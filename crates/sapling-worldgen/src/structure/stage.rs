@@ -85,7 +85,7 @@ impl Structures {
             mineshaft.post_process(&mut canvas, &mut random, biomes, &mut spawners);
             canvas.upgrade(&mineshaft.bb);
         }
-        Self::place_mansions(&mut canvas, mansions);
+        Self::place_mansions(&mut canvas, mansions, seed);
         super::trace::label(|| "treasure".into());
         if *treasure {
             treasure::place(&mut canvas, &mut chunk_random(), chunk);

@@ -7,7 +7,7 @@ use super::BoundingBox;
 use super::canvas::Canvas;
 use super::template::{Placement, Rotation, Template, named};
 use crate::block::Block;
-use crate::block_entity::{BlockEntity, cell_seed};
+use crate::block_entity::BlockEntity;
 use crate::random::{Mt19937, Xoroshiro, position_seed};
 
 /// Warm and lukewarm oceans (deep ones too) build sandstone ruins; the rest stone brick ones.
@@ -118,7 +118,8 @@ impl OceanRuin {
 
 /// The archaeology processor (a capped rule built in 148354700, finished by 145e12a20 from
 /// 141eedbb0): the piece's placed sand or gravel cells in this chunk, shuffled by a Xoroshiro
-/// seeded from the template origin, and the first five still sand or gravel made suspicious.
+/// seeded from the template origin, and the first five still sand or gravel made suspicious, each
+/// taking the same generator's next `nextInt()` as its loot seed (lambda 145e2aeb0).
 fn bury_loot(canvas: &mut Canvas, origin: (i32, i32, i32), mut cells: Vec<(i32, i32, i32)>) {
     // BDS keeps only the low 32 bits of Java's position seed, sign-extended (141eedbb0).
     let seed = (position_seed(origin.0, origin.1, origin.2) as i32) as i64;
@@ -135,7 +136,7 @@ fn bury_loot(canvas: &mut Canvas, origin: (i32, i32, i32), mut cells: Vec<(i32, 
             _ => continue,
         };
         canvas.set(x, y, z, suspicious);
-        canvas.set_entity(x, y, z, BlockEntity::Loot { table, seed: cell_seed([x, y, z]) });
+        canvas.set_entity(x, y, z, BlockEntity::Loot { table, seed: random.next_int() });
         buried += 1;
         if buried == 5 {
             break;
@@ -151,8 +152,10 @@ fn footprint(origin: (i32, i32), rotation: Rotation, (cx, cz): (i32, i32)) -> Bo
 }
 
 impl RuinPiece {
-    /// The piece's part in `canvas`'s chunk; `seed` is that chunk's structure seed.
-    pub fn post_process(&self, canvas: &mut Canvas, seed: u32) {
+    /// The piece's part in `canvas`'s chunk; `seed` is that chunk's structure seed and `random` the
+    /// chunk's structure generator, shared by the ruins' pieces. Every chest marker draws its seed,
+    /// inside the chunk or not: the handler (148356170) writes through the 3x3 view, unclipped.
+    pub fn post_process(&self, canvas: &mut Canvas, seed: u32, random: &mut Mt19937) {
         let y = self.floor_y(canvas);
         let origin = (self.origin.0, y, self.origin.1);
         let mut placement = Placement::new(self.rotation, canvas.bb);
@@ -176,11 +179,12 @@ impl RuinPiece {
         for (index, _) in self.template.markers.iter().filter(|(_, m)| m == "chest") {
             let (dx, dy, dz) = self.rotation.apply(self.template.blocks[*index].pos);
             let (x, y, z) = (origin.0 + dx, origin.1 + dy, origin.2 + dz);
+            let seed = random.next_int_unbounded();
             if canvas.bb.contains(x, y, z) {
                 canvas.set(x, y, z, self.marker_filler());
                 canvas.set(x, y - 1, z, named("chest", "minecraft:cardinal_direction=east", y <= 63));
                 let table = if self.template.name.contains("big") { "loot_tables/chests/underwater_ruin_big.json" } else { "loot_tables/chests/underwater_ruin_small.json" };
-                canvas.set_entity(x, y - 1, z, BlockEntity::Loot { table, seed: cell_seed([x, y - 1, z]) });
+                canvas.set_entity(x, y - 1, z, BlockEntity::Loot { table, seed });
             }
         }
     }

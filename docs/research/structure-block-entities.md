@@ -34,29 +34,41 @@ sculk blocks and the mansion's pre-filled chests (template `Items`), left out he
   `igloo_chest.json` and a draw), shipwreck markers, desert pyramid, jungle temple (chests and
   `dispenser_trap.json` dispensers), strongholds, fortresses: each chest's seed is the draw sapling
   already made for it (`nextInt()` of the structure's generator).
-- Template chests (`placeInWorld` 141eed154: a chest's block actor draws its seed from the piece's generator).
-- Pillager outposts (template chests placed without a draw in sapling), ocean ruins (`underwater_ruin_big/small.json`, archaeology `warm_/cold_ocean_ruins_brushable_block.json`),
-  mansions (`woodland_mansion.json` from the `Chest*` markers), end cities (`end_city_treasure.json` from
-  the `Chest` markers): BDS's seeds come from draws sapling does not model; sapling hashes the cell [U].
-- Trail ruins archaeology: the packs' processors give each capped `suspicious_gravel` rule an
-  `append_loot` table (`trail_ruins_brushable_block_common/rare.json`; `pools_v2.txt` `c` lines, from
-  `jjson.py`).
-- Trial chambers and other v2 templates: their NBT (`templates_to_rust.py` `block_entity`, templates.bin
-  special kind 4) gives the tables, pots' sherds, trial spawners' configs and vaults' tables and keys;
-  BDS's seeds come from a generator sapling does not model; sapling hashes the cell [U].
+- Legacy template chests (`placeInWorld` 141eeb8d0, at 141eed154): a type-2 block actor (chest, trapped
+  chest) whose tag has no `LootTableSeed` draws `nextInt()` from the piece's generator; barrels and
+  other containers draw nothing and load the missing seed as 0. `TemplateStructurePiece::postProcess`
+  (141f797b0) then hands every marker to the structure's handler, with no clipping of its own.
+- Ocean ruins: the chest marker handler (148356170) draws `nextInt()` of the chunk's structure MT for
+  every `chest` marker before its chunk check. Archaeology (`141eedbb0` after the markers): the capped
+  processor (145e12a20) shuffles the candidates on a Xoroshiro of the origin, then each converted
+  block draws that Xoroshiro's `nextInt()` (low 32 bits of `nextLong`, lambda 145e2aeb0).
+- Mansions (1480b2360): a `Group of Allays` marker draws `nextInt(3)`; a `Chest*` marker inside the chunk
+  where no chest stands yet places one and draws `nextInt()` (none where a chest already is).
+- Pillager outpost (148359310, after its chunk check): the template's chest draws as above, then the
+  `topChest` marker re-seeds the chest below it with `nextInt()` (`setLootTable` 144878700).
+- End cities (14831aaa0): a `Chest` marker whose chest below lies inside the chunk draws `nextInt()`
+  of the chunk's structure MT [U: no End oracle with block entities].
+- v2 templates (trial chambers, trail ruins, camps): `WorldGenerator::postProcessStructures` (14196c5f0)
+  builds one Xoroshiro per chunk (`setDecorationSeed` 145941320: the level's Xoroshiro gives
+  `a = nextLong | 1`, `b = nextLong | 1`, then `(cx * a + cz * b) ^ level`) and passes it to every v2
+  start's pieces in order. Each placed block whose actor is a randomizable container (chest, barrel,
+  dispenser, pot, brushable; not a banner: 141ee0510 at 141ee1f71) takes its low 32 bits of
+  `nextLong` as `LootTableSeed`, overwriting `append_loot`'s (1459418f0), and an empty barrel draws too.
+  Their NBT (`templates_to_rust.py` `block_entity`, templates.bin special kind 4) gives the tables,
+  pots' sherds, trial spawners' configs and vaults' tables and keys; trail ruins' capped
+  `suspicious_gravel` rules carry `append_loot` tables (`pools_v2.txt` `c` lines, from `jjson.py`).
+- `examples/loot_seed_fit.rs` finds which draw of which candidate generator a list of BDS seeds is.
 
 ## Checked
 
 `cargo run --release -p sapling-worldgen --example block_entity_diff -- 20261003 20261003-structures`
 (testbox) over the 173 chunks where BDS saved such an entity: every spawner's mob (but four mineshaft
 spawners whose block itself differs in the oracle already: 3 BDS has where ours is air or web, 1 the other way),
-every trial spawner's config, every vault's table and key, and every table match; the seeds match for
-dungeons (42), buried treasure, desert pyramids and their archaeology, jungle temples, strongholds,
-igloo, shipwreck, ruined portal, ancient cities and most village chests. They differ where sapling
-hashes the cell (trial chambers, mansions, camps, ocean ruins, trail ruins, the outpost) and for 3 of 16
-village chests. The desert well is not ported (no blocks, no `desert_well_brushable_block.json`).
-Blocks are unchanged: no block write and no generator draw was added or moved, and
-`tools/oracle.sh <name> blocks_match_bds_structures` gives the same per-region counts as before.
+every trial spawner's config, every vault's table and key, and every table match. Every seed matches
+(`SEEDS=loot` prints the rest) but 3 of 16 village chests and 1 of 7 desert pyramid suspicious sands;
+the desert well is not ported (no blocks, no `desert_well_brushable_block.json`). Before the draws
+above were ported, 447 seeds differed. Blocks are unchanged (`tools/replay-all.sh`, nether and end
+replays): the new draws are of generators nothing else reads after them.
 
 ## Loot on first open
 
@@ -68,6 +80,9 @@ the shard first holds the container (opened, fed by a hopper, broken: `container
 ## Left out
 
 - Decorated pots' and suspicious blocks' loot is kept but never rolled (no breaking-pot loot, no brushing).
+  Found so far: `BrushableBlockActor` (vtable 14a786450; load 141f24d50, save 141f25010 with
+  `brush_direction` +0x344 and `brush_count` +0x340) sets `brushed_progress` from its count (slot 52,
+  141f25530): 0 at 0, 1 at 1-2, 2 at 3-5, 3 from 6.
 - The mansion template chests' own `Items`; flower pots, beds, cauldrons and the other non-loot entities.
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation).
 
@@ -75,5 +90,9 @@ the shard first holds the container (opened, fed by a hopper, broken: `container
 
 - [U] BDS splits a rolled stack over several free slots as Java's `LootTable.fill` does; sapling puts
   each stack in one slot. Whether a comparator or a hopper below unpacks the loot as opening does.
-- [U] The seeds sapling hashes (above), and 3 village chests' seeds (some draw of the piece's generator
-  before them is not the one BDS makes, though the blocks match).
+- [U] 3 village chests' seeds: BDS's are draws 157 of chunk (-63, 9)'s structure MT and 306 and 459 of
+  (-62, 8)'s, sapling's 158, 301 and 449, while (-62, 8)'s chest at draw 433 matches; the draws
+  between are the pieces' bottom fills (`nextInt(3)` per filled column over the whole piece), so some
+  fill reads a column outside the chunk differently from BDS, though the blocks match.
+- [U] The desert pyramid sand at (-6114, 60, -3508): its seed is not the cellar Xoroshiro's draw sapling
+  makes, likely the cell another chunk's post-process placed first (`cellar.rs`).

@@ -8,7 +8,7 @@ use super::java_states::v2_block;
 use super::rules::{Rule, apply_first};
 use super::{Kind, Rotation, Template, named};
 use crate::block::Block;
-use crate::block_entity::{BlockEntity, cell_seed};
+use crate::block_entity::BlockEntity;
 use crate::random::JavaRandom;
 use crate::structure::BoundingBox;
 
@@ -29,7 +29,8 @@ pub struct JavaPlacement<'a> {
 
 impl JavaPlacement<'_> {
     /// The processed blocks of `template` at `origin` within `clip`, in placement order, with their
-    /// block entities; `world` is what the world holds where a rule's location predicate looks.
+    /// block entities (loot seeds 0: the placement draws them); `world` is what the world holds where a
+    /// rule's location predicate looks.
     /// Without capped processors a block's result depends on nothing outside it, so the rest is skipped.
     pub fn blocks(&self, template: &Template, origin: (i32, i32, i32), clip: &BoundingBox, world: &dyn Fn(i32, i32, i32) -> Block) -> Vec<((i32, i32, i32), Block, Option<BlockEntity>)> {
         let mut out = Vec::with_capacity(template.blocks.len());
@@ -54,7 +55,7 @@ impl JavaPlacement<'_> {
             if let Some(output) = apply_first(self.rules, block, world(at.0, at.1, at.2), at) {
                 block = output;
             }
-            out.push((at, block, template.entity(index, || cell_seed([at.0, at.1, at.2]))));
+            out.push((at, block, template.entity(index, || 0)));
         }
         for capped in self.capped {
             let mut random = JavaRandom::new(self.level_seed).fork_at(origin.0, origin.1, origin.2);
@@ -72,7 +73,7 @@ impl JavaPlacement<'_> {
                 {
                     out[k].1 = output;
                     if let Some(table) = capped.loot {
-                        out[k].2 = Some(BlockEntity::Loot { table, seed: cell_seed([at.0, at.1, at.2]) });
+                        out[k].2 = Some(BlockEntity::Loot { table, seed: 0 });
                     }
                     changed += 1;
                 }

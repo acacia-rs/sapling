@@ -8,7 +8,7 @@ use super::canvas::Canvas;
 use super::placement::{Grid, Spread};
 use super::template::{Placement, Rotation, Template, named};
 use crate::block::Block;
-use crate::block_entity::{BlockEntity, cell_seed};
+use crate::block_entity::BlockEntity;
 use crate::chunk::ChunkShape;
 use crate::random::Mt19937;
 
@@ -59,8 +59,9 @@ pub fn generate(random: &mut Mt19937, chunk: (i32, i32), terrain: &ChunkShape) -
 
 impl EndCity {
     /// Every piece meeting `canvas`'s chunk, in list order, clipped to it (`TemplateStructurePiece::postProcess`
-    /// 141f797b0). Chests' loot seeds are the only draws, and nothing else reads them.
-    pub fn post_process(&self, canvas: &mut Canvas) {
+    /// 141f797b0). Chests' loot seeds are the only draws of `random` (the chunk's structure generator):
+    /// the template's chests, then each `Chest` marker's chest below it inside the chunk (14831aaa0).
+    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937) {
         let bb = canvas.bb;
         for piece in self.pieces.iter().filter(|p| p.bb.intersects(&bb)) {
             let template = Template::get(&format!("endcity/{}", piece.name));
@@ -68,13 +69,13 @@ impl EndCity {
             if !piece.overwrite {
                 placement.ignore = Some("air");
             }
-            placement.place(canvas, template, piece.pos);
+            placement.place(canvas, template, piece.pos).draw_seeds(canvas, random);
             // "Chest" and "Sentry" markers write nothing; their cells keep what was there. A chest marker's chest is below it.
             for (index, marker) in &template.markers {
                 let (dx, dy, dz) = piece.rotation.apply(template.blocks[*index].pos);
                 let (x, y, z) = (piece.pos.0 + dx, piece.pos.1 + dy, piece.pos.2 + dz);
-                if marker == "Chest" && canvas.get(x, y - 1, z).name() == "chest" {
-                    canvas.set_entity(x, y - 1, z, BlockEntity::Loot { table: "loot_tables/chests/end_city_treasure.json", seed: cell_seed([x, y - 1, z]) });
+                if marker == "Chest" && bb.contains(x, y - 1, z) && canvas.get(x, y - 1, z).name() == "chest" {
+                    canvas.set_entity(x, y - 1, z, BlockEntity::Loot { table: "loot_tables/chests/end_city_treasure.json", seed: random.next_int_unbounded() });
                 } else if marker == "Elytra" && bb.contains(x, y, z) {
                     let facing = [3, 4, 2, 5][piece.rotation as usize];
                     canvas.set(x, y, z, named("frame", &format!("facing_direction={facing},item_frame_map_bit=0,item_frame_photo_bit=0"), false));

@@ -42,12 +42,11 @@ impl BlockEntity {
     }
 }
 
-/// The seed of a loot table no generator draw of BDS's that sapling models gives: a hash of the cell.
-// TODO: BDS draws these from a generator sapling does not model (barrels, pots, dispensers of templates, markers' chests).
-pub(crate) fn cell_seed([x, y, z]: [i32; 3]) -> i32 {
-    let mut h = (x as i64).wrapping_mul(3_129_871) ^ (z as i64).wrapping_mul(116_129_781) ^ y as i64;
-    h = h.wrapping_mul(h.wrapping_mul(42_317_861).wrapping_add(11));
-    (h >> 16) as i32
+/// Whether BDS's block actor for a block named `name` is a randomizable container (`BlockActor`
+/// +0x20), which a v2 template placement draws a `LootTableSeed` for even without a table: an empty
+/// barrel does, the hopper above it does not (trial chambers, oracle 20261003-structures).
+pub fn randomizable(name: &str) -> bool {
+    matches!(name, "chest" | "trapped_chest" | "barrel" | "dispenser" | "dropper" | "decorated_pot" | "suspicious_sand" | "suspicious_gravel") || name.ends_with("copper_chest")
 }
 
 #[cfg(test)]
