@@ -73,8 +73,10 @@ fn is_used(name: &str) -> bool {
 /// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
 /// False when it does none of these.
 fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 10] = [
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 12] = [
         super::lectern::use_lectern,
+        super::command_blocks::open_editor,
+        super::structure_blocks::open_editor,
         crate::containers::open,
         crate::sleep::lie_down,
         signs::edit_by_click,

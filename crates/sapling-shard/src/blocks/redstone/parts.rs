@@ -34,6 +34,10 @@ pub(super) enum User {
     Bell,
     /// A copper bulb, which turns on and off at each rise of its signal.
     Bulb { powered: bool },
+    /// A command block of any kind (command_blocks.rs).
+    Command,
+    /// A structure block (structure_blocks.rs).
+    Structure,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -96,6 +100,8 @@ impl Part {
             "dispenser" | "dropper" | "crafter" => Part::User(User::Fires { triggered: get("triggered_bit") == Some("1") }),
             "noteblock" => Part::User(User::Note),
             "bell" => Part::User(User::Bell),
+            "command_block" | "repeating_command_block" | "chain_command_block" => Part::User(User::Command),
+            "structure_block" => Part::User(User::Structure),
             _ if name.ends_with("copper_bulb") => Part::User(User::Bulb { powered: get("powered_bit") == Some("1") }),
             "tripwire_hook" => Part::Producer { strength: on("powered_bit"), strong: get("direction").and_then(hook_support) },
             _ if name.ends_with("lightning_rod") => {
