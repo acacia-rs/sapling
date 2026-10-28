@@ -1,6 +1,6 @@
 //! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits"), with
 //! what the weapon's enchantments add (enchanted.rs) and a falling hitter's critical (blows.rs).
-// TODO: a hit mob does not fight back; a hit on an armour stand, which has no health here, tires nobody.
+// TODO: a hit mob does not fight back; a hit on an armour stand (armour_stands/hits.rs) tires nobody.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{EntityId, GameMode};
@@ -62,7 +62,6 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     }
     let entity = entities::find(world, EntityId(id)).filter(|entity| world.get::<Creature>(*entity).is_some() && world.get::<super::Dying>(*entity).is_none() && !crate::dragon::is_dying(world, *entity))?;
     let (body, kind) = (*world.get::<Body>(entity)?, world.get::<entities::Kind>(entity)?.0.clone());
-    let mut health = *world.get::<Health>(entity)?;
     let far = crate::dragon::part_reach(world, entity, eye).map_or(distance(eye, &body), |part| part.min(distance(eye, &body)));
     if world.get::<InLayer>(entity)?.0 != layer || world.get::<Mode>(player)?.0 == GameMode::Spectator || far > reach {
         return None;
@@ -73,7 +72,11 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     // The enchantments' bonus goes in before strength and weakness (BDS 1429e56c0).
     let blow = blows::blow(world, player, crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()) + enchant::melee_bonus(weapon.as_ref(), Some(kind.as_str()))));
     let mut packets = vec![sapling_net::encode(&blows::sound(blow, from))];
-    let harm = if kind == crate::dragon::DRAGON { crate::dragon::body_harm(blow.harm) } else { blow.harm };
+    if super::armour_stands::struck(world, entity, &kind, world.get::<Mode>(player)?.0 == GameMode::Creative, packets.clone()) {
+        return Some(());
+    }
+    let mut health = *world.get::<Health>(entity)?;
+    let harm =if kind == crate::dragon::DRAGON { crate::dragon::body_harm(blow.harm) } else { blow.harm };
     let hitter = in_world_identity(world, player).map(sapling_api::Attacker::Player);
     let before = health.left();
     if crate::damage::ask(world, entity, harm, Cause::Attack, hitter).is_some_and(|harm| health.hurt(harm)) {
@@ -89,8 +92,10 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
         let mut thrown = world.get_mut::<Body>(entity)?;
         let speed = enchant::knockback(enchant::level(weapon.as_ref(), Enchant::Knockback), blow.sprinting, thrown.motion, away);
-        if !sapling_data::mob_traits(&kind).steadfast {
-            thrown.throw(speed);
+        // Knockback resistance takes its share off the throw (research/captures/bds-knockback.txt).
+        let kept = 1.0 - sapling_data::mob_traits(&kind).resists;
+        if kept > 0.0 {
+            thrown.throw(speed.map(|c| c * kept));
         }
         *world.get_mut::<Health>(entity)? = health;
         super::enchanted::struck(world, entity, &kind, weapon.as_ref());

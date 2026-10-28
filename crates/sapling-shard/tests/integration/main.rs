@@ -56,6 +56,7 @@ mod husbandry;
 mod husbandry_products;
 mod inventory;
 mod join;
+mod jostle;
 mod jukebox;
 mod keepers;
 mod kept_drops;

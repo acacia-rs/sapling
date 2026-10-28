@@ -2,17 +2,20 @@
 //! (research/captures/bds-wander-findings.md, "Crowds"): as a tick starts, every two mobs whose
 //! boxes meet push each other apart across by the Java game's rule, from where they stand, and the
 //! push joins their next move after the drag (`Body::jostle`). Two within 0.01 of one spot push
-//! not at all, so mobs summoned onto one spot stay together until one walks.
-// TODO: players neither push mobs nor are pushed by them; kinds the packs make unpushable
-// (`minecraft:pushable`) are pushed all the same.
+//! not at all, so mobs summoned onto one spot stay together until one walks. A player pushes mobs
+//! as a mob does and is not pushed (its client moves it), and kinds the packs make unpushable
+//! neither push nor are pushed: BDS's cow beside an armour stand or a shulker stood still
+//! (research/captures/bds-jostle.txt).
 
 use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
 
+use sapling_api::GameMode;
+
 use super::{Creature, Dying};
 use crate::body::Body;
-use crate::components::InLayer;
+use crate::components::{InLayer, Mode, Position, in_world};
 use crate::entities;
 
 /// Each of a pair pushes the other 0.05 by the Java game's rule and is pushed back as much, which
@@ -23,6 +26,7 @@ const TOGETHER: f32 = 0.01;
 const GRACE: f32 = 0.2;
 /// Mobs are sorted into squares this wide, as wide as the widest mob that walks.
 const SQUARE: f32 = 4.0;
+const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
 
 /// The push across a mob at `from` takes from one at `to`, where their boxes meet.
 fn push(from: &Body, to: &Body) -> Option<[f32; 2]> {
@@ -44,10 +48,17 @@ pub(super) fn tick(world: &mut World) {
     let bodies: Vec<(Entity, Entity, Body)> = world
         .query_filtered::<(Entity, &InLayer, &Body, &entities::Kind), (With<Creature>, Without<Dying>, Without<crate::riding::Riding>)>()
         .iter(world)
-        .filter(|(.., kind)| !super::physics_of(&kind.0).passes && kind.0 != crate::dragon::DRAGON)
+        .filter(|(.., kind)| !super::physics_of(&kind.0).passes && kind.0 != crate::dragon::DRAGON && !sapling_data::mob_traits(&kind.0).unpushable)
         .map(|(entity, layer, body, _)| (entity, layer.0, *body))
         .collect();
-    let bodies: Vec<_> = bodies.into_iter().filter(|(entity, ..)| !crate::riding::is_driven(world, *entity)).collect();
+    let mut bodies: Vec<_> = bodies.into_iter().filter(|(entity, ..)| !crate::riding::is_driven(world, *entity)).collect();
+    let mobs = bodies.len();
+    bodies.extend(in_world(world).into_iter().filter_map(|player| {
+        if world.get::<Mode>(player)?.0 == GameMode::Spectator || world.get::<crate::riding::Riding>(player).is_some() {
+            return None;
+        }
+        Some((player, world.get::<InLayer>(player)?.0, Body::new(world.get::<Position>(player)?.feet, [0.0; 3], PLAYER_SIZE)))
+    }));
     let square = |body: &Body| [(body.at[0] / SQUARE).floor() as i32, (body.at[2] / SQUARE).floor() as i32];
     let mut squares: HashMap<(Entity, [i32; 2]), Vec<usize>> = HashMap::new();
     for (index, (_, layer, body)) in bodies.iter().enumerate() {
@@ -64,7 +75,8 @@ pub(super) fn tick(world: &mut World) {
             }
         }
     }
-    for (entity, by) in pushes {
+    let players: Vec<Entity> = bodies[mobs..].iter().map(|(player, ..)| *player).collect();
+    for (entity, by) in pushes.into_iter().filter(|(entity, _)| !players.contains(entity)) {
         if let Some(mut body) = world.get_mut::<Body>(entity) {
             body.jostle(by);
         }
