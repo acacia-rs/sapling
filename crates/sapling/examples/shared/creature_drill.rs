@@ -49,7 +49,7 @@ pub async fn act(actor: &mut acacia_bot::Bot, line: &str) -> bool {
 }
 
 /// Every mob gone, the floor laid with 11 clear over it, both bots on it in creative.
-fn floor() -> Vec<String> {
+pub fn floor() -> Vec<String> {
     [
         "kill @e[type=!player]",
         "gamerule domobspawning false",
@@ -70,11 +70,11 @@ fn floor() -> Vec<String> {
     .into()
 }
 
-fn waits(lines: &mut Vec<String>, seconds: usize) {
+pub fn waits(lines: &mut Vec<String>, seconds: usize) {
     lines.extend(std::iter::repeat_n(String::new(), seconds));
 }
 
-fn with(mut lines: Vec<String>, more: &[&str]) -> Vec<String> {
+pub fn with(mut lines: Vec<String>, more: &[&str]) -> Vec<String> {
     lines.extend(more.iter().map(|line| line.to_string()));
     lines
 }

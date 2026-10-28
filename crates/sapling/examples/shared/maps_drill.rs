@@ -146,6 +146,18 @@ pub fn maps() -> Vec<String> {
     lines
 }
 
+/// Three maps made and each locked at a cartography table, the last locked twice, to see which
+/// ids the locked copies take.
+pub fn maplock() -> Vec<String> {
+    let mut lines = start("tp @s 0 ~ 0 -90 30");
+    lines.extend(owned(["fill ~-3 ~-1 ~-3 ~3 ~-1 ~3 stone", "fill ~-3 ~ ~-3 ~3 ~3 ~3 air", "setblock ~2 ~ ~ cartography_table", ""]));
+    for _ in 0..3 {
+        lines.extend(owned(["replaceitem entity @s slot.hotbar 0 empty_map 1", "", "!map", "", "", "replaceitem entity @s slot.hotbar 1 glass_pane 1", "", "!carto 2 0 0", "", ""]));
+    }
+    lines.extend(owned(["replaceitem entity @s slot.hotbar 1 glass_pane 1", "", "!carto 2 0 0", "", "", "!mapinfo", "", "", "gamemode creative @s", "clear @s", ""]));
+    lines
+}
+
 /// The map-colours pack lays every block type on a grid about the actor (BDS only), on the
 /// ground's level or one higher (`raised`); a map of it is made and shown whole.
 pub fn mapgrid(raised: bool) -> Vec<String> {
@@ -197,6 +209,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
         "maps" => (maps(), MAPS_SHOWN),
         "mapwater" => (mapwater(), MAPS_SHOWN),
+        "maplock" => (maplock(), MAPS_SHOWN),
         "maptints" => (maptints(), &["CommandOutput"]),
         "mapgrid" => (mapgrid(false), MAPS_SHOWN),
         "mapgrid-raised" => (mapgrid(true), MAPS_SHOWN),

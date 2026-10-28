@@ -169,7 +169,16 @@ pub(crate) fn chart(world: &World, player: Entity) -> Chart {
     let maps = world.get::<InLayer>(player).and_then(|layer| world.get::<Maps>(crate::dimensions::home(world, layer.0)));
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.slot(Place::Ui(CARTOGRAPHY_INPUT))?.as_ref().and_then(|held| map_id(&held.stack)));
     let input = held.and_then(|id| maps?.maps.get(&id)).map(|map| (map.id, map.scale, map.locked));
-    Chart { input, fresh: maps.map_or(ID_BASE + 1, Maps::next_id) }
+    Chart { input, fresh: locked_id(world.resource::<Tick>().0, maps) }
+}
+
+/// The id a locked copy takes: BDS's look drawn, positive and 32 bits wide, apart from the
+/// unique-id run new maps take (bds-maplock.txt: 1396458477, 2162056098, 3185328418).
+fn locked_id(now: u64, maps: Option<&Maps>) -> i64 {
+    use std::hash::BuildHasher;
+    let hasher = std::hash::BuildHasherDefault::<std::collections::hash_map::DefaultHasher>::default();
+    let taken = |id: &i64| maps.is_some_and(|maps| maps.maps.contains_key(id));
+    (0u64..).map(|salt| i64::from(hasher.hash_one((now, maps.map_or(0, |maps| maps.maps.len()), salt)) as u32)).find(|id| *id > 0 && !taken(id)).unwrap_or(1)
 }
 
 /// Makes the map `to` a cartography table made of the map `from`: zoomed out (blank, a scale

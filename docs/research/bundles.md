@@ -46,4 +46,7 @@ ItemStackRequests from `crates/sapling/examples/shared/bundle_drill.rs`). saplin
 ## Open
 
 - Shulker boxes in bundles were not drilled (sapling refuses them, as Java does).
-- A rejoin with a filled bundle on BDS, to confirm the window 125 content sapling sends.
+- A rejoin with a filled bundle on BDS, to confirm the window 125 content sapling sends. `bundlekeep3`
+  (bds-bundlekeep3.txt) tried: BDS let the probe back in as a new player, its inventory empty (the
+  offline probe sends an empty `SelfSignedId`, likely why BDS found no saved player), yet a take from the old bundle's
+  container 0 by its old stack id still answered Ok. A capture needs a client BDS saves as the same player.

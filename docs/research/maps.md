@@ -79,4 +79,9 @@ Java's `MapItem.update`: `f = 1 << scale`, `r = 128 / f` (halved under a ceiling
   filled map at once, each `parentMapId` the id one up (-1 at scale 4); sapling saves the maps it made.
   Unread: the RGBA byte order of `colors` (the BDS records seen were blank), BDS's `map_name_index` count
   after a restart, and `decorations`.
-- Locked maps' ids: BDS took 255902174 outside the unique-id run (one capture); sapling takes a fresh id.
+- Locked maps' ids: `bds_command_probe maplock` (bds-maplock.txt) locked three maps (unique ids -4294967272,
+  -4294967267, -4294967262) to 1396458477, 2162056098 and 3185328418, after 255902174 in the first capture:
+  positive, 32 bits wide, in no order, apart from the unique-id run. Where BDS draws them was not found
+  (the cartography handlers 142c80c10 and 142c81720 call no random); sapling hashes the tick and the map
+  count into a free id of that range (`maps::locked_id`). The locked map's `included_in` was its own id and
+  the zoom ids of the map it came from. A second lock of a locked map: status 9.

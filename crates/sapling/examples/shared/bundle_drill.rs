@@ -138,12 +138,22 @@ fn bundle_kept() -> Vec<String> {
     owned(["", "", "!bundletag", "gamemode survival @s", "replaceitem entity @s slot.hotbar 4 bundle 1", "", "", "!bundletag", "!bundletake 1 6 0", "", ""])
 }
 
+/// Two bundles, the first holding cobblestone and pearls in two slots, then the actor leaves and
+/// joins again (`!rejoin`): what it is sent of them as it comes back.
+fn bundle_rejoin() -> Vec<String> {
+    let mut lines = owned(["kill @e[type=!player]", "gamerule domobspawning false", "gamemode survival @s", "clear @s", ""]);
+    lines.extend(owned(["replaceitem entity @s slot.hotbar 0 bundle 1", "replaceitem entity @s slot.hotbar 1 cobblestone 64", "replaceitem entity @s slot.hotbar 2 ender_pearl 16", "replaceitem entity @s slot.hotbar 4 bundle 1", "", ""]));
+    lines.extend(owned(["!bundleput 1 10 0", "", "!bundleput 2 3 1", "", "!bundletag", "!rejoin", "", "", "!bundletag", "!bundletake 1 6 0", "", "gamemode creative @s", "clear @s", ""]));
+    lines
+}
+
 /// The lines and shown packets of the bundle drill `name`, if it is one.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     let lines = match name {
         "bundles" => bundles(),
         "bundlekeep" => bundle_keep(),
         "bundlekeep2" => bundle_kept(),
+        "bundlekeep3" => bundle_rejoin(),
         _ => return None,
     };
     Some((lines, BUNDLE_SHOWN))

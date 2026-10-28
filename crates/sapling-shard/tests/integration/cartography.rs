@@ -74,7 +74,8 @@ fn a_map_zooms_out_locks_copies_and_takes_a_name() {
     let locked = craft(&mut h, 0, Some(2), Some(LOCK), "", 0);
     assert_eq!(answer(&locked).0, Status::Ok);
     let lock = all::<ClientboundMapItemData>(&locked).into_iter().find(|packet| packet.locked).expect("the locked map, whole");
-    assert!(lock.map_id != map.map_id + 1 && lock.scale == Some(1));
+    // bds-maplock.txt: locked copies took positive 32-bit ids apart from the unique-id run.
+    assert!(lock.map_id > 0 && lock.map_id <= i64::from(u32::MAX) && lock.scale == Some(1), "{}", lock.map_id);
 
     let copied = craft(&mut h, 0, Some(3), Some(COPY), "", 0);
     assert_eq!(answer(&copied).1.last().map(|(_, _, count, _)| *count), Some(2));

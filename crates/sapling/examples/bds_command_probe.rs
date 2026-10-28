@@ -51,6 +51,8 @@ mod maps;
 mod bundles;
 #[path = "shared/creature_drill.rs"]
 mod creatures;
+#[path = "shared/companion_drill.rs"]
+mod companion;
 #[path = "shared/rules_drill.rs"]
 mod rules;
 #[path = "shared/warden_drill.rs"]
@@ -297,7 +299,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)).or_else(|| cmdblocks::drill(other)).or_else(|| cmdlinks::drill(other)).or_else(|| structblocks::drill(other)).or_else(|| parity::drill(other)) {
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)).or_else(|| cmdblocks::drill(other)).or_else(|| cmdlinks::drill(other)).or_else(|| structblocks::drill(other)).or_else(|| parity::drill(other)).or_else(|| companion::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },
@@ -314,6 +316,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("## /{line}");
         match line.strip_prefix("!hit") {
             Some(hit) => strike(&mut actor, &mut watcher, start, shown, hit).await?,
+            // The actor leaves and joins again; what it is sent as it comes is shown.
+            None if line == "!rejoin" => {
+                actor.disconnect().await;
+                tokio::time::sleep(Duration::from_secs(2)).await;
+                actor = connect(&server, "CmdActor").await?;
+            }
             None if line.starts_with('!') => act(&mut actor, &mut watcher, start, shown, line).await?,
             None if !line.is_empty() => drop(actor.client().command(line)),
             None => {}
