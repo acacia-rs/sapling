@@ -20,9 +20,9 @@ it does on BDS and the two captures can be diffed:
    (`tools/sapling-drill.sh`, on testbox `tools/remote-drill.sh`). Left: what the BDS-against-sapling
    diff of the drill captures still shows (`research/captures/sapling-vs-bds-findings.md`).
    `/weather` and `/toggledownfall` set a world's weather, told as BDS told it (`weather.rs`,
-   `bds_command_probe weather`); where `doWeatherCycle` is on it turns of itself, by the Java
-   game's times, which were not checked against BDS; BDS's `query`, which lags a change behind, is
-   not copied.
+   `bds_command_probe weather`); where `doWeatherCycle` is on it turns of itself by BDS's
+   decompiled `Weather::tick` and is saved in `level.dat` (its spells drawn from a hash, not BDS's
+   random); BDS's `query`, which lags a change behind, is not copied.
    `/time`, `/xp` and `/tp` to a target answer as BDS did (`vanilla/clock.rs`, `bds_command_probe
    clock`: the answers agree line for line; BDS writes its experience attributes in another
    order). A sapling capture that answers `commands.generic.unknown` or `.syntax` where BDS's

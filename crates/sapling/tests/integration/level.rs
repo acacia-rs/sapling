@@ -1,4 +1,4 @@
-//! A world folder's time, difficulty and mobs, end to end: a bot joins a server opened on a copy
+//! A world folder's time, difficulty, weather and mobs, end to end: a bot joins a server opened on a copy
 //! of the sapling-leveldb fixture with a horse stored in it, and the folder is read back after
 //! the server shut down.
 
@@ -14,7 +14,8 @@ use acacia_bot::proto::packets::{AddEntity, StartGame, SyncWorldClocks, SyncWorl
 use acacia_bot::{BotConfig, BotEvent};
 use bytes::BytesMut;
 use common::{GROUND, SPAWN, fixture};
-use sapling::{Handler, RuleValue, ShardCtx, World};
+use sapling::{Difficulty, Handler, RuleValue, ShardCtx, World};
+use sapling_api::Weather;
 use sapling_leveldb::{ChunkKey, LevelDbWorld, actors};
 
 const HORSE: [f32; 3] = [SPAWN.0 as f32 + 2.5, GROUND as f32 + 1.0, SPAWN.1 as f32 + 0.5];
@@ -60,7 +61,7 @@ fn near_the_saved_horse(at: [f32; 3]) -> bool {
     at[1] == HORSE[1] && (at[0] - HORSE[0]).hypot(at[2] - HORSE[2]) < 8.0
 }
 
-/// Sets the time once somebody is there to be told, and two game rules.
+/// Sets the time once somebody is there to be told, two game rules, a storm and the difficulty.
 struct Dusk;
 
 impl Handler for Dusk {
@@ -68,9 +69,13 @@ impl Handler for Dusk {
         if ctx.player_count() > 0 && ctx.time() < 100_000 {
             ctx.set_time(112_000);
             assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(3)) && ctx.set_game_rule("domobloot", RuleValue::Bool(false)));
+            ctx.set_weather(Weather::Thunder, Some(STORM));
+            ctx.set_difficulty(Difficulty::Hard);
         }
     }
 }
+
+const STORM: u32 = 50_000;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_folder_brings_its_time_and_mobs_and_takes_the_time_back() {
@@ -115,6 +120,9 @@ async fn a_folder_brings_its_time_and_mobs_and_takes_the_time_back() {
     assert!((112_000..114_000).contains(&time), "saved at {time}");
     let rules = (after.level().int("randomtickspeed"), after.level().root.get("domobloot"));
     assert_eq!(rules, (Some(3), Some(&Value::Byte(0))), "the rules are saved as BDS saves them");
+    let weather = after.level().weather().expect("the weather is saved");
+    assert_eq!((weather.rain_level, weather.lightning_level, weather.rain_time, after.level().difficulty()), (1.0, 1.0, weather.lightning_time, Some(3)));
+    assert!((STORM as i32 - 2_000..STORM as i32).contains(&weather.rain_time), "{weather:?}");
     let home = spawn_column();
     let around = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| ChunkKey::new(home.x + dx, home.z + dz, 0)));
     let stored: Vec<_> = around.filter_map(|key| after.load_column(key).unwrap()).flat_map(|column| actors(&column.actors).unwrap()).collect();

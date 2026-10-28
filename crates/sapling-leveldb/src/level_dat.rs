@@ -133,10 +133,49 @@ impl LevelDat {
         self.int("Difficulty")
     }
 
+    pub fn set_difficulty(&mut self, difficulty: i32) {
+        self.set("Difficulty", Value::Int(difficulty));
+    }
+
     /// Whether the world is hardcore (`IsHardcore`, a byte; off when absent).
     pub fn hardcore(&self) -> bool {
         matches!(self.root.get("IsHardcore"), Some(Value::Byte(on)) if *on != 0)
     }
+
+    pub fn float(&self, key: &str) -> Option<f32> {
+        match self.root.get(key)? {
+            Value::Float(v) => Some(*v),
+            _ => None,
+        }
+    }
+
+    /// The weather, when all four of its fields are there.
+    pub fn weather(&self) -> Option<WeatherRecord> {
+        Some(WeatherRecord { rain_level: self.float("rainLevel")?, rain_time: self.int("rainTime")?, lightning_level: self.float("lightningLevel")?, lightning_time: self.int("lightningTime")? })
+    }
+
+    pub fn set_weather(&mut self, weather: WeatherRecord) {
+        self.set("rainLevel", Value::Float(weather.rain_level));
+        self.set("rainTime", Value::Int(weather.rain_time));
+        self.set("lightningLevel", Value::Float(weather.lightning_level));
+        self.set("lightningTime", Value::Int(weather.lightning_time));
+    }
+
+    /// The chunks around a player that tick (`serverChunkTickRange`: BDS writes its
+    /// `tick-distance` here).
+    pub fn set_chunk_tick_range(&mut self, chunks: i32) {
+        self.set("serverChunkTickRange", Value::Int(chunks));
+    }
+}
+
+/// The weather as `level.dat` keeps it: rain and lightning each have a level, above 0 while it
+/// falls, and the ticks until it turns.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct WeatherRecord {
+    pub rain_level: f32,
+    pub rain_time: i32,
+    pub lightning_level: f32,
+    pub lightning_time: i32,
 }
 
 #[cfg(test)]

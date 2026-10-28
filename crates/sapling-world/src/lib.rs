@@ -29,7 +29,7 @@ pub use column::{SubChunkAnswer, empty_column};
 pub use folder::WorldFolder;
 pub use generated::Generated;
 pub use light::FULL_LIGHT;
-pub use sapling_leveldb::LevelDat;
+pub use sapling_leveldb::{LevelDat, WeatherRecord};
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{Raising, raised_actor, raising, regrouped_actor};
 pub use sapling_leveldb::{actor_pose, geared_actor};
