@@ -21,6 +21,7 @@ use crate::{mobs, splash, view};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.
 #[derive(Component, Clone, Debug)]
+#[component(on_remove = crate::world_notices::note_gone)]
 pub(crate) struct Kind(pub String);
 
 /// What a world folder keeps of an entity: its actor compound, written back with its place and
@@ -267,7 +268,7 @@ pub(crate) fn change(world: &mut World, id: EntityId, change: impl FnOnce(&mut B
 }
 
 pub(crate) fn remove(world: &mut World, id: EntityId) -> bool {
-    let Some(entity) = find(world, id) else { return false };
+    let Some(entity) = find(world, id).or_else(|| crate::labels::floating(world, id)) else { return false };
     mobs::remove(world, entity);
     true
 }

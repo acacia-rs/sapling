@@ -17,6 +17,8 @@ pub struct Executed {
     pub anchor: f32,
     /// 0 overworld, 1 nether, 2 end.
     pub dimension: i32,
+    /// Whom `@initiator` names: the player who pressed the NPC dialogue button running it.
+    pub initiator: Option<crate::Player>,
 }
 
 // Positions are never NaN: they come from parsed finite numbers and the world.
@@ -24,6 +26,20 @@ impl Eq for Executed {}
 
 impl Executed {
     pub fn new(by: Sender, executor: Option<Selected>, position: [f32; 3], rotation: [f32; 2], dimension: i32) -> Self {
-        Self { by, executor, position, rotation, anchor: 0.0, dimension }
+        Self { by, executor, position, rotation, anchor: 0.0, dimension, initiator: None }
+    }
+
+    pub fn with_initiator(self, initiator: crate::Player) -> Self {
+        Self { initiator: Some(initiator), ..self }
+    }
+}
+
+impl Sender {
+    /// The player `@initiator` names, from the innermost `/execute` back to the dialogue button.
+    pub fn initiator(&self) -> Option<&crate::Player> {
+        match self {
+            Self::Executed(executed) => executed.initiator.as_ref().or_else(|| executed.by.initiator()),
+            _ => None,
+        }
     }
 }

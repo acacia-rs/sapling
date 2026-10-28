@@ -15,6 +15,8 @@ use sapling_world::{Actor, ActorState, ChunkPos, ItemStack};
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{InLayer, Layer, NetId, Outgoing, Players, Stage, Tick};
 use crate::grid::Grid;
+use crate::hidden::Hidden;
+use crate::labels::Labels;
 use crate::view::View;
 
 const ITEM: &str = "minecraft:item";
@@ -46,6 +48,15 @@ impl SeesMobs {
     pub fn take_ids(&mut self) -> Vec<u64> {
         self.made_for = None;
         self.mobs.drain().map(|(_, id)| id).collect()
+    }
+
+    pub fn has(&self, mob: Entity) -> bool {
+        self.mobs.contains_key(&mob)
+    }
+
+    /// Has the next [`update`] look again though the view and the mobs stayed.
+    pub fn recheck(&mut self) {
+        self.made_for = None;
     }
 }
 
@@ -200,23 +211,24 @@ pub(crate) fn despawn_unloaded(mut commands: Commands, tick: Res<Tick>, mut grid
     }
 }
 
-type Viewer<'a> = (&'a Stage, &'a InLayer, &'a View, &'a mut SeesMobs, &'a mut Outgoing);
+type Viewer<'a> = (&'a Stage, &'a InLayer, &'a View, &'a mut SeesMobs, &'a mut Outgoing, Option<&'a Hidden>);
 
 /// Adds the mobs whose column came into each player's view and removes those that left it or
 /// are gone. A player whose view stayed where it was while no mob came or went is skipped.
-pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query<&Mob>) {
-    for (stage, in_layer, view, mut sees, mut out) in &mut viewers {
+pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query<(&Mob, &NetId, Option<&Labels>)>) {
+    for (stage, in_layer, view, mut sees, mut out, hidden) in &mut viewers {
         let made_for = Some((view.moves(), grid.changes));
         if *stage != Stage::InWorld || sees.made_for == made_for {
             continue;
         }
-        let mut covered: Vec<(Entity, u64)> = grid.grid.covered(in_layer.0, view).copied().collect();
+        let mut covered: Vec<(Entity, u64)> = grid.grid.covered(in_layer.0, view).copied().filter(|(entity, _)| !Hidden::hides(hidden, *entity)).collect();
         covered.sort_unstable_by_key(|(_, id)| *id);
-        let new: Vec<&Mob> = covered.iter().filter(|(entity, _)| !sees.mobs.contains_key(entity)).filter_map(|(entity, _)| mobs.get(*entity).ok()).collect();
-        for mob in &new {
+        let new: Vec<_> = covered.iter().filter(|(entity, _)| !sees.mobs.contains_key(entity)).filter_map(|(entity, _)| mobs.get(*entity).ok()).collect();
+        for (mob, id, labels) in &new {
             out.0.extend_from_slice(&mob.announcement);
+            out.0.extend(crate::labels::packet(*labels, id.0));
         }
-        for mob in &new {
+        for (mob, ..) in &new {
             out.0.extend_from_slice(&mob.after);
         }
         let now: HashMap<Entity, u64> = covered.into_iter().collect();

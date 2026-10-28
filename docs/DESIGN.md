@@ -441,7 +441,11 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   writes a feature, structure or jigsaw the generator draws over the loaded columns, a structure's block
   entities after its blocks (`PlacedStructure`); `/locate` asks the
   generator's placement and climate. Evidence: `docs/research/structures-and-ticking.md`.
-- **Boss bar.** One per player, on the player's own entity id (dragonfly's way: no extra entity).
+- **Plugin UI** (`sapling-api` `ui.rs`, `display.rs`, `dialogue.rs`, `debug_shape.rs`; shard `ui.rs` and
+  the modules it names). Popups, tips, plugin name/score tags, per-viewer hiding, floating text, extra
+  boss bars, debug shapes and NPC dialogue with `@initiator`: `docs/research/ui-events.md`.
+- **Boss bar.** The player's own, on the player's own entity id (dragonfly's way: no extra entity); more
+  under plugin keys, each on an unseen entity of its own (`extra_bars.rs`).
   A new bar is ShowBar, `remove_boss_bar` HideBar; a bar that is shown changes by SetBarTitle,
   SetBarProgress and Texture (colour), one for each part that differs. A vanilla client ignores ShowBar
   for a bar it already shows, though BDS repeats ShowBar once a second for its wither (there the client

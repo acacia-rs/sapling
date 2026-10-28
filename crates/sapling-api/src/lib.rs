@@ -10,6 +10,9 @@ mod chat;
 mod combat;
 pub mod command;
 mod ctx;
+mod debug_shape;
+mod dialogue;
+mod display;
 mod dragon;
 mod effect;
 mod entity;
@@ -17,6 +20,7 @@ mod experience;
 mod event;
 pub mod form;
 mod generation;
+mod hand_event;
 mod health;
 mod hud;
 mod item;
@@ -42,8 +46,10 @@ mod weather;
 #[cfg(test)]
 mod tests;
 mod ticking;
+mod ui;
 mod world;
 mod world_event;
+mod world_notice;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use block_entity::{BlockEntityBackend, BlockEntityData};
@@ -59,6 +65,9 @@ pub use riding::{Mount, RidingBackend};
 pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
+pub use debug_shape::{DebugShape, ShapeKind};
+pub use dialogue::{Dialogue, DialogueButton, DialogueCallback};
+pub use ui::{Actor, HudLine, Label, UiBackend};
 pub use dragon::{DragonFight, DragonKilledEvent, DragonRespawnEvent};
 pub use effect::{Effect, EffectBackend};
 pub use experience::ExperienceBackend;
@@ -85,6 +94,11 @@ pub use life_event::{
 pub use player_event::{
     GameModeChangeEvent, HeldSlotChangeEvent, JumpEvent, Portal, PortalUseEvent, PunchAirEvent, SkinChangeEvent, TeleportEvent, ToggleSneakEvent, ToggleSprintEvent,
 };
+pub use hand_event::{
+    BlockPickEvent, ContainerSlotEvent, Diagnostics, DiagnosticsEvent, FireExtinguishEvent, ItemDamageEvent, ItemReleaseEvent, LecternPageTurnEvent, SetOnFireEvent, SlotChange,
+    StartBreakEvent,
+};
+pub use world_notice::{EntityDespawnEvent, LiquidDecayEvent, SoundEvent, WorldCloseEvent};
 pub use block_event::{CropTrampleEvent, LeavesDecayEvent, LiquidHardenEvent, PortalCreateEvent, RedstoneUpdateEvent};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use tags::{TagBackend, Tagged};

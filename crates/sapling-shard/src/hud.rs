@@ -90,12 +90,12 @@ fn colour(colour: BossBarColour) -> BossEventColor {
 
 /// The bar hangs on the player's own entity, which is always there to carry it. Every event type
 /// has the same fields on the wire (docs/DESIGN.md "Boss bar"), so each carries the whole bar.
-fn boss_event(id: u64, r#type: BossEventType, bar: &BossBar) -> BossEvent {
+pub(crate) fn boss_event(id: u64, r#type: BossEventType, bar: &BossBar) -> BossEvent {
     BossEvent { target_entity_id: id as i64, r#type, title: bar.text.clone(), filtered_title: String::new(), progress: bar.progress, color: colour(bar.colour), overlay: BossEventOverlay::Progress }
 }
 
 /// The events that turn the bar `old` into `new`: a vanilla client ignores ShowBar for a bar it shows.
-fn boss_events(old: Option<&BossBar>, new: Option<&BossBar>) -> Vec<(BossEventType, BossBar)> {
+pub(crate) fn boss_events(old: Option<&BossBar>, new: Option<&BossBar>) -> Vec<(BossEventType, BossBar)> {
     match (old, new) {
         (None, None) => Vec::new(),
         (None, Some(new)) => vec![(BossEventType::ShowBar, new.clone())],

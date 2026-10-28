@@ -13,7 +13,7 @@ const PLAYER: &str = "minecraft:player";
 /// Players first, then (for `@e`, `@n`, and `@r` with `type=`) the other entities, oldest first.
 pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, filters: &Filters) -> Vec<Candidate> {
     let players: Vec<Player> = match base {
-        Base::Initiator => return Vec::new(),
+        Base::Initiator => sender.initiator().cloned().into_iter().collect(),
         Base::Sender => sender.player().cloned().into_iter().collect(),
         _ => ctx.players().collect(),
     };

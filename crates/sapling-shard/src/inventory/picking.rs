@@ -19,6 +19,10 @@ pub(crate) fn dispatch(world: &mut World) {
             continue;
         }
         let Some(stack) = picked(world, player, [request.x, request.y, request.z]) else { continue };
+        let pos = [request.x, request.y, request.z];
+        if !crate::blocks::block_at(world, world.get::<InLayer>(player).map_or(player, |layer| layer.0), pos).is_some_and(|block| crate::hand_events::may_pick(world, player, pos, block)) {
+            continue;
+        }
         let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
         let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { continue };
         let holds = |inventory: &Inventory, slot: usize| inventory.slot(Place::Main(slot)).and_then(Option::as_ref).is_some_and(|held| held.stack.name == stack.name && held.stack.tag.is_none());

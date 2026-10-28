@@ -34,7 +34,8 @@ pub enum Base {
     Entities,
     /// `@n`: the nearest entity, players too.
     NearestEntity,
-    /// `@initiator`: the player talking to an NPC; nobody, as sapling has no NPC dialogues.
+    /// `@initiator`: the player who pressed the NPC dialogue button running the command
+    /// ([`crate::DialogueButton::commands`]); nobody anywhere else.
     Initiator,
 }
 

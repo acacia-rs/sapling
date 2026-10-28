@@ -130,9 +130,14 @@ pub(super) fn flow(world: &mut World, layer: Entity, pos: BlockPos) {
     let mut changed = false;
     if depth != 0 {
         let Some(now) = fed(world, layer, pos, liquid, drop_off) else {
-            set(world, layer, pos, liquid, None);
+            if crate::world_notices::may_decay(world, layer, pos, liquid.name(), depth, None) {
+                set(world, layer, pos, liquid, None);
+            }
             return;
         };
+        if now > depth && depth < FALLING && !crate::world_notices::may_decay(world, layer, pos, liquid.name(), depth, Some(now)) {
+            return;
+        }
         if now != depth {
             // Lava that thins out lingers.
             if liquid == Liquid::Lava && depth < FALLING && now < FALLING && depth < now && world.get_resource_or_insert_with(Dice::default).roll(4) != 0 {

@@ -89,11 +89,12 @@ impl Inventory {
 /// it broke. The client is not shown it: the caller shows what BDS showed.
 pub(crate) fn wear_at(world: &mut World, player: Entity, place: Place, uses: i32) -> bool {
     let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.slot(place)?.as_ref()) else { return false };
-    let (chance, lasts) = (wear_chance(held, false), sapling_data::gear(&held.stack.name).map_or(0, |gear| gear.lasts));
+    let (chance, lasts, stack) = (wear_chance(held, false), sapling_data::gear(&held.stack.name).map_or(0, |gear| gear.lasts), held.stack.clone());
     if lasts == 0 || chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
         return false;
     }
-    world.get_mut::<Inventory>(player).is_some_and(|mut inventory| inventory.wear_at(place, uses, lasts))
+    let uses = crate::hand_events::wear(world, player, &stack, uses);
+    uses > 0 && world.get_mut::<Inventory>(player).is_some_and(|mut inventory| inventory.wear_at(place, uses, lasts))
 }
 
 /// Counts a broken block against the tool in a player's hand and shows the client the result;
@@ -109,11 +110,12 @@ pub(crate) fn wear_tool_in_hand(world: &mut World, player: Entity) {
 /// spares it; shows the client the result, and one that broke is heard.
 pub(crate) fn wear_hand_by(world: &mut World, player: Entity, uses: i32, lasts: u16) {
     let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return };
-    let chance = wear_chance(held, false);
+    let (chance, stack) = (wear_chance(held, false), held.stack.clone());
     if chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
         return;
     }
-    if change(world, player, |inventory| inventory.wear_hand(uses, lasts)) == Some(true) {
+    let uses = crate::hand_events::wear(world, player, &stack, uses);
+    if uses > 0 && change(world, player, |inventory| inventory.wear_hand(uses, lasts)) == Some(true) {
         sound_broken(world, player);
     }
 }

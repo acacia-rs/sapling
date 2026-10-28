@@ -13,7 +13,9 @@ use sapling_world::ChunkPos;
 
 use crate::components::{Identity, InLayer, NetId, Outgoing, Position, Stage};
 use crate::grid::Grid;
+use crate::hidden::Hidden;
 use crate::inventory::{self, Inventory};
+use crate::labels::Labels;
 use crate::movement::Motion;
 use crate::roster::Profile;
 use crate::view::View;
@@ -32,11 +34,12 @@ impl ToViewers {
     }
 }
 
-type Viewer<'a> = (Entity, &'a Stage, &'a InLayer, &'a View, &'a mut Sees, &'a mut Outgoing);
-type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory);
+type Viewer<'a> = (Entity, &'a Stage, &'a InLayer, &'a View, &'a mut Sees, &'a mut Outgoing, Option<&'a Hidden>);
+type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>);
 
-/// The player as a new viewer needs it: with what it holds, then what it wears.
-fn spawn_packets(id: &NetId, identity: &Identity, position: &Position, motion: &Motion, profile: &Profile, inventory: &Inventory) -> Vec<Bytes> {
+/// The player as a new viewer needs it: with what it holds, then what it wears, then the labels
+/// plugins gave it.
+fn spawn_packets((id, identity, position, motion, profile, inventory, labels): (&NetId, &Identity, &Position, &Motion, &Profile, &Inventory, Option<&Labels>)) -> Vec<Bytes> {
     let player = sapling_net::encode(&sapling_data::add_player(&AddPlayerOptions {
         held: inventory::in_hand(inventory),
         uuid: profile.uuid,
@@ -50,7 +53,7 @@ fn spawn_packets(id: &NetId, identity: &Identity, position: &Position, motion: &
         device_id: &profile.device_id,
         device_os: profile.device_os,
     }));
-    std::iter::once(player).chain(inventory::spawn_packets(id.0, inventory)).collect()
+    std::iter::once(player).chain(inventory::spawn_packets(id.0, inventory)).chain(crate::labels::packet(labels, id.0)).collect()
 }
 
 /// Adds the players that came into each player's view and removes those that left it.
@@ -63,15 +66,15 @@ pub(crate) fn update(mut viewers: Query<Viewer>, seen: Query<Seen>) {
         }
     }
     let mut spawns: HashMap<Entity, Vec<Bytes>> = HashMap::new();
-    for (viewer, stage, in_layer, view, mut sees, mut out) in &mut viewers {
+    for (viewer, stage, in_layer, view, mut sees, mut out, hidden) in &mut viewers {
         if *stage != Stage::InWorld {
             continue;
         }
-        let mut covered: Vec<(u64, Entity)> = grid.covered(in_layer.0, view).copied().filter(|(_, other)| *other != viewer).collect();
+        let mut covered: Vec<(u64, Entity)> = grid.covered(in_layer.0, view).copied().filter(|(_, other)| *other != viewer && !Hidden::hides(hidden, *other)).collect();
         covered.sort_unstable();
         for (_, other) in covered.iter().filter(|(_, other)| !sees.0.contains(other)) {
-            if let Ok((_, _, _, id, identity, position, motion, profile, inventory)) = seen.get(*other) {
-                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets(id, identity, position, motion, profile, inventory)));
+            if let Ok((_, _, _, id, identity, position, motion, profile, inventory, labels)) = seen.get(*other) {
+                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets((id, identity, position, motion, profile, inventory, labels))));
             }
         }
         let now: HashSet<Entity> = covered.into_iter().map(|(_, other)| other).collect();

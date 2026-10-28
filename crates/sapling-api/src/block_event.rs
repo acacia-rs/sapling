@@ -128,4 +128,6 @@ macro_rules! stoppable {
     )*};
 }
 
+pub(crate) use stoppable;
+
 stoppable!(LiquidHardenEvent, CropTrampleEvent, LeavesDecayEvent, PortalCreateEvent);

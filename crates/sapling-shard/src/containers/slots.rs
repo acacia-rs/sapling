@@ -33,6 +33,12 @@ pub(crate) fn slots_of(world: &World, player: Entity) -> Option<Vec<Option<Held>
     }
 }
 
+/// The block of the container a player has open; `None` for one that is no block.
+pub(crate) fn open_pos(world: &World, player: Entity) -> Option<BlockPos> {
+    let viewing = world.get::<Viewing>(player)?;
+    matches!(viewing.screen, Screen::Container).then_some(viewing.pos)
+}
+
 /// What the container a player has open refuses to hold in a slot.
 pub(crate) fn refusal(world: &World, player: Entity) -> Option<fn(usize, &ItemStack) -> bool> {
     let viewing = world.get::<Viewing>(player)?;
