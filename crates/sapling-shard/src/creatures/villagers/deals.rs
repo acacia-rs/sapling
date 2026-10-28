@@ -49,12 +49,17 @@ impl Deal {
         self.offer.max_uses >= 0 && self.uses >= self.offer.max_uses
     }
 
-    /// What `ware` costs now: its count raised by demand, from one to a stack.
+    /// What `ware` costs now: its count raised by demand, less `off` of it, from one to a stack.
     // TODO: BDS's pricing was not decompiled; this is the Java game's `getModifiedCostCount`.
-    fn price(&self, ware: &Ware) -> u8 {
+    fn price(&self, ware: &Ware, off: f32) -> u8 {
         let base = i32::from(ware.count);
         let raised = ((base * self.demand) as f32 * ware.price_multiplier).floor().max(0.0) as i32;
-        (base + raised).clamp(1, i32::from(sapling_data::max_stack(&ware.name))) as u8
+        let cut = if off > 0.0 { ((off * base as f32).floor() as i32).max(1) } else { 0 };
+        (base + raised - cut).clamp(1, i32::from(sapling_data::max_stack(&ware.name))) as u8
+    }
+
+    fn prices(&self, hero: Option<u8>) -> [u8; 2] {
+        [self.price(&self.offer.buy_a, hero_cut(hero)), self.offer.buy_b.as_ref().map_or(0, |ware| self.price(ware, 0.0))]
     }
 
     /// Restocked: none used, and demand moved by how much of it sold.
@@ -64,14 +69,17 @@ impl Deal {
         self.uses = 0;
     }
 
-    /// The offer as a trading screen's request pays for it, named by its place.
-    pub fn bargain(&self, at: usize, registry: &BlockRegistry) -> Bargain {
-        let priced = |ware: &Ware| ItemStack { count: self.price(ware), ..stack(ware, registry) };
-        Bargain { net_id: net_id(at), wants: [Some(priced(&self.offer.buy_a)), self.offer.buy_b.as_ref().map(priced)], gives: stack(&self.offer.sell, registry), sold_out: self.sold_out() }
+    /// The offer as a trading screen's request pays for it, named by its place, to a player with
+    /// Hero of the Village at `hero`'s amplifier.
+    pub fn bargain(&self, at: usize, hero: Option<u8>, registry: &BlockRegistry) -> Bargain {
+        let [a, b] = self.prices(hero);
+        let wants = [Some(ItemStack { count: a, ..stack(&self.offer.buy_a, registry) }), self.offer.buy_b.as_ref().map(|ware| ItemStack { count: b, ..stack(ware, registry) })];
+        Bargain { net_id: net_id(at), wants, gives: stack(&self.offer.sell, registry), sold_out: self.sold_out() }
     }
 
     /// The offer's compound, as the trading screen (`net_id` its recipe id) or the actor keeps it.
-    pub fn compound(&self, net_id: Option<u32>, registry: &BlockRegistry) -> Value {
+    pub fn compound(&self, net_id: Option<u32>, hero: Option<u8>, registry: &BlockRegistry) -> Value {
+        let [a, b] = self.prices(hero);
         let item = |ware: &Ware| {
             let mut fields = stack(ware, registry).fields(registry);
             fields.push(("WasPickedUp".into(), Value::Byte(0)));
@@ -81,8 +89,8 @@ impl Deal {
         let mut fields = vec![(Str::from("buyA"), item(&self.offer.buy_a))];
         fields.extend(self.offer.buy_b.as_ref().map(|ware| (Str::from("buyB"), item(ware))));
         fields.extend([
-            int("buyCountA", self.price(&self.offer.buy_a).into()),
-            int("buyCountB", self.offer.buy_b.as_ref().map_or(0, |ware| self.price(ware).into())),
+            int("buyCountA", a.into()),
+            int("buyCountB", b.into()),
             int("demand", self.demand),
             int("maxUses", self.offer.max_uses),
         ]);
@@ -130,13 +138,19 @@ pub(super) fn net_id(at: usize) -> u32 {
 
 /// The offer list and each tier's experience, as `UpdateTrade` and an actor's `Offers` carry them
 /// (BDS's `MerchantRecipeList` tag: `Recipes`, `TierExpRequirements`).
-pub(super) fn offers_compound(deals: &[Deal], tiers: &[i32], on_screen: bool, registry: &BlockRegistry) -> Value {
-    let recipes = deals.iter().enumerate().map(|(at, deal)| deal.compound(on_screen.then(|| net_id(at)), registry)).collect();
+pub(super) fn offers_compound(deals: &[Deal], tiers: &[i32], on_screen: bool, hero: Option<u8>, registry: &BlockRegistry) -> Value {
+    let recipes = deals.iter().enumerate().map(|(at, deal)| deal.compound(on_screen.then(|| net_id(at)), hero, registry)).collect();
     let needs = tiers.iter().enumerate().map(|(tier, exp)| Value::Compound(vec![(Str::from(tier.to_string()), Value::Int(*exp))])).collect();
     Value::Compound(vec![
         ("Recipes".into(), Value::List(List { tag: COMPOUND, items: recipes })),
         ("TierExpRequirements".into(), Value::List(List { tag: COMPOUND, items: needs })),
     ])
+}
+
+/// What Hero of the Village takes off the first ware: 30% and 6.25% a level more (the Java game's
+/// `Villager.updateSpecialPrices`; not drilled, docs/research/effects-raids.md).
+fn hero_cut(hero: Option<u8>) -> f32 {
+    hero.map_or(0.0, |amplifier| 0.3 + 0.0625 * f32::from(amplifier))
 }
 
 /// A ware as a stack: a block item with its block's first state.

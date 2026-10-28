@@ -125,9 +125,11 @@ pub(crate) fn hits_for(world: &World, player: Entity, amount: f32) -> f32 {
 /// What a player's haste and mining fatigue multiply its digging speed by. BDS's stone breaks
 /// (research/captures/bds-dig.txt) fit Java's 1 + 0.2 a level of haste times another 1.2 a level,
 /// and Java's 0.3 a level of fatigue times another 0.7: 1.44 and 2.76 faster, 0.21 and 0.044.
+/// Conduit power digs as haste of its level (bds-dig.txt: the same 629 crack speed); the stronger counts.
 pub(crate) fn dig_speed(world: &World, player: Entity) -> f32 {
     let levels = |effect| level(world, player, effect).map(|level| i32::from(level) + 1);
-    let haste = levels(Effect::Haste).map_or(1.0, |n| (1.0 + 0.2 * n as f32) * 1.2f32.powi(n));
+    let hastes = levels(Effect::Haste).max(levels(Effect::ConduitPower));
+    let haste = hastes.map_or(1.0, |n| (1.0 + 0.2 * n as f32) * 1.2f32.powi(n));
     let fatigue = levels(Effect::MiningFatigue).map_or(1.0, |n| 0.21f32.powi(n));
     haste * fatigue
 }
@@ -173,7 +175,7 @@ pub(super) fn level(world: &World, player: Entity, effect: Effect) -> Option<u8>
 }
 
 /// Takes one effect off a player; false where it was not on it.
-pub(super) fn end(world: &mut World, player: Entity, effect: Effect) -> bool {
+pub(crate) fn end(world: &mut World, player: Entity, effect: Effect) -> bool {
     take(world, player, |active| active.effect == effect)
 }
 
@@ -195,7 +197,8 @@ pub(crate) fn give_ambient(world: &mut World, player: Entity, effect: Effect, ti
 fn give_as(world: &mut World, player: Entity, new: Active) -> bool {
     let effect = new.effect;
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
-    let new = Active { left: if effect.is_instant() { 1 } else { new.left }, ..new };
+    // bds-fx2.txt: darkness came without particles though the command asked for them.
+    let new = Active { left: if effect.is_instant() { 1 } else { new.left }, particles: new.particles && effect != Effect::Darkness, ..new };
     let before = shown(world, player);
     if world.get::<Effects>(player).is_none() {
         world.entity_mut(player).insert(Effects::default());
@@ -252,11 +255,12 @@ fn act(world: &mut World, player: Entity, active: &Active) {
         }
         Effect::InstantDamage => drop(hurt(world, player, HARMS * 2f32.powi(i32::from(active.amplifier)), Cause::Magic)),
         Effect::Poison if turn(POISONS) && health > POISONED => drop(hurt(world, player, 1.0, Cause::Magic)),
+        Effect::FatalPoison if turn(POISONS) => drop(hurt(world, player, 1.0, Cause::Magic)),
         Effect::Wither if turn(WITHERS) => drop(hurt(world, player, 1.0, Cause::Wither)),
         Effect::Hunger => super::tire(world, player, HUNGERS * levels),
         Effect::Saturation => feed(world, player, |hunger| hunger.feed(levels, levels * 2.0)),
         // Resistance, fire resistance, jump boost and slow falling: `vitals::dress`. Water
-        // breathing: `vitals::tick`. Strength and weakness: `hits_for`.
+        // breathing and conduit power: `vitals::stand`. Strength and weakness: `hits_for`.
         _ => {}
     }
 }

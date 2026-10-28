@@ -1,9 +1,11 @@
 //! Trial spawners (BDS `TrialSpawner::tick`, docs/research/spawners.md "Trial spawner"): its
 //! `trial_spawner_state` goes waiting for players, active (a wave sized by the players it took on,
 //! waves.rs), waiting to eject, ejecting a reward roll per player, and cooling down for its
-//! config's length (configs.rs). An `ominous` one, as a world may hold, uses its ominous config.
+//! config's length (configs.rs). An `ominous` one, as a world may hold or an omened player makes
+//! it (ominous.rs), uses its ominous config.
 
 mod configs;
+mod ominous;
 mod waves;
 
 use std::collections::HashSet;
@@ -138,6 +140,9 @@ pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fiel
         let alive = waves::alive(world, layer, pos, &trial.mobs);
         trial.told |= alive.len() != trial.mobs.len();
         trial.mobs = alive;
+    }
+    if matches!(state, WAITING_FOR_PLAYERS | ACTIVE) && waves::scans(pos, now) && !halted(world, layer) {
+        trial.told |= ominous::awaken(world, layer, pos, near, &mut trial, now);
     }
     let to = match state {
         INACTIVE => Some(WAITING_FOR_PLAYERS),

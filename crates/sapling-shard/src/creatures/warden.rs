@@ -3,11 +3,13 @@
 //! the player behind it (anger.rs); angry, it roars, then hunts that player as any hunter, booming
 //! at one it cannot walk to (boom.rs). Summoned emerging it climbs out first; left undisturbed a
 //! minute it digs down and is gone.
-// TODO: no darkness (sapling-api has no such effect); mobs are no suspects; a player's vibrations
+//! It casts darkness about it (darkness.rs).
+// TODO: mobs are no suspects; a player's vibrations
 // but its steps (blocks, doors, containers, shots) name no suspect; damage is not heard.
 
 mod anger;
 mod boom;
+mod darkness;
 mod hearing;
 
 pub(crate) use hearing::hear;
@@ -118,6 +120,7 @@ pub(super) fn provoked(world: &mut World, entity: Entity, player: Entity) {
 
 /// Wardens done digging down go, without a death or loot, as BDS's did.
 pub(super) fn tick(world: &mut World) {
+    darkness::tick(world);
     let now = world.resource::<Tick>().0;
     let gone: Vec<Entity> = world.query::<(Entity, &Warden)>().iter(world).filter(|(_, warden)| matches!(warden.stage, Stage::Digging(since) if now >= since + DIGS)).map(|(entity, _)| entity).collect();
     for warden in gone {

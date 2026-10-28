@@ -97,7 +97,7 @@ pub(super) fn pace(world: &World, mob: Entity) -> f32 {
 /// Gives a living mob an effect, as `ShardCtx::give_effect` gives a player one; an undead one
 /// takes no poison or regeneration. Whether it took it.
 pub(super) fn give(world: &mut World, mob: Entity, effect: Effect, ticks: u32, amplifier: u8) -> bool {
-    if world.get::<Health>(mob).is_none() || world.get::<Dying>(mob).is_some() || (is_undead(world, mob) && matches!(effect, Effect::Poison | Effect::Regeneration)) {
+    if world.get::<Health>(mob).is_none() || world.get::<Dying>(mob).is_some() || (is_undead(world, mob) && matches!(effect, Effect::Poison | Effect::FatalPoison | Effect::Regeneration)) {
         return false;
     }
     let Some(id) = world.get::<NetId>(mob).map(|id| id.0) else { return false };
@@ -231,6 +231,7 @@ fn act(world: &mut World, mob: Entity, layer: Entity, active: &Active) {
         }
         (Effect::Regeneration, _) if turn(REGENERATES) => (1.0, 0.0, Cause::Magic),
         (Effect::Poison, _) if turn(POISONS) && left > POISONED => (0.0, 1.0, Cause::Magic),
+        (Effect::FatalPoison, _) if turn(POISONS) => (0.0, 1.0, Cause::Magic),
         (Effect::Wither, _) if turn(WITHERS) => (0.0, 1.0, Cause::Wither),
         _ => (0.0, 0.0, Cause::Magic),
     };

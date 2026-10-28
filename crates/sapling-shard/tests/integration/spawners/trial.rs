@@ -66,3 +66,13 @@ fn a_spawn_egg_gives_a_bare_spawner_its_mob() {
     assert_eq!(state(&mut h), "1", "waiting for players now");
     assert_eq!(ask(&mut h, |ctx| ctx.item(ALEX, Slot::Main(0)).map(|held| held.count)), Some(1), "kept in creative");
 }
+
+#[test]
+fn bad_omen_turns_to_trial_omen_and_the_spawner_ominous() {
+    let mut h = chamber();
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, sapling_api::Effect::BadOmen, 6000, 1, true)));
+    let sent: Vec<_> = (0..25).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let told: Vec<_> = common::all::<acacia_proto::packets::MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.duration)).collect();
+    assert_eq!(told.iter().filter(|(id, _)| *id != 28).collect::<Vec<_>>(), [&(31, 36000)], "trial omen for 18000 a level: {told:?}");
+    assert!(block(&mut h, SPAWNER).properties.contains("ominous=1"), "{:?}", block(&mut h, SPAWNER));
+}

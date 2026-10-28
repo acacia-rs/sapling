@@ -3,7 +3,7 @@
 //! shows the entity `Ringing` 1 with the `Direction` it swings to and plays `block.bell.hit` at
 //! the block's corner; a click also flips `toggle_bit`.
 // TODO: BDS clears `Ringing` when the swing ends, unshown; here it stays 1 until the next ring.
-// Raiders are not lit (no raids yet).
+// Raiders are not lit: Bedrock has no glowing to light them with [U: what BDS's bell does for raids].
 
 use acacia_proto::nbt::Value;
 use acacia_proto::types::Vec3f;

@@ -75,7 +75,8 @@ pub(crate) fn break_fall(world: &mut World, player: Entity) {
 pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
     let warding = crate::enchants::warding(world, player);
-    let gilled = effects::level(world, player, sapling_api::Effect::WaterBreathing).is_some();
+    // bds-fx2.txt: under conduit power a drowning player's air filled again as out of water.
+    let gilled = [sapling_api::Effect::WaterBreathing, sapling_api::Effect::ConduitPower].into_iter().any(|effect| effects::level(world, player, effect).is_some());
     let into_wall = hazards::into_wall(world, player);
     let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };

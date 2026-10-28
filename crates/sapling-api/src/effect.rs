@@ -42,11 +42,25 @@ pub enum Effect {
     Oozing,
     /// One hurt with it may let out a silverfish.
     Infested,
+    /// Poison that does not stop at 1 health.
+    FatalPoison,
+    /// Breath under water and the digging speed of haste; a conduit gives it.
+    ConduitPower,
+    /// Never shown with particles; a warden gives it.
+    Darkness,
+    /// A player with it who enters a village takes raid omen instead.
+    BadOmen,
+    /// A raid starts where a player's raid omen runs out.
+    RaidOmen,
+    /// Turns trial spawners near the player ominous.
+    TrialOmen,
+    /// Won by defending a village from a raid.
+    HeroOfTheVillage,
 }
 
 /// Each effect with the name commands know it by, the translation key of its name, and the id
 /// the wire knows it by.
-const KNOWN: [(Effect, &str, &str, i32); 29] = [
+const KNOWN: [(Effect, &str, &str, i32); 36] = [
     (Effect::Speed, "speed", "potion.moveSpeed", 1),
     (Effect::Slowness, "slowness", "potion.moveSlowdown", 2),
     (Effect::Haste, "haste", "potion.digSpeed", 3),
@@ -77,11 +91,19 @@ const KNOWN: [(Effect, &str, &str, i32); 29] = [
     (Effect::Weaving, "weaving", "effect.weaving", 33),
     (Effect::Oozing, "oozing", "effect.oozing", 34),
     (Effect::Infested, "infested", "effect.infested", 35),
+    // docs/research/effects-raids.md: BDS's effect registration names fatal poison `potion.poison`.
+    (Effect::FatalPoison, "fatal_poison", "potion.poison", 25),
+    (Effect::ConduitPower, "conduit_power", "potion.conduitPower", 26),
+    (Effect::BadOmen, "bad_omen", "effect.badOmen", 28),
+    (Effect::HeroOfTheVillage, "village_hero", "effect.villageHero", 29),
+    (Effect::Darkness, "darkness", "effect.darkness", 30),
+    (Effect::TrialOmen, "trial_omen", "effect.trial_omen", 31),
+    (Effect::RaidOmen, "raid_omen", "effect.raid_omen", 36),
 ];
 
 impl Effect {
-    pub const ALL: [Effect; 29] = {
-        let mut all = [Effect::Speed; 29];
+    pub const ALL: [Effect; 36] = {
+        let mut all = [Effect::Speed; 36];
         let mut at = 0;
         while at < all.len() {
             all[at] = KNOWN[at].0;

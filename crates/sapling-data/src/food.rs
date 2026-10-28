@@ -145,10 +145,24 @@ fn potion(data: i16) -> Food {
     Food { always: true, gives: potion_effects(data), leaves: Some("minecraft:glass_bottle"), drunk: true, ..plain(0.0, 0.0) }
 }
 
+/// An ominous bottle's bad omen, its data value the amplifier (the Java game's, 100 minutes; not
+/// drilled, docs/research/effects-raids.md).
+fn ominous_bottle(data: i16) -> Food {
+    let gives: &'static [Gives] = match data {
+        1 => gives!["bad_omen" 120000 1],
+        2 => gives!["bad_omen" 120000 2],
+        3 => gives!["bad_omen" 120000 3],
+        4 => gives!["bad_omen" 120000 4],
+        _ => gives!["bad_omen" 120000 0],
+    };
+    Food { always: true, gives, drunk: true, ..plain(0.0, 0.0) }
+}
+
 /// What the item `name` with the data value `damage` gives one who eats or drinks it.
 pub fn consumable(name: &str, damage: i16) -> Option<Food> {
     match name.strip_prefix("minecraft:").unwrap_or(name) {
         "potion" => Some(potion(damage)),
+        "ominous_bottle" => Some(ominous_bottle(damage)),
         _ => food(name),
     }
 }
