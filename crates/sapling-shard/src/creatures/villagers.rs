@@ -2,8 +2,8 @@
 //! skin and the job site it works at (jobs.rs), the offers it trades (deals.rs) on its trading
 //! screen (trading.rs), kept in its actor compound (storage.rs); the wandering trader's offers,
 //! llamas and the timer it leaves by (wandering.rs).
-// TODO: no gossip, reputation or Hero of the Village discounts, raids, sleeping or schedules but
-// work; villager breeding (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
+// TODO: no gossip, reputation, sleeping or schedules but work, nor flight from raiders (Hero of the
+// Village pays less, trading.rs); villager breeding (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
 
 mod deals;
 mod jobs;

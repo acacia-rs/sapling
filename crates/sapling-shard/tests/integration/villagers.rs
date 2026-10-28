@@ -131,6 +131,15 @@ fn an_armorer_trades_coal_for_emeralds_and_reaches_apprentice_at_ten_experience(
 }
 
 #[test]
+fn a_hero_of_the_village_pays_less_by_its_level() {
+    let (mut h, _, id) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");
+    h.remote.run(|ctx| assert!(ctx.give_effect(sapling_api::PlayerId(1), sapling_api::Effect::HeroOfTheVillage, 48000, 1, false)));
+    h.tick(1);
+    let (_, offers) = open(&mut h, id);
+    assert_eq!(int(&offers[0], "buyCountA"), 10, "15 less floor(15 * 0.3625)");
+}
+
+#[test]
 fn an_armorer_restocks_at_its_job_site_once_a_work_period() {
     let (mut h, _, id) = villager(&[([4, 64, 0], FURNACE)], [2.5, 64.0, 2.5], "minecraft:become_armorer");
     (0..100).for_each(|_| drop(h.tick(1)));

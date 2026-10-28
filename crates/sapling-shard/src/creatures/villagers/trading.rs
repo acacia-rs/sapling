@@ -95,15 +95,24 @@ fn screen(world: &mut World, player: Entity, trader: Entity) -> Option<UpdateTra
         display_name: title.to_owned(),
         new_trading_ui: true,
         economic_trades: true,
-        offers: Nbt { name: String::new(), value: offers_compound(&state.deals, &state.tiers, true, registry) }.into(),
+        offers: Nbt { name: String::new(), value: offers_compound(&state.deals, &state.tiers, true, hero(world, player, state), registry) }.into(),
     })
+}
+
+/// The amplifier of the player's Hero of the Village, which a villager, not a wandering trader,
+/// sells cheaper for.
+fn hero(world: &World, player: Entity, trader: &Trader) -> Option<u8> {
+    let (amplifier, _) = crate::vitals::effects::on(world, player, sapling_api::Effect::HeroOfTheVillage)?;
+    trader.leaves_at.is_none().then_some(amplifier)
 }
 
 /// The offers of the trader whose screen the player has open, as its requests pay for them.
 pub(crate) fn bargains(world: &World, player: Entity) -> Option<Vec<Bargain>> {
     let trader = world.get::<Trading>(player)?.trader;
     let registry = world.get::<Layer>(world.get::<InLayer>(trader)?.0)?.world.registry();
-    Some(world.get::<Trader>(trader)?.deals.iter().enumerate().map(|(at, deal)| deal.bargain(at, registry)).collect())
+    let state = world.get::<Trader>(trader)?;
+    let hero = hero(world, player, state);
+    Some(state.deals.iter().enumerate().map(|(at, deal)| deal.bargain(at, hero, registry)).collect())
 }
 
 /// What a trade of the offer at `index` leaves: a use of it, the trader's experience (and the

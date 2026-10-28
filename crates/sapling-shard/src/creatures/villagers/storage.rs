@@ -48,7 +48,7 @@ pub(super) fn keep(world: &mut World, entity: Entity) {
         ("TradeExperience", Value::Int(trader.experience)),
     ];
     if !trader.deals.is_empty() {
-        set.push(("Offers", offers_compound(&trader.deals, &trader.tiers, false, layer.world.registry())));
+        set.push(("Offers", offers_compound(&trader.deals, &trader.tiers, false, None, layer.world.registry())));
     }
     for (key, value) in set {
         match fields.iter_mut().find(|(name, _)| name == key) {
