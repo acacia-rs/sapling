@@ -54,6 +54,14 @@ impl ServerBackend for Ctx<'_> {
     fn resume_saves(&mut self) -> bool {
         crate::saving::resume(self.world)
     }
+
+    fn soft_enum(&self, name: &str) -> Vec<String> {
+        crate::soft_enums::values(self.world, name)
+    }
+
+    fn change_soft_enum(&mut self, name: &str, change: sapling_api::command::SoftEnumChange) {
+        crate::soft_enums::change(self.world, name, change);
+    }
 }
 
 impl SpawnBackend for Ctx<'_> {

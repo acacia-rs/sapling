@@ -83,6 +83,7 @@ mod shots;
 mod simulation;
 mod skin;
 mod skin_change;
+mod soft_enums;
 mod sleep;
 mod sounds;
 mod spawners;

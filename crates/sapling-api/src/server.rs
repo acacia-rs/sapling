@@ -112,6 +112,10 @@ pub trait ServerBackend {
     fn resume_saves(&mut self) -> bool {
         false
     }
+    fn soft_enum(&self, _name: &str) -> Vec<String> {
+        Vec::new()
+    }
+    fn change_soft_enum(&mut self, _name: &str, _change: crate::command::SoftEnumChange) {}
 }
 
 #[cfg(test)]

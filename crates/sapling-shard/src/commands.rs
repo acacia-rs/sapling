@@ -4,7 +4,7 @@
 use acacia_proto::packets::{
     AvailableCommands, AvailableCommandsCommandDataItem as CommandData, AvailableCommandsCommandDataItemOverloadsItem as OverloadData,
     AvailableCommandsCommandDataItemOverloadsItemParametersItem as ParameterData, AvailableCommandsCommandDataItemOverloadsItemParametersItemEnumType as EnumType,
-    AvailableCommandsEnumsItem, CommandOutput, CommandOutputOutputItem, CommandRequest,
+    AvailableCommandsDynamicEnumsItem, AvailableCommandsEnumsItem, CommandOutput, CommandOutputOutputItem, CommandRequest,
 };
 use acacia_proto::types::{CommandFlags, CommandOrigin};
 use bevy_ecs::prelude::*;
@@ -71,6 +71,7 @@ impl CommandLists {
 struct Tables {
     values: Vec<String>,
     enums: Vec<AvailableCommandsEnumsItem>,
+    soft: Vec<AvailableCommandsDynamicEnumsItem>,
 }
 
 impl Tables {
@@ -91,6 +92,16 @@ impl Tables {
         self.enums.len() - 1
     }
 
+    /// A soft enum's index in `dynamic_enums`; its words are those of all its parameters.
+    fn soft_enumeration(&mut self, name: &str, words: &[String]) -> usize {
+        let index = self.soft.iter().position(|e| e.name == name).unwrap_or_else(|| {
+            self.soft.push(AvailableCommandsDynamicEnumsItem { name: name.to_owned(), values: Vec::new() });
+            self.soft.len() - 1
+        });
+        sapling_api::command::SoftEnumChange::Add(words.to_vec()).apply(&mut self.soft[index].values);
+        index
+    }
+
     fn parameter(&mut self, name: &str, kind: &ParamKind, optional: bool) -> ParameterData {
         let (value_type, enum_type) = match kind {
             ParamKind::Int => (INT, EnumType::Valid),
@@ -106,6 +117,7 @@ impl Tables {
             ParamKind::FilePath => (FILE_PATH, EnumType::Valid),
             // An enum parameter carries its enum's index where the others carry a type.
             ParamKind::Enum { name, values } => (self.enumeration(name, values) as u16, EnumType::Enum),
+            ParamKind::SoftEnum { name, values } => (self.soft_enumeration(name, values) as u16, EnumType::SoftEnum),
         };
         let options = CommandFlags { unused: 0, collapse_enum: 0, has_semantic_constraint: 0, as_chained_command: 0, unknown2: 0 };
         ParameterData { parameter_name: name.to_owned(), value_type, enum_type, optional, options }
@@ -147,17 +159,21 @@ pub(crate) fn available(commands: &Commands, permission: Permission) -> Availabl
         enums: tables.enums,
         chained_subcommands: Vec::new(),
         command_data,
-        dynamic_enums: Vec::new(),
+        dynamic_enums: tables.soft,
         enum_constraints: Vec::new(),
     }
 }
 
-/// Sends the command list to players who entered the world or whose permission changed.
-pub(crate) fn announce(lists: Res<CommandLists>, mut players: Query<(&Stage, &mut Access, &mut Outgoing)>) {
+/// Sends the command list to players who entered the world or whose permission changed, and the
+/// soft enums' words changed since the list was made.
+pub(crate) fn announce(lists: Res<CommandLists>, soft: Option<Res<crate::soft_enums::SoftEnums>>, mut players: Query<(&Stage, &mut Access, &mut Outgoing)>) {
+    let mut catch_up = None;
     for (stage, mut access, mut out) in &mut players {
         if *stage == Stage::InWorld && access.told != Some(access.permission) {
             access.told = Some(access.permission);
             out.0.push(if access.permission == Permission::Operator { lists.operator.clone() } else { lists.member.clone() });
+            let updates = catch_up.get_or_insert_with(|| soft.as_deref().map(crate::soft_enums::catch_up).unwrap_or_default());
+            out.0.extend(updates.iter().cloned());
         }
     }
 }

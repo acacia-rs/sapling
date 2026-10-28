@@ -9,9 +9,9 @@ mod travel;
 
 use acacia_bot::client::PacketFilter;
 use acacia_bot::proto::Packet;
-use acacia_bot::proto::packets::CommandOutput;
+use acacia_bot::proto::packets::{AvailableCommands, CommandOutput, UpdateSoftEnum, UpdateSoftEnumActionType};
 use acacia_bot::{Bot, BotConfig};
-use sapling::{AccessLists, World};
+use sapling::{AccessLists, Command, Output, Sender, ShardCtx, World};
 use travel::{Operators, next};
 
 /// Every line of the answer to `line`: key, parameters, success.
@@ -42,6 +42,53 @@ fn copy(from: &Path, to: &Path) {
             false => drop(std::fs::copy(entry.path(), to.join(entry.file_name())).unwrap()),
         }
     }
+}
+
+/// `/arena <name>` opens an arena: its name joins the soft enum `/join` completes from.
+#[derive(Command)]
+#[command(name = "arena")]
+struct OpenArena {
+    name: String,
+}
+
+impl Command for OpenArena {
+    fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
+        ctx.add_soft_enum_values("Arena", std::slice::from_ref(&self.name));
+        out.print(ctx.soft_enum("Arena").join(","));
+    }
+}
+
+#[derive(Command)]
+#[command(name = "join")]
+struct Join {
+    #[command(soft_enum = "Arena")]
+    arena: String,
+}
+
+impl Command for Join {
+    fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
+        match ctx.soft_enum("Arena").contains(&self.arena) {
+            true => out.print(format!("joined {}", self.arena)),
+            false => out.error(format!("no arena {}", self.arena)),
+        }
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_plugin_changes_a_soft_enum_while_the_server_runs() {
+    let server = common::start(common::builder().command::<OpenArena>().command::<Join>()).await;
+    let config = BotConfig { subscribe: PacketFilter::none().with(CommandOutput::ID).with(UpdateSoftEnum::ID).with(AvailableCommands::ID), ..BotConfig::default() };
+    let mut alice = common::spawn(common::client(&server, "Alice"), config).await;
+    let listed: AvailableCommands = next(&mut alice).await;
+    assert!(listed.dynamic_enums.iter().any(|soft| soft.name == "Arena" && soft.values.is_empty()));
+    assert_eq!(key(&mut alice, "join castle").await, ("no arena castle".into(), false));
+    alice.client().command("arena castle");
+    let update: UpdateSoftEnum = next(&mut alice).await;
+    assert_eq!((update.enum_type.as_str(), update.options.as_slice(), update.action_type), ("Arena", &["castle".to_owned()][..], UpdateSoftEnumActionType::Add));
+    assert_eq!(next::<CommandOutput>(&mut alice).await.output[0].message_id, "castle");
+    assert_eq!(key(&mut alice, "join castle").await, ("joined castle".into(), true));
+    alice.disconnect().await;
+    server.shutdown().await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

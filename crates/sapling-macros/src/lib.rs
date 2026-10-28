@@ -20,6 +20,8 @@ fn expand(input: TokenStream, derive: fn(DeriveInput) -> syn::Result<proc_macro2
 ///
 /// Container: `#[command(name = "hub", aliases = ["lobby"], description = "...", permission = "operator")]`;
 /// the name defaults to the type's in lower case. Variants and fields: `#[command(name = "...")]`.
+/// A `String` or `Option<String>` field with `#[command(soft_enum = "Arena")]` is completed from
+/// that soft enum, whose words the plugin changes at runtime (`ShardCtx::set_soft_enum`).
 #[proc_macro_derive(Command, attributes(command))]
 pub fn derive_command(input: TokenStream) -> TokenStream {
     expand(input, command::command)

@@ -198,6 +198,31 @@ fn a_required_parameter_after_an_optional_one_is_refused() {
     Commands::default().register::<Backwards>();
 }
 
+#[derive(Command)]
+#[command(crate = "crate")]
+struct Join {
+    #[command(soft_enum = "Arena")]
+    arena: String,
+    #[command(name = "team", soft_enum = "Team")]
+    side: Option<String>,
+}
+
+impl Command for Join {
+    fn run(self, _: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
+        out.print(format!("{} {:?}", self.arena, self.side));
+    }
+}
+
+#[test]
+fn a_soft_enum_field_names_its_enum_and_takes_any_word() {
+    let soft = |name: &str| ParamKind::SoftEnum { name: name.into(), values: Vec::new() };
+    let parameters = Join::spec().overloads.remove(0).parameters;
+    assert_eq!(parameters, [ParameterSpec { name: "arena".into(), kind: soft("Arena"), optional: false }, ParameterSpec { name: "team".into(), kind: soft("Team"), optional: true }]);
+    let sender = Sender::Console;
+    let joined = Join::parse(&mut Args::new("castle red", 0, &sender, &[])).map(|join| (join.arena, join.side)).ok();
+    assert_eq!(joined, Some(("castle".into(), Some("red".into()))));
+}
+
 #[test]
 fn registering_a_name_again_replaces_the_command() {
     let mut commands = commands();
