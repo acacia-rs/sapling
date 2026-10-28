@@ -42,6 +42,8 @@ struct Applied {
 struct At {
     station: Station,
     bench: Option<Bench>,
+    /// The crafting grid's filled map as its level knows it (special/maps.rs).
+    grid_map: Option<(i64, u8, bool)>,
 }
 
 fn place(info: &StackRequestSlotInfo) -> Option<Place> {
@@ -119,8 +121,8 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
             (Action::CraftGrindstoneRequest(asked), Some(Bench::Grindstone)) if unstarted => forge = Some(Forge::grind(inventory, asked.recipe_network_id, asked.cost)?),
             (Action::CraftLoomRequest(asked), Some(Bench::Loom)) if unstarted => forge = Some(Forge::loom(inventory, &asked.pattern)?),
             (Action::BeaconPayment(paid), Some(Bench::Beacon(level))) if unstarted => forge = Some(Forge::beacon(inventory, *level, paid.primary_effect, paid.secondary_effect)?),
-            (Action::CraftRecipe(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, true)?),
-            (Action::CraftRecipeAuto(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, false)?),
+            (Action::CraftRecipe(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, true, at.grid_map)?),
+            (Action::CraftRecipeAuto(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, false, at.grid_map)?),
             (Action::Create(asked), _) => craft.as_mut().ok_or(())?.create(inventory, asked.result_slot_id.into())?,
             (Action::Consume(used), _) => {
                 let from = applied.named(inventory, &used.source)?;
@@ -165,8 +167,8 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
         }
     }
     inventory.put(Place::Created, None);
-    let paid = craft.is_none_or(|craft| craft.is_paid()) && forge.as_ref().is_none_or(Forge::is_paid);
-    applied.forged = forge.map(|forge| forge.done);
+    let paid = craft.as_ref().is_none_or(Craft::is_paid) && forge.as_ref().is_none_or(Forge::is_paid);
+    applied.forged = forge.map(|forge| forge.done).or(craft.and_then(|craft| craft.done));
     (paid && inventory.keeps(&bound)).then_some(applied).ok_or(())
 }
 
@@ -214,7 +216,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     let creative = world.get::<Mode>(entity).is_some_and(|mode| mode.0 == GameMode::Creative);
     let Some(mut trial) = world.get::<Inventory>(entity).filter(|inventory| inventory.loaded).cloned() else { return };
     let open = containers::slots_of(world, entity);
-    let at = &At { station: containers::station(world, entity), bench: workstations::bench(world, entity) };
+    let at = &At { station: containers::station(world, entity), bench: workstations::bench(world, entity), grid_map: crate::maps::in_grid(world, entity) };
     let refuses = containers::refusal(world, entity);
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
     bundles::lend(&mut trial, request);

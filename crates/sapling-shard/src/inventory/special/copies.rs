@@ -54,7 +54,7 @@ mod tests {
     }
 
     fn grid(stacks: &[ItemStack]) -> Grid<'_> {
-        Grid { cells: stacks.iter().map(Some).collect(), width: 2 }
+        Grid { cells: stacks.iter().map(Some).collect(), width: 2, map: None }
     }
 
     #[test]

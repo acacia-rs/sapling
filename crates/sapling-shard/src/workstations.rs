@@ -14,7 +14,7 @@ use acacia_proto::types::WindowType;
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
 
-use crate::components::{Mode, NetId, Outgoing, Tick};
+use crate::components::{InLayer, Mode, NetId, Outgoing, Tick};
 use crate::inventory::{Bench, Forged, Inventory};
 use crate::{containers, experience, orbs};
 
@@ -83,7 +83,13 @@ pub(crate) fn answered(world: &mut World, player: Entity, forged: Option<Forged>
     if let Some(Forged::Traded(index)) = forged {
         return crate::creatures::traded(world, player, index);
     }
-    let Some((workstation, layer, pos)) = containers::workstation(world, player) else { return };
+    let Some((workstation, layer, pos)) = containers::workstation(world, player) else {
+        // A map extended in a crafting grid.
+        if let (Some(Forged::Charted { from, to, zoomed }), Some(layer)) = (forged, world.get::<InLayer>(player).map(|layer| layer.0)) {
+            crate::maps::charted(world, layer, from, to, zoomed);
+        }
+        return;
+    };
     let creative = world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative);
     match forged {
         Some(Forged::Enchanted) => {
