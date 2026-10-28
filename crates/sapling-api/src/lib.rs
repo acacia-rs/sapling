@@ -10,6 +10,9 @@ mod chat;
 mod combat;
 pub mod command;
 mod ctx;
+mod debug_shape;
+mod dialogue;
+mod display;
 mod dragon;
 mod effect;
 mod entity;
@@ -42,6 +45,7 @@ mod weather;
 #[cfg(test)]
 mod tests;
 mod ticking;
+mod ui;
 mod world;
 mod world_event;
 
@@ -59,6 +63,9 @@ pub use riding::{Mount, RidingBackend};
 pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
 pub use command::{Command, Commands, Output, Sender};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
+pub use debug_shape::{DebugShape, ShapeKind};
+pub use dialogue::{Dialogue, DialogueButton, DialogueCallback};
+pub use ui::{Actor, HudLine, Label, UiBackend};
 pub use dragon::{DragonFight, DragonKilledEvent, DragonRespawnEvent};
 pub use effect::{Effect, EffectBackend};
 pub use experience::ExperienceBackend;

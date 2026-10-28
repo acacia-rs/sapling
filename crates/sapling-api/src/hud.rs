@@ -37,7 +37,8 @@ pub enum BossBarColour {
     White,
 }
 
-/// The bar at the top of the screen. A player has at most one.
+/// A bar at the top of the screen: the player's own ([`ShardCtx::set_boss_bar`]) and any number
+/// more under keys of the plugin's choosing ([`ShardCtx::set_extra_boss_bar`]), stacked down.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BossBar {
     pub text: String,
@@ -111,6 +112,17 @@ pub enum TitleAction {
 }
 
 impl ShardCtx<'_> {
+    /// Shows `bar` under `key` to a player, below its own bar, or changes the one shown under
+    /// it. Each hangs on an unseen entity of its own that follows the player, since the client
+    /// keeps one bar per entity. Not carried to another shard.
+    pub fn set_extra_boss_bar(&mut self, player: PlayerId, key: u32, bar: &BossBar) {
+        self.backend.set_extra_boss_bar(player, key, Some(bar));
+    }
+
+    pub fn remove_extra_boss_bar(&mut self, player: PlayerId, key: u32) {
+        self.backend.set_extra_boss_bar(player, key, None);
+    }
+
     /// Does one [`TitleAction`] to a player's screen, as `/title` does.
     pub fn title_action(&mut self, player: PlayerId, action: &TitleAction) {
         self.backend.title_action(player, action);

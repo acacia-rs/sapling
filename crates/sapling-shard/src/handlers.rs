@@ -140,6 +140,8 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::weather::tick(world);
     entities::follow(world);
     forms::dispatch(world);
+    crate::dialogue::dispatch(world);
+    crate::extra_bars::follow(world);
     for entity in left {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);
         crate::riding::forget(world, entity);

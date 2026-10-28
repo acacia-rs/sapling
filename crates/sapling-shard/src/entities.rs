@@ -267,7 +267,7 @@ pub(crate) fn change(world: &mut World, id: EntityId, change: impl FnOnce(&mut B
 }
 
 pub(crate) fn remove(world: &mut World, id: EntityId) -> bool {
-    let Some(entity) = find(world, id) else { return false };
+    let Some(entity) = find(world, id).or_else(|| crate::labels::floating(world, id)) else { return false };
     mobs::remove(world, entity);
     true
 }
