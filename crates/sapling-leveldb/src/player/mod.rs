@@ -56,6 +56,17 @@ pub struct PlayerData {
     pub unique_id: Option<i64>,
     /// Ticks since it last slept, which phantoms come by (`TimeSinceRest`, an int: BDSRE 141bf7240).
     pub rested: Option<i32>,
+    /// Its recipe book; `None` in a record without one.
+    pub recipes: Option<RecipeRecord>,
+}
+
+/// BDS's `recipe_unlocking` compound (BDSRE: UnlockedRecipesServerComponent save 141172dc0).
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct RecipeRecord {
+    /// `unlocked_recipes`: recipe ids.
+    pub unlocked: Vec<String>,
+    /// `used_contexts`: the unlocking contexts already met, a bit each.
+    pub used_contexts: i32,
 }
 
 /// BDS keeps an actor's `Pos` where its position is, a player's eyes: this far above the feet.
@@ -66,6 +77,8 @@ const GAME_MODE: &str = "PlayerGameMode";
 const ENCHANT_SEED: &str = "EnchantmentSeed";
 const UNIQUE_ID: &str = "UniqueID";
 const RESTED: &str = "TimeSinceRest";
+const RECIPES: [&str; 3] = ["recipe_unlocking", "used_contexts", "unlocked_recipes"];
+const STRING: u8 = 8;
 const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
 const BEDSIDE: [&str; 3] = ["SpawnX", "SpawnY", "SpawnZ"];
 const SPAWN_DIMENSION: &str = "SpawnDimension";
@@ -86,6 +99,14 @@ fn compound(record: &[u8]) -> Result<Vec<(Str, Value)>, Error> {
         Value::Compound(fields) => Ok(fields),
         _ => Err(Error::Player("a record that is not a compound")),
     }
+}
+
+fn recipe_book(kept: &Value) -> RecipeRecord {
+    let unlocked = match kept.get(RECIPES[2]) {
+        Some(Value::List(list)) => list.items.iter().filter_map(|id| if let Value::String(id) = id { Some(id.to_string()) } else { None }).collect(),
+        _ => Vec::new(),
+    };
+    RecipeRecord { unlocked, used_contexts: if let Some(Value::Int(used)) = kept.get(RECIPES[1]) { *used } else { 0 } }
 }
 
 impl PlayerData {
@@ -136,6 +157,7 @@ impl PlayerData {
             tags: crate::actor_tags::read_tags(&player),
             unique_id: if let Some(Value::Long(id)) = player.get(UNIQUE_ID) { Some(*id) } else { None },
             rested: int(RESTED),
+            recipes: player.get(RECIPES[0]).map(recipe_book),
         })
     }
 
@@ -178,6 +200,10 @@ impl PlayerData {
         }
         if let Some(rested) = self.rested {
             set(&mut fields, RESTED, Value::Int(rested));
+        }
+        if let Some(book) = &self.recipes {
+            let unlocked = Value::List(List { tag: STRING, items: book.unlocked.iter().map(|id| Value::String(id.as_str().into())).collect() });
+            set(&mut fields, RECIPES[0], Value::Compound(vec![(RECIPES[1].into(), Value::Int(book.used_contexts)), (RECIPES[2].into(), unlocked)]));
         }
         crate::actor_tags::write_tags(&mut fields, &self.tags);
         match self.effects.is_empty() {

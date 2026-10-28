@@ -2,7 +2,8 @@
 //! with those a new player knows, answered and sent as BDS 1.26.52 does
 //! (research/captures/bds-controls.txt, bds-controls2.txt).
 // TODO: BDS's UnlockedRecipes for `give *` was cut short in the capture; here it lists every
-// recipe the player did not know, in CraftingData's order. The books are not saved.
+// recipe the player did not know, in CraftingData's order. The shard keeps the real book (saved,
+// filled by picked-up items); this one is not saved and misses those, until sapling-api can read it.
 
 use std::collections::{HashMap, HashSet};
 

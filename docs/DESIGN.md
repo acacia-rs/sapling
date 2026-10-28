@@ -331,9 +331,10 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   `sapling:hunger` (no exhaustion), `sapling:liquidFlow` (due flows are dropped: liquids stand),
   `sapling:redstone` (circuits pause; what was written waits), `sapling:mobAi` (mobs fall and are hurt but
   decide nothing). `sendCommandFeedback` is under Commands. `doMobSpawning` stops natural spawning
-  (`spawning.rs`), not eggs or commands. `doImmediateRespawn` is the client's alone (docs/research/player-damage.md). Not read yet: `spawnRadius`,
-  `recipesUnlock` and `doLimitedCrafting` (sapling unlocks no recipe on pickup; BDS does, rule on or off:
-  research/captures/bds-recipeunlock.txt), and the command-block rules. `showRecipeMessages` is the client's.
+  (`spawning.rs`), not eggs or commands. `doImmediateRespawn` is the client's alone (docs/research/player-damage.md). `recipesUnlock` and
+  `showRecipeMessages` are the client's: BDS unlocked recipes on pickup with either off. `doLimitedCrafting`
+  pauses unlocking and refuses no craft (`inventory/recipe_book.rs`; research/captures/bds-recipeunlock*.txt,
+  bds-limitedcraft.txt). Not read yet: `spawnRadius` and the command-block rules.
 - **World events** (`sapling-api/src/world_event.rs`). What the world does on its own is offered with its
   world in focus (`plugins::offer_in`), so `Scope::World` listeners hear their world's; each is built only
   where a listener hears it (`plugins::stopped_in`), since flows and fire raise them often.
@@ -1170,7 +1171,9 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   the lead's, each half keeping its own 27. Breaking a half spills that half and leaves the other a
   single chest.
 - **Crafting** (`inventory/crafting.rs`, `sapling_data::recipe`). Clients are sent BDS's recorded
-  `CraftingData` and `UnlockedRecipes` with the registries. A request that starts with `CraftRecipe`
+  `CraftingData` with the registries, and their own recipe book once their items are shown: what held
+  items and states (ten filled slots, water) unlocked, kept with the player as BDS's `recipe_unlocking`
+  (`inventory/recipe_book.rs`, `sapling_data::unlocked_by`). A request that starts with `CraftRecipe`
   (by hand) or `CraftRecipeAuto` (the recipe book) names a recipe by its network id. `Consume` actions
   use items up, and the request is done only if what they used is exactly what the recipe's cells take
   (an item by name, or any item carrying a tag; no packet carries the tags, so their members come from

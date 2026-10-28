@@ -17,8 +17,10 @@ mod book;
 mod brewing;
 mod molang;
 mod smithing;
+mod unlock;
 
 pub use book::{initial_recipes, recipe_ids};
+pub use unlock::{UnlockContext, unlocked_by};
 pub use brewing::{brewed, is_brewing_bottle, is_brewing_ingredient};
 pub use smithing::smithed;
 
@@ -112,14 +114,18 @@ pub fn smelted(station: Station, name: &str, damage: i16) -> Option<&'static (Cr
 
 /// What a cell of a recipe takes and how many of it; `None` for a cell that takes nothing.
 fn ingredient(cell: &RecipeIngredient) -> Option<(Ingredient, u8)> {
+    Some((taken(cell)?, u8::try_from(cell.count).ok().filter(|count| *count > 0)?))
+}
+
+/// What a cell takes, however many.
+fn taken(cell: &RecipeIngredient) -> Option<Ingredient> {
     let Content::Valid(valid) = &cell.content else { return None };
-    let ingredient = match &valid.content {
+    Some(match &valid.content {
         Valid::Name(item) => Ingredient::Item { name: item.name.clone(), damage: Some(item.metadata).filter(|damage| ![ANY, -1].contains(damage)).map(|damage| damage as i16) },
         Valid::ItemTag(tagged) => Ingredient::Tagged(vec![tagged.tag.clone()]),
         Valid::Molang(molang) => Ingredient::Expression(molang.expression.clone()),
         Valid::Empty(_) | Valid::Default => return None,
-    };
-    Some((ingredient, u8::try_from(cell.count).ok().filter(|count| *count > 0)?))
+    })
 }
 
 fn inputs(cells: &[RecipeIngredient]) -> Vec<(Ingredient, u8)> {

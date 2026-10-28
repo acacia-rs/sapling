@@ -75,6 +75,7 @@ mod omens;
 mod operations;
 mod pending_ticks;
 mod pistons;
+mod recipe_book;
 mod resource_packs;
 mod placed_items;
 mod player_omens;

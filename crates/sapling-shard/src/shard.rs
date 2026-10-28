@@ -88,12 +88,12 @@ impl Shard {
             kept::keep_columns,
             mobs::despawn_unloaded,
         );
-        let items = (inventory::load, inventory::send_own, inventory::select, inventory::screens, inventory::save_changed);
+        let items = (inventory::load, inventory::send_own, inventory::send_book, inventory::select, inventory::screens, inventory::save_changed);
         schedule.add_systems((join, clock::advance, chunks.chain(), items.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
         let viewers = (visibility::update, mobs::update, entities::send_held_moves, movement::announce, movement::relay_swings, emotes::relay, inventory::announce, visibility::fan_out);
-        after_handlers.add_systems((viewers.chain(), commands::announce, scoreboard::send, flush).chain());
+        after_handlers.add_systems((viewers.chain(), commands::announce, scoreboard::send, inventory::unlock_recipes, flush).chain());
         sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));
         world.init_resource::<PluginState>();

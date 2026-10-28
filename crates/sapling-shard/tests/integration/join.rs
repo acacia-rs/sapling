@@ -38,7 +38,6 @@ fn a_player_is_walked_through_the_join_sequence() {
         CreativeContent::ID,
         TrimData::ID,
         acacia_proto::packets::CraftingData::ID,
-        acacia_proto::packets::UnlockedRecipes::ID,
         UpdateAbilities::ID,
         SetEntityData::ID,
         UpdateAttributes::ID,
@@ -51,6 +50,7 @@ fn a_player_is_walked_through_the_join_sequence() {
         InventoryContent::ID,
         InventoryContent::ID,
         PlayerHotbar::ID,
+        acacia_proto::packets::UnlockedRecipes::ID,
     ];
     assert_eq!(ids(&sent), expected);
     let start: StartGame = sent[2].decode().unwrap();
