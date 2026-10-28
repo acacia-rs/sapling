@@ -116,9 +116,10 @@ impl Structures {
             .iter()
             .map(|o| o.pieces.iter().filter(|p| p.bb.intersects(&column)).filter_map(|p| p.height(canvas).map(|y| (p, y))).collect())
             .collect();
+        let mut random = Mt19937::new(seed);
         for pieces in placed {
             for &(piece, y) in &pieces {
-                piece.post_process(canvas, y, seed);
+                piece.post_process(canvas, y, seed, &mut random);
             }
             for &(piece, y) in &pieces {
                 piece.fill_below(canvas, y);
@@ -154,8 +155,9 @@ impl Structures {
     /// Every ruin piece meeting the canvas's chunk; `seed` is the chunk's structure seed.
     pub(super) fn place_ocean_ruins(canvas: &mut Canvas, ruins: &[Arc<ocean_ruin::OceanRuin>], seed: u32) {
         let column = canvas.bb;
+        let mut random = Mt19937::new(seed);
         for piece in ruins.iter().flat_map(|r| r.pieces.iter()).filter(|p| p.bb.intersects(&column)) {
-            piece.post_process(canvas, seed);
+            piece.post_process(canvas, seed, &mut random);
         }
     }
 }

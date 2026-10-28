@@ -8,6 +8,7 @@ use super::end_city::{self, EndCity};
 use super::stage::Placed;
 use super::start_cache::StartCache;
 use crate::block::Block;
+use crate::random::{LargeFeatureSeed, Mt19937};
 use crate::terrain::ChunkShape;
 
 pub use super::end_city::GRID;
@@ -68,8 +69,9 @@ impl EndStructures {
     pub fn place(&self, cities: &[Arc<Option<EndCity>>], shape: &mut ChunkShape, chunk: (i32, i32), neighbour: &dyn Fn(i32, i32, i32) -> Block) -> Placed {
         let mut canvas = Canvas::new(shape, chunk, neighbour).with_heights(0, TOP);
         let mut touched = (i32::MAX, i32::MIN);
+        let mut random = Mt19937::new(LargeFeatureSeed::new(self.level_seed).chunk(chunk.0, chunk.1));
         for city in cities.iter().filter_map(|c| c.as_ref().as_ref()) {
-            city.post_process(&mut canvas);
+            city.post_process(&mut canvas, &mut random);
             touched = (touched.0.min(city.bb.y0 - 1), touched.1.max(city.bb.y1 + 1));
         }
         let touched = (touched.0.min(canvas.touched.0), touched.1.max(canvas.touched.1));

@@ -22,7 +22,9 @@ pub(crate) const PORTAL: &str = "minecraft:portal";
 const OBSIDIAN: &str = "minecraft:obsidian";
 const FIRE: &str = "minecraft:fire";
 /// `UpdateBlock` flags BDS gave a portal's cells: the network bit alone.
-const NETWORK: u32 = 2;
+pub(crate) const NETWORK: u32 = 2;
+/// The flags of a no-site platform's cells and its ring (bds-portal-voids.txt).
+pub(crate) const NEIGHBOURS_AND_NETWORK: u32 = 3;
 const SIDES: [[i32; 3]; 6] = [[0, -1, 0], [0, 1, 0], [-1, 0, 0], [1, 0, 0], [0, 0, -1], [0, 0, 1]];
 
 /// Cells written this tick that may light or break a portal, checked by [`settle`].
@@ -64,23 +66,51 @@ pub(crate) fn kindle(world: &mut World, layer: Entity, at: BlockPos) -> bool {
     true
 }
 
-/// Writes `cells` without telling anyone, then shows them to those who see them, in their order,
-/// one UpdateSubchunkBlocks per section.
+/// Writes a Nether portal's `cells` without telling anyone, then shows them to those who see them
+/// with the network flag alone, as [`write_shown_nether`] does.
 pub(crate) fn write_shown(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) {
-    write_shown_flagged(world, layer, cells, NETWORK);
+    let flagged: Vec<(BlockPos, u32, u32)> = cells.iter().map(|&(pos, id)| (pos, id, NETWORK)).collect();
+    write_shown_nether(world, layer, &flagged);
 }
 
-/// [`write_shown`] with the updates' flags.
+/// Writes `cells` (where, block, update flags) without telling anyone, then shows them in their
+/// order, one UpdateSubchunkBlocks per section, the last section touched first: BDS's order for
+/// Nether portals (docs/research/nether-dimension.md, "Section order").
+pub(crate) fn write_shown_nether(world: &mut World, layer: Entity, cells: &[(BlockPos, u32, u32)]) {
+    let written = write_quietly(world, layer, cells);
+    show_nether(world, layer, &written);
+}
+
+/// Writes `cells` without telling anyone; the ones that changed.
+pub(crate) fn write_quietly(world: &mut World, layer: Entity, cells: &[(BlockPos, u32, u32)]) -> Vec<(BlockPos, u32, u32)> {
+    cells.iter().copied().filter(|(pos, id, _)| send::set_quietly(world, layer, *pos, *id)).collect()
+}
+
+/// Shows cells already written as [`write_shown_nether`] does.
+pub(crate) fn show_nether(world: &mut World, layer: Entity, written: &[(BlockPos, u32, u32)]) {
+    let mut sections = in_sections(world, layer, written);
+    sections.reverse();
+    show(world, layer, sections);
+}
+
+/// Writes `cells` as [`write_shown_nether`] does, all with `flags`, the first section touched first.
 pub(crate) fn write_shown_flagged(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)], flags: u32) {
     let written: Vec<(BlockPos, u32)> = cells.iter().copied().filter(|(pos, id)| send::set_quietly(world, layer, *pos, *id)).collect();
     show_in_sections(world, layer, &written, flags);
 }
 
-/// Shows cells already written as [`write_shown`] does.
+/// Shows cells already written as [`write_shown_flagged`] does.
 pub(crate) fn show_in_sections(world: &mut World, layer: Entity, written: &[(BlockPos, u32)], flags: u32) {
-    let Some(registry) = level(world, layer).map(|level| level.registry()) else { return };
+    let flagged: Vec<(BlockPos, u32, u32)> = written.iter().map(|&(pos, id)| (pos, id, flags)).collect();
+    let sections = in_sections(world, layer, &flagged);
+    show(world, layer, sections);
+}
+
+/// Written cells as updates grouped by section, sections in the order first touched.
+fn in_sections(world: &World, layer: Entity, written: &[(BlockPos, u32, u32)]) -> Vec<([i32; 3], Vec<BlockUpdate>)> {
+    let Some(registry) = level(world, layer).map(|level| level.registry()) else { return Vec::new() };
     let mut sections: Vec<([i32; 3], Vec<BlockUpdate>)> = Vec::new();
-    for &([x, y, z], id) in written {
+    for &([x, y, z], id, flags) in written {
         let section = [x >> 4, y >> 4, z >> 4];
         let update = BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: registry.network_hash(id), flags, entity_unique_id: 0, transition_type: BlockUpdateTransitionType::Entity };
         match sections.iter_mut().find(|(at, _)| *at == section) {
@@ -88,6 +118,10 @@ pub(crate) fn show_in_sections(world: &mut World, layer: Entity, written: &[(Blo
             None => sections.push((section, vec![update])),
         }
     }
+    sections
+}
+
+fn show(world: &mut World, layer: Entity, sections: Vec<([i32; 3], Vec<BlockUpdate>)>) {
     for ([sx, sy, sz], blocks) in sections {
         let corner = [sx * 16, sy * 16, sz * 16];
         let packet = sapling_net::encode(&UpdateSubchunkBlocks { x: corner[0], y: corner[1], z: corner[2], blocks, extra: Vec::new() });
@@ -150,7 +184,7 @@ fn break_unframed(world: &mut World, layer: Entity, pos: BlockPos) {
     let lowest = corner(&sheet);
     let mut cells: Vec<(BlockPos, u32)> = sheet.into_iter().map(|at| (at, air)).collect();
     cells.sort_by_key(|([x, y, z], _)| (-*y, *x, *z));
-    write_shown(world, layer, &cells);
+    write_shown_flagged(world, layer, &cells, NETWORK);
     let (Some(dimension), Some(home)) = (level_dimension(world, layer), Some(crate::dimensions::home(world, layer))) else { return };
     if let (Some(lowest), Some(mut level)) = (lowest, world.get_mut::<Layer>(home)) {
         level.world.level_mut().portals.retain(|record| !(record.dimension == dimension && record.corner == lowest));
@@ -162,22 +196,22 @@ fn level_dimension(world: &World, layer: Entity) -> Option<i32> {
     level(world, layer).map(|level| level.dimension())
 }
 
-/// What a cell is to a portal site (build.rs): air, or a plant or the like a portal may replace
-/// over what is no liquid, is empty (BDS's site check since its replace fix).
-// TODO: BDS asks the block whether it can be replaced; this list is the plants and fire it knows.
+/// What a cell is to a portal site (build.rs), as `PortalForcer::force` (144783640) asks:
+/// empty where it can be built over (place.rs) and neither it nor its liquid layer is a liquid;
+/// solid where it has a box.
 pub(crate) fn ground(level: &sapling_world::World, [x, y, z]: BlockPos) -> build::Ground {
-    let state = |y: i32| (level.in_height(y) && level.is_loaded(sapling_world::ChunkPos::of_block(x, z))).then(|| level.registry().get(level.block(x, y, z))).flatten();
-    let Some(here) = state(y) else { return build::Ground::Other };
-    let replaceable = REPLACEABLE.iter().any(|name| here.name.strip_prefix("minecraft:") == Some(*name));
+    if !level.in_height(y) || !level.is_loaded(sapling_world::ChunkPos::of_block(x, z)) {
+        return build::Ground::Other;
+    }
+    let (registry, id) = (level.registry(), level.block(x, y, z));
+    let Some(here) = registry.get(id) else { return build::Ground::Other };
+    let in_liquid = here.is_liquid() || registry.get(level.liquid(x, y, z)).is_some_and(|layer| layer.is_liquid());
     match () {
-        _ if here.is_air() => build::Ground::Empty,
-        _ if replaceable && !here.is_liquid() && state(y - 1).is_some_and(|below| !below.is_liquid()) => build::Ground::Empty,
+        _ if !in_liquid && super::place::built_over(registry, id) => build::Ground::Empty,
         _ if here.is_solid() => build::Ground::Solid,
         _ => build::Ground::Other,
     }
 }
-
-const REPLACEABLE: [&str; 13] = ["short_grass", "tall_grass", "fern", "large_fern", "deadbush", "vine", "crimson_roots", "warped_roots", "nether_sprouts", "glow_lichen", "fire", "soul_fire", "snow_layer"];
 
 pub(crate) fn portal_axis(level: &sapling_world::World, [x, y, z]: BlockPos) -> Option<Axis> {
     let state = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten().filter(|state| state.name == PORTAL)?;

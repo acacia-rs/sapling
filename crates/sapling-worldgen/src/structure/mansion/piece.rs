@@ -5,7 +5,8 @@
 
 use super::{Mansion, Mirror, Piece, Pos};
 use crate::block::Block;
-use crate::block_entity::{BlockEntity, cell_seed};
+use crate::block_entity::BlockEntity;
+use crate::random::Mt19937;
 use crate::structure::BoundingBox;
 use crate::structure::canvas::Canvas;
 use crate::structure::template::{Placement, Rotation, named};
@@ -40,40 +41,50 @@ fn fill_down(canvas: &mut Canvas, (x, mut y, z): Pos) {
 }
 
 impl Piece {
-    fn place(&self, canvas: &mut Canvas) {
+    /// The template, its chests drawing loot seeds from `random` (the chunk's structure generator),
+    /// then its markers (1480b2360): an allay group draws `nextInt(3)` wherever it is, a chest marker
+    /// inside the chunk makes a chest and draws its seed, unless a chest already stands there.
+    fn place(&self, canvas: &mut Canvas, random: &mut Mt19937) {
         let (rotation, flip) = settings(self.rotation, self.mirror);
         let mut placement = Placement::new(rotation, canvas.bb);
         placement.mirror = flip;
-        placement.place(canvas, self.template, self.origin);
+        placement.place(canvas, self.template, self.origin).draw_seeds(canvas, random);
         trace::label(|| format!("{} markers", self.template.name));
         for (index, name) in &self.template.markers {
             let (dx, dy, dz) = transform(self.template.blocks[*index].pos, self.rotation, self.mirror);
             let (x, y, z) = (self.origin.0 + dx, self.origin.1 + dy, self.origin.2 + dz);
-            if !canvas.bb.contains(x, y, z) {
+            let inside = canvas.bb.contains(x, y, z);
+            if name == "Group of Allays" {
+                random.next_int(3);
+                if inside {
+                    canvas.set(x, y, z, Block::Air);
+                }
                 continue;
             }
-            if name == "Group of Allays" {
-                canvas.set(x, y, z, Block::Air);
-            } else if let Some(side) = ["ChestNorth", "ChestEast", "ChestSouth", "ChestWest"].iter().position(|n| n == name) {
+            if !inside {
+                continue;
+            }
+            if let Some(side) = ["ChestNorth", "ChestEast", "ChestSouth", "ChestWest"].iter().position(|n| n == name) {
                 let side = match (self.mirror, side) {
                     (Mirror::LeftRight, 0 | 2) | (Mirror::FrontBack, 1 | 3) => side + 2,
                     _ => side,
                 };
                 let facing = [Block::ChestNorth, Block::ChestEast, Block::ChestSouth, Block::ChestWest][(side + self.rotation as usize) & 3];
-                if canvas.get(x, y, z).name() != "chest" {
-                    canvas.set(x, y, z, facing);
+                if canvas.get(x, y, z).name() == "chest" {
+                    continue;
                 }
-                canvas.set_entity(x, y, z, BlockEntity::Loot { table: "loot_tables/chests/woodland_mansion.json", seed: cell_seed([x, y, z]) });
+                canvas.set(x, y, z, facing);
+                canvas.set_entity(x, y, z, BlockEntity::Loot { table: "loot_tables/chests/woodland_mansion.json", seed: random.next_int_unbounded() });
             }
         }
     }
 }
 
 impl Mansion {
-    pub fn post_process(&self, canvas: &mut Canvas) {
+    pub fn post_process(&self, canvas: &mut Canvas, random: &mut Mt19937) {
         let column = canvas.bb;
         for piece in self.pieces.iter().filter(|p| p.bb.intersects(&column)) {
-            piece.place(canvas);
+            piece.place(canvas, random);
         }
         trace::label(|| "mansion foundation and stairs".into());
         let y0 = self.bb.y0;

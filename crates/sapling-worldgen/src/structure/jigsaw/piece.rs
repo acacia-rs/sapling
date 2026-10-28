@@ -11,9 +11,9 @@ use super::super::template::{JavaPlacement, Placement, Rotation, Rule, apply, na
 use super::assemble::middle;
 use super::element::{Element, ElementKind, Projection};
 use crate::block::Block;
-use crate::block_entity::cell_seed;
+use crate::block_entity::randomizable;
 use crate::feature::element_random;
-use crate::random::Mt19937;
+use crate::random::{Mt19937, Xoroshiro};
 
 #[derive(Clone)]
 pub struct Piece {
@@ -111,7 +111,7 @@ impl Piece {
             // A chest's block actor (type 2, trapped ones too; not a barrel's) takes one draw of the chunk's generator
             // for its `LootTableSeed` (`placeInWorld` 141eed154; worldgen-bds-order.md, "replay5").
             let drawn = matches!(block.name(), "chest" | "trapped_chest").then(|| random.next_int_unbounded());
-            if let Some(entity) = template.entity(index, || drawn.unwrap_or_else(|| cell_seed([x, y, z]))) {
+            if let Some(entity) = template.entity(index, || drawn.unwrap_or(0)) {
                 canvas.set_entity(x, y, z, entity);
             }
         }
@@ -139,8 +139,9 @@ impl Piece {
     }
 
     /// A v2 piece within the canvas's chunk (`template::JavaPlacement`); a feature element draws
-    /// from its own generator (145e144c0).
-    pub fn post_process_java(&self, canvas: &mut Canvas, level_seed: i64) {
+    /// from its own generator (145e144c0). Every randomizable container the template places takes
+    /// the low 32 bits of `random.nextLong()` as its `LootTableSeed`, in placement order (141ee1f71).
+    pub fn post_process_java(&self, canvas: &mut Canvas, level_seed: i64, random: &mut Xoroshiro) {
         if let ElementKind::Feature(name) = &self.element.kind {
             let (x, y, z) = self.origin;
             trace::label(|| format!("feature {name} {:?}", self.origin));
@@ -155,8 +156,9 @@ impl Piece {
         for ((x, y, z), block, entity) in blocks {
             if canvas.bb.contains(x, y, z) {
                 canvas.set(x, y, z, block);
+                let seed = randomizable(block.name()).then(|| random.next_int());
                 if let Some(entity) = entity {
-                    canvas.set_entity(x, y, z, entity);
+                    canvas.set_entity(x, y, z, seed.map_or(entity, |seed| entity.seeded(seed)));
                 }
             }
         }

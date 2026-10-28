@@ -6,7 +6,7 @@ use super::BoundingBox;
 use super::canvas::Canvas;
 use super::template::{FULL_CUBE, Placement, Rotation, Template, flags, named, piece_box};
 use crate::block::Block;
-use crate::block_entity::cell_seed;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 
 const MIN_Y: i32 = -64;
@@ -62,23 +62,23 @@ impl Piece {
         }
     }
 
-    /// Places the piece at `y` within the canvas's chunk; `seed` is the chunk's structure seed.
+    /// Places the piece at `y` within the canvas's chunk; `seed` is the chunk's structure seed and
+    /// `random` its structure generator, which the template's chests and then the `topChest` marker
+    /// (handler 148359310: the chest below it, re-seeded) draw loot seeds from.
     /// No block is ignored (settings +0x10 is null): air is placed and takes an integrity draw.
-    pub fn post_process(&self, canvas: &mut Canvas, y: i32, seed: u32) {
+    pub fn post_process(&self, canvas: &mut Canvas, y: i32, seed: u32, random: &mut Mt19937) {
         let mut placement = Placement::new(self.rotation, canvas.bb);
         placement.integrity = self.integrity;
         placement.seed = seed;
         let origin = (self.origin.0, y, self.origin.1);
-        let blocks: Vec<_> = placement.blocks(self.template, origin).collect();
-        canvas.begin_template();
-        for ((x, y, z), block, index) in blocks {
-            placement.label(self.template, index);
-            canvas.set(x, y, z, block);
-            if let Some(entity) = self.template.entity(index, || cell_seed([x, y, z])) {
-                canvas.set_entity(x, y, z, entity);
+        placement.place(canvas, self.template, origin).draw_seeds(canvas, random);
+        for (index, _) in self.template.markers.iter().filter(|(_, m)| m == "topChest") {
+            let (dx, dy, dz) = self.rotation.apply(self.template.blocks[*index].pos);
+            let (x, y, z) = (origin.0 + dx, origin.1 + dy - 1, origin.2 + dz);
+            if canvas.bb.contains(x, y + 1, z) && canvas.get(x, y, z).name() == "chest" {
+                canvas.set_entity(x, y, z, BlockEntity::Loot { table: "loot_tables/chests/pillager_outpost.json", seed: random.next_int_unbounded() });
             }
         }
-        placement.update_pass(canvas, self.template, origin);
     }
 }
 
