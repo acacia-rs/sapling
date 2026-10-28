@@ -47,3 +47,39 @@ The full uuids are in the exe as text (`D392B075-4BA1-40AE-8789-AF868D56F6CE`,
   `equip_item_slot`, sound `armor.equip_generic`).
 - **Death**: a dying mount lets go of its tack, its goods and, when chested, the chest (JAVA
   `AbstractChestedHorse.dropEquipment`, outside the `doMobLoot` gate), where its loot appears.
+
+## Turtles (creatures/husbandry/nesting.rs, creatures/stomping.rs, blocks/eggs/nests.rs)
+
+bdsre finds the goal definitions (`LayEggGoalDefinition`, `StompEggGoalDefinition`, `GoHomeGoalDefinition`: their
+`_registerFillDefinitionFromComprehensive` lambdas 148883050, 1488483b0, 148993850) but not the goals' ticks, so
+what follows is the pack (ED `turtle.json`, `zombie.json` and kin) and the Java game.
+
+- **Breeding**: `minecraft:breedable` has `causes_pregnancy`: the bred turtle gets `minecraft:pregnant` (event
+  `become_pregnant`) and no baby. sapling sets the `PREGNANT` flag and keeps the group in `definitions`; a
+  turtle with an egg does not fall in love (JAVA `Turtle.canFallInLove`).
+- **Going home** (`behavior.go_home`: interval 700, goal radius 4, speed ×1): taken as one tick in 700, then a
+  walk home; within 4, `go_lay_egg` swaps `pregnant` for `wants_to_lay_egg`. Home (`minecraft:home`) is the
+  egg's cell for a hatched turtle, else the cell it was first ticked in (JAVA: its spawn position).
+- **Laying** (`behavior.lay_egg`: search 16 across, 4 up or down, goal radius 1.5): the nearest open cell on
+  sand (the `LayEggGoalDefinition` defaults name sand and air above; the schema at 1430bef60 has a
+  `lay_egg_sound`), a walk there, `LAYING_EGG` for 200 ticks (JAVA `TurtleLayEggGoal`, Bedrock's `lay_seconds`
+  default taken as 10), then 1 to 4 eggs (JAVA `nextInt(4) + 1`), sound `lay_egg`, both flags off and
+  `laid_egg` drops `wants_to_lay_egg`.
+- **Stomping** (`behavior.stomp_turtle_egg` on zombie, husk, drowned, zombie villager (both) and zombie
+  pigman: interval 20, search 10 across and 2 up or down, goal radius 1.14): one tick in 20 a zombie that
+  does not hunt picks the nearest turtle egg and walks there. At the eggs it hops (0.3 up while on the
+  ground) and after 60 ticks every egg breaks (JAVA `RemoveBlockGoal`/`ZombieAttackTurtleEggGoal`); it gives
+  up after 1200 ticks of walking. Only with `mobGriefing` (JAVA).
+
+## Not drilled
+
+- Grid map extending, upgrading and item repair: all read from the decompile, none crafted on a live BDS.
+  Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
+- The llama's carpet in `MobArmorEquipment`'s body slot, and whether BDS sends `Strength`/`MaxStrength`
+  in the mob's announcement or after it.
+- A bred llama's strength: sapling rolls afresh (Java takes the higher parent's with a chance of more).
+- Goods and chest spilled on a mount's death regardless of `doMobLoot`.
+- Turtles: the 1 in 700 home start, the 10 s dig, the 1 to 4 egg count, the nearest-sand pick, the nest
+  search's 20-tick look, and home for a turtle never hatched: all ED or JAVA.
+- Stomping: the 1 in 20 start, the hop, the 60-tick stomp out, the 1200-tick give-up and the walking
+  speed (the mob's stroll speed).

@@ -44,7 +44,7 @@ pub use actor_tags::{actor_tags, tagged_actor};
 pub use actor_state::{WitherRecord, actor_effects, actor_fuse, effected_actor, fused_actor, wither_record, withered_actor};
 pub use hive::{Occupant, hive_occupants, new_hive, occupied_hive};
 pub use scoreboard::{DisplayRecord, ObjectiveRecord, ScoreIdentity, ScoreboardRecord, decode_scoreboard, encode_scoreboard};
-pub use actor_raising::{Raising, raised_actor, raising, regrouped_actor};
+pub use actor_raising::{Raising, actor_groups, raised_actor, raising, regrouped_actor};
 pub use actors::{Actor, Painting, State, actors, falling_block, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_painting_actor, new_shot_actor, orb_value, orb_worth, placed_actor, shot_record, stored_actors, ShotRecord};
 pub use item::ItemStack;
 pub use pending_ticks::{PendingTick, decode_pending_ticks, encode_pending_ticks};
