@@ -20,6 +20,39 @@ support, a piston, `ctx.break_block`), a blast and a shot pot (`blocks/entities.
   block behind it goes (`blocks/updates.rs` `HANGS`). **inf** (Bedrock frames are blocks that need
   their face; not read in the exe).
 
+## Beds outside the Overworld
+
+`BedBlock::use` (142cd8100, **BDSRE**, `dis`): before anything else it asks the dimension whether
+beds work there (vt+0xd0); where they do it goes on to `BedBlock::use_sleep` (142cd8730). Elsewhere
+(Nether, End):
+
+1. Game rule 33, `respawnBlocksExplode` (`cmp byte [rules + 33 * 0x118 + 4]`), off: nothing happens,
+   the click is used up.
+2. Rule 40, `allowDestructiveObjects` (Education, on by default), off: the bed is only removed.
+   sapling has no Education rules and skips this.
+3. Otherwise the clicked bed's head goes to air (setBlock flags 3), then its other half (142cd9bf0
+   finds it) if it is still a bed, and `Level::explode` (vt+0x3c8) runs with no source at the middle
+   of both halves' centres (`((h + 0.5) + (f + 0.5)) * 0.5`), power 5, `fire` 1, `breaksBlocks` 1,
+   `maxResistance` `FLT_MAX`, `allowUnderwater` 0.
+
+sapling: `blocks/bed_burst.rs`, called first thing in `sleep::lie_down`. Fire: `creatures/blast.rs`
+`explode_burning` lights a third of the cells the rays reached (broken or free) that stand over a
+solid block, the Java game's `Explosion.finalizeExplosion` rule (**Java**); BDS's own fire pass was
+not read. The respawn anchor's burst goes through it too (Java's anchor blast has fire).
+
+## Underwater TNT
+
+The vanilla `minecraft:tnt` entity's `minecraft:explode` (behaviour pack `entities/tnt.json`) sets
+`power` 4, `causes_fire` false and no `allow_underwater`; the component's parser (141bdbe30) reads
+`allow_underwater` beside `breaks_blocks`, so it is false for TNT. With it false and the blast's
+middle in water, BDS's explosion breaks no blocks (the bed passes the same 0 explicitly, above).
+sapling already did this (`creatures/blast/rays.rs` `broken`: none when the middle is wet); nothing
+changed. The Education `allow_underwater_bit` TNT state is not read by sapling.
+
 ## Not drilled
 
 - An item frame popping when its block goes (inferred).
+- A bed's burst: halves removed, blast at their middle, nothing with `respawnBlocksExplode` off
+  (decompiled).
+- Fire from a bed's or an anchor's blast (Java's rule; BDS's fire pass not read).
+- Underwater TNT breaking nothing (pack JSON and parser read; sapling's existing rule).

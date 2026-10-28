@@ -4,6 +4,7 @@
 //! falling, liquids, plates, updates.
 
 mod after_break;
+mod bed_burst;
 mod bonemeal;
 mod bells;
 mod blown;
@@ -84,6 +85,7 @@ pub(crate) use frost::{frost_walk, tick as melt_frost};
 pub(crate) use growth::{arrived as plants_arrived, holds_snow, tick as random_ticks, trample};
 pub(crate) use ores::{light as light_ore, tick as dim_ores, tread as tread_ore};
 pub(crate) use scaffolds::tick as settle_scaffolds;
+pub(crate) use bed_burst::bursts as bed_bursts;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
 pub(crate) use holders::spend as spend_held;
 pub(crate) use pistons::{at_place as block_entity_at, tick as move_pistons};

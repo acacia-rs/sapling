@@ -84,7 +84,7 @@ pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, from_storage as s
 pub(crate) use attacks::attacked;
 pub(crate) use bees::{bees_in, hive_broken};
 pub(crate) use creaking::{heart_noticed, hearts_arrived};
-pub(crate) use blast::{Wreck, explode};
+pub(crate) use blast::{Wreck, explode, explode_burning};
 pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, is_full_block, touches, wound};
 pub(crate) use health::{Cause, Health};
