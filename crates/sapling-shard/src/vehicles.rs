@@ -155,7 +155,9 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: &Actor, uniq
 /// mobs.
 pub(crate) fn tick(world: &mut World) {
     for (player, vehicle) in std::mem::take(&mut world.get_resource_or_insert_with(CargoAsked::default).0) {
-        cargo::open(world, player, vehicle);
+        if !cargo::open(world, player, vehicle) && !crate::riding::open_pack(world, player, vehicle) {
+            crate::inventory::open_own(world, player);
+        }
     }
     boats::tick(world);
     carts::tick(world);

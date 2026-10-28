@@ -72,6 +72,8 @@ pub enum SpawnReason {
     Transformed,
     /// A raid's wave.
     Raid,
+    /// Hatched from a block: a turtle egg's turtles, frogspawn's tadpoles, a sniffer egg's sniffer.
+    Hatched,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

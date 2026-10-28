@@ -32,6 +32,7 @@ mod genes;
 mod ghasts;
 mod guardians;
 mod harm;
+mod hatching;
 mod health;
 mod hits;
 mod hunting;
@@ -88,6 +89,7 @@ pub(crate) use creaking::{heart_noticed, hearts_arrived};
 pub(crate) use blast::{Wreck, explode, explode_burning};
 pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, is_full_block, touches, wound};
+pub(crate) use hatching::{hatch, make_home};
 pub(crate) use health::{Cause, Health};
 pub(crate) use hunting::{on_difficulty, sees};
 pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, owner_hurt, shear_in, tame_by_riding, tie_to_fence};
@@ -228,6 +230,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets.clone());
+        crate::blocks::tread_turtle_eggs(world, layer, &kind, body.at, body.on_ground, body.on_ground && !start.on_ground, false);
         if thinks {
             if !creaking::is_frozen(world, entity) && !warden::is_busy(world, entity) {
                 hunting::strike(world, entity, layer, id, &kind, &body);

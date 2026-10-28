@@ -13,7 +13,9 @@ mod leads;
 mod owners;
 mod products;
 mod shown;
+mod sniffing;
 mod state;
+mod tadpoles;
 
 use bevy_ecs::prelude::*;
 use sapling_world::Actor;
@@ -22,6 +24,7 @@ use crate::components::Tick;
 use crate::entities::Stored;
 
 pub(super) use ageing::be_born;
+pub(super) use tadpoles::frog_variant;
 pub(crate) use clicks::interact;
 pub(crate) use guarding::{owner_hit, owner_hurt};
 pub(crate) use knots::{KNOT, from_storage as knot_from_storage, tie_to_fence, undo as undo_knot};
@@ -34,10 +37,13 @@ pub(crate) use state::Raised;
 /// compound), or a newcomer's. A stored baby's box is a baby's.
 pub(super) fn adopt(world: &mut World, entity: Entity, kind: &str, stored: Option<(&Actor, &[u8])>) {
     let grows = sapling_data::husbandry(kind).and_then(|raised| raised.grows).unwrap_or(ageing::GROWS);
-    let raised = match stored {
+    let mut raised = match stored {
         Some((look, compound)) => Raised::stored(look, sapling_world::raising(compound).unwrap_or_default(), grows),
         None => Raised::newcomer(kind),
     };
+    if stored.is_none() {
+        tadpoles::newcomer(&mut raised, kind, grows);
+    }
     let baby = raised.is_baby();
     world.entity_mut(entity).insert(raised);
     if baby {
@@ -53,6 +59,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     }
     owners::stays(world, entity)
         || leads::pull(world, entity, layer)
+        || sniffing::steer(world, entity, layer, kind)
         || guarding::chase(world, entity, layer, kind)
         || breeding::court(world, entity, layer, kind)
         || owners::follow(world, entity, layer, kind)
@@ -60,7 +67,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
 }
 
 /// A tick of every raised mob: babies grow, love and cooldowns wear off, partners breed, hens
-/// lay, leads hold or break and knots without a fence go.
+/// lay, sniffers sniff and dig, leads hold or break and knots without a fence go.
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let raised: Vec<(Entity, String)> = world.query_filtered::<(Entity, &crate::entities::Kind), With<Raised>>().iter(world).map(|(entity, kind)| (entity, kind.0.clone())).collect();
@@ -69,6 +76,7 @@ pub(crate) fn tick(world: &mut World) {
         breeding::tick(world, entity, &kind, now);
         products::lay(world, entity, &kind, now);
         products::graze(world, entity, &kind);
+        sniffing::tick(world, entity, &kind, now);
         leads::hold(world, entity, now);
     }
     knots::tick(world);

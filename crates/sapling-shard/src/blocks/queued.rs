@@ -38,6 +38,8 @@ pub(crate) enum Job {
     Sponge,
     /// A big dripleaf tilts on, or back up (dripleaf.rs).
     Dripleaf,
+    /// A turtle egg, frogspawn or sniffer egg cracks or hatches (eggs.rs).
+    Hatch,
 }
 
 #[derive(Resource, Default)]
@@ -90,6 +92,7 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
         "big_dripleaf" if !properties.split(',').any(|pair| pair == "big_dripleaf_tilt=none") => Job::Dripleaf,
         "command_block" | "repeating_command_block" | "chain_command_block" => Job::Command,
         name if super::coral::is_live(&format!("minecraft:{name}")) => Job::Coral,
+        name if super::eggs::is_egg(&format!("minecraft:{name}")) => Job::Hatch,
         _ => return None,
     })
 }
@@ -135,5 +138,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Coral => super::coral::die(world, layer, pos),
         Job::Sponge => super::sponge::ticked(world, layer, pos),
         Job::Dripleaf => super::dripleaf::step(world, layer, pos),
+        Job::Hatch => super::eggs::ticked(world, layer, pos),
     }
 }

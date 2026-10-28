@@ -2,8 +2,8 @@
 //! put on by hand, getting on by a click, and how a ridden pig, strider or camel is steered. A
 //! tamed and saddled horse, donkey or mule is moved by its rider's client (drive.rs). Tamed and
 //! saddled are the mob's raising (`creatures::Raised`); getting on a wild mount tries to tame it.
-// TODO: a wild mount that is not tamed throws its rider off at once; BDS lets it ride a while
-// first. The horse's inventory screen is not opened, and a mob's tack does not come off.
+// A tamed mount's inventory, and a chest put on one, are packs.rs's.
+// TODO: a wild mount that is not tamed throws its rider off at once; BDS lets it ride a while first.
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -91,6 +91,9 @@ pub(crate) fn used_on(world: &mut World, player: Entity, target: Entity) -> bool
         return true;
     }
     let sneaking = world.get::<Motion>(player).is_some_and(|motion| motion.pose.sneaking);
+    if super::packs::clicked(world, player, target, &kind, sneaking) {
+        return true;
+    }
     if sneaking && (SNEAK_SKIPS.contains(&kind.as_str()) || (TAMED_SADDLED.contains(&kind.as_str()) && tamed(world, target))) {
         return false;
     }
@@ -127,7 +130,7 @@ fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
     let mut told = worn(world, mob);
     told.push(packets::sound(sound, id, kind, body.at));
     super::tell(world, mob, mob, told);
-    keep_tack(world, mob);
+    super::packs::tack_changed(world, mob);
     super::retell(world, mob);
     true
 }
@@ -143,19 +146,6 @@ pub(super) fn worn(world: &mut World, mob: Entity) -> Vec<Bytes> {
         shown.push(sapling_net::encode(&sapling_data::mob_armor(id, &slots)));
     }
     shown
-}
-
-/// Writes a mob's tack into what a world folder keeps of it: `Saddled`, and the armour in slot 1
-/// of its `ChestItems`.
-// TODO: unverified where BDS keeps horse armour; slot 1 of the horse's inventory is the guess.
-fn keep_tack(world: &mut World, mob: Entity) {
-    let Some(tack) = world.get::<Tack>(mob).cloned() else { return };
-    let armor: Vec<(u8, ItemStack)> = tack.armor.into_iter().map(|armor| (1, armor)).collect();
-    let on = saddled(world, mob);
-    entities::restore(world, mob, |compound, registry| {
-        let saddled = sapling_world::flagged_actor(compound, "Saddled", on).ok()?;
-        sapling_world::chested_actor(&saddled, &armor, registry).ok()
-    });
 }
 
 /// How a ridden mob moves this tick.

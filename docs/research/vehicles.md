@@ -120,4 +120,4 @@ were not found in any of these; sapling does what is listed there.
 - Detector rail timing (Java's), hopper minecart pick-up range, the activator lock of a hopper minecart (not done).
 - What raises a boat's underwater counter (not done); boat fall breaking (none found).
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
-- The horse screen (`ContainerOpen` type Horse + `UpdateEquip`): not done; the strider and pig boost by stick use.
+- The horse screen: done without a capture, see mob-life.md "Mount inventories"; the strider and pig boost by stick use.

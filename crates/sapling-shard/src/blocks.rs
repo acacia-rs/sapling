@@ -24,6 +24,7 @@ mod dispensers;
 mod dripleaf;
 mod doors;
 mod drips;
+mod eggs;
 pub(crate) mod end_portal;
 mod entities;
 mod entity_fields;
@@ -86,6 +87,7 @@ pub(crate) use structure_blocks::{dispatch_exports as dispatch_structure_exports
 pub(crate) use falling::from_storage as falling_from_storage;
 pub(crate) use daylight::tick as read_daylight;
 pub(crate) use fire::{light as light_fire, tick as burn_fires};
+pub(crate) use eggs::tread_turtle_eggs;
 pub(crate) use frost::{frost_walk, tick as melt_frost};
 pub(crate) use growth::{arrived as plants_arrived, holds_snow, tick as random_ticks, trample};
 pub(crate) use ores::{light as light_ore, tick as dim_ores, tread as tread_ore};

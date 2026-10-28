@@ -50,6 +50,9 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str) {
 }
 
 fn grow_up(world: &mut World, entity: Entity, kind: &str) {
+    if super::tadpoles::grow_up(world, entity, kind) {
+        return;
+    }
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {
         raised.kept.baby = None;
     }

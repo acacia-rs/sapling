@@ -42,6 +42,9 @@ pub(crate) fn open_pos(world: &World, player: Entity) -> Option<BlockPos> {
 /// What the container a player has open refuses to hold in a slot.
 pub(crate) fn refusal(world: &World, player: Entity) -> Option<fn(usize, &ItemStack) -> bool> {
     let viewing = world.get::<Viewing>(player)?;
+    if let Screen::Carried(vehicle) = viewing.screen {
+        return crate::riding::pack_refusal(world, vehicle);
+    }
     kind_at(world, viewing.layer, viewing.pos)?.refuses
 }
 

@@ -4,6 +4,7 @@
 
 mod actor_gear;
 mod actor_harm;
+mod actor_home;
 mod actor_raising;
 mod actor_riding;
 mod actor_state;
@@ -37,6 +38,7 @@ use std::path::PathBuf;
 
 pub use actor_gear::{actor_pose, geared_actor};
 pub use actor_harm::{actor_attributes, attributed_actor, harmed_actor};
+pub use actor_home::{actor_home, homed_actor};
 pub use actor_riding::{actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor};
 pub use actor_tags::{actor_tags, tagged_actor};
 pub use actor_state::{WitherRecord, actor_effects, actor_fuse, effected_actor, fused_actor, wither_record, withered_actor};
