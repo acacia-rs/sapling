@@ -223,7 +223,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     let tried = apply(&mut trial, request, creative, at);
     let overfilled = tried.is_ok() && trial.bundle.as_ref().is_some_and(|(_, held)| !bundles::fits(held));
     let failed = tried.is_err() || overfilled;
-    let allowed = !overfilled && tried.is_ok_and(|applied| may_drop(world, player, &applied.dropped));
+    let allowed = !overfilled && tried.is_ok_and(|applied| may_drop(world, player, &applied.dropped) && crate::hand_events::may_change_container(world, entity, open.as_deref(), &trial.container, &applied.dropped));
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let Ok((mut inventory, mut out)) = query.get_mut(world, entity) else { return };
     (inventory.container, inventory.refuses) = (open.unwrap_or_default(), refuses);

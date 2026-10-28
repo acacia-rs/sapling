@@ -15,6 +15,7 @@ pub(crate) fn to_viewers(world: &mut World, layer: Entity, pos: BlockPos, packet
 
 /// [`to_viewers`], but for the player `but`.
 pub(crate) fn to_viewers_but(world: &mut World, layer: Entity, pos: BlockPos, but: Option<Entity>, packets: &[Bytes]) {
+    let packets = &*crate::world_notices::heard(world, layer, packets);
     for player in viewers(world, layer, pos) {
         if Some(player) != but
             && let Some(mut out) = world.get_mut::<Outgoing>(player)

@@ -68,6 +68,9 @@ pub(crate) fn release(world: &mut World, player: Entity) {
     eating::show(world, player, false);
     let Some(stack) = held(world, player).filter(|stack| stack.name == drawing.item) else { return };
     let ticks = world.resource::<Tick>().0.saturating_sub(drawing.since);
+    if !crate::hand_events::may_release(world, player, &stack, ticks) {
+        return;
+    }
     match stack.name.as_str() {
         bows::BOW => bows::loose(world, player, &stack, ticks),
         crossbows::CROSSBOW => crossbows::load(world, player, &stack, ticks),

@@ -97,6 +97,7 @@ mod plugin_damage;
 mod paintings;
 mod phantoms;
 mod piglins;
+mod hand_events;
 mod plugin_dialogue;
 mod plugin_ui;
 mod plugins;

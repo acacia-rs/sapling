@@ -108,13 +108,19 @@ pub(crate) fn turn_pages(world: &mut World) {
     for (player, update) in world.resource_mut::<PacketQueues>().take::<LecternUpdate>() {
         let pos = [update.position.x, update.position.y, update.position.z];
         let Some(layer) = world.get::<InLayer>(player).map(|layer| layer.0) else { continue };
-        let Some((_, pages)) = opened_at(world, layer, pos).filter(|_| is_lectern(world, layer, pos) && super::reaches(world, player, pos)) else { continue };
-        if i32::from(update.page) < pages.max(1) {
-            keep(world, layer, pos, vec![("page", Value::Int(update.page.into()))]);
-            if update.page == 0 {
-                queued::cancel(world, layer, pos, Job::Lectern);
-                queued::after(world, layer, pos, 1, Job::Lectern);
-            }
+        let Some((from, pages)) = opened_at(world, layer, pos).filter(|_| is_lectern(world, layer, pos) && super::reaches(world, player, pos)) else { continue };
+        let to = i32::from(update.page);
+        if to >= pages.max(1) {
+            continue;
+        }
+        let Some(page) = crate::hand_events::page_turned(world, player, pos, from, to).filter(|page| (0..pages.max(1)).contains(page)) else {
+            super::send::resync(world, player, &[pos]);
+            continue;
+        };
+        keep(world, layer, pos, vec![("page", Value::Int(page))]);
+        if page == 0 {
+            queued::cancel(world, layer, pos, Job::Lectern);
+            queued::after(world, layer, pos, 1, Job::Lectern);
         }
     }
 }

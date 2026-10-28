@@ -16,7 +16,7 @@ use crate::{plugins, worlds};
 
 /// Offers the event `make` builds about `player`, with its world in focus; `None` where nobody
 /// hears it or the player is not in the world.
-fn ask<E: Event>(world: &mut World, player: Entity, make: impl FnOnce(&mut World, Player) -> E) -> Option<E> {
+pub(crate) fn ask<E: Event>(world: &mut World, player: Entity, make: impl FnOnce(&mut World, Player) -> E) -> Option<E> {
     if !plugins::listening::<E>(world) {
         return None;
     }
@@ -29,7 +29,7 @@ fn ask<E: Event>(world: &mut World, player: Entity, make: impl FnOnce(&mut World
     Some(event)
 }
 
-fn allowed<E: Event>(world: &mut World, player: Entity, make: impl FnOnce(&mut World, Player) -> E) -> bool {
+pub(crate) fn allowed<E: Event>(world: &mut World, player: Entity, make: impl FnOnce(&mut World, Player) -> E) -> bool {
     ask(world, player, make).is_none_or(|event| !event.is_stopped())
 }
 

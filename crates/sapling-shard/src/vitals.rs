@@ -143,7 +143,7 @@ fn flash(world: &mut World, player: Entity, cause: Cause) {
 /// Tells the health and the burning where they changed, and lets a player with no health die of `cause`.
 fn settle(world: &mut World, player: Entity, cause: Cause) {
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
-    let (left, burning, most) = (vitals.health.left(), vitals.health.is_burning(), vitals.health.max());
+    let (left, burning, most, ticks) = (vitals.health.left(), vitals.health.is_burning(), vitals.health.max(), vitals.health.burning());
     let changed = std::mem::replace(&mut vitals.told, left) != left;
     let cushion = vitals.health.cushion();
     let padded = std::mem::replace(&mut vitals.padded, cushion) != cushion;
@@ -154,6 +154,11 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     }
     if changed {
         tell(world, player, &sapling_data::mob_health_update(id, left, most));
+    }
+    let lit = burning && world.get::<Motion>(player).is_some_and(|motion| !motion.pose.burning);
+    let burning = burning && !(lit && !crate::hand_events::may_burn(world, player, ticks));
+    if lit && !burning && let Some(mut vitals) = world.get_mut::<Vitals>(player) {
+        vitals.health.burn(false, true);
     }
     if let Some(mut motion) = world.get_mut::<Motion>(player).filter(|motion| motion.pose.burning != burning) {
         motion.pose.burning = burning;

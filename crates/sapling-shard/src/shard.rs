@@ -191,6 +191,7 @@ impl Shard {
     /// owes other shards go out, everyone it owns is disconnected and its worlds are saved.
     pub fn close(&mut self) {
         self.take_messages();
+        crate::world_notices::closing_all(&mut self.world);
         handoff::close(&mut self.world);
         worlds::withdraw(&self.world);
         let net = self.world.resource::<Net>().0.clone();

@@ -20,6 +20,7 @@ mod experience;
 mod event;
 pub mod form;
 mod generation;
+mod hand_event;
 mod health;
 mod hud;
 mod item;
@@ -48,6 +49,7 @@ mod ticking;
 mod ui;
 mod world;
 mod world_event;
+mod world_notice;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use block_entity::{BlockEntityBackend, BlockEntityData};
@@ -92,6 +94,11 @@ pub use life_event::{
 pub use player_event::{
     GameModeChangeEvent, HeldSlotChangeEvent, JumpEvent, Portal, PortalUseEvent, PunchAirEvent, SkinChangeEvent, TeleportEvent, ToggleSneakEvent, ToggleSprintEvent,
 };
+pub use hand_event::{
+    BlockPickEvent, ContainerSlotEvent, Diagnostics, DiagnosticsEvent, FireExtinguishEvent, ItemDamageEvent, ItemReleaseEvent, LecternPageTurnEvent, SetOnFireEvent, SlotChange,
+    StartBreakEvent,
+};
+pub use world_notice::{EntityDespawnEvent, LiquidDecayEvent, SoundEvent, WorldCloseEvent};
 pub use block_event::{CropTrampleEvent, LeavesDecayEvent, LiquidHardenEvent, PortalCreateEvent, RedstoneUpdateEvent};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use tags::{TagBackend, Tagged};

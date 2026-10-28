@@ -21,6 +21,7 @@ use crate::{mobs, splash, view};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.
 #[derive(Component, Clone, Debug)]
+#[component(on_remove = crate::world_notices::note_gone)]
 pub(crate) struct Kind(pub String);
 
 /// What a world folder keeps of an entity: its actor compound, written back with its place and

@@ -48,6 +48,7 @@ pub(crate) fn create(world: &mut World, name: &str, template: &str) -> bool {
 /// Removes an arena: its players go to the shard's first world, its mobs go with it.
 pub(crate) fn remove(world: &mut World, name: &str) -> bool {
     let Some(layer) = arena(world, name) else { return false };
+    crate::world_notices::closing(world, layer);
     let fallback = world.resource::<DefaultLayer>().0;
     for player in players_in(world, layer) {
         worlds::enter(world, player, fallback);

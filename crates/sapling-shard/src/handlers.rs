@@ -141,6 +141,8 @@ pub(crate) fn dispatch(world: &mut World) {
     entities::follow(world);
     forms::dispatch(world);
     crate::dialogue::dispatch(world);
+    crate::hand_events::dispatch_diagnostics(world);
+    crate::world_notices::offer_gone(world);
     crate::extra_bars::follow(world);
     for entity in left {
         let had_joined = world.get::<Stage>(entity) == Some(&Stage::InWorld);
