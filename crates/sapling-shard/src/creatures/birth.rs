@@ -76,6 +76,9 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(sound, id, kind, &body)]);
     let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, strides::keep(sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]), rolled));
+    if crate::riding::give_strength(world, entity, kind) {
+        reshow(world, entity);
+    }
     Some(EntityId(id))
 }
 
@@ -112,6 +115,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     }
     entities::keep(world, entity, layer, unique_id, compound);
     villagers::arm(world, entity, layer, &kind, true, None);
+    crate::riding::give_strength(world, entity, &kind);
     reshow(world, entity);
     crate::riding::adopt(world, entity);
     true

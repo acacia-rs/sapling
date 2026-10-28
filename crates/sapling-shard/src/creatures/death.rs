@@ -33,6 +33,10 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
         }
     }
     omens::died(world, entity, layer, body);
+    let [x, y, z] = body.at;
+    for stack in crate::riding::spilled(world, entity) {
+        drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
+    }
     world.entity_mut(entity).insert(Dying(now + lasts.unwrap_or(DYING))).remove::<entities::Stored>();
     if let Some(mut health) = world.get_mut::<Health>(entity) {
         health.end();

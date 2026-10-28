@@ -33,3 +33,17 @@ The full uuids are in the exe as text (`D392B075-4BA1-40AE-8789-AF868D56F6CE`,
     `max(0, d1 + d2 - M - M / 20)` (the `* -0x6667 >> 19` is `/ 20`), M the max damage (vfunc +0x120).
   - Only the curses 27 (binding) and 28 (vanishing) of either item are added back, each (id, level) once
     (141b55db0); everything else in the tags is dropped.
+
+## Mounts (riding/strength.rs, riding/packs.rs)
+
+- **Llama strength** (ED `llama.json`, `trader_llama.json`): `minecraft:add_attributes`, triggered by every spawn
+  event, adds `strength_1` to `strength_5` at weights 32, 32, 32, 2, 2; each sets `minecraft:strength` with
+  `max` 5. The tamed group's `minecraft:inventory` has `additional_slots_per_strength` 3, so the chest holds
+  3 × strength. Kept as `Strength` and `StrengthMax` (ints; the `StrengthMax` key is read in `Actor::load`
+  140d48140). sapling shows it as the `Strength` (75) and `MaxStrength` (76) metadata after the mob's
+  announcement, and rolls it for a stored llama that kept none.
+- **Carpets**: slot 1 of a llama (`minecraft:equippable` slot 1, `carpet`) is worn as the horse's armour is:
+  `MobArmorEquipment`'s body slot. A tamed grown llama takes a held carpet by a click (the tamed groups'
+  `equip_item_slot`, sound `armor.equip_generic`).
+- **Death**: a dying mount lets go of its tack, its goods and, when chested, the chest (JAVA
+  `AbstractChestedHorse.dropEquipment`, outside the `doMobLoot` gate), where its loot appears.

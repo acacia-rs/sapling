@@ -3,9 +3,9 @@
 //! llama was given (15 slots, a llama 3 for each point of strength). It opens on the horse screen
 //! (`ContainerOpen` of type Horse naming the mob, then `UpdateEquipment` saying what each tack slot
 //! takes) to a sneaking player's click and to its rider's inventory key; what is in it is kept in
-//! the mob's `ChestItems` by slot, and slots 0 and 1 are the tack it shows.
-// TODO: a llama's strength is not rolled (3 for all), a carpet does not show on it, the chest's
-// goods are not dropped when it dies, and a donkey's chest does not switch its component groups.
+//! the mob's `ChestItems` by slot, and slots 0 and 1 are the tack it shows. It dies spilling all
+//! of it, and the chest itself.
+// TODO: a donkey's chest does not switch its component groups.
 
 use acacia_proto::nbt::{self, List, Nbt, Network, Raw, Value};
 use acacia_proto::packets::UpdateEquipment;
@@ -31,7 +31,6 @@ const LLAMAS: [&str; 2] = ["minecraft:llama", "minecraft:trader_llama"];
 const HORSE: &str = "minecraft:horse";
 const TACK: usize = 2;
 const DONKEY_CHEST: usize = 15;
-const LLAMA_STRENGTH: usize = 3;
 const PER_STRENGTH: usize = 3;
 const HORSE_ARMOR: [&str; 6] = ["leather", "copper", "iron", "golden", "diamond", "netherite"];
 const CARPETS: [&str; 18] = [
@@ -58,7 +57,7 @@ fn has_pack(kind: &str) -> bool {
 fn size(world: &World, mob: Entity, kind: &str) -> usize {
     let chest = match kind {
         _ if !chested(world, mob) => 0,
-        _ if LLAMAS.contains(&kind) => LLAMA_STRENGTH * PER_STRENGTH,
+        _ if LLAMAS.contains(&kind) => super::strength::of(world, mob).unwrap_or(0) as usize * PER_STRENGTH,
         _ if CHESTED.contains(&kind) => DONKEY_CHEST,
         _ => 0,
     };
@@ -70,7 +69,7 @@ fn stack(name: &str) -> ItemStack {
 }
 
 /// What the slot `slot` takes: a saddle, a horse's armour or a llama's carpet, else anything.
-fn takes(kind: &str, slot: usize, item: &str) -> bool {
+pub(super) fn takes(kind: &str, slot: usize, item: &str) -> bool {
     let bare = item.strip_prefix("minecraft:").unwrap_or(item);
     match slot {
         0 => item == SADDLE,
@@ -120,6 +119,17 @@ fn goods(world: &World, mob: Entity) -> Vec<(u8, ItemStack)> {
     saddle.into_iter().chain(armor).chain(stored.into_iter().filter(|(slot, _)| usize::from(*slot) >= TACK)).collect()
 }
 
+/// What a dying mount lets go of: its tack and goods, and the chest they were in (Java's
+/// `AbstractChestedHorse.dropEquipment`).
+pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
+    if !world.get::<Kind>(mob).is_some_and(|kind| has_pack(&kind.0)) {
+        return Vec::new();
+    }
+    let mut spilled: Vec<ItemStack> = goods(world, mob).into_iter().map(|(_, stack)| stack).collect();
+    spilled.extend(chested(world, mob).then(|| stack(CHEST)));
+    spilled
+}
+
 /// Writes `mob`'s tack and goods into what a world folder keeps of it.
 pub(super) fn keep(world: &mut World, mob: Entity) {
     let items = goods(world, mob);
@@ -131,11 +141,11 @@ pub(super) fn keep(world: &mut World, mob: Entity) {
     });
 }
 
-/// A mob a world folder kept: the armour in its slot 1 is worn again.
+/// A mob a world folder kept: the armour or carpet in its slot 1 is worn again.
 pub(super) fn adopt(world: &mut World, mob: Entity) {
     let Some(kind) = world.get::<Kind>(mob).map(|kind| kind.0.clone()).filter(|kind| has_pack(kind)) else { return };
     let stored = world.get::<Stored>(mob).map(|stored| sapling_world::actor_chest(&stored.compound)).unwrap_or_default();
-    if let Some((_, armor)) = stored.into_iter().find(|(slot, stack)| *slot == 1 && takes(&kind, 1, &stack.name) && kind == HORSE) {
+    if let Some((_, armor)) = stored.into_iter().find(|(slot, stack)| *slot == 1 && takes(&kind, 1, &stack.name)) {
         wear(world, mob, Some(armor));
     }
 }
@@ -173,7 +183,7 @@ pub(crate) fn load(world: &mut World, mob: Entity, slots: Vec<Option<Held>>) {
     containers::tell_changed(world, viewers, &changed, &slots);
     if changed.iter().any(|slot| *slot < TACK) {
         let saddled = slots[0].is_some();
-        let armor = slots.get(1).cloned().flatten().map(|held| held.stack).filter(|_| world.get::<Kind>(mob).is_some_and(|kind| kind.0 == HORSE));
+        let armor = slots.get(1).cloned().flatten().map(|held| held.stack).filter(|stack| world.get::<Kind>(mob).is_some_and(|kind| takes(&kind.0, 1, &stack.name)));
         if let Some(mut raised) = world.get_mut::<Raised>(mob) {
             raised.saddled = saddled;
         }

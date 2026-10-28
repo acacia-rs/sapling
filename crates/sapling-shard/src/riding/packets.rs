@@ -28,6 +28,7 @@ pub(super) fn link(vehicle: u64, rider: u64, kind: LinkKind, immediate: bool) ->
 fn item(key: Key, value: Plain) -> Item {
     let (r#type, legacy_type) = match value {
         Plain::Byte(_) => (Type::Byte, 0),
+        Plain::Int(_) => (Type::Int, 2),
         Plain::Float(_) => (Type::Float, 3),
         Plain::String(_) => (Type::String, 4),
         _ => (Type::Vec3f, 8),
@@ -37,6 +38,11 @@ fn item(key: Key, value: Plain) -> Item {
 
 fn data(id: u64, metadata: Vec<Item>) -> Bytes {
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
+}
+
+/// The llama `id`'s strength and the most it may have.
+pub(super) fn strength(id: u64, strength: i32, max: i32) -> Bytes {
+    data(id, vec![item(Key::Strength, Plain::Int(strength)), item(Key::MaxStrength, Plain::Int(max))])
 }
 
 /// The rider `id`'s seat, `position` against its vehicle; with its turn held, all of BDS's items.

@@ -91,9 +91,34 @@ pub fn flagged_actor(compound: &[u8], key: &str, on: bool) -> Result<Vec<u8>, Er
     Ok(written(Value::Compound(fields)))
 }
 
+/// A stored llama's strength and the most it may have (`Strength`, `StrengthMax`).
+pub fn actor_strength(compound: &[u8]) -> Option<(i32, i32)> {
+    let fields = fields_of(compound).ok()?;
+    let int = |key: &str| match fields.iter().find(|(name, _)| name == key) {
+        Some((_, Value::Int(value))) => Some(*value),
+        _ => None,
+    };
+    Some((int("Strength")?, int("StrengthMax")?))
+}
+
+/// A stored actor keeping `strength` of at most `max`.
+pub fn strong_actor(compound: &[u8], strength: i32, max: i32) -> Result<Vec<u8>, Error> {
+    let mut fields = fields_of(compound)?;
+    put(&mut fields, "Strength", Some(Value::Int(strength)));
+    put(&mut fields, "StrengthMax", Some(Value::Int(max)));
+    Ok(written(Value::Compound(fields)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_llamas_strength_is_kept() {
+        let llama = crate::new_actor(7, "minecraft:llama", [0.5, 64.0, 0.5], [0.0; 3]);
+        assert_eq!(actor_strength(&llama), None);
+        assert_eq!(actor_strength(&strong_actor(&llama, 4, 5).unwrap()), Some((4, 5)));
+    }
 
     #[test]
     fn riders_and_goods_go_into_an_actor_and_come_back() {

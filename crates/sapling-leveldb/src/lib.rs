@@ -39,7 +39,7 @@ use std::path::PathBuf;
 pub use actor_gear::{actor_pose, geared_actor};
 pub use actor_harm::{actor_attributes, attributed_actor, harmed_actor};
 pub use actor_home::{actor_home, homed_actor};
-pub use actor_riding::{actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor};
+pub use actor_riding::{actor_chest, actor_links, actor_strength, chested_actor, flagged_actor, linked_actor, strong_actor, varied_actor};
 pub use actor_tags::{actor_tags, tagged_actor};
 pub use actor_state::{WitherRecord, actor_effects, actor_fuse, effected_actor, fused_actor, wither_record, withered_actor};
 pub use hive::{Occupant, hive_occupants, new_hive, occupied_hive};
