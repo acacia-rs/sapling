@@ -84,6 +84,7 @@ fn killed_it_counts_down_200_ticks_flashing_faster_then_bursts_and_leaves_a_neth
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.remote.run(|ctx| ctx.set_game_mode(ALEX, GameMode::Creative));
+    h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Easy));
     let id = ask(&mut h, |ctx| ctx.spawn_entity(WITHER, [6.5, 66.0, 6.5]).unwrap());
     watch(&mut h, CHARGE);
     assert!(ask(&mut h, move |ctx| ctx.kill_entity(id)));

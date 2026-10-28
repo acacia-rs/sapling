@@ -192,6 +192,7 @@ fn an_enderman_teleports_now_and_then_by_night_and_out_of_water_which_costs_it_1
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
         ctx.set_time(18000);
         ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative);
         assert!(ctx.spawn_entity("minecraft:enderman", [0.5, 65.0, 4.5]).is_some());

@@ -33,6 +33,9 @@ pub struct PlayerData {
     pub progress: f32,
     /// Health, hunger, saturation and exhaustion; `None` in a record older than they are kept.
     pub vitals: Option<[f32; 4]>,
+    /// Ticks of breath left (`Air`) and of burning (`Fire`); `None` in a record without them.
+    pub air: Option<i16>,
+    pub fire: Option<i16>,
     /// The head of the bed (or the respawn anchor) it rises by and the cell it rises in.
     pub bed: Option<[[i32; 3]; 2]>,
     /// The dimension `bed` is in (0 overworld, 1 nether).
@@ -77,6 +80,8 @@ const GAME_MODE: &str = "PlayerGameMode";
 const ENCHANT_SEED: &str = "EnchantmentSeed";
 const UNIQUE_ID: &str = "UniqueID";
 const RESTED: &str = "TimeSinceRest";
+const AIR: &str = "Air";
+const FIRE: &str = "Fire";
 const RECIPES: [&str; 3] = ["recipe_unlocking", "used_contexts", "unlocked_recipes"];
 const STRING: u8 = 8;
 const BED: [&str; 3] = ["SpawnBlockPositionX", "SpawnBlockPositionY", "SpawnBlockPositionZ"];
@@ -127,6 +132,7 @@ impl PlayerData {
         let vitals = if let [Some(health), Some(hunger), Some(saturation), Some(exhaustion)] = VITALS.map(current) { Some([health, hunger, saturation, exhaustion]) } else { None };
         let int = |key: &str| if let Some(Value::Int(value)) = player.get(key) { Some(*value) } else { None };
         let float = |key: &str| if let Some(Value::Float(value)) = player.get(key) { Some(*value) } else { None };
+        let short = |key: &str| if let Some(Value::Short(value)) = player.get(key) { Some(*value) } else { None };
         let cell = |keys: [&str; 3]| if let [Some(x), Some(y), Some(z)] = keys.map(int) { Some([x, y, z]).filter(|cell| !cell.contains(&NO_SPAWN)) } else { None };
         let spawn_dimension = int(SPAWN_DIMENSION).unwrap_or(0);
         let died = matches!(player.get(HAS_DIED), Some(Value::Byte(1..)));
@@ -142,6 +148,8 @@ impl PlayerData {
             level: int("PlayerLevel").unwrap_or(0),
             progress: float("PlayerLevelProgress").unwrap_or(0.0),
             vitals,
+            air: short(AIR),
+            fire: short(FIRE),
             effects: list(EFFECTS).iter().filter_map(effect).collect(),
             dimension: int(DIMENSION).unwrap_or(0),
             position: match list("Pos") {
@@ -200,6 +208,11 @@ impl PlayerData {
         }
         if let Some(rested) = self.rested {
             set(&mut fields, RESTED, Value::Int(rested));
+        }
+        for (key, value) in [(AIR, self.air), (FIRE, self.fire)] {
+            if let Some(value) = value {
+                set(&mut fields, key, Value::Short(value));
+            }
         }
         if let Some(book) = &self.recipes {
             let unlocked = Value::List(List { tag: STRING, items: book.unlocked.iter().map(|id| Value::String(id.as_str().into())).collect() });

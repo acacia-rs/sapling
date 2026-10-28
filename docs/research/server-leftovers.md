@@ -77,6 +77,13 @@ right after the list, so a player sent the list late still gets the current word
   32-45, 49, 50, 52, 53, 55, 57-59, 104, 105, 114, 123, 126, 127, 131, 140, 146, 153.
 - sapling uses the packs' `monster` family minus piglin and dragon (spawning/peaceful.rs).
 
+## Breath and burning kept
+
+A player's record is the Actor save (0x140d40ec0) plus its own fields. `Fire` (Short, ticks left) is the
+field sapling already reads from stored actors (sapling-leveldb actors.rs). `Air` (Short, ticks of
+breath, 300 full) is the matching Actor field. sapling writes both, takes them up at load, and tells a
+player coming back short of breath its `Air` metadata in the join greeting.
+
 ## Not drilled
 
 - `/save`'s file list: which files BDS lists (sapling: every file but LOCK/LOG), their order and separator
@@ -88,4 +95,7 @@ right after the list, so a player sent the list late still gets the current word
 - Peaceful's set of kinds: the factory walk (depth 7) did not reach every `monster`-family kind. For
   example stray, husk, wither skeleton, drowned and bogged are missing, likely through shared subclass
   constructors. sapling assumes the family matches the class; a live check on BDS would settle it.
+- `Air` as a key: no plain "Air" string turned up in the exe (it may be inlined), so the name and type
+  come from the documented Bedrock actor format. Also not drilled: whether BDS shows a player's
+  burning flag in its first metadata after joining (sapling: from the first fire hurt).
 - The tick a monster goes after `/difficulty peaceful` (sapling: the same tick, after despawning).

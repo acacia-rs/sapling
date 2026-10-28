@@ -15,6 +15,7 @@ fn the_sun_burns_a_zombie_under_the_sky_and_not_a_creeper_or_one_under_a_roof() 
         let mut h = Harness::new();
         h.enter(1, "Alex");
         h.remote.run(move |ctx| {
+            ctx.set_difficulty(Difficulty::Easy);
             ctx.set_game_mode(PlayerId(1), GameMode::Creative);
             ctx.set_time(time);
             if roofed {
@@ -127,6 +128,7 @@ fn a_hurt_witch_drinks_healing_in_33_ticks_and_mends() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
         ctx.set_game_mode(PlayerId(1), GameMode::Creative);
         assert!(ctx.spawn_entity("minecraft:witch", [0.5, 65.0, 2.5]).is_some());
     });

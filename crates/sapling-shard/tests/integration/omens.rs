@@ -13,6 +13,7 @@ use sapling_api::{Effect, EntityId, GameMode, PlayerId};
 fn killed_with(effect: Effect) -> (Harness, Vec<acacia_proto::RawPacket>) {
     let mut h = Harness::new();
     h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_difficulty(sapling_api::Difficulty::Easy));
     let zombie = Arc::new(Mutex::new(None));
     let found = zombie.clone();
     h.remote.run(move |ctx| {
@@ -64,6 +65,7 @@ fn an_infested_cow_hit_lets_out_a_silverfish_now_and_then() {
     // time in sixty.
     let mut h = Harness::new();
     h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_difficulty(sapling_api::Difficulty::Easy));
     let cow = Arc::new(Mutex::new(None));
     let found = cow.clone();
     h.remote.run(move |ctx| {

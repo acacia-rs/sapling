@@ -51,6 +51,7 @@ fn a_medium_slime_takes_its_prey_squishes_as_it_hops_at_it_and_hurts_it_for_2_by
 fn a_large_slime_killed_leaves_two_to_four_medium_ones_heard_born_and_a_small_one_none() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Easy));
     summon(&mut h, "spawn_large", [0.5, 65.0, 8.5]);
     summon(&mut h, "spawn_small", [4.5, 65.0, 8.5]);
     let ids: Vec<u64> = all::<AddEntity>(h.tick_all().to(1)).iter().filter(|added| added.entity_type == "minecraft:slime").map(|added| added.runtime_id).collect();

@@ -20,7 +20,7 @@ fn player() -> PlayerData {
     let ender = vec![None, None, stack("minecraft:emerald", 12, None)];
     let armor = vec![stack("minecraft:iron_helmet", 1, None), None, None, None];
     PlayerData {
-        main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]),
+        main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]), air: Some(-7), fire: Some(160),
         bed: Some([[5, 64, -3], [4, 64, -3]]), spawn_dimension: 1, last_death: Some(([-2, 101, 2], 1)), effects: vec![[1, 1, 600, 1], [19, 0, 40, 0]], dimension: 1, position: Some([-14.5, 34.0, 7.5]),
         rotation: Some([135.0, -12.5]), game_mode: Some(1), enchant_seed: Some(-123_456), tags: vec!["vip".into(), "§cred".into()],
         unique_id: Some(-4294967295), rested: Some(80_000), recipes: Some(RecipeRecord { unlocked: vec!["minecraft:stick".into(), "minecraft:torch".into()], used_contexts: 8 }),

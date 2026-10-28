@@ -199,4 +199,4 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.
 - Not built: drinks, effects, lying down under a block. A player rises by the bed or Nether anchor it
-  last clicked while it stands (`sleep/spawn.rs` `spawn_of`), and either waits in storage with the player's items, as does its last death (`vitals/last_death.rs`). Health and hunger wait in storage with a player's items (`vitals/kept.rs`); effects, breath and fire do not, and one who left dead comes back whole.
+  last clicked while it stands (`sleep/spawn.rs` `spawn_of`), and either waits in storage with the player's items, as does its last death (`vitals/last_death.rs`). Health, hunger, breath (`Air`) and burning (`Fire`) wait in storage with a player's items (`vitals/kept.rs`), as do effects (`vitals/effects.rs`); one who left dead comes back whole.
