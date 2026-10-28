@@ -7,16 +7,16 @@ use crate::common;
 use std::sync::Arc;
 
 use acacia_proto::nbt::{List, Value};
-use acacia_proto::packets::{AddEntity, ContainerOpen, MobEffect, PlayerEnchantOptions};
+use acacia_proto::packets::{AddEntity, AddItemEntity, BlockEntityData, ContainerOpen, MobEffect, PlayerEnchantOptions};
 use acacia_proto::types::{
-    ContainerSlotType as Container, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentBeaconPayment as Payment,
+    Action as BlockAction, ContainerSlotType as Container, ItemV4Extra, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentBeaconPayment as Payment,
     ItemStackRequestActionsItemContentCraftGrindstoneRequest as Grind, ItemStackRequestActionsItemContentCraftLoomRequest as Loom, ItemStackRequestActionsItemContentDestroy as Destroy,
     ItemStackRequestActionsItemContentCraftRecipe as Craft, ItemStackRequestActionsItemContentOptional as Optional, ItemStackResponsesItemStatus as Status,
     WindowType,
 };
 use common::requests::{answer, consume, place, renaming, request, slot};
 use common::stored::{compound, enter_stored, floor_holding};
-use common::{Harness, all, click, config};
+use common::{Harness, all, block_actions, click, config};
 use sapling_world::{ItemStack, MemoryStorage, PlayerData, World, WorldStorage};
 
 /// Off the column's edge, so that a beacon's pyramid fits in the column.
@@ -216,6 +216,25 @@ fn a_loom_adds_the_dyes_pattern_after_the_banners_own() {
     assert_eq!(patterns.items, [compound([("Color", Value::Int(1)), ("Pattern", Value::String("bo".into()))])]);
     assert_eq!(kept.main[0].as_ref().map(|banner| banner.damage), Some(15));
     assert_eq!(kept.main[1].as_ref().map(|dye| dye.count), Some(1));
+}
+
+#[test]
+fn a_patterned_banner_keeps_its_patterns_placed_and_broken() {
+    let bordered = compound([("Patterns", Value::List(List { tag: 10, items: vec![compound([("Color", Value::Int(1)), ("Pattern", Value::String("bo".into()))])] })), ("Type", Value::Int(0))]);
+    let banner = Some(ItemStack { damage: 15, ..stack("minecraft:banner", 1, Some(bordered)).unwrap() });
+    let (mut h, _storage, _) = at("minecraft:loom", &[], PlayerData { main: vec![banner], ..PlayerData::default() });
+    const SPOT: [i32; 3] = [3, 64, 0];
+    h.receive(1, &click([3, 63, 0], 1, None));
+    let shown = all::<BlockEntityData>(&h.tick(1)).into_iter().map(|data| data.nbt.decode().unwrap().value).find(|entity| entity.get("id") == Some(&Value::String("Banner".into())));
+    let shown = shown.expect("the banner's entity");
+    assert!(matches!(shown.get("Patterns"), Some(Value::List(list)) if list.items.len() == 1), "{shown:?}");
+    h.receive(1, &block_actions(&[(BlockAction::StartBreak, SPOT)]));
+    (0..40).for_each(|_| drop(h.tick(1)));
+    h.receive(1, &block_actions(&[(BlockAction::PredictBreak, SPOT)]));
+    let left = all::<AddItemEntity>(&h.tick(1));
+    assert_eq!(left.len(), 1);
+    let ItemV4Extra::Default(Some(extra)) = &left[0].item.extra else { panic!("{:?}", left[0].item) };
+    assert!(format!("{:?}", extra.nbt).contains("\"bo\""), "{:?}", extra.nbt);
 }
 
 /// A paid beacon on a one-layer pyramid, with `above` over it; what it gives in 80 ticks.

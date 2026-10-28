@@ -81,11 +81,11 @@ pub(super) fn pop_by(world: &mut World, layer: Entity, pos: BlockPos, by: &loot:
     let (air, particles) = (registry.air_id(), send::destroy_particles(registry, pos, id));
     let (name, properties) = registry.get(id).map_or(("", ""), |state| (state.name, state.properties));
     let mut left = loot::thrown(world, name, properties, by);
-    loot::add_entity_loot(world, layer, pos, &mut left);
+    let mut tags = loot::add_entity_loot(world, layer, pos, &mut left);
     doors::remove_other_half(world, layer, pos);
     if send::set(world, layer, pos, air) {
         send::to_viewers(world, layer, pos, &[particles]);
-        loot::spill(world, layer, pos, &left);
+        loot::spill_tagged(world, layer, pos, &left, &mut tags);
     }
 }
 

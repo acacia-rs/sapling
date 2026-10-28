@@ -19,11 +19,31 @@ const KEPT_AS_DAMAGE: &[(&str, &str)] = &[("minecraft:bed", "color"), ("minecraf
 const COMPOUND: u8 = 10;
 
 /// How a block was placed, as far as its entity tells: the item's damage (a bed's or a
-/// banner's colour), the placer's yaw and the block's properties.
+/// banner's colour) and tag (a banner's patterns), the placer's yaw and the block's properties.
 pub(super) struct Placing<'a> {
     pub damage: i16,
+    pub tag: Option<&'a Value>,
     pub yaw: f32,
     pub properties: &'a str,
+}
+
+const PATTERNS: &str = "Patterns";
+const BANNER_TYPE: &str = "Type";
+/// BDS's `BannerBlockActor` reads at most this many of an item's patterns (141f0cad0).
+const MAX_PATTERNS: usize = 6;
+
+/// A banner's entity fields from the item placing it: its colour by damage, its kind (1 ominous)
+/// and patterns by tag.
+fn banner(placing: &Placing) -> Vec<(&'static str, Value)> {
+    let kind = match placing.tag.and_then(|tag| tag.get(BANNER_TYPE)) {
+        Some(Value::Int(kind)) => *kind,
+        _ => 0,
+    };
+    let mut fields = vec![("Base", Value::Int(placing.damage.into())), (BANNER_TYPE, Value::Int(kind))];
+    if let Some(Value::List(patterns)) = placing.tag.and_then(|tag| tag.get(PATTERNS)).filter(|patterns| matches!(patterns, Value::List(list) if !list.items.is_empty())) {
+        fields.push((PATTERNS, Value::List(List { tag: COMPOUND, items: patterns.items.iter().take(MAX_PATTERNS).cloned().collect() })));
+    }
+    fields
 }
 
 fn sign_side() -> Value {
@@ -56,7 +76,7 @@ pub(super) fn placed(block: &str, pos: BlockPos, placing: &Placing) -> Option<Va
             let fields = [("SkullType", Value::Byte(-1)), ("Rotation", Value::Float(skull_rotation(placing))), ("DoingAnimation", Value::Byte(0)), ("MouthTickCount", Value::Int(0))];
             ("Skull", fields.into())
         }
-        _ if BANNERS.contains(&block) => ("Banner", vec![("Base", Value::Int(placing.damage.into())), ("Type", Value::Int(0))]),
+        _ if BANNERS.contains(&block) => ("Banner", banner(placing)),
         "minecraft:flower_pot" => ("FlowerPot", Vec::new()),
         "minecraft:bell" => ("Bell", super::bells::UNRUNG.into()),
         "minecraft:chiseled_bookshelf" => ("ChiseledBookshelf", Vec::new()),
@@ -112,4 +132,36 @@ pub(super) fn into_loot(kept: &Value, items: &mut Vec<Item>) {
         }
     }
     items.extend(held_items(kept));
+}
+
+/// The tags a broken block's entity `kept` gives the items it leaves, by item: a banner's
+/// patterns and kind, none for a plain banner.
+pub(super) fn loot_tags(kept: &Value) -> Vec<(&'static str, Value)> {
+    if kept.get("id") != Some(&Value::String("Banner".into())) {
+        return Vec::new();
+    }
+    let patterns = kept.get(PATTERNS).filter(|patterns| matches!(patterns, Value::List(list) if !list.items.is_empty()));
+    let kind = kept.get(BANNER_TYPE).filter(|kind| **kind != Value::Int(0));
+    let fields: Vec<_> = [(PATTERNS, patterns), (BANNER_TYPE, kind)].into_iter().filter_map(|(key, value)| Some((key.into(), value?.clone()))).collect();
+    if fields.is_empty() { Vec::new() } else { vec![("minecraft:banner", Value::Compound(fields))] }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_banner_takes_its_items_patterns_and_gives_them_back() {
+        let layer = |pattern: &str| Value::Compound(vec![("Color".into(), Value::Int(1)), ("Pattern".into(), Value::String(pattern.into()))]);
+        let patterns = Value::List(List { tag: COMPOUND, items: ["bo", "cr", "bl", "br", "tl", "tr", "ts"].map(layer).into() });
+        let tag = Value::Compound(vec![(PATTERNS.into(), patterns), (BANNER_TYPE.into(), Value::Int(0))]);
+        let placing = Placing { damage: 15, tag: Some(&tag), yaw: 0.0, properties: "" };
+        let entity = placed("minecraft:standing_banner", [0, 64, 0], &placing).unwrap();
+        let Some(Value::List(kept)) = entity.get(PATTERNS) else { panic!("{entity:?}") };
+        assert_eq!(kept.items.len(), MAX_PATTERNS);
+        let [(item, given)] = loot_tags(&entity).try_into().unwrap();
+        assert_eq!((item, given.get(PATTERNS).is_some(), given.get(BANNER_TYPE)), ("minecraft:banner", true, None));
+        let plain = placed("minecraft:wall_banner", [0, 64, 0], &Placing { tag: None, ..placing }).unwrap();
+        assert!(plain.get(PATTERNS).is_none() && loot_tags(&plain).is_empty());
+    }
 }
