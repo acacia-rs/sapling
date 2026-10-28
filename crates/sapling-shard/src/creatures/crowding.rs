@@ -22,7 +22,8 @@ use crate::entities;
 /// BDS's cows were moved by twice over.
 const SHOVE: f32 = 0.1;
 const TOGETHER: f32 = 0.01;
-/// Boxes this much wider meet: BDS's cows 0.995 apart pushed, 0.9 wide, and 1.561 apart did not.
+/// Boxes this much wider meet: BDS's cows 0.995 apart pushed, 0.9 wide, and 1.561 apart did not;
+/// its warden 0.897 off a player was pushed (bds-warden.txt).
 const GRACE: f32 = 0.2;
 /// Mobs are sorted into squares this wide, as wide as the widest mob that walks.
 const SQUARE: f32 = 4.0;
