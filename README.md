@@ -2,6 +2,8 @@
 
 A Rust framework for building Minecraft: Bedrock Edition servers, from hubs and minigames to survival.
 
+[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/DNFJBJBVPr)
+
 _Currently supported Minecraft version: `1.26.52` (protocol `2193`)._
 
 > [!WARNING]
@@ -30,7 +32,7 @@ _Currently supported Minecraft version: `1.26.52` (protocol `2193`)._
 - [Overworld generation](crates/sapling-worldgen) that matches the vanilla dedicated server block for
   block, terrain, features and structures included
 
-**[Join the Discord](https://discord.gg/DNFJBJBVPr)** for questions, bug reports and to share servers you've built.
+[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/DNFJBJBVPr) for questions, bug reports and to share servers you've built.
 
 ## Goals
 
