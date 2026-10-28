@@ -77,6 +77,30 @@ fn a_chorus_flower_on_end_stone_grows_into_a_plant() {
 }
 
 #[test]
+fn lava_with_air_over_it_sets_fire_beside_planks_near_it() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        for x in 3..=7 {
+            for z in -2..=2 {
+                set(ctx, [x, 64, z], Block::new("stone"));
+                set(ctx, [x, 65, z], Block::new("stone"));
+            }
+        }
+        set(ctx, [5, 65, 0], Block::new("lava"));
+        set(ctx, [6, 66, 0], Block::new("oak_planks"));
+    });
+    h.tick(1);
+    speed(&mut h, 3000);
+    let around: Vec<[i32; 3]> = (4..=7).flat_map(|x| (66..=67).flat_map(move |y| (-1..=1).map(move |z| [x, y, z]))).collect();
+    let lit = (0..40).any(|_| {
+        (0..10).for_each(|_| _ = h.tick(1));
+        names(&mut h, around.clone()).iter().any(|name| name.starts_with("minecraft:fire"))
+    });
+    assert!(lit, "no fire by the planks");
+}
+
+#[test]
 fn a_sponge_set_in_water_soaks_it_up_and_turns_wet() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
