@@ -107,9 +107,61 @@ pub fn drill(name: &str) -> Option<Vec<String>> {
                 lines.extend([format!("!light {} -60 5 up 2000", x + 4), format!("tp @s {}.5 -59 5.5 #14000", x + 4), "!where".into(), "!portals 24".into()]);
             }
         }
+        // Overworld portals made in a cleared void: none to stand on (the no-site platform), then
+        // a floor under leaf litter and under snow three high (the site search's empty cells).
+        "voids" => {
+            for (nx, cover) in [(100, None), (150, Some("leaf_litter")), (200, Some(r#"snow_layer ["height"=3]"#))] {
+                lines.extend(void_trip(nx, 78, cover));
+            }
+        }
+        // No-site platforms across a section boundary on y as well (the floor at 79), where two of
+        // the three sections share a bucket of eight: the sections' order.
+        "collide" => {
+            for nx in [240, 264] {
+                lines.extend(void_trip(nx, 77, None));
+            }
+        }
+        // 21 x 21 frames lit across four sections each, along x and along z: the sections' order.
+        "sections" => {
+            lines.push("replaceitem entity @s slot.weapon.mainhand 0 flint_and_steel".into());
+            for k in 0..6 {
+                let z = 28 + 32 * k;
+                lines.push(format!("tp @s 17.5 -60 {}.5 #1000", z - 2));
+                lines.push(format!("fill 19 -60 {z} 41 -38 {z} obsidian"));
+                lines.push(format!("fill 20 -59 {z} 40 -39 {z} air"));
+                lines.push(format!("!light 20 -60 {z} up 2000"));
+                let x = 60 + 32 * k;
+                lines.push(format!("tp @s {}.5 -60 19.5 #1000", x - 2));
+                lines.push(format!("fill {x} -60 19 {x} -38 41 obsidian"));
+                lines.push(format!("fill {x} -59 20 {x} -39 40 air"));
+                lines.push(format!("!light {x} -60 20 up 2000"));
+            }
+        }
         _ => lines.extend(super::end::drill(name).or_else(|| super::eye::drill(name))?),
     }
     Some(lines)
+}
+
+/// Through a Nether portal at x `nx`, height `ny`, z 0 into an overworld cleared round where it
+/// arrives, (8 nx + 15, ny + 1.62, 4): the floor taken out for 20 blocks round, then, with `cover`,
+/// a stone floor at y 78 under a layer of it. The platform crosses sections on x.
+fn void_trip(nx: i32, ny: i32, cover: Option<&str>) -> Vec<String> {
+    let x = 8 * nx + 15;
+    let mut lines = vec![format!("execute in overworld run tp @s {x}.5 -60 40.5 #6000")];
+    for (z0, z1) in [(-16, -1), (0, 15), (16, 24)] {
+        lines.push(format!("fill {} -64 {z0} {} -61 {z1} air", x - 20, x + 20));
+    }
+    if let Some(cover) = cover {
+        lines.push(format!("fill {} 78 2 {} 78 7 stone", x - 5, x - 1));
+        lines.push(format!("fill {} 79 2 {} 79 7 {cover}", x - 5, x - 1));
+    }
+    lines.push(format!("execute in nether run tp @s {nx}.5 90 -3.5 #9000"));
+    lines.push(format!("fill {} {} -6 {} {} 2 air", nx - 3, ny - 2, nx + 4, ny + 6));
+    lines.push(format!("fill {} {} -6 {} {} 2 netherrack", nx - 3, ny - 2, nx + 4, ny - 2));
+    lines.extend(frame(nx, ny, 0));
+    lines.extend([format!("!light {nx} {} 0 up 2000", ny - 1), "!wait 6000".into(), format!("tp @s {}.9 {ny} 0.5 #14000", nx + 1), "!where".into(), "!portals 24".into()]);
+    lines.push(format!("!box {} 76 -16 {} 84 24", x - 20, x + 20));
+    lines
 }
 
 /// Frames of other sizes and ways to light them, along z from x 20 on, each lit at its lower left.
