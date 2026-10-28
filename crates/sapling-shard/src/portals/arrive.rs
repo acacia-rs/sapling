@@ -36,17 +36,34 @@ fn placed(exit: &PortalRecord, cell: [i32; 3], entrance: Option<(PortalRecord, f
     if exit.along_x { [x + along, y, z + 0.5] } else { [x + 0.5, y, z + along] }
 }
 
-/// Settles the trips whose columns are loaded.
+/// A trip's way out, chosen once the columns round where it arrives are loaded: the portal, the
+/// cell it was found by, and a made portal's cells, written then and shown at [`settle`].
+#[derive(Component)]
+pub(crate) struct Exit {
+    trip: Trip,
+    record: PortalRecord,
+    cell: [i32; 3],
+    made: Vec<([i32; 3], u32, u32)>,
+}
+
+/// Chooses the exits of the trips whose columns are loaded, and settles those whose client holds
+/// its spawn columns, as BDS places a traveller and shows a made portal after them
+/// (bds-portal-voids.txt). A made portal is written before its columns go out, so the client's
+/// sections carry it whichever comes first.
 pub(crate) fn arrive(world: &mut World) {
     let due: Vec<(Entity, Trip)> = world.query::<(Entity, &Arriving)>().iter(world).filter(|(_, arriving)| !arriving.told_ready).filter_map(|(player, arriving)| Some((player, arriving.trip?))).collect();
     for (player, trip) in due {
         let (Some(layer), Some(at)) = (world.get::<InLayer>(player).map(|l| l.0), world.get::<Position>(player).map(|p| p.feet)) else { continue };
-        // BDS shows the made portal to a client that holds the columns round it (bds-portal-voids.txt).
-        let sent = world.get::<View>(player).is_some_and(chunks::spawn_columns_sent);
-        if !loaded_round(world, layer, at) || !sent {
-            continue;
+        if world.get::<Exit>(player).is_none_or(|exit| exit.trip != trip) {
+            if !loaded_round(world, layer, at) {
+                continue;
+            }
+            let Some(exit) = choose(world, layer, at, trip) else { continue };
+            world.entity_mut(player).insert(exit);
         }
-        settle(world, player, layer, at, trip);
+        if world.get::<View>(player).is_some_and(chunks::spawn_columns_sent) {
+            settle(world, player, layer);
+        }
     }
 }
 
@@ -63,30 +80,35 @@ fn loaded_round(world: &mut World, layer: Entity, [x, _, z]: [f32; 3]) -> bool {
     all
 }
 
-fn settle(world: &mut World, player: Entity, layer: Entity, at: [f32; 3], trip: Trip) {
+/// The portal a trip arriving at `at` goes to: the nearest standing one, else one made and written
+/// now.
+fn choose(world: &mut World, layer: Entity, at: [f32; 3], trip: Trip) -> Option<Exit> {
     let home = dimensions::home(world, layer);
-    let Some(dimension) = world.get::<Layer>(layer).map(|level| level.world.dimension()) else { return };
+    let dimension = world.get::<Layer>(layer)?.world.dimension();
     let portals = world.get::<Layer>(home).map(|level| level.world.level().portals.clone()).unwrap_or_default();
-    let came_by = entrance(&portals, &trip);
     // A record whose portal is not loaded is taken at its word.
     let standing = |world: &World, (record, _): &(PortalRecord, [i32; 3])| {
         let [x, _, z] = record.corner;
         world.get::<Layer>(layer).is_some_and(|level| !level.world.is_loaded(ChunkPos::of_block(x, z)) || blocks::portal_axis(&level.world, record.corner).is_some())
     };
     let found = records::nearest(&portals, dimension, at.map(|c| c.floor() as i32)).filter(|found| standing(world, found));
-    let (exit, cell, made) = match found {
-        Some((record, cell)) => (record, cell, Vec::new()),
-        None => {
-            // BDS measures from a player's position, its eyes (the platform's y in bds-portal-voids.txt).
-            let Some((record, cells)) = make(world, layer, [at[0], at[1] + EYE_HEIGHT, at[2]]) else { return };
-            (record, record.corner, cells)
-        }
-    };
-    let feet = placed(&exit, cell, came_by);
-    let [yaw, pitch] = trip.look;
-    if let Some(mut position) = world.get_mut::<Position>(player) {
-        position.pitch = pitch;
+    if let Some((record, cell)) = found {
+        return Some(Exit { trip, record, cell, made: Vec::new() });
     }
+    // BDS measures from a player's position, its eyes (the platform's y in bds-portal-voids.txt).
+    let (record, cells) = make(world, layer, [at[0], at[1] + EYE_HEIGHT, at[2]])?;
+    let made = blocks::write_quietly(world, layer, &cells);
+    Some(Exit { trip, record, cell: record.corner, made })
+}
+
+fn settle(world: &mut World, player: Entity, layer: Entity) {
+    let Some(Exit { trip, record: exit, cell, made }) = world.entity_mut(player).take::<Exit>() else { return };
+    let home = dimensions::home(world, layer);
+    let Some(dimension) = world.get::<Layer>(layer).map(|level| level.world.dimension()) else { return };
+    let portals = world.get::<Layer>(home).map(|level| level.world.level().portals.clone()).unwrap_or_default();
+    let came_by = entrance(&portals, &trip);
+    let feet = placed(&exit, cell, came_by);
+    let yaw = world.get::<Position>(player).map_or(0.0, |position| position.yaw);
     // A portal of the other axis turns the traveller with it.
     let turn = match came_by {
         Some((entered, _)) if entered.along_x != exit.along_x => if dimension == NETHER { 90.0 } else { -90.0 },
@@ -100,13 +122,11 @@ fn settle(world: &mut World, player: Entity, layer: Entity, at: [f32; 3], trip: 
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.push(&dimensions::ready(id));
     }
-    if !made.is_empty() {
-        blocks::write_shown_nether(world, layer, &made);
-    }
+    blocks::show_nether(world, layer, &made);
 }
 
 /// Makes a portal for a traveller whose eyes arrive at `at`: its record and the cells to write
-/// with their update flags, which [`settle`] shows after the traveller is told it is there.
+/// with their update flags.
 fn make(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<(PortalRecord, Vec<([i32; 3], u32, u32)>)> {
     let home = dimensions::home(world, layer);
     let seed = world.get::<Layer>(home)?.world.level().seed;

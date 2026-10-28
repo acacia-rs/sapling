@@ -101,6 +101,12 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
   placeholder ChangeDimension, and the four Nether portals made at BDS's places and axes, the traveller
   put where BDS put it, yaw 90.
 - `break`: the same cells emptied in the same order (the broken block as its own UpdateBlock).
+- `voids`, `collide` (sapling-portal-voids.txt, -collide.txt): the same portals, platforms and rings,
+  the same made-portal packets, cells, flags and section order, but for the section order at x 1935
+  (Left). As in BDS, the traveller is placed and the made portal is shown after its spawn columns.
+  Before, sapling placed it earlier and sent the portal only inside the columns. sapling writes the
+  portal before the columns go out, so a client that drops updates to sections it has not received
+  still gets the portal.
 - `survival`: the trip after 4.7 s against BDS's 4.04 (81 ticks): the same count, the debug server under
   a loaded testbox ticks slower.
 - Seen only on sapling: after a flint and steel click sapling resends the clicked cells (UpdateBlock layers 0

@@ -74,8 +74,18 @@ pub(crate) fn write_shown(world: &mut World, layer: Entity, cells: &[(BlockPos, 
 /// order, one UpdateSubchunkBlocks per section, the last section touched first: BDS's order for
 /// Nether portals (docs/research/nether-dimension.md, "Section order").
 pub(crate) fn write_shown_nether(world: &mut World, layer: Entity, cells: &[(BlockPos, u32, u32)]) {
-    let written: Vec<(BlockPos, u32, u32)> = cells.iter().copied().filter(|(pos, id, _)| send::set_quietly(world, layer, *pos, *id)).collect();
-    let mut sections = in_sections(world, layer, &written);
+    let written = write_quietly(world, layer, cells);
+    show_nether(world, layer, &written);
+}
+
+/// Writes `cells` without telling anyone; the ones that changed.
+pub(crate) fn write_quietly(world: &mut World, layer: Entity, cells: &[(BlockPos, u32, u32)]) -> Vec<(BlockPos, u32, u32)> {
+    cells.iter().copied().filter(|(pos, id, _)| send::set_quietly(world, layer, *pos, *id)).collect()
+}
+
+/// Shows cells already written as [`write_shown_nether`] does.
+pub(crate) fn show_nether(world: &mut World, layer: Entity, written: &[(BlockPos, u32, u32)]) {
+    let mut sections = in_sections(world, layer, written);
     sections.reverse();
     show(world, layer, sections);
 }

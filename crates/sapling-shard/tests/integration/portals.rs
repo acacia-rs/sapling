@@ -85,8 +85,11 @@ fn a_creative_player_in_a_portal_goes_at_once_and_a_portal_is_made_for_it() {
     let change = all::<ChangeDimension>(&sent).remove(0);
     assert_eq!((change.dimension, [change.position.x, change.position.z], change.loading_screen_id), (1, [0.0, 0.0], Some(0)));
     let placed = all::<MovePlayer>(&sent).into_iter().find(|moved| moved.mode == MovePlayerMode::Reset).expect("placed in the new portal");
-    // Its columns were not sent yet: the client gets the portal with them, not as an update.
-    assert!(all::<UpdateSubchunkBlocks>(&sent).is_empty(), "{:?}", ids(&sent));
+    // Made once the client holds the columns round it, the portal follows the placing as an update.
+    let at = |id: u32| sent.iter().position(|packet| packet.id == id);
+    assert!(at(UpdateSubchunkBlocks::ID) > at(PlayerAction::ID), "{:?}", ids(&sent));
+    let obsidian = hash("minecraft:obsidian");
+    assert!(all::<UpdateSubchunkBlocks>(&sent).iter().any(|packet| packet.blocks.iter().any(|b| b.runtime_id == obsidian)), "{:?}", ids(&sent));
     let feet = [placed.position.x, placed.position.y - sapling_data::EYE_HEIGHT, placed.position.z];
     assert_eq!(feet[1], 41.0, "on the floor at y 40");
     h.remote.run(move |ctx| {
