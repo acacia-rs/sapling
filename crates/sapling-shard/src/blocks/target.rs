@@ -34,9 +34,12 @@ fn met(at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3]) -> Op
     Some((inside.map(|c| c.floor() as i32), axis, point))
 }
 
-/// A shot stopped by a block: a target it met gives its signal. `sticks` for an arrow or trident.
-pub(crate) fn shot_stopped(world: &mut World, layer: Entity, at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3], sticks: bool) {
+/// A shot of entity type `kind` stopped by a block: a target it met gives its signal, a block it
+/// breaks breaks (shot_blocks.rs). `sticks` for an arrow or trident.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3], sticks: bool) {
     let Some((pos, axis, point)) = met(at, motion, size, stopped) else { return };
+    super::shot_blocks::shot(world, layer, pos, kind, motion);
     let is_target = level(world, layer).filter(|level| level.in_height(pos[1])).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).is_some_and(|state| state.name == TARGET);
     if !is_target {
         return;
