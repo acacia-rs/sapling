@@ -99,8 +99,10 @@ fn power_runs_the_block_then_its_chain_and_operators_are_told() {
     let echoed = all::<Text>(&told).into_iter().filter(|text| matches!(&text.content, TextContent::Json(json) if json.message.contains("!§r"))).count();
     assert_eq!(echoed, 2, "each run shown to the operator as the block's");
 
-    h.receive(1, &click(HEAD, 1, None));
+    // A block in hand builds nothing: BDS opened the editor (bds-cmdblocks.txt).
+    h.receive(1, &click(HEAD, 2, Some("minecraft:command_block")));
     let opened = h.tick_all().to(1).to_vec();
+    assert_eq!(block_at(&mut h, [2, 65, -1]), "minecraft:air");
     assert_eq!(entity(&opened, "SuccessCount"), Some(Value::Int(1)));
     assert_eq!(entity(&opened, "LastOutput"), Some(Value::String("stamped".into())));
     assert_eq!(all::<ContainerOpen>(&opened).pop().map(|open| open.window_type), Some(WindowType::CommandBlock));

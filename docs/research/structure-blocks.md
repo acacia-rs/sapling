@@ -23,6 +23,9 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
   `format_version` 2 and `block_indices` as a list of int arrays, one per layer (only the first for a box without
   liquids).
 - Mirror 2 of the editor flipped x within the box.
+- A load's blocks, instant or one step of an animation: one UpdateSubchunkBlocks per sub-chunk listing the cells
+  that are not air by y, x and z, then every cell in the template's order, changed or not; each block entity's
+  BlockEntityData twice.
 - Animated `/structure load`: `t` ticks after the load, `floor(t * N / T)` of N layers (layer_by_layer) or blocks
   (block_by_block) are in, T = seconds × 20: 3 layers over 2 s came at ≈14, 27, 40 ticks; over 0.5 s, 3 ticks
   apart; 27 blocks over 2 s, two every three ticks. Order: y, then x, then z of the template before it is turned.

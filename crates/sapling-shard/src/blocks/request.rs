@@ -24,6 +24,7 @@ const USED: &[&str] = &["daylight_detector", "daylight_detector_inverted",
     "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
     "dropper", "dispenser", "_sign", "noteblock", "repeater", "comparator", "brewing_stand", "beacon", "loom", "grindstone", "stonecutter_block", ":bed",
     "cartography_table", "smithing_table", "flower_pot", "jukebox", ":frame", "glow_frame", "decorated_pot", "lectern", ":bell",
+    "command_block", "structure_block",
 ];
 
 enum Input {

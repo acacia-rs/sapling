@@ -26,6 +26,12 @@ pub fn lines<const N: usize>(lines: [&str; N]) -> Vec<String> {
     lines.map(String::from).into()
 }
 
+/// The command-block rules at their defaults: the test BDS's world kept `maxcommandchainlength`
+/// -1 from an earlier drill, which ran no chain link (docs/research/command-blocks.md).
+fn default_rules() -> Vec<String> {
+    lines(["gamerule maxcommandchainlength 65535", "gamerule commandblocksenabled true", "gamerule commandblockoutput true"])
+}
+
 pub fn floor() -> Vec<String> {
     lines([
         "kill @e[type=!player]",
@@ -123,6 +129,7 @@ fn blocks() -> Vec<String> {
 /// reading each.
 fn chains() -> Vec<String> {
     let mut out = floor();
+    out.extend(default_rules());
     out.extend(lines([
         "setblock ~2 ~ ~ command_block [\"facing_direction\"=5]",
         "setblock ~3 ~ ~ chain_command_block [\"facing_direction\"=5]",
@@ -197,6 +204,7 @@ fn chains() -> Vec<String> {
 /// `maxcommandchainlength` 2 against a chain of four.
 fn rules() -> Vec<String> {
     let mut out = floor();
+    out.extend(default_rules());
     out.extend(lines([
         "setblock ~2 ~ ~ command_block [\"facing_direction\"=5]",
         "setblock ~3 ~ ~ chain_command_block [\"facing_direction\"=5]",

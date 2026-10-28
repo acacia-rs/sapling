@@ -54,15 +54,24 @@ impl Placing {
     }
 
     /// Puts the template's cells `cells` (of those kept) with their liquids and what they hold.
+    /// BDS showed them in one list per sub-chunk: the cells that are not air, by y, x and z, then
+    /// every cell in the template's order, changed or not; and each block entity twice
+    /// (research/captures/bds-structblocks.txt).
     pub(crate) fn place_cells(&self, world: &mut World, layer: Entity, cells: &[usize]) {
-        blocks::batched(world, |world| {
-            for &index in cells {
-                if let Some(id) = self.id_of(0, index) {
-                    blocks::set(world, layer, self.cell(index), id);
-                }
-            }
-        });
         let air = world.get::<Layer>(layer).map(|layer| layer.world.registry().air_id());
+        let written: Vec<(usize, u32)> = cells.iter().filter_map(|&index| Some((index, self.id_of(0, index)?))).collect();
+        for &(index, id) in &written {
+            blocks::set_quietly(world, layer, self.cell(index), id);
+        }
+        let mut solid: Vec<(usize, u32)> = written.iter().copied().filter(|&(_, id)| Some(id) != air).collect();
+        solid.sort_by_key(|&(index, _)| {
+            let [x, y, z] = self.template.offset(index);
+            (y, x, z)
+        });
+        let mut in_order = written.clone();
+        in_order.sort_unstable();
+        let shown: Vec<(BlockPos, u32)> = solid.iter().chain(&in_order).map(|&(index, id)| (self.cell(index), id)).collect();
+        blocks::show_states(world, layer, &shown);
         for &index in cells {
             let pos = self.cell(index);
             match (self.id_of(1, index), air) {
@@ -74,7 +83,9 @@ impl Placing {
         let placed: HashSet<usize> = cells.iter().copied().collect();
         for (index, entity) in self.template.block_entities.iter().filter(|(index, _)| placed.contains(index)) {
             let pos = self.cell(*index);
-            blocks::keep_entity(world, layer, pos, &unpaired(blocks::block_entity_at(entity.clone(), pos)));
+            let entity = unpaired(blocks::block_entity_at(entity.clone(), pos));
+            blocks::keep_entity(world, layer, pos, &entity);
+            blocks::keep_entity(world, layer, pos, &entity);
         }
         for &index in cells {
             blocks::neighbours_changed(world, layer, self.cell(index));

@@ -34,7 +34,8 @@ refused (ran this tick, blocks off) ends the chain.
   52, `auto` (1 for chain), `conditionMet` 0, `conditionalMode` 0, `powered` 0. Shown with the block, and both again a
   tick later. A repeating block put over an impulse one kept its entity, shown once.
 - Hand placing: creative operators only (survival refused); faces the placer (looking east: `facing_direction` 4).
-  A creative click: BlockEntityData, then ContainerOpen `CommandBlock`, entity id -1. A survival click: nothing.
+  A creative click: BlockEntityData, then ContainerOpen `CommandBlock`, entity id -1, a command block in hand or
+  not (it built nothing). A survival click: nothing.
 - CommandBlockUpdate: answered by UpdateBlock and BlockEntityData; a command that does not compile keeps
   `commands.generic.syntax` with `["", word, ""]` as `LastOutput`. `FilteredCustomName` is added when named. Runs
   show nothing of the entity.
@@ -45,7 +46,9 @@ refused (ran this tick, blocks off) ends the chain.
   `daylock` counted `SuccessCount` 1 with no output line.
 - Permission: `op`, `deop`, `allowlist`, `setmaxplayers`, `transfer`, `place` answered
   `commands.generic.error.permissions` `[name]`; `kick`, `list`, `tp`, `gamerule`, `time` ran.
-- Rules: `maxCommandChainLength` 2 ran two links of three; -1 (the test server's world had it) ran none.
+- Rules: `maxCommandChainLength` 2 ran two links of three; -1 (the test server's world had it) ran none, so
+  `cmdchains` and `cmdrules` set the three rules to their defaults first (recaptured 2026-10-28; that world's
+  redstone clocks and sculk sensors add UpdateBlocks that are not the drill's).
   `commandBlocksEnabled` false ran nothing. `commandBlockOutput` false kept `say` but no echo.
 - Only the chain block a block faces runs after it (bds-cmdlinks2.txt).
 
@@ -55,3 +58,6 @@ refused (ran this tick, blocks off) ends the chain.
   public `Sender` variant or `Executed` field).
 - A repeating block made always active by its editor first ran ~8 ticks into a 10-tick delay on BDS; sapling waits 9.
 - Minecarts with command blocks.
+- `say @s` from a block: BDS said `[!§r] ` (the selector matched nothing), sapling `[Server] @s`: sapling's `/say`
+  does not resolve selectors in its message.
+- `seed` and `version` are sapling commands, so a block runs them; BDS has neither (a syntax error).
