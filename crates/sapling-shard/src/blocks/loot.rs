@@ -201,6 +201,9 @@ pub(super) fn add_entity_loot(world: &World, layer: Entity, pos: BlockPos, items
 
 /// [`of`] with the shard's dice.
 pub(super) fn thrown(world: &mut World, block: &str, properties: &str, by: &Breaker) -> Vec<Item> {
+    if let Some(drops) = super::custom::drops(block) {
+        return drops;
+    }
     let mut dice = world.get_resource_or_insert_with(Dice::default);
     of(block, properties, by, &mut |sides| dice.roll(sides))
 }

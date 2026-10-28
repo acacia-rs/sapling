@@ -32,4 +32,9 @@ pub(super) fn register(content: &Content) {
             tracing::warn!(item = %item.identifier, "a custom item may not take a vanilla name; left out");
         }
     }
+    for block in &content.blocks {
+        if !sapling_shard::register_custom_block(block) {
+            tracing::warn!(block = %block.identifier, "a custom block may not take a vanilla name; left out");
+        }
+    }
 }

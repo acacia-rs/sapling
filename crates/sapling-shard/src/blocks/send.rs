@@ -40,7 +40,8 @@ fn centre(pos: BlockPos) -> Vec3f {
 
 /// A block state as plugins name it.
 pub(crate) fn describe(registry: &BlockRegistry, id: u32) -> Block {
-    registry.get(id).map_or_else(Block::air, |state| Block { name: state.name.to_owned(), properties: state.properties.to_owned() })
+    let custom = || super::custom::described(id).unwrap_or_else(Block::air);
+    registry.get(id).map_or_else(custom, |state| Block { name: state.name.to_owned(), properties: state.properties.to_owned() })
 }
 
 /// Whether plugins let fire or a liquid at `source` put the state `id` names into `pos`
@@ -55,7 +56,7 @@ pub(crate) fn may_spread(world: &mut World, layer: Entity, pos: BlockPos, source
 /// The runtime id of a named state: the block's default state (`sapling_data::default_properties`)
 /// with the properties it names set, so that `water` with `liquid_depth=3` needs no other.
 pub(crate) fn resolve(registry: &BlockRegistry, block: &Block) -> Option<u32> {
-    let first = registry.states_of(&block.name).next().map(|(id, _)| id)?;
+    let Some(first) = registry.states_of(&block.name).next().map(|(id, _)| id) else { return super::custom::resolved(block) };
     let default = sapling_data::default_properties(&block.name).and_then(|properties| registry.find(&block.name, properties)).unwrap_or(first);
     if block.properties.is_empty() {
         return Some(default);
@@ -71,7 +72,7 @@ fn update(registry: &BlockRegistry, pos: BlockPos, id: u32, layer: u32) -> Bytes
 }
 
 fn update_flagged(registry: &BlockRegistry, [x, y, z]: BlockPos, id: u32, layer: u32, flags: UpdateBlockFlags) -> Bytes {
-    sapling_net::encode(&UpdateBlock { position: BlockCoordinates { x, y, z }, block_runtime_id: registry.network_hash(id), flags, layer })
+    sapling_net::encode(&UpdateBlock { position: BlockCoordinates { x, y, z }, block_runtime_id: sapling_world::block_hash(registry, id), flags, layer })
 }
 
 /// What a block holds, as clients are shown it.
@@ -81,12 +82,12 @@ pub(crate) fn block_entity_data([x, y, z]: BlockPos, entity: &BlockEntity) -> By
 
 /// The burst of fragments when a block of `id` breaks.
 pub(crate) fn destroy_particles(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
-    sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleDestroy, position: centre(pos), data: registry.network_hash(id) as i32 })
+    sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleDestroy, position: centre(pos), data: sapling_world::block_hash(registry, id) as i32 })
 }
 
 /// The few fragments a hit knocks off `face`.
 pub(crate) fn punch_particles(registry: &BlockRegistry, pos: BlockPos, face: Face, id: u32) -> Bytes {
-    sapling_net::encode(&LevelEvent { event: PUNCH[face as usize], position: centre(pos), data: registry.network_hash(id) as i32 })
+    sapling_net::encode(&LevelEvent { event: PUNCH[face as usize], position: centre(pos), data: sapling_world::block_hash(registry, id) as i32 })
 }
 
 /// The sound of the block `id` placed: BDS names the block's first state, not the one placed.
@@ -102,7 +103,7 @@ pub(crate) fn sound(name: &str, registry: &BlockRegistry, pos: BlockPos, id: u32
 
 /// [`sound`] from a point other than the block's centre.
 pub(crate) fn sound_at(name: &str, registry: &BlockRegistry, position: Vec3f, id: u32) -> Bytes {
-    noise(name, position, registry.network_hash(id) as i32)
+    noise(name, position, sapling_world::block_hash(registry, id) as i32)
 }
 
 /// The sound `name` at `position`, with what it says of itself in `extra_data` (-1: nothing).
@@ -214,7 +215,7 @@ pub(crate) fn show_whole(world: &mut World, layer: Entity, pos: BlockPos) {
 pub(crate) fn tell_synced(world: &mut World, layer: Entity, pos: BlockPos, entity: u64, transition: Transition) {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let [x, y, z] = pos;
-    let block_runtime_id = level.registry().network_hash(level.block(x, y, z));
+    let block_runtime_id = sapling_world::block_hash(level.registry(), level.block(x, y, z));
     let packet = UpdateBlockSynced { position: BlockCoordinates { x, y, z }, block_runtime_id, flags: FLAGS, layer: 0, entity_unique_id: entity, transition_type: transition };
     let packet = sapling_net::encode(&packet);
     to_viewers(world, layer, pos, &[packet]);

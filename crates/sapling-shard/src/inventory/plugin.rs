@@ -30,7 +30,8 @@ pub(crate) fn stored(item: &Item, registry: &sapling_world::BlockRegistry) -> Op
 /// [`stored`], keeping what `previous`, the tag of the stack it replaces, holds beyond the item's
 /// own fields.
 fn stored_over(item: &Item, registry: &sapling_world::BlockRegistry, previous: Option<&Value>) -> Option<ItemStack> {
-    let block = registry.states_of(&item.name).next().map(|(id, _)| registry.network_hash(id));
+    let first = registry.states_of(&item.name).next().map(|(id, _)| id).or_else(|| crate::blocks::custom::placed_by(&item.name));
+    let block = first.map(|id| sapling_world::block_hash(registry, id));
     sapling_data::is_item(&item.name).then(|| ItemStack { name: item.name.clone(), count: item.count, damage: item.damage, block, tag: tag(item, previous) })
 }
 

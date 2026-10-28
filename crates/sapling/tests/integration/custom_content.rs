@@ -74,7 +74,10 @@ async fn a_client_is_told_the_custom_content_downloads_its_pack_and_is_given_the
     let items = items.unwrap();
     let ruby = items.itemstates.iter().find(|item| item.name == RUBY).expect("the ruby in ItemRegistry");
     assert!(ruby.component_based);
-    let _ = start.expect("StartGame");
+    let lamp_item = items.itemstates.iter().find(|item| item.name == LAMP).expect("the lamp's item in ItemRegistry");
+    assert!(!lamp_item.component_based && lamp_item.runtime_id < 0, "a block's item, numbered as BDS numbers them");
+    let start = start.expect("StartGame");
+    assert!(start.block_properties.iter().any(|block| block.name == LAMP), "the lamp in StartGame's block properties");
     client.close();
 
     let config = BotConfig { subscribe: PacketFilter::none().with(CommandOutput::ID), ..BotConfig::default() };

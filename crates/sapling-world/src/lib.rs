@@ -43,6 +43,9 @@ pub use sapling_leveldb::{
     with_container_items, actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor, actor_strength, strong_actor,
     StructureTemplate, TickingAreaRecord, TrackerRecord, RaidRecord, MapRecord, structure_name, palette_block, placed_actor, PendingTick, decode_pending_ticks, encode_pending_ticks,
 };
+pub use sapling_leveldb::{
+    CustomBlockStates, CustomState, block_hash, block_name, custom_ids, custom_state, custom_states, first_custom_id, id_of_hash, register_custom_block,
+};
 pub use storage::{Level, LevelDbStorage, MemoryStorage, ShapeLoader, StorageError, StoredColumn, WorldStorage};
 pub use sapling_worldgen::{PlaceFailure, is_feature};
 pub use template::Template;

@@ -123,7 +123,7 @@ fn by_section(cells: impl Iterator<Item = Cell>) -> Vec<(BlockPos, Vec<Cell>)> {
 fn show_sections(world: &mut World, layer: Entity, sections: Vec<(BlockPos, Vec<Cell>)>, single_as_block: bool) {
     let packets: Vec<(BlockPos, Bytes)> = {
         let Some(registry) = world.get::<Layer>(layer).map(|level| level.world.registry()) else { return };
-        let block = |&([x, y, z], id, flags): &Cell| BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: registry.network_hash(id), flags, entity_unique_id: i64::MIN, transition_type: BlockUpdateTransitionType::Entity };
+        let block = |&([x, y, z], id, flags): &Cell| BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: sapling_world::block_hash(registry, id), flags, entity_unique_id: i64::MIN, transition_type: BlockUpdateTransitionType::Entity };
         sections
             .into_iter()
             .map(|(corner, cells)| match cells.as_slice() {

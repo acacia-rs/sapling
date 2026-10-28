@@ -10,7 +10,7 @@ pub(crate) struct Blocks<'a>(pub &'a Level, pub &'a [BlockPos]);
 
 impl BlockAccess for Blocks<'_> {
     fn block(&self, x: i32, y: i32, z: i32) -> u32 {
-        if self.1.contains(&[x, y, z]) { self.0.registry().air_id() } else { self.0.block(x, y, z) }
+        if self.1.contains(&[x, y, z]) { self.0.registry().air_id() } else { crate::blocks::custom::stand_in(self.0.registry(), self.0.block(x, y, z)) }
     }
 
     fn liquid(&self, x: i32, y: i32, z: i32) -> u32 {

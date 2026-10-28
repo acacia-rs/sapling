@@ -275,14 +275,15 @@ impl Column {
     }
 
     fn heights(&self, registry: &BlockRegistry) -> &ColumnHeights {
-        self.heights.get_or_init(|| self.chunk.column_heights(&|id| registry.get(id).is_some_and(|s| s.light_filter > 0)))
+        let stops_light = |id| registry.get(id).map_or_else(|| sapling_leveldb::custom_state(id).is_some_and(|s| s.light_filter > 0), |s| s.light_filter > 0);
+        self.heights.get_or_init(|| self.chunk.column_heights(&stops_light))
     }
 
     /// Outer `None`: outside the dimension. Inner `None`: all air.
     fn section(&self, section_y: i32, registry: &BlockRegistry) -> Option<&Option<Blob>> {
         let cached = self.sections.get(self.slot(section_y)?)?;
         Some(cached.get_or_init(|| {
-            let map = |id| registry.network_hash(id);
+            let map = |id| sapling_leveldb::block_hash(registry, id);
             let payload = self.chunk.sub_chunk(section_y, self.heights(registry), &[], &map).and_then(|data| data.payload)?;
             Some(Blob { hash: xxh64(&payload), payload })
         }))
