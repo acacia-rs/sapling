@@ -13,6 +13,7 @@ mod leads;
 mod owners;
 mod products;
 mod shown;
+mod sniffing;
 mod state;
 mod tadpoles;
 
@@ -58,6 +59,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     }
     owners::stays(world, entity)
         || leads::pull(world, entity, layer)
+        || sniffing::steer(world, entity, layer, kind)
         || guarding::chase(world, entity, layer, kind)
         || breeding::court(world, entity, layer, kind)
         || owners::follow(world, entity, layer, kind)
@@ -65,7 +67,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
 }
 
 /// A tick of every raised mob: babies grow, love and cooldowns wear off, partners breed, hens
-/// lay, leads hold or break and knots without a fence go.
+/// lay, sniffers sniff and dig, leads hold or break and knots without a fence go.
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let raised: Vec<(Entity, String)> = world.query_filtered::<(Entity, &crate::entities::Kind), With<Raised>>().iter(world).map(|(entity, kind)| (entity, kind.0.clone())).collect();
@@ -74,6 +76,7 @@ pub(crate) fn tick(world: &mut World) {
         breeding::tick(world, entity, &kind, now);
         products::lay(world, entity, &kind, now);
         products::graze(world, entity, &kind);
+        sniffing::tick(world, entity, &kind, now);
         leads::hold(world, entity, now);
     }
     knots::tick(world);

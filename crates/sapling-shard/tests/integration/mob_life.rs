@@ -3,8 +3,9 @@
 
 use crate::common;
 
-use acacia_proto::packets::{AddEntity, LevelSoundEvent, RemoveEntity};
-use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};
+use acacia_proto::RawPacket;
+use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, RemoveEntity, SetEntityData};
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as MetaValue, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, MetadataFlags2};
 use common::raising::{click_on, has_flag, plain_in};
 use common::shooting::{added, ready, spawn, watch};
 use common::stored::{enter_stored, floor_with};
@@ -125,6 +126,37 @@ fn a_tadpole_fed_ten_slime_balls_becomes_a_frog_of_its_biome() {
     assert_eq!(plain_in(&frogs[0].metadata, Key::Variant), Some(Plain::Int(0)), "a plains frog is temperate");
     assert!(all::<RemoveEntity>(&sent).iter().any(|gone| gone.entity_id_self as u64 == tadpole), "the tadpole is gone");
     assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "convert_to_frog"));
+}
+
+#[test]
+fn two_sniffers_fed_torchflower_seeds_lay_an_egg_not_a_baby() {
+    let mut h = ready(GameMode::Survival, &[("minecraft:torchflower_seeds", 2, 0)], 0.0);
+    let sniffers = [spawn(&mut h, "minecraft:sniffer", [2.5, 65.0, 0.5]), spawn(&mut h, "minecraft:sniffer", [2.5, 65.0, 3.5])];
+    let mut sent: Vec<_> = sniffers.iter().flat_map(|sniffer| click_on(&mut h, *sniffer)).collect();
+    sent.extend(watch(&mut h, 400));
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "plop"), "an egg was laid");
+    assert!(added(&sent, "minecraft:sniffer").is_empty(), "no baby");
+}
+
+/// Whether the entity `id` was ever set with the extended `flag` on in `sent`.
+fn ever_flagged(sent: &[RawPacket], id: u64, flag: MetadataFlags2) -> bool {
+    let flags = |data: &SetEntityData| data.metadata.iter().find_map(|item| if let MetaValue::FlagsExtended(flags) = item.value { Some(flags.0) } else { None });
+    all::<SetEntityData>(sent).iter().filter(|data| data.runtime_entity_id == id).filter_map(flags).any(|flags| flags & flag.0 != 0)
+}
+
+#[test]
+fn a_grown_sniffer_scents_walks_to_soil_and_digs_up_a_seed() {
+    let mut level = World::void();
+    let grass = level.block_id("minecraft:grass_block").unwrap();
+    level.fill([-24, 64, -24], [23, 64, 23], grass);
+    let mut h = Harness::with(config(), level);
+    h.enter(1, "Alex");
+    let sniffer = spawn(&mut h, "minecraft:sniffer", [0.5, 65.0, 0.5]);
+    let sent: Vec<_> = (0..30_000).flat_map(|_| h.tick(1)).collect();
+    for flag in [MetadataFlags2::TIMER_FLAG_1, MetadataFlags2::SEARCHING, MetadataFlags2::DIGGING, MetadataFlags2::TIMER_FLAG_2, MetadataFlags2::TIMER_FLAG_3] {
+        assert!(ever_flagged(&sent, sniffer, flag), "{flag:?}");
+    }
+    assert!(!all::<AddItemEntity>(&sent).is_empty(), "a find came up");
 }
 
 #[test]

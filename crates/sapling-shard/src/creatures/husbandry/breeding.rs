@@ -27,6 +27,9 @@ const COURTS: u32 = 60;
 const NEAR: f32 = 3.0;
 /// The most experience a birth leaves; it leaves from 1.
 const EXPERIENCE: u32 = 7;
+/// Kinds whose breeding lays the egg item instead of a baby (the pack's `causes_pregnancy` and
+/// `spawn_entity`).
+const LAYS_EGG: [(&str, &str); 1] = [("minecraft:sniffer", "minecraft:sniffer_egg")];
 /// A horse and a donkey have a mule.
 const MIXED: [(&str, &str, &str); 1] = [("minecraft:horse", "minecraft:donkey", "minecraft:mule")];
 /// A player this near holding its food is followed.
@@ -120,6 +123,10 @@ fn breed(world: &mut World, parent: Entity, mate: Entity, layer: Entity, kind: &
         shown::flag(world, one, Flags::INLOVE, false);
     }
     let Some(body) = world.get::<Body>(parent).copied() else { return };
+    if let Some((_, egg)) = LAYS_EGG.iter().find(|(mother, _)| *mother == kind) {
+        super::products::drop_egg(world, parent, egg);
+        return leave_experience(world, layer, body.at);
+    }
     let owner = world.get::<Raised>(parent).filter(|raised| raised.is_tamed()).and_then(|raised| raised.kept.owner);
     if let Some(baby) = super::super::spawn_entity(world, layer, &baby_kind, body.at, sapling_api::SpawnReason::Bred) {
         ageing::be_born(world, baby, &baby_kind);
@@ -128,9 +135,13 @@ fn breed(world: &mut World, parent: Entity, mate: Entity, layer: Entity, kind: &
             super::owners::tame_to(world, baby, &baby_kind, owner);
         }
     }
+    leave_experience(world, layer, body.at);
+}
+
+fn leave_experience(world: &mut World, layer: Entity, at: [f32; 3]) {
     if super::super::leaves_loot(world, layer) {
         let points = 1 + world.get_resource_or_insert_with(Dice::default).roll(EXPERIENCE) as i32;
-        crate::orbs::spawn(world, layer, body.at, points);
+        crate::orbs::spawn(world, layer, at, points);
     }
 }
 

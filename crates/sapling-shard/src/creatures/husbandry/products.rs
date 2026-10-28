@@ -49,6 +49,12 @@ fn give(world: &mut World, entity: Entity, item: String, count: u8) {
     crate::drops::toss(world, layer, stack(item, count), [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]]);
 }
 
+/// The mob drops `item` with a plop, as an egg is laid.
+pub(super) fn drop_egg(world: &mut World, entity: Entity, item: &str) {
+    give(world, entity, item.to_owned(), 1);
+    shown::sound(world, entity, "plop");
+}
+
 fn is_creative(world: &World, player: Entity) -> bool {
     world.get::<Mode>(player).is_some_and(|mode| mode.0 == sapling_api::GameMode::Creative)
 }
@@ -66,10 +72,7 @@ pub(super) fn lay(world: &mut World, entity: Entity, kind: &str, now: u64) {
     let Some(raised) = world.get::<Raised>(entity).filter(|raised| !raised.is_baby()) else { return };
     match raised.lays_at {
         Some(due) if now < due => return,
-        Some(_) => {
-            give(world, entity, item.to_owned(), 1);
-            shown::sound(world, entity, "plop");
-        }
+        Some(_) => drop_egg(world, entity, item),
         None => {}
     }
     let wait = least as u64 + world.get_resource_or_insert_with(Dice::default).roll(most - least + 1) as u64;
