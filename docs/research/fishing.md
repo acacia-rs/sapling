@@ -47,5 +47,8 @@ with ActorEvent 12 while the fish's spot is water, ActorEvent 13 at the bite, th
 
 - The nibble's downward tug sinks sapling's hook deeper than BDS's (catches 0.1-0.6 under the surface on BDS,
   up to 1.3 in sapling, 2026-10-28). The decompile adds `-0.5 * r1 * r2 * r3` to motion.y after the hook's
-  own move; moving the tug in between sapling's two moves did not change the depth.
+  own move; moving the tug in between sapling's two moves did not change the depth. Adding a 0.6 drag
+  (the pack's default `liquid_inertia`) to the second move in water as well still dipped 1.08 in a
+  `fish` drill (2026-10-28), so it was not kept. Untried: BDS's wet test (`containsMaterial` per slice,
+  1429c8770) and its skipping of the speed draws during a nibble.
 - A hooked mob or player: from BDSRE only; the drill's pig walked off its platform.
