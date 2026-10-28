@@ -9,6 +9,7 @@ use sapling_world::{Template, World};
 use crate::layout::{self, WorldSpec};
 
 mod error;
+mod listening;
 mod ops;
 mod packs;
 mod properties;
@@ -37,6 +38,7 @@ pub struct ServerBuilder {
     /// Other dimensions, each with the name of the world it belongs to.
     dimensions: Vec<(Option<String>, World)>,
     ops: ops::Ops,
+    console: bool,
 }
 
 impl Default for ServerBuilder {
@@ -55,6 +57,7 @@ impl Default for ServerBuilder {
             commands: Vec::new(),
             dimensions: Vec::new(),
             ops: ops::Ops::default(),
+            console: false,
         }
     }
 }
@@ -99,8 +102,10 @@ impl ServerBuilder {
         self
     }
 
+    /// Also the mode the server list shows.
     pub fn game_mode(mut self, mode: GameMode) -> Self {
         self.shard.game_mode = mode;
+        self.net.motd.game_mode = listening::motd_mode(mode).into();
         self
     }
 
@@ -207,6 +212,9 @@ impl ServerBuilder {
             self.plugins.iter().for_each(|plugin| shard.add_plugin(plugin.as_ref()));
             self.commands.iter().for_each(|register| register(&mut shard));
             shards.push(shard);
+        }
+        if self.console {
+            shards[entry].add_handler(Box::new(crate::console::start()));
         }
         tracing::info!(addr = %listener.local_addr(), shards = count, "sapling listening");
         let watching = self.ops.watch(&shards, self.shard.crash_reports.clone());

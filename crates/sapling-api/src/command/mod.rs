@@ -39,7 +39,7 @@ pub trait CommandSyntax: Sized {
 #[non_exhaustive]
 pub enum Sender {
     Player(Player),
-    // TODO: nothing sends commands as the console yet.
+    /// The server's console (`ServerBuilder::console`).
     Console,
     Executed(Box<Executed>),
 }

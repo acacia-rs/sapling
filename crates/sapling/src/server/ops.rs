@@ -64,7 +64,9 @@ impl ServerBuilder {
         if let Some(level) = &props.level_name {
             (self.net.motd.sub_name, self.shard.world_name) = (level.clone(), level.clone());
         }
-        self.shard.game_mode = props.gamemode.unwrap_or(self.shard.game_mode);
+        if let Some(mode) = props.gamemode {
+            self = self.game_mode(mode);
+        }
         self.shard.difficulty = props.difficulty.unwrap_or(self.shard.difficulty);
         if let Some(max) = props.max_players {
             self.net.max_players.reset(max);
@@ -75,6 +77,10 @@ impl ServerBuilder {
             self.addr.set_ip(ip);
         }
         self.addr.set_port(props.server_port.unwrap_or(self.addr.port()));
+        if let Some(port) = props.server_portv6 {
+            self = self.bind_v6((std::net::Ipv6Addr::UNSPECIFIED, port).into());
+        }
+        self.net.query = props.enable_query.unwrap_or(self.net.query);
         self.shard.max_view_radius = props.view_distance.unwrap_or(self.shard.max_view_radius);
         self.shard.tick_distance = props.tick_distance.unwrap_or(self.shard.tick_distance);
         if let Some(minutes) = props.player_idle_timeout {

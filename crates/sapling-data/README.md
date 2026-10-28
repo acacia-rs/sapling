@@ -23,6 +23,7 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 | `data/block-loot.tsv` | `py -3 data/generate/block-loot.py` (the extracted Java 26.3 client jar, `JAVA` at the top) |
 | `data/names.tsv` | `cargo run -p sapling --example bds_name_probe -- <your BDS> > data/names.tsv`, on testbox `tools/remote-drill.sh bds bds_name_probe data/names.tsv` (BDS's own answers to `/give` and `/kill`); optional: without it names are made from identifiers |
 | `data/command-names.tsv` | `cargo run -p sapling --example bds_enum_probe -- <your BDS> > data/command-names.tsv` (drop a trailing `probe exit` line when made by `tools/remote-drill.sh bds bds_enum_probe`): the `Item` and `Block` enums of BDS's AvailableCommands; optional: without it commands take every name |
+| `data/command-texts.tsv` | `py -3 data/generate/command-texts.py` (your BDS's `resource_packs/vanilla/texts/en_US.lang`, `LANG` at the top; see "Command texts"); optional: without it the console prints translation keys |
 | `data/spawn-rules.tsv`, `data/despawns.tsv` | `py -3 data/generate/spawn-rules.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `data/husbandry.tsv` | `py -3 data/generate/husbandry.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `data/trades.json` | `py -3 data/generate/trades.py` (BDS's behaviour packs, as `mob-loot.py`) |
@@ -160,6 +161,12 @@ kind's properties are numbered by name, as BDS numbers them in AddEntity's and S
 `properties`; `property_registry_packets()` makes the 13 SyncEntityProperty BDS sends after StartGame
 from it, byte for byte as the recording's (the kinds in its order, tested). A Molang default (a bee's
 nectar) is sent as 0.
+
+## Command texts
+
+`command-texts.tsv` (ignored; read by `command_texts.rs`): key and English text of every `commands.*`
+line of en_US.lang. The console prints a command's answer in it, `%s`/`%1$s` filled with the answer's
+parameters, as BDS's console printed them (research/captures/bds-console-cmds.txt).
 
 ## Spawn rules
 

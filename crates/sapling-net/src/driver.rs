@@ -5,7 +5,6 @@ use std::io;
 use std::net::{IpAddr, SocketAddr};
 use std::time::{Duration, Instant};
 
-use tokio::net::UdpSocket;
 use tokio::sync::mpsc;
 
 use crate::config::Motd;
@@ -13,7 +12,9 @@ use crate::event::Outbound;
 use crate::http::Request;
 use crate::lan::Lan;
 use crate::links::{Link, LinkEvent, Links};
+use crate::query::{Query, Status};
 use crate::sessions::Sessions;
+use crate::sockets::Sockets;
 
 /// Longer than any datagram a peer may send (the RakNet MTU tops out at 1492).
 const DATAGRAM_BUF: usize = 2048;
@@ -28,7 +29,11 @@ const IDLE_WAKE: Duration = Duration::from_millis(500);
 const BACKLOG_CHECK: Duration = Duration::from_millis(10);
 
 pub(crate) struct Driver {
-    pub socket: UdpSocket,
+    pub sockets: Sockets,
+    /// `None` unless the query is enabled.
+    pub query: Option<Query>,
+    /// Query answers waiting for the next flush.
+    pub replies: Vec<(SocketAddr, Vec<u8>)>,
     pub links: Links,
     pub sessions: Sessions,
     pub outbound: mpsc::UnboundedReceiver<Outbound>,
@@ -45,7 +50,8 @@ pub(crate) struct Driver {
 impl Driver {
     /// Runs until the game drops its outbox or inbox, then says goodbye to every player.
     pub async fn run(mut self) {
-        let port = self.socket.local_addr().map_or(0, |a| a.port());
+        let ports = self.sockets.ports();
+        let port = ports[0];
         let mut advertised = (usize::MAX, 0);
         let mut backlogs_checked = Instant::now();
         let (mut buf, mut lan_buf) = (vec![0u8; DATAGRAM_BUF], vec![0u8; LAN_BUF]);
@@ -62,7 +68,7 @@ impl Driver {
             self.sessions.enforce_bans(&mut self.links, now);
             if advertised != (self.sessions.player_count(), self.max_players.get()) {
                 advertised = (self.sessions.player_count(), self.max_players.get());
-                self.links.raknet.set_motd(self.motd.pong(self.guid, advertised.0, advertised.1, port));
+                self.links.raknet.set_motd(self.motd.pong(self.guid, advertised.0, advertised.1, ports));
             }
             self.flush(now).await;
             if now.duration_since(backlogs_checked) >= BACKLOG_CHECK {
@@ -72,13 +78,13 @@ impl Driver {
             let timers = self.links.poll_timeout().into_iter().chain(self.sessions.next_deadline());
             let deadline = timers.min().unwrap_or(now + IDLE_WAKE);
             tokio::select! {
-                received = self.socket.recv_from(&mut buf) => {
+                received = self.sockets.recv_from(&mut buf) => {
                     let now = Instant::now();
                     let mut received = received.ok();
                     for _ in 0..BURST {
                         let Some((len, from)) = received else { break };
-                        self.links.handle_datagram(now, from, &buf[..len]);
-                        received = self.socket.try_recv_from(&mut buf).ok();
+                        self.on_datagram(&buf[..len], from, now);
+                        received = self.sockets.try_recv_from(&mut buf).ok();
                     }
                 }
                 command = self.outbound.recv() => {
@@ -126,9 +132,31 @@ impl Driver {
         }
     }
 
+    fn on_datagram(&mut self, data: &[u8], from: SocketAddr, now: Instant) {
+        let Some(query) = self.query.as_mut().filter(|_| Query::is_query(data)) else {
+            self.links.handle_datagram(now, from, data);
+            return;
+        };
+        let reached = self.sockets.reached(from).unwrap_or(from);
+        let status = || Status {
+            name: &self.motd.name,
+            map: &self.motd.sub_name,
+            players: self.sessions.player_names(),
+            max_players: self.max_players.get(),
+            port: reached.port(),
+            ip: reached.ip(),
+        };
+        if let Some(reply) = query.answer(data, from, now, status) {
+            self.replies.push((from, reply));
+        }
+    }
+
     async fn flush(&mut self, now: Instant) {
+        for (to, reply) in std::mem::take(&mut self.replies) {
+            let _ = self.sockets.send_to(&reply, to).await;
+        }
         while let Some((to, datagram)) = self.links.poll_transmit(now) {
-            let _ = self.socket.send_to(&datagram, to).await;
+            let _ = self.sockets.send_to(&datagram, to).await;
         }
     }
 }

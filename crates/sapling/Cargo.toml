@@ -18,6 +18,7 @@ sapling-net.workspace = true
 sapling-shard.workspace = true
 sapling-world.workspace = true
 flate2.workspace = true
+rustyline.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 tokio.workspace = true

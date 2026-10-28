@@ -1,0 +1,12 @@
+# BDS 1.26.52.3 (testbox bds-mechanisms, transport=raknet, server-port=19182, server-portv6=19183),
+# probed 2026-10-28 with a GameSpy4 handshake (FE FD 09 00000001) and a RakNet unconnected ping on
+# each port (scratchpad gs4probe.py). server.properties has no query key.
+[INFO] IPv4 supported, port: 19182: Used for gameplay
+[INFO] IPv6 supported, port: 19183: Used for gameplay
+127.0.0.1:19182 handshake: no answer (2 s timeout)
+127.0.0.1:19182 raknet ping 33 1c0000000000000000adf1d5826c8a726400ffff00fefefefefdfdfdfd12345678
+::1:19183 handshake: no answer (2 s timeout)
+::1:19183 raknet ping 33 1c0000000000000000adf1d5826c8a726400ffff00fefefefefdfdfdfd12345678
+# Both ports answer RakNet with the same guid. This build's pong carries no server string (it logs
+# that NetherNet is its only supported transport), so the string's port fields could not be read;
+# sapling follows the known layout "...;1;<port>;<portv6>;0;".
