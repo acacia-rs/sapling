@@ -173,6 +173,7 @@ pub(crate) fn tick(world: &mut World) {
     husbandry::tick(world);
     crowding::tick(world);
     warden::tick(world);
+    armour_stands::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0).map(|(entity, _)| entity).collect();
     for entity in dead {

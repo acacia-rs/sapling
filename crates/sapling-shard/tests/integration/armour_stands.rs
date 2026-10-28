@@ -3,12 +3,12 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, LevelSoundEvent, MobArmorEquipment, SetEntityData};
+use acacia_proto::packets::{AddEntity, AddItemEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, MobArmorEquipment, RemoveEntity, SetEntityData};
 use acacia_proto::types::{InputData, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, TransactionTransactionData};
 use common::asking::ask;
 use common::raising::use_on;
-use common::{Harness, all, input_at};
-use sapling_api::{Item, PlayerId, Slot};
+use common::{Harness, all, attack, input_at};
+use sapling_api::{GameMode, Item, PlayerId, Slot};
 
 const ALEX: PlayerId = PlayerId(1);
 const STAND: [f32; 3] = [2.5, 65.0, 0.5];
@@ -69,4 +69,50 @@ fn one_of_a_stack_goes_in_its_hand_and_a_sneaking_click_turns_its_pose() {
     let pose = posed.iter().flat_map(|data| &data.metadata).find(|item| item.key == Key::ArmorStandPoseIndex).map(|item| item.value.clone());
     assert_eq!(pose, Some(Value::Default(Plain::Int(1))));
     assert_eq!(held(&mut h), Some(("minecraft:stick".into(), 4)), "posing takes nothing");
+}
+
+/// Alex hits the stand; what Alex was told that tick and the `more` after.
+fn hit(h: &mut Harness, stand: u64, more: usize) -> Vec<RawPacket> {
+    h.receive(1, &attack(stand));
+    (0..=more).flat_map(|_| h.tick_all().to(1).to_vec()).collect()
+}
+
+fn ints(told: &[RawPacket], key: Key) -> Vec<i32> {
+    let value = |item: &acacia_proto::types::MetadataDictionaryItem| match &item.value {
+        Value::Default(Plain::Int(value)) if item.key == key => Some(*value),
+        _ => None,
+    };
+    all::<SetEntityData>(told).iter().flat_map(|data| data.metadata.iter().filter_map(value).collect::<Vec<_>>()).collect()
+}
+
+fn events(told: &[RawPacket]) -> Vec<LevelEventEvent> {
+    all::<LevelEvent>(told).into_iter().map(|event| event.event).filter(|event| format!("{event:?}").contains("ArmorStand")).collect()
+}
+
+#[test]
+fn a_hit_wobbles_it_and_a_second_soon_after_knocks_it_over_dropping_it_and_its_gear() {
+    // research/captures/bds-standhits.txt.
+    let (mut h, stand) = before_a_stand(Some(("minecraft:diamond_helmet", 1)));
+    click_at(&mut h, stand, 0.3);
+    let told = hit(&mut h, stand, 9);
+    assert_eq!(events(&told), [LevelEventEvent::SoundArmorStandHit]);
+    assert_eq!((ints(&told, Key::Health), ints(&told, Key::HurtDirection)), (vec![-10], vec![-1]));
+    assert_eq!(ints(&told, Key::HurtTime), (0..=9).rev().collect::<Vec<_>>());
+    (0..30).for_each(|_| _ = h.tick_all());
+    let told = hit(&mut h, stand, 1);
+    assert_eq!((events(&told), ints(&told, Key::Health), ints(&told, Key::HurtDirection)), (vec![LevelEventEvent::SoundArmorStandHit], vec![], vec![1]), "two seconds on, only a wobble");
+    h.receive(1, &attack(stand));
+    let told: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert_eq!(events(&told), [LevelEventEvent::SoundArmorStandHit, LevelEventEvent::ParticleDestroyArmorStand, LevelEventEvent::SoundArmorStandBreak]);
+    assert_eq!((all::<RemoveEntity>(&told).len(), all::<AddItemEntity>(&told).len()), (1, 2), "gone, leaving itself and its helmet");
+}
+
+#[test]
+fn a_creative_hit_knocks_it_over_leaving_nothing() {
+    let (mut h, stand) = before_a_stand(None);
+    h.remote.run(|ctx| ctx.set_game_mode(ALEX, GameMode::Creative));
+    h.tick_all();
+    let told = hit(&mut h, stand, 2);
+    assert_eq!(events(&told), [LevelEventEvent::ParticleDestroyArmorStand, LevelEventEvent::SoundArmorStandBreak]);
+    assert_eq!((all::<RemoveEntity>(&told).len(), all::<AddItemEntity>(&told).len()), (1, 0));
 }
