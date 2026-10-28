@@ -3,8 +3,8 @@
 //! vanilla's result (docs/research/workstations.md, "Loom"; research/captures/bds-stations.txt).
 //! A pattern item in the third slot allows its own pattern alone and is kept; without one the
 //! loom offers the plain patterns. BDS answered with the banner and dye slots emptied and the
-//! result placed, nothing resent.
-// TODO: the limit of six patterns is the Java game's; BDS's was not drilled.
+//! result placed, nothing resent. A banner of six patterns takes no more (`CraftHandlerLoom`
+//! 1446e43b5 refuses past five).
 
 use acacia_proto::nbt::{List, Value};
 use sapling_data::Made;

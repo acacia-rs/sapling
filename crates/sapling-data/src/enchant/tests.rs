@@ -113,3 +113,11 @@ fn the_table_goes_on_and_combines_as_bds_let_enchant() {
     assert!(!compatible(loyalty, riptide) && !compatible(riptide, channeling) && compatible(loyalty, channeling));
     assert!(KINDS.iter().enumerate().all(|(at, kind)| kind.id == at as i16 && kind_of(kind.id).is_some()));
 }
+
+#[test]
+fn one_table_numbers_names_and_places_every_enchantment() {
+    assert!(Enchant::ALL.iter().enumerate().all(|(at, enchant)| *enchant as usize == at && Enchant::from_id(at as i16) == Some(*enchant) && enchant.kind().id == at as i16));
+    assert_eq!((Enchant::from_id(42), Enchant::from_id(-1), Enchant::Lunge.kind().word), (None, None, "lunge"));
+    // BDS's secondary slots: Silk Touch goes on shears, Thorns on boots; curses on a head.
+    assert!(goes_on(Enchant::SilkTouch.kind(), "minecraft:shears") && goes_on(Enchant::Thorns.kind(), "minecraft:iron_boots"));
+    assert!(goes_on(Enchant::Vanishing.kind(), "minecraft:zombie_head") && !goes_on(Enchant::Unbreaking.kind(), "minecraft:zombie_head"));}

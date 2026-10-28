@@ -170,12 +170,30 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
     left
 }
 
-/// Adds to `items`, left by the block at `pos`, what its entity kept (entities.rs). Call before
-/// the block goes.
-pub(super) fn add_entity_loot(world: &World, layer: Entity, pos: BlockPos, items: &mut Vec<Item>) {
-    if let Some(kept) = world.get::<Layer>(layer).and_then(|layer| layer.world.block_entity(pos)) {
-        super::entities::into_loot(&kept.nbt, items);
+/// The tags a broken block's entity gives the items it leaves, which a plugin's [`Item`] cannot
+/// carry: each goes on the first spilled stack of its item.
+#[derive(Default)]
+pub(super) struct Tags(Vec<(&'static str, acacia_proto::nbt::Value)>);
+
+impl Tags {
+    /// Whether one goes on a stack of the item `name`.
+    pub(super) fn tags(&self, name: &str) -> bool {
+        self.0.iter().any(|(tagged, _)| *tagged == name)
     }
+
+    fn put_on(&mut self, stack: &mut sapling_world::ItemStack) {
+        if let Some(at) = self.0.iter().position(|(name, _)| *name == stack.name) {
+            stack.tag = Some(self.0.remove(at).1);
+        }
+    }
+}
+
+/// Adds to `items`, left by the block at `pos`, what its entity kept (entities.rs); the tags
+/// for [`spill_tagged`]. Call before the block goes.
+pub(super) fn add_entity_loot(world: &World, layer: Entity, pos: BlockPos, items: &mut Vec<Item>) -> Tags {
+    let Some(kept) = world.get::<Layer>(layer).and_then(|layer| layer.world.block_entity(pos)) else { return Tags::default() };
+    super::entities::into_loot(&kept.nbt, items);
+    Tags(super::entities::loot_tags(&kept.nbt))
 }
 
 /// [`of`] with the shard's dice.
@@ -202,10 +220,16 @@ fn stacks(world: &World, layer: Entity, items: &[Item]) -> Vec<sapling_world::It
 /// Lays `items` where the block at `pos` was, tossed out of its cell, unless the world's
 /// `doTileDrops` is off.
 pub(super) fn spill(world: &mut World, layer: Entity, pos: BlockPos, items: &[Item]) {
+    spill_tagged(world, layer, pos, items, &mut Tags::default());
+}
+
+/// [`spill`], `tags` going on the stacks of their items.
+pub(super) fn spill_tagged(world: &mut World, layer: Entity, pos: BlockPos, items: &[Item], tags: &mut Tags) {
     if !crate::rules::on(world, layer, TILE_DROPS) {
         return;
     }
-    for stack in stacks(world, layer, items) {
+    for mut stack in stacks(world, layer, items) {
+        tags.put_on(&mut stack);
         drops::spill(world, layer, stack, pos);
     }
 }

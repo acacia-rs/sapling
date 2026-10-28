@@ -47,7 +47,7 @@ fn an_offer_is_named_with_three_or_four_words() {
 fn the_table_offers_for_a_sword_and_not_for_an_enchanted_one() {
     let offered = offers(15, &stack("minecraft:diamond_sword", None), &mut Script(vec![7, 15, 7, 15, 7, 15]));
     assert_eq!(offered.iter().map(|offer| offer.cost).collect::<Vec<_>>(), [10, 21, 30]);
-    assert!(offered.iter().all(|offer| offer.enchants.iter().all(|(id, _)| kinds::of(*id).is_some_and(|kind| kind.goes_on(crate::gear::slot::SWORD)))));
+    assert!(offered.iter().all(|offer| offer.enchants.iter().all(|(id, _)| kinds::kind_of(*id).is_some_and(|kind| kind.goes_on(crate::gear::slot::SWORD)))));
     let sharp = tagged(&[(9, 1)], &[]);
     assert!(offers(15, &stack("minecraft:diamond_sword", Some(&sharp)), &mut Script(Vec::new())).is_empty());
     let book = table::enchanted(&stack("minecraft:book", None), &offered[0]).unwrap();

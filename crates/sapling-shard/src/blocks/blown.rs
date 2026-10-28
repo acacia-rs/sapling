@@ -26,8 +26,11 @@ pub(crate) fn blow_out(world: &mut World, layer: Entity, cells: &[BlockPos], lea
         let kept = leaves >= 1.0 || (leaves > 0.0 && world.get_resource_or_insert_with(super::Dice::default).fraction() < leaves);
         if let Some((name, properties)) = broken.filter(|_| kept) {
             let mut items = loot::thrown(world, &name, &properties, &Breaker::UNAIDED);
-            loot::add_entity_loot(world, layer, cell, &mut items);
-            for item in items {
+            let mut tags = loot::add_entity_loot(world, layer, cell, &mut items);
+            // A tagged stack (a banner's patterns) is its own, merged with none.
+            let (tagged, plain): (Vec<Item>, Vec<Item>) = items.into_iter().partition(|item| tags.tags(&item.name));
+            loot::spill_tagged(world, layer, cell, &tagged, &mut tags);
+            for item in plain {
                 merge(&mut left, item, cell);
             }
         }

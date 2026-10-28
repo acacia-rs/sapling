@@ -215,10 +215,10 @@ impl Request<'_> {
         let (block, mining) = (send::describe(registry, id), state.mining);
         let name = block.name.clone();
         let by = mining::breaker(self.world, self.entity, &mining);
-        let mut drops = Vec::new();
+        let (mut drops, mut tags) = (Vec::new(), loot::Tags::default());
         if site.mode == GameMode::Survival {
             drops = loot::thrown(self.world, &block.name, &block.properties, &by);
-            loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
+            tags = loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
         }
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
         let event = plugins::offer(self.world,BreakEvent::new(self.player.clone(), pos, block, drops, allowed));
@@ -226,7 +226,7 @@ impl Request<'_> {
         match !event.is_cancelled() && self.remove(&site, pos) {
             true => {
                 crate::creatures::hive_broken(self.world, site.layer, pos, &name, bees, by.silk_touch);
-                loot::spill(self.world, site.layer, pos, &event.drops);
+                loot::spill_tagged(self.world, site.layer, pos, &event.drops, &mut tags);
                 if site.mode == GameMode::Survival {
                     after_break::leave(self.world, site.layer, pos, &name, &by);
                 }

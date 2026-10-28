@@ -1,9 +1,9 @@
 //! Enchantments: their ids in a stack's `ench` list, and what each level does, as BDS reckons it
-//! (docs/research/enchantments.md). Protection and the rest of what armour's do: warding.rs. The
+//! (docs/research/enchantments.md). What each goes on and goes with, its levels and rarity, for
+//! `/enchant` and every workstation: kinds.rs. Reading and writing a stack's list: [`level`],
+//! list.rs; a plugin item's: `sapling_api::Item::enchantment`. Protection and the rest of what armour's do: warding.rs. The
 //! workstations that give and take them (docs/research/workstations.md): the enchanting table
-//! (table.rs), the anvil (anvil.rs) and the grindstone (grind.rs), all by kinds.rs. `/enchant`'s
-//! words, limits and refusals: words.rs.
-// TODO: words.rs and kinds.rs each keep what an enchantment goes on and goes with; one table.
+//! (table.rs), the anvil (anvil.rs) and the grindstone (grind.rs).
 
 pub mod anvil;
 mod archery;
@@ -13,12 +13,11 @@ mod list;
 pub mod mace;
 pub mod table;
 mod warding;
-mod words;
 
 pub use archery::{FLAME_BURNS, charge_ticks, impaling, loyalty_pull, multishot, piercing, power_bonus, punch, riptide};
+pub use kinds::{Activation, KINDS, Kind, compatible, goes_on, kind_of, named, slots_of};
 pub use list::{all, with_all};
 pub use table::Offer;
-pub use words::{Gear, KINDS, Kind, compatible, gear, goes_on, kind_of, named};
 pub use warding::{Harm, THORNS_WEAR, Warding, thorns};
 
 /// The random numbers the workstations draw: BDS's `Random` in the shard.
@@ -75,6 +74,30 @@ pub enum Enchant {
     WindBurst = 38,
     Density = 39,
     Breach = 40,
+    Lunge = 41,
+}
+
+impl Enchant {
+    /// Every one, by id.
+    pub const ALL: [Self; 42] = {
+        use Enchant::*;
+        [
+            Protection, FireProtection, FeatherFalling, BlastProtection, ProjectileProtection, Thorns, Respiration, DepthStrider, AquaAffinity, Sharpness, Smite,
+            BaneOfArthropods, Knockback, FireAspect, Looting, Efficiency, SilkTouch, Unbreaking, Fortune, Power, Punch, Flame, Infinity, LuckOfTheSea, Lure,
+            FrostWalker, Mending, Binding, Vanishing, Impaling, Riptide, Loyalty, Channeling, Multishot, Piercing, QuickCharge, SoulSpeed, SwiftSneak, WindBurst,
+            Density, Breach, Lunge,
+        ]
+    };
+
+    /// The enchantment numbered `id` in a stack's `ench` list.
+    pub fn from_id(id: i16) -> Option<Self> {
+        Self::ALL.get(usize::try_from(id).ok()?).copied()
+    }
+
+    /// What it goes on and goes with, its levels and rarity.
+    pub fn kind(self) -> &'static Kind {
+        &KINDS[self as usize]
+    }
 }
 
 /// The level of `enchant` on a stack whose NBT is `tag`; 0 without it.

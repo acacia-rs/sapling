@@ -9,7 +9,7 @@ use super::wear::{damage, set_damage};
 use super::{HOTBAR, Held, Inventory};
 
 fn level(held: &Held, enchant: Enchant) -> u8 {
-    enchant::level(held.stack.tag.as_ref(), enchant)
+    crate::enchants::level_of(&held.stack, enchant)
 }
 
 /// Whether the stack goes, rather than drops, when its player dies.

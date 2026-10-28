@@ -10,6 +10,11 @@ use crate::components::Outgoing;
 use crate::creatures::Cause;
 use crate::inventory::{self, Inventory};
 
+/// The level of `enchant` on `stack`; 0 without it.
+pub(crate) fn level_of(stack: &sapling_world::ItemStack, enchant: Enchant) -> u8 {
+    enchant::level(stack.tag.as_ref(), enchant)
+}
+
 /// The NBT of what a player holds, for the rules that weigh several of its enchantments.
 pub(crate) fn weapon(world: &World, player: Entity) -> Option<acacia_proto::nbt::Value> {
     world.get::<Inventory>(player)?.in_hand().as_ref()?.stack.tag.clone()

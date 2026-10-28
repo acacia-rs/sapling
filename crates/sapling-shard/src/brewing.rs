@@ -116,10 +116,10 @@ pub(crate) fn refuses(slot: usize, item: &ItemStack) -> bool {
     !takes(slot, item)
 }
 
-/// A hopper above fills the ingredient; one beside the fuel and the bottles.
-// TODO: BDS fills only an empty bottle slot; here glass bottles stack onto one.
-pub(crate) fn takes_from_hopper(slot: usize, face: Face, item: &ItemStack) -> bool {
-    takes(slot, item) && (slot == INGREDIENT) == (face == Face::Up)
+/// A hopper above fills the ingredient; one beside the fuel and the bottles, a bottle slot only
+/// when `empty`.
+pub(crate) fn takes_from_hopper(slot: usize, face: Face, empty: bool, item: &ItemStack) -> bool {
+    takes(slot, item) && (slot == INGREDIENT) == (face == Face::Up) && (empty || !BOTTLES.contains(&slot))
 }
 
 /// A hopper below empties the bottles, brewed or not (`canPullOutItem` 141f21ce0).
@@ -236,4 +236,18 @@ pub(crate) fn tick(world: &mut World) {
     let mut brews = std::mem::take(&mut stands.0);
     brews.retain(|(layer, pos), brew| step(world, *layer, *pos, brew));
     world.resource_mut::<Stands>().0.extend(brews);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_hopper_fills_a_bottle_slot_only_when_it_is_empty() {
+        let item = |name: &str| ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: None };
+        let bottle = item("minecraft:glass_bottle");
+        assert!(takes_from_hopper(1, Face::North, true, &bottle) && !takes_from_hopper(1, Face::North, false, &bottle));
+        assert!(!takes_from_hopper(1, Face::Up, true, &bottle), "a hopper above fills the ingredient only");
+        assert!(takes_from_hopper(FUEL, Face::West, false, &item(POWDER)), "powder stacks onto powder");
+    }
 }

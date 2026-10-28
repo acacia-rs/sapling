@@ -147,7 +147,32 @@ compass, elytra: 0 (never offered).
 - Trim: the base with `Trim{Material, Pattern}`; pattern from the template, material from the
   addition (`TrimData` from the client's start game).
 
-## Unverified
+## One enchantment table (2026-10-28)
+
+`sapling_data::enchant::KINDS` (kinds.rs) is the only table: `/enchant`'s word and name key next to
+`initEnchants`' rarity, costs and slot bits. `/enchant` checks what goes on an item by those bits too
+(`slots_of`: a book all, a skull or head the cosmetic-head bit, else `gear::gear`), so it now takes what BDS's
+secondary slots allow (Silk Touch on shears, the blade enchantments on a spear, curses on heads). Queries:
+`enchant::level(tag, Enchant::X)`, the shard's `enchants::level_of(stack, Enchant::X)`, a plugin item's
+`Item::enchantment(id)`; `Enchant::ALL`, `Enchant::from_id`, `Enchant::kind`.
+
+## Banners (BDSRE)
+
+- Placing (`BannerBlockActor` 141f0cad0, called from 142a817f0): the item's `Patterns`, at most 6 of them, go
+  into the block entity; with no item tag the base colour is the aux value (`& 0xf`). sapling also keeps the
+  item's `Type` (1 ominous).
+- Load 141f0c460 and save 141f0c0f0 read and write `Base`, `Type`, `Patterns` (`{Color, Pattern}`).
+- Loom (`CraftHandlerLoom` 1446e4100): a banner with more than five patterns is refused (1446e43b5), so six
+  is the most.
+- Breaking (sapling, inf): the banner item gets `{Patterns, Type}` back from the entity (nothing for a plain
+  one), by hand, by losing its support and in a blast, where it is not merged with other banners.
+  `loot::Tags` carries it, since a plugin's `Item` has no tag.
+
+## Brewing
+
+A hopper fills a bottle slot only when it is empty (`canPushInItem` 141f219d0, docs/research/brewing.md).
+
+## Not drilled
 
 - The bookshelf gap flag (taken as air only; may include replaceable blocks).
 - Bow, crossbow, book and mace enchantability (1, 1, 1, 15 from the wiki).
@@ -159,4 +184,9 @@ compass, elytra: 0 (never offered).
   again for an anvil within 8.7 of the player (14 in creative); sapling does the same out of
   creative. A creative player's packet got no answer at all (research/captures/bds-packets.txt).
 - Which of the request's two name lists is the filtered one.
+- `/enchant` by the slot bits: spear, shears and head cases (only sword, stone, book were captured).
+- A broken banner's item tag (`{Patterns, Type}`, none for a plain one), a placed banner keeping the
+  item's `Type`, and a banner in a blast not merging.
+- The loom's limit of six patterns and the block's cap of six on placing (read, not played).
+- A hopper refusing a bottle onto a filled bottle slot of a brewing stand.
 - No `bds_*` drill was run against BDS for any of this; the numbers are from the exe only.

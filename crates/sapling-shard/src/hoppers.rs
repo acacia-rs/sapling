@@ -124,10 +124,11 @@ pub(crate) fn takes_items(world: &World, layer: Entity, target: BlockPos) -> boo
 pub(crate) fn put_one(world: &mut World, layer: Entity, target: BlockPos, face: Face, item: &ItemStack) -> bool {
     let Some(kind) = containers::kind_at(world, layer, target).filter(|kind| kind.holds_items()) else { return false };
     let item = ItemStack { count: 1, ..item.clone() };
-    let was_empty = containers::slots_at(world, layer, target).is_some_and(|slots| slots.iter().all(Option::is_none));
+    let empty: Vec<bool> = containers::slots_at(world, layer, target).map(|slots| slots.iter().map(Option::is_none).collect()).unwrap_or_default();
+    let was_empty = !empty.is_empty() && empty.iter().all(|empty| *empty);
     let moved = match crate::blocks::crafter_slot(world, layer, target, &item) {
         Some(slot) => containers::with_slots(world, layer, target, |world, into| insert(world, into, &item, |at| Some(at) == slot) > 0),
-        None => containers::with_slots(world, layer, target, |world, into| insert(world, into, &item, |at| kind.takes_from_hopper(at, face, &item)) > 0),
+        None => containers::with_slots(world, layer, target, |world, into| insert(world, into, &item, |at| kind.takes_from_hopper(at, face, empty.get(at).copied().unwrap_or(true), &item)) > 0),
     };
     if moved == Some(true) && kind.is_hopper() && was_empty {
         delay_receiver(world, layer, target);

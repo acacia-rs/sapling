@@ -156,8 +156,8 @@ impl Request<'_> {
             super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
             let second = door.map(|(above, _)| above).or_else(|| doors::place_second_cell(self.world, site.layer, pos, whole));
             // A bed's colour and a banner's are the item's, which the block cannot say.
-            let damage = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or(0, |held| held.stack.damage);
-            let placing = entities::Placing { damage, yaw: click.yaw, properties: &block.properties };
+            let (damage, tag) = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or((0, None), |held| (held.stack.damage, held.stack.tag.clone()));
+            let placing = entities::Placing { damage, tag: tag.as_ref(), yaw: click.yaw, properties: &block.properties };
             for cell in [Some(pos), second].into_iter().flatten() {
                 if let Some(entity) = entities::placed(&block.name, cell, &placing) {
                     send::keep_entity(self.world, site.layer, cell, &entity);
@@ -168,7 +168,6 @@ impl Request<'_> {
             }
             signs::open_editor(self.world, self.entity, site.layer, pos, &block.name);
             rails::join_placed(self.world, site.layer, pos);
-            let tag = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).and_then(|held| held.stack.tag.clone());
             crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
             super::pistons::furnish(self.world, site.layer, pos);
             super::command_blocks::furnish(self.world, site.layer, pos, None);
