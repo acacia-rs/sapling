@@ -83,6 +83,7 @@ mod liquids;
 mod mechanisms;
 mod mob_commands;
 mod movement_policy;
+mod new_effects;
 mod omens;
 mod operations;
 mod pending_ticks;

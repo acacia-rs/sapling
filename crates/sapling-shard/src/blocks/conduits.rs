@@ -2,8 +2,9 @@
 //! (docs/research/block-entities.md "Conduits"): every 40 ticks one in water all round, with at
 //! least 16 prismarine or sea lanterns where its frame goes, is `Active` in its entity. BDS told
 //! clients nothing of it (research/captures/bds-conduits.txt), so the entity changes unshown.
-// TODO: an active conduit gives no Conduit Power (the effect is not in sapling yet) and hunts no
-// hostile mob (`Target` stays -1).
+//! An active one gives conduit power and hunts (power.rs).
+
+mod power;
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
@@ -39,21 +40,21 @@ fn is_water(level: &Level, [x, y, z]: BlockPos) -> bool {
     level.in_height(y) && (water(level.block(x, y, z)) || water(level.liquid(x, y, z)))
 }
 
-/// Whether the conduit at `pos` wakes: water in the 3 by 3 by 3 round it, itself standing in
-/// water, and enough of its frame.
-fn wakes(level: &Level, [x, y, z]: BlockPos) -> bool {
+/// The frame blocks of the conduit at `pos`, 0 unless it and the 3 by 3 by 3 round it are water.
+fn framed(level: &Level, [x, y, z]: BlockPos) -> usize {
     let mut near = (-1..=1).flat_map(|dx| (-1..=1).flat_map(move |dy| (-1..=1).map(move |dz| [x + dx, y + dy, z + dz])));
     if !near.all(|pos| is_water(level, pos)) {
-        return false;
+        return 0;
     }
     let framed = frame_offsets().filter(|&[dx, dy, dz]| {
         let [fx, fy, fz] = [x + dx, y + dy, z + dz];
         level.in_height(fy) && level.registry().get(level.block(fx, fy, fz)).is_some_and(|state| FRAME.contains(&state.name))
     });
-    framed.count() >= WAKES
+    framed.count()
 }
 
-/// Every 40 ticks, the conduits near players that woke or slept since, kept so.
+/// Every 40 ticks, the conduits near players: those that woke or slept since kept so, and the
+/// active ones' power given.
 pub(crate) fn tick(world: &mut World) {
     if world.resource::<Tick>().0 % EVERY != 0 {
         return;
@@ -65,7 +66,7 @@ pub(crate) fn tick(world: &mut World) {
     }
     columns.sort_by_key(|(layer, pos)| (*layer, pos.x, pos.z));
     columns.dedup();
-    let mut changed = Vec::new();
+    let (mut changed, mut active) = (Vec::new(), Vec::new());
     for (layer, column) in columns {
         let Some(level) = level(world, layer) else { continue };
         for entity in level.block_entities_in(column) {
@@ -73,9 +74,13 @@ pub(crate) fn tick(world: &mut World) {
                 continue;
             }
             let was = matches!(entity.nbt.get("Active"), Some(Value::Byte(1)));
-            let now = wakes(level, entity.pos);
+            let frame = framed(level, entity.pos);
+            let now = frame >= WAKES;
             if was != now {
                 changed.push((layer, entity.pos, entity.nbt.clone(), now));
+            }
+            if now {
+                active.push((layer, entity.pos, frame));
             }
         }
     }
@@ -88,6 +93,10 @@ pub(crate) fn tick(world: &mut World) {
         if let Some(mut level) = world.get_mut::<Layer>(layer) {
             level.world.set_block_entity(pos, &nbt);
         }
+    }
+    for (layer, pos, frame) in active {
+        power::empower(world, layer, pos, frame);
+        power::hunt(world, layer, pos, frame);
     }
 }
 

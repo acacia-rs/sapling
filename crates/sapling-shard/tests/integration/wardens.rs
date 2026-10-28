@@ -134,6 +134,20 @@ fn a_warden_booms_through_armour_at_prey_it_cannot_reach_every_five_seconds() {
 }
 
 #[test]
+fn a_warden_casts_darkness_on_survival_players_within_20_every_121_ticks() {
+    use acacia_proto::packets::{MobEffect, MobEffectEventId};
+    let (mut h, _, _) = with_warden([0.5, 65.0, -7.5], None, GameMode::Survival);
+    let mut cast = Vec::new();
+    // Before it could come to Alex.
+    for tick in 1..=125 {
+        let sent = h.tick_all();
+        cast.extend(all::<MobEffect>(sent.to(1)).into_iter().map(|effect| (tick, effect.runtime_entity_id, effect.event_id, effect.particles, effect.duration)));
+        assert!(!all::<MobEffect>(sent.to(2)).iter().any(|effect| effect.runtime_entity_id == 2), "Steve is in creative");
+    }
+    assert_eq!(cast, [(1, 1, MobEffectEventId::Add, false, 260), (122, 1, MobEffectEventId::Update, false, 260)], "bds-warden-findings.md: given as it came, then every 121 ticks");
+}
+
+#[test]
 fn a_warden_summoned_emerging_climbs_out_and_left_alone_a_minute_digs_down_and_goes() {
     let (mut h, warden, mut timeline) = with_warden([0.5, 65.0, -4.5], Some("minecraft:spawn_emerging"), GameMode::Creative);
     let mut gone = None;
