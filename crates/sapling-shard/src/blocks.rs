@@ -63,6 +63,7 @@ mod shot_blocks;
 mod shown_again;
 mod sign_ink;
 mod signs;
+mod sponge;
 mod stacking;
 mod structure_blocks;
 mod summoning;

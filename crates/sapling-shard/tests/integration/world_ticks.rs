@@ -77,6 +77,30 @@ fn a_chorus_flower_on_end_stone_grows_into_a_plant() {
 }
 
 #[test]
+fn a_sponge_set_in_water_soaks_it_up_and_turns_wet() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let pool: Vec<[i32; 3]> = (3..=7).flat_map(|x| (-2..=2).map(move |z| [x, 70, z])).filter(|cell| *cell != [5, 70, 0]).collect();
+    let cells = pool.clone();
+    h.remote.run(move |ctx| {
+        for x in 2..=8 {
+            for z in -3..=3 {
+                set(ctx, [x, 69, z], Block::new("stone"));
+            }
+        }
+        cells.iter().for_each(|cell| set(ctx, *cell, Block::new("water")));
+    });
+    h.tick(1);
+    h.remote.run(|ctx| set(ctx, [5, 70, 0], Block::new("sponge")));
+    (0..3).for_each(|_| _ = h.tick(1));
+    let mut looked = vec![[5, 70, 0]];
+    looked.extend(pool);
+    let after = names(&mut h, looked);
+    assert!(after[0].starts_with("minecraft:wet_sponge"), "{after:?}");
+    assert!(after[1..].iter().all(|name| !name.contains("water")), "{after:?}");
+}
+
+#[test]
 fn budding_amethyst_grows_buds_into_clusters() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

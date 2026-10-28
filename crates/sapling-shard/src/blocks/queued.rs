@@ -34,6 +34,8 @@ pub(crate) enum Job {
     Command,
     /// Coral out of water dies (coral.rs).
     Coral,
+    /// A sponge soaks up water, or a wet one dries in the Nether (sponge.rs).
+    Sponge,
 }
 
 #[derive(Resource, Default)]
@@ -128,5 +130,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Lectern => super::lectern::pulse(world, layer, pos),
         Job::Command => super::command_blocks::tick(world, layer, pos),
         Job::Coral => super::coral::die(world, layer, pos),
+        Job::Sponge => super::sponge::ticked(world, layer, pos),
     }
 }
