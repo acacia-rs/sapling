@@ -20,7 +20,7 @@ fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
 }
 
 /// The middle of the village about `feet` in `layer`, if there is one.
-pub(super) fn centre(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option<[f32; 3]> {
+pub(in crate::creatures) fn centre(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option<[f32; 3]> {
     let level = &world.get::<Layer>(layer)?.world;
     let reach = (FINDS / 16.0).ceil() as i32;
     let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);

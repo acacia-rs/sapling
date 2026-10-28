@@ -130,6 +130,7 @@ mod throws;
 mod tnt;
 mod vanilla_rules;
 mod vehicles;
+mod villager_days;
 mod villagers;
 mod wardens;
 mod wild_plants;

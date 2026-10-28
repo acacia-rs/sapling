@@ -61,12 +61,28 @@ const AT_WORK: f32 = 1.5;
 const WALK: f32 = 0.5;
 const DAY: i64 = 24_000;
 
-/// The job sites villagers took, by world and cell, with who took each.
+/// The job sites and beds villagers took, by world and cell, with who took each.
 #[derive(Resource, Default)]
-struct Claimed {
-    sites: HashMap<(Entity, [i32; 3]), Entity>,
-    /// The tick of the last searches, and how many it made.
-    searched: (u64, u32),
+pub(super) struct Claimed {
+    pub sites: HashMap<(Entity, [i32; 3]), Entity>,
+    /// The tick of the last searches for job sites and for beds, and how many it made.
+    searched: [(u64, u32); 2],
+}
+
+/// What a search is for: each has its own searches a tick.
+pub(super) const FOR_JOBS: usize = 0;
+pub(super) const FOR_BEDS: usize = 1;
+
+impl Claimed {
+    /// Whether a search `kind` may be made at `now`; counts it if so.
+    pub fn may_search(&mut self, now: u64, kind: usize) -> bool {
+        let searched = &mut self.searched[kind];
+        if *searched == (now, SEARCHES_PER_TICK) {
+            return false;
+        }
+        *searched = if searched.0 == now { (now, searched.1 + 1) } else { (now, 1) };
+        true
+    }
 }
 
 pub(super) fn of(variant: i32) -> Option<&'static Profession> {
@@ -109,31 +125,30 @@ pub(super) fn mark_at(level: &Level, feet: [f32; 3]) -> i32 {
     marks.into_iter().filter(|(_, held)| *held).map(|(mark, _)| mark).last().unwrap_or(0)
 }
 
-fn block_at(level: &Level, [x, y, z]: [i32; 3]) -> Option<&'static str> {
+pub(super) fn block_at(level: &Level, [x, y, z]: [i32; 3]) -> Option<&'static str> {
     level.in_height(y).then(|| level.registry().get(level.block(x, y, z)).map(|state| state.name)).flatten()
 }
 
-/// The nearest free site of `wanted` (any profession's for `None`) around `feet`.
-fn nearest_site(level: &Level, claimed: &HashMap<(Entity, [i32; 3]), Entity>, layer: Entity, feet: [i32; 3], wanted: Option<i32>) -> Option<([i32; 3], i32)> {
+/// The nearest free cell around `feet` that `fits`, and what it gives for it.
+pub(super) fn nearest(level: &Level, claimed: &Claimed, layer: Entity, feet: [i32; 3], fits: impl Fn([i32; 3], &'static str) -> Option<i32>) -> Option<([i32; 3], i32)> {
     let mut best: Option<(i32, [i32; 3], i32)> = None;
     for dy in -REACH_UP..=REACH_UP {
         for dz in -REACH..=REACH {
             for dx in -REACH..=REACH {
                 let cell = [feet[0] + dx, feet[1] + dy, feet[2] + dz];
-                let Some(name) = block_at(level, cell) else { continue };
-                let Some(profession) = PROFESSIONS.iter().find(|p| p.site == name && wanted.is_none_or(|wanted| wanted == p.variant)) else { continue };
+                let Some(given) = block_at(level, cell).and_then(|name| fits(cell, name)) else { continue };
                 let distance = dx * dx + dy * dy + dz * dz;
-                if !claimed.contains_key(&(layer, cell)) && best.is_none_or(|(least, ..)| distance < least) {
-                    best = Some((distance, cell, profession.variant));
+                if !claimed.sites.contains_key(&(layer, cell)) && best.is_none_or(|(least, ..)| distance < least) {
+                    best = Some((distance, cell, given));
                 }
             }
         }
     }
-    best.map(|(_, cell, variant)| (cell, variant))
+    best.map(|(_, cell, given)| (cell, given))
 }
 
-/// A villager's look at its job: whether its site still stands, or for a free one, which it can
-/// take (a few searches a tick, shard-wide).
+/// A villager's look at its job and bed (beds.rs): whether its site still stands, or for a free
+/// one, which it can take (a few searches a tick, shard-wide).
 pub(super) fn look(world: &mut World, entity: Entity, layer: Entity, now: u64) {
     let Some(mut trader) = world.get::<Trader>(entity).cloned() else { return };
     let feet = world.get::<Body>(entity).map_or([0; 3], |body| body.at.map(|c| c.floor() as i32));
@@ -142,7 +157,10 @@ pub(super) fn look(world: &mut World, entity: Entity, layer: Entity, now: u64) {
     claimed.sites.retain(|_, owner| world.get::<Trader>(*owner).is_some());
     let mut dice = world.remove_resource::<Dice>().unwrap_or_default();
     let changed = match world.get::<Layer>(layer) {
-        Some(level) => decide(&level.world, &mut claimed, &mut trader, (entity, layer, feet, now), &mut dice),
+        Some(level) => {
+            super::beds::decide(&level.world, &mut claimed, &mut trader, (entity, layer, feet, now));
+            decide(&level.world, &mut claimed, &mut trader, (entity, layer, feet, now), &mut dice)
+        }
         None => Vec::new(),
     };
     trader.next_look = now + LOOK_EVERY + u64::from(dice.roll(LOOK_SPREAD));
@@ -167,10 +185,10 @@ fn decide(level: &Level, claimed: &mut Claimed, trader: &mut Trader, (entity, la
                 return vec![int(Key::Variant, UNSKILLED), int(Key::MaxTradeTier, 0)];
             }
         }
-        None if trader.profession != NITWIT && claimed.searched != (now, SEARCHES_PER_TICK) => {
-            claimed.searched = if claimed.searched.0 == now { (now, claimed.searched.1 + 1) } else { (now, 1) };
+        None if trader.profession != NITWIT && claimed.may_search(now, FOR_JOBS) => {
             let wanted = (trader.profession != UNSKILLED).then_some(trader.profession);
-            let Some((site, variant)) = nearest_site(level, &claimed.sites, layer, feet, wanted) else { return Vec::new() };
+            let fits = |_, name: &str| PROFESSIONS.iter().find(|p| p.site == name && wanted.is_none_or(|wanted| wanted == p.variant)).map(|p| p.variant);
+            let Some((site, variant)) = nearest(level, claimed, layer, feet, fits) else { return Vec::new() };
             claimed.sites.insert((layer, site), entity);
             trader.job = Some(site);
             if trader.profession == UNSKILLED {

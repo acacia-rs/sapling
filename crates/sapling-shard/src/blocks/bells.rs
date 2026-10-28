@@ -50,6 +50,7 @@ fn ring(world: &mut World, layer: Entity, pos: BlockPos, direction: i32) {
         kept.extend([("Direction".into(), Value::Int(direction)), ("Ringing".into(), Value::Byte(1)), ("Ticks".into(), Value::Int(0))]);
     }
     keep_entity(world, layer, pos, &fields);
+    crate::creatures::hear_bell(world, layer, pos);
     let [x, y, z] = pos.map(|c| c as f32);
     send::to_viewers(world, layer, pos, &[send::noise("block.bell.hit", Vec3f { x, y, z }, -1)]);
 }

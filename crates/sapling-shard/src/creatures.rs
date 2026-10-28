@@ -96,7 +96,7 @@ pub(crate) use omens::{Omens, befall, infested_hurt};
 pub(crate) use piglins::barter;
 pub(crate) use scooping::{held_kind as bucketed_kind, release as release_from_bucket, scoop};
 pub(crate) use struck::struck_by_lightning;
-pub(crate) use villagers::{bargains, interact as trade_with, stop_trading, traded};
+pub(crate) use villagers::{alarm as hear_bell, bargains, interact as trade_with, stop_trading, traded};
 pub(crate) use warden::hear as warden_hears;
 pub(crate) use wither::{build as build_wither, hurt as wither_hurt, spares};
 use crate::components::{InLayer, NetId, Tick};
