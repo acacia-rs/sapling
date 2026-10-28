@@ -1,8 +1,7 @@
 //! Blocks that hold one thing put into them by hand: an item frame takes an item and later
 //! clicks turn it, a decorated pot takes a stack one at a time (docs/research/block-uses.md, "A
 //! second round"). Each keeps it as BDS does, in its entity.
-// TODO: a comparator reads no frame, as BDS read none lying flat; a wall frame was not drilled. A
-// frame shows no map; a pot gives nothing back but by being broken.
+// TODO: a pot gives nothing back but by being broken.
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -70,6 +69,7 @@ pub(super) fn hit(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
         fields.retain(|(key, _)| key != FRAMED && key != TURN);
     }
     send::keep_entity(world, layer, pos, &fields);
+    super::frames::show_map(world, layer, pos, None);
     crate::drops::spill(world, layer, item, pos);
     let corner = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
     send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEvent { event: LevelEventEvent::SoundItemframeRemoveItem, position: corner, data: 0 })]);
@@ -96,6 +96,7 @@ pub(super) fn use_holder(world: &mut World, player: Entity, layer: Entity, pos: 
             }
         };
         send::keep_entity(world, layer, pos, &fields);
+        super::frames::show_map(world, layer, pos, fields.get(FRAMED));
         send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEvent { event, position: corner, data: 0 })]);
         return true;
     }

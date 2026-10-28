@@ -8,7 +8,7 @@ use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use common::asking::ask;
 use acacia_proto::types::Action as BlockAction;
 use common::{Harness, all, block_actions, click};
-use sapling_api::{Block, PlayerId, RuleValue};
+use sapling_api::{Block, GameMode, Item, PlayerId, RuleValue, Slot};
 use sapling_world::{NETHER, World};
 
 const ALEX: PlayerId = PlayerId(1);
@@ -78,6 +78,39 @@ fn infested_stone_broken_by_hand_or_blasted_lets_a_silverfish_out() {
     h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:tnt", [-5.5, 65.0, -5.5]).is_some()));
     (0..90).for_each(|_| drop(h.tick_all()));
     assert_eq!(silverfish(&mut h).len(), 2);
+}
+
+/// The dust's signal, after the circuit settles.
+fn dust(h: &mut Harness) -> String {
+    (0..6).for_each(|_| drop(h.tick_all()));
+    ask(h, |ctx| ctx.block([4, 65, 0]).map(|dust| dust.properties).unwrap_or_default())
+}
+
+#[test]
+fn a_comparator_reads_a_frame_behind_its_block_by_turn_and_a_framed_map_shows() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:diamond", 1))));
+        assert!(ctx.update_block([2, 65, 0], &Block::new("minecraft:stone")));
+        assert!(ctx.update_block([1, 65, 0], &Block::new("minecraft:frame").with("facing_direction=4,item_frame_map_bit=0,item_frame_photo_bit=0")));
+        assert!(ctx.update_block([3, 65, 0], &Block { name: "minecraft:unpowered_comparator".into(), properties: "minecraft:cardinal_direction=west".into() }));
+        assert!(ctx.update_block([4, 65, 0], &Block::new("minecraft:redstone_wire")));
+        assert!(ctx.set_block([1, 65, 3], &Block::new("minecraft:frame").with("facing_direction=1,item_frame_map_bit=0,item_frame_photo_bit=0")));
+    });
+    assert_eq!(dust(&mut h), "redstone_signal=0");
+    h.receive(1, &click([1, 65, 0], 4, None));
+    assert_eq!(dust(&mut h), "redstone_signal=1");
+    h.receive(1, &click([1, 65, 0], 4, None));
+    assert_eq!(dust(&mut h), "redstone_signal=2");
+
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:filled_map", 1)))));
+    h.tick_all();
+    h.receive(1, &click([1, 65, 3], 1, None));
+    h.tick_all();
+    let shown = ask(&mut h, |ctx| ctx.block([1, 65, 3]).map(|frame| frame.properties)).unwrap_or_default();
+    assert!(shown.contains("item_frame_map_bit=1"), "{shown}");
 }
 
 #[test]

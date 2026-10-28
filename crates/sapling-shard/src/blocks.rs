@@ -29,6 +29,7 @@ mod entity_fields;
 mod facing;
 mod fields;
 mod fire;
+mod frames;
 mod falling;
 mod frost;
 mod ground;

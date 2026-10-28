@@ -60,6 +60,18 @@ and left to drop in a blast (`blown.rs`), spawns a silverfish at the cell's corn
 `doTileDrops` is off (the Java game's `InfestedBlock.spawnAfterBreak` gate; the vt+0x1c8 check may be
 it, **inf**).
 
+## Item frames: maps and comparators
+
+- A frame holding a `minecraft:filled_map` has `item_frame_map_bit` 1, else 0; set whenever its item
+  goes in, turns or comes out (`blocks/frames.rs` `show_map`). The client draws the map from the map
+  data it asks for as for a held map. **inf** (the state's name; BDS not read).
+- A comparator reads a frame the Java game's way (`ComparatorBlock.getInputSignal`, `getItemFrame`,
+  `ItemFrame.getAnalogOutput`, **Java**): only past a solid block behind it, a frame on that block's
+  back facing away from the comparator, 1 + its turn in eighths (1 to 8), 0 empty, whichever is
+  stronger of it and the block there. A frame right behind the comparator reads nothing, which is
+  what BDS showed for a flat frame (research/captures/bds-holders.txt, docs/research/redstone.md).
+  sapling: `blocks/redstone/reads.rs` `read_past`.
+
 ## Not drilled
 
 - An item frame popping when its block goes (inferred).
@@ -69,3 +81,4 @@ it, **inf**).
 - Underwater TNT breaking nothing (pack JSON and parser read; sapling's existing rule).
 - Infested blocks: the silverfish at the cell's corner, whether a blast lets one out and whether
   `doTileDrops` gates it.
+- A framed map's `item_frame_map_bit`; a comparator reading a wall frame past a block, by turn.
