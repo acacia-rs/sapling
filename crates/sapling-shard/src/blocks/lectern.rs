@@ -4,8 +4,7 @@
 //! opens its screen. LecternUpdate turns its page. A comparator reads it.
 //! A turn to page 0 powers it a tick later for two ticks, as BDS did; turns to other pages showed no
 //! power (bds-books.txt).
-// TODO: the book is not taken back from the screen (not drilled); broken, the lectern leaves the
-// book by its name only (entities.rs).
+// TODO: broken, the lectern leaves the book by its name only (entities.rs).
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::LecternUpdate;
@@ -85,6 +84,22 @@ pub(super) fn use_lectern(world: &mut World, player: Entity, layer: Entity, pos:
     let [x, y, z] = pos.map(|c| c as f32);
     send::to_viewers(world, layer, pos, &[send::noise("item.book.put", acacia_proto::types::Vec3f { x, y, z }, -1)]);
     keep(world, layer, pos, vec![(BOOK, kept), ("hasBook", Value::Byte(1)), ("page", Value::Int(0)), ("totalPages", Value::Int(pages))]);
+    true
+}
+
+/// A hit on the block at `pos`: a lectern that holds a book lets it go, as the Bedrock client's
+/// Take Book does by a hit (dragonfly's and PocketMine's `Lectern` drop it on a punch; not
+/// drilled). False for anything else.
+pub(super) fn hit(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    if !is_lectern(world, layer, pos) || opened_at(world, layer, pos).is_none() {
+        return false;
+    }
+    let Some(book) = fields::get(world, layer, pos, BOOK).and_then(|book| ItemStack::parse(&book)) else { return false };
+    let Some(Value::Compound(mut kept)) = level(world, layer).and_then(|level| level.block_entity(pos)).map(|entity| entity.nbt.clone()) else { return false };
+    kept.retain(|(key, _)| !matches!(key.as_str(), BOOK | "hasBook" | "page" | "totalPages"));
+    keep_entity(world, layer, pos, &Value::Compound(kept));
+    super::container_changed(world, layer, pos);
+    crate::drops::spill(world, layer, book, sapling_api::Face::Up.neighbour(pos));
     true
 }
 

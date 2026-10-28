@@ -115,3 +115,18 @@ fn a_charged_respawn_anchor_bursts_when_clicked_in_the_overworld() {
     h.remote.run(|ctx| assert!(ctx.block([3, 65, 0]).is_some_and(|block| block.name == "minecraft:air") && ctx.block([3, 64, 0]).is_some_and(|block| block.name == "minecraft:air")));
     h.tick_all();
 }
+
+#[test]
+fn a_fire_charge_from_a_dispenser_lights_the_tnt_it_hits() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.update_block([3, 65, 3], &Block::new("dispenser").with("facing_direction=5")));
+        assert!(ctx.set_container_item([3, 65, 3], 0, Some(&sapling_api::Item::new("minecraft:fire_charge", 1))));
+        assert!(ctx.update_block([6, 65, 3], &Block::new("minecraft:tnt")));
+    });
+    (0..4).for_each(|_| _ = h.tick_all());
+    h.remote.run(|ctx| assert!(ctx.update_block([3, 65, 4], &Block::new("redstone_block"))));
+    let sent: Vec<RawPacket> = (0..30).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(all::<AddEntity>(&sent).iter().any(|added| added.entity_type == "minecraft:tnt"), "primed");
+}

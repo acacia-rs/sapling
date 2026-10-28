@@ -126,6 +126,7 @@ mod vehicles;
 mod villagers;
 mod wardens;
 mod wild_plants;
+mod world_ticks;
 mod veto_events;
 mod vitals;
 mod wither;

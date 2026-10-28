@@ -2,10 +2,13 @@
 //! bamboo, farmland, open dirt, smothered grass, lit ice and snow and marked leaf has the chance a
 //! tick that a cell picked at random around a player has on BDS (docs/research/growth.md); what a
 //! tick then does is in rules.rs and cover.rs, and snowfall.rs freezes water and lays snow.
-// A sapling whose tick comes up grows in saplings.rs; mushrooms, vines, cave vines, stalactites
-// and lava draw theirs (sampled.rs, wild.rs, vines.rs, drips.rs, fire.rs); kelp keeps its own (kelp.rs).
+// A sapling whose tick comes up grows in saplings.rs; mushrooms, vines, cave vines, chorus flowers,
+// budding amethyst, stalactites and lava draw theirs (sampled.rs, wild.rs, vines.rs, chorus.rs,
+// amethyst.rs, drips.rs, fire.rs); kelp and the nether vines keep their own (kelp.rs).
 // TODO: only a survival player treads farmland down, no mob and no creative player.
 
+mod amethyst;
+mod chorus;
 mod copper;
 mod cover;
 mod kelp;
@@ -114,7 +117,7 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     found.retain(|pos| kept(level, *pos).is_some());
     let mut drawn = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| is_sampled(state.name, state.properties)));
     drawn.retain(|pos| sampled_at(level, *pos).is_some());
-    let kelp = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| state.name == "minecraft:kelp"));
+    let kelp = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| kelp::is_grown(state.name)));
     if !found.is_empty() {
         world.get_resource_or_insert_with(Growing::default).0.extend(found.into_iter().map(|pos| (layer, pos)));
     }
