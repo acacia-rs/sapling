@@ -1,12 +1,15 @@
 //! A villager's day (villagers/schedule.rs, beds.rs, fear.rs): it gathers at the bell, sleeps in its
-//! bed at night, flees a zombie and hides in its bed when a bell rings.
+//! bed at night, flees a zombie and hides in its bed when a bell rings; and a player's standing with
+//! its village (villagers/standing.rs).
 
 use crate::common;
 
 use acacia_proto::nbt::Value;
+use acacia_proto::packets::{AddEntity, SetEntityData};
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Meta, MetadataDictionaryItemValueDefault as Plain};
 use common::raising::feet_of;
-use common::{Harness, click, config};
-use sapling_api::{Block, BlockEntityData, Difficulty};
+use common::{Harness, all, attack, click, config};
+use sapling_api::{Block, BlockEntityData, Difficulty, EntityId, PlayerId};
 use sapling_world::World;
 
 const BELL: [i32; 3] = [12, 65, 12];
@@ -83,4 +86,31 @@ fn a_rung_bell_sends_villagers_to_their_beds() {
     h.receive(1, &click([2, 65, 0], 4, None));
     let came = walks_to(&mut h, id, HEAD, 1.5, 600);
     assert!(came <= 1.5, "it hid in its bed: {came}");
+}
+
+/// The runtime ids an iron golem has taken for its prey in `sent`.
+fn golem_targets(sent: &[acacia_proto::RawPacket], golem: u64) -> Vec<i64> {
+    let items = all::<SetEntityData>(sent).into_iter().filter(|data| data.runtime_entity_id == golem).flat_map(|data| data.metadata);
+    items.filter(|item| item.key == Key::TargetEid).filter_map(|item| if let Meta::Default(Plain::Long(id)) = item.value { Some(id) } else { None }).collect()
+}
+
+#[test]
+fn an_iron_golem_turns_on_a_player_who_hit_a_villager_fifteen_times() {
+    let (mut h, id) = village(6_000, [3.5, 65.0, 0.5], "minecraft:become_unskilled");
+    h.remote.run(|ctx| ctx.teleport(PlayerId(1), [0.5, 65.0, 0.5]));
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:iron_golem", [6.5, 65.0, 6.5]).is_some()));
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let golem = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:iron_golem").expect("the golem shown").runtime_id;
+    let mut seen = Vec::new();
+    for hit in 1..=15 {
+        h.remote.run(move |ctx| assert!(ctx.move_entity(EntityId(id), [2.0, 65.0, 0.5])));
+        h.tick_all();
+        h.receive(1, &attack(id));
+        (0..12).for_each(|_| seen.extend(h.tick_all().to(1).to_vec()));
+        if hit == 14 {
+            assert_eq!(golem_targets(&seen, golem), [0i64; 0], "-14 is not low enough");
+        }
+    }
+    (0..40).for_each(|_| seen.extend(h.tick_all().to(1).to_vec()));
+    assert_eq!(golem_targets(&seen, golem), [1], "at -15 the golem takes Alex");
 }

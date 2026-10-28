@@ -3,8 +3,8 @@
 //! screen (trading.rs), kept in its actor compound (storage.rs); the wandering trader's offers,
 //! llamas and the timer it leaves by (wandering.rs).
 //! A villager keeps its pack's day (schedule.rs), sleeps in a bed it claims (beds.rs), flees what
-//! it fears and hides at a bell (fear.rs).
-// TODO: no gossip or reputation (Hero of the Village pays less, trading.rs); villager breeding
+//! it fears and hides at a bell (fear.rs); a player's standing with its village (standing.rs).
+// TODO: no gossip (Hero of the Village pays less, trading.rs); villager breeding
 // (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
 
 mod beds;
@@ -12,6 +12,7 @@ mod deals;
 mod fear;
 mod jobs;
 mod schedule;
+mod standing;
 mod storage;
 mod trading;
 mod wandering;
@@ -31,6 +32,7 @@ use crate::{entities, mobs};
 use deals::Deal;
 
 pub(crate) use fear::alarm;
+pub(super) use standing::{hit as hurt_standing, outlaw};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};
 
 const VILLAGER: &str = "minecraft:villager_v2";
