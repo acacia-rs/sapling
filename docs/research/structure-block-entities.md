@@ -73,9 +73,27 @@ replays): the new draws are of generators nothing else reads after them.
 ## Loot on first open
 
 `RandomizableBlockActorContainer` (load 1448783f0) keeps `LootTable` and `LootTableSeed` until the
-container is first opened, when the table is rolled into it and both fields go. Sapling rolls it when
-the shard first holds the container (opened, fed by a hopper, broken: `containers/loot.rs`), with
-`sapling_data::table_loot` and dice seeded from `LootTableSeed`, into shuffled empty slots.
+container is first opened, when the table is rolled into it and both fields go. The unpack (144878e90)
+seeds an MT19937 `Random` (vtable 14a7125a0) with the seed (0 takes one from the level's random) and
+calls `LootTableUtils::fillContainer` (140af0520), which runs `LootTable::fill` (14127e3b0):
+
+1. Each pool (`LootPool::addRandomItems` 14127b8e0): its conditions; rolls `min + nextInt(max - min + 1)`,
+   drawn even for a written number (`nextInt(1)`); a `nextFloat` for bonus rolls; per roll, the entries
+   whose conditions hold, `nextInt(total weight)`, the first entry the draw runs out in; `set_count`
+   draws as the rolls do.
+2. The empty slots in order, shuffled (MSVC `std::shuffle`: slot i swapped with `raw % (i + 1)`).
+3. Stacks of more than one set aside. If the slots outnumber the single stacks, one set-aside stack at a
+   time (`nextInt(count of them)`) is split (`nextInt(count / 2) + 1` off it), each part of more than
+   one set aside again on `nextBoolean`. BDS counts the room once (`[rbp+0x4d0]`), so it splits until
+   none is set aside, where Java counts again each time.
+4. All stacks shuffled as the slots were, then each put in the slot popped off the back of the list.
+
+Sapling does the same (`containers/loot.rs`, `sapling_data::drawn_table_loot`) when the shard first
+holds the container (opened, fed by a hopper, broken). `tools/bds-loot-setup.sh` and
+`bds_loot_probe` (research/captures/bds-loot-probe.txt) load seeded blocks on a BDS with
+`/structure load loot:row`: a `simple_dungeon.json` chest of seed 357601146 gets the 12 stacks
+`containers::loot::tests` expects, slot for slot. A hopper under such a chest unpacks it the same way and
+starts pulling; comparators beside one lit nothing before it was opened.
 
 ## Left out
 
@@ -88,8 +106,9 @@ the shard first holds the container (opened, fed by a hopper, broken: `container
 
 ## Unverified
 
-- [U] BDS splits a rolled stack over several free slots as Java's `LootTable.fill` does; sapling puts
-  each stack in one slot. Whether a comparator or a hopper below unpacks the loot as opening does.
+- [U] `enchant_randomly` (a dungeon's book) draws nothing in sapling; a table that rolls a book desyncs
+  after it. Checked on one seed only.
+- [U] Whether a comparator reads 0 from unopened loot or the drill's comparators faced the wrong way.
 - [U] 3 village chests' seeds: BDS's are draws 157 of chunk (-63, 9)'s structure MT and 306 and 459 of
   (-62, 8)'s, sapling's 158, 301 and 449, while (-62, 8)'s chest at draw 433 matches; the draws
   between are the pieces' bottom fills (`nextInt(3)` per filled column over the whole piece), so some
