@@ -13,11 +13,13 @@ mod listening;
 mod ops;
 mod packs;
 mod properties;
+mod stopping;
 mod worlds;
 
 pub use error::StartError;
 pub use ops::Metrics;
 pub use properties::{ConfigError, ServerProperties};
+pub(crate) use stopping::StopRequest;
 
 type HandlerFactory = Box<dyn Fn() -> Box<dyn Handler> + Send>;
 
@@ -39,6 +41,7 @@ pub struct ServerBuilder {
     dimensions: Vec<(Option<String>, World)>,
     ops: ops::Ops,
     console: bool,
+    pub(crate) stop: stopping::StopRequest,
 }
 
 impl Default for ServerBuilder {
@@ -58,6 +61,7 @@ impl Default for ServerBuilder {
             dimensions: Vec::new(),
             ops: ops::Ops::default(),
             console: false,
+            stop: stopping::StopRequest::default(),
         }
     }
 }
@@ -219,7 +223,7 @@ impl ServerBuilder {
         tracing::info!(addr = %listener.local_addr(), shards = count, "sapling listening");
         let watching = self.ops.watch(&shards, self.shard.crash_reports.clone());
         // Started together: each shard's first tick finds the others' worlds announced.
-        Ok(Server { listener, shards: shards.into_iter().map(Shard::spawn).collect(), entry, watching })
+        Ok(Server { listener, shards: shards.into_iter().map(Shard::spawn).collect(), entry, watching, stop: self.stop })
     }
 }
 
@@ -243,6 +247,7 @@ pub struct Server {
     /// The shard new players join on, which keeps what is kept of every player.
     entry: usize,
     watching: ops::Watching,
+    stop: stopping::StopRequest,
 }
 
 impl Server {
@@ -266,7 +271,7 @@ impl Server {
 
     /// Stops the game, disconnects every player and closes the socket.
     pub async fn shutdown(self) {
-        let Server { listener, mut shards, entry, watching } = self;
+        let Server { listener, mut shards, entry, watching, .. } = self;
         drop(watching);
         // The entry shard last: the others hand it their players' items as they stop.
         let last = shards.remove(entry);

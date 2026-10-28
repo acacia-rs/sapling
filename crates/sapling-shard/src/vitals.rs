@@ -88,14 +88,15 @@ pub(crate) struct Vitals {
     /// Experience its body leaves as it goes.
     leaves: Option<i32>,
     /// What storage last kept of it (kept.rs).
-    saved: [f32; 4],
+    saved: kept::Kept,
 }
 
 impl Default for Vitals {
     fn default() -> Self {
         let hunger = hunger::Hunger::default();
         let [fed, saturation, exhaustion] = hunger.kept();
-        Self { health: Health::new(MAX, None, 0), air: AIR, hunger, meal: None, told: MAX, padded: 0.0, was: None, died: None, leaves: None, saved: [MAX, fed, saturation, exhaustion] }
+        let saved = kept::Kept { vitals: [MAX, fed, saturation, exhaustion], air: AIR, fire: 0 };
+        Self { health: Health::new(MAX, None, 0), air: AIR, hunger, meal: None, told: MAX, padded: 0.0, was: None, died: None, leaves: None, saved }
     }
 }
 

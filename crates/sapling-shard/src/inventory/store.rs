@@ -72,7 +72,7 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
                     marks.restore(data.unique_id, std::mem::take(&mut data.tags));
                 }
                 if let Some((mut vitals, kept)) = vitals.zip(data.vitals) {
-                    vitals.restore(kept);
+                    vitals.restore(kept, data.air, data.fire);
                 }
                 if let Some(effects) = crate::vitals::restored_effects(&data.effects) {
                     commands.entity(player).insert(effects);
@@ -117,8 +117,13 @@ pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut
             if inventory.experience != Experience::default() {
                 out.push(&experience::attributes(id, &inventory.experience, true, tick.0));
             }
-            for told in vitals.map(|mut vitals| vitals.greeting(id.0, tick.0)).unwrap_or_default() {
-                out.push(&told);
+            if let Some(mut vitals) = vitals {
+                for told in vitals.greeting(id.0, tick.0) {
+                    out.push(&told);
+                }
+                if let Some(breath) = vitals.breath_greeting(id.0) {
+                    out.push(&breath);
+                }
             }
             if let Some(last_death) = last_death {
                 out.push(&crate::vitals::last_death_greeting(id.0, *last_death, tick.0));
@@ -152,7 +157,9 @@ pub(crate) fn save(world: &mut World, player: Entity) {
     inventory.unsaved = false;
     let KeptPlace(place, _, game_mode) = now;
     let (position, rotation) = (place.map(|place| place.0), place.map(|place| place.1));
-    let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), dimension, position, rotation, game_mode, ..kept(&inventory) };
+    let kept_vitals = vitals.map(|vitals| vitals.kept());
+    let (air, fire) = (kept_vitals.map(|kept| kept.air), kept_vitals.map(|kept| kept.fire));
+    let data = PlayerData { vitals: kept_vitals.map(|kept| kept.vitals), air, fire, effects: effects.unwrap_or_default(), dimension, position, rotation, game_mode, ..kept(&inventory) };
     let (bed, spawn_dimension) = world.get::<BedSpawn>(player).and_then(|bed| bed.kept(world, &dimensions::members(world, first))).map_or((None, 0), |(bed, dimension)| (Some(bed), dimension));
     let last_death = world.get::<LastDeath>(player).map(|death| (death.at, death.dimension));
     let rested = world.get::<Rested>(player).map(|rested| rested.0);

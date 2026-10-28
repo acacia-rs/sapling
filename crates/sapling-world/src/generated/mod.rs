@@ -152,6 +152,10 @@ impl<S: WorldStorage> WorldStorage for Generated<S> {
         self.inner.sync()
     }
 
+    fn folder(&self) -> Option<std::path::PathBuf> {
+        self.inner.folder()
+    }
+
     fn locate_stronghold(&self, x: i32, z: i32) -> Option<[i32; 3]> {
         match &self.generator {
             Generator::Overworld(generator) => generator.locate_stronghold(x, z),

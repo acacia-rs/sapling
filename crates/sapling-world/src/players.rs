@@ -30,7 +30,10 @@ impl World {
 
     /// Hands a player's items to the I/O threads; [`World::save_and_wait`] waits for them too.
     pub fn save_player(&mut self, id: &str, data: PlayerData) {
-        self.players.save(self.loader.as_mut(), id, data);
+        match self.held {
+            true => drop(self.players.held.insert(id.to_owned(), data)),
+            false => self.players.save(self.loader.as_mut(), id, data),
+        }
     }
 }
 
@@ -40,12 +43,14 @@ pub(crate) struct Players {
     /// them is given this.
     saving: HashMap<String, PlayerData>,
     arrived: Vec<(String, PlayerLoad)>,
+    /// Saves made during a backup hold, handed to storage when it ends.
+    pub(crate) held: HashMap<String, PlayerData>,
 }
 
 impl Players {
     /// Asks for what is kept of player `id`; the answer comes from [`Players::take_arrived`].
     pub fn request(&mut self, loader: Option<&mut Loader>, id: &str) {
-        match (self.saving.get(id), loader) {
+        match (self.held.get(id).or_else(|| self.saving.get(id)), loader) {
             (Some(data), _) => self.arrived.push((id.to_string(), PlayerLoad::Stored(data.clone()))),
             (None, Some(loader)) => loader.load_player(id.to_string()),
             (None, None) => self.arrived.push((id.to_string(), PlayerLoad::New)),

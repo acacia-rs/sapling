@@ -25,6 +25,11 @@ impl Plugin for Limit {
     }
 }
 
+/// The server's player limit; `None` before the shard's first tick.
+pub(super) fn player_limit(ctx: &mut ShardCtx<'_>) -> Option<PlayerLimit> {
+    ctx.state::<Installed>().0.clone()
+}
+
 fn mode_key(mode: GameMode) -> String {
     format!("%createWorldScreen.gameMode.{}", format!("{mode:?}").to_lowercase())
 }

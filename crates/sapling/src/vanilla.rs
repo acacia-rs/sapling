@@ -3,7 +3,7 @@
 //! `/enchant`, `/gamemode`, `/summon`, `/kill`, `/damage`, `/difficulty`, `/effect`, `/gamerule`,
 //! `/replaceitem`, the spawn commands (`/setworldspawn`, `/spawnpoint`, `/clearspawnpoint`),
 //! `/testfor`, `/spreadplayers`, the server commands (`/defaultgamemode`, `/setmaxplayers`, `/seed`,
-//! `/version`, `/transfer`), `/kick`, `/op`, `/deop`, the messaging commands (`/me`, `/tellraw`,
+//! `/version`, `/transfer`, `/list`, `/stop`, `/save`), `/kick`, `/op`, `/deop`, the messaging commands (`/me`, `/tellraw`,
 //! `/title`, `/titleraw`, `/playsound`, `/stopsound`, `/particle`), `/scoreboard`, `/tag`, `/scriptevent`,
 //! `/execute`, and with access lists `/allowlist` and the ban commands. Opt in with
 //! [`crate::ServerBuilder::vanilla_commands`].
@@ -27,16 +27,19 @@ mod effects;
 mod enchanting;
 mod execute;
 mod items;
+mod lifecycle;
 mod loot;
 mod message;
 mod messaging;
 mod names;
 mod operators;
+mod permission;
 mod players;
 mod recipes;
 mod regions;
 mod riding;
 mod rules;
+mod saving;
 mod scoreboard;
 mod screen;
 mod scriptevent;
@@ -82,7 +85,9 @@ impl ServerBuilder {
         let world_tools = sounds.command::<structure::StructureCommand>().command::<tickingarea::TickingAreaCommand>().command::<worldgen::Place>().command::<worldgen::Locate>();
         let world_tools = world_tools.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>().command::<riding::Ride>().command::<loot::Loot>();
         let screen = world_tools.command::<camera::Camera>().command::<camera::CameraShake>().command::<screen::Fog>().command::<screen::Hud>().command::<screen::PlayAnimation>().command::<screen::Music>();
-        screen.command::<controls::InputPermission>().command::<controls::MobEvent>().command::<controls::DayLock>().command::<recipes::Recipe>()
+        let controls = screen.command::<controls::InputPermission>().command::<controls::MobEvent>().command::<controls::DayLock>().command::<recipes::Recipe>();
+        let stopping = lifecycle::Stopping(controls.stop.clone());
+        controls.plugin(stopping).command::<lifecycle::List>().command::<lifecycle::Stop>().command::<saving::Save>()
     }
 }
 

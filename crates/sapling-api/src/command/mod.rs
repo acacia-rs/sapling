@@ -11,6 +11,7 @@ mod places;
 mod rawtext;
 mod registry;
 mod selector;
+mod soft_enum;
 
 pub use args::{Args, ParseError};
 pub use executed::Executed;
@@ -20,6 +21,7 @@ pub use places::{Axis, BlockCoords, Coords, States};
 pub use rawtext::{RawPart, RawText};
 pub use selector::{Base, Bounds, Filters, Input, Inventory, ItemTest, Location, Not, Selected, Selector};
 pub use registry::Commands;
+pub use soft_enum::SoftEnumChange;
 
 use crate::{Permission, Player, ShardCtx};
 
@@ -91,6 +93,12 @@ impl ParameterSpec {
         Self { name: name.to_owned(), kind: P::kind(), optional: P::OPTIONAL }
     }
 
+    /// A word parameter (`String` or `Option<String>`) completed from the soft enum `enum_name`,
+    /// as `#[command(soft_enum = "Arena")]` on a field declares it.
+    pub fn soft_enum<P: Parameter>(name: &str, enum_name: &str) -> Self {
+        Self { name: name.to_owned(), kind: ParamKind::SoftEnum { name: enum_name.to_owned(), values: Vec::new() }, optional: P::OPTIONAL }
+    }
+
     /// The fixed word that picks sub-command `word` of `command`.
     pub fn literal(command: &str, word: &str) -> Self {
         Self { name: word.to_owned(), kind: ParamKind::Enum { name: format!("{command}_{word}"), values: vec![word.to_owned()] }, optional: false }
@@ -122,4 +130,7 @@ pub enum ParamKind {
     Json,
     /// A path of words between `/`: a function's name.
     FilePath,
+    /// One word, completed from an enum the plugin changes while the server runs (arena names):
+    /// these are its first values; [`ShardCtx::set_soft_enum`] and the like change them.
+    SoftEnum { name: String, values: Vec<String> },
 }

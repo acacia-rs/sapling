@@ -12,7 +12,7 @@ use crate::ServerBuilder;
 impl ServerBuilder {
     /// Checks every login against `lists` (bans by name, XUID and IP, and the allowlist when it is
     /// on), gives joining players the role `permissions.json` has for them, and adds `/allowlist`
-    /// (`/whitelist`), `/ban`, `/ban-ip`, `/pardon`, `/pardon-ip` and `/banlist` for operators.
+    /// (`/whitelist`), `/permission` (`/ops`), `/ban`, `/ban-ip`, `/pardon`, `/pardon-ip` and `/banlist` for operators.
     /// [`ServerBuilder::vanilla_commands`]' `/op` and `/deop` then save to `permissions.json`.
     pub fn access(mut self, lists: AccessLists) -> Self {
         self.net.access = Some(lists.clone());
@@ -45,6 +45,6 @@ impl Plugin for Access {
                 None => {}
             }
         });
-        plugin.command::<Allowlist>().command::<BanCommand>().command::<BanIp>().command::<Pardon>().command::<PardonIp>().command::<Banlist>();
+        plugin.command::<Allowlist>().command::<super::permission::PermissionCommand>().command::<BanCommand>().command::<BanIp>().command::<Pardon>().command::<PardonIp>().command::<Banlist>();
     }
 }

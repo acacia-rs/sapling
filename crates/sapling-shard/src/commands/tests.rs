@@ -140,6 +140,26 @@ fn a_member_s_list_leaves_out_operator_commands() {
     assert_eq!((lists.member.clone(), lists.operator.clone()), (sapling_net::encode(&member), sapling_net::encode(&available(&commands(), Permission::Operator))));
 }
 
+#[derive(Command)]
+#[command(crate = "sapling_api")]
+struct Join {
+    #[command(soft_enum = "Arena")]
+    arena: String,
+}
+silent!(Join);
+
+#[test]
+fn a_soft_enum_parameter_points_into_the_dynamic_enums() {
+    let mut commands = commands();
+    commands.register::<Join>();
+    let list = available(&commands, Permission::Member);
+    let wire = RawPacket::parse(sapling_net::encode(&list)).unwrap();
+    assert_eq!(wire.decode::<AvailableCommands>().unwrap(), list);
+    let [("arena", index, flags, false)] = shape(command(&list, "join"), 0)[..] else { panic!("{:?}", shape(command(&list, "join"), 0)) };
+    assert_eq!(flags, EnumType::SoftEnum.to_raw());
+    assert_eq!(list.dynamic_enums[index as usize], AvailableCommandsDynamicEnumsItem { name: "Arena".into(), values: Vec::new() });
+}
+
 #[test]
 fn command_lines_lose_their_slash_and_control_characters() {
     assert_eq!(clean("/hub").as_deref(), Some("hub"));

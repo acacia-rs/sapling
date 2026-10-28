@@ -1,6 +1,6 @@
 //! The behavior packs whose functions the server runs (crate::functions).
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use super::source::{self, Source};
@@ -24,6 +24,15 @@ const TICK_LIST: &str = "functions/tick.json";
 #[derive(Debug, Default)]
 pub struct BehaviorPacks {
     functions: Functions,
+    /// Where the packs came from, in order, so that `/reload` reads them again.
+    origins: Vec<Origin>,
+}
+
+#[derive(Debug, Clone)]
+enum Origin {
+    Pack(PathBuf),
+    Folder(PathBuf),
+    World(PathBuf, PathBuf),
 }
 
 impl BehaviorPacks {
@@ -32,20 +41,32 @@ impl BehaviorPacks {
     }
 
     /// Adds one pack: a folder with a `manifest.json`, or a `.mcpack` or `.zip` of one.
-    pub fn pack(self, path: impl AsRef<Path>) -> Result<Self, PackError> {
+    pub fn pack(mut self, path: impl AsRef<Path>) -> Result<Self, PackError> {
+        self.origins.push(Origin::Pack(path.as_ref().to_path_buf()));
         Ok(self.with(vec![source::open(path.as_ref())?]))
     }
 
     /// Adds every pack in `folder`, by file name.
-    pub fn folder(self, folder: impl AsRef<Path>) -> Result<Self, PackError> {
+    pub fn folder(mut self, folder: impl AsRef<Path>) -> Result<Self, PackError> {
+        self.origins.push(Origin::Folder(folder.as_ref().to_path_buf()));
         Ok(self.with(source::scan(folder.as_ref())?))
+    }
+
+    /// The same packs read from disk again.
+    pub(crate) fn reread(&self) -> Result<Self, PackError> {
+        self.origins.iter().try_fold(Self::new(), |packs, origin| match origin {
+            Origin::Pack(path) => packs.pack(path),
+            Origin::Folder(folder) => packs.folder(folder),
+            Origin::World(world, folder) => packs.world(world, folder),
+        })
     }
 
     /// Adds the packs a world folder applies, as BDS does: those its `world_behavior_packs.json`
     /// names, from the world's `behavior_packs` folder or `packs`. The first named comes last, so
     /// that its functions win.
     // TODO: which pack's function BDS keeps when two have one of the same name was not checked.
-    pub fn world(self, world: impl AsRef<Path>, packs: impl AsRef<Path>) -> Result<Self, PackError> {
+    pub fn world(mut self, world: impl AsRef<Path>, packs: impl AsRef<Path>) -> Result<Self, PackError> {
+        self.origins.push(Origin::World(world.as_ref().to_path_buf(), packs.as_ref().to_path_buf()));
         let mut listed = world_packs(world.as_ref(), "world_behavior_packs.json", "behavior_packs", packs.as_ref())?;
         listed.reverse();
         Ok(self.with(listed))
@@ -81,6 +102,12 @@ impl BehaviorPacks {
         let mut names: Vec<String> = self.functions.by_name.keys().cloned().collect();
         names.sort();
         names
+    }
+
+    /// [`BehaviorPacks::build`], and the packs' origins without their functions, to reread.
+    pub(crate) fn build_keeping_origins(self) -> (Functions, Self) {
+        let origins = Self { origins: self.origins.clone(), ..Self::default() };
+        (self.build(), origins)
     }
 
     pub(crate) fn build(mut self) -> Functions {

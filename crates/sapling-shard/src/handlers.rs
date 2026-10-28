@@ -124,6 +124,7 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::vehicles::tick(world);
     crate::riding::carry(world);
     crate::spawning::despawn(world);
+    crate::spawning::remove_in_peaceful(world);
     crate::spawning::tick(world);
     crate::spawners::tick(world);
     crate::dragon::tick(world);
