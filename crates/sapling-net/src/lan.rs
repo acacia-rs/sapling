@@ -41,7 +41,7 @@ impl Lan {
     }
 
     /// Handles one discovery datagram and returns the datagrams to send back to `from`.
-    /// `game_port` is the UDP port WebRTC runs on.
+    /// `game_port` is the UDP port WebRTC runs on (NetherNet's own, if it has one).
     pub fn handle(
         &mut self,
         data: &[u8],
@@ -82,7 +82,7 @@ impl Lan {
         match signal.kind {
             SignalKind::ConnectRequest => {
                 let local = SocketAddr::new(local_ip_towards(from), game_port);
-                match sessions.admit_offer(links, &signal.data, local, true, now) {
+                match sessions.admit_offer(links, &signal.data, local, from, true, now) {
                     Ok(answer) => {
                         self.joins.insert(join, answer.peer);
                         let candidates = answer.candidates.into_iter().map(|line| Signal::new(SignalKind::CandidateAdd, join.1, line));
@@ -92,16 +92,16 @@ impl Lan {
                 }
             }
             SignalKind::CandidateAdd => {
-                if let (Some(&peer), Some(host)) = (self.joins.get(&join), links.nethernet.as_mut())
-                    && let Err(error) = host.add_remote_candidate(peer, &signal.data, now)
+                if let (Some(&peer), Some(nethernet)) = (self.joins.get(&join), links.nethernet.as_mut())
+                    && let Err(error) = nethernet.host.add_remote_candidate(peer, &signal.data, now)
                 {
                     tracing::debug!(%from, %error, "bad LAN candidate");
                 }
                 Vec::new()
             }
             SignalKind::ConnectError => {
-                if let (Some(peer), Some(host)) = (self.joins.remove(&join), links.nethernet.as_mut()) {
-                    host.close(peer, now);
+                if let (Some(peer), Some(nethernet)) = (self.joins.remove(&join), links.nethernet.as_mut()) {
+                    nethernet.host.close(peer, now);
                 }
                 Vec::new()
             }

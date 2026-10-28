@@ -9,10 +9,11 @@ use super::Sessions;
 use crate::links::{Links, Refusal};
 
 impl Sessions {
-    /// Answers a NetherNet offer that reached us at `local`, if its identity is good enough for
-    /// this server: online mode wants the auth service's token, offline takes any or none.
-    pub fn admit_offer(&mut self, links: &mut Links, offer: &str, local: SocketAddr, trickle: bool, now: Instant) -> Result<Answer, Refusal> {
-        let host = links.nethernet.as_mut().ok_or(Refusal::Full)?;
+    /// Answers a NetherNet offer that reached us at `local` from `from`, if its identity is good
+    /// enough for this server: online mode wants the auth service's token, offline takes any or none.
+    /// `from` may also reach our TURN relays: a client behind NAT offers only its private address.
+    pub fn admit_offer(&mut self, links: &mut Links, offer: &str, local: SocketAddr, from: SocketAddr, trickle: bool, now: Instant) -> Result<Answer, Refusal> {
+        let host = &mut links.nethernet.as_mut().ok_or(Refusal::Full)?.host;
         let identity = acacia_nethernet::verify_offer(offer).map_err(|error| {
             tracing::debug!(%error, "offer refused");
             Refusal::Identity
@@ -28,6 +29,7 @@ impl Sessions {
                 Refusal::Offer
             }
         })?;
+        host.permit(answer.peer, from, now);
         if let Some(identity) = identity {
             self.offers.insert(answer.peer, identity.key);
         }

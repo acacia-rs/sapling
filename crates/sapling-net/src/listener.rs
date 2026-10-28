@@ -21,6 +21,8 @@ use crate::query::Query;
 use crate::router::Router;
 use crate::sessions::Sessions;
 use crate::sockets::Sockets;
+use crate::transport::Transport;
+use crate::transports::{NetherNetTransport, RakNetTransport};
 
 /// Connections allowed beyond `max_players`, so a full server can still tell newcomers it is full.
 const HANDSHAKE_SLACK: usize = 32;
@@ -30,6 +32,7 @@ const HANDSHAKE_SLACK: usize = 32;
 pub struct Listener {
     addr: SocketAddr,
     lan: Option<Advert>,
+    nethernet_port: Option<u16>,
     task: JoinHandle<()>,
 }
 
@@ -42,13 +45,18 @@ pub struct Advert {
 }
 
 impl Listener {
-    /// The game port: UDP for RakNet and WebRTC, TCP for NetherNet signaling.
+    /// The game port: UDP for RakNet (and WebRTC by default), TCP for NetherNet signaling.
     pub fn local_addr(&self) -> SocketAddr {
         self.addr
     }
 
     pub fn lan(&self) -> Option<Advert> {
         self.lan
+    }
+
+    /// The UDP port NetherNet's datagrams use: the game port unless [`crate::NetherNet::udp_ports`].
+    pub fn nethernet_port(&self) -> Option<u16> {
+        self.nethernet_port
     }
 
     /// Waits for the driver to finish its goodbyes, after the game dropped its channels.
@@ -67,18 +75,34 @@ pub async fn listen(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys) -> io::
 /// [`listen`] for a game of several shards: one inbox each, new players join shard `entry`, and
 /// [`Outbox::route`] moves a connection between them. The task ends when every inbox is dropped.
 pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, shards: usize, entry: usize) -> io::Result<(Listener, Outbox, Vec<Inbox>)> {
-    let (sockets, tcp) = Sockets::bind(addr, cfg.bind_v6, cfg.nethernet.is_some()).await?;
+    listen_with(addr, cfg, keys, shards, entry, Vec::new()).await
+}
+
+/// [`listen_shards`] with transports of the embedder's beside RakNet and NetherNet; their players
+/// log in and play as any other.
+pub async fn listen_with(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, shards: usize, entry: usize, custom: Vec<Box<dyn Transport>>) -> io::Result<(Listener, Outbox, Vec<Inbox>)> {
+    let nethernet_ports = cfg.nethernet.as_ref().and_then(|n| n.udp_ports);
+    let (sockets, tcp) = Sockets::bind(addr, cfg.bind_v6, cfg.nethernet.is_some(), nethernet_ports).await?;
     let addr = sockets.local_addr()?;
     let guid = rand_core::OsRng.next_u64();
     let mut raknet = ServerConfig::new(guid, cfg.motd.pong(guid, 0, cfg.max_players.get(), sockets.ports()));
     raknet.max_peers = cfg.max_players.ceiling() + HANDSHAKE_SLACK;
     let (senders, inboxes) = (0..shards.max(1)).map(|_| mpsc::unbounded_channel()).unzip();
-    let host = cfg.nethernet.as_ref().map(|n| Host::new(n.host_key.clone(), HostConfig { max_peers: raknet.max_peers, ..HostConfig::default() }));
+    let host = match cfg.nethernet.as_ref() {
+        Some(n) => {
+            let ice = crate::nethernet::resolve_ice(&n.ice_servers, addr.is_ipv4()).await;
+            let mut host = Host::new(n.host_key.clone(), HostConfig { max_peers: raknet.max_peers, ice, ..HostConfig::default() });
+            host.gather(Instant::now());
+            Some(NetherNetTransport { host })
+        }
+        None => None,
+    };
     let lan = cfg.nethernet.as_ref().and_then(|n| n.lan.as_ref()).map(|lan| Lan::bind(lan.port)).transpose()?;
     let advert = lan.as_ref().map(|lan| Ok::<_, io::Error>(Advert { addr: lan.socket.local_addr()?, network_id: lan.id() })).transpose()?;
+    let tls = cfg.nethernet.as_ref().and_then(|n| n.tls.as_ref()).map(crate::http::acceptor).transpose()?;
     let signaling = tcp.map(|tcp| {
         let (requests, signaling) = mpsc::unbounded_channel();
-        tokio::spawn(crate::http::serve(tcp, requests));
+        tokio::spawn(crate::http::serve(tcp, requests, tls));
         signaling
     });
     let (commands, outbound) = mpsc::unbounded_channel();
@@ -87,7 +111,7 @@ pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, 
         sockets,
         query: cfg.query.then(|| Query::new(Instant::now())),
         replies: Vec::new(),
-        links: Links { raknet: Server::new(raknet, Instant::now()), nethernet: host },
+        links: Links { raknet: RakNetTransport::new(Server::new(raknet, Instant::now())), nethernet: host, custom },
         signaling,
         lan,
         public_ip: cfg.nethernet.as_ref().and_then(|n| n.public_ip),
@@ -97,8 +121,9 @@ pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, 
         sessions: Sessions::new(cfg, Verifier::new(keys), Router::new(senders, entry), congestion.clone()),
         outbound,
     };
+    let nethernet_port = driver.links.nethernet.is_some().then(|| driver.sockets.nethernet_port());
     let task = tokio::spawn(driver.run());
-    Ok((Listener { addr, lan: advert, task }, Outbox { commands, congestion }, inboxes))
+    Ok((Listener { addr, lan: advert, nethernet_port, task }, Outbox { commands, congestion }, inboxes))
 }
 
 /// The NetherNet host key kept in `path`, made on first use. See [`crate::NetherNet::host_key`].

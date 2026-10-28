@@ -1,20 +1,21 @@
 //! The socket loop: datagrams and signaling in, the transports' output out, timers in between.
 
-use std::future::pending;
+use std::future::{pending, poll_fn};
 use std::io;
 use std::net::{IpAddr, SocketAddr};
 use std::time::{Duration, Instant};
 
+use acacia_nethernet::host::PeerId;
 use tokio::sync::mpsc;
 
 use crate::config::Motd;
 use crate::event::Outbound;
 use crate::http::Request;
 use crate::lan::Lan;
-use crate::links::{Link, LinkEvent, Links};
+use crate::links::{LinkEvent, Links, NETHERNET};
 use crate::query::{Query, Status};
 use crate::sessions::Sessions;
-use crate::sockets::Sockets;
+use crate::sockets::{Sockets, Via};
 
 /// Longer than any datagram a peer may send (the RakNet MTU tops out at 1492).
 const DATAGRAM_BUF: usize = 2048;
@@ -51,7 +52,7 @@ impl Driver {
     /// Runs until the game drops its outbox or inbox, then says goodbye to every player.
     pub async fn run(mut self) {
         let ports = self.sockets.ports();
-        let port = ports[0];
+        let nethernet_port = self.sockets.nethernet_port();
         let mut advertised = (usize::MAX, 0);
         let mut backlogs_checked = Instant::now();
         let (mut buf, mut lan_buf) = (vec![0u8; DATAGRAM_BUF], vec![0u8; LAN_BUF]);
@@ -59,8 +60,10 @@ impl Driver {
             // Events first: the replies they queue must leave in this turn, not at the next wake-up.
             let now = Instant::now();
             while let Some(event) = self.links.poll_event() {
-                if let (LinkEvent::Disconnected(Link::NetherNet(peer), _), Some(lan)) = (&event, self.lan.as_mut()) {
-                    lan.forget(*peer);
+                if let (LinkEvent::Disconnected(link, _), Some(lan)) = (&event, self.lan.as_mut())
+                    && link.transport == NETHERNET
+                {
+                    lan.forget(PeerId(link.conn));
                 }
                 self.sessions.on_event(&mut self.links, event, now);
             }
@@ -68,7 +71,7 @@ impl Driver {
             self.sessions.enforce_bans(&mut self.links, now);
             if advertised != (self.sessions.player_count(), self.max_players.get()) {
                 advertised = (self.sessions.player_count(), self.max_players.get());
-                self.links.raknet.set_motd(self.motd.pong(self.guid, advertised.0, advertised.1, ports));
+                self.links.raknet.server.set_motd(self.motd.pong(self.guid, advertised.0, advertised.1, ports));
             }
             self.flush(now).await;
             if now.duration_since(backlogs_checked) >= BACKLOG_CHECK {
@@ -82,8 +85,8 @@ impl Driver {
                     let now = Instant::now();
                     let mut received = received.ok();
                     for _ in 0..BURST {
-                        let Some((len, from)) = received else { break };
-                        self.on_datagram(&buf[..len], from, now);
+                        let Some((len, from, via)) = received else { break };
+                        self.on_datagram(&buf[..len], from, via, now);
                         received = self.sockets.try_recv_from(&mut buf).ok();
                     }
                 }
@@ -96,12 +99,13 @@ impl Driver {
                         self.sessions.on_outbound(&mut self.links, command, now);
                     }
                 }
-                request = next_request(&mut self.signaling) => self.on_request(request, port),
+                request = next_request(&mut self.signaling) => self.on_request(request, nethernet_port),
                 received = lan_recv(self.lan.as_ref(), &mut lan_buf) => {
                     if let Ok((len, from)) = received {
-                        self.on_lan_datagram(&lan_buf[..len], from, port).await;
+                        self.on_lan_datagram(&lan_buf[..len], from, nethernet_port).await;
                     }
                 }
+                () = poll_fn(|cx| self.links.poll_ready(cx, Instant::now())) => {}
                 _ = tokio::time::sleep_until(deadline.into()) => self.links.handle_timeout(Instant::now()),
             }
         }
@@ -115,9 +119,9 @@ impl Driver {
             Request::Status(reply) => {
                 let _ = reply.send(self.motd.status(self.sessions.player_count(), self.max_players.get()));
             }
-            Request::Join { offer, local, reply } => {
-                let local = SocketAddr::new(self.public_ip.unwrap_or(local), port);
-                let answer = self.sessions.admit_offer(&mut self.links, &offer, local, false, Instant::now());
+            Request::Join { offer, local, from, reply } => {
+                let local = crate::nethernet::local_candidate(self.public_ip, local, port);
+                let answer = self.sessions.admit_offer(&mut self.links, &offer, local, from, false, Instant::now());
                 let _ = reply.send(answer.map(|answer| answer.sdp));
             }
         }
@@ -132,9 +136,9 @@ impl Driver {
         }
     }
 
-    fn on_datagram(&mut self, data: &[u8], from: SocketAddr, now: Instant) {
-        let Some(query) = self.query.as_mut().filter(|_| Query::is_query(data)) else {
-            self.links.handle_datagram(now, from, data);
+    fn on_datagram(&mut self, data: &[u8], from: SocketAddr, via: Via, now: Instant) {
+        let Some(query) = self.query.as_mut().filter(|_| via == Via::Game && Query::is_query(data)) else {
+            self.links.handle_datagram(now, from, data, via);
             return;
         };
         let reached = self.sockets.reached(from).unwrap_or(from);
@@ -153,10 +157,10 @@ impl Driver {
 
     async fn flush(&mut self, now: Instant) {
         for (to, reply) in std::mem::take(&mut self.replies) {
-            let _ = self.sockets.send_to(&reply, to).await;
+            let _ = self.sockets.send_to(&reply, to, Via::Game).await;
         }
-        while let Some((to, datagram)) = self.links.poll_transmit(now) {
-            let _ = self.sockets.send_to(&datagram, to).await;
+        while let Some((via, to, datagram)) = self.links.poll_transmit(now) {
+            let _ = self.sockets.send_to(&datagram, to, via).await;
         }
     }
 }

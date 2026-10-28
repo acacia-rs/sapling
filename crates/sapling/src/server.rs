@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use sapling_api::{Command, Difficulty, GameMode, Handler, Plugin, Priority};
-use sapling_net::{Admission, Advert, Listener, Motd, NetConfig, NetherNet, SigningKeys};
+use sapling_net::{Admission, Advert, Listener, Motd, NetConfig, NetherNet, SigningKeys, Transport};
 use sapling_shard::{Link, Shard, ShardConfig, ShardHandle};
 use sapling_world::{Template, World};
 
@@ -39,6 +39,7 @@ pub struct ServerBuilder {
     dimensions: Vec<(Option<String>, World)>,
     ops: ops::Ops,
     console: bool,
+    transports: Vec<Box<dyn Transport>>,
 }
 
 impl Default for ServerBuilder {
@@ -58,6 +59,7 @@ impl Default for ServerBuilder {
             dimensions: Vec::new(),
             ops: ops::Ops::default(),
             console: false,
+            transports: Vec::new(),
         }
     }
 }
@@ -79,6 +81,13 @@ impl ServerBuilder {
     /// `nethernet.lan` is set. Vanilla clients that find it no longer join over RakNet.
     pub fn nethernet(mut self, nethernet: NetherNet) -> Self {
         self.net.nethernet = Some(nethernet);
+        self
+    }
+
+    /// Also take players over a transport of the embedder's (a proxy link, another port), as
+    /// dragonfly's `ListenNetwork`. Logins, limits and kicks are the same as RakNet's.
+    pub fn transport(mut self, transport: impl Transport) -> Self {
+        self.transports.push(Box::new(transport));
         self
     }
 
@@ -184,7 +193,7 @@ impl ServerBuilder {
         }
         self.ops.apply_allow_list(&self.net)?;
         let keys = if self.net.online_mode { signing_keys().await? } else { SigningKeys::empty() };
-        let (listener, outbox, inboxes) = sapling_net::listen_shards(self.addr, self.net, keys, layout.len(), entry).await?;
+        let (listener, outbox, inboxes) = sapling_net::listen_with(self.addr, self.net, keys, layout.len(), entry, self.transports).await?;
         let count = layout.len();
         let mut single = Some(self.handlers);
         let mut shards = Vec::with_capacity(count);

@@ -1,24 +1,33 @@
-//! Both transports behind one face: a session talks to a [`Link`], whichever carries it.
+//! Every transport behind one face: a session talks to a [`Link`], whichever carries it.
 
 use std::fmt;
 use std::net::{Ipv4Addr, SocketAddr};
+use std::task::{Context, Poll};
 use std::time::Instant;
 
-use acacia_nethernet::host::{Host, HostEvent, PeerId};
-use acacia_raknet::{Reliability, Server, ServerEvent};
 use bytes::Bytes;
 
+use crate::sockets::Via;
+use crate::transport::{ConnKey, Framing, Transport, TransportEvent};
+use crate::transports::{NetherNetTransport, RakNetTransport};
+
+pub(crate) const RAKNET: u16 = 0;
+pub(crate) const NETHERNET: u16 = 1;
+/// Embedders' transports are numbered from here, in the order given.
+const CUSTOM: u16 = 2;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum Link {
-    RakNet(SocketAddr),
-    NetherNet(PeerId),
+pub(crate) struct Link {
+    pub transport: u16,
+    pub conn: ConnKey,
 }
 
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::RakNet(addr) => write!(f, "raknet {addr}"),
-            Self::NetherNet(peer) => write!(f, "nethernet #{}", peer.0),
+        match self.transport {
+            RAKNET => write!(f, "raknet #{}", self.conn),
+            NETHERNET => write!(f, "nethernet #{}", self.conn),
+            n => write!(f, "transport {n} #{}", self.conn),
         }
     }
 }
@@ -53,81 +62,116 @@ impl Refusal {
 }
 
 pub(crate) struct Links {
-    pub raknet: Server,
-    pub nethernet: Option<Host>,
+    pub raknet: RakNetTransport,
+    pub nethernet: Option<NetherNetTransport>,
+    pub custom: Vec<Box<dyn Transport>>,
 }
 
 impl Links {
-    /// A datagram from the game socket: NetherNet claims what is its own, RakNet gets the rest.
-    pub fn handle_datagram(&mut self, now: Instant, from: SocketAddr, data: &[u8]) {
-        if !self.nethernet.as_mut().is_some_and(|host| host.handle_datagram(now, from, data)) {
-            self.raknet.handle_datagram(now, from, Bytes::copy_from_slice(data));
+    fn get(&self, transport: u16) -> Option<&dyn Transport> {
+        match transport {
+            RAKNET => Some(&self.raknet),
+            NETHERNET => self.nethernet.as_ref().map(|n| n as &dyn Transport),
+            n => self.custom.get(usize::from(n - CUSTOM)).map(|t| &**t),
+        }
+    }
+
+    fn get_mut(&mut self, transport: u16) -> Option<&mut dyn Transport> {
+        match transport {
+            RAKNET => Some(&mut self.raknet),
+            NETHERNET => self.nethernet.as_mut().map(|n| n as &mut dyn Transport),
+            n => self.custom.get_mut(usize::from(n - CUSTOM)).map(|t| &mut **t),
+        }
+    }
+
+    /// Each transport with its number, in the order they are offered a datagram: RakNet takes
+    /// whatever is left, so it comes last.
+    fn all_mut(&mut self) -> impl Iterator<Item = (u16, &mut dyn Transport)> {
+        let nethernet = self.nethernet.as_mut().map(|n| (NETHERNET, n as &mut dyn Transport));
+        let custom = self.custom.iter_mut().zip(CUSTOM..).map(|(t, n)| (n, &mut **t));
+        nethernet.into_iter().chain(custom).chain([(RAKNET, &mut self.raknet as &mut dyn Transport)])
+    }
+
+    fn all(&self) -> impl Iterator<Item = &dyn Transport> {
+        let nethernet = self.nethernet.as_ref().map(|n| n as &dyn Transport);
+        nethernet.into_iter().chain(self.custom.iter().map(|t| &**t)).chain([&self.raknet as &dyn Transport])
+    }
+
+    /// A datagram from one of our UDP sockets; NetherNet's own socket feeds NetherNet alone.
+    pub fn handle_datagram(&mut self, now: Instant, from: SocketAddr, data: &[u8], via: Via) {
+        if via == Via::NetherNet {
+            if let Some(nethernet) = self.nethernet.as_mut() {
+                nethernet.handle_datagram(now, from, data);
+            }
+            return;
+        }
+        for (_, transport) in self.all_mut() {
+            if transport.handle_datagram(now, from, data) {
+                return;
+            }
         }
     }
 
     pub fn poll_event(&mut self) -> Option<LinkEvent> {
-        if let Some(event) = self.raknet.poll_event() {
-            return Some(match event {
-                ServerEvent::Connected { addr, .. } => LinkEvent::Connected(Link::RakNet(addr)),
-                ServerEvent::Message(addr, msg) => LinkEvent::Message(Link::RakNet(addr), msg),
-                ServerEvent::Disconnected(addr, reason) => LinkEvent::Disconnected(Link::RakNet(addr), format!("{reason:?}")),
-            });
-        }
-        Some(match self.nethernet.as_mut()?.poll_event()? {
-            HostEvent::Open(peer) => LinkEvent::Connected(Link::NetherNet(peer)),
-            HostEvent::Message(peer, msg) => LinkEvent::Message(Link::NetherNet(peer), msg),
-            HostEvent::Closed(peer, reason) => LinkEvent::Disconnected(Link::NetherNet(peer), reason),
+        self.all_mut().find_map(|(transport, t)| {
+            Some(match t.poll_event()? {
+                TransportEvent::Connected(conn) => LinkEvent::Connected(Link { transport, conn }),
+                TransportEvent::Message(conn, msg) => LinkEvent::Message(Link { transport, conn }, msg),
+                TransportEvent::Disconnected(conn, reason) => LinkEvent::Disconnected(Link { transport, conn }, reason),
+            })
         })
     }
 
-    pub fn poll_transmit(&mut self, now: Instant) -> Option<(SocketAddr, Bytes)> {
-        self.raknet.poll_transmit(now).or_else(|| self.nethernet.as_mut()?.poll_transmit().map(|(to, data)| (to, Bytes::from(data))))
+    /// The next datagram, and the socket it leaves by.
+    pub fn poll_transmit(&mut self, now: Instant) -> Option<(Via, SocketAddr, Bytes)> {
+        self.all_mut().find_map(|(transport, t)| {
+            let via = if transport == NETHERNET { Via::NetherNet } else { Via::Game };
+            t.poll_transmit(now).map(|(to, data)| (via, to, data))
+        })
     }
 
     pub fn poll_timeout(&self) -> Option<Instant> {
-        self.raknet.poll_timeout().into_iter().chain(self.nethernet.as_ref().and_then(Host::poll_timeout)).min()
+        self.all().filter_map(|t| t.poll_timeout()).min()
     }
 
     pub fn handle_timeout(&mut self, now: Instant) {
-        self.raknet.handle_timeout(now);
-        if let Some(host) = self.nethernet.as_mut() {
-            host.handle_timeout(now);
+        for (_, transport) in self.all_mut() {
+            transport.handle_timeout(now);
         }
     }
 
+    /// Ready when a transport with I/O of its own may have events.
+    pub fn poll_ready(&mut self, cx: &mut Context<'_>, now: Instant) -> Poll<()> {
+        let mut ready = false;
+        for transport in &mut self.custom {
+            ready |= transport.poll_ready(cx, now).is_ready();
+        }
+        if ready { Poll::Ready(()) } else { Poll::Pending }
+    }
+
+    pub fn framing(&self, link: Link) -> Framing {
+        self.get(link.transport).map_or_else(Framing::default, |t| t.framing())
+    }
+
     pub fn send(&mut self, link: Link, msg: Bytes, now: Instant) {
-        match (link, self.nethernet.as_mut()) {
-            (Link::RakNet(addr), _) => {
-                self.raknet.send(addr, msg, Reliability::ReliableOrdered);
-            }
-            (Link::NetherNet(peer), Some(host)) => host.send(peer, msg, now),
-            (Link::NetherNet(_), None) => {}
+        if let Some(transport) = self.get_mut(link.transport) {
+            transport.send(link.conn, msg, now);
         }
     }
 
     /// Flushes what is queued for the link, then closes it.
     pub fn close(&mut self, link: Link, now: Instant) {
-        match (link, self.nethernet.as_mut()) {
-            (Link::RakNet(addr), _) => self.raknet.close(addr, now),
-            (Link::NetherNet(peer), Some(host)) => host.close(peer, now),
-            (Link::NetherNet(_), None) => {}
+        if let Some(transport) = self.get_mut(link.transport) {
+            transport.close(link.conn, now);
         }
     }
 
     /// Bytes waiting to leave for the link.
     pub fn queued_bytes(&self, link: Link) -> usize {
-        match link {
-            Link::RakNet(addr) => self.raknet.stats(addr).map(|s| s.queued_bytes),
-            Link::NetherNet(peer) => self.nethernet.as_ref().and_then(|host| host.queued_bytes(peer)),
-        }
-        .unwrap_or(0)
+        self.get(link.transport).map_or(0, |t| t.queued_bytes(link.conn))
     }
 
     pub fn remote_addr(&self, link: Link) -> SocketAddr {
-        match link {
-            Link::RakNet(addr) => Some(addr),
-            Link::NetherNet(peer) => self.nethernet.as_ref().and_then(|host| host.remote_addr(peer)),
-        }
-        .unwrap_or((Ipv4Addr::UNSPECIFIED, 0).into())
+        self.get(link.transport).and_then(|t| t.remote_addr(link.conn)).unwrap_or((Ipv4Addr::UNSPECIFIED, 0).into())
     }
 }

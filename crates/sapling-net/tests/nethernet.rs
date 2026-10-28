@@ -6,9 +6,11 @@ use std::time::Duration;
 
 use acacia_client::{Client, ClientBuilder, ConnectError, DisconnectReason, LanServer, LanServerData, TransportKind};
 use acacia_nethernet::lan::LanPacket;
+use acacia_nethernet::turn::stun::{Attr, Class, Message, Method};
 use p384::ecdsa::SigningKey;
-use sapling_net::{Inbox, Lan, Listener, NetConfig, NetEvent, NetherNet, Outbox, SigningKeys, listen};
-use tokio::net::UdpSocket;
+use sapling_net::{IceServer, Inbox, Lan, Listener, NetConfig, NetEvent, NetherNet, Outbox, SigningKeys, listen};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpStream, UdpSocket};
 
 const WAIT: Duration = Duration::from_secs(20);
 
@@ -67,6 +69,71 @@ async fn direct_connect_and_raknet_share_the_port() {
     outbox.kick(conn, "bye");
     outbox.kick(joined.0, "bye");
     assert!(kicked(alice.await.unwrap()) && kicked(bob.await.unwrap()));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_port_range_gives_nethernet_its_own_socket() {
+    let nethernet = NetherNet { udp_ports: Some("0".parse().unwrap()), ..NetherNet::new(SigningKey::from_slice(&[9; 48]).unwrap()) };
+    let cfg = NetConfig { online_mode: false, nethernet: Some(nethernet), ..NetConfig::default() };
+    let (listener, outbox, mut inbox) = listen("127.0.0.1:0".parse().unwrap(), cfg, SigningKeys::empty()).await.unwrap();
+    let port = listener.nethernet_port().expect("NetherNet is on");
+    assert_ne!(port, listener.local_addr().port());
+    let offer = offer().await;
+    assert!(post_offer(listener.local_addr(), &offer).await.contains(&format!(" 127.0.0.1 {port} typ host ")));
+
+    let dave = tokio::spawn(client(listener.local_addr(), "Dave", TransportKind::NetherNet).connect());
+    let NetEvent::Joined { conn, .. } = next(&mut inbox).await else { panic!("expected Joined first") };
+    outbox.kick(conn, "bye");
+    assert!(kicked(dave.await.unwrap()));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn answers_carry_stun_and_turn_candidates() {
+    let ice = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+    let ice_addr = ice.local_addr().unwrap();
+    tokio::spawn(fake_ice_server(ice));
+    let url = |scheme: &str| format!("{scheme}:{ice_addr}").parse().unwrap();
+    let server = IceServer { username: "u".into(), password: "p".into(), urls: vec![url("stun"), url("turn")] };
+    let nethernet = NetherNet { ice_servers: vec![server], ..NetherNet::new(SigningKey::from_slice(&[9; 48]).unwrap()) };
+    let cfg = NetConfig { online_mode: false, nethernet: Some(nethernet), ..NetConfig::default() };
+    let (listener, _outbox, _inbox) = listen("127.0.0.1:0".parse().unwrap(), cfg, SigningKeys::empty()).await.unwrap();
+    let (offer, deadline) = (offer().await, tokio::time::Instant::now() + WAIT);
+    loop {
+        let answer = post_offer(listener.local_addr(), &offer).await;
+        if answer.contains(" 203.0.113.1 40000 typ srflx ") && answer.contains(" 127.0.0.1 49152 typ relay raddr 203.0.113.1 rport 40000 ") {
+            break;
+        }
+        assert!(tokio::time::Instant::now() < deadline, "no gathered candidates: {answer}");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+/// A STUN binding and a TURN allocation that always succeed, unauthenticated.
+async fn fake_ice_server(socket: UdpSocket) {
+    let mut buf = [0u8; 2048];
+    while let Ok((len, from)) = socket.recv_from(&mut buf).await {
+        let Ok(request) = Message::decode(&buf[..len]) else { continue };
+        let mut reply = Message::new(Class::Success, request.method, request.transaction_id).with(Attr::XorMappedAddress("203.0.113.1:40000".parse().unwrap()));
+        if request.method == Method::Allocate {
+            reply = reply.with(Attr::XorRelayedAddress("127.0.0.1:49152".parse().unwrap())).with(Attr::Lifetime(600));
+        }
+        let _ = socket.send_to(&reply.encode(None, true), from).await;
+    }
+}
+
+async fn offer() -> String {
+    let identity = acacia_nethernet::Identity::self_signed(SigningKey::from_slice(&[5; 48]).unwrap());
+    acacia_nethernet::Connection::offer("127.0.0.1:4000".parse().unwrap(), &identity, std::time::Instant::now()).unwrap().1
+}
+
+/// `POST /v1/join/1` with `offer`; the whole response.
+async fn post_offer(addr: SocketAddr, offer: &str) -> String {
+    let mut tcp = TcpStream::connect(addr).await.unwrap();
+    let request = format!("POST /v1/join/1 HTTP/1.1\r\nHost: {addr}\r\nContent-Type: application/sdp\r\nContent-Length: {}\r\n\r\n{offer}", offer.len());
+    tcp.write_all(request.as_bytes()).await.unwrap();
+    let mut response = String::new();
+    tcp.read_to_string(&mut response).await.unwrap();
+    response
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

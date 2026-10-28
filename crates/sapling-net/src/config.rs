@@ -1,14 +1,14 @@
-use std::net::{IpAddr, SocketAddr};
+use std::net::SocketAddr;
 use std::time::Duration;
 
-use acacia_nethernet::lan::{DISCOVERY_PORT, ServerData};
+use acacia_nethernet::lan::ServerData;
 use acacia_proto::packets::NetworkSettingsCompressionAlgorithm;
 use acacia_proto::{GAME_VERSION, PROTOCOL_VERSION};
-use p384::ecdsa::SigningKey;
 
 use crate::access::AccessLists;
 use crate::admission::Admission;
 use crate::limits::PacketLimits;
+use crate::nethernet::NetherNet;
 
 #[derive(Debug, Clone)]
 pub struct NetConfig {
@@ -80,38 +80,6 @@ impl Compression {
             Self::Zlib => NetworkSettingsCompressionAlgorithm::Deflate,
             Self::Snappy => NetworkSettingsCompressionAlgorithm::Snappy,
         }
-    }
-}
-
-/// NetherNet (WebRTC) hosting; see docs/DESIGN.md "NetherNet". Direct connect is signaled over
-/// HTTP on the TCP side of the game port, and its datagrams share the game's UDP socket.
-#[derive(Debug, Clone)]
-pub struct NetherNet {
-    /// Signs every answer. Clients pin it per server address on first use, so keep it across
-    /// restarts ([`crate::host_key`]).
-    pub host_key: SigningKey,
-    /// The address players reach the server at, when it is not the one their signaling arrives on
-    /// (a forwarded port): answers advertise it as the WebRTC candidate.
-    pub public_ip: Option<IpAddr>,
-    /// Answer LAN discovery, which lists the server for clients on the same network.
-    pub lan: Option<Lan>,
-}
-
-impl NetherNet {
-    pub fn new(host_key: SigningKey) -> Self {
-        Self { host_key, public_ip: None, lan: None }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Lan {
-    /// Vanilla clients only broadcast to 7551; 0 picks a free port (tests).
-    pub port: u16,
-}
-
-impl Default for Lan {
-    fn default() -> Self {
-        Self { port: DISCOVERY_PORT }
     }
 }
 

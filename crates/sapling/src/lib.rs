@@ -22,7 +22,7 @@ pub use sapling_api::{
     Display, DisplaySlot, Objective, ScoreHolder, ScoreOperation, SortOrder, Tagged, ScriptEvent,
 };
 pub use sapling_api::{Mount, Target};
-pub use sapling_net::{AccessLists, Admission, Advert, Compression, Lan, NetherNet, PacketLimits, access, host_key};
+pub use sapling_net::{AccessLists, Admission, Advert, Compression, ConnKey, Framing, IceServer, IceUrl, Lan, NetherNet, PacketLimits, PortRange, Tls, Transport, TransportEvent, access, host_key};
 pub use sapling_world::{ChunkPos, Generated, Level, END, LevelDbStorage, MemoryStorage, NETHER, OVERWORLD, Template, World, WorldFolder, WorldStorage};
 pub use server::{ConfigError, Metrics, Server, ServerBuilder, ServerProperties, StartError};
 pub use sapling_shard::{MovementCheck, Phase, TickStats, Watchdog};

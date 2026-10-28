@@ -22,9 +22,10 @@ use crate::config::NetConfig;
 use crate::congestion::Congestion;
 use crate::event::{ConnId, NetEvent, Outbound};
 use crate::limits::{Meter, Verdict};
-use crate::links::{Link, LinkEvent, Links};
+use crate::links::{Link, LinkEvent, Links, NETHERNET};
 use crate::players::{Player, disconnect};
 use crate::router::Router;
+use crate::transport::Framing;
 
 /// The disconnect screen of a player whose server, or whose part of it, stopped.
 const CLOSED: &str = "disconnect.closed";
@@ -101,10 +102,11 @@ impl Sessions {
                     return;
                 }
                 let key = SigningKey::random(&mut rand_core::OsRng);
-                let (conn, offer_key) = match link {
-                    Link::RakNet(_) => (ServerConnection::new(key), None),
-                    Link::NetherNet(peer) => (ServerConnection::nethernet(key), self.offers.remove(&peer)),
+                let conn = match links.framing(link) {
+                    Framing::Batched => ServerConnection::new(key),
+                    Framing::Plain => ServerConnection::nethernet(key),
                 };
+                let offer_key = (link.transport == NETHERNET).then(|| self.offers.remove(&PeerId(link.conn))).flatten();
                 let (compression, compression_threshold) = (self.cfg.compression.settings(), self.cfg.compression_threshold);
                 let cfg = LoginConfig { require_authenticated: self.cfg.online_mode, compression, compression_threshold, ..LoginConfig::default() };
                 self.logins.insert(link, Pending { login: ServerLogin::new(conn, cfg), deadline: now + self.cfg.login_timeout, offer_key, ip });
@@ -112,8 +114,8 @@ impl Sessions {
             LinkEvent::Message(link, msg) if self.players.contains_key(&link) => self.on_game_message(links, link, &msg, now),
             LinkEvent::Message(link, msg) => self.on_login_message(links, link, &msg, now),
             LinkEvent::Disconnected(link, reason) => {
-                if let Link::NetherNet(peer) = link {
-                    self.offers.remove(&peer);
+                if link.transport == NETHERNET {
+                    self.offers.remove(&PeerId(link.conn));
                 }
                 self.logins.remove(&link);
                 self.forget_player(link, reason);
