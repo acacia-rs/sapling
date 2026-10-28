@@ -49,6 +49,7 @@ mod item_buckets;
 mod fishing;
 mod fish;
 mod hearts;
+mod held_drops;
 mod foes;
 mod forms;
 mod frogs;

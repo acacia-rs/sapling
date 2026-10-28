@@ -55,10 +55,10 @@ fn shatter(world: &mut World, layer: Entity, pos: BlockPos) {
     let (air, particles) = (registry.air_id(), send::destroy_particles(registry, pos, id));
     let heard = send::sound_at(SHATTER, registry, Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 }, id);
     let mut left = shards(level.block_entity(pos).map(|kept| &kept.nbt));
-    loot::add_entity_loot(world, layer, pos, &mut left);
+    let mut tags = loot::add_entity_loot(world, layer, pos, &mut left);
     if send::set(world, layer, pos, air) {
         send::to_viewers(world, layer, pos, &[particles]);
-        loot::spill(world, layer, pos, &left);
+        loot::spill_tagged(world, layer, pos, &left, &mut tags);
         send::to_viewers(world, layer, pos, &[heard]);
         updates::settle(world, layer, pos);
     }

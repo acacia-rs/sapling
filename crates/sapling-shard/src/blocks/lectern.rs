@@ -3,8 +3,7 @@
 //! the entity keeps it (`book`, `hasBook`, `page` 0, `totalPages`); a click on one with a book
 //! opens its screen. LecternUpdate turns its page. A comparator reads it.
 //! A turn to page 0 powers it a tick later for two ticks, as BDS did; turns to other pages showed no
-//! power (bds-books.txt).
-// TODO: broken, the lectern leaves the book by its name only (entities.rs).
+//! power (bds-books.txt). Broken, it leaves the book whole (entities.rs).
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::LecternUpdate;

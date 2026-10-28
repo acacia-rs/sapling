@@ -3,7 +3,7 @@
 
 use acacia_proto::nbt::{List, Str, Value};
 use sapling_api::{BlockPos, Item};
-use sapling_world::new_block_entity;
+use sapling_world::{ItemStack, new_block_entity};
 
 const SKULLS: &[&str] = &[
     "minecraft:skeleton_skull", "minecraft:wither_skeleton_skull", "minecraft:zombie_head", "minecraft:player_head", "minecraft:creeper_head", "minecraft:dragon_head",
@@ -109,17 +109,16 @@ fn number(value: Option<&Value>) -> Option<i16> {
     }
 }
 
-/// The items a broken block's entity adds to what it leaves: a flower pot's plant, the food on
-/// a campfire, what an item frame or a decorated pot holds and a chiseled bookshelf's books. Each
-/// by its name only: what else the stack carried is lost.
-fn held_items(kept: &Value) -> Vec<Item> {
+/// The stacks a broken block's entity adds to what it leaves, each whole: a flower pot's plant,
+/// the food on a campfire, what an item frame, a decorated pot, a jukebox or a lectern holds and
+/// a chiseled bookshelf's books.
+fn held_items(kept: &Value) -> Vec<ItemStack> {
     let plant = match kept.get("PlantBlock").and_then(|plant| plant.get("name")) {
-        Some(Value::String(name)) if sapling_data::is_item(name) => Some(Item::new(name.clone(), 1)),
+        Some(Value::String(name)) if sapling_data::is_item(name) => Some(ItemStack { name: name.to_string(), count: 1, damage: 0, block: None, tag: None }),
         _ => None,
     };
-    let food = ["Item1", "Item2", "Item3", "Item4", super::holders::FRAMED, super::holders::POTTED, super::jukebox::RECORD, super::lectern::BOOK].into_iter().filter_map(|slot| sapling_world::ItemStack::parse(kept.get(slot)?));
-    let held = food.chain(super::bookshelves::books(kept));
-    plant.into_iter().chain(held.map(|stack| Item { damage: stack.damage, ..Item::new(stack.name, stack.count) })).collect()
+    let held = ["Item1", "Item2", "Item3", "Item4", super::holders::FRAMED, super::holders::POTTED, super::jukebox::RECORD, super::lectern::BOOK].into_iter().filter_map(|slot| ItemStack::parse(kept.get(slot)?));
+    plant.into_iter().chain(held).chain(super::bookshelves::books(kept)).collect()
 }
 
 /// Gives `items`, which a broken block leaves, what its entity `kept` that they carry: a bed's
@@ -131,19 +130,24 @@ pub(super) fn into_loot(kept: &Value, items: &mut Vec<Item>) {
             item.damage = damage;
         }
     }
-    items.extend(held_items(kept));
+    items.extend(held_items(kept).into_iter().map(|stack| Item { damage: stack.damage, ..Item::new(stack.name, stack.count) }));
 }
 
-/// The tags a broken block's entity `kept` gives the items it leaves, by item: a banner's
-/// patterns and kind, none for a plain banner.
-pub(super) fn loot_tags(kept: &Value) -> Vec<(&'static str, Value)> {
+/// The tags a broken block's entity `kept` gives the items it leaves, in their order, by item: a
+/// banner's patterns and kind (none for a plain banner), each held stack's own (a written book's
+/// pages, an item's enchantments), `None` for an untagged one.
+pub(super) fn loot_tags(kept: &Value) -> Vec<(String, Option<Value>)> {
+    let mut tags: Vec<_> = held_items(kept).into_iter().map(|stack| (stack.name, stack.tag)).collect();
     if kept.get("id") != Some(&Value::String("Banner".into())) {
-        return Vec::new();
+        return tags;
     }
     let patterns = kept.get(PATTERNS).filter(|patterns| matches!(patterns, Value::List(list) if !list.items.is_empty()));
     let kind = kept.get(BANNER_TYPE).filter(|kind| **kind != Value::Int(0));
     let fields: Vec<_> = [(PATTERNS, patterns), (BANNER_TYPE, kind)].into_iter().filter_map(|(key, value)| Some((key.into(), value?.clone()))).collect();
-    if fields.is_empty() { Vec::new() } else { vec![("minecraft:banner", Value::Compound(fields))] }
+    if !fields.is_empty() {
+        tags.insert(0, ("minecraft:banner".into(), Some(Value::Compound(fields))));
+    }
+    tags
 }
 
 #[cfg(test)]
@@ -160,7 +164,8 @@ mod tests {
         let Some(Value::List(kept)) = entity.get(PATTERNS) else { panic!("{entity:?}") };
         assert_eq!(kept.items.len(), MAX_PATTERNS);
         let [(item, given)] = loot_tags(&entity).try_into().unwrap();
-        assert_eq!((item, given.get(PATTERNS).is_some(), given.get(BANNER_TYPE)), ("minecraft:banner", true, None));
+        let given = given.expect("the banner's tag");
+        assert_eq!((item.as_str(), given.get(PATTERNS).is_some(), given.get(BANNER_TYPE)), ("minecraft:banner", true, None));
         let plain = placed("minecraft:wall_banner", [0, 64, 0], &Placing { tag: None, ..placing }).unwrap();
         assert!(plain.get(PATTERNS).is_none() && loot_tags(&plain).is_empty());
     }
