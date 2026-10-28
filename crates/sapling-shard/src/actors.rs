@@ -6,6 +6,8 @@
 //! health and fire now (`entities::Stored`), so a mob that walked into another column is saved there, and one that
 //! is gone is not.
 
+use std::collections::HashMap;
+
 use bevy_ecs::prelude::*;
 use sapling_world::ChunkPos;
 
@@ -16,6 +18,8 @@ use crate::entities::{Managed, Stored};
 use crate::kept::Kept;
 use crate::view::View;
 use crate::{blocks, creatures, drops, mobs, orbs};
+
+type StoredActor = (Option<sapling_world::Actor>, Option<i64>, Vec<u8>);
 
 const ITEM: &str = "minecraft:item";
 const ORB: &str = "minecraft:xp_orb";
@@ -99,27 +103,38 @@ pub(crate) fn write_back(world: &mut World) {
         let held = world.get::<Kept>(layer);
         let seen = |pos: ChunkPos| views.iter().any(|view| view.covers(pos)) || held.is_some_and(|held| held.holds(pos));
         let Some(level) = world.get::<Layer>(layer).map(|level| &level.world) else { continue };
-        let mut columns = level.columns_with_actors();
-        columns.extend(kept.iter().filter(|(in_layer, ..)| *in_layer == layer).map(|(_, home, ..)| *home));
+        let is_managed = |id: &i64| managed.contains(&(layer, *id));
+        let mut stored: HashMap<ChunkPos, Vec<StoredActor>> =
+            level.columns_with_actors().into_iter().filter_map(|pos| Some((pos, sapling_world::stored_actors(level.actors(pos)).ok()?))).collect();
+        let filed: HashMap<i64, ChunkPos> = stored.iter().flat_map(|(pos, actors)| actors.iter().filter_map(|(_, id, _)| id.filter(is_managed)).map(|id| (id, *pos))).collect();
+        // One in a column not loaded stays filed where it was (or where storage has it), never dropped from both.
+        let homes: Vec<(ChunkPos, i64, &[u8])> = kept
+            .iter()
+            .filter(|(in_layer, ..)| *in_layer == layer)
+            .filter_map(|(_, home, id, compound)| Some((Some(*home).filter(|home| level.is_loaded(*home)).or_else(|| filed.get(id).copied())?, *id, &compound[..])))
+            .collect();
+        let mut columns: Vec<ChunkPos> = stored.keys().copied().chain(homes.iter().map(|(home, ..)| *home)).collect();
         columns.sort_unstable_by_key(|pos| (pos.x, pos.z));
         columns.dedup();
         let records: Vec<(ChunkPos, Vec<u8>)> = columns
             .into_iter()
-            .filter(|pos| level.is_loaded(*pos))
             .filter_map(|pos| {
-                let stored = sapling_world::stored_actors(level.actors(pos)).ok()?;
-                let here = || kept.iter().filter(|(in_layer, home, ..)| *in_layer == layer && *home == pos);
+                let here = || homes.iter().filter(|(home, ..)| *home == pos);
+                let stored = match stored.remove(&pos) {
+                    Some(stored) => stored,
+                    None => sapling_world::stored_actors(level.actors(pos)).ok()?,
+                };
                 // A column nobody sees keeps where its own entities were: a fish that never stops would
                 // otherwise make it changed at every save and never let it unload.
-                let mut filed: Vec<i64> = stored.iter().filter_map(|(_, id, _)| id.filter(|id| managed.contains(&(layer, *id)))).collect();
-                let mut now: Vec<i64> = here().map(|(_, _, id, _)| *id).collect();
-                (filed.sort_unstable(), now.sort_unstable());
-                if filed == now && !seen(pos) {
+                let mut was: Vec<i64> = stored.iter().filter_map(|(_, id, _)| id.filter(is_managed)).collect();
+                let mut now: Vec<i64> = here().map(|(_, id, _)| *id).collect();
+                (was.sort_unstable(), now.sort_unstable());
+                if was == now && !seen(pos) {
                     return None;
                 }
-                let unmoved = stored.into_iter().filter(|(_, id, _)| id.is_none_or(|id| !managed.contains(&(layer, id))));
+                let unmoved = stored.into_iter().filter(|(_, id, _)| id.is_none_or(|id| !is_managed(&id)));
                 let mut record: Vec<u8> = unmoved.flat_map(|(.., compound)| compound).collect();
-                here().for_each(|(.., compound)| record.extend(compound));
+                here().for_each(|(.., compound)| record.extend_from_slice(compound));
                 Some((pos, record))
             })
             .collect();

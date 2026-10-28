@@ -99,6 +99,7 @@ mod snow_golems;
 mod spawners;
 mod spawning;
 mod spectators;
+mod stored_mobs;
 mod structures;
 mod survival;
 mod throws;
