@@ -50,4 +50,15 @@ fn a_book_is_written_signed_and_put_on_a_lectern_whose_page_turns() {
     h.receive(1, &LecternUpdate { page: 0, page_count: 2, position: Vec3i { x: 0, y: 65, z: 2 } });
     let updates: Vec<usize> = (0..5).map(|_| all::<UpdateBlock>(h.tick_all().to(1)).len()).collect();
     assert_eq!(updates, [0, 1, 0, 1, 0]);
+
+    // A hit takes the book off: the lectern keeps no book and the book lies over it.
+    h.receive(1, &common::block_actions(&[(acacia_proto::types::Action::StartBreak, [0, 65, 2])]));
+    let hit = h.tick_all().to(1).to_vec();
+    let emptied = all::<BlockEntityData>(&hit).pop().expect("the emptied lectern");
+    assert_eq!(emptied.nbt.decode().unwrap().value.get("hasBook"), None);
+    let (sent, got) = std::sync::mpsc::channel();
+    h.remote.run(move |ctx| sent.send(ctx.block([0, 65, 2]).map(|block| block.name)).unwrap());
+    h.tick_all();
+    assert_eq!(got.recv().unwrap().as_deref(), Some("minecraft:lectern"), "the lectern stands");
+    assert_eq!(all::<acacia_proto::packets::AddItemEntity>(&hit).len(), 1, "the book dropped");
 }
