@@ -61,7 +61,8 @@ fn near_the_saved_horse(at: [f32; 3]) -> bool {
     at[1] == HORSE[1] && (at[0] - HORSE[0]).hypot(at[2] - HORSE[2]) < 8.0
 }
 
-/// Sets the time once somebody is there to be told, two game rules, a storm and the difficulty.
+/// Sets the time once somebody is there to be told, two game rules, rain (not thunder, whose
+/// lightning would add mobs) and the difficulty, with no monsters spawning for it.
 struct Dusk;
 
 impl Handler for Dusk {
@@ -69,13 +70,14 @@ impl Handler for Dusk {
         if ctx.player_count() > 0 && ctx.time() < 100_000 {
             ctx.set_time(112_000);
             assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(3)) && ctx.set_game_rule("domobloot", RuleValue::Bool(false)));
-            ctx.set_weather(Weather::Thunder, Some(STORM));
+            ctx.set_weather(Weather::Rain, Some(RAIN));
+            assert!(ctx.set_game_rule("doMobSpawning", RuleValue::Bool(false)));
             ctx.set_difficulty(Difficulty::Hard);
         }
     }
 }
 
-const STORM: u32 = 50_000;
+const RAIN: u32 = 50_000;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_folder_brings_its_time_and_mobs_and_takes_the_time_back() {
@@ -121,12 +123,13 @@ async fn a_folder_brings_its_time_and_mobs_and_takes_the_time_back() {
     let rules = (after.level().int("randomtickspeed"), after.level().root.get("domobloot"));
     assert_eq!(rules, (Some(3), Some(&Value::Byte(0))), "the rules are saved as BDS saves them");
     let weather = after.level().weather().expect("the weather is saved");
-    assert_eq!((weather.rain_level, weather.lightning_level, weather.rain_time, after.level().difficulty()), (1.0, 1.0, weather.lightning_time, Some(3)));
-    assert!((STORM as i32 - 2_000..STORM as i32).contains(&weather.rain_time), "{weather:?}");
+    assert_eq!((weather.rain_level, weather.lightning_level, weather.rain_time, after.level().difficulty()), (1.0, 0.0, weather.lightning_time, Some(3)));
+    assert!((RAIN as i32 - 2_000..RAIN as i32).contains(&weather.rain_time), "{weather:?}");
     let home = spawn_column();
     let around = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| ChunkKey::new(home.x + dx, home.z + dz, 0)));
     let stored: Vec<_> = around.filter_map(|key| after.load_column(key).unwrap()).flat_map(|column| actors(&column.actors).unwrap()).collect();
-    let [horse] = &stored[..] else { panic!("{stored:?}") };
+    let everywhere: Vec<_> = after.columns().unwrap().into_iter().filter_map(|key| after.load_column(key).unwrap()).flat_map(|column| actors(&column.actors).unwrap()).map(|a| (a.identifier, a.position)).collect();
+    let [horse] = &stored[..] else { panic!("{stored:?} {everywhere:?}") };
     assert_eq!((horse.identifier.as_str(), horse.variant), ("minecraft:horse", 3));
     assert!(near_the_saved_horse(horse.position), "stored at {:?}", horse.position);
     drop(after);
