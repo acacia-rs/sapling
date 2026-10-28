@@ -1,10 +1,15 @@
-//! `SculkSpreader::updateCursors` (148b48870) and its charge cursors, worldgen only: cursors are
-//! never merged and one that strays more than sqrt(224) from the patch's origin loses its charge.
+//! `SculkSpreader::updateCursors` (148b48870) and its charge cursors. In world generation cursors
+//! are never merged and one that strays more than sqrt(224) from the origin loses its charge; a
+//! catalyst's merge on one cell while their charge stays at most 1000.
 
-use super::behaviour::{Behaviour, is_vein};
-use crate::feature::view::View;
-use crate::random::Mt19937;
+use std::collections::HashMap;
+
+use super::MAX_CHARGE;
+use super::behaviour::{Behaviour, is_vein, substrate_access};
+use super::config::{SculkWorld, Spreader};
 use crate::block::Block;
+use crate::feature::spreader::Cells;
+use crate::random::Mt19937;
 
 /// The non-corner neighbour offsets (table 0x14a94bf78), shuffled per move.
 const NEIGHBOURS: [[i32; 3]; 18] = [
@@ -16,10 +21,11 @@ const NEIGHBOURS: [[i32; 3]; 18] = [
 pub const FACINGS_UNSET: i32 = -1;
 pub const FACINGS_EMPTY: i32 = -2;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Cursor {
     pub pos: [i32; 3],
     pub charge: i32,
-    update_delay: i32,
+    pub update_delay: i32,
     pub decay_delay: i32,
     pub facings: i32,
 }
@@ -30,40 +36,75 @@ impl Cursor {
     }
 }
 
-pub fn update_cursors(view: &mut View, cursors: &mut Vec<Cursor>, origin: [i32; 3], random: &mut Mt19937, spread_veins: bool) {
-    for cursor in cursors.iter_mut() {
-        if cursor.charge > 0 {
-            update(view, cursor, origin, random, spread_veins);
+/// One round of every cursor. A spent cursor pops (2038); the cursors left on each cell are told
+/// with their summed charge (2037), in the order their cells were first reached.
+pub fn update_cursors(view: &mut impl SculkWorld, spreader: &Spreader, cursors: &mut Vec<Cursor>, origin: [i32; 3], random: &mut Mt19937, spread_veins: bool) {
+    let mut kept: Vec<Cursor> = Vec::with_capacity(cursors.len());
+    let mut totals: Vec<([i32; 3], i32)> = Vec::new();
+    // Per cell, the kept cursor whose facings the charge event shows.
+    let mut shown: HashMap<[i32; 3], usize> = HashMap::new();
+    for mut cursor in cursors.drain(..) {
+        if cursor.charge > 0 && view.ticking(cursor.pos) {
+            update(view, spreader, &mut cursor, origin, random, spread_veins);
         }
+        if cursor.charge <= 0 {
+            view.charge_pop(cursor.pos);
+            continue;
+        }
+        match totals.iter_mut().find(|(at, _)| *at == cursor.pos) {
+            Some((_, total)) => *total += cursor.charge,
+            None => totals.push((cursor.pos, cursor.charge)),
+        }
+        let Some(&first) = shown.get(&cursor.pos) else {
+            shown.insert(cursor.pos, kept.len());
+            kept.push(cursor);
+            continue;
+        };
+        let existing = &mut kept[first];
+        if !spreader.worldgen && cursor.charge + existing.charge <= MAX_CHARGE {
+            existing.charge += cursor.charge;
+            existing.update_delay = existing.update_delay.min(cursor.update_delay);
+            continue;
+        }
+        if cursor.charge < existing.charge {
+            shown.insert(cursor.pos, kept.len());
+        }
+        kept.push(cursor);
     }
-    cursors.retain(|cursor| cursor.charge > 0);
+    for (at, total) in totals {
+        view.charge(at, total, kept[shown[&at]].facings);
+    }
+    *cursors = kept;
 }
 
-fn block_at(view: &View, [x, y, z]: [i32; 3]) -> Block {
+fn block_at(view: &impl Cells, [x, y, z]: [i32; 3]) -> Block {
     view.block(x, y, z)
 }
 
-fn update(view: &mut View, cursor: &mut Cursor, origin: [i32; 3], random: &mut Mt19937, spread_veins: bool) {
+fn update(view: &mut impl SculkWorld, spreader: &Spreader, cursor: &mut Cursor, origin: [i32; 3], random: &mut Mt19937, spread_veins: bool) {
     if cursor.update_delay >= 1 {
         cursor.update_delay -= 1;
         return;
     }
     let mut state = block_at(view, cursor.pos);
     let mut behaviour = Behaviour::of(state);
-    if spread_veins && behaviour.attempt_spread_vein(view, cursor.pos, state, cursor.facings) && behaviour.changes_on_spread() {
-        state = block_at(view, cursor.pos);
-        behaviour = Behaviour::of(state);
+    if spread_veins && behaviour.attempt_spread_vein(view, cursor.pos, state, cursor.facings) {
+        if behaviour.changes_on_spread() {
+            state = block_at(view, cursor.pos);
+            behaviour = Behaviour::of(state);
+        }
+        view.sound(cursor.pos, super::config::Sound::Spread);
     }
-    cursor.charge = behaviour.attempt_use_charge(view, cursor, origin, random, spread_veins);
+    cursor.charge = behaviour.attempt_use_charge(view, spreader, cursor, origin, random, spread_veins);
     if cursor.charge < 1 {
         behaviour.on_discharged(view, cursor.pos);
         return;
     }
-    if let Some(next) = movement_target(view, cursor.pos, random) {
+    if let Some(next) = movement_target(view, spreader, cursor.pos, random) {
         behaviour.on_discharged(view, cursor.pos);
         cursor.pos = next;
         let d = [next[0] - origin[0], next[1] - origin[1], next[2] - origin[2]];
-        if d[0] * d[0] + d[1] * d[1] + d[2] * d[2] > 224 {
+        if spreader.worldgen && d[0] * d[0] + d[1] * d[1] + d[2] * d[2] > 224 {
             cursor.charge = 0;
             return;
         }
@@ -79,7 +120,7 @@ fn update(view: &mut View, cursor: &mut Cursor, origin: [i32; 3], random: &mut M
 
 /// `getValidMovementPos`: the last sculk or vein neighbour in shuffled order that is not walled
 /// off, or the first vein with sculk-able ground behind a face.
-fn movement_target(view: &View, pos: [i32; 3], random: &mut Mt19937) -> Option<[i32; 3]> {
+fn movement_target(view: &impl Cells, spreader: &Spreader, pos: [i32; 3], random: &mut Mt19937) -> Option<[i32; 3]> {
     let mut offsets = NEIGHBOURS;
     for i in 1..offsets.len() {
         let j = (random.next_u32() % (i as u32 + 1)) as usize;
@@ -93,7 +134,7 @@ fn movement_target(view: &View, pos: [i32; 3], random: &mut Mt19937) -> Option<[
             continue;
         }
         found = Some(next);
-        if is_vein(block) && super::behaviour::substrate_access(view, block, next) {
+        if is_vein(block) && substrate_access(view, spreader, block, next) {
             break;
         }
     }
@@ -101,7 +142,7 @@ fn movement_target(view: &View, pos: [i32; 3], random: &mut Mt19937) -> Option<[
 }
 
 /// A diagonal move needs one of the two cells it passes free of a sturdy face toward it.
-fn unobstructed(view: &View, pos: [i32; 3], [dx, dy, dz]: [i32; 3]) -> bool {
+fn unobstructed(view: &impl Cells, pos: [i32; 3], [dx, dy, dz]: [i32; 3]) -> bool {
     if dx.abs() + dy.abs() + dz.abs() == 1 {
         return true;
     }

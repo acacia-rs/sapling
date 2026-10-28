@@ -98,8 +98,6 @@ through is the collision data's, not checked.
 
 ## Not done
 
-- Sculk catalyst spreading on mob death: needs the whole `SculkSpreader` (charge cursors, veins,
-  growths) ported; sculk.md lists it as not decompiled.
 - Brushing suspicious sand and gravel: the archaeology tables are in `mob-loot.json`
   (`entities/*_brushable_block`) and structures already write `BrushableBlock` entities, but how
   the Bedrock client asks to brush (repeated use transactions or an item-use action) needs a

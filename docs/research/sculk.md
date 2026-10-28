@@ -253,5 +253,57 @@ Particle (1411b5340)
 
 - Warden summoning and warnings: `SculkShriekerBlockActor::tryRespond` 14487ca80, queued response, warden spawn.
 - Entity listeners (warden 148f8bfd0 owner 2 range 16, allay owner 3), `VibrationListenerSystem` 1484556e0.
-- Amethyst resonance details, sculk catalyst/spread, client particles (`animateTick` 148b44ff0), save/load tags
+- Amethyst resonance details, client particles (`animateTick` 148b44ff0), save/load tags
   (`VibrationListener`, `QueuedResponseThreatLevel`; 14487a960/14487ac80, 14487d3f0/14487d530).
+
+## Catalyst
+
+Read 2026-10-28 (parity/sculk), same build, with bdsre `dis`/`c`. The catalyst runs the same `SculkSpreader` as
+`SculkPatchFeature` (worldgen-bds-caves.md, "Sculk"): one function, `updateCursors` 148b48870, branching on the
+spreader's `worldgen` byte and on whether a level is passed. sapling runs the generator's port
+(`sapling-worldgen/src/feature/sculk/`) over the live world (`sapling-shard/src/blocks/sculk/catalyst.rs`).
+
+| VA | Label | What |
+|---|---|---|
+| 148802230 | `SculkCatalystBlockActor` ctor | listener centre = pos + 0.5; spreader at +0x170 via 148b47480 |
+| 148b47480 | `SculkSpreader` level ctor | `{worldgen 0, growth cost 10, no-growth radius 4, charge decay 10, additional decay 5}` (14a94acc0) |
+| 148b47600 / 148b47d30 | replaceable sets | `sculk_replaceable` = the worldgen set less 6 (deepslate bricks, tiles, both cracked, cobbled, polished) |
+| 144879f70 | `SculkCatalystBlockActor::handleGameEvent` | below (C1) |
+| 140214560 | `getRange` | returns 10 |
+| 144879bc0 | `SculkCatalystBlockActor::tick` | server only: `updateCursors(region, level, pos, level random, spreadVeins 1)` every tick |
+| 148b435b0 | `SculkCatalystBlock::bloom` | below (C3) |
+
+Spreader layout: +0 worldgen, +4 growth spawn cost, +8 no-growth radius, +0xc charge decay rate, +0x10 additional
+decay rate, +0x18 cursors (`{pos, charge +0xc, updateDelay +0x10, decayDelay +0x14, facings +0x18}`, 0x1c bytes),
++0x30 replaceable set.
+
+- C1 `handleGameEvent`: only `entity_die` (type 18) from an actor with category bit 2 (mobs, players) that has no
+  `WasHandledBySculkCatalystFlagComponent`. Reach is S1's with range 10. If it has an enabled
+  `ExperienceRewardComponent` (+0x30 == 1) and is not a player under `keepInventory` (game rule 14): it sets
+  the actor's last-hurt-by-player time (+0x114) to 400 around `getExperienceReward` (140d2a3d0), so any death pays
+  as a player's kill; a reward > 0 becomes cursors (`addCursors`: parts of at most 1000, kept while under 32
+  cursors) at the lower of (block pos + 1 up) and floor(attach pos 0); then the component's flag is cleared (no
+  experience drops). In every case it blooms (C3) and flags the actor, so one catalyst takes a death.
+- C2 `updateCursors` with a level (vs. worldgen): per cursor, one already spent pops; a cursor whose chunk does not
+  tick keeps its state; no sqrt(224) leash. After the update a spent cursor pops (`LevelEventGeneric` 2038
+  `{x, y, z}` ints). Cursors left on one cell merge into the first while the sum is at most 1000 (charge added,
+  update delay the lower), else stay separate (the cell's shown cursor becomes the weaker). Then per cell 2037
+  `{x, y, z: int, charge: short (sum), facing: short (the shown cursor's facings)}`. Sounds at the cursor's cell
+  (float, no +0.5, extra data -1): 379 `block.sculk.spread` when veins spread (148b48d3f) or a vein turned a block
+  to sculk (148b4271d); 381 `block.sculk_sensor.place` / 382 `block.sculk_shrieker.place` for a growth (148b41b85,
+  148b41d8d). A growth shrieker's `can_summon` is the spreader's `worldgen` byte (148b41ca1): 0 from a catalyst.
+- C3 `bloom` (148b435b0): `bloom = 1` (setBlock flags 3), a block tick in 8, `LevelEventGeneric` 2036
+  `{originX, originY, originZ}` ints. The queued tick puts `bloom = 0` (inferred from Java; the lambda not read).
+- C4 Sculk `attemptUseCharge` (148b41810): the growth test is `r² > d²` → no growth (d² float, r the no-growth
+  radius), but the decay penalty is 1 whenever `r² >= d²`. The worldgen port had `d² < 1` for both; it now follows
+  BDS, which changes worldgen only for a cursor at d² = 1 with charge >= 89 (not re-run against the oracle).
+
+sapling: the nearest catalyst in range takes a death (BDS: the first in dispatch order); a mob's reward is its
+`Slain` roll, else rolled at death; a player's is what it would drop. Not done: cursors are not saved with the
+catalyst (BDS saves them in the block actor), live blocks the generator never places read as bedrock, the
+"It Spreads" advancement hook (142d3c8f0) is left out.
+
+## Not drilled
+
+- Everything in "Catalyst" (C1-C4): decompiled only. In particular range 10 rather than Java's 8, the cursor start
+  cell, the bloom end tick, the merge and event order, and that a baby or zero-reward death still blooms.
