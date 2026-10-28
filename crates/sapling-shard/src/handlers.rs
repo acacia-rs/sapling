@@ -110,6 +110,7 @@ pub(crate) fn dispatch(world: &mut World) {
     orbs::tick(world);
     crate::riding::drive(world);
     creatures::tick(world);
+    crate::paintings::tick(world);
     crate::vehicles::tick(world);
     crate::riding::carry(world);
     crate::spawning::despawn(world);

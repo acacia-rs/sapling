@@ -213,6 +213,7 @@ fn owned(lines: &[&str]) -> Vec<String> {
 /// The actor hits the newest mob it knows of the kind `hit` names, twice in a row for `2 kind`,
 /// while the watcher's packets are shown.
 async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str], hit: &str) -> Result<(), String> {
+    let hit = hit.trim();
     let (times, kind) = hit.strip_prefix('2').map_or((1, hit), |kind| (2, kind));
     let kind = format!("minecraft:{}", kind.trim());
     let id = actor.state().entities.iter().filter(|entity| entity.kind == kind).map(|entity| entity.runtime_id).max().ok_or(format!("no {kind} to hit"))?;
