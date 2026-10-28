@@ -97,8 +97,11 @@ starts pulling; comparators beside one lit nothing before it was opened.
 
 ## Left out
 
-- Decorated pots' and suspicious blocks' loot is kept but never rolled (no breaking-pot loot, no brushing).
-  Found so far: `BrushableBlockActor` (vtable 14a786450; load 141f24d50, save 141f25010 with
+- Suspicious blocks' loot is kept but never rolled (no brushing). A broken decorated pot rolls its table
+  into its one slot as a container does and leaves that beside itself (`blocks/entities.rs`; the probe's
+  pot of seed 1434522187 left item 307, one, as `containers::loot::tests` expects); a pot shot or broken
+  in creative was not drilled. Brushing was not drilled: the probe's repeated `UseItem` clicks with a
+  brush only made BDS resend the cell, so it needs the held-use input acacia-bot lacks. Found so far: `BrushableBlockActor` (vtable 14a786450; load 141f24d50, save 141f25010 with
   `brush_direction` +0x344 and `brush_count` +0x340) sets `brushed_progress` from its count (slot 52,
   141f25530): 0 at 0, 1 at 1-2, 2 at 3-5, 3 from 6.
 - The mansion template chests' own `Items`; flower pots, beds, cauldrons and the other non-loot entities.

@@ -9,7 +9,7 @@ mod access;
 mod again;
 mod brewing;
 mod lid;
-mod loot;
+pub(crate) mod loot;
 mod pairs;
 mod screens;
 mod shulker;

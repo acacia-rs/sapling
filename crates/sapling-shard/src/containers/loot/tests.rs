@@ -13,3 +13,10 @@ fn a_seeded_chest_fills_the_slots_bds_fills() {
     let bds: Vec<_> = BDS_DUNGEON.iter().map(|&(slot, id, count)| (slot, (sapling_data::item_name(id).unwrap_or("?").to_owned(), count))).collect();
     assert_eq!(placed, bds);
 }
+
+#[test]
+fn a_seeded_pot_leaves_what_bds_left() {
+    // The pot of the probe's row, broken in survival: BDS dropped the pot and item 307, one of it.
+    let left = rolled("loot_tables/pots/trial_chambers/corridor.json", 1_434_522_187, vec![0]);
+    assert_eq!(left, [(0, (sapling_data::item_name(307).unwrap_or("?").to_owned(), 1))]);
+}

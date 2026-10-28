@@ -41,14 +41,18 @@ pub(super) fn unpack(world: &mut World, layer: Entity, pos: BlockPos, slots: usi
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let mut items = container_items(&nbt);
     let free: Vec<u8> = (0..slots.min(usize::from(u8::MAX)) as u8).filter(|slot| !items.iter().any(|(at, _)| at == slot)).collect();
-    let mut random = Mt19937::new(seed);
-    let rolled = sapling_data::drawn_table_loot(&table, &mut Bedrock(&mut random));
     let registry = level.registry();
-    let placed = fill(rolled, free, &mut random);
-    items.extend(placed.into_iter().filter_map(|(slot, (name, count))| Some((slot, crate::inventory::stored(&Item::new(name, count.min(64) as u8), registry)?))));
+    items.extend(rolled(&table, seed, free).into_iter().filter_map(|(slot, (name, count))| Some((slot, crate::inventory::stored(&Item::new(name, count.min(64) as u8), registry)?))));
     let Value::Compound(mut fields) = with_container_items(&nbt, &items, registry) else { return };
     fields.retain(|(key, _)| key != TABLE && key != SEED);
     keep_entity(world, layer, pos, &Value::Compound(fields));
+}
+
+/// What `table` rolled with `seed` puts in the `free` slots, by slot.
+pub(crate) fn rolled(table: &str, seed: u32, free: Vec<u8>) -> Vec<(u8, (String, u32))> {
+    let mut random = Mt19937::new(seed);
+    let rolled = sapling_data::drawn_table_loot(table, &mut Bedrock(&mut random));
+    fill(rolled, free, &mut random)
 }
 
 /// MSVC's `std::shuffle` on BDS's generator: each later element swapped with one at or before it.

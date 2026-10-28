@@ -99,7 +99,22 @@ fn held_items(kept: &Value) -> Vec<Item> {
     };
     let food = ["Item1", "Item2", "Item3", "Item4", super::holders::FRAMED, super::holders::POTTED, super::jukebox::RECORD, super::lectern::BOOK].into_iter().filter_map(|slot| sapling_world::ItemStack::parse(kept.get(slot)?));
     let held = food.chain(super::bookshelves::books(kept));
-    plant.into_iter().chain(held.map(|stack| Item { damage: stack.damage, ..Item::new(stack.name, stack.count) })).collect()
+    let held = plant.into_iter().chain(held.map(|stack| Item { damage: stack.damage, ..Item::new(stack.name, stack.count) }));
+    held.chain(pot_loot(kept)).collect()
+}
+
+/// A broken decorated pot's unrolled loot, rolled into its one slot as a container's is
+/// (research/captures/bds-loot-probe.txt: BDS's pot left it beside itself).
+fn pot_loot(kept: &Value) -> Vec<Item> {
+    let (Some(Value::String(id)), Some(Value::String(table))) = (kept.get("id"), kept.get("LootTable")) else { return Vec::new() };
+    let seed = match kept.get("LootTableSeed") {
+        Some(Value::Int(seed)) => *seed as u32,
+        _ => 0,
+    };
+    if id != "DecoratedPot" {
+        return Vec::new();
+    }
+    crate::containers::loot::rolled(table, seed, vec![0]).into_iter().map(|(_, (name, count))| Item::new(name, count.min(64) as u8)).collect()
 }
 
 /// Gives `items`, which a broken block leaves, what its entity `kept` that they carry: a bed's
