@@ -30,4 +30,5 @@ uuid.workspace = true
 
 [dev-dependencies]
 acacia-client.workspace = true
+rcgen = "0.14"
 tokio = { workspace = true, features = ["rt-multi-thread"] }
