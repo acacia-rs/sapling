@@ -75,7 +75,7 @@ fn multiplier(kind: &Kind, from_book: bool) -> i32 {
 
 /// What the enchantments `levels` are worth on an anvil.
 fn worth(levels: &[(i16, u8)], from_book: bool) -> i32 {
-    levels.iter().filter_map(|(id, level)| Some(multiplier(kinds::of(*id)?, from_book) * i32::from(*level))).sum()
+    levels.iter().filter_map(|(id, level)| Some(multiplier(kinds::kind_of(*id)?, from_book) * i32::from(*level))).sum()
 }
 
 /// Whether a craft that costs `cost` may be done, by a creative player or not.
@@ -151,7 +151,7 @@ fn merged(input: &Stack<'_>, material: &Stack<'_>) -> Option<Vec<(i16, u8)>> {
     let slots = if input.name == ENCHANTED_BOOK || input.name == BOOK { u32::MAX } else { gear(input.name)?.slots };
     let mut levels = all(input.tag);
     for (id, level) in all(material.tag) {
-        let Some(kind) = kinds::of(id).filter(|kind| kind.goes_on(slots)) else { continue };
+        let Some(kind) = kinds::kind_of(id).filter(|kind| kind.goes_on(slots)) else { continue };
         match levels.iter().position(|(have, _)| *have == id) {
             Some(at) if levels[at].1 < kind.max => {
                 let now = levels[at].1;

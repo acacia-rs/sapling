@@ -21,8 +21,7 @@ pub(super) fn tool(ctx: &ShardCtx<'_>, sender: &Sender, word: Option<&str>) -> O
 }
 
 fn looting(tool: Option<&Item>) -> u8 {
-    let level = tool.and_then(|tool| tool.enchantments.iter().find(|(id, _)| *id == Enchant::Looting as i16));
-    level.map_or(0, |(_, level)| (*level).clamp(0, 255) as u8)
+    tool.map_or(0, |tool| tool.enchantment(Enchant::Looting as i16).clamp(0, 255) as u8)
 }
 
 /// (item, count) as stacks no bigger than the item stacks.

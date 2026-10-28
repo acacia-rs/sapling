@@ -24,13 +24,13 @@ pub struct Ground {
 }
 
 fn is_curse(id: i16) -> bool {
-    kinds::of(id).is_some_and(|kind| kind.curse)
+    kinds::kind_of(id).is_some_and(|kind| kind.curse)
 }
 
 /// The power of the enchantments on `stack` that are not curses: what grinding them off gives
 /// back.
 fn ground_power(stack: &Stack<'_>) -> u32 {
-    let power = |(id, level): (i16, u8)| kinds::of(id).filter(|kind| !kind.curse).map_or(0, |kind| kind.min_power(level).max(0) as u32);
+    let power = |(id, level): (i16, u8)| kinds::kind_of(id).filter(|kind| !kind.curse).map_or(0, |kind| kind.min_power(level).max(0) as u32);
     all(stack.tag).into_iter().map(power).sum()
 }
 

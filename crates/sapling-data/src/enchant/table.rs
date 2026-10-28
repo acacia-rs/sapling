@@ -82,14 +82,14 @@ fn reachable(slots: u32, power: i32) -> Vec<(i16, u8)> {
 
 /// Draws one of `pool` out by weight, and keeps it if it goes with what was chosen.
 fn take(pool: &mut Vec<(i16, u8)>, chosen: &mut Vec<(i16, u8)>, draws: &mut dyn Draws) {
-    let weight = |id: i16| kinds::of(id).map_or(0, kinds::Kind::weight) as i32;
+    let weight = |id: i16| kinds::kind_of(id).map_or(0, kinds::Kind::weight) as i32;
     let mut roll = draws.int(pool.iter().map(|(id, _)| weight(*id)).sum());
     let at = pool.iter().position(|(id, _)| {
         roll -= weight(*id);
         roll < 0
     });
     let picked = pool.remove(at.unwrap_or(pool.len() - 1));
-    let activation = |id: i16| kinds::of(id).map(|kind| kind.activation);
+    let activation = |id: i16| kinds::kind_of(id).map(|kind| kind.activation);
     // Only an enchantment acting the same way can clash (BDS's `ItemEnchants::canEnchant`).
     if chosen.iter().all(|(have, _)| activation(*have) != activation(picked.0) || kinds::go_together(*have, picked.0)) {
         chosen.push(picked);
@@ -165,6 +165,6 @@ pub fn book(levels: &[(i16, u8)]) -> Made {
 
 /// An offer's enchantments in the three lists the screen shows: worn, held, on the item itself.
 pub fn by_activation(enchants: &[(i16, u8)]) -> [Vec<(i16, u8)>; 3] {
-    let of = |activation: Activation| enchants.iter().filter(|(id, _)| kinds::of(*id).is_some_and(|kind| kind.activation == activation)).copied().collect();
+    let of = |activation: Activation| enchants.iter().filter(|(id, _)| kinds::kind_of(*id).is_some_and(|kind| kind.activation == activation)).copied().collect();
     [of(Activation::Equipped), of(Activation::Held), of(Activation::Itself)]
 }
