@@ -109,8 +109,8 @@ These are the Java game's, a guess, or not found in the decompile:
 - the 1200-tick despawn of a stuck arrow;
 - BDS's short pickup delay (Actor +0x1bc), which sapling does not have;
 - the wind charge cooldown (10), and the cooldowns of snowballs, eggs and potions (none);
-- the lingering cloud's wait (10), pulse (5), quarter share of each effect and shrinking over its
-  life;
+- the lingering cloud's shrinking over its life (its pulse and shares were read: items.md, "Area
+  effect clouds");
 - a player's arrow throwing a mob 0.4, as a melee hit does;
 - Loyalty's return pull (0.05 a level) and Riptide's launch (`3 × (1 + level) / 4`);
 - the `chargedItem` tag of a loaded crossbow;

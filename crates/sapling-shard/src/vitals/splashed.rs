@@ -32,6 +32,27 @@ pub(crate) fn splashed(world: &mut World, player: Entity, data: i16, share: f32,
     }
 }
 
+/// A cloud's pulse of the potion of data value `data` on a player (clouds.rs): `share` of each
+/// effect's time and of an instant one's strength; its harm throws as a magic hit by `slayer` from `from`.
+pub(crate) fn clouded(world: &mut World, player: Entity, data: i16, [time, instant]: [f32; 2], slayer: &str, from: [f32; 3]) {
+    if !is_mortal(world, player) {
+        return;
+    }
+    for gives in sapling_data::potion_effects(data) {
+        let Some(effect) = Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect) else { continue };
+        let strength = 2f32.powi(i32::from(gives.amplifier)) * instant;
+        match effect {
+            Effect::InstantDamage => drop(struck::fanged(world, player, effects::HARMS * strength, slayer, from)),
+            Effect::InstantHealth => {
+                if let Some(mut vitals) = world.get_mut::<Vitals>(player).filter(|vitals| vitals.died.is_none()) {
+                    vitals.health.mend(effects::HEALS * strength);
+                }
+            }
+            _ => drop(effects::give(world, player, effect, (gives.ticks as f32 * time) as u32, gives.amplifier, true)),
+        }
+    }
+}
+
 /// Whether the effect named `effect` is on the player.
 pub(crate) fn is_under(world: &World, player: Entity, effect: &str) -> bool {
     Effect::ALL.into_iter().find(|known| known.name() == effect).is_some_and(|effect| effects::level(world, player, effect).is_some())

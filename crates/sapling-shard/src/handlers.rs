@@ -125,6 +125,7 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::dragon::tick(world);
     crate::eyes::tick(world);
     crate::shots::tick(world);
+    crate::clouds::tick(world);
     crate::fishing::tick(world);
     crate::gliding::tick(world);
     crate::instruments::tick(world);

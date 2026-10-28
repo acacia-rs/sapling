@@ -199,3 +199,38 @@ Send `MoveEntityDelta` when moved > 0.01, `SetEntityMotion` when v changed by > 
 - Player-side touch: which box overlap calls `playerTouch` (Java inflates the player box by 1, 0.5, 1); not read.
 - Item+0x152 bits 0x20 (fire resistant) and 0x40 (should despawn) from use, not headers.
 - 140d5e660 (`dropTowards?`, throwTime 40, pickup 10, uses 0.1 and 0.2) was not decompiled.
+
+## Area effect clouds
+
+Read 2026-10-28 from `.testserver/bds-blocks/bedrock_server.exe` with `dis` only (this machine has no Linux
+radare2, so `c` fails). The cloud's vtable is 14a7bf660 (its read-save-data 1429b2930 sits at +0x390 and +0x398,
+as `ItemActor`'s do); slot 4 is `AreaEffectCloud::normalTick` 1429b01a0. Fields named from the save strings in
+1429b2930: +0x3c0 `SpawnTick`, +0x3c8 `ReapplicationDelay`, +0x3cc `DurationOnUse`, +0x3d0 `PickupCount`,
++0x3d4 `RadiusOnUse`, +0x3b0 owner, +0x3d8 the effect list (0x90 a record). sapling: `clouds.rs`, for the dragon's
+breath (`dragon/cloud.rs`) and a lingering potion's (`shots/clouds.rs`).
+
+| Rule | Where |
+|---|---|
+| A `SpawnTick` of 0 is set to the current tick and the tick ends; age = now - `SpawnTick` | 1429b025f-1429b03d3 |
+| Gone when age > the `Duration` metadata (-1 lasts), or when the radius is under 0.5 | 1429b02f0-1429b031f |
+| Radius = `Radius` metadata + age × `RadiusPerTick` metadata (`getRadius`) | 1429afbe0 |
+| Server side, it pulses only when age % 5 == 0 (multiply by 0xcccc...cd); there is no wait first | 1429b0454 |
+| Candidates: the entities in a box about it of (r, r/2, r), then 3D distance² ≤ r² from its position | 1429b06a3, 1429b0937 |
+| One in the reapplication map is skipped; one given is put there at age + `ReapplicationDelay` | 1429b0734, 1429b097b |
+| Each one given: radius += `RadiusOnUse`, gone under 0.5; duration += `DurationOnUse` | 1429b09b3-1429b0a31 |
+| An instant effect: `applyInstantaneousEffect(cloud, owner, target, amplifier, 0.5)` | 1429b0ae6 |
+| Any other: its duration × 0.25, truncated, at its amplifier (-1 stays -1) | 1429b0c4f |
+
+So a lingering potion of harming takes 3 off a cow on its first pulse (age 5), and nothing more for 40 ticks
+(`shot_hits::a_lingering_potion_of_harming_harms_a_cow_standing_in_its_cloud`). The dragon's breath is the same
+rule with potion 23; it had been written separately with the same numbers.
+
+Not drilled:
+
+- every row above (decompile only); in particular the cloud's first pulse at age 5 and the half-strength instant
+  harm on a player from a lingering cloud;
+- `RadiusPerTick` of a lingering potion's cloud: sapling keeps the Java game's `-radius / duration`; where BDS's
+  `SpawnAoECloudSubcomponent` (pack reader 142409a00) sets it was not found;
+- the box's half-height (r/2) limiting who is reached; sapling tests the 3D distance from the feet only;
+- the ender dragon left out of every cloud (sapling `clouds.rs` `UNAFFECTED`), taken from the old dragon code;
+- 140d5b950 (a can-be-affected test before the distance) and vt+0x338 (per-effect `canBeAffected`) not read.

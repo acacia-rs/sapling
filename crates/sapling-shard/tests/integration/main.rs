@@ -103,6 +103,7 @@ mod riding;
 mod saplings;
 mod shapes;
 mod shot_blocks;
+mod shot_hits;
 mod shown_effects;
 mod sleep;
 mod slimes;

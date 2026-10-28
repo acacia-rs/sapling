@@ -77,7 +77,7 @@ pub(crate) fn release(world: &mut World, player: Entity) {
 }
 
 /// A tick of what players loose: a draw whose item left the hand is over, stuck shots are picked
-/// up, tridents come back, clouds linger.
+/// up, tridents come back.
 pub(crate) fn tick(world: &mut World) {
     let drawing: Vec<(Entity, String)> = world.query::<(Entity, &Drawing)>().iter(world).map(|(player, drawing)| (player, drawing.item.clone())).collect();
     for (player, item) in drawing {
@@ -88,7 +88,6 @@ pub(crate) fn tick(world: &mut World) {
     }
     pickup::tick(world);
     tridents::tick(world);
-    clouds::tick(world);
 }
 
 /// Whether a world folder's actor of `kind` is a shot that lay where it stuck.
