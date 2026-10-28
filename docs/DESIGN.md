@@ -324,13 +324,16 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   message), `fallDamage` / `fireDamage` / `drowningDamage` / `freezeDamage` (players only; a spared tick
   hit keeps its timers), `naturalRegeneration`, `doTileDrops` (every block drop), `doEntityDrops` (a
   falling block's item), `tntExplodes` (the fuse burns, nothing bursts), `tntExplosionDropDecay` (a block
-  drops by 1 in the power), `respawnBlocksExplode` (anchors), `playersSleepingPercentage`. What no BDS rule
+  drops by 1 in the power), `respawnBlocksExplode` (anchors), `playersSleepingPercentage`, `doInsomnia`
+  (phantoms), `projectilesCanBreakBlocks` (`blocks/shot_blocks.rs`: pots, chorus flowers, dripstone under
+  a trident). What no BDS rule
   switches is a `sapling:` rule in the same store, never sent to clients, each on by default:
   `sapling:hunger` (no exhaustion), `sapling:liquidFlow` (due flows are dropped: liquids stand),
   `sapling:redstone` (circuits pause; what was written waits), `sapling:mobAi` (mobs fall and are hurt but
   decide nothing). `sendCommandFeedback` is under Commands. `doMobSpawning` stops natural spawning
   (`spawning.rs`), not eggs or commands. `doImmediateRespawn` is the client's alone (docs/research/player-damage.md). Not read yet: `spawnRadius`,
-  and rules for what sapling lacks (`doInsomnia`, command blocks).
+  `recipesUnlock` and `doLimitedCrafting` (sapling unlocks no recipe on pickup; BDS does, rule on or off:
+  research/captures/bds-recipeunlock.txt), and the command-block rules. `showRecipeMessages` is the client's.
 - **World events** (`sapling-api/src/world_event.rs`). What the world does on its own is offered with its
   world in focus (`plugins::offer_in`), so `Scope::World` listeners hear their world's; each is built only
   where a listener hears it (`plugins::stopped_in`), since flows and fire raise them often.
@@ -724,8 +727,7 @@ block action, and takes StopBreak and AbortBreak with a position.
   100 ticks of a night (a storm by day skips nothing), all wake and the time jumps to the next
   day's tick 0. Whenever someone lies down or gets up, the world's players are told how many sleep
   of how many: `LevelEventGeneric` 9801 with the Ints `ableToSleep`, `overworldPlayerCount`,
-  `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: the water check, `doInsomnia`
-  and phantoms.
+  `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: the water check.
 - **Ground truth for what follows**: `cargo build -p sapling --example bds_mechanism_probe`, then
   `tools/bds-drill.sh <bds dir> <port> bds_mechanism_probe <out>` runs drills (falls, plates, buckets,
   lava, waterlogging, the odd cases too) on a BDS with a fresh world, and `tools/sapling-drill.sh
@@ -1308,10 +1310,11 @@ All set through `ServerBuilder` (`sapling/src/server/ops.rs`).
   `properties(&props)`. Read: `server-name`, `level-name` (the list's level and StartGame's name; the
   folder is the binary's to open), `gamemode`, `difficulty` (names or numbers), `max-players`,
   `online-mode`, `allow-list`/`white-list` (sets the `access` lists' allowlist; on without lists is
-  `StartError::NoAllowlist`), `server-ip`, `server-port`, `view-distance` (≥ 5), `player-idle-timeout`,
+  `StartError::NoAllowlist`), `server-ip`, `server-port`, `view-distance` (≥ 5), `tick-distance` (4 to 12: how far about a player mobs spawn and hives and
+  snow tick, saved as level.dat's `serverChunkTickRange`), `player-idle-timeout`,
   `level-seed` (numbers only, for the binary), `compression-threshold`, `compression-algorithm`,
   `player-position-acceptance-threshold`, `player-rewind-min-correction-delay-ticks`. Every other key
-  (`server-portv6`, `tick-distance`, `force-gamemode`, `allow-cheats`, `default-player-permission-level`,
+  (`server-portv6`, `force-gamemode`, `allow-cheats`, `default-player-permission-level`,
   `transport`, `enable-lan-visibility`, ...) is logged as ignored. Bad values fail with their line.
   Settings made after it win. `examples/generated.rs --properties=` uses it.
 - **Compression**: `NetConfig::compression` (zlib = raw deflate, or snappy) and `compression_threshold`
@@ -1495,7 +1498,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
 - Chat: private messages, profanity filter fields.
 - **Operations, not checked against BDS:** the idle kick's activity rule and screen, BDS's chat or
-  packet rate limits (Java's chat rule is used), `level-seed` text hashing, `tick-distance`, an IPv6
+  packet rate limits (Java's chat rule is used), `level-seed` text hashing, the despawn cap at a `tick-distance` other than 4, an IPv6
   listener beside the IPv4 one (`server-portv6`), config hot reload.
 - **BDS only saves chunks that changed since generation.** A folder's holes are void unless it is
   opened with `generate_missing`, which fills them as a new world would be generated ("Generation").

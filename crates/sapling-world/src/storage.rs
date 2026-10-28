@@ -218,7 +218,7 @@ impl LevelDbStorage {
         let (spawn, rules, seed, hardcore) = (dat.spawn(), read_rules(dat), dat.seed().unwrap_or(0), dat.hardcore());
         let (structures, folder_structures) = (structures.into(), folder_structures.into());
         let (time, weather, difficulty) = (dat.time().unwrap_or(Level::default().time), dat.weather().unwrap_or(Level::default().weather), dat.difficulty());
-        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, hardcore, weather, difficulty }
+        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, hardcore, weather, difficulty, chunk_tick_range: None }
     }
 }
 
@@ -262,6 +262,9 @@ impl WorldStorage for LevelDbStorage {
         dat.set_weather(level.weather);
         if let Some(difficulty) = level.difficulty {
             dat.set_difficulty(difficulty);
+        }
+        if let Some(chunks) = level.chunk_tick_range {
+            dat.set_chunk_tick_range(chunks);
         }
         write_rules(&mut dat, &level.rules);
         if let Some(spawn) = level.spawn {

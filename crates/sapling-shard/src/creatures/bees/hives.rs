@@ -14,13 +14,12 @@ use acacia_proto::nbt::Value;
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
-use sapling_world::{ChunkPos, Occupant};
+use sapling_world::Occupant;
 
 use super::super::Health;
 use crate::blocks::{self, Dice};
-use crate::components::{InLayer, Layer, Tick};
+use crate::components::{Layer, Tick};
 use crate::entities::Stored;
-use crate::view::View;
 
 const ENTITY: &str = "Beehive";
 const HOLDS: usize = 3;
@@ -30,8 +29,6 @@ const HONEY: &str = "honey_level";
 const HONEY_FULL: u8 = 5;
 /// The chance a tick of `block.beehive.work` from a hive with bees in.
 const WORKS: f32 = 0.005;
-/// Columns this many chunks across from a player's tick their hives (BDS's `tick-distance`).
-const REACH: i32 = 4;
 
 /// The tick each hive's entity was last written in, by world and place: its bees' `TicksLeftToStay`
 /// count from then.
@@ -154,15 +151,8 @@ pub(crate) fn broken(world: &mut World, layer: Entity, pos: BlockPos, name: &str
 /// The hives of the columns about players: their bees count down and come out when due, and
 /// they are heard working.
 pub(crate) fn tick(world: &mut World) {
-    let mut columns = Vec::new();
-    for (in_layer, view) in world.query::<(&InLayer, &View)>().iter(world) {
-        let Some(center) = view.center() else { continue };
-        columns.extend((-REACH..=REACH).flat_map(|dx| (-REACH..=REACH).map(move |dz| (in_layer.0, ChunkPos::new(center.x + dx, center.z + dz)))));
-    }
-    columns.sort_by_key(|(layer, pos)| (*layer, pos.x, pos.z));
-    columns.dedup();
     let mut hives = Vec::new();
-    for (layer, column) in columns {
+    for (layer, column) in crate::ticking::near_players(world) {
         let Some(level) = level(world, layer) else { continue };
         let occupied = |entity: &&sapling_world::BlockEntity| matches!(entity.nbt.get("id"), Some(Value::String(id)) if id.as_str() == ENTITY) && matches!(entity.nbt.get("Occupants"), Some(Value::List(list)) if !list.items.is_empty());
         hives.extend(level.block_entities_in(column).into_iter().filter(occupied).map(|entity| (layer, entity.pos)));

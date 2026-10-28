@@ -13,7 +13,7 @@ use acacia_proto::packets::{
 };
 use acacia_proto::types::{GameRuleI32Value, MetadataDictionaryItemValue as Metadata, MetadataFlags1, Vec3i8, Vec3li};
 use bytes::BytesMut;
-use common::stored::{actor, compound, enter_stored, floor_with};
+use common::stored::{actor, compound, enter_stored, floor_holding};
 use common::{Harness, all, click, config, pack_response, platform};
 use sapling_api::{Difficulty, Item, PlayerId, RuleValue, Slot};
 use sapling_shard::ShardConfig;
@@ -212,14 +212,15 @@ fn stored_mobs_are_shown_and_leave_with_their_column() {
     let stack = |name: &str| ("Item", compound([("Name", Value::String(name.into())), ("Count", Value::Byte(5)), ("Damage", Value::Short(0))]));
     let actors = [
         actor(-5, "minecraft:horse", [4.5, 64.0, 6.5], ("Saddled", Value::Byte(1))),
-        actor(-9, "minecraft:painting", [7.0, 66.0, 0.03], ("Motif", Value::String("Kebab".into()))),
+        actor(-9, "minecraft:painting", [6.5, 66.5, 1.03125], ("Motif", Value::String("Kebab".into()))),
         actor(-6, "minecraft:item", [5.0, 64.0, 5.0], stack("minecraft:diamond")),
         actor(-7, "minecraft:bat", [9.5, 70.0, 2.5], ("Mainhand", Value::List(List { tag: 10, items: vec![stack("minecraft:iron_sword").1] }))),
         actor(-8, "minecraft:item", [6.0, 64.0, 5.0], stack("sapling:no_such_item")),
     ]
     .concat();
 
-    let mut h = Harness::with(config(), World::with_storage(floor_with(actors)));
+    // The painting's wall, else it falls.
+    let mut h = Harness::with(config(), World::with_storage(floor_holding(actors, &[([6, 66, 0], "minecraft:stone")])));
     let sent = enter_stored(&mut h, 1);
     let mut mobs = all::<AddEntity>(&sent);
     mobs.sort_by(|a, b| a.entity_type.cmp(&b.entity_type));
@@ -249,7 +250,7 @@ fn stored_mobs_are_shown_and_leave_with_their_column() {
     (0..250).for_each(|_| h.shard.tick());
     let sent = enter_stored(&mut h, 2);
     let again = all::<AddEntity>(&sent);
-    assert_eq!((again.len(), all::<AddItemEntity>(&sent).len()), (2, 1));
+    assert_eq!((again.len(), all::<AddItemEntity>(&sent).len(), all::<AddPainting>(&sent).len()), (2, 1, 1));
     assert!(again.iter().all(|mob| !ids.contains(&mob.runtime_id)), "the reloaded column's mobs are new entities");
     assert!(all::<RemoveEntity>(&h.tick(2)).is_empty());
 }

@@ -6,15 +6,11 @@
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Face, Weather};
 use sapling_data::RuleValue;
-use sapling_world::ChunkPos;
 
 use super::super::{level, send};
 use super::Picks;
-use crate::components::InLayer;
-use crate::view::View;
+use crate::ticking::near_players;
 
-/// Columns this many chunks across from a player's are ticked.
-const REACH: i32 = 4;
 /// At most this many picks a column a tick, whatever the rule: a column's top is looked for
 /// after every sixteenth.
 const MOST_PICKS: i32 = 16;
@@ -50,18 +46,6 @@ const PILES: [(&str, u8); 15] = [
 ];
 
 type Level = sapling_world::World;
-
-/// The columns around players, each once, in an order that does not turn on the hash.
-fn near_players(world: &mut World) -> Vec<(Entity, ChunkPos)> {
-    let mut near = Vec::new();
-    for (in_layer, view) in world.query::<(&InLayer, &View)>().iter(world) {
-        let Some(center) = view.center() else { continue };
-        near.extend((-REACH..=REACH).flat_map(|dx| (-REACH..=REACH).map(move |dz| (in_layer.0, ChunkPos::new(center.x + dx, center.z + dz)))));
-    }
-    near.sort_by_key(|(layer, pos)| (*layer, pos.x, pos.z));
-    near.dedup();
-    near
-}
 
 /// Whether a layer of snow can lie on the block `id`: leaves, or a full top that is not ice.
 pub(crate) fn holds_snow(level: &Level, id: u32) -> bool {

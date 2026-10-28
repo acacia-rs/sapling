@@ -76,6 +76,7 @@ impl ServerBuilder {
         }
         self.addr.set_port(props.server_port.unwrap_or(self.addr.port()));
         self.shard.max_view_radius = props.view_distance.unwrap_or(self.shard.max_view_radius);
+        self.shard.tick_distance = props.tick_distance.unwrap_or(self.shard.tick_distance);
         if let Some(minutes) = props.player_idle_timeout {
             self = self.idle_timeout(Duration::from_secs(u64::from(minutes) * 60));
         }
@@ -90,6 +91,13 @@ impl ServerBuilder {
     /// The farthest a client may see, in chunks (default 8; BDS's `view-distance`).
     pub fn view_distance(mut self, chunks: i32) -> Self {
         self.shard.max_view_radius = chunks;
+        self
+    }
+
+    /// How far about a player, in chunks, mobs spawn and blocks tick (default 4; BDS's
+    /// `tick-distance`).
+    pub fn tick_distance(mut self, chunks: i32) -> Self {
+        self.shard.tick_distance = chunks;
         self
     }
 

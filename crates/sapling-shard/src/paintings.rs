@@ -1,15 +1,44 @@
 //! Paintings players hang: a painting used on the side of a block takes, at random, one of the
 //! largest pictures that fit there, as BDS's painting does (docs/research/mob-kinds.md
-//! "Paintings"). A hung painting is kept with its column and shown as the stored ones are (mobs.rs).
-// TODO: breaking a painting (a hit, or its wall going) and its drop are not built.
+//! "Paintings"). A hung painting is kept with its column and shown as the stored ones are (mobs.rs);
+//! it falls when hit or when it no longer fits where it hangs (falls.rs).
+
+mod falls;
+
+pub(crate) use falls::{struck, tick};
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
-use sapling_world::{ChunkPos, World as Level};
+use sapling_world::{Actor, ChunkPos, World as Level};
 
 use crate::blocks::Dice;
 use crate::components::Layer;
 use crate::{entities, mobs};
+
+/// A painting on a wall: which way it faces, its size, the lowest corner of the cells it covers,
+/// its middle, and the column that keeps it and its id there.
+#[derive(Component, Clone, Copy)]
+pub(crate) struct Hung {
+    direction: i8,
+    w: i32,
+    h: i32,
+    corner: BlockPos,
+    middle: [f32; 3],
+    home: ChunkPos,
+    unique_id: i64,
+}
+
+impl Hung {
+    fn new(middle: [f32; 3], direction: i8, motif: &str, (home, unique_id): (ChunkPos, i64)) -> Option<Self> {
+        let &(_, w, h, _) = MOTIVES.iter().find(|motive| motive.0 == motif)?;
+        Some(Self { direction, w, h, corner: corner(middle, direction, w, h), middle, home, unique_id })
+    }
+
+    fn highest(&self) -> BlockPos {
+        let [ax, az] = across(self.direction).map(i32::abs);
+        [self.corner[0] + ax * (self.w - 1), self.corner[1] + self.h - 1, self.corner[2] + az * (self.w - 1)]
+    }
+}
 
 pub(crate) const PAINTING: &str = "minecraft:painting";
 /// BDS's pictures in its order with their width and height in blocks, and whether a hung
@@ -93,12 +122,27 @@ fn hung_about(level: &Level, front: BlockPos) -> Vec<(BlockPos, BlockPos)> {
     actors
         .filter_map(|actor| {
             let painting = actor.painting?;
-            let &(_, w, h, _) = MOTIVES.iter().find(|motive| motive.0 == painting.motif)?;
-            let corner = corner(actor.position, painting.direction, w, h);
-            let [ax, az] = across(painting.direction).map(i32::abs);
-            Some((corner, [corner[0] + ax * (w - 1), corner[1] + h - 1, corner[2] + az * (w - 1)]))
+            let hung = Hung::new(actor.position, painting.direction, &painting.motif, (home, 0))?;
+            Some((hung.corner, hung.highest()))
         })
         .collect()
+}
+
+/// Whether the painting still fits where it hangs (`survives`), other paintings about it
+/// counted but itself not.
+fn still_fits(level: &Level, hung: &Hung) -> bool {
+    let own = (hung.corner, hung.highest());
+    let others: Vec<(BlockPos, BlockPos)> = hung_about(level, hung.corner).into_iter().filter(|other| *other != own).collect();
+    fits(level, hung.corner, hung.direction, hung.w, hung.h, &others)
+}
+
+/// Shows the stored painting `actor` of `layer`, to fall as a hung one does; false where its
+/// picture is not known.
+pub(crate) fn from_storage(world: &mut World, layer: Entity, home: ChunkPos, actor: &Actor, unique_id: i64) -> bool {
+    let Some(hung) = actor.painting.as_ref().and_then(|painting| Hung::new(actor.position, painting.direction, &painting.motif, (home, unique_id))) else { return false };
+    let Some(painting) = mobs::spawn_shown(world, layer, actor.position, |id| mobs::announcement(actor, id)) else { return false };
+    world.entity_mut(painting).insert(hung);
+    true
 }
 
 /// A painting used on the `face` side of the block at `wall` in `layer`: false where none fits.
@@ -121,9 +165,12 @@ pub(crate) fn hang(world: &mut World, layer: Entity, wall: BlockPos, face: Face)
     }
     let &(motif, w, h, _) = largest[world.get_resource_or_insert_with(Dice::default).roll(largest.len() as u32) as usize];
     let (middle, _) = placed(front, direction, w, h);
-    let shown = mobs::spawn_shown(world, layer, middle, |id| Some(vec![sapling_net::encode(&sapling_data::add_painting(id, middle, direction.into(), motif))]));
-    let Some(unique_id) = shown.and_then(|painting| entities::new_unique_id(world, painting)) else { return false };
+    let Some(shown) = mobs::spawn_shown(world, layer, middle, |id| Some(vec![sapling_net::encode(&sapling_data::add_painting(id, middle, direction.into(), motif))])) else { return false };
+    let Some(unique_id) = entities::new_unique_id(world, shown) else { return false };
     let home = ChunkPos::of_block(middle[0].floor() as i32, middle[2].floor() as i32);
+    if let Some(hung) = Hung::new(middle, direction, motif, (home, unique_id)) {
+        world.entity_mut(shown).insert(hung);
+    }
     let Some(mut level) = world.get_mut::<Layer>(layer) else { return false };
     let mut record = level.world.actors(home).to_vec();
     record.extend(sapling_world::new_painting_actor(unique_id, middle, direction, motif));

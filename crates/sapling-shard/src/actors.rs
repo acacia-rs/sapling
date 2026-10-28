@@ -66,6 +66,7 @@ pub(crate) fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: 
         (_, false) if crate::shots::is_kept(&actor.identifier) => crate::shots::from_storage(world, layer, &actor, unique_id, compound),
         (_, false) if crate::vehicles::is_vehicle(&actor.identifier) => crate::vehicles::from_storage(world, layer, &actor, unique_id, compound),
         (_, false) if actor.painting.is_none() => creatures::from_storage(world, layer, actor.clone(), unique_id, compound),
+        (_, false) => crate::paintings::from_storage(world, layer, home, &actor, unique_id),
         _ => false,
     };
     if !moved {

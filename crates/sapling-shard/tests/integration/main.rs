@@ -92,6 +92,7 @@ mod redstone_blocks;
 mod riding;
 mod saplings;
 mod shapes;
+mod shot_blocks;
 mod shown_effects;
 mod sleep;
 mod slimes;

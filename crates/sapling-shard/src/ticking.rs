@@ -24,6 +24,25 @@ fn id(entity: &Value) -> Option<&str> {
     }
 }
 
+/// The chunks about a player that are simulated (`ShardConfig::tick_distance`).
+pub(crate) fn tick_distance(world: &World) -> i32 {
+    world.resource::<crate::components::Settings>().0.tick_distance
+}
+
+/// The columns within [`tick_distance`] across a square about each player, each once, in an
+/// order that does not turn on the hash.
+pub(crate) fn near_players(world: &mut World) -> Vec<(Entity, ChunkPos)> {
+    let reach = tick_distance(world);
+    let mut near = Vec::new();
+    for (in_layer, view) in world.query::<(&InLayer, &View)>().iter(world) {
+        let Some(center) = view.center() else { continue };
+        near.extend((-reach..=reach).flat_map(|dx| (-reach..=reach).map(move |dz| (in_layer.0, ChunkPos::new(center.x + dx, center.z + dz)))));
+    }
+    near.sort_by_key(|(layer, pos)| (*layer, pos.x, pos.z));
+    near.dedup();
+    near
+}
+
 /// The loaded columns some player's view covers or the world keeps (kept.rs), by layer.
 fn seen(world: &mut World) -> HashSet<(Entity, ChunkPos)> {
     let (mut players, mut layers) = (world.query::<(&InLayer, &View)>(), world.query::<(Entity, &Layer, Option<&crate::kept::Kept>)>());

@@ -25,8 +25,6 @@ pub(crate) use eggs::{hatch, kind_of as egg_kind};
 pub(crate) use phantoms::Rested;
 
 const MOB_SPAWNING: &str = "doMobSpawning";
-/// The chunks about a player that tick, BDS's default `tick-distance`.
-const TICK_RANGE: i32 = 4;
 /// Each ticked chunk makes an attempt with this chance in [`ODDS`] a tick.
 const CHANCE: u32 = 11;
 const ODDS: u32 = 2000;
@@ -74,15 +72,16 @@ pub(crate) fn watchers(world: &mut World) -> Vec<Watcher> {
         .collect()
 }
 
-/// Counts the players' sleeplessness, then rolls an attempt in every chunk within [`TICK_RANGE`]
-/// of a player of a world where `doMobSpawning` is on.
+/// Counts the players' sleeplessness, then rolls an attempt in every chunk within the tick
+/// distance (`crate::ticking::tick_distance`) of a player of a world where `doMobSpawning` is on.
 pub(crate) fn tick(world: &mut World) {
     phantoms::count_sleepless(world);
     let watchers = watchers(world);
+    let reach = crate::ticking::tick_distance(world);
     let mut ticked = BTreeSet::new();
     for watcher in watchers.iter().filter(|watcher| crate::rules::on(world, watcher.layer, MOB_SPAWNING)) {
         let center = watcher.chunk();
-        for (dx, dz) in (-TICK_RANGE..=TICK_RANGE).flat_map(|dx| (-TICK_RANGE..=TICK_RANGE).map(move |dz| (dx, dz))).filter(|(dx, dz)| dx * dx + dz * dz <= TICK_RANGE * TICK_RANGE) {
+        for (dx, dz) in (-reach..=reach).flat_map(|dx| (-reach..=reach).map(move |dz| (dx, dz))).filter(|(dx, dz)| dx * dx + dz * dz <= reach * reach) {
             ticked.insert((watcher.layer, center.x + dx, center.z + dz));
         }
     }
