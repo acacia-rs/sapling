@@ -24,7 +24,7 @@ type Level = sapling_world::World;
 
 /// Whether `name` is one this module ticks.
 pub(super) fn is_ticked(name: &str) -> bool {
-    MUSHROOMS.contains(&name) || name == VINE || CAVE_VINES.contains(&name)
+    MUSHROOMS.contains(&name) || name == VINE || CAVE_VINES.contains(&name) || name == super::chorus::FLOWER || name == super::amethyst::BUDDING
 }
 
 fn name_at(level: &Level, [x, y, z]: BlockPos) -> Option<&'static str> {
@@ -55,6 +55,10 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos, name: &str
         mushroom(world, layer, pos, name, picks);
     } else if name == VINE {
         super::vines::ticked(world, layer, pos, picks);
+    } else if name == super::chorus::FLOWER {
+        super::chorus::ticked(world, layer, pos, picks);
+    } else if name == super::amethyst::BUDDING {
+        super::amethyst::ticked(world, layer, pos, picks);
     } else {
         cave_vine(world, layer, pos, name, picks);
     }

@@ -32,6 +32,8 @@ pub(crate) enum Job {
     Lectern,
     /// A command block runs (command_blocks/run.rs).
     Command,
+    /// Coral out of water dies (coral.rs).
+    Coral,
 }
 
 #[derive(Resource, Default)]
@@ -82,6 +84,7 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
         "cauldron" => Job::Drip,
         "lectern" => Job::Lectern,
         "command_block" | "repeating_command_block" | "chain_command_block" => Job::Command,
+        name if super::coral::is_live(&format!("minecraft:{name}")) => Job::Coral,
         _ => return None,
     })
 }
@@ -124,5 +127,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Drip => super::drips::fill(world, layer, pos),
         Job::Lectern => super::lectern::pulse(world, layer, pos),
         Job::Command => super::command_blocks::tick(world, layer, pos),
+        Job::Coral => super::coral::die(world, layer, pos),
     }
 }

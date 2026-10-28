@@ -14,6 +14,7 @@ mod bulbs;
 mod cauldrons;
 mod command_blocks;
 mod conduits;
+mod coral;
 mod composter;
 mod copper;
 mod crafter;
