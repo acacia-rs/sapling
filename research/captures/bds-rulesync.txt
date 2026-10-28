@@ -1,0 +1,640 @@
+## drill starts at 1793203488180
+## /gamerule
+     49 actor   CommandOutput success_count=1 data=None commandBlockOutput = true, doDayLightCycle = true, doEntityDrops = true, doFireTick = true, recipesUnlock = true, doLimitedCrafting = false, doMobLoot = true, doMobSpawning = false, doTileDrops = true, doWeatherCycle = true, drowningDamage = true, fallDamage = true, fireDamage = true, keepInventory = false, mobGriefing = true, pvp = true, showCoordinates = false, playerWaypoints = everyone, locatorbar = true, showDaysPlayed = false, naturalRegeneration = true, tntExplodes = true, sendCommandFeedback = true, maxCommandChainLength = 65535, doInsomnia = true, commandBlocksEnabled = true, randomTickSpeed = 0, doImmediateRespawn = false, showDeathMessages = true, functionCommandLimit = 10000, spawnRadius = 10, showTags = true, freezeDamage = true, respawnBlocksExplode = true, showBorderEffect = true, showRecipeMessages = true, playersSleepingPercentage = 100, projectilesCanBreakBlocks = true, tntExplosionDropDecay = false success=true []
+     49 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commandBlockOutput = true, doDayLightCycle = true, doEntityDrops = true, doFireTick = true, recipesUnlock = true, doLimitedCrafting = false, doMobLoot = true, doMobSpawning = false, doTileDrops = true, doWeatherCycle = true, drowningDamage = true, fallDamage = true, fireDamage = true, keepInventory = false, mobGriefing = true, pvp = true, showCoordinates = false, playerWaypoints = everyone, locatorbar = true, showDaysPlayed = false, naturalRegeneration = true, tntExplodes = true, sendCommandFeedback = true, maxCommandChainLength = 65535, doInsomnia = true, commandBlocksEnabled = true, randomTickSpeed = 0, doImmediateRespawn = false, showDeathMessages = true, functionCommandLimit = 10000, spawnRadius = 10, showTags = true, freezeDamage = true, respawnBlocksExplode = true, showBorderEffect = true, showRecipeMessages = true, playersSleepingPercentage = 100, projectilesCanBreakBlocks = true, tntExplosionDropDecay = false\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule commandblockoutput true
+   1012 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblockoutput\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1012 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblockoutput", "true"]
+## /gamerule commandblockoutput false
+   2004 actor   GameRulesChanged commandBlockOutput=Bool(false)
+   2004 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblockoutput", "false"]
+   2004 watcher GameRulesChanged commandBlockOutput=Bool(false)
+   2004 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblockoutput\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule commandblockoutput false
+   3015 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblockoutput", "false"]
+   3015 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblockoutput\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule commandblockoutput true
+   4016 actor   GameRulesChanged commandBlockOutput=Bool(true)
+   4016 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblockoutput", "true"]
+   4016 watcher GameRulesChanged commandBlockOutput=Bool(true)
+   4016 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblockoutput\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dodaylightcycle true
+   5017 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dodaylightcycle", "true"]
+   5017 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dodaylightcycle\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5183 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2873, paused: false }] }) }
+   5183 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2873, paused: false }] }) }
+## /gamerule dodaylightcycle false
+   6018 actor   GameRulesChanged doDayLightCycle=Bool(false)
+   6018 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dodaylightcycle", "false"]
+   6018 watcher GameRulesChanged doDayLightCycle=Bool(false)
+   6018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dodaylightcycle\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dodaylightcycle false
+   7015 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dodaylightcycle", "false"]
+   7015 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dodaylightcycle\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dodaylightcycle true
+   8016 actor   GameRulesChanged doDayLightCycle=Bool(true)
+   8041 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dodaylightcycle", "true"]
+   8041 watcher GameRulesChanged doDayLightCycle=Bool(true)
+   8041 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dodaylightcycle\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doentitydrops true
+   9023 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doentitydrops", "true"]
+   9023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doentitydrops\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doentitydrops false
+  10022 actor   GameRulesChanged doEntityDrops=Bool(false)
+  10022 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doentitydrops", "false"]
+  10022 watcher GameRulesChanged doEntityDrops=Bool(false)
+  10022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doentitydrops\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doentitydrops false
+  11026 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doentitydrops", "false"]
+  11026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doentitydrops\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doentitydrops true
+  12028 actor   GameRulesChanged doEntityDrops=Bool(true)
+  12028 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doentitydrops", "true"]
+  12028 watcher GameRulesChanged doEntityDrops=Bool(true)
+  12028 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doentitydrops\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dofiretick true
+  13023 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dofiretick", "true"]
+  13023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dofiretick\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dofiretick false
+  14032 actor   GameRulesChanged doFireTick=Bool(false)
+  14032 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dofiretick", "false"]
+  14032 watcher GameRulesChanged doFireTick=Bool(false)
+  14032 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dofiretick\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dofiretick false
+  15033 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dofiretick\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15034 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dofiretick", "false"]
+## /gamerule dofiretick true
+  16024 actor   GameRulesChanged doFireTick=Bool(true)
+  16024 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dofiretick", "true"]
+  16024 watcher GameRulesChanged doFireTick=Bool(true)
+  16024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dofiretick\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule recipesunlock true
+  17033 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["recipesunlock", "true"]
+  17033 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"recipesunlock\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  17984 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3089, paused: false }] }) }
+  17984 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3089, paused: false }] }) }
+## /gamerule recipesunlock false
+  18034 actor   GameRulesChanged recipesUnlock=Bool(false)
+  18034 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["recipesunlock", "false"]
+  18034 watcher GameRulesChanged recipesUnlock=Bool(false)
+  18034 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"recipesunlock\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule recipesunlock false
+  19036 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["recipesunlock", "false"]
+  19036 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"recipesunlock\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule recipesunlock true
+  20037 watcher GameRulesChanged recipesUnlock=Bool(true)
+  20037 actor   GameRulesChanged recipesUnlock=Bool(true)
+  20037 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"recipesunlock\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20037 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["recipesunlock", "true"]
+## /gamerule dolimitedcrafting false
+  21035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dolimitedcrafting\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21035 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dolimitedcrafting", "false"]
+## /gamerule dolimitedcrafting true
+  22032 watcher GameRulesChanged doLimitedCrafting=Bool(true)
+  22032 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dolimitedcrafting\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22032 actor   GameRulesChanged doLimitedCrafting=Bool(true)
+  22032 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dolimitedcrafting", "true"]
+## /gamerule dolimitedcrafting true
+  23040 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dolimitedcrafting", "true"]
+  23040 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dolimitedcrafting\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule dolimitedcrafting false
+  24044 watcher GameRulesChanged doLimitedCrafting=Bool(false)
+  24044 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dolimitedcrafting\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24044 actor   GameRulesChanged doLimitedCrafting=Bool(false)
+  24044 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dolimitedcrafting", "false"]
+## /gamerule domobloot true
+  25034 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobloot", "true"]
+  25034 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobloot\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule domobloot false
+  26036 actor   GameRulesChanged doMobLoot=Bool(false)
+  26036 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobloot", "false"]
+  26036 watcher GameRulesChanged doMobLoot=Bool(false)
+  26036 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobloot\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule domobloot false
+  27044 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobloot", "false"]
+  27044 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobloot\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule domobloot true
+  28046 actor   GameRulesChanged doMobLoot=Bool(true)
+  28046 watcher GameRulesChanged doMobLoot=Bool(true)
+  28046 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobloot", "true"]
+  28046 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobloot\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule domobspawning true
+  29045 actor   GameRulesChanged doMobSpawning=Bool(true)
+  29062 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "true"]
+  29062 watcher GameRulesChanged doMobSpawning=Bool(true)
+  29062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule domobspawning false
+  30044 actor   GameRulesChanged doMobSpawning=Bool(false)
+  30044 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+  30044 watcher GameRulesChanged doMobSpawning=Bool(false)
+  30044 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30785 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3345, paused: false }] }) }
+  30785 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3345, paused: false }] }) }
+## /gamerule domobspawning false
+  31050 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31050 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /gamerule domobspawning true
+  32052 watcher GameRulesChanged doMobSpawning=Bool(true)
+  32052 actor   GameRulesChanged doMobSpawning=Bool(true)
+  32052 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32052 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "true"]
+## /gamerule dotiledrops true
+  33053 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dotiledrops\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  33053 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dotiledrops", "true"]
+## /gamerule dotiledrops false
+  34054 actor   GameRulesChanged doTileDrops=Bool(false)
+  34054 watcher GameRulesChanged doTileDrops=Bool(false)
+  34054 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dotiledrops\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34054 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dotiledrops", "false"]
+## /gamerule dotiledrops false
+  35055 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dotiledrops\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35055 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dotiledrops", "false"]
+## /gamerule dotiledrops true
+  36054 actor   GameRulesChanged doTileDrops=Bool(true)
+  36054 watcher GameRulesChanged doTileDrops=Bool(true)
+  36054 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dotiledrops", "true"]
+  36054 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"dotiledrops\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doweathercycle true
+  37054 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doweathercycle", "true"]
+  37054 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doweathercycle\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doweathercycle false
+  38058 actor   GameRulesChanged doWeatherCycle=Bool(false)
+  38058 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doweathercycle", "false"]
+  38058 watcher GameRulesChanged doWeatherCycle=Bool(false)
+  38058 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doweathercycle\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doweathercycle false
+  39054 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doweathercycle", "false"]
+  39054 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doweathercycle\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doweathercycle true
+  40054 actor   GameRulesChanged doWeatherCycle=Bool(true)
+  40054 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doweathercycle", "true"]
+  40054 watcher GameRulesChanged doWeatherCycle=Bool(true)
+  40054 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doweathercycle\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule drowningdamage true
+  41062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"drowningdamage\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41062 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["drowningdamage", "true"]
+## /gamerule drowningdamage false
+  42062 actor   GameRulesChanged drowningDamage=Bool(false)
+  42062 watcher GameRulesChanged drowningDamage=Bool(false)
+  42062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"drowningdamage\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42062 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["drowningdamage", "false"]
+## /gamerule drowningdamage false
+  43064 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"drowningdamage\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  43064 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["drowningdamage", "false"]
+  43583 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3601, paused: false }] }) }
+  43583 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3601, paused: false }] }) }
+## /gamerule drowningdamage true
+  44063 actor   GameRulesChanged drowningDamage=Bool(true)
+  44063 watcher GameRulesChanged drowningDamage=Bool(true)
+  44063 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["drowningdamage", "true"]
+  44063 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"drowningdamage\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule falldamage true
+  45059 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["falldamage", "true"]
+  45060 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"falldamage\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule falldamage false
+  46060 actor   GameRulesChanged fallDamage=Bool(false)
+  46060 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["falldamage", "false"]
+  46060 watcher GameRulesChanged fallDamage=Bool(false)
+  46060 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"falldamage\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule falldamage false
+  47064 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["falldamage", "false"]
+  47064 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"falldamage\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule falldamage true
+  48064 actor   GameRulesChanged fallDamage=Bool(true)
+  48064 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["falldamage", "true"]
+  48064 watcher GameRulesChanged fallDamage=Bool(true)
+  48064 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"falldamage\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule firedamage true
+  49068 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["firedamage", "true"]
+  49068 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"firedamage\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule firedamage false
+  50064 actor   GameRulesChanged fireDamage=Bool(false)
+  50064 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["firedamage", "false"]
+  50064 watcher GameRulesChanged fireDamage=Bool(false)
+  50064 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"firedamage\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule firedamage false
+  51066 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"firedamage\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  51066 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["firedamage", "false"]
+## /gamerule firedamage true
+  52074 actor   GameRulesChanged fireDamage=Bool(true)
+  52074 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["firedamage", "true"]
+  52074 watcher GameRulesChanged fireDamage=Bool(true)
+  52074 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"firedamage\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule keepinventory false
+  53075 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["keepinventory", "false"]
+  53075 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"keepinventory\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule keepinventory true
+  54076 watcher GameRulesChanged keepInventory=Bool(true)
+  54076 actor   GameRulesChanged keepInventory=Bool(true)
+  54076 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["keepinventory", "true"]
+  54076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"keepinventory\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule keepinventory true
+  55074 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["keepinventory", "true"]
+  55074 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"keepinventory\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule keepinventory false
+  56074 actor   GameRulesChanged keepInventory=Bool(false)
+  56074 watcher GameRulesChanged keepInventory=Bool(false)
+  56074 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["keepinventory", "false"]
+  56074 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"keepinventory\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  56384 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3857, paused: false }] }) }
+  56384 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3857, paused: false }] }) }
+## /gamerule mobgriefing true
+  57077 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["mobgriefing", "true"]
+  57077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"mobgriefing\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule mobgriefing false
+  58074 actor   GameRulesChanged mobGriefing=Bool(false)
+  58074 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["mobgriefing", "false"]
+  58074 watcher GameRulesChanged mobGriefing=Bool(false)
+  58074 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"mobgriefing\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule mobgriefing false
+  59082 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"mobgriefing\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  59082 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["mobgriefing", "false"]
+## /gamerule mobgriefing true
+  60082 watcher GameRulesChanged mobGriefing=Bool(true)
+  60082 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"mobgriefing\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  60082 actor   GameRulesChanged mobGriefing=Bool(true)
+  60082 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["mobgriefing", "true"]
+## /gamerule pvp true
+  61083 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["pvp", "true"]
+  61083 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"pvp\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule pvp false
+  62086 actor   GameRulesChanged pvp=Bool(false)
+  62086 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["pvp", "false"]
+  62086 watcher GameRulesChanged pvp=Bool(false)
+  62086 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"pvp\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule pvp false
+  63081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"pvp\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  63081 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["pvp", "false"]
+## /gamerule pvp true
+  64083 actor   GameRulesChanged pvp=Bool(true)
+  64083 watcher GameRulesChanged pvp=Bool(true)
+  64083 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["pvp", "true"]
+  64083 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"pvp\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showcoordinates false
+  65090 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showcoordinates\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  65090 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showcoordinates", "false"]
+## /gamerule showcoordinates true
+  66092 actor   GameRulesChanged showCoordinates=Bool(true)
+  66092 watcher GameRulesChanged showCoordinates=Bool(true)
+  66092 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showcoordinates\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  66092 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showcoordinates", "true"]
+## /gamerule showcoordinates true
+  67084 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showcoordinates\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  67084 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showcoordinates", "true"]
+## /gamerule showcoordinates false
+  68094 actor   GameRulesChanged showCoordinates=Bool(false)
+  68094 watcher GameRulesChanged showCoordinates=Bool(false)
+  68094 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showcoordinates", "false"]
+  68094 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showcoordinates\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerwaypoints everyone
+  69095 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerwaypoints", "everyone"]
+  69095 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerwaypoints\"},{\"text\":\"everyone\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  69181 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4113, paused: false }] }) }
+  69181 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4113, paused: false }] }) }
+## /gamerule playerwaypoints off
+  70093 actor   GameRulesChanged playerWaypoints=Int(0)
+  70093 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerwaypoints", "off"]
+  70094 watcher GameRulesChanged playerWaypoints=Int(0)
+  70094 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerwaypoints\"},{\"text\":\"off\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerwaypoints off
+  71090 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerwaypoints", "off"]
+  71090 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerwaypoints\"},{\"text\":\"off\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerwaypoints everyone
+  72092 watcher GameRulesChanged playerWaypoints=Int(1)
+  72092 actor   GameRulesChanged playerWaypoints=Int(1)
+  72092 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerwaypoints", "everyone"]
+  72092 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerwaypoints\"},{\"text\":\"everyone\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showdaysplayed false
+  73094 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showdaysplayed", "false"]
+  73094 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showdaysplayed\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showdaysplayed true
+  74094 actor   GameRulesChanged showDaysPlayed=Bool(true)
+  74094 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showdaysplayed", "true"]
+  74094 watcher GameRulesChanged showDaysPlayed=Bool(true)
+  74094 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showdaysplayed\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showdaysplayed true
+  75094 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showdaysplayed", "true"]
+  75094 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showdaysplayed\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showdaysplayed false
+  76100 actor   GameRulesChanged showDaysPlayed=Bool(false)
+  76100 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showdaysplayed", "false"]
+  76100 watcher GameRulesChanged showDaysPlayed=Bool(false)
+  76100 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showdaysplayed\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule naturalregeneration true
+  77105 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"naturalregeneration\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  77105 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["naturalregeneration", "true"]
+## /gamerule naturalregeneration false
+  78104 actor   GameRulesChanged naturalRegeneration=Bool(false)
+  78104 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["naturalregeneration", "false"]
+  78104 watcher GameRulesChanged naturalRegeneration=Bool(false)
+  78104 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"naturalregeneration\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule naturalregeneration false
+  79107 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"naturalregeneration\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  79107 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["naturalregeneration", "false"]
+## /gamerule naturalregeneration true
+  80105 actor   GameRulesChanged naturalRegeneration=Bool(true)
+  80105 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["naturalregeneration", "true"]
+  80105 watcher GameRulesChanged naturalRegeneration=Bool(true)
+  80105 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"naturalregeneration\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule tntexplodes true
+  81108 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["tntexplodes", "true"]
+  81108 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"tntexplodes\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  81983 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4369, paused: false }] }) }
+  81984 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4369, paused: false }] }) }
+## /gamerule tntexplodes false
+  82113 actor   GameRulesChanged tntExplodes=Bool(false)
+  82113 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["tntexplodes", "false"]
+  82113 watcher GameRulesChanged tntExplodes=Bool(false)
+  82113 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"tntexplodes\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule tntexplodes false
+  83108 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["tntexplodes", "false"]
+  83108 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"tntexplodes\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule tntexplodes true
+  84111 watcher GameRulesChanged tntExplodes=Bool(true)
+  84111 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"tntexplodes\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  84111 actor   GameRulesChanged tntExplodes=Bool(true)
+  84111 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["tntexplodes", "true"]
+## /gamerule maxcommandchainlength 65535
+  85113 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"maxcommandchainlength\"},{\"text\":\"65535\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  85113 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["maxcommandchainlength", "65535"]
+## /gamerule maxcommandchainlength 5
+  86113 actor   GameRulesChanged maxCommandChainLength=Int(5)
+  86113 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["maxcommandchainlength", "5"]
+  86113 watcher GameRulesChanged maxCommandChainLength=Int(5)
+  86113 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"maxcommandchainlength\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule maxcommandchainlength 5
+  87110 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"maxcommandchainlength\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  87110 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["maxcommandchainlength", "5"]
+## /gamerule maxcommandchainlength 65535
+  88117 actor   GameRulesChanged maxCommandChainLength=Int(65535)
+  88117 watcher GameRulesChanged maxCommandChainLength=Int(65535)
+  88117 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["maxcommandchainlength", "65535"]
+  88117 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"maxcommandchainlength\"},{\"text\":\"65535\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doinsomnia true
+  89113 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doinsomnia", "true"]
+  89114 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doinsomnia\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doinsomnia false
+  90119 watcher GameRulesChanged doInsomnia=Bool(false)
+  90119 actor   GameRulesChanged doInsomnia=Bool(false)
+  90119 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doinsomnia\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  90119 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doinsomnia", "false"]
+## /gamerule doinsomnia false
+  91115 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doinsomnia", "false"]
+  91115 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doinsomnia\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doinsomnia true
+  92122 actor   GameRulesChanged doInsomnia=Bool(true)
+  92122 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doinsomnia", "true"]
+  92122 watcher GameRulesChanged doInsomnia=Bool(true)
+  92122 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doinsomnia\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule commandblocksenabled true
+  93119 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblocksenabled", "true"]
+  93119 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblocksenabled\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule commandblocksenabled false
+  94123 actor   GameRulesChanged commandBlocksEnabled=Bool(false)
+  94133 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblocksenabled", "false"]
+  94133 watcher GameRulesChanged commandBlocksEnabled=Bool(false)
+  94133 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblocksenabled\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  94784 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4625, paused: false }] }) }
+  94784 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4625, paused: false }] }) }
+## /gamerule commandblocksenabled false
+  95120 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblocksenabled", "false"]
+  95120 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblocksenabled\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule commandblocksenabled true
+  96126 actor   GameRulesChanged commandBlocksEnabled=Bool(true)
+  96126 watcher GameRulesChanged commandBlocksEnabled=Bool(true)
+  96126 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblocksenabled\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  96127 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblocksenabled", "true"]
+## /gamerule randomtickspeed 1
+  97121 actor   GameRulesChanged randomTickSpeed=Int(1)
+  97121 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "1"]
+  97121 watcher GameRulesChanged randomTickSpeed=Int(1)
+  97121 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed 0
+  98123 actor   GameRulesChanged randomTickSpeed=Int(0)
+  98123 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+  98123 watcher GameRulesChanged randomTickSpeed=Int(0)
+  98123 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed 0
+  99124 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+  99143 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed 1
+ 100130 actor   GameRulesChanged randomTickSpeed=Int(1)
+ 100130 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "1"]
+ 100130 watcher GameRulesChanged randomTickSpeed=Int(1)
+ 100130 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doimmediaterespawn false
+ 101133 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doimmediaterespawn", "false"]
+ 101133 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doimmediaterespawn\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doimmediaterespawn true
+ 102134 actor   GameRulesChanged doImmediateRespawn=Bool(true)
+ 102134 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doimmediaterespawn", "true"]
+ 102134 watcher GameRulesChanged doImmediateRespawn=Bool(true)
+ 102134 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doimmediaterespawn\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doimmediaterespawn true
+ 103134 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doimmediaterespawn", "true"]
+ 103134 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doimmediaterespawn\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule doimmediaterespawn false
+ 104134 actor   GameRulesChanged doImmediateRespawn=Bool(false)
+ 104149 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doimmediaterespawn", "false"]
+ 104149 watcher GameRulesChanged doImmediateRespawn=Bool(false)
+ 104149 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doimmediaterespawn\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showdeathmessages true
+ 105134 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showdeathmessages", "true"]
+ 105134 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showdeathmessages\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showdeathmessages false
+ 106136 actor   GameRulesChanged showDeathMessages=Bool(false)
+ 106136 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showdeathmessages", "false"]
+ 106136 watcher GameRulesChanged showDeathMessages=Bool(false)
+ 106136 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showdeathmessages\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showdeathmessages false
+ 107134 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showdeathmessages", "false"]
+ 107134 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showdeathmessages\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 107583 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4881, paused: false }] }) }
+ 107583 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4881, paused: false }] }) }
+## /gamerule showdeathmessages true
+ 108139 actor   GameRulesChanged showDeathMessages=Bool(true)
+ 108139 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showdeathmessages", "true"]
+ 108139 watcher GameRulesChanged showDeathMessages=Bool(true)
+ 108139 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showdeathmessages\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule functioncommandlimit 10000
+ 109134 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["functioncommandlimit", "10000"]
+ 109134 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"functioncommandlimit\"},{\"text\":\"10000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule functioncommandlimit 5
+ 110134 actor   GameRulesChanged functionCommandLimit=Int(5)
+ 110135 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["functioncommandlimit", "5"]
+ 110135 watcher GameRulesChanged functionCommandLimit=Int(5)
+ 110135 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"functioncommandlimit\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule functioncommandlimit 5
+ 111136 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["functioncommandlimit", "5"]
+ 111136 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"functioncommandlimit\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule functioncommandlimit 10000
+ 112143 actor   GameRulesChanged functionCommandLimit=Int(10000)
+ 112143 watcher GameRulesChanged functionCommandLimit=Int(10000)
+ 112143 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"functioncommandlimit\"},{\"text\":\"10000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 112143 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["functioncommandlimit", "10000"]
+## /gamerule spawnradius 10
+ 113141 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["spawnradius", "10"]
+ 113141 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"spawnradius\"},{\"text\":\"10\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule spawnradius 5
+ 114143 watcher GameRulesChanged spawnRadius=Int(5)
+ 114143 actor   GameRulesChanged spawnRadius=Int(5)
+ 114143 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"spawnradius\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 114143 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["spawnradius", "5"]
+## /gamerule spawnradius 5
+ 115144 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["spawnradius", "5"]
+ 115144 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"spawnradius\"},{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule spawnradius 10
+ 116148 actor   GameRulesChanged spawnRadius=Int(10)
+ 116148 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["spawnradius", "10"]
+ 116148 watcher GameRulesChanged spawnRadius=Int(10)
+ 116148 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"spawnradius\"},{\"text\":\"10\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showtags true
+ 117149 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showtags", "true"]
+ 117149 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showtags\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showtags false
+ 118153 watcher GameRulesChanged showTags=Bool(false)
+ 118153 actor   GameRulesChanged showTags=Bool(false)
+ 118153 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showtags\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 118153 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showtags", "false"]
+## /gamerule showtags false
+ 119153 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showtags", "false"]
+ 119153 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showtags\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showtags true
+ 120153 actor   GameRulesChanged showTags=Bool(true)
+ 120162 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showtags", "true"]
+ 120163 watcher GameRulesChanged showTags=Bool(true)
+ 120163 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showtags\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 120384 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5137, paused: false }] }) }
+ 120384 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5137, paused: false }] }) }
+## /gamerule freezedamage true
+ 121154 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["freezedamage", "true"]
+ 121154 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"freezedamage\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule freezedamage false
+ 122150 actor   GameRulesChanged freezeDamage=Bool(false)
+ 122150 watcher GameRulesChanged freezeDamage=Bool(false)
+ 122150 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"freezedamage\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 122150 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["freezedamage", "false"]
+## /gamerule freezedamage false
+ 123154 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"freezedamage\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 123154 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["freezedamage", "false"]
+## /gamerule freezedamage true
+ 124158 actor   GameRulesChanged freezeDamage=Bool(true)
+ 124158 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["freezedamage", "true"]
+ 124158 watcher GameRulesChanged freezeDamage=Bool(true)
+ 124158 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"freezedamage\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule respawnblocksexplode true
+ 125163 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"respawnblocksexplode\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 125163 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["respawnblocksexplode", "true"]
+## /gamerule respawnblocksexplode false
+ 126154 actor   GameRulesChanged respawnBlocksExplode=Bool(false)
+ 126154 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["respawnblocksexplode", "false"]
+ 126154 watcher GameRulesChanged respawnBlocksExplode=Bool(false)
+ 126154 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"respawnblocksexplode\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule respawnblocksexplode false
+ 127159 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["respawnblocksexplode", "false"]
+ 127160 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"respawnblocksexplode\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule respawnblocksexplode true
+ 128162 actor   GameRulesChanged respawnBlocksExplode=Bool(true)
+ 128162 watcher GameRulesChanged respawnBlocksExplode=Bool(true)
+ 128162 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"respawnblocksexplode\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 128162 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["respawnblocksexplode", "true"]
+## /gamerule showborderEffect true
+ 129158 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showborderEffect", "true"]
+ 129158 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showborderEffect\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showborderEffect false
+ 130164 actor   GameRulesChanged showBorderEffect=Bool(false)
+ 130164 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showborderEffect", "false"]
+ 130164 watcher GameRulesChanged showBorderEffect=Bool(false)
+ 130164 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showborderEffect\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showborderEffect false
+ 131165 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showborderEffect", "false"]
+ 131165 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showborderEffect\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showborderEffect true
+ 132164 actor   GameRulesChanged showBorderEffect=Bool(true)
+ 132164 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showborderEffect", "true"]
+ 132164 watcher GameRulesChanged showBorderEffect=Bool(true)
+ 132164 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showborderEffect\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showrecipemessages true
+ 133163 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showrecipemessages", "true"]
+ 133163 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showrecipemessages\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 133188 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5393, paused: false }] }) }
+ 133188 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5393, paused: false }] }) }
+## /gamerule showrecipemessages false
+ 134164 actor   GameRulesChanged showRecipeMessages=Bool(false)
+ 134164 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showrecipemessages", "false"]
+ 134164 watcher GameRulesChanged showRecipeMessages=Bool(false)
+ 134164 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showrecipemessages\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showrecipemessages false
+ 135164 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showrecipemessages", "false"]
+ 135164 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showrecipemessages\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule showrecipemessages true
+ 136169 watcher GameRulesChanged showRecipeMessages=Bool(true)
+ 136186 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"showrecipemessages\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 136186 actor   GameRulesChanged showRecipeMessages=Bool(true)
+ 136186 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["showrecipemessages", "true"]
+## /gamerule playerssleepingpercentage 100
+ 137171 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerssleepingpercentage", "100"]
+ 137171 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerssleepingpercentage\"},{\"text\":\"100\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerssleepingpercentage 50
+ 138173 actor   GameRulesChanged playersSleepingPercentage=Int(50)
+ 138173 watcher GameRulesChanged playersSleepingPercentage=Int(50)
+ 138173 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerssleepingpercentage", "50"]
+ 138173 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerssleepingpercentage\"},{\"text\":\"50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerssleepingpercentage 50
+ 139174 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerssleepingpercentage", "50"]
+ 139174 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerssleepingpercentage\"},{\"text\":\"50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule playerssleepingpercentage 100
+ 140173 actor   GameRulesChanged playersSleepingPercentage=Int(100)
+ 140173 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["playerssleepingpercentage", "100"]
+ 140173 watcher GameRulesChanged playersSleepingPercentage=Int(100)
+ 140173 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"playerssleepingpercentage\"},{\"text\":\"100\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule projectilescanbreakblocks true
+ 141178 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["projectilescanbreakblocks", "true"]
+ 141178 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"projectilescanbreakblocks\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule projectilescanbreakblocks false
+ 142176 actor   GameRulesChanged projectilesCanBreakBlocks=Bool(false)
+ 142176 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["projectilescanbreakblocks", "false"]
+ 142176 watcher GameRulesChanged projectilesCanBreakBlocks=Bool(false)
+ 142176 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"projectilescanbreakblocks\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule projectilescanbreakblocks false
+ 143173 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["projectilescanbreakblocks", "false"]
+ 143173 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"projectilescanbreakblocks\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule projectilescanbreakblocks true
+ 144180 actor   GameRulesChanged projectilesCanBreakBlocks=Bool(true)
+ 144180 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["projectilescanbreakblocks", "true"]
+ 144180 watcher GameRulesChanged projectilesCanBreakBlocks=Bool(true)
+ 144180 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"projectilescanbreakblocks\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule tntexplosiondropdecay false
+ 145184 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["tntexplosiondropdecay", "false"]
+ 145184 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"tntexplosiondropdecay\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 145984 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5649, paused: false }] }) }
+ 145984 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5649, paused: false }] }) }
+## /gamerule tntexplosiondropdecay true
+ 146184 actor   GameRulesChanged tntExplosionDropDecay=Bool(true)
+ 146184 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["tntexplosiondropdecay", "true"]
+ 146184 watcher GameRulesChanged tntExplosionDropDecay=Bool(true)
+ 146184 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"tntexplosiondropdecay\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule tntexplosiondropdecay true
+ 147183 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["tntexplosiondropdecay", "true"]
+ 147200 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"tntexplosiondropdecay\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule tntexplosiondropdecay false
+ 148183 actor   GameRulesChanged tntExplosionDropDecay=Bool(false)
+ 148183 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["tntexplosiondropdecay", "false"]
+ 148183 watcher GameRulesChanged tntExplosionDropDecay=Bool(false)
+ 148183 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"tntexplosiondropdecay\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule sendcommandfeedback true
+ 149181 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["sendcommandfeedback", "true"]
+ 149181 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"sendcommandfeedback\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule sendcommandfeedback false
+ 150189 actor   GameRulesChanged sendCommandFeedback=Bool(false)
+ 150189 watcher GameRulesChanged sendCommandFeedback=Bool(false)
+## /gamerule sendcommandfeedback false
+## /gamerule sendcommandfeedback true
+ 152185 watcher GameRulesChanged sendCommandFeedback=Bool(true)
+ 152185 actor   GameRulesChanged sendCommandFeedback=Bool(true)
+ 152185 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["sendcommandfeedback", "true"]
+ 152185 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"sendcommandfeedback\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule
+ 153184 actor   CommandOutput success_count=1 data=None commandBlockOutput = true, doDayLightCycle = true, doEntityDrops = true, doFireTick = true, recipesUnlock = true, doLimitedCrafting = false, doMobLoot = true, doMobSpawning = true, doTileDrops = true, doWeatherCycle = true, drowningDamage = true, fallDamage = true, fireDamage = true, keepInventory = false, mobGriefing = true, pvp = true, showCoordinates = false, playerWaypoints = everyone, locatorbar = true, showDaysPlayed = false, naturalRegeneration = true, tntExplodes = true, sendCommandFeedback = true, maxCommandChainLength = 65535, doInsomnia = true, commandBlocksEnabled = true, randomTickSpeed = 1, doImmediateRespawn = false, showDeathMessages = true, functionCommandLimit = 10000, spawnRadius = 10, showTags = true, freezeDamage = true, respawnBlocksExplode = true, showBorderEffect = true, showRecipeMessages = true, playersSleepingPercentage = 100, projectilesCanBreakBlocks = true, tntExplosionDropDecay = false success=true []
+ 153184 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commandBlockOutput = true, doDayLightCycle = true, doEntityDrops = true, doFireTick = true, recipesUnlock = true, doLimitedCrafting = false, doMobLoot = true, doMobSpawning = true, doTileDrops = true, doWeatherCycle = true, drowningDamage = true, fallDamage = true, fireDamage = true, keepInventory = false, mobGriefing = true, pvp = true, showCoordinates = false, playerWaypoints = everyone, locatorbar = true, showDaysPlayed = false, naturalRegeneration = true, tntExplodes = true, sendCommandFeedback = true, maxCommandChainLength = 65535, doInsomnia = true, commandBlocksEnabled = true, randomTickSpeed = 1, doImmediateRespawn = false, showDeathMessages = true, functionCommandLimit = 10000, spawnRadius = 10, showTags = true, freezeDamage = true, respawnBlocksExplode = true, showBorderEffect = true, showRecipeMessages = true, playersSleepingPercentage = 100, projectilesCanBreakBlocks = true, tntExplosionDropDecay = false\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+probe exit 0
