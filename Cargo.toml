@@ -21,18 +21,18 @@ sapling-worldgen = { path = "crates/sapling-worldgen" }
 
 # acacia at one commit of its `master`: bump every `rev` together. To build against a checkout
 # beside this one instead, see docs/DESIGN.md "Building against a local acacia".
-acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123", default-features = false }
-acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
-acacia-physics = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123", features = ["acacia-world"] }
-acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
-acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
-acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
-acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
-acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f", default-features = false }
+acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
+acacia-physics = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f", features = ["acacia-world"] }
+acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
+acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
+acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
+acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
+acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
 # Test clients and the recorded BDS join (dev-dependencies only).
-acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
-acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
-acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
+acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
+acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
 
 base64 = "0.22"
 bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }
@@ -50,6 +50,8 @@ sha2 = "0.10"
 socket2 = "0.6"
 thiserror = "2.0.21"
 tokio = { version = "1.53.1", features = ["rt", "net", "time", "macros", "sync"] }
+# HTTPS NetherNet signaling; ring, as reqwest's rustls already builds.
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12", "logging"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 uuid = "1"
