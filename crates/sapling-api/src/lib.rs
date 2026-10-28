@@ -24,6 +24,7 @@ mod listen;
 mod loot;
 mod movement;
 mod player;
+mod player_event;
 mod plugin;
 mod riding;
 mod scoreboard;
@@ -76,6 +77,7 @@ pub use hud::{BossBar, BossBarColour, Sidebar, Title, TitleAction, TitleBackend}
 pub use screen::{Animation, Camera, Music, RecipeChange, ScreenAction};
 pub use sound::{Sound, SoundBackend};
 pub use item::{DropEvent, Item, ItemLock, Slot};
+pub use player_event::{GameModeChangeEvent, HeldSlotChangeEvent, JumpEvent, PunchAirEvent, SkinChangeEvent, TeleportEvent, ToggleSneakEvent, ToggleSprintEvent};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use tags::{TagBackend, Tagged};
 pub use scoreboard::{Display, DisplaySlot, Objective, ScoreHolder, ScoreOperation, ScoreboardBackend, SortOrder};

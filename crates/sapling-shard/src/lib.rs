@@ -59,6 +59,7 @@ mod orbs;
 mod packs;
 mod paintings;
 mod player;
+mod player_events;
 mod plugins;
 mod portals;
 mod riding;

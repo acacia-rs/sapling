@@ -154,7 +154,8 @@ impl Backend for Ctx<'_> {
     }
 
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
-        if let Some(entity) = self.entity(player).filter(|_| feet.iter().all(|c| c.is_finite())) {
+        let entity = self.entity(player).filter(|_| feet.iter().all(|c| c.is_finite()));
+        if let Some(entity) = entity.filter(|entity| crate::player_events::may_teleport(self.world, *entity, feet)) {
             crate::sleep::teleport_waking(self.world, entity, feet);
         }
     }

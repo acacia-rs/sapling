@@ -102,6 +102,7 @@ impl Shard {
         world.init_resource::<Deferred>();
         world.init_resource::<plugins::ScriptEvents>();
         world.init_resource::<crate::movement::Moves>();
+        world.init_resource::<crate::player_events::Inputs>();
         Self { world, schedule, after_handlers, inbox, mailbox: link.mailbox, meter: TickMeter::new(link.index) }
     }
 

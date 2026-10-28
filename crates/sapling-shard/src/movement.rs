@@ -149,6 +149,7 @@ pub(crate) fn player_input(
     settings: Res<Settings>,
     mut blocks: ResMut<BlockInputs>,
     mut moves: ResMut<Moves>,
+    mut inputs: ResMut<crate::player_events::Inputs>,
     layers: Query<&Layer>,
     mut players: Query<Mover>,
 ) {
@@ -200,7 +201,9 @@ pub(crate) fn player_input(
             motion.unconfirmed_teleport = Some(tick.0 + SETBACK_TICKS);
             continue;
         }
+        let before = motion.pose;
         motion.pose.apply(&input.input_data);
+        inputs.record(entity, before, motion.pose, &input.input_data);
         motion.glide_asked = pose::glide_asked(&input.input_data).or(motion.glide_asked);
         motion.delta = [input.delta.x, input.delta.y, input.delta.z];
         motion.jumps = motion.jumps.saturating_add(input.input_data.iter().filter(|flag| **flag == InputData::StartJumping).count() as u8);
