@@ -184,6 +184,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     super::bubbles::written(world, layer, pos);
     super::coral::written(world, layer, pos);
     super::sponge::written(world, layer, pos);
+    super::eggs::written(world, layer, pos, was, now);
     super::ores::written(world, layer, pos);
     super::growth::written(world, layer, pos);
     super::leaves::written(world, layer, pos, old);

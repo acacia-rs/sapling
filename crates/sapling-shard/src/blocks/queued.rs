@@ -36,6 +36,8 @@ pub(crate) enum Job {
     Coral,
     /// A sponge soaks up water, or a wet one dries in the Nether (sponge.rs).
     Sponge,
+    /// A turtle egg, frogspawn or sniffer egg cracks or hatches (eggs.rs).
+    Hatch,
 }
 
 #[derive(Resource, Default)]
@@ -87,6 +89,7 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
         "lectern" => Job::Lectern,
         "command_block" | "repeating_command_block" | "chain_command_block" => Job::Command,
         name if super::coral::is_live(&format!("minecraft:{name}")) => Job::Coral,
+        name if super::eggs::is_egg(&format!("minecraft:{name}")) => Job::Hatch,
         _ => return None,
     })
 }
@@ -131,5 +134,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Command => super::command_blocks::tick(world, layer, pos),
         Job::Coral => super::coral::die(world, layer, pos),
         Job::Sponge => super::sponge::ticked(world, layer, pos),
+        Job::Hatch => super::eggs::ticked(world, layer, pos),
     }
 }
