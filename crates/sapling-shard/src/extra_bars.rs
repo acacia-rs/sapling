@@ -30,8 +30,6 @@ pub(crate) struct ExtraBars(BTreeMap<BarKey, Shown>);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum BarKey {
     Plugin(u32),
-    // TODO: creatures/raids (on master, not this branch) should show its bar under this key.
-    #[allow(dead_code)]
     Raid,
 }
 
