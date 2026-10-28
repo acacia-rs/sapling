@@ -78,8 +78,20 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
   a 3x4 footing then the frame alone, nearest to the arriving place; the frame 4x5 with the inside
   2x3, listed along the frame from the bottom; the first direction tried is `next & 3` of an MT19937
   seeded with the world seed's low 32 bits (four portals made in a row went 0, 2, 2, 0, as MT(20261018)
-  draws; MT(0) would give 0, 3, 1, 0); no site: a 3x2 obsidian platform at y clamped to 70..height-10 with
-  netherrack under the 10 air cells round it.
+  draws; MT(0) would give 0, 3, 1, 0). Measured from the player's position, its eyes.
+- Empty cell of the site search (new-version branch of `force`): not a liquid (Material `mLiquid`), no
+  liquid in its extra layer, and `BlockType::canBeBuiltOver` (vtable slot 83, default 141a25540: the
+  replaceable block component; no block type overrides it). sapling: `blocks::place::built_over`. BDS
+  builds over leaf litter and over snow three layers high (bds-portal-voids.txt); footing is a solid material.
+- No site (bds-portal-voids.txt, -collide.txt): direction 0, y = eyes clamped to 70..height-10; a 3x2
+  obsidian platform at y-1 with air above it to y+2, then netherrack where the 10 cells round it under
+  the floor are air, a row across at a time, both with flags 3; then the frame, flags 2.
+- Section order: one UpdateSubchunkBlocks per section from `Dimension::mBlocksChangedBySubChunkMap`
+  (an unordered_map: insert `onBlockChanged` 1418869d0, flushed and cleared in `Dimension::tick`
+  14187f9c0), one cell alone as UpdateBlock. Captured, the section touched last goes first in six of seven
+  made or lit portals across a boundary; the seventh (-collide.txt, x 1935) sent (121,4), (120,5), (120,4)
+  for first touches (120,4), (121,4), (120,5). The map's list order with the decompiled hash fits neither,
+  for any bucket count. sapling sends Nether portal sections last touched first.
 
 ## sapling against the same drills
 
@@ -96,9 +108,10 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
 
 ## Left
 
-- No drill made the no-site fallback (platform plus a netherrack ring round it, from the decompile only);
-  spectators in portals (the End: end-dimension.md), `/execute` beyond `in <dimension> run tp`, and BDS's per-tick UpdateSubchunkBlocks batching of
-  other block changes.
-- The empty-cell rule of the site search asks BDS's "can be replaced"; sapling uses a list of plants and fire.
-- Sections of one made portal reach the client in BDS's order (upper section first in one capture),
-  sapling's in cell order.
+- Spectators in portals (the End: end-dimension.md), `/execute` beyond `in <dimension> run tp`, and BDS's
+  per-tick UpdateSubchunkBlocks batching of other block changes.
+- Section order where it is not last-touched-first (-collide.txt x 1935): what puts the second section
+  ahead. A breakpoint on `onBlockChanged` would show the real touch order. A lit 21x21 frame is written
+  flood-like in BDS, and column by column in sapling, so its four sections and cells differ in order
+  (bds-portal-sections.txt; the frames along x did not light there). A broken sheet's sections go out
+  first-touched-first, unmeasured.

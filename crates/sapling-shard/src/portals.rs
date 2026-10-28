@@ -110,7 +110,7 @@ pub(crate) fn translate([x, y, z]: [f32; 3], to: i32) -> [f32; 3] {
 
 /// Starts a player's trip through the portal it stands in.
 fn depart(world: &mut World, player: Entity) {
-    let (Some(layer), Some(feet)) = (world.get::<InLayer>(player).map(|l| l.0), world.get::<Position>(player).map(|p| p.feet)) else { return };
+    let (Some(layer), Some((feet, look))) = (world.get::<InLayer>(player).map(|l| l.0), world.get::<Position>(player).map(|p| (p.feet, [p.yaw, p.pitch]))) else { return };
     let Some(from) = world.get::<Layer>(layer).map(|level| level.world.dimension()) else { return };
     let to = match from {
         OVERWORLD => NETHER,
@@ -126,7 +126,7 @@ fn depart(world: &mut World, player: Entity) {
     let place = found.map_or(scaled, |(_, cell)| cell.map(|c| c as f32 + 0.5));
     dimensions::travel(world, player, target, place);
     if let Some(mut arriving) = world.get_mut::<Arriving>(player) {
-        arriving.trip = Some(Trip { entrance, from });
+        arriving.trip = Some(Trip { entrance, from, look });
     }
     if let Some(mut time) = world.get_mut::<PortalTime>(player) {
         time.cooldown = AFTER_TRIP;

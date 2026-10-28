@@ -4,6 +4,7 @@
 //! Then MovePlayer mode Reset and the word to leave the loading screen, then the new portal.
 
 use bevy_ecs::prelude::*;
+use sapling_data::EYE_HEIGHT;
 use sapling_world::{ChunkPos, NETHER, PortalRecord};
 
 use super::draws::Directions;
@@ -13,6 +14,8 @@ use crate::blocks::portals::{self as blocks, build, shape};
 use crate::components::{InLayer, Layer, NetId, Outgoing, Position};
 use crate::dimensions::{self, Arriving};
 use crate::movement;
+use crate::chunks;
+use crate::view::View;
 
 /// Columns this far round the place must be loaded before it is settled (BDS waits on 32 blocks).
 const LOADED_REACH: i32 = 2;
@@ -38,7 +41,9 @@ pub(crate) fn arrive(world: &mut World) {
     let due: Vec<(Entity, Trip)> = world.query::<(Entity, &Arriving)>().iter(world).filter(|(_, arriving)| !arriving.told_ready).filter_map(|(player, arriving)| Some((player, arriving.trip?))).collect();
     for (player, trip) in due {
         let (Some(layer), Some(at)) = (world.get::<InLayer>(player).map(|l| l.0), world.get::<Position>(player).map(|p| p.feet)) else { continue };
-        if !loaded_round(world, layer, at) {
+        // BDS shows the made portal to a client that holds the columns round it (bds-portal-voids.txt).
+        let sent = world.get::<View>(player).is_some_and(chunks::spawn_columns_sent);
+        if !loaded_round(world, layer, at) || !sent {
             continue;
         }
         settle(world, player, layer, at, trip);
@@ -72,12 +77,16 @@ fn settle(world: &mut World, player: Entity, layer: Entity, at: [f32; 3], trip: 
     let (exit, cell, made) = match found {
         Some((record, cell)) => (record, cell, Vec::new()),
         None => {
-            let Some((record, cells)) = make(world, layer, at) else { return };
+            // BDS measures from a player's position, its eyes (the platform's y in bds-portal-voids.txt).
+            let Some((record, cells)) = make(world, layer, [at[0], at[1] + EYE_HEIGHT, at[2]]) else { return };
             (record, record.corner, cells)
         }
     };
     let feet = placed(&exit, cell, came_by);
-    let yaw = world.get::<Position>(player).map_or(0.0, |position| position.yaw);
+    let [yaw, pitch] = trip.look;
+    if let Some(mut position) = world.get_mut::<Position>(player) {
+        position.pitch = pitch;
+    }
     // A portal of the other axis turns the traveller with it.
     let turn = match came_by {
         Some((entered, _)) if entered.along_x != exit.along_x => if dimension == NETHER { 90.0 } else { -90.0 },
@@ -92,13 +101,13 @@ fn settle(world: &mut World, player: Entity, layer: Entity, at: [f32; 3], trip: 
         out.push(&dimensions::ready(id));
     }
     if !made.is_empty() {
-        blocks::write_shown(world, layer, &made);
+        blocks::write_shown_nether(world, layer, &made);
     }
 }
 
-/// Makes a portal for a traveller arriving at `at`: its record and the cells to write, which
-/// [`settle`] shows after the traveller is told it is there.
-fn make(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<(PortalRecord, Vec<([i32; 3], u32)>)> {
+/// Makes a portal for a traveller whose eyes arrive at `at`: its record and the cells to write
+/// with their update flags, which [`settle`] shows after the traveller is told it is there.
+fn make(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<(PortalRecord, Vec<([i32; 3], u32, u32)>)> {
     let home = dimensions::home(world, layer);
     let seed = world.get::<Layer>(home)?.world.level().seed;
     let start = world.get_resource_or_insert_with(Directions::default).draw(home, seed);
@@ -107,14 +116,15 @@ fn make(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<(PortalRecord,
     let obsidian = level.registry().find("minecraft:obsidian", "")?;
     let portal = blocks::portal_id(level, site.axis())?;
     let air = level.registry().air_id();
-    let mut cells: Vec<([i32; 3], u32)> = Vec::new();
+    let mut cells: Vec<([i32; 3], u32, u32)> = Vec::new();
     if site.platform {
-        cells.extend(site.platform_cells().into_iter().map(|(pos, solid)| (pos, if solid { obsidian } else { air })));
+        let floor = blocks::NEIGHBOURS_AND_NETWORK;
+        cells.extend(site.platform_cells().into_iter().map(|(pos, solid)| (pos, if solid { obsidian } else { air }, floor)));
         let netherrack = level.registry().find("minecraft:netherrack", "")?;
         let is_air = |[x, y, z]: [i32; 3]| level.in_height(y) && level.block(x, y, z) == air;
-        cells.extend(site.ring_cells().into_iter().filter(|pos| is_air(*pos)).map(|pos| (pos, netherrack)));
+        cells.extend(site.ring_cells().into_iter().filter(|pos| is_air(*pos)).map(|pos| (pos, netherrack, floor)));
     }
-    cells.extend(site.frame_cells().into_iter().map(|(pos, frame)| (pos, if frame { obsidian } else { portal })));
+    cells.extend(site.frame_cells().into_iter().map(|(pos, frame)| (pos, if frame { obsidian } else { portal }, blocks::NETWORK)));
     let shape = shape::Shape { axis: site.axis(), corner: site.corner(), width: 2, height: 3 };
     let dimension = level.dimension();
     blocks::keep(world, layer, &shape);

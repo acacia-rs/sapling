@@ -52,11 +52,13 @@ pub(crate) struct Arriving {
 }
 
 /// A trip through a portal on its way: where the traveller stood (its eyes, as BDS keeps a
-/// player's place) and in which dimension.
+/// player's place), in which dimension, and its look then (yaw, pitch), which BDS keeps through
+/// the loading screen (bds-portal-makes.txt).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Trip {
     pub entrance: [f32; 3],
     pub from: i32,
+    pub look: [f32; 2],
 }
 
 /// Makes `member` a dimension of the realm of `overworld`.

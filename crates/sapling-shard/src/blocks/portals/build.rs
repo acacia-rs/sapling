@@ -63,11 +63,11 @@ impl Site {
         cells
     }
 
-    /// The netherrack round the platform, under the floor: where BDS puts it if the cell is air.
+    /// The netherrack round the platform, under the floor: where BDS puts it if the cell is air,
+    /// in its order, a row across at a time.
     pub fn ring_cells(&self) -> Vec<BlockPos> {
-        let ends = [-2, 2].into_iter().flat_map(|across| (0..2).map(move |along| (along, across)));
-        let sides = (-1..=1).flat_map(|across| [-1, 2].map(|along| (along, across)));
-        ends.chain(sides).map(|(along, across)| self.cell(along, across, -1)).collect()
+        let alongs = |across: i32| if across.abs() == 2 { [0, 1] } else { [-1, 2] };
+        (-2..=2).flat_map(|across| alongs(across).map(|along| self.cell(along, across, -1))).collect()
     }
 
     /// The frame (true) and the inside, in the order BDS lists them: along the frame, each
