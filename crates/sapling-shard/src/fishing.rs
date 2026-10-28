@@ -12,9 +12,10 @@ use acacia_proto::packets::{CompletedUsingItem, CompletedUsingItemUseMethod};
 use bevy_ecs::prelude::*;
 use sapling_world::ItemStack;
 
-use crate::components::{InLayer, Outgoing, Position, Tick};
+use crate::components::{InLayer, NetId, Outgoing, Position, Tick};
 use crate::inventory::Inventory;
-use crate::mobs;
+use crate::vitals::eating;
+use crate::{entities, mobs};
 
 const ROD: &str = "minecraft:fishing_rod";
 const HOOK: &str = "minecraft:fishing_hook";
@@ -47,6 +48,10 @@ pub(crate) struct Hook {
 #[derive(Component, Clone, Copy)]
 pub(crate) struct Line(Entity);
 
+/// The tick a player used a rod: it shows using an item until the next (bds-fish.txt).
+#[derive(Component)]
+struct RodUsed(u64);
+
 /// A click in the air with a rod: a hook out comes back, else one is cast; true where the hand
 /// held a rod. Either way BDS ends the use and shows the player its whole inventory.
 pub(crate) fn use_rod(world: &mut World, player: Entity, stack: &ItemStack) -> bool {
@@ -54,6 +59,9 @@ pub(crate) fn use_rod(world: &mut World, player: Entity, stack: &ItemStack) -> b
         return false;
     }
     let Some(id) = world.get::<Inventory>(player).map(|inventory| crate::inventory::wire(inventory.in_hand(), false).network_id) else { return false };
+    eating::show(world, player, true);
+    let now = world.resource::<Tick>().0;
+    world.entity_mut(player).insert(RodUsed(now));
     match world.get::<Line>(player).copied() {
         Some(Line(hook)) => reel::retrieve(world, player, hook),
         None => cast::cast(world, player),
@@ -89,12 +97,21 @@ fn still_fishing(world: &World, fisher: Entity, layer: Entity, at: [f32; 3]) -> 
 /// A tick of every hook out.
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let hooks: Vec<(Entity, Entity, Entity)> = world.query::<(Entity, &Hook, &InLayer)>().iter(world).filter(|(_, hook, _)| hook.cast < now).map(|(entity, hook, layer)| (entity, hook.fisher, layer.0)).collect();
-    for (hook, fisher, layer) in hooks {
-        let Some(at) = world.get::<crate::body::Body>(hook).map(|body| body.at) else { continue };
+    let used: Vec<Entity> = world.query::<(Entity, &RodUsed)>().iter(world).filter(|(_, used)| used.0 < now).map(|(player, _)| player).collect();
+    for player in used {
+        world.entity_mut(player).remove::<RodUsed>();
+        eating::show(world, player, false);
+    }
+    let hooks: Vec<(Entity, Entity, Entity, u64)> = world.query::<(Entity, &Hook, &InLayer)>().iter(world).filter(|(_, hook, _)| hook.cast < now).map(|(entity, hook, layer)| (entity, hook.fisher, layer.0, hook.cast)).collect();
+    for (hook, fisher, layer, cast) in hooks {
+        let (Some(at), Some(id)) = (world.get::<crate::body::Body>(hook).map(|body| body.at), world.get::<NetId>(hook).map(|id| id.0)) else { continue };
         if !still_fishing(world, fisher, layer, at) {
             remove(world, hook);
             continue;
+        }
+        let appearing = cast::appearing(id, now - cast, at);
+        if !appearing.is_empty() {
+            entities::tell_viewers(world, hook, layer, at.map(|c| c.floor() as i32), appearing);
         }
         bob::tick(world, hook, layer);
     }

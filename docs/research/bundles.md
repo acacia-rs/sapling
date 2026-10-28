@@ -24,8 +24,15 @@ ItemStackRequests from `crates/sapling/examples/shared/bundle_drill.rs`). saplin
   sends InventorySlot `{window 125, slot, container: Dynamic(id), storage_item: the bundle (no stack id),
   item: the slot's stack with its id}` per changed slot (an emptied slot: no item).
 - `/clear` counted no bundle contents.
+- Taking from an empty bundle slot: **status 49**, no containers, nothing resent (bds-bundlekeep.txt, twice).
+- Numbers across a restart (bds-bundlekeep2.txt, KEEP_WORLD): a new bundle after the restart was numbered 0
+  again, so BDS keeps no level counter. The drill's own bundles were cleared before the restart, so whether
+  a player's kept bundle 0 then shares its number with a new one was not seen; sapling skips past the
+  numbers the player holds.
+- After a rejoin sapling sends each numbered bundle's contents as InventoryContent window 125 (no BDS capture
+  of a rejoin with a filled bundle yet).
 
 ## Open
 
 - Shulker boxes in bundles were not drilled (sapling refuses them, as Java does).
-- Taking from an empty bundle slot answered status 49 in an earlier run; sapling answers its usual refusal.
+- A rejoin with a filled bundle on BDS, to confirm the window 125 content sapling sends.

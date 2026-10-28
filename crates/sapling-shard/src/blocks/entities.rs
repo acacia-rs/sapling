@@ -60,6 +60,7 @@ pub(super) fn placed(block: &str, pos: BlockPos, placing: &Placing) -> Option<Va
         "minecraft:flower_pot" => ("FlowerPot", Vec::new()),
         "minecraft:bell" => ("Bell", super::bells::UNRUNG.into()),
         "minecraft:chiseled_bookshelf" => ("ChiseledBookshelf", Vec::new()),
+        "minecraft:beacon" => ("Beacon", vec![("primary", Value::Int(0)), ("secondary", Value::Int(0))]),
         "minecraft:conduit" => ("Conduit", vec![("Active", Value::Byte(0)), ("Target", Value::Long(-1))]),
         "minecraft:cauldron" => {
             let items = Value::List(List { tag: COMPOUND, items: Vec::new() });

@@ -123,7 +123,27 @@ pub fn bundles() -> Vec<String> {
     lines
 }
 
+/// Two bundles given, cobblestone put in the first and taken from its empty slot 5; the items are
+/// left for `bundlekeep2`, run on the same world (KEEP_WORLD=1) after a restart.
+fn bundle_keep() -> Vec<String> {
+    let mut lines = owned(["kill @e[type=!player]", "gamerule domobspawning false", "gamemode survival @s", "clear @s", ""]);
+    lines.extend(owned(["replaceitem entity @s slot.hotbar 0 bundle 1", "replaceitem entity @s slot.hotbar 1 cobblestone 64", "replaceitem entity @s slot.hotbar 4 bundle 1", "", "", "!bundletag"]));
+    lines.extend(owned(["!bundleput 1 10 0", "", "!bundletake 1 6 5", "", "!bundletag", ""]));
+    lines
+}
+
+/// After `bundlekeep`'s restart: what the player kept, and the number a new bundle gets.
+fn bundle_kept() -> Vec<String> {
+    owned(["", "", "!bundletag", "gamemode survival @s", "replaceitem entity @s slot.hotbar 4 bundle 1", "", "", "!bundletag", "!bundletake 1 6 0", "", ""])
+}
+
 /// The lines and shown packets of the bundle drill `name`, if it is one.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
-    (name == "bundles").then(|| (bundles(), BUNDLE_SHOWN))
+    let lines = match name {
+        "bundles" => bundles(),
+        "bundlekeep" => bundle_keep(),
+        "bundlekeep2" => bundle_kept(),
+        _ => return None,
+    };
+    Some((lines, BUNDLE_SHOWN))
 }

@@ -6,7 +6,7 @@
 //! 9 + 2 a level seconds (BDS gave speed 220 ticks on a one-layer pyramid, resent as an Update each
 //! 80 ticks; research/captures/bds-stations.txt). A secondary equal to the primary raises it a level;
 //! otherwise it is regeneration. Which effect each level allows: docs/research/workstations.md.
-// TODO: the beam's way up is not checked, and BDS's `ambient` flag is not told.
+//! A placed beacon gets its entity at once, `{primary 0, secondary 0}` (blocks/entities.rs).
 
 use std::collections::HashSet;
 
@@ -23,6 +23,7 @@ const PAYMENTS: [&str; 5] = ["minecraft:iron_ingot", "minecraft:gold_ingot", "mi
 /// The effects (Bedrock ids) a beacon of at least the level of each row's index + 1 offers first.
 const OFFERED: [&[i32]; 3] = [&[1, 3], &[11, 8], &[5]];
 const REGENERATION: i32 = 10;
+const BEDROCK: &str = "minecraft:bedrock";
 const MAX_LEVEL: i32 = 4;
 
 /// The beacons that give effects.
@@ -68,6 +69,15 @@ pub(crate) fn level(world: &World, layer: Entity, [x, y, z]: BlockPos) -> i32 {
     (1..=MAX_LEVEL).take_while(|&l| (-l..=l).all(|dx| (-l..=l).all(|dz| is_base([x + dx, y - l, z + dz])))).count() as i32
 }
 
+/// Whether the beam goes up from the beacon at `pos`: no block above stops all light but bedrock
+/// (Java's `BeaconBlockEntity.tick`).
+fn sees_sky(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
+    let registry = level.registry();
+    let stops = |id: u32| registry.get(id).is_some_and(|state| state.light_filter >= sapling_world::FULL_LIGHT && state.name != BEDROCK);
+    level.top_where(x, z, stops).is_none_or(|top| top <= y)
+}
+
 /// Keeps the effects paid for at the beacon at `pos` (the request checked them, forge.rs).
 pub(crate) fn pay(world: &mut World, layer: Entity, pos: BlockPos, [primary, secondary]: [i32; 2]) {
     let Some(mut level) = world.get_mut::<Layer>(layer) else { return };
@@ -93,7 +103,7 @@ pub(crate) fn tick(world: &mut World) {
             continue;
         };
         let (primary, secondary, level) = (int(&entity, "primary"), int(&entity, "secondary"), level(world, layer, pos));
-        if level == 0 || !offers(level, primary, secondary) {
+        if level == 0 || !offers(level, primary, secondary) || !sees_sky(world, layer, pos) {
             continue;
         }
         let range = (level * 10 + 10) as f32;
@@ -105,10 +115,10 @@ pub(crate) fn tick(world: &mut World) {
         let effect = |id: i32| Effect::ALL.into_iter().find(|effect| effect.id() == id);
         for player in players {
             if let Some(effect) = effect(primary) {
-                crate::vitals::give_effect(world, player, effect, ticks, u8::from(secondary == primary), true);
+                crate::vitals::give_ambient(world, player, effect, ticks, u8::from(secondary == primary));
             }
             if let Some(effect) = effect(secondary).filter(|_| secondary != primary) {
-                crate::vitals::give_effect(world, player, effect, ticks, 0, true);
+                crate::vitals::give_ambient(world, player, effect, ticks, 0);
             }
         }
     }

@@ -50,6 +50,8 @@ struct Active {
     amplifier: u8,
     left: u32,
     particles: bool,
+    /// From a beacon: BDS told it `ambient` (bds-stations.txt). Not kept.
+    ambient: bool,
 }
 
 /// The effects on a player, whether storage has yet to hear of them, and whether the player,
@@ -67,7 +69,7 @@ pub(crate) fn kept(world: &mut World, player: Entity) -> Option<Vec<[i32; 4]>> {
 
 /// The effects storage kept, for a player coming back.
 pub(crate) fn restored(kept: &[[i32; 4]]) -> Option<Effects> {
-    let active = |[id, amplifier, left, shown]: &[i32; 4]| Some(Active { effect: Effect::ALL.into_iter().find(|known| known.id() == *id)?, amplifier: *amplifier as u8, left: u32::try_from(*left).ok()?, particles: *shown != 0 });
+    let active = |[id, amplifier, left, shown]: &[i32; 4]| Some(Active { effect: Effect::ALL.into_iter().find(|known| known.id() == *id)?, amplifier: *amplifier as u8, left: u32::try_from(*left).ok()?, particles: *shown != 0, ambient: false });
     let active: Vec<Active> = kept.iter().filter_map(active).collect();
     (!active.is_empty()).then(|| Effects(active, false, true))
 }
@@ -87,7 +89,7 @@ fn greet(world: &mut World, player: Entity) {
 }
 
 fn told(id: u64, event_id: MobEffectEventId, active: &Active, duration: u32) -> MobEffect {
-    MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: duration as i32, tick: 0, ambient: false }
+    MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: duration as i32, tick: 0, ambient: active.ambient }
 }
 
 /// Puts `amount` of health on top of a player's own, told at once.
@@ -194,8 +196,18 @@ pub(super) fn clear(world: &mut World, player: Entity) -> bool {
 
 /// See `ShardCtx::give_effect`.
 pub(crate) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
+    give_as(world, player, Active { effect, amplifier, left: ticks, particles, ambient: false })
+}
+
+/// A beacon's effect: as [`give`], told `ambient`.
+pub(crate) fn give_ambient(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8) -> bool {
+    give_as(world, player, Active { effect, amplifier, left: ticks, particles: true, ambient: true })
+}
+
+fn give_as(world: &mut World, player: Entity, new: Active) -> bool {
+    let effect = new.effect;
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
-    let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles };
+    let new = Active { left: if effect.is_instant() { 1 } else { new.left }, ..new };
     let before = shown(world, player);
     if world.get::<Effects>(player).is_none() {
         world.entity_mut(player).insert(Effects::default());

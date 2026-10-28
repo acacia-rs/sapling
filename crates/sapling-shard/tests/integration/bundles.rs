@@ -56,3 +56,34 @@ fn a_bundle_takes_up_to_its_weight_and_gives_back() {
     assert!(answer(&taken).1.contains(&(Container::Dynamic, 0, 35, cobble.3)), "{:?}", answer(&taken).1);
     assert_eq!(all::<InventorySlot>(&taken)[0].item.count, 35);
 }
+
+#[test]
+fn a_kept_bundle_shows_what_it_holds_after_a_rejoin_and_an_empty_slot_answers_49() {
+    let storage = floor_holding(Vec::new(), &[]);
+    let steve = acacia_auth::login::offline_identity("Steve");
+    storage.store_player(&steve, &PlayerData { main: vec![stack("minecraft:bundle", 1), stack("minecraft:cobblestone", 41)], ..PlayerData::default() }).unwrap();
+    let mut h = Harness::with(config(), World::with_storage(storage.clone()));
+    enter_stored(&mut h, 1);
+    (0..12).for_each(|_| drop(h.tick(1)));
+    h.receive(1, &request(-1, vec![place(10, slot(Container::Hotbar, 1, 0), in_bundle(0, 0, 0))]));
+    assert_eq!(answer(&h.tick(1)).0, Status::Ok);
+    h.leave(1);
+    h.shard.tick();
+    h.shard.save_worlds();
+    drop(h);
+
+    let mut h = Harness::with(config(), World::with_storage(storage));
+    let mut sent = enter_stored(&mut h, 1);
+    (0..3).for_each(|_| sent.extend(h.tick(1)));
+    let shown: Vec<InventoryContent> = all::<InventoryContent>(&sent).into_iter().filter(|content| content.container.dynamic_container_id == Some(0)).collect();
+    let [content] = &shown[..] else { panic!("{} contents of bundle 0", shown.len()) };
+    assert_eq!((content.input.len(), content.input[0].count, content.input[1].count), (64, 10, 0));
+    let id = content.input[0].stack_id.expect("a stack id");
+
+    h.receive(1, &request(-3, vec![take(4, in_bundle(0, 0, id), slot(Container::Hotbar, 5, 0))]));
+    assert!(answer(&h.tick(1)).1.contains(&(Container::Dynamic, 0, 6, id)), "taken under the id shown");
+    h.receive(1, &request(-5, vec![take(1, in_bundle(0, 7, 0), slot(Container::Hotbar, 6, 0))]));
+    let refused = h.tick(1);
+    assert_eq!(answer(&refused), (Status::Unknown(49), Vec::new()));
+    assert!(all::<InventoryContent>(&refused).is_empty(), "nothing resent");
+}
