@@ -59,6 +59,7 @@ mod join;
 mod jukebox;
 mod keepers;
 mod kept_drops;
+mod kept_maps;
 mod kept_state;
 mod landing_sounds;
 mod leftovers;

@@ -93,7 +93,7 @@ pub(crate) fn answered(world: &mut World, player: Entity, forged: Option<Forged>
         }
         Some(Forged::Repaired) => anvil::wear(world, layer, pos, creative),
         Some(Forged::Beaconed(effects)) => crate::beacons::pay(world, layer, pos, effects),
-        Some(Forged::Charted { from, to, zoomed }) => crate::maps::charted(world, from, to, zoomed),
+        Some(Forged::Charted { from, to, zoomed }) => crate::maps::charted(world, layer, from, to, zoomed),
         Some(Forged::Ground([least, most])) => {
             let points = least + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll(most - least + 1);
             orbs::pay_player(world, player, points as i32);

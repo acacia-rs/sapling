@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use acacia_proto::nbt::Value;
 use sapling_data::{GameRules, RuleValue};
-use sapling_leveldb::{DragonFightRecord, LevelDat, LevelDbWorld, PortalRecord, ScoreboardRecord, TickingAreaRecord, WeatherRecord};
+use sapling_leveldb::{DragonFightRecord, LevelDat, LevelDbWorld, MapRecord, PortalRecord, ScoreboardRecord, TickingAreaRecord, WeatherRecord};
 
 /// What a new BDS `LevelData` draws each weather spell from, `nextInt(168000) + 12000`
 /// (0x1408192b4): a world without storage takes the shortest.
@@ -37,6 +37,9 @@ pub struct Level {
     pub folder_structures: Arc<BTreeMap<String, Vec<u8>>>,
     /// The ticking areas of every dimension.
     pub ticking_areas: Vec<TickingAreaRecord>,
+    /// The maps as storage holds them, shared like `structures`: what was read until the shard
+    /// takes them, and what it hands back to be saved.
+    pub maps: Arc<Vec<MapRecord>>,
     /// `IsHardcore`: one life, after which a player only watches.
     pub hardcore: bool,
     /// The weather, which the shard turns as BDS's `Weather::tick` does.
@@ -61,6 +64,7 @@ impl Default for Level {
             structures: Arc::default(),
             folder_structures: Arc::default(),
             ticking_areas: Vec::new(),
+            maps: Arc::default(),
             hardcore: false,
             weather: WeatherRecord { rain_level: 0.0, rain_time: FIRST_SPELL, lightning_level: 0.0, lightning_time: FIRST_SPELL },
             difficulty: None,

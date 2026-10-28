@@ -75,4 +75,8 @@ Java's `MapItem.update`: `f = 1 << scale`, `r = 128 / f` (halved under a ceiling
 
 - Tints: BDS blends biome tints across neighbours; `map-tints.tsv` holds one probed spot per biome.
 - Only default block states were drawn; state-dependent colours (log axis, beds) use the default's.
-- Maps are not saved across shard restarts.
+- Saving (sapling-leveldb `maps.rs`, from a BDS world's `map_<id>` records): BDS saved all five scales of a
+  filled map at once, each `parentMapId` the id one up (-1 at scale 4); sapling saves the maps it made.
+  Unread: the RGBA byte order of `colors` (the BDS records seen were blank), BDS's `map_name_index` count
+  after a restart, and `decorations`.
+- Locked maps' ids: BDS took 255902174 outside the unique-id run (one capture); sapling takes a fresh id.
