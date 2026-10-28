@@ -3,6 +3,7 @@
 //! tick ([`Job::Hatch`]); each tick then cracks it, hatches it or queues the next (turtle.rs).
 
 mod frogspawn;
+mod sniffer;
 mod turtle;
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -54,7 +55,7 @@ fn level_event(event: LevelEventEvent, [x, y, z]: BlockPos, data: i32) -> bytes:
 
 /// Whether the block `name` is one that hatches.
 pub(super) fn is_egg(name: &str) -> bool {
-    name == turtle::EGG || name == frogspawn::SPAWN
+    [turtle::EGG, frogspawn::SPAWN, sniffer::EGG].contains(&name)
 }
 
 /// A block was written at `pos`, `was` before and `now` after: an egg that was not there queues
@@ -66,6 +67,7 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str
     match now {
         turtle::EGG => turtle::placed(world, layer, pos),
         frogspawn::SPAWN => frogspawn::placed(world, layer, pos),
+        sniffer::EGG => sniffer::placed(world, layer, pos),
         _ => {}
     }
 }
@@ -75,6 +77,7 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
     match level(world, layer).and_then(|level| name_at(level, pos)) {
         Some(turtle::EGG) => turtle::ticked(world, layer, pos),
         Some(frogspawn::SPAWN) => frogspawn::ticked(world, layer, pos),
+        Some(sniffer::EGG) => sniffer::ticked(world, layer, pos),
         _ => {}
     }
 }

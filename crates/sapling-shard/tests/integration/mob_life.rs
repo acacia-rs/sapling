@@ -76,6 +76,26 @@ fn a_turtle_egg_cracks_at_its_first_tick_on_sand_and_never_off_it() {
 }
 
 #[test]
+fn a_sniffer_egg_on_moss_cracks_twice_then_hatches_a_baby_sniffer() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        set(ctx, [4, 64, 4], Block::new("moss_block"));
+        set(ctx, [4, 65, 4], Block::new("sniffer_egg"));
+    });
+    // On moss each tick is 3600 to 4399 ticks after the last.
+    (0..3_590).for_each(|_| _ = h.tick(1));
+    assert!(names(&mut h, vec![[4, 65, 4]])[0].contains("no_cracks"));
+    let sent: Vec<_> = (0..13_200).flat_map(|_| h.tick(1)).collect();
+    assert_eq!(names(&mut h, vec![[4, 65, 4]]), ["minecraft:air[]"]);
+    let heard: Vec<String> = all::<LevelSoundEvent>(&sent).into_iter().map(|sound| sound.sound_id).filter(|name| name.starts_with("block.sniffer_egg")).collect();
+    assert_eq!(heard, ["block.sniffer_egg.crack", "block.sniffer_egg.crack", "block.sniffer_egg.hatch"]);
+    let sniffers: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:sniffer").collect();
+    assert_eq!(sniffers.len(), 1);
+    assert_eq!(has_flag(&sent, sniffers[0].runtime_id, MetadataFlags1::BABY), Some(true));
+}
+
+#[test]
 fn frogspawn_on_water_hatches_into_two_to_six_baby_tadpoles() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
