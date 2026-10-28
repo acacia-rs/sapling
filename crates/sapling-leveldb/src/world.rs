@@ -258,6 +258,22 @@ impl LevelDbWorld {
         self.db.write(batch)
     }
 
+    /// The raids kept under `VILLAGE_<uuid>_RAID` (raids.rs).
+    pub fn load_raids(&self) -> Result<Vec<crate::RaidRecord>, Error> {
+        Ok(self.db.prefixed(crate::raids::VILLAGE_PREFIX)?.into_iter().filter_map(|(key, value)| crate::RaidRecord::decode(&key, &value)).collect())
+    }
+
+    /// Saves `raids`, and drops the raids kept before that are not among them.
+    pub fn store_raids(&self, raids: &[crate::RaidRecord]) -> Result<(), Error> {
+        let mut batch = Batch::default();
+        let kept: std::collections::HashSet<Vec<u8>> = raids.iter().map(crate::RaidRecord::key).collect();
+        for old in self.load_raids()?.iter().map(crate::RaidRecord::key).filter(|key| !kept.contains(key)) {
+            batch.delete(&old);
+        }
+        raids.iter().for_each(|raid| batch.put(&raid.key(), &raid.compound));
+        self.db.write(batch)
+    }
+
     fn replace_prefixed<'a>(&self, prefix: &[u8], records: impl Iterator<Item = (&'a [u8], &'a [u8])>) -> Result<(), Error> {
         let mut batch = Batch::default();
         let mut kept = std::collections::HashSet::new();

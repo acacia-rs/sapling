@@ -112,6 +112,32 @@ fn a_captain_wears_the_ominous_banner_and_drops_it() {
 }
 
 #[test]
+fn a_raid_is_kept_with_the_world_and_goes_on_after_a_restart() {
+    let storage = common::kept::Kept::new(common::stored::floor_holding(Vec::new(), &[([3, 64, 3], "minecraft:bell")]));
+    let mut h = common::kept::opened(&storage);
+    common::stored::enter_stored(&mut h, 1);
+    let entity = Value::Compound(vec![("id".into(), Value::String("Bell".into())), ("x".into(), Value::Int(3)), ("y".into(), Value::Int(64)), ("z".into(), Value::Int(3))]);
+    h.remote.run(move |ctx| {
+        ctx.set_difficulty(Difficulty::Normal);
+        assert!(ctx.set_block_entity([3, 64, 3], &BlockEntityData::new(entity)));
+        assert!(ctx.spawn_entity("minecraft:villager_v2", [5.5, 64.0, 5.5]).is_some());
+        assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 0, true));
+    });
+    ticks(&mut h, 640);
+    h.shard.save_worlds();
+    let level = storage.level().expect("flushed");
+    let [raid] = &level.raids[..] else { panic!("{} raids kept", level.raids.len()) };
+    assert!(raid.village.ends_with("-4000-8000-000000000003"), "{}", raid.village);
+    drop(h);
+
+    let mut h = common::kept::opened(&storage);
+    let mut sent = common::stored::enter_stored(&mut h, 1);
+    sent.extend(ticks(&mut h, 25));
+    let shown = bars(&sent).into_iter().find(|(event, _)| *event == BossEventType::ShowBar);
+    assert_eq!(shown, Some((BossEventType::ShowBar, "%raid.name".to_owned())), "the kept raid goes on");
+}
+
+#[test]
 fn bad_omen_where_no_villager_lives_stays() {
     let mut h = village();
     h.remote.run(|ctx| {

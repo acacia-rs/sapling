@@ -44,8 +44,13 @@ pub(super) fn centre(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option
     holds(world, layer, middle).then_some(middle)
 }
 
-/// Whether a villager lives within reach of the village's middle.
+/// Whether a villager lives within reach of the village's middle; true while that middle is not
+/// loaded, as a kept raid waits for its village.
 pub(super) fn holds(world: &mut World, layer: Entity, middle: [f32; 3]) -> bool {
+    let chunk = ChunkPos::of_block(middle[0].floor() as i32, middle[2].floor() as i32);
+    if world.get::<Layer>(layer).is_some_and(|kept| !kept.world.is_loaded(chunk)) {
+        return true;
+    }
     let near: Vec<Entity> = world
         .query::<(Entity, &InLayer, &Kind, &Body)>()
         .iter(world)
