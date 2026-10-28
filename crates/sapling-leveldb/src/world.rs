@@ -214,6 +214,25 @@ impl LevelDbWorld {
         self.replace_prefixed(crate::TICKING_AREA_PREFIX, records.iter().map(|(key, record)| (&key[..], &record[..])))
     }
 
+    /// The world's maps (maps.rs); one that does not read is logged and left out.
+    pub fn load_maps(&self) -> Result<Vec<crate::MapRecord>, Error> {
+        let read = |(key, record): (Vec<u8>, Vec<u8>)| match crate::MapRecord::decode(&key, &record) {
+            Ok(map) => map,
+            Err(error) => {
+                tracing::warn!(%error, "skipping an unreadable map");
+                None
+            }
+        };
+        Ok(self.db.prefixed(crate::MAP_PREFIX)?.into_iter().filter_map(read).collect())
+    }
+
+    /// Saves `maps` over what was kept under their ids; other maps stay.
+    pub fn store_maps(&self, maps: &[crate::MapRecord]) -> Result<(), Error> {
+        let mut batch = Batch::default();
+        maps.iter().for_each(|map| batch.put(&map.key(), &map.encode()));
+        self.db.write(batch)
+    }
+
     fn replace_prefixed<'a>(&self, prefix: &[u8], records: impl Iterator<Item = (&'a [u8], &'a [u8])>) -> Result<(), Error> {
         let mut batch = Batch::default();
         let mut kept = std::collections::HashSet::new();

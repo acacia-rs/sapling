@@ -203,6 +203,7 @@ impl Shard {
         actors::write_back(&mut self.world);
         blocks::write_back_ticks(&mut self.world);
         scoreboard::keep_all(&mut self.world);
+        crate::maps::keep_all(&mut self.world);
         let config = &self.world.resource::<Settings>().0;
         let (difficulty, tick_distance) = (config.difficulty as i32, config.tick_distance);
         let mut layers = self.world.query::<&mut Layer>();

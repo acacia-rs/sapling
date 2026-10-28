@@ -18,6 +18,7 @@ mod hive;
 mod item;
 mod keys;
 mod level_dat;
+mod maps;
 mod pending_ticks;
 mod player;
 mod portals;
@@ -51,6 +52,7 @@ pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
 pub use level_dat::{LevelDat, WeatherRecord};
+pub use maps::{MAP_PREFIX, MapRecord};
 pub use states::{BlockStates, PLACEHOLDER, block_of_hash, palette_block};
 pub use structure::{STRUCTURE_PREFIX, StructureTemplate, structure_name};
 pub use sub_chunk::{Layer, SubChunk};
@@ -81,6 +83,8 @@ pub enum Error {
     Structure(&'static str),
     #[error("ticking area: {0}")]
     TickingArea(&'static str),
+    #[error("map: {0}")]
+    Map(&'static str),
     #[error(transparent)]
     Decode(#[from] acacia_proto::DecodeError),
 }
