@@ -7,7 +7,7 @@ mod falling;
 mod lying;
 mod stuck;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub use falling::{falling_block, new_falling_block_actor};
 pub use lying::{lying_stack, new_item_actor, new_orb_actor, orb_value, orb_worth};
@@ -180,6 +180,12 @@ pub fn new_actor(unique_id: i64, identifier: &str, position: [f32; 3], motion: [
     written(Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect()))
 }
 
+/// A new painting showing `motif`, facing `direction` (as [`Painting`]), its middle at `position`.
+pub fn new_painting_actor(unique_id: i64, position: [f32; 3], direction: i8, motif: &str) -> Vec<u8> {
+    let actor = new_actor(unique_id, "minecraft:painting", position, [0.0; 3]);
+    with_fields(&actor, [("Direction", Value::Byte(direction)), ("Motif", Value::String(motif.into()))]).expect("a compound just written")
+}
+
 fn actor_key(id: &[u8]) -> Vec<u8> {
     [ACTOR, id].concat()
 }
@@ -193,8 +199,14 @@ pub(crate) fn load(db: &Db, key: ChunkKey) -> Result<Vec<u8>, Error> {
     Ok(record)
 }
 
-/// Adds what makes `record` the column's actors to `batch`; nothing when it already is.
-pub(crate) fn store(db: &Db, batch: &mut Batch, key: ChunkKey, record: &[u8]) -> Result<(), Error> {
+/// The column each actor was last stored in, by id, while the world is open.
+pub(crate) type Homes = HashMap<[u8; 8], ChunkKey>;
+
+/// Adds what makes `record` the column's actors to `batch`; nothing when it already is. An actor
+/// that left the column is deleted unless `homes` has it stored in another since: a mob that walked
+/// into the next column must survive that column being saved before this one. The caller writes
+/// `batch` before another store reads `homes`.
+pub(crate) fn store(db: &Db, batch: &mut Batch, key: ChunkKey, record: &[u8], homes: &mut Homes) -> Result<(), Error> {
     if load(db, key)? == record {
         return Ok(());
     }
@@ -203,10 +215,17 @@ pub(crate) fn store(db: &Db, batch: &mut Batch, key: ChunkKey, record: &[u8]) ->
         let Some(Value::Long(id)) = actor.get("UniqueID") else { return Err(Error::Actor("an actor without a UniqueID")) };
         ids.extend(id.to_le_bytes());
         batch.put(&actor_key(&id.to_le_bytes()), raw);
+        homes.insert(id.to_le_bytes(), key);
     }
     let kept: HashSet<&[u8]> = ids.chunks_exact(8).collect();
     let before = db.get(&key.actor_digest())?.unwrap_or_default();
-    before.chunks_exact(8).filter(|id| !kept.contains(id)).for_each(|id| batch.delete(&actor_key(id)));
+    for id in before.chunks_exact(8).filter(|id| !kept.contains(id)) {
+        let id: [u8; 8] = id.try_into().expect("chunks of 8");
+        if homes.get(&id).is_none_or(|home| *home == key) {
+            homes.remove(&id);
+            batch.delete(&actor_key(&id));
+        }
+    }
     batch.put(&key.actor_digest(), &ids);
     batch.delete(&key.tag(Tag::Entity));
     Ok(())

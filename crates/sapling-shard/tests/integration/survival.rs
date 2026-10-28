@@ -129,9 +129,16 @@ fn a_door_is_two_cells_that_are_placed_opened_and_broken_together() {
     let mut h = with_in_hand(Some(Item::new("minecraft:spruce_door", 1)));
     let top = [1, 66, 0];
     h.receive(1, &click(NEAR, 1, None));
-    let placed = blocks(h.tick_all().to(2));
+    let sent = h.tick_all();
+    let placed = blocks(sent.to(2));
     assert_eq!([placed[0].0, placed[1].0], [ABOVE, top], "{placed:?}");
     assert_ne!(placed[0].1, placed[1].1, "the upper cell says that it is one");
+    // BDS showed both cells in one packet and was heard from the corner, naming the lower cell
+    // (research/captures/bds-hinges.txt).
+    assert_eq!(all::<acacia_proto::packets::UpdateSubchunkBlocks>(sent.to(2)).len(), 1);
+    let sounds = all::<acacia_proto::packets::LevelSoundEvent>(sent.to(2));
+    let place = sounds.iter().find(|sound| sound.sound_id == "place").expect("heard");
+    assert_eq!(([place.position.x, place.position.y, place.position.z], place.extra_data as u32), ([1.0, 65.0, 0.0], placed[0].1));
 
     // The hand is empty now: a click on either cell opens the door. Its lower cell holds the open
     // bit and both are shown in one UpdateSubchunkBlocks (research/captures/bds-held-use.txt).

@@ -37,11 +37,18 @@ impl Inventory {
         }
     }
 
-    /// Sends the client every window, as BDS does at join and after `/give`.
-    pub fn send_all(&self, out: &mut Outgoing) {
+    /// Sends the client every window and then its held slot, selecting it or not, as BDS does at
+    /// join, after `/give` and wherever it shows them all (research/captures/bds-chest-moves.txt).
+    pub fn send_all(&self, out: &mut Outgoing, select_slot: bool) {
         for window in [WindowIDVarint::Inventory, WindowIDVarint::Armor, WindowIDVarint::Ui, WindowIDVarint::Offhand] {
             out.push(&sapling_data::inventory_content(window, self.window(window)));
         }
+        out.push(&sapling_data::player_hotbar(self.selected, select_slot));
+    }
+
+    /// Sends the client one of its windows alone, as BDS shows an offhand item that wore or went.
+    pub fn send_window(&self, out: &mut Outgoing, window: WindowIDVarint) {
+        out.push(&sapling_data::inventory_content(window, self.window(window)));
     }
 }
 
@@ -52,6 +59,13 @@ pub(crate) fn in_hand(inventory: &Inventory) -> ItemV4 {
 
 fn hand(id: u64, inventory: &Inventory) -> MobEquipment {
     MobEquipment { runtime_entity_id: id, item: in_hand(inventory), slot: inventory.selected, selected_slot: inventory.selected, window_id: WindowID::Inventory }
+}
+
+/// Shows a player's viewers its hand again, as BDS did after a place in creative mode
+/// (research/captures/bds-place-faces.txt).
+pub(crate) fn show_hand(world: &mut World, player: Entity) {
+    let Some(packet) = world.get::<NetId>(player).zip(world.get::<Inventory>(player)).map(|(id, inventory)| hand(id.0, inventory)) else { return };
+    world.resource_mut::<ToViewers>().push(player, &packet);
 }
 
 fn offhand(id: u64, inventory: &Inventory) -> MobEquipment {

@@ -1,0 +1,436 @@
+## drill starts at 1793128157059
+## /kill @e[type=!player]
+     48 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1011 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+   1026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative @s
+   2009 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2009 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   2009 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2227 watcher UpdateSubchunkBlocks 20 9 6 daylight_detector[redstone_signal=9]; 20 10 14 daylight_detector[redstone_signal=9]; 20 9 10 daylight_detector[redstone_signal=9] | extra: 
+   2227 watcher UpdateSubchunkBlocks 52 -19 36 daylight_detector[redstone_signal=9]; 52 -19 40 daylight_detector[redstone_signal=9]; 52 -18 44 daylight_detector[redstone_signal=9] | extra: 
+   2227 actor   UpdateSubchunkBlocks 20 9 6 daylight_detector[redstone_signal=9]; 20 10 14 daylight_detector[redstone_signal=9]; 20 9 10 daylight_detector[redstone_signal=9] | extra: 
+   2227 actor   UpdateSubchunkBlocks 52 -19 36 daylight_detector[redstone_signal=9]; 52 -19 40 daylight_detector[redstone_signal=9]; 52 -18 44 daylight_detector[redstone_signal=9] | extra: 
+   2280 actor   UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=9]
+   2281 actor   UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=9]
+   2281 watcher UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=9]
+   2281 watcher UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=9]
+   2880 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   2880 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /tp @s 0.5 ~ 0.5 -90 0
+   3010 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -20.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3010 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-20.00", "0.50"]
+   3010 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-20.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3078 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3079 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3223 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3223 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~-2 ~-1 ~-6 ~10 ~-1 ~6 stone
+   4018 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill ~-2 ~ ~-6 ~10 ~6 ~6 air
+   5020 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+   5127 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 144599, paused: false }] }) }
+   5127 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 144599, paused: false }] }) }
+## /clear @s
+   6020 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   6020 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+   6182 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   6182 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock ~2 ~ ~0 bell ["attachment"="standing","direction"=0]
+   8022 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   8022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8030 actor   UpdateBlock 2 -20 0 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+   8030 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(255)), ("Ringing", Byte(0)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+   8030 watcher UpdateBlock 2 -20 0 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+   8030 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(255)), ("Ringing", Byte(0)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+   8431 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   8431 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+   9429 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9429 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9780 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9780 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 0 0
+## clicked: Ok(())
+  10140 actor   UpdateBlock 2 -20 0 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  10140 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  10140 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  10140 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  10140 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  10140 actor   UpdateBlock 2 -20 0 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+## /!click 2 0 0
+## clicked: Ok(())
+  11079 actor   UpdateBlock 2 -20 0 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  11080 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  11080 actor   UpdateBlock 2 -21 0 layer 0 stone[]
+  11080 actor   UpdateBlock 2 -19 0 layer 0 air[]
+  11080 actor   UpdateBlock 2 -18 0 layer 0 air[]
+  11080 actor   UpdateBlock 2 -20 0 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  11431 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11431 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  13423 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  13423 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  14629 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14629 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14978 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14978 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /setblock ~2 ~ ~1 redstone_block
+  15059 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  15059 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15080 actor   UpdateBlock 2 -20 1 layer 0 redstone_block[]
+  15080 watcher UpdateBlock 2 -20 1 layer 0 redstone_block[]
+  15231 actor   UpdateSubchunkBlocks 2 -20 0 bell[attachment=standing,direction=0,toggle_bit=1]; 2 -20 0 bell[attachment=standing,direction=0,toggle_bit=1] | extra: 
+  15231 watcher UpdateSubchunkBlocks 2 -20 0 bell[attachment=standing,direction=0,toggle_bit=1]; 2 -20 0 bell[attachment=standing,direction=0,toggle_bit=1] | extra: 
+  15231 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  15231 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  15231 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15231 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  15231 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(0))]) } }
+  15231 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15331 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15331 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  17929 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 144855, paused: false }] }) }
+  17929 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 144855, paused: false }] }) }
+## /setblock ~2 ~ ~1 air
+  18069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  18069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18079 actor   UpdateBlock 2 -20 1 layer 0 air[]
+  18079 watcher UpdateBlock 2 -20 1 layer 0 air[]
+  18728 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  18728 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  19830 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19830 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19926 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19926 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /setblock ~3 ~1 ~-3 stone
+  20064 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  20064 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20080 watcher UpdateBlock 3 -19 -3 layer 0 stone[]
+  20080 actor   UpdateBlock 3 -19 -3 layer 0 stone[]
+  20380 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20380 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /setblock ~2 ~1 ~-3 bell ["attachment"="side","direction"=1]
+  21066 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  21066 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21080 actor   UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=0]
+  21080 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(255)), ("Ringing", Byte(0)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  21080 watcher UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=0]
+  21080 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(255)), ("Ringing", Byte(0)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  21780 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  21780 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  22230 actor   UpdateSubchunkBlocks 52 -19 36 daylight_detector[redstone_signal=10]; 52 -18 44 daylight_detector[redstone_signal=10]; 52 -19 40 daylight_detector[redstone_signal=10] | extra: 
+  22230 actor   UpdateSubchunkBlocks 20 9 6 daylight_detector[redstone_signal=10]; 20 10 14 daylight_detector[redstone_signal=10]; 20 9 10 daylight_detector[redstone_signal=10] | extra: 
+  22230 watcher UpdateSubchunkBlocks 52 -19 36 daylight_detector[redstone_signal=10]; 52 -18 44 daylight_detector[redstone_signal=10]; 52 -19 40 daylight_detector[redstone_signal=10] | extra: 
+  22230 watcher UpdateSubchunkBlocks 20 9 6 daylight_detector[redstone_signal=10]; 20 10 14 daylight_detector[redstone_signal=10]; 20 9 10 daylight_detector[redstone_signal=10] | extra: 
+  22281 actor   UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=10]
+  22281 actor   UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=10]
+  22281 watcher UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=10]
+  22281 watcher UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=10]
+## /!click 2 1 -3 east
+## clicked: Ok(())
+  23126 actor   UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=1]
+  23126 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  23126 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  23126 watcher UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=1]
+  23126 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  23126 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  24179 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24179 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24880 actor   LevelEvent LevelEvent { event: ParticleProjectileHit, position: Vec3f { x: 2.5, y: -39.5, z: 12.5 }, data: 97 }
+  24880 watcher LevelEvent LevelEvent { event: ParticleProjectileHit, position: Vec3f { x: 2.5, y: -39.5, z: 12.5 }, data: 97 }
+  24930 actor   UpdateBlock 2 -40 12 layer 0 closed_eyeblossom[]
+  24930 actor   LevelSoundEvent LevelSoundEvent { sound_id: "close", position: Vec3f { x: 2.5, y: -39.5, z: 12.5 }, extra_data: 2018094267, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24930 watcher UpdateBlock 2 -40 12 layer 0 closed_eyeblossom[]
+  24930 watcher LevelSoundEvent LevelSoundEvent { sound_id: "close", position: Vec3f { x: 2.5, y: -39.5, z: 12.5 }, extra_data: 2018094267, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  25326 actor   UpdateBlock 4 -40 4 layer 0 calibrated_sculk_sensor[minecraft:cardinal_direction=south,sculk_sensor_phase=1]
+  25326 actor   LevelSoundEvent LevelSoundEvent { sound_id: "power.on.sculk_sensor", position: Vec3f { x: 4.0, y: -40.0, z: 4.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25326 watcher UpdateBlock 4 -40 4 layer 0 calibrated_sculk_sensor[minecraft:cardinal_direction=south,sculk_sensor_phase=1]
+  25326 watcher LevelSoundEvent LevelSoundEvent { sound_id: "power.on.sculk_sensor", position: Vec3f { x: 4.0, y: -40.0, z: 4.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25530 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25530 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25825 actor   UpdateBlock 4 -40 4 layer 0 calibrated_sculk_sensor[minecraft:cardinal_direction=south,sculk_sensor_phase=2]
+  25825 watcher UpdateBlock 4 -40 4 layer 0 calibrated_sculk_sensor[minecraft:cardinal_direction=south,sculk_sensor_phase=2]
+  25930 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  25930 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  26330 actor   UpdateBlock 4 -40 4 layer 0 calibrated_sculk_sensor[minecraft:cardinal_direction=south,sculk_sensor_phase=0]
+  26330 actor   LevelSoundEvent LevelSoundEvent { sound_id: "power.off.sculk_sensor", position: Vec3f { x: 4.0, y: -40.0, z: 4.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  26330 watcher UpdateBlock 4 -40 4 layer 0 calibrated_sculk_sensor[minecraft:cardinal_direction=south,sculk_sensor_phase=0]
+  26330 watcher LevelSoundEvent LevelSoundEvent { sound_id: "power.off.sculk_sensor", position: Vec3f { x: 4.0, y: -40.0, z: 4.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 1 -3 west
+## clicked: Ok(())
+  27181 actor   UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=0]
+  27181 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  27181 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27181 watcher UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=0]
+  27181 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  27181 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  28579 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  28579 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /!click 2 1 -3 north
+## clicked: Ok(())
+  30226 actor   UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=1]
+  30226 watcher UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=1]
+  30227 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  30227 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  30227 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  30227 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  30729 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 145111, paused: false }] }) }
+  30729 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 145111, paused: false }] }) }
+  30776 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  30776 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  31522 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  31522 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  32730 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  32730 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 1 -3 south
+## clicked: Ok(())
+  33280 actor   UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=0]
+  33280 watcher UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=0]
+  33280 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  33280 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  33280 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  33280 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  34527 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  34527 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  35373 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35373 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35924 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35924 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 1 -3 up
+## clicked: Ok(())
+  36280 actor   UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=1]
+  36280 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  36280 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  36280 watcher UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=1]
+  36280 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  36280 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  36574 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  36574 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  36876 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  36877 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  37230 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  37230 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /!click 2 1 -3 down
+## clicked: Ok(())
+  39329 actor   UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=0]
+  39330 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  39330 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  39330 watcher UpdateBlock 2 -19 -3 layer 0 bell[attachment=side,direction=1,toggle_bit=0]
+  39330 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -19, z: -3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(0)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-19)), ("z", Int(-3))]) } }
+  39330 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -19.0, z: -3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  39422 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  39422 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  40529 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  40530 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock ~2 ~ ~3 bell ["attachment"="standing","direction"=0]
+  42247 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42247 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  42280 watcher UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  42280 actor   UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  42280 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(255)), ("Ringing", Byte(0)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  42280 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(255)), ("Ringing", Byte(0)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+## /!click 2 0 3 west
+## clicked: Ok(())
+  43379 actor   UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=1]
+  43379 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(2)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  43379 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43379 watcher UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=1]
+  43379 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(2)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  43379 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43531 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 145367, paused: false }] }) }
+  43531 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 145367, paused: false }] }) }
+  43627 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43627 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44232 actor   UpdateSubchunkBlocks 52 -19 40 daylight_detector[redstone_signal=11]; 52 -18 44 daylight_detector[redstone_signal=11]; 52 -19 36 daylight_detector[redstone_signal=11] | extra: 
+  44232 watcher UpdateSubchunkBlocks 52 -19 40 daylight_detector[redstone_signal=11]; 52 -18 44 daylight_detector[redstone_signal=11]; 52 -19 36 daylight_detector[redstone_signal=11] | extra: 
+  44232 watcher UpdateSubchunkBlocks 20 9 10 daylight_detector[redstone_signal=11]; 20 9 6 daylight_detector[redstone_signal=11]; 20 10 14 daylight_detector[redstone_signal=11] | extra: 
+  44232 actor   UpdateSubchunkBlocks 20 9 10 daylight_detector[redstone_signal=11]; 20 9 6 daylight_detector[redstone_signal=11]; 20 10 14 daylight_detector[redstone_signal=11] | extra: 
+## /
+  44276 actor   UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=11]
+  44276 actor   UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=11]
+  44276 watcher UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=11]
+  44276 watcher UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=11]
+  44580 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44580 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44929 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44930 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  45880 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45880 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 0 3 east
+## clicked: Ok(())
+  46427 actor   UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  46427 watcher UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  46427 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(2)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  46427 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(2)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  46427 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  46427 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  47779 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  47779 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  49280 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  49280 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 2 0 3 north
+## clicked: Ok(())
+  49481 actor   UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=1]
+  49481 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(2)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  49481 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  49481 watcher UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=1]
+  49481 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(2)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  49481 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  49831 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  49831 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /!click 2 0 3 south
+## clicked: Ok(())
+  52477 actor   UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  52477 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(2)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  52477 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  52478 watcher UpdateBlock 2 -20 3 layer 0 bell[attachment=standing,direction=0,toggle_bit=0]
+  52478 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: -20, z: 3 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(2)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(2)), ("y", Int(-20)), ("z", Int(3))]) } }
+  52478 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 2.0, y: -20.0, z: 3.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  52729 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  52729 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  55230 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  55230 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /setblock ~6 ~2 ~0 stone
+  55412 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  55412 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  55430 watcher UpdateBlock 6 -18 0 layer 0 stone[]
+  55430 actor   UpdateBlock 6 -18 0 layer 0 stone[]
+  55629 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  55629 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56323 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 145623, paused: false }] }) }
+  56323 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 145623, paused: false }] }) }
+## /setblock ~6 ~1 ~0 bell ["attachment"="hanging","direction"=0]
+  56409 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  56409 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  56426 actor   UpdateBlock 6 -19 0 layer 0 bell[attachment=hanging,direction=0,toggle_bit=0]
+  56426 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 6, y: -19, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(255)), ("Ringing", Byte(0)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(6)), ("y", Int(-19)), ("z", Int(0))]) } }
+  56426 watcher UpdateBlock 6 -19 0 layer 0 bell[attachment=hanging,direction=0,toggle_bit=0]
+  56426 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 6, y: -19, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(255)), ("Ringing", Byte(0)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(6)), ("y", Int(-19)), ("z", Int(0))]) } }
+  56683 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  56683 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  57974 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  57974 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  58031 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  58031 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 6 1 0 west
+## clicked: Ok(())
+  58529 actor   UpdateBlock 6 -19 0 layer 0 bell[attachment=hanging,direction=0,toggle_bit=1]
+  58529 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 6, y: -19, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(1)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(6)), ("y", Int(-19)), ("z", Int(0))]) } }
+  58529 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 6.0, y: -19.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  58530 watcher UpdateBlock 6 -19 0 layer 0 bell[attachment=hanging,direction=0,toggle_bit=1]
+  58530 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 6, y: -19, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(1)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(6)), ("y", Int(-19)), ("z", Int(0))]) } }
+  58530 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 6.0, y: -19.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  58580 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  58580 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  60429 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  60433 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 6 1 0 north
+## clicked: Ok(())
+  61580 actor   UpdateBlock 6 -19 0 layer 0 bell[attachment=hanging,direction=0,toggle_bit=0]
+  61580 watcher UpdateBlock 6 -19 0 layer 0 bell[attachment=hanging,direction=0,toggle_bit=0]
+  61580 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 6, y: -19, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(1)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(6)), ("y", Int(-19)), ("z", Int(0))]) } }
+  61580 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 6, y: -19, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(1)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(6)), ("y", Int(-19)), ("z", Int(0))]) } }
+  61580 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 6.0, y: -19.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  61581 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 6.0, y: -19.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  62430 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  62430 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  64080 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  64080 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!click 6 1 0 down
+## clicked: Ok(())
+  64572 actor   UpdateBlock 6 -19 0 layer 0 bell[attachment=hanging,direction=0,toggle_bit=1]
+  64572 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 6, y: -19, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(1)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(6)), ("y", Int(-19)), ("z", Int(0))]) } }
+  64572 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 6.0, y: -19.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  64579 watcher UpdateBlock 6 -19 0 layer 0 bell[attachment=hanging,direction=0,toggle_bit=1]
+  64579 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 6, y: -19, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("Direction", Int(1)), ("Ringing", Byte(1)), ("Ticks", Int(0)), ("id", String("Bell")), ("x", Int(6)), ("y", Int(-19)), ("z", Int(0))]) } }
+  64579 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.bell.hit", position: Vec3f { x: 6.0, y: -19.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  66781 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  66781 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  66822 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  66822 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  67029 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  67029 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  67531 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  67531 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  67531 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  67531 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  68530 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  68530 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  69124 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 145879, paused: false }] }) }
+  69124 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 145879, paused: false }] }) }
+  69229 actor   UpdateSubchunkBlocks 20 10 14 daylight_detector[redstone_signal=12]; 20 9 6 daylight_detector[redstone_signal=12]; 20 9 10 daylight_detector[redstone_signal=12] | extra: 
+  69229 watcher UpdateSubchunkBlocks 20 10 14 daylight_detector[redstone_signal=12]; 20 9 6 daylight_detector[redstone_signal=12]; 20 9 10 daylight_detector[redstone_signal=12] | extra: 
+  69229 actor   UpdateSubchunkBlocks 52 -19 40 daylight_detector[redstone_signal=12]; 52 -18 44 daylight_detector[redstone_signal=12]; 52 -19 36 daylight_detector[redstone_signal=12] | extra: 
+  69229 watcher UpdateSubchunkBlocks 52 -19 40 daylight_detector[redstone_signal=12]; 52 -18 44 daylight_detector[redstone_signal=12]; 52 -19 36 daylight_detector[redstone_signal=12] | extra: 
+  69279 actor   UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=12]
+  69279 actor   UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=12]
+  69279 watcher UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=12]
+  69279 watcher UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=12]
+  69480 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  69480 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  71279 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  71279 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /gamemode creative @s
+  71508 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  71517 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  71517 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /fill ~-2 ~ ~-6 ~10 ~6 ~6 air
+  72510 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["6"]
+  72510 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"6\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  72531 actor   UpdateSubchunkBlocks 2 -19 -3 air[]; 3 -19 -3 air[] | extra: 
+  72531 watcher UpdateSubchunkBlocks 2 -19 -3 air[]; 3 -19 -3 air[] | extra: 
+  72531 actor   UpdateSubchunkBlocks 2 -20 0 air[]; 2 -20 3 air[]; 6 -19 0 air[]; 6 -18 0 air[] | extra: 
+  72531 watcher UpdateSubchunkBlocks 2 -20 0 air[]; 2 -20 3 air[]; 6 -19 0 air[]; 6 -18 0 air[] | extra: 
+  72629 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  72629 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  72779 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  72779 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  73231 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  73232 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /kill @e[type=!player]
+  73510 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /clear @s
+  74511 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+  74512 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /
+probe exit 0

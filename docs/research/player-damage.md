@@ -113,7 +113,24 @@ From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding us
 - Rising, once the client answers: `Respawn` state 0 at y 32767, `Respawn` state 1 at the world's spawn,
   `EntityEvent` `Respawn`, `SetHealth` 20, the sound `reappeared`, and `UpdateAttributes` with health 20,
   hunger 20, exhaustion 0, saturation 5, level 0, experience 0. A watcher gets the event, an empty
-  `MobEquipment`, the attributes and the box again.
+  `MobEquipment`, the attributes and the box again. `reappeared` is heard where the body lay, not at the
+  spawn; from another dimension at (0, 32767.1, 0).
+- `bds_command_probe anchor` (research/captures/bds-anchor.txt): the death's `SetEntityData` holds the
+  box (0.2) and then only what changed: `PlayerLastDeathPosition` (the cell of the eyes),
+  `PlayerLastDeathDimension` (left out while it stays 0) and `PlayerHasDied` (the first death). The
+  recovery compass reads these on the client. Kept as `DeathPositionX/Y/Z`, `DeathDimension` and
+  `HasDiedBefore` (BDSRE: Player load 1402af220 reads them only together), and told again at join.
+- `doImmediateRespawn` only reaches the client in `GameRulesChanged`; the server's answers were alike.
+
+## A respawn anchor's spawn
+
+From `bds_command_probe anchor`: glowstone charges it (`respawn_anchor.charge`); an empty hand on a
+charged anchor in the Nether sends `SetSpawnPosition` (`Player`, the feet's cell, dimension 1, the
+anchor), the grey `tile.respawn_anchor.respawnSet` and the sound `respawn_anchor.set_spawn`; the same
+click again sends nothing. Killed, it rises as by a bed, with `respawn_anchor.deplete` at the anchor
+after `Respawn` state 1 and the anchor a charge lower the next tick. An anchor at 0 is forgotten:
+`SetSpawnPosition` of `Player` with every field `i32::MIN` and dimension 3 first, the trip home to the
+overworld, and after `SetHealth` the white `tile.respawn_anchor.notValid`.
 
 ## A bed's spawn
 
@@ -181,5 +198,5 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
 - Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
   drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.
-- Not built: drinks, effects, the shrunken box and `PlayerLastDeathPosition`, lying down under a
-  block, `doImmediateRespawn`. A player rises by the bed it last clicked while the bed stands (`sleep.rs` `spawn_of`), and a bed in the first world waits in storage with the player's items. Health and hunger wait in storage with a player's items (`vitals/kept.rs`); effects, breath and fire do not, and one who left dead comes back whole.
+- Not built: drinks, effects, lying down under a block. A player rises by the bed or Nether anchor it
+  last clicked while it stands (`sleep/spawn.rs` `spawn_of`), and either waits in storage with the player's items, as does its last death (`vitals/last_death.rs`). Health and hunger wait in storage with a player's items (`vitals/kept.rs`); effects, breath and fire do not, and one who left dead comes back whole.

@@ -14,7 +14,7 @@ use super::rails::{self, Rail, RailKind, Roll};
 use super::{MINECART, TNT_MINECART, is_crowded, spawn};
 use crate::body::{Body, InLiquid, Physics};
 use crate::components::{InLayer, Layer, NetId, Position, Tick};
-use crate::creatures::{self, Wreck};
+use crate::creatures;
 use crate::entities::{self, Kind};
 use crate::riding::{Reins, Riding};
 use crate::sync::Told;
@@ -22,7 +22,7 @@ use crate::sync::Told;
 /// The wire puts a minecart this far above its box's bottom.
 const LIFT: f32 = 0.35;
 /// Off a rail a cart falls as a block does and slides half as far on the ground.
-const LOOSE: Physics = Physics { gravity: 0.04, air_drag: 0.95, fall_drag: 0.95, ground_drag: 0.5, bounce: 0.0, liquid: InLiquid::Sinks, burns: false, passes: false };
+const LOOSE: Physics = Physics { gravity: 0.04, air_drag: 0.95, fall_drag: 0.95, ground_drag: 0.5, bounce: 0.0, liquid: InLiquid::Sinks, burns: false, passes: false, water_drag: 0.8 };
 const RIDDEN_DRAG: f32 = 0.997;
 const EMPTY_DRAG: f32 = 0.96;
 /// A cart with goods keeps more of its motion, the less full it is: its comparator signal.
@@ -119,7 +119,7 @@ pub(super) fn tick(world: &mut World) {
         state.fuse = state.fuse.map(|fuse| fuse - 1);
         if landed_hard || state.fuse.is_some_and(|fuse| fuse <= 0) {
             crate::riding::forget(world, cart);
-            creatures::explode(world, Some(cart), layer, body.at, BLAST, Wreck::Leaves);
+            creatures::explode(world, Some(cart), layer, body.at, BLAST, crate::tnt::wreck(world, layer));
             continue;
         }
         if let Ok(mut entity) = world.get_entity_mut(cart) {

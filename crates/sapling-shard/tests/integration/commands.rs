@@ -85,8 +85,9 @@ fn a_player_gets_the_commands_it_may_use_and_a_new_list_when_that_changes() {
     assert_eq!(listed(h.enter(1, "Alex").to(1)), [["hub", "promote"]]);
     assert!(listed(&h.tick(1)).is_empty());
 
+    // BDS refused a member's `/gamemode creative` by name (research/captures/bds-member.txt).
     h.receive(1, &request("/gamemode creative", 1));
-    assert_eq!(answer(&h.tick(1)), ("commands.generic.unknown".into(), vec!["gamemode".into()], false));
+    assert_eq!(answer(&h.tick(1)), ("commands.generic.error.permissions".into(), vec!["gamemode".into()], false));
     h.receive(1, &request("/promote", 2));
     assert_eq!(listed(&h.tick(1)), [["hub", "gamemode", "promote"]]);
     h.receive(1, &request("/gamemode creative", 3));

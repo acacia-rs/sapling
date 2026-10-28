@@ -43,7 +43,7 @@ impl Command for PlaySound {
         if found.is_empty() {
             return no_target(out);
         }
-        let at = self.position.map(|position| position.from(ctx.origin(sender)));
+        let at = self.position.map(|position| position.resolve(ctx, sender));
         let (volume, minimum) = (self.volume.unwrap_or(1.0), self.minimum_volume.unwrap_or(0.0));
         let mut played = 0;
         for player in &found {
@@ -93,8 +93,8 @@ pub(crate) struct Particle {
 
 impl Command for Particle {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
-        ctx.spawn_particle_in_world(&self.effect, self.position.map_or(here, |position| position.from(here)));
+        let at = self.position.map_or_else(|| ctx.origin(sender), |position| position.resolve(ctx, sender));
+        ctx.spawn_particle_in_world(&self.effect, at);
         out.translate("commands.spawnParticleEmitter.success", vec![self.effect], true);
     }
 }

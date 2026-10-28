@@ -1,0 +1,327 @@
+## drill starts at 1793110330097
+## /kill @e[type=!player]
+     98 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+     99 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+     99 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+    132 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+    132 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+    242 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+    242 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+    332 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+    332 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+    432 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+    432 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+    539 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+    539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+    539 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+    539 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+    633 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+    633 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+    732 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+    732 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+    841 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+    841 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+    935 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+    935 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+## /gamemode creative @s
+   1012 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1012 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   1013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1041 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   1041 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   1133 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   1133 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   1234 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   1234 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   1334 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   1334 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   1436 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   1436 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1436 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   1436 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   1532 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   1532 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   1632 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   1632 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   1732 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   1732 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   1834 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   1834 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   1934 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   1934 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+## /clear @s
+   2014 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+   2042 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   2042 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   2133 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   2133 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   2241 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   2241 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   2333 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   2334 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   2434 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   2434 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   2534 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   2534 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   2636 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   2636 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   2636 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   2636 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   2733 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   2733 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   2841 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   2841 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   2941 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   2941 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+## /fill ~-1 ~-1 ~7 ~8 ~-1 ~13 stone
+   3015 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+   3032 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   3032 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   3134 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   3134 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   3233 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   3233 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   3336 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   3336 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   3440 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   3440 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   3483 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3483 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3534 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   3534 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3534 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   3534 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   3642 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   3642 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   3737 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   3737 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   3837 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   3837 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   3933 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   3933 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+## /tp @s ~ ~ ~10 -90 0
+   4014 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -20.00, 10.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4014 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-20.00", "10.50"]
+   4014 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-20.00\"},{\"text\":\"10.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4033 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   4034 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   4132 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   4132 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   4242 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   4242 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   4334 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   4334 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   4432 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   4432 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   4534 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   4534 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   4634 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   4634 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   4733 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   4733 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   4834 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   4834 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   4934 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   4934 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+## /fill ~1 ~ ~-4 ~8 ~10 ~4 air
+   5017 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["4"]
+   5017 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"4\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5033 actor   UpdateSubchunkBlocks 2 -16 12 air[]; 6 -16 12 air[] | extra: 
+   5033 actor   UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1]; 3 -20 7 air[]; 4 -20 7 air[] | extra: 
+   5033 watcher UpdateSubchunkBlocks 2 -16 12 air[]; 6 -16 12 air[] | extra: 
+   5033 watcher UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1]; 3 -20 7 air[]; 4 -20 7 air[] | extra: 
+   5141 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 30529, paused: false }] }) }
+   5141 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 30529, paused: false }] }) }
+   5234 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   5234 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /time set noon
+   6019 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["54000"]
+   6019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"54000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6037 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 54001, paused: false }] }) }
+   6037 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 54001, paused: false }] }) }
+   6332 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   6332 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~1 ~-1 ~-4 ~8 ~-1 ~4 stone
+   7020 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /setblock ~3 ~ ~-3 observer ["minecraft:facing_direction"="east"]
+   8022 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   8045 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8046 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=0]
+   8046 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=0]
+   8284 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   8284 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   8683 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   8684 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /setblock ~4 ~ ~-3 observer ["minecraft:facing_direction"="west"]
+   9024 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9033 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   9033 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   9133 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   9133 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   9232 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   9232 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   9332 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   9332 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   9442 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   9442 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   9533 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   9533 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   9634 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   9634 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   9732 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   9732 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+   9732 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9732 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9833 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   9833 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+   9932 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+   9932 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+## /setblock ~6 ~4 ~2 lava
+  10025 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  10025 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10032 watcher UpdateBlock 6 -16 12 layer 0 lava[liquid_depth=0]
+  10032 actor   UpdateBlock 6 -16 12 layer 0 lava[liquid_depth=0]
+  10032 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  10032 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  10135 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  10135 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  10241 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  10241 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  10334 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  10334 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  10434 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  10434 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  10533 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  10533 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  10635 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  10635 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  10732 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  10732 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  10841 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  10841 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  10935 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  10935 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+## /setblock ~2 ~4 ~2 water
+  11028 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11028 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  11034 actor   UpdateBlock 2 -16 12 layer 0 water[liquid_depth=0]
+  11034 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  11034 watcher UpdateBlock 2 -16 12 layer 0 water[liquid_depth=0]
+  11034 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  11134 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  11134 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  11242 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  11242 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  11332 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  11332 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  11432 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  11432 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  11482 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11482 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11534 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  11534 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11534 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  11534 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11535 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11535 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11632 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  11632 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  11734 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  11734 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  11840 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  11840 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  11932 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  11932 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+## /setblock ~6 ~3 ~2 stone
+  12028 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12028 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  12034 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0]; 6 -17 12 stone[] | extra: 
+  12034 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0]; 6 -17 12 stone[] | extra: 
+  12139 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  12139 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  12241 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  12241 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  12342 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  12342 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  12342 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12342 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12434 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  12434 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  12542 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  12542 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  12542 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12542 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12635 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  12635 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  12733 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  12733 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  12834 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  12834 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  12932 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  12932 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+## /setblock ~2 ~3 ~2 stone
+  13023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13023 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  13034 actor   UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1]; 2 -17 12 stone[] | extra: 
+  13054 watcher UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1]; 2 -17 12 stone[] | extra: 
+  13132 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  13132 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  13234 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  13234 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  13291 actor   UpdateSubchunkBlocks 1 -16 12 water[liquid_depth=1]; 3 -16 12 water[liquid_depth=1]; 2 -16 11 water[liquid_depth=1]; 2 -16 13 water[liquid_depth=1] | extra: 
+  13291 watcher UpdateSubchunkBlocks 1 -16 12 water[liquid_depth=1]; 3 -16 12 water[liquid_depth=1]; 2 -16 11 water[liquid_depth=1]; 2 -16 13 water[liquid_depth=1] | extra: 
+  13332 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  13332 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  13433 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  13434 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  13533 actor   UpdateSubchunkBlocks 5 -16 12 lava[liquid_depth=2]; 7 -16 12 lava[liquid_depth=2]; 6 -16 11 lava[liquid_depth=2]; 6 -16 13 lava[liquid_depth=2] | extra: 
+  13533 actor   UpdateSubchunkBlocks 1 -17 12 water[liquid_depth=9]; 2 -17 13 water[liquid_depth=9]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0]; 3 -17 12 water[liquid_depth=9]; 2 -17 11 water[liquid_depth=9] | extra: 
+  13534 watcher UpdateSubchunkBlocks 5 -16 12 lava[liquid_depth=2]; 7 -16 12 lava[liquid_depth=2]; 6 -16 11 lava[liquid_depth=2]; 6 -16 13 lava[liquid_depth=2] | extra: 
+  13534 watcher UpdateSubchunkBlocks 1 -17 12 water[liquid_depth=9]; 2 -17 13 water[liquid_depth=9]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0]; 3 -17 12 water[liquid_depth=9]; 2 -17 11 water[liquid_depth=9] | extra: 
+  13632 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  13632 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  13732 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  13732 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0] | extra: 
+  13784 actor   UpdateSubchunkBlocks 2 -18 13 water[liquid_depth=9]; 1 -18 12 water[liquid_depth=9]; 2 -18 11 water[liquid_depth=9]; 3 -18 12 water[liquid_depth=9] | extra: 
+  13784 watcher UpdateSubchunkBlocks 2 -18 13 water[liquid_depth=9]; 1 -18 12 water[liquid_depth=9]; 2 -18 11 water[liquid_depth=9]; 3 -18 12 water[liquid_depth=9] | extra: 
+  13784 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  13784 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  13835 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  13835 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  13934 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  13934 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+## /fill ~2 ~3 ~2 ~6 ~3 ~2 air
+  14027 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["3"]
+  14028 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"3\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14034 actor   UpdateSubchunkBlocks 1 -19 12 water[liquid_depth=9]; 3 -19 12 water[liquid_depth=9]; 2 -19 13 water[liquid_depth=9]; 2 -19 11 water[liquid_depth=9]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0]; 2 -17 12 air[]; 3 -17 12 air[]; 6 -17 12 air[] | extra: 
+  14034 watcher UpdateSubchunkBlocks 1 -19 12 water[liquid_depth=9]; 3 -19 12 water[liquid_depth=9]; 2 -19 13 water[liquid_depth=9]; 2 -19 11 water[liquid_depth=9]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0]; 2 -17 12 air[]; 3 -17 12 air[]; 6 -17 12 air[] | extra: 
+  14132 actor   UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  14132 watcher UpdateBlock 4 -20 7 layer 0 observer[minecraft:facing_direction=west,powered_bit=0]
+  14237 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  14237 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=1]
+  14283 actor   UpdateSubchunkBlocks 3 -18 12 air[]; 2 -17 12 water[liquid_depth=8]; 2 -20 13 water[liquid_depth=9]; 1 -20 12 water[liquid_depth=9]; 2 -20 11 water[liquid_depth=9]; 3 -19 12 air[]; 3 -20 12 water[liquid_depth=7]; 3 -17 12 water[liquid_depth=9] | extra: 
+  14284 watcher UpdateSubchunkBlocks 3 -18 12 air[]; 2 -17 12 water[liquid_depth=8]; 2 -20 13 water[liquid_depth=9]; 1 -20 12 water[liquid_depth=9]; 2 -20 11 water[liquid_depth=9]; 3 -19 12 air[]; 3 -20 12 water[liquid_depth=7]; 3 -17 12 water[liquid_depth=9] | extra: 
+  14334 watcher UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1] | extra: 
+  14334 actor   UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1] | extra: 
+  14434 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1] | extra: 
+  14434 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1] | extra: 
+  14534 actor   UpdateSubchunkBlocks 3 -18 12 water[liquid_depth=9]; 3 -20 12 air[]; 2 -18 12 water[liquid_depth=8]; 1 -20 13 water[liquid_depth=1]; 3 -20 13 water[liquid_depth=1]; 2 -20 12 water[liquid_depth=1]; 2 -20 14 water[liquid_depth=1]; 1 -20 11 water[liquid_depth=1]; 3 -20 11 water[liquid_depth=1]; 2 -20 10 water[liquid_depth=1]; 0 -20 12 water[liquid_depth=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1] | extra: 
+  14534 watcher UpdateSubchunkBlocks 3 -18 12 water[liquid_depth=9]; 3 -20 12 air[]; 2 -18 12 water[liquid_depth=8]; 1 -20 13 water[liquid_depth=1]; 3 -20 13 water[liquid_depth=1]; 2 -20 12 water[liquid_depth=1]; 2 -20 14 water[liquid_depth=1]; 1 -20 11 water[liquid_depth=1]; 3 -20 11 water[liquid_depth=1]; 2 -20 10 water[liquid_depth=1]; 0 -20 12 water[liquid_depth=1]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1] | extra: 
+  14634 actor   UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1] | extra: 
+  14634 watcher UpdateSubchunkBlocks 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0]; 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1] | extra: 
+  14734 actor   UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1] | extra: 
+  14734 watcher UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=0]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=1] | extra: 
+  14783 actor   UpdateBlock -1 -20 12 layer 0 water[liquid_depth=2]
+  14783 actor   UpdateSubchunkBlocks 0 -20 13 water[liquid_depth=2]; 1 -20 14 water[liquid_depth=2]; 4 -20 11 water[liquid_depth=2]; 3 -20 10 water[liquid_depth=2]; 3 -20 12 water[liquid_depth=2]; 0 -20 11 water[liquid_depth=2]; 2 -19 12 water[liquid_depth=8]; 3 -19 12 water[liquid_depth=9]; 3 -20 14 water[liquid_depth=2]; 2 -20 15 water[liquid_depth=2]; 1 -20 10 water[liquid_depth=2]; 2 -20 9 water[liquid_depth=2]; 2 -20 12 water[liquid_depth=8]; 4 -20 13 water[liquid_depth=2] | extra: 
+  14783 watcher UpdateBlock -1 -20 12 layer 0 water[liquid_depth=2]
+  14783 watcher UpdateSubchunkBlocks 0 -20 13 water[liquid_depth=2]; 1 -20 14 water[liquid_depth=2]; 4 -20 11 water[liquid_depth=2]; 3 -20 10 water[liquid_depth=2]; 3 -20 12 water[liquid_depth=2]; 0 -20 11 water[liquid_depth=2]; 2 -19 12 water[liquid_depth=8]; 3 -19 12 water[liquid_depth=9]; 3 -20 14 water[liquid_depth=2]; 2 -20 15 water[liquid_depth=2]; 1 -20 10 water[liquid_depth=2]; 2 -20 9 water[liquid_depth=2]; 2 -20 12 water[liquid_depth=8]; 4 -20 13 water[liquid_depth=2] | extra: 
+  14834 watcher UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0] | extra: 
+  14834 actor   UpdateSubchunkBlocks 3 -20 7 observer[minecraft:facing_direction=east,powered_bit=1]; 4 -20 7 observer[minecraft:facing_direction=west,powered_bit=0] | extra: 
+  14942 actor   UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=0]
+  14942 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14942 watcher UpdateBlock 3 -20 7 layer 0 observer[minecraft:facing_direction=east,powered_bit=0]
+  14942 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14984 actor   UpdateSubchunkBlocks -2 -20 12 water[liquid_depth=3]; -1 -20 11 water[liquid_depth=3]; -1 -20 13 water[liquid_depth=3] | extra: 
+  14984 watcher UpdateSubchunkBlocks -2 -20 12 water[liquid_depth=3]; -1 -20 11 water[liquid_depth=3]; -1 -20 13 water[liquid_depth=3] | extra: 
+probe exit 0

@@ -26,7 +26,7 @@ pub(super) fn floats(values: &[f32]) -> Value {
 }
 
 /// Every slot in order, an empty one as a stack without a name.
-pub(super) fn stacks(slots: &[Option<ItemStack>], registry: &BlockRegistry) -> Value {
+pub(crate) fn stacks(slots: &[Option<ItemStack>], registry: &BlockRegistry) -> Value {
     let stack = |slot: &Option<ItemStack>| Value::Compound(slot.as_ref().map_or_else(ItemStack::no_fields, |stack| stack.fields(registry)));
     Value::List(List { tag: COMPOUND, items: slots.iter().map(stack).collect() })
 }
@@ -57,7 +57,7 @@ pub(super) fn read_slotted(stored: &[Value]) -> Result<Vec<Option<ItemStack>>, E
 const EFFECT: [&str; 4] = ["Id", "Amplifier", "Duration", "ShowParticles"];
 const DURATIONS: [&str; 3] = ["DurationEasy", "DurationNormal", "DurationHard"];
 
-pub(super) fn effect(kept: &Value) -> Option<[i32; 4]> {
+pub(crate) fn effect(kept: &Value) -> Option<[i32; 4]> {
     let part = |key: &str| match kept.get(key) {
         Some(Value::Byte(part)) => Some(i32::from(*part)),
         Some(Value::Int(part)) => Some(*part),

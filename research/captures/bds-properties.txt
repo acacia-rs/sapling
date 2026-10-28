@@ -1,0 +1,189 @@
+## drill starts at 1793194320631
+## /kill @e[type=!player]
+## /gamerule domobspawning false
+## /gamerule domobloot false
+## /weather clear
+## /time set noon
+## /gamemode creative @s
+## /gamemode creative CmdWatcher
+## /fill -12 -27 -12 12 -27 12 stone
+## /fill -12 -26 -12 12 -16 12 air
+## /tp @s 0.5 -26 0.5 -90 0
+## /tp CmdWatcher 0.5 -26 0.5
+## /
+## /summon pig -4 -26 -6
+  12042 actor   AddEntity 3 minecraft:pig ints=[(0,0) (1,2)] floats=[]
+  12042 actor   SetEntityData 3 ints=[(0,0) (1,2)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=De
+## /summon pig -3 -26 -6
+  13032 actor   AddEntity 4 minecraft:pig ints=[(0,0) (1,2)] floats=[]
+  13032 actor   SetEntityData 4 ints=[(0,0) (1,2)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=De
+## /summon pig -2 -26 -6
+  14040 actor   AddEntity 5 minecraft:pig ints=[(0,0) (1,2)] floats=[]
+  14040 actor   SetEntityData 5 ints=[(0,0) (1,2)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=De
+## /summon pig -1 -26 -6
+  15033 actor   AddEntity 6 minecraft:pig ints=[(0,0) (1,0)] floats=[]
+  15033 actor   SetEntityData 6 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=De
+## /summon pig 0 -26 -6
+  16032 actor   AddEntity 7 minecraft:pig ints=[(0,0) (1,1)] floats=[]
+  16033 actor   SetEntityData 7 ints=[(0,0) (1,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=De
+## /summon pig 1 -26 -6
+  17041 actor   AddEntity 8 minecraft:pig ints=[(0,0) (1,2)] floats=[]
+  17041 actor   SetEntityData 8 ints=[(0,0) (1,2)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=De
+## /summon pig 2 -26 -6
+  18033 actor   AddEntity 9 minecraft:pig ints=[(0,0) (1,1)] floats=[]
+  18033 actor   SetEntityData 9 ints=[(0,0) (1,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=De
+## /summon pig 3 -26 -6
+  19034 actor   AddEntity 10 minecraft:pig ints=[(0,0) (1,1)] floats=[]
+  19034 actor   SetEntityData 10 ints=[(0,0) (1,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /
+## /summon cow -4 -26 -5
+  21083 actor   AddEntity 11 minecraft:cow ints=[(0,0) (1,0)] floats=[]
+  21083 actor   SetEntityData 11 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon cow -3 -26 -5
+  22091 actor   AddEntity 12 minecraft:cow ints=[(0,0) (1,1)] floats=[]
+  22091 actor   SetEntityData 12 ints=[(0,0) (1,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon cow -2 -26 -5
+  23083 actor   AddEntity 13 minecraft:cow ints=[(0,0) (1,0)] floats=[]
+  23083 actor   SetEntityData 13 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon cow -1 -26 -5
+  24085 actor   AddEntity 14 minecraft:cow ints=[(0,0) (1,1)] floats=[]
+  24085 actor   SetEntityData 14 ints=[(0,0) (1,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon cow 0 -26 -5
+  25091 actor   AddEntity 15 minecraft:cow ints=[(0,0) (1,0)] floats=[]
+  25091 actor   SetEntityData 15 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon cow 1 -26 -5
+  26084 actor   AddEntity 16 minecraft:cow ints=[(0,0) (1,1)] floats=[]
+  26084 actor   SetEntityData 16 ints=[(0,0) (1,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /
+## /summon chicken -4 -26 -4
+  28083 actor   AddEntity 17 minecraft:chicken ints=[(0,0) (1,0)] floats=[]
+  28083 actor   SetEntityData 17 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon chicken -3 -26 -4
+  29087 actor   AddEntity 18 minecraft:chicken ints=[(0,0) (1,0)] floats=[]
+  29087 actor   SetEntityData 18 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon chicken -2 -26 -4
+  30083 actor   AddEntity 19 minecraft:chicken ints=[(0,0) (1,0)] floats=[]
+  30083 actor   SetEntityData 19 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon chicken -1 -26 -4
+  31089 actor   AddEntity 20 minecraft:chicken ints=[(0,0) (1,1)] floats=[]
+  31090 actor   SetEntityData 20 ints=[(0,0) (1,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon chicken 0 -26 -4
+  32083 actor   AddEntity 21 minecraft:chicken ints=[(0,0) (1,1)] floats=[]
+  32083 actor   SetEntityData 21 ints=[(0,0) (1,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /summon chicken 1 -26 -4
+  33088 actor   AddEntity 22 minecraft:chicken ints=[(0,0) (1,0)] floats=[]
+  33088 actor   SetEntityData 22 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /
+## /summon wolf -4 -26 -3
+  35083 actor   AddEntity 23 minecraft:wolf ints=[(0,4)] floats=[]
+  35083 actor   SetEntityData 23 ints=[(0,4)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /summon wolf -3 -26 -3
+  36090 actor   AddEntity 24 minecraft:wolf ints=[(0,1)] floats=[]
+  36090 actor   SetEntityData 24 ints=[(0,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /summon wolf -2 -26 -3
+  37087 actor   AddEntity 25 minecraft:wolf ints=[(0,3)] floats=[]
+  37088 actor   SetEntityData 25 ints=[(0,3)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /summon wolf -1 -26 -3
+  38090 actor   AddEntity 26 minecraft:wolf ints=[(0,1)] floats=[]
+  38091 actor   SetEntityData 26 ints=[(0,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /summon wolf 0 -26 -3
+  39084 actor   AddEntity 27 minecraft:wolf ints=[(0,5)] floats=[]
+  39084 actor   SetEntityData 27 ints=[(0,5)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /summon wolf 1 -26 -3
+  40084 actor   AddEntity 28 minecraft:wolf ints=[(0,2)] floats=[]
+  40084 actor   SetEntityData 28 ints=[(0,2)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /summon wolf 2 -26 -3
+  41092 actor   AddEntity 29 minecraft:wolf ints=[(0,1)] floats=[]
+  41093 actor   SetEntityData 29 ints=[(0,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /summon wolf 3 -26 -3
+  42092 actor   AddEntity 30 minecraft:wolf ints=[(0,0)] floats=[]
+  42092 actor   SetEntityData 30 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /
+## /summon cat -4 -26 -2
+  44093 actor   AddEntity 31 minecraft:cat ints=[(0,0)] floats=[]
+  44093 actor   SetEntityData 31 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(2)), Color=Default(Byte(0)), Nametag=Default
+## /summon cat -3 -26 -2
+  45087 actor   AddEntity 32 minecraft:cat ints=[(0,1)] floats=[]
+  45087 actor   SetEntityData 32 ints=[(0,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(3)), Color=Default(Byte(0)), Nametag=Default
+## /summon cat -2 -26 -2
+  46092 actor   AddEntity 33 minecraft:cat ints=[(0,0)] floats=[]
+  46093 actor   SetEntityData 33 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(10)), Color=Default(Byte(0)), Nametag=Defaul
+## /summon cat -1 -26 -2
+  47092 actor   AddEntity 34 minecraft:cat ints=[(0,0)] floats=[]
+  47093 actor   SetEntityData 34 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(7)), Color=Default(Byte(0)), Nametag=Default
+## /summon cat 0 -26 -2
+  48083 actor   AddEntity 35 minecraft:cat ints=[(0,1)] floats=[]
+  48083 actor   SetEntityData 35 ints=[(0,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(5)), Color=Default(Byte(0)), Nametag=Default
+## /summon cat 1 -26 -2
+  49092 actor   AddEntity 36 minecraft:cat ints=[(0,0)] floats=[]
+  49093 actor   SetEntityData 36 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(8)), Color=Default(Byte(0)), Nametag=Default
+## /
+## /summon armadillo -4 -26 -1
+  51090 actor   AddEntity 37 minecraft:armadillo ints=[(0,0)] floats=[]
+  51090 actor   SetEntityData 37 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /
+## /summon happy_ghast -4 -26 0
+  53093 actor   AddEntity 38 minecraft:happy_ghast ints=[(0,1)] floats=[]
+  53093 actor   SetEntityData 38 ints=[(0,1)] floats=[] metadata=[Flags=Flags(MetadataFlags1(281475251437568)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /
+## /summon copper_golem -4 -26 1
+  55093 actor   AddEntity 39 minecraft:copper_golem ints=[(0,0) (1,0) (2,0)] floats=[]
+  55093 actor   SetEntityData 39 ints=[(0,0) (1,0) (2,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nam
+## /
+## /summon creaking -4 -26 2
+  57085 actor   AddEntity 40 minecraft:creaking ints=[(0,0) (1,0)] floats=[]
+  57085 actor   SetEntityData 40 ints=[(0,0) (1,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=D
+## /
+  58283 actor   SetEntityData 39 ints=[(0,0)] floats=[] metadata=[]
+## /summon zombie_nautilus -4 -26 3
+  59090 actor   AddEntity 41 minecraft:zombie_nautilus ints=[(0,0)] floats=[]
+  59090 actor   SetEntityData 41 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424931180544)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+  59140 actor   SetEntityData 37 ints=[(0,1)] floats=[] metadata=[FlagsExtended=FlagsExtended(MetadataFlags2(-9205357638311739392)), AmbientSoundInterval=Default(Float(6.0))]
+## /
+## /summon sulfur_cube -4 -26 4
+  61085 actor   AddEntity 42 minecraft:sulfur_cube ints=[(0,0)] floats=[]
+  61085 actor   SetEntityData 42 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934850560)), Health=Default(Int(1)), Variant=Default(Int(2)), Color=Default(Byte(0)), Nametag=Default
+## /
+## /kill @e[type=!player]
+## /
+  64134 actor   AddEntity 44 minecraft:sulfur_cube ints=[(0,0)] floats=[]
+  64135 actor   AddEntity 43 minecraft:sulfur_cube ints=[(0,0)] floats=[]
+  64136 actor   SetEntityData 44 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(1)), Color=Default(Byte(0)), Nametag=Default
+  64136 actor   SetEntityData 43 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424934852608)), Health=Default(Int(1)), Variant=Default(Int(1)), Color=Default(Byte(0)), Nametag=Default
+## /fill 3 -27 4 4 -27 4 grass_block
+## /setblock 3 -26 4 poppy
+## /setblock 4 -26 4 dandelion
+## /summon bee 4.5 -25 2.5
+  68140 actor   AddEntity 47 minecraft:bee ints=[(0,0)] floats=[]
+  68140 actor   SetEntityData 47 ints=[(0,0)] floats=[] metadata=[Flags=Flags(MetadataFlags1(844424932229120)), Health=Default(Int(1)), Variant=Default(Int(0)), Color=Default(Byte(0)), Nametag=Default
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /kill @e[type=!player]

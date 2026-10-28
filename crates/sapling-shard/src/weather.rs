@@ -1,13 +1,19 @@
-//! Each world's weather, and what its players are told of it: the events BDS sent for
-//! `/weather` (research/captures/bds-weather.txt). A player is told whenever what it was last
-//! told differs from its world's sky, so one who joins or changes worlds is too.
-// TODO: how long a sky lasts where `doWeatherCycle` is on, and how often rain is thunder, are the
-// Java game's and a guess: BDS's were not watched; snow falls on no block. Lightning: lightning.rs.
+//! Each world's weather as BDS keeps and turns it, and what its players are told of it: the
+//! events BDS sent for `/weather` (research/captures/bds-weather.txt). The state is the level's
+//! (`Level::weather`, saved in `level.dat`): rain and lightning each have a level and the ticks
+//! until it turns, which BDS's `Weather::tick` (0x14119d290) counts down while `doWeatherCycle`
+//! is on, turning each when its count runs out and drawing how long the new spell lasts. A player
+//! is told whenever what it was last told differs from its world's sky, so one who joins or
+//! changes worlds is too.
+// TODO: BDS draws the spells from the level's random, here from a hash of the tick; `query`
+// answers thunder where lightning is on and rain is not, here clear; snow falls on no block.
+// Lightning: lightning.rs.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{Weather, WeatherBackend};
+use sapling_world::WeatherRecord;
 
 use crate::components::{InLayer, Layer, Outgoing, Tick, in_world};
 use crate::handlers::Ctx;
@@ -16,36 +22,65 @@ use crate::{dimensions, worlds};
 /// What BDS sent with the start of rain and of thunder.
 const FULL: i32 = 65535;
 const CYCLE: &str = "doWeatherCycle";
-/// The ticks a clear sky and a wet one last where the weather turns of itself: from, and to.
-const CLEAR_LASTS: [u64; 2] = [12_000, 180_000];
-const WET_LASTS: [u64; 2] = [12_000, 24_000];
-/// One wet sky in this many thunders.
-const THUNDERS: u64 = 4;
+/// A new spell lasts its least plus `nextInt` of its spread: clear sky and rain by
+/// `Weather::tick`, `stopWeather` and `/toggledownfall` (0x143a48410), thunder by `Weather::tick`.
+const CLEAR_SPELL: [u64; 2] = [12_000, 168_000];
+const RAIN_SPELL: [u64; 2] = [12_000, 12_000];
+const THUNDER_SPELL: [u64; 2] = [3_600, 12_000];
+/// `/weather` without a duration: `nextInt(600) * 20 + 6000` ticks (0x143a4f000).
+const COMMAND_SPELL: (u64, u64, u64) = (6_000, 600, 20);
+/// Counts at or below this turn the weather (`Weather::tick` compares with 2).
+const TURNS_AT: i32 = 1;
 
-/// A world's weather and the tick it clears in, if it does of itself.
-#[derive(Component, Clone, Copy, Default)]
-pub(crate) struct Sky {
-    weather: Weather,
-    until: Option<u64>,
+fn sky(record: &WeatherRecord) -> Weather {
+    match (record.rain_level > 0.0, record.lightning_level > 0.0) {
+        (false, _) => Weather::Clear,
+        (true, false) => Weather::Rain,
+        (true, true) => Weather::Thunder,
+    }
 }
 
-/// The weather a player was last told of.
-#[derive(Component, Clone, Copy, Default)]
-struct Told(Weather);
+fn home_record(world: &World, layer: Entity) -> Option<WeatherRecord> {
+    world.get::<Layer>(dimensions::home(world, layer)).map(|home| home.world.level().weather)
+}
 
 /// The sky of a world; another dimension has its overworld's.
 pub(crate) fn of(world: &World, layer: Entity) -> Weather {
-    world.get::<Sky>(dimensions::home(world, layer)).map_or(Weather::Clear, |sky| sky.weather)
+    home_record(world, layer).map_or(Weather::Clear, |record| sky(&record))
 }
 
-pub(crate) fn set(world: &mut World, layer: Entity, weather: Weather, ticks: Option<u32>) {
-    let layer = dimensions::home(world, layer);
-    let until = ticks.map(|ticks| world.resource::<Tick>().0 + u64::from(ticks));
-    if world.get::<Layer>(layer).is_some() {
-        world.entity_mut(layer).insert(Sky { weather, until });
-        // At once, as BDS told it before it answered the command.
-        tell(world);
+fn put(world: &mut World, layer: Entity, record: WeatherRecord) {
+    let home = dimensions::home(world, layer);
+    if let Some(mut home) = world.get_mut::<Layer>(home) {
+        home.world.level_mut().weather = record;
     }
+    // At once, as BDS told it before it answered the command.
+    tell(world);
+}
+
+/// `WeatherManager::updateWeather` as `/weather` calls it: rain and lightning on or off, both
+/// for `ticks` (BDS's own draw without them).
+pub(crate) fn set(world: &mut World, layer: Entity, weather: Weather, ticks: Option<u32>) {
+    let now = world.resource::<Tick>().0;
+    let (least, sides, step) = COMMAND_SPELL;
+    let ticks = ticks.map_or(least + chance(now, layer, 0) % sides * step, u64::from);
+    let time = i32::try_from(ticks).unwrap_or(i32::MAX);
+    let level = |on: bool| if on { 1.0 } else { 0.0 };
+    let record = WeatherRecord { rain_level: level(weather != Weather::Clear), rain_time: time, lightning_level: level(weather == Weather::Thunder), lightning_time: time };
+    put(world, layer, record);
+}
+
+/// `WeatherManager::stopWeather`, as a night slept through ends: where `doWeatherCycle` is on
+/// and it rains or thunders, both stop for a clear spell each.
+pub(crate) fn stop(world: &mut World, layer: Entity) {
+    let Some(level) = world.get::<Layer>(dimensions::home(world, layer)).map(|home| home.world.level()) else { return };
+    let wet = level.weather.rain_level != 0.0 || level.weather.lightning_level != 0.0;
+    if !wet || !level.rules.on(CYCLE) {
+        return;
+    }
+    let now = world.resource::<Tick>().0;
+    let spell = |salt| spell(CLEAR_SPELL, now, layer, salt);
+    put(world, layer, WeatherRecord { rain_level: 0.0, rain_time: spell(1), lightning_level: 0.0, lightning_time: spell(2) });
 }
 
 fn event(event: LevelEventEvent, data: i32) -> LevelEvent {
@@ -66,30 +101,46 @@ fn turns(was: Weather, now: Weather) -> Vec<LevelEvent> {
     told
 }
 
-/// A number that differs by tick and by world: the shard's dice are not thrown for the weather.
-fn chance(now: u64, layer: Entity) -> u64 {
-    let mut mixed = (now ^ layer.to_bits()).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+/// A number that differs by tick, world and draw: the shard's dice are not thrown for the weather.
+fn chance(now: u64, layer: Entity, salt: u64) -> u64 {
+    let mut mixed = (now ^ layer.to_bits() ^ salt.wrapping_mul(0xD6E8_FEB8_6659_FD93)).wrapping_mul(0x9E37_79B9_7F4A_7C15);
     mixed ^= mixed >> 29;
     mixed.wrapping_mul(0xBF58_476D_1CE4_E5B9) >> 16
 }
 
-/// Turns the skies whose time is up, and where the weather turns of itself gives a sky without
-/// an end one; players are told of any change. A sky a command or plugin timed clears.
+fn spell([least, spread]: [u64; 2], now: u64, layer: Entity, salt: u64) -> i32 {
+    (least + chance(now, layer, salt) % spread) as i32
+}
+
+/// One tick of `Weather::tick`: both counts run down; one that ran out turns its weather and
+/// draws the new spell's length.
+fn turned(record: WeatherRecord, now: u64, layer: Entity) -> WeatherRecord {
+    let (rain_turns, lightning_turns) = (record.rain_time <= TURNS_AT, record.lightning_time <= TURNS_AT);
+    let mut next = WeatherRecord { rain_time: record.rain_time - 1, lightning_time: record.lightning_time - 1, ..record };
+    if rain_turns {
+        let rains = record.rain_level <= 0.0;
+        next.rain_level = if rains { 1.0 } else { 0.0 };
+        next.rain_time = spell(if rains { RAIN_SPELL } else { CLEAR_SPELL }, now, layer, 1);
+    }
+    if lightning_turns {
+        let thunders = record.lightning_level <= 0.0;
+        next.lightning_level = if thunders { 1.0 } else { 0.0 };
+        next.lightning_time = spell(if thunders { THUNDER_SPELL } else { CLEAR_SPELL }, now, layer, 2);
+    }
+    next
+}
+
+/// Turns the weather of every overworld where `doWeatherCycle` is on; players are told of any
+/// change.
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let skies: Vec<(Entity, Sky, bool)> = world.query::<(Entity, &Layer, Option<&Sky>)>().iter(world).map(|(layer, level, sky)| (layer, sky.copied().unwrap_or_default(), level.world.level().rules.on(CYCLE))).collect();
-    let skies: Vec<(Entity, Sky, bool)> = skies.into_iter().filter(|(layer, ..)| dimensions::home(world, *layer) == *layer).collect();
-    for (layer, sky, cycles) in skies {
-        let is_over = sky.until.is_some_and(|until| now >= until);
-        let lasts = |[least, most]: [u64; 2]| now + least + chance(now, layer) % (most - least);
-        let next = match (is_over, cycles, sky.weather) {
-            (true, true, Weather::Clear) => Sky { weather: if chance(now + 1, layer) % THUNDERS == 0 { Weather::Thunder } else { Weather::Rain }, until: Some(lasts(WET_LASTS)) },
-            (true, true, _) => Sky { weather: Weather::Clear, until: Some(lasts(CLEAR_LASTS)) },
-            (true, false, _) => Sky::default(),
-            (false, true, weather) if sky.until.is_none() => Sky { weather, until: Some(lasts(if weather == Weather::Clear { CLEAR_LASTS } else { WET_LASTS })) },
-            _ => continue,
-        };
-        world.entity_mut(layer).insert(next);
+    let cycling: Vec<Entity> = world.query::<(Entity, &Layer)>().iter(world).filter(|(_, layer)| layer.world.level().rules.on(CYCLE)).map(|(layer, _)| layer).collect();
+    let homes: Vec<Entity> = cycling.into_iter().filter(|layer| dimensions::home(world, *layer) == *layer).collect();
+    for layer in homes {
+        if let Some(mut home) = world.get_mut::<Layer>(layer) {
+            let level = home.world.level_mut();
+            level.weather = turned(level.weather, now, layer);
+        }
     }
     tell(world);
 }
@@ -108,6 +159,10 @@ fn tell(world: &mut World) {
         }
     }
 }
+
+/// The weather a player was last told of.
+#[derive(Component, Clone, Copy, Default)]
+struct Told(Weather);
 
 impl WeatherBackend for Ctx<'_> {
     fn weather(&self) -> Weather {
@@ -135,7 +190,20 @@ mod tests {
 
     #[test]
     fn the_chance_differs_from_tick_to_tick() {
-        let drawn: std::collections::HashSet<u64> = (0..64).map(|now| chance(now, Entity::PLACEHOLDER) % 1000).collect();
+        let drawn: std::collections::HashSet<u64> = (0..64).map(|now| chance(now, Entity::PLACEHOLDER, 1) % 1000).collect();
         assert!(drawn.len() > 48, "{}", drawn.len());
+    }
+
+    #[test]
+    fn each_count_turns_its_own_weather_when_it_runs_out() {
+        let rain = WeatherRecord { rain_level: 1.0, rain_time: 2, lightning_level: 0.0, lightning_time: 40 };
+        let next = turned(rain, 0, Entity::PLACEHOLDER);
+        assert_eq!((next.rain_level, next.rain_time, next.lightning_time), (1.0, 1, 39));
+        let next = turned(next, 1, Entity::PLACEHOLDER);
+        assert_eq!((next.rain_level, next.lightning_level, next.lightning_time), (0.0, 0.0, 38), "rain stopped, lightning still counting");
+        assert!((12_000..180_000).contains(&next.rain_time), "a clear spell: {}", next.rain_time);
+        let storm = turned(WeatherRecord { lightning_time: 1, ..rain }, 0, Entity::PLACEHOLDER);
+        assert_eq!((storm.rain_level, storm.lightning_level, sky(&storm)), (1.0, 1.0, Weather::Thunder));
+        assert!((3_600..15_600).contains(&storm.lightning_time), "a thunder spell: {}", storm.lightning_time);
     }
 }

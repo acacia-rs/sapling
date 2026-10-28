@@ -20,6 +20,8 @@ fn hunted_by(kind: &'static str, difficulty: Difficulty) -> (Harness, u64) {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.enter(2, "Steve");
+    // Off Alex's spot, so as not to push what comes to it twice over.
+    h.receive(2, &common::input_at([0.5, 65.0, -6.5]));
     h.remote.run(move |ctx| {
         ctx.set_difficulty(difficulty);
         // By night: the sun would burn most of them.
@@ -143,7 +145,11 @@ fn a_cow_left_alone_strolls_at_its_pace_and_stays_on_the_floor() {
     // research/captures/bds-stroll.txt: a cow went 0.08634 a tick, up to ten blocks at a time.
     let mut h = Harness::with(sapling_shard::ShardConfig { mobs_stroll: true, ..common::config() }, common::platform());
     h.enter(1, "Alex");
-    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 0.5]).is_some()));
+    // A spectator, so as not to push it.
+    h.remote.run(|ctx| {
+        let _ = ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Spectator);
+        assert!(ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 0.5]).is_some());
+    });
     let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     for _ in 0..1200 {
         let seen = seen.clone();
@@ -187,7 +193,8 @@ fn a_creeper_lights_its_fuse_three_blocks_off_and_bursts_as_on_bds() {
     // the stone under it.
     let (mut h, creeper) = hunted_by("minecraft:creeper", Difficulty::Easy);
     let (ticks, sent) = until_hit(&mut h, 80);
-    let fuses: Vec<i32> = all::<SetEntityData>(&sent).iter().flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect();
+    // The blast's loot comes with its whole metadata, FuseLength -1 among it.
+    let fuses: Vec<i32> = all::<SetEntityData>(&sent).iter().filter(|data| data.runtime_entity_id == creeper).flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect();
     assert_eq!((fuses.len(), fuses.first(), fuses.last()), (30, Some(&29), Some(&0)), "lit at tick {}", ticks - 31);
     assert!(all::<LevelEvent>(&sent).iter().any(|event| event.event == LevelEventEvent::ParticleExplosion && event.data == 3) && all::<RemoveEntity>(&sent).len() == 1);
     let hurt = 20.0 - health(&sent)[0];
@@ -220,9 +227,9 @@ fn a_skeleton_stands_off_and_looses_an_arrow_every_three_seconds() {
 
 #[test]
 fn an_arrow_hurts_a_mob_that_stands_in_its_way() {
-    // The skeleton shoots at Alex over a cow two blocks before it.
+    // The skeleton shoots at Alex over a cow a block before it, beyond where Alex would push it.
     let (mut h, _) = hunted_by("minecraft:skeleton", Difficulty::Easy);
-    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 1.3]).is_some()));
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 1.5]).is_some()));
     let sent: Vec<RawPacket> = (0..75).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
     let cows: Vec<f32> = all::<UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id > 3).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
     assert!(health(&sent).is_empty() && cows.last().is_some_and(|left| *left < 10.0), "the cow took it: {cows:?}");

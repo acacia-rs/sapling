@@ -190,6 +190,15 @@ pub(super) fn thrown(world: &mut World, block: &str, properties: &str, by: &Brea
     of(block, properties, by, &mut |sides| dice.roll(sides))
 }
 
+/// What the block at `pos` would drop to `tool` (`/loot ... mine`); the block stays. Nothing from
+/// air, a liquid or a cell outside the world.
+pub(crate) fn mined(world: &mut World, layer: Entity, pos: BlockPos, tool: Option<&Item>) -> Vec<Item> {
+    let Some(level) = super::level(world, layer).filter(|level| level.in_height(pos[1]) && level.is_loaded(super::send::column(pos))) else { return Vec::new() };
+    let Some(state) = level.registry().get(level.block(pos[0], pos[1], pos[2])).filter(|state| !state.is_air() && !state.is_liquid()) else { return Vec::new() };
+    let (name, properties, by) = (state.name.to_owned(), state.properties.to_owned(), super::mining::breaker_of(tool, &state.mining));
+    thrown(world, &name, &properties, &by)
+}
+
 /// `items` as stacks; items the game lacks are left out.
 fn stacks(world: &World, layer: Entity, items: &[Item]) -> Vec<sapling_world::ItemStack> {
     let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return Vec::new() };

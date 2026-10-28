@@ -59,10 +59,15 @@ pub(crate) fn dispatch(world: &mut World) {
     actions::dispatch_moves(world);
     chat::dispatch(world);
     commands::dispatch(world);
+    blocks::show_blocks_again(world);
+    blocks::dispatch_command_block_updates(world);
+    blocks::dispatch_structure_block_updates(world);
+    blocks::dispatch_structure_exports(world);
     blocks::release_buttons(world);
     blocks::press_plates(world);
     blocks::batched(world, blocks::trip_wires);
     blocks::batched(world, blocks::run_queued);
+    crate::structures::animate(world);
     blocks::batched(world, blocks::hear_vibrations);
     blocks::batched(world, blocks::flow_liquids);
     blocks::dispatch(world);
@@ -72,6 +77,7 @@ pub(crate) fn dispatch(world: &mut World) {
     dimensions::acknowledge(world, &actions);
     sleep::tick(world, &actions);
     campfires::tick(world);
+    blocks::wake_conduits(world);
     // After the requests: a block placed over a gap falls in the tick it was placed, as on BDS.
     blocks::fall_blocks(world);
     tnt::burn(world);
@@ -83,13 +89,25 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::light::relight(world);
     blocks::batched(world, blocks::random_ticks);
     inventory::dispatch(world);
+    inventory::dispatch_picks(world);
+    crate::workstations::dispatch_anvil_damage(world);
+    crate::join::dispatch_game_type_requests(world);
     blocks::dispatch_crafter_toggles(world);
+    crate::books::dispatch(world);
+    crate::maps::dispatch(world);
+    crate::maps::tick(world);
+    crate::inventory::number_bundles(world);
+    crate::inventory::sweep_bundles(world);
+    blocks::turn_lectern_pages(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
     containers::show_turned_barrels(world);
+    containers::show_again_due(world);
     late_sounds::play_due(world);
     containers::close_where_gone(world);
     furnaces::tick(world);
+    crate::brewing::tick(world);
+    crate::beacons::tick(world);
     hoppers::tick(world);
     entities::remove_left(world);
     drops::fly(world);
@@ -98,6 +116,7 @@ pub(crate) fn dispatch(world: &mut World) {
     orbs::tick(world);
     crate::riding::drive(world);
     creatures::tick(world);
+    crate::paintings::tick(world);
     crate::vehicles::tick(world);
     crate::riding::carry(world);
     crate::spawning::despawn(world);
@@ -106,6 +125,9 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::dragon::tick(world);
     crate::eyes::tick(world);
     crate::shots::tick(world);
+    crate::fishing::tick(world);
+    crate::gliding::tick(world);
+    crate::instruments::tick(world);
     crate::fireworks::tick(world);
     crate::lightning::tick(world);
     vitals::tick(world);

@@ -125,6 +125,21 @@ impl World {
         self.columns.iter().filter(|(_, column)| !column.actors().is_empty()).map(|(pos, _)| *pos).collect()
     }
 
+    /// The block ticks a loaded column was stored with, or last given (`StoredColumn::pending_ticks`).
+    pub fn pending_ticks(&self, pos: ChunkPos) -> &[u8] {
+        self.column(pos).map_or(&[], Column::pending_ticks)
+    }
+
+    /// Replaces a loaded column's waiting block ticks, to be saved with it; false where none is loaded.
+    pub fn set_pending_ticks(&mut self, pos: ChunkPos, ticks: Vec<u8>) -> bool {
+        self.column_mut(pos).map(|column| column.set_pending_ticks(ticks)).is_some()
+    }
+
+    /// The loaded columns, for writing back what is kept beside their blocks.
+    pub fn loaded_positions(&self) -> Vec<ChunkPos> {
+        self.columns.keys().copied().collect()
+    }
+
     /// The runtime id of a block's default-ordered first state, e.g. `minecraft:stone`.
     pub fn block_id(&self, name: &str) -> Option<u32> {
         self.registry.states_of(name).next().map(|(id, _)| id)
@@ -150,6 +165,12 @@ impl World {
     pub fn surface(&self, x: i32, z: i32) -> Option<i32> {
         let stands = |id| self.registry.get(id).is_some_and(|s| s.is_solid() || s.is_liquid());
         self.column(ChunkPos::of_block(x, z))?.top(x, z, stands)
+    }
+
+    /// The y of the highest layer-0 block in block column `(x, z)` that `counts` accepts; `None` where
+    /// there is none or the column is not loaded.
+    pub fn top_where(&self, x: i32, z: i32, counts: impl Fn(u32) -> bool) -> Option<i32> {
+        self.column(ChunkPos::of_block(x, z))?.top(x, z, counts)
     }
 
     /// The y of the highest block in block column `(x, z)` that has collision; `None` where there

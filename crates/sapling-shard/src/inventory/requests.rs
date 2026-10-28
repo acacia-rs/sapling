@@ -15,7 +15,7 @@ use sapling_world::ItemStack;
 
 use super::crafting::Craft;
 use super::forge::{self, Bench, Forge, Forged};
-use super::{ARMOR, Inventory, MAIN, MAX_COUNT, Place, described};
+use super::{ARMOR, Inventory, MAIN, MAX_COUNT, Place, bundles, described};
 use crate::components::{Mode, Outgoing, PacketQueues, PerTick, in_world_identity};
 use crate::{containers, drops, workstations};
 use crate::plugins;
@@ -64,6 +64,7 @@ fn place(info: &StackRequestSlotInfo) -> Option<Place> {
         ContainerSlotType::Offhand => Some(Place::Offhand),
         ContainerSlotType::Cursor => Some(Place::Cursor),
         ContainerSlotType::CreativeOutput if info.slot == CREATED_SLOT => Some(Place::Created),
+        ContainerSlotType::Dynamic if slot < bundles::SLOTS => Some(Place::Bundle(slot)),
         kind if forge::ui_slot(kind) == Some(slot) => Some(Place::Ui(slot)),
         _ => None,
     }
@@ -73,6 +74,10 @@ impl Applied {
     /// The slot a request names, if it holds the stack the client thinks it does.
     fn named(&mut self, inventory: &Inventory, info: &StackRequestSlotInfo) -> Result<Place, ()> {
         let place = place(info).ok_or(())?;
+        let lent = inventory.bundle.as_ref().and_then(|(id, _)| u32::try_from(*id).ok());
+        if matches!(place, Place::Bundle(_)) && info.slot_type.dynamic_container_id != lent {
+            return Err(());
+        }
         let id = inventory.slot(place).and_then(Option::as_ref).map_or(0, |held| held.id);
         // An id below 1 names an empty slot or a stack this request made (its own request id).
         if info.stack_id > 0 && place != Place::Created && info.stack_id != id {
@@ -103,11 +108,16 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
         let unstarted = craft.is_none() && forge.is_none();
         match (&action.content, &at.bench) {
             (Action::CraftRecipe(asked), Some(bench)) if unstarted => forge = Some(Forge::by_recipe(inventory, bench, asked.recipe_network_id, creative)?),
-            (Action::Optional(asked), Some(Bench::Anvil)) if unstarted => {
-                let name = usize::try_from(asked.filtered_string_index).ok().and_then(|index| request.custom_names.get(index));
-                forge = Some(Forge::repair(inventory, name.map(String::as_str), creative)?);
+            (Action::Optional(asked), Some(bench @ (Bench::Anvil | Bench::Cartography(_)))) if unstarted => {
+                let name = usize::try_from(asked.filtered_string_index).ok().and_then(|index| request.custom_names.get(index)).map(String::as_str);
+                forge = Some(match bench {
+                    Bench::Cartography(chart) => Forge::chart(inventory, chart, asked.recipe_network_id, name)?,
+                    _ => Forge::repair(inventory, name, creative)?,
+                });
             }
             (Action::CraftGrindstoneRequest(asked), Some(Bench::Grindstone)) if unstarted => forge = Some(Forge::grind(inventory, asked.recipe_network_id, asked.cost)?),
+            (Action::CraftLoomRequest(asked), Some(Bench::Loom)) if unstarted => forge = Some(Forge::loom(inventory, &asked.pattern)?),
+            (Action::BeaconPayment(paid), Some(Bench::Beacon(level))) if unstarted => forge = Some(Forge::beacon(inventory, *level, paid.primary_effect, paid.secondary_effect)?),
             (Action::CraftRecipe(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, true)?),
             (Action::CraftRecipeAuto(asked), None) if unstarted => craft = Some(Craft::start(inventory, asked.recipe_network_id, asked.times_crafted, station, false)?),
             (Action::Create(asked), _) => craft.as_mut().ok_or(())?.create(inventory, asked.result_slot_id.into())?,
@@ -129,6 +139,12 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
             (Action::Drop(thrown), _) => {
                 let from = applied.named(inventory, &thrown.source)?;
                 applied.dropped.push(inventory.take(from, thrown.count)?);
+            }
+            // A beacon's payment is destroyed, not consumed.
+            (Action::Destroy(destroy), _) if forge.is_some() => {
+                let from = applied.named(inventory, &destroy.source)?;
+                inventory.take(from, destroy.count)?;
+                forge.as_mut().expect("matched above").use_up(from, destroy.count);
             }
             (Action::Destroy(destroy), _) if creative => {
                 let from = applied.named(inventory, &destroy.source)?;
@@ -156,6 +172,8 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
 /// What BDS answers a request a container refused to hold an item in (a furnace's fuel slot asked
 /// to take stone): this status, and nothing resent (research/captures/containers-findings.md D4).
 const CANNOT_HOLD: Status = Status::Unknown(55);
+/// What BDS answers a take out of an empty bundle slot, nothing resent (bds-bundlekeep.txt).
+const NOTHING_THERE: Status = Status::Unknown(49);
 
 fn refusal(request_id: i32, status: Status) -> ItemStackResponse {
     ItemStackResponse { responses: vec![ItemStackResponsesItem { status, request_id, containers: None }] }
@@ -170,7 +188,8 @@ fn response(inventory: &Inventory, request_id: i32, applied: &Applied) -> ItemSt
             hotbar_slot: *slot,
             count: held.map_or(0, |held| held.stack.count),
             item_stack_id: held.map(|held| held.id),
-            custom_name: String::new(),
+            // BDS named a renamed map's slot by its new name (research/captures/bds-maps.txt).
+            custom_name: held.and_then(|held| sapling_data::enchant::anvil::custom_name(held.stack.tag.as_ref())).unwrap_or_default().to_owned(),
             filtered_custom_name: String::new(),
             durability_correction: 0,
         };
@@ -197,34 +216,44 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     let at = &At { station: containers::station(world, entity), bench: workstations::bench(world, entity) };
     let refuses = containers::refusal(world, entity);
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
+    bundles::lend(&mut trial, request);
+    let takes_nothing = bundles::takes_nothing(&trial, request);
     let mut unrefused = Inventory { refuses: None, ..trial.clone() };
     // Tried on a copy first: the handlers see a drop before anything has left the inventory.
     let tried = apply(&mut trial, request, creative, at);
-    let failed = tried.is_err();
-    let allowed = tried.is_ok_and(|applied| may_drop(world, player,&applied.dropped));
+    let overfilled = tried.is_ok() && trial.bundle.as_ref().is_some_and(|(_, held)| !bundles::fits(held));
+    let failed = tried.is_err() || overfilled;
+    let allowed = !overfilled && tried.is_ok_and(|applied| may_drop(world, player, &applied.dropped));
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let Ok((mut inventory, mut out)) = query.get_mut(world, entity) else { return };
     (inventory.container, inventory.refuses) = (open.unwrap_or_default(), refuses);
+    bundles::lend(&mut inventory, request);
+    let lent = inventory.bundle.as_ref().map(|(_, held)| held.clone()).unwrap_or_default();
     let applied = if allowed { apply(&mut inventory, request, creative, at).ok() } else { None };
     // Made before the container's slots are taken back out (the answer names them), sent after
     // the container's slots are shown, as BDS does.
     let answer = applied.as_ref().map(|applied| response(&inventory, request.request_id, applied));
+    let bundle_slots = if applied.is_some() { bundles::keep(&mut inventory, &lent) } else { Vec::new() };
+    let shown_bundle = bundles::shown_slots(&inventory, &bundle_slots);
     let (container, _) = (std::mem::take(&mut inventory.container), inventory.refuses.take());
     match (applied, answer) {
         (Some(applied), Some(answer)) => {
             containers::store(world, entity, container);
             if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
                 out.push(&answer);
+                shown_bundle.iter().for_each(|slot| out.push(slot));
             }
             applied.dropped.into_iter().for_each(|stack| drops::throw(world, entity, stack));
             workstations::answered(world, entity, applied.forged);
         }
-        // Only the container's refusal stood in the way: the client undoes it by itself.
-        _ if failed && apply(&mut unrefused, request, creative, at).is_ok() => out.push(&refusal(request.request_id, CANNOT_HOLD)),
+        _ if failed && takes_nothing => out.push(&refusal(request.request_id, NOTHING_THERE)),
+        // Only the container's refusal or a bundle's weight stood in the way: the client undoes it
+        // by itself.
+        _ if overfilled || (failed && apply(&mut unrefused, request, creative, at).is_ok()) => out.push(&refusal(request.request_id, CANNOT_HOLD)),
         _ => {
             tracing::debug!(player = %player.name, ?request, "refusing an inventory request");
             out.push(&refusal(request.request_id, Status::Error));
-            inventory.send_all(&mut out);
+            inventory.send_all(&mut out, false);
             containers::resend(world, entity);
         }
     }

@@ -1,0 +1,106 @@
+## drill starts at 1793121658194
+## /kill @e[type=!player]
+## /fill ~-3 ~-1 ~-3 ~3 ~-1 ~3 stone
+## /fill ~-3 ~ ~-3 ~3 ~3 ~3 air
+## /gamemode survival @s
+## /clear @s
+## /effect @s clear
+## /replaceitem entity @s slot.weapon.mainhand 0 air
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Ok(())
+  17749 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 436 }
+## /replaceitem entity @s slot.weapon.mainhand 0 wooden_pickaxe
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Ok(())
+  23940 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 2912 }
+## /effect @s clear
+## /effect @s haste 30 0
+  26953 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 3, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+  26953 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 3, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+## /replaceitem entity @s slot.weapon.mainhand 0 air
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Ok(())
+  36326 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 629 }
+  36342 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 0 }
+## /replaceitem entity @s slot.weapon.mainhand 0 wooden_pickaxe
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Ok(())
+  42176 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 4194 }
+  42187 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 0 }
+## /effect @s clear
+  44186 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 3, amplifier: 0, particles: true, duration: 263, tick: 0, ambient: false }
+  44186 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 3, amplifier: 0, particles: true, duration: 263, tick: 0, ambient: false }
+## /effect @s haste 30 2
+  45184 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 3, amplifier: 2, particles: true, duration: 600, tick: 0, ambient: false }
+  45184 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 3, amplifier: 2, particles: true, duration: 600, tick: 0, ambient: false }
+## /replaceitem entity @s slot.weapon.mainhand 0 air
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Ok(())
+  52021 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 1207 }
+  52033 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 0 }
+## /replaceitem entity @s slot.weapon.mainhand 0 wooden_pickaxe
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Ok(())
+  57547 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 8052 }
+  57558 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 0 }
+## /effect @s clear
+  59561 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 3, amplifier: 2, particles: true, duration: 318, tick: 0, ambient: false }
+  59561 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 3, amplifier: 2, particles: true, duration: 318, tick: 0, ambient: false }
+## /effect @s mining_fatigue 30 0
+  60562 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 4, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+  60563 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 4, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+## /replaceitem entity @s slot.weapon.mainhand 0 air
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Err(Rejected("breaking minecraft:stone at [2, -51, 0]: the server showed no change after 3 tries"))
+  87846 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 91 }
+## /replaceitem entity @s slot.weapon.mainhand 0 wooden_pickaxe
+## /setblock ~2 ~ ~ stone
+  91092 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 4, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+  91092 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 4, amplifier: 0, particles: true, duration: 0, tick: 0, ambient: false }
+## /!break 2 0 0
+## broke: Ok(())
+  94065 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 2912 }
+## /effect @s clear
+## /effect @s mining_fatigue 30 1
+  97073 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 4, amplifier: 1, particles: true, duration: 600, tick: 0, ambient: false }
+  97101 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 4, amplifier: 1, particles: true, duration: 600, tick: 0, ambient: false }
+## /replaceitem entity @s slot.weapon.mainhand 0 air
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Err(Rejected("breaking minecraft:stone at [2, -51, 0]: the server showed no change after 3 tries"))
+ 124465 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 19 }
+## /replaceitem entity @s slot.weapon.mainhand 0 wooden_pickaxe
+## /setblock ~2 ~ ~ stone
+ 127671 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 4, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+ 127671 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 4, amplifier: 1, particles: true, duration: 0, tick: 0, ambient: false }
+## /!break 2 0 0
+## broke: Ok(())
+ 130680 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 2912 }
+## /effect @s clear
+## /effect @s conduit_power 30 0
+ 133691 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 26, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+ 133691 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 26, amplifier: 0, particles: true, duration: 600, tick: 0, ambient: false }
+## /replaceitem entity @s slot.weapon.mainhand 0 air
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Ok(())
+ 143069 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 629 }
+ 143086 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 0 }
+## /replaceitem entity @s slot.weapon.mainhand 0 wooden_pickaxe
+## /setblock ~2 ~ ~ stone
+## /!break 2 0 0
+## broke: Ok(())
+ 148922 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 4194 }
+ 148933 actor   LevelEvent LevelEvent { event: BlockStartBreak, position: Vec3f { x: 2.0, y: -51.0, z: 0.0 }, data: 0 }
+## /effect @s clear
+ 150937 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 26, amplifier: 0, particles: true, duration: 262, tick: 0, ambient: false }
+ 150937 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 26, amplifier: 0, particles: true, duration: 262, tick: 0, ambient: false }
+## /clear @s
+## /gamemode creative @s

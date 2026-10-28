@@ -60,11 +60,12 @@ pub(crate) struct MobGrid {
 /// What shows a stored actor as it was stored; `None` for a dropped item that names no item a
 /// client knows.
 pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
-    announcement_with(actor, id, MetadataFlags1(0))
+    announcement_with(actor, id, MetadataFlags1(0), None, None)
 }
 
-/// [`announcement`] with `extra` flags on top of those its stored states show.
-pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1) -> Option<Vec<Bytes>> {
+/// [`announcement`] with `extra` flags on top of those its stored states show, its entity
+/// `properties` where they are known, and the `strides` a mount was born with.
+pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, properties: Option<EntityProperties>, strides: Option<&sapling_data::Strides>) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
         return Some(item_shown(sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?));
     }
@@ -78,7 +79,7 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1) -
         ActorState::Chested => MetadataFlags1::CHESTED,
         ActorState::Sitting => MetadataFlags1::SITTING,
     };
-    let mut packets = vec![sapling_net::encode(&sapling_data::add_entity(&AddEntityOptions {
+    let mut added = sapling_data::add_entity(&AddEntityOptions {
         flags: MetadataFlags1(actor.states.iter().fold(extra.0, |flags, state| flags | flag(state).0)),
         health: actor.health,
         id,
@@ -91,7 +92,14 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1) -
         color: actor.color,
         baby: actor.baby,
         name: &actor.name,
-    }))];
+    });
+    if let Some(properties) = properties {
+        added.properties = properties;
+    }
+    if let Some(strides) = strides {
+        sapling_data::dress_strides(&mut added, strides, actor.health);
+    }
+    let mut packets = vec![sapling_net::encode(&added)];
     if actor.armor.iter().any(Option::is_some) {
         let slots: Vec<_> = actor.armor.iter().map(|slot| slot.as_ref().map(stack)).collect();
         packets.push(sapling_net::encode(&sapling_data::mob_armor(id, &slots)));
@@ -104,8 +112,9 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1) -
 
 /// What shows a stack as an item at `position` moving at `velocity`; `None` for an item no
 /// client knows.
-pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3]) -> Option<Vec<Bytes>> {
-    Some(item_shown(sapling_data::add_item_entity(id, &stack(item), position, velocity)?))
+pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3], fished: bool) -> Option<Vec<Bytes>> {
+    let shown = sapling_data::add_item_entity(id, &stack(item), position, velocity)?;
+    Some(item_shown(AddItemEntity { is_from_fishing: fished, ..shown }))
 }
 
 /// An item's announcement and its metadata again, as BDS follows one (findings D9, bds-kill.txt).

@@ -1,28 +1,36 @@
-//! Mobs, spawned through the plugin API or kept by a world folder (birth.rs): bodies (body.rs) that fall and
-//! collide, stroll (strolling.rs), hunt if their kind does (hunting.rs) and are raised (husbandry.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
+//! Mobs, spawned through the plugin API or kept by a world folder (birth.rs): bodies (body.rs) that fall,
+//! collide and push each other (crowding.rs), stroll (strolling.rs), swim (swimming.rs, squids.rs), fly about (wings.rs), hunt if their kind does (hunting.rs) and are raised (husbandry.rs), shown as BDS announced their kind (`sapling_data::add_entity`) or
 //! as they were stored; and the entity side of the handlers' context (backend.rs).
-// TODO: no AI but strolling, hunting and raising; their physics are the Java game's (`Physics::MOB`); a spawned mob is
+// TODO: no AI but strolling, swimming, flying about, hunting and raising; a spawned mob is
 // saved with the least a compound needs, which BDS was not tried on.
 
 mod afflictions;
+mod armour_stands;
 mod arrows;
 mod attacks;
 mod backend;
+mod bees;
 mod birth;
 mod blast;
+mod blows;
 mod breezes;
 mod dolphins;
 mod drinks;
+mod drowned;
 mod bullets;
 mod charges;
+mod creaking;
+mod crowding;
 mod death;
 mod duels;
 mod enchanted;
 mod fireballs;
 mod flight;
 mod floating;
+mod frogs;
 mod genes;
 mod ghasts;
+mod guardians;
 mod harm;
 mod health;
 mod hits;
@@ -32,19 +40,29 @@ mod landing;
 mod legs;
 mod omens;
 mod paths;
+mod piglins;
+mod properties;
 mod rams;
+mod scooping;
 mod shooting;
 mod shown;
 mod slimes;
+mod smash;
+mod snow_golems;
 mod spells;
 mod splashes;
+mod squids;
 mod strolling;
 mod stares;
+mod strides;
 mod struck;
 mod summoned;
+mod swimming;
 mod teleports;
 mod vexes;
 mod villagers;
+mod warden;
+mod wings;
 mod wither;
 
 use bevy_ecs::prelude::*;
@@ -60,9 +78,12 @@ use shown::{head, physics_of, reshow};
 pub(crate) use birth::{from_storage, spawn};
 pub(crate) use shown::is_baby;
 pub(crate) use afflictions::{breathed_on, splashed};
+pub(crate) use armour_stands::use_on as dress_stand;
 pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot};
-pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, from_storage as shot_from_storage, launch, lying as lying_shots, unstick};
+pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, from_storage as shot_from_storage, launch, lying as lying_shots, sound, unstick};
 pub(crate) use attacks::attacked;
+pub(crate) use bees::{bees_in, hive_broken};
+pub(crate) use creaking::{heart_noticed, hearts_arrived};
 pub(crate) use blast::{Wreck, explode};
 pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, is_full_block, touches, wound};
@@ -70,11 +91,14 @@ pub(crate) use health::{Cause, Health};
 pub(crate) use hunting::{on_difficulty, sees};
 pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, owner_hurt, shear_in, tame_by_riding, tie_to_fence};
 pub(crate) use omens::{Omens, befall, infested_hurt};
+pub(crate) use piglins::barter;
+pub(crate) use scooping::{held_kind as bucketed_kind, release as release_from_bucket, scoop};
 pub(crate) use struck::struck_by_lightning;
 pub(crate) use villagers::{bargains, interact as trade_with, stop_trading, traded};
+pub(crate) use warden::hear as warden_hears;
 pub(crate) use wither::{build as build_wither, hurt as wither_hurt, spares};
 use crate::components::{InLayer, NetId, Tick};
-use crate::{blocks, entities, mobs};
+use crate::{entities, mobs};
 
 
 /// A mob: spawned through the API, or kept by a world folder and dressed as it was stored
@@ -91,7 +115,7 @@ impl Creature {
     }
 }
 
-/// A mob that died at the tick it holds; it goes [`DYING`] ticks after.
+/// A mob that died: the tick it goes in, [`DYING`] after its death (a wither's later, wither/dying.rs).
 #[derive(Component)]
 struct Dying(u64);
 
@@ -104,6 +128,14 @@ pub(crate) fn is_alive(world: &World, entity: Entity) -> bool {
 const DYING: u64 = 21;
 /// Killed, these go at once, without a death or loot, as BDS's armor stand.
 const NO_DEATH: &[&str] = &["minecraft:armor_stand"];
+
+/// Writes what mobs keep beyond their place and health (effects, a wither's fight) into what the
+/// world folder keeps of them.
+pub(crate) fn keep_state(world: &mut World) {
+    afflictions::keep(world);
+    wither::keep(world);
+    piglins::keep(world);
+}
 
 /// Kills the entity `id` (see `ShardCtx::kill_entity`).
 fn kill(world: &mut World, id: EntityId) -> bool {
@@ -140,9 +172,17 @@ pub(crate) fn tick(world: &mut World) {
     charges::tick(world);
     fireballs::tick(world);
     wither::tick(world);
+    bees::tick(world);
+    guardians::tick(world);
+    snow_golems::tick(world);
+    piglins::tick(world);
     husbandry::tick(world);
+    crowding::tick(world);
+    warden::tick(world);
+    armour_stands::tick(world);
+    creaking::tick_hearts(world);
     let now = world.resource::<Tick>().0;
-    let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0 + DYING).map(|(entity, _)| entity).collect();
+    let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0).map(|(entity, _)| entity).collect();
     for entity in dead {
         attacks::leave_experience(world, entity);
         slimes::split(world, entity);
@@ -171,7 +211,9 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer) {
+        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !warden::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !snow_golems::steer(world, entity, layer, id, &kind) && !piglins::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
+            && !frogs::steer(world, entity, layer, id) && !swimming::steer(world, entity, layer, &kind) && !squids::steer(world, entity, layer)&& !wings::steer(world, entity, layer, &kind)
+        {
             let traits = sapling_data::mob_traits(&kind);
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {
@@ -183,10 +225,13 @@ pub(crate) fn tick(world: &mut World) {
             slimes::tick(world, entity, layer, id, &kind, &start);
         }
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
-        blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
+        entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets.clone());
         if thinks {
-            hunting::strike(world, entity, layer, id, &kind, &body);
+            if !creaking::is_frozen(world, entity) && !warden::is_busy(world, entity) {
+                hunting::strike(world, entity, layer, id, &kind, &body);
+            }
             rams::strike(world, entity, layer, id, &kind, &body);
+            drowned::throw(world, entity, layer, id, &kind, &body);
             slimes::after_move(world, entity, layer, id, &kind, &start, &body);
             if blast::tick(world, entity, layer, id, &kind, &body) {
                 continue;

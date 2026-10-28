@@ -1,7 +1,6 @@
 //! What a changed block does to its neighbours: sand and gravel over a gap start to fall
 //! (falling.rs), and what stood on or hung off a block that is gone breaks and leaves its item.
-// TODO: the lists are name endings, not block data; levers, vines, wall banners and beds are not
-// looked at; `ctx.set_block` settles nothing.
+// TODO: the lists are name endings, not block data; a vine goes at once, where BDS took a tick.
 
 use std::collections::VecDeque;
 
@@ -10,7 +9,8 @@ use sapling_api::{BlockPos, Face};
 use sapling_world::BlockRegistry;
 
 use super::falling::{self, Change};
-use super::{doors, ground, level, liquid, loot, send, shapes};
+use super::growth::vines;
+use super::{doors, ground, level, liquid, loot, send, shapes, with_property};
 
 /// Cells looked at for one change: a tower of sand is one cell a step.
 const MAX_STEPS: usize = 512;
@@ -72,10 +72,15 @@ fn block(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(&BlockReg
 
 /// Breaks the block at `pos` as one that lost its hold: it leaves its item.
 pub(super) fn pop(world: &mut World, layer: Entity, pos: BlockPos) {
+    pop_by(world, layer, pos, &loot::Breaker::UNAIDED);
+}
+
+/// Breaks the block at `pos` with what `by` makes it leave.
+pub(super) fn pop_by(world: &mut World, layer: Entity, pos: BlockPos, by: &loot::Breaker) {
     let Some((registry, id)) = block(world, layer, pos) else { return };
     let (air, particles) = (registry.air_id(), send::destroy_particles(registry, pos, id));
     let (name, properties) = registry.get(id).map_or(("", ""), |state| (state.name, state.properties));
-    let mut left = loot::thrown(world, name, properties, &loot::Breaker::UNAIDED);
+    let mut left = loot::thrown(world, name, properties, by);
     loot::add_entity_loot(world, layer, pos, &mut left);
     doors::remove_other_half(world, layer, pos);
     if send::set(world, layer, pos, air) {
@@ -95,12 +100,35 @@ pub(crate) fn break_block(world: &mut World, layer: Entity, pos: BlockPos) -> bo
     true
 }
 
+/// What the change at `changed` does to the block at `pos` that holds by more than a face: a bed
+/// whose other half was there goes with it and leaves nothing, a vine lets go of the faces it lost
+/// (bds-holds.txt); whether it changed.
+fn loosen(world: &mut World, layer: Entity, pos: BlockPos, changed: BlockPos) -> bool {
+    let Some(level) = level(world, layer) else { return false };
+    let is_bed = level.registry().get(level.block(pos[0], pos[1], pos[2])).is_some_and(|state| state.name == "minecraft:bed");
+    if is_bed && doors::half_wanted(world, layer, pos) == Some(changed) && doors::other_half(world, layer, pos).is_none() {
+        let air = level.registry().air_id();
+        return send::set(world, layer, pos, air);
+    }
+    match vines::loosened(level, pos) {
+        Some(0) => pop(world, layer, pos),
+        Some(kept) => {
+            let Some(id) = with_property(level.registry(), level.block(pos[0], pos[1], pos[2]), "vine_direction_bits", &kept.to_string()) else { return false };
+            send::set(world, layer, pos, id);
+        }
+        None => return false,
+    }
+    true
+}
+
 /// Lets everything that the change at `pos` unsettled fall or break, and what that unsettles.
 pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     let mut changed = VecDeque::from([pos]);
     for _ in 0..MAX_STEPS {
         let Some(pos) = changed.pop_front() else { return };
         liquid::neighbours_changed(world, layer, pos);
+        crate::creatures::heart_noticed(world, layer, pos);
+        Face::ALL.into_iter().for_each(|face| crate::creatures::heart_noticed(world, layer, face.neighbour(pos)));
         shapes::reshape_around(world, layer, pos);
         falling::unsettled(world, layer, pos, Change::Placed);
         for face in Face::ALL {
@@ -116,6 +144,8 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
             let is_own_half = doors::other_half(world, layer, beside) == Some(pos);
             if is_gone && depended(registry, id, face) && !is_own_half || !stands {
                 pop(world, layer, beside);
+                changed.push_back(beside);
+            } else if loosen(world, layer, beside, pos) {
                 changed.push_back(beside);
             }
         }

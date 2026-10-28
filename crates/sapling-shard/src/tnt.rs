@@ -1,8 +1,8 @@
 //! Primed TNT, as BDS's burnt and burst (docs/research/block-uses.md, "TNT"): lit by flint and
 //! steel, a signal or a blast, the block becomes an entity that hops, burns its fuse and bursts.
+//! One is kept with its column, its fuse as BDS's `Fuse` byte (sapling_world::fused_actor).
 // TODO: the `MOVING` flag BDS turned on and off is not told; fire and burning arrows light none;
-// one in water still breaks blocks; a blast throws none; none is kept in the world folder; the
-// fuse of one a blast lit is the Java game's, not measured.
+// the fuse of one a blast lit is the Java game's, not measured.
 
 use std::f32::consts::TAU;
 
@@ -38,7 +38,7 @@ const HEART: f32 = 0.0625 * SIZE;
 
 /// A primed TNT's own part: the ticks left of its fuse.
 #[derive(Component)]
-struct Primed(i32);
+pub(crate) struct Primed(i32);
 
 fn wire([x, y, z]: [f32; 3]) -> [f32; 3] {
     [x, y + WIRE_OFFSET, z]
@@ -56,7 +56,29 @@ pub(crate) fn prime(world: &mut World, layer: Entity, feet: [f32; 3], fuse: i32)
     let body = Body::new(feet, [-angle.sin() * DRIFT, HOP, -angle.cos() * DRIFT], [SIZE, SIZE]);
     let entity = entities::spawn(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body)))?;
     world.entity_mut(entity).insert(Primed(fuse));
+    let unique_id = entities::new_unique_id(world, entity)?;
+    let actor = sapling_world::new_actor(unique_id, KIND, feet, body.motion);
+    entities::keep(world, entity, layer, unique_id, sapling_world::fused_actor(&actor, fuse).unwrap_or(actor));
     Some(entity)
+}
+
+/// Makes a primed TNT a world folder kept (its compound `compound`) burn on in `layer`, the fuse
+/// it was saved with left; false for one with no fuse.
+pub(crate) fn from_storage(world: &mut World, layer: Entity, feet: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
+    let Some(fuse) = sapling_world::actor_fuse(&compound) else { return false };
+    let body = Body::new(feet, [0.0; 3], [SIZE, SIZE]);
+    let Some(entity) = entities::spawn(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body))) else { return false };
+    world.entity_mut(entity).insert(Primed(fuse));
+    entities::keep(world, entity, layer, unique_id, compound);
+    true
+}
+
+/// Writes each kept primed TNT's fuse into what the world folder keeps of it.
+pub(crate) fn keep_fuses(world: &mut World) {
+    let primed: Vec<(Entity, i32)> = world.query_filtered::<(Entity, &Primed), With<entities::Stored>>().iter(world).map(|(entity, primed)| (entity, primed.0)).collect();
+    for (entity, fuse) in primed {
+        entities::restore(world, entity, |compound, _| sapling_world::fused_actor(compound, fuse).ok());
+    }
 }
 
 fn is_tnt(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
@@ -93,6 +115,12 @@ pub(crate) fn catch(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     set_off(world, layer, pos, fuse as i32)
 }
 
+/// What a TNT's or a TNT minecart's blast leaves of its blocks: all of them, or by
+/// `tntExplosionDropDecay` one in its power, as other blasts do.
+pub(crate) fn wreck(world: &World, layer: Entity) -> Wreck {
+    if crate::rules::on(world, layer, DROP_DECAY) { Wreck::Decays } else { Wreck::Leaves }
+}
+
 /// A tick of every primed TNT: it moves, its fuse burns, and the tick after its end it bursts.
 pub(crate) fn burn(world: &mut World) {
     let primed: Vec<(Entity, Entity, u64, i32)> = world.query::<(Entity, &InLayer, &NetId, &Primed)>().iter(world).map(|(entity, layer, id, primed)| (entity, layer.0, id.0, primed.0 - 1)).collect();
@@ -104,7 +132,7 @@ pub(crate) fn burn(world: &mut World) {
         }
         if left < 0 {
             let [x, y, z] = body.at;
-            let wreck = if crate::rules::on(world, layer, DROP_DECAY) { Wreck::Decays } else { Wreck::Leaves };
+            let wreck = wreck(world, layer);
             creatures::explode(world, Some(entity), layer, [x, y + HEART, z], POWER, wreck);
             continue;
         }

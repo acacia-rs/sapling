@@ -18,9 +18,13 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
         _ => ctx.players().collect(),
     };
     // Unverified on BDS: `@r` takes entities once any `type=` is given, `!` too.
-    let entities = match base {
-        Base::Entities | Base::NearestEntity => ctx.entities(),
-        Base::RandomPlayer if !filters.types.is_empty() => ctx.entities(),
+    let entities = match (base, sender) {
+        (Base::Sender, Sender::Executed(executed)) => match &executed.executor {
+            Some(Selected::Entity(entity)) => ctx.entity(entity.id).into_iter().collect(),
+            _ => Vec::new(),
+        },
+        (Base::Entities | Base::NearestEntity, _) => ctx.entities(),
+        (Base::RandomPlayer, _) if !filters.types.is_empty() => ctx.entities(),
         _ => Vec::new(),
     };
     let mut found = Vec::new();
@@ -37,6 +41,7 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
             mode: ctx.game_mode(player.id),
             level: ctx.experience(player.id).map(|(level, _)| level),
             inventory: (!filters.items.is_empty()).then(|| inventory(ctx, &player)),
+            input_locks: ctx.backend.input_locks(player.id),
             target: Selected::Player(player),
         };
         found.push(candidate);
@@ -53,6 +58,7 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
             mode: None,
             level: None,
             inventory: None,
+            input_locks: 0,
             target: Selected::Entity(entity),
         };
         found.push(candidate);

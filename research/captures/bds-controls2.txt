@@ -1,0 +1,109 @@
+## drill starts at 1793114958969
+## /inputpermission set @s lateral_movement disabled
+     88 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(16) }
+     89 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Lateral Movement  input disabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     89 actor   CommandOutput success_count=1 data=None Lateral Movement  input disabled for CmdActor   success=true ["1"]
+## /inputpermission set @s dismount disabled
+   1011 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(272) }
+   1020 actor   CommandOutput success_count=1 data=None Dismount  input disabled for CmdActor   success=true ["1"]
+   1020 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Dismount  input disabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /inputpermission set @s move_forward disabled
+   2013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Move Forward  input disabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2013 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(784) }
+   2013 actor   CommandOutput success_count=1 data=None Move Forward  input disabled for CmdActor   success=true ["1"]
+## /inputpermission set @s move_backward disabled
+   3010 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(1808) }
+   3010 actor   CommandOutput success_count=1 data=None Move Backward input disabled for CmdActor   success=true ["1"]
+   3010 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Move Backward input disabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /inputpermission set @s move_right disabled
+   4017 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(5904) }
+   4017 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Move Right input disabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4018 actor   CommandOutput success_count=1 data=None Move Right input disabled for CmdActor   success=true ["1"]
+## /inputpermission set @s move_right disabled
+   5017 actor   CommandOutput success_count=1 data=None Move Right input disabled for CmdActor   success=true ["1"]
+   5017 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Move Right input disabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5183 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 203029, paused: false }] }) }
+   5183 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 203029, paused: false }] }) }
+## /inputpermission query @a move_right
+   6018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"<Move Right>: 1 enabled | 1 disabled\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6018 actor   CommandOutput success_count=1 data=None <Move Right>: 1 enabled | 1 disabled success=true ["CmdWatcher"]
+## /inputpermission query @a move_right disabled
+   7022 actor   CommandOutput success_count=0 data=None <Move Right>: 1 disabled success=true ["CmdActor"]
+   7022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"<Move Right>: 1 disabled\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   7884 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 20, y: 9, z: 11 }, block_runtime_id: 252939952, flags: UpdateBlockFlags(3), layer: 0 }
+   7884 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 20, y: 9, z: 11 }, block_runtime_id: 252939952, flags: UpdateBlockFlags(3), layer: 0 }
+   7884 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 52, y: -18, z: 45 }, block_runtime_id: 252939952, flags: UpdateBlockFlags(3), layer: 0 }
+   7884 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 52, y: -18, z: 45 }, block_runtime_id: 252939952, flags: UpdateBlockFlags(3), layer: 0 }
+## /inputpermission query @a move_right enabled
+   8022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"<Move Right>: 1 enabled\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8022 actor   CommandOutput success_count=0 data=None <Move Right>: 1 enabled success=true ["CmdWatcher"]
+## /inputpermission set @a move_right enabled
+   9023 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(1808) }
+   9023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Move Right input enabled for 2 players  \",\"with\":{\"rawtext\":[{\"text\":\"2\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9023 actor   CommandOutput success_count=1 data=None Move Right input enabled for 2 players   success=true ["2"]
+## /inputpermission set @s lateral_movement enabled
+  10022 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(1792) }
+  10022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Lateral Movement  input enabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10022 actor   CommandOutput success_count=1 data=None Lateral Movement  input enabled for CmdActor   success=true ["1"]
+## /inputpermission set @s dismount enabled
+  11027 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(1536) }
+  11027 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Dismount  input enabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11027 actor   CommandOutput success_count=1 data=None Dismount  input enabled for CmdActor   success=true ["1"]
+## /inputpermission set @s move_forward enabled
+  12029 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(1024) }
+  12029 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Move Forward  input enabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12029 actor   CommandOutput success_count=1 data=None Move Forward  input enabled for CmdActor   success=true ["1"]
+## /inputpermission set @s move_backward enabled
+  13030 actor   UpdateClientInputLocks UpdateClientInputLocks { locks: InputLockFlags(0) }
+  13030 actor   CommandOutput success_count=1 data=None Move Backward input enabled for CmdActor   success=true ["1"]
+  13030 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"Move Backward input enabled for CmdActor  \",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /inputpermission query nobody camera
+  14031 actor   CommandOutput success_count=1 data=None <Camera>: 0 enabled | 0 disabled success=true [""]
+  14031 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"<Camera>: 0 enabled | 0 disabled\",\"with\":{\"rawtext\":[{\"text\":\"\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /recipe give @s minecraft:stick
+  15032 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.recipes.unlockedRecipe\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"minecraft:stick\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15032 actor   CommandOutput success_count=1 data=None commands.recipes.unlockedRecipe success=true ["CmdActor", "minecraft:stick"]
+  15074 actor   UnlockedRecipes UnlockedRecipes { unlock_type: NewlyUnlocked, recipes: ["minecraft:stick"] }
+## /recipe give @s minecraft:stick
+  16034 actor   CommandOutput success_count=0 data=None commands.recipes.playerHasRecipe success=false ["CmdActor", "minecraft:stick"]
+## /recipe give @a minecraft:stick
+  17031 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.recipes.unlockedRecipe\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"minecraft:stick\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  17031 actor   CommandOutput success_count=1 data=None commands.recipes.playerHasRecipe success=false ["CmdActor", "minecraft:stick"] | commands.recipes.unlockedRecipe success=true ["CmdWatcher", "minecraft:stick"]
+  17082 watcher UnlockedRecipes UnlockedRecipes { unlock_type: NewlyUnlocked, recipes: ["minecraft:stick"] }
+  17980 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 203285, paused: false }] }) }
+  17980 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 203285, paused: false }] }) }
+## /recipe take @s minecraft:stick
+  18036 actor   CommandOutput success_count=1 data=None commands.recipes.removedRecipe success=true ["CmdActor", "minecraft:stick"]
+  18037 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.recipes.removedRecipe\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"minecraft:stick\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18083 actor   UnlockedRecipes UnlockedRecipes { unlock_type: RemoveUnlocked, recipes: ["minecraft:stick"] }
+## /recipe take @s minecraft:stick
+  19033 actor   CommandOutput success_count=0 data=None commands.recipes.playerDoesNotHaveRecipe success=false ["CmdActor", "minecraft:stick"]
+## /recipe give @s stick
+  20038 actor   CommandOutput success_count=0 data=None commands.recipes.notFound success=false []
+## /recipe give @s minecraft:WorkBench_recipeId_from_oak
+  21040 actor   CommandOutput success_count=0 data=None commands.recipes.playerHasRecipe success=false ["CmdActor", "minecraft:WorkBench_recipeId_from_oak"]
+## /recipe take @s minecraft:WorkBench_recipeId_from_oak
+  22036 actor   CommandOutput success_count=1 data=None commands.recipes.removedRecipe success=true ["CmdActor", "minecraft:WorkBench_recipeId_from_oak"]
+  22048 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.recipes.removedRecipe\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"minecraft:WorkBench_recipeId_from_oak\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22082 actor   UnlockedRecipes UnlockedRecipes { unlock_type: RemoveUnlocked, recipes: ["minecraft:WorkBench_recipeId_from_oak"] }
+  22082 actor   UnlockedRecipes UnlockedRecipes { unlock_type: InitiallyUnlocked, recipes: ["minecraft:WorkBench_recipeId_from_oak"] }
+## /mobevent minecraft:wandering_trader_event false
+  23040 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.mobevent.eventSetToFalse\",\"with\":{\"rawtext\":[{\"text\":\"%entity.wandering_trader.name\"},{\"text\":\"minecraft:wandering_trader_event\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23040 actor   CommandOutput success_count=1 data=None commands.mobevent.eventSetToFalse success=true ["%entity.wandering_trader.name", "minecraft:wandering_trader_event"]
+## /mobevent minecraft:wandering_trader_event
+  24045 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.mobevent.eventIsFalse\",\"with\":{\"rawtext\":[{\"text\":\"%entity.wandering_trader.name\"},{\"text\":\"minecraft:wandering_trader_event\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24045 actor   CommandOutput success_count=1 data=None commands.mobevent.eventIsFalse success=true ["%entity.wandering_trader.name", "minecraft:wandering_trader_event"]
+## /mobevent minecraft:ender_dragon_event
+  25047 actor   CommandOutput success_count=1 data=None commands.mobevent.eventIsTrue success=true ["%entity.ender_dragon.name", "minecraft:ender_dragon_event"]
+  25047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.mobevent.eventIsTrue\",\"with\":{\"rawtext\":[{\"text\":\"%entity.ender_dragon.name\"},{\"text\":\"minecraft:ender_dragon_event\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /mobevent minecraft:wandering_trader_event true
+  26050 actor   CommandOutput success_count=1 data=None commands.mobevent.eventSetToTrue success=true ["%entity.wandering_trader.name", "minecraft:wandering_trader_event"]
+  26050 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.mobevent.eventSetToTrue\",\"with\":{\"rawtext\":[{\"text\":\"%entity.wandering_trader.name\"},{\"text\":\"minecraft:wandering_trader_event\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /mobevent events_enabled
+  27050 actor   CommandOutput success_count=1 data=None commands.mobevent.eventsEnabledIsTrue success=true []
+  27057 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.mobevent.eventsEnabledIsTrue\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  27880 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 20, y: 9, z: 11 }, block_runtime_id: 191465129, flags: UpdateBlockFlags(3), layer: 0 }
+  27881 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 52, y: -18, z: 45 }, block_runtime_id: 191465129, flags: UpdateBlockFlags(3), layer: 0 }
+  27881 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 20, y: 9, z: 11 }, block_runtime_id: 191465129, flags: UpdateBlockFlags(3), layer: 0 }
+  27881 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 52, y: -18, z: 45 }, block_runtime_id: 191465129, flags: UpdateBlockFlags(3), layer: 0 }
+probe exit 0

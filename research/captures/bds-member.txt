@@ -1,0 +1,38 @@
+## drill starts at 1793204280895
+## /tell @a hi
+     46 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /tell CmdWatcher hi @s
+   1011 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /me hi @a
+   2007 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /list
+   3013 actor   CommandOutput success_count=1 data=None commands.players.list success=true ["2", "10"] | commands.players.list.names success=true ["CmdActor, CmdWatcher"]
+## /tp @s ~ ~ ~
+   4015 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /tp CmdActor ~ ~ ~
+   5014 actor   CommandOutput success_count=0 data=None commands.generic.error.permissions success=false ["teleport"]
+   5182 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 368, paused: false }] }) }
+   5182 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 368, paused: false }] }) }
+## /tp CmdActor @s
+   6016 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /give CmdActor dirt
+   7018 actor   CommandOutput success_count=0 data=None commands.generic.error.permissions success=false ["give"]
+## /give @s dirt
+   8022 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /gamemode creative
+   9023 actor   CommandOutput success_count=0 data=None commands.generic.error.permissions success=false ["gamemode"]
+## /difficulty banana
+  10027 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["ifficulty ", "banana", ""]
+## /kill @e[type=cow
+  11026 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["e[type=cow", "", ""]
+## /nosuch @a
+  12027 actor   CommandOutput success_count=0 data=None commands.generic.unknown success=false ["nosuch"]
+## /say hi
+  13027 actor   CommandOutput success_count=0 data=None commands.generic.error.permissions success=false ["say"]
+## /say hi @a
+  14031 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /tell @s[name=CmdActor] x
+  15024 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /w @p hi
+  16030 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+probe exit 0

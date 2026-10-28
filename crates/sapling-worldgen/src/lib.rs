@@ -190,6 +190,11 @@ impl OverworldGenerator {
         self.with_inputs(|inputs| self.features.place(shape, (chunk_x, chunk_z), inputs));
     }
 
+    /// The liquid ticks the generated chunk's queue holds, for the game to run: (cell, lava), in order (`Features::game_ticks`).
+    pub fn chunk_game_ticks(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], bool)> {
+        self.with_inputs(|inputs| self.features.game_ticks((chunk_x, chunk_z), inputs))
+    }
+
     /// One source chunk's feature writes, decorated alone: world (x, y, z), block placed, block replaced.
     #[doc(hidden)]
     pub fn source_feature_writes(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], Block, Block)> {

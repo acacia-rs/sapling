@@ -12,7 +12,8 @@ as BDS 1.26.5x does, and the dragon fight (its own section). Evidence: drills of
   `minecraft:the_end` (9), saved under the LevelDB keys with dimension 2. `Generated::end` (worldgen-bds-end.md),
   `WorldFolder::end`, `ServerBuilder::end` (`<world>:the_end`). It joins the overworld's `Realm` and shares its
   level as the Nether does (nether-dimension.md); `/execute in the_end run tp` and `ctx.travel` go there the same
-  way. Columns ask for the sections up to the highest holding a block (BDS: 4 at chunk (6, 0)).
+  way. Columns ask for the sections up to the highest holding a block (BDS: 4 at chunk (6, 0); 5 at (0, 0),
+  the podium's pillar reaching y 65 before that column goes out; sapling the same, bds-/sapling-end-travel.txt).
 - **Blocks:** `blocks/end_portal.rs` (frames and the portal they make), called by the eye's use in `blocks/tools.rs`.
 - **Travel:** `portals/end.rs` (end portal to the platform) and `portals/gateway.rs`, run from `portals::tick`;
   `dimensions::respawn_home` (the dead of the End and the Nether rise in their overworld), from `vitals/death.rs`.
@@ -121,6 +122,7 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   (3D pattern, torches) a tick later; ShowBar about every second to players within 125. No spike crystals or
   bedrock in the first fight. sapling the same; it resends the podium's columns to clients still waiting on
   blobs, since its fight starts while they stream in (an again run lost half the podium on the bot without it).
+  The podium's five sections carry the same cells; BDS sends the pillar's (y 64) first, sapling last.
 - **Flight** (watch): BDS's goals (holding pattern, strafe, charge, landing, scanning, flaming, takeoff, death)
   over the 24 nodes (rerun after the first-growl fix: perches 8 vs 8, first growl 5.0 s after spawn on both). Two
   moves a tick: the generic move by the stored motion, then **xz × 0.91** (fitted:
@@ -205,4 +207,3 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   height + 1, z + 0.5) and bedrock at (x, height, z) for each spike whose centre is in the chunk, reading no fight
   state, but no caller was found, and in every drill (70 s with a player on the island) the tops stayed obsidian
   and no crystal was sent. Left out to match what BDS did.
-- **Column (0, 0)** asks for 5 sections on BDS, 4 on sapling (sapling-end-travel.txt, before the fight was built).

@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "tools/*"]
+# A BDS script pack and its runner, no crate.
+exclude = ["tools/map-colours"]
 
 [workspace.package]
 edition = "2024"
@@ -19,18 +21,18 @@ sapling-worldgen = { path = "crates/sapling-worldgen" }
 
 # acacia at one commit of its `master`: bump every `rev` together. To build against a checkout
 # beside this one instead, see docs/DESIGN.md "Building against a local acacia".
-acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b", default-features = false }
-acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
-acacia-physics = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b", features = ["acacia-world"] }
-acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
-acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
-acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
-acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
-acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
+acacia-auth = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123", default-features = false }
+acacia-molang = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-physics = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123", features = ["acacia-world"] }
+acacia-nethernet = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-proto = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-raknet = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-session = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-world = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
 # Test clients and the recorded BDS join (dev-dependencies only).
-acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
-acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
-acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "d19b12792501a75bb56d99512c38f7657f33192b" }
+acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
+acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "bb4195b83beafb893abe91124848e3a3d4af1123" }
 
 base64 = "0.22"
 bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }
@@ -41,6 +43,8 @@ flate2 = "1.1"
 rusty-leveldb = { git = "https://github.com/bedrock-crustaceans/rusty-leveldb", rev = "3365b32b747ad50fefdd8b6a6f988dacf357a114", default-features = false, features = ["fs"] }
 p384 = { version = "0.13", features = ["ecdsa"] }
 rand_core = { version = "0.6", features = ["getrandom"] }
+# The console's line editor (tab completion on a terminal).
+rustyline = { version = "15", default-features = false }
 serde_json = "1"
 sha2 = "0.10"
 socket2 = "0.6"

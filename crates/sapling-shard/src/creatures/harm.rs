@@ -90,7 +90,7 @@ pub(super) fn sun_on(world: &World, layer: Entity, at: [i32; 3]) -> bool {
 
 /// Whether rain falls on the cell `at` in `weather`: the sky is over it and the biome is not
 /// cold enough for snow, which does not put a burning mob out (`Actor::isInWaterOrRain`).
-fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], weather: sapling_api::Weather) -> bool {
+pub(super) fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], weather: sapling_api::Weather) -> bool {
     weather != sapling_api::Weather::Clear && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT) && !level.is_cold(x, y, z)
 }
 
@@ -101,7 +101,12 @@ pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
 
 /// The hit's flash, or the death it was; a fall's names where it landed.
 pub(super) fn strike(id: u64, health: &Health, cause: Cause, landed: Option<[f32; 3]>) -> Bytes {
-    let (event_id, data) = if health.left() > 0.0 { (EntityEventEventId::HurtAnimation, cause.id()) } else { (EntityEventEventId::DeathAnimation, 0) };
+    strike_as(id, health, cause.id(), landed)
+}
+
+/// [`strike`] with the cause as the wire numbers it, for one the API's causes do not name.
+pub(super) fn strike_as(id: u64, health: &Health, cause: i32, landed: Option<[f32; 3]>) -> Bytes {
+    let (event_id, data) = if health.left() > 0.0 { (EntityEventEventId::HurtAnimation, cause) } else { (EntityEventEventId::DeathAnimation, 0) };
     let fire_at_position = landed.filter(|_| health.left() > 0.0).map(|[x, y, z]| Vec3f { x, y, z });
     sapling_net::encode(&EntityEvent { runtime_entity_id: id, event_id, data, fire_at_position })
 }

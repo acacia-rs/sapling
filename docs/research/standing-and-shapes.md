@@ -91,6 +91,17 @@ Sapling's `settle` pops only when the cell under turns non-solid: crops on farml
 nether wart on non-soul-sand are missed. Rule to add: on a change at P, re-run the placement test of the block at
 P+up (and of the cocoa beside P, the cave vines under P) and pop on failure.
 
+### A5. Levers, vines, wall banners, beds (2026-10-27, `bds_command_probe holds`, research/captures/bds-holds.txt)
+
+Each support was `/setblock`ed to air. A lever on a stone's side and a wall banner on one popped a tick later with their
+item. A vine on a stone's side went a tick later with no item and the vine hanging under it the tick after: a vine
+keeps the faces with a solid block beside or that the vine over it has (JAVA 1.12 `BlockVine.recheckGrownSides`), and
+goes with none. A vine under a stone, its only face on air, went with the stone. A bed's half set to air took the
+other half in the same packet, with that half's break particles and no item. Sapling does all of this in the change's own tick (`blocks/updates.rs`).
+
+`/setblock bed` put the head on the named cell and the foot behind it, both with `Bed` entities (color 14), and
+refused a second `/setblock` on the head; sapling's `/setblock` puts the one half.
+
 ## Part B: shapes that reconnect
 
 ### B1. States (REG)
@@ -231,12 +242,17 @@ connectTo(R, other):                # neighbour re-shapes toward the new rail
 ```
 
 Removal: neighbours keep their shape (JAVA `affectNeighborsAfterRemoval` only sends updates: `pos+up` when the
-removed rail sloped, `pos` and `pos-down` for straight rails). Plain-rail redstone switching (`RailBlock.updateState`
-re-runs `place(.., always=false)` when 3 rails surround it) needs power: skip.
+removed rail sloped, `pos` and `pos-down` for straight rails).
 
 Pop (BDS `canSurvive` 142cd5660, = JAVA `shouldBeRemoved`): below lacks Support(Up, Edge), or shape AE and the block at
 x+1 (same y) lacks it, AW x-1, AN z-1, AS z+1. Placement needs only Support(Up, Center) below (142cd6c80).
-`rail_data_bit` stays 0 (no redstone; detector rails would set it while a minecart sits on them).
+
+Power (2026-10-27, `bds_command_probe rails`, research/captures/bds-rails.txt): a block of redstone beside the first
+of 12 golden rails lit rails 1 to 9, beside the 6th all 12 (each powered rail feeds 8 more along its line, JAVA
+`findPoweredRailSignal`), the same for activator rails, and up and down a slope. The line changed about 100 ms after
+the source, in one UpdateSubchunkBlocks. A plain rail placed at a T (rails west, east and south) took SE (6); a block
+of redstone beside it or under it turned it SW (7), taking it away back SE: `place(.., always=false)` with the
+powered order, as JAVA `RailBlock.updateState` (rail_line.rs, rails.rs `switch`).
 
 ## Open checks (one bot session on BDS: place, read back)
 

@@ -20,9 +20,9 @@ it does on BDS and the two captures can be diffed:
    (`tools/sapling-drill.sh`, on testbox `tools/remote-drill.sh`). Left: what the BDS-against-sapling
    diff of the drill captures still shows (`research/captures/sapling-vs-bds-findings.md`).
    `/weather` and `/toggledownfall` set a world's weather, told as BDS told it (`weather.rs`,
-   `bds_command_probe weather`); where `doWeatherCycle` is on it turns of itself, by the Java
-   game's times, which were not checked against BDS; BDS's `query`, which lags a change behind, is
-   not copied.
+   `bds_command_probe weather`); where `doWeatherCycle` is on it turns of itself by BDS's
+   decompiled `Weather::tick` and is saved in `level.dat` (its spells drawn from a hash, not BDS's
+   random); BDS's `query`, which lags a change behind, is not copied.
    `/time`, `/xp` and `/tp` to a target answer as BDS did (`vanilla/clock.rs`, `bds_command_probe
    clock`: the answers agree line for line; BDS writes its experience attributes in another
    order). A sapling capture that answers `commands.generic.unknown` or `.syntax` where BDS's
@@ -36,6 +36,13 @@ it does on BDS and the two captures can be diffed:
    `/structure`, `/tickingarea`, `/place`, `/locate` and hardcore are built (`structures`, `ticking`,
    `place`, `locate`, `hardcore`); left: the "Unverified" list of docs/research/structures-and-ticking.md,
    structure blocks (StructureBlockUpdate, StructureTemplateDataRequest) and `/structure`'s animations.
+   `/execute` has every sub-command BDS has (`execute`, `execute-if`, `execute-run`, `execute2`;
+   research/captures/bds-execute-findings.md); left: `run function`, as sapling has no `/function`.
+   `/loot`, `/camera`, `/camerashake`, `/fog`, `/hud`, `/music`, `/playanimation`, `/daylock`,
+   `/recipe`, `/inputpermission` and `/mobevent` answer and send as BDS did (`lootcmd2`, `screen`,
+   `music`, `controls`, `controls2`; research/captures/bds-commands-findings.md). Left: tables
+   mob-loot.json does not keep (`gameplay/fishing`), `/loot replace entity` on mobs, `/camera`'s
+   other forms (attach, spline, target, offsets), `/recipe` answering before its packet, `/event`, `/dialogue`.
 
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,
@@ -46,7 +53,12 @@ it does on BDS and the two captures can be diffed:
    and the sun's burning ask it by BDS's decompiled rules (docs/research/growth.md "Light"; not
    drilled), as does mob spawning (`spawning.rs`, docs/research/mob-spawning.md, whose "Left"
    lists what is not built: slimes, built now, still never spawn naturally, as BDS's code gates
-   them by slime chunk and swamp moon phase, not by spawn rules alone); left there: mushrooms spreading, vines and cave vines; the flood's grid
+   them by slime chunk and swamp moon phase, not by spawn rules alone). Mushrooms, vines, cave vines,
+   kelp, stalactites' drips, lava's fire and snow layers follow BDS's decompiled rules, not drilled
+   for timing but kelp's (docs/research/growth.md "Wild plants", "Snow layers"); bubble columns and
+   falling stalactites follow the bubbles and dripstone drills (docs/research/bubbles-and-dripstone.md),
+   and block ticks are kept in `PendingTicks` (blocks/pending.rs), where a generated column brings the
+   liquid ticks decoration left it (docs/research/worldgen-bds-liquids.md, "How they run"). The flood's grid
    looks a column up by hash per cell (~0.7 µs a cell optimised: three columns arriving cost a tick
    15 ms), worth caching. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes
@@ -70,7 +82,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    hurts and throws a mob, and its kill leaves experience (`creatures/attacks.rs`, `hit`). Left:
    what the doc lists as not drilled. A zombie and seven kinds like it take the nearest survival player, walk at it
    and hit it, a creeper blows up by it (`creatures/blast.rs`, `boom`) and a skeleton shoots at it (`creatures/arrows.rs`, `shoot`) (`creatures/hunting.rs`, `docs/research/mob-attacks.md`, `bite`, `slain`, `kinds`); and every kind that walks strolls when it has nothing to do and flees a hit (`creatures/strolling.rs`, `stroll`, `flee`); animals breed, grow up, are tamed, sit, follow and defend their owners, take leads and knots, and give wool, milk, stew, eggs and scutes by their packs (`creatures/husbandry`, docs/research/husbandry.md, not drilled against BDS: its "Unverified" list); left
-   there: the kinds that shoot other things than arrows (a blaze and a witch are built; a witch drinks, `witch-drinks`, and mobs have effects, splashed too, `mob-effects`; an evoker's fangs and vexes are built, `evoker`; a shulker's bullets are built, `shulker`, a breeze's wind charges and leaps, `breeze`, and a ghast's flight and fireballs, `ghast`; docs/research/mob-kinds.md), the other kinds that turn on their hitter (`provoke`, `provoke2` and `provoke3`: a wolf, a zombified piglin, a polar bear, spiders by day, a llama's spit, a panda, a bee and an enderman, `ender`, are built; an enderman's stare is built, `stare`; a dolphin swims and bites back, `dolphin`; an enderman's calm teleports and water are built; left there rain on an enderman, a dolphin's breath, breaching and shared anger, and of pandas' genes a lazy one's pace, a worried one's keeping away, a playful one's roll and an aggressive one's anger passed on (`pandas`); a goat's ram is built, of players and mobs, `goat`, `goat-cows`). Survival players have health: falls,
+   there: the kinds that shoot other things than arrows (a blaze and a witch are built; a witch drinks, `witch-drinks`, and mobs have effects, splashed too, `mob-effects`; an evoker's fangs and vexes are built, `evoker`; a shulker's bullets are built, `shulker`, a breeze's wind charges and leaps, `breeze`, and a ghast's flight and fireballs, `ghast`; docs/research/mob-kinds.md), the other kinds that turn on their hitter (`provoke`, `provoke2` and `provoke3`: a wolf, a zombified piglin, a polar bear, spiders by day, a llama's spit, a panda, a bee and an enderman, `ender`, are built; bees fly to flowers and hives, shelter, make honey, sting once and perish, and a broken hive's bees turn on its breaker, `bees`, `beesout`; an enderman's stare is built, `stare`; a dolphin swims and bites back, `dolphin`; an enderman's calm teleports and water are built; left there rain on an enderman, a dolphin's breath, breaching and shared anger, and of pandas' genes a lazy one's pace, a worried one's keeping away, a playful one's roll and an aggressive one's anger passed on (`pandas`); a goat's ram is built, of players and mobs, `goat`, `goat-cows`). Survival players have health: falls,
    fire, lava, water over the head and a block around them hurt, `/damage` and `/kill` too; they die
    leaving items and experience and rise by their bed or at the world's spawn (`vitals.rs`,
    `docs/research/player-damage.md`, `bds_command_probe hurt` and `smother`). A wounded player mends by its
@@ -110,6 +122,13 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    `RideID`, the horse screen and a horse's charged jump, a wild horse bucking a rider off later in
    the ride, hoppers filling carts, a rail's own redstone line, and the doc's "Unverified" list.
 
+- **Protocol gaps left (2026-10-28):** entity property states sapling does not model yet (armadillo
+  rolling, copper golem, happy ghast, sulfur cube, creaking deactivation with its `Flags`), properties
+  saved with a mob, which parent a bred young takes a climate from (`creatures/properties.rs`);
+  MotionPredictionHints (BDS sent none in the `hints` drill: orbs, walking and hit mobs, drops, carts,
+  bundles; two orbs once in bds-orbs.txt, trigger unknown); ContainerRegistryCleanup for bundles in
+  chests or mobs' hands.
+
 ## 3. Things assumed, not verified
 
 - Checked 2026-10-24 (docs/research/assumptions-checked.md): mirrored shaped recipes match BDS for every
@@ -120,10 +139,11 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   burns; the orb touch runs from the player's side (`orbs::touch`). Left there: whether the 2-tick
   spacing between orbs taken is BDS's `+0x3c4` lookup.
 - A door's hinge was checked against BDS with a block and with a door on either side (`bds_command_probe
-  sounds`); the Java game's tie-break by where the click fell is still left out.
-- The sounds of a door, trapdoor, gate, chest, barrel and ender chest opening and shutting were
-  heard on BDS and agree, tick for tick (`sounds`, `shut`), with a barrel's top a tick late and
-  an open lid shown again 80 ticks from its opening; left there: how late a shulker box sounds.
+  sounds`), and alone, clicked at five points of a floor (`hinges`): BDS has no tie-break by where
+  the click fell. A door put down is shown in one UpdateSubchunkBlocks and heard from its corner.
+- The sounds of a door, trapdoor, gate, chest, trapped chest, barrel, ender chest and shulker box
+  opening and shutting were heard on BDS and agree, tick for tick (`sounds`, `shut`), with a
+  barrel's top a tick late and an open lid shown again 80 ticks from its opening.
 - Block loot is the Java game's tables under Bedrock names (`sapling-data/data/block-loot.tsv`);
   26 blocks broken with a diamond pickaxe left the same items in the same numbers on BDS
   (`bds_command_probe loot`, research/captures/bds-loot.txt), but copper ore, which left 3 each of
@@ -133,13 +153,14 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
 - 75 blocks put down by hand from one stance took the same state on BDS and here in 65
   (`bds_command_probe placing`, research/captures/bds-placing.txt), after dispensers, pistons,
   observers, gates, anvils, bells, grindstones, amethyst, frames and rails were set right. Scaffolding and trapdoors (`trapdoors`: `oak_trapdoor` is no item, the
-  drill's mistake) take BDS's states too. A placer is shown the clicked and the placed cell again,
-  each with the cells above and below, and in creative its windows twice, as on BDS
-  (`place-faces`: top, side and bottom faces); left: BDS's own copy of the placement comes after
-  those six, sapling's before. A second run of 51 more (`placing2`) agreed in 31
+  drill's mistake) take BDS's states too. A placer is answered packet for packet as on BDS
+  (`place-faces`: top, side and bottom faces, and a top in survival): in creative its windows, the
+  clicked and the placed cell each with those above and below, its windows again, then the place;
+  in survival its windows once and the place, the stack left under a new id. Left: BDS shows
+  watchers the hand before the place (sapling after), and once more after a creative place. A second run of 51 more (`placing2`) agreed in 31
   and set right a crafter, a decorated pot, a chiseled bookshelf, a calibrated sculk sensor, what
   clings (lichen, sculk vein, resin) and what hangs (moss, roots, a spore blossom, a vine, a
-  hanging sign) and a pitcher plant, which stands on its own lower half; a vault is not woken. BDS's commands take old item names too (`chain`
+  hanging sign) and a pitcher plant, which stands on its own lower half, and a vault, which wakes for its placer. BDS's commands take old item names too (`chain`
   for `iron_chain`): sapling's `/give` and `/replaceitem` take the 31 that were tried and found
   (`vanilla.rs` `OLD_ITEM_NAMES`, `bds_command_probe item-names`). Which way a dispenser or a
   piston turns up or down is the old game's rule, of which BDS showed one case.
@@ -155,7 +176,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   leaves it), the cauldron's `PotionId` defaults (`docs/research/block-entities.md`, "Open checks").
 - A double chest asks both halves above, a slab too, as on BDS (`bds_command_probe lids`). Getting
   up by `StopSleeping`, by day and by `/tp`, and a sleeper's data and box, are told as on BDS
-  (`wake`); left there: a player's other `FlagsExtended` bits, which sapling never sends. A block a hand
+  (`wake`), a sleeper's `FlagsExtended` with the bits BDS keeps on every player. A block a hand
   uses, a block held or not, is shown as it changed and no more, as on BDS (`held-use`); a door opened
   by hand keeps `open_bit` in its lower half and is shown whole in one UpdateSubchunkBlocks, as
   there. A door `/setblock` puts is shown so too, its upper half with flags 2.
@@ -173,9 +194,11 @@ picture. Needs a person at the client.
 
 Record the bot doing the same things against the BDS in `acacia/.testserver` and diff the packets
 with sapling's (`tools/bds-drill.sh` runs a probe on a fresh world; `bds-blocks` is a copy kept for
-the drills, port 19182): chest and furnace traffic was never recorded (`research/containers-crafting.md`
-says where it is decompiled only), nor door and bed placement. One agent at a time uses that
-server. A hopper's rate, shulker box drops, a furnace's result and fuel slots and experience orbs
+the drills, port 19182). A chest opened, items put in whole, in part and onto a stack, a stack
+and the rest taken back, and `/clear` are answered packet for packet as there (`chest-moves`:
+the windows after the slots at opening, each changed slot again a tick on); stack ids are
+numbered otherwise (BDS spends two on a `/give`), which no client checks. Doors and beds are
+placed in `sounds` and `wake`. One agent at a time uses that server. A hopper's rate, shulker box drops, a furnace's result and fuel slots and experience orbs
 were recorded on a testbox BDS by `cargo run -p sapling --example bds_container_probe` (2026-10-06).
 
 ## 6. World generation, the rest

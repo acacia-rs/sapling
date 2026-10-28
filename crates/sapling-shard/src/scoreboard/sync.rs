@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use acacia_proto::packets::{
-    RemoveObjective, SetDisplayObjective, SetScore, SetScoreEntriesItem, SetScoreEntriesItemContent as Content, SetScoreEntriesItemContentDefault as Default,
+    RemoveObjective, SetDisplayObjective, SetScore, SetScoreEntriesItem, SetScoreboardIdentity, SetScoreboardIdentityAction, SetScoreboardIdentityEntriesItem, SetScoreEntriesItemContent as Content, SetScoreEntriesItemContentDefault as Default,
     SetScoreEntriesItemContentFakePlayer as FakePlayer, SetScoreEntriesItemContentRemove as Remove, SetScoreEntriesItemEntryType as EntryType,
 };
 use bevy_ecs::prelude::*;
@@ -14,7 +14,7 @@ use sapling_api::{DisplaySlot, Objective, SortOrder};
 use sapling_world::ScoreIdentity;
 
 use super::{Board, Change, board_mut, order_byte};
-use crate::components::{InLayer, NetId, Outgoing, in_world};
+use crate::components::{Identity, InLayer, NetId, Outgoing, in_world};
 use crate::hud::Hud;
 use crate::tags::{Marks, UniqueId};
 
@@ -123,6 +123,11 @@ pub(crate) fn send(world: &mut World) {
         } else {
             enter(&mut packets, &mut known, own, board, &wire);
         }
+        if seen.is_none()
+            && let Some(identity) = claim(world, player, home, &wire)
+        {
+            packets.push(&identity);
+        }
         world.entity_mut(player).insert(Seen(home));
         if let Some(mut hud) = world.get_mut::<Hud>(player) {
             hud.board_objectives = known;
@@ -131,6 +136,24 @@ pub(crate) fn send(world: &mut World) {
             out.0.extend(packets.0);
         }
     }
+}
+
+/// A player new to the shard takes over the fake holder of its name, as on BDS
+/// (research/captures/bds-scoreboard-join.txt): the players seeing the board are told who the id
+/// is now, the newcomer after its board showed the fake name. Its scores show as its own from then.
+fn claim(world: &mut World, player: Entity, home: Entity, wire: &WireIds) -> Option<SetScoreboardIdentity> {
+    let name = world.get::<Identity>(player)?.0.name.clone();
+    let unique = world.get::<Marks>(player)?.unique_id;
+    let id = world.get_mut::<Board>(home)?.claim(&name, unique)?;
+    let entries = vec![SetScoreboardIdentityEntriesItem { scoreboard_id: id, entity_unique_id: Some(wire.get(&unique).copied().unwrap_or(unique)) }];
+    let identity = SetScoreboardIdentity { action: SetScoreboardIdentityAction::RegisterIdentity, entries };
+    let others: Vec<Entity> = world.query::<(Entity, &Seen)>().iter(world).filter(|(other, seen)| seen.0 == home && *other != player).map(|(other, _)| other).collect();
+    for other in others {
+        if let Some(mut out) = world.get_mut::<Outgoing>(other) {
+            out.push(&identity);
+        }
+    }
+    Some(identity)
 }
 
 /// Shows a player the board's sidebar again once its own is gone.

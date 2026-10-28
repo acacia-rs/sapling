@@ -1,86 +1,227 @@
-//! `/execute in <dimension> run tp ...`, the way to another dimension without a portal, as BDS takes
-//! it (research/captures/bds-dims-travel.txt), and `/execute at <target> run tp ...`, a teleport
-//! from where each entity named stands (bds-dolphin.txt, bds-pandas.txt). The only forms sapling runs.
-// TODO: the rest of `/execute` (as, positioned, if, unless, ...) and commands other than `tp`.
+//! `/execute` as BDS runs it (research/captures/bds-execute.txt, bds-execute-if.txt,
+//! bds-execute-run.txt). The whole line is read first, the command after `run` too: a word wrong
+//! anywhere is a syntax error of the `/execute` line. Then each sub-command in turn changes every
+//! frame (frames.rs) or drops those that fail a test (conditions.rs), and the command runs once per
+//! frame left as [`Sender::Executed`]. Its answers are passed on, `commands.execute.failed` after
+//! each that failed; without `run`, each frame left answers `trueCondition`.
 
-use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
+mod conditions;
+mod frames;
+mod parse;
+
+use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, ParamKind, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx};
 
-use super::teleport::Teleport;
-use super::{no_target, targets};
+use super::chat::speaker;
+use super::no_target;
+use frames::Frame;
+use parse::{Condition, Step, DIMENSIONS};
 
-const DIMENSIONS: [(&str, i32); 3] = [("overworld", 0), ("nether", 1), ("the_end", 2)];
+/// Commands an `/execute` may not run: BDS runs its commands below the level that may change who
+/// is an operator (bds-execute-run.txt `execute run op`).
+// TODO: only `op` was drilled; BDS's other commands of that level are not known here.
+const ABOVE_EXECUTE: [&str; 2] = ["op", "deop"];
 
 pub(crate) struct Execute {
-    context: Context,
-    teleport: Teleport,
-}
-
-enum Context {
-    In(i32),
-    At(Selector),
+    steps: Vec<Step>,
+    /// The command after `run` and where it starts in `line`.
+    run: Option<(String, usize)>,
+    line: String,
 }
 
 impl CommandSyntax for Execute {
     fn spec() -> CommandSpec {
-        let dimension = ParameterSpec { name: "dimension".into(), kind: ParamKind::Enum { name: "Dimension".into(), values: DIMENSIONS.map(|(name, _)| name.to_owned()).to_vec() }, optional: false };
-        let command = || ParameterSpec { name: "command".into(), kind: ParamKind::Text, optional: false };
-        let runs = |first: Vec<ParameterSpec>| Overload { parameters: first.into_iter().chain([ParameterSpec::literal("execute", "run"), command()]).collect() };
         CommandSpec {
             name: "execute".into(),
             aliases: Vec::new(),
             description: "Executes a command on behalf of one or more entities".into(),
             permission: Permission::Operator,
-            overloads: vec![runs(vec![ParameterSpec::literal("execute", "in"), dimension]), runs(vec![ParameterSpec::literal("execute", "at"), ParameterSpec::of::<Selector>("origin")])],
+            overloads: overloads(),
         }
     }
 
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
-        let word = |args: &mut Args<'_>, wanted: &[&str]| -> Result<usize, ParseError> {
-            let mark = args.mark();
-            let word = args.word()?;
-            wanted.iter().position(|one| word.eq_ignore_ascii_case(one)).ok_or_else(|| args.error_at(mark))
-        };
-        let context = match word(args, &["in", "at"])? {
-            0 => Context::In(DIMENSIONS[word(args, &DIMENSIONS.map(|(name, _)| name))?].1),
-            _ => Context::At(Selector::parse(args)?),
-        };
-        word(args, &["run"])?;
-        word(args, &["tp", "teleport"])?;
-        Ok(Self { context, teleport: Teleport::parse(args)? })
+        let (steps, run) = parse::steps(args)?;
+        Ok(Self { steps, run, line: args.line().to_owned() })
     }
+}
+
+/// BDS's overloads (research/captures/bds-command-syntax.txt), each sub-command followed by the
+/// rest of the line: sapling's list cannot chain them.
+fn overloads() -> Vec<Overload> {
+    let word = |word: &str| ParameterSpec::literal("execute", word);
+    let words = |name: &str, values: &[&str]| ParameterSpec { name: name.into(), kind: ParamKind::Enum { name: name.into(), values: values.iter().map(|v| v.to_string()).collect() }, optional: false };
+    let of = |name: &str, kind: ParamKind| ParameterSpec { name: name.into(), kind, optional: false };
+    let anchor = || words("ActorLocation", &["eyes", "feet"]);
+    let chained = |optional: bool| ParameterSpec { name: "chainedCommand".into(), kind: ParamKind::Text, optional };
+    let test = |kind: &str| vec![words("Option_If_Unless", &["if", "unless"]), word(kind)];
+    let score = || vec![ParameterSpec::of::<Selector>("target"), of("objective", ParamKind::String)];
+    let then = |mut first: Vec<ParameterSpec>, optional: bool| {
+        first.push(chained(optional));
+        Overload { parameters: first }
+    };
+    vec![
+        then(vec![word("as"), ParameterSpec::of::<Selector>("origin")], false),
+        then(vec![word("at"), ParameterSpec::of::<Selector>("origin")], false),
+        then(vec![word("in"), words("Dimension", &DIMENSIONS)], false),
+        then(vec![word("positioned"), ParameterSpec::of::<Coords>("position")], false),
+        then(vec![word("positioned"), word("as"), ParameterSpec::of::<Selector>("origin")], false),
+        then(vec![word("rotated"), of("yaw", ParamKind::Value), of("pitch", ParamKind::Value)], false),
+        then(vec![word("rotated"), word("as"), ParameterSpec::of::<Selector>("origin")], false),
+        then(vec![word("facing"), ParameterSpec::of::<Coords>("position")], false),
+        then(vec![word("facing"), word("entity"), ParameterSpec::of::<Selector>("origin"), anchor()], false),
+        then(vec![word("align"), of("axes", ParamKind::String)], false),
+        then(vec![word("anchored"), anchor()], false),
+        then([test("block"), vec![of("position", ParamKind::BlockPosition), of("block", ParamKind::String)]].concat(), true),
+        then([test("blocks"), ["begin", "end", "destination"].map(|name| of(name, ParamKind::BlockPosition)).to_vec(), vec![words("BlocksScanMode", &["masked", "all"])]].concat(), true),
+        then([test("entity"), vec![ParameterSpec::of::<Selector>("target")]].concat(), true),
+        then([test("score"), score(), vec![of("operation", ParamKind::String)], score()].concat(), true),
+        then([test("score"), score(), vec![words("ScoreRangeMode", &["matches"]), of("range", ParamKind::String)]].concat(), true),
+        Overload { parameters: vec![word("run"), of("command", ParamKind::Text)] },
+    ]
 }
 
 impl Command for Execute {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        match self.context {
-            Context::In(dimension) => {
-                let here = ctx.origin(sender);
-                self.teleport.run_from(ctx, sender, out, Some(dimension), here);
-            }
-            Context::At(selector) => {
-                let (people, others) = targets(ctx, sender, Some(&selector));
-                let stood: Vec<[f32; 3]> = people.into_iter().filter_map(|player| ctx.position(player.id).map(|at| at.feet)).chain(others.into_iter().map(|entity| entity.feet)).collect();
-                if stood.is_empty() {
-                    return no_target(out);
+        if let Some(error) = self.refused(ctx, sender) {
+            return out.refuse(error);
+        }
+        let mut frames = vec![(Frame::of(ctx, sender), None)];
+        for step in &self.steps {
+            frames = match step {
+                Step::If(wanted, condition) => test(ctx, frames, *wanted, condition, out),
+                _ => {
+                    let mut next = Vec::new();
+                    for (frame, _) in frames {
+                        next.extend(frames::apply(ctx, step, frame).into_iter().map(|frame| (frame, None)));
+                    }
+                    if next.is_empty() {
+                        return no_target(out);
+                    }
+                    next
                 }
-                for here in stood {
-                    self.teleport.clone().run_from(ctx, sender, out, None, here);
-                }
+            };
+            if frames.is_empty() {
+                return;
             }
         }
+        let Some((command, _)) = &self.run else {
+            for (_, count) in &frames {
+                match count {
+                    Some(count) => out.translate("commands.execute.trueConditionWithCount", vec![count.to_string()], true),
+                    None => out.translate("commands.execute.trueCondition", Vec::new(), true),
+                }
+            }
+            return out.done_to(frames.len() as u32);
+        };
+        let mut done = 0;
+        for (frame, _) in frames {
+            done += run_in(ctx, &frame, command, out);
+        }
+        out.done_to(done);
+    }
+}
+
+impl Execute {
+    /// The syntax error of the command after `run`, placed in the whole line as BDS places it.
+    fn refused(&self, ctx: &ShardCtx<'_>, sender: &Sender) -> Option<ParseError> {
+        let (command, at) = self.run.as_ref()?;
+        let error = match ctx.commands().check(command, Permission::Operator) {
+            Ok(()) => self.nested_refusal(ctx, sender)?,
+            Err(ParseError::NoTarget) => return None,
+            Err(error) => error,
+        };
+        match error {
+            ParseError::Syntax { before, token, after } => {
+                // The error keeps only ten characters each side; find them in the command again.
+                let quoted = format!("/{command}");
+                let found = quoted.find(&format!("{before}{token}{after}")).map_or(command.len() - token.len(), |pos| pos + before.len() - 1);
+                let start = at + found;
+                Some(Args::new(&self.line, 0, sender, &[]).error_span(start, start + token.len()))
+            }
+            other => Some(other),
+        }
+    }
+
+    /// The refusal of an `/execute` this one runs: BDS refuses the whole line, with no
+    /// `commands.execute.failed` (bds-execute2.txt `execute run execute run banana`).
+    fn nested_refusal(&self, ctx: &ShardCtx<'_>, sender: &Sender) -> Option<ParseError> {
+        let (command, _) = self.run.as_ref()?;
+        let name = command.split_whitespace().next()?;
+        if !name.eq_ignore_ascii_case("execute") {
+            return None;
+        }
+        let mut args = Args::new(command, name.len(), sender, &[]);
+        Self::parse(&mut args).ok()?.refused(ctx, sender)
+    }
+}
+
+/// The frames that pass a test, each with how many blocks `if blocks` counted; each that does not
+/// is answered `falseCondition`.
+fn test(ctx: &mut ShardCtx<'_>, frames: Vec<(Frame, Option<u32>)>, wanted: bool, condition: &Condition, out: &mut Output) -> Vec<(Frame, Option<u32>)> {
+    let mut kept = Vec::new();
+    for (frame, _) in frames {
+        let (sender, dimension) = (frame.sender(), frame.executed.dimension);
+        match in_dimension(ctx, dimension, |ctx| conditions::test(ctx, &sender, dimension, condition, out)) {
+            Some((held, count)) if held == wanted => kept.push((frame, count)),
+            _ => {
+                let kind = match condition {
+                    Condition::Block(..) => "block",
+                    Condition::Blocks(..) => "blocks",
+                    Condition::Entity(_) => "entity",
+                    Condition::Score(..) => "score",
+                };
+                let mode = if wanted { "if" } else { "unless" };
+                out.translate("commands.execute.falseCondition", vec![mode.into(), kind.into()], false);
+            }
+        }
+    }
+    kept
+}
+
+/// Runs `command` in `frame`, passes its answer on and returns how many it acted on.
+fn run_in(ctx: &mut ShardCtx<'_>, frame: &Frame, command: &str, out: &mut Output) -> u32 {
+    let sender = frame.sender();
+    let name = command.split_whitespace().next().unwrap_or("").to_ascii_lowercase();
+    let failed = |out: &mut Output| out.translate("commands.execute.failed", vec![name.clone(), speaker(&sender)], false);
+    if ABOVE_EXECUTE.contains(&name.as_str()) {
+        out.translate("commands.generic.error.permissions", vec![name.clone()], false);
+        failed(out);
+        return 0;
+    }
+    let commands = ctx.commands();
+    let answer = in_dimension(ctx, frame.executed.dimension, |ctx| commands.run(ctx, &sender, Permission::Operator, command));
+    for line in answer.messages() {
+        out.translate(line.text.clone(), line.parameters.clone(), line.success);
+    }
+    if answer.answers_always() {
+        out.always_answer();
+    }
+    let done = answer.success_count();
+    if done == 0 && !answer.messages().is_empty() {
+        failed(out);
+    }
+    done
+}
+
+/// Runs `f` with the world of `dimension` that the world in scope belongs to in scope; in the
+/// world in scope where that dimension is not on this shard yet.
+fn in_dimension<R>(ctx: &mut ShardCtx<'_>, dimension: i32, f: impl FnOnce(&mut ShardCtx<'_>) -> R) -> R {
+    let world = ctx.world();
+    let (base, here) = match world.rsplit_once(':') {
+        Some((base, suffix)) if DIMENSIONS.contains(&suffix) => (base.to_owned(), DIMENSIONS.iter().position(|one| *one == suffix).unwrap_or(0) as i32),
+        _ => (world.clone(), 0),
+    };
+    if here == dimension {
+        return f(ctx);
+    }
+    let name = if dimension == 0 { base } else { format!("{base}:{}", DIMENSIONS[dimension.clamp(0, 2) as usize]) };
+    let mut f = Some(f);
+    match ctx.within(&name, |ctx| f.take().map(|f| f(ctx))) {
+        Some(Some(result)) => result,
+        _ => f.take().map(|f| f(ctx)).expect("not run in the other world"),
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_teleport_into_a_dimension_or_from_an_entity_parses() {
-        let sender = Sender::Console;
-        let parsed = |line: &str| Execute::parse(&mut Args::new(line, 0, &sender, &[])).map(|execute| matches!(execute.context, Context::In(_))).ok();
-        assert_eq!([parsed("in nether run tp @s 0 70 0"), parsed("in Overworld run tp ~ ~ ~"), parsed("at @e[type=panda] run tp @s ~ ~ ~-1.5 facing ~ ~1 ~")], [Some(true), Some(true), Some(false)]);
-        assert_eq!([parsed("in hell run tp 0 0 0"), parsed("as @s run tp 0 0 0"), parsed("in nether run say hi")], [None, None, None]);
-    }
-}
+mod tests;

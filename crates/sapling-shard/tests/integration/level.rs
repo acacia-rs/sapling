@@ -13,7 +13,7 @@ use acacia_proto::packets::{
 };
 use acacia_proto::types::{GameRuleI32Value, MetadataDictionaryItemValue as Metadata, MetadataFlags1, Vec3i8, Vec3li};
 use bytes::BytesMut;
-use common::stored::{actor, compound, enter_stored, floor_with};
+use common::stored::{actor, compound, enter_stored, floor_holding};
 use common::{Harness, all, click, config, pack_response, platform};
 use sapling_api::{Difficulty, Item, PlayerId, RuleValue, Slot};
 use sapling_shard::ShardConfig;
@@ -212,21 +212,24 @@ fn stored_mobs_are_shown_and_leave_with_their_column() {
     let stack = |name: &str| ("Item", compound([("Name", Value::String(name.into())), ("Count", Value::Byte(5)), ("Damage", Value::Short(0))]));
     let actors = [
         actor(-5, "minecraft:horse", [4.5, 64.0, 6.5], ("Saddled", Value::Byte(1))),
-        actor(-9, "minecraft:painting", [7.0, 66.0, 0.03], ("Motif", Value::String("Kebab".into()))),
+        actor(-9, "minecraft:painting", [6.5, 66.5, 1.03125], ("Motif", Value::String("Kebab".into()))),
         actor(-6, "minecraft:item", [5.0, 64.0, 5.0], stack("minecraft:diamond")),
         actor(-7, "minecraft:bat", [9.5, 70.0, 2.5], ("Mainhand", Value::List(List { tag: 10, items: vec![stack("minecraft:iron_sword").1] }))),
         actor(-8, "minecraft:item", [6.0, 64.0, 5.0], stack("sapling:no_such_item")),
     ]
     .concat();
 
-    let mut h = Harness::with(config(), World::with_storage(floor_with(actors)));
+    // The painting's wall, else it falls.
+    let mut h = Harness::with(config(), World::with_storage(floor_holding(actors, &[([6, 66, 0], "minecraft:stone")])));
     let sent = enter_stored(&mut h, 1);
     let mut mobs = all::<AddEntity>(&sent);
     mobs.sort_by(|a, b| a.entity_type.cmp(&b.entity_type));
-    let shown: Vec<_> = mobs.iter().map(|mob| (mob.entity_type.as_str(), [mob.position.x, mob.position.z], mob.yaw)).collect();
-    assert_eq!(shown, [("minecraft:bat", [9.5, 2.5], 90.0), ("minecraft:horse", [4.5, 6.5], 90.0)]);
-    // The horse stands on the floor; the bat, which does not fly here, is falling to it.
-    assert!(mobs[1].position.y == 64.0 && (64.0..=70.0).contains(&mobs[0].position.y), "{:?}", mobs.iter().map(|mob| mob.position.y).collect::<Vec<_>>());
+    let shown: Vec<_> = mobs.iter().map(|mob| (mob.entity_type.as_str(), mob.yaw)).collect();
+    assert_eq!(shown, [("minecraft:bat", 90.0), ("minecraft:horse", 90.0)]);
+    // The horse stands on the floor where it was kept; the bat has begun to fly about from there.
+    let near = |mob: &AddEntity, [x, y, z]: [f32; 3]| (mob.position.x - x).abs() < 1.0 && (mob.position.y - y).abs() < 1.0 && (mob.position.z - z).abs() < 1.0;
+    let at = |mob: &AddEntity| [mob.position.x, mob.position.y, mob.position.z];
+    assert!(near(&mobs[0], [9.5, 70.0, 2.5]) && at(&mobs[1]) == [4.5, 64.0, 6.5], "{:?}", mobs.iter().map(at).collect::<Vec<_>>());
     assert!(mobs.iter().all(|mob| !mob.attributes.is_empty()), "each as BDS announces its kind");
     let saddled = |mob: &AddEntity| mob.metadata.iter().any(|item| matches!(&item.value, Metadata::Flags(flags) if flags.contains(MetadataFlags1::SADDLED)));
     assert_eq!(mobs.iter().map(saddled).collect::<Vec<_>>(), [false, true], "the horse wears what it was stored with");
@@ -243,10 +246,11 @@ fn stored_mobs_are_shown_and_leave_with_their_column() {
 
     // Nobody sees the column: it is unloaded and its mobs go; whoever comes next meets new ones.
     h.leave(1);
-    (0..150).for_each(|_| h.shard.tick());
+    // Two sweeps: the mobs moved since the last, so the first saves the column and the second drops it.
+    (0..250).for_each(|_| h.shard.tick());
     let sent = enter_stored(&mut h, 2);
     let again = all::<AddEntity>(&sent);
-    assert_eq!((again.len(), all::<AddItemEntity>(&sent).len()), (2, 1));
+    assert_eq!((again.len(), all::<AddItemEntity>(&sent).len(), all::<AddPainting>(&sent).len()), (2, 1, 1));
     assert!(again.iter().all(|mob| !ids.contains(&mob.runtime_id)), "the reloaded column's mobs are new entities");
     assert!(all::<RemoveEntity>(&h.tick(2)).is_empty());
 }

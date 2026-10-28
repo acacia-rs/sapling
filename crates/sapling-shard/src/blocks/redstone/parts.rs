@@ -20,8 +20,8 @@ pub(super) enum User {
     Lamp { lit: bool },
     Opens(Opens),
     Hopper,
-    /// A powered or activator rail, on while powered (vehicles/rails.rs).
-    // TODO: power does not pass along a line of rails as in vanilla.
+    /// A powered or activator rail, on while powered or within reach of one along its line
+    /// (rail_line.rs, vehicles/rails.rs); a plain rail, which switches at a junction (rails.rs).
     Rail,
     Tnt,
     /// Pushes out of its `front`, where it takes no power.
@@ -30,8 +30,14 @@ pub(super) enum User {
     Fires { triggered: bool },
     /// Plays on a rise of its signal.
     Note,
+    /// Rings on a rise of its signal (bells.rs).
+    Bell,
     /// A copper bulb, which turns on and off at each rise of its signal.
     Bulb { powered: bool },
+    /// A command block of any kind (command_blocks.rs).
+    Command,
+    /// A structure block (structure_blocks.rs).
+    Structure,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -93,6 +99,9 @@ impl Part {
             "hopper" => Part::User(User::Hopper),
             "dispenser" | "dropper" | "crafter" => Part::User(User::Fires { triggered: get("triggered_bit") == Some("1") }),
             "noteblock" => Part::User(User::Note),
+            "bell" => Part::User(User::Bell),
+            "command_block" | "repeating_command_block" | "chain_command_block" => Part::User(User::Command),
+            "structure_block" => Part::User(User::Structure),
             _ if name.ends_with("copper_bulb") => Part::User(User::Bulb { powered: get("powered_bit") == Some("1") }),
             "tripwire_hook" => Part::Producer { strength: on("powered_bit"), strong: get("direction").and_then(hook_support) },
             _ if name.ends_with("lightning_rod") => {
@@ -102,7 +111,7 @@ impl Part {
             // Their strength is held by the circuit (`redstone::emit`), not their block.
             "target" | "jukebox" => Part::Producer { strength: 0, strong: None },
             "sculk_sensor" | "calibrated_sculk_sensor" => Part::Producer { strength: 0, strong: Some(Face::Down) },
-            "golden_rail" | "activator_rail" => Part::User(User::Rail),
+            "golden_rail" | "activator_rail" | "rail" => Part::User(User::Rail),
             // A minecart on it turns it on (vehicles/rails.rs).
             "detector_rail" => Part::Producer { strength: on("rail_data_bit"), strong: Some(Face::Down) },
             "tnt" => Part::User(User::Tnt),
@@ -114,6 +123,8 @@ impl Part {
             _ if name.ends_with("trapdoor") => Part::User(User::Opens(Opens::Trapdoor)),
             _ if name.ends_with("door") => Part::User(User::Opens(Opens::Door)),
             _ if name.ends_with("fence_gate") => Part::User(User::Opens(Opens::Gate)),
+            // Java's: a powered lectern gives 15 around and strongly down.
+            "lectern" if on("powered_bit") > 0 => Part::Producer { strength: 15, strong: Some(Face::Down) },
             "slime" | "honey_block" | "mob_spawner" | "lectern" => Part::Cutter,
             "glowstone" => Part::Ledge,
             _ if name.ends_with("_slab") && !name.ends_with("double_slab") && get("minecraft:vertical_half") == Some("top") => Part::Ledge,

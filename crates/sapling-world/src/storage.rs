@@ -23,11 +23,13 @@ pub struct StoredColumn {
     pub block_entities: Vec<u8>,
     /// The column's mobs, items and the like, in the same form (`sapling_leveldb::actors`).
     pub actors: Vec<u8>,
+    /// The block ticks waiting in it, as one compound (`sapling_leveldb::pending_ticks`).
+    pub pending_ticks: Vec<u8>,
 }
 
 impl StoredColumn {
     pub fn of(chunk: Chunk) -> Self {
-        Self { chunk, block_entities: Vec::new(), actors: Vec::new() }
+        Self { chunk, block_entities: Vec::new(), actors: Vec::new(), pending_ticks: Vec::new() }
     }
 }
 
@@ -213,9 +215,15 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the ticking areas are unreadable; there are none");
             Vec::new()
         });
+        let maps = self.0.load_maps().unwrap_or_else(|error| {
+            tracing::warn!(%error, "the maps are unreadable; there are none");
+            Vec::new()
+        });
         let (spawn, rules, seed, hardcore) = (dat.spawn(), read_rules(dat), dat.seed().unwrap_or(0), dat.hardcore());
         let (structures, folder_structures) = (structures.into(), folder_structures.into());
-        Level { spawn, time: dat.time().unwrap_or(Level::default().time), rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, hardcore }
+        let (time, weather, difficulty) = (dat.time().unwrap_or(Level::default().time), dat.weather().unwrap_or(Level::default().weather), dat.difficulty());
+        let maps = maps.into();
+        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, hardcore, weather, difficulty, chunk_tick_range: None }
     }
 }
 
@@ -228,11 +236,11 @@ fn game_version() -> [i32; 5] {
 impl WorldStorage for LevelDbStorage {
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
         let column = self.0.load_column(ChunkKey::new(pos.x, pos.z, dimension))?;
-        Ok(column.map(|c| StoredColumn { chunk: c.chunk, block_entities: c.block_entities, actors: c.actors }))
+        Ok(column.map(|c| StoredColumn { chunk: c.chunk, block_entities: c.block_entities, actors: c.actors, pending_ticks: c.pending_ticks }))
     }
 
     fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
-        Ok(self.0.store_column(ChunkKey::new(pos.x, pos.z, dimension), &column.chunk, &column.block_entities, &column.actors)?)
+        Ok(self.0.store_column(ChunkKey::new(pos.x, pos.z, dimension), &column.chunk, &column.block_entities, &column.actors, &column.pending_ticks)?)
     }
 
     fn load_player(&self, id: &str) -> Result<Option<PlayerData>, StorageError> {
@@ -256,6 +264,13 @@ impl WorldStorage for LevelDbStorage {
             dat.set_last_opened_with(version);
         }
         dat.set_time(level.time);
+        dat.set_weather(level.weather);
+        if let Some(difficulty) = level.difficulty {
+            dat.set_difficulty(difficulty);
+        }
+        if let Some(chunks) = level.chunk_tick_range {
+            dat.set_chunk_tick_range(chunks);
+        }
         write_rules(&mut dat, &level.rules);
         if let Some(spawn) = level.spawn {
             dat.set_spawn(spawn);
@@ -270,6 +285,7 @@ impl WorldStorage for LevelDbStorage {
         let structures: Vec<(String, Vec<u8>)> = level.structures.iter().map(|(name, bytes)| (name.clone(), bytes.clone())).collect();
         self.0.store_structures(&structures)?;
         self.0.store_ticking_areas(&level.ticking_areas)?;
+        self.0.store_maps(&level.maps)?;
         Ok(self.0.flush(&dat)?)
     }
 

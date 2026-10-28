@@ -2,9 +2,11 @@
 //! layout, `level.dat`, and the disk chunk codec, decoding into acacia-world chunks. Formats and
 //! sources: research/worlds-and-ecs.md §1.
 
+mod actor_gear;
 mod actor_harm;
 mod actor_raising;
 mod actor_riding;
+mod actor_state;
 mod actor_tags;
 mod actors;
 mod block_entities;
@@ -13,9 +15,12 @@ mod data3d;
 mod db;
 mod dragon_fight;
 mod generated;
+mod hive;
 mod item;
 mod keys;
 mod level_dat;
+mod maps;
+mod pending_ticks;
 mod player;
 mod portals;
 mod records;
@@ -28,14 +33,18 @@ mod world;
 
 use std::path::PathBuf;
 
-pub use actor_harm::harmed_actor;
+pub use actor_gear::{actor_pose, geared_actor};
+pub use actor_harm::{actor_attributes, attributed_actor, harmed_actor};
 pub use actor_riding::{actor_chest, actor_links, chested_actor, flagged_actor, linked_actor, varied_actor};
 pub use actor_tags::{actor_tags, tagged_actor};
+pub use actor_state::{WitherRecord, actor_effects, actor_fuse, effected_actor, fused_actor, wither_record, withered_actor};
+pub use hive::{Occupant, hive_occupants, new_hive, occupied_hive};
 pub use scoreboard::{DisplayRecord, ObjectiveRecord, ScoreIdentity, ScoreboardRecord, decode_scoreboard, encode_scoreboard};
 pub use actor_raising::{Raising, raised_actor, raising, regrouped_actor};
-pub use actors::{Actor, Painting, State, actors, falling_block, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_shot_actor, orb_value, orb_worth, placed_actor, shot_record, stored_actors, ShotRecord};
+pub use actors::{Actor, Painting, State, actors, falling_block, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_painting_actor, new_shot_actor, orb_value, orb_worth, placed_actor, shot_record, stored_actors, ShotRecord};
 pub use item::ItemStack;
-pub use player::PlayerData;
+pub use pending_ticks::{PendingTick, decode_pending_ticks, encode_pending_ticks};
+pub use player::{PlayerData, RecipeRecord};
 pub use portals::{PortalRecord, decode_portals, encode_portals};
 pub use dragon_fight::{DragonFightRecord, decode_dragon_fight, encode_dragon_fight};
 pub use block_entities::{BlockEntity, block_entities, with_block_entity, without_block_entity};
@@ -44,7 +53,8 @@ pub use generated::{generated_loot, generated_pot, generated_spawner, generated_
 pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
-pub use level_dat::LevelDat;
+pub use level_dat::{LevelDat, WeatherRecord};
+pub use maps::{MAP_PREFIX, MapRecord};
 pub use states::{BlockStates, PLACEHOLDER, block_of_hash, palette_block};
 pub use structure::{STRUCTURE_PREFIX, StructureTemplate, structure_name};
 pub use sub_chunk::{Layer, SubChunk};
@@ -75,6 +85,8 @@ pub enum Error {
     Structure(&'static str),
     #[error("ticking area: {0}")]
     TickingArea(&'static str),
+    #[error("map: {0}")]
+    Map(&'static str),
     #[error(transparent)]
     Decode(#[from] acacia_proto::DecodeError),
 }

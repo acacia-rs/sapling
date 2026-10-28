@@ -46,6 +46,9 @@ pub struct Warding {
     pub respiration: u8,
     pub depth_strider: u8,
     pub frost_walker: u8,
+    pub soul_speed: u8,
+    pub swift_sneak: u8,
+    pub aqua_affinity: bool,
 }
 
 impl Warding {
@@ -58,6 +61,9 @@ impl Warding {
             respiration: highest(Enchant::Respiration),
             depth_strider: highest(Enchant::DepthStrider),
             frost_walker: highest(Enchant::FrostWalker).min(FROST_MOST),
+            soul_speed: highest(Enchant::SoulSpeed),
+            swift_sneak: highest(Enchant::SwiftSneak),
+            aqua_affinity: highest(Enchant::AquaAffinity) > 0,
         }
     }
 

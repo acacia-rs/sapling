@@ -26,6 +26,8 @@ pub(super) enum After {
     On,
     /// It bounces back off (a trident).
     Back,
+    /// A shield turned it away, a tenth as fast (research/captures/bds-shield.txt).
+    Deflected,
 }
 
 /// The shot `arrow`, flying at `motion`, met `struck` at `at`.
@@ -36,6 +38,12 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
     let from: [f32; 3] = std::array::from_fn(|axis| at[axis] - motion[axis]);
     let cost = harm(world, layer, shot.harm, loosed.as_ref(), speed, struck, is_player);
     let push = loosed.as_ref().map_or([0.0; 3], |loosed| punched(loosed.punch, motion));
+    if is_player && vitals::blocks(world, struck, from, cost, Cause::Projectile, false) {
+        if let Some(mut loosed) = world.get_mut::<Loosed>(arrow) {
+            loosed.spent = true;
+        }
+        return After::Deflected;
+    }
     let landed = match is_player {
         // One proof against fire lost nothing to a fireball on BDS (bds-blaze.txt).
         true => !(loosed.is_none() && shot.burns > 0 && vitals::is_fireproof(world, struck)) && vitals::shot(world, struck, cost, &archer, from, shot.throws, push),

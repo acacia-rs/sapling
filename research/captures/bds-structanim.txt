@@ -1,0 +1,268 @@
+## drill starts at 1793198161762
+## /kill @e[type=!player]
+     55 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1011 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1011 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /gamerule randomtickspeed 0
+   2012 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2012 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+## /gamemode creative @s
+   3013 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3013 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   3013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp @s 0.5 ~ 0.5 -90 0
+   4008 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -19.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4008 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-19.00", "0.50"]
+   4008 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-19.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4783 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   4783 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~-2 ~-1 ~-6 ~12 ~-1 ~8 stone
+   5010 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+   5182 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 209617, paused: false }] }) }
+   5183 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   5183 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 209617, paused: false }] }) }
+   5183 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~-2 ~ ~-6 ~12 ~6 ~8 air
+   6016 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["48"]
+   6016 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"48\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6033 actor   UpdateSubchunkBlocks 3 -19 0 air[]; 3 -19 5 air[]; 4 -19 0 air[]; 4 -19 1 air[]; 4 -19 4 air[]; 4 -19 5 air[]; 4 -19 6 air[]; 4 -19 7 air[]; 4 -19 8 air[]; 4 -17 6 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -19 4 air[]; 5 -19 5 air[]; 5 -19 6 air[]; 5 -19 7 air[]; 5 -19 8 air[]; 5 -18 0 air[]; 5 -18 5 air[]; 5 -18 8 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -19 4 air[]; 6 -19 5 air[]; 6 -19 6 air[]; 6 -19 7 air[]; 6 -19 8 air[]; 6 -18 4 air[]; 6 -18 7 air[]; 6 -17 1 air[] | extra: 
+   6033 watcher UpdateSubchunkBlocks 3 -19 0 air[]; 3 -19 5 air[]; 4 -19 0 air[]; 4 -19 1 air[]; 4 -19 4 air[]; 4 -19 5 air[]; 4 -19 6 air[]; 4 -19 7 air[]; 4 -19 8 air[]; 4 -17 6 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -19 4 air[]; 5 -19 5 air[]; 5 -19 6 air[]; 5 -19 7 air[]; 5 -19 8 air[]; 5 -18 0 air[]; 5 -18 5 air[]; 5 -18 8 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -19 4 air[]; 6 -19 5 air[]; 6 -19 6 air[]; 6 -19 7 air[]; 6 -19 8 air[]; 6 -18 4 air[]; 6 -18 7 air[]; 6 -17 1 air[] | extra: 
+   6033 actor   UpdateSubchunkBlocks 2 -19 -4 air[]; 3 -19 -4 air[]; 4 -19 -6 air[]; 4 -19 -5 air[]; 4 -19 -4 air[]; 4 -19 -1 air[]; 4 -18 -6 air[]; 4 -18 -1 air[]; 5 -19 -6 air[]; 5 -19 -5 air[]; 5 -19 -4 air[]; 5 -19 -1 air[]; 5 -18 -5 air[]; 6 -19 -6 air[]; 6 -19 -5 air[]; 6 -19 -4 air[]; 6 -19 -1 air[]; 6 -17 -4 air[] | extra: 
+   6033 watcher UpdateSubchunkBlocks 2 -19 -4 air[]; 3 -19 -4 air[]; 4 -19 -6 air[]; 4 -19 -5 air[]; 4 -19 -4 air[]; 4 -19 -1 air[]; 4 -18 -6 air[]; 4 -18 -1 air[]; 5 -19 -6 air[]; 5 -19 -5 air[]; 5 -19 -4 air[]; 5 -19 -1 air[]; 5 -18 -5 air[]; 6 -19 -6 air[]; 6 -19 -5 air[]; 6 -19 -4 air[]; 6 -19 -1 air[]; 6 -17 -4 air[] | extra: 
+   6227 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   6227 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /clear @s
+   7008 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   7009 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+   7330 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   7331 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+   8829 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   8829 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 stone
+   9021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9021 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+   9025 actor   UpdateSubchunkBlocks 4 -19 0 stone[]; 4 -19 1 stone[]; 4 -18 0 stone[]; 4 -18 1 stone[]; 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 5 -18 0 stone[]; 5 -18 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[] | extra: 
+   9025 actor   UpdateSubchunkBlocks 4 -19 -1 stone[]; 4 -18 -1 stone[]; 4 -17 -1 stone[]; 5 -19 -1 stone[]; 5 -18 -1 stone[]; 5 -17 -1 stone[]; 6 -19 -1 stone[]; 6 -18 -1 stone[]; 6 -17 -1 stone[] | extra: 
+   9025 watcher UpdateSubchunkBlocks 4 -19 0 stone[]; 4 -19 1 stone[]; 4 -18 0 stone[]; 4 -18 1 stone[]; 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 5 -18 0 stone[]; 5 -18 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[] | extra: 
+   9025 watcher UpdateSubchunkBlocks 4 -19 -1 stone[]; 4 -18 -1 stone[]; 4 -17 -1 stone[]; 5 -19 -1 stone[]; 5 -18 -1 stone[]; 5 -17 -1 stone[]; 6 -19 -1 stone[]; 6 -18 -1 stone[]; 6 -17 -1 stone[] | extra: 
+   9878 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9879 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9879 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   9879 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /setblock ~5 ~1 ~ chest
+  10018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10019 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  10026 actor   UpdateBlock 5 -18 0 layer 0 chest[minecraft:cardinal_direction=north]
+  10026 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  10026 watcher UpdateBlock 5 -18 0 layer 0 chest[minecraft:cardinal_direction=north]
+  10026 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  10728 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  10728 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  10775 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  10775 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  10978 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  10978 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /structure save anim ~4 ~ ~-1 ~6 ~2 ~1
+  11023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.save.success\",\"with\":{\"rawtext\":[{\"text\":\"mystructure:anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11023 actor   CommandOutput success_count=1 data=None commands.structure.save.success success=true ["mystructure:anim"]
+  11075 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11075 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  12021 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+  12021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12028 watcher UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  12029 watcher UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+  12029 actor   UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  12029 actor   UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+## /
+## /structure load anim ~4 ~ ~-1 0_degrees none layer_by_layer 2
+  14026 actor   CommandOutput success_count=1 data=None commands.structure.load.success success=true ["anim"]
+  14026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.load.success\",\"with\":{\"rawtext\":[{\"text\":\"anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14728 actor   UpdateSubchunkBlocks 4 -19 0 stone[]; 4 -19 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[]; 4 -19 0 stone[]; 4 -19 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[] | extra: 
+  14729 watcher UpdateSubchunkBlocks 4 -19 0 stone[]; 4 -19 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[]; 4 -19 0 stone[]; 4 -19 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[] | extra: 
+  14729 actor   UpdateSubchunkBlocks 4 -19 -1 stone[]; 5 -19 -1 stone[]; 6 -19 -1 stone[]; 4 -19 -1 stone[]; 5 -19 -1 stone[]; 6 -19 -1 stone[] | extra: 
+  14729 watcher UpdateSubchunkBlocks 4 -19 -1 stone[]; 5 -19 -1 stone[]; 6 -19 -1 stone[]; 4 -19 -1 stone[]; 5 -19 -1 stone[]; 6 -19 -1 stone[] | extra: 
+## /
+  15283 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15283 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15377 actor   UpdateSubchunkBlocks 4 -18 0 stone[]; 4 -18 1 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[]; 4 -18 0 stone[]; 4 -18 1 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[] | extra: 
+  15377 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  15377 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  15377 actor   UpdateSubchunkBlocks 4 -18 -1 stone[]; 5 -18 -1 stone[]; 6 -18 -1 stone[]; 4 -18 -1 stone[]; 5 -18 -1 stone[]; 6 -18 -1 stone[] | extra: 
+  15377 watcher UpdateSubchunkBlocks 4 -18 0 stone[]; 4 -18 1 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[]; 4 -18 0 stone[]; 4 -18 1 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[] | extra: 
+  15377 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  15377 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  15377 watcher UpdateSubchunkBlocks 4 -18 -1 stone[]; 5 -18 -1 stone[]; 6 -18 -1 stone[]; 4 -18 -1 stone[]; 5 -18 -1 stone[]; 6 -18 -1 stone[] | extra: 
+## /
+  16029 actor   UpdateSubchunkBlocks 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[]; 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[] | extra: 
+  16029 watcher UpdateSubchunkBlocks 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[]; 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[] | extra: 
+  16029 watcher UpdateSubchunkBlocks 4 -17 -1 stone[]; 5 -17 -1 stone[]; 6 -17 -1 stone[]; 4 -17 -1 stone[]; 5 -17 -1 stone[]; 6 -17 -1 stone[] | extra: 
+  16029 actor   UpdateSubchunkBlocks 4 -17 -1 stone[]; 5 -17 -1 stone[]; 6 -17 -1 stone[]; 4 -17 -1 stone[]; 5 -17 -1 stone[]; 6 -17 -1 stone[] | extra: 
+## /
+  17378 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  17378 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  17983 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 209873, paused: false }] }) }
+  17983 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 209873, paused: false }] }) }
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  18038 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+  18038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18075 actor   UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  18075 actor   UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+  18075 watcher UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  18075 watcher UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+  18227 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  18227 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /structure load anim ~4 ~ ~-1 0_degrees none block_by_block 2
+  20092 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.load.success\",\"with\":{\"rawtext\":[{\"text\":\"anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20093 actor   CommandOutput success_count=1 data=None commands.structure.load.success success=true ["anim"]
+  20143 actor   UpdateSubchunkBlocks 4 -19 -1 stone[]; 4 -19 -1 stone[] | extra: 
+  20143 watcher UpdateSubchunkBlocks 4 -19 -1 stone[]; 4 -19 -1 stone[] | extra: 
+  20193 watcher UpdateSubchunkBlocks 4 -19 0 stone[]; 4 -19 0 stone[] | extra: 
+  20194 actor   UpdateSubchunkBlocks 4 -19 0 stone[]; 4 -19 0 stone[] | extra: 
+  20286 watcher UpdateSubchunkBlocks 4 -19 1 stone[]; 4 -19 1 stone[] | extra: 
+  20286 actor   UpdateSubchunkBlocks 4 -19 1 stone[]; 4 -19 1 stone[] | extra: 
+  20343 watcher UpdateSubchunkBlocks 5 -19 -1 stone[]; 5 -19 -1 stone[] | extra: 
+  20344 actor   UpdateSubchunkBlocks 5 -19 -1 stone[]; 5 -19 -1 stone[] | extra: 
+  20444 actor   UpdateSubchunkBlocks 5 -19 0 stone[]; 5 -19 0 stone[] | extra: 
+  20444 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20444 watcher UpdateSubchunkBlocks 5 -19 0 stone[]; 5 -19 0 stone[] | extra: 
+  20444 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20494 watcher UpdateSubchunkBlocks 5 -19 1 stone[]; 5 -19 1 stone[] | extra: 
+  20494 actor   UpdateSubchunkBlocks 5 -19 1 stone[]; 5 -19 1 stone[] | extra: 
+  20587 actor   UpdateSubchunkBlocks 6 -19 -1 stone[]; 6 -19 -1 stone[] | extra: 
+  20587 watcher UpdateSubchunkBlocks 6 -19 -1 stone[]; 6 -19 -1 stone[] | extra: 
+  20638 actor   UpdateSubchunkBlocks 6 -19 0 stone[]; 6 -19 0 stone[] | extra: 
+  20638 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20638 watcher UpdateSubchunkBlocks 6 -19 0 stone[]; 6 -19 0 stone[] | extra: 
+  20638 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20692 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20692 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20743 watcher UpdateSubchunkBlocks 6 -19 1 stone[]; 6 -19 1 stone[] | extra: 
+  20743 actor   UpdateSubchunkBlocks 6 -19 1 stone[]; 6 -19 1 stone[] | extra: 
+  20791 actor   UpdateSubchunkBlocks 4 -18 -1 stone[]; 4 -18 -1 stone[] | extra: 
+  20791 watcher UpdateSubchunkBlocks 4 -18 -1 stone[]; 4 -18 -1 stone[] | extra: 
+  20887 actor   UpdateSubchunkBlocks 4 -18 0 stone[]; 4 -18 0 stone[] | extra: 
+  20887 watcher UpdateSubchunkBlocks 4 -18 0 stone[]; 4 -18 0 stone[] | extra: 
+  20937 actor   UpdateSubchunkBlocks 4 -18 1 stone[]; 4 -18 1 stone[] | extra: 
+  20938 watcher UpdateSubchunkBlocks 4 -18 1 stone[]; 4 -18 1 stone[] | extra: 
+  21039 actor   UpdateSubchunkBlocks 5 -18 -1 stone[]; 5 -18 -1 stone[] | extra: 
+## /
+  21039 watcher UpdateSubchunkBlocks 5 -18 -1 stone[]; 5 -18 -1 stone[] | extra: 
+  21088 actor   UpdateSubchunkBlocks 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 0 chest[minecraft:cardinal_direction=north] | extra: 
+  21088 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  21088 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  21088 watcher UpdateSubchunkBlocks 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 0 chest[minecraft:cardinal_direction=north] | extra: 
+  21088 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  21088 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  21188 actor   UpdateSubchunkBlocks 5 -18 1 stone[]; 5 -18 1 stone[] | extra: 
+  21188 watcher UpdateSubchunkBlocks 5 -18 1 stone[]; 5 -18 1 stone[] | extra: 
+  21237 actor   UpdateSubchunkBlocks 6 -18 -1 stone[]; 6 -18 -1 stone[] | extra: 
+  21237 watcher UpdateSubchunkBlocks 6 -18 -1 stone[]; 6 -18 -1 stone[] | extra: 
+  21335 actor   UpdateSubchunkBlocks 6 -18 0 stone[]; 6 -18 0 stone[] | extra: 
+  21335 watcher UpdateSubchunkBlocks 6 -18 0 stone[]; 6 -18 0 stone[] | extra: 
+  21394 watcher UpdateSubchunkBlocks 6 -18 1 stone[]; 6 -18 1 stone[] | extra: 
+  21395 actor   UpdateSubchunkBlocks 6 -18 1 stone[]; 6 -18 1 stone[] | extra: 
+  21494 actor   UpdateSubchunkBlocks 4 -17 -1 stone[]; 4 -17 -1 stone[] | extra: 
+  21494 watcher UpdateSubchunkBlocks 4 -17 -1 stone[]; 4 -17 -1 stone[] | extra: 
+  21536 actor   UpdateSubchunkBlocks 4 -17 0 stone[]; 4 -17 0 stone[] | extra: 
+  21536 watcher UpdateSubchunkBlocks 4 -17 0 stone[]; 4 -17 0 stone[] | extra: 
+  21645 actor   UpdateSubchunkBlocks 4 -17 1 stone[]; 4 -17 1 stone[] | extra: 
+  21645 watcher UpdateSubchunkBlocks 4 -17 1 stone[]; 4 -17 1 stone[] | extra: 
+  21688 actor   UpdateSubchunkBlocks 5 -17 -1 stone[]; 5 -17 -1 stone[] | extra: 
+  21688 watcher UpdateSubchunkBlocks 5 -17 -1 stone[]; 5 -17 -1 stone[] | extra: 
+  21794 actor   UpdateSubchunkBlocks 5 -17 0 stone[]; 5 -17 0 stone[] | extra: 
+  21795 watcher UpdateSubchunkBlocks 5 -17 0 stone[]; 5 -17 0 stone[] | extra: 
+  21839 actor   UpdateSubchunkBlocks 5 -17 1 stone[]; 5 -17 1 stone[] | extra: 
+  21839 watcher UpdateSubchunkBlocks 5 -17 1 stone[]; 5 -17 1 stone[] | extra: 
+  21943 actor   UpdateSubchunkBlocks 6 -17 -1 stone[]; 6 -17 -1 stone[] | extra: 
+  21943 watcher UpdateSubchunkBlocks 6 -17 -1 stone[]; 6 -17 -1 stone[] | extra: 
+  21992 actor   UpdateSubchunkBlocks 6 -17 0 stone[]; 6 -17 0 stone[] | extra: 
+  21992 watcher UpdateSubchunkBlocks 6 -17 0 stone[]; 6 -17 0 stone[] | extra: 
+## /
+  22040 watcher UpdateSubchunkBlocks 6 -17 1 stone[]; 6 -17 1 stone[] | extra: 
+  22040 actor   UpdateSubchunkBlocks 6 -17 1 stone[]; 6 -17 1 stone[] | extra: 
+## /
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  24054 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+  24054 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24094 watcher UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  24094 actor   UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  24094 watcher UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+  24094 actor   UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+## /
+## /structure load anim ~4 ~ ~-1 0_degrees none block_by_block 0
+  26053 actor   CommandOutput success_count=1 data=None commands.structure.load.success success=true ["anim"]
+  26053 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.load.success\",\"with\":{\"rawtext\":[{\"text\":\"anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26088 actor   UpdateSubchunkBlocks 4 -19 0 stone[]; 4 -19 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[]; 4 -18 0 stone[]; 4 -18 1 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[]; 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[]; 4 -19 0 stone[]; 4 -19 1 stone[]; 4 -18 0 stone[]; 4 -18 1 stone[]; 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[] | extra: 
+  26088 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  26088 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  26088 actor   UpdateSubchunkBlocks 4 -19 -1 stone[]; 5 -19 -1 stone[]; 6 -19 -1 stone[]; 4 -18 -1 stone[]; 5 -18 -1 stone[]; 6 -18 -1 stone[]; 4 -17 -1 stone[]; 5 -17 -1 stone[]; 6 -17 -1 stone[]; 4 -19 -1 stone[]; 4 -18 -1 stone[]; 4 -17 -1 stone[]; 5 -19 -1 stone[]; 5 -18 -1 stone[]; 5 -17 -1 stone[]; 6 -19 -1 stone[]; 6 -18 -1 stone[]; 6 -17 -1 stone[] | extra: 
+  26088 watcher UpdateSubchunkBlocks 4 -19 0 stone[]; 4 -19 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[]; 4 -18 0 stone[]; 4 -18 1 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[]; 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[]; 4 -19 0 stone[]; 4 -19 1 stone[]; 4 -18 0 stone[]; 4 -18 1 stone[]; 4 -17 0 stone[]; 4 -17 1 stone[]; 5 -19 0 stone[]; 5 -19 1 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=north]; 5 -18 1 stone[]; 5 -17 0 stone[]; 5 -17 1 stone[]; 6 -19 0 stone[]; 6 -19 1 stone[]; 6 -18 0 stone[]; 6 -18 1 stone[]; 6 -17 0 stone[]; 6 -17 1 stone[] | extra: 
+  26088 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  26088 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  26088 watcher UpdateSubchunkBlocks 4 -19 -1 stone[]; 5 -19 -1 stone[]; 6 -19 -1 stone[]; 4 -18 -1 stone[]; 5 -18 -1 stone[]; 6 -18 -1 stone[]; 4 -17 -1 stone[]; 5 -17 -1 stone[]; 6 -17 -1 stone[]; 4 -19 -1 stone[]; 4 -18 -1 stone[]; 4 -17 -1 stone[]; 5 -19 -1 stone[]; 5 -18 -1 stone[]; 5 -17 -1 stone[]; 6 -19 -1 stone[]; 6 -18 -1 stone[]; 6 -17 -1 stone[] | extra: 
+  26392 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  26392 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  28058 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28058 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+  28088 actor   UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  29547 actor   UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+  29547 watcher UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  29547 watcher UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+## /
+  29938 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  29938 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /structure load anim ~4 ~ ~-1 90_degrees none layer_by_layer 0.5
+  30886 actor   CommandOutput success_count=1 data=None commands.structure.load.success success=true ["anim"]
+  30886 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.load.success\",\"with\":{\"rawtext\":[{\"text\":\"anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31090 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  31090 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  31144 actor   UpdateSubchunkBlocks 6 -19 0 stone[]; 5 -19 0 stone[]; 4 -19 0 stone[]; 6 -19 1 stone[]; 5 -19 1 stone[]; 4 -19 1 stone[]; 6 -19 0 stone[]; 5 -19 0 stone[]; 4 -19 0 stone[]; 6 -19 1 stone[]; 5 -19 1 stone[]; 4 -19 1 stone[] | extra: 
+  31144 actor   UpdateSubchunkBlocks 6 -19 -1 stone[]; 5 -19 -1 stone[]; 4 -19 -1 stone[]; 6 -19 -1 stone[]; 5 -19 -1 stone[]; 4 -19 -1 stone[] | extra: 
+  31144 watcher UpdateSubchunkBlocks 6 -19 0 stone[]; 5 -19 0 stone[]; 4 -19 0 stone[]; 6 -19 1 stone[]; 5 -19 1 stone[]; 4 -19 1 stone[]; 6 -19 0 stone[]; 5 -19 0 stone[]; 4 -19 0 stone[]; 6 -19 1 stone[]; 5 -19 1 stone[]; 4 -19 1 stone[] | extra: 
+  31144 watcher UpdateSubchunkBlocks 6 -19 -1 stone[]; 5 -19 -1 stone[]; 4 -19 -1 stone[]; 6 -19 -1 stone[]; 5 -19 -1 stone[]; 4 -19 -1 stone[] | extra: 
+  31289 watcher UpdateSubchunkBlocks 6 -18 0 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=east]; 4 -18 0 stone[]; 6 -18 1 stone[]; 5 -18 1 stone[]; 4 -18 1 stone[]; 6 -18 0 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=east]; 4 -18 0 stone[]; 6 -18 1 stone[]; 5 -18 1 stone[]; 4 -18 1 stone[] | extra: 
+  31289 actor   UpdateSubchunkBlocks 6 -18 0 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=east]; 4 -18 0 stone[]; 6 -18 1 stone[]; 5 -18 1 stone[]; 4 -18 1 stone[]; 6 -18 0 stone[]; 5 -18 0 chest[minecraft:cardinal_direction=east]; 4 -18 0 stone[]; 6 -18 1 stone[]; 5 -18 1 stone[]; 4 -18 1 stone[] | extra: 
+  31289 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  31289 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  31289 actor   UpdateSubchunkBlocks 6 -18 -1 stone[]; 5 -18 -1 stone[]; 4 -18 -1 stone[]; 6 -18 -1 stone[]; 5 -18 -1 stone[]; 4 -18 -1 stone[] | extra: 
+  31289 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  31289 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: -18, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("id", String("Chest")), ("x", Int(5)), ("y", Int(-18)), ("z", Int(0))]) } }
+  31289 watcher UpdateSubchunkBlocks 6 -18 -1 stone[]; 5 -18 -1 stone[]; 4 -18 -1 stone[]; 6 -18 -1 stone[]; 5 -18 -1 stone[]; 4 -18 -1 stone[] | extra: 
+  31438 watcher UpdateSubchunkBlocks 6 -17 0 stone[]; 5 -17 0 stone[]; 4 -17 0 stone[]; 6 -17 1 stone[]; 5 -17 1 stone[]; 4 -17 1 stone[]; 6 -17 0 stone[]; 5 -17 0 stone[]; 4 -17 0 stone[]; 6 -17 1 stone[]; 5 -17 1 stone[]; 4 -17 1 stone[] | extra: 
+  31438 actor   UpdateSubchunkBlocks 6 -17 0 stone[]; 5 -17 0 stone[]; 4 -17 0 stone[]; 6 -17 1 stone[]; 5 -17 1 stone[]; 4 -17 1 stone[]; 6 -17 0 stone[]; 5 -17 0 stone[]; 4 -17 0 stone[]; 6 -17 1 stone[]; 5 -17 1 stone[]; 4 -17 1 stone[] | extra: 
+  31438 actor   UpdateSubchunkBlocks 6 -17 -1 stone[]; 5 -17 -1 stone[]; 4 -17 -1 stone[]; 6 -17 -1 stone[]; 5 -17 -1 stone[]; 4 -17 -1 stone[] | extra: 
+  31439 watcher UpdateSubchunkBlocks 6 -17 -1 stone[]; 5 -17 -1 stone[]; 4 -17 -1 stone[]; 6 -17 -1 stone[]; 5 -17 -1 stone[]; 4 -17 -1 stone[] | extra: 
+  31490 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 210129, paused: false }] }) }
+  31490 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 210129, paused: false }] }) }
+## /
+  31985 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  31985 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 8.5, y: -39.8, z: 4.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  33691 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  33918 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  33928 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+  33928 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  33937 actor   UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  33937 actor   UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+  33937 watcher UpdateSubchunkBlocks 4 -19 0 air[]; 4 -19 1 air[]; 4 -18 0 air[]; 4 -18 1 air[]; 4 -17 0 air[]; 4 -17 1 air[]; 5 -19 0 air[]; 5 -19 1 air[]; 5 -18 0 air[]; 5 -18 1 air[]; 5 -17 0 air[]; 5 -17 1 air[]; 6 -19 0 air[]; 6 -19 1 air[]; 6 -18 0 air[]; 6 -18 1 air[]; 6 -17 0 air[]; 6 -17 1 air[] | extra: 
+  33938 watcher UpdateSubchunkBlocks 4 -19 -1 air[]; 4 -18 -1 air[]; 4 -17 -1 air[]; 5 -19 -1 air[]; 5 -18 -1 air[]; 5 -17 -1 air[]; 6 -19 -1 air[]; 6 -18 -1 air[]; 6 -17 -1 air[] | extra: 
+  34539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  34539 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /structure delete anim
+  34928 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.delete.success\",\"with\":{\"rawtext\":[{\"text\":\"mystructure:anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34928 actor   CommandOutput success_count=1 data=None commands.structure.delete.success success=true ["mystructure:anim"]
+  35242 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35242 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35343 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35343 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  36288 actor   LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  36288 watcher LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+probe exit 0

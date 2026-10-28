@@ -40,6 +40,13 @@ pub(crate) fn show_together(world: &mut World, layer: Entity, cells: &[(BlockPos
     show_sections(world, layer, sections, false);
 }
 
+/// Shows `cells` as given, without writing them, an UpdateSubchunkBlocks per sub-chunk: a cell
+/// may be listed twice, as BDS showed a landed stalactite put and broken (bds-dripstone.txt).
+pub(crate) fn show_states(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) {
+    let sections = by_section(cells.iter().map(|&(pos, id)| (pos, id, FLAGS.0)));
+    show_sections(world, layer, sections, false);
+}
+
 /// The cells [`super::set`] wrote while a batch was open, and the flags they are shown with.
 #[derive(Resource, Default)]
 pub(crate) struct Held(Option<(UpdateBlockFlags, Vec<(Entity, BlockPos)>)>);

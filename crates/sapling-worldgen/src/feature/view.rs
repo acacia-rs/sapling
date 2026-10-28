@@ -42,6 +42,8 @@ pub struct View<'a> {
     pub ticks: TickQueue,
     /// The ticks decoration left on chunk queues (liquid/mod.rs).
     pub routed: Vec<Routed>,
+    /// The instaticks decoration left on its own chunk's queue, with their times instead of delays (liquid/leftovers.rs).
+    pub left: Vec<Routed>,
     /// The oracle's taint analysis, when the generator tracks it.
     pub reach: Option<Reach<'a>>,
     /// BDS's per-thread generator, when the run it models is known (thread.rs).
@@ -68,6 +70,7 @@ impl<'a> View<'a> {
             generated: None,
             ticks: TickQueue::default(),
             routed: Vec::new(),
+            left: Vec::new(),
             reach: None,
             thread_random: None,
             ultrawarm: false,
@@ -262,6 +265,6 @@ impl<'a> View<'a> {
     }
 
     pub fn into_writes(self) -> ChunkWrites {
-        ChunkWrites(self.writes, self.routed, self.reach.map(Reach::into_parts), self.entities)
+        ChunkWrites(self.writes, self.routed, self.reach.map(Reach::into_parts), self.left, self.entities)
     }
 }

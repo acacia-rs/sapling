@@ -223,6 +223,83 @@ survival on obsidian at midnight on easy (`research/captures/bds-ghast-findings.
   1 came the tick after, `7 (a² + a)` with `a = 1 - d/2`, d from the feet, the same on every
   difficulty, and lit fire about it. One that met the floor blew up there.
 
+## The snow golem (`snowgolem`)
+
+A snow golem on plains at noon with a zombie 8 off (`research/captures/bds-snowgolem.txt`):
+
+- A layer of snow came the tick after it was summoned under its feet, and as it walked one under
+  each of the four cells a quarter block about where it stood at the tick's start, in one update
+  where several were new (temperature under 0.81, the pack's `trail`).
+- It took the zombie (`TargetEid` the zombie's unique id, `mob.warning` a tick later) once it was
+  within 6, walked at it, and threw its snowball 22 ticks after taking it (Java's `RangedAttackGoal`
+  throws at 21 with a 20-tick interval), from about its eyes at 1.5 a tick, heard `shoot` from its
+  middle. The zombie, which had taken the golem 4 ticks after it came, killed it (health 4) first.
+
+## Drowned with tridents (`drowned`)
+
+A drowned summoned `as_ranged_adult` in a pool 8 from the actor at midnight
+(`research/captures/bds-drowned.txt`): shown holding a trident (`MobEquipment`) as it came; it took
+the actor and 77 ticks on swung (sapling waits Java's 20 to 60 by distance), a `thrown_trident` following a tick later at 3.94 a tick (the
+pack's power 4), heard `item.trident.throw` from the drowned. It kept its own trident; the thrown
+one stuck in the floor. One handed a trident by `replaceitem` (an earlier run) only bit.
+
+`drownedloot` (`bds-drownedloot.txt`): 40 drowned summoned `as_ranged_adult` in a pool and killed by
+`damage ... entity_attack entity @s`. All 40 held a trident; 5 held a nautilus shell in the offhand
+(`MobEquipment` window `Offhand`, slot 0; the table's 8%). 13 tridents dropped (sapling: a quarter, of
+mobs a player killed, Java's equipment rule), each with a `Damage` tag of 32 to 248 (sapling: Java's
+`250 - nextInt(1 + nextInt(247))`), none enchanted; all 5 shells dropped (the pack's offhand chance 1.0).
+Besides: rotten flesh, copper ingots. sapling: `creatures/drowned.rs`.
+
+## Paintings (`paintings`)
+
+BDS's pictures are `Motive`s built in one static initialiser (`142a1ce60`, each at `1429f4250` with
+its width and height in pixels and a flag for whether a hung painting may take it: Earth, Wind,
+Fire and Water may not). The painting's constructor (`1429fbbe0`) walks them in order, keeps each
+that survives (`1429cce40`: no collision in its box, a solid block behind each cell, no hanging
+actor in the box) at an area no less than the best so far, drops those smaller than the last best,
+and takes one by the level random's `nextInt`. In `research/captures/bds-paintings.txt` west faces of
+a wall at x 3 gave a 4 by 4 (`unpacked`, `BurningSkull`) on an open wall, `Sea` in a 2 by 1 gap and
+`Bust` in a 2 by 2 one, each `AddPainting` at the wall less 1/32 and the middle of its cells, moved
+half a block to the viewer's left and up for an even width and height (Java's offsets). sapling
+(`paintings.rs`) does the same with "solid" as collision, and keeps the painting with its column.
+Breaking one is not built; a hung painting is a statue like the stored ones.
+
+## Armour stands (`armorstand`)
+
+`ArmorStand::getInteraction` (`1429b5e20`): nothing for a spectator; a sneaking click is
+`action.interact.armorstand.pose`, which moves `PoseIndex` on by one of 13 (`142a044f0`). Otherwise
+the height of the point hit above the stand's feet picks a slot, in this order: 0.1 to 0.55 feet,
+0.9 to 1.6 chest, 0.4 to 1.2 legs, 1.6 up head, below 0.1 none. A held armour piece goes to its own
+slot, anything else to the main hand; an empty hand takes from the slot clicked, the main hand first
+when the chest is clicked. The swap (`1429ba2c0`) does nothing for the same stack on both sides; a
+creative player's item is copied onto an empty slot; from a stack of two or more one goes on and the
+stand's item goes to the inventory (refused without room); otherwise the two trade places. Then
+`mob.armor_stand.place` at the stand's position plus 0.5 on each axis. In
+`research/captures/bds-armorstand.txt` a creative player's diamond helmet went on (main hand, offhand
+then armour `MobEquipment`s, `armor.equip_diamond` from the stand's eyes, then the place sound) and
+the player kept it; a second click with it did nothing. sapling (`creatures/armour_stands.rs`)
+keeps the gear and pose with the stand (`Armor`, `Mainhand`, `Offhand`, `Pose`/`PoseIndex`, the
+names the stand's save at `1429b4d80` writes). Which slot heads, skulls and pumpkins take, and
+where the stand's old item goes on a plain swap (here: the player's hand) are [U].
+
+## Piglins bartering (`barter`)
+
+A piglin in the warded room (`research/captures/bds-barter.txt`) picked a thrown gold ingot up: shown
+in its offhand (`MobEquipment` window `Offhand`, slot 1) that tick, `admire` from its head a tick
+later, and 161 ticks on (`admire_item` 8 s) the ingot went to its main hand and the offhand emptied.
+No barter came out in three runs: the clicks with an ingot fell out of reach. sapling barters on the
+click (the pack's `minecraft:interact` with `barter`), with that timing, and drops a roll of
+`piglin_barter.json` (read by `mob-loot.py` with the block tables) as the offhand empties.
+
+`piglinkeep` then `piglinkeep2` with `KEEP_WORLD=1` (`bds-piglinkeep.txt`, `bds-piglinkeep2.txt`): a
+piglin picked up a thrown golden sword, admired it in the offhand, and 161 ticks on was sent the sword
+in its main hand, then the offhand emptied, the same tick; it then took a thrown ingot into the
+offhand. After the restart it was announced with the sword (`Damage` 0 in its tag, as thrown) in the
+main hand and the ingot in the offhand (slot 0, as a stored mob's hands are shown) and bartered
+nothing in the next 11 s. sapling (`creatures/piglins.rs`) keeps both hands with the piglin
+(`Mainhand`, `Offhand`; it also writes the armour stand's `Pose`, which BDS's piglins may not have) and
+does not resume admiring after a load.
+
 ## Sapling
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),

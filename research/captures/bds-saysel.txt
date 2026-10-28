@@ -1,0 +1,177 @@
+## drill starts at 1793203333663
+## /kill @e[type=!player]
+     92 actor   CommandOutput success_count=4 data=None commands.kill.successful success=true ["Pig, Chicken, Sheep, Pig"]
+     93 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"Pig, Chicken, Sheep, Pig\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule domobspawning false
+   1011 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1011 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1011 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1011 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /gamerule randomtickspeed 0
+   2005 actor   GameRulesChanged randomTickSpeed=Int(0)
+   2006 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+   2006 watcher GameRulesChanged randomTickSpeed=Int(0)
+   2006 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative @s
+   3015 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3015 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   3015 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp @s 0.5 ~ 0.5 -90 0
+   4028 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -60.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4028 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-60.00", "0.50"]
+   4029 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-60.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill ~-2 ~-1 ~-6 ~12 ~-1 ~8 stone
+   5024 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["225"]
+   5024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"225\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5079 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 367, paused: false }] }) }
+   5079 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 367, paused: false }] }) }
+## /fill ~-2 ~ ~-6 ~12 ~6 ~8 air
+   6018 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /clear @s
+   7013 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /
+## /gamerule commandblocksenabled true
+   9022 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblocksenabled", "true"]
+   9023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblocksenabled\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule commandblockoutput true
+  10025 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["commandblockoutput", "true"]
+  10025 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"commandblockoutput\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /summon cow ~4 ~ ~3
+  11024 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  11024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.summon.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @s
+  12024 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi CmdActor" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12024 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi CmdActor" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @a
+  13026 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi CmdActor, CmdWatcher" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13026 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi CmdActor, CmdWatcher" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say @s@s x
+  14027 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] CmdActorCmdActor x" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14027 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] CmdActorCmdActor x" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say a@s b
+  15030 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] aCmdActor b" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15030 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] aCmdActor b" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @e[type=cow]
+  16028 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16028 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @e[type=cow,c=0] end
+  17032 actor   CommandOutput success_count=0 data=None Entity count cannot be 0 success=false []
+  17877 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 623, paused: false }] }) }
+  17877 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 623, paused: false }] }) }
+## /say hi @p[name=nobody] x
+  18033 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi  x" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18034 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi  x" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @x y
+  19035 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi @x y" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  19035 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi @x y" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @s[ y
+  20030 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["y hi @s[ y", "", ""]
+## /say hi @s[bad=1] y
+  21030 actor   CommandOutput success_count=0 data=None commands.generic.syntax success=false ["say hi @s[", "bad", "=1] y"]
+## /say mail@example.com
+  22034 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] mail@example.com" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22048 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] mail@example.com" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @ y
+  23034 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi @ y" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23034 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi @ y" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @here
+  24039 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi @here" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24039 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi @here" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi "@s" y
+  25042 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi \"@s\" y" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  25042 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi \"@s\" y" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @s, @a.
+  26040 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi CmdActor, CmdActor, CmdWatcher." }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26040 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi CmdActor, CmdActor, CmdWatcher." }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @initiator
+  27038 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  27038 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say hi @r
+  28040 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi CmdWatcher" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28040 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] hi CmdWatcher" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /say  two  spaces  @s  end 
+  29040 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] two  spaces  CmdActor  end " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  29040 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] two  spaces  CmdActor  end " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /me waves at @a
+  30040 actor   Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* CmdActor waves at CmdActor, CmdWatcher" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30041 watcher Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* CmdActor waves at CmdActor, CmdWatcher" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30680 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 879, paused: false }] }) }
+  30680 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 879, paused: false }] }) }
+## /me @s
+  31048 actor   Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* CmdActor CmdActor" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31048 watcher Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* CmdActor CmdActor" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tell CmdWatcher hi @s
+  32044 actor   CommandOutput success_count=1 data=None commands.message.display.outgoing success=true ["CmdWatcher", "hi CmdActor"]
+  32044 watcher Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "hi CmdActor" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32044 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.message.display.outgoing\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"hi CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tell @a hey @p and @e[type=cow]
+  33050 actor   Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "hey CmdActor and Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  33050 actor   CommandOutput success_count=2 data=None commands.message.display.outgoing success=true ["CmdActor, CmdWatcher", "hey CmdActor and Cow"]
+  33051 watcher Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "CmdActor", message: "hey CmdActor and Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  33051 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.message.display.outgoing\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"hey CmdActor and Cow\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /execute as @e[type=cow] run say I am @s
+  34050 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "Cow", message: "[Cow] I am Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34050 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "Cow", message: "[Cow] I am Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /execute as @e[type=cow] run me moos at @s
+  35055 actor   Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* Cow moos at Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35055 watcher Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* Cow moos at Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /execute as @e[type=cow] run tell CmdWatcher from @s
+  36054 actor   CommandOutput success_count=1 data=None commands.message.display.outgoing success=true ["CmdWatcher", "from Cow"]
+  36054 watcher Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "Cow", message: "from Cow" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36054 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.message.display.outgoing\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"from Cow\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock ~2 ~ ~ command_block ["facing_direction"=5]
+  37055 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  37055 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /!cmdblock 2 0 0 0 1 0 0 0 1 say hi @s
+## sent !cmdblock: true
+## /setblock ~2 ~1 ~ redstone_block
+  40064 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  40064 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  40180 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "!§r", message: "[!§r] hi " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  40180 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "!§r", message: "[!§r] hi " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /setblock ~2 ~1 ~ air
+  42064 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  42065 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!cmdblock 2 0 0 0 1 0 0 0 1 say hi @a and @p
+## sent !cmdblock: true
+  43480 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1135, paused: false }] }) }
+  43480 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1135, paused: false }] }) }
+## /setblock ~2 ~1 ~ redstone_block
+  44064 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  44064 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  44180 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "!§r", message: "[!§r] hi CmdActor, CmdWatcher and CmdActor" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  44181 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "!§r", message: "[!§r] hi CmdActor, CmdWatcher and CmdActor" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /setblock ~2 ~1 ~ air
+  46070 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  46070 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!cmdblock 2 0 0 0 1 0 0 0 1 me hi @s
+## sent !cmdblock: true
+## /setblock ~2 ~1 ~ redstone_block
+  48074 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  48075 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  48185 actor   Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* !§r hi " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  48185 watcher Text Text { needs_translation: false, category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* !§r hi " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /setblock ~2 ~1 ~ air
+  50072 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  50073 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!cmdblock 2 0 0 0 1 0 0 0 1 tell @a hi @s
+## sent !cmdblock: true
+## /setblock ~2 ~1 ~ redstone_block
+  52078 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  52078 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  52182 actor   Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "!§r", message: "hi " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  52182 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"!§r\"},{\"text\":\": \"},{\"translate\":\"commands.message.display.outgoing\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"hi \"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  52182 watcher Text Text { needs_translation: false, category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "!§r", message: "hi " }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  52182 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"!§r\"},{\"text\":\": \"},{\"translate\":\"commands.message.display.outgoing\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"hi \"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /setblock ~2 ~1 ~ air
+  54072 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  54072 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /kill @e[type=cow]
+  55074 actor   CommandOutput success_count=1 data=None commands.kill.successful success=true ["Cow"]
+  55074 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"Cow\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+probe exit 0

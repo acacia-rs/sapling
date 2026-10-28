@@ -3,7 +3,7 @@
 
 use acacia_proto::packets::{
     ChunkRadiusUpdate, RequestChunkRadius, ResourcePackClientResponse, ResourcePackClientResponseResponseStatus as PackStatus, SetDifficulty,
-    SetLocalPlayerAsInitialized, UpdatePlayerGameType,
+    SetLocalPlayerAsInitialized, SetPlayerGameType, UpdatePlayerGameType,
 };
 use acacia_proto::types::GameMode as WireGameMode;
 use bevy_ecs::prelude::*;
@@ -35,6 +35,25 @@ pub(crate) fn set_game_mode(world: &mut World, player: Entity, mode: GameMode) {
     current.0 = mode;
     let packet = UpdatePlayerGameType { gamemode: wire_game_mode(mode), player_unique_id: id.0 as i64, tick };
     crate::chat::send_to_all(world, &sapling_net::encode(&packet));
+}
+
+/// An operator's client asking for its own game mode, as the pause menu's settings do: BDS put a
+/// creative and a survival actor in the mode asked for and told everyone as `/gamemode` does, but
+/// said nothing in chat (research/captures/bds-packets.txt).
+pub(crate) fn dispatch_game_type_requests(world: &mut World) {
+    for (player, request) in world.resource_mut::<PacketQueues>().take::<SetPlayerGameType>() {
+        let operator = world.get::<crate::commands::Access>(player).is_some_and(|access| access.permission == sapling_api::Permission::Operator);
+        let mode = match request.gamemode {
+            WireGameMode::Survival => GameMode::Survival,
+            WireGameMode::Creative => GameMode::Creative,
+            WireGameMode::Adventure => GameMode::Adventure,
+            WireGameMode::Spectator => GameMode::Spectator,
+            _ => continue,
+        };
+        if operator {
+            set_game_mode(world, player, mode);
+        }
+    }
 }
 
 type Joining<'a> = (&'a Conn, &'a Identity, &'a NetId, &'a Position, &'a InLayer, &'a Inventory, &'a Mode, &'a mut Stage, &'a mut Outgoing);
@@ -97,6 +116,7 @@ pub(crate) fn resource_packs(
         };
         out.0.extend_from_slice(sapling_data::pre_start_packets());
         out.push(&sapling_data::start_game(&options));
+        out.0.extend_from_slice(sapling_data::property_registry_packets());
         out.0.extend_from_slice(sapling_data::registry_packets());
         out.push(&sapling_data::update_abilities(id.0 as i64));
         out.push(&sapling_data::entity_data(id.0, &identity.0.name));

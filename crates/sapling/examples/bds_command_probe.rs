@@ -1,7 +1,7 @@
 //! Runs a drill of command lines as an operator bot while a second operator watches, and prints
 //! what each was answered: CommandOutput in full, Text, GameRulesChanged as `rule=value`, and the
 //! drill's own packets. The ground truth for sapling's vanilla commands (`sapling::vanilla`).
-//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile|worldcmds|itemcmds]` (offline mode,
+//! `cargo run -p sapling --example bds_command_probe -- <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile|worldcmds|itemcmds|bubbles|dripstone|plants|plantmeal|pendingticks|blasts|creeperdrops|holds|rails|cauldrons|cauldronrain|bells|conduits|bookshelves|hives|shield|totem|crit|sprint|swing-wear|thorny|void|anvil]` (offline mode,
 //! operators by default; `gamerule` when none is named).
 #[path = "shared/batch_drill.rs"]
 mod batch;
@@ -29,6 +29,46 @@ mod redstone;
 mod world_commands;
 #[path = "shared/structure_drill.rs"]
 mod structures;
+#[path = "shared/nature_drill.rs"]
+mod nature;
+#[path = "shared/blast_drill.rs"]
+mod blast;
+#[path = "shared/hold_drill.rs"]
+mod hold;
+#[path = "shared/rail_drill.rs"]
+mod rail;
+#[path = "shared/cauldron_drill.rs"]
+mod cauldron;
+#[path = "shared/block_entity_drill.rs"]
+mod keeper;
+#[path = "shared/execute_drill.rs"]
+mod execute;
+#[path = "shared/client_command_drill.rs"]
+mod client;
+#[path = "shared/maps_drill.rs"]
+mod maps;
+#[path = "shared/bundle_drill.rs"]
+mod bundles;
+#[path = "shared/creature_drill.rs"]
+mod creatures;
+#[path = "shared/companion_drill.rs"]
+mod companion;
+#[path = "shared/rules_drill.rs"]
+mod rules;
+#[path = "shared/warden_drill.rs"]
+mod warden;
+#[path = "shared/props_drill.rs"]
+mod props;
+#[path = "shared/protocol_drill.rs"]
+mod protocol;
+#[path = "shared/command_block_drill.rs"]
+mod cmdblocks;
+#[path = "shared/command_link_drill.rs"]
+mod cmdlinks;
+#[path = "shared/structure_block_drill.rs"]
+mod structblocks;
+#[path = "shared/parity_drill.rs"]
+mod parity;
 
 use std::time::{Duration, Instant};
 
@@ -155,14 +195,29 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
         let rules = packet.decode::<packets::GameRulesChanged>().map_err(|e| e.to_string())?;
         let shown: Vec<String> = rules.rules.iter().map(|rule| format!("{}={:?}", rule.name, rule.value)).collect();
         println!("{ms:>7} {who:<7} GameRulesChanged {}", shown.join(" "));
+    } else if let Some(rows) = parity::listed(&packet).filter(|_| shown.contains(&"AvailableCommands")) {
+        rows.iter().for_each(|row| println!("{ms:>7} {who:<7} {row}"));
+    } else if let Some(rows) = maps::pixels(&packet).filter(|_| shown.contains(&"MapPixels")) {
+        let text: String = dump::dump(&packet).unwrap_or_default().split(", pixels").next().unwrap_or_default().to_owned();
+        println!("{ms:>7} {who:<7} ClientboundMapItemData {text}");
+        rows.iter().for_each(|row| println!("{ms:>7} {who:<7} {row}"));
+    } else if let Some(text) = protocol::properties(&packet).filter(|_| shown.contains(&"Properties")) {
+        println!("{ms:>7} {who:<7} {text}");
     } else if let Some(cells) = structures::block_names(&packet).filter(|_| shown.contains(&"UpdateSubchunkBlocks")) {
         println!("{ms:>7} {who:<7} {cells}");
     } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
         let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
         println!("{ms:>7} {who:<7} {name} {text}");
+    } else if acacia_bot::proto::packet_name(packet.id).is_none() && (shown.contains(&"Unknown") || shown.contains(&"*")) {
+        println!("{ms:>7} {who:<7} Unknown id {} {} bytes", packet.id, packet.body.len());
+    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| shown.contains(&"*") && !EVERY_TICK.contains(name)) {
+        println!("{ms:>7} {who:<7} {name} {} bytes", packet.body.len());
     }
     Ok(())
 }
+
+/// What a `*` drill leaves out: the packets that come whatever a command does.
+const EVERY_TICK: &[&str] = &["MovePlayer", "MoveEntityAbsolute", "MoveEntityDelta", "SetEntityMotion", "SetEntityData", "UpdateAttributes", "NetworkChunkPublisherUpdate", "LevelChunk", "SubChunk", "NetworkStackLatency", "CurrentStructureFeature"];
 
 /// Characters of a drill's own packets shown.
 const SHOWN: usize = 4000;
@@ -174,6 +229,7 @@ fn owned(lines: &[&str]) -> Vec<String> {
 /// The actor hits the newest mob it knows of the kind `hit` names, twice in a row for `2 kind`,
 /// while the watcher's packets are shown.
 async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str], hit: &str) -> Result<(), String> {
+    let hit = hit.trim();
     let (times, kind) = hit.strip_prefix('2').map_or((1, hit), |kind| (2, kind));
     let kind = format!("minecraft:{}", kind.trim());
     let id = actor.state().entities.iter().filter(|entity| entity.kind == kind).map(|entity| entity.runtime_id).max().ok_or(format!("no {kind} to hit"))?;
@@ -192,7 +248,11 @@ async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&st
 
 /// Does the actor's `!` line while the watcher's packets are shown, so they keep their times.
 async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str], line: &str) -> Result<(), String> {
-    let action = player::act(actor, line);
+    let action = async {
+        if !maps::act(actor, line).await && !bundles::act(actor, line).await && !creatures::act(actor, line).await && !cmdblocks::act(actor, line).await && !structblocks::act(actor, line).await {
+            player::act(actor, line).await;
+        }
+    };
     tokio::pin!(action);
     loop {
         tokio::select! {
@@ -205,7 +265,7 @@ async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str],
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
-    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile|holders|messaging|scoreboard|scoreboard2]")?;
+    let server = args.next().ok_or("usage: bds_command_probe <server> [gamerule|kill|replaceitem|defaults|concrete|water|lava|redstone|redstone-phase|conductors|shapes|burnout|repeater-facing|repeaters|comparators|reads|observer-facing|observers|piston-facing|pistons|slime|burn|harm|douse|hit|tools|reach|hurt|smother|hunger|eat|tire|bite|slain|chase|toil|armour|effects|sick|worn|kinds|stroll|flee|around|drink|more|shove|byhand|bedspawn|boom|shoot|wear|provoke|provoke2|provoke3|witch|ender|goat|evoker|shulker|ghast|breeze|vex|stare|dolphin|pandas|witch-drinks|goat-cows|mob-effects|mob-effects2|effects3|wind-burst|player-omens|fx|drink2|shoot2|golem|clock|sounds|loot|loot2|names|sun|weather|spiders|kinds2|pushed|pvp|blaze|duel|placing|item-names|placing2|daylight|clicks|tnt|bonemeal|fire|quench|discs|ores|crops|grows|leaves|trample|clicks2|scaffold|grows2|copper|oresteps|bonemeal2|leafreach|stacks|snowpile|holders|messaging|scoreboard|scoreboard2|bubbles|dripstone|plants|plantmeal|pendingticks|blasts|creeperdrops|holds|rails|cauldrons|cauldronrain|bells|conduits|bookshelves|hives|shield|totem|crit|sprint|swing-wear|thorny|void|anvil]")?;
     let (lines, shown, settle) = match args.next().as_deref() {
         None | Some("gamerule") => (owned(GAMERULE), &[][..], SETTLE),
         Some("kill") => (owned(KILL), KILL_SHOWN, KILL_SETTLE),
@@ -239,7 +299,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other).or_else(|| structures::drill(other)) {
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)).or_else(|| cmdblocks::drill(other)).or_else(|| cmdlinks::drill(other)).or_else(|| structblocks::drill(other)).or_else(|| parity::drill(other)).or_else(|| companion::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },
@@ -256,6 +316,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("## /{line}");
         match line.strip_prefix("!hit") {
             Some(hit) => strike(&mut actor, &mut watcher, start, shown, hit).await?,
+            // The actor leaves and joins again; what it is sent as it comes is shown.
+            None if line == "!rejoin" => {
+                actor.disconnect().await;
+                tokio::time::sleep(Duration::from_secs(2)).await;
+                actor = connect(&server, "CmdActor").await?;
+            }
             None if line.starts_with('!') => act(&mut actor, &mut watcher, start, shown, line).await?,
             None if !line.is_empty() => drop(actor.client().command(line)),
             None => {}

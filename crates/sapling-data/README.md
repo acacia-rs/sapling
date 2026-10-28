@@ -23,6 +23,7 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 | `data/block-loot.tsv` | `py -3 data/generate/block-loot.py` (the extracted Java 26.3 client jar, `JAVA` at the top) |
 | `data/names.tsv` | `cargo run -p sapling --example bds_name_probe -- <your BDS> > data/names.tsv`, on testbox `tools/remote-drill.sh bds bds_name_probe data/names.tsv` (BDS's own answers to `/give` and `/kill`); optional: without it names are made from identifiers |
 | `data/command-names.tsv` | `cargo run -p sapling --example bds_enum_probe -- <your BDS> > data/command-names.tsv` (drop a trailing `probe exit` line when made by `tools/remote-drill.sh bds bds_enum_probe`): the `Item` and `Block` enums of BDS's AvailableCommands; optional: without it commands take every name |
+| `data/command-texts.tsv` | `py -3 data/generate/command-texts.py` (your BDS's `resource_packs/vanilla/texts/en_US.lang`, `LANG` at the top; see "Command texts"); optional: without it the console prints translation keys |
 | `data/spawn-rules.tsv`, `data/despawns.tsv` | `py -3 data/generate/spawn-rules.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `data/husbandry.tsv` | `py -3 data/generate/husbandry.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `data/trades.json` | `py -3 data/generate/trades.py` (BDS's behaviour packs, as `mob-loot.py`) |
@@ -32,6 +33,7 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 |---|---|---|
 | `StartGame.bin` | `start_game(&StartGameOptions)` | ids, game mode, position, world spawn, world name, tick, seed (0), `client_side_generation` (off), `block_network_ids_are_hashes` |
 | `ItemRegistry.bin`, `BiomeDefinitionList.bin`, `AvailableEntityIdentifiers.bin`, `FeatureRegistry.bin`, `CameraPresets.bin`, `CreativeContent.bin`, `TrimData.bin`, `CraftingData.bin` | `registry_packets()`, byte for byte (BDS sends CraftingData later, after the player's own windows) | nothing |
+| none: `entity-properties.tsv` | `property_registry_packets()`, 13 SyncEntityProperty after StartGame (see "Entity properties") | nothing |
 | `JigsawStructureData.bin`, `VoxelShapes.bin` | `pre_start_packets()`, byte for byte, sent before StartGame (vanilla kicks with "missing structure data" without the first) | nothing |
 | `UpdateAttributes.bin` (the last one before spawn: the full list) | `update_attributes(id)` | runtime id |
 | `UpdateAbilities.bin` | `update_abilities(id)` | unique id |
@@ -114,13 +116,19 @@ these its own components (not its component groups) say, by `data/generate/mob-t
 `xp=least-most` (`minecraft:experience_reward` of the entity or of a group not named for a baby, the
 part after `last_hit_by_player ?`, without equipment), `fire_immune` (`minecraft:fire_immune`), `no_fall` (a `minecraft:damage_sensor` trigger that takes
 no damage from `fall` or from all), `breathes_water` and `no_air` (`minecraft:breathable`), `floats`
-(`minecraft:behavior.float`).
+(`minecraft:behavior.float`), `steadfast` (`minecraft:knockback_resistance` 1) and `resists=` (its
+value below 1), `unpushable` (no `minecraft:pushable_by_entity`, nor a `minecraft:pushable` with
+`is_pushable`, in the components or any group).
 `strolls=` and `panics=` are `minecraft:movement` times the `speed_multiplier` of `random_stroll`
-and of `panic`, for an entity with `navigation.walk`. `attack=`, `speed=`, `sees=` and `hits=effect:ticks` are the script's own
+and of `panic`, for an entity with `navigation.walk` (or `navigation.generic` that can walk); a
+movement given as a range (a horse's) counts as its middle. `swims=` is `minecraft:underwater_movement`
+times `random_swim`'s `speed_multiplier` (with `navigation.generic` that can swim), and `roams=XxY`
+that behaviour's `xz_dist` and `y_dist`. `attack=`, `speed=`, `sees=` and `hits=effect:ticks` are the script's own
 table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `attack` is
 `minecraft:attack` plus what the kind holds (a vindicator's axe 5, a wither skeleton's sword 5),
 `speed` is `minecraft:movement` times its attack's `speed_multiplier`, `sees` the `max_dist` of its
-`nearest_attackable_target` for players (16 where it names none).
+`nearest_attackable_target` for players (16 where it names none); `varies=` the top of an
+`attack` range BDS draws with fractions (the hoglin's `[3, 9]`).
 
 ## Husbandry
 
@@ -144,6 +152,22 @@ potion rules): each entity's
 `minecraft:type_family` from the vanilla behaviour packs, by `data/generate/mob-families.py`: its own
 components', or, for a kind that has them only in component groups, every group's together. Kinds the
 packs give no family (items, falling blocks) are not listed.
+
+## Entity properties
+
+`entity-properties.tsv` (tracked; read by `entity_properties.rs`): each entity's
+`description.properties` the vanilla behaviour packs mark `client_sync`, by `data/generate/entity-properties.py`
+(packs as `mob-loot.py`): kind, name, type, values (an enum's names, an int or float range) and default. A
+kind's properties are numbered by name, as BDS numbers them in AddEntity's and SetEntityData's
+`properties`; `property_registry_packets()` makes the 13 SyncEntityProperty BDS sends after StartGame
+from it, byte for byte as the recording's (the kinds in its order, tested). A Molang default (a bee's
+nectar) is sent as 0.
+
+## Command texts
+
+`command-texts.tsv` (ignored; read by `command_texts.rs`): key and English text of every `commands.*`
+line of en_US.lang. The console prints a command's answer in it, `%s`/`%1$s` filled with the answer's
+parameters, as BDS's console printed them (research/captures/bds-console-cmds.txt).
 
 ## Spawn rules
 
@@ -177,6 +201,26 @@ does to it (Broken, Popped, Blocking, Noreaction) and whether it keeps a water s
 Read statically off BDS's block registration, not out of a pack or the Java jar; how, and which rows
 are less certain: sapling's `docs/research/waterlogging.md`. A block not listed is Blocking and keeps
 nothing, BDS's default.
+
+## Blast resistance
+
+`block-resistance.tsv` (read by `block_resistance.rs`): the explosion resistance of each of BDS's 1477
+blocks, read out of a running BDS's memory (`data/generate/block-resistance.py`, which says how), not
+the Java game's table. Every state of a block had the same value.
+
+## Map colours
+
+`map-colours.tsv` (read by `map_colours.rs`): each block type's colour on a map, read off maps BDS drew
+of every block's default state laid in a grid (`tools/map-colours`, captures
+`research/captures/bds-mapgrid*`), by `data/generate/map-colours.py`: the block's
+`minecraft:map_color` component where it has one (with its tint), else the full-brightness pixel of a
+cell raised a block, else the one palette colour whose normal shade matches, else a colour between whole
+bytes (BDS keeps some as floats) fitted to both shades; `-` for blocks maps look through. Only default
+states were drawn: a block whose colour changes with its state (logs by axis, beds) has its default's.
+`map-tints.tsv` (`data/generate/map-tints.py`): each biome's grass, foliage and water tint, read off a
+grass block, oak leaves and water set where `/locate biome` led (`bds-maptints.cells`); biomes today's
+worldgen never makes take those of a found biome of the same climate. BDS blends tints between
+neighbouring biomes, so a value is the one at the probed spot.
 
 `game_rules`, `no_player_spawn` and `world_spawn` are built, not recorded: the rules are StartGame's, the
 spawn packets have the shape `bds_entity_probe` (join) and `bds_mob_recorder` (`/setworldspawn`) print.

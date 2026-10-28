@@ -140,8 +140,13 @@ fn hears(world: &World, layer: Entity, (name, properties): (&str, &str), pos: Bl
 }
 
 /// `event` happened at `at`, by a player or not: each listener in range that hears it starts to
-/// wait for it, unless one is already on its way to it (S3-S8).
+/// wait for it, unless one is already on its way to it (S3-S8), and wardens hear it.
 pub(crate) fn vibrate(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, by_player: bool) {
+    crate::creatures::warden_hears(world, layer, at, event, None);
+    reach_listeners(world, layer, at, event, by_player);
+}
+
+fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, by_player: bool) {
     let Some(listeners) = world.get_resource::<Listeners>() else { return };
     let reach = CALIBRATED_RANGE as i32;
     let corner = |dx: i32, dz: i32| send::column([at[0] as i32 + dx, 0, at[2] as i32 + dz]);
@@ -199,7 +204,8 @@ pub(crate) fn walked(world: &mut World, player: Entity, layer: Entity, from: [f3
     let stepped = *gone >= 1.0;
     *gone = gone.fract();
     if stepped {
-        vibrate(world, layer, to, GameEvent::Step, true);
+        crate::creatures::warden_hears(world, layer, to, GameEvent::Step, Some(player));
+        reach_listeners(world, layer, to, GameEvent::Step, true);
     }
 }
 

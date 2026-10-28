@@ -110,7 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         let actors = marked_actors(&column.actors, made, [x as f32 + 0.5, (MARKER_Y + 4) as f32, z as f32 + 0.5])?;
         made += 1;
-        world.store_column(*key, &column.chunk, &column.block_entities, &actors)?;
+        world.store_column(*key, &column.chunk, &column.block_entities, &actors, &column.pending_ticks)?;
     }
     let mut level = world.level().clone();
     level.set_last_played(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64);

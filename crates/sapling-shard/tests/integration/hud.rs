@@ -5,8 +5,8 @@ use crate::common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{
-    BossEvent, BossEventColor, BossEventOverlay, BossEventType, RemoveObjective, SetDisplayObjective, SetScore, SetScoreEntriesItemContent as Content, SetTitle, SetTitleType,
-    ToastRequest,
+    BossEvent, BossEventColor, BossEventOverlay, BossEventType, RemoveObjective, SetDisplayObjective, SetScore, SetScoreEntriesItemContent as Content, SetScoreboardIdentity,
+    SetScoreboardIdentityAction, SetTitle, SetTitleType, ToastRequest,
 };
 use common::{Harness, all};
 use sapling_api::{BossBar, BossBarColour, Display, DisplaySlot, Objective, PlayerId, ScoreHolder, ShardCtx, Sidebar, SortOrder, Title};
@@ -101,6 +101,34 @@ fn a_players_sidebar_hides_the_worlds_until_it_goes() {
     let sent = after(&mut h, |ctx| ctx.remove_sidebar(PlayerId(1)));
     assert_eq!(kinds(&sent), ["RemoveObjective", "SetDisplayObjective", "SetScore"], "the world's comes back");
     assert_eq!(all::<SetDisplayObjective>(&sent)[0].objective_name, "kills");
+}
+
+/// BDS's `bds_join_probe` (research/captures/bds-scoreboard-join.txt): scores kept under a name
+/// become the player's of that name as it joins, which everyone seeing the board is told.
+#[test]
+fn a_player_joining_takes_over_the_fake_scores_of_its_name() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    after(&mut h, |ctx| {
+        ctx.add_objective(&Objective::dummy("obj", "obj"));
+        ctx.set_display(DisplaySlot::Sidebar, Some(&Display { objective: "obj".into(), order: SortOrder::Descending }));
+        ctx.set_score(&ScoreHolder::Fake("Bob".into()), "obj", 3);
+    });
+    let entered = h.enter(2, "Bob");
+    let identity = |packets: &[RawPacket]| all::<SetScoreboardIdentity>(packets).into_iter().map(|told| (told.action, told.entries)).collect::<Vec<_>>();
+    let told = identity(entered.to(1));
+    assert_eq!(told.len(), 1, "Alex is told who the id is now");
+    let (action, entries) = &told[0];
+    assert_eq!((action, entries.len(), entries[0].entity_unique_id.is_some()), (&SetScoreboardIdentityAction::RegisterIdentity, 1, true));
+    assert_eq!(kinds(entered.to(2)).into_iter().filter(|kind| kind.starts_with("SetScore") || *kind == "SetDisplayObjective").collect::<Vec<_>>(), ["SetDisplayObjective", "SetScore", "SetScoreboardIdentity"]);
+    let id = entries[0].scoreboard_id;
+    let entries = |packets: &[RawPacket]| all::<SetScore>(packets).into_iter().flat_map(|set| set.entries).map(|entry| (entry.scoreboard_id, entry.entry_type_name)).collect::<Vec<_>>();
+    assert_eq!(entries(entered.to(2)), [(id, "changefakeplayer".to_owned())], "Bob's board shows the fake name first");
+    assert_eq!(identity(entered.to(2)), told);
+    h.remote.run(|ctx| {
+        ctx.set_score(&ScoreHolder::Fake("Bob".into()), "obj", 5);
+    });
+    assert_eq!(entries(h.tick_all().to(1)), [(id + 1, "changefakeplayer".to_owned())], "the name is a new fake holder once taken");
 }
 
 #[test]

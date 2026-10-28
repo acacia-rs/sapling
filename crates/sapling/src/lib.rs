@@ -9,6 +9,7 @@
 //! # Ok(()) }
 //! ```
 
+mod console;
 mod functions;
 mod layout;
 pub mod packs;

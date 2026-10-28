@@ -65,3 +65,19 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
 Riding (the vehicles work reads `Raised::saddled`/`chested` and calls `owners::tame_by_riding`),
 cats' and parrots' own behaviours (sitting on chests and shoulders, gifts), turtles' eggs and
 scutes, breeding of villagers, foxes' trust, bees, axolotls in buckets, natural herds of babies.
+
+## Parrots on shoulders (`parrots`, not built)
+
+`bds-parrots.txt` (survival actor, a parrot tamed with seeds on the fifth try): the parrot, tamed and
+standing, sat on the actor 2.3 s after it was last stood up by a click: `SetEntityData` with
+`RiderSeatPosition` (0.4, -0.2, -0.1) and `RiderRotationLocked` 1, then `SetEntityLink` type 1 (rider,
+`rider_initiated`, not immediate) with the player's unique id as the ridden, then `mount` at the player's
+eyes. Its `RIDING` flag (bit 2) was never set; only its `MOVING` bit (34) went on and off, and no
+`MoveEntity` was sent while it sat. A jump, sneaking and `/damage @s 1 entity_attack` left it there; a
+`tp ~ ~4 ~` took it off about 9 ticks into the fall (`SetEntityLink` type 0, not immediate), likely
+Java's `fallDistance > 0.5`. It did not sit on the player again in the 18 s after. The actor left and
+came back as a new player (see bundles.md "Open"): the parrot, still in the world, sat on the newcomer
+as it was shown (no delay), and its death sent the link's removal `immediate` after `RemoveEntity`.
+The pack's `find_mount` (`start_delay` 100, `within_radius` 16, `mount_distance` 2, `target_needed`
+false) is C++; when it tries again after a dismount was not found. Sapling's seats (riding/, the
+vehicles work) take no player as a vehicle.

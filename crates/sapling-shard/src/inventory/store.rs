@@ -1,19 +1,20 @@
-//! A player's items, health, hunger, bed, place, game mode, tags and `UniqueID` between visits: asked of the first world's storage at
+//! A player's items, health, hunger, bed or anchor, last death, place, game mode, tags, `UniqueID` and recipe book between visits: asked of the first world's storage at
 //! login, handed back when the player leaves, every few seconds while something changed, and when the shard stops.
 
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
 use sapling_world::{PlayerData, PlayerLoad};
 
-use super::{ARMOR, ENDER, Held, Inventory, MAIN, Place};
+use super::{ARMOR, ENDER, Held, Inventory, MAIN, Place, RecipeBook};
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{DefaultLayer, Identity, InLayer, Layer, Mode, NetId, Outgoing, Position, Stage, Tick};
 use crate::dimensions::{self, ClientDimension};
 use crate::experience::{self, Experience};
 use crate::handoff::{Peers, ShardMsg};
 use crate::sleep::BedSpawn;
+use crate::spawning::Rested;
 use crate::tags::Marks;
-use crate::vitals::Vitals;
+use crate::vitals::{LastDeath, Vitals};
 
 fn fill(inventory: &mut Inventory, data: PlayerData) {
     for (slot, stack) in data.main.into_iter().take(MAIN).enumerate() {
@@ -60,10 +61,10 @@ fn game_mode(stored: i32) -> Option<GameMode> {
 }
 
 /// Gives the players storage answered for their items.
-pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer)>, mut players: Query<(Entity, &Identity, &mut Inventory, Option<&mut Vitals>, Option<&mut Marks>)>) {
+pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer)>, mut players: Query<(Entity, &Identity, &mut Inventory, Option<&mut Vitals>, Option<&mut Marks>, Option<&mut RecipeBook>)>) {
     for (here, mut layer) in &mut layers {
         for (id, answer) in layer.world.take_players() {
-            let Some((player, _, mut inventory, vitals, marks)) = players.iter_mut().find(|(_, identity, inventory, ..)| !inventory.loaded && identity.0.uuid.to_string() == id) else { continue };
+            let Some((player, _, mut inventory, vitals, marks, book)) = players.iter_mut().find(|(_, identity, inventory, ..)| !inventory.loaded && identity.0.uuid.to_string() == id) else { continue };
             (inventory.loaded, inventory.keep) = (true, answer != PlayerLoad::Unreadable);
             inventory.enchant_seed = crate::workstations::new_seed();
             if let PlayerLoad::Stored(mut data) = answer {
@@ -77,7 +78,18 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
                     commands.entity(player).insert(effects);
                 }
                 if let Some(bed) = data.bed {
-                    commands.entity(player).insert(BedSpawn::restored(bed, here));
+                    let dimension = data.spawn_dimension;
+                    commands.queue(move |world: &mut World| {
+                        if let Some(layer) = dimensions::of(world, here, dimension) {
+                            world.entity_mut(player).insert(BedSpawn::restored(bed, layer));
+                        }
+                    });
+                }
+                if let Some((at, dimension)) = data.last_death {
+                    commands.entity(player).insert(LastDeath { at, dimension });
+                }
+                if let Some(rested) = data.rested {
+                    commands.entity(player).insert(Rested(rested));
                 }
                 if let Some(mode) = data.game_mode.and_then(game_mode) {
                     commands.entity(player).insert(Mode(mode));
@@ -86,7 +98,11 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
                     let (dimension, rotation) = (data.dimension, data.rotation);
                     commands.queue(move |world: &mut World| dimensions::start_in(world, player, dimension, feet, rotation));
                 }
+                let recipes = data.recipes.take();
                 fill(&mut inventory, data);
+                if let Some(mut book) = book {
+                    book.restore(recipes, &inventory);
+                }
             }
         }
     }
@@ -94,16 +110,18 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
 
 /// Sends each joining player its windows once it has items to show, in BDS's order: inventory,
 /// armour, the screen's own slots, offhand, then the slot in hand.
-pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut Inventory, &mut Outgoing, Option<&mut Vitals>)>) {
-    for (id, stage, mut inventory, mut out, vitals) in &mut players {
+pub(crate) fn send_own(tick: Res<Tick>, mut players: Query<(&NetId, &Stage, &mut Inventory, &mut Outgoing, Option<&mut Vitals>, Option<&LastDeath>)>) {
+    for (id, stage, mut inventory, mut out, vitals, last_death) in &mut players {
         if *stage >= Stage::StartGame && inventory.loaded && !inventory.sent {
-            inventory.send_all(&mut out);
-            out.push(&sapling_data::player_hotbar(inventory.selected, true));
+            inventory.send_all(&mut out, true);
             if inventory.experience != Experience::default() {
                 out.push(&experience::attributes(id, &inventory.experience, true, tick.0));
             }
             for told in vitals.map(|mut vitals| vitals.greeting(id.0, tick.0)).unwrap_or_default() {
                 out.push(&told);
+            }
+            if let Some(last_death) = last_death {
+                out.push(&crate::vitals::last_death_greeting(id.0, *last_death, tick.0));
             }
             inventory.sent = true;
         }
@@ -128,14 +146,21 @@ pub(crate) fn save(world: &mut World, player: Entity) {
     let place = world.get::<Position>(player).filter(|_| home).map(|position| (position.feet, [position.yaw, position.pitch]));
     let now = KeptPlace(place, dimension, world.get::<Mode>(player).map(|mode| game_type(mode.0)));
     let marks = world.get::<Marks>(player).cloned().unwrap_or_default();
-    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some() || marks.unsaved || world.get::<KeptPlace>(player) != Some(&now);
+    let recipes = world.get::<RecipeBook>(player).map(|book| (book.kept(), book.unsaved));
+    let stale = vitals.is_some_and(|vitals| vitals.is_unsaved()) || effects.is_some() || marks.unsaved || recipes.as_ref().is_some_and(|(_, unsaved)| *unsaved) || world.get::<KeptPlace>(player) != Some(&now);
     let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|inventory| inventory.keep && (inventory.unsaved || stale)) else { return };
     inventory.unsaved = false;
     let KeptPlace(place, _, game_mode) = now;
     let (position, rotation) = (place.map(|place| place.0), place.map(|place| place.1));
     let data = PlayerData { vitals: vitals.map(|vitals| vitals.kept()), effects: effects.unwrap_or_default(), dimension, position, rotation, game_mode, ..kept(&inventory) };
-    let data = PlayerData { bed: world.get::<BedSpawn>(player).and_then(|bed| bed.kept(first)), tags: marks.tags, unique_id: Some(marks.unique_id), ..data };
+    let (bed, spawn_dimension) = world.get::<BedSpawn>(player).and_then(|bed| bed.kept(world, &dimensions::members(world, first))).map_or((None, 0), |(bed, dimension)| (Some(bed), dimension));
+    let last_death = world.get::<LastDeath>(player).map(|death| (death.at, death.dimension));
+    let rested = world.get::<Rested>(player).map(|rested| rested.0);
+    let data = PlayerData { bed, spawn_dimension, last_death, tags: marks.tags, unique_id: Some(marks.unique_id), rested, recipes: recipes.map(|(kept, _)| kept), ..data };
     world.entity_mut(player).insert(now);
+    if let Some(mut book) = world.get_mut::<RecipeBook>(player) {
+        book.unsaved = false;
+    }
     if let Some(mut marks) = world.get_mut::<Marks>(player) {
         marks.unsaved = false;
     }

@@ -17,8 +17,9 @@ impl ShardCtx<'_> {
         self.backend.weather()
     }
 
-    /// Sets the weather of the world in scope for `ticks`, after which it is clear again, or
-    /// until it is set anew where `ticks` is `None`. Its players see it at once.
+    /// Sets the weather of the world in scope for `ticks` (`None`: `/weather`'s own 6000 to 17980),
+    /// after which the `doWeatherCycle` rule turns it as BDS does; where the rule is off it stays.
+    /// Its players see it at once.
     pub fn set_weather(&mut self, weather: Weather, ticks: Option<u32>) {
         self.backend.set_weather(weather, ticks);
     }

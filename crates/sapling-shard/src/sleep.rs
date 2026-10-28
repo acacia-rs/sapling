@@ -1,12 +1,12 @@
 //! Sleeping in a bed, as BDS does it (docs/research/beds-and-containers.md, sections 1 to 4):
-//! a click on a bed at night lies the player down in it and makes it its spawn; once everyone
-//! in the world has slept for 100 ticks the night is skipped and they all wake.
-// TODO: no monsters keep anyone awake (mobs are statues), no weather, no stand-up search
-// (a sleeper wakes where it lay down); only a bed in the shard's first world is kept with its
-// player (inventory/store.rs).
+//! a click on a bed at night or in a storm lies the player down in it and makes it its spawn,
+//! unless a monster is near (rest.rs); once everyone in the world has slept for 100 ticks of a
+//! night it is skipped and they all wake, each where stand.rs finds room.
 // A sleeper who leaves the game leaves its bed's `occupied_bit`, which the next click clears.
 
+mod rest;
 mod spawn;
+mod stand;
 
 use std::collections::HashMap;
 
@@ -17,21 +17,20 @@ use acacia_proto::types::{
     MetadataDictionaryItemValueDefault as Plain, MetadataFlags2, Vec3f, Vec3i,
 };
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, GameMode};
+use sapling_api::{BlockPos, Difficulty, GameMode};
 use sapling_data::EYE_HEIGHT;
 
-pub(crate) use spawn::{BedSpawn, spawn_of};
+pub(crate) use rest::is_night;
+pub(crate) use spawn::{BedSpawn, Own, set_anchor_spawn, sound_anchor_spent, spawn_of, spend_anchor, tell_lapsed};
 
 use crate::blocks::{bed_head, set_network_only, with_property};
-use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, in_world};
+use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, Settings, in_world};
 use crate::movement;
 use crate::visibility::ToViewers;
 
 const BED: &str = "minecraft:bed";
 const SLEEPING_PERCENTAGE: &str = "playersSleepingPercentage";
 const OCCUPIED: &str = "occupied_bit";
-/// The ticks of a clear day in which one may sleep: the sky is dark enough (BDS `skyDarken` 4).
-const NIGHT: std::ops::RangeInclusive<i64> = 12_541..=23_459;
 const DAY: i64 = 24_000;
 /// How far from the head of a bed its sleeper's eyes may be, per axis.
 const BED_REACH: [f32; 3] = [3.0, 4.0, 3.0];
@@ -41,6 +40,8 @@ const LYING_HEIGHT: f32 = 0.90625;
 const STAND_UP_HEIGHT: f32 = 0.1;
 /// A sleeper's yaw by its bed's `direction`.
 const LYING_YAW: [f32; 4] = [0.0, 90.0, 180.0, -90.0];
+/// Where a bed's head lies from its foot, x and z, by its `direction`.
+const HEAD_AHEAD: [[i32; 2]; 4] = [[0, 1], [-1, 0], [0, -1], [1, 0]];
 /// Ticks of sleep after which a sleeper counts for skipping the night.
 const DEEP_SLEEP: u64 = 100;
 /// The sleeping bit of `PlayerFlags`.
@@ -48,7 +49,7 @@ const SLEEPING_FLAG: i8 = 0x02;
 /// The bit of `FlagsExtended` BDS set on a sleeper (acacia-proto names it `WANTS_TO_WAKE`).
 const SLEEPING_EXTENDED: i64 = 1 << 12;
 /// A player's box, wide and high, lying in a bed and standing.
-const LYING_BOX: [f32; 2] = [0.2, 0.2];
+pub(crate) const LYING_BOX: [f32; 2] = [0.2, 0.2];
 const STANDING_BOX: [f32; 2] = [0.6, 1.8];
 /// The `LevelEventGeneric` that counts the sleepers (9801). The game zigzags the id where
 /// acacia-proto writes a plain varint, so it goes as 19602: BDS's bytes (bds-dims-travel.txt).
@@ -59,14 +60,17 @@ const SLEEPING_PLAYERS: u32 = 9801 << 1;
 pub(crate) struct Sleeping {
     layer: Entity,
     head: BlockPos,
-    /// Where it stood before it lay down, and gets up again.
+    foot: BlockPos,
+    direction: usize,
+    /// Where it stood before it lay down, which picks where it gets up (stand.rs).
     entered: [f32; 3],
     ticks: u64,
 }
 
-/// Tells a player why it did not lie down, as BDS does: the game's own grey line.
+/// Tells a player why it did not lie down, or that its spawn is set, as BDS does: the game's own
+/// grey line.
 fn tell(world: &mut World, player: Entity, key: &str) {
-    let packet = crate::chat::json_packet(vec![serde_json::json!({ "text": "§7" }), serde_json::json!({ "translate": format!("tile.bed.{key}") })]);
+    let packet = crate::chat::json_packet(vec![serde_json::json!({ "text": "§7" }), serde_json::json!({ "translate": key })]);
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.0.push(packet);
     }
@@ -81,13 +85,13 @@ fn entity_data(id: u64, metadata: Vec<MetadataDictionaryItem>) -> SetEntityData 
 fn lying_data(id: u64, lying: Option<(BlockPos, [f32; 3])>) -> SetEntityData {
     let flags = MetadataDictionaryItem { key: Key::PlayerFlags, r#type: Type::Byte, legacy_type: 0, value: Value::Default(Plain::Byte(if lying.is_some() { SLEEPING_FLAG } else { 0 })) };
     let bed = lying.map(|([x, y, z], _)| MetadataDictionaryItem { key: Key::PlayerBedPosition, r#type: Type::Vec3i, legacy_type: 6, value: Value::Default(Plain::Vec3i(Vec3i { x, y, z })) });
-    let extended = MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(if lying.is_some() { SLEEPING_EXTENDED } else { 0 })) };
+    let extended = MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(sapling_data::player_flags_extended().0 | if lying.is_some() { SLEEPING_EXTENDED } else { 0 })) };
     let entered = lying.map(|(_, [x, y, z])| MetadataDictionaryItem { key: Key::BedEnterPosition, r#type: Type::Vec3f, legacy_type: 8, value: Value::Default(Plain::Vec3f(Vec3f { x, y: y + EYE_HEIGHT, z })) });
     entity_data(id, [flags].into_iter().chain(bed).chain([extended]).chain(entered).collect())
 }
 
-/// A player's box, small while it lies in a bed.
-fn box_data(id: u64, lying: bool) -> SetEntityData {
+/// A player's box, small while it lies in a bed (and dead: vitals/death.rs).
+pub(crate) fn box_data(id: u64, lying: bool) -> SetEntityData {
     let [width, height] = if lying { LYING_BOX } else { STANDING_BOX };
     let size = |key, value| MetadataDictionaryItem { key, r#type: Type::Float, legacy_type: 3, value: Value::Default(Plain::Float(value)) };
     entity_data(id, vec![size(Key::BoundingboxWidth, width), size(Key::BoundingboxHeight, height)])
@@ -154,10 +158,6 @@ fn set_occupied(world: &mut World, layer: Entity, head: BlockPos, occupied: bool
     }
 }
 
-fn is_night(world: &World, layer: Entity) -> bool {
-    world.get::<Layer>(layer).is_some_and(|layer| NIGHT.contains(&layer.world.level().time.rem_euclid(DAY)))
-}
-
 /// A click on the block `name` at `pos`: a bed lies the player down in it if it may (BDS
 /// `BedBlock::use_sleep`, checks in its order). False for any other block.
 pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
@@ -169,7 +169,7 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
     if occupied {
         let mut sleepers = world.query::<&Sleeping>();
         if sleepers.iter(world).any(|sleeping| sleeping.layer == layer && sleeping.head == head) {
-            tell(world, player, "occupied");
+            tell(world, player, "tile.bed.occupied");
             return true;
         }
         set_occupied(world, layer, head, false);
@@ -177,23 +177,34 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
     let Some(position) = world.get::<Position>(player).copied() else { return true };
     let eye = [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]];
     if (0..3).any(|axis| (eye[axis] - head[axis] as f32).abs() > BED_REACH[axis]) {
-        tell(world, player, "tooFar");
+        tell(world, player, "tile.bed.tooFar");
         return true;
     }
     if world.get::<Sleeping>(player).is_some() {
         return true;
     }
-    spawn::set_spawn(world, player, head);
-    if !is_night(world, layer) {
-        tell(world, player, "noSleep");
+    let direction = world.get::<Layer>(layer).and_then(|level| level.world.registry().get(level.world.block(head[0], head[1], head[2]))?.property("direction")?.parse::<usize>().ok()).unwrap_or(0) % 4;
+    let foot = [head[0] - HEAD_AHEAD[direction][0], head[1], head[2] - HEAD_AHEAD[direction][1]];
+    let roomy = world.get::<Layer>(layer).is_some_and(|level| stand::stand_up_cell(&level.world, foot, direction, position.feet).is_some());
+    if !roomy {
+        tell(world, player, "tile.bed.obstructed");
         return true;
     }
-    let direction = world.get::<Layer>(layer).and_then(|level| level.world.registry().get(level.world.block(head[0], head[1], head[2]))?.property("direction")?.parse::<usize>().ok());
-    let yaw = direction.and_then(|direction| LYING_YAW.get(direction)).copied().unwrap_or(position.yaw);
+    spawn::set_spawn(world, player, head);
+    if !rest::is_resting_time(world, layer) {
+        tell(world, player, "tile.bed.noSleep");
+        return true;
+    }
+    let watched = world.get::<Mode>(player).is_some_and(|mode| mode.0 != GameMode::Creative) && world.resource::<Settings>().0.difficulty != Difficulty::Peaceful;
+    if watched && rest::monster_near(world, layer, head) {
+        tell(world, player, "tile.bed.notSafe");
+        return true;
+    }
+    let yaw = LYING_YAW[direction];
     if let Some(mut lying) = world.get_mut::<Position>(player) {
         (lying.yaw, lying.head_yaw, lying.pitch) = (yaw, yaw, 0.0);
     }
-    world.entity_mut(player).insert(Sleeping { layer, head, entered: position.feet, ticks: 0 });
+    world.entity_mut(player).insert(Sleeping { layer, head, foot, direction, entered: position.feet, ticks: 0 });
     show(world, player, Some((head, position.feet)));
     movement::correct_unmoving(world, player, [head[0] as f32 + 0.5, head[1] as f32 + LYING_HEIGHT - EYE_HEIGHT, head[2] as f32 + 0.5]);
     show_box(world, player, true);
@@ -203,7 +214,7 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
 }
 
 /// Gets a sleeper up: its client is told to wake, the bed is free again and it stands in the
-/// middle of the cell it lay down from, a little above its floor, its prediction corrected as
+/// middle of the cell stand.rs picks, a little above its floor, its prediction corrected as
 /// BDS's `Player::stopSleepInBed` puts it (research/captures/bds-wake.txt).
 fn wake(world: &mut World, player: Entity) {
     get_up(world, player, None);
@@ -228,7 +239,9 @@ fn get_up(world: &mut World, player: Entity, sent_to: Option<[f32; 3]>) -> bool 
     match sent_to {
         Some(feet) => movement::teleport(world, player, feet),
         None => {
-            let [x, y, z] = sleeping.entered.map(f32::floor);
+            let cell = world.get::<Layer>(sleeping.layer).and_then(|level| stand::stand_up_cell(&level.world, sleeping.foot, sleeping.direction, sleeping.entered));
+            // None: BDS stands it on the bed.
+            let [x, y, z] = cell.unwrap_or([sleeping.foot[0], sleeping.foot[1] + 1, sleeping.foot[2]]).map(|c| c as f32);
             movement::correct(world, player, [x + 0.5, y + STAND_UP_HEIGHT, z + 0.5]);
         }
     }
@@ -254,7 +267,7 @@ pub(crate) fn tick(world: &mut World, actions: &[(Entity, PlayerAction)]) {
     let mut sleepers = world.query::<(Entity, &mut Sleeping)>();
     let mut awake = Vec::new();
     let mut deep: HashMap<Entity, Vec<Entity>> = HashMap::new();
-    let night: HashMap<Entity, bool> = world.query::<(Entity, &Layer)>().iter(world).map(|(layer, _)| (layer, is_night(world, layer))).collect();
+    let night: HashMap<Entity, bool> = world.query::<(Entity, &Layer)>().iter(world).map(|(layer, _)| (layer, rest::is_resting_time(world, layer))).collect();
     let still: Vec<(Entity, bool)> = sleepers.iter(world).map(|(player, sleeping)| (player, bed_is_there(world, sleeping) && night.get(&sleeping.layer) == Some(&true))).collect();
     for (player, stays) in still {
         let Ok((_, mut sleeping)) = sleepers.get_mut(world, player) else { continue };
@@ -269,7 +282,7 @@ pub(crate) fn tick(world: &mut World, actions: &[(Entity, PlayerAction)]) {
     }
     awake.into_iter().for_each(|player| wake(world, player));
     for (layer, sleepers) in deep {
-        if sleepers.len() < needed(world, layer) {
+        if sleepers.len() < needed(world, layer) || !rest::is_night(world, layer) {
             continue;
         }
         let mut all = world.query::<(Entity, &Sleeping)>();
@@ -277,5 +290,6 @@ pub(crate) fn tick(world: &mut World, actions: &[(Entity, PlayerAction)]) {
         everyone.into_iter().for_each(|player| wake(world, player));
         let time = world.get::<Layer>(layer).map_or(0, |layer| layer.world.level().time);
         crate::clock::set(world, layer, (time + DAY) / DAY * DAY);
+        crate::weather::stop(world, layer);
     }
 }

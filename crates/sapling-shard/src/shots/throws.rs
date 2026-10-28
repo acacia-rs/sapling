@@ -1,8 +1,8 @@
 //! Things thrown at a click: snowballs, eggs, ender pearls, splash and lingering potions, bottles o'
 //! enchanting and wind charges, each from the eyes along the look at its pack's `power` (bottles
 //! 20 degrees higher, their `angle_offset`, which BDS turns by the look's cos), the arm swung and
-//! the throw heard; outside creative one is spent. A pearl and a wind charge then cool down.
-// TODO: only the pearl's cooldown was read of BDS; the client is not told of either.
+//! the throw heard; outside creative one is spent. A pearl (20 ticks) and a wind charge (10) then
+//! cool down, the client told (research/captures/bds-small.txt).
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
@@ -10,7 +10,7 @@ use sapling_data::shots::{BOTTLE_SPEED, BOTTLE_TILT, PEARL_COOLDOWN, THROWN_SPEE
 use sapling_world::ItemStack;
 
 use super::kinds::{BOTTLE, EGG, LINGERING, PEARL, SNOWBALL, SPLASH, WIND};
-use crate::components::{InLayer, NetId, Position, Tick};
+use crate::components::{InLayer, NetId, Position};
 use crate::creatures::{Lands, Loosed, Pickup, Shot};
 use crate::inventory::{self, Inventory};
 
@@ -27,15 +27,10 @@ const THROWN: &[(&str, Shot, f32, bool, u64)] = &[
     ("minecraft:wind_charge", WIND, THROWN_SPEED, false, WIND_COOLDOWN),
 ];
 
-/// The ticks from which each item a player threw that cools down may be thrown again.
-#[derive(Component, Default)]
-pub(super) struct Cooldowns(Vec<(&'static str, u64)>);
-
 /// The player throws the `stack` it holds, if it is a thing thrown; true when it is one.
 pub(super) fn throw(world: &mut World, player: Entity, stack: &ItemStack) -> bool {
     let Some(&(name, shot, speed, bottle, cooldown)) = THROWN.iter().find(|(name, ..)| *name == stack.name) else { return false };
-    let now = world.resource::<Tick>().0;
-    if world.get::<Cooldowns>(player).is_some_and(|cooled| cooled.0.iter().any(|(item, until)| *item == name && now < *until)) {
+    if crate::cooldowns::is_cooling(world, player, name) {
         return true;
     }
     let shot = match shot.lands {
@@ -48,13 +43,7 @@ pub(super) fn throw(world: &mut World, player: Entity, stack: &ItemStack) -> boo
         return true;
     }
     if cooldown > 0 {
-        if world.get::<Cooldowns>(player).is_none() {
-            world.entity_mut(player).insert(Cooldowns::default());
-        }
-        if let Some(mut cooled) = world.get_mut::<Cooldowns>(player) {
-            cooled.0.retain(|(item, _)| *item != name);
-            cooled.0.push((name, now + cooldown));
-        }
+        crate::cooldowns::tell(world, player, name, cooldown, true);
     }
     if !super::is_creative(world, player) {
         inventory::change(world, player, Inventory::take_one_in_hand);

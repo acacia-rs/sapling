@@ -32,8 +32,14 @@ const POSITION: u16 = 65;
 const MESSAGE: u16 = 68;
 const BLOCK_STATES: u16 = 84;
 const JSON: u16 = 74;
-/// Every command is sent at this level: the list is filtered per player on the server instead.
-const ANYONE: &str = "any";
+/// A command's level as BDS names it: `any` for everyone, `gamedirectors` for operators
+/// (research/captures/bds-ui-operator.txt). The list is still filtered per player on the server.
+fn level(permission: Permission) -> &'static str {
+    match permission {
+        Permission::Member => "any",
+        Permission::Operator => "gamedirectors",
+    }
+}
 /// The chat box takes 512 characters.
 const MAX_CHARS: usize = 512;
 const MAX_COMMANDS_PER_TICK: usize = 3;
@@ -121,7 +127,7 @@ impl Tables {
             name: spec.name.clone(),
             description: spec.description.clone(),
             flags: 0,
-            permission_level: ANYONE.into(),
+            permission_level: level(spec.permission).into(),
             alias,
             chained_subcommand_offsets: Vec::new(),
             overloads: spec.overloads.iter().map(|o| overload(self, o)).collect(),
@@ -204,7 +210,7 @@ pub(crate) fn dispatch(world: &mut World) {
             outgoing.push(&output_packet(&request.origin, &out));
         }
         if !quiet {
-            echo(world, entity, &name, &out);
+            echo_to_operators(world, Some(entity), &name, &out);
         }
     }
 }
@@ -215,9 +221,9 @@ fn feedback_on(world: &World, sender: Entity) -> bool {
     world.get::<InLayer>(sender).is_none_or(|layer| crate::rules::on(world, layer.0, SEND_COMMAND_FEEDBACK))
 }
 
-/// Shows the other operators on the shard what an operator's command did, as BDS does: a grey
-/// italic `[name: line]`.
-fn echo(world: &mut World, sender: Entity, name: &str, out: &Output) {
+/// Shows the operators on the shard but `sender` what an operator's command or a command block
+/// did, as BDS does: a grey italic `[name: line]`.
+pub(crate) fn echo_to_operators(world: &mut World, sender: Option<Entity>, name: &str, out: &Output) {
     let lines: Vec<Bytes> = out
         .echoed()
         .map(|m| {
@@ -229,7 +235,7 @@ fn echo(world: &mut World, sender: Entity, name: &str, out: &Output) {
         return;
     }
     for operator in in_world(world) {
-        if operator == sender || world.get::<Access>(operator).is_none_or(|access| access.permission != Permission::Operator) {
+        if Some(operator) == sender || world.get::<Access>(operator).is_none_or(|access| access.permission != Permission::Operator) {
             continue;
         }
         if let Some(mut outgoing) = world.get_mut::<Outgoing>(operator) {

@@ -8,15 +8,24 @@
 mod death;
 pub(crate) mod eating;
 pub(crate) mod effects;
+pub(crate) mod frost;
 pub(crate) use eating::bite;
-pub(crate) use effects::{afflict, give as give_effect, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
+pub(crate) use effects::{afflict, give as give_effect, give_ambient, hits_for, kept as kept_effects, restored as restored_effects};
+pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
+mod hazards;
 mod hunger;
 mod kept;
+mod last_death;
+pub(crate) use last_death::{LastDeath, greeting as last_death_greeting};
 mod omens;
 mod splashed;
 mod stand;
+mod shield;
+mod soles;
 mod struck;
+mod totem;
+pub(crate) use shield::{blocks, thrown_back, wields_axe};
+pub(crate) use stand::{break_fall, fallen, falls_freely};
 pub(crate) use splashed::{health_left, is_under, splashed};
 
 use acacia_proto::Packet;
@@ -157,14 +166,13 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     }
 }
 
-/// Has the player's health know the armour it wears now, what its enchantments and its effects
-/// ward off, and its movement the boots' Depth Strider: a level of resistance takes a fifth off
-/// every hit (research/captures/bds-more.txt).
+/// Has the player's health know its armour, what its enchantments and effects ward off, and its
+/// movement what its armour changes: a level of resistance takes a fifth off every hit (bds-more.txt).
 fn dress(world: &mut World, player: Entity) {
     let armour = world.get::<crate::inventory::Inventory>(player).map_or([0.0; 2], |inventory| inventory.armour());
-    let warding = crate::enchants::warding(world, player);
+    let (warding, leather) = (crate::enchants::warding(world, player), frost::leather(world, player));
     if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
-        simulated.equip(warding.depth_strider);
+        simulated.equip(&warding, leather[frost::FEET]);
     }
     let resisted = effects::level(world, player, sapling_api::Effect::Resistance).map_or(0.0, |level| RESISTS * (f32::from(level) + 1.0));
     let fireproof = effects::level(world, player, sapling_api::Effect::FireResistance).is_some();
@@ -179,7 +187,7 @@ fn dress(world: &mut World, player: Entity) {
 }
 
 /// [`land`]s a hit once the world's rules and plugins let it; false where it took nothing.
-fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
+pub(crate) fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     let spared = layer_of(world, player).and_then(|layer| world.get::<Layer>(layer)).is_some_and(|layer| crate::rules::spares_player(&layer.world.level().rules, cause));
     !spared && ask(world, player, amount, cause).is_some_and(|amount| land(world, player, amount, cause))
 }
@@ -211,8 +219,9 @@ fn land(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     let helmeted = cause.is_on_the_head() && world.get::<crate::inventory::Inventory>(player).is_some_and(|inventory| inventory.has_helmet());
     let whole = amount;
     let amount = if helmeted { amount * HELMETED } else { amount };
+    let pierced = world.get::<struck::Pierced>(player).map_or(0.0, |pierced| pierced.0);
     let lands = |mut vitals: Mut<Vitals>| {
-        let amount = if cause.is_stopped_by_armour() { vitals.health.shielded(amount) } else { amount };
+        let amount = if cause.is_stopped_by_armour() { vitals.health.shielded_but(amount, pierced) } else { amount };
         let amount = vitals.health.warded(amount, cause);
         vitals.health.hurt(amount)
     };
@@ -222,6 +231,7 @@ fn land(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     if cause.is_stopped_by_armour() {
         crate::inventory::wear_armour(world, player, whole, cause.is_on_the_head());
     }
+    totem::rescue(world, player, cause);
     if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0) {
         flash(world, player, cause);
         omens::hurt(world, player);
@@ -254,6 +264,7 @@ pub(crate) fn tick(world: &mut World) {
     death::rise(world);
     eating::tick(world);
     effects::tick(world);
+    shield::tick(world);
     let players: Vec<(Entity, Entity)> = in_world(world).into_iter().filter_map(|player| Some((player, world.get::<InLayer>(player)?.0))).collect();
     for (player, layer) in players {
         if is_mortal(world, player) {

@@ -33,6 +33,8 @@ fn level_dat_names_the_world_and_its_spawn() {
     // The types these accessors expect are the ones BDS writes.
     assert!(level.time().is_some() && level.long("LastPlayed").is_some() && level.daylight_cycle());
     assert_eq!((level.game_type(), level.difficulty()), (Some(0), Some(0)), "survival, peaceful");
+    let clear = sapling_leveldb::WeatherRecord { rain_level: 0.0, rain_time: 86606, lightning_level: 0.0, lightning_time: 67914 };
+    assert_eq!(level.weather(), Some(clear));
     assert!(matches!(level.root.get("dodaylightcycle"), Some(Value::Byte(1))));
     assert!(matches!(level.root.get("lastOpenedWithVersion"), Some(Value::List(List { tag: 3, items })) if items.len() == 5));
 }
@@ -128,9 +130,9 @@ fn stored_columns_read_back_and_carry_what_bds_writes() {
         let saved = world.load_column(key).unwrap().unwrap();
         let records = |y: i8| (world.db().get(&key.sub_chunk(y)).unwrap(), world.db().get(&key.tag(Tag::Data3d)).unwrap());
         let before: Vec<_> = (-4..20).map(records).collect();
-        world.store_column(key, &saved.chunk, &saved.block_entities, &saved.actors).unwrap();
+        world.store_column(key, &saved.chunk, &saved.block_entities, &saved.actors, &saved.pending_ticks).unwrap();
         let reread = world.load_column(key).unwrap().unwrap();
-        assert!((reread.version, &reread.block_entities) == (saved.version, &saved.block_entities), "{key:?}");
+        assert!((reread.version, &reread.block_entities, &reread.pending_ticks) == (saved.version, &saved.block_entities, &saved.pending_ticks), "{key:?}");
         // BDS orders palettes its own way, so blocks and biomes are compared decoded.
         assert!((0..24).all(|index| section(&reread.chunk, index) == section(&saved.chunk, index)), "{key:?}");
         // The heightmap is not kept but recomputed: it must come out as BDS wrote it.
@@ -151,19 +153,20 @@ fn stored_columns_read_back_and_carry_what_bds_writes() {
     let (new, old) = (ChunkKey::new(40, 40, 0), ChunkKey::new(1, 12, 0));
     let mut chunk = acacia_world::Chunk::empty(40, 40, acacia_world::Dimension::overworld(registry().air_id()));
     chunk.set(3, 70, 9, 0, stone);
-    world.store_column(new, &chunk, &[], &[]).unwrap();
+    world.store_column(new, &chunk, &[], &[], &[]).unwrap();
     let stored = world.load_column(new).unwrap().unwrap();
     assert_eq!((stored.version, stored.chunk.block(3, 70, 9), stored.data3d.unwrap().top(3, 9, -64)), (42, stone, Some(70)));
     assert_eq!(world.db().get(&new.sub_chunk(3)).unwrap(), None, "sections of air are not written");
 
     let mut edited = world.load_column(old).unwrap().unwrap();
     edited.chunk.set(5, 300, 5, 0, stone);
-    world.store_column(old, &edited.chunk, b"kept as given", &[]).unwrap();
+    world.store_column(old, &edited.chunk, b"kept as given", &[], b"ticks as given").unwrap();
     let reread = world.load_column(old).unwrap().unwrap();
     assert_eq!((reread.chunk.block(5, 300, 5), reread.data3d.unwrap().top(5, 5, -64)), (stone, Some(300)));
-    assert_eq!(reread.block_entities, b"kept as given");
-    world.store_column(old, &edited.chunk, &[], &[]).unwrap();
+    assert_eq!((&reread.block_entities[..], &reread.pending_ticks[..]), (&b"kept as given"[..], &b"ticks as given"[..]));
+    world.store_column(old, &edited.chunk, &[], &[], &[]).unwrap();
     assert_eq!(world.db().get(&old.tag(Tag::BlockEntities)).unwrap(), None, "an empty record is not written");
+    assert_eq!(world.db().get(&old.tag(Tag::PendingTicks)).unwrap(), None);
 
     let level = std::fs::read(fixture().join("level.dat")).unwrap();
     world.flush(world.level()).unwrap();
@@ -185,7 +188,7 @@ fn actors_are_stored_by_id_and_listed_by_their_column() {
     let column = world.load_column(key).unwrap().unwrap();
     assert!(column.actors.is_empty(), "the fixture holds terrain only");
     let (cow, pig) = (actor(-4_294_967_295, "minecraft:cow"), actor(7, "minecraft:pig"));
-    let store = |actors: &[u8]| world.store_column(key, &column.chunk, &column.block_entities, actors).unwrap();
+    let store = |actors: &[u8]| world.store_column(key, &column.chunk, &column.block_entities, actors, &[]).unwrap();
     let stored = |id: i64| world.db().get(&[&b"actorprefix"[..], &id.to_le_bytes()].concat()).unwrap();
 
     store(&[&cow[..], &pig].concat());
@@ -207,8 +210,27 @@ fn actors_are_stored_by_id_and_listed_by_their_column() {
     world.db().put(&old.tag(Tag::Entity), &cow).unwrap();
     let legacy = world.load_column(old).unwrap().unwrap();
     assert_eq!(legacy.actors, cow);
-    world.store_column(old, &legacy.chunk, &legacy.block_entities, &[&cow[..], &pig].concat()).unwrap();
+    world.store_column(old, &legacy.chunk, &legacy.block_entities, &[&cow[..], &pig].concat(), &[]).unwrap();
     assert_eq!((world.db().get(&old.tag(Tag::Entity)).unwrap(), stored(7)), (None, Some(pig)), "rewritten the current way");
+}
+
+#[test]
+fn an_actor_that_moved_columns_survives_its_old_column_being_saved_after_its_new_one() {
+    let world = world();
+    let (from, to) = (ChunkKey::new(1, 12, 0), ChunkKey::new(1, 13, 0));
+    let horse = actor(-5, "minecraft:horse");
+    let store = |key: ChunkKey, actors: &[u8]| {
+        let column = world.load_column(key).unwrap().unwrap();
+        world.store_column(key, &column.chunk, &column.block_entities, actors, &[]).unwrap();
+    };
+    let held = |key: ChunkKey| actors(&world.load_column(key).unwrap().unwrap().actors).unwrap().len();
+    store(from, &horse);
+    // Two I/O threads may save the column it walked into first.
+    store(to, &horse);
+    store(from, &[]);
+    assert_eq!((held(from), held(to)), (0, 1));
+    store(to, &[]);
+    assert_eq!(world.db().get(&[&b"actorprefix"[..], &(-5i64).to_le_bytes()].concat()).unwrap(), None, "gone once no column has it");
 }
 
 #[test]
@@ -218,7 +240,7 @@ fn what_is_stored_and_flushed_is_there_when_the_folder_opens_again() {
     let world = LevelDbWorld::open(&copy).unwrap();
     let mut column = world.load_column(key).unwrap().unwrap();
     column.chunk.set(5, 300, 5, 0, stone);
-    world.store_column(key, &column.chunk, &column.block_entities, &column.actors).unwrap();
+    world.store_column(key, &column.chunk, &column.block_entities, &column.actors, &column.pending_ticks).unwrap();
     let mut level = world.level().clone();
     level.set_last_played(1_800_000_000);
     level.set_spawn([3, 70, -4]);

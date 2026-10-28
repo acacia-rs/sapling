@@ -4,6 +4,7 @@
 // TODO: what is free to fall into and what breaks a falling block are name lists, not block
 // data; no fall damage.
 
+mod dripstone;
 mod flight;
 
 pub(crate) use flight::from_storage;
@@ -17,7 +18,7 @@ use super::{level, send};
 use crate::components::{NetId, Tick};
 
 /// Snow layers fall on Bedrock (`TopSnowBlock` ticks as a falling block), where Java breaks them.
-const FALLS: &[&str] = &[":sand", "red_sand", "suspicious_sand", "suspicious_gravel", "gravel", "concrete_powder", "dragon_egg", "anvil", "snow_layer"];
+const FALLS: &[&str] = &[":sand", "red_sand", "suspicious_sand", "suspicious_gravel", "gravel", "concrete_powder", "dragon_egg", "anvil", "snow_layer", "pointed_dripstone"];
 /// A falling block a stack's lowest is found through: all but snow (`canSlide`).
 const SNOW: &str = "minecraft:snow_layer";
 
@@ -96,7 +97,26 @@ pub(super) fn unsettled(world: &mut World, layer: Entity, pos: BlockPos, change:
     if !name_at(world, layer, pos).is_some_and(falls) || matches!(change, Change::Placed) && set_if_wet(world, layer, pos) {
         return;
     }
-    let due = world.resource::<Tick>().0 + change.delay();
+    // A stalactite fell the tick after its support went (research/captures/bds-dripstone.txt).
+    let is_dripstone = block(world, layer, pos).is_some_and(|(registry, id)| dripstone::is_dripstone(registry, id));
+    queue(world, layer, pos, if is_dripstone { 1 } else { change.delay() });
+}
+
+/// What waits to fall, for its column to keep (pending.rs): each block and when it is due.
+pub(super) fn waiting(world: &World) -> Vec<(Entity, BlockPos, u64)> {
+    world.get_resource::<Slides>().map(|slides| slides.0.iter().map(|&(when, layer, pos)| (layer, pos, when)).collect()).unwrap_or_default()
+}
+
+/// Drops what waits where `saved` says its column kept it and is gone.
+pub(super) fn forget(world: &mut World, saved: &dyn Fn(Entity, BlockPos) -> bool) {
+    if let Some(mut slides) = world.get_resource_mut::<Slides>() {
+        slides.0.retain(|&(_, layer, pos)| !saved(layer, pos));
+    }
+}
+
+/// Queues the block at `pos` to fall in `delay` ticks, unless it is already; also what a column kept.
+pub(super) fn queue(world: &mut World, layer: Entity, pos: BlockPos, delay: u64) {
+    let due = world.resource::<Tick>().0 + delay.max(1);
     let mut slides = world.get_resource_or_insert_with(Slides::default);
     if !slides.0.iter().any(|(_, at_layer, at)| (*at_layer, *at) == (layer, pos)) {
         slides.0.push((due, layer, pos));
@@ -113,11 +133,15 @@ fn is_free(world: &World, layer: Entity, below: BlockPos) -> bool {
 /// Sets the lowest falling block of the stack at `pos` falling, if it can (BDS `checkSlide`), or
 /// concrete powder there into concrete when wet. The cell that changed, for its neighbours.
 fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
+    if block(world, layer, pos).is_some_and(|(registry, id)| dripstone::is_dripstone(registry, id)) {
+        return dripstone::fall(world, layer, pos);
+    }
     if set_if_wet(world, layer, pos) {
         return Some(pos);
     }
     let mut lowest = pos;
-    while name_at(world, layer, Face::Down.neighbour(lowest)).is_some_and(|name| falls(name) && name != SNOW) {
+    let stacks = |world: &World, at: BlockPos| block(world, layer, at).is_some_and(|(registry, id)| !dripstone::is_dripstone(registry, id));
+    while name_at(world, layer, Face::Down.neighbour(lowest)).is_some_and(|name| falls(name) && name != SNOW) && stacks(world, Face::Down.neighbour(lowest)) {
         lowest = Face::Down.neighbour(lowest);
     }
     if !name_at(world, layer, pos).is_some_and(falls) || !is_free(world, layer, Face::Down.neighbour(lowest)) {
@@ -128,14 +152,19 @@ fn slide(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
 
 /// Sets the block at `pos` falling, whatever it is; false where it could not.
 pub(super) fn let_fall(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    let Some((registry, id)) = block(world, layer, pos) else { return false };
+    falling_from(world, layer, pos).is_some()
+}
+
+/// [`let_fall`]: the falling block it became.
+fn falling_from(world: &mut World, layer: Entity, pos: BlockPos) -> Option<Entity> {
+    let (registry, id) = block(world, layer, pos)?;
     let air = registry.air_id();
     if !send::set_quietly(world, layer, pos, air) {
-        return false;
+        return None;
     }
-    let Some(falling) = flight::start(world, layer, id, pos).and_then(|falling| world.get::<NetId>(falling).map(|id| id.0)) else { return false };
-    send::tell_synced(world, layer, pos, falling, send::Transition::Create);
-    true
+    let falling = flight::start(world, layer, id, pos)?;
+    send::tell_synced(world, layer, pos, world.get::<NetId>(falling)?.0, send::Transition::Create);
+    Some(falling)
 }
 
 /// Moves the falling blocks and starts the falls that are due; the cells that changed, for their

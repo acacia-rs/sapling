@@ -26,8 +26,8 @@ Rule components and how they are read:
 - Biome filters: a list is `all_of`; `has_biome_tag` with `==`/`!=`/`not`; `is_snow_covered` is taken as
   the biome's `frozen` tag. [U]
 
-Left out: `pillager_patrol` (needs patrol events, world age, villages), the phantom (insomnia), the
-guardian (ocean monuments) and the slime (slime chunks), all gated by BDS's code; herd events (babies,
+Left out: `pillager_patrol` (needs patrol events, world age, villages) and the guardian (ocean
+monuments, BDS's structure spawns); the slime and the phantom have their code gates (below); herd events (babies,
 horse and fish variants, riders), `disallow_spawns_in_bubble`; blazes, wither skeletons, cats and
 pillagers have no natural conditions (structures spawn them).
 
@@ -69,6 +69,33 @@ Decompiled from the bds-blocks build (`BDS_EXE=acacia/.testserver/bds-blocks/bed
   monster 8, animal 4, water_animal 5, ambient 2 for both [U].
 - Monster spawner blocks: built, docs/research/spawners.md.
 
+## Slimes [D]
+
+`ActorSpawnRuleGroup`'s lambda 28 gives `minecraft:slime` alone a placement check (`1429983d0`, which
+bdsre's labels call "SlimeBlock factory"), on top of its pack rule (surface or underground, any
+monster, swamp, mangrove or frozen biome). sapling: `spawning/gates.rs`, tested as a rule is admitted.
+
+- Below y 39: only in a slime chunk. An MT19937 seeded `(cx * 0x1f1f1f1f) ^ cz` (block coordinates
+  `>> 4`, no world seed), first draw `% 10 == 0` (`imul 0xcccccccd; ror 1; cmp 0x1999999a`).
+- y 50 to 68: raw brightness under 8 and not over a `nextInt(8)` of the level's random, then a
+  `nextFloat` under the moon's fullness, `[1, .75, .5, .25, 0, .25, .5, .75]` (`14a75c000`) by
+  `|time / 24000| & 7`, and a biome tag [U: read as `swamp`; BDS reads a tag id off the level].
+- Elsewhere none. sapling draws both rolls from natural spawning's dice.
+
+## Phantoms [D]
+
+`InsomniaSystem::tick` (`148489af0`, per player, not spectators): a sleeping player's count is set to
+1; any other's goes up by one while `doInsomnia` (game rule 24) is on and is set to 1 while it is
+off. It is saved as `TimeSinceRest` (int; loaded at `141bf7240`). The phantom's pack rule (surface,
+light 0 to 7, monster biomes, 5 a cap) finds the spot as for any mob; the phantom's own spawn check
+(`14298ff30`) then runs a lambda (`1429ab450`) over the players, which takes the first that:
+has the component; is within 100 (squared distance under 10000) of the spot; stands at or over its
+column's height map; passes `nextInt(TimeSinceRest) >= 72000` (3 days). The phantom moves to the
+player's position plus `nextInt(21) - 10`, `nextInt(15) + 20`, `nextInt(21) - 10`, floored, if
+fewer than 5 phantoms are within 48 on each axis, and then `Mob::checkSpawnRules` there.
+sapling (`spawning/phantoms.rs`): the same, players in join order, the height map as the highest
+solid block [U], the new place only needing room for the phantom, at the cell's inset like any spawn.
+
 ## Despawning
 
 BDS's `DespawnSystem` runs `_canDespawn` every tick [D]: no player at all, nothing goes; a
@@ -86,7 +113,7 @@ despawns (wandering trader, piglin brute, zoglin) are not built.
 
 Per-category caps, the herd size expression, persistence from name tags, taming, leashes and picked-up
 items (no `PersistentComponent` seen besides rules' `mPersistence`), structure spawns (fortresses,
-monuments, huts: the tick's second part), patrols, phantoms, slimes, herd events (spawner blocks:
+monuments, huts: the tick's second part), patrols, herd events (spawner blocks:
 docs/research/spawners.md). Peaceful does not remove monsters already there [U]. Whether `doMobSpawning` stops
 spawners and eggs was not checked; sapling's eggs ignore it.
 

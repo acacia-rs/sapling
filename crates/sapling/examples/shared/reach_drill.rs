@@ -38,14 +38,41 @@ pub fn trapdoors() -> Vec<String> {
     lines
 }
 
-/// The place-faces drill: stone put by hand on the top, a side and the bottom of a block, to see
-/// which cells the server shows its placer again (NEXT.md 3).
+/// The place-faces drill: stone put by hand on the top, a side and the bottom of a block, then on
+/// a top in survival, to see which cells and windows the server shows its placer again, and when.
 pub fn place_faces() -> Vec<String> {
     let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~4 ~2 air", "gamemode creative @s", "replaceitem entity @s slot.weapon.mainhand 0 stone", ""].map(String::from).into();
     for (anchor, click) in [("~1 ~-1 ~", "1 -1 0 up"), ("~2 ~ ~", "2 0 0 west"), ("~1 ~ ~-1", "1 0 -1 south"), ("~1 ~2 ~", "1 2 0 down")] {
         lines.extend([format!("setblock {anchor} gold_block"), String::new(), format!("!place {click}"), String::new(), String::new(), "fill ~1 ~ ~-1 ~2 ~2 ~1 air".into(), "fill ~1 ~-1 ~ ~1 ~-1 ~ stone".into(), String::new()]);
     }
-    lines.extend(["gamemode creative @s", ""].map(String::from));
+    lines.extend(["gamemode survival @s", "replaceitem entity @s slot.weapon.mainhand 0 stone 4", "setblock ~1 ~-1 ~ gold_block", "", "!place 1 -1 0 up", "", ""].map(String::from));
+    lines.extend(["fill ~1 ~ ~-1 ~2 ~2 ~1 air", "fill ~1 ~-1 ~ ~1 ~-1 ~ stone", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
+pub const MOVES_SHOWN: &[&str] = &["ItemStackResponse", "InventorySlot", "InventoryContent", "ContainerOpen", "ContainerClose", "PlayerHotbar", "MobEquipment", "LevelSoundEvent"];
+
+/// The chest-moves drill: a survival player's items into a chest, whole, in part and onto a stack
+/// there, then a stack and the rest taken back out, to see what the server answers each move with.
+pub fn chest_moves() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~2 air", "gamemode survival @s", "clear @s", ""].map(String::from).into();
+    lines.extend(["give @s cobblestone 40", "give @s diamond 3", "setblock ~1 ~ ~ chest", "", "replaceitem block ~1 ~ ~ slot.container 3 iron_ingot 5", ""].map(String::from));
+    for step in ["!click 1 0 0", "!put 0 0", "!put 1 1 2", "!put 1 1 1", "!take 3", "!takeall", "!close"] {
+        lines.extend([step.to_owned(), String::new()]);
+    }
+    lines.extend(["setblock ~1 ~ ~ air", "clear @s", "gamemode creative @s", ""].map(String::from));
+    lines
+}
+
+/// The hinges drill: doors put down alone on a floor, facing south, clicked at the west and east
+/// edges and the middle of the floor's top, and at its north and south edges, to see whether the
+/// click picks the hinge.
+pub fn hinges() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-6 ~-1 ~-2 ~6 ~-1 ~4 stone", "fill ~-6 ~ ~-2 ~6 ~3 ~4 air", "gamemode creative @s", "tp @s ~ ~ ~ 0 0", "replaceitem entity @s slot.weapon.mainhand 0 wooden_door", ""].map(String::from).into();
+    for (x, [cx, cz]) in [(-4, [0.1, 0.5]), (-2, [0.5, 0.5]), (0, [0.9, 0.5]), (2, [0.5, 0.1]), (4, [0.5, 0.9])] {
+        lines.extend([format!("!placeat {x} -1 2 {cx} 1 {cz}"), String::new()]);
+    }
+    lines.extend(["", "fill ~-6 ~ ~-2 ~6 ~3 ~4 air", ""].map(String::from));
     lines
 }
 
@@ -70,7 +97,7 @@ pub fn held_use() -> Vec<String> {
 /// again (NEXT.md 3).
 pub fn shut() -> Vec<String> {
     let mut lines: Vec<String> = ["kill @e[type=!player]", "fill ~-2 ~-1 ~-2 ~4 ~-1 ~2 stone", "fill ~-2 ~ ~-2 ~4 ~3 ~2 air", "gamemode creative @s", ""].map(String::from).into();
-    for block in ["chest", "barrel", "ender_chest"] {
+    for block in ["chest", "barrel", "ender_chest", "undyed_shulker_box", "trapped_chest"] {
         lines.extend([format!("setblock ~1 ~ ~ {block}"), String::new(), "!click 1 0 0".into()]);
         lines.extend(std::iter::repeat_n(String::new(), 6));
         lines.extend(["!close".into(), String::new(), String::new(), "setblock ~1 ~ ~ air".into(), String::new()]);

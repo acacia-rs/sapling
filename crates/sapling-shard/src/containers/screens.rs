@@ -104,6 +104,9 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     if kind.is_smelter() {
         furnaces::watch(world, layer, pos);
     }
+    if kind.is_stand() {
+        crate::brewing::opened(world, layer, pos);
+    }
     shown
 }
 
@@ -115,10 +118,17 @@ fn show_screen(world: &mut World, player: Entity, viewing: Viewing, window_type:
     let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
     let window = inventory.next_window();
     out.push(&sapling_data::block_screen(WindowID::from_raw(window.into()), window_type, viewing.pos));
+    // BDS followed a container's slots with the player's windows and the slots again, and those
+    // once more a tick on (research/captures/bds-chest-moves.txt, bds-containers.txt).
     if let Some(slots) = slots {
+        out.push(&content(window, slots));
+        inventory.send_all(&mut out, false);
         out.push(&content(window, slots));
     }
     world.entity_mut(player).insert(Viewing { window, ..viewing });
+    if slots.is_some() {
+        super::again::next_tick(world, player, window, None);
+    }
     true
 }
 

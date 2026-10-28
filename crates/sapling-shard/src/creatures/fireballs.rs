@@ -74,7 +74,7 @@ fn met(world: &World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
 
 fn burst(world: &mut World, fireball: Entity, layer: Entity, at: [f32; 3]) {
     let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
-    blast::explode_fireball(world, fireball, layer, at, POWER, if griefs { Wreck::Breaks } else { Wreck::Nothing });
+    blast::explode_fireball(world, fireball, layer, at, POWER, if griefs { Wreck::Decays } else { Wreck::Nothing });
 }
 
 /// A tick of one fireball.

@@ -18,8 +18,10 @@ mod links;
 mod listener;
 mod player_limit;
 mod players;
+mod query;
 mod router;
 mod sessions;
+mod sockets;
 
 pub use acacia_auth::login::verify::{Identity, SigningKeys, VerifiedLogin};
 pub use acacia_proto as proto;

@@ -9,7 +9,7 @@ use sapling_api::{BlockPos, Item};
 
 use super::super::place::gives_way;
 use super::super::{level, loot, send};
-use super::{SNOW, block, is_water, set_wet};
+use super::{SNOW, block, dripstone, is_water, set_wet};
 use crate::body::{Body, Physics};
 use crate::components::{InLayer, NetId};
 use crate::{entities, mobs};
@@ -26,6 +26,9 @@ const LINGER: u32 = 3;
 const WIRE_OFFSET: f32 = 0.49;
 /// BDS spawns it at the middle of the cell it leaves: its box starts this far above the floor.
 const SPAWN_LIFT: f32 = 0.01;
+const ANVIL_HARM: f32 = 2.0;
+const ANVIL_MOST: f32 = 40.0;
+const PLAYER: [f32; 2] = [0.6, 1.8];
 
 /// A falling block's own part; its [`Body`] and what viewers were told are beside it (entities.rs).
 #[derive(Component)]
@@ -34,6 +37,17 @@ pub(crate) struct FallingBlock {
     airborne: u32,
     landed_for: Option<u32>,
     refused: bool,
+    /// The height its fall began at: the floor of the cell it left.
+    from: f32,
+    /// What it costs what it lands on for each block it fell, past the first.
+    harm: f32,
+}
+
+/// Has the falling block `entity` hurt what it lands on, `per_block` for each block it fell.
+pub(super) fn hurts(world: &mut World, entity: Entity, per_block: f32) {
+    if let Some(mut falling) = world.get_mut::<FallingBlock>(entity) {
+        falling.harm = per_block;
+    }
 }
 
 const KIND: &str = "minecraft:falling_block";
@@ -63,8 +77,26 @@ pub(super) fn start(world: &mut World, layer: Entity, block: u32, [x, y, z]: Blo
 fn spawn(world: &mut World, layer: Entity, block: u32, hash: u32, body: Body, airborne: u32) -> Option<Entity> {
     let entity = entities::spawn(world, layer, KIND, body, wire(body.at), |id| Some(announcement(id, &body, hash)))?;
     entities::flag_moving(world, entity, true);
-    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false });
+    // A new one is a tick into its fall, under the floor of its cell.
+    let from = body.at[1].round();
+    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false, from, harm: 0.0 });
     Some(entity)
+}
+
+/// A landing anvil that fell `fallen` hurts the players its box meets: two for each block past the
+/// first, at most 40 (research/captures/bds-anvil.txt: 6 blocks cost 10, 16 killed).
+// TODO: what a helmet spares and how it wears; mobs under it; the anvil chipping.
+fn crush(world: &mut World, layer: Entity, body: &Body, fallen: f32) {
+    let amount = ((fallen - 1.0).ceil() * ANVIL_HARM).clamp(0.0, ANVIL_MOST);
+    let (low, high) = body.bounds();
+    let meets = |feet: [f32; 3]| (feet[0] - body.at[0]).abs() < (SIZE + PLAYER[0]) / 2.0 && (feet[2] - body.at[2]).abs() < (SIZE + PLAYER[0]) / 2.0 && feet[1] < high[1] && low[1] < feet[1] + PLAYER[1];
+    let struck: Vec<Entity> = crate::components::in_world(world)
+        .into_iter()
+        .filter(|player| world.get::<InLayer>(*player).is_some_and(|on| on.0 == layer) && world.get::<crate::components::Position>(*player).is_some_and(|position| meets(position.feet)))
+        .collect();
+    for player in struck.into_iter().filter(|_| amount > 0.0) {
+        crate::vitals::crushed(world, player, amount);
+    }
 }
 
 /// Makes a falling block a world folder kept (its actor compound `compound`) fall in `layer`
@@ -76,6 +108,10 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, at: [f32; 3], uniqu
     let Some(entity) = spawn(world, layer, block, hash, Body::new(at, [0.0; 3], [SIZE, SIZE]), u32::from(time)) else { return false };
     entities::keep(world, entity, layer, unique_id, compound);
     true
+}
+
+fn is_dripstone(world: &World, layer: Entity, block: u32) -> bool {
+    level(world, layer).is_some_and(|level| dripstone::is_dripstone(level.registry(), block))
 }
 
 fn wire([x, y, z]: [f32; 3]) -> [f32; 3] {
@@ -127,7 +163,15 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         if waited >= PLACE_AFTER + LINGER {
             mobs::remove(world, entity);
         }
-        if waited != PLACE_AFTER || !send::set_quietly(world, layer, cell, block_id) {
+        if waited != PLACE_AFTER {
+            return None;
+        }
+        if is_dripstone(world, layer, block_id) {
+            world.entity_mut(entity).remove::<entities::Stored>();
+            dripstone::shatter(world, layer, block_id, cell);
+            return None;
+        }
+        if !send::set_quietly(world, layer, cell, block_id) {
             return None;
         }
         world.entity_mut(entity).remove::<entities::Stored>();
@@ -147,7 +191,8 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     }
     let below_world = level(world, layer).is_some_and(|level| !level.in_height(cell_of(at)[1]) && !level.in_height(cell_of(at)[1] + 1));
     // Refused: it shatters now and goes, leaving its item, the next tick, as BDS was seen to.
-    if landed && !takes(world, layer, block_id, cell_of(at)) {
+    let is_dripstone = is_dripstone(world, layer, block_id);
+    if landed && !is_dripstone && !takes(world, layer, block_id, cell_of(at)) {
         shatter(world, layer, block_id, at);
         world.get_mut::<FallingBlock>(entity)?.refused = true;
         return None;
@@ -162,15 +207,21 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     }
     let mut falling = world.get_mut::<FallingBlock>(entity)?;
     (falling.airborne, falling.landed_for) = (airborne, landed.then_some(0));
+    let (fell, harm) = (falling.from - at[1], falling.harm);
     if !packets.is_empty() {
         let hash = level(world, layer).map_or(0, |level| level.registry().network_hash(block_id));
         mobs::reannounce(world, entity, announcement(id, &body, hash));
     }
     if landed {
         let is_anvil = block(world, layer, cell_of(at)).and_then(|(registry, _)| registry.get(block_id)).is_some_and(|state| state.name.ends_with("anvil"));
-        // BDS sends the sound before the landing move.
+        // BDS sends the sound before the landing move, after the hurt it did.
         if is_anvil {
+            crush(world, layer, &body, fell);
             packets.insert(0, event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));
+        }
+        if is_dripstone {
+            dripstone::hurt(world, layer, &body, harm, fell);
+            packets.splice(0..0, dripstone::landed(world, layer, block_id, cell_of(at)));
         }
     }
     send::to_viewers(world, layer, cell_of(at), &packets);

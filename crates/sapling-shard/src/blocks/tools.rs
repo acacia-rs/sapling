@@ -2,8 +2,7 @@
 //! path, an axe strips and
 //! scrapes, honeycomb waxes, shears carve, a bottle and a bucket empty and fill
 //! (docs/research/block-uses.md).
-// TODO: no handler is asked; an empty bucket takes nothing out of a cauldron, and a cauldron
-// keeps no lava, powder snow or potion.
+// TODO: no handler is asked. Potions, dyes and powder snow in cauldrons are cauldrons.rs's.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -132,9 +131,6 @@ fn change(registry: &BlockRegistry, held: &str, id: u32, face: Face) -> Option<C
         }
         "ender_eye" if bare == "end_portal_frame" && get("end_portal_eye_bit") == Some("0") => done(set("end_portal_eye_bit", "1")?, Told::Sound("block.end_portal_frame.fill", [0.5, 1.0, 0.5], false), Cost::Spend),
         "flint_and_steel" if bare.ends_with("campfire") && get("extinguished") == Some("1") => done(set("extinguished", "0")?, Told::Sound("ignite", CORNER, false), Cost::Wear),
-        // BDS's empty cauldron took no powder snow: it told this and stayed empty. That the bucket
-        // is emptied is a guess.
-        "powder_snow_bucket" if bare == "cauldron" && level == 0 => done(id, Told::Event(LevelEventEvent::CauldronExplode, surface(0), WATER), Cost::Becomes("minecraft:bucket")),
         // The compass is not bound to the place: it is a lodestone compass by name only.
         "compass" if bare == "lodestone" => done(id, sound("lodestone_compass.link_compass_to_lodestone"), Cost::Becomes("minecraft:lodestone_compass")),
         "glowstone" if bare == "respawn_anchor" => {
@@ -165,6 +161,9 @@ impl Request<'_> {
     /// A click with `held` in the hand on the block at `pos`: false when it does nothing to it.
     /// A hoe and a shovel want air over the ground they work.
     pub(super) fn use_tool(&mut self, site: &Site, pos: BlockPos, face: Face, held: &str) -> bool {
+        if super::cauldrons::use_on(self.world, self.entity, site.layer, pos, site.mode == GameMode::Creative) {
+            return true;
+        }
         if let Some(spent) = super::composter::fill(self.world, site.layer, pos, held) {
             if spent && site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
@@ -184,6 +183,12 @@ impl Request<'_> {
             return true;
         }
         if crate::spawning::hatch(self.world, site.layer, held, face.neighbour(pos)) {
+            if site.mode != GameMode::Creative {
+                inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
+            }
+            return true;
+        }
+        if held == crate::paintings::PAINTING && crate::paintings::hang(self.world, site.layer, pos, face) {
             if site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
             }

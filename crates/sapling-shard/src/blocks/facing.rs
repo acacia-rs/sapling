@@ -66,10 +66,12 @@ impl Click {
         // faced it level (research/captures/bds-placing.txt). The bounds are the old game's.
         let (looks_down, looks_up) = (self.eyes_over.is_some_and(|over| over > 2.0), self.eyes_over.is_some_and(|over| over < 0.0));
         Some(match property {
-            // Dispensers and the like face their placer, up or down under a steep look.
-            "facing_direction" if ends(&["dispenser", "dropper", "barrel"]) && looks_down => "1",
-            "facing_direction" if ends(&["dispenser", "dropper", "barrel"]) && looks_up => "0",
-            "facing_direction" if ends(&["dispenser", "dropper", "barrel", "glazed_terracotta"]) => ["2", "5", "3", "4"][self.quarter()],
+            // Dispensers and the like face their placer, up or down under a steep look. A command
+            // block put by a placer looking east faced west (bds-cmdblocks.txt); its up and down
+            // are the dispenser's, not drilled.
+            "facing_direction" if ends(&["dispenser", "dropper", "barrel", "command_block"]) && looks_down => "1",
+            "facing_direction" if ends(&["dispenser", "dropper", "barrel", "command_block"]) && looks_up => "0",
+            "facing_direction" if ends(&["dispenser", "dropper", "barrel", "glazed_terracotta", "command_block"]) => ["2", "5", "3", "4"][self.quarter()],
             // A piston's head faces the placer too, but its sideways values name the other end.
             "facing_direction" if block.ends_with("piston") => match (looks_down, looks_up) {
                 (true, _) => "1",

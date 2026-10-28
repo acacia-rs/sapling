@@ -13,9 +13,15 @@ use acacia_proto::types::{ItemLegacy, RecipeIngredient, RecipeIngredientContent 
 use crate::items::{CreativeItem, described};
 use crate::templates::{CRAFTING_DATA, decode};
 
+mod book;
+mod brewing;
 mod molang;
 mod smithing;
+mod unlock;
 
+pub use book::{initial_recipes, recipe_ids};
+pub use unlock::{UnlockContext, unlocked_by};
+pub use brewing::{brewed, is_brewing_bottle, is_brewing_ingredient};
 pub use smithing::smithed;
 
 const GRID: &str = "crafting_table";
@@ -108,14 +114,18 @@ pub fn smelted(station: Station, name: &str, damage: i16) -> Option<&'static (Cr
 
 /// What a cell of a recipe takes and how many of it; `None` for a cell that takes nothing.
 fn ingredient(cell: &RecipeIngredient) -> Option<(Ingredient, u8)> {
+    Some((taken(cell)?, u8::try_from(cell.count).ok().filter(|count| *count > 0)?))
+}
+
+/// What a cell takes, however many.
+fn taken(cell: &RecipeIngredient) -> Option<Ingredient> {
     let Content::Valid(valid) = &cell.content else { return None };
-    let ingredient = match &valid.content {
+    Some(match &valid.content {
         Valid::Name(item) => Ingredient::Item { name: item.name.clone(), damage: Some(item.metadata).filter(|damage| ![ANY, -1].contains(damage)).map(|damage| damage as i16) },
         Valid::ItemTag(tagged) => Ingredient::Tagged(vec![tagged.tag.clone()]),
         Valid::Molang(molang) => Ingredient::Expression(molang.expression.clone()),
         Valid::Empty(_) | Valid::Default => return None,
-    };
-    Some((ingredient, u8::try_from(cell.count).ok().filter(|count| *count > 0)?))
+    })
 }
 
 fn inputs(cells: &[RecipeIngredient]) -> Vec<(Ingredient, u8)> {
@@ -183,6 +193,14 @@ pub fn recipe(network_id: u32) -> Option<&'static Recipe> {
 
 /// The network ids of the special recipes, whose result the grid's items decide.
 static SPECIAL: LazyLock<HashSet<u32>> = LazyLock::new(|| decode::<CraftingData>(CRAFTING_DATA).multi_recipes.into_iter().map(|recipe| recipe.network_id).collect());
+
+static MULTI: LazyLock<HashMap<String, u32>> =
+    LazyLock::new(|| decode::<CraftingData>(CRAFTING_DATA).multi_recipes.into_iter().map(|recipe| (recipe.uuid.to_string(), recipe.network_id)).collect());
+
+/// The network id CraftingData gives the special recipe of `uuid` (the cartography table's crafts).
+pub fn multi_recipe(uuid: &str) -> Option<u32> {
+    MULTI.get(uuid).copied()
+}
 
 /// Whether a client's craft request names one of the special recipes.
 pub fn is_special(network_id: u32) -> bool {
@@ -261,5 +279,6 @@ mod tests {
     fn the_special_recipes_are_known_by_id_and_listed_apart() {
         assert!(SPECIAL.len() >= 3, "{} special recipes", SPECIAL.len());
         assert!(SPECIAL.iter().all(|id| is_special(*id) && recipe(*id).is_none()));
+        assert!(multi_recipe("442d85ed-8272-4543-a6f1-418f90ded05d").is_some_and(is_special), "the cartography table's copy");
     }
 }

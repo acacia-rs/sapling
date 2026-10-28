@@ -8,7 +8,9 @@ set -uo pipefail
 bds=$(realpath "$1") port=$2 out=$(realpath -m "$4")
 exe=$([ -f "$bds/bedrock_server.exe" ] && echo .exe)
 probe=$(realpath "$(dirname "$0")/../target/debug/examples/$3$exe")
-world=$(grep -E '^level-name=' "$bds/server.properties" | cut -d= -f2)
+# The shipped server.properties has CRLF lines: a kept \r named a world that never existed, so no
+# drill's world was wiped (devbox's kept clocks, sculk and game rules from earlier drills).
+world=$(grep -E '^level-name=' "$bds/server.properties" | cut -d= -f2 | tr -d '\r')
 [ "${KEEP_WORLD:-0}" = 1 ] || rm -rf "$bds/worlds/$world"
 log="$bds/drill.log"
 : >"$log"
@@ -17,7 +19,15 @@ cd "$bds" || exit 1
   n=0
   # A loaded testbox took 64 s to start one (2026-10-18).
   until grep -q 'Server started' "$log" || [ "$n" -ge 360 ]; do sleep 0.5; n=$((n + 1)); done
-  "$probe" "127.0.0.1:$port" "${@:5}" >"$out" 2>&1
+  "$probe" "127.0.0.1:$port" "${@:5}" >"$out" 2>&1 &
+  running=$!
+  # CONSOLE: `;`-separated lines typed at the server's console CONSOLE_AT seconds into the probe.
+  if [ -n "${CONSOLE:-}" ]; then
+    sleep "${CONSOLE_AT:-15}"
+    IFS=';' read -ra typed <<<"$CONSOLE"
+    for line in "${typed[@]}"; do echo "$line"; sleep 1.5; done
+  fi
+  wait "$running"
   echo "probe exit $?" >>"$out"
   echo stop
   sleep 5

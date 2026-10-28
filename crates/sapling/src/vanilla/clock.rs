@@ -125,9 +125,10 @@ impl Command for Xp {
     }
 }
 
-/// `/weather <clear|rain|thunder|query> [duration]`; the duration is in ticks.
-// TODO: BDS's `query` named the weather before the last change, a lag not kept here; without a
-// duration BDS's weather lasts a while of its own choosing, here until it is set anew.
+/// `/weather <clear|rain|thunder|query> [duration]`; the duration is in ticks, BDS's own draw
+/// without one (the shard's weather.rs). `/toggledownfall` sets the command's spells, not the
+/// weather cycle's longer ones BDS gives it (bdsre 0x143a48410).
+// TODO: BDS's `query` named the weather before the last change, a lag not kept here.
 pub(crate) struct WeatherCommand {
     to: Option<Weather>,
     ticks: Option<u32>,

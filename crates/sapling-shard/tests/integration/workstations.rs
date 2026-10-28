@@ -1,15 +1,16 @@
 //! The workstations' screens driven by inventory requests as a vanilla client sends them
-//! (docs/research/workstations.md): the enchanting table, the anvil, the grindstone and the
-//! smithing table.
+//! (docs/research/workstations.md): the enchanting table, the anvil, the grindstone, the smithing
+//! table, the loom and the beacon.
 
 use crate::common;
 
 use std::sync::Arc;
 
 use acacia_proto::nbt::{List, Value};
-use acacia_proto::packets::{AddEntity, ContainerOpen, PlayerEnchantOptions};
+use acacia_proto::packets::{AddEntity, ContainerOpen, MobEffect, PlayerEnchantOptions};
 use acacia_proto::types::{
-    ContainerSlotType as Container, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentCraftGrindstoneRequest as Grind,
+    ContainerSlotType as Container, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentBeaconPayment as Payment,
+    ItemStackRequestActionsItemContentCraftGrindstoneRequest as Grind, ItemStackRequestActionsItemContentCraftLoomRequest as Loom, ItemStackRequestActionsItemContentDestroy as Destroy,
     ItemStackRequestActionsItemContentCraftRecipe as Craft, ItemStackRequestActionsItemContentOptional as Optional, ItemStackResponsesItemStatus as Status,
     WindowType,
 };
@@ -18,7 +19,8 @@ use common::stored::{compound, enter_stored, floor_holding};
 use common::{Harness, all, click, config};
 use sapling_world::{ItemStack, MemoryStorage, PlayerData, World, WorldStorage};
 
-const STATION: [i32; 3] = [1, 64, 0];
+/// Off the column's edge, so that a beacon's pyramid fits in the column.
+const STATION: [i32; 3] = [1, 64, 1];
 
 fn stack(name: &str, count: u8, tag: Option<Value>) -> Option<ItemStack> {
     Some(ItemStack { name: name.into(), count, damage: 0, block: None, tag })
@@ -75,7 +77,7 @@ fn out(count: u8, to: u8) -> Action {
 #[test]
 fn an_enchanting_table_offers_three_and_one_is_taken_for_lapis_and_levels() {
     let data = PlayerData { main: vec![stack("minecraft:iron_sword", 1, None), stack("minecraft:lapis_lazuli", 5, None)], level: 30, enchant_seed: Some(1234), ..PlayerData::default() };
-    let shelves = [[3, 64, 0], [3, 65, 0], [3, 64, 1]].map(|pos| (pos, "minecraft:bookshelf"));
+    let shelves = [[3, 64, 1], [3, 65, 1], [3, 64, 2]].map(|pos| (pos, "minecraft:bookshelf"));
     let (mut h, storage, opened) = at("minecraft:enchanting_table", &shelves, data);
     assert_eq!(all::<ContainerOpen>(&opened)[0].window_type, WindowType::Enchantment);
     assert!(all::<PlayerEnchantOptions>(&opened).iter().all(|offered| offered.options.is_empty()), "nothing yet");
@@ -195,4 +197,49 @@ fn a_smithing_table_upgrades_to_netherite_keeping_the_sword() {
     assert_eq!(kept.main[1].as_ref().map(|sword| sword.name.as_str()), Some("minecraft:netherite_sword"));
     assert_eq!(field(&kept.main[1], "Damage"), Some(&Value::Int(40)), "the sword's wear and enchantments stay");
     assert!(kept.main[0].is_none() && kept.main[2].is_none());
+}
+
+#[test]
+fn a_loom_adds_the_dyes_pattern_after_the_banners_own() {
+    let banner = Some(ItemStack { damage: 15, ..stack("minecraft:banner", 1, Some(compound([("Type", Value::Int(0))]))).unwrap() });
+    let (mut h, storage, opened) = at("minecraft:loom", &[], PlayerData { main: vec![banner, stack("minecraft:red_dye", 2, None)], ..PlayerData::default() });
+    assert_eq!(all::<ContainerOpen>(&opened)[0].window_type, WindowType::Loom);
+    put(&mut h, 0, 1, Container::LoomInput, 9);
+    put(&mut h, 1, 1, Container::LoomDye, 10);
+    let loom = |pattern: &str| vec![Action::CraftLoomRequest(Loom { pattern: pattern.into(), times_crafted: 1 }), consume(1, slot(Container::LoomInput, 9, 0)), consume(1, slot(Container::LoomDye, 10, 0)), out(1, 0)];
+    h.receive(1, &request(-3, loom("cre")));
+    assert_eq!(answer(&h.tick(1)).0, Status::Error, "a creeper needs its pattern item");
+    h.receive(1, &request(-5, loom("bo")));
+    assert_eq!(answer(&h.tick(1)).0, Status::Ok);
+    let kept = kept(h, &storage);
+    let Some(Value::List(patterns)) = field(&kept.main[0], "Patterns") else { panic!("{:?}", kept.main[0]) };
+    assert_eq!(patterns.items, [compound([("Color", Value::Int(1)), ("Pattern", Value::String("bo".into()))])]);
+    assert_eq!(kept.main[0].as_ref().map(|banner| banner.damage), Some(15));
+    assert_eq!(kept.main[1].as_ref().map(|dye| dye.count), Some(1));
+}
+
+/// A paid beacon on a one-layer pyramid, with `above` over it; what it gives in 80 ticks.
+fn beacon_gives(above: &[([i32; 3], &str)]) -> Vec<MobEffect> {
+    let mut base: Vec<([i32; 3], &str)> = (0..3).flat_map(|x| (0..3).map(move |z| ([x, 63, z], "minecraft:iron_block"))).collect();
+    base.extend_from_slice(above);
+    let (mut h, _storage, opened) = at("minecraft:beacon", &base, PlayerData { main: vec![stack("minecraft:iron_ingot", 2, None)], ..PlayerData::default() });
+    assert_eq!(all::<ContainerOpen>(&opened)[0].window_type, WindowType::Beacon);
+    let pay = |primary: i32| vec![Action::BeaconPayment(Payment { primary_effect: primary, secondary_effect: 0 }), Action::Destroy(Destroy { count: 1, source: slot(Container::BeaconPayment, 27, 0) })];
+    put(&mut h, 0, 1, Container::BeaconPayment, 27);
+    h.receive(1, &request(-3, pay(5)));
+    assert_eq!(answer(&h.tick(1)).0, Status::Error, "strength needs three layers");
+    h.receive(1, &request(-5, pay(1)));
+    assert_eq!(answer(&h.tick(1)).0, Status::Ok);
+    (0..80).flat_map(|_| all::<MobEffect>(&h.tick(1))).collect()
+}
+
+#[test]
+fn a_beacon_takes_its_payment_for_what_its_pyramid_offers_and_gives_it_around() {
+    let given = beacon_gives(&[([1, 70, 1], "minecraft:glass"), ([1, 75, 1], "minecraft:bedrock")]);
+    assert_eq!(given.iter().map(|effect| (effect.effect_id, effect.amplifier, effect.duration, effect.ambient)).collect::<Vec<_>>(), [(1, 0, 220, true)]);
+}
+
+#[test]
+fn a_beacon_under_stone_gives_nothing() {
+    assert!(beacon_gives(&[([1, 70, 1], "minecraft:stone")]).is_empty());
 }

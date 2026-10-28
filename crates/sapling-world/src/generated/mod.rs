@@ -4,6 +4,7 @@ mod convert;
 mod entities;
 mod grow;
 mod on_demand;
+mod ticks;
 #[cfg(test)]
 mod tests;
 
@@ -38,6 +39,14 @@ impl Generator {
             Self::Overworld(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
             Self::Nether(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
             Self::End(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
+        }
+    }
+
+    fn game_ticks(&self, pos: ChunkPos) -> Vec<([i32; 3], bool)> {
+        match self {
+            Self::Overworld(generator) => generator.chunk_game_ticks(pos.x, pos.z),
+            Self::Nether(generator) => generator.chunk_game_ticks(pos.x, pos.z),
+            Self::End(_) => Vec::new(),
         }
     }
 }
@@ -101,9 +110,9 @@ impl<S: WorldStorage> Generated<S> {
     /// The column the generator makes at `pos`, whatever `inner` holds there.
     pub fn generate_column(&self, pos: ChunkPos) -> StoredColumn {
         let (shape, biomes) = self.generator.chunk(pos);
-        let mut column = StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim));
-        column.block_entities = generated_block_entities(pos.x, pos.z, &shape);
-        column
+        let pending_ticks = ticks::pending_ticks(pos, &shape, &self.generator.game_ticks(pos), &self.ids, BlockRegistry::vanilla());
+        let block_entities = generated_block_entities(pos.x, pos.z, &shape);
+        StoredColumn { pending_ticks, block_entities, ..StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim)) }
     }
 }
 

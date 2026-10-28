@@ -4,6 +4,7 @@
 //! syntax and completions, and run on the sender's shard.
 
 mod args;
+mod executed;
 mod output;
 mod params;
 mod places;
@@ -12,6 +13,7 @@ mod registry;
 mod selector;
 
 pub use args::{Args, ParseError};
+pub use executed::Executed;
 pub use output::{Output, OutputMessage};
 pub use params::{Parameter, Target, Text, parse_choice};
 pub use places::{Axis, BlockCoords, Coords, States};
@@ -37,15 +39,21 @@ pub trait CommandSyntax: Sized {
 #[non_exhaustive]
 pub enum Sender {
     Player(Player),
-    // TODO: nothing sends commands as the console yet.
+    /// The server's console (`ServerBuilder::console`).
     Console,
+    Executed(Box<Executed>),
 }
 
 impl Sender {
+    /// The player who sent the command, or the one an `/execute` runs it as.
     pub fn player(&self) -> Option<&Player> {
         match self {
             Self::Player(player) => Some(player),
             Self::Console => None,
+            Self::Executed(executed) => match &executed.executor {
+                Some(Selected::Player(player)) => Some(player),
+                _ => None,
+            },
         }
     }
 

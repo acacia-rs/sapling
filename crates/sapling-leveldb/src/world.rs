@@ -1,7 +1,7 @@
 //! A world folder: `level.dat` beside the `db` directory.
 
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use acacia_world::{BlockRegistry, Chunk, Dimension, SECTION_VOLUME};
 
@@ -28,6 +28,8 @@ pub struct DiskColumn {
     pub block_entities: Vec<u8>,
     /// The column's actors as one record of compounds (actors.rs).
     pub actors: Vec<u8>,
+    /// The block ticks that were waiting when it was saved, one compound (pending_ticks.rs).
+    pub pending_ticks: Vec<u8>,
 }
 
 pub struct LevelDbWorld {
@@ -36,6 +38,8 @@ pub struct LevelDbWorld {
     db: Db,
     in_memory: bool,
     states: BlockStates,
+    /// Held from reading a column's actors to writing its batch (actors::store).
+    actor_homes: Mutex<actors::Homes>,
 }
 
 impl LevelDbWorld {
@@ -52,7 +56,7 @@ impl LevelDbWorld {
 
     fn with_db(folder: &Path, db: Db, in_memory: bool) -> Result<Self, Error> {
         let level = LevelDat::read(&folder.join("level.dat"))?;
-        Ok(Self { folder: folder.to_path_buf(), level, db, in_memory, states: BlockStates::new(BlockRegistry::vanilla_arc()) })
+        Ok(Self { folder: folder.to_path_buf(), level, db, in_memory, states: BlockStates::new(BlockRegistry::vanilla_arc()), actor_homes: Mutex::default() })
     }
 
     pub fn folder(&self) -> &Path {
@@ -108,17 +112,19 @@ impl LevelDbWorld {
         }
         let block_entities = self.db.get(&key.tag(Tag::BlockEntities))?.unwrap_or_default();
         let actors = actors::load(&self.db, key)?;
-        Ok(Some(DiskColumn { chunk, version: version.first().copied().unwrap_or(0), data3d, block_entities, actors }))
+        let pending_ticks = self.db.get(&key.tag(Tag::PendingTicks))?.unwrap_or_default();
+        Ok(Some(DiskColumn { chunk, version: version.first().copied().unwrap_or(0), data3d, block_entities, actors, pending_ticks }))
     }
 
-    /// Writes a column's blocks, biomes, heightmap, block entities and actors as one batch. Its
-    /// other records (pending ticks) stay as they are.
-    pub fn store_column(&self, key: ChunkKey, chunk: &Chunk, block_entities: &[u8], actors: &[u8]) -> Result<(), Error> {
+    /// Writes a column's blocks, biomes, heightmap, block entities, actors and pending ticks
+    /// (pending_ticks.rs) as one batch.
+    pub fn store_column(&self, key: ChunkKey, chunk: &Chunk, block_entities: &[u8], actors: &[u8], pending_ticks: &[u8]) -> Result<(), Error> {
         let mut batch = Batch::default();
-        actors::store(&self.db, &mut batch, key, actors)?;
-        match block_entities {
-            [] => batch.delete(&key.tag(Tag::BlockEntities)),
-            record => batch.put(&key.tag(Tag::BlockEntities), record),
+        for (tag, record) in [(Tag::BlockEntities, block_entities), (Tag::PendingTicks, pending_ticks)] {
+            match record {
+                [] => batch.delete(&key.tag(tag)),
+                record => batch.put(&key.tag(tag), record),
+            }
         }
         batch.put(&key.tag(Tag::Version), &[CHUNK_VERSION]);
         batch.delete(&key.tag(Tag::LegacyVersion));
@@ -139,6 +145,8 @@ impl LevelDbWorld {
             let layers = if wet { vec![blocks.clone(), liquid.clone()] } else { vec![blocks.clone()] };
             batch.put(&key.sub_chunk(y), &SubChunk { y: Some(y), layers }.encode(&self.states)?);
         }
+        let mut homes = self.actor_homes.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        actors::store(&self.db, &mut batch, key, actors, &mut homes)?;
         self.db.write(batch)
     }
 
@@ -207,6 +215,25 @@ impl LevelDbWorld {
     pub fn store_ticking_areas(&self, areas: &[crate::TickingAreaRecord]) -> Result<(), Error> {
         let records: Vec<(Vec<u8>, Vec<u8>)> = areas.iter().map(|area| (area.key(), area.encode())).collect();
         self.replace_prefixed(crate::TICKING_AREA_PREFIX, records.iter().map(|(key, record)| (&key[..], &record[..])))
+    }
+
+    /// The world's maps (maps.rs); one that does not read is logged and left out.
+    pub fn load_maps(&self) -> Result<Vec<crate::MapRecord>, Error> {
+        let read = |(key, record): (Vec<u8>, Vec<u8>)| match crate::MapRecord::decode(&key, &record) {
+            Ok(map) => map,
+            Err(error) => {
+                tracing::warn!(%error, "skipping an unreadable map");
+                None
+            }
+        };
+        Ok(self.db.prefixed(crate::MAP_PREFIX)?.into_iter().filter_map(read).collect())
+    }
+
+    /// Saves `maps` over what was kept under their ids; other maps stay.
+    pub fn store_maps(&self, maps: &[crate::MapRecord]) -> Result<(), Error> {
+        let mut batch = Batch::default();
+        maps.iter().for_each(|map| batch.put(&map.key(), &map.encode()));
+        self.db.write(batch)
     }
 
     fn replace_prefixed<'a>(&self, prefix: &[u8], records: impl Iterator<Item = (&'a [u8], &'a [u8])>) -> Result<(), Error> {

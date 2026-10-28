@@ -131,8 +131,7 @@ impl CommandSyntax for Place {
 
 impl Command for Place {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
-        let at = self.at.map_or_else(|| here.map(|axis| axis.floor() as i32), |at| at.from(here));
+        let at = self.at.map_or_else(|| ctx.origin(sender).map(|axis| axis.floor() as i32), |at| at.resolve(ctx, sender));
         if !(LOWEST_Y..HEIGHT_END).contains(&at[1]) {
             return out.translate("commands.place.invalidposition.error", Vec::new(), false);
         }

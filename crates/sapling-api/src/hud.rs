@@ -117,9 +117,16 @@ impl ShardCtx<'_> {
     }
 }
 
-/// The `/title` side of [`crate::Backend`].
+/// The `/title` side of [`crate::Backend`], and the rest of a client's screen (screen.rs).
 pub trait TitleBackend {
     fn title_action(&mut self, player: PlayerId, action: &TitleAction);
+    fn screen_action(&mut self, _player: PlayerId, _action: &crate::ScreenAction) {}
+    /// The inputs stopped for a player, as UpdateClientInputLocks' bits.
+    fn input_locks(&self, _player: PlayerId) -> u32 {
+        0
+    }
+    fn set_input_locks(&mut self, _player: PlayerId, _locks: u32) {}
+    fn animate(&mut self, _players: &[PlayerId], _entities: &[crate::EntityId], _animation: &crate::Animation) {}
 }
 
 #[cfg(test)]

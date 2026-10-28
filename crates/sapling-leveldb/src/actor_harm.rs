@@ -1,5 +1,6 @@
 //! A stored actor's health and fire, written into its compound as BDS keeps them: `Current` of
-//! the `minecraft:health` entry of `Attributes`, and `Fire`, the ticks it has left to burn.
+//! the `minecraft:health` entry of `Attributes`, and `Fire`, the ticks it has left to burn; and
+//! the attributes a mob is born with (a horse's strides).
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};
 
@@ -40,6 +41,40 @@ pub fn harmed_actor(compound: &[u8], left: f32, max: f32, fire: i16) -> Result<V
     Ok(written(Value::Compound(fields)))
 }
 
+/// A stored actor's `Attributes`: each one's name, `Current` and `Max`.
+pub fn actor_attributes(compound: &[u8]) -> Vec<(String, f32, f32)> {
+    let Ok(Value::Compound(fields)) = nbt::read::<LittleEndian>(&mut &compound[..]).map(|read| read.value) else { return Vec::new() };
+    let Some((_, Value::List(attributes))) = fields.iter().find(|(name, _)| name == "Attributes") else { return Vec::new() };
+    let float = |attribute: &Value, key: &str| match attribute.get(key) {
+        Some(Value::Float(value)) => Some(*value),
+        _ => None,
+    };
+    let read = |attribute: &Value| match attribute.get("Name") {
+        Some(Value::String(name)) => Some((name.to_string(), float(attribute, "Current")?, float(attribute, "Max")?)),
+        _ => None,
+    };
+    attributes.items.iter().filter_map(read).collect()
+}
+
+/// One stored actor's compound with each of `attributes` (name, value, max) set as BDS keeps one
+/// it was born with: base and current the value, max and default max the max.
+pub fn attributed_actor(compound: &[u8], attributes: &[(&str, f32, f32)]) -> Result<Vec<u8>, Error> {
+    let Value::Compound(mut fields) = nbt::read::<LittleEndian>(&mut &compound[..])?.value else { return Err(Error::Actor("an actor that is no compound")) };
+    if !fields.iter().any(|(name, _)| name == "Attributes") {
+        fields.push(("Attributes".into(), Value::List(List { tag: COMPOUND_TAG, items: Vec::new() })));
+    }
+    if let Some((_, Value::List(kept))) = fields.iter_mut().find(|(name, _)| name == "Attributes") {
+        for &(name, value, max) in attributes {
+            kept.items.retain(|attribute| !matches!(attribute.get("Name"), Some(Value::String(known)) if known == name));
+            let entry = [("Base", value), ("Current", value), ("DefaultMax", max), ("DefaultMin", 0.0), ("Max", max), ("Min", 0.0)];
+            let mut attribute: Vec<_> = entry.into_iter().map(|(key, value)| (key.into(), Value::Float(value))).collect();
+            attribute.push(("Name".into(), Value::String(name.into())));
+            kept.items.push(Value::Compound(attribute));
+        }
+    }
+    Ok(written(Value::Compound(fields)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -54,5 +89,14 @@ mod tests {
         assert_eq!((read.health, read.fire, read.unique_id), (Some(6.0), 120, -7));
         let healed = actors(&harmed_actor(&hurt, 10.0, 10.0, 0).unwrap()).unwrap().remove(0);
         assert_eq!((healed.health, healed.fire), (Some(10.0), 0));
+    }
+
+    #[test]
+    fn attributes_set_read_back_and_a_later_hurt_keeps_the_max() {
+        let horse = new_actor(-8, "minecraft:horse", [0.5, 65.0, 0.5], [0.0; 3]);
+        let born = attributed_actor(&horse, &[("minecraft:health", 23.0, 23.0), ("minecraft:horse.jump_strength", 0.8, f32::MAX)]).unwrap();
+        let hurt = harmed_actor(&born, 20.0, 23.0, 0).unwrap();
+        assert_eq!(actor_attributes(&hurt), [("minecraft:health".to_owned(), 20.0, 23.0), ("minecraft:horse.jump_strength".to_owned(), 0.8, f32::MAX)]);
+        assert_eq!(actors(&hurt).unwrap().remove(0).health, Some(20.0));
     }
 }

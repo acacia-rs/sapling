@@ -13,8 +13,9 @@ spec.loader.exec_module(packs)
 
 # Conditions holding these need what sapling has not built (patrols, villages); they are left out.
 UNBUILT = ("minecraft:mob_event_filter", "minecraft:delay_filter", "minecraft:world_age_filter", "minecraft:player_in_village_filter")
-# Kinds whose rules BDS's own code gates (insomnia, ocean monuments, slime chunks): left out too.
-GATED = ("minecraft:phantom", "minecraft:guardian", "minecraft:slime")
+# Kinds whose rules BDS's own code gates (ocean monuments): left out too. Slimes' and phantoms' gates
+# are sapling-shard's spawning/gates.rs and phantoms.rs.
+GATED = ("minecraft:guardian",)
 PLACES = {"minecraft:spawns_on_surface": "surface", "minecraft:spawns_underground": "underground", "minecraft:spawns_underwater": "underwater", "minecraft:spawns_lava": "lava"}
 # Old block names the rules still use -> today's.
 RENAMES = {"minecraft:grass": "minecraft:grass_block"}

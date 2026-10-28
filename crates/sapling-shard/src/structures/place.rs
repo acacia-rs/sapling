@@ -1,8 +1,9 @@
-//! A structure template put into a world as `/structure load` puts it, all at once: its blocks
-//! in one batch (BDS sent one UpdateSubchunkBlocks), what they hold marked `forceunpair` as BDS
-//! marked a chest, its liquids left to flow, and its entities as new ones turned with the box
-//! (research/captures/bds-structures.txt).
-// TODO: BDS's `layer_by_layer` and `block_by_block` animations place over time; here they are instant.
+//! A structure template put into a world as `/structure load` puts it: its blocks in batches
+//! (BDS sent one UpdateSubchunkBlocks for a load at once), what they hold marked `forceunpair` as
+//! BDS marked a chest, its liquids left to flow, and its entities as new ones turned with the box
+//! (research/captures/bds-structures.txt). An animated load puts its cells over time (animate.rs).
+
+use std::collections::HashSet;
 
 use acacia_proto::nbt::{self, LittleEndian, Nbt, Value};
 use bevy_ecs::prelude::*;
@@ -14,55 +15,109 @@ use super::turn::Turn;
 use crate::components::{Layer, Players, Tick};
 use crate::{actors, blocks};
 
-/// Places `template` with the lowest corner of its turned box at `at`.
-pub(crate) fn place(world: &mut World, layer: Entity, template: &StructureTemplate, at: BlockPos, how: &StructureLoad) {
-    let turn = Turn::of(how.rotation, how.mirror);
-    if how.include_blocks {
-        place_blocks(world, layer, template, at, turn, how);
-    }
-    if how.include_entities {
-        place_entities(world, layer, template, at, turn);
-    }
+/// A template about to be put with the lowest corner of its turned box at `at`: its palette as
+/// the world's states, and the cells its integrity keeps, in order.
+pub(crate) struct Placing {
+    template: StructureTemplate,
+    at: BlockPos,
+    turn: Turn,
+    ids: Vec<Option<u32>>,
+    pub kept: Vec<usize>,
+    how: StructureLoad,
 }
 
-fn place_blocks(world: &mut World, layer: Entity, template: &StructureTemplate, at: BlockPos, turn: Turn, how: &StructureLoad) {
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
-    let ids: Vec<Option<u32>> = template.palette.iter().map(|entry| {
-        let (name, properties) = palette_block(entry)?;
-        let properties = turn.states(&name, &properties);
-        blocks::resolve(level.registry(), &Block { name, properties })
-    }).collect();
-    let mut dice = Integrity::new(&how.seed, world.resource::<Tick>().0);
-    let kept: Vec<usize> = (0..template.volume()).filter(|_| how.integrity >= 1.0 || dice.fraction() < how.integrity).collect();
-    let cell = |index: usize| -> BlockPos {
-        let offset = turn.cell(template.offset(index), template.size);
-        std::array::from_fn(|axis| at[axis] + offset[axis])
-    };
-    let id_of = |layer: usize, index: usize| usize::try_from(template.layers[layer][index]).ok().and_then(|palette| ids.get(palette).copied().flatten());
-    blocks::batched(world, |world| {
-        for &index in &kept {
-            if let Some(id) = id_of(0, index) {
-                blocks::set(world, layer, cell(index), id);
+impl Placing {
+    pub(crate) fn new(world: &World, layer: Entity, template: StructureTemplate, at: BlockPos, how: &StructureLoad) -> Option<Placing> {
+        let level = &world.get::<Layer>(layer)?.world;
+        let turn = Turn::of(how.rotation, how.mirror);
+        let ids = template.palette.iter().map(|entry| {
+            let (name, properties) = palette_block(entry)?;
+            let properties = turn.states(&name, &properties);
+            blocks::resolve(level.registry(), &Block { name, properties })
+        }).collect();
+        let mut dice = Integrity::new(&how.seed, world.resource::<Tick>().0);
+        let kept = if how.include_blocks { (0..template.volume()).filter(|_| how.integrity >= 1.0 || dice.fraction() < how.integrity).collect() } else { Vec::new() };
+        Some(Placing { template, at, turn, ids, kept, how: how.clone() })
+    }
+
+    pub(crate) fn template(&self) -> &StructureTemplate {
+        &self.template
+    }
+
+    fn cell(&self, index: usize) -> BlockPos {
+        let offset = self.turn.cell(self.template.offset(index), self.template.size);
+        std::array::from_fn(|axis| self.at[axis] + offset[axis])
+    }
+
+    fn id_of(&self, layer: usize, index: usize) -> Option<u32> {
+        usize::try_from(self.template.layers[layer][index]).ok().and_then(|palette| self.ids.get(palette).copied().flatten())
+    }
+
+    /// Puts the template's cells `cells` (of those kept) with their liquids and what they hold.
+    /// BDS showed them in one list per sub-chunk: the cells that are not air, by y, x and z, then
+    /// every cell in the template's order, changed or not; and each block entity twice
+    /// (research/captures/bds-structblocks.txt).
+    pub(crate) fn place_cells(&self, world: &mut World, layer: Entity, cells: &[usize]) {
+        let air = world.get::<Layer>(layer).map(|layer| layer.world.registry().air_id());
+        let written: Vec<(usize, u32)> = cells.iter().filter_map(|&index| Some((index, self.id_of(0, index)?))).collect();
+        for &(index, id) in &written {
+            blocks::set_quietly(world, layer, self.cell(index), id);
+        }
+        let mut solid: Vec<(usize, u32)> = written.iter().copied().filter(|&(_, id)| Some(id) != air).collect();
+        solid.sort_by_key(|&(index, _)| {
+            let [x, y, z] = self.template.offset(index);
+            (y, x, z)
+        });
+        let mut in_order = written.clone();
+        in_order.sort_unstable();
+        let shown: Vec<(BlockPos, u32)> = solid.iter().chain(&in_order).map(|&(index, id)| (self.cell(index), id)).collect();
+        blocks::show_states(world, layer, &shown);
+        for &index in cells {
+            let pos = self.cell(index);
+            match (self.id_of(1, index), air) {
+                (Some(liquid), _) => drop(blocks::set_liquid(world, layer, pos, liquid)),
+                (None, Some(air)) if !self.how.waterlogged && self.id_of(0, index).is_some() => drop(blocks::set_liquid(world, layer, pos, air)),
+                _ => {}
             }
         }
-    });
-    let air = world.get::<Layer>(layer).map(|layer| layer.world.registry().air_id());
-    for &index in &kept {
-        let pos = cell(index);
-        match (id_of(1, index), air) {
-            (Some(liquid), _) => drop(blocks::set_liquid(world, layer, pos, liquid)),
-            (None, Some(air)) if !how.waterlogged && id_of(0, index).is_some() => drop(blocks::set_liquid(world, layer, pos, air)),
-            _ => {}
+        let placed: HashSet<usize> = cells.iter().copied().collect();
+        for (index, entity) in self.template.block_entities.iter().filter(|(index, _)| placed.contains(index)) {
+            let pos = self.cell(*index);
+            let entity = unpaired(blocks::block_entity_at(entity.clone(), pos));
+            blocks::keep_entity(world, layer, pos, &entity);
+            blocks::keep_entity(world, layer, pos, &entity);
+        }
+        for &index in cells {
+            blocks::neighbours_changed(world, layer, self.cell(index));
         }
     }
-    for (index, entity) in &template.block_entities {
-        if kept.binary_search(index).is_ok() {
-            let pos = cell(*index);
-            blocks::keep_entity(world, layer, pos, &unpaired(blocks::block_entity_at(entity.clone(), pos)));
+
+    /// Brings in the template's entities, where the load includes them.
+    pub(crate) fn place_entities(&self, world: &mut World, layer: Entity) {
+        if !self.how.include_entities {
+            return;
         }
-    }
-    for &index in &kept {
-        blocks::neighbours_changed(world, layer, cell(index));
+        let (template, at, turn) = (&self.template, self.at, self.turn);
+        let floats = |value: Option<&Value>| -> Option<Vec<f32>> {
+            let Some(Value::List(list)) = value else { return None };
+            list.items.iter().map(|item| if let Value::Float(f) = item { Some(*f) } else { None }).collect()
+        };
+        let high = (world.resource::<Tick>().0 as i64) << 32;
+        for (n, entity) in template.entities.iter().enumerate() {
+            let Some(pos) = floats(entity.get("Pos")).filter(|pos| pos.len() == 3) else { continue };
+            let [yaw, pitch] = floats(entity.get("Rotation")).and_then(|rotation| rotation.try_into().ok()).unwrap_or([0.0, 0.0]);
+            let local: [f32; 3] = std::array::from_fn(|axis| pos[axis] - template.origin[axis] as f32);
+            let turned = turn.point(local, template.size);
+            let feet: [f32; 3] = std::array::from_fn(|axis| at[axis] as f32 + turned[axis]);
+            let unique_id = high | ((world.resource::<Players>().next_net_id as i64 + n as i64) & 0xffff_ffff);
+            let mut bytes = BytesMut::new();
+            nbt::write::<LittleEndian>(&mut bytes, &Nbt { name: String::new(), value: entity.clone() });
+            let Ok(compound) = placed_actor(&bytes, unique_id, feet, [turn.yaw(yaw), pitch]) else { continue };
+            let Ok(mut read) = stored_actors(&compound) else { continue };
+            let Some((actor, unique_id, compound)) = read.pop() else { continue };
+            let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
+            actors::bring_in(world, layer, home, actor, unique_id, compound);
+        }
     }
 }
 
@@ -74,29 +129,6 @@ fn unpaired(entity: Value) -> Value {
         fields.push(("forceunpair".into(), Value::Byte(1)));
     }
     Value::Compound(fields)
-}
-
-fn place_entities(world: &mut World, layer: Entity, template: &StructureTemplate, at: BlockPos, turn: Turn) {
-    let floats = |value: Option<&Value>| -> Option<Vec<f32>> {
-        let Some(Value::List(list)) = value else { return None };
-        list.items.iter().map(|item| if let Value::Float(f) = item { Some(*f) } else { None }).collect()
-    };
-    let high = (world.resource::<Tick>().0 as i64) << 32;
-    for (n, entity) in template.entities.iter().enumerate() {
-        let Some(pos) = floats(entity.get("Pos")).filter(|pos| pos.len() == 3) else { continue };
-        let [yaw, pitch] = floats(entity.get("Rotation")).and_then(|rotation| rotation.try_into().ok()).unwrap_or([0.0, 0.0]);
-        let local: [f32; 3] = std::array::from_fn(|axis| pos[axis] - template.origin[axis] as f32);
-        let turned = turn.point(local, template.size);
-        let feet: [f32; 3] = std::array::from_fn(|axis| at[axis] as f32 + turned[axis]);
-        let unique_id = high | ((world.resource::<Players>().next_net_id as i64 + n as i64) & 0xffff_ffff);
-        let mut bytes = BytesMut::new();
-        nbt::write::<LittleEndian>(&mut bytes, &Nbt { name: String::new(), value: entity.clone() });
-        let Ok(compound) = placed_actor(&bytes, unique_id, feet, [turn.yaw(yaw), pitch]) else { continue };
-        let Ok(mut read) = stored_actors(&compound) else { continue };
-        let Some((actor, unique_id, compound)) = read.pop() else { continue };
-        let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
-        actors::bring_in(world, layer, home, actor, unique_id, compound);
-    }
 }
 
 /// Which cells a load of integrity below 1 places: the same ones for the same seed, as BDS

@@ -77,6 +77,10 @@ impl Sessions {
         self.players.len()
     }
 
+    pub fn player_names(&self) -> Vec<&str> {
+        self.players.values().map(|player| player.name.as_str()).collect()
+    }
+
     pub fn online_mode(&self) -> bool {
         self.cfg.online_mode
     }

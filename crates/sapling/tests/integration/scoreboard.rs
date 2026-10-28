@@ -112,7 +112,8 @@ async fn scores_and_tags_answer_and_show_as_on_bds() {
         ("tag @s add zero", &["answer commands.tag.add.failed [] 0"]),
         ("tag @s list", &[r#"answer commands.tag.list.single.success ["Alice", "1", "§azero§r"] 1"#]),
         ("scoreboard players reset Fake", &[r#"score 2 remove Some("obj")"#, r#"answer commands.scoreboard.players.reset.success ["Fake"] 1"#]),
-        ("scoreboard objectives remove obj", &["remove obj", r#"answer commands.scoreboard.objectives.remove.success ["obj"] 1"#]),
+        // A shown objective's scores go first (research/captures/bds-scoreboard-join.txt).
+        ("scoreboard objectives remove obj", &[r#"score 1 remove Some("obj")"#, "remove obj", r#"answer commands.scoreboard.objectives.remove.success ["obj"] 1"#]),
     ];
     for (line, expected) in second {
         assert_eq!(run(&mut alice, line).await, expected, "/{line}");
@@ -128,6 +129,7 @@ async fn scores_and_tags_answer_and_show_as_on_bds() {
         "score 1 changeplayer obj 12",
         "score 1 changeplayer obj 0",
         r#"score 2 remove Some("obj")"#,
+        r#"score 1 remove Some("obj")"#,
         "remove obj",
     ]);
     for mut bot in [alice, bob, carol] {

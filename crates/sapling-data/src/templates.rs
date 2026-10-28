@@ -4,7 +4,7 @@ use std::sync::LazyLock;
 
 use acacia_proto::packets::{
     AvailableEntityIdentifiers, BiomeDefinitionList, CameraPresets, CraftingData, CreativeContent, FeatureRegistry, ItemRegistry,
-    JigsawStructureData, TrimData, UnlockedRecipes, VoxelShapes,
+    JigsawStructureData, TrimData, VoxelShapes,
 };
 use acacia_proto::{Packet, codec};
 use bytes::{Bytes, BytesMut};
@@ -17,6 +17,7 @@ pub(crate) const ITEM_REGISTRY: &[u8] = include_bytes!("../data/ItemRegistry.bin
 pub(crate) const CREATIVE_CONTENT: &[u8] = include_bytes!("../data/CreativeContent.bin");
 pub(crate) const CRAFTING_DATA: &[u8] = include_bytes!("../data/CraftingData.bin");
 pub(crate) const TRIM_DATA: &[u8] = include_bytes!("../data/TrimData.bin");
+pub(crate) const UNLOCKED_RECIPES: &[u8] = include_bytes!("../data/UnlockedRecipes.bin");
 
 pub(crate) fn decode<T: Packet>(body: &[u8]) -> T {
     T::decode(&mut &body[..]).unwrap_or_else(|e| panic!("bundled {} template: {e}", T::NAME))
@@ -39,6 +40,13 @@ fn framed<T: Packet>(body: &[u8]) -> Bytes {
     out.freeze()
 }
 
+/// `packet` with its header, as the registries are kept.
+pub(crate) fn encoded<T: Packet>(packet: &T) -> Bytes {
+    let mut body = BytesMut::new();
+    packet.encode(&mut body);
+    framed::<T>(&body)
+}
+
 /// What BDS sends before StartGame. Without JigsawStructureData the vanilla client refuses to
 /// enter the world ("missing structure data").
 pub fn pre_start_packets() -> &'static [Bytes] {
@@ -53,7 +61,7 @@ pub fn pre_start_packets() -> &'static [Bytes] {
 
 /// The registries as BDS sent them, each with its header, in the order BDS sends them after StartGame.
 pub fn registry_packets() -> &'static [Bytes] {
-    static PACKETS: LazyLock<[Bytes; 9]> = LazyLock::new(|| {
+    static PACKETS: LazyLock<[Bytes; 8]> = LazyLock::new(|| {
         [
             framed::<ItemRegistry>(ITEM_REGISTRY),
             framed::<BiomeDefinitionList>(include_bytes!("../data/BiomeDefinitionList.bin")),
@@ -63,9 +71,8 @@ pub fn registry_packets() -> &'static [Bytes] {
             framed::<CreativeContent>(CREATIVE_CONTENT),
             framed::<TrimData>(TRIM_DATA),
             // BDS sends the recipes after the player's own windows; here they go with the rest.
+            // The player's recipe book follows once its items are shown (sapling-shard recipe_book.rs).
             framed::<CraftingData>(CRAFTING_DATA),
-            // StartGame says recipes unlock: without this list a recipe book has little in it.
-            framed::<UnlockedRecipes>(include_bytes!("../data/UnlockedRecipes.bin")),
         ]
     });
     &*PACKETS
@@ -89,7 +96,6 @@ mod tests {
             CreativeContent::ID,
             TrimData::ID,
             CraftingData::ID,
-            UnlockedRecipes::ID,
         ];
         assert_eq!(ids, expected);
         let raw = |i: usize| RawPacket::parse(registry_packets()[i].clone()).unwrap();

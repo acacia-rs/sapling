@@ -18,6 +18,10 @@ const SHARE: f32 = 4.0;
 /// times the hit above that.
 const ON_HEAD: f32 = 4.0;
 const ON_HEAD_MORE: f32 = 2.0;
+const CHEST: usize = 1;
+const ELYTRA: &str = "minecraft:elytra";
+/// An elytra's damage once it is worn to its last use: it lasts 432.
+const ELYTRA_WORN: i32 = 431;
 
 /// A hit of `amount` that armour stops wears what a player has on; `on_head`, it fell on the
 /// helmet. The client is told what each piece has lost, and sent the helmet anew if it was hit.
@@ -74,7 +78,7 @@ fn wear(world: &mut World, player: Entity, uses: impl Fn(usize, &Held) -> i32, m
     let lost = |piece: usize| inventory.armor[piece].as_ref().map(|held| ArmorDamageEntry { armor_slot: ArmorDamageEntryArmorSlot::from_raw(piece as i64 * 2), damage: (damage(&held.stack.tag) - unsaid(piece)) as i16 });
     out.push(&PlayerArmorDamage { entries: (0..inventory.armor.len()).filter_map(lost).collect() });
     if broke {
-        inventory.send_all(&mut out);
+        inventory.send_all(&mut out, false);
     } else if more.is_some() && inventory.armor[0].is_some() {
         let id = inventory.new_id();
         inventory.armor[0].as_mut().expect("worn").id = id;
@@ -82,6 +86,28 @@ fn wear(world: &mut World, player: Entity, uses: impl Fn(usize, &Held) -> i32, m
         let helmet = inventory.armor[0].as_ref().map(|held| held.stack.name.clone());
         helmet.into_iter().for_each(|helmet| equip_sound(world, player, &helmet));
     }
+}
+
+/// Whether the chest holds an elytra that still flies: one worn to its last use stays on but no
+/// longer opens (research/captures/bds-glide.txt).
+pub(crate) fn elytra_flies(inventory: &Inventory) -> bool {
+    inventory.armor[CHEST].as_ref().is_some_and(|held| held.stack.name == ELYTRA && damage(&held.stack.tag) < ELYTRA_WORN)
+}
+
+/// A second of gliding wears the elytra by one, unless Unbreaking spares it; the client is told
+/// the chest's damage alone, as BDS told it. False once it no longer flies.
+pub(crate) fn wear_elytra(world: &mut World, player: Entity) -> bool {
+    let roll = world.get_resource_or_insert_with(Dice::default).roll(100);
+    let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
+    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
+    let Some(held) = inventory.armor[CHEST].as_mut().filter(|held| held.stack.name == ELYTRA) else { return false };
+    if roll < wear_chance(held, false) {
+        let worn = (damage(&held.stack.tag) + 1).min(ELYTRA_WORN);
+        set_damage(&mut held.stack.tag, worn);
+        inventory.unsaved = true;
+        out.push(&PlayerArmorDamage { entries: vec![ArmorDamageEntry { armor_slot: ArmorDamageEntryArmorSlot::from_raw(CHEST as i64 * 2), damage: worn as i16 }] });
+    }
+    elytra_flies(&inventory)
 }
 
 /// The stack ids and items in a player's armour slots, to tell later which [`equipped`] set.
@@ -101,10 +127,10 @@ pub(crate) fn equipped(world: &mut World, player: Entity, before: &[Option<(i32,
     }
 }
 
-/// `armor.equip_<material>` at the player's eyes, to it and its viewers.
+/// `armor.equip_<material>` of an armour piece; `None` for anything else.
 // TODO: chainmail, gold, turtle and elytra are named as the client's sounds are, not drilled.
-fn equip_sound(world: &mut World, player: Entity, piece: &str) {
-    let Some(_) = sapling_data::armour_lasts(piece) else { return };
+pub(crate) fn equip_sound_name(piece: &str) -> Option<String> {
+    sapling_data::armour_lasts(piece)?;
     let plain = piece.strip_prefix("minecraft:").unwrap_or(piece);
     let material = match plain.split('_').next() {
         Some(material @ ("leather" | "iron" | "diamond" | "netherite")) => material,
@@ -113,8 +139,14 @@ fn equip_sound(world: &mut World, player: Entity, piece: &str) {
         _ if plain == "elytra" => "elytra",
         _ => "generic",
     };
+    Some(format!("armor.equip_{material}"))
+}
+
+/// `armor.equip_<material>` at the player's eyes, to it and its viewers.
+fn equip_sound(world: &mut World, player: Entity, piece: &str) {
+    let Some(sound_id) = equip_sound_name(piece) else { return };
     let (Some(id), Some([x, y, z])) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return };
     let position = Vec3f { x, y: y + sapling_data::EYE_HEIGHT, z };
-    let sound = LevelSoundEvent { sound_id: format!("armor.equip_{material}"), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    let sound = LevelSoundEvent { sound_id, position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
     crate::vitals::tell(world, player, &sound);
 }

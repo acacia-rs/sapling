@@ -12,7 +12,7 @@ use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
 mod sections;
 
-pub(crate) use sections::{batched, hold, set_many, set_sectioned, show_held, show_together};
+pub(crate) use sections::{batched, hold, set_many, set_sectioned, show_held, show_states, show_together};
 
 use crate::components::{InLayer, Layer, Outgoing};
 
@@ -181,6 +181,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     super::redstone::notice(world, layer, pos);
     super::daylight::written(world, layer, pos);
     super::fire::written(world, layer, pos);
+    super::bubbles::written(world, layer, pos);
     super::ores::written(world, layer, pos);
     super::growth::written(world, layer, pos);
     super::leaves::written(world, layer, pos, old);
@@ -231,12 +232,15 @@ pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: 
     if block_at(world, layer, pos)? == describe(level.registry(), id) {
         return Some(false);
     }
+    let before = level.block_entity(pos).map(|entity| entity.nbt.clone());
     if !set(world, layer, pos, id) {
         return None;
     }
     if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name) {
         crate::containers::furnish(world, layer, pos, name, None, sapling_api::Face::Up);
         super::pistons::furnish(world, layer, pos);
+        super::command_blocks::furnish(world, layer, pos, before.as_ref());
+        super::structure_blocks::furnish(world, layer, pos, before.as_ref());
     }
     Some(true)
 }

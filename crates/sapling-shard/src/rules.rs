@@ -39,6 +39,14 @@ pub(crate) fn on(world: &World, layer: Entity, name: &str) -> bool {
     world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(name))
 }
 
+/// The number `name` of the world `layer`; `None` for a switch or no such world.
+pub(crate) fn number(world: &World, layer: Entity, name: &str) -> Option<i32> {
+    match world.get::<Layer>(layer)?.world.level().rules.get(name)?.1 {
+        sapling_data::RuleValue::Int(n) => Some(n),
+        sapling_data::RuleValue::Bool(_) => None,
+    }
+}
+
 /// Whether `rules` spare a player a hit of `cause`: BDS's fall, fire, drowning and freezing
 /// switches are for players alone.
 pub(crate) fn spares_player(rules: &GameRules, cause: Cause) -> bool {

@@ -3,7 +3,9 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityData, SetEntityMotion};
+use acacia_proto::packets::{AddEntity, AddItemEntity, CommandRequest, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityData, SetEntityMotion};
+use acacia_proto::manual::Uuid;
+use acacia_proto::types::CommandOrigin;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use common::{Harness, all, click};
 use sapling_api::{Block, Difficulty, GameMode, PlayerId};
@@ -71,6 +73,29 @@ fn a_blast_lights_the_tnt_it_reaches_and_a_summoned_one_is_primed() {
     let primed = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:tnt").count();
     let bursts = all::<LevelEvent>(&sent).into_iter().filter(|event| event.event == LevelEventEvent::ParticleExplosion).count();
     assert_eq!((primed, bursts), (2, 2));
+}
+
+#[test]
+fn a_blast_throws_a_pig_in_the_open_off_and_up() {
+    // research/captures/bds-blasts.txt: TNT 3 west of a pig threw it at (0.88, 0.48, -0.14); the
+    // primed TNT hops, so how far it is here is not pinned.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let pig = common::asking::ask(&mut h, |ctx| {
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        ctx.spawn_entity("minecraft:pig", [5.5, 65.0, 0.5])
+    })
+    .expect("a pig");
+    // As the drill's pigs: resistance V takes the whole hit, which still throws.
+    let origin = CommandOrigin { r#type: "player".into(), uuid: Uuid::default(), request_id: String::new(), player_entity_id: 0 };
+    h.receive(1, &CommandRequest { command: "/effect @e[type=pig] resistance 100 4 true".into(), origin, internal: false, version: "latest".into() });
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:tnt", [2.5, 65.0, 0.5]).is_some()));
+    let sent: Vec<RawPacket> = (0..85).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let thrown: Vec<_> = all::<SetEntityMotion>(&sent).into_iter().filter(|motion| motion.runtime_entity_id == pig.0).map(|motion| motion.velocity).collect();
+    let first = thrown.first().expect("thrown");
+    // The hit's own 0.4 away and up, and the blast's push on top.
+    assert!(first.x > 0.4 && first.y > 0.4 && first.z.abs() < 0.1, "{thrown:?}");
 }
 
 #[test]

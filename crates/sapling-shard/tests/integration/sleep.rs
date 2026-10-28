@@ -69,8 +69,11 @@ fn a_sleeper_is_put_in_its_bed_and_a_teleport_gets_it_up_where_it_was_sent() {
     assert_eq!(corrected(&lay), [([1.5, 65.90625, 1.5], 0.0)]);
     let width = |sent: &[acacia_proto::RawPacket]| all::<SetEntityData>(sent).iter().flat_map(|data| data.metadata.clone()).filter(|item| item.key == Key::BoundingboxWidth).map(|item| format!("{:?}", item.value)).collect::<Vec<_>>();
     assert_eq!(width(&lay), ["Default(Float(0.2))"], "a sleeper's box is small");
+    let extended = |sent: &[acacia_proto::RawPacket]| all::<SetEntityData>(sent).iter().flat_map(|data| data.metadata.clone()).filter(|item| item.key == Key::FlagsExtended).map(|item| format!("{:?}", item.value)).collect::<Vec<_>>();
+    assert_eq!(extended(&lay), ["FlagsExtended(MetadataFlags2(35184405647360))"], "BDS's player bits and the sleeper's");
     h.remote.run(|ctx| ctx.teleport(ALEX, [5.5, 65.0, 5.5]));
     let sent = h.tick(1);
+    assert_eq!(extended(&sent), ["FlagsExtended(MetadataFlags2(35184405643264))"]);
     assert!(all::<Animate>(&sent).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
     let moved = all::<acacia_proto::packets::MovePlayer>(&sent);
     assert_eq!(moved.iter().map(|to| [to.position.x, to.position.y, to.position.z]).collect::<Vec<_>>(), [[5.5, 65.0 + sapling_data::EYE_HEIGHT, 5.5]]);
@@ -78,10 +81,42 @@ fn a_sleeper_is_put_in_its_bed_and_a_teleport_gets_it_up_where_it_was_sent() {
     assert_eq!(width(&sent), ["Default(Float(0.6))"]);
 }
 
+/// research/captures/bds-rest.txt: a zombie 6 blocks from the bed keeps the clicker up, one 9
+/// off does not; a storm lets it sleep by day.
+#[test]
+fn a_monster_near_keeps_a_sleeper_up_and_a_storm_lets_it_sleep_by_day() {
+    static NEAR: Mutex<Option<sapling_api::EntityId>> = Mutex::new(None);
+    let mut h = with_a_bed();
+    h.remote.run(|ctx| {
+        ctx.set_time(18_000);
+        ctx.set_difficulty(sapling_api::Difficulty::Easy);
+        assert!(ctx.set_game_rule("sapling:mobAi", sapling_api::RuleValue::Bool(false)));
+        let near = ctx.spawn_entity("minecraft:zombie", [7.5, 65.0, 0.5]).unwrap();
+        *NEAR.lock().unwrap() = Some(near);
+    });
+    h.tick(1);
+    h.receive(1, &click(HEAD, 1, None));
+    let sent = h.tick(1);
+    assert!(said(&sent).iter().any(|line| line.contains("tile.bed.notSafe")) && !lies_down(&sent));
+    h.remote.run(|ctx| {
+        assert!(ctx.remove_entity(NEAR.lock().unwrap().take().unwrap()));
+        assert!(ctx.spawn_entity("minecraft:zombie", [10.5, 65.0, 0.5]).is_some());
+        ctx.set_time(6000);
+        ctx.set_weather(sapling_api::Weather::Thunder, None);
+    });
+    h.tick(1);
+    h.receive(1, &click(HEAD, 1, None));
+    assert!(lies_down(&h.tick(1)), "in a storm, the zombie 9 off");
+}
+
+/// The night ends with `WeatherManager::stopWeather` (bdsre 0x1411a79e0): the rain stops too.
 #[test]
 fn a_night_slept_through_is_skipped() {
     let mut h = with_a_bed();
-    h.remote.run(|ctx| ctx.set_time(13_000));
+    h.remote.run(|ctx| {
+        ctx.set_time(13_000);
+        ctx.set_weather(sapling_api::Weather::Rain, None);
+    });
     h.tick(1);
     h.receive(1, &click(HEAD, 1, None));
     let sent = h.tick(1);
@@ -95,6 +130,27 @@ fn a_night_slept_through_is_skipped() {
     let woke = (0..110).any(|_| all::<Animate>(&h.tick(1)).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
     assert!(woke, "woken after 100 ticks");
     assert!(time(&mut h).rem_euclid(24_000) < 200, "it is morning");
+    let weather = Arc::new(Mutex::new(sapling_api::Weather::Rain));
+    let out = weather.clone();
+    h.remote.run(move |ctx| *out.lock().unwrap() = ctx.weather());
+    h.tick(1);
+    assert_eq!(*weather.lock().unwrap(), sapling_api::Weather::Clear, "the rain stopped with the night");
+}
+
+/// research/captures/bds-rest.txt: a sleeper whose cell was walled while it slept stood up in the
+/// next cell of BDS's search, one north.
+#[test]
+fn a_sleeper_whose_cell_is_walled_stands_up_in_the_next() {
+    use acacia_proto::packets::CorrectPlayerMovePrediction;
+    use sapling_api::Block;
+    let mut h = with_a_bed();
+    h.remote.run(|ctx| ctx.set_time(13_000));
+    h.tick(1);
+    h.receive(1, &click(HEAD, 1, None));
+    assert!(lies_down(&h.tick(1)));
+    h.remote.run(|ctx| assert!(ctx.set_block([0, 65, 0], &Block::new("stone")) && ctx.set_block([0, 66, 0], &Block::new("stone"))));
+    let stood = (0..110).find_map(|_| all::<CorrectPlayerMovePrediction>(&h.tick(1)).first().map(|fix| [fix.position.x, fix.position.y, fix.position.z]));
+    assert_eq!(stood, Some([0.5, 65.1 + sapling_data::EYE_HEIGHT, -0.5]));
 }
 
 #[test]
@@ -119,6 +175,6 @@ fn a_player_rises_by_the_bed_it_clicked_while_the_bed_stands() {
     h.remote.run(|ctx| assert!(ctx.set_block(FOOT, &Block::new("air")) && ctx.set_block(HEAD, &Block::new("air"))));
     h.tick(1);
     let (risen, told) = rise(&mut h);
-    assert_eq!(risen, [(1, 0.5, 0.5)], "at the world's spawn once the bed is gone");
+    assert_eq!(risen, [(0, 0.0, 0.0), (1, 0.5, 0.5)], "the cell named once more, then the world's spawn once the bed is gone");
     assert!(told.iter().any(|line| line.contains("tile.bed.notValid")), "{told:?}");
 }

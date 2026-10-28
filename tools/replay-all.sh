@@ -3,7 +3,8 @@
 # `<region> | <canon> | wrong N missing M structure stage K`, then the sum. The canons of tools/replay-canons.txt
 # first, then the structure regions of tools/replay-worlds.txt; logs target/testbox/<prefix>-<canon>.log.
 # usage: tools/replay-all.sh <prefix> [canon...]   (names of either list; default: all)
-# Prints as each run ends; a run takes one to four minutes, all of them about 80.
+# One sync and one testbox job for all of them (tools/testbox.sh BATCH); env: ENVS adds to every run's,
+# JOBS runs at once (default 3: one run keeps ~4 of testbox's 12 cores busy).
 set -uo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 prefix=$1
@@ -11,15 +12,25 @@ shift
 out=${OUT:-$here/../target/testbox}
 canons=$(grep -v '^#' "$here/replay-canons.txt" | cut -d'|' -f1)
 worlds=$(grep -v '^#' "$here/replay-worlds.txt" | cut -d'|' -f1)
-total=0
+have=$(ssh -o ConnectTimeout=20 testbox "ls replay-worlds")
+batch=$(mktemp) rows=$(mktemp)
+trap 'rm -f "$batch" "$rows"' EXIT
+args="test --release -p sapling-worldgen --test oracle -- --ignored --nocapture --test-threads 1"
 for canon in ${*:-$canons $worlds}; do
   if grep -qx "$canon" <<<"$worlds"; then
-    region=$(grep -E "^$canon\|" "$here/replay-worlds.txt" | cut -d'|' -f4)
-    bash "$here/replay-regions.sh" "$prefix" "$canon" >/dev/null 2>&1
+    grep -qx "$canon" <<<"$have" || continue
+    IFS='|' read -r _ _ test region _ <<<"$(grep -E "^$canon\|" "$here/replay-worlds.txt")"
+    envs=$(bash "$here/replay-env.sh" "$canon") filter=$region
   else
-    region=$(grep -E "^$canon\|" "$here/replay-canons.txt" | cut -d'|' -f4)
-    bash "$here/replay.sh" "$prefix-$canon" "$canon" test >/dev/null 2>&1
+    IFS='|' read -r _ _ test region _ <<<"$(grep -E "^$canon\|" "$here/replay-canons.txt")"
+    envs=$(bash "$here/replay-canon-env.sh" "$canon") filter="=$region"
   fi
+  echo "$prefix-$canon|$envs ${ENVS:-} SAPLING_ORACLE_REGION=$(printf '%q' "$filter")|$args $test" >>"$batch"
+  echo "$canon|$region" >>"$rows"
+done
+BATCH=$batch JOBS=${JOBS:-3} bash "$here/testbox.sh" "$prefix" >/dev/null
+total=0
+while IFS='|' read -r canon region; do
   log=$out/$prefix-$canon.log
   # The first region the filter kept: a region name that is part of another's fails after its own lines.
   wrong=$(grep -m1 '^  exact blocks:' "$log" 2>/dev/null | awk '{ print $8 }')
@@ -27,5 +38,5 @@ for canon in ${*:-$canons $worlds}; do
   stage=$(grep -m1 '^  structure stage:' "$log" 2>/dev/null | awk '{ print $3 }')
   echo "$region | $canon | wrong ${wrong:-?} missing ${missing:-?} structure stage ${stage:-?}"
   total=$((total + ${wrong:-0} + ${missing:-0}))
-done
+done <"$rows"
 echo "TOTAL wrong + missing $total"

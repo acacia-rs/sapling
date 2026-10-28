@@ -5,7 +5,7 @@
 // TODO: the mobs a world folder stores are still statues (mobs.rs), outside this.
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::AddEntity;
+use acacia_proto::packets::{AddEntity, MoveEntityDelta};
 use acacia_proto::types::{MetadataDictionaryItemValue, MetadataFlags1};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -13,10 +13,10 @@ use sapling_api::{EntityId, EntityInfo};
 
 use crate::blocks::Dice;
 use crate::body::{Body, InLiquid, Liquid, Physics};
-use crate::components::{InLayer, Layer, NetId, Tick};
+use crate::components::{InLayer, Layer, NetId, Outgoing, Position, Tick};
 use crate::drops::Dropped;
 use crate::inventory::described;
-use crate::sync::Told;
+use crate::sync::{Told, pace};
 use crate::{mobs, splash, view};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.
@@ -184,11 +184,13 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     }
     let lifted = physics.liquid == InLiquid::Floats && body.liquid().is_some();
     let [x, y, z] = body.at;
+    let new = is_new(world, entity);
     let mut told = world.get_mut::<Told>(entity)?;
     let flags = told.flags(id, std::array::from_fn(|axis| body.at[axis] - start.at[axis]), lifted, physics.burns && in_lava);
-    let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.motion, body.on_ground)).chain(splash).collect();
+    let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.held_motion(physics), body.on_ground)).chain(splash).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
-    if is_new(world, entity) {
+    if new {
+        told.settle(false);
         after_announcing(world, layer, body.at.map(|c| c.floor() as i32), packets);
         return Some((body, Vec::new()));
     }
@@ -206,9 +208,47 @@ pub(crate) fn tell_viewers(world: &mut World, entity: Entity, layer: Entity, cel
         return;
     }
     if is_new(world, entity) {
+        if let Some(mut told) = world.get_mut::<Told>(entity) {
+            told.settle(false);
+        }
         after_announcing(world, layer, cell, packets);
     } else {
-        view::to_viewers(world, layer, cell, &packets);
+        to_viewers_paced(world, entity, layer, cell, &packets);
+    }
+}
+
+/// A player's eyes above its feet, whence its distance to a move is measured.
+const EYES: f32 = 1.62;
+
+/// Hands `packets` to the viewers of `cell`, each told of the entity's move as often as its kind
+/// lets one so far away (sync/pace.rs), with that in the move's `ticks`.
+fn to_viewers_paced(world: &mut World, entity: Entity, layer: Entity, cell: [i32; 3], packets: &[Bytes]) {
+    let Some(pending) = world.get::<Told>(entity).and_then(|told| told.pending().cloned()) else {
+        return view::to_viewers(world, layer, cell, packets);
+    };
+    let limits = world.get::<Kind>(entity).and_then(|kind| pace::limits(&kind.0));
+    let now = world.resource::<Tick>().0;
+    let mut versions: Vec<(u64, Bytes)> = vec![(0, pending.bytes.clone())];
+    let mut none = true;
+    for viewer in view::viewers(world, layer, cell) {
+        let eye = world.get::<Position>(viewer).map_or([f32::MAX; 3], |position| [position.feet[0], position.feet[1] + EYES, position.feet[2]]);
+        let ticks = world.get_mut::<Told>(entity).and_then(|mut told| told.told_to(viewer, eye, now, limits));
+        let delta = ticks.map(|ticks| match versions.iter().find(|(known, _)| *known == ticks) {
+            Some((_, bytes)) => bytes.clone(),
+            None => {
+                let bytes = sapling_net::encode(&MoveEntityDelta { ticks, ..pending.delta.clone() });
+                versions.push((ticks, bytes.clone()));
+                bytes
+            }
+        });
+        none &= delta.is_none();
+        let told: Vec<Bytes> = packets.iter().filter_map(|packet| if *packet == pending.bytes { delta.clone() } else { Some(packet.clone()) }).collect();
+        if let Some(mut out) = world.get_mut::<Outgoing>(viewer) {
+            out.0.extend(told);
+        }
+    }
+    if let Some(mut told) = world.get_mut::<Told>(entity) {
+        told.settle(none);
     }
 }
 

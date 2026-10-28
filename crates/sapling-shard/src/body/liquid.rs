@@ -159,12 +159,12 @@ pub(super) fn lift(body: &mut Body, liquid: Liquid) {
     (body.motion[0], body.motion[2]) = (body.motion[0] * drag, body.motion[2] * drag);
 }
 
-/// Slows a mob in `liquid` and pulls it down, in place of the air's drag and gravity.
-/// A swimmer's tick in water: dragged as a sinking mob is, and not pulled down.
-pub(super) fn swim(body: &mut Body) {
-    body.motion = body.motion.map(|speed| speed * SINK_DRAG_WATER);
+/// A swimmer's tick in water: it keeps `drag` of its speed, and is not pulled down.
+pub(super) fn swim(body: &mut Body, drag: f32) {
+    body.motion = body.motion.map(|speed| speed * drag);
 }
 
+/// Slows a mob in `liquid` and pulls it down, in place of the air's drag and gravity.
 pub(super) fn sink(body: &mut Body, liquid: Liquid) {
     let drag = if liquid == Liquid::Water { SINK_DRAG_WATER } else { SINK_DRAG_LAVA };
     body.motion = body.motion.map(|speed| speed * drag);

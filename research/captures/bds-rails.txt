@@ -1,0 +1,260 @@
+## drill starts at 1793127796557
+## /kill @e[type=!player]
+     46 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1011 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+   1011 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative @s
+   2012 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2012 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2012 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /tp @s 0.5 ~ 0.5 -90 0
+   3009 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -20.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3009 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-20.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3009 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-20.00", "0.50"]
+## /fill ~-2 ~-1 ~-8 ~16 ~-1 ~8 stone
+   4015 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill ~-2 ~ ~-8 ~16 ~4 ~8 air
+   5021 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+   5233 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 142091, paused: false }] }) }
+   5233 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 142091, paused: false }] }) }
+## /
+## /fill ~1 ~ ~-6 ~12 ~ ~-6 golden_rail ["rail_direction"=1]
+   7020 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"12\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   7020 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["12"]
+   7033 watcher UpdateSubchunkBlocks 1 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 9 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 10 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 11 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 12 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+   7034 actor   UpdateSubchunkBlocks 1 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 9 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 10 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 11 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 12 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /
+## /setblock ~1 ~ ~-7 redstone_block
+   9012 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9012 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9033 watcher UpdateBlock 1 -20 -7 layer 0 redstone_block[]
+   9033 actor   UpdateBlock 1 -20 -7 layer 0 redstone_block[]
+   9189 actor   UpdateSubchunkBlocks 9 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 1 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1] | extra: 
+   9189 watcher UpdateSubchunkBlocks 9 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 1 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1] | extra: 
+## /
+## /
+## /setblock ~1 ~ ~-7 air
+  12025 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12025 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  12033 actor   UpdateBlock 1 -20 -7 layer 0 air[]
+  12033 watcher UpdateBlock 1 -20 -7 layer 0 air[]
+  12183 actor   UpdateSubchunkBlocks 9 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 1 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+  12184 watcher UpdateSubchunkBlocks 9 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 1 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /
+## /
+## /setblock ~6 ~ ~-7 redstone_block
+  15029 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  15029 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15032 actor   UpdateBlock 6 -20 -7 layer 0 redstone_block[]
+  15032 watcher UpdateBlock 6 -20 -7 layer 0 redstone_block[]
+  15183 watcher UpdateSubchunkBlocks 12 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 11 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 10 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 9 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 1 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1] | extra: 
+  15183 actor   UpdateSubchunkBlocks 12 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 11 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 10 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 9 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1]; 1 -20 -6 golden_rail[rail_data_bit=1,rail_direction=1] | extra: 
+## /
+## /
+  17733 actor   UpdateSubchunkBlocks 52 -19 36 daylight_detector[redstone_signal=1]; 52 -19 40 daylight_detector[redstone_signal=1]; 52 -18 44 daylight_detector[redstone_signal=1] | extra: 
+  17733 watcher UpdateSubchunkBlocks 52 -19 36 daylight_detector[redstone_signal=1]; 52 -19 40 daylight_detector[redstone_signal=1]; 52 -18 44 daylight_detector[redstone_signal=1] | extra: 
+  17733 watcher UpdateSubchunkBlocks 20 9 6 daylight_detector[redstone_signal=1]; 20 9 10 daylight_detector[redstone_signal=1]; 20 10 14 daylight_detector[redstone_signal=1] | extra: 
+  17733 actor   UpdateSubchunkBlocks 20 9 6 daylight_detector[redstone_signal=1]; 20 9 10 daylight_detector[redstone_signal=1]; 20 10 14 daylight_detector[redstone_signal=1] | extra: 
+  17786 watcher UpdateSubchunkBlocks 20 9 11 redstone_wire[redstone_signal=1]; 20 9 7 lit_redstone_lamp[] | extra: 
+  17786 watcher UpdateSubchunkBlocks 52 -18 45 redstone_wire[redstone_signal=1]; 52 -19 37 lit_redstone_lamp[] | extra: 
+  17786 actor   UpdateSubchunkBlocks 20 9 11 redstone_wire[redstone_signal=1]; 20 9 7 lit_redstone_lamp[] | extra: 
+  17786 actor   UpdateSubchunkBlocks 52 -18 45 redstone_wire[redstone_signal=1]; 52 -19 37 lit_redstone_lamp[] | extra: 
+## /setblock ~6 ~ ~-7 air
+  18032 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  18033 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18043 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 142347, paused: false }] }) }
+  18043 actor   UpdateBlock 6 -20 -7 layer 0 air[]
+  18043 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 142347, paused: false }] }) }
+  18043 watcher UpdateBlock 6 -20 -7 layer 0 air[]
+  18192 actor   UpdateSubchunkBlocks 12 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 11 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 10 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 9 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 1 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+  18193 watcher UpdateSubchunkBlocks 12 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 11 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 10 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 9 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1]; 1 -20 -6 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /
+## /
+## /fill ~1 ~ ~-3 ~12 ~ ~-3 activator_rail ["rail_direction"=1]
+  21032 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["12"]
+  21035 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"12\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21084 actor   UpdateSubchunkBlocks 1 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 9 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 10 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 11 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 12 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1] | extra: 
+  21084 watcher UpdateSubchunkBlocks 1 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 9 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 10 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 11 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 12 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /
+## /setblock ~1 ~ ~-4 redstone_block
+  23032 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  23033 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23085 actor   UpdateBlock 1 -20 -4 layer 0 redstone_block[]
+  23085 watcher UpdateBlock 1 -20 -4 layer 0 redstone_block[]
+  23184 actor   UpdateSubchunkBlocks 9 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 1 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1] | extra: 
+  23184 watcher UpdateSubchunkBlocks 9 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 1 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1] | extra: 
+## /
+## /
+## /setblock ~1 ~ ~-4 air
+  26043 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  26043 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26083 actor   UpdateBlock 1 -20 -4 layer 0 air[]
+  26083 watcher UpdateBlock 1 -20 -4 layer 0 air[]
+  26192 watcher UpdateSubchunkBlocks 9 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 1 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1] | extra: 
+  26192 actor   UpdateSubchunkBlocks 9 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 1 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /
+## /
+## /setblock ~6 ~ ~-4 redstone_block
+  29047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  29047 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  29084 actor   UpdateBlock 6 -20 -4 layer 0 redstone_block[]
+  29084 watcher UpdateBlock 6 -20 -4 layer 0 redstone_block[]
+  29185 actor   UpdateSubchunkBlocks 12 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 11 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 10 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 9 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 1 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1] | extra: 
+  29185 watcher UpdateSubchunkBlocks 12 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 11 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 10 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 9 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1]; 1 -20 -3 activator_rail[rail_data_bit=1,rail_direction=1] | extra: 
+## /
+  30832 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 142603, paused: false }] }) }
+  30832 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 142603, paused: false }] }) }
+## /
+## /setblock ~6 ~ ~-4 air
+  32050 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  32050 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32083 actor   UpdateBlock 6 -20 -4 layer 0 air[]
+  32083 watcher UpdateBlock 6 -20 -4 layer 0 air[]
+  32184 actor   UpdateSubchunkBlocks 12 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 11 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 10 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 9 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 1 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1] | extra: 
+  32184 watcher UpdateSubchunkBlocks 12 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 11 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 10 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 9 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 8 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 7 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 6 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 5 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 4 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 3 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 2 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1]; 1 -20 -3 activator_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /
+## /
+## /fill ~1 ~ ~0 ~5 ~ ~0 golden_rail ["rail_direction"=1]
+  35053 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["5"]
+  35053 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35084 actor   UpdateSubchunkBlocks 1 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 4 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 0 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+  35084 watcher UpdateSubchunkBlocks 1 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 4 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 0 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /fill ~6 ~ ~0 ~10 ~ ~0 stone
+  36054 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["5"]
+  36068 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36083 actor   UpdateSubchunkBlocks 6 -20 0 stone[]; 7 -20 0 stone[]; 8 -20 0 stone[]; 9 -20 0 stone[]; 10 -20 0 stone[] | extra: 
+  36083 watcher UpdateSubchunkBlocks 6 -20 0 stone[]; 7 -20 0 stone[]; 8 -20 0 stone[]; 9 -20 0 stone[]; 10 -20 0 stone[] | extra: 
+## /fill ~6 ~1 ~0 ~10 ~1 ~0 golden_rail ["rail_direction"=1]
+  37048 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37048 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["5"]
+  37084 watcher UpdateSubchunkBlocks 5 -20 0 golden_rail[rail_data_bit=0,rail_direction=2]; 6 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 9 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 10 -19 0 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+  37084 actor   UpdateSubchunkBlocks 5 -20 0 golden_rail[rail_data_bit=0,rail_direction=2]; 6 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 9 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 10 -19 0 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /
+## /setblock ~1 ~ ~-1 redstone_block
+  39058 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  39058 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  39087 watcher UpdateBlock 1 -20 -1 layer 0 redstone_block[]
+  39087 actor   UpdateBlock 1 -20 -1 layer 0 redstone_block[]
+  39184 actor   UpdateSubchunkBlocks 4 -20 0 golden_rail[rail_data_bit=1,rail_direction=1]; 3 -20 0 golden_rail[rail_data_bit=1,rail_direction=1]; 2 -20 0 golden_rail[rail_data_bit=1,rail_direction=1]; 1 -20 0 golden_rail[rail_data_bit=1,rail_direction=1]; 9 -19 0 golden_rail[rail_data_bit=1,rail_direction=1]; 8 -19 0 golden_rail[rail_data_bit=1,rail_direction=1]; 7 -19 0 golden_rail[rail_data_bit=1,rail_direction=1]; 5 -20 0 golden_rail[rail_data_bit=1,rail_direction=2]; 6 -19 0 golden_rail[rail_data_bit=1,rail_direction=1] | extra: 
+  39184 watcher UpdateSubchunkBlocks 4 -20 0 golden_rail[rail_data_bit=1,rail_direction=1]; 3 -20 0 golden_rail[rail_data_bit=1,rail_direction=1]; 2 -20 0 golden_rail[rail_data_bit=1,rail_direction=1]; 1 -20 0 golden_rail[rail_data_bit=1,rail_direction=1]; 9 -19 0 golden_rail[rail_data_bit=1,rail_direction=1]; 8 -19 0 golden_rail[rail_data_bit=1,rail_direction=1]; 7 -19 0 golden_rail[rail_data_bit=1,rail_direction=1]; 5 -20 0 golden_rail[rail_data_bit=1,rail_direction=2]; 6 -19 0 golden_rail[rail_data_bit=1,rail_direction=1] | extra: 
+## /
+  40743 actor   UpdateSubchunkBlocks 20 9 10 daylight_detector[redstone_signal=2]; 20 9 6 daylight_detector[redstone_signal=2]; 20 10 14 daylight_detector[redstone_signal=2] | extra: 
+  40743 actor   UpdateSubchunkBlocks 52 -19 40 daylight_detector[redstone_signal=2]; 52 -18 44 daylight_detector[redstone_signal=2]; 52 -19 36 daylight_detector[redstone_signal=2] | extra: 
+  40743 watcher UpdateSubchunkBlocks 20 9 10 daylight_detector[redstone_signal=2]; 20 9 6 daylight_detector[redstone_signal=2]; 20 10 14 daylight_detector[redstone_signal=2] | extra: 
+  40743 watcher UpdateSubchunkBlocks 52 -19 40 daylight_detector[redstone_signal=2]; 52 -18 44 daylight_detector[redstone_signal=2]; 52 -19 36 daylight_detector[redstone_signal=2] | extra: 
+  40783 actor   UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=2]
+  40783 actor   UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=2]
+  40783 watcher UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=2]
+  40783 watcher UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=2]
+## /
+## /setblock ~1 ~ ~-1 air
+  42061 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  42070 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42083 actor   UpdateBlock 1 -20 -1 layer 0 air[]
+  42083 watcher UpdateBlock 1 -20 -1 layer 0 air[]
+  42186 actor   UpdateSubchunkBlocks 4 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 1 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 9 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 0 golden_rail[rail_data_bit=0,rail_direction=2]; 6 -19 0 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+  42186 watcher UpdateSubchunkBlocks 4 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 3 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 2 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 1 -20 0 golden_rail[rail_data_bit=0,rail_direction=1]; 9 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 8 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 7 -19 0 golden_rail[rail_data_bit=0,rail_direction=1]; 5 -20 0 golden_rail[rail_data_bit=0,rail_direction=2]; 6 -19 0 golden_rail[rail_data_bit=0,rail_direction=1] | extra: 
+## /
+  43633 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 142859, paused: false }] }) }
+  43633 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 142859, paused: false }] }) }
+## /fill ~1 ~ ~0 ~10 ~1 ~0 air
+  44063 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"15\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  44064 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["15"]
+  44083 actor   UpdateSubchunkBlocks 1 -20 0 air[]; 2 -20 0 air[]; 3 -20 0 air[]; 4 -20 0 air[]; 5 -20 0 air[]; 6 -20 0 air[]; 6 -19 0 air[]; 7 -20 0 air[]; 7 -19 0 air[]; 8 -20 0 air[]; 8 -19 0 air[]; 9 -20 0 air[]; 9 -19 0 air[]; 10 -20 0 air[]; 10 -19 0 air[] | extra: 
+  44083 watcher UpdateSubchunkBlocks 1 -20 0 air[]; 2 -20 0 air[]; 3 -20 0 air[]; 4 -20 0 air[]; 5 -20 0 air[]; 6 -20 0 air[]; 6 -19 0 air[]; 7 -20 0 air[]; 7 -19 0 air[]; 8 -20 0 air[]; 8 -19 0 air[]; 9 -20 0 air[]; 9 -19 0 air[]; 10 -20 0 air[]; 10 -19 0 air[] | extra: 
+## /setblock ~1 ~ ~2 rail ["rail_direction"=1]
+  45059 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  45059 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  45082 actor   UpdateBlock 1 -20 2 layer 0 rail[rail_direction=1]
+  45082 watcher UpdateBlock 1 -20 2 layer 0 rail[rail_direction=1]
+## /setblock ~3 ~ ~2 rail ["rail_direction"=1]
+  46062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  46062 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  46082 actor   UpdateBlock 3 -20 2 layer 0 rail[rail_direction=1]
+  46082 watcher UpdateBlock 3 -20 2 layer 0 rail[rail_direction=1]
+## /setblock ~2 ~ ~3 rail ["rail_direction"=0]
+  47066 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47066 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  47083 actor   UpdateBlock 2 -20 3 layer 0 rail[rail_direction=0]
+  47091 watcher UpdateBlock 2 -20 3 layer 0 rail[rail_direction=0]
+## /replaceitem entity @s slot.weapon.mainhand 0 rail
+  48062 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Rail"]
+  48062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Rail\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!place 2 -1 2
+## placed: Ok(())
+  49159 actor   UpdateBlock 2 -21 2 layer 0 stone[]
+  49159 actor   UpdateBlock 2 -20 2 layer 0 rail[rail_direction=6]
+  49159 actor   UpdateBlock 2 -22 2 layer 0 stone[]
+  49159 actor   UpdateBlock 2 -20 2 layer 0 rail[rail_direction=6]
+  49159 actor   UpdateBlock 2 -19 2 layer 0 air[]
+  49159 actor   UpdateBlock 2 -21 2 layer 0 stone[]
+  49182 actor   UpdateSubchunkBlocks 2 -20 2 rail[rail_direction=6]; 2 -20 2 rail[rail_direction=6] | extra: 
+  49182 watcher UpdateSubchunkBlocks 2 -20 2 rail[rail_direction=6]; 2 -20 2 rail[rail_direction=6] | extra: 
+## /
+## /setblock ~2 ~ ~1 redstone_block
+  51172 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  51172 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  51183 actor   UpdateBlock 2 -20 1 layer 0 redstone_block[]
+  51183 watcher UpdateBlock 2 -20 1 layer 0 redstone_block[]
+  51283 actor   UpdateBlock 2 -20 2 layer 0 rail[rail_direction=7]
+  51283 watcher UpdateBlock 2 -20 2 layer 0 rail[rail_direction=7]
+## /
+## /
+## /setblock ~2 ~ ~1 air
+  54166 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  54166 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  54184 actor   UpdateBlock 2 -20 1 layer 0 air[]
+  54184 watcher UpdateBlock 2 -20 1 layer 0 air[]
+  54283 actor   UpdateBlock 2 -20 2 layer 0 rail[rail_direction=6]
+  54283 watcher UpdateBlock 2 -20 2 layer 0 rail[rail_direction=6]
+  54738 actor   UpdateSubchunkBlocks 52 -19 40 daylight_detector[redstone_signal=3]; 52 -19 36 daylight_detector[redstone_signal=3]; 52 -18 44 daylight_detector[redstone_signal=3] | extra: 
+  54738 watcher UpdateSubchunkBlocks 52 -19 40 daylight_detector[redstone_signal=3]; 52 -19 36 daylight_detector[redstone_signal=3]; 52 -18 44 daylight_detector[redstone_signal=3] | extra: 
+  54738 watcher UpdateSubchunkBlocks 20 10 14 daylight_detector[redstone_signal=3]; 20 9 10 daylight_detector[redstone_signal=3]; 20 9 6 daylight_detector[redstone_signal=3] | extra: 
+  54738 actor   UpdateSubchunkBlocks 20 10 14 daylight_detector[redstone_signal=3]; 20 9 10 daylight_detector[redstone_signal=3]; 20 9 6 daylight_detector[redstone_signal=3] | extra: 
+  54784 actor   UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=3]
+  54784 actor   UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=3]
+  54784 watcher UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=3]
+  54784 watcher UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=3]
+## /
+## /
+  56432 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 143115, paused: false }] }) }
+  56432 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 143115, paused: false }] }) }
+## /setblock ~2 ~-1 ~2 redstone_block
+  57172 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  57172 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  57182 watcher UpdateBlock 2 -21 2 layer 0 redstone_block[]
+  57183 actor   UpdateBlock 2 -21 2 layer 0 redstone_block[]
+  57287 watcher UpdateBlock 2 -20 2 layer 0 rail[rail_direction=7]
+  57287 actor   UpdateBlock 2 -20 2 layer 0 rail[rail_direction=7]
+## /
+## /
+## /setblock ~2 ~-1 ~2 stone
+  60184 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  60184 actor   UpdateBlock 2 -21 2 layer 0 stone[]
+  60184 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  60184 watcher UpdateBlock 2 -21 2 layer 0 stone[]
+  60282 actor   UpdateBlock 2 -20 2 layer 0 rail[rail_direction=6]
+  60282 watcher UpdateBlock 2 -20 2 layer 0 rail[rail_direction=6]
+## /
+## /
+## /fill ~-2 ~ ~-8 ~16 ~4 ~8 air
+  63184 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["28"]
+  63184 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"28\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  63234 actor   UpdateSubchunkBlocks 1 -20 2 air[]; 2 -20 2 air[]; 2 -20 3 air[]; 3 -20 2 air[] | extra: 
+  63234 actor   UpdateSubchunkBlocks 1 -20 -6 air[]; 1 -20 -3 air[]; 2 -20 -6 air[]; 2 -20 -3 air[]; 3 -20 -6 air[]; 3 -20 -3 air[]; 4 -20 -6 air[]; 4 -20 -3 air[]; 5 -20 -6 air[]; 5 -20 -3 air[]; 6 -20 -6 air[]; 6 -20 -3 air[]; 7 -20 -6 air[]; 7 -20 -3 air[]; 8 -20 -6 air[]; 8 -20 -3 air[]; 9 -20 -6 air[]; 9 -20 -3 air[]; 10 -20 -6 air[]; 10 -20 -3 air[]; 11 -20 -6 air[]; 11 -20 -3 air[]; 12 -20 -6 air[]; 12 -20 -3 air[] | extra: 
+  63234 watcher UpdateSubchunkBlocks 1 -20 2 air[]; 2 -20 2 air[]; 2 -20 3 air[]; 3 -20 2 air[] | extra: 
+  63234 watcher UpdateSubchunkBlocks 1 -20 -6 air[]; 1 -20 -3 air[]; 2 -20 -6 air[]; 2 -20 -3 air[]; 3 -20 -6 air[]; 3 -20 -3 air[]; 4 -20 -6 air[]; 4 -20 -3 air[]; 5 -20 -6 air[]; 5 -20 -3 air[]; 6 -20 -6 air[]; 6 -20 -3 air[]; 7 -20 -6 air[]; 7 -20 -3 air[]; 8 -20 -6 air[]; 8 -20 -3 air[]; 9 -20 -6 air[]; 9 -20 -3 air[]; 10 -20 -6 air[]; 10 -20 -3 air[]; 11 -20 -6 air[]; 11 -20 -3 air[]; 12 -20 -6 air[]; 12 -20 -3 air[] | extra: 
+## /clear @s
+  64193 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  64193 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "1"]
+## /
+  65734 actor   UpdateSubchunkBlocks 20 9 10 daylight_detector[redstone_signal=4]; 20 9 6 daylight_detector[redstone_signal=4]; 20 10 14 daylight_detector[redstone_signal=4] | extra: 
+  65734 actor   UpdateSubchunkBlocks 52 -18 44 daylight_detector[redstone_signal=4]; 52 -19 36 daylight_detector[redstone_signal=4]; 52 -19 40 daylight_detector[redstone_signal=4] | extra: 
+  65734 watcher UpdateSubchunkBlocks 20 9 10 daylight_detector[redstone_signal=4]; 20 9 6 daylight_detector[redstone_signal=4]; 20 10 14 daylight_detector[redstone_signal=4] | extra: 
+  65734 watcher UpdateSubchunkBlocks 52 -18 44 daylight_detector[redstone_signal=4]; 52 -19 36 daylight_detector[redstone_signal=4]; 52 -19 40 daylight_detector[redstone_signal=4] | extra: 
+  65784 actor   UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=4]
+  65784 actor   UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=4]
+  65784 watcher UpdateBlock 52 -18 45 layer 0 redstone_wire[redstone_signal=4]
+  65784 watcher UpdateBlock 20 9 11 layer 0 redstone_wire[redstone_signal=4]
+probe exit 0

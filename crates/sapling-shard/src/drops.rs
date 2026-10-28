@@ -15,7 +15,7 @@ use sapling_world::{ChunkPos, ItemStack};
 
 use crate::blocks::Dice;
 use crate::body::{Body, Liquid, Physics};
-use crate::components::{InLayer, Layer, NetId, Position, Stage, Tick};
+use crate::components::{InLayer, Layer, Mode, NetId, Position, Stage, Tick};
 use crate::inventory::Inventory;
 use crate::{blocks, entities, inventory, mobs};
 
@@ -98,15 +98,20 @@ fn dice(world: &mut World) -> Mut<'_, Dice> {
 /// Lets `stack` go with the bottom of its box at `at`, moving at `motion`, for the world folder
 /// to keep with the column it lies in (actors.rs).
 fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) -> Option<Entity> {
-    let item = lay_unkept(world, layer, stack.clone(), at, motion, pickup_from)?;
+    lay_as(world, layer, stack, at, motion, pickup_from, false)
+}
+
+/// [`lay`], shown as a hook's catch when `fished`.
+fn lay_as(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64, fished: bool) -> Option<Entity> {
+    let item = lay_unkept(world, layer, stack.clone(), at, motion, pickup_from, fished)?;
     let unique_id = entities::new_unique_id(world, item)?;
     let compound = sapling_world::new_item_actor(unique_id, &stack, world.get::<Layer>(layer)?.world.registry(), at, motion);
     entities::keep(world, item, layer, unique_id, compound);
     Some(item)
 }
 
-fn lay_unkept(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64) -> Option<Entity> {
-    let shown = entities::spawn(world, layer, KIND, Body::new(at, motion, [SIZE; 2]), wire(at), |id| mobs::item_announcement(id, &stack, wire(at), motion));
+fn lay_unkept(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64, fished: bool) -> Option<Entity> {
+    let shown = entities::spawn(world, layer, KIND, Body::new(at, motion, [SIZE; 2]), wire(at), |id| mobs::item_announcement(id, &stack, wire(at), motion, fished));
     match shown {
         Some(item) => {
             entities::flag_moving(world, item, false);
@@ -123,7 +128,7 @@ fn lay_unkept(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], 
 /// picked up at once; false for one no client knows, which stays in the folder as it was.
 pub(crate) fn from_storage(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
     let tick = world.resource::<Tick>().0;
-    let Some(item) = lay_unkept(world, layer, stack, at, [0.0; 3], tick) else { return false };
+    let Some(item) = lay_unkept(world, layer, stack, at, [0.0; 3], tick, false) else { return false };
     entities::keep(world, item, layer, unique_id, compound);
     true
 }
@@ -154,6 +159,12 @@ pub(crate) fn toss(world: &mut World, layer: Entity, stack: ItemStack, centre: [
 pub(crate) fn eject(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3], motion: [f32; 3]) {
     let from = world.resource::<Tick>().0 + SPILL_DELAY;
     lay(world, layer, stack, [centre[0], centre[1] - SIZE / 2.0, centre[2]], motion, from);
+}
+
+/// A hook's catch: `stack` flies from the hook at `at` (the bottom of its box) at `motion`.
+pub(crate) fn reeled(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3]) {
+    let from = world.resource::<Tick>().0 + SPILL_DELAY;
+    lay_as(world, layer, stack, at, motion, from, true);
 }
 
 /// Tosses `stack` out of somewhere in the cell a broken block left.
@@ -212,8 +223,8 @@ pub(crate) fn fly(world: &mut World) {
             }
         }
         if !packets.is_empty() {
-            blocks::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &packets);
-            let shown = world.get::<Dropped>(entity).and_then(|item| mobs::item_announcement(id, &item.stack, wire(body.at), body.motion));
+            entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets);
+            let shown = world.get::<Dropped>(entity).and_then(|item| mobs::item_announcement(id, &item.stack, wire(body.at), body.motion, false));
             shown.into_iter().for_each(|shown| mobs::reannounce(world, entity, shown));
         }
     }
@@ -239,6 +250,12 @@ pub(crate) fn within_pickup(feet: [f32; 3], at: [f32; 3], size: f32) -> bool {
     (at[0] - feet[0]).abs() <= across && (at[2] - feet[2]).abs() <= across && up >= -REACH[1] - size && up <= PLAYER_HEIGHT + REACH[1]
 }
 
+/// Whether a player in `mode` takes up items and orbs: a spectator does neither
+/// (research/captures/bds-spectate.txt).
+pub(crate) fn takes_up(mode: Option<&Mode>) -> bool {
+    mode.is_none_or(|mode| mode.0 != sapling_api::GameMode::Spectator)
+}
+
 /// Gives each item that can be picked up to a player standing on it who has room, whole or as
 /// much as fits; what is left lies on as a new item.
 pub(crate) fn pick_up(world: &mut World) {
@@ -248,10 +265,10 @@ pub(crate) fn pick_up(world: &mut World) {
     if ready.is_empty() {
         return;
     }
-    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position, &NetId)>();
+    let mut players = world.query::<(Entity, &Stage, &InLayer, &Position, &NetId, Option<&Mode>)>();
     let mut standing: HashMap<(Entity, ChunkPos), Vec<(Entity, [f32; 3], u64)>> = HashMap::new();
-    for (player, stage, layer, position, id) in players.iter(world) {
-        if *stage == Stage::InWorld {
+    for (player, stage, layer, position, id, mode) in players.iter(world) {
+        if *stage == Stage::InWorld && takes_up(mode) {
             standing.entry((layer.0, column(position.feet))).or_default().push((player, position.feet, id.0));
         }
     }

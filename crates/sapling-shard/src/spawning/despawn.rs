@@ -19,6 +19,7 @@ const CHANCE: u32 = 800;
 // TODO: BDS counts ticks since the mob was last active; here since it appeared.
 const INACTIVE: u64 = 600;
 /// Where the chunk tick range is 4, the far distance is no more than this.
+// TODO: BDS's cap at other `tick-distance`s is unmeasured; this one is kept at every distance.
 const TICK_RANGE_FAR: f32 = 44.0;
 
 /// Takes away the natural mobs that are due to go.

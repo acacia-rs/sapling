@@ -99,7 +99,7 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   |---|---|
   | ResourcePacksInfo (the configured packs, "Packs (as built)") | ResourcePackClientResponse(HaveAllPacks) |
   | ResourcePackStack | ResourcePackClientResponse(Completed) |
-  | StartGame, ItemRegistry, BiomeDefinitionList, AvailableEntityIdentifiers, CreativeContent, UpdateAbilities, SetEntityData, UpdateAttributes | RequestChunkRadius |
+  | StartGame, SyncEntityProperty (13 kinds' entity properties, `sapling_data::property_registry_packets`), ItemRegistry, BiomeDefinitionList, AvailableEntityIdentifiers, CreativeContent, UpdateAbilities, SetEntityData, UpdateAttributes | RequestChunkRadius |
   | ChunkRadiusUpdate, NetworkChunkPublisherUpdate, a LevelChunk per column in view, PlayStatus(PlayerSpawn) | SetLocalPlayerAsInitialized |
   | — the player is in the world: `on_join` | |
 
@@ -126,7 +126,8 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   (tests, read-only maps). `LevelDbWorld::store_column` writes a column as one batch: version 42,
   FinalizedState 2, Data3D (heightmap recomputed, biome headers with bit 0 set as BDS has them) and v9
   sub-chunks, one layer unless a block is waterlogged; sections of air are deleted. The block-entity
-  record is written as the world holds it; pending ticks are left as stored.
+  record is written as the world holds it, and so is `PendingTicks` (`pending_ticks.rs`), which the shard
+  fills from its liquid, falling-block, fire and job queues before a save (`blocks/pending.rs`).
   `LevelDbWorld::flush` writes the memtable out and replaces `level.dat` with the one it is given,
   keeping the old file as `level.dat_old`; a world opened in memory never touches its folder.
 - **Actors** (`actors.rs`). A column's mobs and items are read through `digp` + `actorprefix`, or the
@@ -185,7 +186,9 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   each compound whole, as network NBT, with the section it is in: after the section's bytes, or as the
   entry's payload for a blob-cache client (the blob is the section alone). A resync, which would leave
   the client's block without its data, is followed by `BlockEntityData` for the positions that have any.
-- **Level.** A world keeps a `Level`: spawn block, time of day counter, whether the daylight cycle runs.
+- **Level.** A world keeps a `Level`: spawn block, time of day counter, game rules, weather (BDS's
+  `rainLevel`, `rainTime`, `lightningLevel`, `lightningTime`, turned by the shard's `weather.rs`) and
+  difficulty (the shard's, so `ShardCtx::set_difficulty` is saved).
   A folder's comes from `level.dat`, and closing the world writes it back with `LastPlayed`, and with
   `lastOpenedWithVersion` when the folder was last written by another game version. So a folder opened
   in place gets a new `level.dat` every run; `open_folder_in_memory` leaves it alone.
@@ -217,8 +220,8 @@ One listener task, one shard thread, one world. The pieces and why they are shap
 - **Game rules** (`sapling_data::GameRules`, `Level::rules`, shard `rules.rs`). Every rule BDS has,
   its names, order and defaults those of the recorded StartGame; a world's are read from and saved to
   `level.dat` as BDS keeps them (lower-case root fields, a byte for a switch). `set_game_rule` tells
-  the world's players of the one rule that changed, nothing when it did not, as BDS. Sapling acts on
-  `doDayLightCycle` only; the rest are kept for plugins.
+  the world's players of the one rule that changed, nothing when it did not, as BDS. Which rules
+  sapling acts on: "Vanilla rules".
 - **Actors checked against BDS 1.26.52** (2026-10-04): the hub world rewritten with the `rewrite`
   example, which renames every stored actor and adds one sheep per column holding only the fields
   `Actor` reads. BDS announced both to a bot (`bds_entity_probe`) with the names and wool written. The
@@ -311,11 +314,12 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (`handler_at`). Tasks run once a tick after the events, then `TickEvent` (`on_tick`).
 - **Keeping the API stable** (`sapling-api`). Enums that will grow (`DamageCause`, `Effect`, `Attacker`,
   `DeathMessage`, `Target`, `Sender`, `Scope`, form `Element`, `FormError`, `ParseError`, a command's `Selector`,
-  `Pick` and `Filter`, which took its arguments in 0.2.0) and the snapshots
+  `Pick` and `Filter`, which took its arguments in 0.2.0, a position's `Axis`, which took `^` in 0.3.0,
+  `ScreenAction`, `RecipeChange`, `Music`) and the snapshots
   plugins only read (`Player`, `Position`, `EntityInfo`, built with `new`) are `#[non_exhaustive]`; events
   keep private fields. Not marked: closed enums (`Face`, `GameMode`, `Difficulty`, `Slot`, `Priority`, ..),
   `ParamKind` (only the shard and the derive match it), and values plugins write as struct literals
-  (`Block`, `Item`, forms, HUD), which would lose struct-literal and `..Default::default()` construction.
+  (`Block`, `Item`, forms, HUD, `Camera`, `Animation`), which would lose struct-literal and `..Default::default()` construction.
   `tools/semver-check.sh [rev]` runs cargo-semver-checks on testbox against `rev` (default origin/master).
 - **Vanilla rules** (`sapling-shard/src/rules.rs`, `sapling-data/src/game_rules.rs`). A world's game rules
   are its vanilla switches: plugins set them with `ctx.set_game_rule`, operators with `/gamerule`, and they
@@ -324,13 +328,17 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   message), `fallDamage` / `fireDamage` / `drowningDamage` / `freezeDamage` (players only; a spared tick
   hit keeps its timers), `naturalRegeneration`, `doTileDrops` (every block drop), `doEntityDrops` (a
   falling block's item), `tntExplodes` (the fuse burns, nothing bursts), `tntExplosionDropDecay` (a block
-  drops by 1 in the power), `respawnBlocksExplode` (anchors), `playersSleepingPercentage`. What no BDS rule
+  drops by 1 in the power), `respawnBlocksExplode` (anchors), `playersSleepingPercentage`, `doInsomnia`
+  (phantoms), `projectilesCanBreakBlocks` (`blocks/shot_blocks.rs`: pots, chorus flowers, dripstone under
+  a trident). What no BDS rule
   switches is a `sapling:` rule in the same store, never sent to clients, each on by default:
   `sapling:hunger` (no exhaustion), `sapling:liquidFlow` (due flows are dropped: liquids stand),
   `sapling:redstone` (circuits pause; what was written waits), `sapling:mobAi` (mobs fall and are hurt but
   decide nothing). `sendCommandFeedback` is under Commands. `doMobSpawning` stops natural spawning
-  (`spawning.rs`), not eggs or commands. Not read yet: `spawnRadius`, `doImmediateRespawn` (the client's),
-  and rules for what sapling lacks (`doInsomnia`, command blocks).
+  (`spawning.rs`), not eggs or commands. `doImmediateRespawn` is the client's alone (docs/research/player-damage.md). `recipesUnlock` and
+  `showRecipeMessages` are the client's: BDS unlocked recipes on pickup with either off. `doLimitedCrafting`
+  pauses unlocking and refuses no craft (`inventory/recipe_book.rs`; research/captures/bds-recipeunlock*.txt,
+  bds-limitedcraft.txt). Not read yet: `spawnRadius` and the command-block rules.
 - **World events** (`sapling-api/src/world_event.rs`). What the world does on its own is offered with its
   world in focus (`plugins::offer_in`), so `Scope::World` listeners hear their world's; each is built only
   where a listener hears it (`plugins::stopped_in`), since flows and fire raise them often.
@@ -364,10 +372,16 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   (fields = parameters) or an enum (variants = sub-commands) writes `CommandSyntax`; the plugin writes
   `Command::run(self, ctx, sender, out)`. Parameters: integers, floats, `bool`, `String` (a word or a quoted
   run), `Text` (rest of the line), `Target` (an online player or `@s`), `GameMode`, any `#[derive(CommandEnum)]`,
-  and `Option<T>` for trailing optional ones. `Sender` is `Player | Console`; only players send yet.
+  and `Option<T>` for trailing optional ones. `Sender` is `Player | Console`, or `Executed` for a command an
+  `/execute` runs: who sent it, the executor, the place, turn, anchor and dimension it runs at (`~` and `^`
+  count from there, `@s` names the executor; research/captures/bds-execute-findings.md).
   - `AvailableCommands` is built once per permission level and sent when a player enters the world and when
-    `ctx.set_permission` changes its level (`Member` / `Operator`). Hidden commands are left out entirely and
-    answer as unknown; every command sent carries permission `"any"` and flags 0.
+    `ctx.set_permission` changes its level (`Member` / `Operator`). Commands above a player are left out of its
+    list (BDS sends everyone all 82 of its commands with their levels and lets the client hide them:
+    research/captures/bds-ui-member.txt); a member's line is read first, then refused as BDS refused it: a
+    syntax error, `commands.generic.permission.selector` for any selector in it (a message's too), then
+    `commands.generic.error.permissions [command name]` (bds-member.txt). A command sent carries permission
+    `"any"` (members) or `"gamedirectors"` (operators), as BDS names them, and flags 0.
   - Wire shape as BDS 1.26.52: enum values and enums deduplicated; an enum parameter carries its enum index
     with flag 0x30; a sub-command word is a one-value enum; aliases are an enum `<name>CommandAliases` led by
     the name. Type ids from the capture: int 1, float 3, target 8, string 56, message 68 (acacia-proto names
@@ -451,6 +465,11 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   are ignored until one carries `HandledTeleport`, and the teleport is repeated after 20 ticks without one.
 - **Game mode.** `ctx.set_game_mode` sends UpdatePlayerGameType to everyone in the world, the player
   included: all BDS's `/gamemode` sends besides chat lines (no SetPlayerGameType, no UpdateAbilities).
+  An operator's own `SetPlayerGameType` does the same, with no chat line, as on BDS.
+- **Client packets** (research/captures/bds-packets.txt). `Emote` and `EmoteList` go to the sender's
+  viewers (`emotes.rs`: its id, `ServerSide`); a creative `BlockPickRequest` selects or fills a hotbar
+  slot (`inventory/picking.rs`). BDS answered no `EntityPickRequest`, creative `AnvilDamage` or
+  `ServerSettingsRequest`; sapling neither. `PlayerSkin` is dropped: BDS disconnected the drill's sender.
 
 ## Step 5 as built (Worlds)
 
@@ -620,9 +639,10 @@ block action, and takes StopBreak and AbortBreak with a position.
   Java's, an upper bound on Bedrock's); otherwise the BreakEvent starts cancelled (a handler may allow it)
   and the client is shown the block. AbortBreak ends the clock. Unbreakable blocks and blocks of unknown
   hardness never pass in survival. Viewers get `BlockStartBreak` (block corner, 65535 / ticks) at the
-  start and `BlockStopBreak` on an abort. Creative breaks at once, as before. Not taken into account,
-  each of which would only lengthen a break: haste and mining fatigue (there are no effects), water and
-  being off the ground (the server's on-ground flag is a guess). BDS also sends `BlockBreakSpeed` and
+  start and `BlockStopBreak` on an abort. Creative breaks at once, as before. Haste multiplies the speed
+  by (1 + 0.2 n) 1.2^n and mining fatigue by 0.21^n for n levels, as BDS's stone breaks timed them
+  (research/captures/bds-dig.txt). Not taken into account, each of which would only lengthen a break:
+  water and being off the ground (the server's on-ground flag is a guess). BDS also sends `BlockBreakSpeed` and
   breaks the block itself when a refused break's time is up; sapling does neither.
 - **Turning and replacing** (`blocks/facing.rs`, `blocks/place.rs`). A placed block's state comes from
   the clicked face, how high on it the click was, and the placer's yaw and pitch. Every rule and its
@@ -650,7 +670,8 @@ block action, and takes StopBreak and AbortBreak with a position.
   placement (`Sign` with empty `FrontText`/`BackText`, `Skull` with the floor rotation, `Banner`
   with `Base` = the item's damage, ...); a brewing stand is a container of five (window type
   BrewingStand; ingredient, three bottles, fuel) whose block shows a bottle in each place that
-  holds something (`containers/brewing.rs`); it brews nothing. Breaking gives
+  holds something (`containers/brewing.rs`) and brews by BDS's tick and mixes (`brewing.rs`,
+  docs/research/brewing.md). Breaking gives
   the item back what the entity kept: a bed's and a banner's colour, a pot's plant, a campfire's
   food. Signs of every wood leave their wood's sign, banners `banner`. Not done: cauldrons hold
   nothing, a banner's patterns are lost (`Item` has no tag).
@@ -705,17 +726,18 @@ block action, and takes StopBreak and AbortBreak with a position.
 - **Sleeping** (`sleep.rs`, `docs/research/beds-and-containers.md` sections 1 to 4). An allowed
   click on a bed checks as BDS's `BedBlock::use_sleep` does: occupied by another sleeper
   (`tile.bed.occupied`; a stale `occupied_bit` is cleared), eyes more than 3, 4, 3 blocks from
-  the head's corner (`tooFar`), then the bed becomes the player's spawn (`SetSpawnPosition`, and
-  `respawnSet` when it is a new one), then only between ticks 12541 and 23459 of the day
-  (`noSleep`). Messages are BDS's grey JSON `Text`. Lying down: the head gets `occupied_bit`, the
+  the head's corner (`tooFar`), no room to stand up (`obstructed`), then the bed becomes the
+  player's spawn (`SetSpawnPosition`, and `respawnSet` when it is a new one), then only between
+  ticks 12541 and 23459 of the day (12009 to 23991 in rain, always in a storm: `noSleep`), then,
+  out of creative and peaceful, no monster within 8, 5, 8 of the head (`notSafe`, `sleep/rest.rs`). Messages are BDS's grey JSON `Text`. Lying down: the head gets `occupied_bit`, the
   player's `PlayerFlags` sleep bit and `PlayerBedPosition` go to it and its viewers, and it lies
   at the head facing along the bed. It gets up on `PlayerAction StopSleeping`, when its bed is
-  gone or day comes: `Animate WakeUp`, the bit and flag cleared, put back where it lay down from.
-  When every non-spectator of a world has slept 100 ticks, all wake and the time jumps to the next
+  gone or day comes: `Animate WakeUp`, the bit and flag cleared, stood in the cell BDS's
+  `findStandUpPosition` picks (`sleep/stand.rs`). When every non-spectator of a world has slept
+  100 ticks of a night (a storm by day skips nothing), all wake and the time jumps to the next
   day's tick 0. Whenever someone lies down or gets up, the world's players are told how many sleep
   of how many: `LevelEventGeneric` 9801 with the Ints `ableToSleep`, `overworldPlayerCount`,
-  `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: monsters near the bed (mobs
-  are statues), weather, BDS's stand-up search, and the spawn is never used.
+  `sleepingPlayerCount` (BDS `updateSleepingPlayerList`). Not done: the water check.
 - **Ground truth for what follows**: `cargo build -p sapling --example bds_mechanism_probe`, then
   `tools/bds-drill.sh <bds dir> <port> bds_mechanism_probe <out>` runs drills (falls, plates, buckets,
   lava, waterlogging, the odd cases too) on a BDS with a fresh world, and `tools/sapling-drill.sh
@@ -889,8 +911,9 @@ block action, and takes StopBreak and AbortBreak with a position.
   (`blocks/frost.rs`). Mending: an orb mends one damaged Mending stack worn or held, two of wear a
   point, before the rest is experience. Curse of Vanishing is gone at death; Curse of Binding keeps
   a piece on outside creative (`inventory/enchanted.rs`). Power, Punch, Flame, Infinity, Multishot,
-  Piercing, Quick Charge, Loyalty, Riptide and Impaling: see "Players' shots". Not done: Channeling,
-  fishing rods and the mace and their enchantments; Aqua Affinity (the server does not slow a break
+  Piercing, Quick Charge, Loyalty, Riptide and Impaling: see "Players' shots". Lure and Luck of the
+  Sea: see fishing (`fishing.rs`, docs/research/fishing.md). Not done: Channeling, the mace and its
+  enchantments; Aqua Affinity (the server does not slow a break
   under water); Soul Speed, Swift Sneak; Thorns against arrows; Blast Protection's throw (BDS reads
   none); Looting on armour.
 - **What a block leaves** (`blocks/loot.rs`, `sapling_data::block_loot`). `BreakEvent::drops` starts as
@@ -1018,7 +1041,10 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   stand, goes at once. A spawned mob is heard (`spawn` at its head, docs/research/spawn-sound.md).
   Mobs press every pressure plate, items and falling blocks wooden and weighted ones, orbs none.
   A spawned mob is saved with its column as a new actor (`UniqueID`, `identifier`, `definitions`,
-  `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried). Mobs also appear by themselves
+  `Pos`, `Rotation`, `Motion`: what BDS reads of one is untried); its effects (`ActiveEffects`), a
+  primed TNT's `Fuse` and a wither's charge, armour and max health (`Invul`, `SpawningFrames`,
+  `Phase`, `AirAttack`, `maxHealth`) go with it and come back as a BDS world held them
+  (sapling-leveldb `actor_state.rs`, research/captures/bds-keepmobs.txt). Mobs also appear by themselves
   around players by the vanilla packs' spawn rules, capped by category, and go again by their kind's
   despawn distances; spawn eggs hatch them (`spawning.rs`, docs/research/mob-spawning.md). Not done: AI, damage; saving the
   items players throw, orbs and falling blocks; a kept entity that wanders into a column that is not
@@ -1154,7 +1180,9 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   the lead's, each half keeping its own 27. Breaking a half spills that half and leaves the other a
   single chest.
 - **Crafting** (`inventory/crafting.rs`, `sapling_data::recipe`). Clients are sent BDS's recorded
-  `CraftingData` and `UnlockedRecipes` with the registries. A request that starts with `CraftRecipe`
+  `CraftingData` with the registries, and their own recipe book once their items are shown: what held
+  items and states (ten filled slots, water) unlocked, kept with the player as BDS's `recipe_unlocking`
+  (`inventory/recipe_book.rs`, `sapling_data::unlocked_by`). A request that starts with `CraftRecipe`
   (by hand) or `CraftRecipeAuto` (the recipe book) names a recipe by its network id. `Consume` actions
   use items up, and the request is done only if what they used is exactly what the recipe's cells take
   (an item by name, or any item carrying a tag; no packet carries the tags, so their members come from
@@ -1181,7 +1209,8 @@ Details and BDS evidence: docs/research/nether-dimension.md, docs/research/end-d
   each enchant) and the bookshelves, and sent as `PlayerEnchantOptions` with the answer to the
   request that laid the item in. The anvil charges BDS's levels (what enchantments gain, not Java's
   sums), wears 12% of crafts out of creative and says so (level events 1021, 1020); the grindstone
-  lets out experience at the player. Not done: the anvil's map recipes, `AnvilDamage` (ignored).
+  lets out experience at the player. A client's `AnvilDamage` rolls the wear again, as BDS's handler does.
+  Not done: the anvil's map recipes.
 - **API.** `ctx.item`, `set_item`, `give` (returns what did not fit), `clear_inventory`, `held_slot`,
   `held_item`, with `Item { name, count, damage }` and `Slot::{Main, Armor, Offhand}`; every change
   resends the four windows, as BDS does after `/give`. A stack's tag stays with it but does not show.
@@ -1293,12 +1322,23 @@ All set through `ServerBuilder` (`sapling/src/server/ops.rs`).
   `properties(&props)`. Read: `server-name`, `level-name` (the list's level and StartGame's name; the
   folder is the binary's to open), `gamemode`, `difficulty` (names or numbers), `max-players`,
   `online-mode`, `allow-list`/`white-list` (sets the `access` lists' allowlist; on without lists is
-  `StartError::NoAllowlist`), `server-ip`, `server-port`, `view-distance` (≥ 5), `player-idle-timeout`,
+  `StartError::NoAllowlist`), `server-ip`, `server-port`, `server-portv6` (`bind_v6` on `[::]`: an
+  IPv6-only socket beside the main one, RakNet and the query on both, the pong naming both ports;
+  research/captures/bds-query.txt), `enable-query` (Java's key, BDS has none and answers no query:
+  `query(true)` answers GameSpy4 handshake and basic/full stat on the game ports, sapling-net
+  `query.rs`), `view-distance` (≥ 5), `tick-distance` (4 to 12: how far about a player mobs spawn and hives and
+  snow tick, saved as level.dat's `serverChunkTickRange`), `player-idle-timeout`,
   `level-seed` (numbers only, for the binary), `compression-threshold`, `compression-algorithm`,
   `player-position-acceptance-threshold`, `player-rewind-min-correction-delay-ticks`. Every other key
-  (`server-portv6`, `tick-distance`, `force-gamemode`, `allow-cheats`, `default-player-permission-level`,
+  (`force-gamemode`, `allow-cheats`, `default-player-permission-level`,
   `transport`, `enable-lan-visibility`, ...) is logged as ignored. Bad values fail with their line.
-  Settings made after it win. `examples/generated.rs --properties=` uses it.
+  Settings made after it win. `examples/generated.rs --properties=` uses it. `gamemode` (and
+  `game_mode()`) also sets the server list's mode.
+- **Console** (`sapling/src/console.rs`, `console(true)`): stdin lines run on the entry shard as
+  `Sender::Console` with operator permission; the answer is logged in English as BDS's console prints
+  it (INFO when it succeeded, ERROR otherwise; bds-console-cmds.txt), from en_US.lang's `commands.*`
+  texts (`sapling_data::command_text`, an ignored data file). Tab completes command names when stdin
+  is a terminal (rustyline); otherwise lines are read plainly until the input ends.
 - **Compression**: `NetConfig::compression` (zlib = raw deflate, or snappy) and `compression_threshold`
   (default 1) go into acacia's `LoginConfig`, i.e. NetworkSettings.
 - **Packet limits** (`sapling-net/src/limits.rs`, `NetConfig::packet_limits`): per session and one-second
@@ -1464,7 +1504,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   sidebar with two lines of the same text; removing and re-adding a line in one batch without flicker;
   RemoveObjective alone to hide the sidebar (BDS also clears the slot); ToastRequest;
   UpdatePlayerGameType for another player's id.
-- Commands: console sender, selectors in `Target` parameters, position and item parameters, soft enums
+- Commands: selectors in `Target` parameters, position and item parameters, soft enums
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
 - HUD: several boss bars (needs an entity each).
@@ -1480,8 +1520,8 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
 - Chat: private messages, profanity filter fields.
 - **Operations, not checked against BDS:** the idle kick's activity rule and screen, BDS's chat or
-  packet rate limits (Java's chat rule is used), `level-seed` text hashing, `tick-distance`, an IPv6
-  listener beside the IPv4 one (`server-portv6`), config hot reload.
+  packet rate limits (Java's chat rule is used), `level-seed` text hashing, the despawn cap at a `tick-distance` other than 4, the pong's
+  IPv6 port field (BDS 1.26.52's pong carried no string to read), config hot reload.
 - **BDS only saves chunks that changed since generation.** A folder's holes are void unless it is
   opened with `generate_missing`, which fills them as a new world would be generated ("Generation").
 - Block-state upgrader (CC0 BedrockBlockUpgradeSchema) for palettes older than the current version;
@@ -1507,9 +1547,9 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   item saved by an older game version carries old states, whose hash a client may not know. Movement,
   AI, damage; a player's `RideID`.
 - Clock and level: a vanilla client has not confirmed `SyncWorldClocks` or the other join packets as
-  sapling sends them; game rules other than the daylight cycle are not read from `level.dat`. A
-  difficulty set while the server runs (`ShardCtx::set_difficulty`) is not saved.
-- Only the overworld is opened; nether/end keys parse but no world is made for them.
+  sapling sends them. `level.dat` keys sapling neither reads nor changes are written back as read:
+  `abilities` (BDS's defaults for new players; sapling sends its recorded UpdateAbilities instead),
+  `experiments`, `currentTick` (the shard counts its own ticks from 0), `worldStartCount`.
 - LevelDB block compression id 2 is zlib in worlds; never enable zstd (Mojang master reuses id 2).
 - Game data source and licence (item/creative/biome/recipes) for sapling-data.
 - acacia-proto's shield item id is process-global: never run acacia-bot and sapling in one process.

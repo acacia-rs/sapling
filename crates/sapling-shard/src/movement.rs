@@ -4,14 +4,12 @@
 // teleport-sized steps are refused.
 
 mod placing;
+mod pose;
 
 use std::collections::HashSet;
 
-use acacia_proto::packets::{Animate, AnimateActionId, MovePlayer, MovePlayerMode, MovePlayerTeleport, MovePlayerTeleportCause, PlayerAuthInput, SetEntityData};
-use acacia_proto::types::{
-    EntityProperties, InputData, LegacyEntityType, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType,
-    MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault, MetadataFlags1, Vec3f,
-};
+use acacia_proto::packets::{Animate, AnimateActionId, MovePlayer, MovePlayerMode, MovePlayerTeleport, MovePlayerTeleportCause, PlayerAuthInput};
+use acacia_proto::types::{InputData, LegacyEntityType, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
@@ -24,6 +22,7 @@ use crate::simulation::{self, Own, Ruling, Simulated};
 use crate::visibility::ToViewers;
 use crate::vitals::Vitals;
 pub(crate) use placing::{correct, correct_unmoving, push, reset, teleport, teleport_as, teleport_onto_ground};
+pub(crate) use pose::{Pose, pose_packet};
 
 /// Blocks an input may be from the one before it; further is a teleport the server never made.
 const MAX_STEP: f32 = 10.0;
@@ -37,50 +36,14 @@ const LANDING_REACH: f32 = 1.0;
 const LANDING_SLACK: f32 = 1e-3;
 /// `source_entity_type` of BDS's own teleports.
 const TELEPORT_SOURCE: i64 = 1;
-const STANDING_HEIGHT: f32 = 1.8;
-const SNEAKING_HEIGHT: f32 = 1.49;
-
-#[derive(Clone, Copy, PartialEq, Default)]
-pub(crate) struct Pose {
-    pub sneaking: bool,
-    pub sprinting: bool,
-    pub swimming: bool,
-    /// On fire (vitals.rs).
-    pub burning: bool,
-    /// Using the item in its hand (vitals/eating.rs).
-    pub using: bool,
-}
-
-impl Pose {
-    /// The entity flags viewers get on top of the recorded ones.
-    pub fn flags(self) -> MetadataFlags1 {
-        let mut flags = MetadataFlags1::BREATHING;
-        for (on, flag) in [(self.sneaking, MetadataFlags1::SNEAKING), (self.sprinting, MetadataFlags1::SPRINTING), (self.swimming, MetadataFlags1::SWIMMING), (self.burning, MetadataFlags1::ONFIRE), (self.using, MetadataFlags1::ACTION)] {
-            if on {
-                flags.insert(flag);
-            }
-        }
-        flags
-    }
-
-    fn apply(&mut self, input: &[InputData]) {
-        for flag in input {
-            match flag {
-                InputData::StartSneaking => self.sneaking = true,
-                InputData::StopSneaking => self.sneaking = false,
-                InputData::StartSprinting => self.sprinting = true,
-                InputData::StopSprinting => self.sprinting = false,
-                InputData::StartSwimming => self.swimming = true,
-                InputData::StopSwimming => self.swimming = false,
-                _ => {}
-            }
-        }
-    }
-}
 
 #[derive(Component, Default)]
 pub(crate) struct Motion {
     pub pose: Pose,
+    /// The glide the last inputs asked for and gliding.rs has yet to answer.
+    pub glide_asked: Option<bool>,
+    /// The client's own step of its last input.
+    pub delta: [f32; 3],
     /// The client's own tick of its last input; BDS stamps what it tells viewers with it.
     input_tick: u64,
     /// The shard tick until which far inputs are dropped without another correction.
@@ -115,6 +78,11 @@ impl Motion {
     pub fn awaits_teleport(&self) -> bool {
         self.unconfirmed_teleport.is_some()
     }
+
+    /// The client's own tick of its last input.
+    pub fn input_tick(&self) -> u64 {
+        self.input_tick
+    }
 }
 
 fn eyes(position: &Position) -> Vec3f {
@@ -148,17 +116,6 @@ fn fell_while_landing(motion: &mut Motion, feet: [f32; 3], on_ground: bool, tick
         motion.landing = None;
     }
     motion.landing.is_some() && is_below
-}
-
-pub(crate) fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
-    let height = MetadataDictionaryItem {
-        key: Key::BoundingboxHeight,
-        r#type: MetadataDictionaryItemType::Float,
-        legacy_type: 3,
-        value: Value::Default(MetadataDictionaryItemValueDefault::Float(if pose.sneaking { SNEAKING_HEIGHT } else { STANDING_HEIGHT })),
-    };
-    let flags = sapling_data::player_metadata("", pose.flags()).into_iter().filter(|item| item.key == Key::Flags);
-    SetEntityData { runtime_entity_id: id, metadata: flags.chain([height]).collect(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick }
 }
 
 /// This tick's moves for the plugins (`actions::dispatch_moves`): a player, where it was at the
@@ -244,6 +201,8 @@ pub(crate) fn player_input(
             continue;
         }
         motion.pose.apply(&input.input_data);
+        motion.glide_asked = pose::glide_asked(&input.input_data).or(motion.glide_asked);
+        motion.delta = [input.delta.x, input.delta.y, input.delta.z];
         motion.jumps = motion.jumps.saturating_add(input.input_data.iter().filter(|flag| **flag == InputData::StartJumping).count() as u8);
         motion.input_tick = input.tick;
         let mut moved = Position { feet, yaw: input.yaw, pitch: input.pitch, head_yaw: input.head_yaw, on_ground };

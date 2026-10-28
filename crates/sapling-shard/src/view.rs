@@ -15,13 +15,20 @@ pub(crate) fn to_viewers(world: &mut World, layer: Entity, pos: BlockPos, packet
 
 /// [`to_viewers`], but for the player `but`.
 pub(crate) fn to_viewers_but(world: &mut World, layer: Entity, pos: BlockPos, but: Option<Entity>, packets: &[Bytes]) {
-    let column = ChunkPos::of_block(pos[0], pos[2]);
-    let mut players = world.query::<(Entity, &InLayer, &Stage, &View, &mut Outgoing)>();
-    for (player, in_layer, stage, view, mut out) in players.iter_mut(world) {
-        if Some(player) != but && in_layer.0 == layer && *stage >= Stage::Chunks && view.covers(column) {
+    for player in viewers(world, layer, pos) {
+        if Some(player) != but
+            && let Some(mut out) = world.get_mut::<Outgoing>(player)
+        {
             out.0.extend_from_slice(packets);
         }
     }
+}
+
+/// The players [`to_viewers`] hands packets about `pos` to.
+pub(crate) fn viewers(world: &mut World, layer: Entity, pos: BlockPos) -> Vec<Entity> {
+    let column = ChunkPos::of_block(pos[0], pos[2]);
+    let mut players = world.query::<(Entity, &InLayer, &Stage, &View)>();
+    players.iter(world).filter(|(_, in_layer, stage, view)| in_layer.0 == layer && **stage >= Stage::Chunks && view.covers(column)).map(|(player, ..)| player).collect()
 }
 
 /// Sends `columns` again to the players of `layer` still waiting on blobs: an update reaching a

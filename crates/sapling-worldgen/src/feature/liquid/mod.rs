@@ -7,6 +7,7 @@
 mod detect;
 mod detect_table;
 mod flow;
+mod leftovers;
 
 use super::ticks::TickQueue;
 use super::view::{Routed, View};
@@ -72,7 +73,8 @@ pub fn instatick(view: &mut View) {
 
 /// The chunk's queue in game after decoration: the ticks that could not join the block source's
 /// queue, then the instaticks left over, run by game tick for `game_ticks()` ticks over the same
-/// 3x3 (BDS then has every neighbour; this is the approximation).
+/// 3x3 (BDS then has every neighbour; this is the approximation). Without that replay the
+/// leftovers go out with the chunk instead (leftovers.rs).
 fn play(view: &mut View) {
     let budget = game_ticks();
     let mut game = TickQueue::game();
@@ -80,8 +82,12 @@ fn play(view: &mut View) {
         game.add(at, lava, delay + 1);
     }
     // Leftover instaticks keep their wrapped times (delay - 1); deferred ones (u64::MAX) never come due.
-    for tick in view.ticks.drain() {
+    let left = view.ticks.drain();
+    for tick in &left {
         game.add_at(tick.at, tick.lava, tick.time);
+    }
+    if budget == 0 {
+        view.left = leftovers::due(&left);
     }
     if budget == 0 || game.is_empty() {
         return;

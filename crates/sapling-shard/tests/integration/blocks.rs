@@ -156,9 +156,9 @@ fn a_place_in_creative_puts_the_held_block_on_the_clicked_face() {
     h.receive(1, &click(NEAR, UP, Some(DIRT)));
     let sent = h.tick_all();
     // The placer is shown the clicked and the placed cell again, each with those above and below,
-    // as BDS showed it (research/captures/bds-place-faces.txt).
+    // and then the place, as BDS showed it (research/captures/bds-place-faces.txt).
     let around = [(NEAR, hash(STONE), 0), (ABOVE, hash(DIRT), 0), ([1, 63, 0], hash(AIR), 0), (ABOVE, hash(DIRT), 0), ([1, 66, 0], hash(AIR), 0), (NEAR, hash(STONE), 0)];
-    assert_eq!(updates(sent.to(1)), [&[(ABOVE, hash(DIRT), 0)][..], &around].concat());
+    assert_eq!(updates(sent.to(1)), [&around[..], &[(ABOVE, hash(DIRT), 0)]].concat());
     assert_eq!(updates(sent.to(2)), [(ABOVE, hash(DIRT), 0)]);
     for conn in [1, 2] {
         let sounds = all::<LevelSoundEvent>(sent.to(conn));

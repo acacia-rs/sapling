@@ -124,7 +124,8 @@ async fn two_bots_see_each_other_move_and_chat() {
     alice.controls().expect("physics").yaw = 90.0;
     both(&mut alice, &mut bob, 10).await;
     let turned = seen(&bob, "Alice").unwrap();
-    assert!(distance(turned, feet(&alice)) < 0.01 && (turned.yaw - 90.0).abs() < 0.01 && turned.on_ground, "{turned:?} vs {:?}", feet(&alice));
+    // acacia-bot sends every turn up to 0.03 degrees off (its rotation_noise.rs).
+    assert!(distance(turned, feet(&alice)) < 0.01 && (turned.yaw - 90.0).abs() < 0.05 && turned.on_ground, "{turned:?} vs {:?}", feet(&alice));
 
     let track = walk_watched(&mut alice, &mut bob).await;
     both(&mut alice, &mut bob, 20).await;

@@ -1,7 +1,7 @@
 //! Tools wear: a use is counted where the game keeps it, in the stack's `Damage` tag, and a tool
 //! used once more than it lasts is gone. The rules are BDS's `ItemStackBase::hurtAndBreak`
-//! (docs/research/block-rules.md, section 5).
-// TODO: no break sound; of tools nothing but breaking blocks wears any (armour: armour_wear.rs).
+//! (docs/research/block-rules.md, section 5). Hits wear weapons too (creatures/blows.rs); armour:
+//! armour_wear.rs.
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
@@ -16,6 +16,11 @@ const DAMAGE: &str = "Damage";
 impl Inventory {
     pub(crate) fn has_helmet(&self) -> bool {
         self.armor[0].is_some()
+    }
+
+    /// The names of the armour worn, helmet first.
+    pub(crate) fn worn_names(&self) -> impl Iterator<Item = Option<&str>> {
+        self.armor.iter().map(|slot| slot.as_ref().map(|held| held.stack.name.as_str()))
     }
 
     /// The points and toughness of the armour worn.
@@ -60,16 +65,35 @@ impl Inventory {
         self.unsaved = true;
     }
 
-    /// Counts `uses` against the stack in the hand, which lasts `lasts` of them.
-    fn wear_hand(&mut self, uses: i32, lasts: u16) {
-        let Some(slot) = self.slot_mut(Place::Main(usize::from(self.selected) % HOTBAR)) else { return };
-        let Some(held) = slot.as_mut() else { return };
+    /// Counts `uses` against the stack in the hand, which lasts `lasts` of them; whether it broke.
+    fn wear_hand(&mut self, uses: i32, lasts: u16) -> bool {
+        self.wear_at(Place::Main(usize::from(self.selected) % HOTBAR), uses, lasts)
+    }
+
+    /// Counts `uses` against the stack at `place`, which lasts `lasts` of them; whether it broke.
+    fn wear_at(&mut self, place: Place, uses: i32, lasts: u16) -> bool {
+        self.unsaved = true;
+        let Some(slot) = self.slot_mut(place) else { return false };
+        let Some(held) = slot.as_mut() else { return false };
         let worn = damage(&held.stack.tag) + uses;
-        match worn > i32::from(lasts) {
+        let broke = worn > i32::from(lasts);
+        match broke {
             true => *slot = None,
             false => set_damage(&mut held.stack.tag, worn),
         }
+        broke
     }
+}
+
+/// Counts `uses` against the stack at `place` of a player's, unless Unbreaking spares it; whether
+/// it broke. The client is not shown it: the caller shows what BDS showed.
+pub(crate) fn wear_at(world: &mut World, player: Entity, place: Place, uses: i32) -> bool {
+    let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.slot(place)?.as_ref()) else { return false };
+    let (chance, lasts) = (wear_chance(held, false), sapling_data::gear(&held.stack.name).map_or(0, |gear| gear.lasts));
+    if lasts == 0 || chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
+        return false;
+    }
+    world.get_mut::<Inventory>(player).is_some_and(|mut inventory| inventory.wear_at(place, uses, lasts))
 }
 
 /// Counts a broken block against the tool in a player's hand and shows the client the result;
@@ -82,12 +106,23 @@ pub(crate) fn wear_tool_in_hand(world: &mut World, player: Entity) {
 }
 
 /// Counts `uses` against what the player holds, which lasts `lasts` of them, unless Unbreaking
-/// spares it; shows the client the result.
+/// spares it; shows the client the result, and one that broke is heard.
 pub(crate) fn wear_hand_by(world: &mut World, player: Entity, uses: i32, lasts: u16) {
     let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return };
     let chance = wear_chance(held, false);
     if chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
         return;
     }
-    change(world, player, |inventory| inventory.wear_hand(uses, lasts));
+    if change(world, player, |inventory| inventory.wear_hand(uses, lasts)) == Some(true) {
+        sound_broken(world, player);
+    }
+}
+
+/// What BDS let the player and those who see it hear of a stack of its that broke: `break` at its
+/// eyes (research/captures/bds-swing-wear.txt).
+pub(crate) fn sound_broken(world: &mut World, player: Entity) {
+    let Some([x, y, z]) = world.get::<crate::components::Position>(player).map(|position| position.feet) else { return };
+    let position = acacia_proto::types::Vec3f { x, y: y + sapling_data::EYE_HEIGHT, z };
+    let sound = acacia_proto::packets::LevelSoundEvent { sound_id: "break".into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
+    crate::vitals::tell(world, player, &sound);
 }

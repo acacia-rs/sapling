@@ -19,7 +19,8 @@ fn a_hit_from_too_far_is_not_answered() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.enter(2, "Steve");
-    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [4.5, 65.0, 0.5]).is_some()));
+    // 7.18 from the eyes to its feet, past BDS's 6.7.
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [7.5, 65.0, 0.5]).is_some()));
     let cow = (0..5).flat_map(|_| all::<AddEntity>(h.tick_all().to(2))).collect::<Vec<_>>().remove(0).runtime_id;
     h.receive(1, &attack(cow));
     let sent = h.tick_all().to(2).to_vec();
@@ -254,4 +255,25 @@ fn a_player_hits_another_for_what_it_holds_and_not_with_pvp_off_or_one_in_creati
     h.receive(1, &attack(steve));
     let sent = h.tick_all().to(2).to_vec();
     assert!(health(&sent).is_empty() && all::<LevelSoundEvent>(&sent).len() == 1, "a creative player hears the swing");
+}
+
+#[test]
+fn knockback_resistance_takes_its_share_off_a_throw() {
+    // research/captures/bds-knockback.txt: a hoglin (0.6) thrown 0.16 across, a ravager (0.75) 0.1, an iron golem not at all.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| assert!(ctx.set_game_rule("sapling:mobAi", sapling_api::RuleValue::Bool(false))));
+    let mut across = Vec::new();
+    for kind in ["minecraft:cow", "minecraft:hoglin", "minecraft:ravager", "minecraft:iron_golem"] {
+        h.remote.run(move |ctx| assert!(ctx.spawn_entity(kind, [2.5, 65.0, 0.5]).is_some()));
+        let mob = (0..5).flat_map(|_| all::<AddEntity>(h.tick_all().to(2))).collect::<Vec<_>>().remove(0).runtime_id;
+        (0..10).for_each(|_| drop(h.tick_all()));
+        h.receive(1, &attack(mob));
+        let moved = all::<MoveEntityDelta>(h.tick_all().to(2)).into_iter().find(|moved| moved.runtime_entity_id == mob).and_then(|moved| moved.x);
+        across.push(moved.map_or(0.0, |x| ((x - 2.5) * 1000.0).round() / 1000.0));
+        h.remote.run(move |ctx| _ = ctx.remove_entity(sapling_api::EntityId(mob)));
+        (0..3).for_each(|_| drop(h.tick_all()));
+    }
+    assert_eq!(across, [0.4, 0.16, 0.1, 0.0]);
 }

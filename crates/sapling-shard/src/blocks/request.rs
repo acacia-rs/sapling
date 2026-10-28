@@ -23,7 +23,8 @@ const MAX_CLICKS_PER_TICK: usize = 4;
 const USED: &[&str] = &["daylight_detector", "daylight_detector_inverted", 
     "door", "button", "lever", "fence_gate", "chest", "barrel", "shulker_box", "furnace", "smoker", "crafting_table", "anvil", "enchanting_table", "hopper",
     "dropper", "dispenser", "_sign", "noteblock", "repeater", "comparator", "brewing_stand", "beacon", "loom", "grindstone", "stonecutter_block", ":bed",
-    "cartography_table", "smithing_table", "flower_pot", "jukebox", ":frame", "glow_frame", "decorated_pot",
+    "cartography_table", "smithing_table", "flower_pot", "jukebox", ":frame", "glow_frame", "decorated_pot", "lectern", ":bell",
+    "command_block", "structure_block",
 ];
 
 enum Input {
@@ -73,7 +74,10 @@ fn is_used(name: &str) -> bool {
 /// a bed is slept in, a sign is written on, a pot takes or gives a plant, a campfire takes food.
 /// False when it does none of these.
 fn use_block(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 9] = [
+    let uses: [fn(&mut World, Entity, Entity, BlockPos, &str) -> bool; 12] = [
+        super::lectern::use_lectern,
+        super::command_blocks::open_editor,
+        super::structure_blocks::open_editor,
         crate::containers::open,
         crate::sleep::lie_down,
         signs::edit_by_click,
@@ -97,15 +101,20 @@ pub(crate) fn dispatch(world: &mut World) {
         TransactionTransactionData::ItemRelease(_) => {
             crate::vitals::eating::stop(world, from);
             crate::shots::release(world, from);
+            crate::instruments::release(world, from);
             None
         }
         TransactionTransactionData::ItemUseOnEntity(on) => {
-            let clicks = if on.action_type == OnEntity::Attack { &mut hits } else { &mut uses };
-            clicks.push((from, on.entity_runtime_id));
+            match on.action_type {
+                OnEntity::Attack => hits.push((from, on.entity_runtime_id)),
+                _ => uses.push((from, on.entity_runtime_id, [on.click_pos.x, on.click_pos.y, on.click_pos.z])),
+            }
             None
         }
         _ => None,
     }));
+    // Paintings are no entities plugins know (entities.rs), so no plugin is offered their hits.
+    let hits = crate::paintings::struck(world, hits);
     let hits = actions::allowed_hits(world, hits);
     crate::creatures::attacked(world, hits);
     actions::interacted(world, uses);
@@ -138,7 +147,14 @@ pub(crate) fn dispatch(world: &mut World) {
                     TransactionUseItemActionType::ClickBlock => request.click(pos, Face::from_index(u32::from(click.face)), &click),
                     TransactionUseItemActionType::BreakBlock if broken.insert((entity, pos)) => request.break_block(pos),
                     TransactionUseItemActionType::ClickAir if actions::may_use_item(request.world, entity, request.player) => {
-                        if !crate::riding::boost(request.world, entity) && !crate::shots::use_in_air(request.world, entity) && !crate::eyes::throw(request.world, entity) {
+                        let used = crate::riding::boost(request.world, entity)
+                            || crate::gliding::boost(request.world, entity)
+                            || crate::shots::use_in_air(request.world, entity)
+                            || crate::eyes::throw(request.world, entity)
+                            || crate::instruments::start(request.world, entity)
+                            || crate::books::open(request.world, entity)
+                            || crate::maps::fill(request.world, entity);
+                        if !used {
                             crate::vitals::eating::start(request.world, entity);
                         }
                     }
@@ -206,8 +222,10 @@ impl Request<'_> {
         }
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
         let event = plugins::offer(self.world,BreakEvent::new(self.player.clone(), pos, block, drops, allowed));
+        let bees = crate::creatures::bees_in(self.world, site.layer, pos);
         match !event.is_cancelled() && self.remove(&site, pos) {
             true => {
+                crate::creatures::hive_broken(self.world, site.layer, pos, &name, bees, by.silk_touch);
                 loot::spill(self.world, site.layer, pos, &event.drops);
                 if site.mode == GameMode::Survival {
                     after_break::leave(self.world, site.layer, pos, &name, &by);
@@ -230,6 +248,7 @@ impl Request<'_> {
         let particles = send::destroy_particles(level.registry(), [x, y, z], id);
         doors::remove_other_half(self.world, site.layer, [x, y, z]);
         crate::containers::spill(self.world, site.layer, [x, y, z], site.mode == GameMode::Creative);
+        super::bookshelves::spill(self.world, site.layer, [x, y, z], site.mode == GameMode::Creative);
         // BDS sends the fragments before the block; the cell is loaded and not air, so it changes.
         send::to_viewers(self.world, site.layer, [x, y, z], &[particles]);
         if !send::set(self.world, site.layer, [x, y, z], air) {
@@ -255,6 +274,9 @@ impl Request<'_> {
         let builds = site.sneaking || !is_used(name) || held.as_deref().is_some_and(|held| super::copper::is_worked_by(name, held));
         let held = held.filter(|_| builds);
         let at = [click.click_pos.x, click.click_pos.y, click.click_pos.z];
+        if !site.sneaking && super::bookshelves::use_on(self.world, self.entity, site.layer, pos, face, at, site.mode == GameMode::Creative) {
+            return;
+        }
         if held.as_ref().is_some_and(|held| crate::vehicles::place(self.world, self.entity, site.layer, pos, face, at, held)) {
             return;
         }
@@ -290,7 +312,7 @@ impl Request<'_> {
     fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block) {
         let name = block.name.clone();
         let event = plugins::offer(self.world,InteractEvent::new(self.player.clone(), pos, face, block, site.mode != GameMode::Spectator));
-        let used = !event.is_cancelled() && (use_block(self.world, self.entity, site.layer, pos, &name) || doors::use_by_hand(self.world, site.layer, pos, &name));
+        let used = !event.is_cancelled() && (super::bells::ring_by_hand(self.world, self.entity, site.layer, pos, face, &name) || use_block(self.world, self.entity, site.layer, pos, &name) || doors::use_by_hand(self.world, site.layer, pos, &name));
         if !used {
             self.resync(&[pos, face.neighbour(pos), Face::Up.neighbour(pos), Face::Down.neighbour(pos)]);
         }

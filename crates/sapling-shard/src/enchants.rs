@@ -41,7 +41,7 @@ pub(crate) fn mend(world: &mut World, player: Entity, value: i32) -> i32 {
     let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return value };
     let left = inventory.mend(value, |count| pick % count.max(1));
     if left != value && inventory.sent {
-        inventory.send_all(&mut out);
+        inventory.send_all(&mut out, false);
     }
     left
 }

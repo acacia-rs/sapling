@@ -1,4 +1,4 @@
-use std::net::IpAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
 use acacia_nethernet::lan::{DISCOVERY_PORT, ServerData};
@@ -36,6 +36,11 @@ pub struct NetConfig {
     pub compression_threshold: u16,
     /// What one player's client may send a second.
     pub packet_limits: PacketLimits,
+    /// An IPv6 socket beside the game's (BDS's `server-portv6`): RakNet and the query on it too,
+    /// and its port in the pong. None by default.
+    pub bind_v6: Option<SocketAddr>,
+    /// Answer the GameSpy4 query on the game ports (`enable-query`; query.rs). Off by default.
+    pub query: bool,
 }
 
 impl Default for NetConfig {
@@ -54,6 +59,8 @@ impl Default for NetConfig {
             compression: Compression::default(),
             compression_threshold: 1,
             packet_limits: PacketLimits::default(),
+            bind_v6: None,
+            query: false,
         }
     }
 }
@@ -123,11 +130,12 @@ impl Default for Motd {
 }
 
 impl Motd {
-    /// The pong payload; a `;` in a name would shift every field after it.
-    pub(crate) fn pong(&self, guid: u64, players: usize, max_players: usize, port: u16) -> String {
+    /// The pong payload, with the IPv4 and IPv6 ports; a `;` in a name would shift every field
+    /// after it.
+    pub(crate) fn pong(&self, guid: u64, players: usize, max_players: usize, [port, port_v6]: [u16; 2]) -> String {
         let clean = |s: &str| s.replace(';', "");
         let (name, sub_name, game_mode) = (clean(&self.name), clean(&self.sub_name), clean(&self.game_mode));
-        format!("MCPE;{name};{PROTOCOL_VERSION};{GAME_VERSION};{players};{max_players};{guid};{sub_name};{game_mode};1;{port};{port};0;")
+        format!("MCPE;{name};{PROTOCOL_VERSION};{GAME_VERSION};{players};{max_players};{guid};{sub_name};{game_mode};1;{port};{port_v6};0;")
     }
 
     /// The body of `GET /v1/join`: NetherNet's pong.
@@ -177,11 +185,11 @@ mod tests {
     #[test]
     fn pong_has_the_fields_the_server_list_reads() {
         let motd = Motd { name: "a;b".into(), ..Motd::default() };
-        let pong = motd.pong(7, 3, 20, 19132);
+        let pong = motd.pong(7, 3, 20, [19132, 19133]);
         let fields: Vec<&str> = pong.split(';').collect();
         assert_eq!(fields[..2], ["MCPE", "ab"]);
         assert_eq!(fields[2], PROTOCOL_VERSION.to_string());
-        assert_eq!(fields[4..12], ["3", "20", "7", "sapling", "Survival", "1", "19132", "19132"]);
+        assert_eq!(fields[4..12], ["3", "20", "7", "sapling", "Survival", "1", "19132", "19133"]);
     }
 
     #[test]

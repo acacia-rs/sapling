@@ -1,5 +1,5 @@
 //! The server's side of a craft at a workstation (enchanting table, anvil, grindstone, smithing
-//! table): the server works out the result from the screen's own slots, as BDS's `_screenSimCraft`
+//! table, loom (loom.rs), a beacon's payment, a cartography table (cartography.rs)): the server works out the result from the screen's own slots, as BDS's `_screenSimCraft`
 //! does, and the request must use up exactly what that result takes. The rules:
 //! `sapling_data::enchant` and `sapling_data::smithed`; the request shapes and BDS's numbers:
 //! docs/research/workstations.md.
@@ -12,6 +12,11 @@ use sapling_world::ItemStack;
 
 use super::{Held, Inventory, Place, stack};
 
+mod cartography;
+mod loom;
+
+pub(crate) use cartography::{CARTOGRAPHY_INPUT, Chart};
+
 const ANVIL_INPUT: usize = 1;
 const ANVIL_MATERIAL: usize = 2;
 const ENCHANTING_INPUT: usize = 14;
@@ -23,6 +28,7 @@ const SMITHING_MATERIAL: usize = 52;
 const SMITHING_TEMPLATE: usize = 53;
 /// The trading screen's two payment slots.
 const PAYMENT: [usize; 2] = [4, 5];
+const BEACON_PAYMENT: usize = 27;
 
 /// The `Ui` slot a request names a workstation's slot of the kind `kind` by.
 pub(super) fn ui_slot(kind: ContainerSlotType) -> Option<usize> {
@@ -38,6 +44,12 @@ pub(super) fn ui_slot(kind: ContainerSlotType) -> Option<usize> {
         ContainerSlotType::SmithingTableTemplate => SMITHING_TEMPLATE,
         ContainerSlotType::Trade2Ingredient1 | ContainerSlotType::TradeIngredient1 => PAYMENT[0],
         ContainerSlotType::Trade2Ingredient2 | ContainerSlotType::TradeIngredient2 => PAYMENT[1],
+        ContainerSlotType::LoomInput => loom::LOOM_INPUT,
+        ContainerSlotType::LoomDye => loom::LOOM_DYE,
+        ContainerSlotType::LoomMaterial => loom::LOOM_MATERIAL,
+        ContainerSlotType::BeaconPayment => BEACON_PAYMENT,
+        ContainerSlotType::CartographyInput => cartography::CARTOGRAPHY_INPUT,
+        ContainerSlotType::CartographyAdditional => cartography::CARTOGRAPHY_ADDITIONAL,
         _ => return None,
     })
 }
@@ -57,6 +69,10 @@ pub(crate) enum Bench {
     Smithing,
     /// A trader's screen, with its offers.
     Trade(Vec<Bargain>),
+    Loom,
+    /// A beacon's screen, with the beacon's level.
+    Beacon(i32),
+    Cartography(Chart),
 }
 
 /// An offer of an open trading screen as a request pays for it: the recipe id it is named by,
@@ -80,6 +96,13 @@ pub(crate) enum Forged {
     Smithed,
     /// The trader's offer of this place was traded once.
     Traded(usize),
+    Loomed,
+    /// A beacon paid for its primary and secondary effects.
+    Beaconed([i32; 2]),
+    /// A map copied or renamed at a cartography table.
+    Copied,
+    /// A map zoomed out or locked: the map `to` is made from the map `from`.
+    Charted { from: i64, to: i64, zoomed: bool },
 }
 
 /// A craft at a workstation, and what the request used up so far.
@@ -128,8 +151,18 @@ impl Forge {
             Bench::Enchanting(offers) => Self::enchant(inventory, offers, id, creative),
             Bench::Smithing => Self::smith(inventory, id),
             Bench::Trade(bargains) => Self::trade(inventory, bargains, id),
-            Bench::Anvil | Bench::Grindstone => Err(()),
+            Bench::Anvil | Bench::Grindstone | Bench::Loom | Bench::Beacon(_) | Bench::Cartography(_) => Err(()),
         }
+    }
+
+    /// A beacon's payment (`BeaconPayment`), which the request then destroys: one of a beacon's
+    /// payment items, for effects a beacon of `level` offers.
+    pub fn beacon(inventory: &Inventory, level: i32, primary: i32, secondary: i32) -> Result<Self, ()> {
+        let paid = held(inventory, BEACON_PAYMENT).is_some_and(|held| crate::beacons::is_payment(&held.stack.name));
+        if !paid || !crate::beacons::offers(level, primary, secondary) {
+            return Err(());
+        }
+        Ok(Self::new(vec![(Place::Ui(BEACON_PAYMENT), 1)], Forged::Beaconed([primary, secondary])))
     }
 
     fn enchant(inventory: &mut Inventory, offers: &[(u32, Offer)], id: u32, creative: bool) -> Result<Self, ()> {

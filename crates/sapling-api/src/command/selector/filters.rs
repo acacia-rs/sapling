@@ -81,6 +81,37 @@ const INPUTS: [(&str, Input); 11] = [
     ("move_right", Input::MoveRight),
 ];
 
+impl Input {
+    /// Every input, in `haspermission`'s order.
+    pub const ALL: [Input; 11] = [Self::Camera, Self::Movement, Self::LateralMovement, Self::Sneak, Self::Jump, Self::Mount, Self::Dismount, Self::MoveForward, Self::MoveBackward, Self::MoveLeft, Self::MoveRight];
+
+    /// The input `/inputpermission` and `haspermission` call `name` (`move_left`).
+    pub fn named(name: &str) -> Option<Self> {
+        INPUTS.iter().find(|(known, _)| *known == name).map(|(_, input)| *input)
+    }
+
+    pub fn name(self) -> &'static str {
+        INPUTS.iter().find(|(_, input)| *input == self).map_or("", |(name, _)| name)
+    }
+
+    /// Its bit in the client's input locks (UpdateClientInputLocks, research/captures/bds-controls.txt).
+    pub(crate) fn lock(self) -> u32 {
+        match self {
+            Self::Camera => 1 << 1,
+            Self::Movement => 1 << 2,
+            Self::LateralMovement => 1 << 4,
+            Self::Sneak => 1 << 5,
+            Self::Jump => 1 << 6,
+            Self::Mount => 1 << 7,
+            Self::Dismount => 1 << 8,
+            Self::MoveForward => 1 << 9,
+            Self::MoveBackward => 1 << 10,
+            Self::MoveLeft => 1 << 11,
+            Self::MoveRight => 1 << 12,
+        }
+    }
+}
+
 /// What a selector's brackets ask of a candidate. Each test of a list must pass: `tag=a,tag=b`
 /// is both tags.
 #[derive(Debug, Clone, PartialEq, Default)]

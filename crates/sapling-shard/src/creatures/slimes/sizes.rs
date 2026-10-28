@@ -9,25 +9,34 @@ use bevy_ecs::prelude::*;
 use super::super::genes::Gene;
 use crate::blocks::Dice;
 
-/// Of each kind, by size: its box, health, pace, what its touch costs (none for a small slime's)
-/// and how fast across a hop throws it.
+/// Of each kind, by size: its box, health, pace, what its touch costs (none for a small slime's),
+/// and its hop's speed across, as told once the hop's tick has slowed it, and up.
 pub(super) struct Size {
     pub(super) size: [f32; 2],
     health: f32,
-    pace: f32,
+    pub(super) pace: f32,
     pub(super) touch: f32,
     pub(super) hop: f32,
+    pub(super) rise: f32,
 }
 
-const fn size(width: f32, height: f32, health: f32, pace: f32, touch: f32, hop: f32) -> Size {
-    Size { size: [width, height], health, pace, touch, hop }
+const fn size(width: f32, height: f32, health: f32, pace: f32, touch: f32, hop: f32, rise: f32) -> Size {
+    Size { size: [width, height], health, pace, touch, hop, rise }
 }
 
-/// The packs' `slime_small`, `slime_medium` and `slime_large` groups. A slime's hop is not by its
-/// pace: BDS's medium and large ones jumped 0.0856 across, a small one 0.0482 (bds-player-omens.txt,
-/// bds-effects3.txt); a magma cube's was not drilled, and is its pace's as a medium slime's.
-const SLIME: [Size; 3] = [size(0.52, 0.52, 1.0, 0.3, 0.0, 0.0482), size(1.04, 1.04, 4.0, 0.4, 2.0, 0.0856), size(2.08, 2.08, 16.0, 0.6, 4.0, 0.0856)];
-const MAGMA_CUBE: [Size; 3] = [size(0.52, 0.52, 1.0, 0.6, 3.0, 0.1284), size(1.04, 1.02, 4.0, 0.66, 4.0, 0.1412), size(2.08, 2.08, 16.0, 0.75, 6.0, 0.1605)];
+/// The packs' `slime_small`, `slime_medium` and `slime_large` groups. Hops as BDS's told them
+/// (bds-kinds2.txt, bds-player-omens.txt, bds-effects3.txt): a slime's not by its pace, and a magma
+/// cube's 0.1 higher a size. No large slime was drilled: its hop is a medium one's.
+const SLIME: [Size; 3] = [
+    size(0.52, 0.52, 1.0, 0.3, 0.0, 0.0482, 0.42),
+    size(1.04, 1.04, 4.0, 0.4, 2.0, 0.0856, 0.42),
+    size(2.08, 2.08, 16.0, 0.6, 4.0, 0.0856, 0.42),
+];
+const MAGMA_CUBE: [Size; 3] = [
+    size(0.52, 0.52, 1.0, 0.6, 3.0, 0.1926, 0.52),
+    size(1.04, 1.02, 4.0, 0.66, 4.0, 0.2984, 0.62),
+    size(2.08, 2.08, 16.0, 0.75, 6.0, 0.301, 0.82),
+];
 pub(super) const KINDS: [&str; 2] = ["minecraft:slime", "minecraft:magma_cube"];
 const VARIANTS: [i32; 3] = [1, 2, 4];
 const EVENTS: [&str; 3] = ["spawn_small", "spawn_medium", "spawn_large"];

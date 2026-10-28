@@ -15,7 +15,11 @@ const POP_LATE: u64 = 1;
 /// One of the stack the player holds becomes `into`: in its slot when it was the last, else added
 /// to the inventory or, without room, thrown.
 pub(crate) fn swap_held(world: &mut World, player: Entity, into: &str) {
-    let new = ItemStack { name: into.to_owned(), count: 1, damage: 0, block: None, tag: None };
+    swap_held_for(world, player, ItemStack { name: into.to_owned(), count: 1, damage: 0, block: None, tag: None });
+}
+
+/// [`swap_held`] into the stack `new`.
+pub(crate) fn swap_held_for(world: &mut World, player: Entity, new: ItemStack) {
     let spilled = super::change(world, player, |inventory| {
         let slot = super::Place::Main(inventory.selected.into());
         inventory.take(slot, 1).ok()?;

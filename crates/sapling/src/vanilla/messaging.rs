@@ -1,11 +1,12 @@
 //! `/me` and `/tellraw`, as BDS answered them (research/captures/bds-messaging.txt): both go
 //! unanswered when they work; `/tellraw` sends each target its rawtext as a JsonWhisper.
 
-use sapling_api::command::{Args, Parameter, RawPart, RawText, Selector, Text};
+use sapling_api::command::{Args, Parameter, RawPart, RawText, Selector};
 use sapling_api::{Command, Output, Player, PlayerId, ScoreHolder, Sender, ShardCtx};
 
 use super::chat::speaker;
-use super::{display_name, no_target, players, targets};
+use super::message::{Message, names};
+use super::{no_target, players};
 
 /// `text` with each selector replaced by the names it finds from `sender`, `, `-joined, and each
 /// score by the scores of those it names, `*` being `reader`; either left out where it finds
@@ -24,9 +25,7 @@ pub(super) fn resolved(ctx: &mut ShardCtx<'_>, sender: &Sender, text: &RawText, 
             _ => return None,
         };
         let selector = Selector::parse(&mut Args::new(written, 0, sender, &online)).ok()?;
-        let (players, entities) = targets(ctx, sender, Some(&selector));
-        let found = players.into_iter().map(|player| player.name);
-        let names: Vec<String> = found.chain(entities.iter().map(|entity| display_name(entity))).collect();
+        let names = names(ctx, sender, &selector);
         (!names.is_empty()).then(|| RawPart::Text(names.join(", ")))
     })
 }
@@ -34,13 +33,16 @@ pub(super) fn resolved(ctx: &mut ShardCtx<'_>, sender: &Sender, text: &RawText, 
 #[derive(Command)]
 #[command(crate = "crate", name = "me", description = "Displays a message about yourself")]
 pub(crate) struct Me {
-    message: Option<Text>,
+    message: Option<Message>,
 }
 
 impl Command for Me {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         match self.message {
-            Some(message) => ctx.emote(&speaker(sender), &message.0),
+            Some(message) => {
+                let message = message.resolve(ctx, sender);
+                ctx.emote(&speaker(sender), &message);
+            }
             None => out.translate("commands.generic.invalidMessage", Vec::new(), false),
         }
     }

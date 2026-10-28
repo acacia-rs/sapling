@@ -18,7 +18,7 @@ use crate::roster::Elsewhere;
 use crate::timing::{Phase, ShardTiming, TickMeter};
 use crate::visibility::ToViewers;
 use crate::worlds::{Atlas, Changes, Scope};
-use crate::{actors, arenas, blobs, blocks, border, chunks, clock, commands, entities, handlers, handoff, idle, inventory, join, kept, mobs, movement, packs, scoreboard, ticking, visibility, worlds};
+use crate::{actors, arenas, blobs, blocks, border, chunks, clock, commands, emotes, entities, handlers, handoff, idle, inventory, join, kept, mobs, movement, packs, scoreboard, ticking, visibility, worlds};
 
 /// The disconnect screen of the players of a shard that stops.
 const CLOSED: &str = "disconnect.closed";
@@ -82,17 +82,18 @@ impl Shard {
             blobs::blob_status,
             ticking::sweep,
             actors::write_back_before_saving,
+            blocks::write_back_ticks_before_saving,
             chunks::save_and_unload_columns,
             chunks::cancel_unseen_loads,
             kept::keep_columns,
             mobs::despawn_unloaded,
         );
-        let items = (inventory::load, inventory::send_own, inventory::select, inventory::screens, inventory::save_changed);
+        let items = (inventory::load, inventory::send_own, inventory::send_book, inventory::select, inventory::screens, inventory::save_changed);
         schedule.add_systems((join, clock::advance, chunks.chain(), items.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
-        let viewers = (visibility::update, mobs::update, entities::send_held_moves, movement::announce, movement::relay_swings, inventory::announce, visibility::fan_out);
-        after_handlers.add_systems((viewers.chain(), commands::announce, scoreboard::send, flush).chain());
+        let viewers = (visibility::update, mobs::update, entities::send_held_moves, movement::announce, movement::relay_swings, emotes::relay, inventory::announce, visibility::fan_out);
+        after_handlers.add_systems((viewers.chain(), commands::announce, scoreboard::send, inventory::unlock_recipes, flush).chain());
         sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));
         world.init_resource::<PluginState>();
@@ -200,9 +201,15 @@ impl Shard {
     pub fn save_worlds(&mut self) {
         inventory::save_all(&mut self.world);
         actors::write_back(&mut self.world);
+        blocks::write_back_ticks(&mut self.world);
         scoreboard::keep_all(&mut self.world);
+        crate::maps::keep_all(&mut self.world);
+        let config = &self.world.resource::<Settings>().0;
+        let (difficulty, tick_distance) = (config.difficulty as i32, config.tick_distance);
         let mut layers = self.world.query::<&mut Layer>();
         for mut layer in layers.iter_mut(&mut self.world) {
+            let level = layer.world.level_mut();
+            (level.difficulty, level.chunk_tick_range) = (Some(difficulty), Some(tick_distance));
             let failed = layer.world.save_and_wait();
             if failed > 0 {
                 tracing::error!(failed, "columns could not be saved and are lost");
