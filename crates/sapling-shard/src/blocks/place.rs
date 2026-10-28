@@ -122,7 +122,11 @@ impl Request<'_> {
             self.resync(&[against, pos]);
             return None;
         }
-        let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && from_hand;
+        let allowed = if super::command_blocks::Kind::of(&block.name).is_some() || block.name == "minecraft:structure_block" {
+            super::command_blocks::may_edit(self.world, self.entity)
+        } else {
+            site.mode == GameMode::Creative || site.mode == GameMode::Survival && from_hand
+        };
         let event = crate::plugins::offer(self.world, PlaceEvent::new(self.player.clone(), pos, against, click.face, block, allowed));
         let placed = !event.is_cancelled() && self.put(site, pos, click, &event.block);
         if !placed {
@@ -167,6 +171,8 @@ impl Request<'_> {
             let tag = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).and_then(|held| held.stack.tag.clone());
             crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
             super::pistons::furnish(self.world, site.layer, pos);
+            super::command_blocks::furnish(self.world, site.layer, pos, None);
+            super::structure_blocks::furnish(self.world, site.layer, pos, None);
             updates::settle(self.world, site.layer, pos);
             super::summoning::placed(self.world, site.layer, pos, &block.name);
         }

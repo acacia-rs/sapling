@@ -204,7 +204,7 @@ pub(crate) fn dispatch(world: &mut World) {
             outgoing.push(&output_packet(&request.origin, &out));
         }
         if !quiet {
-            echo(world, entity, &name, &out);
+            echo_to_operators(world, Some(entity), &name, &out);
         }
     }
 }
@@ -215,9 +215,9 @@ fn feedback_on(world: &World, sender: Entity) -> bool {
     world.get::<InLayer>(sender).is_none_or(|layer| crate::rules::on(world, layer.0, SEND_COMMAND_FEEDBACK))
 }
 
-/// Shows the other operators on the shard what an operator's command did, as BDS does: a grey
-/// italic `[name: line]`.
-fn echo(world: &mut World, sender: Entity, name: &str, out: &Output) {
+/// Shows the operators on the shard but `sender` what an operator's command or a command block
+/// did, as BDS does: a grey italic `[name: line]`.
+pub(crate) fn echo_to_operators(world: &mut World, sender: Option<Entity>, name: &str, out: &Output) {
     let lines: Vec<Bytes> = out
         .echoed()
         .map(|m| {
@@ -229,7 +229,7 @@ fn echo(world: &mut World, sender: Entity, name: &str, out: &Output) {
         return;
     }
     for operator in in_world(world) {
-        if operator == sender || world.get::<Access>(operator).is_none_or(|access| access.permission != Permission::Operator) {
+        if Some(operator) == sender || world.get::<Access>(operator).is_none_or(|access| access.permission != Permission::Operator) {
             continue;
         }
         if let Some(mut outgoing) = world.get_mut::<Outgoing>(operator) {

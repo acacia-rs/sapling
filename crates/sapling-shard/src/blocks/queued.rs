@@ -30,6 +30,8 @@ pub(crate) enum Job {
     Drip,
     /// A lectern's page-turn pulse starts or ends (lectern.rs).
     Lectern,
+    /// A command block runs (command_blocks/run.rs).
+    Command,
 }
 
 #[derive(Resource, Default)]
@@ -39,6 +41,12 @@ pub(crate) struct Queued(Vec<(u64, Entity, BlockPos, Job)>);
 pub(crate) fn after(world: &mut World, layer: Entity, pos: BlockPos, delay: u64, job: Job) {
     let when = world.resource::<Tick>().0 + delay.max(1);
     world.get_resource_or_insert_with(Queued::default).0.push((when, layer, pos, job));
+}
+
+/// Runs `job` on the block at `pos` later in this tick, or in the next where this tick's jobs ran.
+pub(crate) fn this_tick(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
+    let now = world.resource::<Tick>().0;
+    world.get_resource_or_insert_with(Queued::default).0.push((now, layer, pos, job));
 }
 
 /// Drops what waits of `job` for the block at `pos`.
@@ -73,6 +81,7 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
         "bubble_column" => Job::Bubbles,
         "cauldron" => Job::Drip,
         "lectern" => Job::Lectern,
+        "command_block" | "repeating_command_block" | "chain_command_block" => Job::Command,
         _ => return None,
     })
 }
@@ -114,5 +123,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Bubbles => super::bubbles::settle(world, layer, pos),
         Job::Drip => super::drips::fill(world, layer, pos),
         Job::Lectern => super::lectern::pulse(world, layer, pos),
+        Job::Command => super::command_blocks::tick(world, layer, pos),
     }
 }

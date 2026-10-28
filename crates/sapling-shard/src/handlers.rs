@@ -59,10 +59,15 @@ pub(crate) fn dispatch(world: &mut World) {
     actions::dispatch_moves(world);
     chat::dispatch(world);
     commands::dispatch(world);
+    blocks::show_blocks_again(world);
+    blocks::dispatch_command_block_updates(world);
+    blocks::dispatch_structure_block_updates(world);
+    blocks::dispatch_structure_exports(world);
     blocks::release_buttons(world);
     blocks::press_plates(world);
     blocks::batched(world, blocks::trip_wires);
     blocks::batched(world, blocks::run_queued);
+    crate::structures::animate(world);
     blocks::batched(world, blocks::hear_vibrations);
     blocks::batched(world, blocks::flow_liquids);
     blocks::dispatch(world);

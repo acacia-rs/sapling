@@ -2,9 +2,15 @@
 //! server stops, those saved to disk go with the world's level (`Level::structures`), and those of
 //! the folder's `structures` directory are read from it. Each realm keeps its own, on its overworld.
 
+mod animate;
 mod capture;
+mod export;
 mod place;
 mod turn;
+
+pub(crate) use animate::{Animation, load as load_animated, tick as animate};
+pub(crate) use capture::capture;
+pub(crate) use export::network_nbt;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
@@ -58,6 +64,21 @@ fn keep(world: &mut World, home: Entity, name: String, template: Vec<u8>, to_dis
     }
 }
 
+/// The template kept under `key` exactly: a structure block's name is not namespaced, as BDS
+/// keyed a block's save by the name as typed (research/captures/bds-structblocks.txt).
+pub(crate) fn saved_as(world: &World, layer: Entity, key: &str) -> Option<StructureTemplate> {
+    StructureTemplate::decode(&template_bytes(world, dimensions::home(world, layer), key)?).ok()
+}
+
+/// Keeps the box from `low`, `size` cells along each axis, under `key` exactly; false where a
+/// column of it is not loaded.
+pub(crate) fn save_as(world: &mut World, layer: Entity, key: &str, low: BlockPos, size: [i32; 3], include_entities: bool, to_disk: bool) -> bool {
+    let Some(template) = capture::capture(world, layer, low, size, include_entities, true) else { return false };
+    let home = dimensions::home(world, layer);
+    keep(world, home, key.to_owned(), template.encode(), to_disk);
+    true
+}
+
 impl Ctx<'_> {
     fn structure_home(&self) -> Entity {
         dimensions::home(self.world, worlds::current(self.world))
@@ -87,7 +108,7 @@ impl StructureBackend for Ctx<'_> {
     fn load_structure(&mut self, name: &str, at: BlockPos, how: &StructureLoad) -> Result<(), StructureError> {
         let template = self.saved_template(name)?;
         let layer = worlds::current(self.world);
-        place::place(self.world, layer, &template, at, how);
+        animate::load(self.world, layer, template, at, how, Animation::None, 0.0);
         Ok(())
     }
 

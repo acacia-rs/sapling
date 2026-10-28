@@ -115,6 +115,8 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
         }
         User::Fires { .. } => {}
         User::Bulb { powered } => bulbs::powered(world, layer, pos, powered, signal > 0),
+        User::Command => crate::blocks::command_blocks::powered(world, layer, pos, signal > 0),
+        User::Structure => crate::blocks::structure_blocks::powered(world, layer, pos, signal > 0),
     }
 }
 
