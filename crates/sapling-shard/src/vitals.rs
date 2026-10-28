@@ -26,7 +26,7 @@ mod struck;
 mod totem;
 pub(crate) use shield::{blocks, thrown_back, wields_axe};
 pub(crate) use stand::{break_fall, fallen, falls_freely};
-pub(crate) use splashed::{health_left, is_under, splashed};
+pub(crate) use splashed::{clouded, health_left, is_under, splashed};
 
 use acacia_proto::Packet;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};

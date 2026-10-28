@@ -171,8 +171,27 @@ pub(crate) fn splashed(world: &mut World, mob: Entity, data: i16, share: f32) {
     }
 }
 
+/// A cloud's pulse of the potion of data value `data` on a mob (clouds.rs): `share` of each
+/// effect's time and of an instant one's strength, the undead harmed and mended the other way.
+pub(crate) fn clouded(world: &mut World, mob: Entity, layer: Entity, data: i16, [time, instant]: [f32; 2]) {
+    for gives in sapling_data::potion_effects(data) {
+        let Some(effect) = Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect) else { continue };
+        let strength = 2f32.powi(i32::from(gives.amplifier)) * instant;
+        match effect {
+            Effect::InstantDamage => breathed_on(world, mob, layer, strength),
+            Effect::InstantHealth if is_undead(world, mob) => drop(harm::wound(world, mob, layer, HEALS * strength, Cause::Magic)),
+            Effect::InstantHealth => {
+                if let Some(mut health) = world.get_mut::<Health>(mob) {
+                    health.mend(HEALS * strength);
+                }
+            }
+            _ => drop(give(world, mob, effect, (gives.ticks as f32 * time) as u32, gives.amplifier)),
+        }
+    }
+}
+
 /// A cloud's instant harm on a mob, at `share` of a potion's (the undead are mended instead).
-pub(crate) fn breathed_on(world: &mut World, mob: Entity, layer: Entity, share: f32) {
+fn breathed_on(world: &mut World, mob: Entity, layer: Entity, share: f32) {
     if is_undead(world, mob) {
         if let Some(mut health) = world.get_mut::<Health>(mob) {
             health.mend(HARMS * share);

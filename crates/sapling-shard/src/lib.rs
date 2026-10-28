@@ -18,6 +18,7 @@ mod campfires;
 mod chat;
 mod chunks;
 mod clock;
+mod clouds;
 mod commands;
 mod components;
 mod config;

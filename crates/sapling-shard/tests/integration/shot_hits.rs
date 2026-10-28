@@ -133,7 +133,8 @@ fn a_lingering_potion_of_harming_harms_a_cow_standing_in_its_cloud() {
     spawn(&mut h, "minecraft:cow", [0.5, 65.0, 2.5]);
     let sent = throw(&mut h, 40);
     assert!(gone(&sent, "minecraft:lingering_potion"));
-    assert!(healths(&sent).iter().any(|left| *left < 10.0), "{:?}", healths(&sent));
+    // Half an instant harm, then spared for 40 ticks (AreaEffectCloud::normalTick 1429b01a0).
+    assert_eq!(healths(&sent), [7.0]);
 }
 
 #[test]

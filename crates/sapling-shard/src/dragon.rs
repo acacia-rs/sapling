@@ -130,7 +130,6 @@ pub(crate) fn tick(world: &mut World) {
     }
     // After the dragons: a fireball shot this tick makes its first move in it, as BDS's did.
     fireball::tick(world);
-    cloud::tick(world);
 }
 
 /// An end crystal summoned at `feet`, showing its base as a crystal does unless put down.
