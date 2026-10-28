@@ -45,6 +45,11 @@ impl Inventory {
         }
         out.push(&sapling_data::player_hotbar(self.selected, select_slot));
     }
+
+    /// Sends the client one of its windows alone, as BDS shows an offhand item that wore or went.
+    pub fn send_window(&self, out: &mut Outgoing, window: WindowIDVarint) {
+        out.push(&sapling_data::inventory_content(window, self.window(window)));
+    }
 }
 
 /// The item in a player's hand, as AddPlayer and MobEquipment carry it: without a stack id.

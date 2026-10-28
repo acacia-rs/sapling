@@ -20,6 +20,7 @@ mod brewing;
 mod bonemeal;
 mod chat;
 mod chunks;
+mod combat;
 mod commands;
 mod container_access;
 mod containers;

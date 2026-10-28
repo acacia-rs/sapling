@@ -59,7 +59,12 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
     let far = dx.hypot(dz);
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
     let [along, up] = if hunts.upto.is_some() { FLINGS } else { [THROW; 2] };
-    let bitten = vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
+    let blocked = vitals::blocks(world, prey, body.at, harm, super::super::Cause::Attack, vitals::wields_axe(kind));
+    if blocked && let Some(mut thrown) = world.get_mut::<Body>(entity) {
+        let back = vitals::thrown_back(thrown.motion, [-away[0], -away[1]]);
+        thrown.throw(back);
+    }
+    let bitten = !blocked && vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
     if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
         vitals::afflict(world, prey, effect, ticks);
     }

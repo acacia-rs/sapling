@@ -10,7 +10,8 @@ pub(crate) mod eating;
 pub(crate) mod effects;
 pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, give as give_effect, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, boomed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
+pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
+mod hazards;
 mod hunger;
 mod kept;
 mod last_death;
@@ -18,7 +19,11 @@ pub(crate) use last_death::{LastDeath, greeting as last_death_greeting};
 mod omens;
 mod splashed;
 mod stand;
+mod shield;
 mod struck;
+mod totem;
+pub(crate) use shield::{blocks, thrown_back, wields_axe};
+pub(crate) use stand::falls_freely;
 pub(crate) use splashed::{health_left, is_under, splashed};
 
 use acacia_proto::Packet;
@@ -224,6 +229,7 @@ fn land(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     if cause.is_stopped_by_armour() {
         crate::inventory::wear_armour(world, player, whole, cause.is_on_the_head());
     }
+    totem::rescue(world, player, cause);
     if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0) {
         flash(world, player, cause);
         omens::hurt(world, player);
@@ -256,6 +262,7 @@ pub(crate) fn tick(world: &mut World) {
     death::rise(world);
     eating::tick(world);
     effects::tick(world);
+    shield::tick(world);
     let players: Vec<(Entity, Entity)> = in_world(world).into_iter().filter_map(|player| Some((player, world.get::<InLayer>(player)?.0))).collect();
     for (player, layer) in players {
         if is_mortal(world, player) {
