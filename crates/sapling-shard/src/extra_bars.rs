@@ -23,7 +23,17 @@ struct Shown {
 }
 
 #[derive(Component, Default)]
-pub(crate) struct ExtraBars(BTreeMap<u32, Shown>);
+pub(crate) struct ExtraBars(BTreeMap<BarKey, Shown>);
+
+/// Whose a bar is. A game bar that is no boss's own (a raid's) takes a slot here rather than the
+/// player's own id, which `ctx.set_boss_bar` uses; the dragon's and the wither's hang on themselves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum BarKey {
+    Plugin(u32),
+    // TODO: creatures/raids (on master, not this branch) should show its bar under this key.
+    #[allow(dead_code)]
+    Raid,
+}
 
 /// A new unseen entity at `at`, told to `player` alone.
 fn add_holder(world: &mut World, player: Entity, at: [f32; 3]) -> Option<u64> {
@@ -34,7 +44,7 @@ fn add_holder(world: &mut World, player: Entity, at: [f32; 3]) -> Option<u64> {
     Some(id)
 }
 
-pub(crate) fn set(world: &mut World, player: Entity, key: u32, bar: Option<&BossBar>) {
+pub(crate) fn set(world: &mut World, player: Entity, key: BarKey, bar: Option<&BossBar>) {
     let Some(feet) = world.get::<Position>(player).map(|p| p.feet) else { return };
     if world.get::<ExtraBars>(player).is_none() {
         world.entity_mut(player).insert(ExtraBars::default());

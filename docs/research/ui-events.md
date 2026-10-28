@@ -51,6 +51,9 @@ How events are raised in general: `plugin-api.md`.
   more than 8 blocks away on any axis.
 - The player's own bar is unchanged: it stays on the player's own id (DESIGN.md "Boss bar").
 - Bars are shown in key order.
+- Game bars that belong to no boss entity take a slot of their own as well
+  (`extra_bars::BarKey::Raid`), so a raid's bar does not overwrite the plugin bar on the player's id.
+  The dragon's and the wither's bars stay on their own entity ids, as on BDS.
 - A removed bar gets HideBar, then RemoveEntity for its entity.
 - Source: gophertunnel `BossEvent` (the id is an entity unique id), and the vanilla client's
   per-actor bar map. PocketMine's bossbar plugins work the same way.

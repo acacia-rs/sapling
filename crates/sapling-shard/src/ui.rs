@@ -64,7 +64,7 @@ impl UiBackend for Ctx<'_> {
 
     fn set_extra_boss_bar(&mut self, player: PlayerId, key: u32, bar: Option<&BossBar>) {
         if let Some(entity) = self.entity(player) {
-            crate::extra_bars::set(self.world, entity, key, bar);
+            crate::extra_bars::set(self.world, entity, crate::extra_bars::BarKey::Plugin(key), bar);
         }
     }
 
