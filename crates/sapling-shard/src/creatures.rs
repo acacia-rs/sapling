@@ -52,6 +52,7 @@ mod splashes;
 mod squids;
 mod strolling;
 mod stares;
+mod strides;
 mod struck;
 mod summoned;
 mod swimming;

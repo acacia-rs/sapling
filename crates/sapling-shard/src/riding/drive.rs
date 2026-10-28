@@ -2,7 +2,8 @@
 //! to their seat): a driver whose client moves its vehicle itself (a boat, a tamed and saddled
 //! horse: `ClientPredictedVehicle`) reports where the vehicle is, and the vehicle is put there, as
 //! BDS takes it (acacia's docs/research/riding-fishing-elytra.md). A rider leaves on an
-//! `Interact LeaveVehicle`, which a client sends for sneak too, where its client put it.
+//! `Interact LeaveVehicle`, which a client sends for sneak too, where its client put it. A
+//! horse rears through its jumps (rearing.rs).
 // TODO: BDS also simulates a predicted vehicle and corrects its driver; drivers are trusted here.
 
 use acacia_proto::packets::PlayerAuthInput;
@@ -85,6 +86,9 @@ fn follow(world: &mut World, driver: Entity, vehicle: Entity, [x, y, z]: [f32; 3
     let (motion, on_ground) = (body.motion, body.on_ground);
     let tick = world.resource::<Tick>().0;
     world.entity_mut(vehicle).insert(Driven(tick));
+    if let Some(reared) = (!BOATS.contains(&kind.as_str())).then(|| super::rearing::rear(world, vehicle, id, &kind, motion[1])).flatten() {
+        crate::blocks::to_viewers(world, layer, feet.map(|c| c.floor() as i32), &[reared]);
+    }
     let Some(mut told) = world.get_mut::<Told>(vehicle) else { return };
     told.face(yaw, yaw);
     let packets = told.update(id, [x, y, z], motion, on_ground);

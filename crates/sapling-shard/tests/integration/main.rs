@@ -108,6 +108,7 @@ mod spawners;
 mod spawning;
 mod spectators;
 mod stored_mobs;
+mod strides;
 mod structures;
 mod survival;
 mod throws;
