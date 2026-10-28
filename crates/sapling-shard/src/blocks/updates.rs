@@ -24,7 +24,7 @@ const STANDS: &[&str] = &[
     "dry_grass", ":bush", "firefly_bush", "azalea", "dripleaf", "chorus_plant", "chorus_flower",
 ];
 /// Blocks whose `facing_direction` names the face of the block they hang or stand on.
-const HANGS: &[&str] = &["ladder", "button", "wall_sign", "wall_banner"];
+const HANGS: &[&str] = &["ladder", "button", "wall_sign", "wall_banner", ":frame", "glow_frame"];
 const FACES: [&str; 6] = ["0", "1", "2", "3", "4", "5"];
 /// A torch's `torch_facing_direction` on each face of its block, as facing.rs places it.
 const TORCH_ON: [&str; 6] = ["top", "top", "south", "north", "east", "west"];

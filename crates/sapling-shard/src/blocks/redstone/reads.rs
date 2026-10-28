@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
-use sapling_api::BlockPos;
+use sapling_api::{BlockPos, Face};
 
 use super::capacitors::{fullness, state_signal};
 use super::parts::Part;
@@ -15,17 +15,24 @@ use crate::containers;
 /// What each comparator of `circuit` reads.
 pub(super) fn read_containers(world: &mut World, layer: Entity, circuit: &Circuit) -> HashMap<BlockPos, u8> {
     let mut part = reader(world, layer);
-    let behind: Vec<(BlockPos, BlockPos, Option<BlockPos>)> = (circuit.sources.iter().chain(&circuit.changed))
+    let behind: Vec<(BlockPos, BlockPos, Option<BlockPos>, Face)> = (circuit.sources.iter().chain(&circuit.changed))
         .filter_map(|pos| match part(*pos) {
             Part::Comparator { input, .. } => {
                 let near = input.neighbour(*pos);
-                Some((*pos, near, (part(near) == Part::Conductor).then(|| input.neighbour(near))))
+                Some((*pos, near, (part(near) == Part::Conductor).then(|| input.neighbour(near)), input))
             }
             _ => None,
         })
         .collect();
     drop(part);
-    behind.into_iter().filter_map(|(pos, near, far)| Some((pos, read(world, layer, near).or_else(|| read(world, layer, far?))?))).collect()
+    behind.into_iter().filter_map(|(pos, near, far, input)| Some((pos, read(world, layer, near).or_else(|| read_past(world, layer, far?, input))?))).collect()
+}
+
+/// What a comparator reads past a solid block, at `far`: the block there, and a frame on the
+/// block's back facing `input`, whichever is stronger.
+fn read_past(world: &mut World, layer: Entity, far: BlockPos, input: Face) -> Option<u8> {
+    let framed = crate::blocks::frames::signal(world, layer, far, input);
+    read(world, layer, far).max(framed)
 }
 
 fn by_state(world: &World, layer: Entity, at: BlockPos) -> Option<u8> {

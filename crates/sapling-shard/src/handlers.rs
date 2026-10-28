@@ -67,6 +67,7 @@ pub(crate) fn dispatch(world: &mut World) {
     blocks::dispatch_structure_exports(world);
     blocks::release_buttons(world);
     blocks::press_plates(world);
+    blocks::tilt_dripleaves(world);
     blocks::batched(world, blocks::trip_wires);
     blocks::batched(world, blocks::run_queued);
     crate::structures::animate(world);
@@ -101,6 +102,7 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::inventory::number_bundles(world);
     crate::inventory::sweep_bundles(world);
     blocks::turn_lectern_pages(world);
+    blocks::answer_lodestone_queries(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
     containers::show_turned_barrels(world);

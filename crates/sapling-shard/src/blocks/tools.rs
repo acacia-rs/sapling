@@ -131,8 +131,6 @@ fn change(registry: &BlockRegistry, held: &str, id: u32, face: Face) -> Option<C
         }
         "ender_eye" if bare == "end_portal_frame" && get("end_portal_eye_bit") == Some("0") => done(set("end_portal_eye_bit", "1")?, Told::Sound("block.end_portal_frame.fill", [0.5, 1.0, 0.5], false), Cost::Spend),
         "flint_and_steel" if bare.ends_with("campfire") && get("extinguished") == Some("1") => done(set("extinguished", "0")?, Told::Sound("ignite", CORNER, false), Cost::Wear),
-        // The compass is not bound to the place: it is a lodestone compass by name only.
-        "compass" if bare == "lodestone" => done(id, sound("lodestone_compass.link_compass_to_lodestone"), Cost::Becomes("minecraft:lodestone_compass")),
         "glowstone" if bare == "respawn_anchor" => {
             let charge: u8 = get("respawn_anchor_charge")?.parse().ok()?;
             done(set("respawn_anchor_charge", &(charge + 1).to_string()).filter(|_| charge < ANCHOR_FULL)?, sound("respawn_anchor.charge"), Cost::Spend)
@@ -204,6 +202,9 @@ impl Request<'_> {
             if site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
             }
+            return true;
+        }
+        if super::lodestone::bind(self.world, self.entity, site.layer, pos, held) {
             return true;
         }
         if held == FLINT_AND_STEEL && crate::tnt::light(self.world, site.layer, pos) {

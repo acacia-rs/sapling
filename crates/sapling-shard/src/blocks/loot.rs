@@ -177,19 +177,22 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
 }
 
 /// The tags a broken block's entity gives the items it leaves, which a plugin's [`Item`] cannot
-/// carry: each goes on the first spilled stack of its item.
+/// carry: each goes, in order, on the next spilled stack of its item; a `None` keeps that stack's
+/// place for an untagged held stack.
 #[derive(Default)]
-pub(super) struct Tags(Vec<(&'static str, acacia_proto::nbt::Value)>);
+pub(super) struct Tags(Vec<(String, Option<acacia_proto::nbt::Value>)>);
 
 impl Tags {
     /// Whether one goes on a stack of the item `name`.
     pub(super) fn tags(&self, name: &str) -> bool {
-        self.0.iter().any(|(tagged, _)| *tagged == name)
+        self.0.iter().any(|(tagged, _)| tagged == name)
     }
 
     fn put_on(&mut self, stack: &mut sapling_world::ItemStack) {
-        if let Some(at) = self.0.iter().position(|(name, _)| *name == stack.name) {
-            stack.tag = Some(self.0.remove(at).1);
+        if let Some(at) = self.0.iter().position(|(name, _)| *name == stack.name)
+            && let Some(tag) = self.0.remove(at).1
+        {
+            stack.tag = Some(tag);
         }
     }
 }

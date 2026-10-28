@@ -41,6 +41,7 @@ fn met(at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3]) -> Op
 pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3], sticks: bool, burning: bool) {
     let Some((pos, axis, point)) = met(at, motion, size, stopped) else { return };
     super::shot_blocks::shot(world, layer, pos, kind, motion);
+    super::dripleaf::shot(world, layer, pos);
     if burning && crate::tnt::light(world, layer, pos) {
         return;
     }

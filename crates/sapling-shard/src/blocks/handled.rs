@@ -101,7 +101,7 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
             }
             let air = registry.air_id();
             send::set(world, layer, pos, air);
-            crate::creatures::explode(world, None, layer, pos.map(|c| c as f32 + 0.5), ANCHOR_POWER, crate::creatures::Wreck::Decays);
+            crate::creatures::explode_burning(world, layer, pos.map(|c| c as f32 + 0.5), ANCHOR_POWER, crate::creatures::Wreck::Decays);
             true
         }
         "minecraft:dragon_egg" => {

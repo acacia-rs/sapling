@@ -223,7 +223,11 @@ impl LevelDbStorage {
         let (structures, folder_structures) = (structures.into(), folder_structures.into());
         let (time, weather, difficulty) = (dat.time().unwrap_or(Level::default().time), dat.weather().unwrap_or(Level::default().weather), dat.difficulty());
         let maps = maps.into();
-        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, hardcore, weather, difficulty, chunk_tick_range: None }
+        let (trackers, last_tracker) = self.0.load_trackers().unwrap_or_else(|error| {
+            tracing::warn!(%error, "the lodestone targets are unreadable; compasses find none");
+            (Vec::new(), 0)
+        });
+        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, hardcore, weather, difficulty, chunk_tick_range: None }
     }
 }
 
@@ -286,6 +290,7 @@ impl WorldStorage for LevelDbStorage {
         self.0.store_structures(&structures)?;
         self.0.store_ticking_areas(&level.ticking_areas)?;
         self.0.store_maps(&level.maps)?;
+        self.0.store_trackers(&level.trackers, level.last_tracker)?;
         Ok(self.0.flush(&dat)?)
     }
 

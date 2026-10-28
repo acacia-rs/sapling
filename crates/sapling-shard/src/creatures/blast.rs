@@ -105,17 +105,44 @@ pub(crate) enum Wreck {
 
 /// A blast of `power` at `at`: of `source`, if an entity made it, which is gone with it.
 pub(crate) fn explode(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
-    blow(world, source, layer, at, power, wreck, false);
+    blow(world, source, layer, at, power, wreck, Rule::Plain);
 }
 
 /// As [`explode`], a ghast's fireball's blast, by its own rule ([`reaches`]).
 pub(super) fn explode_fireball(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
-    blow(world, Some(source), layer, at, power, wreck, true);
+    blow(world, Some(source), layer, at, power, wreck, Rule::Fireball);
 }
 
-fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, fireball: bool) {
+/// As [`explode`] with no source, a blast that sets fire: a bed's or a respawn anchor's.
+pub(crate) fn explode_burning(world: &mut World, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
+    blow(world, None, layer, at, power, wreck, Rule::Burning);
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Rule {
+    Plain,
+    Fireball,
+    Burning,
+}
+
+/// Lights about a third of `cells`, each free over a solid block, as the Java game's
+/// `Explosion.finalizeExplosion` with fire.
+fn set_fires(world: &mut World, layer: Entity, cells: &[[i32; 3]]) {
+    for &[x, y, z] in cells {
+        if world.get_resource_or_insert_with(blocks::Dice::default).roll(3) != 0 {
+            continue;
+        }
+        let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world).filter(|level| level.in_height(y - 1)) else { continue };
+        if level.registry().get(level.block(x, y - 1, z)).is_some_and(|under| under.is_solid()) {
+            blocks::light_fire(world, layer, [x, y, z]);
+        }
+    }
+}
+
+fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, rule: Rule) {
     crate::blocks::vibrate(world, layer, at, crate::blocks::GameEvent::Explode, false);
-    let cells = if wreck != Wreck::Nothing { rays::broken(world, layer, at, power) } else { Vec::new() };
+    let fireball = rule == Rule::Fireball;
+    let (cells, free) = if wreck != Wreck::Nothing { rays::broken(world, layer, at, power) } else { Default::default() };
     let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
         let kind = source.and_then(|source| world.get::<entities::Kind>(source)).map(|kind| kind.0.clone());
         let blast = crate::plugins::offer_in(world, layer, ExplosionEvent::new(at, kind, power, cells));
@@ -176,6 +203,9 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
             Wreck::Nothing | Wreck::Breaks => 0.0,
         };
         blocks::blow_out(world, layer, &cells, leaves);
+    }
+    if rule == Rule::Burning {
+        set_fires(world, layer, &[cells, free].concat());
     }
 }
 

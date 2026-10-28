@@ -1,6 +1,8 @@
 //! A blast's rays: which blocks it breaks, and how much of a body it sees (BDS's
 //! `Explosion::explode` and `BlockSource::getSeenPercent`, docs/research/block-uses.md "Blasts").
 
+use std::collections::BTreeSet;
+
 use acacia_physics::{Aabb, WorldView};
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
@@ -26,18 +28,18 @@ fn wet(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     level.in_height(y) && (is_water(level, level.block(x, y, z)) || is_water(level, level.liquid(x, y, z)))
 }
 
-/// The cells a blast of `power` at `at` breaks, none where its middle is in water. A ray stops
-/// at water; air costs it nothing.
-pub(super) fn broken(world: &mut World, layer: Entity, at: [f32; 3], power: f32) -> Vec<[i32; 3]> {
+/// The cells a blast of `power` at `at` breaks, none where its middle is in water, and the free
+/// cells its rays cross. A ray stops at water; air costs it nothing.
+pub(super) fn broken(world: &mut World, layer: Entity, at: [f32; 3], power: f32) -> (Vec<[i32; 3]>, Vec<[i32; 3]>) {
     let strengths: Vec<f32> = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         (0..RAYS * RAYS * RAYS).map(|_| power * (0.7 + dice.fraction() * 0.6)).collect()
     };
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return Vec::new() };
+    let (mut cells, mut free) = (Vec::new(), BTreeSet::new());
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return (cells, Vec::new()) };
     if wet(level, at.map(|c| c.floor() as i32)) {
-        return Vec::new();
+        return (cells, Vec::new());
     }
-    let mut cells = Vec::new();
     let edge = |i: i32| i == 0 || i == RAYS - 1;
     for (ray, [i, j, k]) in (0..RAYS).flat_map(|i| (0..RAYS).flat_map(move |j| (0..RAYS).map(move |k| [i, j, k]))).enumerate().filter(|(_, [i, j, k])| edge(*i) || edge(*j) || edge(*k)) {
         let towards = [i, j, k].map(|c| c as f32 / (RAYS - 1) as f32 * 2.0 - 1.0);
@@ -50,17 +52,23 @@ pub(super) fn broken(world: &mut World, layer: Entity, at: [f32; 3], power: f32)
             }
             let [x, y, z] = cell;
             let state = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten();
-            if let Some(state) = state.filter(|state| !state.is_air()) {
-                left -= (sapling_data::blast_resistance(state.name).unwrap_or(0.0) + STEP) * STEP;
-                if left > 0.0 && !cells.contains(&cell) {
-                    cells.push(cell);
+            match state.filter(|state| !state.is_air()) {
+                Some(state) => {
+                    left -= (sapling_data::blast_resistance(state.name).unwrap_or(0.0) + STEP) * STEP;
+                    if left > 0.0 && !cells.contains(&cell) {
+                        cells.push(cell);
+                    }
                 }
+                None if state.is_some() => {
+                    free.insert(cell);
+                }
+                None => {}
             }
             here = std::array::from_fn(|axis| here[axis] + towards[axis] / long * STEP);
             left -= FADES;
         }
     }
-    cells
+    (cells, free.into_iter().collect())
 }
 
 /// The share of points through a body's box `min` to `max` that see `at` past every block's

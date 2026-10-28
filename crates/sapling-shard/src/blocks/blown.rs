@@ -25,6 +25,7 @@ pub(crate) fn blow_out(world: &mut World, layer: Entity, cells: &[BlockPos], lea
         let broken = level(world, layer).and_then(|level| level.registry().get(level.block(x, y, z))).map(|state| (state.name.to_owned(), state.properties.to_owned()));
         let kept = leaves >= 1.0 || (leaves > 0.0 && world.get_resource_or_insert_with(super::Dice::default).fraction() < leaves);
         if let Some((name, properties)) = broken.filter(|_| kept) {
+            super::infested::release(world, layer, cell, &name, false);
             let mut items = loot::thrown(world, &name, &properties, &Breaker::UNAIDED);
             let mut tags = loot::add_entity_loot(world, layer, cell, &mut items);
             // A tagged stack (a banner's patterns) is its own, merged with none.

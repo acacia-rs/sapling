@@ -162,6 +162,9 @@ fn set_occupied(world: &mut World, layer: Entity, head: BlockPos, occupied: bool
 /// `BedBlock::use_sleep`, checks in its order). False for any other block.
 pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
     let Some(head) = (name == BED).then(|| bed_head(world, layer, pos)).flatten() else { return name == BED };
+    if crate::blocks::bed_bursts(world, layer, head) {
+        return true;
+    }
     let occupied = world.get::<Layer>(layer).is_some_and(|level| {
         let id = level.world.block(head[0], head[1], head[2]);
         level.world.registry().get(id).and_then(|state| state.property(OCCUPIED)) == Some("1")
