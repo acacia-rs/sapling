@@ -26,6 +26,8 @@ fn describe(event: BotEvent) -> Option<String> {
         }
         Text::ID => match raw.decode::<Text>().expect("decodes").content {
             TextContent::Chat(chat) => format!("chat {:?} {}", chat.source_name, chat.message),
+            TextContent::Announcement(said) => format!("say {:?} {}", said.source_name, said.message),
+            TextContent::Whisper(told) => format!("whisper {:?} {}", told.source_name, told.message),
             TextContent::JsonWhisper(json) => format!("json {}", json.message.trim_end()),
             _ => return None,
         },
@@ -124,5 +126,34 @@ async fn messages_titles_sounds_and_particles_go_out_as_bds_sent_them() {
     assert_eq!(watched, [r#"chat "" * Alice waves"#, hi, "title SetTitle Hello there [-1, -1, -1]", "title SetDurations  [5, 40, 10]", particle, end]);
     alice.disconnect().await;
     bob.disconnect().await;
+    server.shutdown().await;
+}
+
+/// Selectors in `/say`, `/me` and `/tell` messages, as research/captures/bds-saysel.txt has them.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn selectors_in_messages_are_resolved_as_bds_resolved_them() {
+    let server = common::start(crate::common::builder().handler(Operators).vanilla_commands()).await;
+    let subscribe = [CommandOutput::ID, Text::ID].into_iter().fold(PacketFilter::none(), PacketFilter::with);
+    let config = || BotConfig { subscribe: subscribe.clone(), ..BotConfig::default() };
+    let mut alice = common::spawn(common::client(&server, "Alice"), config()).await;
+    let _bob = common::spawn(common::client(&server, "Bob"), config()).await;
+    alice.wait_ticks(20).await.expect("connected");
+
+    let steps: [(&str, &[&str]); 10] = [
+        ("say hi @s", &[r#"say "Alice" [Alice] hi Alice"#]),
+        ("say hi @a", &[r#"say "Alice" [Alice] hi Alice, Bob"#]),
+        ("say @s@s a@s", &[r#"say "Alice" [Alice] AliceAlice aAlice"#]),
+        ("say hi @p[name=nobody] x", &[r#"say "Alice" [Alice] hi  x"#]),
+        (r#"say mail@example.com @here @ @x "@s" @initiator"#, &[r#"say "Alice" [Alice] mail@example.com @here @ @x "@s" "#]),
+        ("say hi @s[bad=1] y", &[r#"answer commands.generic.syntax ["say hi @s[", "bad", "=1] y"] 0"#]),
+        ("say hi @s[ y", &[r#"answer commands.generic.syntax ["y hi @s[ y", "", ""] 0"#]),
+        ("me waves at @a", &[r#"chat "" * Alice waves at Alice, Bob"#]),
+        ("tell Alice hi @s", &[r#"whisper "Alice" hi Alice"#, r#"answer commands.message.display.outgoing ["Alice", "hi Alice"] 1"#]),
+        ("execute as @a[name=Bob] run say I am @s", &[r#"say "Bob" [Bob] I am Bob"#]),
+    ];
+    for (line, expected) in steps {
+        assert_eq!(run(&mut alice, line).await, expected, "/{line}");
+    }
+    alice.disconnect().await;
     server.shutdown().await;
 }

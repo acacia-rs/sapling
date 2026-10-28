@@ -1,0 +1,11 @@
+## drill starts at 1793203672581
+  10889 actor   Text Text { category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "Server", message: "[Server] hi CmdActor, CmdWatcher" })
+  10889 watcher Text Text { category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "Server", message: "[Server] hi CmdActor, CmdWatcher" })
+  12391 watcher Text Text { category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "Server", message: "[Server] hi  x" })
+  12391 actor   Text Text { category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "Server", message: "[Server] hi  x" })
+  13899 actor   Text Text { category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "Server", message: "[Server] hi CmdActor, CmdWatcher x" })
+  13899 watcher Text Text { category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "Server", message: "[Server] hi CmdActor, CmdWatcher x" })
+  15403 actor   Text Text { category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* Server waves CmdActor, CmdWatcher" })
+  15403 watcher Text Text { category: Authored, type: Chat, content: Chat(TextContentChat { source_name: "", message: "* Server waves CmdActor, CmdWatcher" })
+  16903 actor   Text Text { category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "Server", message: "hi " })
+  16903 watcher Text Text { category: Authored, type: Whisper, content: Whisper(TextContentWhisper { source_name: "Server", message: "hi " })

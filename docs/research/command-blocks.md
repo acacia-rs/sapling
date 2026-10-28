@@ -58,6 +58,6 @@ refused (ran this tick, blocks off) ends the chain.
   public `Sender` variant or `Executed` field).
 - A repeating block made always active by its editor first ran ~8 ticks into a 10-tick delay on BDS; sapling waits 9.
 - Minecarts with command blocks.
-- `say @s` from a block: BDS said `[!§r] ` (the selector matched nothing), sapling `[Server] @s`: sapling's `/say`
-  does not resolve selectors in its message.
+- `say hi @s` from a block: BDS said `[!§r] hi ` (bds-saysel.txt), sapling `[Server] hi `: the selector resolves
+  as BDS's did, the name is the console's (above).
 - `seed` and `version` are sapling commands, so a block runs them; BDS has neither (a syntax error).

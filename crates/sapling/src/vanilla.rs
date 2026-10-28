@@ -28,6 +28,7 @@ mod enchanting;
 mod execute;
 mod items;
 mod loot;
+mod message;
 mod messaging;
 mod names;
 mod operators;
