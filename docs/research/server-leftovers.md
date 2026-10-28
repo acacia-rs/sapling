@@ -1,7 +1,6 @@
 # Server leftovers: /list, /stop, /save, /reload, /permission
 
-BDS 1.26.52 (`.testserver/bds-blocks/bedrock_server.exe`), read with bdsre `dis` (pseudo-C does not run on
-Linux: its radare2 is the Windows build). Captures: research/captures/bds-cmdlist.txt, bds-ui-operator.txt,
+BDS 1.26.52 (`.testserver/bds-blocks/bedrock_server.exe`), read with bdsre `dis` and, later, `c`. Captures: research/captures/bds-cmdlist.txt, bds-ui-operator.txt,
 bds-console-cmds.txt.
 
 ## Levels
@@ -59,6 +58,25 @@ Mode at `[this+0x20]`: 0 list, 1 reload, 2 another (not a client overload; not b
   `command.permissions.list.fail.filenotfound` (error).
 sapling applies a reloaded role to each online player with an XUID, as on join.
 
+## Soft enums
+
+`AvailableCommands.dynamic_enums` carries them, and the parameter flag is 0x410 (`SoftEnum`, acacia-proto).
+`UpdateSoftEnum` add/remove/update changes them. sapling sends a player the enums changed since the build
+right after the list, so a player sent the list late still gets the current words.
+
+## Peaceful (bdsre `c`, pseudo-C now runs on Linux)
+
+- `Monster`'s constructor (0x14298f180) emplaces `MonsterFlagComponent` and `RemoveInPeacefulFlagComponent`.
+- `Monster::normalTick` (0x14298f410) calls `Mob::normalTick`. Then, if the level's difficulty (vfn 0x120)
+  is 0 and the actor has the flag, it calls the actor's vfn 0x58 (remove). No drop, death or name check.
+- The `setDifficulty` lambda (0x140847630) walks the level's actors and collects every flagged one, so a
+  change to peaceful takes them at once.
+- These constructors erase the flag: `HumanoidMonster` (piglin, 0x142990d10) and `EnderDragon`
+  (0x145993350). `PiglinBrute` (0x1429910f0) puts it back. Hoglin is not a `Monster`.
+- Walking the actor factory 0x141e9b120 found these type ids reaching `Monster`'s constructor:
+  32-45, 49, 50, 52, 53, 55, 57-59, 104, 105, 114, 123, 126, 127, 131, 140, 146, 153.
+- sapling uses the packs' `monster` family minus piglin and dragon (spawning/peaceful.rs).
+
 ## Not drilled
 
 - `/save`'s file list: which files BDS lists (sapling: every file but LOCK/LOG), their order and separator
@@ -67,3 +85,7 @@ sapling applies a reloaded role to each online player with an XUID, as on join.
   the JSON's spacing.
 - `/reload all` on BDS (sapling: `commands.reload.onlyHost`).
 - `/stop` run by command rather than typed in BDS's console.
+- Peaceful's set of kinds: the factory walk (depth 7) did not reach every `monster`-family kind. For
+  example stray, husk, wither skeleton, drowned and bogged are missing, likely through shared subclass
+  constructors. sapling assumes the family matches the class; a live check on BDS would settle it.
+- The tick a monster goes after `/difficulty peaceful` (sapling: the same tick, after despawning).

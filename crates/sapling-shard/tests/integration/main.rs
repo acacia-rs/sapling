@@ -101,6 +101,7 @@ mod players;
 mod raids;
 mod plugin_damage;
 mod paintings;
+mod peaceful;
 mod phantoms;
 mod piglins;
 mod hand_events;

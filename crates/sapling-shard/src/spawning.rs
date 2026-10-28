@@ -7,6 +7,7 @@ mod despawn;
 mod eggs;
 mod gates;
 mod herds;
+mod peaceful;
 mod phantoms;
 mod spots;
 
@@ -22,6 +23,7 @@ use crate::view::View;
 
 pub(crate) use despawn::tick as despawn;
 pub(crate) use eggs::{hatch, kind_of as egg_kind};
+pub(crate) use peaceful::{removed_in_peaceful, tick as remove_in_peaceful};
 pub(crate) use phantoms::Rested;
 
 const MOB_SPAWNING: &str = "doMobSpawning";
