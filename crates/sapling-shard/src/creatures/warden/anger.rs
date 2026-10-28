@@ -73,9 +73,14 @@ pub(super) fn ambient(anger: u32) -> &'static str {
 mod tests {
     use super::*;
 
+    fn suspects<const N: usize>() -> [Entity; N] {
+        let mut world = bevy_ecs::world::World::new();
+        std::array::from_fn(|_| world.spawn_empty().id())
+    }
+
     #[test]
     fn three_disturbances_make_it_angry_as_bds_heard_them() {
-        let suspect = Entity::from_raw(7);
+        let [suspect] = suspects();
         let mut anger = Anger::default();
         assert_eq!((anger.raise(suspect, ANNOYS), heartbeat(anger.level())), ("listening", 27));
         anger.cool(|_| true);
@@ -88,7 +93,7 @@ mod tests {
 
     #[test]
     fn anger_is_capped_and_cools_away() {
-        let (one, two) = (Entity::from_raw(1), Entity::from_raw(2));
+        let [one, two] = suspects();
         let mut anger = Anger::default();
         for _ in 0..5 {
             anger.raise(one, HIT);
