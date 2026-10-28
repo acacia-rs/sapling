@@ -43,6 +43,5 @@ any face but up, potions and glass bottles, only into an empty slot. A hopper be
 
 ## sapling gaps
 
-- A hopper fills a glass bottle onto a non-empty bottle slot (TODO in brewing.rs).
 - A stand nobody looks into starts brewing what a hopper brought only at the next ticking sweep.
 - Finish order on the wire: sapling tells slot 0 before 1-3.
