@@ -113,7 +113,9 @@ these its own components (not its component groups) say, by `data/generate/mob-t
 `xp=least-most` (`minecraft:experience_reward` of the entity or of a group not named for a baby, the
 part after `last_hit_by_player ?`, without equipment), `fire_immune` (`minecraft:fire_immune`), `no_fall` (a `minecraft:damage_sensor` trigger that takes
 no damage from `fall` or from all), `breathes_water` and `no_air` (`minecraft:breathable`), `floats`
-(`minecraft:behavior.float`), `steadfast` (`minecraft:knockback_resistance` 1).
+(`minecraft:behavior.float`), `steadfast` (`minecraft:knockback_resistance` 1) and `resists=` (its
+value below 1), `unpushable` (no `minecraft:pushable_by_entity`, nor a `minecraft:pushable` with
+`is_pushable`, in the components or any group).
 `strolls=` and `panics=` are `minecraft:movement` times the `speed_multiplier` of `random_stroll`
 and of `panic`, for an entity with `navigation.walk` (or `navigation.generic` that can walk); a
 movement given as a range (a horse's) counts as its middle. `swims=` is `minecraft:underwater_movement`

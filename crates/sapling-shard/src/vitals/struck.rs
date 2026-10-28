@@ -97,6 +97,10 @@ pub(crate) fn blasted(world: &mut World, player: Entity, amount: f32, from: [f32
         throw(world, player, id, push);
         return false;
     }
+    if amount > 0.0 && super::shield::blocks(world, player, from, amount, Cause::EntityExplosion, false) {
+        pushed(world, player, push);
+        return false;
+    }
     amount > 0.0 && hit_from(world, player, amount, from, push, Cause::EntityExplosion)
 }
 
@@ -145,6 +149,11 @@ pub(crate) fn winded(world: &mut World, player: Entity, amount: f32, kind: &str,
     })
 }
 
+/// A falling anvil lands on a player for `amount`; false where it took nothing.
+pub(crate) fn crushed(world: &mut World, player: Entity, amount: f32) -> bool {
+    is_mortal(world, player) && hurt(world, player, amount, Cause::Anvil)
+}
+
 /// Lightning strikes a player for `amount` and sets one that fire can hurt alight for `burns`
 /// ticks; false where it took nothing.
 pub(crate) fn electrocuted(world: &mut World, player: Entity, amount: f32, burns: u16) -> bool {
@@ -186,6 +195,26 @@ const PEARL_SOURCE: i64 = 87;
 pub(super) fn throw_from(world: &mut World, player: Entity, id: u64, from: [f32; 3]) {
     let Some(feet) = world.get::<Position>(player).map(|position| position.feet) else { return };
     throw(world, player, id, away(from, feet));
+}
+
+/// A warden's sonic boom throws a player as a hit does, then again this many times as fast across
+/// and this fast up (the second fit to three of four booms in research/captures/bds-warden.txt).
+const BOOM_ACROSS: f32 = 3.0;
+const BOOM_UP: f32 = 0.4167;
+
+/// The sonic boom of a warden of `kind` at `from` hurts a player for `amount`, through its armour,
+/// and throws it twice (see [`BOOM_ACROSS`]); one it kills is not thrown. False where it took nothing.
+pub(crate) fn boomed(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3]) -> bool {
+    let (Some(id), Some(feet), true) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet), is_mortal(world, player)) else { return false };
+    let plain = away(from, feet);
+    slain_by(world, player, kind, |world| {
+        let Some(amount) = ask(world, player, amount, Cause::SonicBoom) else { return false };
+        if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount) {
+            throw(world, player, id, plain);
+            throw(world, player, id, [plain[0] * BOOM_ACROSS, BOOM_UP, plain[2] * BOOM_ACROSS]);
+        }
+        land(world, player, amount, Cause::SonicBoom)
+    })
 }
 
 fn hit_from(world: &mut World, player: Entity, amount: f32, from: [f32; 3], push: [f32; 3], cause: Cause) -> bool {

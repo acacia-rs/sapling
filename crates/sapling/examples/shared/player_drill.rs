@@ -9,6 +9,8 @@ use acacia_bot::Bot;
 
 #[path = "armour_drill.rs"]
 mod armour;
+#[path = "combat_drill.rs"]
+mod combat;
 #[path = "feedback_drill.rs"]
 mod feedback;
 #[path = "fishing_drill.rs"]
@@ -163,7 +165,7 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         "!sprint" => keys(actor, 1.0, true, false),
         "!leap" => keys(actor, 1.0, true, true),
         "!stop" => keys(actor, 0.0, false, false),
-        _ => return false,
+        _ => return combat::act(actor, line).await,
     }
     true
 }
@@ -277,6 +279,6 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "spectate" => (rest::spectate(), rest::SPECTATE_SHOWN),
         "fx2" => (fx::fx2(), HURT_SHOWN),
         "dig" => (fx::dig(), fx::DIG_SHOWN),
-        _ => return uses::named(name).or_else(|| items::drill(name)),
+        _ => return uses::named(name).or_else(|| items::drill(name)).or_else(|| Some((combat::named(name)?, HURT_SHOWN))),
     })
 }

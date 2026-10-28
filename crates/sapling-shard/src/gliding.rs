@@ -31,8 +31,6 @@ pub(crate) fn is_gliding(world: &World, player: Entity) -> bool {
 }
 
 /// The glider's velocity, as its client last stepped it; `None` for a player not gliding.
-// TODO: read by the fly-into-wall damage, which combat (damage.rs) is to add.
-#[allow(dead_code)]
 pub(crate) fn velocity(world: &World, player: Entity) -> Option<[f32; 3]> {
     world.get::<Motion>(player).filter(|motion| motion.pose.gliding).map(|motion| motion.delta)
 }

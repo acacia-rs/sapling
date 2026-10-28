@@ -45,7 +45,11 @@ fn weapon_effects() {
     assert_eq!([0, 1, 2].map(aspect_burn), [0, 80, 160]);
     assert_eq!([bane_slowness(1, &mut always(0.0)), bane_slowness(3, &mut always(0.999))], [20, 49]);
     assert_eq!(BANE_SLOWNESS, 0, "BDS's first level, not the Java game's fourth");
-    assert_eq!([knockback(0, [0.4, 0.4]), knockback(2, [0.4, 0.4])], [[0.4, 0.4], [1.4, 0.4]]);
+    // bds-sprint.txt: a standing player thrown 0.4 and 0.4 by a walking fist, 0.6 and 0.32 by a sprinting one.
+    let near = |a: [f32; 3], b: [f32; 3]| a.iter().zip(b).all(|(a, b)| (a - b).abs() < 1e-6);
+    let still = [0.0, -0.0784, 0.0];
+    assert!(near(knockback(0, false, still, [0.0, -1.0]), [0.0, 0.4, -0.4]) && near(knockback(0, true, still, [0.0, -1.0]), [0.0, 0.32, -0.6]));
+    assert!(near(knockback(2, false, still, [1.0, 0.0]), [0.2 + 0.4 * 2.3, 0.4, 0.0]), "{:?}", knockback(2, false, still, [1.0, 0.0]));
 }
 
 #[test]

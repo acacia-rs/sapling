@@ -24,6 +24,9 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     let entity = entities::find(world, id)?;
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
+    if event.is_some() {
+        super::warden::arm(world, entity, kind, event);
+    }
     Some(id)
 }
 
@@ -122,6 +125,7 @@ fn give_legs(world: &mut World, entity: Entity, kind: &str) {
     vexes::arm(world, entity, kind);
     stares::arm(world, entity, kind);
     creaking::arm(world, entity, kind);
+    super::warden::arm(world, entity, kind, None);
     dolphins::arm(world, entity, kind);
     swimming::arm(world, entity, kind);
     squids::arm(world, entity, kind);

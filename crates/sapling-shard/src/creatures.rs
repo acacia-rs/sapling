@@ -12,6 +12,7 @@ mod backend;
 mod bees;
 mod birth;
 mod blast;
+mod blows;
 mod breezes;
 mod dolphins;
 mod drinks;
@@ -56,6 +57,7 @@ mod swimming;
 mod teleports;
 mod vexes;
 mod villagers;
+mod warden;
 mod wings;
 mod wither;
 
@@ -88,6 +90,7 @@ pub(crate) use piglins::barter;
 pub(crate) use scooping::{held_kind as bucketed_kind, release as release_from_bucket, scoop};
 pub(crate) use struck::struck_by_lightning;
 pub(crate) use villagers::{bargains, interact as trade_with, stop_trading, traded};
+pub(crate) use warden::hear as warden_hears;
 pub(crate) use wither::{build as build_wither, hurt as wither_hurt, spares};
 use crate::components::{InLayer, NetId, Tick};
 use crate::{entities, mobs};
@@ -169,6 +172,7 @@ pub(crate) fn tick(world: &mut World) {
     piglins::tick(world);
     husbandry::tick(world);
     crowding::tick(world);
+    warden::tick(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0).map(|(entity, _)| entity).collect();
     for entity in dead {
@@ -199,7 +203,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !snow_golems::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
+        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !warden::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !snow_golems::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
             && !swimming::steer(world, entity, layer, &kind) && !squids::steer(world, entity) && !wings::steer(world, entity, layer, &kind)
         {
             let traits = sapling_data::mob_traits(&kind);
@@ -215,7 +219,7 @@ pub(crate) fn tick(world: &mut World) {
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets.clone());
         if thinks {
-            if !creaking::is_frozen(world, entity) {
+            if !creaking::is_frozen(world, entity) && !warden::is_busy(world, entity) {
                 hunting::strike(world, entity, layer, id, &kind, &body);
             }
             rams::strike(world, entity, layer, id, &kind, &body);
