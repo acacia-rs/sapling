@@ -109,7 +109,7 @@ pub(super) fn tick(world: &mut World, picks: &mut Picks) {
         for _ in 0..speed.clamp(0, MOST_PICKS) {
             let [x, z] = [column.x * 16 + picks.below(16) as i32, column.z * 16 + picks.below(16) as i32];
             // TODO: how often BDS's picks fill a cauldron is not measured; here every pick on one does.
-            if let Some(filled) = level.surface(x, z).filter(|_| raining).and_then(|top| Some((top, super::super::cauldrons::rained_in(level, [x, top, z])?))) {
+            if let Some(filled) = level.surface(x, z).filter(|_| raining).and_then(|top| Some((top, super::super::cauldrons::fallen_in(level, [x, top, z])?))) {
                 fell.push((layer, [x, filled.0, z], filled.1));
             }
             let (freezes, snows) = (picks.below(ODDS) == 0, snowing && picks.below(ODDS) == 0);

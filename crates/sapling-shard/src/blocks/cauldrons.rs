@@ -1,17 +1,22 @@
 //! A cauldron's potions, dyed water and washing, as BDS ran them (research/captures/bds-cauldrons.txt,
 //! docs/research/block-uses.md "Cauldrons"): the potion and the colour are in the cauldron's entity
 //! (`PotionId`, `PotionType`, `CustomColor`) over `cauldron_liquid=water`. Water by bucket and bottle
-//! is tools.rs's.
+//! is tools.rs's, powder snow snow.rs's.
 //! A bucket takes a full cauldron of dyed water with its colour and does nothing to a potion; a
-//! banner loses its last pattern a level at a time (bds-cauldrons2.txt).
-// TODO: a potion poured into plain or dyed water, and snow falling into a cauldron, were not drilled.
+//! banner loses its last pattern a level at a time (bds-cauldrons2.txt). A potion poured into
+//! water, plain or dyed, or onto another potion bursts it, heard `bottle.empty` but for a water
+//! bottle (bds-cauldrons3.txt).
+
+mod snow;
+
+pub(super) use snow::fallen_in;
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
-use sapling_world::{ItemStack, new_block_entity};
+use sapling_world::{BlockRegistry, ItemStack, new_block_entity};
 
 use super::send::keep_entity;
 use super::{fields, level, send, with_property};
@@ -29,12 +34,14 @@ const BOTTLES: [&str; 3] = ["minecraft:potion", "minecraft:splash_potion", "mine
 const SHULKER_BOX: &str = "minecraft:undyed_shulker_box";
 const DYED_LEATHER: &str = "customColor";
 
-/// What the cauldron holds: its level, a potion's id and kind, a dye's colour.
+/// What the cauldron holds: its level, a potion's id and kind, a dye's colour, and whether it is
+/// powder snow.
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Held {
     level: u8,
     potion: Option<(i16, i16)>,
     colour: Option<i32>,
+    snow: bool,
 }
 
 /// What a click does: the cauldron after, the event told at a level's surface with its data, the
@@ -64,7 +71,11 @@ fn short(value: Option<Value>) -> Option<i16> {
 fn held_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Held> {
     let level = level(world, layer)?;
     let state = level.registry().get(level.block(pos[0], pos[1], pos[2])).filter(|state| state.name == CAULDRON)?;
-    (state.property("cauldron_liquid")? == "water").then_some(())?;
+    let snow = match state.property("cauldron_liquid")? {
+        "water" => false,
+        "powder_snow" => true,
+        _ => return None,
+    };
     let filled: u8 = state.property("fill_level")?.parse().ok()?;
     let id = short(fields::get(world, layer, pos, "PotionId")).filter(|id| *id >= 0);
     let kind = short(fields::get(world, layer, pos, "PotionType")).unwrap_or(0).max(0);
@@ -72,7 +83,13 @@ fn held_at(world: &World, layer: Entity, pos: BlockPos) -> Option<Held> {
         Some(Value::Int(colour)) => Some(colour),
         _ => None,
     };
-    Some(Held { level: filled, potion: id.map(|id| (id, kind)), colour })
+    Some(Held { level: filled, potion: id.map(|id| (id, kind)), colour, snow })
+}
+
+/// The cauldron state `id` holding `level` of water, or of powder snow.
+fn with_contents(registry: &BlockRegistry, id: u32, level: u8, snow: bool) -> Option<u32> {
+    let filled = with_property(registry, id, "fill_level", &level.to_string())?;
+    with_property(registry, filled, "cauldron_liquid", if snow { "powder_snow" } else { "water" })
 }
 
 /// The cauldron's surface at `level`, where its events are told.
@@ -89,7 +106,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, outcome: &Outcome) {
     }
     let next = outcome.next;
     let Some(level) = level(world, layer) else { return };
-    let filled = with_property(level.registry(), level.block(pos[0], pos[1], pos[2]), "fill_level", &next.level.to_string());
+    let filled = with_contents(level.registry(), level.block(pos[0], pos[1], pos[2]), next.level, next.snow);
     let entity = level.block_entity(pos).map_or_else(|| new_block_entity(ENTITY, pos), |entity| entity.nbt.clone());
     if let Some(id) = filled {
         send::set(world, layer, pos, id);
@@ -139,20 +156,25 @@ fn washed_banner(hand: &ItemStack) -> Option<ItemStack> {
     Some(with_tag(hand, "Patterns", left))
 }
 
+/// The cauldron emptied with `CauldronExplode` at its floor, coloured as what it held.
+fn burst(held: Held, sound: Option<&'static str>, cost: Cost) -> Outcome {
+    let next = Held { level: 0, potion: None, colour: None, snow: false };
+    Outcome { next, told: Some((LevelEventEvent::CauldronExplode, 0, held.colour.unwrap_or(WATER))), sound, cost }
+}
+
 /// A potion poured in: like on like (or into an empty cauldron) two levels more and the last
-/// kind; anything else bursts it empty.
+/// kind; into anything else it bursts.
 fn poured(hand: &ItemStack, kind: i16, held: Held) -> Option<Outcome> {
-    (held.level < FULL).then_some(())?;
     let fits = held.level == 0 || held.colour.is_none() && held.potion.is_some_and(|(id, _)| id == hand.damage);
     let cost = Cost::Becomes(stack("minecraft:glass_bottle", 0));
-    let potion_colour = sapling_data::shots::potion_colour;
-    Some(if fits {
-        let level = (held.level + BOTTLEFUL).min(FULL);
-        let next = Held { level, potion: Some((hand.damage, kind)), colour: None };
-        Outcome { next, told: Some((LevelEventEvent::CauldronFillPotion, level, potion_colour(hand.damage))), sound: Some("bottle.empty"), cost }
-    } else {
-        Outcome { next: Held { level: 0, potion: None, colour: None }, told: Some((LevelEventEvent::CauldronExplode, 0, WATER)), sound: Some("bottle.empty"), cost }
-    })
+    if !fits {
+        let is_water = hand.name == BOTTLES[0] && hand.damage == 0;
+        return Some(burst(held, (!is_water).then_some("bottle.empty"), cost));
+    }
+    (held.level < FULL).then_some(())?;
+    let level = (held.level + BOTTLEFUL).min(FULL);
+    let next = Held { level, potion: Some((hand.damage, kind)), colour: None, snow: false };
+    Some(Outcome { next, told: Some((LevelEventEvent::CauldronFillPotion, level, sapling_data::shots::potion_colour(hand.damage))), sound: Some("bottle.empty"), cost })
 }
 
 /// Leather dyed in coloured water, or washed in plain water, for a level.
@@ -171,6 +193,9 @@ fn leather(hand: &ItemStack, held: Held) -> Option<Outcome> {
 /// What a click with `hand` does to the cauldron holding `held`.
 fn change(hand: &ItemStack, held: Held) -> Option<Outcome> {
     let name = hand.name.as_str();
+    if held.snow || name == snow::BUCKET {
+        return snow::change(hand, held);
+    }
     let is_water = hand.damage == 0 && name == BOTTLES[0];
     if let Some(kind) = BOTTLES.iter().position(|bottle| *bottle == name).filter(|_| !is_water || held.potion.is_some()) {
         return poured(hand, kind as i16, held);
@@ -194,7 +219,7 @@ fn change(hand: &ItemStack, held: Held) -> Option<Outcome> {
         _ if name.starts_with("minecraft:leather_") && held.level > 0 && held.potion.is_none() => leather(hand, held),
         "minecraft:bucket" if held.level == FULL => {
             let colour = held.colour?;
-            let next = Held { level: 0, potion: None, colour: None };
+            let next = Held { level: 0, potion: None, colour: None, snow: false };
             Some(Outcome { next, told: Some((LevelEventEvent::CauldronTakeWater, FULL, colour)), sound: None, cost: Cost::Becomes(stack("minecraft:water_bucket", 0)) })
         }
         "minecraft:banner" if held.level > 0 && plain => {
@@ -214,19 +239,6 @@ fn change(hand: &ItemStack, held: Held) -> Option<Outcome> {
             Some(Outcome { next: Held { colour: Some(colour), ..held }, told: Some((LevelEventEvent::CauldronAddDye, held.level, colour)), sound: None, cost: Cost::Spend })
         }
     }
-}
-
-/// The cauldron at `pos` a level fuller of rain, if it holds plain water short of full and rain
-/// falls on it: BDS filled one this way at each of six of its rain picks (bds-cauldronrain.txt).
-pub(super) fn rained_in(level: &sapling_world::World, [x, y, z]: BlockPos) -> Option<u32> {
-    let state = level.registry().get(level.block(x, y, z)).filter(|state| state.name == CAULDRON && state.property("cauldron_liquid") == Some("water"))?;
-    let filled: u8 = state.property("fill_level")?.parse().ok()?;
-    let plain = level.block_entity([x, y, z]).is_none_or(|entity| {
-        let potion = matches!(entity.nbt.get("PotionId"), Some(Value::Short(id)) if *id >= 0);
-        !potion && entity.nbt.get("CustomColor").is_none()
-    });
-    let rained = level.light_at(x, y + 1, z).is_some_and(|(sky, _)| sky == 15) && !level.is_cold(x, y, z);
-    (plain && rained && filled < FULL).then(|| with_property(level.registry(), level.block(x, y, z), "fill_level", &(filled + 1).to_string())).flatten()
 }
 
 /// A click with what the player holds on the cauldron at `pos`: false when it does nothing here.

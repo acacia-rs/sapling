@@ -3,7 +3,11 @@ use acacia_proto::nbt::List;
 use super::*;
 
 fn held(level: u8, potion: Option<(i16, i16)>) -> Held {
-    Held { level, potion, colour: None }
+    Held { level, potion, colour: None, snow: false }
+}
+
+fn snow(level: u8) -> Held {
+    Held { snow: true, ..held(level, None) }
 }
 
 fn after(hand: &ItemStack, before: Held) -> (Held, Option<(LevelEventEvent, u8, i32)>) {
@@ -23,6 +27,33 @@ fn potions_fill_by_two_burst_when_unlike_and_take_the_last_kind() {
     let arrows = ItemStack { count: 16, ..stack("minecraft:arrow", 0) };
     assert_eq!(after(&arrows, held(4, Some((14, 1)))), (held(3, Some((14, 1))), None));
     assert!(change(&stack("minecraft:potion", 0), held(3, None)).is_none(), "water by bottle is tools.rs's");
+}
+
+/// bds-cauldrons3.txt: swiftness into plain and red water and a water bottle onto swiftness all
+/// burst, coloured as what was there; only the water bottle unheard.
+#[test]
+fn a_potion_poured_into_water_or_onto_another_bursts() {
+    let swift = stack("minecraft:potion", 14);
+    for level in [3, 6] {
+        let outcome = change(&swift, held(level, None)).expect("a burst");
+        assert_eq!((outcome.next, outcome.told, outcome.sound), (held(0, None), Some((LevelEventEvent::CauldronExplode, 0, WATER)), Some("bottle.empty")));
+    }
+    let red = Held { colour: Some(-5_231_066), ..held(3, None) };
+    assert_eq!(after(&swift, red), (held(0, None), Some((LevelEventEvent::CauldronExplode, 0, -5_231_066))));
+    let water = change(&stack("minecraft:potion", 0), held(2, Some((14, 0)))).expect("a burst");
+    assert_eq!((water.next, water.sound), (held(0, None), None));
+}
+
+/// bds-cauldrons3.txt: powder snow in and out by bucket, a bottle and a snow bucket bursting.
+#[test]
+fn powder_snow_fills_by_bucket_and_bursts_under_anything_else() {
+    let bucket = stack(snow::BUCKET, 0);
+    assert_eq!(after(&bucket, held(0, None)), (snow(6), Some((LevelEventEvent::Unknown(3514), 6, WATER))));
+    assert_eq!(after(&stack("minecraft:bucket", 0), snow(6)), (held(0, None), Some((LevelEventEvent::Unknown(3515), 6, WATER))));
+    assert!(change(&stack("minecraft:glass_bottle", 0), snow(6)).is_none());
+    let bottle = change(&stack("minecraft:potion", 0), snow(6)).expect("a burst");
+    assert_eq!((bottle.next, bottle.told, bottle.sound), (held(0, None), Some((LevelEventEvent::CauldronExplode, 0, WATER)), None));
+    assert_eq!(after(&bucket, held(4, None)), (held(0, None), Some((LevelEventEvent::CauldronExplode, 0, WATER))));
 }
 
 #[test]

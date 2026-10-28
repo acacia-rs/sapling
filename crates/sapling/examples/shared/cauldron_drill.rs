@@ -10,6 +10,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
             "cauldrons" => cauldrons(),
             "cauldronrain" => rain(),
             "cauldrons2" => buckets_and_banners(),
+            "cauldrons3" => snow_and_mixing(),
             _ => return None,
         },
         CAULDRON_SHOWN,
@@ -70,6 +71,36 @@ pub fn buckets_and_banners() -> Vec<String> {
         lines.extend([hold(item), format!("!click {at}"), String::new()]);
     }
     lines.extend(["replaceitem entity @s slot.hotbar 0 banner 1 15", "replaceitem entity @s slot.hotbar 1 red_dye 1", "", "!loom 5 0 3 bo", "", "!close", "", "!click 2 0 3", "", "!click 2 0 3", ""].map(String::from));
+    lines.extend(["gamemode creative @s", "fill ~-2 ~ ~-6 ~10 ~6 ~6 air", "clear @s", ""].map(String::from));
+    lines
+}
+
+/// The actor in survival: powder snow into an empty cauldron, a bucket to take it, and again;
+/// swiftness poured into plain water of 3 and 6 levels and into red water; a water bottle and
+/// slowness poured onto swiftness; powder snow onto water and a bottle onto powder snow.
+pub fn snow_and_mixing() -> Vec<String> {
+    let mut lines = floor();
+    let set = ["setblock ~2 ~ ~0 cauldron", "setblock ~2 ~ ~-3 cauldron [\"fill_level\"=3]", "setblock ~2 ~ ~3 cauldron [\"fill_level\"=6]", "setblock ~4 ~ ~-3 cauldron [\"fill_level\"=3]", "setblock ~4 ~ ~3 cauldron", "setblock ~4 ~ ~0 cauldron [\"fill_level\"=4]"];
+    lines.extend(set.into_iter().chain(["gamemode survival @s", ""]).map(String::from));
+    let clicks = [
+        ("powder_snow_bucket 1", "2 0 0"),
+        ("bucket 1", "2 0 0"),
+        ("powder_snow_bucket 1", "2 0 0"),
+        ("glass_bottle 1", "2 0 0"),
+        ("potion 1 0", "2 0 0"),
+        ("potion 1 14", "2 0 -3"),
+        ("potion 1 14", "2 0 3"),
+        ("red_dye 1", "4 0 -3"),
+        ("potion 1 14", "4 0 -3"),
+        ("potion 1 14", "4 0 3"),
+        ("potion 1 0", "4 0 3"),
+        ("potion 1 14", "4 0 3"),
+        ("potion 1 17", "4 0 3"),
+        ("powder_snow_bucket 1", "4 0 0"),
+    ];
+    for (item, at) in clicks {
+        lines.extend([hold(item), format!("!click {at}"), String::new()]);
+    }
     lines.extend(["gamemode creative @s", "fill ~-2 ~ ~-6 ~10 ~6 ~6 air", "clear @s", ""].map(String::from));
     lines
 }

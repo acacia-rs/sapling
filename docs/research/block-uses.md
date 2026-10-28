@@ -133,7 +133,22 @@ eighth a level), every sound at the block's middle.
 Rain (`bds_command_probe cauldronrain`, `bds-cauldronrain.txt`, `randomtickspeed` 100): an empty cauldron under the
 sky filled a level at a time, six levels in 2.3 s starting 0.9 s after the rain, each with the block and its entity
 sent again. Sapling fills a level at each of the rain picks of snowfall.rs that lands on one; BDS's rate is not
-measured further.
+measured further. Snow fills one with powder snow instead, by BDS's `handlePrecipitation` (BDSRE 141a46850): where
+the temperature is under 0.15 the fall is snow; none falls into a full cauldron, lava, a potion, dyed water, or
+(once it holds any) snow into water and rain into powder snow. Not drilled on BDS.
+
+`bds_command_probe cauldrons3` (`bds-cauldrons3.txt`):
+
+| Cauldron | Hand | BDS |
+| --- | --- | --- |
+| empty | powder snow bucket | `cauldron_liquid=powder_snow`, level 6, level event 3514 at the full surface with water's colour, a bucket back (BDSRE 141a415e0: an empty cauldron or one of powder snow) |
+| powder snow, 6 | bucket | empty, level event 3515 at the full surface, a powder snow bucket |
+| powder snow, 6 | glass bottle | nothing |
+| powder snow, 6 | water bottle | empty, `CauldronExplode` at the floor with water's colour, no `bottle.empty` |
+| water, 3 or 6 | potion of swiftness | empty, `CauldronExplode` at the floor, `bottle.empty` |
+| red water, 3 | potion of swiftness | empty, `CustomColor` gone, `CauldronExplode` with the dye's colour |
+| swiftness, 2 | water bottle | empty, `CauldronExplode`, no `bottle.empty` |
+| water, 4 | powder snow bucket | empty, `CauldronExplode` at the floor |
 
 Sapling does the same (`blocks/cauldrons.rs`), tipping arrows into `arrow` of the potion's data plus one, as BDS
 names tipped arrows.
@@ -162,7 +177,7 @@ Measured with `bds_command_probe clicks2` (`crates/sapling/examples/shared/click
 | cauldron of lava, full | bucket | empty, level event 3513 at the old surface |
 | cauldron | lava bucket | lava at level 6, level event 3512 at the new surface |
 | cauldron | water bottle | two levels more a click, `CauldronFillWater` at the new surface, `bottle.empty` at the middle |
-| cauldron | powder snow bucket | `CauldronExplode` low in the cauldron, which stayed empty |
+| cauldron | powder snow bucket | `CauldronExplode` low in the cauldron, which stayed empty (not so in `bds-cauldrons3.txt`, a capture after sapling c180cee5: see "Cauldrons") |
 | dirt | water bottle | mud, `bottle.empty` at the cell's corner |
 | grass block | hoe | farmland, as dirt |
 | campfire | shovel | `extinguished` set, `extinguish.fire` at the corner |
@@ -231,8 +246,7 @@ two ways: the first candle, pickle and snow layer are told by `place` where BDS 
 ## Left
 
 - From the second round: a compass linked on a lodestone is a lodestone compass by name and
-  points nowhere; powder snow on an empty cauldron tells BDS's event and leaves it empty, and
-  that the bucket is emptied is a guess. A pot gives its stack back only when broken.
+  points nowhere. A pot gives its stack back only when broken.
 - A frame's item comes out at the first blow, with `SoundItemframeRemoveItem` at the corner,
   and the frame stands (`bds-bonemeal2.txt`, its last steps); sapling does the same, and in
   creative breaks the frame with the same blow, which was not tried on BDS. A respawn anchor clicked with a block in the hand has the
