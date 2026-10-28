@@ -109,10 +109,14 @@ fn a_monster_near_keeps_a_sleeper_up_and_a_storm_lets_it_sleep_by_day() {
     assert!(lies_down(&h.tick(1)), "in a storm, the zombie 9 off");
 }
 
+/// The night ends with `WeatherManager::stopWeather` (bdsre 0x1411a79e0): the rain stops too.
 #[test]
 fn a_night_slept_through_is_skipped() {
     let mut h = with_a_bed();
-    h.remote.run(|ctx| ctx.set_time(13_000));
+    h.remote.run(|ctx| {
+        ctx.set_time(13_000);
+        ctx.set_weather(sapling_api::Weather::Rain, None);
+    });
     h.tick(1);
     h.receive(1, &click(HEAD, 1, None));
     let sent = h.tick(1);
@@ -126,6 +130,11 @@ fn a_night_slept_through_is_skipped() {
     let woke = (0..110).any(|_| all::<Animate>(&h.tick(1)).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
     assert!(woke, "woken after 100 ticks");
     assert!(time(&mut h).rem_euclid(24_000) < 200, "it is morning");
+    let weather = Arc::new(Mutex::new(sapling_api::Weather::Rain));
+    let out = weather.clone();
+    h.remote.run(move |ctx| *out.lock().unwrap() = ctx.weather());
+    h.tick(1);
+    assert_eq!(*weather.lock().unwrap(), sapling_api::Weather::Clear, "the rain stopped with the night");
 }
 
 /// research/captures/bds-rest.txt: a sleeper whose cell was walled while it slept stood up in the

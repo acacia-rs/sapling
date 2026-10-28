@@ -182,7 +182,9 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   each compound whole, as network NBT, with the section it is in: after the section's bytes, or as the
   entry's payload for a blob-cache client (the blob is the section alone). A resync, which would leave
   the client's block without its data, is followed by `BlockEntityData` for the positions that have any.
-- **Level.** A world keeps a `Level`: spawn block, time of day counter, whether the daylight cycle runs.
+- **Level.** A world keeps a `Level`: spawn block, time of day counter, game rules, weather (BDS's
+  `rainLevel`, `rainTime`, `lightningLevel`, `lightningTime`, turned by the shard's `weather.rs`) and
+  difficulty (the shard's, so `ShardCtx::set_difficulty` is saved).
   A folder's comes from `level.dat`, and closing the world writes it back with `LastPlayed`, and with
   `lastOpenedWithVersion` when the folder was last written by another game version. So a folder opened
   in place gets a new `level.dat` every run; `open_folder_in_memory` leaves it alone.
@@ -214,8 +216,8 @@ One listener task, one shard thread, one world. The pieces and why they are shap
 - **Game rules** (`sapling_data::GameRules`, `Level::rules`, shard `rules.rs`). Every rule BDS has,
   its names, order and defaults those of the recorded StartGame; a world's are read from and saved to
   `level.dat` as BDS keeps them (lower-case root fields, a byte for a switch). `set_game_rule` tells
-  the world's players of the one rule that changed, nothing when it did not, as BDS. Sapling acts on
-  `doDayLightCycle` only; the rest are kept for plugins.
+  the world's players of the one rule that changed, nothing when it did not, as BDS. Which rules
+  sapling acts on: "Vanilla rules".
 - **Actors checked against BDS 1.26.52** (2026-10-04): the hub world rewritten with the `rewrite`
   example, which renames every stored actor and adds one sheep per column holding only the fields
   `Actor` reads. BDS announced both to a bot (`bds_entity_probe`) with the names and wool written. The
@@ -1520,9 +1522,9 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   item saved by an older game version carries old states, whose hash a client may not know. Movement,
   AI, damage; a player's `RideID`.
 - Clock and level: a vanilla client has not confirmed `SyncWorldClocks` or the other join packets as
-  sapling sends them; game rules other than the daylight cycle are not read from `level.dat`. A
-  difficulty set while the server runs (`ShardCtx::set_difficulty`) is not saved.
-- Only the overworld is opened; nether/end keys parse but no world is made for them.
+  sapling sends them. `level.dat` keys sapling neither reads nor changes are written back as read:
+  `abilities` (BDS's defaults for new players; sapling sends its recorded UpdateAbilities instead),
+  `experiments`, `currentTick` (the shard counts its own ticks from 0), `worldStartCount`.
 - LevelDB block compression id 2 is zlib in worlds; never enable zstd (Mojang master reuses id 2).
 - Game data source and licence (item/creative/biome/recipes) for sapling-data.
 - acacia-proto's shield item id is process-global: never run acacia-bot and sapling in one process.

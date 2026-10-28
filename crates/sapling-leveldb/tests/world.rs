@@ -33,6 +33,8 @@ fn level_dat_names_the_world_and_its_spawn() {
     // The types these accessors expect are the ones BDS writes.
     assert!(level.time().is_some() && level.long("LastPlayed").is_some() && level.daylight_cycle());
     assert_eq!((level.game_type(), level.difficulty()), (Some(0), Some(0)), "survival, peaceful");
+    let clear = sapling_leveldb::WeatherRecord { rain_level: 0.0, rain_time: 86606, lightning_level: 0.0, lightning_time: 67914 };
+    assert_eq!(level.weather(), Some(clear));
     assert!(matches!(level.root.get("dodaylightcycle"), Some(Value::Byte(1))));
     assert!(matches!(level.root.get("lastOpenedWithVersion"), Some(Value::List(List { tag: 3, items })) if items.len() == 5));
 }

@@ -203,8 +203,10 @@ impl Shard {
         actors::write_back(&mut self.world);
         blocks::write_back_ticks(&mut self.world);
         scoreboard::keep_all(&mut self.world);
+        let difficulty = self.world.resource::<Settings>().0.difficulty as i32;
         let mut layers = self.world.query::<&mut Layer>();
         for mut layer in layers.iter_mut(&mut self.world) {
+            layer.world.level_mut().difficulty = Some(difficulty);
             let failed = layer.world.save_and_wait();
             if failed > 0 {
                 tracing::error!(failed, "columns could not be saved and are lost");
