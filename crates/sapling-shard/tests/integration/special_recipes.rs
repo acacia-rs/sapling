@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::{List, Value};
+use acacia_proto::packets::ClientboundMapItemData;
 use acacia_proto::types::{
     ContainerSlotType as Container, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentCraftRecipe as Craft,
     ItemStackRequestActionsItemContentCreate as Create, ItemStackResponsesItemStatus as Status,
@@ -22,6 +23,8 @@ const SHIELD_BANNER: &str = "00000000-0000-0000-0000-0000000000c8";
 const FIREWORKS: &str = "00000000-0000-0000-0000-000000000002";
 const POT: &str = "685a742a-c42e-4a4e-88ea-5eb83fc98e5b";
 const BOOK_CLONING: &str = "d1ca6b84-338e-4f2f-9c6b-76cc8b4bd98d";
+const EXTENDING: &str = "d392b075-4ba1-40ae-8789-af868d56f6ce";
+const REPAIR: &str = "00000000-0000-0000-0000-000000000001";
 
 fn stack(name: &str, count: u8, damage: i16, tag: Option<Value>) -> Option<ItemStack> {
     Some(ItemStack { name: name.into(), count, damage, block: None, tag })
@@ -112,4 +115,38 @@ fn a_written_book_is_copied_and_given_back() {
     let kept = kept(h, &storage);
     let generation = |slot: usize| kept.main[slot].as_ref().and_then(|book| book.tag.as_ref()?.get("generation").cloned());
     assert_eq!((generation(2), generation(3)), (Some(Value::Int(1)), Some(Value::Int(0))));
+}
+
+#[test]
+fn eight_paper_round_a_map_extend_it_at_craft_time() {
+    let (mut h, storage) = steve(vec![stack("minecraft:empty_map", 1, 0, None), stack("minecraft:paper", 8, 0, None)], false);
+    h.receive(1, &common::shooting::click_air());
+    let map = common::all::<ClientboundMapItemData>(&h.tick(1)).pop().expect("the map made");
+    h.receive(1, &click(TABLE, 1, None));
+    h.tick(1);
+    let cells: Vec<u8> = (32..41).collect();
+    for cell in &cells {
+        lay(&mut h, if *cell == 36 { 0 } else { 1 }, *cell);
+    }
+    let sent = craft(&mut h, EXTENDING, &cells, &[(0, 1)], 2);
+    assert_eq!(answer(&sent).0, Status::Ok);
+    let zoom = common::all::<ClientboundMapItemData>(&sent).into_iter().find(|packet| packet.map_id == map.map_id + 1).expect("the extended map, whole");
+    assert_eq!(zoom.scale, Some(1));
+    let kept = kept(h, &storage);
+    let tag = kept.main[2].as_ref().and_then(|map| map.tag.clone()).expect("the extended map");
+    assert_eq!((tag.get("map_uuid"), tag.get("map_is_init")), (Some(&Value::Long(map.map_id + 1)), Some(&Value::Byte(1))));
+}
+
+#[test]
+fn two_worn_tools_repair_into_one() {
+    let worn = |damage: i32| Some(compound([("Damage", Value::Int(damage))]));
+    let (mut h, storage) = steve(vec![stack("minecraft:iron_pickaxe", 1, 0, worn(200)), stack("minecraft:iron_pickaxe", 1, 0, worn(150))], false);
+    lay(&mut h, 0, 28);
+    lay(&mut h, 1, 31);
+    assert_eq!(answer(&craft(&mut h, REPAIR, &[28, 31], &[(0, 1)], 2)).0, Status::Ok);
+    let kept = kept(h, &storage);
+    // An iron pickaxe lasts 250: 50 + 100 left and 12 more leave 88 worn.
+    let pickaxe = kept.main[2].as_ref().expect("the repaired pickaxe");
+    assert_eq!((pickaxe.name.as_str(), pickaxe.tag.as_ref().and_then(|tag| tag.get("Damage"))), ("minecraft:iron_pickaxe", Some(&Value::Int(88))));
+    assert!(kept.main[0].is_none() && kept.main[1].is_none());
 }

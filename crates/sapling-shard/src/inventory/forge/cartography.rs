@@ -30,7 +30,7 @@ pub(crate) struct Chart {
 }
 
 /// `tag` naming the map `id`, made by the table, keys in byte order as BDS writes them.
-fn remade(tag: Option<&Value>, id: i64) -> Option<Value> {
+pub(crate) fn remade(tag: Option<&Value>, id: i64) -> Option<Value> {
     let mut fields = match tag {
         Some(Value::Compound(fields)) => fields.clone(),
         _ => Vec::new(),

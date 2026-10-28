@@ -10,6 +10,7 @@ mod clicks;
 mod guarding;
 mod knots;
 mod leads;
+mod nesting;
 mod owners;
 mod products;
 mod shown;
@@ -46,6 +47,9 @@ pub(super) fn adopt(world: &mut World, entity: Entity, kind: &str, stored: Optio
     }
     let baby = raised.is_baby();
     world.entity_mut(entity).insert(raised);
+    if let Some((_, compound)) = stored {
+        nesting::adopt(world, entity, kind, compound);
+    }
     if baby {
         ageing::fit_body(world, entity, kind);
     }
@@ -59,6 +63,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     }
     owners::stays(world, entity)
         || leads::pull(world, entity, layer)
+        || nesting::steer(world, entity, layer, kind)
         || sniffing::steer(world, entity, layer, kind)
         || guarding::chase(world, entity, layer, kind)
         || breeding::court(world, entity, layer, kind)
@@ -77,6 +82,7 @@ pub(crate) fn tick(world: &mut World) {
         products::lay(world, entity, &kind, now);
         products::graze(world, entity, &kind);
         sniffing::tick(world, entity, &kind, now);
+        nesting::tick(world, entity, &kind, now);
         leads::hold(world, entity, now);
     }
     knots::tick(world);

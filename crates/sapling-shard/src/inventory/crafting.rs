@@ -10,7 +10,7 @@ use bevy_ecs::prelude::*;
 use sapling_data::{Ingredient, Recipe, Station};
 use sapling_world::ItemStack;
 
-use super::{Inventory, Place, UI, change};
+use super::{Forged, Inventory, Place, UI, change};
 use crate::drops;
 
 /// The `Ui` slots of the crafting grids, row by row: the inventory screen's and a table's.
@@ -28,6 +28,8 @@ pub(super) struct Craft {
     /// once the created-output slot has room: it holds one stack at a time.
     result: usize,
     pending: u32,
+    /// What the world is left to do once it is crafted.
+    pub done: Option<Forged>,
 }
 
 /// The filled cells of the grid a player crafts in at `at`, if the recipe is laid out in it.
@@ -39,14 +41,23 @@ fn laid_out(inventory: &Inventory, recipe: &Recipe, at: Station) -> Result<Vec<P
 }
 
 /// The special recipe `network_id` as what the grid at `at` holds makes of it (special.rs): one
-/// of each filled cell for what it makes.
-fn special(inventory: &Inventory, network_id: u32, at: Station) -> Option<Recipe> {
+/// of each filled cell for what it makes. `map` is the grid's filled map as its level knows it.
+fn special(inventory: &Inventory, network_id: u32, at: Station, map: Option<(i64, u8, bool)>) -> Option<(Recipe, Option<Forged>)> {
     let (cells, width) = if at == Station::Table { (TABLE_GRID, 3) } else { (HAND_GRID, 2) };
     let cells: Vec<Option<&ItemStack>> = cells.map(|slot| inventory.slot(Place::Ui(slot)).and_then(Option::as_ref).map(|held| &held.stack)).collect();
-    let grid = super::special::Grid { cells, width };
+    let grid = super::special::Grid { cells, width, map };
     let outputs = super::special::crafted(network_id, &grid)?;
     let inputs = grid.filled().iter().map(|stack| (Ingredient::Item { name: stack.name.clone(), damage: Some(stack.damage) }, 1)).collect();
-    Some(Recipe { inputs, outputs, station: Station::Hand, shape: None })
+    Some((Recipe { inputs, outputs, station: Station::Hand, shape: None }, super::special::forged(network_id, &grid)))
+}
+
+/// The map id of the first filled map in either crafting grid.
+pub(crate) fn grid_map_id(inventory: &Inventory) -> Option<i64> {
+    let held = |slot: usize| inventory.slot(Place::Ui(slot)).and_then(Option::as_ref);
+    (HAND_GRID.start..TABLE_GRID.end)
+        .filter_map(held)
+        .find(|held| held.stack.name == crate::maps::FILLED)
+        .and_then(|held| crate::maps::map_id(&held.stack))
 }
 
 impl Craft {
@@ -54,20 +65,23 @@ impl Craft {
     /// One made by hand in a grid needs the recipe laid out there, and is then held to using up
     /// those cells. A recipe's only result lies in the created-output slot at once; of several,
     /// each waits for the request to ask for it ([`Craft::create`]).
-    pub fn start(inventory: &mut Inventory, network_id: u32, times: u8, at: Station, by_hand: bool) -> Result<Self, ()> {
+    pub fn start(inventory: &mut Inventory, network_id: u32, times: u8, at: Station, by_hand: bool, map: Option<(i64, u8, bool)>) -> Result<Self, ()> {
         let fits = |recipe: &&Recipe| match recipe.station {
             Station::Hand => at != Station::Stonecutter,
             station => station == at,
         };
-        let recipe = match sapling_data::recipe(network_id) {
-            Some(listed) => Cow::Borrowed(listed),
-            None if sapling_data::is_special_recipe(network_id) && at != Station::Stonecutter => Cow::Owned(special(inventory, network_id, at).ok_or(())?),
+        let (recipe, done) = match sapling_data::recipe(network_id) {
+            Some(listed) => (Cow::Borrowed(listed), None),
+            None if sapling_data::is_special_recipe(network_id) && at != Station::Stonecutter => {
+                let (recipe, done) = special(inventory, network_id, at, map).ok_or(())?;
+                (Cow::Owned(recipe), done)
+            }
             None => return Err(()),
         };
         let recipe = Some(recipe).filter(|recipe| fits(&&**recipe)).filter(|_| times > 0).ok_or(())?;
         let cells = (by_hand && at != Station::Stonecutter).then(|| laid_out(inventory, &recipe, at)).transpose()?;
         let single = recipe.outputs.len() == 1;
-        let mut craft = Self { recipe, times, used: Vec::new(), cells, result: 0, pending: 0 };
+        let mut craft = Self { recipe, times, used: Vec::new(), cells, result: 0, pending: 0, done };
         if single {
             craft.create(inventory, 0)?;
         }

@@ -53,7 +53,7 @@ mod tests {
 
     fn craft(cells: [Option<&str>; 9]) -> Option<Made> {
         let stacks: Vec<Option<ItemStack>> = cells.iter().map(|name| name.map(stack)).collect();
-        crafted(&Grid { cells: stacks.iter().map(Option::as_ref).collect(), width: 3 })
+        crafted(&Grid { cells: stacks.iter().map(Option::as_ref).collect(), width: 3, map: None })
     }
 
     #[test]

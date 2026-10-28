@@ -19,7 +19,6 @@ use crate::movement::Motion;
 use crate::{blocks, creatures};
 
 const SADDLE: &str = "minecraft:saddle";
-const HORSE: &str = "minecraft:horse";
 /// A player reaches a mob to get on it from this far, eyes to feet (acacia's riding notes).
 const REACH: f32 = 6.7;
 const EYES: f32 = 1.62;
@@ -107,7 +106,8 @@ pub(crate) fn used_on(world: &mut World, player: Entity, target: Entity) -> bool
     true
 }
 
-/// Puts the saddle or the horse armour a player holds on `mob`; false when it takes neither now.
+/// Puts the saddle, the horse armour or the llama's carpet a player holds on `mob`; false when
+/// it takes none of them now.
 fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
     let Some(stack) = held(world, player) else { return false };
     let grown = !creatures::is_baby(world, mob);
@@ -118,7 +118,7 @@ fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
             raised.saddled = true;
         }
         "saddle"
-    } else if stack.name.ends_with("_horse_armor") && kind == HORSE && grown && tamed(world, mob) && tack.armor.is_none() {
+    } else if super::packs::takes(kind, 1, &stack.name) && grown && tamed(world, mob) && tack.armor.is_none() {
         tack.armor = Some(ItemStack { count: 1, ..stack });
         "armor.equip_generic"
     } else {
@@ -135,7 +135,7 @@ fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
     true
 }
 
-/// What shows a mob's tack: its flags, with `SADDLED`, and the armour on its body.
+/// What shows a mob's tack: its flags, with `SADDLED`, and the armour or carpet on its body.
 pub(super) fn worn(world: &mut World, mob: Entity) -> Vec<Bytes> {
     let Some(tack) = world.get::<Tack>(mob).cloned() else { return Vec::new() };
     let (Some(id), Some(kind)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Kind>(mob).map(|kind| kind.0.clone())) else { return Vec::new() };

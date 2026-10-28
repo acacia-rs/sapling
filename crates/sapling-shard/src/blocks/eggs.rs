@@ -3,6 +3,7 @@
 //! tick ([`Job::Hatch`]); each tick then cracks it, hatches it or queues the next (turtle.rs).
 
 mod frogspawn;
+mod nests;
 mod sniffer;
 mod turtle;
 
@@ -14,6 +15,7 @@ use sapling_api::BlockPos;
 use super::queued::{self, Job};
 use super::{Dice, level, send};
 
+pub(crate) use nests::{egg_near as turtle_egg_near, lay as lay_turtle_eggs, nest_near as turtle_nest_near, stomp_out as stomp_turtle_eggs};
 pub(crate) use turtle::trodden as tread_turtle_eggs;
 
 type Level = sapling_world::World;

@@ -82,6 +82,13 @@ pub fn raised_actor(compound: &[u8], raising: &Raising) -> Result<Vec<u8>, Error
     }
 }
 
+/// The component groups a stored actor's `definitions` list as on (`+`), without the sign.
+pub fn actor_groups(compound: &[u8]) -> Vec<String> {
+    let Ok(Value::Compound(fields)) = nbt::read::<LittleEndian>(&mut &compound[..]).map(|read| read.value) else { return Vec::new() };
+    let Some((_, Value::List(list))) = fields.iter().find(|(name, _)| name == "definitions") else { return Vec::new() };
+    list.items.iter().filter_map(|item| if let Value::String(group) = item { group.to_string().strip_prefix('+').map(str::to_owned) } else { None }).collect()
+}
+
 /// `compound` whose `definitions` lose `removed` and gain `added`, component group names that BDS
 /// lists with a leading `+`.
 pub fn regrouped_actor(compound: &[u8], removed: &[&str], added: &[&str]) -> Result<Vec<u8>, Error> {

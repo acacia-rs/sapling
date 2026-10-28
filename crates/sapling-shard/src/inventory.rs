@@ -29,7 +29,7 @@ pub(crate) use armour_wear::{elytra_flies, equip_sound_name, wear_armour, wear_e
 pub(crate) use bundle_cleanup::sweep as sweep_bundles;
 pub(crate) use bundles::number as number_bundles;
 pub(crate) use wire::{stack, stacks_with, wire};
-pub(crate) use crafting::clear_grid;
+pub(crate) use crafting::{clear_grid, grid_map_id};
 pub(crate) use forge::{Bargain, Bench, CARTOGRAPHY_INPUT, Chart, Forged, enchanting_input};
 pub(crate) use equipment::{announce, in_hand, open_own, screens, select, show_hand, spawn_packets};
 pub(crate) use give::{give_and_pop, swap_held, swap_held_for, use_up_held};
