@@ -53,12 +53,17 @@ pub(super) fn empty_hands(world: &mut World, entity: Entity, layer: Entity, body
 /// The dead mob's loot, where the world's rules let it leave any.
 pub(super) fn leave_remains(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
     let on_fire = world.get::<Health>(entity).is_some_and(|health| health.is_burning());
+    let by_player = world.get::<attacks::Slain>(entity).is_some();
     let killer = match world.get::<attacks::Slain>(entity) {
         Some(slain) => sapling_data::Killer::Player { looting: slain.1 },
         None => sapling_data::Killer::None,
     };
     if leaves_loot(world, layer) {
         leave_loot(world, layer, kind, on_fire, killer, body.at);
+        let [x, y, z] = body.at;
+        for stack in super::drowned::let_go(world, entity, by_player) {
+            drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
+        }
     }
 }
 

@@ -3,11 +3,15 @@
 
 use crate::common;
 
+use std::sync::Arc;
+
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, RemoveEntity, SetEntityData, UpdateAttributes};
 use common::asking::ask;
-use common::{Harness, all, attack, block_changes, input_at};
+use common::stored::enter_stored;
+use common::{Harness, all, attack, block_changes, config, input_at};
 use sapling_api::{Block, Difficulty, GameMode, PlayerId, RuleValue};
+use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, MemoryStorage, StoredColumn, World, WorldStorage};
 
 const HEART: [i32; 3] = [6, 66, 0];
 
@@ -68,6 +72,27 @@ fn an_awake_heart_calls_a_creaking_that_sways_off_hits_and_crumbles_when_the_hea
     let gone = crumbling.iter().position(|sent| !all::<RemoveEntity>(sent).is_empty()).expect("gone");
     assert_eq!((event - started, died - started, gone - started), (47, 48, 49));
     assert!(state(died).contains(&(0, 4)));
+}
+
+/// A natural heart a world folder holds, as a pale garden's tree leaves one, wakes at night with
+/// nothing changed beside it.
+#[test]
+fn a_stored_natural_heart_wakes_at_night() {
+    let registry = BlockRegistry::vanilla();
+    let mut chunk = Chunk::empty(0, 0, Dimension::overworld(registry.air_id()));
+    let stone = registry.find("minecraft:stone", "").unwrap();
+    (0..16).for_each(|x| (0..16).for_each(|z| chunk.set(x, 63, z, 0, stone)));
+    let log = registry.find("minecraft:pale_oak_log", "pillar_axis=y").unwrap();
+    let heart = registry.find("minecraft:creaking_heart", "creaking_heart_state=dormant,natural=1,pillar_axis=y").unwrap();
+    [(64, log), (65, heart), (66, log)].into_iter().for_each(|(y, id)| chunk.set(3, y, 3, 0, id));
+    let storage = Arc::new(MemoryStorage::default());
+    storage.store_column(ChunkPos::new(0, 0), 0, &StoredColumn::of(chunk)).unwrap();
+    let mut h = Harness::with(config(), World::with_storage(storage));
+    h.remote.run(|ctx| ctx.set_time(18000));
+    enter_stored(&mut h, 1);
+    (0..5).for_each(|_| drop(h.tick_all()));
+    let state = ask(&mut h, |ctx| ctx.block([3, 65, 3]).map(|block| block.properties).unwrap_or_default());
+    assert!(state.contains("creaking_heart_state=awake"), "{state}");
 }
 
 #[test]

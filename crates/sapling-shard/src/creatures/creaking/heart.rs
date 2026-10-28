@@ -8,8 +8,7 @@
 //! 1 counting 1 to 6 a tick, then 0). When its heart goes, sleeps or is uprooted it crumbles:
 //! property 0 is 3 and it stands; 47 ticks on particle event 16478 from its middle; a tick on its
 //! `death` and property 0 is 4; a tick on it is gone, leaving nothing.
-// TODO: hearts are known once a block beside them changes, not as their chunk loads; a hit's trail
-// of `block.creaking_heart.trail` sounds to the heart and the resin it grows on the logs by it
+// TODO: a hit's trail of `block.creaking_heart.trail` sounds to the heart and the resin it grows on the logs by it
 // (BDS's third hit grew three clumps) are not done; a creaking strays from its heart without bound.
 
 use std::collections::HashMap;
@@ -18,7 +17,7 @@ use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Difficulty, SpawnReason};
-use sapling_world::World as Level;
+use sapling_world::{ChunkPos, World as Level};
 
 use super::{Creaking, KIND};
 use crate::blocks::{self, Dice};
@@ -74,6 +73,20 @@ pub(crate) fn noticed(world: &mut World, layer: Entity, pos: BlockPos) {
     let is_heart = world.get::<Layer>(layer).and_then(|layer| state_of(&layer.world, pos)).is_some_and(|(name, _)| name == HEART);
     if is_heart {
         world.get_resource_or_insert_with(Hearts::default).0.entry((layer, pos)).or_default();
+    }
+}
+
+/// A column came in, stored or generated: its hearts (a pale garden's among them) are looked after
+/// from now on, as BDS ticks the block entity of every heart in a loaded column.
+pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let registry = level.registry();
+    let found = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| state.name == HEART));
+    if !found.is_empty() {
+        let mut hearts = world.get_resource_or_insert_with(Hearts::default);
+        for pos in found {
+            hearts.0.entry((layer, pos)).or_default();
+        }
     }
 }
 

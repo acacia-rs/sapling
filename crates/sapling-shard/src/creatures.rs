@@ -83,7 +83,7 @@ pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot};
 pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, from_storage as shot_from_storage, launch, lying as lying_shots, sound, unstick};
 pub(crate) use attacks::attacked;
 pub(crate) use bees::{bees_in, hive_broken};
-pub(crate) use creaking::heart_noticed;
+pub(crate) use creaking::{heart_noticed, hearts_arrived};
 pub(crate) use blast::{Wreck, explode};
 pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, is_full_block, touches, wound};
@@ -134,6 +134,7 @@ const NO_DEATH: &[&str] = &["minecraft:armor_stand"];
 pub(crate) fn keep_state(world: &mut World) {
     afflictions::keep(world);
     wither::keep(world);
+    piglins::keep(world);
 }
 
 /// Kills the entity `id` (see `ShardCtx::kill_entity`).

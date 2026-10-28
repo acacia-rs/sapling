@@ -34,6 +34,7 @@ pub(crate) fn arrive(world: &mut World) {
             blocks::circuits_arrived(world, layer, home);
             blocks::plants_arrived(world, layer, home);
             blocks::ticks_arrived(world, layer, home);
+            creatures::hearts_arrived(world, layer, home);
             let Some(record) = world.get::<Layer>(layer).map(|level| level.world.actors(home).to_vec()) else { continue };
             match sapling_world::stored_actors(&record) {
                 Ok(stored) => stored.into_iter().for_each(|(actor, unique_id, compound)| bring_in(world, layer, home, actor, unique_id, compound)),

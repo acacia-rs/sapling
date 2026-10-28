@@ -243,6 +243,13 @@ the actor and 77 ticks on swung (sapling waits Java's 20 to 60 by distance), a `
 pack's power 4), heard `item.trident.throw` from the drowned. It kept its own trident; the thrown
 one stuck in the floor. One handed a trident by `replaceitem` (an earlier run) only bit.
 
+`drownedloot` (`bds-drownedloot.txt`): 40 drowned summoned `as_ranged_adult` in a pool and killed by
+`damage ... entity_attack entity @s`. All 40 held a trident; 5 held a nautilus shell in the offhand
+(`MobEquipment` window `Offhand`, slot 0; the table's 8%). 13 tridents dropped (sapling: a quarter, of
+mobs a player killed, Java's equipment rule), each with a `Damage` tag of 32 to 248 (sapling: Java's
+`250 - nextInt(1 + nextInt(247))`), none enchanted; all 5 shells dropped (the pack's offhand chance 1.0).
+Besides: rotten flesh, copper ingots. sapling: `creatures/drowned.rs`.
+
 ## Paintings (`paintings`)
 
 BDS's pictures are `Motive`s built in one static initialiser (`142a1ce60`, each at `1429f4250` with
@@ -283,6 +290,15 @@ later, and 161 ticks on (`admire_item` 8 s) the ingot went to its main hand and 
 No barter came out in three runs: the clicks with an ingot fell out of reach. sapling barters on the
 click (the pack's `minecraft:interact` with `barter`), with that timing, and drops a roll of
 `piglin_barter.json` (read by `mob-loot.py` with the block tables) as the offhand empties.
+
+`piglinkeep` then `piglinkeep2` with `KEEP_WORLD=1` (`bds-piglinkeep.txt`, `bds-piglinkeep2.txt`): a
+piglin picked up a thrown golden sword, admired it in the offhand, and 161 ticks on was sent the sword
+in its main hand, then the offhand emptied, the same tick; it then took a thrown ingot into the
+offhand. After the restart it was announced with the sword (`Damage` 0 in its tag, as thrown) in the
+main hand and the ingot in the offhand (slot 0, as a stored mob's hands are shown) and bartered
+nothing in the next 11 s. sapling (`creatures/piglins.rs`) keeps both hands with the piglin
+(`Mainhand`, `Offhand`; it also writes the armour stand's `Pose`, which BDS's piglins may not have) and
+does not resume admiring after a load.
 
 ## Sapling
 

@@ -6,8 +6,10 @@ use acacia_proto::RawPacket;
 use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, MobEquipment, TakeItemEntity};
 use acacia_proto::types::WindowID;
 use common::raising::click_on;
-use common::{Harness, all};
+use common::stored::{enter_stored, floor_with};
+use common::{Harness, all, config};
 use sapling_api::{GameMode, Item, PlayerId, Slot};
+use sapling_world::{ChunkPos, World, WorldStorage, stored_actors};
 
 const ALEX: PlayerId = PlayerId(1);
 
@@ -84,6 +86,37 @@ fn a_piglin_admires_a_golden_sword_it_picks_up_and_keeps_it_but_leaves_cobblesto
     let (took, ticks) = dropped_for(&mut h, piglin, "minecraft:golden_sword", [6.5, 65.5, 0.5]);
     assert!(ticks[..took].iter().all(|sent| all::<TakeItemEntity>(sent).is_empty()), "the cobblestone is left");
     let after: Vec<Vec<RawPacket>> = (0..170).map(|_| h.tick_all().to(1).to_vec()).collect();
-    assert!(after.iter().any(|sent| offhand(sent, piglin) == [0]), "its hand empties");
+    let emptied = after.iter().find(|sent| offhand(sent, piglin) == [0]).expect("its hand empties");
+    let hands: Vec<WindowID> = all::<MobEquipment>(emptied).into_iter().filter(|held| held.runtime_entity_id == piglin).map(|held| held.window_id).collect();
+    assert_eq!(hands, [WindowID::Inventory, WindowID::Offhand], "the sword to its main hand as the offhand empties (bds-piglinkeep.txt)");
     assert!(after.iter().all(|sent| all::<AddItemEntity>(sent).is_empty()), "and nothing is handed back");
+}
+
+/// bds-piglinkeep.txt, bds-piglinkeep2.txt: the sword it kept and the ingot it was admiring come
+/// back with the world, shown in its hands.
+#[test]
+fn what_a_piglin_holds_is_saved_and_shown_again() {
+    let storage = floor_with(Vec::new());
+    let mut h = Harness::with(config(), World::with_storage(storage.clone()));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.spawn_entity("minecraft:piglin", [8.5, 64.0, 8.5]).is_some());
+    });
+    let shown: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let piglin = all::<AddEntity>(&shown).into_iter().find(|added| added.entity_type == "minecraft:piglin").expect("shown").runtime_id;
+    dropped_for(&mut h, piglin, "minecraft:golden_sword", [11.5, 64.5, 8.5]);
+    (0..170).for_each(|_| drop(h.tick_all()));
+    dropped_for(&mut h, piglin, "minecraft:gold_ingot", [11.5, 64.5, 10.5]);
+    h.shard.save_worlds();
+    let column = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
+    let saved = stored_actors(&column.actors).unwrap().into_iter().find_map(|(actor, ..)| actor.filter(|actor| actor.identifier == "minecraft:piglin")).expect("saved");
+    let name = |held: &Option<sapling_world::ItemStack>| held.as_ref().map(|held| held.name.clone());
+    assert_eq!((name(&saved.mainhand), name(&saved.offhand)), (Some("minecraft:golden_sword".into()), Some("minecraft:gold_ingot".into())));
+
+    let mut again = Harness::with(config(), World::with_storage(storage));
+    let sent = enter_stored(&mut again, 1);
+    let piglin = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:piglin").expect("shown again").runtime_id;
+    let hands: Vec<WindowID> = all::<MobEquipment>(&sent).into_iter().filter(|held| held.runtime_entity_id == piglin && held.item.network_id != 0).map(|held| held.window_id).collect();
+    assert_eq!(hands, [WindowID::Inventory, WindowID::Offhand]);
 }

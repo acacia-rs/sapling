@@ -103,6 +103,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     wither::adopt(world, entity, &compound);
     husbandry::adopt(world, entity, &kind, Some((&actor, &compound)));
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
+    super::piglins::adopt(world, entity);
     if kind == crate::dragon::DRAGON {
         crate::dragon::adopt(world, entity);
     }

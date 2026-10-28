@@ -3,20 +3,20 @@
 //! research/captures/bds-goldpickup.txt showed: an adult not admiring walks to gold lying within
 //! 10 and takes it once within a block of its box (`TakeItemEntity`), shows it a tick later and
 //! is heard to `admire` a tick after that. An ingot it admires in its offhand and barters; another
-//! `admire` item (a golden sword in the drill) it admires as long and keeps; nuggets it keeps in
-//! its main hand, which is empty here.
-// TODO: what it keeps is lost on death and with the world; its other shareables (armour, food,
-// crossbows) are not picked up; it is not shown admiring (`FlagsExtended` bit 30).
+//! `admire` item (a golden sword in the drill) it admires as long and then holds; nuggets it keeps
+//! in its main hand.
+// TODO: what it holds is lost on death; its other shareables (armour, food, crossbows) are not
+// picked up; it is not shown admiring (`FlagsExtended` bit 30).
 
 use acacia_proto::packets::TakeItemEntity;
 use bevy_ecs::prelude::*;
 
-use super::{ADMIRES, Admiring, GOLD, HEAD, Nuggets, PIGLIN, offhand};
+use super::{Admiring, GOLD, Hands, PIGLIN, admire, main_hand, stack};
 use crate::body::Body;
-use crate::components::{NetId, Tick};
+use crate::components::NetId;
+use crate::creatures::{Dying, is_baby, legs};
 use crate::drops;
 use crate::late_sounds;
-use crate::creatures::{Dying, hunting, is_baby, legs};
 
 pub(super) const NUGGET: &str = "minecraft:gold_nugget";
 const SIGHT: [f32; 2] = [10.0, 4.0];
@@ -51,7 +51,7 @@ pub(in crate::creatures) fn steer(world: &mut World, piglin: Entity, layer: Enti
         .filter(|(_, stack)| wanted(&stack.name))
         .filter_map(|(item, stack)| world.get::<Body>(item).map(|lies| (item, stack, lies.at)))
         .min_by(|a, b| far(a.2).total_cmp(&far(b.2)));
-    let Some((item, stack, at)) = nearest else { return false };
+    let Some((item, taken, at)) = nearest else { return false };
     let reach = HALF_WIDTH + REACH;
     let touches = (at[0] - body.at[0]).abs() <= reach && (at[2] - body.at[2]).abs() <= reach && (body.at[1]..=body.at[1] + HEIGHT).contains(&at[1]);
     if !touches {
@@ -60,22 +60,21 @@ pub(in crate::creatures) fn steer(world: &mut World, piglin: Entity, layer: Enti
     }
     let Some(item_id) = world.get::<NetId>(item).map(|id| id.0) else { return false };
     let cell = body.at.map(|c| c.floor() as i32);
-    let taken = sapling_net::encode(&TakeItemEntity { runtime_entity_id: item_id, target: id as u32 });
-    crate::blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[taken]);
-    let nuggets = stack.name == NUGGET;
-    drops::take(world, item, if nuggets { stack.count } else { 1 });
+    let told = sapling_net::encode(&TakeItemEntity { runtime_entity_id: item_id, target: id as u32 });
+    crate::blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[told]);
+    let nuggets = taken.name == NUGGET;
+    drops::take(world, item, if nuggets { taken.count } else { 1 });
     if nuggets {
-        let kept = world.get::<Nuggets>(piglin).map_or(0, |nuggets| nuggets.0);
-        world.entity_mut(piglin).insert(Nuggets(kept.saturating_add(stack.count)));
-        if let Some(held) = super::held(world, piglin, id) {
-            late_sounds::play_later(world, 1, layer, cell, held);
+        let kept = world.get::<Hands>(piglin).and_then(|hands| hands.main.as_ref()).filter(|held| held.name == NUGGET).map_or(0, |held| held.count);
+        let held = stack(NUGGET, kept.saturating_add(taken.count));
+        if let Some(shown) = main_hand(id, &held) {
+            late_sounds::play_later(world, 1, layer, cell, shown);
         }
+        let off = world.get_mut::<Hands>(piglin).and_then(|mut hands| hands.off.take());
+        world.entity_mut(piglin).insert(Hands { main: Some(held), off });
         crate::creatures::reshow(world, piglin);
         return true;
     }
-    let now = world.resource::<Tick>().0;
-    world.entity_mut(piglin).insert(Admiring { until: now + ADMIRES, barters: stack.name == GOLD });
-    late_sounds::play_later(world, 1, layer, cell, sapling_net::encode(&offhand(id, Some(&stack.name))));
-    late_sounds::play_later(world, 2, layer, cell, hunting::sound("admire", id, PIGLIN, &body, HEAD));
+    admire(world, piglin, layer, sapling_world::ItemStack { count: 1, ..taken }, 1);
     true
 }

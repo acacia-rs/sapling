@@ -11,7 +11,7 @@
 
 mod heart;
 
-pub(crate) use heart::noticed as heart_noticed;
+pub(crate) use heart::{arrived as hearts_arrived, noticed as heart_noticed};
 pub(super) use heart::{shrugs_off, tick as tick_hearts};
 
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2};
