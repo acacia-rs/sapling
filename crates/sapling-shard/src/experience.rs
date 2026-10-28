@@ -58,6 +58,7 @@ pub(crate) fn attributes(id: &NetId, experience: &Experience, with_level: bool, 
 /// Gives a player `points` of experience, which it is shown; a fifth level sounds, once in
 /// [`SOUND_EVERY`] ticks.
 pub(crate) fn give(world: &mut World, player: Entity, points: i32) {
+    let Some(points) = crate::life_events::experience_gained(world, player, points) else { return };
     let tick = world.resource::<Tick>().0;
     let mut query = world.query::<(&NetId, &Position, &mut Inventory, &mut Outgoing)>();
     let Ok((id, position, mut inventory, mut out)) = query.get_mut(world, player) else { return };

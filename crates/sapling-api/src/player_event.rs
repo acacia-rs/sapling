@@ -115,7 +115,41 @@ pub struct SkinChangeEvent {
     cancelled: bool,
 }
 
-player_events!(notice: JumpEvent, PunchAirEvent; cancellable: ToggleSprintEvent, ToggleSneakEvent, HeldSlotChangeEvent, TeleportEvent, GameModeChangeEvent, SkinChangeEvent);
+/// Which portal a player stepped through.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum Portal {
+    /// A nether portal, either way.
+    Nether,
+    /// An end portal in a stronghold.
+    End,
+    /// The End's exit portal, home.
+    EndExit,
+}
+
+/// A player's time in a portal is up and it is about to be sent through. Cancelled, it stays
+/// where it is (and is asked again once the portal's cooldown is over).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PortalUseEvent {
+    player: Player,
+    portal: Portal,
+    cancelled: bool,
+}
+
+player_events!(
+    notice: JumpEvent, PunchAirEvent;
+    cancellable: ToggleSprintEvent, ToggleSneakEvent, HeldSlotChangeEvent, TeleportEvent, GameModeChangeEvent, SkinChangeEvent, PortalUseEvent
+);
+
+impl PortalUseEvent {
+    pub fn new(player: Player, portal: Portal) -> Self {
+        Self { player, portal, cancelled: false }
+    }
+
+    pub fn portal(&self) -> Portal {
+        self.portal
+    }
+}
 
 impl JumpEvent {
     pub fn new(player: Player) -> Self {

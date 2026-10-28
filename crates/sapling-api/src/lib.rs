@@ -4,6 +4,7 @@
 
 mod block;
 mod block_entity;
+mod block_event;
 mod border;
 mod chat;
 mod combat;
@@ -19,6 +20,7 @@ mod generation;
 mod health;
 mod hud;
 mod item;
+mod life_event;
 mod light;
 mod listen;
 mod loot;
@@ -77,7 +79,13 @@ pub use hud::{BossBar, BossBarColour, Sidebar, Title, TitleAction, TitleBackend}
 pub use screen::{Animation, Camera, Music, RecipeChange, ScreenAction};
 pub use sound::{Sound, SoundBackend};
 pub use item::{DropEvent, Item, ItemLock, Slot};
-pub use player_event::{GameModeChangeEvent, HeldSlotChangeEvent, JumpEvent, PunchAirEvent, SkinChangeEvent, TeleportEvent, ToggleSneakEvent, ToggleSprintEvent};
+pub use life_event::{
+    ContainerCloseEvent, ContainerOpenEvent, ExperienceGainEvent, FoodLossEvent, HealEvent, HealSource, ItemConsumeEvent, ItemPickupEvent, SignEditEvent, SleepEvent,
+};
+pub use player_event::{
+    GameModeChangeEvent, HeldSlotChangeEvent, JumpEvent, Portal, PortalUseEvent, PunchAirEvent, SkinChangeEvent, TeleportEvent, ToggleSneakEvent, ToggleSprintEvent,
+};
+pub use block_event::{CropTrampleEvent, LeavesDecayEvent, LiquidHardenEvent, PortalCreateEvent, RedstoneUpdateEvent};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use tags::{TagBackend, Tagged};
 pub use scoreboard::{Display, DisplaySlot, Objective, ScoreHolder, ScoreOperation, ScoreboardBackend, SortOrder};

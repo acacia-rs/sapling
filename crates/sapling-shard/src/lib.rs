@@ -50,6 +50,7 @@ mod inventory;
 mod join;
 mod kept;
 mod late_sounds;
+mod life_events;
 mod light;
 mod lightning;
 mod maps;

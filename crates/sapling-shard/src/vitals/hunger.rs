@@ -70,6 +70,11 @@ impl Hunger {
         self.exhaustion += by;
     }
 
+    /// Puts the hunger back to `food`, a loss plugins refused (life_events.rs).
+    pub(super) fn keep_food(&mut self, food: f32) {
+        self.food = food;
+    }
+
     pub(super) fn is_full(&self) -> bool {
         self.food >= FULL
     }

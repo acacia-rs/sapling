@@ -76,6 +76,7 @@ mod lit_rules;
 mod mace;
 mod maps;
 mod level;
+mod life_events;
 mod liquids;
 mod mechanisms;
 mod mob_commands;

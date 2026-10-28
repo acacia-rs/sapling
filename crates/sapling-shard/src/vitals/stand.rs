@@ -151,9 +151,12 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     }
     let left = vitals.health.left();
     match vitals.hunger.tick(rules.on(NATURAL_REGENERATION) && left > 0.0 && left < vitals.health.max()) {
-        Some(hunger::Turn::Mend) => vitals.health.mend(1.0),
+        Some(hunger::Turn::Mend) => vitals.health.mend(crate::life_events::healed(world, player, 1.0, sapling_api::HealSource::Natural)),
         Some(hunger::Turn::Starve) => hits.extend((left > STARVED && vitals.health.hurt(1.0)).then_some(Cause::Starving)),
         None => {}
+    }
+    if !crate::life_events::may_lose_food(world, player, fed.shown().0, vitals.hunger.shown().0) {
+        vitals.hunger.keep_food(fed.shown().0);
     }
     // Plugins may spare the player what its surroundings took this tick, or change how much.
     if let Some(&cause) = hits.last().filter(|_| vitals.health.lost_since(&spared) > 0.0)
