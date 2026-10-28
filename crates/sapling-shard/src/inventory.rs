@@ -2,6 +2,7 @@
 //! (docs/DESIGN.md "Inventories"). Stacks carry the ids clients name them by.
 
 mod armour_wear;
+mod bundle_cleanup;
 mod bundles;
 mod crafting;
 mod death;
@@ -24,6 +25,7 @@ use crate::components::Outgoing;
 use crate::experience::Experience;
 
 pub(crate) use armour_wear::{elytra_flies, equip_sound_name, wear_armour, wear_elytra, wear_thorny};
+pub(crate) use bundle_cleanup::sweep as sweep_bundles;
 pub(crate) use bundles::number as number_bundles;
 pub(crate) use wire::{stack, stacks_with, wire};
 pub(crate) use crafting::clear_grid;

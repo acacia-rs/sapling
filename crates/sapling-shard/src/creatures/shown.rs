@@ -13,6 +13,7 @@ use super::genes::Gene;
 use super::health::Health;
 use super::husbandry::Raised;
 use super::legs::Legs;
+use super::properties::Properties;
 use super::vexes;
 use crate::body::{Body, Physics};
 use crate::components::NetId;
@@ -32,14 +33,19 @@ const HEAD_FORWARD: f32 = 0.85;
 /// A mob's head is this much of its height up.
 const HEAD_UP: f32 = 0.85;
 
+/// What a mob is dressed in beyond its kind: as it was stored, raised, its entity properties
+/// and a mount's strides.
+pub(super) type Dress<'a> = (Option<&'a Actor>, Option<&'a Raised>, Option<&'a Properties>, Option<&'a Strides>);
+
 /// The mob `id` as its viewers are told of it: dressed as it was stored (`look`), or as BDS
-/// announced its kind, in `variant`; either as it is `raised` now.
+/// announced its kind, in `variant` and with its `properties`; either as it is `raised` now.
 // TODO: a mob dressed as it was stored is not shown on fire to one who comes to see it burning.
-pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, strides): (Option<&Actor>, Option<&Raised>, Option<&Strides>), health: Option<&Health>, yaw: f32, variant: i32) -> Vec<Bytes> {
+pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, properties, strides): Dress<'_>, health: Option<&Health>, yaw: f32, variant: i32) -> Vec<Bytes> {
     let left = health.map(Health::left);
     let extra = raised.map_or(MetadataFlags1(0), Raised::unstored_flags);
     let dressed = look.map(|look| raised.map_or_else(|| look.clone(), |raised| raised.dress(look)));
-    if let Some(shown) = dressed.and_then(|look| mobs::announcement_with(&Actor { position: body.at, health: left.or(look.health), ..look }, id, extra, strides)) {
+    let told = properties.map(|properties| properties.shown(kind));
+    if let Some(shown) = dressed.and_then(|look| mobs::announcement_with(&Actor { position: body.at, health: left.or(look.health), ..look }, id, extra, told, strides)) {
         return shown;
     }
     let on_fire = health.is_some_and(Health::is_burning);
@@ -64,6 +70,7 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, stri
         sapling_data::dress_strides(&mut added, strides, left);
     }
     super::slimes::sizes::dress(&mut added, kind, Some(super::genes::Gene(variant)));
+    super::properties::dress(&mut added, properties);
     let mut shown = vec![sapling_net::encode(&added)];
     let held = HOLDS.iter().find(|(of, _)| *of == kind).map(|(_, item)| sapling_data::Stack { name: item, count: 1, damage: 0, block: None, tag: None });
     shown.extend(held.and_then(|stack| sapling_data::mob_hand(id, &stack, false)).map(|held| sapling_net::encode(&held)));
@@ -77,7 +84,7 @@ fn shown_now(world: &World, entity: Entity) -> Option<Vec<Bytes>> {
     let look = world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref());
     let yaw = world.get::<Legs>(entity).map_or(0.0, |legs| legs.yaw);
     let strides = world.get::<super::strides::Strode>(entity).map(|strode| &strode.0);
-    let mut shown = announcement(id, kind, body, (look, raised, strides), world.get::<Health>(entity), yaw, world.get::<Gene>(entity).map_or(0, |gene| gene.0));
+    let mut shown = announcement(id, kind, body, (look, raised, world.get::<Properties>(entity), strides), world.get::<Health>(entity), yaw, world.get::<Gene>(entity).map_or(0, |gene| gene.0));
     shown.extend(super::drowned::held(world, entity, id));
     shown.extend(super::piglins::held(world, entity, id));
     let flags = world.get::<Told>(entity).and_then(Told::mob_flags);

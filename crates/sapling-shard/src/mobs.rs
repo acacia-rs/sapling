@@ -60,12 +60,12 @@ pub(crate) struct MobGrid {
 /// What shows a stored actor as it was stored; `None` for a dropped item that names no item a
 /// client knows.
 pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
-    announcement_with(actor, id, MetadataFlags1(0), None)
+    announcement_with(actor, id, MetadataFlags1(0), None, None)
 }
 
-/// [`announcement`] with `extra` flags on top of those its stored states show, and the
-/// `strides` a mount was born with.
-pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, strides: Option<&sapling_data::Strides>) -> Option<Vec<Bytes>> {
+/// [`announcement`] with `extra` flags on top of those its stored states show, its entity
+/// `properties` where they are known, and the `strides` a mount was born with.
+pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, properties: Option<EntityProperties>, strides: Option<&sapling_data::Strides>) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
         return Some(item_shown(sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?));
     }
@@ -93,6 +93,9 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, s
         baby: actor.baby,
         name: &actor.name,
     });
+    if let Some(properties) = properties {
+        added.properties = properties;
+    }
     if let Some(strides) = strides {
         sapling_data::dress_strides(&mut added, strides, actor.health);
     }

@@ -116,6 +116,7 @@ pub(crate) fn resource_packs(
         };
         out.0.extend_from_slice(sapling_data::pre_start_packets());
         out.push(&sapling_data::start_game(&options));
+        out.0.extend_from_slice(sapling_data::property_registry_packets());
         out.0.extend_from_slice(sapling_data::registry_packets());
         out.push(&sapling_data::update_abilities(id.0 as i64));
         out.push(&sapling_data::entity_data(id.0, &identity.0.name));

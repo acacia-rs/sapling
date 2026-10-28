@@ -110,9 +110,14 @@ impl Board {
         new
     }
 
-    /// BDS tells every client, whether the objective was shown or not.
+    /// BDS tells every client, whether the objective was shown or not; a shown one's scores are
+    /// taken away first, newest first (research/captures/bds-scoreboard-join.txt).
     pub(crate) fn remove_objective(&mut self, name: &str) -> bool {
         let Some(at) = self.objectives.iter().position(|kept| kept.objective.name == name) else { return false };
+        if self.shown(name) {
+            let gone = self.scores_on(name).into_iter().map(|(id, _)| Change::Score { objective: name.to_owned(), id, score: None });
+            self.changes.extend(gone.collect::<Vec<_>>());
+        }
         self.objectives.remove(at);
         self.displays.retain(|_, display| display.objective != name);
         self.changes.push(Change::Removed(name.to_owned()));
@@ -144,6 +149,19 @@ impl Board {
 
     pub(crate) fn id_of(&self, holder: &ScoreIdentity) -> Option<i64> {
         self.ids.get(holder).copied()
+    }
+
+    /// The fake holder `name` becomes the player `unique`, unless that player holds scores of its
+    /// own (sync.rs `claim`); the id they keep.
+    pub(crate) fn claim(&mut self, name: &str, unique: i64) -> Option<i64> {
+        let player = ScoreIdentity::Player(unique);
+        if self.ids.contains_key(&player) {
+            return None;
+        }
+        let id = self.ids.remove(&ScoreIdentity::Fake(name.to_owned()))?;
+        self.ids.insert(player.clone(), id);
+        self.holders.insert(id, player);
+        Some(id)
     }
 
     pub(crate) fn holder(&self, id: i64) -> Option<&ScoreIdentity> {

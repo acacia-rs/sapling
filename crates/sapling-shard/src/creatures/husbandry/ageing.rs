@@ -58,6 +58,7 @@ fn grow_up(world: &mut World, entity: Entity, kind: &str) {
     if let Some(swap) = sapling_data::husbandry(kind).map(|raised| &raised.on_grow) {
         regroup(world, entity, swap);
     }
+    super::super::properties::grew_up(world, entity, kind);
     super::super::reshow(world, entity);
 }
 

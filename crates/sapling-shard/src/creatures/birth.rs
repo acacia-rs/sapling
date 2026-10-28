@@ -51,9 +51,10 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
         return None;
     }
     let body = Body::new(feet, [0.0; 3], slimes::sizes::body_size(kind, gene).unwrap_or(size));
+    let properties = super::properties::rolled(world, layer, kind, feet, reason == SpawnReason::Bred);
     let rolled = strides::roll(world, kind);
-    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, rolled.as_ref()), None, yaw, gene.map_or(0, |gene| gene.0))))?;
-    world.entity_mut(entity).insert(Creature { look: None });
+    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, Some(&properties), rolled.as_ref()), None, yaw, gene.map_or(0, |gene| gene.0))))?;
+    world.entity_mut(entity).insert((Creature { look: None }, properties));
     if let Some(rolled) = rolled {
         world.entity_mut(entity).insert(strides::Strode(rolled));
     }
@@ -89,7 +90,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let gene = genes::stored(&kind, actor.variant);
     let body = Body::new(actor.position, [0.0; 3], slimes::sizes::body_size(&kind, gene).unwrap_or(size));
     let (kept, compound) = strides::stored(world, &kind, compound);
-    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, kept.as_ref()), None, 0.0, actor.variant))) else { return false };
+    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, None, kept.as_ref()), None, 0.0, actor.variant))) else { return false };
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }

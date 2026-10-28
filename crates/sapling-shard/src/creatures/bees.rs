@@ -13,6 +13,9 @@
 
 mod hives;
 
+use acacia_proto::types::{
+    MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain,
+};
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Difficulty, Weather};
 
@@ -39,6 +42,7 @@ const LOOKS: f32 = 0.5;
 /// the flower's bottom.
 const AT_FLOWER: f32 = 1.0;
 const POLLINATES: u32 = 20;
+const NECTAR: &str = "minecraft:has_nectar";
 const OVER_FLOWER: f32 = 0.25;
 /// Ticks it looks for flowers before it goes home (`find_flower_timeout`), and how far it looks
 /// for a hive.
@@ -170,10 +174,18 @@ fn forage(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool
     let Some(mut bee) = world.get_mut::<Bee>(entity) else { return false };
     bee.flower = Some(flower);
     bee.stayed = if there { bee.stayed + 1 } else { 0 };
-    if bee.stayed >= POLLINATES {
+    let pollinated = bee.stayed >= POLLINATES;
+    if pollinated {
         (bee.nectar, bee.flower, bee.stayed, bee.since) = (true, None, 0, now);
+        super::properties::set(world, entity, NECTAR, 1, nectar_sounds());
     }
     wings::fly_at(world, entity, KIND, spot)
+}
+
+/// The sounds BDS sent with a bee's `has_nectar` (bds-beesout.txt): those of its pollen group.
+fn nectar_sounds() -> Vec<MetadataDictionaryItem> {
+    let interval = |key| MetadataDictionaryItem { key, r#type: Type::Float, legacy_type: 3, value: Value::Default(Plain::Float(0.0)) };
+    vec![interval(Key::AmbientSoundInterval), interval(Key::AmbientSoundIntervalRange), super::properties::ambient_sound("ambient")]
 }
 
 fn home(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool {

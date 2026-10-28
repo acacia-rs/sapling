@@ -14,8 +14,8 @@
 
 use std::collections::HashMap;
 
-use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent, SetEntityData};
-use acacia_proto::types::{EntityProperties, EntityPropertiesIntsItem, Vec3f};
+use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Difficulty, SpawnReason};
 use sapling_world::World as Level;
@@ -35,8 +35,8 @@ const REACH: [i32; 2] = [16, 8];
 /// What its spawn particle carries, as a spawner's (spawners/monster.rs): the creaking's width and
 /// height rounded up.
 const SPAWN_SIZE: i32 = 1 + (3 << 8);
-const STATE: u32 = 0;
-const SWAY: u32 = 1;
+pub(super) const STATE: &str = "minecraft:creaking_state";
+const SWAY: &str = "minecraft:creaking_swaying_ticks";
 const SWAYS: i32 = 6;
 const CRUMBLING: i32 = 3;
 const CRUMBLED: i32 = 4;
@@ -180,9 +180,8 @@ fn call(world: &mut World, layer: Entity, heart: BlockPos) {
     late_sounds::play_later(world, 1, layer, heart, sound(corner(heart), state as i32, "", -1));
 }
 
-fn properties(id: u64, index: u32, value: i32) -> bytes::Bytes {
-    let properties = EntityProperties { ints: vec![EntityPropertiesIntsItem { index, value }], floats: Vec::new() };
-    sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: Vec::new(), properties, tick: 0 })
+fn set_property(world: &mut World, creaking: Entity, name: &str, value: i32) {
+    crate::creatures::properties::set(world, creaking, name, value, Vec::new());
 }
 
 fn tell(world: &mut World, creaking: Entity, packets: Vec<bytes::Bytes>) {
@@ -193,14 +192,13 @@ fn tell(world: &mut World, creaking: Entity, packets: Vec<bytes::Bytes>) {
 /// Its heart is lost to `creaking`: it starts to crumble.
 fn crumble(world: &mut World, creaking: Entity) {
     let now = world.resource::<Tick>().0;
-    let Some(id) = world.get::<NetId>(creaking).map(|id| id.0) else { return };
     let started = {
         let Some(mut tie) = world.get_mut::<Creaking>(creaking) else { return };
         let Some(bound) = tie.bound.as_mut() else { return };
         bound.crumbling.replace(now).is_none()
     };
     if started {
-        tell(world, creaking, vec![properties(id, STATE, CRUMBLING)]);
+        set_property(world, creaking, STATE, CRUMBLING);
     }
 }
 
@@ -210,7 +208,7 @@ fn sway_and_crumble(world: &mut World, now: u64) {
     for (creaking, id, bound) in bound {
         if let Some(sway) = bound.swaying {
             let next = (sway < SWAYS).then_some(sway + 1);
-            tell(world, creaking, vec![properties(id, SWAY, next.unwrap_or(0))]);
+            set_property(world, creaking, SWAY, next.unwrap_or(0));
             set_sway(world, creaking, next);
         }
         let Some(since) = bound.crumbling else { continue };
@@ -219,7 +217,8 @@ fn sway_and_crumble(world: &mut World, now: u64) {
             let position = Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] };
             tell(world, creaking, vec![sapling_net::encode(&LevelEvent { event: LevelEventEvent::Unknown(CRUMBLE_EVENT), position, data: 0 })]);
         } else if now == since + CRUMBLES + 1 {
-            tell(world, creaking, vec![crate::creatures::hunting::sound("death", id, KIND, &body, 0.0), properties(id, STATE, CRUMBLED)]);
+            tell(world, creaking, vec![crate::creatures::hunting::sound("death", id, KIND, &body, 0.0)]);
+            set_property(world, creaking, STATE, CRUMBLED);
         } else if now > since + CRUMBLES + 1 {
             mobs::remove(world, creaking);
         }
@@ -243,8 +242,7 @@ pub(in crate::creatures) fn shrugs_off(world: &mut World, creaking: Entity) -> b
         return false;
     }
     if bound.swaying.is_none() {
-        let Some(id) = world.get::<NetId>(creaking).map(|id| id.0) else { return true };
-        tell(world, creaking, vec![properties(id, SWAY, 1)]);
+        set_property(world, creaking, SWAY, 1);
         set_sway(world, creaking, Some(1));
     }
     true

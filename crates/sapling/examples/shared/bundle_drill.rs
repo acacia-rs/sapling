@@ -33,8 +33,10 @@ fn tag_ints(actor: &Bot, slot: u8) -> Vec<(String, i64)> {
     }).collect()
 }
 
+/// The bundle `id`'s slot: the number goes little-endian, as BDS reads it (acacia-proto writes the
+/// field big-endian; sapling-shard inventory/bundles.rs `wire_id`).
 fn dynamic(id: u32, slot: u8, stack_id: i32) -> StackRequestSlotInfo {
-    StackRequestSlotInfo { slot_type: FullContainerName { container_id: ContainerSlotType::Dynamic, dynamic_container_id: Some(id) }, slot, stack_id }
+    StackRequestSlotInfo { slot_type: FullContainerName { container_id: ContainerSlotType::Dynamic, dynamic_container_id: Some(id.swap_bytes()) }, slot, stack_id }
 }
 
 /// Sends one request and prints what comes back for a second; the stack ids the answer gives

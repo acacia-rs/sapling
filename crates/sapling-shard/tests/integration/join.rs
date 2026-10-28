@@ -26,11 +26,13 @@ fn a_player_is_walked_through_the_join_sequence() {
     use acacia_proto::packets::{
         CameraPresets, FeatureRegistry, GameRulesChanged, InventoryContent, JigsawStructureData, PlayerHotbar, SetDifficulty, SetSpawnPosition, SyncWorldClocks, TrimData, VoxelShapes,
     };
+    // BDS's join (acacia-testserver/fixtures/bds-1.26.52.script) tells the 13 kinds' entity
+    // properties between StartGame and ItemRegistry.
+    let properties = [acacia_proto::packets::SyncEntityProperty::ID; 13];
     let expected = [
-        JigsawStructureData::ID,
-        VoxelShapes::ID,
-        StartGame::ID,
-        ItemRegistry::ID,
+        &[JigsawStructureData::ID, VoxelShapes::ID, StartGame::ID][..],
+        &properties,
+        &[ItemRegistry::ID,
         BiomeDefinitionList::ID,
         AvailableEntityIdentifiers::ID,
         FeatureRegistry::ID,
@@ -50,8 +52,9 @@ fn a_player_is_walked_through_the_join_sequence() {
         InventoryContent::ID,
         InventoryContent::ID,
         PlayerHotbar::ID,
-        acacia_proto::packets::UnlockedRecipes::ID,
-    ];
+        acacia_proto::packets::UnlockedRecipes::ID][..],
+    ]
+    .concat();
     assert_eq!(ids(&sent), expected);
     let start: StartGame = sent[2].decode().unwrap();
     assert_eq!((start.runtime_entity_id, start.world_name.as_str()), (1, "test"));

@@ -36,6 +36,7 @@ mod emotes;
 mod enchantments;
 mod end;
 mod entities;
+mod entity_properties;
 mod eyes;
 mod fire;
 mod fireworks;

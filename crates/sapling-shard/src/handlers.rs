@@ -92,6 +92,7 @@ pub(crate) fn dispatch(world: &mut World) {
     crate::maps::dispatch(world);
     crate::maps::tick(world);
     crate::inventory::number_bundles(world);
+    crate::inventory::sweep_bundles(world);
     blocks::turn_lectern_pages(world);
     containers::dispatch_closes(world);
     containers::show_lids_again(world);
