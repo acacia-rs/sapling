@@ -42,6 +42,7 @@ mod omens;
 mod paths;
 mod piglins;
 mod properties;
+mod raids;
 mod rams;
 mod scooping;
 mod shooting;
@@ -179,6 +180,7 @@ pub(crate) fn tick(world: &mut World) {
     husbandry::tick(world);
     crowding::tick(world);
     warden::tick(world);
+    raids::tick(world);
     armour_stands::tick(world);
     creaking::tick_hearts(world);
     let now = world.resource::<Tick>().0;

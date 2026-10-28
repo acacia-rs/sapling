@@ -94,6 +94,7 @@ mod resource_packs;
 mod placed_items;
 mod player_omens;
 mod players;
+mod raids;
 mod plugin_damage;
 mod paintings;
 mod phantoms;
