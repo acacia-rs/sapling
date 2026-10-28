@@ -31,6 +31,9 @@ pub(crate) fn wire_game_mode(mode: GameMode) -> WireGameMode {
 /// learn whom to show how.
 pub(crate) fn set_game_mode(world: &mut World, player: Entity, mode: GameMode) {
     let (tick, Some(id)) = (world.resource::<Tick>().0, world.get::<NetId>(player).copied()) else { return };
+    if !crate::player_events::may_change_mode(world, player, mode) {
+        return;
+    }
     let Some(mut current) = world.get_mut::<Mode>(player) else { return };
     current.0 = mode;
     let packet = UpdatePlayerGameType { gamemode: wire_game_mode(mode), player_unique_id: id.0 as i64, tick };

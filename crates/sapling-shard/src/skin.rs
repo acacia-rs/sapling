@@ -59,6 +59,21 @@ pub(crate) fn wire_skin(claims: &Claims) -> Skin {
     })
 }
 
+/// A skin a client sent in game (PlayerSkin), held to the limits a login's is: `None` for one
+/// that does not hold together, which is dropped.
+pub(crate) fn checked(skin: Skin) -> Option<Skin> {
+    let fits = |image: &SkinImage, empty_ok: bool| {
+        let sides = (1..=MAX_SIDE as i32).contains(&image.width) && (1..=MAX_SIDE as i32).contains(&image.height);
+        (sides && image.data.len() == (image.width * image.height * 4) as usize) || (empty_ok && image.width == 0 && image.height == 0 && image.data.is_empty())
+    };
+    let ids = [&skin.skin_id, &skin.full_skin_id, &skin.cape_id, &skin.geometry_data_version].iter().all(|id| id.len() <= MAX_ID) && !skin.skin_id.is_empty();
+    let texts = [&skin.skin_resource_pack, &skin.geometry_data, &skin.animation_data].iter().all(|text| text.len() <= MAX_TEXT);
+    let json = serde_json::from_str::<Value>(&skin.skin_resource_pack).is_ok() && (skin.geometry_data.is_empty() || serde_json::from_str::<Value>(&skin.geometry_data).is_ok());
+    let counts = skin.animations.len() <= MAX_ANIMATIONS && skin.personal_pieces.len() <= MAX_PIECES && skin.piece_tint_colors.len() <= MAX_PIECES;
+    let images = fits(&skin.skin_data, false) && fits(&skin.cape_data, true) && skin.animations.iter().all(|animation| fits(&animation.skin_image, false));
+    (ids && texts && json && counts && images).then_some(Skin { primary_user: false, ..skin })
+}
+
 fn image(width: u32, height: u32, base64: &str) -> Option<SkinImage> {
     let data = STANDARD.decode(base64).ok()?;
     let fits = width <= MAX_SIDE && height <= MAX_SIDE && data.len() == (width * height * 4) as usize;

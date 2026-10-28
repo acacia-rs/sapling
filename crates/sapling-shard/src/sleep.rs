@@ -200,6 +200,9 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
         tell(world, player, "tile.bed.notSafe");
         return true;
     }
+    if !crate::life_events::may_sleep(world, player, head) {
+        return true;
+    }
     let yaw = LYING_YAW[direction];
     if let Some(mut lying) = world.get_mut::<Position>(player) {
         (lying.yaw, lying.head_yaw, lying.pitch) = (yaw, yaw, 0.0);

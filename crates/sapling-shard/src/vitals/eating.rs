@@ -124,6 +124,9 @@ fn drained(world: &mut World, player: Entity) {
 
 /// The food is eaten: one less in the hand, the hunger fed, and a burp; a drink empties its bottle.
 fn finish(world: &mut World, player: Entity, meal: Meal) {
+    if !crate::life_events::may_consume(world, player) {
+        return show(world, player, false);
+    }
     let now = world.resource::<Tick>().0;
     let use_method = match (meal.food.drunk, meal.food.cures) {
         (true, true) => CompletedUsingItemUseMethod::Unknown(-1),

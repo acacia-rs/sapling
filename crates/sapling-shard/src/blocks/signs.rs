@@ -115,7 +115,8 @@ pub(crate) fn dispatch_edits(world: &mut World) {
         }
         let owner = world.get::<Identity>(player).map(|identity| identity.0.xuid.clone()).unwrap_or_default();
         let kept = world.get::<Layer>(editing.layer).and_then(|layer| layer.world.block_entity(pos)).map(|kept| kept.nbt.clone());
-        if let Some(entity) = kept.and_then(|kept| written(&kept, &edit.nbt.decode().ok()?.value, &owner)) {
+        let Some(kept) = kept else { continue };
+        if let Some(entity) = edit.nbt.decode().ok().and_then(|sent| written(&kept, &sent.value, &owner)).filter(|entity| crate::life_events::may_edit_sign(world, player, editing.layer, pos, &kept, entity)) {
             send::keep_entity(world, editing.layer, pos, &entity);
         }
     }

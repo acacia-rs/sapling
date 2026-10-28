@@ -245,6 +245,7 @@ fn act(world: &mut World, player: Entity, active: &Active) {
     match active.effect {
         Effect::InstantHealth | Effect::Regeneration => {
             let by = if active.effect == Effect::Regeneration { f32::from(u8::from(turn(REGENERATES))) } else { HEALS * 2f32.powi(i32::from(active.amplifier)) };
+            let by = if by > 0.0 { crate::life_events::healed(world, player, by, if active.effect == Effect::Regeneration { sapling_api::HealSource::Regeneration } else { sapling_api::HealSource::InstantHealth }) } else { by };
             if let Some(mut vitals) = world.get_mut::<Vitals>(player).filter(|vitals| by > 0.0 && vitals.died.is_none()) {
                 vitals.health.mend(by);
             }

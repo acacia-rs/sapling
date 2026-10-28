@@ -277,7 +277,7 @@ pub(crate) fn pick_up(world: &mut World) {
         let around = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| ChunkPos::new(home.x + dx, home.z + dz)));
         let near = around.filter_map(|pos| standing.get(&(layer, pos))).flatten().filter(|(_, feet, _)| within_pickup(*feet, at, SIZE));
         let taker = near.copied().find(|(player, ..)| world.get::<Inventory>(*player).is_some_and(|inventory| inventory.loaded && inventory.has_room_for(&stack)));
-        let Some((player, _, player_id)) = taker else { continue };
+        let Some((player, _, player_id)) = taker.filter(|(player, ..)| crate::life_events::may_pick_up(world, *player, &stack)) else { continue };
         let left = inventory::change(world, player, |inventory| inventory.add(&stack)).unwrap_or(stack.count);
         let taken = sapling_net::encode(&TakeItemEntity { runtime_entity_id: item_id, target: player_id as u32 });
         blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[taken]);

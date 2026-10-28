@@ -56,6 +56,9 @@ pub(crate) fn kindle(world: &mut World, layer: Entity, at: BlockPos) -> bool {
     let Some(shape) = shape::find(at, &|pos| cell(level, pos)).filter(|shape| !shape.cells().iter().any(|pos| is_portal(level, *pos))) else { return false };
     let Some(id) = portal_id(level, shape.axis) else { return false };
     let cells: Vec<(BlockPos, u32)> = shape.cells().into_iter().map(|pos| (pos, id)).collect();
+    if !crate::world_events::may_create_portal(world, layer, &cells) {
+        return false;
+    }
     write_shown(world, layer, &cells);
     keep(world, layer, &shape);
     true

@@ -65,6 +65,9 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
     if super::access::is_blocked(world, layer, pos, block) {
         return true;
     }
+    if (kind(block).is_some() || workstations::of_block(block).is_some() || [TABLE, STONECUTTER].contains(&block)) && !crate::life_events::may_open(world, player, pos, block) {
+        return true;
+    }
     let station = [(TABLE, Station::Table), (STONECUTTER, Station::Stonecutter)].into_iter().find(|(name, _)| *name == block);
     if let Some((_, station)) = station {
         let window = if station == Station::Table { WindowType::Workbench } else { WindowType::Stonecutter };
@@ -170,6 +173,7 @@ pub(crate) fn close(world: &mut World, player: Entity) {
 fn stop_viewing(world: &mut World, player: Entity) -> Option<Viewing> {
     let viewing = world.get::<Viewing>(player).copied()?;
     world.entity_mut(player).remove::<Viewing>();
+    crate::life_events::closed(world, player, viewing.pos);
     Some(viewing)
 }
 

@@ -107,10 +107,11 @@ pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, mut players: Query<(En
 }
 
 /// The hotbar slot each client says it switched to.
-pub(crate) fn select(mut packets: ResMut<PacketQueues>, mut players: Query<&mut Inventory>) {
+pub(crate) fn select(mut packets: ResMut<PacketQueues>, mut inputs: ResMut<crate::player_events::Inputs>, mut players: Query<&mut Inventory>) {
     for (entity, packet) in packets.take::<MobEquipment>() {
         let Ok(mut inventory) = players.get_mut(entity) else { continue };
         if packet.window_id == WindowID::Inventory && usize::from(packet.selected_slot) < HOTBAR && inventory.selected != packet.selected_slot {
+            inputs.held(entity, inventory.selected, packet.selected_slot);
             (inventory.selected, inventory.unsaved) = (packet.selected_slot, true);
         }
     }

@@ -110,6 +110,9 @@ pub(crate) fn translate([x, y, z]: [f32; 3], to: i32) -> [f32; 3] {
 
 /// Starts a player's trip through the portal it stands in.
 fn depart(world: &mut World, player: Entity) {
+    if !crate::world_events::may_use_portal(world, player, sapling_api::Portal::Nether) {
+        return;
+    }
     let (Some(layer), Some(feet)) = (world.get::<InLayer>(player).map(|l| l.0), world.get::<Position>(player).map(|p| p.feet)) else { return };
     let Some(from) = world.get::<Layer>(layer).map(|level| level.world.dimension()) else { return };
     let to = match from {

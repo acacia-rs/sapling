@@ -43,6 +43,9 @@ pub(super) fn meets_water(world: &mut World, layer: Entity, pos: BlockPos) -> bo
 
 /// Makes the cell the block `name` with a hiss.
 pub(super) fn turn(world: &mut World, layer: Entity, pos: BlockPos, name: &str) -> bool {
+    if !crate::world_events::may_harden(world, layer, pos, name) {
+        return false;
+    }
     let Some(id) = level(world, layer).and_then(|level| level.registry().states_of(name).next()).map(|(id, _)| id) else { return false };
     let turned = send::set(world, layer, pos, id);
     if turned {

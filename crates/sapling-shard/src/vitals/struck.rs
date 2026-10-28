@@ -190,6 +190,9 @@ pub(crate) fn knocked(world: &mut World, player: Entity, from: [f32; 3]) {
 /// The ender pearl a player threw takes it to `to` (a pearl's teleport: the Bedrock id of the
 /// thrown pearl, 87, names its source) and costs a mortal one `amount` as a fall.
 pub(crate) fn pearled(world: &mut World, player: Entity, to: [f32; 3], amount: f32) {
+    if !crate::player_events::may_teleport(world, player, to) {
+        return;
+    }
     crate::movement::teleport_as(world, player, to, acacia_proto::packets::MovePlayerTeleportCause::Projectile, &[PEARL_SOURCE]);
     if is_mortal(world, player) {
         hurt(world, player, amount, Cause::Fall);
