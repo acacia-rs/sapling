@@ -68,9 +68,16 @@ fn away(from: [f32; 3], feet: [f32; 3]) -> [f32; 3] {
 
 /// The player named `by` hits a player for `amount` and throws it at `speed`; one it kills is
 /// not thrown. False where it took nothing.
-pub(crate) fn punched(world: &mut World, player: Entity, amount: f32, by: &str, speed: [f32; 3]) -> bool {
-    bitten(world, player, amount, &format!("{}{by}", death::BY_PLAYER), speed)
+pub(crate) fn punched(world: &mut World, player: Entity, amount: f32, by: &str, speed: [f32; 3], pierced: f32) -> bool {
+    world.entity_mut(player).insert(Pierced(pierced));
+    let took = bitten(world, player, amount, &format!("{}{by}", death::BY_PLAYER), speed);
+    world.entity_mut(player).remove::<Pierced>();
+    took
 }
+
+/// What a hit under way takes off the share the struck player's armour stops ([`punched`]).
+#[derive(Component)]
+pub(super) struct Pierced(pub f32);
 
 /// The Thorns of what `player` hit hurt it for `amount`; false where `player` is no player, or
 /// it took nothing.

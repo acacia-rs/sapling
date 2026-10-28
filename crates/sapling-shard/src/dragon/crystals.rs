@@ -99,7 +99,7 @@ pub(super) fn set_beam(world: &mut World, crystal: Entity, at: Option<BlockPos>)
 }
 
 /// The particles BDS sends after an explosion's flash (`LevelEventGeneric`).
-pub(super) fn blast_particles([x, y, z]: [f32; 3], power: f32) -> Bytes {
+pub(crate) fn blast_particles([x, y, z]: [f32; 3], power: f32) -> Bytes {
     let float = |name: &str, value: f32| Nbt { name: name.to_owned(), value: NbtValue::Float(value) };
     let nbt = vec![float("originX", x), float("originY", y), float("originZ", z), float("radius", power), Nbt { name: "size".into(), value: NbtValue::Int(0) }];
     sapling_net::encode(&LevelEventGeneric { event_id: EXPLOSION_PARTICLES, nbt })

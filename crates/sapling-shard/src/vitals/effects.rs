@@ -9,13 +9,12 @@ mod attributes;
 
 use acacia_proto::packets::{MobEffect, MobEffectEventId};
 use acacia_proto::types::PlayerAttributesItemModifiersItem;
-use attributes::pace;
-pub(crate) use attributes::cushion;
+pub(crate) use attributes::{Paced, cushion, tell_pace};
 use bevy_ecs::prelude::*;
 use sapling_api::{Effect, EffectBackend, PlayerId};
 
 use super::{Vitals, feed, hurt, settle, tell};
-use crate::components::{NetId, Tick, in_world};
+use crate::components::{NetId, in_world};
 use crate::creatures::Cause;
 use crate::handlers::Ctx;
 
@@ -106,17 +105,6 @@ fn boost(world: &mut World, player: Entity, id: u64) {
     let mut told = sapling_data::mob_health_update(id, vitals.health.left(), vitals.health.max());
     (told.attributes[0].default, told.attributes[0].default_max) = (super::MAX, super::MAX);
     told.attributes[0].modifiers = more.map(|amount| PlayerAttributesItemModifiersItem { id: BOOSTS_AS.into(), name: "HealthBoost".into(), amount, operation: 0, operand: 1, serializable: false }).into_iter().collect();
-    tell(world, player, &told);
-}
-
-/// Tells a player its walking speed under the effects on it now.
-fn tell_pace(world: &mut World, player: Entity, id: u64) {
-    let tick = world.resource::<Tick>().0;
-    let (quick, slow) = (level(world, player, Effect::Speed), level(world, player, Effect::Slowness));
-    let told = pace(id, quick, slow, tick);
-    if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
-        simulated.set_speed(told.attributes[0].current);
-    }
     tell(world, player, &told);
 }
 

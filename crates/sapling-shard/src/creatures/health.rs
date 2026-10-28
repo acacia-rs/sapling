@@ -122,8 +122,14 @@ impl Health {
     /// What is left of a hit of `amount` behind its armour: the Java game's rule, which BDS
     /// follows (docs/research/player-damage.md, "Armour").
     pub(crate) fn shielded(&self, amount: f32) -> f32 {
+        self.shielded_but(amount, 0.0)
+    }
+
+    /// [`Health::shielded`] with `pierced` taken off the share the armour stops (a mace's Breach).
+    pub(crate) fn shielded_but(&self, amount: f32, pierced: f32) -> f32 {
         let [points, toughness] = self.armour;
-        amount * (1.0 - (points - amount / (2.0 + toughness / 4.0)).clamp(points * 0.2, 20.0) / 25.0)
+        let stops = (points - amount / (2.0 + toughness / 4.0)).clamp(points * 0.2, 20.0) / 25.0;
+        amount * (1.0 - (stops - pierced).max(0.0))
     }
 
     /// Whether a hit of `amount` landed.
@@ -208,6 +214,13 @@ impl Health {
     /// How far it has fallen when it comes from `from` to `to`.
     pub(crate) fn dropped(&self, from: f32, to: f32) -> f32 {
         self.peak.map_or(from, |peak| peak.max(from)).max(to) - to
+    }
+
+    /// Forgets how far it has fallen: a fall from `at` starts anew.
+    pub(crate) fn break_fall(&mut self, at: f32) {
+        if self.peak.is_some() {
+            self.peak = Some(at);
+        }
     }
 
     /// Sets it on fire for `ticks` more, less what Fire Protection spares it, if it would not burn

@@ -8,6 +8,7 @@
 mod death;
 pub(crate) mod eating;
 pub(crate) mod effects;
+pub(crate) mod frost;
 pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, give as give_effect, hits_for, kept as kept_effects, restored as restored_effects};
 pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
@@ -20,10 +21,11 @@ mod omens;
 mod splashed;
 mod stand;
 mod shield;
+mod soles;
 mod struck;
 mod totem;
 pub(crate) use shield::{blocks, thrown_back, wields_axe};
-pub(crate) use stand::falls_freely;
+pub(crate) use stand::{break_fall, fallen, falls_freely};
 pub(crate) use splashed::{health_left, is_under, splashed};
 
 use acacia_proto::Packet;
@@ -164,14 +166,13 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     }
 }
 
-/// Has the player's health know the armour it wears now, what its enchantments and its effects
-/// ward off, and its movement the boots' Depth Strider: a level of resistance takes a fifth off
-/// every hit (research/captures/bds-more.txt).
+/// Has the player's health know its armour, what its enchantments and effects ward off, and its
+/// movement what its armour changes: a level of resistance takes a fifth off every hit (bds-more.txt).
 fn dress(world: &mut World, player: Entity) {
     let armour = world.get::<crate::inventory::Inventory>(player).map_or([0.0; 2], |inventory| inventory.armour());
-    let warding = crate::enchants::warding(world, player);
+    let (warding, leather) = (crate::enchants::warding(world, player), frost::leather(world, player));
     if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
-        simulated.equip(warding.depth_strider);
+        simulated.equip(&warding, leather[frost::FEET]);
     }
     let resisted = effects::level(world, player, sapling_api::Effect::Resistance).map_or(0.0, |level| RESISTS * (f32::from(level) + 1.0));
     let fireproof = effects::level(world, player, sapling_api::Effect::FireResistance).is_some();
@@ -218,8 +219,9 @@ fn land(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
     let helmeted = cause.is_on_the_head() && world.get::<crate::inventory::Inventory>(player).is_some_and(|inventory| inventory.has_helmet());
     let whole = amount;
     let amount = if helmeted { amount * HELMETED } else { amount };
+    let pierced = world.get::<struck::Pierced>(player).map_or(0.0, |pierced| pierced.0);
     let lands = |mut vitals: Mut<Vitals>| {
-        let amount = if cause.is_stopped_by_armour() { vitals.health.shielded(amount) } else { amount };
+        let amount = if cause.is_stopped_by_armour() { vitals.health.shielded_but(amount, pierced) } else { amount };
         let amount = vitals.health.warded(amount, cause);
         vitals.health.hurt(amount)
     };

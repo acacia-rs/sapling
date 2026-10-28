@@ -45,6 +45,7 @@ mod scooping;
 mod shooting;
 mod shown;
 mod slimes;
+mod smash;
 mod snow_golems;
 mod spells;
 mod splashes;

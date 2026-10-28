@@ -3,11 +3,12 @@
 //! `pvp` rule is on; Sharpness, Knockback and Fire Aspect add as they do on a mob, and the
 //! struck player's Thorns hurt back. A falling hitter's is critical, a sprinting one's throws
 //! further, and the weapon wears (blows.rs); a raised shield turns it away (vitals/shield.rs).
+//! A mace smashes (smash.rs) and its Breach pierces armour.
 
 use bevy_ecs::prelude::*;
 use sapling_data::enchant::{self, Enchant};
 
-use super::blows;
+use super::{blows, smash};
 use crate::components::{InLayer, Layer, Mode, NetId, Position, in_world, in_world_identity};
 use crate::inventory::Inventory;
 use crate::vitals;
@@ -29,9 +30,12 @@ pub(super) fn hit(world: &mut World, hitter: Entity, id: u64) -> Option<()> {
     }
     let held = world.get::<Inventory>(hitter).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
     let weapon = crate::enchants::weapon(world, hitter);
-    let blow = blows::blow(world, hitter, vitals::hits_for(world, hitter, sapling_data::item_attack(held.as_deref()) + enchant::melee_bonus(weapon.as_ref(), None)));
+    let smash = smash::smash(world, hitter, held.as_deref());
+    let bonus = enchant::melee_bonus(weapon.as_ref(), None) + smash::bonus(smash, weapon.as_ref());
+    let blow = blows::blow(world, hitter, vitals::hits_for(world, hitter, sapling_data::item_attack(held.as_deref()) + bonus));
     let cell = to.map(|c| c.floor() as i32);
     crate::blocks::to_viewers(world, layer, cell, &[sapling_net::encode(&blows::sound(blow, from))]);
+    let pierced = enchant::mace::breach(enchant::level(weapon.as_ref(), Enchant::Breach));
     let (dx, dz) = (to[0] - from[0], to[2] - from[2]);
     let apart = dx.hypot(dz);
     let away = if apart > 1e-4 { [dx / apart, dz / apart] } else { [0.0; 2] };
@@ -41,9 +45,13 @@ pub(super) fn hit(world: &mut World, hitter: Entity, id: u64) -> Option<()> {
     let axe = held.as_deref().is_some_and(|held| held.ends_with("_axe"));
     let blocked = vitals::blocks(world, struck, from, blow.harm, super::Cause::Attack, axe);
     blows::wear(world, hitter);
-    if !blocked && vitals::punched(world, struck, blow.harm, &name, thrown) {
+    if !blocked && vitals::punched(world, struck, blow.harm, &name, thrown, pierced) {
         if let Some(sparks) = blows::sparks(blow, id) {
             crate::blocks::to_viewers(world, layer, cell, &[sapling_net::encode(&sparks)]);
+        }
+        if let Some(smash) = smash {
+            crate::blocks::to_viewers(world, layer, cell, &smash::shown(smash, from, to));
+            smash::follow(world, hitter, struck, to, weapon.as_ref());
         }
         vitals::tire(world, hitter, vitals::HIT_TIRES);
         vitals::set_alight(world, struck, enchant::aspect_burn(enchant::level(weapon.as_ref(), Enchant::FireAspect)));
