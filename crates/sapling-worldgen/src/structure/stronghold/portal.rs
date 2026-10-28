@@ -3,6 +3,7 @@
 use super::Door;
 use super::common::{fill, portal_frame, selector_box, small_door};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::structure::canvas::Canvas;
 use crate::structure::piece::Frame;
@@ -51,4 +52,6 @@ pub fn portal_room(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
         }
     }
     f.place(canvas, Block::MobSpawner, 5, 3, 6);
+    let (x, y, z) = f.world(5, 3, 6);
+    canvas.set_entity(x, y, z, BlockEntity::Spawner("minecraft:silverfish"));
 }

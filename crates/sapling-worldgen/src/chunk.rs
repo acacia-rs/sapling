@@ -5,6 +5,7 @@
 use std::sync::{Arc, OnceLock};
 
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 
 pub const MIN_Y: i32 = -64;
 pub const HEIGHT: usize = 384;
@@ -76,6 +77,8 @@ pub struct ChunkShape {
     /// Fluid cells the aquifer asked to tick (index, lava), in the order generation placed them:
     /// the chunk's tick queue when its decoration starts.
     fluid_ticks: Vec<(u32, bool)>,
+    /// Block entities as generation filed them (index, entity), oldest first: see `block_entities`.
+    entities: Vec<(u32, BlockEntity)>,
 }
 
 // SAFETY: `data` points into the sections' own heap blocks, which never move and are written only
@@ -85,19 +88,37 @@ unsafe impl Sync for ChunkShape {}
 
 impl Clone for ChunkShape {
     fn clone(&self) -> Self {
-        Self::from_sections(self.sections.clone(), self.fluid_ticks.clone())
+        Self::from_sections(self.sections.clone(), self.fluid_ticks.clone(), self.entities.clone())
     }
 }
 
 impl ChunkShape {
-    fn from_sections(sections: [Section; SECTIONS], fluid_ticks: Vec<(u32, bool)>) -> Self {
+    fn from_sections(sections: [Section; SECTIONS], fluid_ticks: Vec<(u32, bool)>, entities: Vec<(u32, BlockEntity)>) -> Self {
         let data = std::array::from_fn(|s| sections[s].blocks().as_ptr());
-        Self { sections, data, fluid_ticks }
+        Self { sections, data, fluid_ticks, entities }
     }
 
     /// All air.
     pub fn empty() -> Self {
-        Self::from_sections(std::array::from_fn(|_| air_section()), Vec::new())
+        Self::from_sections(std::array::from_fn(|_| air_section()), Vec::new(), Vec::new())
+    }
+
+    /// Files `entity` for the cell at `index`; it counts while the cell holds a block of its kind.
+    pub(crate) fn add_block_entity(&mut self, index: usize, entity: BlockEntity) {
+        self.entities.push((index as u32, entity));
+    }
+
+    /// The block entities of cells that hold a block of their kind, the last filed for a cell that
+    /// fits it winning (a block set over another drops what the other held), as chunk x, world y, chunk z.
+    pub fn block_entities(&self) -> Vec<([i32; 3], BlockEntity)> {
+        let mut taken: Vec<(u32, BlockEntity)> = Vec::new();
+        for &(index, entity) in self.entities.iter().rev() {
+            if !taken.iter().any(|(at, _)| *at == index) && entity.fits(self.block_at(index as usize).name()) {
+                taken.push((index, entity));
+            }
+        }
+        taken.sort_by_key(|(index, _)| *index);
+        taken.into_iter().map(|(index, entity)| ([index as i32 & 15, index as i32 / 256 + MIN_Y, (index as i32 >> 4) & 15], entity)).collect()
     }
 
     pub(crate) fn schedule_fluid(&mut self, index: usize, lava: bool) {

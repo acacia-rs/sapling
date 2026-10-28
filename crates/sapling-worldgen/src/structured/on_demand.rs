@@ -7,6 +7,7 @@ use std::sync::Arc;
 use super::order::{Order, Rank};
 use super::{Pieced, Source, Stage};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::cache::SourceCache;
 use crate::structure::{BoundingBox, Forced, PlaceFailure, StructureKind};
 use crate::terrain::{ChunkShape, HEIGHT, MIN_Y};
@@ -56,11 +57,20 @@ impl Stage for OnDemand<'_> {
     }
 }
 
+/// What a structure placed on demand writes: the blocks it changed, by chunk, and the block
+/// entities of what it placed, at world positions.
+#[derive(Debug, Default, PartialEq)]
+pub struct StructureWrites {
+    pub blocks: Vec<([i32; 3], Block)>,
+    pub entities: Vec<([i32; 3], BlockEntity)>,
+}
+
 impl OnDemand<'_> {
-    /// Every block the post-processes changed, by chunk, after `rejoin_connections`.
-    fn writes(&self) -> Vec<([i32; 3], Block)> {
+    /// Every block the post-processes changed, by chunk, after `rejoin_connections`; the loaded
+    /// shapes hold no block entities, so every one `after` holds is the structure's.
+    fn writes(&self) -> StructureWrites {
         let (x0, z0, x1, z1) = self.chunks;
-        let mut writes = Vec::new();
+        let mut writes = StructureWrites::default();
         for chunk in (x0 - 1..=x1 + 1).flat_map(|x| (z0 - 1..=z1 + 1).map(move |z| (x, z))) {
             if self.staged_after(chunk).touched.is_none() {
                 continue;
@@ -72,10 +82,11 @@ impl OnDemand<'_> {
                 for (z, x) in (0..16).flat_map(|z| (0..16).map(move |x| (z, x))) {
                     let block = after.block(x, y, z);
                     if block != before.block(x, y, z) {
-                        writes.push(([chunk.0 * 16 + x as i32, y, chunk.1 * 16 + z as i32], block));
+                        writes.blocks.push(([chunk.0 * 16 + x as i32, y, chunk.1 * 16 + z as i32], block));
                     }
                 }
             }
+            writes.entities.extend(after.block_entities().into_iter().map(|([x, y, z], entity)| ([chunk.0 * 16 + x, y, chunk.1 * 16 + z], entity)));
         }
         writes
     }
@@ -87,7 +98,7 @@ impl OverworldGenerator {
     /// variant), drawn over the chunk shapes `load` gives for every chunk its pieces cover: world
     /// position and block, every chunk's writes. Err(Unsupported) for kinds this cannot run on
     /// demand; Err(Failed) when the start's own checks fail there (no room, wrong height...).
-    pub fn place_structure(&self, kind: StructureKind, start: (i32, i32), load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<Vec<([i32; 3], Block)>, PlaceFailure> {
+    pub fn place_structure(&self, kind: StructureKind, start: (i32, i32), load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<StructureWrites, PlaceFailure> {
         let forced = self.structures.forced(&self.density, kind, start)?;
         Ok(self.draw(forced, start, load))
     }
@@ -97,12 +108,12 @@ impl OverworldGenerator {
     /// jigsaw named `target` (e.g. "minecraft:bottom"), `max_depth` pieces deep; same output.
     /// Err(Unknown) for a pool that does not exist, Err(Failed) when the start element drawn has
     /// no jigsaw named `target`.
-    pub fn place_jigsaw(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<Vec<([i32; 3], Block)>, PlaceFailure> {
+    pub fn place_jigsaw(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<StructureWrites, PlaceFailure> {
         let forced = self.structures.forced_jigsaw(&self.density, pool, target, max_depth, at)?;
         Ok(self.draw(forced, (at[0] >> 4, at[2] >> 4), load))
     }
 
-    fn draw(&self, forced: Forced, start: (i32, i32), load: Load) -> Vec<([i32; 3], Block)> {
+    fn draw(&self, forced: Forced, start: (i32, i32), load: Load) -> StructureWrites {
         let chunks = forced.bb.map_or((start.0, start.1, start.0, start.1), |b: BoundingBox| (b.x0 >> 4, b.z0 >> 4, b.x1 >> 4, b.z1 >> 4));
         let reach = ((chunks.2 - chunks.0 + 3) * (chunks.3 - chunks.1 + 3)) as usize;
         let limit = (reach * 4).max(LIMIT);

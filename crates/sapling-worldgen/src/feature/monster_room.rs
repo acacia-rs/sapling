@@ -4,11 +4,15 @@
 
 use super::view::View;
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::terrain::MIN_Y;
 
 /// `OverworldGenerator`'s generation height (144a184d0).
 const GENERATION_HEIGHT: i32 = 320;
+/// The spawner's mob by `nextInt(4)` (ActorTypes at 14a98ef10).
+const MOBS: [&str; 4] = ["minecraft:skeleton", "minecraft:zombie", "minecraft:zombie", "minecraft:spider"];
+const CHEST_TABLE: &str = "loot_tables/chests/simple_dungeon.json";
 
 /// `random` is the chunk's post-process generator after its lava lake.
 pub fn monster_rooms(mut random: Mt19937, chunk: (i32, i32), view: &mut View) {
@@ -74,7 +78,7 @@ fn room(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3]) -> bool {
     }
     chests(view, random, [x, y, z], rx + 2, rz + 2);
     view.set_block(x, y, z, Block::MobSpawner);
-    random.next_int(4);
+    view.set_block_entity([x, y, z], BlockEntity::Spawner(MOBS[random.next_int(4) as usize]));
     true
 }
 
@@ -92,7 +96,7 @@ fn chests(view: &mut View, random: &mut Mt19937, [x, y, z]: [i32; 3], rx: i32, r
             if sides == 1 {
                 let facing = chest_facing(view, p, dx, dz);
                 view.set_block(p[0], y, p[2], Block::CHESTS[facing]);
-                random.next_u32();
+                view.set_block_entity([p[0], y, p[2]], BlockEntity::Loot { table: CHEST_TABLE, seed: random.next_int_unbounded() });
                 break;
             }
         }

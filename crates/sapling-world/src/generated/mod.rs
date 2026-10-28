@@ -1,18 +1,22 @@
 //! Storage whose holes are generated terrain. See docs/DESIGN.md "Storage".
 
 mod convert;
+mod entities;
 mod grow;
 mod on_demand;
+mod ticks;
 #[cfg(test)]
 mod tests;
 
 use acacia_world::{BlockRegistry, Dimension};
 use sapling_leveldb::PlayerData;
-use sapling_worldgen::{Block, ChunkBiomes, ChunkShape, EndGenerator, NetherGenerator, OverworldGenerator, PlaceFailure};
+use sapling_worldgen::{ChunkBiomes, ChunkShape, EndGenerator, NetherGenerator, OverworldGenerator, PlaceFailure, StructureWrites};
 
 use crate::storage::{Level, ShapeLoader, StorageError, StoredColumn, WorldStorage};
 use crate::{ChunkPos, END, NETHER, OVERWORLD};
 use convert::{BlockIds, generated_chunk};
+use entities::generated_block_entities;
+pub use grow::PlacedStructure;
 
 /// The generator of one dimension.
 enum Generator {
@@ -35,6 +39,14 @@ impl Generator {
             Self::Overworld(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
             Self::Nether(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
             Self::End(generator) => (generator.chunk_blocks(pos.x, pos.z), generator.chunk_biomes(pos.x, pos.z)),
+        }
+    }
+
+    fn game_ticks(&self, pos: ChunkPos) -> Vec<([i32; 3], bool)> {
+        match self {
+            Self::Overworld(generator) => generator.chunk_game_ticks(pos.x, pos.z),
+            Self::Nether(generator) => generator.chunk_game_ticks(pos.x, pos.z),
+            Self::End(_) => Vec::new(),
         }
     }
 }
@@ -98,7 +110,9 @@ impl<S: WorldStorage> Generated<S> {
     /// The column the generator makes at `pos`, whatever `inner` holds there.
     pub fn generate_column(&self, pos: ChunkPos) -> StoredColumn {
         let (shape, biomes) = self.generator.chunk(pos);
-        StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim))
+        let pending_ticks = ticks::pending_ticks(pos, &shape, &self.generator.game_ticks(pos), &self.ids, BlockRegistry::vanilla());
+        let block_entities = generated_block_entities(pos.x, pos.z, &shape);
+        StoredColumn { pending_ticks, block_entities, ..StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim)) }
     }
 }
 
@@ -155,12 +169,12 @@ impl<S: WorldStorage> WorldStorage for Generated<S> {
         Some(generator.density().climate.biome_at(x, y, z))
     }
 
-    fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+    fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         let Generator::Overworld(generator) = &self.generator else { return self.inner.structure_writes(name, start, load) };
         Some(on_demand::structure(generator, name, start, load))
     }
 
-    fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+    fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         let Generator::Overworld(generator) = &self.generator else { return self.inner.jigsaw_writes(pool, target, max_depth, at, load) };
         Some(generator.place_jigsaw(pool, target, max_depth, at, load))
     }

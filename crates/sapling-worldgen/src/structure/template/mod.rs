@@ -31,6 +31,7 @@ pub use rules::{LinearPos, Predicate, Rule, apply};
 pub use update::Record;
 
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use load::{data, palette_block};
 
 /// Palette flags.
@@ -131,9 +132,17 @@ pub struct Template {
     pub loot_chests: Vec<usize>,
     /// Vines with Java's `up`: a v2 placement hangs them on all four sides (trial chambers' display, oracle).
     pub ceiling_vines: Vec<usize>,
+    /// The block entities BDS keeps from the template, by block index in file order; loot seeds 0.
+    pub entities: Vec<(usize, BlockEntity)>,
 }
 
 impl Template {
+    /// The block entity of block `index`, its loot seeded `seed`.
+    pub fn entity(&self, index: usize, seed: impl FnOnce() -> i32) -> Option<BlockEntity> {
+        let found = self.entities.binary_search_by_key(&index, |(at, _)| *at).ok()?;
+        Some(self.entities[found].1.seeded(seed()))
+    }
+
     /// The vanilla template at `path` (e.g. "igloo/igloo_bottom"); panics on an unknown one.
     pub fn get(path: &str) -> &'static Template {
         Self::find(path).unwrap_or_else(|| panic!("no structure template {path}"))
@@ -142,4 +151,17 @@ impl Template {
     pub fn find(path: &str) -> Option<&'static Template> {
         data().templates.get(path)
     }
+}
+
+#[cfg(test)]
+#[test]
+fn templates_keep_their_block_entities() {
+    let all = || data().templates.values().flat_map(|t| t.entities.iter().map(move |(i, e)| (t, *i, *e)));
+    assert!(all().all(|(t, i, e)| e.fits(t.blocks[i].state.block(Rotation::None).name())));
+    let has = |test: &dyn Fn(&BlockEntity) -> bool| all().any(|(_, _, e)| test(&e));
+    assert!(has(&|e| matches!(e, BlockEntity::Loot { table: "loot_tables/chests/village/village_plains_house.json", .. })));
+    assert!(has(&|e| matches!(e, BlockEntity::Vault { key: "minecraft:ominous_trial_key", .. })));
+    assert!(has(&|e| matches!(e, BlockEntity::TrialSpawner { .. })));
+    assert!(has(&|e| matches!(e, BlockEntity::Spawner("minecraft:magma_cube"))));
+    assert!(has(&|e| matches!(e, BlockEntity::Pot { table: Some(_), .. })));
 }

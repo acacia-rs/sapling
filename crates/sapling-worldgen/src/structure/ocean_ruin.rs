@@ -7,6 +7,7 @@ use super::BoundingBox;
 use super::canvas::Canvas;
 use super::template::{Placement, Rotation, Template, named};
 use crate::block::Block;
+use crate::block_entity::{BlockEntity, cell_seed};
 use crate::random::{Mt19937, Xoroshiro, position_seed};
 
 /// Warm and lukewarm oceans (deep ones too) build sandstone ruins; the rest stone brick ones.
@@ -128,12 +129,13 @@ fn bury_loot(canvas: &mut Canvas, origin: (i32, i32, i32), mut cells: Vec<(i32, 
     }
     let mut buried = 0;
     for (x, y, z) in cells {
-        let suspicious = match canvas.get(x, y, z) {
-            Block::Gravel => named("suspicious_gravel", "brushed_progress=0,hanging=1", false),
-            Block::Sand => named("suspicious_sand", "brushed_progress=0,hanging=1", false),
+        let (suspicious, table) = match canvas.get(x, y, z) {
+            Block::Gravel => (named("suspicious_gravel", "brushed_progress=0,hanging=1", false), "loot_tables/entities/cold_ocean_ruins_brushable_block.json"),
+            Block::Sand => (named("suspicious_sand", "brushed_progress=0,hanging=1", false), "loot_tables/entities/warm_ocean_ruins_brushable_block.json"),
             _ => continue,
         };
         canvas.set(x, y, z, suspicious);
+        canvas.set_entity(x, y, z, BlockEntity::Loot { table, seed: cell_seed([x, y, z]) });
         buried += 1;
         if buried == 5 {
             break;
@@ -177,6 +179,8 @@ impl RuinPiece {
             if canvas.bb.contains(x, y, z) {
                 canvas.set(x, y, z, self.marker_filler());
                 canvas.set(x, y - 1, z, named("chest", "minecraft:cardinal_direction=east", y <= 63));
+                let table = if self.template.name.contains("big") { "loot_tables/chests/underwater_ruin_big.json" } else { "loot_tables/chests/underwater_ruin_small.json" };
+                canvas.set_entity(x, y - 1, z, BlockEntity::Loot { table, seed: cell_seed([x, y - 1, z]) });
             }
         }
     }

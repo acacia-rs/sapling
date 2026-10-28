@@ -3,6 +3,7 @@
 
 use super::{air, bricks, down, fences};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::structure::canvas::Canvas;
 use crate::structure::piece::Frame;
@@ -167,6 +168,7 @@ pub fn monster_throne(f: &Frame, c: &mut Canvas) {
     let (x, y, z) = f.world(3, 5, 5);
     if c.bb.contains(x, y, z) {
         c.set(x, y, z, Block::MobSpawner);
+        c.set_entity(x, y, z, BlockEntity::Spawner("minecraft:blaze"));
     }
     room_floor(f, c);
 }

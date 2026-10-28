@@ -7,6 +7,7 @@ use super::rules::{Rule, apply};
 use super::wood::rewood;
 use super::{Kind, Template, soaked};
 use crate::block::Block;
+use crate::block_entity::{BlockEntity, cell_seed};
 use crate::random::Mt19937;
 use crate::structure::canvas::Canvas;
 use crate::structure::{BoundingBox, trace};
@@ -36,6 +37,21 @@ impl Rotation {
             Rotation::Clockwise90 => (-z, y, x),
             Rotation::Clockwise180 => (-x, y, -z),
             Rotation::CounterClockwise90 => (z, y, -x),
+        }
+    }
+}
+
+/// The chests with block entity data a template placed, in order, with the entity BDS keeps of each.
+pub struct LootChests(Vec<((i32, i32, i32), Option<BlockEntity>)>);
+
+impl LootChests {
+    /// One draw of `random` per chest, its `LootTableSeed` (`placeInWorld` 141eed154).
+    pub fn draw_seeds(self, canvas: &mut Canvas, random: &mut Mt19937) {
+        for ((x, y, z), entity) in self.0 {
+            let seed = random.next_int_unbounded();
+            if let Some(entity) = entity {
+                canvas.set_entity(x, y, z, entity.seeded(seed));
+            }
         }
     }
 }
@@ -137,17 +153,22 @@ impl Placement {
         });
     }
 
-    /// Writes the template; returns how many loot chests it placed (each drew a loot seed).
-    pub fn place(&self, canvas: &mut Canvas, template: &Template, origin: (i32, i32, i32)) -> usize {
-        let mut chests = 0;
+    /// Writes the template and files its block entities; returns its loot chests, whose seeds are
+    /// still to be drawn.
+    pub fn place(&self, canvas: &mut Canvas, template: &Template, origin: (i32, i32, i32)) -> LootChests {
+        let mut chests = Vec::new();
         canvas.begin_template();
         for ((x, y, z), block, index) in self.blocks(template, origin) {
             self.label(template, index);
             canvas.set(x, y, z, block);
-            chests += usize::from(template.loot_chests.contains(&index));
+            if template.loot_chests.contains(&index) {
+                chests.push(((x, y, z), template.entity(index, || 0)));
+            } else if let Some(entity) = template.entity(index, || cell_seed([x, y, z])) {
+                canvas.set_entity(x, y, z, entity);
+            }
         }
         self.update_pass(canvas, template, origin);
-        chests
+        LootChests(chests)
     }
 
     /// Ends the placement `Canvas::begin_template` started: the template's box grown by one, in its own x, y, z order.

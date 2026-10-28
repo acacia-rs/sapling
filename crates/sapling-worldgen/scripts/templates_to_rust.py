@@ -11,7 +11,8 @@ templates.bin, little-endian: b'SPT1', the palette (templates_palette.py), u32 c
 u8 legacy (saved before Java's flattening), u32 block count, then per block u8 x, u16 y, u8 z, u16 state (an index into the state table); then u16
 special count, per special: u32 block index, u8 kind (0 jigsaw: name, target, pool, joint, orientation
 strings, u16 final state, i32 selection and placement priorities; 1 data marker: metadata string; 2 chest
-whose block entity draws a loot seed; 3 vine with Java's `up`), strings as u8 length + bytes; then the state table
+whose block entity draws a loot seed; 3 vine with Java's `up`; 4 block entity: `block_entity`'s kind and strings),
+strings as u8 length + bytes; then the state table
 (templates_palette.py).
 """
 import gzip
@@ -144,6 +145,33 @@ def skull(key, nbt):
     return key
 
 
+def table(java):
+    """A Java loot table as BDS saves it (`minecraft:chests/igloo_chest` -> `loot_tables/chests/igloo_chest.json`)."""
+    return f"loot_tables/{java.removeprefix('minecraft:')}.json" if java else ''
+
+
+def block_entity(nbt):
+    """What BDS keeps of a template block's entity (docs/research/structure-block-entities.md): a kind, then its
+    strings. `loot` table; `pot` table, four sherds (empty when plain); `trial` normal and ominous configs;
+    `vault` table, key item; `spawner` mob. None for the rest."""
+    kind = nbt.get('id', '').removeprefix('minecraft:')
+    if kind in ('chest', 'trapped_chest', 'barrel', 'dispenser') and nbt.get('LootTable'):
+        return ['loot', table(nbt['LootTable'])]
+    if kind == 'decorated_pot' and ('LootTable' in nbt or 'sherds' in nbt):
+        sherds = nbt.get('sherds', [])
+        return ['pot', table(nbt.get('LootTable', ''))] + (sherds if len(sherds) == 4 else [''] * 4)
+    if kind == 'trial_spawner':
+        return ['trial', nbt['normal_config'], nbt['ominous_config']]
+    if kind == 'vault':
+        config = nbt.get('config', {})
+        key = config.get('key_item', {}).get('id', 'minecraft:trial_key')
+        return ['vault', table(config.get('loot_table', 'minecraft:chests/trial_chambers/reward')), key]
+    if kind in ('mob_spawner', 'MobSpawner'):
+        mob = nbt['SpawnData'].get('id') or nbt['SpawnData']['entity']['id']
+        return ['spawner', mob if ':' in mob else 'minecraft:' + mob.lower()]
+    return None
+
+
 def placed_wall(key, rot, probed):
     """A wall as the loader places it, before the shape pass the probe saw it after: its Java sides turned `rot`
     quarters clockwise (pre-1.16 boolean sides load as short), which the wall below reads (template/connect.rs)."""
@@ -240,6 +268,9 @@ def main():
                 specials.append((i, 2, [], None))
             elif key.startswith('minecraft:vine[') and 'up=true' in key:
                 specials.append((i, 3, [], None))
+            entity = block_entity(nbt)
+            if entity:
+                specials.append((i, 4, entity, None))
         out += struct.pack('<H', len(specials))
         for i, kind, strings, final in specials:
             out += struct.pack('<IB', i, kind)

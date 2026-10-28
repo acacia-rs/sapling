@@ -7,6 +7,7 @@ use super::canvas::Canvas;
 use super::template::{Placement, Rotation, Template};
 use super::BoundingBox;
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 
 /// Snowy plains, snowy taiga, snowy slopes: the scattered start's biome for an igloo.
@@ -24,7 +25,7 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32)) {
         return;
     }
     let chests = placement.place(canvas, Template::get("igloo/igloo_top_trapdoor"), origin);
-    random.consume_count(chests as u32);
+    chests.draw_seeds(canvas, random);
     let connected = |a: (i32, i32, i32), b: (i32, i32, i32)| {
         let (a, b) = (rotation.apply(a), rotation.apply(b));
         (origin.0 + a.0 - b.0, origin.1 + a.1 - b.1, origin.2 + a.2 - b.2)
@@ -43,5 +44,13 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32)) {
         let (dx, dy, dz) = rotation.apply(bottom.blocks[*index].pos);
         canvas.set(at.0 + dx, at.1 + dy, at.2 + dz, Block::Air);
     }
-    placement.place(canvas, bottom, at);
+    placement.place(canvas, bottom, at).draw_seeds(canvas, random);
+    // The chest marker gives the chest below it its table and a seed (14836fd90).
+    for (index, _) in bottom.markers.iter().filter(|(_, m)| m == "chest") {
+        let (dx, dy, dz) = rotation.apply(bottom.blocks[*index].pos);
+        let (x, y, z) = (at.0 + dx, at.1 + dy - 1, at.2 + dz);
+        if canvas.get(x, y, z).name() == "chest" {
+            canvas.set_entity(x, y, z, BlockEntity::Loot { table: "loot_tables/chests/igloo_chest.json", seed: random.next_int_unbounded() });
+        }
+    }
 }

@@ -130,11 +130,10 @@ here was drilled against a running BDS.
 plugin or an egg just set; state lives in the block entity and the block state, so a saved world keeps it.
 Rewards are rolled from BDS's own tables (`sapling-data` `table_loot`, `mob-loot.json`). Times are this
 shard's ticks; a world BDS saved counts BDS's, so stored deadlines are clamped to at most one wait ahead.
-Players are known by their kept `UniqueID` (`tags::Marks`).
+Players are known by their kept `UniqueID` (`tags::Marks`). Generated spawners, trial spawners and vaults
+get the block entities BDS writes (docs/research/structure-block-entities.md).
 
 Left out:
-- Spawners in worlds sapling generates have no block entity (worldgen writes blocks only), so they do
-  nothing until a spawn egg sets them; BDS's dungeon picks its mob from `nextInt(4)` (`monster_room.rs`).
 - Bad Omen and Trial Omen (no such effects yet), so a spawner turns ominous only as a world holds it; the
   ominous item spawner. Ominous vaults use `reward_ominous.json` and the ominous key [U: BDS has these from
   their template's NBT].

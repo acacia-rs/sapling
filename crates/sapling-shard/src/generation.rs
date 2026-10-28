@@ -4,26 +4,29 @@
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, GenerationBackend, PlaceError};
-use sapling_world::{ChunkPos, PlaceFailure};
+use sapling_world::{ChunkPos, PlaceFailure, PlacedStructure};
 
 use crate::blocks::{self, Dice};
 use crate::components::Layer;
 use crate::handlers::Ctx;
 use crate::worlds;
 
-/// Writes what the generator placed, or says why it placed nothing.
-fn write(world: &mut World, layer: Entity, placed: Option<Result<Vec<([i32; 3], u32)>, PlaceFailure>>) -> Result<(), PlaceError> {
-    let writes = match placed {
+/// Writes what the generator placed, then the block entities of what it placed, or says why it placed nothing.
+fn write(world: &mut World, layer: Entity, placed: Option<Result<PlacedStructure, PlaceFailure>>) -> Result<(), PlaceError> {
+    let placed = match placed {
         None => return Err(PlaceError::NoGenerator),
         Some(Err(PlaceFailure::Unknown)) => return Err(PlaceError::Unknown),
         Some(Err(_)) => return Err(PlaceError::Failed),
-        Some(Ok(writes)) => writes,
+        Some(Ok(placed)) => placed,
     };
     let level = &world.get::<Layer>(layer).ok_or(PlaceError::NoGenerator)?.world;
-    if !writes.iter().all(|([x, _, z], _)| level.is_loaded(ChunkPos::of_block(*x, *z))) {
+    if !placed.blocks.iter().all(|([x, _, z], _)| level.is_loaded(ChunkPos::of_block(*x, *z))) {
         return Err(PlaceError::Unloaded);
     }
-    blocks::set_many(world, layer, &writes);
+    blocks::set_many(world, layer, &placed.blocks);
+    for (pos, entity) in &placed.entities {
+        blocks::keep_entity(world, layer, *pos, entity);
+    }
     Ok(())
 }
 
@@ -35,7 +38,7 @@ impl GenerationBackend for Ctx<'_> {
         let placed = match level.place_feature(name, at, seed) {
             None => Err(PlaceFailure::Unknown),
             Some(writes) if writes.is_empty() => Err(PlaceFailure::Failed),
-            Some(writes) => Ok(writes),
+            Some(blocks) => Ok(PlacedStructure { blocks, entities: Vec::new() }),
         };
         write(self.world, layer, Some(placed))
     }

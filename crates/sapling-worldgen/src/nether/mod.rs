@@ -109,6 +109,16 @@ impl NetherGenerator {
     /// Every ported stage: the structured chunk (`loaded_blocks`), then the decoration of every chunk that reaches it.
     pub fn chunk_blocks(&self, chunk_x: i32, chunk_z: i32) -> ChunkShape {
         let mut shape = self.loaded_blocks(chunk_x, chunk_z);
+        self.with_inputs(|inputs| self.features.place(&mut shape, (chunk_x, chunk_z), inputs));
+        shape
+    }
+
+    /// As `OverworldGenerator::chunk_game_ticks`.
+    pub fn chunk_game_ticks(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], bool)> {
+        self.with_inputs(|inputs| self.features.game_ticks((chunk_x, chunk_z), inputs))
+    }
+
+    fn with_inputs<T>(&self, run: impl FnOnce(Inputs) -> T) -> T {
         let loaded = |x, z| self.loaded(x, z);
         let carved = |x, z| self.carved(x, z);
         let biomes = |x, z| self.chunk_biomes(x, z);
@@ -116,8 +126,7 @@ impl NetherGenerator {
         let surface = |_, _| crate::density::NO_SURFACE;
         let none = |_: [i32; 3]| false;
         let inputs = Inputs { loaded: &loaded, carved: &carved, generated_tops: &tops, biomes: &biomes, surface: &surface, in_structure: &none, in_tunnels: &none, island: None };
-        self.features.place(&mut shape, (chunk_x, chunk_z), inputs);
-        shape
+        run(inputs)
     }
 
     /// Decorates in the order one BDS run did (`OverworldGenerator::set_decoration_order`).

@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use acacia_world::Chunk;
 use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld, PlayerData};
-use sapling_worldgen::{Block, ChunkShape, PlaceFailure};
+use sapling_worldgen::{ChunkShape, PlaceFailure, StructureWrites};
 
 use crate::ChunkPos;
 pub use crate::level::Level;
@@ -81,11 +81,11 @@ pub trait WorldStorage: Send + Sync + 'static {
     }
     /// The blocks the generator's structure `name` places when it starts in chunk `start`, over
     /// the shapes `load` gives; `None` where storage generates no structures.
-    fn structure_writes(&self, _name: &str, _start: ChunkPos, _load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+    fn structure_writes(&self, _name: &str, _start: ChunkPos, _load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         None
     }
     /// [`WorldStorage::structure_writes`] for the jigsaw pool `pool`, as `/place jigsaw` assembles it.
-    fn jigsaw_writes(&self, _pool: &str, _target: &str, _max_depth: u32, _at: [i32; 3], _load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+    fn jigsaw_writes(&self, _pool: &str, _target: &str, _max_depth: u32, _at: [i32; 3], _load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         None
     }
 }
@@ -128,10 +128,10 @@ impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
     fn generated_biome(&self, x: i32, y: i32, z: i32) -> Option<u32> {
         (**self).generated_biome(x, y, z)
     }
-    fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+    fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         (**self).structure_writes(name, start, load)
     }
-    fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<Vec<([i32; 3], Block)>, PlaceFailure>> {
+    fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         (**self).jigsaw_writes(pool, target, max_depth, at, load)
     }
 }

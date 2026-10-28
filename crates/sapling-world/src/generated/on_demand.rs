@@ -2,7 +2,7 @@
 //! `/place structure` name them (`village`, `minecraft:trail_ruins`).
 
 use sapling_worldgen::structure::StructureKind;
-use sapling_worldgen::{Block, OverworldGenerator, PlaceFailure};
+use sapling_worldgen::{OverworldGenerator, PlaceFailure, StructureWrites};
 
 use crate::ChunkPos;
 use crate::storage::ShapeLoader;
@@ -24,7 +24,7 @@ pub(super) fn locate(generator: &OverworldGenerator, name: &str, x: i32, z: i32)
     }
 }
 
-pub(super) fn structure(generator: &OverworldGenerator, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Result<Vec<([i32; 3], Block)>, PlaceFailure> {
+pub(super) fn structure(generator: &OverworldGenerator, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Result<StructureWrites, PlaceFailure> {
     let kind = kind(name).ok_or(PlaceFailure::Unknown)?;
     generator.place_structure(kind, (start.x, start.z), load)
 }

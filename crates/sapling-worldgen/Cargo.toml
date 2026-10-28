@@ -11,4 +11,5 @@ acacia-molang.workspace = true
 
 [dev-dependencies]
 sapling-leveldb.workspace = true
+acacia-proto.workspace = true
 acacia-world.workspace = true

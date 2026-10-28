@@ -50,6 +50,12 @@ impl Default for Dice {
 }
 
 impl Dice {
+    /// Dice of their own, throwing the same for the same seed.
+    pub fn seeded(seed: u64) -> Self {
+        // Xorshift never leaves 0.
+        Self((seed ^ Self::default().0).max(1))
+    }
+
     /// A number below `sides`.
     pub fn roll(&mut self, sides: u32) -> u32 {
         self.0 ^= self.0 << 13;

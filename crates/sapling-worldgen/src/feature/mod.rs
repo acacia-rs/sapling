@@ -225,6 +225,9 @@ impl Features {
                 shape.set_at(index, write.block);
             }
         }
+        for ([x, y, z], entity) in writes.entities_in(chunk) {
+            shape.add_block_entity(ChunkShape::index((x & 15) as usize, y, (z & 15) as usize), entity);
+        }
     }
 
     /// A chunk with the features of every source decorated before `limit`.
