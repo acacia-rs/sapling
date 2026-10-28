@@ -106,6 +106,9 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     for stack in stacks {
         drops::toss(world, layer, stack, feet);
     }
+    // A catalyst blooms for a player kept whole too, but is offered nothing (144879f70).
+    let kept = death.keep_inventory;
+    let points = if crate::blocks::mob_died(world, layer, feet, |_| (!kept).then_some(points)) { 0 } else { points };
     if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
         (vitals.died, vitals.leaves) = (Some(now), Some(points));
     }

@@ -5,6 +5,23 @@
 use super::view::View;
 use crate::block::Block;
 
+/// The blocks a spreader reads and writes: a feature's view, or a live world (a sculk catalyst's).
+pub trait Cells {
+    fn block(&self, x: i32, y: i32, z: i32) -> Block;
+    /// Whether the cell changed.
+    fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool;
+}
+
+impl Cells for View<'_> {
+    fn block(&self, x: i32, y: i32, z: i32) -> Block {
+        View::block(self, x, y, z)
+    }
+
+    fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) -> bool {
+        View::set_block(self, x, y, z, block)
+    }
+}
+
 const FACING: [[i32; 3]; 6] = [[0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [-1, 0, 0], [1, 0, 0]];
 
 /// The order BDS walks faces in `spreadAll` and its toward-all loops.
@@ -25,7 +42,7 @@ pub fn has_face(block: Block, face: usize) -> bool {
 
 /// `getStateForPlacement`: `existing` with `face` added (a fresh `first` when it is another
 /// block), or `existing` itself when the face is there already or has nothing to hang on.
-pub fn placement(view: &View, first: Block, at: [i32; 3], existing: Block, face: usize) -> Block {
+pub fn placement(view: &impl Cells, first: Block, at: [i32; 3], existing: Block, face: usize) -> Block {
     let own = existing.multiface().filter(|&(family, _)| family == first).map_or(0, |(_, bits)| bits);
     let [x, y, z] = step(at, face);
     if own & Block::FACE_BITS[face] != 0 || !view.block(x, y, z).supports_multiface(opposite(face)) {
@@ -63,7 +80,7 @@ impl Config {
 
     /// `canSpreadInto`: lichen's `stateCanBeReplaced` (1465e9f50); vein's (148b4a9d0) also
     /// refuses a face on sculk or a catalyst and takes anything replaceable.
-    fn can_spread_into(self, view: &View, at: [i32; 3], face: usize) -> bool {
+    fn can_spread_into(self, view: &impl Cells, at: [i32; 3], face: usize) -> bool {
         let state = view.block(at[0], at[1], at[2]);
         if self != Config::Lichen {
             let [x, y, z] = step(at, face);
@@ -96,7 +113,7 @@ pub fn is_piston_arm(block: Block) -> bool {
 
 /// `getSpreadFromFaceTowardDirection`: where a `state` at `at` on face `from` spreads toward
 /// `to`, as the cell, its face and the block it would become.
-pub fn spread_target(config: Config, view: &View, state: Block, at: [i32; 3], from: usize, to: usize) -> Option<([i32; 3], usize, Block)> {
+pub fn spread_target(config: Config, view: &impl Cells, state: Block, at: [i32; 3], from: usize, to: usize) -> Option<([i32; 3], usize, Block)> {
     if !config.can_spread_from(state, from) || to == from || to == opposite(from) {
         return None;
     }
@@ -120,11 +137,11 @@ pub fn spread_target(config: Config, view: &View, state: Block, at: [i32; 3], fr
 
 /// `spreadFromFaceTowardAllDirections` over `faces` in order (`spreadAll` when all six): the
 /// blocks placed.
-pub fn spread_all(config: Config, view: &mut View, state: Block, at: [i32; 3], faces: &[usize]) -> usize {
+pub fn spread_all(config: Config, view: &mut impl Cells, state: Block, at: [i32; 3], faces: &[usize]) -> usize {
     let mut placed = 0;
     for &from in faces {
         for to in SPREAD_ORDER {
-            if let Some((cell, _, block)) = spread_target(config, view, state, at, from, to) {
+            if let Some((cell, _, block)) = spread_target(config, &*view, state, at, from, to) {
                 view.set_block(cell[0], cell[1], cell[2], block);
                 placed += 1;
             }

@@ -75,6 +75,20 @@ impl World {
         Some(writes.map(|writes| PlacedStructure::of(writes, ids)))
     }
 
+    /// The block at a cell as the generator names it, its layer-1 water included; `None` for a
+    /// state the generator never places.
+    pub fn generator_block(&self, x: i32, y: i32, z: i32) -> Option<Block> {
+        let ids = ids(&self.registry);
+        let block = *ids.back.get(&self.block(x, y, z))?;
+        let wet = ids.back.get(&self.liquid(x, y, z)) == Some(&Block::Water);
+        Some(if wet { block.into_water() } else { block })
+    }
+
+    /// The runtime id of a block the generator names (layer 0: a waterlogged twin's dry block).
+    pub fn generator_id(&self, block: Block) -> u32 {
+        ids(&self.registry).forward.id(block.dry())
+    }
+
     fn shape_of(&self, pos: ChunkPos, ids: &Ids) -> ChunkShape {
         let mut shape = ChunkShape::empty();
         if !self.is_loaded(pos) {

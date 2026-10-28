@@ -115,7 +115,7 @@ pub(crate) use lectern::turn_pages as turn_lectern_pages;
 pub(crate) use conduits::tick as wake_conduits;
 pub(crate) use pending::{arrived as ticks_arrived, write_back as write_back_ticks, write_back_before_saving as write_back_ticks_before_saving};
 pub(crate) use rods::struck as lightning_struck;
-pub(crate) use sculk::{GameEvent, tick as hear_vibrations, vibrate, vibrate_at, walked};
+pub(crate) use sculk::{GameEvent, mob_died, tick as hear_vibrations, vibrate, vibrate_at, walked};
 pub(crate) use target::shot_stopped;
 pub(crate) use tripwire::tick as trip_wires;
 
