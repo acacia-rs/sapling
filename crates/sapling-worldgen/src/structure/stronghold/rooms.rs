@@ -9,6 +9,8 @@ use crate::structure::canvas::Canvas;
 use crate::structure::piece::Frame;
 use crate::structure::scattered::create_chest;
 
+const LIBRARY: &str = "loot_tables/chests/stronghold_library.json";
+
 pub fn post_process(p: &Piece, canvas: &mut Canvas, random: &mut Mt19937) {
     match p.kind {
         Kind::RoomCrossing => room_crossing(p, canvas, random),
@@ -76,7 +78,7 @@ fn storeroom(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
     }
     let step = ladder(f, 4);
     (1..=3).for_each(|y| f.place(canvas, step, 9, y, 3));
-    create_chest(f, canvas, random, (3, 4, 8), Block::ChestWest);
+    create_chest(f, canvas, random, (3, 4, 8), Block::ChestWest, "loot_tables/chests/stronghold_crossing.json");
 }
 
 fn five_crossing(p: &Piece, canvas: &mut Canvas, random: &mut Mt19937) {
@@ -140,9 +142,9 @@ fn library(p: &Piece, canvas: &mut Canvas, random: &mut Mt19937) {
     if tall {
         gallery(f, canvas);
     }
-    create_chest(f, canvas, random, (3, 3, 5), Block::ChestWest);
+    create_chest(f, canvas, random, (3, 3, 5), Block::ChestWest, LIBRARY);
     if tall {
-        create_chest(f, canvas, random, (12, 8, 1), Block::ChestNorth);
+        create_chest(f, canvas, random, (12, 8, 1), Block::ChestNorth, LIBRARY);
     }
 }
 

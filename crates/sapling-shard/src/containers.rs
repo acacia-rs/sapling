@@ -9,6 +9,7 @@ mod access;
 mod again;
 mod brewing;
 mod lid;
+mod loot;
 mod pairs;
 mod screens;
 mod shulker;
@@ -192,6 +193,7 @@ fn hold(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
     if !opened(world).chests.contains_key(&key) {
         let mut slots = Vec::new();
         for half in halves.iter().filter(|_| kind.holds_items()) {
+            loot::unpack(world, layer, *half, kind.slots);
             slots.extend(stored_slots(world, layer, *half, kind.slots));
         }
         opened(world).chests.insert(key, Chest { halves, per_half: kind.slots, slots, viewers: Vec::new(), opened_at: 0, pinned: false });

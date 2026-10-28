@@ -91,7 +91,7 @@ fn place_at(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32), site: 
     placement.ignore = ignore_air.then_some("air");
     placement.flood = underwater(canvas, &b);
     let chests = placement.place(canvas, template, (x0, b.y0, z0));
-    random.consume_count(chests as u32);
+    chests.draw_seeds(canvas, random);
     for x in b.x0 + 1..b.x1 {
         for z in b.z0 + 1..b.z1 {
             if canvas.get(x, b.y0, z).name() == "netherrack" {

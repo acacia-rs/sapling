@@ -66,3 +66,10 @@ fn trial_tables_give_a_key_food_and_a_reward() {
     assert!(!table_loot("loot_tables/chests/trial_chambers/reward.json", &mut always(0.1)).is_empty());
     assert!(table_loot("loot_tables/nothing.json", &mut always(0.1)).is_empty());
 }
+
+#[test]
+fn generated_containers_tables_are_kept() {
+    for table in ["loot_tables/chests/simple_dungeon.json", "loot_tables/chests/village/village_plains_house.json", "loot_tables/dispensers/trial_chambers/chamber.json", "loot_tables/pots/trial_chambers/corridor.json", "loot_tables/entities/desert_pyramid_brushable_block.json"] {
+        assert!(!table_loot(table, &mut always(0.3)).is_empty(), "{table}");
+    }
+}

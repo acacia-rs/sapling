@@ -1,7 +1,7 @@
 """jjson.py <bds> <out pools_v2.txt> <trial chambers jsonl>: the v2 (data-driven) jigsaw pools and processor
 lists of BDS's vanilla behaviour packs (worldgen/template_pools*, worldgen/processors), newest pack winning, plus
 the trial chambers' (jtrial.py's output), in jdata.py's format. Elements are named by their template and marked
-`j` (placed as Java does); a capped processor becomes `c <processors> <limit> <rule>;...`."""
+`j` (placed as Java does); a capped processor becomes `c <processors> <limit> <rule>;... [<append_loot table>]`."""
 import os
 import sys
 
@@ -62,13 +62,21 @@ def rules(proc):
             for r in proc['rules']]
 
 
+def loot(proc):
+    """The `append_loot` table of a rule list's block entity modifiers, as a trailing ` <table>` field, or ''."""
+    tables = {r['block_entity_modifier']['loot_table'] for r in proc['rules']
+              if short(r.get('block_entity_modifier', {}).get('type', '')) == 'append_loot'}
+    assert len(tables) <= 1, tables
+    return ' ' + tables.pop() if tables else ''
+
+
 def pack_data(bds, procs, elements, pools):
     for doc in archives(bds, 'processors'):
         d = doc['minecraft:processor_list']
         lines = []
         for p in d['processors']:
             if short(p['processor_type']) == 'capped':
-                lines.append(('c', p['limit'], rules(p['delegate'])))
+                lines.append(('c', (p['limit'], loot(p['delegate'])), rules(p['delegate'])))
             else:
                 lines.append(('r', None, rules(p)))
         procs[short(d['description']['identifier'])] = lines
@@ -125,9 +133,10 @@ def write(out_path, procs, elements, pools, aliases, structures=()):
         for name, lines in procs.items():
             plain = [r for kind, _, rs in lines if kind == 'r' for r in rs]
             out.write(f"r {name} {';'.join(plain) or '-'}\n")
-            for kind, limit, rs in lines:
+            for kind, capped, rs in lines:
                 if kind == 'c':
-                    out.write(f"c {name} {limit} {';'.join(rs)}\n")
+                    limit, table = capped
+                    out.write(f"c {name} {limit} {';'.join(rs)}{table}\n")
         for name, d in elements.items():
             out.write(f'e {name} {d}\n')
         for name, (fallback, items) in pools.items():

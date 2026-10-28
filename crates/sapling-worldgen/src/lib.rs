@@ -7,6 +7,7 @@
 
 pub mod biome;
 mod block;
+mod block_entity;
 mod cache;
 mod carver;
 mod chunk;
@@ -32,12 +33,14 @@ use std::sync::Arc;
 
 pub use biome::ChunkBiomes;
 pub use block::Block;
+pub use block_entity::BlockEntity;
 pub use end::EndGenerator;
 pub use nether::NetherGenerator;
 #[doc(hidden)]
 pub use feature::grow::{is_feature, place_feature};
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]
+pub use structured::StructureWrites;
 pub use structured::replay::{ReplayWrite, StructureStep};
 pub use structure::{PlaceFailure, StructureKind};
 pub use surface::temperature;
@@ -185,6 +188,11 @@ impl OverworldGenerator {
     /// The decoration of every chunk that reaches this one: its lava lake, monster rooms, feature rules and liquid.
     pub fn place_features(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {
         self.with_inputs(|inputs| self.features.place(shape, (chunk_x, chunk_z), inputs));
+    }
+
+    /// The liquid ticks the generated chunk's queue holds, for the game to run: (cell, lava), in order (`Features::game_ticks`).
+    pub fn chunk_game_ticks(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], bool)> {
+        self.with_inputs(|inputs| self.features.game_ticks((chunk_x, chunk_z), inputs))
     }
 
     /// One source chunk's feature writes, decorated alone: world (x, y, z), block placed, block replaced.

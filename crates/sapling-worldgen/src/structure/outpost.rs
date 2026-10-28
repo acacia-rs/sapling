@@ -6,6 +6,7 @@ use super::BoundingBox;
 use super::canvas::Canvas;
 use super::template::{FULL_CUBE, Placement, Rotation, Template, flags, named, piece_box};
 use crate::block::Block;
+use crate::block_entity::cell_seed;
 use crate::random::Mt19937;
 
 const MIN_Y: i32 = -64;
@@ -73,6 +74,9 @@ impl Piece {
         for ((x, y, z), block, index) in blocks {
             placement.label(self.template, index);
             canvas.set(x, y, z, block);
+            if let Some(entity) = self.template.entity(index, || cell_seed([x, y, z])) {
+                canvas.set_entity(x, y, z, entity);
+            }
         }
         placement.update_pass(canvas, self.template, origin);
     }

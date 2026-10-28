@@ -6,6 +6,7 @@ use std::sync::OnceLock;
 
 use super::{Jigsaw, Kind, State, Template, TemplateBlock};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 
 static DATA: &[u8] = include_bytes!("templates.bin");
 
@@ -75,8 +76,29 @@ impl Reader {
     }
 
     fn string(&mut self) -> String {
+        self.short_str().to_string()
+    }
+
+    fn short_str(&mut self) -> &'static str {
         let n = self.u8() as usize;
-        self.str(n).to_string()
+        self.str(n)
+    }
+
+    /// A template block's entity (scripts/templates_to_rust.py `block_entity`); loot seeds are drawn at placement.
+    fn entity(&mut self) -> BlockEntity {
+        let some = |s: &'static str| (!s.is_empty()).then_some(s);
+        match self.short_str() {
+            "loot" => BlockEntity::Loot { table: self.short_str(), seed: 0 },
+            "pot" => {
+                let table = some(self.short_str());
+                let sherds = [(); 4].map(|_| self.short_str());
+                BlockEntity::Pot { table, seed: 0, sherds: some(sherds[0]).map(|_| sherds) }
+            }
+            "trial" => BlockEntity::TrialSpawner { normal: self.short_str(), ominous: self.short_str() },
+            "vault" => BlockEntity::Vault { table: self.short_str(), key: self.short_str() },
+            "spawner" => BlockEntity::Spawner(self.short_str()),
+            kind => panic!("templates.bin: unknown block entity {kind}"),
+        }
     }
 }
 
@@ -101,7 +123,7 @@ fn parse() -> Data {
                 TemplateBlock { pos: (x, y, z), state: State(r.u16()) }
             })
             .collect();
-        let (mut jigsaws, mut markers, mut loot_chests, mut ceiling_vines) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+        let (mut jigsaws, mut markers, mut loot_chests, mut ceiling_vines, mut entities) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
         for _ in 0..r.u16() {
             let block = r.u32() as usize;
             match r.u8() {
@@ -113,10 +135,11 @@ fn parse() -> Data {
                 }
                 1 => markers.push((block, r.string())),
                 2 => loot_chests.push(block),
-                _ => ceiling_vines.push(block),
+                3 => ceiling_vines.push(block),
+                _ => entities.push((block, r.entity())),
             }
         }
-        templates.insert(name.clone(), Template { name, size, legacy, blocks, jigsaws, markers, loot_chests, ceiling_vines });
+        templates.insert(name.clone(), Template { name, size, legacy, blocks, jigsaws, markers, loot_chests, ceiling_vines, entities });
     }
     let mut blocks: HashMap<u16, Block> = HashMap::new();
     let states = (0..r.u16())

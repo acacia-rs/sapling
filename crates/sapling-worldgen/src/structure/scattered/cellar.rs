@@ -2,6 +2,7 @@
 //! the west room, a sand-filled room, and suspicious sand in a shuffled few of its cells.
 
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::{Mt19937, Xoroshiro, position_seed};
 use crate::structure::canvas::Canvas;
 use crate::structure::piece::Frame;
@@ -82,6 +83,7 @@ fn suspicious_sand(f: &Frame, canvas: &mut Canvas, xoroshiro: &mut Xoroshiro, (x
     let (wx, wy, wz) = f.world(x, y, z);
     f.place(canvas, Block::SuspiciousSand, x, y, z);
     if canvas.get(wx, wy, wz) == Block::SuspiciousSand {
-        xoroshiro.next_long();
+        let seed = xoroshiro.next_long() as i32;
+        canvas.set_entity(wx, wy, wz, BlockEntity::Loot { table: "loot_tables/entities/desert_pyramid_brushable_block.json", seed });
     }
 }

@@ -4,10 +4,12 @@
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
+use acacia_proto::nbt::Value;
 use acacia_world::BlockRegistry;
-use sapling_worldgen::{Block, ChunkShape, HEIGHT, MIN_Y, PlaceFailure};
+use sapling_worldgen::{Block, ChunkShape, HEIGHT, MIN_Y, PlaceFailure, StructureWrites};
 
 use super::convert::BlockIds;
+use super::entities::block_entity_nbt;
 use crate::{ChunkPos, World};
 
 /// What a runtime id is to worldgen, and back.
@@ -27,6 +29,23 @@ fn ids(registry: &BlockRegistry) -> &'static Ids {
     })
 }
 
+/// What a structure drawn over the loaded columns writes: the cells it changed with their new
+/// runtime ids, and the block entities of what it placed as BDS saves them.
+#[derive(Debug, Default)]
+pub struct PlacedStructure {
+    pub blocks: Vec<([i32; 3], u32)>,
+    pub entities: Vec<([i32; 3], Value)>,
+}
+
+impl PlacedStructure {
+    fn of(writes: StructureWrites, ids: &Ids) -> Self {
+        let blocks: HashMap<[i32; 3], Block> = writes.blocks.iter().copied().collect();
+        let block = |at: [i32; 3]| blocks.get(&at).map_or("", |b| b.name());
+        let entities = writes.entities.iter().filter_map(|&(at, entity)| Some((at, block_entity_nbt(at, block(at), entity)?))).collect();
+        Self { blocks: writes.blocks.iter().map(|&(pos, block)| (pos, ids.forward.id(block))).collect(), entities }
+    }
+}
+
 impl World {
     /// Places the feature `name` at `at` with a generator seeded `seed` over the loaded columns:
     /// the cells it writes and their new runtime ids, in the order it wrote them; `None` where it
@@ -40,20 +59,20 @@ impl World {
     }
 
     /// The generator's structure `name` drawn over the loaded columns as though it started in
-    /// chunk `start`: the cells and their runtime ids; `None` without a generator.
-    pub fn place_structure(&self, name: &str, start: ChunkPos) -> Option<Result<Vec<([i32; 3], u32)>, PlaceFailure>> {
+    /// chunk `start`; `None` without a generator.
+    pub fn place_structure(&self, name: &str, start: ChunkPos) -> Option<Result<PlacedStructure, PlaceFailure>> {
         let ids = ids(&self.registry);
         let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
         let writes = self.loader.as_ref()?.storage().structure_writes(name, start, &load)?;
-        Some(writes.map(|writes| writes.into_iter().map(|(pos, block)| (pos, ids.forward.id(block))).collect()))
+        Some(writes.map(|writes| PlacedStructure::of(writes, ids)))
     }
 
     /// [`World::place_structure`] for a jigsaw pool assembled from `at`, as `/place jigsaw` does.
-    pub fn place_jigsaw(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3]) -> Option<Result<Vec<([i32; 3], u32)>, PlaceFailure>> {
+    pub fn place_jigsaw(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3]) -> Option<Result<PlacedStructure, PlaceFailure>> {
         let ids = ids(&self.registry);
         let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
         let writes = self.loader.as_ref()?.storage().jigsaw_writes(pool, target, max_depth, at, &load)?;
-        Some(writes.map(|writes| writes.into_iter().map(|(pos, block)| (pos, ids.forward.id(block))).collect()))
+        Some(writes.map(|writes| PlacedStructure::of(writes, ids)))
     }
 
     fn shape_of(&self, pos: ChunkPos, ids: &Ids) -> ChunkShape {

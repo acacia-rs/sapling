@@ -2,6 +2,7 @@
 
 use super::reach::{Cells, Tries};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::terrain::MIN_Y;
 
 /// How many chunks around the decorated one its features may write.
@@ -19,11 +20,23 @@ pub struct Write {
 /// A liquid tick left on its cell's chunk queue: cell, lava, delay.
 pub type Routed = ([i32; 3], bool, u64);
 
-/// One source chunk's writes, per target chunk around it, the ticks it left on chunk queues, and
-/// what `reach` followed.
-pub struct ChunkWrites(pub(super) Vec<Vec<Write>>, pub(super) Vec<Routed>, pub(super) Option<(Vec<Option<Cells>>, Tries)>);
+/// One source chunk's writes, per target chunk around it, the ticks it left on chunk queues, what
+/// `reach` followed, the instaticks it left on its own queue (`View::left`), and the block entities it
+/// filed (world cell).
+pub struct ChunkWrites(
+    pub(super) Vec<Vec<Write>>,
+    pub(super) Vec<Routed>,
+    pub(super) Option<(Vec<Option<Cells>>, Tries)>,
+    pub(super) Vec<Routed>,
+    pub(super) Vec<([i32; 3], BlockEntity)>,
+);
 
 impl ChunkWrites {
+    /// The block entities this source filed in `chunk`, in order.
+    pub fn entities_in(&self, chunk: (i32, i32)) -> impl Iterator<Item = ([i32; 3], BlockEntity)> + '_ {
+        self.4.iter().copied().filter(move |(at, _)| (at[0].div_euclid(16), at[2].div_euclid(16)) == chunk)
+    }
+
     /// The ticks this source left on `chunk`'s queue, in the order they came.
     pub fn routed_to(&self, chunk: (i32, i32)) -> impl Iterator<Item = Routed> + '_ {
         self.1.iter().copied().filter(move |(at, _, _)| (at[0].div_euclid(16), at[2].div_euclid(16)) == chunk)

@@ -1,11 +1,11 @@
 # BDS v2 jigsaw data (behaviour pack worldgen JSON, trial chambers from C++); scripts/jigsaw_extract/jjson.py
 r trail_ruins_houses_archaeology rb=gravel@0.2|*|dirt;rb=gravel@0.1|*|coarse_dirt;rb=mud_bricks@0.1|*|packed_mud
-c trail_ruins_houses_archaeology 6 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
-c trail_ruins_houses_archaeology 3 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+c trail_ruins_houses_archaeology 6 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1] loot_tables/entities/trail_ruins_brushable_block_common.json
+c trail_ruins_houses_archaeology 3 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1] loot_tables/entities/trail_ruins_brushable_block_rare.json
 r trail_ruins_roads_archaeology rb=gravel@0.2|*|dirt;rb=gravel@0.1|*|gravel;rb=mud_bricks@0.1|*|packed_mud
-c trail_ruins_roads_archaeology 2 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+c trail_ruins_roads_archaeology 2 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1] loot_tables/entities/trail_ruins_brushable_block_common.json
 r trail_ruins_tower_top_archaeology -
-c trail_ruins_tower_top_archaeology 2 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1]
+c trail_ruins_tower_top_archaeology 2 b=gravel|*|suspicious_gravel[brushed_progress=0,hanging=1] loot_tables/entities/trail_ruins_brushable_block_common.json
 r trial_chambers_copper_bulb_degradation rb=waxed_copper_bulb@0.1|*|waxed_oxidized_copper_bulb[lit=1,powered_bit=0];rb=waxed_copper_bulb@0.33333334|*|waxed_weathered_copper_bulb[lit=1,powered_bit=0];rb=waxed_copper_bulb@0.5|*|waxed_exposed_copper_bulb[lit=1,powered_bit=0]
 e trail_ruins/buildings/group_hall_1 j trail_ruins/buildings/group_hall_1 trail_ruins_houses_archaeology 0 0 -
 e trail_ruins/buildings/group_hall_2 j trail_ruins/buildings/group_hall_2 trail_ruins_houses_archaeology 0 0 -

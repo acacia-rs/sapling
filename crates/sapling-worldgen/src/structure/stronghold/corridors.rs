@@ -92,7 +92,7 @@ pub fn post_process(p: &Piece, canvas: &mut Canvas, random: &mut Mt19937) {
             for (x, y, z) in [(3, 1, 1), (3, 1, 5), (3, 2, 2), (3, 2, 4), (2, 1, 2), (2, 1, 3), (2, 1, 4)] {
                 f.place(canvas, Block::StoneBrickSlab, x, y, z);
             }
-            create_chest(f, canvas, random, (3, 2, 3), Block::ChestWest);
+            create_chest(f, canvas, random, (3, 2, 3), Block::ChestWest, "loot_tables/chests/stronghold_corridor.json");
         }
         Kind::Filler => {
             for z in 0..p.value {

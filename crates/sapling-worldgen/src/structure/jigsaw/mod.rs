@@ -136,7 +136,8 @@ fn parse(text: &str) -> Data {
             }
             "c" => {
                 let limit = fields[2].parse().unwrap();
-                capped.entry(fields[1].to_string()).or_default().push(Capped { limit, rules: rule_list(fields[3], &lists) });
+                let loot = fields.get(4).map(|table| leak(table.to_string()).as_str());
+                capped.entry(fields[1].to_string()).or_default().push(Capped { limit, rules: rule_list(fields[3], &lists), loot });
             }
             "e" => {
                 elements.insert(fields[1].to_string(), fields[2..].iter().map(|s| s.to_string()).collect::<Vec<_>>());

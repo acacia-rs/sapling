@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use acacia_proto::nbt::Value;
 use acacia_world::{BlockRegistry, Chunk, Dimension};
 use sapling_worldgen::{Block, EndGenerator, MIN_Y, NetherGenerator, OverworldGenerator};
 
@@ -106,6 +107,21 @@ fn the_end_is_generated_in_its_own_dimension_256_high() {
 }
 
 #[test]
+fn a_generated_dungeon_saves_its_block_entities_as_bds() {
+    // The dungeon at 123,-20,270, whose spawner and chest BDS saved in the oracle world 20261003-structures.
+    let column = Generated::new(MemoryStorage::default(), SEED).generate_column(ChunkPos::new(7, 16));
+    let entities = sapling_leveldb::block_entities(&column.block_entities).unwrap();
+    let at = |pos: [i32; 3]| &entities.iter().find(|e| e.pos == pos).unwrap_or_else(|| panic!("nothing at {pos:?}: {entities:?}")).nbt;
+    let text = |s: &str| Some(Value::String(s.into()));
+    let spawner = at([123, -20, 270]);
+    assert_eq!((spawner.get("id").cloned(), spawner.get("EntityIdentifier").cloned()), (text("MobSpawner"), text("minecraft:spider")));
+    assert_eq!(spawner.get("Delay"), Some(&Value::Short(20)));
+    let chest = at([125, -20, 270]);
+    assert_eq!((chest.get("id").cloned(), chest.get("LootTable").cloned()), (text("Chest"), text("loot_tables/chests/simple_dungeon.json")));
+    assert_eq!(chest.get("LootTableSeed"), Some(&Value::Int(357601146)));
+}
+
+#[test]
 fn an_oak_tree_feature_grows_over_the_loaded_columns() {
     let mut world = World::void();
     let dirt = world.block_id("minecraft:dirt").unwrap();
@@ -158,4 +174,14 @@ fn a_generated_world_without_a_spawn_spawns_on_the_surface_above_the_origin() {
     let shape = OverworldGenerator::new(SEED).chunk_blocks(0, 0);
     let top = (MIN_Y..320).rev().find(|&y| shape.block(0, y, 0) != Block::Air).unwrap();
     assert_eq!(world.load_spawn(), [0.5, top as f32 + 1.0, 0.5]);
+}
+
+/// Decoration's leftover liquid ticks go out with their column, due at once (generated/ticks.rs).
+#[test]
+fn a_generated_column_keeps_the_liquid_ticks_its_queue_holds() {
+    let generated = Generated::with_areas(MemoryStorage::default(), SEED, 1);
+    let (saved_at, ticks) = crate::decode_pending_ticks(&generated.generate_column(ChunkPos::new(5, 4)).pending_ticks).unwrap();
+    assert_eq!((ticks.len(), ticks[0].pos), (7, [88, -13, 79]), "sapling-worldgen's leftovers.rs test");
+    assert!(ticks.iter().all(|tick| tick.name == "minecraft:water" && tick.time - saved_at == 1), "{ticks:?}");
+    assert!(generated.generate_column(ChunkPos::new(0, 0)).pending_ticks.is_empty());
 }
