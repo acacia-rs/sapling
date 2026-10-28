@@ -45,3 +45,20 @@ Drills in `crates/sapling/examples/shared/gameplay_drill.rs`; captures beside th
 - The charged jump is the rider's client's: the horse's height comes in the rider's input. BDS
   sets Flags bit 39 (rearing) on the horse at take-off and clears it on landing, told to the rider
   and viewers.
+
+## Frog on land (bds-amphibians.txt, frog 6)
+
+- Leaps at 70° (told y/across 2.747): first one to the block 1 across and 4 along, level with its
+  own, at 0.689; v² = g·e² / (e·sin 2θ − 2f·cos²θ) with e to the block's centre and f = −1 gives
+  0.687. Told every 3 ticks: across constant, y 0.24 less (gravity 0.08, no drag). On landing
+  (x, −0.08, z) a tenth of the speed across.
+- `jump_to_block` sound at its feet a tick after the leap; FlagsExtended bit 39 (as a breeze's
+  leap) from the leap to the landing. Waits from landing to the next leap 7.5–9.2 s (pack
+  cooldown_range 5–7 s).
+
+## Squid spurts (bds-swimmers.txt, squid 20, glow squid 21) — not copied
+
+- Over ~5 s each squid got a kick every ~12 ticks (glow squid ~8): −0.0715 along z (constant),
+  across x drifting from +0.031 to −0.065 over the spurts; the kick decays ×0.62 a tick on top of
+  the steady 0.0146 drift. The goal behind it (`squid_idle`/`squid_flee`/`squid_dive`) is unnamed
+  in bdsre (only their definitions' cereal glue is), so the rule was not found.

@@ -45,6 +45,8 @@ pub(crate) struct Body {
     pushed: Option<bool>,
     /// What mobs crowding a mob push it by across in its next tick, after the drag.
     jostled: [f32; 2],
+    /// Whether its motion is told as it moves, not after the next tick's drag (a frog's leap).
+    flung: bool,
 }
 
 /// A box in world coordinates: its lowest and highest corners.
@@ -52,7 +54,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2] }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false }
     }
 
     /// Has a mob crowding this one push it by `by` across in its next tick, after the drag.
@@ -63,7 +65,13 @@ impl Body {
     /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
     /// one that left the ground it is on now (research/captures/bds-hit.txt).
     pub fn throw(&mut self, speed: [f32; 3]) {
-        self.thrown = Some(speed);
+        (self.thrown, self.flung) = (Some(speed), false);
+    }
+
+    /// As [`Body::throw`], its motion told as it is, with no drag to come (a frog's leap: BDS
+    /// told it so every tick, research/captures/bds-amphibians.txt).
+    pub fn fling(&mut self, speed: [f32; 3]) {
+        (self.thrown, self.flung) = (Some(speed), true);
     }
 
     /// As [`Body::throw`], its first move `lift` higher, as a breeze leaps.
@@ -187,6 +195,7 @@ impl Body {
             self.on_ground = self.travel(level, physics, moved);
             return moved;
         }
+        self.flung = false;
         self.drag(physics, liquid, stood);
         self.motion = std::array::from_fn(|axis| self.motion[axis] + walking[axis]);
         if let Some(rise) = leaping {
@@ -219,7 +228,7 @@ impl Body {
     /// move there, where sapling slows it as its next tick starts (a jump's 0.42 up is told
     /// 0.3332; research/captures/bds-chase.txt, bds-kinds2.txt).
     pub fn held_motion(&self, physics: &Physics) -> [f32; 3] {
-        if !matches!(physics.liquid, InLiquid::Sinks | InLiquid::Swims) {
+        if self.flung || !matches!(physics.liquid, InLiquid::Sinks | InLiquid::Swims) {
             return self.motion;
         }
         let mut held = *self;

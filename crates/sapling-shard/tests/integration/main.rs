@@ -49,6 +49,7 @@ mod fish;
 mod hearts;
 mod foes;
 mod forms;
+mod frogs;
 mod frost;
 mod ground;
 mod growth;
