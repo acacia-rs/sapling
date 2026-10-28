@@ -167,14 +167,16 @@ fn the_registry_runs_commands_and_answers_as_bds_does() {
 }
 
 #[test]
-fn commands_above_a_players_permission_do_not_exist_for_them() {
+fn a_member_is_refused_commands_above_it_and_selectors_after_its_line_is_read() {
     let commands = commands();
     let names = |permission| commands.visible(permission).map(|spec| spec.name.as_str()).collect::<Vec<_>>();
     assert_eq!((names(Permission::Member), names(Permission::Operator)), (vec!["warp", "ping"], vec!["give", "warp", "ping"]));
-    for line in ["/give 1 2 true x survival red @s", "/g"] {
-        let name = line[1..].split(' ').next().unwrap().to_owned();
-        assert_eq!(run(Permission::Member, line), [("commands.generic.unknown".to_owned(), vec![name], false)]);
-    }
+    // As BDS answered a member (research/captures/bds-member.txt): a syntax error first, then any
+    // selector, then the command by its own name.
+    let answer = |key: &str, parameters: &[&str]| vec![(key.to_owned(), parameters.iter().map(|p| p.to_string()).collect(), false)];
+    assert_eq!(run(Permission::Member, "/g"), answer("commands.generic.syntax", &["/g", "", ""]));
+    assert_eq!(run(Permission::Member, "/give 1 2 true x survival red @s"), answer("commands.generic.permission.selector", &[]));
+    assert_eq!(run(Permission::Member, "/g 1 2 true x survival red Nobody"), answer("commands.generic.error.permissions", &["give"]));
 }
 
 #[derive(Command)]

@@ -32,8 +32,14 @@ const POSITION: u16 = 65;
 const MESSAGE: u16 = 68;
 const BLOCK_STATES: u16 = 84;
 const JSON: u16 = 74;
-/// Every command is sent at this level: the list is filtered per player on the server instead.
-const ANYONE: &str = "any";
+/// A command's level as BDS names it: `any` for everyone, `gamedirectors` for operators
+/// (research/captures/bds-ui-operator.txt). The list is still filtered per player on the server.
+fn level(permission: Permission) -> &'static str {
+    match permission {
+        Permission::Member => "any",
+        Permission::Operator => "gamedirectors",
+    }
+}
 /// The chat box takes 512 characters.
 const MAX_CHARS: usize = 512;
 const MAX_COMMANDS_PER_TICK: usize = 3;
@@ -121,7 +127,7 @@ impl Tables {
             name: spec.name.clone(),
             description: spec.description.clone(),
             flags: 0,
-            permission_level: ANYONE.into(),
+            permission_level: level(spec.permission).into(),
             alias,
             chained_subcommand_offsets: Vec::new(),
             overloads: spec.overloads.iter().map(|o| overload(self, o)).collect(),

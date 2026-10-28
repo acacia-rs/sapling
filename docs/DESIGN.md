@@ -372,8 +372,12 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
   `/execute` runs: who sent it, the executor, the place, turn, anchor and dimension it runs at (`~` and `^`
   count from there, `@s` names the executor; research/captures/bds-execute-findings.md).
   - `AvailableCommands` is built once per permission level and sent when a player enters the world and when
-    `ctx.set_permission` changes its level (`Member` / `Operator`). Hidden commands are left out entirely and
-    answer as unknown; every command sent carries permission `"any"` and flags 0.
+    `ctx.set_permission` changes its level (`Member` / `Operator`). Commands above a player are left out of its
+    list (BDS sends everyone all 82 of its commands with their levels and lets the client hide them:
+    research/captures/bds-ui-member.txt); a member's line is read first, then refused as BDS refused it: a
+    syntax error, `commands.generic.permission.selector` for any selector in it (a message's too), then
+    `commands.generic.error.permissions [command name]` (bds-member.txt). A command sent carries permission
+    `"any"` (members) or `"gamedirectors"` (operators), as BDS names them, and flags 0.
   - Wire shape as BDS 1.26.52: enum values and enums deduplicated; an enum parameter carries its enum index
     with flag 0x30; a sub-command word is a one-value enum; aliases are an enum `<name>CommandAliases` led by
     the name. Type ids from the capture: int 1, float 3, target 8, string 56, message 68 (acacia-proto names

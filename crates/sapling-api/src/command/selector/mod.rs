@@ -48,6 +48,21 @@ const BASES: [(&str, Base); 7] = [
     ("initiator", Base::Initiator),
 ];
 
+/// Whether `text` holds a selector: `@` and a base's whole name, outside double quotes. BDS
+/// refused a member any such line, a message's included (research/captures/bds-member.txt).
+pub(crate) fn mentioned(text: &str) -> bool {
+    let mut quoted = false;
+    text.char_indices().any(|(at, c)| {
+        quoted ^= c == '"';
+        if c != '@' || quoted {
+            return false;
+        }
+        let after = &text[at + 1..];
+        let name = &after[..after.find(|c: char| !c.is_ascii_alphabetic()).unwrap_or(after.len())];
+        BASES.iter().any(|(base, _)| *base == name)
+    })
+}
+
 /// Who or what a command is aimed at.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Selector {

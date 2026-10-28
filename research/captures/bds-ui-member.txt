@@ -1,0 +1,140 @@
+## bds_ui_probe against BDS 1.26.52 (default-player-permission-level=member), 2026-10-28: its AvailableCommands at join, one line per command, and the probe's command answers.
+AvailableCommands: 5218 enum values, 11 chained values, 4 suffixes ["t", "s", "d", "l"], 253 enums, 1 chained, 82 commands, 14 dynamic enums, 3271 constraints
+  /aimassist "commands.aimassist.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /allowlist "commands.allowlist.description" flags 0x0000 permission "owner" alias 247 Some(("allowlistCommandAliases", ["allowlist", "whitelist"])) chained [] overloads 1
+  /camera "commands.camera.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 41
+  /camerashake "commands.screenshake.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /changesetting "commands.change-setting.description" flags 0x0000 permission "owner" alias -1 None chained [] overloads 3
+  /clear "commands.clear.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /clearspawnpoint "commands.clearspawnpoint.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /clone "commands.clone.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /controlscheme "commands.controlscheme.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /damage "commands.damage.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /daylock "commands.daylock.description" flags 0x0000 permission "gamedirectors" alias 68 Some(("daylockCommandAliases", ["daylock", "alwaysday"])) chained [] overloads 1
+  /deop "commands.deop.description" flags 0x0480 permission "admin" alias -1 None chained [] overloads 1
+  /dialogue "commands.dialogue.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /difficulty "commands.difficulty.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /editor-allowlist "commands.editor-allowlist.description" flags 0x0000 permission "owner" alias -1 None chained [] overloads 1
+  /effect "commands.effect.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 3
+  /enchant "commands.enchant.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /event "commands.event.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /execute "commands.execute.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [0] overloads 18
+  /fill "commands.fill.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 4
+  /fog "commands.fog.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /function "commands.function.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /gamemode "commands.gamemode.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /gamerule "commands.gamerule.description" flags 0x0080 permission "gamedirectors" alias -1 None chained [] overloads 4
+  /gametest "gameTest.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 10
+  /give "commands.give.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /hud "commands.hud.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /inputpermission "commands.inputpermission.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /kick "commands.kick.description" flags 0x0080 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /kill "commands.kill.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /list "commands.list.description" flags 0x0080 permission "any" alias -1 None chained [] overloads 1
+  /locate "commands.locate.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /loot "commands.loot.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 21
+  /me "commands.me.description" flags 0x00c0 permission "any" alias -1 None chained [] overloads 1
+  /mobevent "commands.mobevent.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /music "commands.music.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 4
+  /op "commands.op.description" flags 0x0480 permission "admin" alias -1 None chained [] overloads 1
+  /packstack "Prints client or server pack stack to chat" flags 0x0080 permission "any" alias -1 None chained [] overloads 1
+  /particle "commands.spawnParticleEmitter.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /permission "commands.permissions.description" flags 0x0480 permission "admin" alias 144 Some(("permissionCommandAliases", ["permission", "ops"])) chained [] overloads 2
+  /place "commands.place.description" flags 0x0000 permission "admin" alias -1 None chained [] overloads 4
+  /playanimation "commands.playanimation.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /playsound "commands.playsound.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /recipe "commands.recipes.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /reload "commands.reload.all.description" flags 0x0000 permission "admin" alias -1 None chained [] overloads 1
+  /reloadconfig "commands.reloadconfig.description" flags 0x0000 permission "owner" alias -1 None chained [] overloads 1
+  /reloadpacketlimitconfig "Reload packet limit config from file" flags 0x0000 permission "owner" alias -1 None chained [] overloads 1
+  /replaceitem "commands.replaceitem.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 4
+  /ride "commands.ride.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 5
+  /save "commands.save.description" flags 0x0000 permission "owner" alias -1 None chained [] overloads 1
+  /say "commands.say.description" flags 0x00c0 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /schedule "commands.schedule.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 11
+  /scoreboard "commands.scoreboard.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 11
+  /script "script.description" flags 0x0020 permission "admin" alias -1 None chained [] overloads 7
+  /scriptevent "commands.scriptevent.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /sendshowstoreoffer "Sends a request to show a store offer to the target player." flags 0x0000 permission "owner" alias -1 None chained [] overloads 2
+  /serveridentity "commands.serveridentity.description" flags 0x0080 permission "owner" alias -1 None chained [] overloads 1
+  /setblock "commands.setblock.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /setmaxplayers "commands.setmaxplayers.description" flags 0x0000 permission "host" alias -1 None chained [] overloads 1
+  /setworldspawn "commands.setworldspawn.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /spawnpoint "commands.spawnpoint.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /spreadplayers "commands.spreadplayers.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /stop "commands.stop.description" flags 0x0000 permission "owner" alias -1 None chained [] overloads 1
+  /stopsound "commands.stopsound.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /structure "commands.structure.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 5
+  /summon "commands.summon.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 4
+  /tag "commands.tag.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /teleport "commands.tp.description" flags 0x0000 permission "gamedirectors" alias 198 Some(("teleportCommandAliases", ["teleport", "tp"])) chained [] overloads 10
+  /tell "commands.tell.description" flags 0x00c0 permission "any" alias 199 Some(("tellCommandAliases", ["tell", "w", "msg"])) chained [] overloads 1
+  /tellraw "commands.tellraw.description" flags 0x00c0 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /testfor "commands.testfor.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /testforblock "commands.testforblock.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /testforblocks "commands.testforblocks.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /tickingarea "commands.tickingarea.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 8
+  /time "commands.time.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 4
+  /title "commands.title.description" flags 0x0040 permission "gamedirectors" alias -1 None chained [] overloads 4
+  /titleraw "commands.titleraw.description" flags 0x0040 permission "gamedirectors" alias -1 None chained [] overloads 4
+  /toggledownfall "commands.toggledownfall.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 1
+  /transfer "commands.transferserver.description" flags 0x0000 permission "owner" alias -1 None chained [] overloads 1
+  /weather "commands.weather.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+  /wsserver "commands.wsserver.description" flags 0x0020 permission "admin" alias 223 Some(("wsserverCommandAliases", ["connect", "wsserver"])) chained [] overloads 1
+  /xp "commands.xp.description" flags 0x0000 permission "gamedirectors" alias -1 None chained [] overloads 2
+## /list
+  CommandOutputOutputItem { message_id: "commands.players.list", success: true, parameters: ["1", "10"] }, CommandOutputOutputItem { message_id: "commands.players.list.names", success: true, parameters: ["UiProbe"] }
+## /say hello
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["say"] }
+## /nonexistent foo
+  CommandOutputOutputItem { message_id: "commands.generic.unknown", success: false, parameters: ["nonexistent"] }
+## /gamemode banana
+  CommandOutputOutputItem { message_id: "commands.generic.syntax", success: false, parameters: ["/gamemode ", "banana", ""] }
+## /gamemode
+  CommandOutputOutputItem { message_id: "commands.generic.syntax", success: false, parameters: ["/gamemode", "", ""] }
+## /gamemode creative
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["gamemode"] }
+## /gamemode survival
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["gamemode"] }
+## /tp @s ~ ~3 ~
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /title @s times 10 40 10
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /title @s subtitle Probe subtitle
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /title @s title Probe title
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /title @s actionbar Probe actionbar
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /title @s clear
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /title @s reset
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /scoreboard objectives add probe dummy "Probe board"
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["scoreboard"] }
+## /scoreboard objectives setdisplay sidebar probe
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["scoreboard"] }
+## /scoreboard players set "line one" probe 1
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["scoreboard"] }
+## /scoreboard players set "line two" probe 2
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["scoreboard"] }
+## /scoreboard players set "line one" probe 5
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["scoreboard"] }
+## /scoreboard players reset "line two" probe
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["scoreboard"] }
+## /scoreboard objectives setdisplay sidebar
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["scoreboard"] }
+## /scoreboard objectives remove probe
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["scoreboard"] }
+## /difficulty easy
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["difficulty"] }
+## /summon wither ~ ~40 ~
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["summon"] }
+## /tp @s ~300 ~ ~
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /tp @s ~-300 ~ ~
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /kill @e[type=wither]
+  CommandOutputOutputItem { message_id: "commands.generic.permission.selector", success: false, parameters: [] }
+## /difficulty peaceful
+  CommandOutputOutputItem { message_id: "commands.generic.error.permissions", success: false, parameters: ["difficulty"] }

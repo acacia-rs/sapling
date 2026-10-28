@@ -171,10 +171,11 @@ async fn a_bot_uses_commands_forms_and_the_hud() {
     let board = alice.state().scoreboard.sidebar().expect("a sidebar");
     assert_eq!((board.display_name.as_str(), alice.state().scoreboard.sidebar_text()), ("§lHub", vec!["Online: 1".to_owned(), spawn.clone()]));
 
-    // A member gets a shorter list, and what is not on it does not exist for it.
+    // A member gets a shorter list, and what is not on it is refused by name (BDS's answer to a
+    // member's `/say`, research/captures/bds-member.txt).
     let (mut bob, commands, _) = join(&server, "Bob").await;
     assert_eq!(commands, ["hub", "ask"]);
-    assert_eq!(run(&mut bob, "clear").await, ("commands.generic.unknown".to_owned(), false));
+    assert_eq!(run(&mut bob, "clear").await, ("commands.generic.error.permissions".to_owned(), false));
     assert_eq!(run(&mut bob, "ask nobody").await, ("commands.generic.syntax".to_owned(), false));
 
     // Alice walks off and is brought back; the sidebar followed her there and back, line by line.

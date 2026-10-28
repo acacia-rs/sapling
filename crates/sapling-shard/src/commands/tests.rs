@@ -79,7 +79,9 @@ fn the_list_decodes_and_is_shaped_like_bds_s() {
     unique.dedup();
     assert_eq!(unique.len(), list.enum_values.len(), "{:?}", list.enum_values);
     assert!(list.suffixes.is_empty() && list.chained_subcommands.is_empty() && list.dynamic_enums.is_empty() && list.enum_constraints.is_empty());
-    assert!(list.command_data.iter().all(|c| c.flags == 0 && c.permission_level == "any" && c.chained_subcommand_offsets.is_empty()));
+    assert!(list.command_data.iter().all(|c| c.flags == 0 && c.chained_subcommand_offsets.is_empty()));
+    // BDS names an operator command's level `gamedirectors` (research/captures/bds-ui-operator.txt).
+    assert_eq!((command(&list, "hub").permission_level.as_str(), command(&list, "gamemode").permission_level.as_str()), ("any", "gamedirectors"));
     assert!(list.command_data.iter().flat_map(|c| &c.overloads).all(|o| !o.chaining));
 
     let hub = command(&list, "hub");

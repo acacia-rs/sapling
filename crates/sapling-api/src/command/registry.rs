@@ -69,14 +69,15 @@ impl Commands {
         self.entries.iter().find(|e| e.spec.permission <= permission && named(&e.spec))
     }
 
-    /// Runs `line` (a leading `/` is optional) for `sender` and returns what to tell it. A command
-    /// the sender may not use is as unknown as one that does not exist.
+    /// Runs `line` (a leading `/` is optional) for `sender` and returns what to tell it. A member's
+    /// line is read first: a syntax error is answered as such, then a selector anywhere in it is
+    /// refused, then a command above it is refused by its name (research/captures/bds-member.txt).
     pub fn run(&self, ctx: &mut ShardCtx<'_>, sender: &Sender, permission: Permission, line: &str) -> Output {
         let line = line.trim();
         let line = line.strip_prefix('/').unwrap_or(line);
         let name = line.split_whitespace().next().unwrap_or("");
         let mut out = Output::default();
-        let Some(entry) = self.find(name, permission) else {
+        let Some(entry) = self.find(name, Permission::Operator) else {
             out.translate("commands.generic.unknown", vec![name.to_owned()], false);
             return out;
         };
@@ -85,6 +86,23 @@ impl Commands {
             out.echo();
         }
         let players: Vec<Player> = ctx.players().collect();
+        if permission < Permission::Operator {
+            match (entry.check)(&mut Args::new(line, name.len(), sender, &players)) {
+                Ok(()) | Err(ParseError::NoTarget) => {}
+                Err(error) => {
+                    out.refuse(error);
+                    return out;
+                }
+            }
+            if super::selector::mentioned(&line[name.len()..]) {
+                out.translate("commands.generic.permission.selector", Vec::new(), false);
+                return out;
+            }
+            if entry.spec.permission > permission {
+                out.translate("commands.generic.error.permissions", vec![entry.spec.name.clone()], false);
+                return out;
+            }
+        }
         let mut args = Args::new(line, name.len(), sender, &players);
         if let Err(error) = (entry.run)(ctx, sender, &mut args, &mut out) {
             out.refuse(error);
