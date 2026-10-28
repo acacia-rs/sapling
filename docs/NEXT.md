@@ -57,7 +57,8 @@ it does on BDS and the two captures can be diffed:
    kelp, stalactites' drips, lava's fire and snow layers follow BDS's decompiled rules, not drilled
    for timing but kelp's (docs/research/growth.md "Wild plants", "Snow layers"); bubble columns and
    falling stalactites follow the bubbles and dripstone drills (docs/research/bubbles-and-dripstone.md),
-   and block ticks are kept in `PendingTicks` (blocks/pending.rs). The flood's grid
+   and block ticks are kept in `PendingTicks` (blocks/pending.rs), where a generated column brings the
+   liquid ticks decoration left it (docs/research/worldgen-bds-liquids.md, "How they run"). The flood's grid
    looks a column up by hash per cell (~0.7 µs a cell optimised: three columns arriving cost a tick
    15 ms), worth caching. Fire is lit, spreads,
    burns and is put out (`docs/research/fire.md`, `fire`, `quench`), its spread by the Java game's odds. Crops, stems and berry bushes

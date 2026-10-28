@@ -53,8 +53,17 @@ Companion to [worldgen-bds.md](worldgen-bds.md). The flow rule itself (`LiquidBl
   32x32 blocks centred on the decorated chunk.
 - An instatick needs every chunk within a block of the cell in the 3x3; otherwise it is requeued with delay 0 (time
   `MAX`, never due in game). Leftovers go back to the chunk's queue; in game they run at the next ticks.
-- sapling outputs decoration's result; the chunk-queue ticks can be played afterwards as game ticks on the source's
-  3x3 (`SAPLING_LIQUID_GAME_TICKS`, default 0). TODO: hand them to the server's own ticking instead.
+- sapling outputs decoration's result. What a chunk's queue still holds once every source around it has decorated
+  goes out with the generated column as its `PendingTicks` record, and the shard queues it when the column arrives
+  (`liquid/leftovers.rs`, sapling-world `generated/ticks.rs`, sapling-shard `blocks/pending.rs`): the instaticks its
+  own decoration left, then the ticks later sources routed to it (in the Nether every source's, as its decoration
+  never takes the chunk's queue in). `LevelChunk::tick` (1409f98a0) runs the block queue up to the level's current
+  tick (its third argument), so in game all of them are due on the chunk's first tick: each goes out due in 1, in
+  queue order. A magma cell's tick goes out as the magma's, which the shard answers by forming the column above.
+  Deferred instaticks (time `u64::MAX`) are dropped: never due in game, and a record would load that time as due
+  at once. Seed 20261003 near origin: 17 of 441 chunks keep any (chunk 5,4: seven water ticks).
+  `SAPLING_LIQUID_GAME_TICKS` (default 0) instead plays them as game ticks on the source's 3x3 for the oracle, and
+  then nothing goes out. Not modelled: BDS runs a chunk's first ticks with instatick 1, at most 100 a call.
 - While instaticking, `neighborChanged` reaches only blocks with BlockLegacy +0x163 bit 3, which `LiquidBlock`'s
   constructor (148b5c4c0) sets: liquids do hear their neighbours. `spread_to` replaces whatever it enters without
   drops or waterlogging.

@@ -159,3 +159,13 @@ fn a_generated_world_without_a_spawn_spawns_on_the_surface_above_the_origin() {
     let top = (MIN_Y..320).rev().find(|&y| shape.block(0, y, 0) != Block::Air).unwrap();
     assert_eq!(world.load_spawn(), [0.5, top as f32 + 1.0, 0.5]);
 }
+
+/// Decoration's leftover liquid ticks go out with their column, due at once (generated/ticks.rs).
+#[test]
+fn a_generated_column_keeps_the_liquid_ticks_its_queue_holds() {
+    let generated = Generated::with_areas(MemoryStorage::default(), SEED, 1);
+    let (saved_at, ticks) = crate::decode_pending_ticks(&generated.generate_column(ChunkPos::new(5, 4)).pending_ticks).unwrap();
+    assert_eq!((ticks.len(), ticks[0].pos), (7, [88, -13, 79]), "sapling-worldgen's leftovers.rs test");
+    assert!(ticks.iter().all(|tick| tick.name == "minecraft:water" && tick.time - saved_at == 1), "{ticks:?}");
+    assert!(generated.generate_column(ChunkPos::new(0, 0)).pending_ticks.is_empty());
+}

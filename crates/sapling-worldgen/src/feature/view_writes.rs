@@ -20,8 +20,8 @@ pub struct Write {
 pub type Routed = ([i32; 3], bool, u64);
 
 /// One source chunk's writes, per target chunk around it, the ticks it left on chunk queues, and
-/// what `reach` followed.
-pub struct ChunkWrites(pub(super) Vec<Vec<Write>>, pub(super) Vec<Routed>, pub(super) Option<(Vec<Option<Cells>>, Tries)>);
+/// what `reach` followed, and the instaticks it left on its own queue (`View::left`).
+pub struct ChunkWrites(pub(super) Vec<Vec<Write>>, pub(super) Vec<Routed>, pub(super) Option<(Vec<Option<Cells>>, Tries)>, pub(super) Vec<Routed>);
 
 impl ChunkWrites {
     /// The ticks this source left on `chunk`'s queue, in the order they came.

@@ -42,6 +42,7 @@ mod eyes;
 mod fire;
 mod fireworks;
 mod books;
+mod generated_ticks;
 mod gliding;
 mod instruments;
 mod item_buckets;
