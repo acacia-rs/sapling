@@ -110,6 +110,8 @@ pub(crate) fn dispatch(world: &mut World) {
         }
         _ => None,
     }));
+    // Paintings are no entities plugins know (entities.rs), so no plugin is offered their hits.
+    let hits = crate::paintings::struck(world, hits);
     let hits = actions::allowed_hits(world, hits);
     crate::creatures::attacked(world, hits);
     actions::interacted(world, uses);
