@@ -1,12 +1,12 @@
-//! The firework recipes, which the game lists as special ones (`CraftingData`'s multi recipes)
-//! with no cells: what lies in the grid makes the result. A rocket is a paper, one to three
-//! gunpowder (its `Flight`) and any stars, three to a craft; a star is a gunpowder, dyes, and at
-//! most one each of a shape, a diamond (trail) and glowstone dust (flicker); a star and dyes fade it.
+//! The firework recipe (`00000000-…-0002`): a rocket is a paper, one to three gunpowder (its
+//! `Flight`) and any stars, three to a craft; a star is a gunpowder, dyes, and at most one each
+//! of a shape, a diamond (trail) and glowstone dust (flicker); a star and dyes fade it.
 
 use sapling_data::CreativeItem;
 use sapling_world::ItemStack;
 
-use super::item::{self, Explosion, ROCKET, STAR};
+use crate::fireworks::dye;
+use crate::fireworks::item::{self, Explosion, ROCKET, STAR};
 
 const PAPER: &str = "minecraft:paper";
 const GUNPOWDER: &str = "minecraft:gunpowder";
@@ -17,15 +17,6 @@ const MOST_GUNPOWDER: usize = 3;
 /// What each shape item makes a star burst as.
 const SHAPES: &[(&str, u8)] = &[("minecraft:fire_charge", 1), ("minecraft:gold_nugget", 2), ("minecraft:feather", 4)];
 const HEAD_SHAPE: u8 = 3;
-/// The dyes by dye colour number, and the older items that dye as one.
-const DYES: [&str; 16] = ["black", "red", "green", "brown", "blue", "purple", "cyan", "light_gray", "gray", "pink", "lime", "yellow", "light_blue", "magenta", "orange", "white"];
-const OLD_DYES: &[(&str, u8)] = &[("minecraft:ink_sac", 0), ("minecraft:cocoa_beans", 3), ("minecraft:lapis_lazuli", 4), ("minecraft:bone_meal", 15)];
-
-/// The dye colour number of a dye item, banners' numbering too.
-pub(crate) fn dye(name: &str) -> Option<u8> {
-    let named = name.strip_prefix("minecraft:").and_then(|bare| bare.strip_suffix("_dye")).and_then(|colour| DYES.iter().position(|dye| *dye == colour));
-    named.map(|colour| colour as u8).or_else(|| OLD_DYES.iter().find(|(old, _)| *old == name).map(|(_, colour)| *colour))
-}
 
 fn shape(name: &str) -> Option<u8> {
     let is_head = name.ends_with("_skull") || name.ends_with("_head");

@@ -3,11 +3,10 @@
 //! (shots/crossbows.rs) along a way, each starts at 0.03 a tick that way, goes 1.05 times faster
 //! and 0.03 more each tick, and bursts (burst.rs) after 10 ticks a unit of `Flight` and one more,
 //! and up to 5 and 6 more. One used while gliding rides along with its glider until it bursts
-//! (gliding.rs). Their recipes: recipes.rs; their item tags: item.rs.
+//! (gliding.rs). Their recipes: inventory/special/fireworks.rs; their item tags: item.rs.
 
 mod burst;
-mod item;
-mod recipes;
+pub(crate) mod item;
 
 use acacia_proto::nbt::{self, Nbt, Network, Raw, Value};
 use acacia_proto::packets::LevelSoundEvent;
@@ -24,8 +23,7 @@ use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::sync::Told;
 use crate::{entities, inventory};
 
-pub(crate) use item::ROCKET;
-pub(crate) use recipes::{crafted, dye};
+pub(crate) use item::{ROCKET, dye};
 
 /// The RGB of a dye item's colour.
 pub(crate) fn dye_rgb(name: &str) -> Option<u32> {

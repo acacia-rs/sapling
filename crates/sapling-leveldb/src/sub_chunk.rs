@@ -2,6 +2,11 @@
 //! A storage is `bits << 1` (bit 0 clear: a persistent palette), packed u32 LE indices in XZY
 //! order with no index spanning words, an `i32` entry count (absent when `bits` is 0), and the
 //! entries as NBT (states.rs).
+//!
+//! Versions 0 and 2 to 7 are the pre-palette record: 4096 numeric block ids, then 2048 bytes of
+//! metas a nibble each (an even index the low nibble), both in XZY order; light may follow and
+//! is not read (PocketMine's `LevelDB::deserializeLegacy`). The ids and metas resolve through
+//! their 1.12 states (upgrade.rs).
 
 use std::collections::HashMap;
 
@@ -28,6 +33,7 @@ impl SubChunk {
     pub fn decode(mut bytes: &[u8], states: &BlockStates) -> Result<Self, Error> {
         let r = &mut bytes;
         let (count, y) = match read_u8(r)? {
+            0 | 2..=7 => return Ok(Self { y: None, layers: vec![legacy_layer(r, states)?] }),
             1 => (1, None),
             8 => (read_u8(r)?, None),
             9 => (read_u8(r)?, Some(read_u8(r)? as i8)),
@@ -68,6 +74,12 @@ fn write_layer(ids: &[u32; SECTION_VOLUME], states: &BlockStates, out: &mut Vec<
     }
     out.extend((palette.len() as i32).to_le_bytes());
     palette.iter().try_for_each(|&id| states.write(id, out))
+}
+
+fn legacy_layer(r: &mut &[u8], states: &BlockStates) -> Result<Layer, Error> {
+    let ids = take(r, SECTION_VOLUME)?;
+    let metas = take(r, SECTION_VOLUME / 2)?;
+    Ok(Box::new(std::array::from_fn(|i| states.resolve_legacy(ids[i], metas[i / 2] >> (i % 2 * 4) & 0xF))))
 }
 
 fn layer(r: &mut &[u8], states: &BlockStates) -> Result<Layer, Error> {
@@ -168,6 +180,22 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn pre_palette_records_resolve_numeric_ids_and_metas() {
+        let states = states();
+        let registry = states.registry().clone();
+        // Granite (stone:1) at even indices, a birch log (log:2) at odd ones, light after.
+        let ids: Vec<u8> = (0..SECTION_VOLUME).map(|i| if i % 2 == 0 { 1 } else { 17 }).collect();
+        let record = [&[0][..], &ids, &[0x21; SECTION_VOLUME / 2], &[0xff; SECTION_VOLUME]].concat();
+        for version in [0, 2, 7] {
+            let decoded = SubChunk::decode(&[&[version][..], &record[1..]].concat(), &states).unwrap();
+            assert_eq!((decoded.y, decoded.layers.len()), (None, 1));
+            let granite = registry.find("minecraft:granite", "").unwrap();
+            let birch = registry.find("minecraft:birch_log", "pillar_axis=y").unwrap();
+            assert_eq!((decoded.layers[0][0], decoded.layers[0][1], decoded.layers[0][4095]), (granite, birch, birch), "version {version}");
+        }
+    }
+
+    #[test]
     fn encoded_records_decode_to_the_same_layers_at_every_width() {
         let states = states();
         let count = states.registry().len();
@@ -187,7 +215,8 @@ pub(crate) mod tests {
         let stone = entry("minecraft:stone", &[]);
         let good = [&[9, 1, 0][..], &storage(&[stone.clone(), entry("minecraft:dirt", &[])], &[0; SECTION_VOLUME])].concat();
         assert!(SubChunk::decode(&good, &states).is_ok());
-        assert!(matches!(SubChunk::decode(&[7, 1, 0], &states), Err(Error::SubChunkVersion(7))));
+        assert!(matches!(SubChunk::decode(&[10, 1, 0], &states), Err(Error::SubChunkVersion(10))));
+        assert!(SubChunk::decode(&[7, 1, 0], &states).is_err(), "a cut pre-palette record");
         assert!(matches!(SubChunk::decode(&[9, 1, 0, 3], &states), Err(Error::SubChunk(_))), "a network palette");
         assert!(matches!(SubChunk::decode(&[9, 1, 0, 7 << 1], &states), Err(Error::SubChunk(_))), "7 bits");
         for cut in [1, 2, 3, 100, good.len() - 1] {

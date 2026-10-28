@@ -7,6 +7,7 @@ sapling is MIT-licensed ([LICENSE](LICENSE)). It includes or derives from these 
 | [Cubitect/cubiomes](https://github.com/Cubitect/cubiomes), [xpple/cubiomes](https://github.com/xpple/cubiomes) | (c) 2020 Cubitect | `sapling-worldgen/src/biome/btree/` (generated from `btree262` by `scripts/btree_to_rust.py`); the density terms in `sapling-worldgen/src/shaper/overworld.rs` (`terrainnoise.c`) |
 | [stirante/featurelab](https://github.com/stirante/featurelab) | (c) 2026 stirante | the `sapling-worldgen/src/feature/` files that name it in their header (trees, ores, vegetation patches, growing plants and others) |
 | [df-mc/dragonfly](https://github.com/df-mc/dragonfly) | (c) 2019 Dragonfly Tech | server design and game values, as noted in [docs/DESIGN.md](docs/DESIGN.md) and the source |
+| [df-mc/worldupgrader](https://github.com/df-mc/worldupgrader) | (c) 2023 Dragonfly | `sapling-leveldb/src/upgrade/schema.rs` (ported from `blockupgrader`) |
 
 Each is used under the MIT License:
 
@@ -24,6 +25,10 @@ Each is used under the MIT License:
 > EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 > IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 > USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+`crates/sapling-leveldb/data/upgrade/` is [pmmp/BedrockBlockUpgradeSchema](https://github.com/pmmp/BedrockBlockUpgradeSchema)
+(commit 1077ee6) as published: its upgrade schemas, legacy id map and `id_meta_to_nbt/1.12.0.bin`, dedicated to the
+public domain under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
 
 Other projects (Dragonfly, featurelab, cubiomes, ChunkBiomes, BedrockUtil, pmmp/BedrockData) are cited in
 comments and research notes for how the game behaves; beyond the table above, no code is taken from them.

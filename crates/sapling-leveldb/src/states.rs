@@ -1,8 +1,9 @@
 //! Disk palette entries (`{name, states, version}` in little-endian NBT) to runtime ids.
 //!
-//! Entries saved by an older game version need the block-state upgrader (docs/DESIGN.md open
-//! items). Until it exists: a known block with unknown states becomes that block's first state,
-//! an unknown block becomes [`PLACEHOLDER`]; each is logged once.
+//! An entry that names no current state goes through the upgrader (upgrade.rs) first; only an
+//! exact miss is upgraded, since BDS saves today's states under an older `version`. What still
+//! does not resolve: a known block becomes its first state, an unknown block [`PLACEHOLDER`];
+//! each is logged once.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
@@ -12,6 +13,7 @@ use acacia_world::{BlockRegistry, BlockState};
 use bytes::BytesMut;
 
 use crate::Error;
+use crate::upgrade::{self, States};
 
 /// The block vanilla itself shows for blocks it does not know.
 pub const PLACEHOLDER: &str = "minecraft:info_update";
@@ -26,6 +28,8 @@ pub struct BlockStates {
     resolved: Mutex<HashMap<Box<[u8]>, u32>>,
     /// Runtime id to the entry [`BlockStates::write`] made for it.
     written: Mutex<HashMap<u32, Arc<[u8]>>>,
+    /// Pre-1.13 numeric id and meta to runtime id.
+    legacy: Mutex<HashMap<(u8, u8), u32>>,
     reported: Mutex<HashSet<String>>,
 }
 
@@ -36,7 +40,7 @@ impl BlockStates {
             by_name.entry(registry.get(id).expect("an id below the length").name).or_default().push(id);
         }
         let placeholder = by_name.get(PLACEHOLDER).map_or(registry.air_id(), |ids| ids[0]);
-        Self { registry, by_name, placeholder, resolved: Mutex::default(), written: Mutex::default(), reported: Mutex::default() }
+        Self { registry, by_name, placeholder, resolved: Mutex::default(), written: Mutex::default(), legacy: Mutex::default(), reported: Mutex::default() }
     }
 
     pub fn registry(&self) -> &Arc<BlockRegistry> {
@@ -61,22 +65,62 @@ impl BlockStates {
         Ok(id)
     }
 
-    /// The runtime id of a `{name, states}` compound.
+    /// The runtime id of a `{name, states, version}` compound, or of a pre-1.13 `{name, val}`.
     pub fn resolve(&self, entry: &Value) -> u32 {
         let Some(Value::String(name)) = entry.get("name") else {
             self.report("an entry without a name", "");
             return self.placeholder;
         };
-        let Some(ids) = self.by_name.get(name.as_str()) else {
+        let version = match entry.get("version") {
+            Some(Value::Int(version)) => *version,
+            _ => 0,
+        };
+        let states = upgrade::states_of(entry.get("states"));
+        let meta = match entry.get("val") {
+            Some(Value::Short(meta)) if version < upgrade::FIRST_STATES_VERSION => Some(*meta),
+            _ => None,
+        };
+        if let Some(id) = meta.is_none().then(|| self.exact(name, &states)).flatten() {
+            return id;
+        }
+        let upgraded = match meta {
+            Some(meta) => upgrade::from_legacy(name, meta),
+            None => Some(upgrade::upgraded(name, states.clone(), version)),
+        };
+        let (name, states) = upgraded.unwrap_or((name.to_string(), states));
+        self.exact(&name, &states).unwrap_or_else(|| self.nearest(&name, &states))
+    }
+
+    /// The runtime id of a pre-1.13 numeric block id and its meta, as legacy sub-chunks store them.
+    pub fn resolve_legacy(&self, id: u8, meta: u8) -> u32 {
+        if let Some(&resolved) = self.legacy.lock().expect("legacy lock").get(&(id, meta)) {
+            return resolved;
+        }
+        let state = upgrade::legacy_name(id.into()).and_then(|name| upgrade::from_legacy(name, meta.into()));
+        let resolved = match state {
+            Some((name, states)) => self.exact(&name, &states).unwrap_or_else(|| self.nearest(&name, &states)),
+            None => {
+                self.report("unknown numeric block", &format!("{id}:{meta}"));
+                self.placeholder
+            }
+        };
+        self.legacy.lock().expect("legacy lock").insert((id, meta), resolved);
+        resolved
+    }
+
+    fn exact(&self, name: &str, states: &States) -> Option<u32> {
+        let properties = properties(&compound_of(states));
+        self.by_name.get(name)?.iter().copied().find(|&id| self.registry.get(id).is_some_and(|state| state.properties == properties))
+    }
+
+    /// The block's first state, or [`PLACEHOLDER`] for an unknown block; logged.
+    fn nearest(&self, name: &str, states: &States) -> u32 {
+        let Some(ids) = self.by_name.get(name) else {
             self.report("unknown block", name);
             return self.placeholder;
         };
-        let properties = entry.get("states").map(properties).unwrap_or_default();
-        let exact = ids.iter().find(|&&id| self.registry.get(id).is_some_and(|s| s.properties == properties));
-        *exact.unwrap_or_else(|| {
-            self.report("unknown states, using the block's first state", &format!("{name}[{properties}]"));
-            &ids[0]
-        })
+        self.report("unknown states, using the block's first state", &format!("{name}[{}]", properties(&compound_of(states))));
+        ids[0]
     }
 
     /// Appends the palette entry of runtime id `id`; an error when [`typed_states`] cannot type it.
@@ -98,6 +142,10 @@ impl BlockStates {
             tracing::warn!(block, "{what}");
         }
     }
+}
+
+fn compound_of(states: &States) -> Value {
+    Value::Compound(states.iter().map(|(key, value)| (Str::from(key.as_str()), value.clone())).collect())
 }
 
 fn name_field(state: &BlockState) -> (Str, Value) {
@@ -218,6 +266,21 @@ pub(crate) mod tests {
         assert_eq!(read(entry("minecraft:oak_log", &[("pillar_axis", Value::String(axis.into()))])), id);
         // The second read is the cached one.
         assert_eq!(read(entry("minecraft:oak_log", &[("pillar_axis", Value::String(axis.into()))])), id);
+    }
+
+    #[test]
+    fn old_entries_resolve_through_the_upgrader() {
+        let states = BlockStates::new(BlockRegistry::vanilla_arc());
+        let registry = states.registry().clone();
+        let old = |fields: Vec<(&str, Value)>| Value::Compound(fields.into_iter().map(|(key, value)| (Str::from(key), value)).collect());
+        let wood_states = old(vec![("wood_type", Value::String("birch".into())), ("stripped_bit", Value::Byte(1)), ("pillar_axis", Value::String("x".into()))]);
+        let wood = old(vec![("name", Value::String("minecraft:wood".into())), ("states", wood_states), ("version", Value::Int(17_959_425))]);
+        assert_eq!(states.resolve(&wood), registry.find("minecraft:stripped_birch_wood", "pillar_axis=x").unwrap());
+        let granite = registry.find("minecraft:granite", "").unwrap();
+        assert_eq!(states.resolve(&old(vec![("name", Value::String("minecraft:stone".into())), ("val", Value::Short(1))])), granite);
+        assert_eq!(states.resolve_legacy(1, 1), granite);
+        assert_eq!(states.resolve_legacy(0, 0), registry.air_id());
+        assert!(states.reported.lock().unwrap().is_empty(), "{:?}", states.reported.lock().unwrap());
     }
 
     #[test]
