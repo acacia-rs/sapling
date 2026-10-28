@@ -35,12 +35,15 @@ pub struct Gives {
     pub chance: f32,
 }
 
-const fn plain(hunger: f32, saturation: f32) -> Food {
+pub(crate) const fn plain(hunger: f32, saturation: f32) -> Food {
     Food { hunger, saturation, always: false, ticks: USE_TICKS, gives: &[], leaves: None, cures: false, ends_poison: false, drunk: false }
 }
 
 /// What the item `name` (`minecraft:bread`) feeds; `None` for what is not eaten.
 pub fn food(name: &str) -> Option<Food> {
+    if let Some(custom) = crate::custom_items::by_name(name) {
+        return custom.food;
+    }
     Some(match name.strip_prefix("minecraft:").unwrap_or(name) {
         "apple" | "chorus_fruit" => plain(4.0, 2.4),
         "baked_potato" | "bread" | "cooked_cod" | "cooked_rabbit" => plain(5.0, 6.0),

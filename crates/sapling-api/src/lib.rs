@@ -9,7 +9,9 @@ mod border;
 mod chat;
 mod combat;
 pub mod command;
+mod content;
 mod ctx;
+mod custom_block;
 mod debug_shape;
 mod dialogue;
 mod display;
@@ -64,6 +66,9 @@ pub use movement::{MovementBackend, MovementPolicy};
 pub use riding::{Mount, RidingBackend};
 pub use combat::{Attacker, DamageEvent, DeathEvent, DeathMessage, RespawnEvent};
 pub use command::{Command, Commands, Output, Sender};
+pub use content::{
+    ArmourSlot, BlockBox, BlockDrop, Content, CreativeCategory, CustomBlock, CustomFood, CustomItem, Geometry, Material, Permutation, RenderMethod, StateValue, StateValues,
+};
 pub use ctx::{Backend, FormCallback, ShardCtx, State};
 pub use debug_shape::{DebugShape, ShapeKind};
 pub use dialogue::{Dialogue, DialogueButton, DialogueCallback};

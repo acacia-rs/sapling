@@ -26,10 +26,10 @@ fn takes(names: &HashSet<&str>, name: &str) -> bool {
 
 /// Whether BDS's commands take `name` (as typed) for an item; every name without the table.
 pub fn command_takes_item(name: &str) -> bool {
-    takes(&NAMES[0], name)
+    takes(&NAMES[0], name) || crate::custom_items::by_name(name).is_some()
 }
 
 /// Whether BDS's commands take `name` (as typed) for a block; every name without the table.
 pub fn command_takes_block(name: &str) -> bool {
-    takes(&NAMES[1], name)
+    takes(&NAMES[1], name) || crate::custom_items::by_name(name).is_some_and(|item| item.block.is_some())
 }

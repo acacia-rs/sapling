@@ -59,8 +59,26 @@ pub fn pre_start_packets() -> &'static [Bytes] {
     &*PACKETS
 }
 
-/// The registries as BDS sent them, each with its header, in the order BDS sends them after StartGame.
+/// The registries as BDS sent them, each with its header, in the order BDS sends them after StartGame,
+/// with the custom items in ItemRegistry and CreativeContent (custom_creative.rs).
 pub fn registry_packets() -> &'static [Bytes] {
+    let generation = crate::custom_items::generation();
+    if generation == 0 {
+        return recorded_registry_packets();
+    }
+    static WITH_CUSTOM: std::sync::Mutex<(usize, &'static [Bytes])> = std::sync::Mutex::new((0, &[]));
+    let mut cached = WITH_CUSTOM.lock().expect("registry packets lock");
+    if cached.0 != generation {
+        let mut packets = recorded_registry_packets().to_vec();
+        packets[0] = encoded(&crate::custom_creative::item_registry());
+        packets[5] = encoded(&crate::custom_creative::creative_content());
+        // Leaked once per registration, which happens before a server starts.
+        *cached = (generation, Vec::leak(packets));
+    }
+    cached.1
+}
+
+fn recorded_registry_packets() -> &'static [Bytes] {
     static PACKETS: LazyLock<[Bytes; 8]> = LazyLock::new(|| {
         [
             framed::<ItemRegistry>(ITEM_REGISTRY),

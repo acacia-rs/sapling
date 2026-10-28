@@ -20,6 +20,9 @@ const TURTLE_HELMET: (&str, [f32; 2]) = ("minecraft:turtle_helmet", [2.0, 0.0]);
 
 /// The points and toughness of the item `name` (namespaced), if it is armour.
 pub fn armour(name: &str) -> Option<[f32; 2]> {
+    if let Some(custom) = crate::custom_items::by_name(name) {
+        return custom.armour.map(|(_, points)| [points, 0.0]);
+    }
     if name == TURTLE_HELMET.0 {
         return Some(TURTLE_HELMET.1);
     }
@@ -30,6 +33,9 @@ pub fn armour(name: &str) -> Option<[f32; 2]> {
 
 /// The uses the item `name` (namespaced) lasts as armour, if it is armour that wears.
 pub fn armour_lasts(name: &str) -> Option<u16> {
+    if let Some(custom) = crate::custom_items::by_name(name) {
+        return custom.armour.and(custom.durability);
+    }
     if name == TURTLE_HELMET.0 {
         return Some(TURTLE_HELMET_LASTS);
     }

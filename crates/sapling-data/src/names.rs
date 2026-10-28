@@ -26,7 +26,8 @@ static NAMES: LazyLock<Names> = LazyLock::new(|| {
 
 /// What BDS calls the item `identifier` (namespaced) of `data`, or of data 0 where its name is the same for all.
 pub fn item_display_name(identifier: &str, data: u16) -> Option<&'static str> {
-    NAMES.items.get(&(identifier, data)).or_else(|| NAMES.items.get(&(identifier, 0))).copied()
+    let recorded = NAMES.items.get(&(identifier, data)).or_else(|| NAMES.items.get(&(identifier, 0))).copied();
+    recorded.or_else(|| crate::custom_items::by_name(identifier).map(|item| item.display_name))
 }
 
 /// What BDS calls an entity of `identifier` (namespaced).
