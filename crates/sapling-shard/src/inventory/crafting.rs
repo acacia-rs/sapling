@@ -1,8 +1,7 @@
 //! The server's side of a craft: a request names a recipe, uses items up and takes the result,
 //! and is done only if what it used up is what the recipe asks for (requests.rs). How BDS does
 //! it, where this follows it and where not: docs/research/containers-crafting.md, sections E, F.
-// TODO: a craft by the recipe book is only held to what it used, not to where it took it from;
-// no recipe unlocking.
+// TODO: a craft by the recipe book is only held to what it used, not to where it took it from.
 
 use std::borrow::Cow;
 use std::ops::Range;

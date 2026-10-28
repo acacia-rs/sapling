@@ -4,7 +4,7 @@ use std::sync::LazyLock;
 
 use acacia_proto::packets::{
     AvailableEntityIdentifiers, BiomeDefinitionList, CameraPresets, CraftingData, CreativeContent, FeatureRegistry, ItemRegistry,
-    JigsawStructureData, TrimData, UnlockedRecipes, VoxelShapes,
+    JigsawStructureData, TrimData, VoxelShapes,
 };
 use acacia_proto::{Packet, codec};
 use bytes::{Bytes, BytesMut};
@@ -54,7 +54,7 @@ pub fn pre_start_packets() -> &'static [Bytes] {
 
 /// The registries as BDS sent them, each with its header, in the order BDS sends them after StartGame.
 pub fn registry_packets() -> &'static [Bytes] {
-    static PACKETS: LazyLock<[Bytes; 9]> = LazyLock::new(|| {
+    static PACKETS: LazyLock<[Bytes; 8]> = LazyLock::new(|| {
         [
             framed::<ItemRegistry>(ITEM_REGISTRY),
             framed::<BiomeDefinitionList>(include_bytes!("../data/BiomeDefinitionList.bin")),
@@ -64,9 +64,8 @@ pub fn registry_packets() -> &'static [Bytes] {
             framed::<CreativeContent>(CREATIVE_CONTENT),
             framed::<TrimData>(TRIM_DATA),
             // BDS sends the recipes after the player's own windows; here they go with the rest.
+            // The player's recipe book follows once its items are shown (sapling-shard recipe_book.rs).
             framed::<CraftingData>(CRAFTING_DATA),
-            // StartGame says recipes unlock: without this list a recipe book has little in it.
-            framed::<UnlockedRecipes>(UNLOCKED_RECIPES),
         ]
     });
     &*PACKETS
@@ -90,7 +89,6 @@ mod tests {
             CreativeContent::ID,
             TrimData::ID,
             CraftingData::ID,
-            UnlockedRecipes::ID,
         ];
         assert_eq!(ids, expected);
         let raw = |i: usize| RawPacket::parse(registry_packets()[i].clone()).unwrap();

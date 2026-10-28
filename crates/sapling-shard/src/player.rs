@@ -9,7 +9,7 @@ use sapling_net::{ConnId, VerifiedLogin};
 use crate::blobs::BlobCache;
 use crate::dimensions::ClientDimension;
 use crate::blocks::Breaking;
-use crate::inventory::Inventory;
+use crate::inventory::{Inventory, RecipeBook};
 use crate::chunks::SectionBacklog;
 use crate::commands::Access;
 use crate::components::{Conn, Identity, InLayer, Mode, NetId, Outgoing, Position, Stage};
@@ -46,6 +46,7 @@ pub(crate) struct Carried {
     pub marks: Marks,
     /// The player's items, under the stack ids its client knows them by.
     pub inventory: Inventory,
+    pub recipes: RecipeBook,
     pub vitals: Vitals,
     pub dimension: ClientDimension,
 }
@@ -74,6 +75,7 @@ impl Carried {
             hud: Hud::default(),
             marks: Marks::new(identity.uuid.as_bytes()),
             inventory: Inventory::default(),
+            recipes: RecipeBook::default(),
             vitals: Vitals::default(),
             dimension: ClientDimension::new(dimension),
         }

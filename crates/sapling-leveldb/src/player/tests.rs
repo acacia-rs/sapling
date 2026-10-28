@@ -23,7 +23,7 @@ fn player() -> PlayerData {
         main, armor, offhand: stack("minecraft:shield", 1, None), selected: 8, ender, level: 17, progress: 0.25, vitals: Some([7.5, 18.0, 0.0, 2.25]),
         bed: Some([[5, 64, -3], [4, 64, -3]]), spawn_dimension: 1, last_death: Some(([-2, 101, 2], 1)), effects: vec![[1, 1, 600, 1], [19, 0, 40, 0]], dimension: 1, position: Some([-14.5, 34.0, 7.5]),
         rotation: Some([135.0, -12.5]), game_mode: Some(1), enchant_seed: Some(-123_456), tags: vec!["vip".into(), "§cred".into()],
-        unique_id: Some(-4294967295), rested: Some(80_000),
+        unique_id: Some(-4294967295), rested: Some(80_000), recipes: Some(RecipeRecord { unlocked: vec!["minecraft:stick".into(), "minecraft:torch".into()], used_contexts: 8 }),
     }
 }
 
@@ -48,6 +48,8 @@ fn the_record_has_bds_fields_and_shapes() {
     let death = ["DeathPositionX", "DeathPositionY", "DeathDimension", "HasDiedBefore"].map(|key| record.get(key).cloned());
     assert_eq!(death, [Value::Int(-2), Value::Int(101), Value::Int(1), Value::Byte(1)].map(Some));
     assert_eq!(record.get("EnchantmentSeed"), Some(&Value::Int(-123_456)));
+    let unlocked = Value::List(List { tag: 8, items: vec![Value::String("minecraft:stick".into()), Value::String("minecraft:torch".into())] });
+    assert_eq!(record.get("recipe_unlocking"), Some(&Value::Compound(vec![("used_contexts".into(), Value::Int(8)), ("unlocked_recipes".into(), unlocked)])));
     let Some(Value::List(effects)) = record.get("ActiveEffects") else { panic!("no effects") };
     let speed = &effects.items[0];
     let parts = ["Id", "Amplifier", "Duration", "DurationEasy", "DurationNormal", "DurationHard", "Ambient", "ShowParticles"].map(|key| speed.get(key).cloned());

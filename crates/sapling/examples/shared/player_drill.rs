@@ -146,6 +146,11 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         println!("## fished: {:?}", actor.fish(Duration::from_secs(secs)).await);
         return true;
     }
+    // `!craft item`: one craft of `minecraft:item` in the inventory's grid (`Bot::craft`).
+    if let Some(item) = line.strip_prefix("!craft ") {
+        println!("## crafted: {:?}", actor.craft(&format!("minecraft:{item}"), 1, None).await);
+        return true;
+    }
     if let Some(slot) = line.strip_prefix("!take ").and_then(|slot| slot.parse().ok()) {
         println!("## took: {:?}", actor.move_to_inventory(slot).await);
         return true;

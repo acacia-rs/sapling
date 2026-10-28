@@ -11,6 +11,7 @@ mod forge;
 mod give;
 mod picking;
 mod plugin;
+mod recipe_book;
 mod requests;
 mod store;
 mod wear;
@@ -31,6 +32,7 @@ pub(crate) use equipment::{announce, in_hand, screens, select, show_hand, spawn_
 pub(crate) use give::{give_and_pop, swap_held, swap_held_for, use_up_held};
 pub(crate) use picking::dispatch as dispatch_picks;
 pub(crate) use plugin::{described, item_at, set_item, stored};
+pub(crate) use recipe_book::{RecipeBook, send_book, unlock as unlock_recipes};
 pub(crate) use requests::dispatch;
 pub(crate) use store::{keep_here, load, save, save_all, save_changed, send_own};
 pub(crate) use wear::{sound_broken, wear_at, wear_hand_by, wear_tool_in_hand};

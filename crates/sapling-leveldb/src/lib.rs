@@ -42,7 +42,7 @@ pub use actor_raising::{Raising, raised_actor, raising, regrouped_actor};
 pub use actors::{Actor, Painting, State, actors, falling_block, lying_stack, moved_actor, new_actor, new_falling_block_actor, new_item_actor, new_orb_actor, new_painting_actor, new_shot_actor, orb_value, orb_worth, placed_actor, shot_record, stored_actors, ShotRecord};
 pub use item::ItemStack;
 pub use pending_ticks::{PendingTick, decode_pending_ticks, encode_pending_ticks};
-pub use player::PlayerData;
+pub use player::{PlayerData, RecipeRecord};
 pub use portals::{PortalRecord, decode_portals, encode_portals};
 pub use dragon_fight::{DragonFightRecord, decode_dragon_fight, encode_dragon_fight};
 pub use block_entities::{BlockEntity, block_entities, with_block_entity, without_block_entity};

@@ -18,6 +18,7 @@ use crate::body::Body;
 use crate::components::{InLayer, NetId, Outgoing, Position};
 use crate::handlers::Ctx;
 use crate::hud::Hud;
+use crate::inventory::RecipeBook;
 use crate::{entities, view};
 
 fn vec3([x, y, z]: [f32; 3]) -> Vec3f {
@@ -102,6 +103,11 @@ pub(crate) fn packet(action: &ScreenAction) -> Option<Bytes> {
 
 impl Ctx<'_> {
     pub(crate) fn act_on_screen(&mut self, player: PlayerId, action: &ScreenAction) {
+        if let (ScreenAction::Recipes { ids, change }, Some(entity)) = (action, self.entity(player)) {
+            if let Some(mut book) = self.world.get_mut::<RecipeBook>(entity) {
+                book.changed(ids, *change);
+            }
+        }
         if let (Some(packet), Some(mut out)) = (packet(action), self.out(player)) {
             out.0.push(packet);
         }
