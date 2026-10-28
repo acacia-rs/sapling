@@ -54,7 +54,8 @@ pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let due: Vec<(Entity, Entity, Hung)> = world.query::<(Entity, &NetId, &InLayer, &Hung)>().iter(world).filter(|(_, id, ..)| (now + id.0).is_multiple_of(CHECKS)).map(|(painting, _, layer, hung)| (painting, layer.0, *hung)).collect();
     for (painting, layer, hung) in due {
-        if world.get::<Layer>(layer).is_some_and(|level| !still_fits(&level.world, &hung)) {
+        // A painting outlives its column's unloading by up to a sweep (mobs.rs); unloaded, its wall reads as air.
+        if world.get::<Layer>(layer).is_some_and(|level| level.world.is_loaded(hung.home) && !still_fits(&level.world, &hung)) {
             fall(world, painting, true);
         }
     }
