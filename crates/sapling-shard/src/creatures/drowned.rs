@@ -4,8 +4,9 @@
 //! research/captures/bds-drowned.txt: shown holding the trident as it came; it swung, and the
 //! trident flew a tick later at 3.94 a tick, heard `item.trident.throw` from the drowned; it kept
 //! its own, and the thrown one stuck where it fell.
-// TODO: a viewer who comes later does not see the trident; its drop on death (the pack sets only
-// the offhand's chance), its enchantments and the 8% nautilus shell are not done.
+// A viewer who comes later is shown the trident with the drowned.
+// TODO: its drop on death (the pack sets only the offhand's chance; BDS's mainhand chance was not
+// drilled), its enchantments and the 8% nautilus shell (`drowned_ranged_equipment.json`) are not done.
 
 use bevy_ecs::prelude::*;
 
@@ -61,9 +62,14 @@ pub(super) fn arm(world: &mut World, drowned: Entity, kind: &str, event: Option<
     world.entity_mut(drowned).insert(Thrower::default());
     let stack = sapling_data::Stack { name: "minecraft:trident", count: 1, damage: 0, block: None, tag: None };
     let (Some(held), Some(body)) = (sapling_data::mob_hand(id, &stack, false), world.get::<Body>(drowned).copied()) else { return };
+    let held = sapling_net::encode(&held);
+    if let Some(mut announcement) = crate::mobs::announced(world, drowned) {
+        announcement.push(held.clone());
+        crate::mobs::reannounce(world, drowned, announcement);
+    }
     let layer = world.get::<crate::components::InLayer>(drowned).map(|layer| layer.0);
     if let Some(layer) = layer {
-        entities::tell_viewers(world, drowned, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&held)]);
+        entities::tell_viewers(world, drowned, layer, body.at.map(|c| c.floor() as i32), vec![held]);
     }
 }
 
