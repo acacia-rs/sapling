@@ -73,6 +73,7 @@ mod shard;
 mod shots;
 mod simulation;
 mod skin;
+mod skin_change;
 mod sleep;
 mod sounds;
 mod spawners;
@@ -92,6 +93,7 @@ mod vitals;
 mod watchdog;
 mod weather;
 mod workstations;
+mod world_events;
 mod worlds;
 
 pub use config::{MovementCheck, ShardConfig, TICK};

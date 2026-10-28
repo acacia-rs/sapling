@@ -58,6 +58,7 @@ pub(crate) fn dispatch(world: &mut World) {
     // Before anything acts on where players are: a cancelled move puts one back.
     actions::dispatch_moves(world);
     crate::player_events::dispatch(world);
+    crate::skin_change::dispatch(world);
     chat::dispatch(world);
     commands::dispatch(world);
     blocks::show_blocks_again(world);

@@ -155,7 +155,7 @@ pub(crate) fn trample(world: &mut World, layer: Entity, feet: [f32; 3], dropped:
     let mut picks = world.remove_resource::<Picks>().unwrap_or_default();
     let treads = (picks.below(CHANCES) as f32) < (dropped - SAFE_DROP) * CHANCES as f32;
     world.insert_resource(picks);
-    if treads {
+    if treads && crate::world_events::may_trample(world, layer, pos) {
         super::update_block(world, layer, pos, &Block::new(DIRT));
     }
 }
@@ -197,7 +197,7 @@ pub(crate) fn tick(world: &mut World) {
         growing.0.remove(&cell);
     }
     for (layer, ticked, grows, changes) in changed {
-        if changes.is_empty() || grows && !may_grow(world, layer, ticked) {
+        if changes.is_empty() || grows && !may_grow(world, layer, ticked) || !crate::world_events::may_decay(world, layer, ticked) {
             continue;
         }
         for rules::Change { pos, id, how } in changes {

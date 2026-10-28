@@ -65,6 +65,24 @@ impl Profile {
     }
 }
 
+impl Profile {
+    /// The skin its list entry gives it.
+    pub fn skin(&self) -> Option<acacia_proto::types::Skin> {
+        match acacia_proto::RawPacket::parse(self.list_add.clone()).ok()?.decode::<PlayerList>().ok()?.records.pop()?.content {
+            PlayerRecordContent::Add(add) => Some(add.skin_data),
+            _ => None,
+        }
+    }
+
+    /// Gives its list entry `skin`, for those who list it later (skin_change.rs).
+    pub fn reskin(&mut self, skin: acacia_proto::types::Skin) {
+        let Some(mut list) = acacia_proto::RawPacket::parse(self.list_add.clone()).ok().and_then(|raw| raw.decode::<PlayerList>().ok()) else { return };
+        let Some(PlayerRecordContent::Add(add)) = list.records.first_mut().map(|record| &mut record.content) else { return };
+        add.skin_data = skin;
+        self.list_add = sapling_net::encode(&list);
+    }
+}
+
 /// A player's list packets, as the other shards keep them.
 #[derive(Debug, Clone)]
 pub(crate) struct ListEntry {

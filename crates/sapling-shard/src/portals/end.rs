@@ -24,6 +24,9 @@ pub(crate) struct Platforms(Vec<Entity>);
 
 /// Sends a player from its world to the End of its realm.
 pub(super) fn depart(world: &mut World, player: Entity) {
+    if !crate::world_events::may_use_portal(world, player, sapling_api::Portal::End) {
+        return;
+    }
     let Some(layer) = world.get::<InLayer>(player).map(|in_layer| in_layer.0) else { return };
     let Some(end) = dimensions::of(world, layer, END).filter(|end| *end != layer) else { return };
     dimensions::travel(world, player, end, ARRIVAL);

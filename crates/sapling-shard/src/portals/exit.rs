@@ -34,6 +34,9 @@ fn eyes([x, y, z]: [f32; 3]) -> Vec3f {
 
 /// A player in the exit portal: the credits the first time, else home at once.
 pub(super) fn enter(world: &mut World, player: Entity) {
+    if !crate::world_events::may_use_portal(world, player, sapling_api::Portal::EndExit) {
+        return;
+    }
     if world.get::<WatchingCredits>(player).is_some() {
         return;
     }

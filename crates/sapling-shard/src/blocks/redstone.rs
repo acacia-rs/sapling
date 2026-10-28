@@ -126,6 +126,7 @@ pub(crate) fn apply(world: &mut World) {
     let due = std::mem::take(&mut circuits.due);
     for (layer, pos, due) in due {
         apply::write(world, layer, pos, due);
+        crate::world_events::redstone_updated(world, layer, pos);
     }
     apply::put_out_lamps(world);
     observers::tick(world);
