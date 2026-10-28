@@ -14,6 +14,7 @@ mod owners;
 mod products;
 mod shown;
 mod state;
+mod tadpoles;
 
 use bevy_ecs::prelude::*;
 use sapling_world::Actor;
@@ -22,6 +23,7 @@ use crate::components::Tick;
 use crate::entities::Stored;
 
 pub(super) use ageing::be_born;
+pub(super) use tadpoles::frog_variant;
 pub(crate) use clicks::interact;
 pub(crate) use guarding::{owner_hit, owner_hurt};
 pub(crate) use knots::{KNOT, from_storage as knot_from_storage, tie_to_fence, undo as undo_knot};
@@ -34,10 +36,13 @@ pub(crate) use state::Raised;
 /// compound), or a newcomer's. A stored baby's box is a baby's.
 pub(super) fn adopt(world: &mut World, entity: Entity, kind: &str, stored: Option<(&Actor, &[u8])>) {
     let grows = sapling_data::husbandry(kind).and_then(|raised| raised.grows).unwrap_or(ageing::GROWS);
-    let raised = match stored {
+    let mut raised = match stored {
         Some((look, compound)) => Raised::stored(look, sapling_world::raising(compound).unwrap_or_default(), grows),
         None => Raised::newcomer(kind),
     };
+    if stored.is_none() {
+        tadpoles::newcomer(&mut raised, kind, grows);
+    }
     let baby = raised.is_baby();
     world.entity_mut(entity).insert(raised);
     if baby {

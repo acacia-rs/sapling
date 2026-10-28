@@ -19,9 +19,12 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]
 
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
 pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
-    let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind));
+    let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
     let id = born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })?;
     let entity = entities::find(world, id)?;
+    if let Some(gene) = gene {
+        entities::restore(world, entity, |compound, _| sapling_world::varied_actor(compound, gene.0, yaw).ok());
+    }
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
     if event.is_some() {

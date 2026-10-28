@@ -2,6 +2,7 @@
 //! `SnifferEggBlock` subscribe to the place and queued-tick events. Writing one queues its first
 //! tick ([`Job::Hatch`]); each tick then cracks it, hatches it or queues the next (turtle.rs).
 
+mod frogspawn;
 mod turtle;
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -53,7 +54,7 @@ fn level_event(event: LevelEventEvent, [x, y, z]: BlockPos, data: i32) -> bytes:
 
 /// Whether the block `name` is one that hatches.
 pub(super) fn is_egg(name: &str) -> bool {
-    name == turtle::EGG
+    name == turtle::EGG || name == frogspawn::SPAWN
 }
 
 /// A block was written at `pos`, `was` before and `now` after: an egg that was not there queues
@@ -62,8 +63,10 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str
     if was == now {
         return;
     }
-    if now == turtle::EGG {
-        turtle::placed(world, layer, pos);
+    match now {
+        turtle::EGG => turtle::placed(world, layer, pos),
+        frogspawn::SPAWN => frogspawn::placed(world, layer, pos),
+        _ => {}
     }
 }
 
@@ -71,6 +74,7 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str
 pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
     match level(world, layer).and_then(|level| name_at(level, pos)) {
         Some(turtle::EGG) => turtle::ticked(world, layer, pos),
+        Some(frogspawn::SPAWN) => frogspawn::ticked(world, layer, pos),
         _ => {}
     }
 }

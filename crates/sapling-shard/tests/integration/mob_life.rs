@@ -1,14 +1,15 @@
 //! Mobs born of blocks (blocks/eggs.rs, creatures/hatching.rs; docs/research/mob-life.md): turtle
-//! eggs crack, hatch and are trodden.
+//! eggs crack, hatch and are trodden; frogspawn hatches tadpoles that grow into frogs.
 
 use crate::common;
 
-use acacia_proto::packets::{AddEntity, LevelSoundEvent};
-use acacia_proto::types::MetadataFlags1;
-use common::raising::has_flag;
+use acacia_proto::packets::{AddEntity, LevelSoundEvent, RemoveEntity};
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};
+use common::raising::{click_on, has_flag, plain_in};
+use common::shooting::{added, ready, spawn, watch};
 use common::stored::{enter_stored, floor_with};
 use common::{Harness, all, config};
-use sapling_api::{Block, RuleValue, ShardCtx};
+use sapling_api::{Block, GameMode, RuleValue, ShardCtx};
 use sapling_world::{ChunkPos, World, WorldStorage};
 
 fn set(ctx: &mut ShardCtx<'_>, pos: [i32; 3], block: Block) {
@@ -72,6 +73,38 @@ fn a_turtle_egg_cracks_at_its_first_tick_on_sand_and_never_off_it() {
     let after = names(&mut h, vec![[4, 65, 4], [6, 65, 4]]);
     assert!(after[0].contains("cracked_state=cracked"), "{after:?}");
     assert!(after[1].contains("no_cracks"), "off sand: {after:?}");
+}
+
+#[test]
+fn frogspawn_on_water_hatches_into_two_to_six_baby_tadpoles() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        set(ctx, [4, 64, 4], Block::new("water"));
+        set(ctx, [4, 65, 4], Block::new("frog_spawn"));
+    });
+    let sent: Vec<_> = (0..12_001).flat_map(|_| h.tick(1)).collect();
+    assert_eq!(names(&mut h, vec![[4, 65, 4]]), ["minecraft:air[]"]);
+    let tadpoles: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:tadpole").collect();
+    assert!((2..=6).contains(&tadpoles.len()), "{}", tadpoles.len());
+    assert!(tadpoles.iter().all(|tadpole| has_flag(&sent, tadpole.runtime_id, MetadataFlags1::BABY) == Some(true)));
+    assert!(tadpoles.iter().all(|tadpole| tadpole.position.y == 64.5 && tadpole.position.x.floor() == 4.0 && tadpole.position.z.floor() == 4.0), "in the water under it");
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "block.frog_spawn.hatch"));
+}
+
+#[test]
+fn a_tadpole_fed_ten_slime_balls_becomes_a_frog_of_its_biome() {
+    let mut h = ready(GameMode::Survival, &[("minecraft:slime_ball", 10, 0)], 0.0);
+    h.remote.run(|ctx| set(ctx, [2, 65, 0], Block::new("water")));
+    h.tick_all();
+    let tadpole = spawn(&mut h, "minecraft:tadpole", [2.5, 65.0, 0.5]);
+    let mut sent: Vec<_> = (0..10).flat_map(|_| click_on(&mut h, tadpole)).collect();
+    sent.extend(watch(&mut h, 3));
+    let frogs = added(&sent, "minecraft:frog");
+    assert_eq!(frogs.len(), 1, "the tadpole became a frog");
+    assert_eq!(plain_in(&frogs[0].metadata, Key::Variant), Some(Plain::Int(0)), "a plains frog is temperate");
+    assert!(all::<RemoveEntity>(&sent).iter().any(|gone| gone.entity_id_self as u64 == tadpole), "the tadpole is gone");
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "convert_to_frog"));
 }
 
 #[test]
