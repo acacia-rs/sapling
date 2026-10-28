@@ -10,6 +10,7 @@ mod drive;
 mod exit;
 mod mounts;
 mod packets;
+mod rearing;
 mod seats;
 
 use bevy_ecs::prelude::*;

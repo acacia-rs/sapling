@@ -32,7 +32,7 @@ pub use light::FULL_LIGHT;
 pub use sapling_leveldb::{LevelDat, WeatherRecord};
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{Raising, raised_actor, raising, regrouped_actor};
-pub use sapling_leveldb::{actor_pose, geared_actor};
+pub use sapling_leveldb::{actor_attributes, actor_pose, attributed_actor, geared_actor};
 pub use sapling_leveldb::{WitherRecord, actor_effects, actor_fuse, effected_actor, fused_actor, wither_record, withered_actor};
 pub use sapling_leveldb::{Occupant, hive_occupants, new_hive, occupied_hive};
 pub use sapling_leveldb::{

@@ -33,10 +33,10 @@ const BACKS_TO: [f32; 2] = [4.0, 8.0];
 const SPEED: f32 = 0.48;
 const ARRIVED: f32 = 0.6;
 /// Its `FlagsExtended` at rest, facing its prey and leaping: bits 24 and 39 as BDS sent them,
-/// one above acacia-proto's names for them.
+/// one above acacia-proto's names for them. A frog's leap is told the same way (frogs.rs).
 const REST: i64 = i64::MIN | 1 << 25;
 const FACING: i64 = 1 << 24;
-const LEAPING: i64 = 1 << 39;
+pub(super) const LEAPING: i64 = 1 << 39;
 
 #[derive(Clone, Copy, Default)]
 enum Stage {
@@ -62,7 +62,7 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     }
 }
 
-fn flags(id: u64, set: i64) -> bytes::Bytes {
+pub(super) fn flags(id: u64, set: i64) -> bytes::Bytes {
     let item = MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(REST | set)) };
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
 }
