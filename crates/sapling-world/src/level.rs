@@ -43,6 +43,8 @@ pub struct Level {
     pub weather: WeatherRecord,
     /// `Difficulty`, 0 peaceful to 3 hard: the shard's, written back when the world closes.
     pub difficulty: Option<i32>,
+    /// `serverChunkTickRange`: the shard's `tick-distance`, written back as BDS writes it.
+    pub chunk_tick_range: Option<i32>,
 }
 
 impl Default for Level {
@@ -62,6 +64,7 @@ impl Default for Level {
             hardcore: false,
             weather: WeatherRecord { rain_level: 0.0, rain_time: FIRST_SPELL, lightning_level: 0.0, lightning_time: FIRST_SPELL },
             difficulty: None,
+            chunk_tick_range: None,
         }
     }
 }

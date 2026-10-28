@@ -24,6 +24,9 @@ pub struct ShardConfig {
     pub spawn: [f32; 3],
     /// Cap on the view distance clients ask for, in chunks.
     pub max_view_radius: i32,
+    /// Chunks about a player that are simulated: mobs spawn in them, hives and snow tick
+    /// (BDS's `tick-distance`, saved as level.dat's `serverChunkTickRange`).
+    pub tick_distance: i32,
     /// Columns announced to one player per tick.
     pub columns_per_tick: usize,
     /// Serve chunk data through the client blob cache to clients that report one.
@@ -72,6 +75,7 @@ impl Default for ShardConfig {
             difficulty: Difficulty::Peaceful,
             spawn: [0.5, 65.0, 0.5],
             max_view_radius: 8,
+            tick_distance: 4,
             columns_per_tick: 8,
             blob_cache: true,
             mobs_stroll: true,

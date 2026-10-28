@@ -29,6 +29,8 @@ pub struct ServerProperties {
     pub server_port: Option<u16>,
     /// `view-distance`, in chunks: the most a client may ask for.
     pub view_distance: Option<i32>,
+    /// `tick-distance`, in chunks: how far about a player the world is simulated.
+    pub tick_distance: Option<i32>,
     /// `player-idle-timeout`, in minutes; 0 is never.
     pub player_idle_timeout: Option<u32>,
     /// `level-name`: the world's name in the server list and on the client. The folder of that
@@ -125,6 +127,7 @@ impl ServerProperties {
             "server-ip" => self.server_ip = read(value.parse().ok(), "an IP address")?,
             "server-port" => self.server_port = read(value.parse().ok().filter(|port| *port > 0), "a port from 1 to 65535")?,
             "view-distance" => self.view_distance = read(value.parse().ok().filter(|chunks| *chunks >= 5), "a whole number of 5 or more")?,
+            "tick-distance" => self.tick_distance = read(value.parse().ok().filter(|chunks| (4..=12).contains(chunks)), "a whole number from 4 to 12")?,
             "player-idle-timeout" => self.player_idle_timeout = read(value.parse().ok(), "a whole number of minutes")?,
             "level-name" => self.level_name = Some(value.to_owned()),
             "level-seed" => match value.parse() {
@@ -157,7 +160,7 @@ mod tests {
         assert_eq!((props.max_players, props.online_mode, props.allow_list, props.server_port), (Some(10), Some(false), Some(true), Some(19182)));
         assert_eq!((props.view_distance, props.player_idle_timeout, props.level_name.as_deref(), props.level_seed), (Some(32), Some(30), Some("blocks"), None));
         assert_eq!((props.compression_threshold, props.compression_algorithm, props.position_threshold), (Some(256), Some(Compression::Snappy), Some(0.5)));
-        assert_eq!(props.ignored, ["force-gamemode", "server-portv6", "tick-distance"]);
+        assert_eq!((props.ignored, props.tick_distance), (vec!["force-gamemode".to_owned(), "server-portv6".to_owned()], Some(4)));
     }
 
     #[test]

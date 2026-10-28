@@ -56,6 +56,7 @@ mod redstone;
 mod request;
 mod send;
 mod shapes;
+mod shot_blocks;
 mod sign_ink;
 mod signs;
 mod stacking;

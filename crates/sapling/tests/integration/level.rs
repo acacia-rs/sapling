@@ -125,6 +125,7 @@ async fn a_folder_brings_its_time_and_mobs_and_takes_the_time_back() {
     let weather = after.level().weather().expect("the weather is saved");
     assert_eq!((weather.rain_level, weather.lightning_level, weather.rain_time, after.level().difficulty()), (1.0, 0.0, weather.lightning_time, Some(3)));
     assert!((RAIN as i32 - 2_000..RAIN as i32).contains(&weather.rain_time), "{weather:?}");
+    assert_eq!(after.level().int("serverChunkTickRange"), Some(4), "the fixture's 12 gives way to the server's tick distance");
     let home = spawn_column();
     let around = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| ChunkKey::new(home.x + dx, home.z + dz, 0)));
     let stored: Vec<_> = around.filter_map(|key| after.load_column(key).unwrap()).flat_map(|column| actors(&column.actors).unwrap()).collect();
