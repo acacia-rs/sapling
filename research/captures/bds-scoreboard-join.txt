@@ -1,0 +1,28 @@
+## drill starts at 1793194758661
+## keeper joins
+## /scoreboard objectives remove obj
+## /scoreboard objectives add obj dummy
+## /scoreboard objectives setdisplay sidebar obj
+   8399 keeper  SetDisplayObjective SetDisplayObjective { display_slot: "sidebar", objective_name: "obj", display_name: "obj", criteria_name: "dummy", sort_order: 1 }
+## /scoreboard players set @s obj 7
+   9201 keeper  SetScore SetScore { entries: [SetScoreEntriesItem { entry_type: Player, entry_type_name: "changeplayer", scoreboard_id: 5, content: Default(SetScoreEntriesItemContentDefault { objective_name: "obj", score: 7, entity_unique_id: -858993459199 }) }] }
+## /scoreboard players set Late obj 3
+  10003 keeper  SetScore SetScore { entries: [SetScoreEntriesItem { entry_type: FakePlayer, entry_type_name: "changefakeplayer", scoreboard_id: 6, content: FakePlayer(SetScoreEntriesItemContentFakePlayer { objective_name: "obj", score: 3, custom_name: "Late" }) }] }
+## late joins (1)
+  14035 keeper  SetScoreboardIdentity SetScoreboardIdentity { action: RegisterIdentity, entries: [SetScoreboardIdentityEntriesItem { scoreboard_id: 6, entity_unique_id: Some(-858993459198) }] }
+  14050 late    SetDisplayObjective SetDisplayObjective { display_slot: "sidebar", objective_name: "obj", display_name: "obj", criteria_name: "dummy", sort_order: 1 }
+  14050 late    SetScore SetScore { entries: [SetScoreEntriesItem { entry_type: FakePlayer, entry_type_name: "changefakeplayer", scoreboard_id: 6, content: FakePlayer(SetScoreEntriesItemContentFakePlayer { objective_name: "obj", score: 3, custom_name: "Late" }) }, SetScoreEntriesItem { entry_type: Player, entry_type_name: "changeplayer", scoreboard_id: 5, content: Default(SetScoreEntriesItemContentDefault { objective_name: "obj", score: 7, entity_unique_id: -858993459199 }) }] }
+  14050 late    SetScoreboardIdentity SetScoreboardIdentity { action: RegisterIdentity, entries: [SetScoreboardIdentityEntriesItem { scoreboard_id: 6, entity_unique_id: Some(-858993459198) }] }
+## late: /scoreboard players set @s obj 4
+  18044 keeper  SetScore SetScore { entries: [SetScoreEntriesItem { entry_type: Player, entry_type_name: "changeplayer", scoreboard_id: 6, content: Default(SetScoreEntriesItemContentDefault { objective_name: "obj", score: 4, entity_unique_id: -858993459198 }) }] }
+  18044 late    SetScore SetScore { entries: [SetScoreEntriesItem { entry_type: Player, entry_type_name: "changeplayer", scoreboard_id: 6, content: Default(SetScoreEntriesItemContentDefault { objective_name: "obj", score: 4, entity_unique_id: -858993459198 }) }] }
+## late leaves
+## late joins (2)
+  23946 late    SetDisplayObjective SetDisplayObjective { display_slot: "sidebar", objective_name: "obj", display_name: "obj", criteria_name: "dummy", sort_order: 1 }
+  23946 late    SetScore SetScore { entries: [SetScoreEntriesItem { entry_type: Player, entry_type_name: "changeplayer", scoreboard_id: 6, content: Default(SetScoreEntriesItemContentDefault { objective_name: "obj", score: 4, entity_unique_id: -858993459198 }) }, SetScoreEntriesItem { entry_type: Player, entry_type_name: "changeplayer", scoreboard_id: 5, content: Default(SetScoreEntriesItemContentDefault { objective_name: "obj", score: 7, entity_unique_id: -858993459199 }) }] }
+## late leaves
+## /scoreboard objectives remove obj
+  29944 keeper  SetScore SetScore { entries: [SetScoreEntriesItem { entry_type: Remove, entry_type_name: "remove", scoreboard_id: 6, content: Remove(SetScoreEntriesItemContentRemove { objective_name: Some("obj") }) }] }
+  29944 keeper  SetScore SetScore { entries: [SetScoreEntriesItem { entry_type: Remove, entry_type_name: "remove", scoreboard_id: 5, content: Remove(SetScoreEntriesItemContentRemove { objective_name: Some("obj") }) }] }
+  29944 keeper  RemoveObjective RemoveObjective { objective_name: "obj" }
+probe exit 0

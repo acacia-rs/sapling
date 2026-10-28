@@ -5,19 +5,22 @@
 //! hits it every 2 seconds (hunting.rs).
 //! One a heart called is tied to it (heart.rs).
 // TODO: a look is the Java game's (`isLookingAtMe`: within 60 degrees of its middle, in sight);
-// a summoned one is the same by day and by night (BDS's was drilled at both).
+// a summoned one is the same by day and by night (BDS's was drilled at both). Its prey let go is
+// not told as BDS's was (`deactivate`, state neutral), BDS's Flags beside a freeze are not sent, and
+// one shown anew has the flags it was announced with.
 
 mod heart;
 
 pub(crate) use heart::noticed as heart_noticed;
 pub(super) use heart::{shrugs_off, tick as tick_hearts};
 
+use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2};
 use bevy_ecs::prelude::*;
 
 use crate::body::Body;
 use crate::components::{InLayer, Position, Tick, in_world};
 use crate::{entities, late_sounds, vitals};
-use super::{hunting, legs};
+use super::{hunting, legs, properties};
 
 const KIND: &str = "minecraft:creaking";
 /// A look at its middle within this cosine, from up to this far, freezes it.
@@ -26,6 +29,16 @@ const SEEN_FROM: f32 = 16.0;
 const STARES: u64 = 3;
 /// Its stare is heard from its head.
 const HEAD: f32 = 0.85;
+/// Its `creaking_state` and extended flags as BDS told them with it (bds-creaking.txt): looked at
+/// with the flag `OBSERVED`, looked away from without.
+const OBSERVED_STATE: i32 = 1;
+const UNOBSERVED: i32 = 2;
+const CALM: i64 = 36028797052518400;
+const OBSERVED: i64 = 1 << 54;
+
+fn flags_extended(flags: i64) -> MetadataDictionaryItem {
+    MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(flags)) }
+}
 
 #[derive(Component, Default)]
 pub(super) struct Creaking {
@@ -75,6 +88,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         if frozen.is_some() {
             entities::tell_viewers(world, entity, layer, cell, vec![hunting::sound("unfreeze", id, kind, &body, 0.0)]);
             world.get_mut::<Creaking>(entity).expect("read above").frozen = None;
+            properties::set(world, entity, heart::STATE, UNOBSERVED, vec![flags_extended(CALM)]);
         }
         return false;
     };
@@ -86,6 +100,9 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         }
         late_sounds::play_later(world, 1, layer, cell, hunting::sound(if woke { "activate" } else { "freeze" }, id, kind, &body, 0.0));
         world.get_mut::<Creaking>(entity).expect("read above").frozen = Some(now);
+        let mut told = vec![flags_extended(CALM | OBSERVED)];
+        told.extend(woke.then(|| properties::ambient_sound("undefined")));
+        properties::set(world, entity, heart::STATE, OBSERVED_STATE, told);
     }
     if (now - since).is_multiple_of(STARES) {
         late_sounds::play_later(world, 1, layer, cell, hunting::sound("stare", id, kind, &body, HEAD));

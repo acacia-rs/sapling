@@ -40,6 +40,13 @@ fn framed<T: Packet>(body: &[u8]) -> Bytes {
     out.freeze()
 }
 
+/// `packet` with its header, as the registries are kept.
+pub(crate) fn encoded<T: Packet>(packet: &T) -> Bytes {
+    let mut body = BytesMut::new();
+    packet.encode(&mut body);
+    framed::<T>(&body)
+}
+
 /// What BDS sends before StartGame. Without JigsawStructureData the vanilla client refuses to
 /// enter the world ("missing structure data").
 pub fn pre_start_packets() -> &'static [Bytes] {

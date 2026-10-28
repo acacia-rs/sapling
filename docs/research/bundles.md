@@ -32,6 +32,17 @@ ItemStackRequests from `crates/sapling/examples/shared/bundle_drill.rs`). saplin
 - After a rejoin sapling sends each numbered bundle's contents as InventoryContent window 125 (no BDS capture
   of a rejoin with a filled bundle yet).
 
+## Container numbers on the wire and cleanup (2026-10-28)
+
+- `dynamic_container_id` is little-endian: bundle 1's `ContainerRegistryCleanup` body was
+  `01 3f 01 01000000` (research/captures/bds-container-cleanup.txt), which acacia-proto (big-endian
+  `u32`) decodes as 16777216; a request the bot sent for bundle 1 as big-endian 1 got status 50
+  (bds-hints.txt). sapling swaps the number at its wire (`bundles.rs` `wire_id`).
+- `ContainerRegistryCleanup` goes to every player, also those that never held the bundle, at a sweep
+  every 15 s (two runs: 15.05 s apart, phase unrelated to the drill). It lists every shown bundle no
+  longer anywhere: cleared, replaced by air, or thrown and then killed as an item; one lying as an item
+  stayed. Two at once came newest first. sapling: `inventory/bundle_cleanup.rs`.
+
 ## Open
 
 - Shulker boxes in bundles were not drilled (sapling refuses them, as Java does).

@@ -99,7 +99,7 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   |---|---|
   | ResourcePacksInfo (the configured packs, "Packs (as built)") | ResourcePackClientResponse(HaveAllPacks) |
   | ResourcePackStack | ResourcePackClientResponse(Completed) |
-  | StartGame, ItemRegistry, BiomeDefinitionList, AvailableEntityIdentifiers, CreativeContent, UpdateAbilities, SetEntityData, UpdateAttributes | RequestChunkRadius |
+  | StartGame, SyncEntityProperty (13 kinds' entity properties, `sapling_data::property_registry_packets`), ItemRegistry, BiomeDefinitionList, AvailableEntityIdentifiers, CreativeContent, UpdateAbilities, SetEntityData, UpdateAttributes | RequestChunkRadius |
   | ChunkRadiusUpdate, NetworkChunkPublisherUpdate, a LevelChunk per column in view, PlayStatus(PlayerSpawn) | SetLocalPlayerAsInitialized |
   | — the player is in the world: `on_join` | |
 

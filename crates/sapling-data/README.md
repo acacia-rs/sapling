@@ -32,6 +32,7 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 |---|---|---|
 | `StartGame.bin` | `start_game(&StartGameOptions)` | ids, game mode, position, world spawn, world name, tick, seed (0), `client_side_generation` (off), `block_network_ids_are_hashes` |
 | `ItemRegistry.bin`, `BiomeDefinitionList.bin`, `AvailableEntityIdentifiers.bin`, `FeatureRegistry.bin`, `CameraPresets.bin`, `CreativeContent.bin`, `TrimData.bin`, `CraftingData.bin` | `registry_packets()`, byte for byte (BDS sends CraftingData later, after the player's own windows) | nothing |
+| none: `entity-properties.tsv` | `property_registry_packets()`, 13 SyncEntityProperty after StartGame (see "Entity properties") | nothing |
 | `JigsawStructureData.bin`, `VoxelShapes.bin` | `pre_start_packets()`, byte for byte, sent before StartGame (vanilla kicks with "missing structure data" without the first) | nothing |
 | `UpdateAttributes.bin` (the last one before spawn: the full list) | `update_attributes(id)` | runtime id |
 | `UpdateAbilities.bin` | `update_abilities(id)` | unique id |
@@ -149,6 +150,16 @@ potion rules): each entity's
 `minecraft:type_family` from the vanilla behaviour packs, by `data/generate/mob-families.py`: its own
 components', or, for a kind that has them only in component groups, every group's together. Kinds the
 packs give no family (items, falling blocks) are not listed.
+
+## Entity properties
+
+`entity-properties.tsv` (tracked; read by `entity_properties.rs`): each entity's
+`description.properties` the vanilla behaviour packs mark `client_sync`, by `data/generate/entity-properties.py`
+(packs as `mob-loot.py`): kind, name, type, values (an enum's names, an int or float range) and default. A
+kind's properties are numbered by name, as BDS numbers them in AddEntity's and SetEntityData's
+`properties`; `property_registry_packets()` makes the 13 SyncEntityProperty BDS sends after StartGame
+from it, byte for byte as the recording's (the kinds in its order, tested). A Molang default (a bee's
+nectar) is sent as 0.
 
 ## Spawn rules
 

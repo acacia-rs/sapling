@@ -57,6 +57,8 @@ mod rules;
 mod warden;
 #[path = "shared/props_drill.rs"]
 mod props;
+#[path = "shared/protocol_drill.rs"]
+mod protocol;
 
 use std::time::{Duration, Instant};
 
@@ -187,6 +189,8 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
         let text: String = dump::dump(&packet).unwrap_or_default().split(", pixels").next().unwrap_or_default().to_owned();
         println!("{ms:>7} {who:<7} ClientboundMapItemData {text}");
         rows.iter().for_each(|row| println!("{ms:>7} {who:<7} {row}"));
+    } else if let Some(text) = protocol::properties(&packet).filter(|_| shown.contains(&"Properties")) {
+        println!("{ms:>7} {who:<7} {text}");
     } else if let Some(cells) = structures::block_names(&packet).filter(|_| shown.contains(&"UpdateSubchunkBlocks")) {
         println!("{ms:>7} {who:<7} {cells}");
     } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
@@ -283,7 +287,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)) {
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },

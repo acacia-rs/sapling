@@ -40,6 +40,7 @@ mod legs;
 mod omens;
 mod paths;
 mod piglins;
+mod properties;
 mod rams;
 mod scooping;
 mod shooting;

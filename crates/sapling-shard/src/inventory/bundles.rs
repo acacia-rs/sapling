@@ -100,7 +100,7 @@ pub(super) fn lend(inventory: &mut Inventory, request: &Request) {
         _ => [None, None],
     });
     let id = named.flatten().find(|info| info.slot_type.container_id == ContainerSlotType::Dynamic).and_then(|info| info.slot_type.dynamic_container_id);
-    let Some(id) = id.and_then(|id| i32::try_from(id).ok()) else { return };
+    let Some(id) = id.and_then(|id| i32::try_from(wire_id(id)).ok()) else { return };
     let Some(bundle) = find(inventory, id).and_then(|place| inventory.slot(place)?.clone()) else { return };
     if let Some(lent) = inventory.bundle.take() {
         inventory.bundles_shown.retain(|(shown, _)| *shown != lent.0);
@@ -136,8 +136,15 @@ pub(super) fn keep(inventory: &mut Inventory, before: &[Option<Held>]) -> Vec<us
     (0..SLOTS).filter(|slot| before.get(*slot) != held.get(*slot)).collect()
 }
 
-fn container(id: i32) -> FullContainerName {
-    FullContainerName { container_id: ContainerSlotType::Dynamic, dynamic_container_id: Some(id as u32) }
+pub(super) fn container(id: i32) -> FullContainerName {
+    FullContainerName { container_id: ContainerSlotType::Dynamic, dynamic_container_id: Some(wire_id(id as u32)) }
+}
+
+/// A bundle's number as acacia-proto reads and writes it. BDS sends it little-endian (bundle 1 is
+/// `01 00 00 00`, research/captures/bds-container-cleanup.txt) and took a big-endian 1 for another
+/// container (status 50, bds-hints.txt); acacia-proto's field is big-endian.
+pub(super) fn wire_id(id: u32) -> u32 {
+    id.swap_bytes()
 }
 
 /// The bundle's changed slots, as BDS showed them after its answer.
@@ -181,6 +188,14 @@ fn number_slots(world: &mut World, player: Entity, slots: &[usize], first: i32) 
         shown.push(content(id, &inventory.main[slot].clone(), &empty));
     }
     super::show_windows(world, player, true);
+    show_contents(world, player, &shown);
+}
+
+/// Sends the bundles' `shown` contents to `player`; their numbers are registered (bundle_cleanup.rs).
+fn show_contents(world: &mut World, player: Entity, shown: &[InventoryContent]) {
+    for content in shown {
+        super::bundle_cleanup::register(world, wire_id(content.container.dynamic_container_id.unwrap_or_default()) as i32);
+    }
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         shown.iter().for_each(|content| out.push(content));
     }
@@ -200,7 +215,5 @@ fn show_unshown(world: &mut World, player: Entity) {
         shown.push(content(id, &Some(bundle), &held));
         inventory.bundles_shown.push((id, held));
     }
-    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-        shown.iter().for_each(|content| out.push(content));
-    }
+    show_contents(world, player, &shown);
 }

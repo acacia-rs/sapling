@@ -1,0 +1,134 @@
+## drill starts at 1793195085711
+## /kill @e[type=!player]
+     90 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamemode survival @s
+   1013 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /clear @s
+   2012 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /
+## /replaceitem entity @s slot.hotbar 0 bundle 1
+   4033 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.hotbar", "0", "CmdActor", "1", "Bundle"]
+## /replaceitem entity @s slot.hotbar 1 cobblestone 64
+   5013 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.hotbar", "1", "CmdActor", "64", "Cobblestone"]
+## /
+## /!bundletag
+## bundle 0: Some(ItemStack { network_id: 864, count: 1, metadata: 0, block_runtime_id: 0, stack_network_id: Some(3), custom_name: None, lore: [], nbt: Some(Nbt { name: "", value: Compound([("bundle_id", Int(0))]) }) })
+## bundle 4: Some(ItemStack { network_id: 0, count: 0, metadata: 0, block_runtime_id: 0, stack_network_id: None, custom_name: None, lore: [], nbt: None })
+## /!bundleput 1 10 0
+## request -1001: ItemStackRequest { requests: [ItemStackRequest { request_id: -1001, actions: [ItemStackRequestActionsItem { type_id: Place, legacy_type_id: 1, content: Place(ItemStackRequestActionsItemContentPlace { count: 10, source: StackRequestSlotInfo { slot_type: FullContainerName { container
+## got ItemStackResponse ItemStackResponse { responses: [ItemStackResponsesItem { status: Ok, request_id: -1001, containers: Some([ItemStackResponsesItemContainersItem { slot_type: FullContainerName { container_id: Hotbar, dynamic_container_id: None }, slots: [ItemStackResponsesItemContainersItemSlo
+## got InventorySlot InventorySlot { window_id: Unknown(125), slot: 0, container: Some(FullContainerName { container_id: Dynamic, dynamic_container_id: Some(0) }), storage_item: Some(ItemV4 { network_id: 864, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Def
+## bundle slots: [(0, 5)]
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /clear @s bundle
+  18031 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "1"]
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  29931 actor   ContainerRegistryCleanup 013f0100000000 [FullContainerName { container_id: Dynamic, dynamic_container_id: Some(0) }]
+  29931 watcher ContainerRegistryCleanup 013f0100000000 [FullContainerName { container_id: Dynamic, dynamic_container_id: Some(0) }]
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /replaceitem entity @s slot.hotbar 0 bundle 1
+  53075 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.hotbar", "0", "CmdActor", "1", "Bundle"]
+## /replaceitem entity @s slot.hotbar 1 cobblestone 64
+  54077 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.hotbar", "1", "CmdActor", "64", "Cobblestone"]
+## /
+## /!bundletag
+## bundle 0: Some(ItemStack { network_id: 864, count: 1, metadata: 0, block_runtime_id: 0, stack_network_id: Some(8), custom_name: None, lore: [], nbt: Some(Nbt { name: "", value: Compound([("bundle_id", Int(1))]) }) })
+## bundle 4: Some(ItemStack { network_id: 0, count: 0, metadata: 0, block_runtime_id: 0, stack_network_id: None, custom_name: None, lore: [], nbt: None })
+## /!bundleput 1 10 0
+## request -1003: ItemStackRequest { requests: [ItemStackRequest { request_id: -1003, actions: [ItemStackRequestActionsItem { type_id: Place, legacy_type_id: 1, content: Place(ItemStackRequestActionsItemContentPlace { count: 10, source: StackRequestSlotInfo { slot_type: FullContainerName { container
+## got ItemStackResponse ItemStackResponse { responses: [ItemStackResponsesItem { status: Unknown(50), request_id: -1003, containers: None }] }
+## got LevelSoundEvent LevelSoundEvent { sound_id: "block.campfire.crackle", position: Vec3f { x: 7.5, y: -18.8, z: 44.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## bundle slots: []
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /clear @s bundle
+  71110 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "1"]
+## /
+## /
+## /
+  75084 actor   ContainerRegistryCleanup 013f0101000000 [FullContainerName { container_id: Dynamic, dynamic_container_id: Some(16777216) }]
+  75084 watcher ContainerRegistryCleanup 013f0101000000 [FullContainerName { container_id: Dynamic, dynamic_container_id: Some(16777216) }]
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /gamemode creative @s
+ 106156 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /clear @s
+ 107163 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "64"]
