@@ -74,20 +74,31 @@ pub fn warden() -> Vec<String> {
 /// its creaking comes; faced, the actor hits it three times; the heart is broken under it. Then a
 /// second heart whose creaking is left to the morning.
 pub fn heart() -> Vec<String> {
-    let mut lines = start("midnight");
+    // A heart calls no creaking while mob spawning is off (the first run); what else spawns goes each second.
+    let guarded = |lines: &mut Vec<String>, seconds: usize| {
+        for _ in 0..seconds {
+            lines.extend(["effect @s instant_health 1 4", "kill @e[type=!player,type=!creaking,type=!item]"].map(String::from));
+        }
+    };
+    let mut lines = with_spawning(start("midnight"));
     let build = ["setblock 6 -26 0 pale_oak_log", "setblock 6 -25 0 creaking_heart [\"natural\"=true]", "setblock 6 -24 0 pale_oak_log", "tp @s 0.5 -26 0.5 facing -8 -25 0.5"];
     lines.extend(build.map(String::from));
-    healed(&mut lines, 20);
+    guarded(&mut lines, 20);
     for _ in 0..3 {
-        lines.extend(["tp @s ~ ~ ~ facing @e[type=creaking,c=1]", "!hit creaking", "effect @s instant_health 1 4"].map(String::from));
+        lines.extend(["execute at @e[type=creaking,c=1] run tp @s ~2 ~ ~ facing @e[type=creaking,c=1]", "!hit creaking", "effect @s instant_health 1 4"].map(String::from));
     }
-    healed(&mut lines, 2);
+    guarded(&mut lines, 2);
     lines.extend(["setblock 6 -25 0 air destroy", ""].map(String::from));
-    healed(&mut lines, 4);
+    guarded(&mut lines, 4);
     lines.extend(["kill @e[type=!player]", "fill 6 -26 0 6 -24 0 air", "setblock 6 -26 0 pale_oak_log", "setblock 6 -25 0 creaking_heart [\"natural\"=true]", "setblock 6 -24 0 pale_oak_log", "tp @s 0.5 -26 0.5 facing -8 -25 0.5"].map(String::from));
-    healed(&mut lines, 15);
+    guarded(&mut lines, 15);
     lines.push("time set noon".into());
-    healed(&mut lines, 8);
-    lines.extend(["effect @s clear", "gamemode creative @s", "kill @e[type=!player]", "fill 6 -26 0 6 -24 0 air", ""].map(String::from));
+    guarded(&mut lines, 8);
+    lines.extend(["effect @s clear", "gamemode creative @s", "gamerule domobspawning false", "kill @e[type=!player]", "fill 6 -26 0 6 -24 0 air", ""].map(String::from));
+    lines
+}
+
+fn with_spawning(mut lines: Vec<String>) -> Vec<String> {
+    lines.push("gamerule domobspawning true".into());
     lines
 }
