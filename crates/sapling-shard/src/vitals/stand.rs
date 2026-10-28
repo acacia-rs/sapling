@@ -1,6 +1,7 @@
 //! What the place a living player stands in does to it each tick: a fall, fire, lava, water over
-//! its head (less often with Respiration), a block around it, thorns and the void (hazards.rs), and the hunger its moves cost;
-//! boots with Frost Walker freeze the water around.
+//! its head (less often with Respiration), a block around it, thorns and the void (hazards.rs),
+//! powder snow (frost.rs), and the hunger its moves cost; boots with Frost Walker freeze the water
+//! around, with Soul Speed quicken it on soul sand (soles.rs).
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
@@ -8,7 +9,7 @@ use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 use sapling_data::enchant;
 
-use super::hazards;
+use super::{frost, hazards, soles};
 use super::{
     AIR, BREATH, DROWN_HARM, FIERY, GASP, JUMP_TIRES, LAVA, LEAP_TIRES, LONGEST_STEP, SIZE, SPRINT_TIRES, STARVED, Vitals, WALLED, WATER, dress, effects, flash, hunger,
     settle, tell,
@@ -55,6 +56,22 @@ pub(crate) fn falls_freely(world: &World, player: Entity) -> bool {
     !position.on_ground && vitals.health.is_airborne() && vitals.health.dropped(feet, feet) > 0.0 && !blind && world.get::<crate::riding::Riding>(player).is_none()
 }
 
+/// How far a player off the ground has fallen; none on it or riding.
+pub(crate) fn fallen(world: &World, player: Entity) -> f32 {
+    let (Some(vitals), Some(position)) = (world.get::<Vitals>(player), world.get::<Position>(player)) else { return 0.0 };
+    let feet = position.feet[1];
+    let falls = !position.on_ground && vitals.health.is_airborne() && world.get::<crate::riding::Riding>(player).is_none();
+    if falls { vitals.health.dropped(feet, feet) } else { 0.0 }
+}
+
+/// A player's fall so far no longer counts: one from where it is starts anew.
+pub(crate) fn break_fall(world: &mut World, player: Entity) {
+    let Some(feet) = world.get::<Position>(player).map(|position| position.feet[1]) else { return };
+    if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
+        vitals.health.break_fall(feet);
+    }
+}
+
 pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
     let warding = crate::enchants::warding(world, player);
@@ -65,12 +82,15 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let rules = level.level().rules.clone();
     let body = Body::new(position.feet, [0.0; 3], SIZE);
     let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
-    let (thorns, in_void) = (hazards::thorns(level, &body), hazards::in_void(level, position.feet[1]));
+    let (thorns, in_void, in_snow) = (hazards::thorns(level, &body), hazards::in_void(level, position.feet[1]), touches(level, &body, frost::POWDER_SNOW));
+    let on_soul = soles::on_soul(level, position);
     let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
     // BDS lays a player with only its head in a block down, unhurt.
     let (under_water, in_wall) = (holds(level, eyes, WATER) && !gilled, is_full_block(level, eyes) && is_full_block(level, low));
     // A teleport is no fall: until the client follows it, the height starts anew.
     let (carried, sprinting, jumps) = world.get_mut::<Motion>(player).map_or((false, false, 0), |mut motion| (motion.awaits_teleport(), motion.pose.sprinting, std::mem::take(&mut motion.jumps)));
+    let freezes = frost::chill(world, player, in_snow);
+    soles::tread(world, player, on_soul.then_some(warding.soul_speed));
     let from = vitals.was.replace(position.feet).unwrap_or(position.feet);
     let run = (position.feet[0] - from[0]).hypot(position.feet[2] - from[2]);
     let ran = if sprinting && position.on_ground && !carried && run <= LONGEST_STEP { run } else { 0.0 };
@@ -115,6 +135,9 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let before = *health;
     let flown = into_wall.is_some_and(|harm| health.hurt(harm)).then_some(Cause::FlyIntoWall);
     take(health, before, flown);
+    let before = *health;
+    let frozen = (freezes && health.hurt(frost::FREEZE_HARM)).then_some(Cause::Freezing);
+    take(health, before, frozen);
     vitals.air = match under_water || in_wall {
         true if warding.respiration > 0 && world.get_resource_or_insert_with(Dice::default).fraction() < enchant::holds_breath(warding.respiration) => breath,
         true => breath - 1,

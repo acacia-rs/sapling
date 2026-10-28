@@ -19,7 +19,12 @@ pub(crate) struct Pose {
     pub using: bool,
     /// Flying on an elytra (gliding.rs), which the server starts and stops itself.
     pub gliding: bool,
+    /// Full of powder snow's freeze (vitals/frost.rs).
+    pub frozen: bool,
 }
+
+/// The `Flags` bit BDS sets on a player whose freeze is full (research/captures/bds-freeze.txt).
+const FROZEN: MetadataFlags1 = MetadataFlags1(1 << 40);
 
 impl Pose {
     /// The entity flags viewers get on top of the recorded ones.
@@ -32,6 +37,7 @@ impl Pose {
             (self.burning, MetadataFlags1::ONFIRE),
             (self.using, MetadataFlags1::ACTION),
             (self.gliding, MetadataFlags1::GLIDING),
+            (self.frozen, FROZEN),
         ];
         for (on, flag) in shown {
             if on {

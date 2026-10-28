@@ -97,9 +97,17 @@ impl Simulated {
         self.state.set_movement_attribute(movement);
     }
 
-    /// The Depth Strider level of the boots worn.
-    pub fn equip(&mut self, depth_strider: u8) {
-        self.state.equipment.depth_strider = i32::from(depth_strider);
+    /// What the armour worn changes in a step: its Depth Strider, Soul Speed and Swift Sneak, and
+    /// leather boots, which stand on powder snow.
+    pub fn equip(&mut self, warding: &sapling_data::enchant::Warding, leather_boots: bool) {
+        let equipment = &mut self.state.equipment;
+        (equipment.depth_strider, equipment.soul_speed, equipment.swift_sneak) = (i32::from(warding.depth_strider), i32::from(warding.soul_speed), i32::from(warding.swift_sneak));
+        equipment.leather_boots = leather_boots;
+    }
+
+    /// The freeze the server holds the player at: the step takes it rather than its own.
+    pub fn freeze(&mut self, freeze: f32) {
+        self.state.server_freeze = Some(freeze);
     }
 
     /// Steps one input over `world`; `None` for the first after a restart, which takes the

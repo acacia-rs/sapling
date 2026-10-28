@@ -10,6 +10,7 @@ mod archery;
 pub mod grind;
 mod kinds;
 mod list;
+pub mod mace;
 pub mod table;
 mod warding;
 mod words;
@@ -69,6 +70,11 @@ pub enum Enchant {
     Multishot = 33,
     Piercing = 34,
     QuickCharge = 35,
+    SoulSpeed = 36,
+    SwiftSneak = 37,
+    WindBurst = 38,
+    Density = 39,
+    Breach = 40,
 }
 
 /// The level of `enchant` on a stack whose NBT is `tag`; 0 without it.

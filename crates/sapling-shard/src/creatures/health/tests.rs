@@ -14,6 +14,16 @@ fn armour_takes_off_a_hit_what_it_took_off_on_bds() {
 }
 
 #[test]
+fn breach_pierces_what_armour_stops_as_on_bds() {
+    // research/captures/bds-mace-breach.txt, bds-mace-push.txt: a mace's 6 on a zombie in a
+    // diamond chestplate (10 points, 2 toughness) with Breach 0 to 4.
+    let mut health = Health::new(20.0, None, 0);
+    health.wear([10.0, 2.0], Warding::default());
+    let taken = [0, 1, 2, 3, 4].map(|level| (health.shielded_but(6.0, sapling_data::enchant::mace::breach(level)) * 1000.0).round() / 1000.0);
+    assert_eq!(taken, [4.176, 5.076, 5.976, 6.0, 6.0]);
+}
+
+#[test]
 fn a_pig_in_lava_is_hurt_as_bds_hurt_one() {
     // research/captures/bds-burn.txt: touching from its 1st tick, in the lava from its 3rd.
     let mut pig = Health::new(10.0, None, 0);

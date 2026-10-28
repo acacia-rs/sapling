@@ -2,9 +2,9 @@
 //! long. The time is vanilla's, as acacia-bot computes it for its own breaks
 //! (acacia-bot `interact/break_time.rs` has the sources): the held tool's speed on the block's
 //! material, hardness x 30 ticks when the tool harvests the block and x 100 when it does not.
-//! Haste and mining fatigue scale the speed (vitals::effects::dig_speed).
-// TODO: no water or mid-air slowdown: the server has only a rough on-ground flag, and each would
-// only make a break slower than what is asked for here.
+//! Haste and mining fatigue scale the speed (vitals::effects::dig_speed), and so do eyes in water.
+// TODO: no mid-air slowdown: the server has only a rough on-ground flag, and it would only make a
+// break slower than what is asked for here.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -23,6 +23,7 @@ const LEEWAY: u64 = 3;
 /// `BlockStartBreak` carries this over the break's ticks: the crack's growth per tick.
 const CRACK_SCALE: u32 = 65535;
 const HITS_EVERY: u64 = 5;
+const UNDERWATER: f32 = 0.2;
 
 /// The break a player has started and not finished.
 #[derive(Component, Default)]
@@ -70,6 +71,17 @@ pub(crate) fn break_ticks(mining: &Mining, tool: Option<Tool>, efficiency: u8, e
     Some((ticks - 1e-4).ceil().max(1.0) as u32)
 }
 
+/// What a player's eyes in water leave of its break speed: a fifth, unless a helmet has Aqua
+/// Affinity (research/captures/bds-soles.txt: dirt by hand cracked at 873 underwater, 4369 with
+/// it, as on land).
+fn underwater_speed(world: &World, player: Entity, layer: Entity) -> f32 {
+    let (Some(position), Some(level)) = (world.get::<crate::components::Position>(player), world.get::<Layer>(layer).map(|layer| &layer.world)) else { return 1.0 };
+    let [x, y, z] = position.feet;
+    let eyes = [x, y + sapling_data::EYE_HEIGHT, z].map(|c| c.floor() as i32);
+    let drowned = crate::creatures::holds(level, eyes, &["minecraft:water", "minecraft:flowing_water"]);
+    if drowned && !crate::enchants::warding(world, player).aqua_affinity { UNDERWATER } else { 1.0 }
+}
+
 /// The tool in a player's hand and its levels of `enchants`.
 fn held_tool<const N: usize>(world: &World, player: Entity, enchants: [Enchant; N]) -> (Option<Tool>, [u8; N]) {
     let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return (None, [0; N]) };
@@ -103,7 +115,7 @@ pub(crate) fn start(world: &mut World, player: Entity, layer: Entity, pos: Block
     // The sword and shears speeds are the Java game's, never faster than Bedrock's but perhaps
     // slower: a break with one of them is taken as soon as it is claimed.
     let is_unsure = tool.is_some_and(|tool| matches!(tool.kind, ToolKind::Sword | ToolKind::Shears));
-    let effects = crate::vitals::effects::dig_speed(world, player);
+    let effects = crate::vitals::effects::dig_speed(world, player) * underwater_speed(world, player, layer);
     let needed = break_ticks(mining, tool, efficiency, effects).map(|ticks| if is_unsure { 1 } else { ticks });
     let tick = world.resource::<Tick>().0;
     if let Some(mut breaking) = world.get_mut::<Breaking>(player) {

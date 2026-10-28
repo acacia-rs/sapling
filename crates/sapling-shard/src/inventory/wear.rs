@@ -18,6 +18,11 @@ impl Inventory {
         self.armor[0].is_some()
     }
 
+    /// The names of the armour worn, helmet first.
+    pub(crate) fn worn_names(&self) -> impl Iterator<Item = Option<&str>> {
+        self.armor.iter().map(|slot| slot.as_ref().map(|held| held.stack.name.as_str()))
+    }
+
     /// The points and toughness of the armour worn.
     pub(crate) fn armour(&self) -> [f32; 2] {
         let worn = self.armor.iter().flatten().filter_map(|held| sapling_data::armour(&held.stack.name));

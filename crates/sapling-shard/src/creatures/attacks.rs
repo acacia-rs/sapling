@@ -7,7 +7,7 @@ use sapling_api::{EntityId, GameMode};
 use sapling_data::enchant::{self, Enchant};
 
 use super::Creature;
-use super::{blows, harm};
+use super::{blows, harm, smash};
 use super::health::{Cause, Health};
 use crate::blocks::Dice;
 use crate::body::Body;
@@ -69,8 +69,10 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     let cell = body.at.map(|c| c.floor() as i32);
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
     let weapon = crate::enchants::weapon(world, player);
+    let smash = smash::smash(world, player, held.as_deref());
     // The enchantments' bonus goes in before strength and weakness (BDS 1429e56c0).
-    let blow = blows::blow(world, player, crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()) + enchant::melee_bonus(weapon.as_ref(), Some(kind.as_str()))));
+    let bonus = enchant::melee_bonus(weapon.as_ref(), Some(kind.as_str())) + smash::bonus(smash, weapon.as_ref());
+    let blow = blows::blow(world, player, crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()) + bonus));
     let mut packets = vec![sapling_net::encode(&blows::sound(blow, from))];
     if super::armour_stands::struck(world, entity, &kind, world.get::<Mode>(player)?.0 == GameMode::Creative, packets.clone()) || super::creaking::shrugs_off(world, entity) {
         return Some(());
@@ -83,9 +85,14 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         if kind == crate::dragon::DRAGON {
             crate::dragon::hurt(world, entity, before, &mut health);
         }
-        packets.insert(0, harm::strike(id, &health, Cause::Attack, None));
+        let flashed = if smash.is_some() { smash::MACE_SMASH } else { Cause::Attack.id() };
+        packets.insert(0, harm::strike_as(id, &health, flashed, None));
         if let Some(sparks) = blows::sparks(blow, id) {
             packets.insert(1, sapling_net::encode(&sparks));
+        }
+        if let Some(smash) = smash {
+            let at = packets.len() - 1;
+            packets.splice(at..at, smash::shown(smash, from, body.at));
         }
         let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
         let far = (dx * dx + dz * dz).sqrt();
@@ -98,6 +105,9 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
             thrown.throw(speed.map(|c| c * kept));
         }
         *world.get_mut::<Health>(entity)? = health;
+        if smash.is_some() {
+            smash::follow(world, player, entity, body.at, weapon.as_ref());
+        }
         super::enchanted::struck(world, entity, &kind, weapon.as_ref());
         crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);
         super::strolling::startle(world, entity);
