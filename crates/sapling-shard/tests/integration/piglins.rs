@@ -3,9 +3,8 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, LevelSoundEvent, MobEquipment};
+use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, MobEquipment, TakeItemEntity};
 use acacia_proto::types::WindowID;
-use common::asking::ask;
 use common::raising::click_on;
 use common::{Harness, all};
 use sapling_api::{GameMode, Item, PlayerId, Slot};
@@ -36,7 +35,55 @@ fn a_piglin_given_gold_admires_it_8_seconds_in_its_offhand_then_hands_back_its_b
     assert_eq!(emptied, 159, "161 ticks after it took the ingot");
     // An older mob-loot.json lacks the table (sapling-data README); the drop needs it.
     if sapling_data::has_loot_table("loot_tables/entities/piglin_barter.json") {
-        let items = ask(&mut h, |ctx| ctx.entities().into_iter().filter(|entity| entity.item.is_some()).count());
-        assert!(items > 0, "its barter lies by it");
+        // A nugget it may take straight back up, as BDS's did (bds-goldpickup.txt).
+        assert!(!all::<AddItemEntity>(&admiring[emptied]).is_empty(), "its barter drops by it");
     }
+}
+
+/// A piglin by Alex in creative, and what Alex was told of it; its id.
+fn piglin_by_alex(h: &mut Harness) -> u64 {
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.spawn_entity("minecraft:piglin", [3.5, 65.0, 0.5]).is_some());
+    });
+    let shown: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    all::<AddEntity>(&shown).into_iter().find(|added| added.entity_type == "minecraft:piglin").expect("shown").runtime_id
+}
+
+/// Drops `item` at `at` and ticks until the piglin takes it: the ticks taken and all that was told.
+fn dropped_for(h: &mut Harness, piglin: u64, item: &'static str, at: [f32; 3]) -> (usize, Vec<Vec<RawPacket>>) {
+    h.remote.run(move |ctx| assert!(ctx.drop_item(&Item::new(item, 1), at)));
+    let ticks: Vec<Vec<RawPacket>> = (0..80).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let took = ticks.iter().position(|sent| all::<TakeItemEntity>(sent).iter().any(|taken| taken.target as u64 == piglin)).unwrap_or_else(|| panic!("{item} never taken"));
+    (took, ticks)
+}
+
+#[test]
+fn a_piglin_walks_to_gold_lying_near_admires_an_ingot_and_barters_it_and_keeps_nuggets_in_hand() {
+    let mut h = Harness::new();
+    let piglin = piglin_by_alex(&mut h);
+    let (took, ticks) = dropped_for(&mut h, piglin, "minecraft:gold_nugget", [6.5, 65.5, 0.5]);
+    let held: Vec<(WindowID, i16)> = all::<MobEquipment>(&ticks[took + 1]).into_iter().filter(|held| held.runtime_entity_id == piglin).map(|held| (held.window_id, held.item.network_id)).collect();
+    assert!(held.len() == 1 && held[0].0 == WindowID::Inventory && held[0].1 != 0, "a nugget in its main hand a tick on: {held:?}");
+
+    let (took, ticks) = dropped_for(&mut h, piglin, "minecraft:gold_ingot", [6.5, 65.5, -2.5]);
+    assert!(offhand(&ticks[took + 1], piglin).first().is_some_and(|item| *item != 0), "the ingot in its offhand a tick on");
+    assert!(all::<LevelSoundEvent>(&ticks[took + 2]).iter().any(|sound| sound.sound_id == "admire"), "and admire heard a tick after");
+
+    let mut shown: Vec<RawPacket> = h.enter(2, "Steve").to(2).to_vec();
+    shown.extend((0..3).flat_map(|_| h.tick_all().to(2).to_vec()));
+    assert!(all::<MobEquipment>(&shown).iter().any(|held| held.runtime_entity_id == piglin && held.window_id == WindowID::Inventory && held.item.network_id != 0), "one who comes later sees the nugget");
+}
+
+#[test]
+fn a_piglin_admires_a_golden_sword_it_picks_up_and_keeps_it_but_leaves_cobblestone() {
+    let mut h = Harness::new();
+    let piglin = piglin_by_alex(&mut h);
+    h.remote.run(|ctx| assert!(ctx.drop_item(&Item::new("minecraft:cobblestone", 1), [3.5, 65.5, 2.0])));
+    let (took, ticks) = dropped_for(&mut h, piglin, "minecraft:golden_sword", [6.5, 65.5, 0.5]);
+    assert!(ticks[..took].iter().all(|sent| all::<TakeItemEntity>(sent).is_empty()), "the cobblestone is left");
+    let after: Vec<Vec<RawPacket>> = (0..170).map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(after.iter().any(|sent| offhand(sent, piglin) == [0]), "its hand empties");
+    assert!(after.iter().all(|sent| all::<AddItemEntity>(sent).is_empty()), "and nothing is handed back");
 }

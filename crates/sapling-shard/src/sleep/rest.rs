@@ -17,7 +17,7 @@ const MONSTER_REACH: [f32; 3] = [8.0, 5.0, 8.0];
 /// The same in rain (docs/research/beds-and-containers.md, "Night window").
 const RAINY_NIGHT: std::ops::RangeInclusive<i64> = 12_009..=23_991;
 
-pub(super) fn is_night(world: &World, layer: Entity) -> bool {
+pub(crate) fn is_night(world: &World, layer: Entity) -> bool {
     let night = if crate::weather::of(world, layer) == Weather::Rain { RAINY_NIGHT } else { NIGHT };
     world.get::<Layer>(layer).is_some_and(|layer| night.contains(&layer.world.level().time.rem_euclid(super::DAY)))
 }

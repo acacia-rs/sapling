@@ -44,6 +44,8 @@ mod gliding;
 mod instruments;
 mod item_buckets;
 mod fishing;
+mod fish;
+mod hearts;
 mod foes;
 mod forms;
 mod ground;

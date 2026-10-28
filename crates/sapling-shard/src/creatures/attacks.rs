@@ -72,7 +72,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     // The enchantments' bonus goes in before strength and weakness (BDS 1429e56c0).
     let blow = blows::blow(world, player, crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()) + enchant::melee_bonus(weapon.as_ref(), Some(kind.as_str()))));
     let mut packets = vec![sapling_net::encode(&blows::sound(blow, from))];
-    if super::armour_stands::struck(world, entity, &kind, world.get::<Mode>(player)?.0 == GameMode::Creative, packets.clone()) {
+    if super::armour_stands::struck(world, entity, &kind, world.get::<Mode>(player)?.0 == GameMode::Creative, packets.clone()) || super::creaking::shrugs_off(world, entity) {
         return Some(());
     }
     let mut health = *world.get::<Health>(entity)?;
