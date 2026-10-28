@@ -3,8 +3,14 @@
 //! looks at it, takes that player as its prey (`provoked` in mob-traits.tsv) and stands frozen,
 //! heard `stare` every 3 ticks, while anyone looks at it; looked away from, it hunts its prey and
 //! hits it every 2 seconds (hunting.rs).
+//! One a heart called is tied to it (heart.rs).
 // TODO: a look is the Java game's (`isLookingAtMe`: within 60 degrees of its middle, in sight);
-// no creaking heart, and it is the same by day and by night (BDS's was drilled at both, summoned).
+// a summoned one is the same by day and by night (BDS's was drilled at both).
+
+mod heart;
+
+pub(crate) use heart::noticed as heart_noticed;
+pub(super) use heart::{shrugs_off, tick as tick_hearts};
 
 use bevy_ecs::prelude::*;
 
@@ -25,6 +31,7 @@ const HEAD: f32 = 0.85;
 pub(super) struct Creaking {
     /// The tick it froze in, while it is frozen.
     frozen: Option<u64>,
+    bound: Option<heart::Bound>,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
@@ -34,7 +41,7 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
 }
 
 pub(super) fn is_frozen(world: &World, entity: Entity) -> bool {
-    world.get::<Creaking>(entity).is_some_and(|creaking| creaking.frozen.is_some())
+    world.get::<Creaking>(entity).is_some_and(|creaking| creaking.frozen.is_some()) || heart::is_crumbling(world, entity)
 }
 
 /// Whether the player at `position` looks at the point `at`, `SEEN_FROM` off at most.
@@ -52,6 +59,10 @@ fn looks_at(position: &Position, at: [f32; 3]) -> bool {
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let (Some(creaking), Some(body)) = (world.get::<Creaking>(entity), world.get::<Body>(entity).copied()) else { return false };
     let frozen = creaking.frozen;
+    if heart::is_crumbling(world, entity) {
+        legs::rest(world, entity);
+        return true;
+    }
     let now = world.resource::<Tick>().0;
     let middle = [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]];
     let looker = in_world(world).into_iter().find(|player| {

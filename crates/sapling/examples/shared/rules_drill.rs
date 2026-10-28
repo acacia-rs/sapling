@@ -3,7 +3,7 @@
 //! picking items up unlocks).
 
 /// Packets shown of these drills.
-pub const RULES_SHOWN: &[&str] = &["UpdateBlock", "LevelSoundEvent", "LevelEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "UnlockedRecipes", "GameRulesChanged"];
+pub const RULES_SHOWN: &[&str] = &["UpdateBlock", "LevelSoundEvent", "LevelEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "UnlockedRecipes", "GameRulesChanged", "ItemStackResponse"];
 
 /// The drill called `name` of this file.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
@@ -11,6 +11,8 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         match name {
             "shotblocks" => shot_blocks(),
             "recipeunlock" => recipe_unlock(),
+            "recipeunlock2" => recipe_unlock_more(),
+            "limitedcraft" => limited_craft(),
             _ => return None,
         },
         RULES_SHOWN,
@@ -59,5 +61,30 @@ pub fn recipe_unlock() -> Vec<String> {
     let mut lines = floor();
     lines.extend(["gamemode survival @s", "recipe take @s *", "", "give @s oak_log", "", "", "give @s cobblestone", "", "", "give @s iron_ingot", "", ""].map(String::from));
     lines.extend(["gamerule recipesunlock false", "", "give @s diamond", "", "", "give @s stick", "", "", "gamerule recipesunlock true", "", "give @s gold_ingot", "", "", "gamemode creative @s", "clear @s"].map(String::from));
+    lines
+}
+
+/// What else unlocks: a full stack, then single items of new kinds one at a time (the chest's
+/// "many items"); the same item again, before and after `/recipe take` of one it unlocked; an item
+/// put in the offhand; one given in creative; standing in water (boats).
+pub fn recipe_unlock_more() -> Vec<String> {
+    let mut lines = floor();
+    lines.extend(["gamemode survival @s", "recipe take @s *", ""].map(String::from));
+    lines.extend(["give @s dirt 64", "", "give @s dirt 1", ""].map(String::from));
+    for item in ["sand", "gravel", "clay_ball", "flint", "feather", "bone", "string", "leather", "paper", "egg", "apple", "wheat_seeds"] {
+        lines.extend([format!("give @s {item}"), String::new()]);
+    }
+    lines.extend(["clear @s", "", "give @s oak_log", "", "give @s oak_log", "", "recipe take @s minecraft:oak_planks", "", "give @s oak_log", "", "clear @s", ""].map(String::from));
+    lines.extend(["replaceitem entity @s slot.weapon.offhand 0 iron_ingot", "", "", "gamemode creative @s", "give @s copper_ingot", "", "", "gamemode survival @s", ""].map(String::from));
+    lines.extend(["fill ~3 ~ ~3 ~5 ~1 ~5 water", "", "tp @s ~3.5 ~ ~3.5", "", "", "", "tp @s 0.5 ~ 0.5", "", "gamemode creative @s", "clear @s"].map(String::from));
+    lines
+}
+
+/// With `doLimitedCrafting` on, sticks crafted from planks while the stick recipe is known, then
+/// after `/recipe take` of it; then with the rule off again.
+pub fn limited_craft() -> Vec<String> {
+    let mut lines = floor();
+    lines.extend(["gamemode survival @s", "recipe take @s *", "gamerule dolimitedcrafting true", "", "give @s oak_planks 8", "", "!craft stick", "", ""].map(String::from));
+    lines.extend(["recipe take @s minecraft:stick", "", "!craft stick", "", "", "gamerule dolimitedcrafting false", "", "!craft stick", "", "", "gamemode creative @s", "clear @s"].map(String::from));
     lines
 }

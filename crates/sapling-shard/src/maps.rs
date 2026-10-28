@@ -4,9 +4,10 @@
 //! (damage 2) also gets `map_display_players`. The map in a player's hand ticks: every 15 to 20 ticks
 //! it redraws the circle around its holder; a tick with changed pixels sends them, and every fifth
 //! tick without sends the players on it, both to everyone in its world. A `MapInfoRequest` is
-//! answered with the whole map, or, carrying pixels, has them painted in.
-// TODO: maps live only in memory: a restarted shard forgets them (no generic world store yet).
+//! answered with the whole map, or, carrying pixels, has them painted in. Each realm keeps its
+//! maps with its level (kept.rs).
 
+mod kept;
 mod marks;
 mod render;
 
@@ -23,6 +24,7 @@ use crate::blocks::Dice;
 use crate::components::{InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick};
 use crate::inventory::{self, CARTOGRAPHY_INPUT, Chart, Inventory, Place};
 
+pub(crate) use kept::keep_all;
 pub(crate) use render::Colours;
 
 const EMPTY: &str = "minecraft:empty_map";
@@ -59,6 +61,11 @@ pub(crate) struct MapData {
 }
 
 impl MapData {
+    /// A map as storage kept it; the next tick that ticks it shows it.
+    fn kept(id: i64, scale: u8, centre: [i32; 2], dimension: i32, layer: Entity, locked: bool, pixels: Vec<u32>) -> Self {
+        Self { id, scale, centre, dimension, layer, locked, pixels, changed: None, tracked: Vec::new(), marks: Vec::new(), redraw: 0, told: 0, born: u64::MAX }
+    }
+
     pub(crate) fn paint(&mut self, x: usize, z: usize, pixel: u32) {
         let at = &mut self.pixels[z * render::SIZE as usize + x];
         if *at == pixel {
@@ -72,8 +79,8 @@ impl MapData {
     }
 }
 
-/// Every map made in this shard, by id.
-#[derive(Resource, Default)]
+/// Every map of a realm, by id: on its home layer.
+#[derive(Component, Default)]
 pub(crate) struct Maps {
     pub maps: HashMap<i64, MapData>,
     made: i64,
@@ -106,7 +113,7 @@ pub(crate) fn map_id(stack: &ItemStack) -> Option<i64> {
 /// A new blank map's data under a fresh id; returns the id and the next `map_name_index`.
 pub(crate) fn make(world: &mut World, layer: Entity, dimension: i32, centre: [i32; 2], scale: u8, locked: bool) -> (i64, i32) {
     let born = world.resource::<Tick>().0;
-    let mut maps = world.get_resource_or_insert_with(Maps::default);
+    let mut maps = kept::maps_mut(world, layer);
     let id = maps.next_id();
     maps.made += 1;
     maps.names += 1;
@@ -147,7 +154,7 @@ pub(crate) fn fill(world: &mut World, player: Entity) -> bool {
         fields.insert(0, ("map_display_players".into(), Value::Byte(1)));
     }
     let made = ItemStack { name: FILLED.to_owned(), count: 1, damage: 0, block: None, tag: Some(Value::Compound(fields)) };
-    let creation = marks::creation(&world.resource::<Maps>().maps[&id]);
+    let creation = marks::creation(&kept::maps_mut(world, layer).maps[&id]);
     tell_layer(world, layer, &creation);
     inventory::swap_held_for(world, player, made);
     inventory::show_windows(world, player, true);
@@ -159,7 +166,7 @@ pub(crate) fn fill(world: &mut World, player: Entity) -> bool {
 
 /// What a player's cartography table knows of the map in its input.
 pub(crate) fn chart(world: &World, player: Entity) -> Chart {
-    let maps = world.get_resource::<Maps>();
+    let maps = world.get::<InLayer>(player).and_then(|layer| world.get::<Maps>(crate::dimensions::home(world, layer.0)));
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.slot(Place::Ui(CARTOGRAPHY_INPUT))?.as_ref().and_then(|held| map_id(&held.stack)));
     let input = held.and_then(|id| maps?.maps.get(&id)).map(|map| (map.id, map.scale, map.locked));
     Chart { input, fresh: maps.map_or(ID_BASE + 1, Maps::next_id) }
@@ -168,9 +175,9 @@ pub(crate) fn chart(world: &World, player: Entity) -> Chart {
 /// Makes the map `to` a cartography table made of the map `from`: zoomed out (blank, a scale
 /// up, centred anew around the old centre) or locked (a copy that never redraws), and tells
 /// everyone in its world all of it. A zoom level made before is kept as it is.
-pub(crate) fn charted(world: &mut World, from: i64, to: i64, zoomed: bool) {
+pub(crate) fn charted(world: &mut World, layer: Entity, from: i64, to: i64, zoomed: bool) {
     let now = world.resource::<Tick>().0;
-    let Some(mut maps) = world.get_resource_mut::<Maps>() else { return };
+    let mut maps = kept::maps_mut(world, layer);
     let Some(old) = maps.maps.get(&from).filter(|_| !maps.maps.contains_key(&to)).cloned() else { return };
     let mut map = MapData { id: to, changed: None, tracked: Vec::new(), marks: Vec::new(), redraw: 0, told: 0, born: now.wrapping_sub(1), ..old.clone() };
     if zoomed {
@@ -192,11 +199,13 @@ pub(crate) fn charted(world: &mut World, from: i64, to: i64, zoomed: bool) {
 
 /// Answers this tick's `MapInfoRequest`s: the whole map to the asker, or the pixels it sent painted in.
 pub(crate) fn dispatch(world: &mut World) {
+    kept::restore_all(world);
     let asked = world.resource_mut::<PacketQueues>().take::<MapInfoRequest>();
     let size = render::SIZE as usize;
     for (player, request) in asked {
+        let Some(layer) = world.get::<InLayer>(player).map(|layer| layer.0) else { continue };
         let whole = {
-            let Some(mut maps) = world.get_resource_mut::<Maps>() else { return };
+            let mut maps = kept::maps_mut(world, layer);
             let Some(map) = maps.maps.get_mut(&request.map_id) else { continue };
             if !request.client_pixels.is_empty() {
                 for pixel in request.client_pixels.iter().filter(|pixel| usize::from(pixel.index) < size * size) {
@@ -225,11 +234,12 @@ pub(crate) fn tick(world: &mut World) {
             continue;
         }
         ticked.push(id);
-        let Some(mut maps) = world.remove_resource::<Maps>() else { return };
+        let Some(home) = world.get::<InLayer>(holder).map(|layer| crate::dimensions::home(world, layer.0)) else { continue };
+        let Some(mut maps) = world.entity_mut(home).take::<Maps>() else { continue };
         if let Some(map) = maps.maps.get_mut(&id).filter(|map| map.born != now) {
             tick_map(world, &mut maps.colours, map, holder);
         }
-        world.insert_resource(maps);
+        world.entity_mut(home).insert(maps);
     }
 }
 

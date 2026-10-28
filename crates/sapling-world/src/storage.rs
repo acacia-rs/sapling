@@ -215,10 +215,15 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the ticking areas are unreadable; there are none");
             Vec::new()
         });
+        let maps = self.0.load_maps().unwrap_or_else(|error| {
+            tracing::warn!(%error, "the maps are unreadable; there are none");
+            Vec::new()
+        });
         let (spawn, rules, seed, hardcore) = (dat.spawn(), read_rules(dat), dat.seed().unwrap_or(0), dat.hardcore());
         let (structures, folder_structures) = (structures.into(), folder_structures.into());
         let (time, weather, difficulty) = (dat.time().unwrap_or(Level::default().time), dat.weather().unwrap_or(Level::default().weather), dat.difficulty());
-        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, hardcore, weather, difficulty, chunk_tick_range: None }
+        let maps = maps.into();
+        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, hardcore, weather, difficulty, chunk_tick_range: None }
     }
 }
 
@@ -280,6 +285,7 @@ impl WorldStorage for LevelDbStorage {
         let structures: Vec<(String, Vec<u8>)> = level.structures.iter().map(|(name, bytes)| (name.clone(), bytes.clone())).collect();
         self.0.store_structures(&structures)?;
         self.0.store_ticking_areas(&level.ticking_areas)?;
+        self.0.store_maps(&level.maps)?;
         Ok(self.0.flush(&dat)?)
     }
 

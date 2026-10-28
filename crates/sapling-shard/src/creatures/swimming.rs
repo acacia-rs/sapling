@@ -5,9 +5,14 @@
 //! towards the spot; water keeps 0.8 of its speed (`Physics::SWIMMER`; a turtle's 0.9). It looks
 //! for another spot once within a block of it or after 5 seconds. Out of water a turtle or an
 //! axolotl walks to water within 16 blocks.
+//! Fish hop out of water and flee players (ashore.rs).
 // TODO: the push up or down is fitted at its full strength only (a fish's 1.25 of its push
 // across); nearer the spot's height it is taken to fall off over the last block. A fish out of
-// water neither flops nor dies; none flees a player; a frog does not look for land.
+// water does not die; a frog does not look for land.
+
+mod ashore;
+
+pub(super) use ashore::is_fish;
 
 use bevy_ecs::prelude::*;
 
@@ -59,6 +64,10 @@ pub(super) struct Swimmer {
     pace: f32,
     spot: Option<[f32; 3]>,
     since: u64,
+    /// Whether its spot is one it flees a player to.
+    fleeing: bool,
+    /// Out of water, the tick it was first seen on the ground.
+    landed: Option<u64>,
 }
 
 /// Makes a mob of a kind that swims about, and hunts nothing, a swimmer.
@@ -113,17 +122,23 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     let stroke = stroke(kind);
     if body.liquid() != Some(Liquid::Water) {
         if let Some(mut swimmer) = world.get_mut::<Swimmer>(entity) {
-            swimmer.pace = 0.0;
+            (swimmer.pace, swimmer.fleeing) = (0.0, false);
+        }
+        if is_fish(kind) {
+            ashore::flop(world, entity, &body);
+            return true;
         }
         return stroke.seeks_water && seek_water(world, entity, layer, kind, &body);
     }
+    let haste = ashore::flee(world, entity, layer, kind, &body);
     let Some(to) = spot(world, entity, layer, &body, roams) else { return true };
     let Some(mut swimmer) = world.get_mut::<Swimmer>(entity) else { return true };
+    swimmer.landed = None;
     let (dx, dy, dz) = (to[0] - body.at[0], to[1] - body.at[1], to[2] - body.at[2]);
     let turn = ((-dx).atan2(dz).to_degrees() - swimmer.yaw + 180.0).rem_euclid(360.0) - 180.0;
     swimmer.yaw += turn.clamp(-stroke.turn, stroke.turn);
     swimmer.pace = if stroke.ramps { (swimmer.pace + PACE).min(1.0) } else { 1.0 };
-    let (yaw, push) = (swimmer.yaw, STROKE * speed * speed * swimmer.pace);
+    let (yaw, push) = (swimmer.yaw, STROKE * speed * speed * swimmer.pace * haste);
     let facing = yaw.to_radians();
     if let Some(mut moving) = world.get_mut::<Body>(entity) {
         moving.fly([-facing.sin() * push, dy.clamp(-1.0, 1.0) * stroke.rise * push, facing.cos() * push]);

@@ -17,8 +17,7 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
    behind slot 50 (E3).
 2. **Stored double chests.** sapling sends the stored compound, so a client that gets `pairlead/pairx/pairz`
    draws one large chest, while sapling opens 27 slots at the clicked half. BDS opens 54 at the lead (B).
-3. **Recipe book.** sapling's `StartGame.bin` says `recipesUnlock` true and `UnlockedRecipes` is never sent;
-   BDS sends one at join (E5). Expect a book with almost nothing in it (mem, not confirmed on a client).
+3. **Recipe book.** Resolved: sapling keeps and sends each player's book as BDS does (E5).
 4. **Barrels do not look open** (no `open_bit` block change), and **no container sounds** at all (A3, C).
 5. **Cake, honey block, honey bottle to sugar** are refused: the only three recipes with two outputs (E4).
 6. **Inventory screen `ContainerOpen` entity id**: sapling sends the player's id, BDS sends -1 (A1).
@@ -185,8 +184,9 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 5. **Unlocking.** BDS sends `UnlockedRecipes` (656 bytes) during join (REC: `sapling-data/README.md:27`, the
    join recording's packet list). sapling's `StartGame.bin` has `recipesUnlock` true, `doLimitedCrafting`
    false (DATA: bytes at offsets 164 and 181). `_handleCraftAction` returns no status for a locked recipe,
-   so crafting by hand should work without it (inf); the book is what suffers. Either send
-   `UnlockedRecipes` or set `recipesUnlock` false (mem; untested).
+   and BDS crafted a locked recipe with `doLimitedCrafting` on (REC: research/captures/bds-limitedcraft.txt;
+   the rule paused unlocking instead). What unlocks what: research/captures/bds-recipeunlock*.txt and
+   `sapling_data::unlocked_by`; sapling's book: `inventory/recipe_book.rs`.
 6. **Statuses.** Numbers are from the decompiles and REC; names are mem (Mojang's `ItemStackNetResult`),
    three of them checked as strings in the exe (`MismatchedRecipeForInputGridItems`,
    `MismatchedCraftingSize`, `InvalidCraftResultIndex`): 7 InvalidCraftRequest, 9 InvalidCraftResult,
@@ -225,4 +225,3 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 - The reach at which BDS closes a screen (A5), and the lid speed behind the close sound's delay (A3).
 - `InventoryContent`/`InventorySlot` `container` and `storage_item` for a chest window (A2, A4).
 - The multi-result sequence on 1.26 and the order of `ResultsDeprecated` entries (E4).
-- Whether a client with `recipesUnlock` true and no `UnlockedRecipes` really shows an empty book (E5).
