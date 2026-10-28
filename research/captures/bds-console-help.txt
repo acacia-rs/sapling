@@ -1,0 +1,56 @@
+## BDS console (CONSOLE lines of tools/bds-drill.sh during bds_command_probe idle, 2026-10-28), in order: help; help 2; help say; help gamerule; ?; help help; help 99; help nosuch; say hi @a; say hi @s x; say hi @e[type=player] x; me waves @a; tell @a hi @s; list; seed. The players' side is bds-console-say.txt.
+[2026-10-28 16:07:51:479 INFO] §2--- Showing help page 1 of 44 (/help <page>) ---
+/? <page: int>
+/? [command: CommandName]
+/aimassist <players: target> clear
+/aimassist <players: target> set [x angle: float] [y angle: float] [max distance: float] [target mode: AimAssistTargetMode] [preset id: string]
+/allowlist <action: AllowListAction> [name: string]
+/alwaysday [lock: Boolean]
+/camera <players: target> attach_to_entity <entity: target>
+§2Tip: Use the <tab> key while typing a command to auto-complete the command or its arguments
+[2026-10-28 16:07:52:942 INFO] §2--- Showing help page 2 of 44 (/help <page>) ---
+/camera <players: target> clear
+/camera <players: target> detach_from_entity
+/camera <players: target> fade
+/camera <players: target> fade color <red: int> <green: int> <blue: int>
+/camera <players: target> fade time <fadeInSeconds: float> <holdSeconds: float> <fadeOutSeconds: float>
+/camera <players: target> fade time <fadeInSeconds: float> <holdSeconds: float> <fadeOutSeconds: float> color <red: int> <green: int> <blue: int>
+/camera <players: target> fov_clear [fovEaseTime: float] [fovEaseType: Easing]
+§2Tip: Use the <tab> key while typing a command to auto-complete the command or its arguments
+[2026-10-28 16:07:54:441 INFO] §esay:
+§eSends a message in the chat to other players.
+Usage:
+- /say <message: message>
+[2026-10-28 16:07:55:946 INFO] §egamerule:
+§eSets or queries a game rule value.
+Usage:
+- /gamerule
+- /gamerule <rule: BoolGameRule> [value: Boolean]
+- /gamerule <rule: IntGameRule> [value: int]
+- /gamerule locatorbar [value: Boolean]
+- /gamerule playerwaypoints <value: playerwaypointsValues>
+[2026-10-28 16:07:57:452 INFO] §2--- Showing help page 1 of 44 (/help <page>) ---
+/? <page: int>
+/? [command: CommandName]
+/aimassist <players: target> clear
+/aimassist <players: target> set [x angle: float] [y angle: float] [max distance: float] [target mode: AimAssistTargetMode] [preset id: string]
+/allowlist <action: AllowListAction> [name: string]
+/alwaysday [lock: Boolean]
+/camera <players: target> attach_to_entity <entity: target>
+§2Tip: Use the <tab> key while typing a command to auto-complete the command or its arguments
+[2026-10-28 16:07:58:951 INFO] §ehelp (also ?):
+§eProvides help/list of commands.
+Usage:
+- /help <page: int>
+- /help [command: CommandName]
+[2026-10-28 16:08:00:457 INFO] §2--- Showing help page 44 of 44 (/help <page>) ---
+/wsserver <serverUri: text>
+/xp <amount: int> [player: target]
+/xp <amount: int>L [player: target]
+§2Tip: Use the <tab> key while typing a command to auto-complete the command or its arguments
+[2026-10-28 16:08:01:962 ERROR] Syntax error: Unexpected "nosuch": at "/help >>nosuch<<"
+[2026-10-28 16:08:09:477 INFO] You whisper to CmdActor, CmdWatcher: hi 
+[2026-10-28 16:08:10:977 INFO] There are 2/10 players online:
+CmdActor, CmdWatcher
+[2026-10-28 16:08:12:481 ERROR] Unknown command: seed. Please check that the command exists and that you have permission to use it.
+[2026-10-28 16:08:32:663 INFO] Server stop requested.

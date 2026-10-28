@@ -2,8 +2,10 @@
 //! runs as a command of the server (`Sender::Console`, operator commands) on the entry shard at its
 //! next tick, and the answer is logged in English as BDS's console prints it
 //! (research/captures/bds-console-cmds.txt): INFO when it succeeded, ERROR when not, the answer's
-//! lines together in one entry. BDS does not echo the line itself.
+//! lines together in one entry. BDS does not echo the line itself. `/help` is the console's own
+//! (help.rs).
 
+mod help;
 mod input;
 
 use std::sync::mpsc::{Receiver, channel};
@@ -40,7 +42,8 @@ impl Handler for Console {
         while let Ok(line) = self.lines.try_recv() {
             let line = line.trim();
             if !line.is_empty() {
-                log(&commands.run(ctx, &Sender::Console, Permission::Operator, line));
+                let out = help::answer(&commands, line).unwrap_or_else(|| commands.run(ctx, &Sender::Console, Permission::Operator, line));
+                log(&out);
             }
         }
     }

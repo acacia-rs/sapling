@@ -67,3 +67,23 @@ The `haspermission` selector filter reads the same locks.
 /mobevent: `eventIsTrue|IsFalse|SetToTrue|SetToFalse ["%entity.<pillager|wandering_trader|ender_dragon>.name", event]`;
 `events_enabled`: `eventsEnabled...`. /ability does not exist (`commands.generic.unknown`).
 /event and /dialogue answers are recorded in bds-controls.txt but not built.
+
+## Messages, permissions, game rules, console help (2026-10-28)
+
+`bds_command_probe saysel|cmdlist|rulesync|member|idle` (`shared/parity_drill.rs`) and `bds_ui_probe`.
+- Message selectors (bds-saysel.txt; console: bds-console-say.txt): `/say`, `/me` and `/tell` replace each
+  `@<base>` (whole base name: `a@s` and `@s@s` resolve, `mail@example.com`, `@here`, `@`, `@x` stay) outside
+  double quotes by its names, `, `-joined, or by nothing (`@initiator`, `@s` from a block or the console).
+  A broken selector is the line's syntax error; `c=0` answers the text `Entity count cannot be 0`.
+- Lists (bds-ui-operator.txt, bds-ui-member.txt): a member and an operator get the same 82 commands, each
+  with its level (`any`, `gamedirectors`, `admin` op/deop/permission/place/reload/script/wsserver, `host`
+  setmaxplayers, `owner` allowlist/transfer/stop/save/...). No `help`, `seed`, `version`, `defaultgamemode`.
+- A member (bds-member.txt): syntax errors first; then any selector in the line, a message's included, is
+  `commands.generic.permission.selector []`; then a command above it `commands.generic.error.permissions
+  [its own name]` (`tp` → "teleport"). An operator's `/op` and `/deop` are `error.permissions` (bds-cmdlist.txt).
+- Game rules (bds-rulesync.txt): every rule's change is told (GameRulesChanged to everyone), a set to the
+  same value never. Earlier captures that seemed to skip rules ran on a kept world: tools/bds-drill.sh did not
+  wipe it (server.properties' CRLF), so `domobspawning false` was already false there.
+- Console `/help` (bds-console-help.txt): `§2--- Showing help page N of 44 (/help <page>) ---`, seven
+  overload lines sorted by listed name (`/?`, `/alwaysday`), the tab tip; `help <command>` name, description,
+  `Usage:` and `- ` lines; an unknown name is the syntax error. Players' `/help` answers the same, unlisted.
