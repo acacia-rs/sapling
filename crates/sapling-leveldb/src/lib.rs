@@ -29,6 +29,7 @@ mod states;
 mod structure;
 mod sub_chunk;
 mod ticking_areas;
+mod upgrade;
 mod world;
 
 use std::path::PathBuf;

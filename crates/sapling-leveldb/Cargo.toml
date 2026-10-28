@@ -12,5 +12,6 @@ acacia-world.workspace = true
 bytes.workspace = true
 flate2.workspace = true
 rusty-leveldb.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true

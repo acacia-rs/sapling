@@ -2637,6 +2637,7 @@ dependencies = [
  "bytes",
  "flate2",
  "rusty-leveldb",
+ "serde_json",
  "thiserror",
  "tracing",
 ]

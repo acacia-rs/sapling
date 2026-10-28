@@ -142,8 +142,10 @@ One listener task, one shard thread, one world. The pieces and why they are shap
   with the folder: 25 columns, 0 blocks differ, as for the untouched fixture. The bot needs physics on,
   or BDS sends only the 3x3 columns at the spawn. BDS recomputes a stair's `minecraft:corner`.
 - **Block states.** Palette entries resolve by name + states against acacia-world's registry, cached by
-  their raw bytes. Unknown states of a known block become its first state, unknown blocks become
-  `minecraft:info_update`; each is logged once. Writing needs typed values (byte or int) and the
+  their raw bytes. An entry that misses goes through the block-state upgrader (`upgrade.rs`, CC0
+  BedrockBlockUpgradeSchema; pre-1.13 ids, metas and sub-chunk versions 0 and 2-7 through their 1.12
+  states; docs/research/crafting-storage.md "Old storage"). What still misses: a known block becomes
+  its first state, an unknown block `minecraft:info_update`; each is logged once. Writing needs typed values (byte or int) and the
   registry keeps text: the typing whose `{name, states}` NBT reproduces the state's network hash is used
   (`states.rs`), and a test writes and reads back every vanilla state.
 - **Storage.** `WorldStorage::load_column` (blocking) with `LevelDbStorage` and `MemoryStorage` (empty =
@@ -1524,8 +1526,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   IPv6 port field (BDS 1.26.52's pong carried no string to read), config hot reload.
 - **BDS only saves chunks that changed since generation.** A folder's holes are void unless it is
   opened with `generate_missing`, which fills them as a new world would be generated ("Generation").
-- Block-state upgrader (CC0 BedrockBlockUpgradeSchema) for palettes older than the current version;
-  until then see "Block states" above. Legacy sub-chunk versions (< 8, except 1) are skipped as air.
+- The whole-column `LegacyTerrain` record of pre-1.0 worlds is not read.
 - Block entities: no vanilla client has seen them (bots decode them), and what BDS itself puts into a
   chunk for them was not recorded: sapling sends the stored compound without `Items`. Only chests and
   barrels are opened, edited or created; the container shapes (`InventoryContent` naming no container,
