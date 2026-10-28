@@ -22,6 +22,7 @@ pub use sapling_api::{
     Display, DisplaySlot, Objective, ScoreHolder, ScoreOperation, SortOrder, Tagged, ScriptEvent,
 };
 pub use sapling_api::{Mount, Target};
+pub use sapling_api::{ArmourSlot, BlockBox, BlockDrop, Content, CreativeCategory, CustomBlock, CustomFood, CustomItem, Geometry, Material, Permutation, Plugin, RenderMethod, StateValues};
 pub use sapling_net::{AccessLists, Admission, Advert, Compression, Lan, NetherNet, PacketLimits, access, host_key};
 pub use sapling_world::{ChunkPos, Generated, Level, END, LevelDbStorage, MemoryStorage, NETHER, OVERWORLD, Template, World, WorldFolder, WorldStorage};
 pub use server::{ConfigError, Metrics, Server, ServerBuilder, ServerProperties, StartError};

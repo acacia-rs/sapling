@@ -5,6 +5,7 @@
 
 mod archive;
 mod behavior;
+pub(crate) mod generated;
 mod manifest;
 mod resource;
 mod source;

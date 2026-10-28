@@ -8,6 +8,7 @@ use sapling_world::{Template, World};
 
 use crate::layout::{self, WorldSpec};
 
+mod content;
 mod error;
 mod listening;
 mod ops;
@@ -174,7 +175,7 @@ impl ServerBuilder {
 
     /// Fetches the signing keys (online mode), binds the socket on the current tokio runtime and
     /// starts the game threads, one per shard.
-    pub async fn start(self) -> Result<Server, StartError> {
+    pub async fn start(mut self) -> Result<Server, StartError> {
         let default = WorldSpec { name: self.shard.world_id.clone(), world: self.world.unwrap_or_else(layout::platform_world), spawn: self.shard.spawn, shard: 0 };
         let join = self.join.unwrap_or_else(|| default.name.clone());
         let default_name = default.name.clone();
@@ -187,6 +188,9 @@ impl ServerBuilder {
             return Err(StartError::HandlerPerShard);
         }
         self.ops.apply_allow_list(&self.net)?;
+        let custom = content::gather(&self.plugins);
+        content::register(&custom);
+        self.shard.resource_packs = content::with_generated_pack(&self.shard.resource_packs, &custom);
         let keys = if self.net.online_mode { signing_keys().await? } else { SigningKeys::empty() };
         let (listener, outbox, inboxes) = sapling_net::listen_shards(self.addr, self.net, keys, layout.len(), entry).await?;
         let count = layout.len();
