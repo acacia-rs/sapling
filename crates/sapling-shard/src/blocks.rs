@@ -35,6 +35,7 @@ mod ground;
 mod growth;
 mod handled;
 mod holders;
+mod infested;
 mod items;
 mod jukebox;
 mod leaves;

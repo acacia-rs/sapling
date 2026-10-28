@@ -6,7 +6,8 @@ use crate::common;
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use common::asking::ask;
-use common::{Harness, all, click};
+use acacia_proto::types::Action as BlockAction;
+use common::{Harness, all, block_actions, click};
 use sapling_api::{Block, PlayerId, RuleValue};
 use sapling_world::{NETHER, World};
 
@@ -56,6 +57,27 @@ fn a_bed_bursts_in_the_nether_between_its_halves() {
         let left = block_in_nether(&mut h, half);
         assert!(left == "minecraft:air" || left == "minecraft:fire", "{half:?}: {left}");
     }
+}
+
+fn silverfish(h: &mut Harness) -> Vec<[f32; 3]> {
+    ask(h, |ctx| ctx.entities().into_iter().filter(|entity| entity.kind == "minecraft:silverfish").map(|entity| entity.feet).collect())
+}
+
+#[test]
+fn infested_stone_broken_by_hand_or_blasted_lets_a_silverfish_out() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block([1, 64, 0], &Block::new("minecraft:infested_stone")) && ctx.set_block([-6, 64, -6], &Block::new("minecraft:infested_cobblestone"))));
+    h.tick_all();
+    h.receive(1, &block_actions(&[(BlockAction::StartBreak, [1, 64, 0])]));
+    (0..120).for_each(|_| drop(h.tick_all()));
+    h.receive(1, &block_actions(&[(BlockAction::PredictBreak, [1, 64, 0])]));
+    h.tick_all();
+    let out = silverfish(&mut h);
+    assert!(out.len() == 1 && (out[0][0] - 1.0).abs() < 0.3 && (out[0][2] - 0.0).abs() < 0.3, "{out:?}");
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:tnt", [-5.5, 65.0, -5.5]).is_some()));
+    (0..90).for_each(|_| drop(h.tick_all()));
+    assert_eq!(silverfish(&mut h).len(), 2);
 }
 
 #[test]

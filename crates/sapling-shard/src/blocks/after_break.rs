@@ -17,6 +17,7 @@ const ICE: &str = "minecraft:ice";
 
 /// The block `name` at `pos` is gone, broken by `by`.
 pub(super) fn leave(world: &mut World, layer: Entity, pos: BlockPos, name: &str, by: &Breaker) {
+    super::infested::release(world, layer, pos, name, by.silk_touch);
     if !by.harvests || by.silk_touch {
         return;
     }

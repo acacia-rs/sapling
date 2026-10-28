@@ -49,6 +49,17 @@ middle in water, BDS's explosion breaks no blocks (the bed passes the same 0 exp
 sapling already did this (`creatures/blast/rays.rs` `broken`: none when the middle is wet); nothing
 changed. The Education `allow_underwater_bit` TNT state is not read by sapling.
 
+## Infested blocks
+
+A virtual of the infested blocks' vtables (142fd3ec0, **BDSRE**) returns at once when the break's
+tool has silk touch (144bc8ef0), else tail-calls 142fd3cf0, which (after a check through the
+region's vt+0x1c8) spawns `ActorType` 0x40b27 (silverfish) by `Spawner::spawnMob` at the cell's
+integer coordinates, `surface` 1. Found by the `imm 40b27` immediate. sapling (`blocks/infested.rs`):
+any `minecraft:infested_*` broken by a survival hand without silk touch (`after_break.rs`), or broken
+and left to drop in a blast (`blown.rs`), spawns a silverfish at the cell's corner, unless
+`doTileDrops` is off (the Java game's `InfestedBlock.spawnAfterBreak` gate; the vt+0x1c8 check may be
+it, **inf**).
+
 ## Not drilled
 
 - An item frame popping when its block goes (inferred).
@@ -56,3 +67,5 @@ changed. The Education `allow_underwater_bit` TNT state is not read by sapling.
   (decompiled).
 - Fire from a bed's or an anchor's blast (Java's rule; BDS's fire pass not read).
 - Underwater TNT breaking nothing (pack JSON and parser read; sapling's existing rule).
+- Infested blocks: the silverfish at the cell's corner, whether a blast lets one out and whether
+  `doTileDrops` gates it.
