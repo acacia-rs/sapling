@@ -36,6 +36,8 @@ pub(crate) enum Job {
     Coral,
     /// A sponge soaks up water, or a wet one dries in the Nether (sponge.rs).
     Sponge,
+    /// A big dripleaf tilts on, or back up (dripleaf.rs).
+    Dripleaf,
 }
 
 #[derive(Resource, Default)]
@@ -85,6 +87,7 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
         "bubble_column" => Job::Bubbles,
         "cauldron" => Job::Drip,
         "lectern" => Job::Lectern,
+        "big_dripleaf" if !properties.split(',').any(|pair| pair == "big_dripleaf_tilt=none") => Job::Dripleaf,
         "command_block" | "repeating_command_block" | "chain_command_block" => Job::Command,
         name if super::coral::is_live(&format!("minecraft:{name}")) => Job::Coral,
         _ => return None,
@@ -131,5 +134,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Command => super::command_blocks::tick(world, layer, pos),
         Job::Coral => super::coral::die(world, layer, pos),
         Job::Sponge => super::sponge::ticked(world, layer, pos),
+        Job::Dripleaf => super::dripleaf::step(world, layer, pos),
     }
 }

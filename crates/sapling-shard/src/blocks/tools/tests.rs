@@ -47,6 +47,5 @@ fn buckets_bottles_and_what_else_bds_took_change_their_block() {
     assert_eq!([name("potion", "dirt", ""), name("candle", "cake", "bite_counter=0"), name("candle", "cake", "bite_counter=1"), name("bucket", "cauldron", "cauldron_liquid=water,fill_level=4")], [Some("mud".into()), Some("candle_cake".into()), None, None]);
     assert_eq!(made("iron_shovel", "campfire", "extinguished=0,minecraft:cardinal_direction=south"), Some(("campfire".into(), "extinguished=1,minecraft:cardinal_direction=south".into())));
     assert_eq!(made("flint_and_steel", "campfire", "extinguished=1,minecraft:cardinal_direction=south"), Some(("campfire".into(), "extinguished=0,minecraft:cardinal_direction=south".into())));
-    assert_eq!([name("compass", "lodestone", ""), name("compass", "stone", "")], [Some("lodestone".into()), None]);
     assert_eq!(made("ender_eye", "end_portal_frame", "end_portal_eye_bit=0,minecraft:cardinal_direction=south"), Some(("end_portal_frame".into(), "end_portal_eye_bit=1,minecraft:cardinal_direction=south".into())));
 }

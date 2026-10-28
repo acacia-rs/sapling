@@ -4,10 +4,12 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{LevelEvent, LevelEventEvent};
+use acacia_proto::packets::{
+    LevelEvent, LevelEventEvent, PositionTrackingDbBroadcast, PositionTrackingDbBroadcastBroadcastAction, PositionTrackingDbRequest, PositionTrackingDbRequestAction,
+};
 use common::asking::ask;
 use acacia_proto::types::Action as BlockAction;
-use common::{Harness, all, block_actions, click};
+use common::{Harness, all, block_actions, click, shooting};
 use sapling_api::{Block, GameMode, Item, PlayerId, RuleValue, Slot};
 use sapling_world::{NETHER, World};
 
@@ -111,6 +113,71 @@ fn a_comparator_reads_a_frame_behind_its_block_by_turn_and_a_framed_map_shows() 
     h.tick_all();
     let shown = ask(&mut h, |ctx| ctx.block([1, 65, 3]).map(|frame| frame.properties)).unwrap_or_default();
     assert!(shown.contains("item_frame_map_bit=1"), "{shown}");
+}
+
+/// What the shard answers Alex's request for the target of `handle`.
+fn tracked(h: &mut Harness, handle: i32) -> (PositionTrackingDbBroadcastBroadcastAction, String) {
+    h.receive(1, &PositionTrackingDbRequest { action: PositionTrackingDbRequestAction::Query, tracking_id: handle });
+    let told = all::<PositionTrackingDbBroadcast>(h.tick_all().to(1));
+    let [told] = told.try_into().expect("one answer");
+    assert_eq!(told.tracking_id, handle);
+    (told.broadcast_action, format!("{:?}", told.nbt.decode().unwrap().value))
+}
+
+#[test]
+fn a_compass_clicked_on_a_lodestone_points_at_it_until_it_goes() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:compass", 2))));
+        assert!(ctx.set_block([2, 65, 0], &Block::new("minecraft:lodestone")));
+    });
+    h.tick_all();
+    h.receive(1, &click([2, 65, 0], 1, None));
+    h.tick_all();
+    let held = ask(&mut h, |ctx| [Slot::Main(0), Slot::Main(1)].map(|slot| ctx.item(ALEX, slot).map(|item| (item.name, item.count))));
+    assert_eq!(held, [Some(("minecraft:compass".into(), 1)), Some(("minecraft:lodestone_compass".into(), 1))]);
+    let (told, record) = tracked(&mut h, 1);
+    assert!(told == PositionTrackingDbBroadcastBroadcastAction::Update && record.contains("Int(2), Int(65), Int(0)") && record.contains("0x00000001"), "{told:?} {record}");
+    assert_eq!(tracked(&mut h, 7).0, PositionTrackingDbBroadcastBroadcastAction::NotFound);
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 65, 0], &Block::air())));
+    h.tick_all();
+    assert_eq!(tracked(&mut h, 1).0, PositionTrackingDbBroadcastBroadcastAction::Destory);
+}
+
+fn tilt_at(h: &mut Harness, pos: [i32; 3]) -> String {
+    let properties = ask(h, move |ctx| ctx.block(pos).map(|leaf| leaf.properties)).unwrap_or_default();
+    properties.split(',').find_map(|pair| pair.strip_prefix("big_dripleaf_tilt=")).unwrap_or_default().to_owned()
+}
+
+#[test]
+fn a_big_dripleaf_tilts_under_a_player_and_comes_back_up() {
+    const LEAF: [i32; 3] = [2, 65, 0];
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
+    h.tick_all();
+    shooting::face(&mut h, 1, ALEX, [2.5, 65.9375, 0.5], 0.0);
+    let mut seen = vec![tilt_at(&mut h, LEAF)];
+    (0..10).for_each(|_| drop(h.tick_all()));
+    seen.push(tilt_at(&mut h, LEAF));
+    (0..10).for_each(|_| drop(h.tick_all()));
+    seen.push(tilt_at(&mut h, LEAF));
+    shooting::face(&mut h, 1, ALEX, [-4.5, 65.0, -4.5], 0.0);
+    (0..100).for_each(|_| drop(h.tick_all()));
+    seen.push(tilt_at(&mut h, LEAF));
+    assert_eq!(seen, ["unstable", "partial_tilt", "full_tilt", "none"]);
+}
+
+#[test]
+fn an_arrow_tilts_a_big_dripleaf_fully() {
+    const LEAF: [i32; 3] = [0, 65, 0];
+    let mut h = shooting::ready(GameMode::Survival, &[("minecraft:bow", 1, 0), ("minecraft:arrow", 4, 0)], 90.0);
+    h.remote.run(|ctx| assert!(ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
+    h.tick_all();
+    shooting::face(&mut h, 1, ALEX, [0.5, 69.0, 0.5], 90.0);
+    shooting::draw(&mut h, 20, 10);
+    assert_eq!(tilt_at(&mut h, LEAF), "full_tilt");
 }
 
 #[test]

@@ -29,6 +29,7 @@ mod states;
 mod structure;
 mod sub_chunk;
 mod ticking_areas;
+mod trackers;
 mod world;
 
 use std::path::PathBuf;
@@ -59,6 +60,7 @@ pub use states::{BlockStates, PLACEHOLDER, block_of_hash, palette_block};
 pub use structure::{STRUCTURE_PREFIX, StructureTemplate, structure_name};
 pub use sub_chunk::{Layer, SubChunk};
 pub use ticking_areas::{TICKING_AREA_PREFIX, TickingAreaRecord};
+pub use trackers::{LAST_TRACKER_KEY, TRACKER_PREFIX, TrackerRecord, decode_last_tracker, encode_last_tracker};
 pub use world::{DiskColumn, LevelDbWorld};
 
 #[derive(Debug, thiserror::Error)]
@@ -87,6 +89,8 @@ pub enum Error {
     TickingArea(&'static str),
     #[error("map: {0}")]
     Map(&'static str),
+    #[error("position tracker: {0}")]
+    Tracker(&'static str),
     #[error(transparent)]
     Decode(#[from] acacia_proto::DecodeError),
 }

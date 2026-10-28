@@ -236,6 +236,28 @@ impl LevelDbWorld {
         self.db.write(batch)
     }
 
+    /// The lodestone targets (trackers.rs) and the last handle given out; an unreadable target is
+    /// logged and left out.
+    pub fn load_trackers(&self) -> Result<(Vec<crate::TrackerRecord>, u32), Error> {
+        let read = |(key, record): (Vec<u8>, Vec<u8>)| crate::TrackerRecord::decode(&key, &record).unwrap_or_else(|error| {
+            tracing::warn!(%error, "skipping an unreadable lodestone target");
+            None
+        });
+        let targets = self.db.prefixed(crate::TRACKER_PREFIX)?.into_iter().filter_map(read).collect();
+        let last = self.db.get(crate::LAST_TRACKER_KEY)?.map_or(Ok(0), |record| crate::decode_last_tracker(&record))?;
+        Ok((targets, last))
+    }
+
+    /// Saves `targets` over what was kept under their handles, and the last handle given out.
+    pub fn store_trackers(&self, targets: &[crate::TrackerRecord], last: u32) -> Result<(), Error> {
+        let mut batch = Batch::default();
+        targets.iter().for_each(|target| batch.put(&target.key(), &target.encode()));
+        if last > 0 {
+            batch.put(crate::LAST_TRACKER_KEY, &crate::encode_last_tracker(last));
+        }
+        self.db.write(batch)
+    }
+
     fn replace_prefixed<'a>(&self, prefix: &[u8], records: impl Iterator<Item = (&'a [u8], &'a [u8])>) -> Result<(), Error> {
         let mut batch = Batch::default();
         let mut kept = std::collections::HashSet::new();

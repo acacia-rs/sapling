@@ -72,6 +72,39 @@ it, **inf**).
   what BDS showed for a flat frame (research/captures/bds-holders.txt, docs/research/redstone.md).
   sapling: `blocks/redstone/reads.rs` `read_past`.
 
+## Lodestones
+
+BDS keeps lodestone targets in its `PositionTrackingDB`: LevelDB key `PosTrackDB-` + `0x%08x` of the
+handle (key built at 14478b480, **BDSRE**), and the last handle under `PositionTrackDB-LastId`
+(1447a7540). The record's fields (`dim`, `id`, `pos`, `status`, `version` 1) and the compass's
+`trackingHandle` tag (string found at 141a61530 and others) are the community's description of the
+format, not read in the exe. sapling: `sapling-leveldb` `trackers.rs` (`TrackerRecord`), kept in
+`Level.trackers`/`last_tracker` of the realm's overworld; `blocks/lodestone.rs`: a compass or
+lodestone compass clicked on a lodestone is swapped for a lodestone compass tagged with the handle of
+that lodestone's target (made at the first binding), heard as
+`lodestone_compass.link_compass_to_lodestone`. A `PositionTrackingDBClientRequest` is answered with
+a `PositionTrackingDBServerBroadcast`: Update with the record, Destroy (status 1) once the loaded
+cell holds no lodestone, NotFound for an unknown handle.
+
+## Big dripleaf
+
+The Java game's `BigDripleafBlock` (**Java**; BDS has a queued-tick and a redstone subscriber for it,
+14a7d8990/14a7d89c0, not read): a body whose feet are 0.6875 or more up a still, unpowered leaf head
+makes it `unstable`; 10 ticks on `partial_tilt`, 10 on `full_tilt`, 100 on `none`; a shot that meets
+it tilts it fully; power sets it back to `none` at its next step. Sounds `tilt_down.big_dripleaf`
+on partial and full, `tilt_up.big_dripleaf` going back (names from BDS's sound table, 14346a2b0).
+sapling: `blocks/dripleaf.rs`, `Job::Dripleaf`. Whether a fully tilted leaf lets bodies fall
+through is the collision data's, not checked.
+
+## Not done
+
+- Sculk catalyst spreading on mob death: needs the whole `SculkSpreader` (charge cursors, veins,
+  growths) ported; sculk.md lists it as not decompiled.
+- Brushing suspicious sand and gravel: the archaeology tables are in `mob-loot.json`
+  (`entities/*_brushable_block`) and structures already write `BrushableBlock` entities, but how
+  the Bedrock client asks to brush (repeated use transactions or an item-use action) needs a
+  capture before the progress and `brushed_progress` states can be served.
+
 ## Not drilled
 
 - An item frame popping when its block goes (inferred).
@@ -82,3 +115,6 @@ it, **inf**).
 - Infested blocks: the silverfish at the cell's corner, whether a blast lets one out and whether
   `doTileDrops` gates it.
 - A framed map's `item_frame_map_bit`; a comparator reading a wall frame past a block, by turn.
+- Lodestone: the record's fields, the broadcast's actions, a compass in creative being swapped,
+  status 1 for a gone lodestone, and whether BDS tells clients unasked when one breaks.
+- Big dripleaf: every delay, the 0.6875 height, power, sounds and the shot.
