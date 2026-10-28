@@ -388,6 +388,10 @@ it sends for `/title`, `/scoreboard`, `/gamemode`, `/tp`, a wither's bar and com
     with flag 0x30; a sub-command word is a one-value enum; aliases are an enum `<name>CommandAliases` led by
     the name. Type ids from the capture: int 1, float 3, target 8, string 56, message 68 (acacia-proto names
     44 and 55 for the last two: an older protocol). A test compares them with the recorded BDS list.
+  - Soft enums: a `String` field with `#[command(soft_enum = "Arena")]` takes any word and is completed
+    from `dynamic_enums` (flag 0x410). `ctx.set_soft_enum` / `add_soft_enum_values` /
+    `remove_soft_enum_values` change the words on the shard (`soft_enums.rs`): UpdateSoftEnum to everyone in
+    the world, and the changed enums after the list to a player sent it later; `ctx.soft_enum` reads them.
   - Answers are `CommandOutput` with the request's origin echoed, `output_type` "alloutput", and BDS's keys
     for failures: `commands.generic.unknown [name]`, `commands.generic.syntax [before, token, after]`,
     `commands.generic.noTargetMatch`. `out.print` / `out.error` send text as the message id, as dragonfly does.
@@ -804,8 +808,13 @@ block action, and takes StopBreak and AbortBreak with a position.
   `ServerBuilder::access` adds `/allowlist` (`/whitelist`: add, remove, list, on, off, reload; on and
   off not saved, as on BDS) and Java's and PocketMine's `/ban <name> [reason]`, `/ban-ip <ip|player>
   [reason]`, `/pardon`, `/pardon-ip` and `/banlist [players|ips]` (BDS has none; operator-only,
-  answered under the client's old `commands.ban*` keys, `vanilla/bans.rs`). Not done: the rest of
-  vanilla's commands; `/give`'s `can_destroy` and `can_place_on` (stacks do not carry them); `/permission list|reload`; a ban's expiry from a command (the API takes one);
+  answered under the client's old `commands.ban*` keys, `vanilla/bans.rs`), and `/permission`
+  (`/ops`) `list|reload` over `permissions.json` (`vanilla/permission.rs`). `/list` (anyone), `/stop`
+  (asks `Server::stop_requested`), `/save hold|query|resume` (a backup hold over the shard's worlds:
+  `ShardCtx::hold_saves`, `sapling-shard/src/saving.rs`, `sapling-world/src/hold.rs`) and, with behavior
+  packs, `/reload` (the packs read again) answer under BDS's keys (docs/research/server-leftovers.md);
+  BDS keeps `/stop` and `/save` for its console. Not done: the rest of
+  vanilla's commands; `/give`'s `can_destroy` and `can_place_on` (stacks do not carry them); a ban's expiry from a command (the API takes one);
   `/kick` and `/op` reach players of the sender's shard only; `whitelist.json` is not read in place
   of `allowlist.json` as BDS does.
 - **Selectors** (`sapling-api/src/command/selector/`). Parsed into a `Selector` (`Named` or
@@ -1522,8 +1531,8 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   sidebar with two lines of the same text; removing and re-adding a line in one batch without flicker;
   RemoveObjective alone to hide the sidebar (BDS also clears the slot); ToastRequest;
   UpdatePlayerGameType for another player's id.
-- Commands: selectors in `Target` parameters, position and item parameters, soft enums
-  (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
+- Commands: selectors in `Target` parameters, position and item parameters, several overloads for a
+  struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
 - HUD: several boss bars (needs an entity each).
 - Not sent yet, though BDS sends them for other players: UpdateAbilities, UpdateAdventureSettings,

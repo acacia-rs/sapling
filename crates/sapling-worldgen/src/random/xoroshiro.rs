@@ -31,6 +31,15 @@ impl Xoroshiro {
         Self::new(mix_stafford13(lo), mix_stafford13(hi))
     }
 
+    /// Java `WorldgenRandom.setDecorationSeed` with chunk coordinates (145941320): the generator a
+    /// chunk's post-process hands every v2 structure piece (`postProcessStructures` 14196c5f0).
+    pub fn decoration(level_seed: i64, chunk_x: i32, chunk_z: i32) -> Self {
+        let mut random = Self::from_seed(level_seed);
+        let (a, b) = (random.next_long() | 1, random.next_long() | 1);
+        let mixed = (chunk_x as i64 as u64).wrapping_mul(a).wrapping_add((chunk_z as i64 as u64).wrapping_mul(b));
+        Self::from_seed((mixed ^ level_seed as u64) as i64)
+    }
+
     pub fn next_long(&mut self) -> u64 {
         let (lo, mut hi) = (self.lo, self.hi);
         let value = lo.wrapping_add(hi).rotate_left(17).wrapping_add(lo);

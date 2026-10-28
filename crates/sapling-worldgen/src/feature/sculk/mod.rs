@@ -1,20 +1,34 @@
-//! `SculkPatchFeature::place` (143ba12e0): Java 1.19's worldgen `SculkSpreader` (ctor 148b47ba0:
-//! growth spawn cost 50, no-growth radius 1, charge decay rate 5, additional decay rate 10), its
-//! cursors (cursor.rs) and the sculk behaviours (behaviour.rs).
+//! `SculkPatchFeature::place` (143ba12e0) and a sculk catalyst's spread share BDS's `SculkSpreader`:
+//! its settings (config.rs), cursors (cursor.rs) and the sculk behaviours (behaviour.rs).
 
 mod behaviour;
+mod config;
 mod cursor;
+
+pub use config::{SculkWorld, Sound, Spreader};
+pub use cursor::{Cursor, update_cursors};
 
 use super::cave_spec::SculkPatch;
 use super::place::Ctx;
 use super::spreader::step;
 use super::tree::spec::Range;
 use crate::block::Block;
-use cursor::Cursor;
 
 /// BDS caps a spreader at 32 cursors of at most 1000 charge each.
 const MAX_CURSORS: usize = 32;
 const MAX_CHARGE: i32 = 1000;
+
+/// `SculkSpreader::addCursors` (inlined in 143ba12e0 and 144879f70): `charge` at `at` in parts of at
+/// most 1000, each kept while there are fewer than 32 cursors.
+pub fn add_cursors(cursors: &mut Vec<Cursor>, at: [i32; 3], mut charge: i32) {
+    while charge > 0 {
+        let part = charge.min(MAX_CHARGE);
+        if cursors.len() < MAX_CURSORS {
+            cursors.push(Cursor::new(at, part));
+        }
+        charge -= part;
+    }
+}
 
 impl SculkPatch {
     pub fn place(&self, ctx: &mut Ctx, at: [i32; 3]) -> Option<[i32; 3]> {
@@ -24,17 +38,10 @@ impl SculkPatch {
         let mut cursors: Vec<Cursor> = Vec::new();
         for round in 0..self.growth_rounds + self.spread_rounds {
             for _ in 0..self.cursors {
-                let mut charge = self.charge;
-                while charge > 0 {
-                    let part = charge.min(MAX_CHARGE);
-                    if cursors.len() < MAX_CURSORS {
-                        cursors.push(Cursor::new(at, part));
-                    }
-                    charge -= part;
-                }
+                add_cursors(&mut cursors, at, self.charge);
             }
             for _ in 0..self.attempts {
-                cursor::update_cursors(ctx.view, &mut cursors, at, ctx.random, round < self.spread_rounds);
+                update_cursors(ctx.view, &Spreader::WORLDGEN, &mut cursors, at, ctx.random, round < self.spread_rounds);
             }
             cursors.clear();
         }
@@ -72,8 +79,8 @@ impl SculkPatch {
     }
 }
 
-/// `sculk_replaceable_world_gen` (built in 148b47d30): what a vein turns to sculk under it.
-pub fn replaceable(block: Block) -> bool {
+/// `sculk_replaceable_world_gen` (built in 148b47d30); see `Spreader::replaceable`.
+pub(super) fn replaceable(block: Block) -> bool {
     matches!(
         block.name(),
         "stone" | "granite" | "diorite" | "andesite" | "tuff" | "deepslate" | "grass_block" | "podzol" | "dirt"

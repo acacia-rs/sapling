@@ -69,6 +69,7 @@ fn silverfish(h: &mut Harness) -> Vec<[f32; 3]> {
 fn infested_stone_broken_by_hand_or_blasted_lets_a_silverfish_out() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_difficulty(sapling_api::Difficulty::Easy));
     h.remote.run(|ctx| assert!(ctx.set_block([1, 64, 0], &Block::new("minecraft:infested_stone")) && ctx.set_block([-6, 64, -6], &Block::new("minecraft:infested_cobblestone"))));
     h.tick_all();
     h.receive(1, &block_actions(&[(BlockAction::StartBreak, [1, 64, 0])]));

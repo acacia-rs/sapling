@@ -94,9 +94,11 @@ impl Structures {
         self.templates.mansions.get(start, || generate(density, &mut grid.candidate_random(self.level_seed, start).1, start))
     }
 
-    pub(super) fn place_mansions(canvas: &mut Canvas, mansions: &[Arc<Mansion>]) {
+    /// `seed` is the chunk's structure seed: the mansions' pieces share one generator of it.
+    pub(super) fn place_mansions(canvas: &mut Canvas, mansions: &[Arc<Mansion>], seed: u32) {
+        let mut random = Mt19937::new(seed);
         for mansion in mansions {
-            mansion.post_process(canvas);
+            mansion.post_process(canvas, &mut random);
         }
     }
 }

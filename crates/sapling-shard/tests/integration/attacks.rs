@@ -263,6 +263,7 @@ fn knockback_resistance_takes_its_share_off_a_throw() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.enter(2, "Steve");
+    h.remote.run(|ctx| ctx.set_difficulty(sapling_api::Difficulty::Easy));
     h.remote.run(|ctx| assert!(ctx.set_game_rule("sapling:mobAi", sapling_api::RuleValue::Bool(false))));
     let mut across = Vec::new();
     for kind in ["minecraft:cow", "minecraft:hoglin", "minecraft:ravager", "minecraft:iron_golem"] {

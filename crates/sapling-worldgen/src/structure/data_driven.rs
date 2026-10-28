@@ -12,7 +12,7 @@ use super::template::{Kind, Rotation, v2_block};
 use super::{BoundingBox, StructureKind, Structures};
 use crate::block::Block;
 use crate::density::Density;
-use crate::random::JavaRandom;
+use crate::random::{JavaRandom, Xoroshiro};
 
 const TRAIL_RUINS: V2Start = V2Start {
     pool: "trail_ruins/tower",
@@ -171,11 +171,13 @@ impl Structures {
         pieces.iter().flat_map(|s| s.iter()).chain(city).map(line).collect()
     }
 
-    /// Every piece meeting the canvas's chunk, in assembly order.
+    /// Every piece meeting the canvas's chunk, in assembly order, all drawing loot seeds from the
+    /// chunk's one decoration generator.
     pub(super) fn place_v2(&self, canvas: &mut Canvas, structures: &[Arc<Vec<Piece>>]) {
         let column = canvas.bb;
+        let mut random = Xoroshiro::decoration(self.seed, column.x0 >> 4, column.z0 >> 4);
         for piece in structures.iter().flat_map(|s| s.iter()).filter(|p| p.bb.intersects(&column)) {
-            piece.post_process_java(canvas, self.seed);
+            piece.post_process_java(canvas, self.seed, &mut random);
         }
     }
 }

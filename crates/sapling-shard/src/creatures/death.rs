@@ -33,12 +33,30 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
         }
     }
     omens::died(world, entity, layer, body);
+    feed_catalyst(world, entity, layer, kind, body);
+    let [x, y, z] = body.at;
+    for stack in crate::riding::spilled(world, entity) {
+        drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
+    }
     world.entity_mut(entity).insert(Dying(now + lasts.unwrap_or(DYING))).remove::<entities::Stored>();
     if let Some(mut health) = world.get_mut::<Health>(entity) {
         health.end();
     }
     if lasts.is_none() {
         leave_remains(world, entity, layer, kind, body);
+    }
+}
+
+/// A sculk catalyst near the mob takes its experience, and it leaves none. BDS counts every death
+/// as a player's kill for it (144879f70 sets the last-hurt-by-player time), so the mob's worth is
+/// rolled now when no player slew it.
+fn feed_catalyst(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
+    let slain = world.get::<attacks::Slain>(entity).map(|slain| slain.0);
+    let reward = |world: &mut World| Some(slain.unwrap_or_else(|| attacks::experience_reward(world, entity, kind)));
+    if crate::blocks::mob_died(world, layer, body.at, reward)
+        && let Some(mut slain) = world.get_mut::<attacks::Slain>(entity)
+    {
+        slain.0 = 0;
     }
 }
 
@@ -61,7 +79,9 @@ pub(super) fn leave_remains(world: &mut World, entity: Entity, layer: Entity, ki
     if leaves_loot(world, layer) {
         leave_loot(world, layer, kind, on_fire, killer, body.at);
         let [x, y, z] = body.at;
-        for stack in super::drowned::let_go(world, entity, by_player) {
+        let mut dropped = super::drowned::let_go(world, entity, by_player);
+        dropped.extend(super::captains::let_go(world, entity, by_player));
+        for stack in dropped {
             drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
         }
     }

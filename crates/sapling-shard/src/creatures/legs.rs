@@ -67,6 +67,13 @@ pub(super) fn ridden(world: &mut World, entity: Entity, layer: Entity, kind: &st
     true
 }
 
+/// The mob hops where it stands, if it is on the ground.
+pub(super) fn hop(world: &mut World, entity: Entity) {
+    if let Some(mut body) = world.get_mut::<Body>(entity).filter(|body| body.on_ground) {
+        body.walk([0.0; 2], Some(DEFAULT_JUMP_HEIGHT));
+    }
+}
+
 /// The mob stands: its legs start from nothing when it next walks.
 pub(super) fn rest(world: &mut World, entity: Entity) {
     if let Some(mut legs) = world.get_mut::<Legs>(entity) {

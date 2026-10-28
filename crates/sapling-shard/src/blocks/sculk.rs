@@ -6,8 +6,10 @@
 // TODO: nothing occludes or dampens (wool); no amethyst resonates; no vibration particle; a
 // shrieker warns no one and summons no warden; mobs, eating, damage and explosions are not heard.
 
+mod catalyst;
 mod events;
 
+pub(crate) use catalyst::mob_died;
 pub(crate) use events::GameEvent;
 
 use std::collections::{HashMap, HashSet};
@@ -209,8 +211,9 @@ pub(crate) fn walked(world: &mut World, player: Entity, layer: Entity, from: [f3
     }
 }
 
-/// Listeners that a vibration reached this tick act on it.
+/// Listeners that a vibration reached this tick act on it, and catalysts' charge moves.
 pub(crate) fn tick(world: &mut World) {
+    catalyst::tick(world);
     let now = world.resource::<Tick>().0;
     let Some(mut listeners) = world.get_resource_mut::<Listeners>().filter(|listeners| !listeners.coming.is_empty()) else { return };
     let (due, waiting): (Vec<Coming>, Vec<Coming>) = std::mem::take(&mut listeners.coming).into_iter().partition(|coming| coming.when <= now);
@@ -266,9 +269,12 @@ fn shriek(world: &mut World, layer: Entity, pos: BlockPos) {
 }
 
 /// A sensor's or shrieker's time in its phase is up: an active sensor cools down, a cooling one
-/// listens again, a shrieker falls quiet.
+/// listens again, a shrieker falls quiet, a catalyst's bloom ends.
 pub(super) fn step(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some((name, properties, _)) = name_at(world, layer, pos) else { return };
+    if name == catalyst::CATALYST {
+        return catalyst::wilt(world, layer, pos);
+    }
     if name == SHRIEKER {
         set_number(world, layer, pos, "active", 0);
         return;

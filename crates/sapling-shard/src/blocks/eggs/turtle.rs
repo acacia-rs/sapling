@@ -4,7 +4,7 @@
 //! whose home is the egg's cell; then the next tick is queued 750 to 1499 ticks on. A living thing
 //! but a turtle or bat breaks an egg treading on it, one in 100 a tick and one in 3 landing on it,
 //! a mob only with `mobGriefing` on, a player not while sneaking.
-// TODO: zombies do not go for eggs (`behavior.stomp_turtle_egg`) and turtles do not lay them.
+// Laying and stomping out: nests.rs.
 
 use acacia_proto::packets::LevelEventEvent;
 use bevy_ecs::prelude::*;
@@ -15,8 +15,8 @@ use crate::blocks::{level, send, updates};
 
 pub(super) const EGG: &str = "minecraft:turtle_egg";
 const TURTLE: &str = "minecraft:turtle";
-const COUNTS: [&str; 4] = ["one_egg", "two_egg", "three_egg", "four_egg"];
-const SANDS: [&str; 3] = ["minecraft:sand", "minecraft:red_sand", "minecraft:suspicious_sand"];
+pub(super) const COUNTS: [&str; 4] = ["one_egg", "two_egg", "three_egg", "four_egg"];
+pub(super) const SANDS: [&str; 3] = ["minecraft:sand", "minecraft:red_sand", "minecraft:suspicious_sand"];
 const FIRST_TICK: u64 = 1000;
 /// Ticks to the next tick: the least, and how many more it may be.
 const NEXT_TICK: (u64, u32) = (750, 750);
@@ -90,7 +90,7 @@ fn hatch(world: &mut World, layer: Entity, pos: BlockPos) {
 }
 
 /// One egg of those at `pos` breaks: the last takes the block with it.
-fn break_one(world: &mut World, layer: Entity, pos: BlockPos) {
+pub(super) fn break_one(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(level) = level(world, layer) else { return };
     let (id, count) = (level.block(pos[0], pos[1], pos[2]), eggs(level, pos));
     let heard = send::sound("block.turtle_egg.break", level.registry(), pos, id);
@@ -122,6 +122,6 @@ pub(crate) fn trodden(world: &mut World, layer: Entity, kind: &str, feet: [f32; 
     }
 }
 
-fn is_egg_at(world: &World, layer: Entity, pos: BlockPos) -> bool {
+pub(super) fn is_egg_at(world: &World, layer: Entity, pos: BlockPos) -> bool {
     level(world, layer).is_some_and(|level| name_at(level, pos) == Some(EGG))
 }

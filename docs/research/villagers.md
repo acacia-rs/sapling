@@ -74,6 +74,47 @@ profession in the 20 s after its furnace was broken, nor taking the lectern plac
 The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `TradeExperience` and
 `Offers` (`Recipes` without `netId`, `TierExpRequirements`).
 
+## Schedules
+
+- A villager's `minecraft:scheduler` picks its goals by `hourly_clock_time`, the time of day
+  [pack `villager_v2.json`]. `work_schedule` (also the farmer's, fisher's and librarian's groups): work
+  0–8000, gather 8000–10000, work 10000–11000, home 11000–12000, bed 12000–24000. `basic_schedule`
+  (unskilled): wander in place of work. `jobless_schedule` (nitwit): bed 0–2000, wander 2000–13000,
+  home 13000–14000, bed after. `child_schedule`: play 0–11000, home 11000–12000, bed after.
+- Gathering walks to the village's middle (`behavior.mingle`, `mingle_distance` 2, speed 0.5); home walks
+  to its bed (`move_towards_dwelling_restriction`, speed 0.6); bed time sleeps on it (`behavior.sleep`,
+  speed 0.6) [pack]. Speeds are `minecraft:movement` 0.5 times the goal's multiplier.
+
+## Beds
+
+- At its job looks a villager without a bed claims the nearest free bed head in the job site's reach,
+  and gives it up once the bed goes [sapling; BDS claims beds as village POIs]. Babies claim none.
+
+## Fear
+
+- `behavior.avoid_mob_type`: a zombie, zombie villager, illager, vex or zoglin within 8 walks it away at
+  0.6 [pack].
+- `behavior.hide` (priority 0, 30 s, a bed, speed 0.8) [pack]. A bell rung by hand or by power marks
+  every actor with `minecraft:hide` in the bell's box grown 32 across and 12 up, then rests 300 ticks; a
+  bell a villager rings in a raid marks none [BDS 0x141f1c400, its callers 141f1c130, 142ce0770,
+  142cdf7c0 pass 1, `Village::tick` 142a23bc0 passes 0].
+- Goals in order: trading customer, hide, flee, then the schedule [pack priorities: hide 0, avoid 4].
+
+## Standing
+
+- Each village keeps a standing per player, clamped to [-30, 10] [BDS `Village::modifyStanding`
+  0x142a31380].
+- A trade adds 1 [BDS TradeableSystem 14194d9b0]. A player's hit on a villager takes 1, or 3 from a baby
+  [BDS DwellerComponent hurt 141ba6be0]. A villager killed by a player takes 2 more; an iron golem 5
+  [BDS DwellerComponent death 141ba6460].
+- Two village-wide timers step good standings down by one every 120000 ticks and bad ones up every
+  12000, by as many steps as periods passed [BDS `Village::tick` 142a23bc0,
+  `mGoodStandingDecayTimer`/`mBadStandingDecayTimer`].
+- A village's iron golem takes the nearest player at -15 or lower [BDS `getClosestBadStandingPlayer`
+  0x142a30c80 from the defend-village goal 148a38fd0; pack `behavior.defend_village_target`].
+- Prices take no standing: `economy_trade_table` reads only the cured, nearby-cured and hero discounts
+  [BDS definition 141ba86e0].
+
 ## Unverified (sapling's choice where BDS was not seen)
 
 - Prices: `buyCount = count + max(0, floor(count × demand × priceMultiplier))`, from 1 to a stack; demand
@@ -91,11 +132,19 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 - The wandering trader leaves after 2400 or 3600 seconds (its `minecraft:timer`, taken as seconds) or
   once sold out, when no player is within 24 blocks; its timer is not kept by the actor compound.
 
+## Not drilled
+
+- Every rule above under Schedules, Beds, Fear and Standing: none was compared with a live BDS.
+- The sleeper's flags, pose and the bed's `occupied_bit`; a sleeper here only rests on its bed.
+- The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick.
+- Which golems defend a village: BDS's `village_created` group; sapling takes every iron golem.
+- Standing from ranged kills, the +5 of 0x142445c80, the +1 of 0x141ba8d80 and the founding reward;
+  standing kept with the world (`VILLAGE_<id>_PLAYERS`); the aggressor a golem defends against.
+
 ## Left out
 
-Gossip and reputation (and so discounts for curing and for Hero of the Village, whose effect the shard
-cannot give), raids, villages (beds, bells, meeting points), sleeping and schedules other than work,
-babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
+Gossip (and so discounts for curing and for Hero of the Village, whose effect the shard cannot give),
+villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
 makes a baby's unskilled trader), zombie villagers and curing, explorer maps (their trades are never
 offered), the llamas' leashes and their going with their trader, a villager picking up and sharing food,
-farmers farming, iron golems, the old trading screen.
+farmers farming, iron golems spawning and defending a hurt villager, the old trading screen.

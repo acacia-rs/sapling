@@ -22,7 +22,45 @@ impl Event for ScriptEvent {
     }
 }
 
+/// Where a backup snapshot of this shard's worlds stands, as BDS's `/save` steps it: hold, query
+/// until ready, copy, resume.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SaveState {
+    /// Saving as usual: no hold.
+    Idle,
+    /// Held, still writing out what was unsaved.
+    Saving,
+    /// Held and written: these files, cut to these sizes, are a whole copy of the worlds.
+    Ready(Vec<SavedFile>),
+    /// Held, but writing failed.
+    Failed,
+}
+
+/// One file of a [`SaveState::Ready`] snapshot.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SavedFile {
+    /// From the folder that holds the world folder, `/`-separated: `Bedrock level/db/CURRENT`.
+    pub path: String,
+    pub size: u64,
+}
+
 impl ShardCtx<'_> {
+    /// `/save hold`: writes out what this shard's worlds have unsaved and keeps their files as
+    /// they are until [`ShardCtx::resume_saves`]; changes wait in memory. False if a hold is on.
+    pub fn hold_saves(&mut self) -> bool {
+        self.backend.hold_saves()
+    }
+
+    /// `/save query`: where the hold stands.
+    pub fn save_state(&mut self) -> SaveState {
+        self.backend.save_state()
+    }
+
+    /// `/save resume`: ends a ready hold, and saving catches up. False unless it was ready.
+    pub fn resume_saves(&mut self) -> bool {
+        self.backend.resume_saves()
+    }
+
     /// The shard's commands, to run a line as a sender would: `ctx.commands().run(ctx, ..)`.
     pub fn commands(&self) -> Arc<Commands> {
         self.backend.commands()
@@ -65,6 +103,19 @@ pub trait ServerBackend {
         Arc::default()
     }
     fn send_script_event(&mut self, _event: ScriptEvent) {}
+    fn hold_saves(&mut self) -> bool {
+        false
+    }
+    fn save_state(&mut self) -> SaveState {
+        SaveState::Idle
+    }
+    fn resume_saves(&mut self) -> bool {
+        false
+    }
+    fn soft_enum(&self, _name: &str) -> Vec<String> {
+        Vec::new()
+    }
+    fn change_soft_enum(&mut self, _name: &str, _change: crate::command::SoftEnumChange) {}
 }
 
 #[cfg(test)]

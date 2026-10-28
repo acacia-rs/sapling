@@ -68,6 +68,7 @@ impl World {
             base: Some(template.clone()),
             base_actors_taken: false,
             players: crate::players::Players::default(),
+            held: false,
             light: Lights::sharing(template.light.props.clone()),
         }
     }

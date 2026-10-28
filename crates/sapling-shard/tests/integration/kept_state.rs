@@ -28,7 +28,8 @@ fn kept() -> Vec<u8> {
 #[test]
 fn effects_a_lit_fuse_and_a_withers_armour_come_back_and_are_saved_as_they_went_on() {
     let storage = floor_with(kept());
-    let mut h = Harness::with(config(), World::with_storage(storage.clone()));
+    let config = sapling_shard::ShardConfig { difficulty: sapling_api::Difficulty::Easy, ..config() };
+    let mut h = Harness::with(config, World::with_storage(storage.clone()));
     let sent = enter_stored(&mut h, 1);
     h.remote.run(|ctx| ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative));
     let kinds: Vec<String> = all::<AddEntity>(&sent).into_iter().map(|added| added.entity_type).collect();

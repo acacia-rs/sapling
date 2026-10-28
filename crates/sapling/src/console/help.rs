@@ -84,7 +84,7 @@ fn line(name: &str, overload: &Overload) -> String {
                 words.push(values[0].clone());
                 continue;
             }
-            ParamKind::Enum { name, .. } => name.as_str(),
+            ParamKind::Enum { name, .. } | ParamKind::SoftEnum { name, .. } => name.as_str(),
             ParamKind::Int => "int",
             ParamKind::Float => "float",
             ParamKind::String => "string",

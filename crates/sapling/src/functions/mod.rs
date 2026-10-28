@@ -3,6 +3,7 @@
 //! every world. Opt in with [`crate::ServerBuilder::behavior_packs`].
 
 mod commands;
+mod reload;
 mod run;
 mod schedule;
 
@@ -11,6 +12,7 @@ use std::sync::Arc;
 
 use sapling_api::{Plugin, PluginBuilder};
 
+pub(crate) use reload::Library;
 use run::FunctionState;
 
 /// A function: its command lines, comments and blank lines left out.
@@ -37,13 +39,13 @@ pub(crate) struct Functions {
 }
 
 /// Hands each shard the functions, and runs the scheduled and `tick.json` ones every tick.
-pub(crate) struct FunctionsPlugin(pub Arc<Functions>);
+pub(crate) struct FunctionsPlugin(pub Library);
 
 impl Plugin for FunctionsPlugin {
     fn build(&self, plugin: &mut PluginBuilder<'_>) {
-        let functions = self.0.clone();
-        plugin.command::<commands::FunctionCommand>().command::<schedule::Schedule>();
-        plugin.later(0, move |ctx| ctx.state::<FunctionState>().install(functions));
+        let library = self.0.clone();
+        plugin.command::<commands::FunctionCommand>().command::<schedule::Schedule>().command::<reload::Reload>();
+        plugin.later(0, move |ctx| ctx.state::<FunctionState>().install(library));
         plugin.every(1, schedule::tick);
     }
 }

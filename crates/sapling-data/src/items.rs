@@ -86,6 +86,11 @@ pub fn item_name(network_id: i32) -> Option<&'static str> {
     NAMES.get(&i16::try_from(network_id).ok()?).copied()
 }
 
+/// `name` as the ItemRegistry spells it, kept for the whole run; `None` for an unlisted item.
+pub fn static_item_name(name: &str) -> Option<&'static str> {
+    NETWORK_IDS.get_key_value(name).map(|(name, _)| name.as_str())
+}
+
 /// What a client names by `entry_id` when it takes an item from the creative inventory.
 pub fn creative_item(entry_id: u32) -> Option<&'static CreativeItem> {
     CREATIVE.get(&entry_id)

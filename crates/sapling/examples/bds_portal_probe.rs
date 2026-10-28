@@ -37,6 +37,9 @@ const DETAILED: &[&str] = &[
 ];
 /// Blocks whose UpdateBlock is printed; others are tallied.
 const BLOCKS_SHOWN: &[&str] = &["portal", "obsidian", "fire", "air", "bedrock", "gateway", "end_stone"];
+const OVERWORLD_SHOWN: &[&str] = &["netherrack", "leaf_litter", "snow_layer"];
+/// An UpdateSubchunkBlocks with more cells (a fill's) is printed as its count.
+const MAX_CELLS: usize = 500;
 /// Counted per dimension and printed as a tally at the next other packet.
 const TALLIED: &[&str] = &[
     "LevelChunk", "Subchunk", "ClientCacheMissResponse", "MoveEntityDelta", "SetEntityMotion", "SyncWorldClocks", "NetworkStackLatency", "CurrentStructureFeature", "SetEntityData",
@@ -82,6 +85,12 @@ impl Run {
         }
     }
 
+    /// The blocks a portal made in the overworld writes besides obsidian and portal, shown there
+    /// only: the Nether sends netherrack updates by the hundred.
+    fn overworld_shown(&self, actor: &Bot) -> &'static [&'static str] {
+        if actor.state().player.dimension == 0 { OVERWORLD_SHOWN } else { &[] }
+    }
+
     fn end_screen(&mut self, actor: &Bot) {
         if let Some(id) = self.screen.take() {
             actor.client().send(&ServerboundLoadingScreen { r#type: 2, loading_screen_id: id });
@@ -108,7 +117,7 @@ impl Run {
             if let Ok(update) = packet.decode::<UpdateBlock>() {
                 let registry = BlockRegistry::vanilla();
                 let block = registry.runtime_id_from_hash(update.block_runtime_id).and_then(|id| registry.get(id)).map_or("?".into(), |s| format!("{} [{}]", s.name, s.properties));
-                if !BLOCKS_SHOWN.iter().any(|shown| block.contains(shown)) {
+                if !BLOCKS_SHOWN.iter().chain(self.overworld_shown(actor)).any(|shown| block.contains(shown)) {
                     return self.count(format!("UpdateBlock {}", block.split(' ').next().unwrap_or("?")));
                 }
                 self.flush_tally();
@@ -121,8 +130,12 @@ impl Run {
             let Ok(update) = packet.decode::<UpdateSubchunkBlocks>() else { return };
             let registry = BlockRegistry::vanilla();
             let name = |hash: u32| registry.runtime_id_from_hash(hash).and_then(|id| registry.get(id)).map_or("?".into(), |s| format!("{}[{}]", s.name.trim_start_matches("minecraft:"), s.properties));
-            let cells = |blocks: &[acacia_bot::proto::types::BlockUpdate]| blocks.iter().map(|b| format!("{} {} {} {} f{}", b.position.x, b.position.y, b.position.z, name(b.runtime_id), b.flags)).collect::<Vec<_>>().join("; ");
-            if update.blocks.iter().chain(&update.extra).all(|b| !BLOCKS_SHOWN.iter().any(|shown| name(b.runtime_id).contains(shown))) {
+            let cells = |blocks: &[acacia_bot::proto::types::BlockUpdate]| match blocks.len() {
+                0..=MAX_CELLS => blocks.iter().map(|b| format!("{} {} {} {} f{}", b.position.x, b.position.y, b.position.z, name(b.runtime_id), b.flags)).collect::<Vec<_>>().join("; "),
+                n => format!("{n} cells"),
+            };
+            let shown = |hash: u32| BLOCKS_SHOWN.iter().chain(self.overworld_shown(actor)).any(|shown| name(hash).contains(shown));
+            if update.blocks.iter().chain(&update.extra).all(|b| !shown(b.runtime_id)) {
                 return self.count("UpdateSubchunkBlocks[other]".into());
             }
             self.flush_tally();

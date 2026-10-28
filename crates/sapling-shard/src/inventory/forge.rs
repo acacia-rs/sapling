@@ -15,7 +15,7 @@ use super::{Held, Inventory, Place, stack};
 mod cartography;
 mod loom;
 
-pub(crate) use cartography::{CARTOGRAPHY_INPUT, Chart};
+pub(crate) use cartography::{CARTOGRAPHY_INPUT, Chart, remade};
 
 const ANVIL_INPUT: usize = 1;
 const ANVIL_MATERIAL: usize = 2;

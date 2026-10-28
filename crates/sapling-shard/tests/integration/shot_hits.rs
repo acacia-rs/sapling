@@ -114,6 +114,7 @@ fn a_piercing_arrow_harms_the_cow_behind_the_first() {
 #[test]
 fn a_snowball_costs_a_blaze_three_and_an_egg_harms_a_cow_nothing() {
     let mut h = ready(GameMode::Creative, &[("minecraft:snowball", 1, 0)], 5.0);
+    h.remote.run(|ctx| ctx.set_difficulty(sapling_api::Difficulty::Easy));
     spawn(&mut h, "minecraft:blaze", [0.5, 65.0, 3.5]);
     let sent = throw(&mut h, 10);
     assert_eq!(healths(&sent).first(), Some(&17.0));

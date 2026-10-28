@@ -5,9 +5,9 @@ use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
 
 use super::super::{blast, shooting};
-use super::{COOLDOWN, FLINGS, GOES_OUT, Hunter, IGNITES, MIDDLE, PLAYER, REACH, THROW, distance, on_difficulty, sound, take};
+use super::{COOLDOWN, FLINGS, GOES_OUT, Hunter, IGNITES, MIDDLE, REACH, THROW, distance, on_difficulty, sound, take};
 use crate::body::Body;
-use crate::components::{Position, Tick};
+use crate::components::Tick;
 use crate::{entities, late_sounds, vitals};
 
 /// The kinds of fight whose hit is a bite within reach; the others hit their own way.
@@ -36,28 +36,34 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
         return shooting::shoot(world, entity, layer, kind, body, hunts, every, prey?);
     }
     let prey = prey.filter(|_| now >= ready)?;
-    let feet = world.get::<Position>(prey)?.feet;
+    let (feet, size) = (super::feet_of(world, prey)?, super::prey::size_of(world, prey));
     let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
     if hunts.explodes.is_some() {
         // Between their boxes, as the pack's `target_nearby_sensor` counts.
-        match distance(feet, body.at) - (body.size[0] + PLAYER[0]) / 2.0 {
+        match distance(feet, body.at) - (body.size[0] + size[0]) / 2.0 {
             gap if gap < IGNITES => blast::light(world, entity, layer, id, kind, body),
             gap if gap > GOES_OUT => blast::put_out(world, entity, layer, id, kind, body),
             _ => {}
         }
         return None;
     }
-    let across = (body.size[0] + PLAYER[0]) / 2.0 + REACH;
-    if dx.abs() >= across || dz.abs() >= across || feet[1] >= body.at[1] + body.size[1] || body.at[1] >= feet[1] + PLAYER[1] {
+    let across = (body.size[0] + size[0]) / 2.0 + REACH;
+    if dx.abs() >= across || dz.abs() >= across || feet[1] >= body.at[1] + body.size[1] || body.at[1] >= feet[1] + size[1] {
         return None;
     }
     world.get_mut::<Hunter>(entity)?.ready = now + hunts.every.map_or(COOLDOWN, u64::from);
     let harm = harm + hunts.varies.map_or(0.0, |most| world.get_resource_or_insert_with(crate::blocks::Dice::default).fraction() * (most - hunts.attack));
-    let harm = on_difficulty(world, harm)?;
     let cell = body.at.map(|c| c.floor() as i32);
-    swing(world, entity, layer, id, body);
     let far = dx.hypot(dz);
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
+    if super::prey::is_mob(world, prey) {
+        swing(world, entity, layer, id, body);
+        super::prey::hit(world, layer, prey, harm, away);
+        late_sounds::play_later(world, 1, layer, cell, sound("attack", id, kind, body, MIDDLE));
+        return Some(());
+    }
+    let harm = on_difficulty(world, harm)?;
+    swing(world, entity, layer, id, body);
     let [along, up] = if hunts.upto.is_some() { FLINGS } else { [THROW; 2] };
     let blocked = vitals::blocks(world, prey, body.at, harm, super::super::Cause::Attack, vitals::wields_axe(kind));
     if blocked && let Some(mut thrown) = world.get_mut::<Body>(entity) {

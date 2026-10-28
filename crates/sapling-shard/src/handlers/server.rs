@@ -4,7 +4,7 @@ use acacia_proto::packets::{SetDefaultGameType, SetSpawnPosition, SetSpawnPositi
 use acacia_proto::types::BlockCoordinates;
 use std::sync::Arc;
 
-use sapling_api::{BlockPos, Commands, GameMode, PlayerId, ScriptEvent, ServerBackend, SpawnBackend};
+use sapling_api::{BlockPos, Commands, GameMode, PlayerId, SaveState, ScriptEvent, ServerBackend, SpawnBackend};
 
 use super::Ctx;
 use crate::components::{InLayer, Layer, Outgoing, Settings};
@@ -41,6 +41,26 @@ impl ServerBackend for Ctx<'_> {
 
     fn send_script_event(&mut self, event: ScriptEvent) {
         self.world.resource_mut::<ScriptEvents>().0.push(event);
+    }
+
+    fn hold_saves(&mut self) -> bool {
+        crate::saving::hold(self.world)
+    }
+
+    fn save_state(&mut self) -> SaveState {
+        crate::saving::query(self.world)
+    }
+
+    fn resume_saves(&mut self) -> bool {
+        crate::saving::resume(self.world)
+    }
+
+    fn soft_enum(&self, name: &str) -> Vec<String> {
+        crate::soft_enums::values(self.world, name)
+    }
+
+    fn change_soft_enum(&mut self, name: &str, change: sapling_api::command::SoftEnumChange) {
+        crate::soft_enums::change(self.world, name, change);
     }
 }
 

@@ -114,6 +114,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         super::hunting::provoke(world, entity, layer, id, &kind, &body, player);
         super::teleports::startle(world, entity);
         super::owner_hit(world, player, entity);
+        super::villagers::hurt_standing(world, player, entity, layer, &kind, health.left() <= 0.0);
     }
     entities::tell_viewers(world, entity, layer, cell, packets);
     blows::wear(world, player);
@@ -127,12 +128,17 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
 /// The mob of `kind` was killed by a player with Looting at `looting`: it is [`Slain`], for the
 /// experience its kind leaves.
 pub(super) fn slay(world: &mut World, entity: Entity, kind: &str, looting: u8) {
+    let points = experience_reward(world, entity, kind);
+    world.entity_mut(entity).insert(Slain(points, looting));
+}
+
+/// The experience the mob of `kind` is worth, rolled: none for a baby.
+pub(super) fn experience_reward(world: &mut World, entity: Entity, kind: &str) -> i32 {
     let is_baby = world.get::<super::Raised>(entity).is_some_and(super::Raised::is_baby);
-    let points = super::slimes::experience(world, entity, kind).or(sapling_data::mob_traits(kind).experience).filter(|_| !is_baby).map_or(0, |(least, most)| {
+    super::slimes::experience(world, entity, kind).or(sapling_data::mob_traits(kind).experience).filter(|_| !is_baby).map_or(0, |(least, most)| {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         least + (dice.fraction() * (most - least) as f32) as i32
-    });
-    world.entity_mut(entity).insert(Slain(points, looting));
+    })
 }
 
 /// From `eye` to the body's position (its feet).

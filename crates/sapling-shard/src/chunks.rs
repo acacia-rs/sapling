@@ -69,7 +69,7 @@ pub(crate) fn send_chunks(settings: Res<Settings>, net: Res<Net>, mut layers: Qu
             column.blobs.iter().for_each(|blob| blobs.advertise(blob));
             out.push(&column.packet(pos.x, pos.z, world.dimension()));
         }
-        if view.is_waiting_within(SPAWN_RADIUS.min(view.radius())) {
+        if !spawn_columns_sent(&view) {
             continue;
         }
         if *stage == Stage::Chunks {
@@ -81,6 +81,11 @@ pub(crate) fn send_chunks(settings: Res<Settings>, net: Res<Net>, mut layers: Qu
             arriving.told_ready = true;
         }
     }
+}
+
+/// Whether the columns a joining or arriving player waits on have been sent to it.
+pub(crate) fn spawn_columns_sent(view: &View) -> bool {
+    !view.is_waiting_within(SPAWN_RADIUS.min(view.radius()))
 }
 
 /// Section requests for columns that are not loaded yet, answered once they are.

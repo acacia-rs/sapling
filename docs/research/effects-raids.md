@@ -60,6 +60,23 @@ Bedrock was found.
   then `%raid.name - %raid.victory` / `- %raid.defeat`, red, removed 600 ticks after [BDS strings at
   14116bbf0; Java `updateBossbar`]. It is a BossEvent on the player's own runtime id.
 - A second omen in a running raid raises its level, at most 5 [Java].
+- Raiders walk to the village's middle until within 2 when they have no prey [pack `spawn_for_raid`
+  groups' `behavior.move_to_village`]. They hunt as their pack's `nearest_attackable_target` names:
+  vindicators and evokers grown villagers, wandering traders, iron and snow golems and players;
+  pillagers and ravagers also; witches golems [pack]. Pillagers shoot, ravagers bite as melee, evokers
+  cast fangs that harm mobs too (`hunting.rs`, `shooting.rs`, `spells.rs`).
+- On defeat the living raiders celebrate 600 ticks: hops and `celebrate` sounds [pack `celebrate`
+  group, `minecraft:behavior.celebrate`].
+- BDS raids have no captains: `_createRaid` (0x142a50270) spawns with `spawn_for_raid` only;
+  `spawn_as_illager_captain` is sent only by structure spawns (141f82140) and patrols (1483599e0).
+  A captain wears the ominous banner (`set_banner_details` type 1, damage 15) in its chest slot, drop
+  chance 1, and drops `pillager_captain.json`'s ominous bottle (amplifier 0–4) when a player killed it;
+  no bad omen on kill [pack].
+- A raid is kept as `VILLAGE_<uuid>_RAID`: `State`, `Status`, `GroupNum`, `NumGroups`, `GameTick`, `Ticks`,
+  `SpawnX/Y/Z`, `Raiders` (unique ids), `NumRaiders`, `TotalMaxHealth`, `SpawnFails` [BDS
+  `VillageManager::loadAllVillages` lambda 0x142a52630]; sapling adds `CenterX/Y/Z` and `OmenLevel`, as
+  it has no `VILLAGE_<uuid>_INFO`. A kept raid's raiders rejoin it as they load; it is not judged lost
+  while its middle is unloaded.
 
 ## Ominous bottle and trial omen
 
@@ -78,7 +95,9 @@ Bedrock was found.
 - Every [Java] rule above: village detection, wave spot and timing, victory and defeat, the boss bar's
   progress, hero reach and length, ominous bottle length, hero discount, conduit range and bite.
 - Fatal poison refused by undead.
-- Raiders seeking the village, raid captains and banners, celebrating, joining passing raiders; saved raids.
+- Raiders seeking the village, captains and banners, celebrating, saved raids: built from the pack and
+  bdsre, never compared with a live BDS raid. The village uuid sapling keys a raid by is its own.
+- Joining passing raiders (`RaidRecruitSystem` 0x141959650): not built.
 - Bells lighting raiders (Bedrock has no glowing).
 - Ominous item spawners from an active ominous trial spawner.
-- Villager gossip, reputation, schedules and sleeping.
+- Villager schedules, sleeping and standing: see villagers.md.

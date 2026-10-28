@@ -40,6 +40,8 @@ pub struct World {
     pub(crate) base_actors_taken: bool,
     pub(crate) players: Players,
     pub(crate) light: Lights,
+    /// A backup hold is on (hold.rs): nothing is written until it ends.
+    pub(crate) held: bool,
 }
 
 impl World {
@@ -53,7 +55,7 @@ impl World {
         let registry = BlockRegistry::vanilla_arc();
         let dim = Dimension::from_id(dimension, registry.air_id());
         let (columns, void, players, light) = (HashMap::new(), Column::empty(0, 0, dim), Players::default(), Lights::new(&registry));
-        Self { dimension, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false, players, light }
+        Self { dimension, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false, players, light, held: false }
     }
 
     /// The overworld of `storage`, loaded on [`WorldStorage::load_threads`] threads. Columns it

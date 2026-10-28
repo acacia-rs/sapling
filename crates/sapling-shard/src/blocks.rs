@@ -87,7 +87,7 @@ pub(crate) use structure_blocks::{dispatch_exports as dispatch_structure_exports
 pub(crate) use falling::from_storage as falling_from_storage;
 pub(crate) use daylight::tick as read_daylight;
 pub(crate) use fire::{light as light_fire, tick as burn_fires};
-pub(crate) use eggs::tread_turtle_eggs;
+pub(crate) use eggs::{lay_turtle_eggs, stomp_turtle_eggs, tread_turtle_eggs, turtle_egg_near, turtle_nest_near};
 pub(crate) use frost::{frost_walk, tick as melt_frost};
 pub(crate) use growth::{arrived as plants_arrived, holds_snow, tick as random_ticks, trample};
 pub(crate) use ores::{light as light_ore, tick as dim_ores, tread as tread_ore};
@@ -115,7 +115,7 @@ pub(crate) use lectern::turn_pages as turn_lectern_pages;
 pub(crate) use conduits::tick as wake_conduits;
 pub(crate) use pending::{arrived as ticks_arrived, write_back as write_back_ticks, write_back_before_saving as write_back_ticks_before_saving};
 pub(crate) use rods::struck as lightning_struck;
-pub(crate) use sculk::{GameEvent, tick as hear_vibrations, vibrate, vibrate_at, walked};
+pub(crate) use sculk::{GameEvent, mob_died, tick as hear_vibrations, vibrate, vibrate_at, walked};
 pub(crate) use target::shot_stopped;
 pub(crate) use tripwire::tick as trip_wires;
 

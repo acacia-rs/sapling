@@ -22,12 +22,12 @@ the uuid globals a static initializer (142cafa40) parses from text.
 | `…-000000000002` | fireworks (rocket, star, fade) | yes |
 | `85939755-…` | `map_cloning_crafting` | yes |
 | `442d85ed-…` | `map_cloning_cartography` | cartography.rs |
-| `d392b075-…` | `map_extending_crafting` | no: needs a new map record (maps.rs `charted`) at craft time |
+| `d392b075-…` | `map_extending_crafting` | yes (docs/research/leftovers.md) |
 | `8b36268c-…` | `map_extending_cartography` | cartography.rs |
 | `602234e4-…` | `map_locking_cartography` | cartography.rs |
-| `aecd2294-…` | `map_upgrading_crafting` | no |
+| `aecd2294-…` | `map_upgrading_crafting` | yes (docs/research/leftovers.md) |
 | `98c84b38-…` | `map_upgrading_cartography` | no |
-| `…-000000000001` | `repair_item` | no |
+| `…-000000000001` | `repair_item` | yes (docs/research/leftovers.md) |
 | `d1ca6b84-…` | `book_cloning` | yes |
 | `685a742a-…` | `decorated_pot` | yes |
 

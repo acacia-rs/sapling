@@ -20,7 +20,7 @@ fn set(ctx: &mut ShardCtx<'_>, pos: [i32; 3], block: Block) {
 fn names(h: &mut Harness, cells: Vec<[i32; 3]>) -> Vec<String> {
     let (sent, got) = std::sync::mpsc::channel();
     h.remote.run(move |ctx| sent.send(cells.iter().map(|at| ctx.block(*at).map_or(String::new(), |block| format!("{}[{}]", block.name, block.properties))).collect::<Vec<_>>()).unwrap());
-    h.tick(1);
+    h.tick_all();
     got.recv().unwrap()
 }
 
@@ -157,6 +157,40 @@ fn a_grown_sniffer_scents_walks_to_soil_and_digs_up_a_seed() {
         assert!(ever_flagged(&sent, sniffer, flag), "{flag:?}");
     }
     assert!(!all::<AddItemEntity>(&sent).is_empty(), "a find came up");
+}
+
+/// The cells within `reach` of `centre` across at height `y`.
+fn around([x, z]: [i32; 2], y: i32, reach: i32) -> Vec<[i32; 3]> {
+    (-reach..=reach).flat_map(|dx| (-reach..=reach).map(move |dz| [x + dx, y, z + dz])).collect()
+}
+
+#[test]
+fn bred_turtles_have_no_baby_and_one_goes_home_and_lays_eggs_on_sand() {
+    let mut h = ready(GameMode::Survival, &[("minecraft:seagrass", 2, 0)], 0.0);
+    h.remote.run(|ctx| around([2, 2], 64, 8).into_iter().for_each(|cell| set(ctx, cell, Block::new("sand"))));
+    h.tick_all();
+    let turtles = [spawn(&mut h, "minecraft:turtle", [2.5, 65.0, 0.5]), spawn(&mut h, "minecraft:turtle", [2.5, 65.0, 3.5])];
+    let mut sent: Vec<_> = turtles.iter().flat_map(|turtle| click_on(&mut h, *turtle)).collect();
+    sent.extend(watch(&mut h, 6000));
+    assert!(added(&sent, "minecraft:turtle").is_empty(), "no baby");
+    assert!(turtles.iter().any(|turtle| has_flag(&sent, *turtle, MetadataFlags1::PREGNANT).is_some()), "pregnant");
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "lay_egg"), "laid");
+    assert!(names(&mut h, around([2, 2], 65, 8)).iter().any(|name| name.starts_with("minecraft:turtle_egg[")), "eggs on the sand");
+}
+
+#[test]
+fn a_zombie_goes_for_turtle_eggs_and_stomps_them_out() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(sapling_api::Difficulty::Easy);
+        ctx.set_game_mode(sapling_api::PlayerId(1), GameMode::Creative);
+        hold_time(ctx, 18_000);
+        set(ctx, [6, 65, 6], turtle_egg("no_cracks", "four_egg"));
+        assert!(ctx.spawn_entity("minecraft:zombie", [0.5, 65.0, 0.5]).is_some());
+    });
+    (0..600).for_each(|_| _ = h.tick_all());
+    assert_eq!(names(&mut h, vec![[6, 65, 6]]), ["minecraft:air[]"]);
 }
 
 #[test]

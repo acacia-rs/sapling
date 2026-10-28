@@ -27,6 +27,7 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     }
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
+    super::captains::arm(world, entity, kind, event);
     if event.is_some() {
         super::warden::arm(world, entity, kind, event);
     }
@@ -76,6 +77,9 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
     entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(sound, id, kind, &body)]);
     let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, strides::keep(sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]), rolled));
+    if crate::riding::give_strength(world, entity, kind) {
+        reshow(world, entity);
+    }
     Some(EntityId(id))
 }
 
@@ -107,11 +111,13 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     husbandry::adopt(world, entity, &kind, Some((&actor, &compound)));
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     super::piglins::adopt(world, entity);
+    super::captains::adopt(world, entity);
     if kind == crate::dragon::DRAGON {
         crate::dragon::adopt(world, entity);
     }
     entities::keep(world, entity, layer, unique_id, compound);
     villagers::arm(world, entity, layer, &kind, true, None);
+    crate::riding::give_strength(world, entity, &kind);
     reshow(world, entity);
     crate::riding::adopt(world, entity);
     true

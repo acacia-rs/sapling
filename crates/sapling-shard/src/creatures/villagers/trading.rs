@@ -134,6 +134,7 @@ pub(crate) fn traded(world: &mut World, player: Entity, index: usize) {
     }
     tell(world, trader, changed);
     say(world, trader, "haggle.yes");
+    super::standing::traded(world, player, trader);
     if rewarded {
         // TODO: BDS's reward was not decompiled; this is the Java game's 3 to 6 points.
         let points = 3 + world.get_resource_or_insert_with(Dice::default).roll(4) as i32;

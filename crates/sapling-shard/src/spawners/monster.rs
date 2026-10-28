@@ -129,7 +129,7 @@ fn spawn_all(world: &mut World, layer: Entity, pos: BlockPos, kind: &str, fields
             continue;
         }
         spawned = true;
-        if is_monster(kind) && world.resource::<Settings>().0.difficulty == Difficulty::Peaceful {
+        if crate::spawning::removed_in_peaceful(kind) && world.resource::<Settings>().0.difficulty == Difficulty::Peaceful {
             // BDS spawns it and the monster takes itself away on its first tick.
             continue;
         }

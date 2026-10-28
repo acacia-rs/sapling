@@ -7,7 +7,7 @@ use super::rules::{Rule, apply};
 use super::wood::rewood;
 use super::{Kind, Template, soaked};
 use crate::block::Block;
-use crate::block_entity::{BlockEntity, cell_seed};
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::structure::canvas::Canvas;
 use crate::structure::{BoundingBox, trace};
@@ -163,7 +163,8 @@ impl Placement {
             canvas.set(x, y, z, block);
             if template.loot_chests.contains(&index) {
                 chests.push(((x, y, z), template.entity(index, || 0)));
-            } else if let Some(entity) = template.entity(index, || cell_seed([x, y, z])) {
+            } else if let Some(entity) = template.entity(index, || 0) {
+                // Only chests draw a seed here; BDS loads a missing `LootTableSeed` as 0 (1448783f0).
                 canvas.set_entity(x, y, z, entity);
             }
         }

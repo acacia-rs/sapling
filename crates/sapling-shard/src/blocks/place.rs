@@ -12,14 +12,16 @@ use crate::inventory::{self, Inventory, Place};
 
 pub(super) const PLAYER_HALF_WIDTH: f32 = 0.3;
 pub(super) const PLAYER_HEIGHT: f32 = 1.8;
-/// Blocks a block placed into their cell takes the place of, by the end of their name: those
-/// the Java game marks replaceable, in Bedrock's names.
+/// Blocks that can be built over besides air, liquids, light blocks and snow layers, by the end
+/// of their name: those the Java game marks replaceable, in Bedrock's names.
 const REPLACED: &[&str] = &[
     "short_grass", "tall_grass", ":fern", "large_fern", "deadbush", ":vine", ":fire", "soul_fire", "seagrass", "structure_void", "bubble_column", "crimson_roots",
     "warped_roots", "nether_sprouts", "glow_lichen", "resin_clump", "leaf_litter", "hanging_roots", "dry_grass", ":bush",
 ];
-/// A snow layer gives way while it is a single one.
-const THIN_SNOW: (&str, &str) = ("minecraft:snow_layer", "height=0");
+const SNOW_LAYER: &str = "minecraft:snow_layer";
+/// A placed block takes a snow layer's place while it is a single one (the Java game's rule; BDS's
+/// portal sites build over three: research/captures/bds-portal-voids.txt).
+const THIN_SNOW: &str = "height=0";
 
 /// The block a stack places on `face`: the one it names by `hash`, or the one its item builds
 /// (items.rs).
@@ -42,9 +44,15 @@ pub(super) fn held_block(world: &World, player: Entity, registry: &BlockRegistry
 
 /// Whether a block placed into the cell of block `id` takes its place.
 pub(super) fn gives_way(registry: &BlockRegistry, id: u32) -> bool {
-    let listed = |name: &str| REPLACED.iter().any(|end| name.ends_with(end)) || name.contains(":light_block");
-    let is_thin_snow = |name: &str, properties: &str| name == THIN_SNOW.0 && properties.split(',').any(|pair| pair == THIN_SNOW.1);
-    registry.get(id).is_some_and(|state| state.is_air() || state.is_liquid() || listed(state.name) || is_thin_snow(state.name, state.properties))
+    let thick_snow = |name: &str, properties: &str| name == SNOW_LAYER && !properties.split(',').any(|pair| pair == THIN_SNOW);
+    built_over(registry, id) && registry.get(id).is_some_and(|state| !thick_snow(state.name, state.properties))
+}
+
+/// Whether the block `id` can be built over: BDS's `canBeBuiltOver` (141a25540), the block's
+/// replaceable component.
+pub(super) fn built_over(registry: &BlockRegistry, id: u32) -> bool {
+    let listed = |name: &str| REPLACED.iter().any(|end| name.ends_with(end)) || name.contains(":light_block") || name == SNOW_LAYER;
+    registry.get(id).is_some_and(|state| state.is_air() || state.is_liquid() || listed(state.name))
 }
 
 /// Whether a player of `layer` stands in the cell at `pos`.

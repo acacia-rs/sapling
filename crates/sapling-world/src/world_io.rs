@@ -45,6 +45,9 @@ impl World {
     /// Hands every column written since its last save to the I/O threads; returns how many.
     /// A column whose previous save is still on its way waits for the next call.
     pub fn save_modified(&mut self) -> usize {
+        if self.held {
+            return 0;
+        }
         self.queue_saves(&HashSet::new())
     }
 
@@ -60,6 +63,7 @@ impl World {
     /// world's [`crate::Level`]; returns how many columns could not be saved. Blocks on disk: for a
     /// world that is being closed, never for a tick.
     pub fn save_and_wait(&mut self) -> usize {
+        self.release_saves();
         let mut failed = HashSet::new();
         loop {
             self.queue_saves(&failed);
@@ -69,17 +73,23 @@ impl World {
             }
             self.accept(done);
         }
-        let flushed = self.loader.as_ref().map(|loader| match self.dimension {
-            crate::OVERWORLD => loader.source().storage.flush(&self.level),
-            _ => loader.source().storage.sync(),
-        });
-        if let Some(Err(error)) = flushed {
+        if let Err(error) = self.flush_storage() {
             tracing::error!(%error, "flushing storage failed");
         }
         failed.len()
     }
 
-    fn queue_saves(&mut self, skip: &HashSet<ChunkPos>) -> usize {
+    /// Makes what storage was handed durable, with the world's [`crate::Level`] for an overworld.
+    /// Blocks on disk.
+    pub fn flush_storage(&self) -> Result<(), crate::StorageError> {
+        let Some(loader) = &self.loader else { return Ok(()) };
+        match self.dimension {
+            crate::OVERWORLD => loader.source().storage.flush(&self.level),
+            _ => loader.source().storage.sync(),
+        }
+    }
+
+    pub(crate) fn queue_saves(&mut self, skip: &HashSet<ChunkPos>) -> usize {
         let Some(loader) = &mut self.loader else { return 0 };
         let mut queued = 0;
         for (pos, column) in &mut self.columns {

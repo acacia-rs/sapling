@@ -172,6 +172,13 @@ pub(crate) fn chart(world: &World, player: Entity) -> Chart {
     Chart { input, fresh: locked_id(world.resource::<Tick>().0, maps) }
 }
 
+/// What the level knows of the filled map in a player's crafting grid: id, scale, locked.
+pub(crate) fn in_grid(world: &World, player: Entity) -> Option<(i64, u8, bool)> {
+    let id = inventory::grid_map_id(world.get::<Inventory>(player)?)?;
+    let home = crate::dimensions::home(world, world.get::<InLayer>(player)?.0);
+    world.get::<Maps>(home)?.maps.get(&id).map(|map| (map.id, map.scale, map.locked))
+}
+
 /// The id a locked copy takes: BDS's look drawn, positive and 32 bits wide, apart from the
 /// unique-id run new maps take (bds-maplock.txt: 1396458477, 2162056098, 3185328418).
 fn locked_id(now: u64, maps: Option<&Maps>) -> i64 {

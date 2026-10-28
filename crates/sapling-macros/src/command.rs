@@ -31,15 +31,21 @@ fn container(input: &DeriveInput) -> syn::Result<Container> {
 
 /// The `#[command(name = "...")]` of a variant or field, or `default` in lower case.
 fn name_of(attributes: &[Attribute], default: &syn::Ident) -> syn::Result<String> {
-    let mut name = None;
+    Ok(field_attrs(attributes, default, false)?.0)
+}
+
+/// A field's name as [`name_of`], and the soft enum `#[command(soft_enum = "...")]` completes it from.
+fn field_attrs(attributes: &[Attribute], default: &syn::Ident, field: bool) -> syn::Result<(String, Option<String>)> {
+    let (mut name, mut soft) = (None, None);
     attrs::each(attributes, "command", |meta| {
-        if !meta.path.is_ident("name") {
-            return Err(attrs::unknown(meta));
+        match meta.path.get_ident().map(ToString::to_string).as_deref() {
+            Some("name") => name = Some(attrs::string(meta)?),
+            Some("soft_enum") if field => soft = Some(attrs::string(meta)?),
+            _ => return Err(attrs::unknown(meta)),
         }
-        name = Some(attrs::string(meta)?);
         Ok(())
     })?;
-    Ok(name.unwrap_or_else(|| default.to_string().to_lowercase()))
+    Ok((name.unwrap_or_else(|| default.to_string().to_lowercase()), soft))
 }
 
 /// For one struct or variant: its parameter specs and the expression that parses its fields.
@@ -52,8 +58,11 @@ fn fields(krate: &Path, fields: &Fields, constructor: TokenStream) -> syn::Resul
     let (mut specs, mut parsers) = (Vec::new(), Vec::new());
     for field in named {
         let (ident, ty) = (field.ident.as_ref().expect("named"), &field.ty);
-        let name = name_of(&field.attrs, ident)?;
-        specs.push(quote!(#krate::command::ParameterSpec::of::<#ty>(#name)));
+        let (name, soft) = field_attrs(&field.attrs, ident, true)?;
+        specs.push(match soft {
+            Some(soft) => quote!(#krate::command::ParameterSpec::soft_enum::<#ty>(#name, #soft)),
+            None => quote!(#krate::command::ParameterSpec::of::<#ty>(#name)),
+        });
         parsers.push(quote!(#ident: <#ty as #krate::command::Parameter>::parse(args)?));
     }
     Ok((specs, quote!(#constructor { #(#parsers),* })))

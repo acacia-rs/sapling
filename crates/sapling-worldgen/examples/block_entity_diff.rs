@@ -2,7 +2,8 @@
 //! block entity the generator makes (spawners, loot, trial spawners, vaults, pots) against ours,
 //! tallied per kind and table as `same`, `seed` (only the loot seed differs), `other`, `missing`
 //! (BDS only) and `extra` (ours only); the first `other`, `missing` and `extra` are printed.
-//! `<world>` is a folder under `$SAPLING_ORACLE_WORLDS` (e.g. 20261003-structures).
+//! `<world>` is a folder under `$SAPLING_ORACLE_WORLDS` (e.g. 20261003-structures). `SEEDS=<text>`
+//! prints both seeds of each `seed` entity whose kind contains the text (`SEEDS=loot` for all).
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -56,6 +57,7 @@ fn main() {
     let primary = LevelDbWorld::open_in_memory(&root.join(world)).expect("the world");
     let mut tally: BTreeMap<(String, &str), u32> = BTreeMap::new();
     let (mut shown, mut chunks) = (0, 0);
+    let seeds = std::env::var("SEEDS").ok();
     for key in primary.columns().unwrap().into_iter().filter(|key| key.dimension == 0) {
         let Some(column) = primary.load_column(key).unwrap() else { continue };
         let bds: BTreeMap<[i32; 3], (String, Option<i32>)> = block_entities(&column.block_entities).unwrap().iter().filter_map(|e| Some((e.pos, theirs(&e.nbt)?))).collect();
@@ -74,7 +76,10 @@ fn main() {
                 _ => "extra",
             };
             let kind = bds.get(at).or(ours.get(at)).unwrap().0.clone();
-            *tally.entry((kind, verdict)).or_default() += 1;
+            *tally.entry((kind.clone(), verdict)).or_default() += 1;
+            if verdict == "seed" && seeds.as_deref().is_some_and(|s| kind.contains(s)) {
+                println!("{at:?} seed: BDS {:?} ours {:?} {kind}", bds[at].1, ours[at].1);
+            }
             if !matches!(verdict, "same" | "seed") && shown < 40 {
                 let block = shape.block((at[0] & 15) as usize, at[1], (at[2] & 15) as usize).name();
                 println!("{at:?} {verdict}: BDS {:?} ours {:?} on our {block}", bds.get(at), ours.get(at));

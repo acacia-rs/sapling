@@ -2,7 +2,7 @@
 //! stands for the cast, and a second in sends a line of sixteen fangs at a prey 3 or more off, or
 //! two rings of them about itself at one nearer. A fang bites a tick after it rises. One cast in
 //! four, while fewer than 8 vexes are about, summons three (`vexes`) after five seconds.
-// TODO: no stepping away from a player within 8, and a fang bites no mob.
+// TODO: no stepping away from a player within 8.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};
@@ -225,6 +225,20 @@ fn bitten(world: &World, layer: Entity, at: [f32; 3]) -> Vec<Entity> {
     }).collect()
 }
 
+/// The mobs of `layer` but illagers a fang standing at `at` reaches.
+fn bitten_mobs(world: &mut World, layer: Entity, at: [f32; 3]) -> Vec<Entity> {
+    let reaches = |body: &Body| {
+        let across = (SIZE[0] + body.size[0]) / 2.0;
+        (body.at[0] - at[0]).abs() < across && (body.at[2] - at[2]).abs() < across && body.at[1] < at[1] + SIZE[1] && at[1] < body.at[1] + body.size[1]
+    };
+    world
+        .query_filtered::<(Entity, &InLayer, &entities::Kind, &Body), (With<super::Creature>, With<super::Health>, Without<super::Dying>)>()
+        .iter(world)
+        .filter(|(_, on, kind, body)| on.0 == layer && kind.0 != FANG && !sapling_data::has_family(&kind.0, "illager") && reaches(body))
+        .map(|(mob, ..)| mob)
+        .collect()
+}
+
 /// A tick of every fang: it bites on its second, is heard on its third, wanes and goes.
 pub(super) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
@@ -242,6 +256,9 @@ pub(super) fn tick(world: &mut World) {
             let Some((owner, kind)) = world.get::<Fang>(fang).map(|fang| (fang.owner, fang.kind.clone())) else { continue };
             for player in bitten(world, layer, at) {
                 vitals::fanged(world, player, HARM, &kind, owner);
+            }
+            for mob in bitten_mobs(world, layer, at) {
+                super::harm::wound(world, mob, layer, HARM, super::Cause::Magic);
             }
         }
         if age == 2 {
