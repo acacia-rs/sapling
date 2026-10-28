@@ -34,7 +34,7 @@ acacia-bot = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f
 acacia-client = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
 acacia-testserver = { git = "https://github.com/acacia-rs/acacia", rev = "37036096e815f7526b9a145e6873767d93ea9c2f" }
 
-base64 = "0.22"
+base64 = "0.23"
 bevy_ecs = { version = "0.19", default-features = false, features = ["std"] }
 bytes = "1.12.1"
 flate2 = "1.1"
