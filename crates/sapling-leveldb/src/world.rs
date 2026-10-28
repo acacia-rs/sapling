@@ -1,7 +1,7 @@
 //! A world folder: `level.dat` beside the `db` directory.
 
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use acacia_world::{BlockRegistry, Chunk, Dimension, SECTION_VOLUME};
 
@@ -38,6 +38,8 @@ pub struct LevelDbWorld {
     db: Db,
     in_memory: bool,
     states: BlockStates,
+    /// Held from reading a column's actors to writing its batch (actors::store).
+    actor_homes: Mutex<actors::Homes>,
 }
 
 impl LevelDbWorld {
@@ -54,7 +56,7 @@ impl LevelDbWorld {
 
     fn with_db(folder: &Path, db: Db, in_memory: bool) -> Result<Self, Error> {
         let level = LevelDat::read(&folder.join("level.dat"))?;
-        Ok(Self { folder: folder.to_path_buf(), level, db, in_memory, states: BlockStates::new(BlockRegistry::vanilla_arc()) })
+        Ok(Self { folder: folder.to_path_buf(), level, db, in_memory, states: BlockStates::new(BlockRegistry::vanilla_arc()), actor_homes: Mutex::default() })
     }
 
     pub fn folder(&self) -> &Path {
@@ -118,7 +120,6 @@ impl LevelDbWorld {
     /// (pending_ticks.rs) as one batch.
     pub fn store_column(&self, key: ChunkKey, chunk: &Chunk, block_entities: &[u8], actors: &[u8], pending_ticks: &[u8]) -> Result<(), Error> {
         let mut batch = Batch::default();
-        actors::store(&self.db, &mut batch, key, actors)?;
         for (tag, record) in [(Tag::BlockEntities, block_entities), (Tag::PendingTicks, pending_ticks)] {
             match record {
                 [] => batch.delete(&key.tag(tag)),
@@ -144,6 +145,8 @@ impl LevelDbWorld {
             let layers = if wet { vec![blocks.clone(), liquid.clone()] } else { vec![blocks.clone()] };
             batch.put(&key.sub_chunk(y), &SubChunk { y: Some(y), layers }.encode(&self.states)?);
         }
+        let mut homes = self.actor_homes.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        actors::store(&self.db, &mut batch, key, actors, &mut homes)?;
         self.db.write(batch)
     }
 
