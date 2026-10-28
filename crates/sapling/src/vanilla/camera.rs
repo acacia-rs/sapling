@@ -1,8 +1,7 @@
 //! `/camera` and `/camerashake`, answered and sent as BDS 1.26.52 does
 //! (research/captures/bds-screen.txt).
-// TODO: `fade`, `fov_set` and `fov_clear` are answered but send nothing: acacia-proto's
-// CameraInstruction does not lay them out as BDS writes them. The other `/camera` forms
-// (attach_to_entity, spline, target_entity, view and entity offsets) are not built.
+// TODO: the other `/camera` forms (attach_to_entity, spline, target_entity, view and entity
+// offsets) are not built.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selected, Selector};
 use sapling_api::{Camera as Set, Command, CommandEnum, Output, Permission, Player, ScreenAction, Sender, ShardCtx};
@@ -28,8 +27,9 @@ enum Facing {
 enum Action {
     Set { preset: String, ease: Option<(u8, f32)>, position: Option<Coords>, rotation: Option<[f32; 2]>, facing: Option<Facing>, default: bool },
     Clear,
-    Fade { times: Option<[f32; 3]> },
-    Fov,
+    Fade { times: Option<[f32; 3]>, colour: Option<[f32; 3]> },
+    FovSet { degrees: f32, ease: Option<(u8, f32)> },
+    FovClear,
 }
 
 pub(crate) struct Camera {
@@ -65,17 +65,18 @@ fn set(args: &mut Args<'_>) -> Result<Action, ParseError> {
 }
 
 fn fade(args: &mut Args<'_>) -> Result<Action, ParseError> {
-    let mut times = None;
+    let (mut times, mut colour) = (None, None);
+    let channel = |args: &mut Args<'_>| Ok::<_, ParseError>(i32::parse(args)? as f32 / 255.0);
     while let Some(word) = args.peek().map(str::to_ascii_lowercase) {
         let mark = args.mark();
         args.word()?;
         match word.as_str() {
             "time" => times = Some([f32::parse(args)?, f32::parse(args)?, f32::parse(args)?]),
-            "color" => _ = [i32::parse(args)?, i32::parse(args)?, i32::parse(args)?],
+            "color" => colour = Some([channel(args)?, channel(args)?, channel(args)?]),
             _ => return Err(args.error_at(mark)),
         }
     }
-    Ok(Action::Fade { times })
+    Ok(Action::Fade { times, colour })
 }
 
 impl CommandSyntax for Camera {
@@ -95,13 +96,11 @@ impl CommandSyntax for Camera {
             "clear" => Action::Clear,
             "fade" => fade(args)?,
             "fov_set" => {
-                f32::parse(args)?;
-                if !args.is_empty() {
-                    ease(args)?;
-                }
-                Action::Fov
+                let degrees = f32::parse(args)?;
+                let ease = if args.is_empty() { None } else { Some(ease(args)?) };
+                Action::FovSet { degrees, ease }
             }
-            "fov_clear" => Action::Fov,
+            "fov_clear" => Action::FovClear,
             _ => return Err(args.error_at(mark)),
         };
         args.finish()?;
@@ -140,13 +139,17 @@ impl Command for Camera {
                 Some(ScreenAction::Camera(Set { preset: preset as u32, ease, position, rotation, facing, default }))
             }
             Action::Clear => Some(ScreenAction::ClearCamera),
-            Action::Fade { times } => {
+            Action::Fade { times, colour } => {
                 if times.is_some_and(|times| times.iter().any(|seconds| !(0.0..=MOST_FADE).contains(seconds))) {
                     return out.translate("commands.camera.invalid.time", Vec::new(), false);
                 }
-                None
+                Some(ScreenAction::CameraFade { seconds: times, colour })
             }
-            Action::Fov => None,
+            Action::FovSet { degrees, ease } => {
+                let (kind, ease_seconds) = ease.unwrap_or((0, 0.0));
+                Some(ScreenAction::CameraFov { degrees, ease_seconds, ease: EASES[usize::from(kind)].to_owned() })
+            }
+            Action::FovClear => Some(ScreenAction::ClearCameraFov),
         };
         if let Some(action) = action {
             found.iter().for_each(|player| ctx.screen_action(player.id, &action));

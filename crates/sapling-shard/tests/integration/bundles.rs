@@ -16,12 +16,7 @@ fn stack(name: &str, count: u8) -> Option<ItemStack> {
 }
 
 fn in_bundle(id: u32, at: u8, stack_id: i32) -> StackRequestSlotInfo {
-    StackRequestSlotInfo { slot_type: FullContainerName { container_id: Container::Dynamic, dynamic_container_id: Some(wire(id)) }, slot: at, stack_id }
-}
-
-/// A bundle's number as acacia-proto decodes BDS's little-endian one (bds-container-cleanup.txt).
-fn wire(id: u32) -> u32 {
-    id.swap_bytes()
+    StackRequestSlotInfo { slot_type: FullContainerName { container_id: Container::Dynamic, dynamic_container_id: Some(id) }, slot: at, stack_id }
 }
 
 #[test]
@@ -33,7 +28,7 @@ fn a_bundle_takes_up_to_its_weight_and_gives_back() {
     let mut sent = enter_stored(&mut h, 1);
     (0..12).for_each(|_| sent.extend(h.tick(1)));
     let numbered: Vec<_> = all::<InventoryContent>(&sent).into_iter().filter(|content| content.container.container_id == Container::Dynamic).map(|content| content.container.dynamic_container_id).collect();
-    assert_eq!(numbered, [Some(wire(0)), Some(wire(1))]);
+    assert_eq!(numbered, [Some(0), Some(1)]);
 
     h.receive(1, &request(-1, vec![place(40, slot(Container::Hotbar, 1, 0), in_bundle(0, 0, 0))]));
     let placed = h.tick(1);
@@ -81,7 +76,7 @@ fn a_bundle_gone_is_let_go_at_the_next_sweep() {
         })
         .filter(|(_, removed)| !removed.is_empty())
         .collect();
-    let bundle_one = FullContainerName { container_id: Container::Dynamic, dynamic_container_id: Some(wire(1)) };
+    let bundle_one = FullContainerName { container_id: Container::Dynamic, dynamic_container_id: Some(1) };
     assert_eq!(told, [(1, vec![bundle_one.clone()]), (2, vec![bundle_one])]);
 }
 

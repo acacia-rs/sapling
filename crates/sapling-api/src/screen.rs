@@ -20,6 +20,14 @@ pub enum ScreenAction {
     Camera(Camera),
     /// The camera back to the player's own.
     ClearCamera,
+    /// Fades the view to `colour` (red, green, blue, 0 to 1) and back: seconds in, held, out.
+    /// Each left out is the client's own.
+    CameraFade { seconds: Option<[f32; 3]>, colour: Option<[f32; 3]> },
+    /// The field of view in degrees, eased over `ease_seconds` by the easing named as `/camera`
+    /// names it (`linear`, `in_out_sine`, ..).
+    CameraFov { degrees: f32, ease_seconds: f32, ease: String },
+    /// The field of view back to the player's own.
+    ClearCameraFov,
     /// Recipes, by id, the player's recipe book gains or loses.
     Recipes { ids: Vec<String>, change: RecipeChange },
     Music(Music),

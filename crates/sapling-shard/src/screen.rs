@@ -6,7 +6,7 @@ use std::collections::HashSet;
 
 use acacia_proto::nbt::{Nbt, Value as NbtValue};
 use acacia_proto::packets::{
-    AnimateEntity, LevelEventGeneric, CameraInstruction, CameraInstructionInstructionSet as Set, CameraInstructionInstructionSetEaseData as Ease, CameraShake, CameraShakeAction, PlayerFog,
+    AnimateEntity, LevelEventGeneric, CameraInstruction, CameraInstructionFade as Fade, CameraInstructionFadeTime as FadeTime, CameraInstructionFov as Fov, CameraInstructionInstructionSet as Set, CameraInstructionInstructionSetEaseData as Ease, CameraShake, CameraShakeAction, PlayerFog,
     SetHud, SetHudVisibility, UnlockedRecipes, UnlockedRecipesUnlockType as Unlock, UpdateClientInputLocks,
 };
 use acacia_proto::types::{EaseType, Element, InputLockFlags, Vec2f, Vec3f};
@@ -44,6 +44,16 @@ fn camera(set: &Camera) -> CameraInstruction {
 
 fn cleared(clear: Option<bool>) -> CameraInstruction {
     CameraInstruction { instruction_set: None, clear, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+}
+
+fn fade(seconds: Option<[f32; 3]>, colour: Option<[f32; 3]>) -> CameraInstruction {
+    let time = seconds.map(|[fade_in_duration, wait_duration, fade_out_duration]| FadeTime { fade_in_duration, wait_duration, fade_out_duration });
+    CameraInstruction { fade: Some(Fade { time, color_rgb: colour.map(vec3) }), ..cleared(None) }
+}
+
+/// BDS's `fov_clear` is a zero field of view, eased `linear`, with `clear` set.
+fn fov(degrees: f32, ease_time: f32, ease: &str, clear: bool) -> CameraInstruction {
+    CameraInstruction { fov: Some(Fov { field_of_view: degrees, ease_time, ease_type: ease.to_owned(), clear }), ..cleared(None) }
 }
 
 /// BDS's music events (bds-music.txt), shifted as acacia-proto writes the id.
@@ -86,6 +96,9 @@ pub(crate) fn packet(action: &ScreenAction) -> Option<Bytes> {
         }
         ScreenAction::Camera(set) => sapling_net::encode(&camera(set)),
         ScreenAction::ClearCamera => sapling_net::encode(&cleared(Some(true))),
+        ScreenAction::CameraFade { seconds, colour } => sapling_net::encode(&fade(*seconds, *colour)),
+        ScreenAction::CameraFov { degrees, ease_seconds, ease } => sapling_net::encode(&fov(*degrees, *ease_seconds, ease, false)),
+        ScreenAction::ClearCameraFov => sapling_net::encode(&fov(0.0, 0.0, "linear", true)),
         ScreenAction::Recipes { ids, change } => {
             let unlock_type = match change {
                 RecipeChange::Initial => Unlock::InitiallyUnlocked,
@@ -153,5 +166,29 @@ impl Ctx<'_> {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use acacia_proto::Packet;
+    use bytes::BytesMut;
+
+    use super::*;
+
+    fn hex(instruction: &CameraInstruction) -> String {
+        let mut body = BytesMut::new();
+        instruction.encode(&mut body);
+        body.iter().map(|byte| format!("{byte:02x}")).collect()
+    }
+
+    /// BDS 1.26.52's bodies, research/captures/bds-commands-findings.md.
+    #[test]
+    fn fade_and_fov_are_bds_bodies() {
+        assert_eq!(hex(&fade(None, None)), "0000010000000000000000");
+        assert_eq!(hex(&fade(Some([1.0, 2.0, 3.0]), None)), "000001010000803f000000400000404000000000000000");
+        assert_eq!(hex(&fade(None, Some([0.0, 1.0, 0.0]))), "0000010001000000000000803f00000000000000000000");
+        assert_eq!(hex(&fov(60.0, 2.0, "linear", false)), "0000000000010000704200000040066c696e65617200000000");
+        assert_eq!(hex(&fov(0.0, 0.0, "linear", true)), "0000000000010000000000000000066c696e65617201000000");
     }
 }

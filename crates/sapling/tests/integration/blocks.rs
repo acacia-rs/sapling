@@ -134,7 +134,7 @@ async fn bots_break_and_place_blocks_and_adventure_is_refused() {
     let mut carol = common::spawn(common::client(&server, "Carol"), config).await;
     carol.wait_ticks(20).await.expect("connected");
     assert_eq!((seen(&carol, at(1, 0)), seen(&carol, at(2, 1))), (AIR, STONE), "the column as it is now");
-    let refused = carol.break_block(at(3, 0)).await;
+    let refused = carol.break_block(at(2, 1)).await;
     assert!(matches!(refused, Err(ActionError::Rejected(_))), "{refused:?}");
     updates(&mut carol).await;
     carol.client().send(&click_with_stone(&carol, at(4, 0)));
@@ -142,7 +142,7 @@ async fn bots_break_and_place_blocks_and_adventure_is_refused() {
     assert_eq!(shown, BTreeSet::from([(at(4, 0), 0), (at(4, 0), 1), (at(4, 1), 0), (at(4, 1), 1)]));
     all(&mut [&mut alice, &mut bob], 10).await;
     for (who, bot) in [("Alice", &alice), ("Bob", &bob), ("Carol", &carol)] {
-        assert_eq!((seen(bot, at(3, 0)), seen(bot, at(4, 0)), seen(bot, at(4, 1))), (DIRT, DIRT, AIR), "{who}");
+        assert_eq!((seen(bot, at(2, 1)), seen(bot, at(4, 0)), seen(bot, at(4, 1))), (STONE, DIRT, AIR), "{who}");
         assert_eq!(bot.disconnect_reason(), None, "{who}");
     }
     for bot in [&mut alice, &mut bob, &mut carol] {

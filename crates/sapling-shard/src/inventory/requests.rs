@@ -74,7 +74,7 @@ impl Applied {
     /// The slot a request names, if it holds the stack the client thinks it does.
     fn named(&mut self, inventory: &Inventory, info: &StackRequestSlotInfo) -> Result<Place, ()> {
         let place = place(info).ok_or(())?;
-        let lent = inventory.bundle.as_ref().and_then(|(id, _)| u32::try_from(*id).ok()).map(super::bundles::wire_id);
+        let lent = inventory.bundle.as_ref().and_then(|(id, _)| u32::try_from(*id).ok());
         if matches!(place, Place::Bundle(_)) && info.slot_type.dynamic_container_id != lent {
             return Err(());
         }

@@ -22,6 +22,10 @@ pub fn name(packet: &RawPacket) -> Option<&'static str> {
     (!NOISE.iter().any(|noise| noise.eq_ignore_ascii_case(name))).then_some(name)
 }
 
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
 macro_rules! dumper {
     ($($t:ident),* $(,)?) => {
         /// The packet decoded and printed with `Debug`; `None` for an id without a decoder.
@@ -29,7 +33,7 @@ macro_rules! dumper {
             $(if p.id == <packets::$t>::ID {
                 return Some(match p.decode::<packets::$t>() {
                     Ok(v) => format!("{v:?}"),
-                    Err(e) => format!("<decode error: {e}>"),
+                    Err(e) => format!("<decode error: {e}> body {}", hex(&p.body)),
                 });
             })*
             None

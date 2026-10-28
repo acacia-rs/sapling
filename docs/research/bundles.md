@@ -35,9 +35,9 @@ ItemStackRequests from `crates/sapling/examples/shared/bundle_drill.rs`). saplin
 ## Container numbers on the wire and cleanup (2026-10-28)
 
 - `dynamic_container_id` is little-endian: bundle 1's `ContainerRegistryCleanup` body was
-  `01 3f 01 01000000` (research/captures/bds-container-cleanup.txt), which acacia-proto (big-endian
-  `u32`) decodes as 16777216; a request the bot sent for bundle 1 as big-endian 1 got status 50
-  (bds-hints.txt). sapling swaps the number at its wire (`bundles.rs` `wire_id`).
+  `01 3f 01 01000000` (research/captures/bds-container-cleanup.txt), which acacia-proto before
+  2026-10-28 (big-endian `u32`) decoded as 16777216; a request the bot sent for bundle 1 as big-endian 1
+  got status 50 (bds-hints.txt). acacia-proto reads it little-endian since (its docs/proto.md).
 - `ContainerRegistryCleanup` goes to every player, also those that never held the bundle, at a sweep
   every 15 s (two runs: 15.05 s apart, phase unrelated to the drill). It lists every shown bundle no
   longer anywhere: cleared, replaced by air, or thrown and then killed as an item; one lying as an item

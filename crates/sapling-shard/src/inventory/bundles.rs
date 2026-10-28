@@ -100,7 +100,7 @@ pub(super) fn lend(inventory: &mut Inventory, request: &Request) {
         _ => [None, None],
     });
     let id = named.flatten().find(|info| info.slot_type.container_id == ContainerSlotType::Dynamic).and_then(|info| info.slot_type.dynamic_container_id);
-    let Some(id) = id.and_then(|id| i32::try_from(wire_id(id)).ok()) else { return };
+    let Some(id) = id.and_then(|id| i32::try_from(id).ok()) else { return };
     let Some(bundle) = find(inventory, id).and_then(|place| inventory.slot(place)?.clone()) else { return };
     if let Some(lent) = inventory.bundle.take() {
         inventory.bundles_shown.retain(|(shown, _)| *shown != lent.0);
@@ -137,14 +137,7 @@ pub(super) fn keep(inventory: &mut Inventory, before: &[Option<Held>]) -> Vec<us
 }
 
 pub(super) fn container(id: i32) -> FullContainerName {
-    FullContainerName { container_id: ContainerSlotType::Dynamic, dynamic_container_id: Some(wire_id(id as u32)) }
-}
-
-/// A bundle's number as acacia-proto reads and writes it. BDS sends it little-endian (bundle 1 is
-/// `01 00 00 00`, research/captures/bds-container-cleanup.txt) and took a big-endian 1 for another
-/// container (status 50, bds-hints.txt); acacia-proto's field is big-endian.
-pub(super) fn wire_id(id: u32) -> u32 {
-    id.swap_bytes()
+    FullContainerName { container_id: ContainerSlotType::Dynamic, dynamic_container_id: Some(id as u32) }
 }
 
 /// The bundle's changed slots, as BDS showed them after its answer.
@@ -194,7 +187,7 @@ fn number_slots(world: &mut World, player: Entity, slots: &[usize], first: i32) 
 /// Sends the bundles' `shown` contents to `player`; their numbers are registered (bundle_cleanup.rs).
 fn show_contents(world: &mut World, player: Entity, shown: &[InventoryContent]) {
     for content in shown {
-        super::bundle_cleanup::register(world, wire_id(content.container.dynamic_container_id.unwrap_or_default()) as i32);
+        super::bundle_cleanup::register(world, content.container.dynamic_container_id.unwrap_or_default() as i32);
     }
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         shown.iter().for_each(|content| out.push(content));

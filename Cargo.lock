@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "acacia-auth"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -31,7 +31,7 @@ dependencies = [
 [[package]]
 name = "acacia-bot"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "acacia-client",
  "acacia-molang",
@@ -40,6 +40,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "flate2",
+ "memchr",
  "regex",
  "rustc-hash",
  "serde",
@@ -52,7 +53,7 @@ dependencies = [
 [[package]]
 name = "acacia-client"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "acacia-auth",
  "acacia-nethernet",
@@ -76,12 +77,12 @@ dependencies = [
 [[package]]
 name = "acacia-molang"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 
 [[package]]
 name = "acacia-nbt"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "bytes",
  "compact_str",
@@ -92,7 +93,7 @@ dependencies = [
 [[package]]
 name = "acacia-nethernet"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "aes",
  "base64 0.22.1",
@@ -115,7 +116,7 @@ dependencies = [
 [[package]]
 name = "acacia-physics"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "acacia-world",
 ]
@@ -123,7 +124,7 @@ dependencies = [
 [[package]]
 name = "acacia-proto"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "acacia-nbt",
  "bytes",
@@ -133,7 +134,7 @@ dependencies = [
 [[package]]
 name = "acacia-raknet"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "bytes",
 ]
@@ -141,7 +142,7 @@ dependencies = [
 [[package]]
 name = "acacia-session"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "acacia-auth",
  "acacia-proto",
@@ -160,7 +161,7 @@ dependencies = [
 [[package]]
 name = "acacia-testserver"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "acacia-auth",
  "acacia-proto",
@@ -179,7 +180,7 @@ dependencies = [
 [[package]]
 name = "acacia-world"
 version = "0.1.0"
-source = "git+https://github.com/acacia-rs/acacia?rev=d19b12792501a75bb56d99512c38f7657f33192b#d19b12792501a75bb56d99512c38f7657f33192b"
+source = "git+https://github.com/acacia-rs/acacia?rev=bb4195b83beafb893abe91124848e3a3d4af1123#bb4195b83beafb893abe91124848e3a3d4af1123"
 dependencies = [
  "acacia-proto",
  "bytes",
@@ -459,7 +460,7 @@ dependencies = [
  "spin 0.10.1",
  "wasm-bindgen",
  "wasm-bindgen-futures",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1903,7 +1904,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2226,7 +2227,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

@@ -32,8 +32,13 @@ then GameRulesChanged doDayLightCycle=false. Already locked: the text only.
 /camera: presets by CameraPresets.bin order (free = 3). `pos` and `facing` resolve `~`;
 `facing <entity>` is its box middle (player feet + 0.9); `rot` is pitch, yaw; `default` sets
 `default` and `remove_ignore_starting_values`. `unknown.preset`, `invalid.pitch` (|pitch| > 90),
-`invalid.time` (fade seconds outside 0..10). BDS's fade and fov packets do not decode with
-acacia-proto.
+`invalid.time` (fade seconds outside 0..10). BDS's fade and fov bodies (2026-10-28 `screen` rerun,
+dump.rs printing undecodable bodies): `fade` `0000010000000000000000`, `fade time 1 2 3`
+`000001010000803f000000400000404000000000000000`, `fade color 0 255 0`
+`0000010001000000000000803f00000000000000000000`, `fov_set 60` `…01 00007042 00000000 06"linear" 00…`,
+`fov_set 60 2 linear` ease time `00000040`, `fov_clear` `…01 00000000 00000000 06"linear" 01…`. So fade
+is optional time then optional colour (channel/255), and fov's ease is a string; acacia-proto reads
+them so from 2026-10-28 (its docs/proto.md). The `screen` lines above that show decode errors predate it.
 
 /fog: PlayerFog carries the whole stack; pop takes the topmost entry of the id, remove all;
 none: `commands.fog.invalidUserId [name, id]`. Any fog id is taken.

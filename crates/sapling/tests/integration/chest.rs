@@ -56,6 +56,8 @@ async fn a_chest_keeps_what_one_bot_puts_in_for_the_next_and_spills_when_broken(
     assert_eq!((count(&alice, SlotRef::Main(1)), count(&alice, SlotRef::Container(4))), (0, 3));
 
     // Bob finds them there and takes the diamonds; Alice, still looking, sees them go.
+    // Bob, idle until now, takes in the chest's UpdateBlock: acacia-bot only opens what its world shows.
+    bob.wait_ticks(5).await.expect("connected");
     let found = bob.open_container_at(CHEST).await.expect("a chest opens for a second player");
     assert_eq!((found.slots[4].count, found.slots[5].count), (3, 8));
     let went_to = bob.move_to_inventory(4).await.expect("diamonds come out");

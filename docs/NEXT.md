@@ -42,7 +42,7 @@ it does on BDS and the two captures can be diffed:
    `/recipe`, `/inputpermission` and `/mobevent` answer and send as BDS did (`lootcmd2`, `screen`,
    `music`, `controls`, `controls2`; research/captures/bds-commands-findings.md). Left: tables
    mob-loot.json does not keep (`gameplay/fishing`), `/loot replace entity` on mobs, `/camera`'s
-   fade, fov and other forms, `/recipe` answering before its packet, `/event`, `/dialogue`.
+   other forms (attach, spline, target, offsets), `/recipe` answering before its packet, `/event`, `/dialogue`.
 
    What a click does to a block (`docs/research/block-uses.md`, `clicks`), primed TNT (`tnt`) and
    bone meal (`docs/research/bone-meal.md`, `bonemeal`) are drilled and built. Saplings,
@@ -126,9 +126,7 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
   saved with a mob, which parent a bred young takes a climate from (`creatures/properties.rs`);
   MotionPredictionHints (BDS sent none in the `hints` drill: orbs, walking and hit mobs, drops, carts,
   bundles; two orbs once in bds-orbs.txt, trigger unknown); ContainerRegistryCleanup for bundles in
-  chests or mobs' hands. acacia-proto reads and writes `FullContainerName::dynamic_container_id`
-  big-endian where BDS uses little-endian (`docs/research/bundles.md`); sapling swaps at its edge until
-  acacia fixes it.
+  chests or mobs' hands.
 
 ## 3. Things assumed, not verified
 
