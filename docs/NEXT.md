@@ -121,6 +121,15 @@ Each needs its rule looked up first (`bdsre` for BDS, the Java jar for data), th
    `RideID`, the horse screen and a horse's charged jump, a wild horse bucking a rider off later in
    the ride, hoppers filling carts, a rail's own redstone line, and the doc's "Unverified" list.
 
+- **Protocol gaps left (2026-10-28):** entity property states sapling does not model yet (armadillo
+  rolling, copper golem, happy ghast, sulfur cube, creaking deactivation with its `Flags`), properties
+  saved with a mob, which parent a bred young takes a climate from (`creatures/properties.rs`);
+  MotionPredictionHints (BDS sent none in the `hints` drill: orbs, walking and hit mobs, drops, carts,
+  bundles; two orbs once in bds-orbs.txt, trigger unknown); ContainerRegistryCleanup for bundles in
+  chests or mobs' hands. acacia-proto reads and writes `FullContainerName::dynamic_container_id`
+  big-endian where BDS uses little-endian (`docs/research/bundles.md`); sapling swaps at its edge until
+  acacia fixes it.
+
 ## 3. Things assumed, not verified
 
 - Checked 2026-10-24 (docs/research/assumptions-checked.md): mirrored shaped recipes match BDS for every

@@ -7,6 +7,7 @@
 //! `cargo run -p sapling --example hub -- [port] [world folder] [--offline] [--no-cache] [--op=Name] [--nethernet] [--lan]`
 //! (default port 19132, online mode). `--nethernet` also hosts over NetherNet direct connect;
 //! `--lan` adds the LAN list to that. `RUST_LOG=debug` shows refused logins and ended connections.
+//! Lines typed on stdin run as the server's commands.
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -235,7 +236,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = positional().find_map(|a| a.parse::<u16>().ok()).unwrap_or(19132);
     let folder = positional().find(|a| a.parse::<u16>().is_err());
 
-    let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name(NAME).online_mode(!offline).blob_cache(!args.iter().any(|a| a == "--no-cache"));
+    let mut builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name(NAME).online_mode(!offline).blob_cache(!args.iter().any(|a| a == "--no-cache")).console(true);
     let lan = args.iter().any(|a| a == "--lan");
     if lan || args.iter().any(|a| a == "--nethernet") {
         let nethernet = NetherNet { lan: lan.then(Lan::default), ..NetherNet::new(sapling::host_key(Path::new(HOST_KEY_FILE))?) };

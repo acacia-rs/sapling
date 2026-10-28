@@ -5,7 +5,7 @@
 //! (default port 19132, seed 20261003, online mode). Release: a debug build generates slowly.
 //! `--properties` reads a BDS `server.properties`, whose settings (its `level-seed` and
 //! `server-port` too) win over the defaults and the flags. Slow ticks are logged, and a crash
-//! writes its report to `crash-reports/`.
+//! writes its report to `crash-reports/`. Lines typed on stdin run as the server's commands.
 use std::sync::Arc;
 
 use sapling::{GameMode, Generated, MemoryStorage, Server, ServerProperties, Watchdog, World};
@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let spawn = world.load_spawn();
     tracing::info!(seed, ?spawn, "generating the world");
     let builder = Server::builder().bind(([0, 0, 0, 0], port).into()).name(NAME).online_mode(!offline).game_mode(GameMode::Creative);
-    let builder = builder.properties(&props).watchdog(Watchdog::default()).crash_reports("crash-reports");
+    let builder = builder.properties(&props).watchdog(Watchdog::default()).crash_reports("crash-reports").console(true);
     let server = builder.world(world, spawn).start().await?;
     tokio::signal::ctrl_c().await?;
     tracing::info!(stats = ?server.tick_stats(), "shutting down");

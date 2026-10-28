@@ -8,7 +8,6 @@ use acacia_nethernet::host::{Host, HostConfig};
 use acacia_raknet::{Server, ServerConfig};
 use p384::ecdsa::SigningKey;
 use rand_core::RngCore;
-use tokio::net::{TcpListener, UdpSocket};
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
@@ -18,13 +17,13 @@ use crate::driver::Driver;
 use crate::event::{Inbox, Outbox};
 use crate::lan::Lan;
 use crate::links::Links;
+use crate::query::Query;
 use crate::router::Router;
 use crate::sessions::Sessions;
+use crate::sockets::Sockets;
 
 /// Connections allowed beyond `max_players`, so a full server can still tell newcomers it is full.
 const HANDSHAKE_SLACK: usize = 32;
-/// Tries at finding a free port number that is free on both UDP and TCP, when asked for port 0.
-const PAIR_ATTEMPTS: usize = 16;
 
 /// The listening sockets and the task driving them. The task ends when the game drops the
 /// [`Outbox`] or the [`Inbox`]; players are then told the server closed.
@@ -68,10 +67,10 @@ pub async fn listen(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys) -> io::
 /// [`listen`] for a game of several shards: one inbox each, new players join shard `entry`, and
 /// [`Outbox::route`] moves a connection between them. The task ends when every inbox is dropped.
 pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, shards: usize, entry: usize) -> io::Result<(Listener, Outbox, Vec<Inbox>)> {
-    let (socket, tcp) = bind(addr, cfg.nethernet.is_some()).await?;
-    let addr = socket.local_addr()?;
+    let (sockets, tcp) = Sockets::bind(addr, cfg.bind_v6, cfg.nethernet.is_some()).await?;
+    let addr = sockets.local_addr()?;
     let guid = rand_core::OsRng.next_u64();
-    let mut raknet = ServerConfig::new(guid, cfg.motd.pong(guid, 0, cfg.max_players.get(), addr.port()));
+    let mut raknet = ServerConfig::new(guid, cfg.motd.pong(guid, 0, cfg.max_players.get(), sockets.ports()));
     raknet.max_peers = cfg.max_players.ceiling() + HANDSHAKE_SLACK;
     let (senders, inboxes) = (0..shards.max(1)).map(|_| mpsc::unbounded_channel()).unzip();
     let host = cfg.nethernet.as_ref().map(|n| Host::new(n.host_key.clone(), HostConfig { max_peers: raknet.max_peers, ..HostConfig::default() }));
@@ -85,7 +84,9 @@ pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, 
     let (commands, outbound) = mpsc::unbounded_channel();
     let congestion = Congestion::default();
     let driver = Driver {
-        socket,
+        sockets,
+        query: cfg.query.then(|| Query::new(Instant::now())),
+        replies: Vec::new(),
         links: Links { raknet: Server::new(raknet, Instant::now()), nethernet: host },
         signaling,
         lan,
@@ -98,23 +99,6 @@ pub async fn listen_shards(addr: SocketAddr, cfg: NetConfig, keys: SigningKeys, 
     };
     let task = tokio::spawn(driver.run());
     Ok((Listener { addr, lan: advert, task }, Outbox { commands, congestion }, inboxes))
-}
-
-/// The game's UDP socket and, with NetherNet, a TCP listener on the same port number.
-async fn bind(addr: SocketAddr, with_tcp: bool) -> io::Result<(UdpSocket, Option<TcpListener>)> {
-    if !with_tcp {
-        return Ok((UdpSocket::bind(addr).await?, None));
-    }
-    let mut attempts = if addr.port() == 0 { PAIR_ATTEMPTS } else { 1 };
-    loop {
-        let socket = UdpSocket::bind(addr).await?;
-        attempts -= 1;
-        match TcpListener::bind(socket.local_addr()?).await {
-            Ok(tcp) => return Ok((socket, Some(tcp))),
-            Err(error) if attempts == 0 => return Err(error),
-            Err(_) => {}
-        }
-    }
 }
 
 /// The NetherNet host key kept in `path`, made on first use. See [`crate::NetherNet::host_key`].

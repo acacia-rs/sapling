@@ -43,6 +43,8 @@ flate2 = "1.1"
 rusty-leveldb = { git = "https://github.com/bedrock-crustaceans/rusty-leveldb", rev = "3365b32b747ad50fefdd8b6a6f988dacf357a114", default-features = false, features = ["fs"] }
 p384 = { version = "0.13", features = ["ecdsa"] }
 rand_core = { version = "0.6", features = ["getrandom"] }
+# The console's line editor (tab completion on a terminal).
+rustyline = { version = "15", default-features = false }
 serde_json = "1"
 sha2 = "0.10"
 socket2 = "0.6"

@@ -1313,13 +1313,23 @@ All set through `ServerBuilder` (`sapling/src/server/ops.rs`).
   `properties(&props)`. Read: `server-name`, `level-name` (the list's level and StartGame's name; the
   folder is the binary's to open), `gamemode`, `difficulty` (names or numbers), `max-players`,
   `online-mode`, `allow-list`/`white-list` (sets the `access` lists' allowlist; on without lists is
-  `StartError::NoAllowlist`), `server-ip`, `server-port`, `view-distance` (≥ 5), `tick-distance` (4 to 12: how far about a player mobs spawn and hives and
+  `StartError::NoAllowlist`), `server-ip`, `server-port`, `server-portv6` (`bind_v6` on `[::]`: an
+  IPv6-only socket beside the main one, RakNet and the query on both, the pong naming both ports;
+  research/captures/bds-query.txt), `enable-query` (Java's key, BDS has none and answers no query:
+  `query(true)` answers GameSpy4 handshake and basic/full stat on the game ports, sapling-net
+  `query.rs`), `view-distance` (≥ 5), `tick-distance` (4 to 12: how far about a player mobs spawn and hives and
   snow tick, saved as level.dat's `serverChunkTickRange`), `player-idle-timeout`,
   `level-seed` (numbers only, for the binary), `compression-threshold`, `compression-algorithm`,
   `player-position-acceptance-threshold`, `player-rewind-min-correction-delay-ticks`. Every other key
-  (`server-portv6`, `force-gamemode`, `allow-cheats`, `default-player-permission-level`,
+  (`force-gamemode`, `allow-cheats`, `default-player-permission-level`,
   `transport`, `enable-lan-visibility`, ...) is logged as ignored. Bad values fail with their line.
-  Settings made after it win. `examples/generated.rs --properties=` uses it.
+  Settings made after it win. `examples/generated.rs --properties=` uses it. `gamemode` (and
+  `game_mode()`) also sets the server list's mode.
+- **Console** (`sapling/src/console.rs`, `console(true)`): stdin lines run on the entry shard as
+  `Sender::Console` with operator permission; the answer is logged in English as BDS's console prints
+  it (INFO when it succeeded, ERROR otherwise; bds-console-cmds.txt), from en_US.lang's `commands.*`
+  texts (`sapling_data::command_text`, an ignored data file). Tab completes command names when stdin
+  is a terminal (rustyline); otherwise lines are read plainly until the input ends.
 - **Compression**: `NetConfig::compression` (zlib = raw deflate, or snappy) and `compression_threshold`
   (default 1) go into acacia's `LoginConfig`, i.e. NetworkSettings.
 - **Packet limits** (`sapling-net/src/limits.rs`, `NetConfig::packet_limits`): per session and one-second
@@ -1485,7 +1495,7 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   sidebar with two lines of the same text; removing and re-adding a line in one batch without flicker;
   RemoveObjective alone to hide the sidebar (BDS also clears the slot); ToastRequest;
   UpdatePlayerGameType for another player's id.
-- Commands: console sender, selectors in `Target` parameters, position and item parameters, soft enums
+- Commands: selectors in `Target` parameters, position and item parameters, soft enums
   (UpdateSoftEnum) for dynamic completions, several overloads for a struct, permission nodes.
 - Forms: images are untested, `ServerSettings`, ClientboundCloseForm, a timeout for unanswered forms.
 - HUD: several boss bars (needs an entity each).
@@ -1501,8 +1511,8 @@ acacia-world = { path = "../acacia/acacia/crates/acacia-world" }
   per-player backlog limit (16 MB) matters. Skin changes in game (PlayerSkin) are ignored.
 - Chat: private messages, profanity filter fields.
 - **Operations, not checked against BDS:** the idle kick's activity rule and screen, BDS's chat or
-  packet rate limits (Java's chat rule is used), `level-seed` text hashing, the despawn cap at a `tick-distance` other than 4, an IPv6
-  listener beside the IPv4 one (`server-portv6`), config hot reload.
+  packet rate limits (Java's chat rule is used), `level-seed` text hashing, the despawn cap at a `tick-distance` other than 4, the pong's
+  IPv6 port field (BDS 1.26.52's pong carried no string to read), config hot reload.
 - **BDS only saves chunks that changed since generation.** A folder's holes are void unless it is
   opened with `generate_missing`, which fills them as a new world would be generated ("Generation").
 - Block-state upgrader (CC0 BedrockBlockUpgradeSchema) for palettes older than the current version;
