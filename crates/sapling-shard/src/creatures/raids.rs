@@ -2,14 +2,18 @@
 //! (omens.rs, village.rs) starts one. After a 300-tick wait each wave of BDS's raid groups comes
 //! (waves.rs), the next once the last is dead; with the last dead the raid is won and its heroes
 //! take Hero of the Village, and it is lost once no villager is left. Shown on a boss bar (bar.rs),
-//! which stays 30 s past the end.
-// TODO: raiders do not make for the village, hunt villagers, celebrate or join a raid they pass;
-// no captain or banner; a raid is not kept with the world.
+//! which stays 30 s past the end. Its raiders make for the village and celebrate its fall
+//! (raiders.rs); they hunt villagers and golems as their kind does (hunting/prey.rs).
+// TODO: raiders do not join a raid they pass (BDS's `RaidRecruitSystem`, 0x141959650); a raid is not
+// kept with the world.
 
 mod bar;
 mod omens;
+mod raiders;
 mod village;
 mod waves;
+
+pub(super) use raiders::steer;
 
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
@@ -104,6 +108,9 @@ fn step(world: &mut World, raid: &mut Raid, now: u64) {
     match raid.stage {
         Stage::Gathering(until) if now >= until => {
             raid.raiders = waves::spawn(world, raid.layer, raid.middle, raid.spawned);
+            for &raider in &raid.raiders {
+                world.entity_mut(raider).insert(raiders::Raider { middle: raid.middle });
+            }
             raid.spawned += 1;
             raid.most = health(world, &raid.raiders).max(1.0);
             raid.stage = Stage::Fighting;
@@ -121,6 +128,8 @@ fn step(world: &mut World, raid: &mut Raid, now: u64) {
     }
     if !raid.is_over() && now.is_multiple_of(LOOKS) && !village::holds(world, raid.layer, raid.middle) {
         raid.stage = Stage::Lost(now);
+        raid.raiders.retain(|raider| is_alive(world, *raider));
+        raiders::celebrate(world, &raid.raiders, now);
     }
 }
 
@@ -134,7 +143,9 @@ pub(super) fn tick(world: &mut World) {
     for raid in &mut raids {
         step(world, raid, now);
     }
-    raids.retain(|raid| !matches!(raid.stage, Stage::Won(since) | Stage::Lost(since) if now >= since + ENDS));
+    let (gone, kept): (Vec<Raid>, Vec<Raid>) = raids.into_iter().partition(|raid| matches!(raid.stage, Stage::Won(since) | Stage::Lost(since) if now >= since + ENDS));
+    let raids = kept;
+    gone.iter().for_each(|raid| raiders::disband(world, &raid.raiders));
     bar::show(world, &raids, now);
     world.resource_mut::<Raids>().0 = raids;
 }

@@ -5,7 +5,7 @@ use crate::common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{BossEvent, BossEventType, MobEffect, MobEffectEventId};
+use acacia_proto::packets::{AddEntity, BossEvent, BossEventType, LevelSoundEvent, MobArmorEquipment, MobEffect, MobEffectEventId};
 use common::{Harness, all, config};
 use sapling_api::{Block, BlockEntityData, Difficulty, Effect, EntityInfo, PlayerId};
 use sapling_world::World;
@@ -70,6 +70,45 @@ fn bad_omen_in_a_village_brings_a_raid_whose_three_waves_on_easy_won_make_a_hero
     assert!(effects(&after).contains(&(MobEffectEventId::Add, 29, 1, 48000)), "{:?}", effects(&after));
     assert!(bars(&after).contains(&(BossEventType::SetBarTitle, "%raid.name - %raid.victory".to_owned())), "{:?}", bars(&after));
     assert_eq!(bars(&ticks(&mut h, 600)), [(BossEventType::HideBar, String::new())], "30 s on");
+}
+
+#[test]
+fn raiders_make_for_the_village_kill_its_villager_and_celebrate_its_fall() {
+    let mut h = village();
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 0, true)));
+    ticks(&mut h, 602);
+    assert!((0..400).any(|_| !raiders(&mut h).is_empty()), "the first wave");
+    // Out of the fight: the omen's player is creative only once its raid has begun.
+    h.remote.run(|ctx| ctx.set_game_mode(ALEX, sapling_api::GameMode::Creative));
+    let off = |h: &mut Harness| raiders(h).iter().map(|raider| (raider.feet[0] - 3.5).hypot(raider.feet[2] - 3.5)).fold(f32::MAX, f32::min);
+    let came = off(&mut h);
+    ticks(&mut h, 100);
+    assert!(off(&mut h) < came - 3.0, "they walk at the bell: {came} then {}", off(&mut h));
+    let mut sent = Vec::new();
+    for _ in 0..40 {
+        sent.extend(ticks(&mut h, 50));
+        if bars(&sent).contains(&(BossEventType::SetBarTitle, "%raid.name - %raid.defeat".to_owned())) {
+            break;
+        }
+    }
+    assert!(bars(&sent).contains(&(BossEventType::SetBarTitle, "%raid.name - %raid.defeat".to_owned())), "the pillagers shot the villager");
+    let cries = all::<LevelSoundEvent>(&ticks(&mut h, 300)).into_iter().filter(|sound| sound.sound_id == "celebrate").count();
+    assert!(cries >= 2, "the raiders celebrate: {cries}");
+}
+
+#[test]
+fn a_captain_wears_the_ominous_banner_and_drops_it() {
+    let mut h = village();
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:pillager", [20.5, 65.0, 20.5], 0.0, Some("minecraft:spawn_as_illager_captain")).is_some()));
+    let sent = ticks(&mut h, 3);
+    let captain = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:pillager").expect("shown").runtime_id;
+    let worn: Vec<i16> = all::<MobArmorEquipment>(&sent).into_iter().filter(|worn| worn.runtime_entity_id == captain).map(|worn| worn.chestplate.network_id).collect();
+    assert!(worn.iter().any(|id| *id != 0), "its banner shows in its chest slot: {worn:?}");
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(sapling_api::EntityId(captain))));
+    ticks(&mut h, 30);
+    let dropped: Vec<(String, i16)> = common::asking::ask(&mut h, |ctx| ctx.entities().into_iter().filter_map(|entity| entity.item).map(|item| (item.name, item.damage)).collect());
+    assert!(dropped.contains(&("minecraft:banner".to_owned(), 15)), "{dropped:?}");
+    assert!(!dropped.iter().any(|(name, _)| name == "minecraft:ominous_bottle"), "no player killed it: no bottle");
 }
 
 #[test]

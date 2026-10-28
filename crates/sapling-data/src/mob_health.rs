@@ -89,6 +89,21 @@ pub struct Hunts {
     pub calms: Option<u32>,
     /// It lets its prey go once it has hit it (a panda's, a bee's `attack_once`).
     pub once: bool,
+    /// The mob families it takes besides players, from its `nearest_attackable_target`: `villager.grown`
+    /// for grown ones only, `!creeper` for never a creeper.
+    pub preys: Option<&'static str>,
+}
+
+impl Hunts {
+    /// Whether it takes a mob of `families`, a baby if `baby`.
+    pub fn preys_on(&self, families: &[&str], baby: bool) -> bool {
+        let mut terms = self.preys.unwrap_or_default().split(',').filter(|term| !term.is_empty());
+        let barred = terms.clone().any(|term| term.strip_prefix('!').is_some_and(|family| families.contains(&family)));
+        !barred && terms.any(|term| match term.strip_suffix(".grown") {
+            Some(family) => !baby && families.contains(&family),
+            None => families.contains(&term),
+        })
+    }
 }
 
 pub fn mob_traits(identifier: &str) -> MobTraits {
@@ -99,7 +114,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let value = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name)));
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
     let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), varies: number("varies="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once") });
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), varies: number("varies="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once"), preys: value("preys=") });
     let roams = value("roams=").and_then(|roams| roams.split_once('x')).and_then(|(across, up)| Some([across.parse().ok()?, up.parse().ok()?]));
     let swims = number("swims=").zip(roams);
     MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
@@ -191,6 +206,15 @@ mod tests {
         assert_eq!(mob_traits("minecraft:cod").swims, Some((0.1, [16, 4])));
         assert_eq!(["minecraft:hoglin", "minecraft:ravager", "minecraft:warden", "minecraft:cow"].map(|kind| mob_traits(kind).resists), [0.6, 0.75, 1.0, 0.0]);
         assert!(mob_traits("minecraft:shulker").unpushable && mob_traits("minecraft:armor_stand").unpushable && !mob_traits("minecraft:warden").unpushable && !mob_traits("minecraft:cow").unpushable);
+    }
+
+    #[test]
+    fn raiders_spare_baby_villagers_and_golems_spare_creepers() {
+        let hunts = |kind| mob_traits(kind).hunts.expect("a hunter");
+        assert!(hunts("minecraft:pillager").preys_on(&["villager", "mob"], false) && !hunts("minecraft:pillager").preys_on(&["villager", "mob"], true));
+        assert!(hunts("minecraft:zombie").preys_on(&["villager", "mob"], true));
+        assert!(hunts("minecraft:iron_golem").preys_on(&["zombie", "monster"], false) && !hunts("minecraft:iron_golem").preys_on(&["creeper", "monster"], false));
+        assert!(!hunts("minecraft:skeleton").preys_on(&["villager"], false));
     }
 
     #[test]

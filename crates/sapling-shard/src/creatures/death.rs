@@ -61,7 +61,9 @@ pub(super) fn leave_remains(world: &mut World, entity: Entity, layer: Entity, ki
     if leaves_loot(world, layer) {
         leave_loot(world, layer, kind, on_fire, killer, body.at);
         let [x, y, z] = body.at;
-        for stack in super::drowned::let_go(world, entity, by_player) {
+        let mut dropped = super::drowned::let_go(world, entity, by_player);
+        dropped.extend(super::captains::let_go(world, entity, by_player));
+        for stack in dropped {
             drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
         }
     }

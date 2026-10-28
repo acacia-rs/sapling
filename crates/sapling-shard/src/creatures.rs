@@ -14,6 +14,7 @@ mod birth;
 mod blast;
 mod blows;
 mod breezes;
+mod captains;
 mod dolphins;
 mod drinks;
 mod drowned;
@@ -136,6 +137,7 @@ pub(crate) fn keep_state(world: &mut World) {
     afflictions::keep(world);
     wither::keep(world);
     piglins::keep(world);
+    captains::keep(world);
 }
 
 /// Kills the entity `id` (see `ShardCtx::kill_entity`).
@@ -213,7 +215,7 @@ pub(crate) fn tick(world: &mut World) {
         }
         // A teleport starts the tick afresh where it landed: no fall from where it left.
         let Some(start) = world.get::<Body>(entity).copied() else { continue };
-        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !warden::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !snow_golems::steer(world, entity, layer, id, &kind) && !piglins::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
+        if thinks && !legs::ridden(world, entity, layer, &kind, &start) && !wither::steer(world, entity, layer) && !rams::steer(world, entity, layer, id, &kind) && !creaking::steer(world, entity, layer, id, &kind) && !warden::steer(world, entity, layer, id, &kind) && !hunting::steer(world, entity, layer, id, &kind) && !raids::steer(world, entity, layer, &kind) && !snow_golems::steer(world, entity, layer, id, &kind) && !piglins::steer(world, entity, layer, id, &kind) && !husbandry::steer(world, entity, layer, &kind) && !villagers::steer(world, entity, layer)
             && !frogs::steer(world, entity, layer, id) && !swimming::steer(world, entity, layer, &kind) && !squids::steer(world, entity, layer)&& !wings::steer(world, entity, layer, &kind)
         {
             let traits = sapling_data::mob_traits(&kind);

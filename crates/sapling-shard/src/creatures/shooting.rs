@@ -6,7 +6,7 @@ use sapling_data::Hunts;
 use super::hunting::Hunter;
 use super::{arrows, bullets, splashes};
 use crate::body::Body;
-use crate::components::{Position, Tick};
+use crate::components::Tick;
 use crate::late_sounds;
 
 /// The ticks after a shot at which a crossbow's loading is heard, and what of it.
@@ -18,7 +18,7 @@ const MIDDLE: f32 = 0.5;
 /// After its move: a hunter that shoots, `every` ticks, at its `prey` looses what is due.
 pub(super) fn shoot(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body, hunts: Hunts, every: u32, prey: Entity) -> Option<()> {
     let now = world.resource::<Tick>().0;
-    let feet = world.get::<Position>(prey)?.feet;
+    let feet = super::hunting::feet_of(world, prey)?;
     let ready = world.get::<Hunter>(entity)?.ready;
     let fire = |world: &mut World| match hunts.shot {
         Some(bullets::NAME) => bullets::fire(world, layer, entity, kind, body, prey),

@@ -112,6 +112,23 @@ HUNTS = {
     "minecraft:zombie_villager_v2": "attack=3 speed=0.23 sees=35",
 }
 
+# The families each hunter takes besides players, from its `nearest_attackable_target` (`.grown`: not a
+# baby; `!f`: never family f). See creatures/hunting/prey.rs.
+GROWN_VILLAGERS = "irongolem,wandering_trader,villager.grown"
+ZOMBIE_PREY = "preys=snowgolem,irongolem,villager,wandering_trader"
+PREYS = {
+    "minecraft:evocation_illager": "preys=snowgolem," + GROWN_VILLAGERS,
+    "minecraft:husk": ZOMBIE_PREY,
+    "minecraft:iron_golem": "preys=monster,!creeper,hoglin,zoglin",
+    "minecraft:pillager": "preys=" + GROWN_VILLAGERS,
+    "minecraft:ravager": "preys=" + GROWN_VILLAGERS,
+    "minecraft:vindicator": "preys=snowgolem," + GROWN_VILLAGERS,
+    "minecraft:witch": "preys=snowgolem,irongolem",
+    "minecraft:zombie": ZOMBIE_PREY,
+    "minecraft:zombie_villager": ZOMBIE_PREY,
+    "minecraft:zombie_villager_v2": ZOMBIE_PREY,
+}
+
 rows = []
 for document in packs.entities().values():
     entity = document.get("minecraft:entity")
@@ -144,7 +161,7 @@ for document in packs.entities().values():
     swim = components.get("minecraft:behavior.random_swim")
     if swim and any(name.startswith("swims=") for name in held):
         held.append(f"roams={swim.get('xz_dist', 10)}x{swim.get('y_dist', 7)}")
-    held.extend(filter(None, [HUNTS.get(entity["description"]["identifier"])]))
+    held.extend(filter(None, [HUNTS.get(entity["description"]["identifier"]), PREYS.get(entity["description"]["identifier"])]))
     if held:
         rows.append((entity["description"]["identifier"], " ".join(held)))
 open(os.path.join(HERE, "..", "mob-traits.tsv"), "w", newline="\n").write("".join(f"{name}\t{traits}\n" for name, traits in sorted(rows)))

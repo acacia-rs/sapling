@@ -24,6 +24,7 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     let entity = entities::find(world, id)?;
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
+    super::captains::arm(world, entity, kind, event);
     if event.is_some() {
         super::warden::arm(world, entity, kind, event);
     }
@@ -104,6 +105,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     husbandry::adopt(world, entity, &kind, Some((&actor, &compound)));
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     super::piglins::adopt(world, entity);
+    super::captains::adopt(world, entity);
     if kind == crate::dragon::DRAGON {
         crate::dragon::adopt(world, entity);
     }

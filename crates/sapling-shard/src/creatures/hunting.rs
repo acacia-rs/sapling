@@ -5,8 +5,10 @@
 // monsters, idle; viewers far off are told every move, where BDS told one of every other; a piglin
 // hunts a player in gold too, and a polar bear does not rear before its hit.
 
+mod prey;
 mod strike;
 
+pub(super) use prey::feet_of;
 pub(super) use strike::{strike, swing};
 
 use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
@@ -41,7 +43,6 @@ const COOLDOWN: u64 = 20;
 const THROW: f32 = 0.4;
 /// Nearer than this to its prey it stands: their boxes touch.
 const TOUCHING: f32 = 0.6;
-const PLAYER: [f32; 2] = [0.6, 1.8];
 /// How far apart a line of sight is looked at.
 const GLANCE: f32 = 0.25;
 /// Its sounds come from this much of its height up: its growl, and its hit.
@@ -113,7 +114,7 @@ pub(super) fn targets(id: u64, target: i64) -> bytes::Bytes {
 
 /// Where the hunter's prey stands, if it has any.
 pub(super) fn prey_at(world: &World, entity: Entity) -> Option<[f32; 3]> {
-    Some(world.get::<Position>(world.get::<Hunter>(entity)?.prey?)?.feet)
+    feet_of(world, world.get::<Hunter>(entity)?.prey?)
 }
 
 /// A hunter that died lets its prey go, which its viewers are told (bds-bite.txt).
@@ -131,14 +132,18 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let hunts = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful;
     let since = world.get::<Hunter>(entity)?.since;
     let calm = sapling_data::mob_traits(kind).hunts?.calms.is_some_and(|calms| now >= since + u64::from(calms));
-    let mut found = had.filter(|_| hunts && !calm).and_then(|prey| Some((prey, seen(world, prey, layer, body.at, sight)?)));
+    let keeps = |prey| if prey::is_mob(world, prey) { prey::kept(world, prey, layer, body.at, sight) } else { seen(world, prey, layer, body.at, sight) };
+    let mut found = had.filter(|_| hunts && !calm).and_then(|prey| Some((prey, keeps(prey)?)));
     // A spider under the sun by day took none on BDS; under a roof or by night it did
     // (research/captures/bds-spiders.txt).
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
     let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && super::harm::sun_on(world, layer, head);
-    let looks = !sapling_data::mob_traits(kind).hunts?.provoked && !dazzled;
-    if found.is_none() && hunts && looks && (now + id).is_multiple_of(LOOKS) {
-        found = nearest(world, layer, body, sight);
+    // One provoked by players still takes the mobs its kind hunts.
+    let traits = sapling_data::mob_traits(kind).hunts?;
+    if found.is_none() && hunts && !dazzled && (now + id).is_multiple_of(LOOKS) {
+        let player = if traits.provoked { None } else { nearest(world, layer, body, sight) };
+        let mob = prey::nearest(world, entity, layer, body, sight, traits);
+        found = [player, mob].into_iter().flatten().min_by(|a, b| distance(a.1, body.at).total_cmp(&distance(b.1, body.at)));
     }
     let prey = found.map(|(prey, _)| prey);
     if prey != had {
@@ -202,6 +207,13 @@ fn heads(world: &mut World, entity: Entity, layer: Entity, body: &Body, feet: [f
         hunter.way.remove(0);
     }
     hunter.way.first().map_or(straight, |cell| (middle(cell), 0.0))
+}
+
+/// Before the hunter's move without prey: it walks to `to` as it would at prey, by a way round
+/// where one is needed, until it is `near` of it.
+pub(super) fn approach(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 3], speed: f32, near: f32) {
+    let (step, stop) = heads(world, entity, layer, body, to);
+    legs::walk(world, entity, layer, body, step, speed, if stop > 0.0 { near } else { 0.0 });
 }
 
 /// Before the hunter's move: it walks at its prey, if it has any.
