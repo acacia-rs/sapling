@@ -78,6 +78,11 @@ async fn world_and_item_commands_answer_as_bds_answered() {
         ("clear @s red_wool -1 0", r#"commands.clear.testing ["Alice", "2"] 1"#),
         ("clear @a red_wool", r#"commands.clear.success ["Alice", "2"] 1"#),
         ("clear @s apple", r#"commands.clear.success ["Alice", "1"] 1"#),
+        ("clear @s apple 0 0", r#"commands.clear.failure.no.items ["Alice"] 0"#),
+        ("give @s shulker_box 1 14", r#"commands.give.success ["Red Shulker Box", "1", "Alice"] 1"#),
+        ("give @s coral_block 1 14", r#"commands.give.success ["Dead Tube Coral Block", "1", "Alice"] 1"#),
+        ("give @s ender_pearl 3000", r#"commands.give.success ["Ender Pearl", "3000", "Alice"] 1"#),
+        ("clear", r#"commands.clear.success ["Alice", "546"] 1"#),
         ("give @s diamond_sword", r#"commands.give.success ["Diamond Sword", "1", "Alice"] 1"#),
         ("enchant @s sharpness", r#"commands.enchant.success ["Alice"] 1"#),
         ("enchant @s sharpness 6", r#"commands.generic.num.tooBig ["6", "5"] 0"#),
@@ -94,6 +99,10 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     for (line, expected) in steps {
         assert_eq!(answer(&mut alice, line).await, *expected, "/{line}");
     }
+    // Still peaceful, from `difficulty 0` (bds-server.txt).
+    assert_eq!(answer(&mut alice, "summon zombie").await, "commands.summon.failed [] 0");
+    let v2 = answer(&mut alice, "summon zombie_villager_v2 ~ ~ ~").await;
+    assert!(v2.starts_with("commands.generic.syntax [") && v2.contains(r#""zombie_villager_v2""#), "{v2}");
     let seed = answer(&mut alice, "seed").await;
     assert!(seed.starts_with("commands.seed.success [") && seed.ends_with("] 1"), "{seed}");
     let version = answer(&mut alice, "version").await;

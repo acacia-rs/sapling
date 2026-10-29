@@ -148,19 +148,19 @@ pub(super) fn into_loot(kept: &Value, items: &mut Vec<Item>) {
 }
 
 /// The tags a broken block's entity `kept` gives the items it leaves, in their order, by item: a
-/// banner's patterns and kind (none for a plain banner), each held stack's own (a written book's
-/// pages, an item's enchantments), `None` for an untagged one.
+/// banner's `{BlockEntityVersion, Patterns, Type}`, plain or not (research/captures/bds-banners.txt),
+/// each held stack's own (a written book's pages, an item's enchantments), `None` for an untagged one.
 pub(super) fn loot_tags(kept: &Value) -> Vec<(String, Option<Value>)> {
     let mut tags: Vec<_> = held_items(kept).into_iter().map(|stack| (stack.name, stack.tag)).collect();
     if kept.get("id") != Some(&Value::String("Banner".into())) {
         return tags;
     }
     let patterns = kept.get(PATTERNS).filter(|patterns| matches!(patterns, Value::List(list) if !list.items.is_empty()));
-    let kind = kept.get(BANNER_TYPE).filter(|kind| **kind != Value::Int(0));
-    let fields: Vec<_> = [(PATTERNS, patterns), (BANNER_TYPE, kind)].into_iter().filter_map(|(key, value)| Some((key.into(), value?.clone()))).collect();
-    if !fields.is_empty() {
-        tags.insert(0, ("minecraft:banner".into(), Some(Value::Compound(fields))));
-    }
+    let kind = kept.get(BANNER_TYPE).cloned().unwrap_or(Value::Int(0));
+    let mut fields = vec![("BlockEntityVersion".into(), Value::Int(0))];
+    fields.extend(patterns.map(|patterns| (PATTERNS.into(), patterns.clone())));
+    fields.push((BANNER_TYPE.into(), kind));
+    tags.insert(0, ("minecraft:banner".into(), Some(Value::Compound(fields))));
     tags
 }
 
@@ -179,8 +179,10 @@ mod tests {
         assert_eq!(kept.items.len(), MAX_PATTERNS);
         let [(item, given)] = loot_tags(&entity).try_into().unwrap();
         let given = given.expect("the banner's tag");
-        assert_eq!((item.as_str(), given.get(PATTERNS).is_some(), given.get(BANNER_TYPE)), ("minecraft:banner", true, None));
+        assert_eq!((item.as_str(), given.get(PATTERNS).is_some(), given.get(BANNER_TYPE)), ("minecraft:banner", true, Some(&Value::Int(0))));
         let plain = placed("minecraft:wall_banner", [0, 64, 0], &Placing { tag: None, ..placing }).unwrap();
-        assert!(plain.get(PATTERNS).is_none() && loot_tags(&plain).is_empty());
+        let tags: [(String, Option<Value>); 1] = loot_tags(&plain).try_into().unwrap();
+        let [(_, Some(Value::Compound(given)))] = tags else { panic!("a plain banner's tag") };
+        assert_eq!(given, vec![("BlockEntityVersion".into(), Value::Int(0)), (BANNER_TYPE.into(), Value::Int(0))]);
     }
 }

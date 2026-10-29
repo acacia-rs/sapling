@@ -98,6 +98,19 @@ impl Applied {
     }
 }
 
+fn named_text(request: &Request, index: i32) -> Option<&str> {
+    usize::try_from(index).ok().and_then(|index| request.custom_names.get(index)).map(String::as_str)
+}
+
+/// Whether `request` is an anvil craft that would make nothing ([`Forge::repairs_nothing`]).
+fn repairs_nothing(inventory: &Inventory, request: &Request, at: &At) -> bool {
+    let asked = request.actions.iter().find_map(|action| match &action.content {
+        Action::Optional(asked) => Some(asked.filtered_string_index),
+        _ => None,
+    });
+    matches!(at.bench, Some(Bench::Anvil)) && asked.is_some_and(|index| Forge::repairs_nothing(inventory, named_text(request, index)))
+}
+
 /// Does every action of `request`, or fails at the first that cannot be done as asked, or at
 /// the end over a craft that did not use up what its recipe needs or, out of creative, over a
 /// piece with Curse of Binding that left its slot.
@@ -112,7 +125,7 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
         match (&action.content, &at.bench) {
             (Action::CraftRecipe(asked), Some(bench)) if unstarted => forge = Some(Forge::by_recipe(inventory, bench, asked.recipe_network_id, creative)?),
             (Action::Optional(asked), Some(bench @ (Bench::Anvil | Bench::Cartography(_)))) if unstarted => {
-                let name = usize::try_from(asked.filtered_string_index).ok().and_then(|index| request.custom_names.get(index)).map(String::as_str);
+                let name = named_text(request, asked.filtered_string_index);
                 forge = Some(match bench {
                     Bench::Cartography(chart) => Forge::chart(inventory, chart, asked.recipe_network_id, name)?,
                     _ => Forge::repair(inventory, name, creative)?,
@@ -177,6 +190,10 @@ fn apply(inventory: &mut Inventory, request: &Request, creative: bool, at: &At) 
 const CANNOT_HOLD: Status = Status::Unknown(55);
 /// What BDS answers a take out of an empty bundle slot, nothing resent (bds-bundlekeep.txt).
 const NOTHING_THERE: Status = Status::Unknown(49);
+/// What BDS answers a loom craft on a banner of six patterns (forge::holds_a_full_banner).
+const BANNER_FULL: Status = Status::Unknown(7);
+/// What BDS answers an anvil craft that makes nothing ([`repairs_nothing`]).
+const NOTHING_MADE: Status = Status::Unknown(9);
 
 fn refusal(request_id: i32, status: Status) -> ItemStackResponse {
     ItemStackResponse { responses: vec![ItemStackResponsesItem { status, request_id, containers: None }] }
@@ -221,6 +238,8 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
     bundles::lend(&mut trial, request);
     let takes_nothing = bundles::takes_nothing(&trial, request);
+    let looms_a_full_banner = forge::holds_a_full_banner(&trial) && request.actions.iter().any(|action| matches!(action.content, Action::CraftLoomRequest(_)));
+    let makes_nothing = repairs_nothing(&trial, request, at);
     let mut unrefused = Inventory { refuses: None, ..trial.clone() };
     // Tried on a copy first: the handlers see a drop before anything has left the inventory.
     let tried = apply(&mut trial, request, creative, at);
@@ -250,6 +269,8 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
             workstations::answered(world, entity, applied.forged);
         }
         _ if failed && takes_nothing => out.push(&refusal(request.request_id, NOTHING_THERE)),
+        _ if failed && looms_a_full_banner => out.push(&refusal(request.request_id, BANNER_FULL)),
+        _ if failed && makes_nothing => out.push(&refusal(request.request_id, NOTHING_MADE)),
         // Only the container's refusal or a bundle's weight stood in the way: the client undoes it
         // by itself.
         _ if overfilled || (failed && apply(&mut unrefused, request, creative, at).is_ok()) => out.push(&refusal(request.request_id, CANNOT_HOLD)),

@@ -1,0 +1,69 @@
+NO LOG FILE! - setting up server logging...
+[2026-10-29 10:05:56:492 INFO] Starting Server
+[2026-10-29 10:05:56:492 INFO] Version: 1.26.52.3
+[2026-10-29 10:05:56:492 INFO] Session ID: 08fd6f0b-9839-42fc-a731-bac145c0eac6
+[2026-10-29 10:05:56:492 INFO] Build ID: 51798919
+[2026-10-29 10:05:56:492 INFO] Branch: r/26_u5
+[2026-10-29 10:05:56:492 INFO] Commit ID: 54116bb5ee0b7aee0b5591efbcc8bc3cf64f168a
+[2026-10-29 10:05:56:492 INFO] Configuration: Publish
+[2026-10-29 10:05:56:492 INFO] Contents of server.properties: {}
+[2026-10-29 10:05:56:492 INFO] Level Name: blocks
+[2026-10-29 10:05:56:492 INFO] Profiler config ('bootstrap.json') load result: success=1, errorMessage=(null)
+[2026-10-29 10:05:56:512 INFO] No CDN config file found at: cdn_config.json for dedicated server
+[2026-10-29 10:05:56:512 INFO] Game mode: 1 Creative
+[2026-10-29 10:05:56:512 INFO] Difficulty: 1 EASY
+[2026-10-29 10:05:56:514 INFO] Content logging to console is enabled.
+[2026-10-29 10:05:56:515 INFO] 
+
+#####################################################
+#                                                   #
+#              CREATING VANILLA WORLD               #
+#                                                   #
+#####################################################
+[2026-10-29 10:05:56:940 INFO] Opening level 'worlds/blocks/db'
+[2026-10-29 10:05:56:968 INFO] Pack Stack - None
+[2026-10-29 10:05:57:130 INFO] Signed in to signaling service successfully
+[2026-10-29 10:05:57:686 INFO] IPv4 supported, port: 19660: Used for gameplay
+[2026-10-29 10:05:57:686 INFO] IPv6 supported, port: 19661: Used for gameplay
+[2026-10-29 10:05:57:718 INFO] Server started.
+[2026-10-29 10:05:57:718 ERROR] ================ TRANSPORT TYPE ERROR  ===================
+[2026-10-29 10:05:57:718 ERROR] Your current connection type is not set to NetherNet. In this release, NetherNet is the only supported transport type.
+[2026-10-29 10:05:57:718 ERROR] Players will not be able to connect to your game without NetherNet.
+[2026-10-29 10:05:57:718 ERROR] 
+[2026-10-29 10:05:57:718 ERROR] To switch, set 'transport=nethernet' in server.properties.
+[2026-10-29 10:05:57:718 ERROR] 
+[2026-10-29 10:05:57:718 ERROR] For more information, please reference the included bedrock_server_how_to.html file.
+[2026-10-29 10:05:57:718 ERROR] =======================================================
+[2026-10-29 10:05:57:718 INFO] ================ TELEMETRY MESSAGE ===================
+[2026-10-29 10:05:57:718 INFO] Server Telemetry is currently not enabled. 
+[2026-10-29 10:05:57:718 INFO] Enabling this telemetry helps us improve the game.
+[2026-10-29 10:05:57:718 INFO] 
+[2026-10-29 10:05:57:718 INFO] To enable this feature, add the line 'emit-server-telemetry=true'
+[2026-10-29 10:05:57:718 INFO] to the server.properties file in the handheld/src-server directory
+[2026-10-29 10:05:57:718 INFO] ======================================================
+[2026-10-29 10:05:58:151 INFO] Player connected: CmdActor, xuid: 
+[2026-10-29 10:06:00:741 INFO] Player PartyIdUpdate:  pfid: , partyid: , isLeader: false
+[2026-10-29 10:06:02:450 INFO] Player Spawned: CmdActor xuid: , pfid: 
+[2026-10-29 10:06:02:805 INFO] Player connected: CmdWatcher, xuid: 
+[2026-10-29 10:06:05:046 INFO] Player PartyIdUpdate:  pfid: , partyid: , isLeader: false
+[2026-10-29 10:06:06:700 INFO] Player Spawned: CmdWatcher xuid: , pfid: 
+[2026-10-29 10:06:12:808 INFO] Saving...
+[2026-10-29 10:06:14:401 INFO] Data saved. Files are now ready to be copied.
+blocks/db/CURRENT:16, blocks/db/MANIFEST-000002:50, blocks/db/000003.log:21948, blocks/level.dat:3008, blocks/level.dat_old:3008, blocks/levelname.txt:6
+[2026-10-29 10:06:15:901 INFO] Data saved. Files are now ready to be copied.
+blocks/db/CURRENT:16, blocks/db/MANIFEST-000002:50, blocks/db/000003.log:21948, blocks/level.dat:3008, blocks/level.dat_old:3008, blocks/levelname.txt:6
+[2026-10-29 10:06:17:371 INFO] Changes to the world are resumed.
+[2026-10-29 10:06:18:880 INFO] ###* {"command":"ops","result":[]}
+ *###
+###* {"command":"permissions","result":[]}
+ *###
+[2026-10-29 10:06:20:391 INFO] Ops reloaded from file.
+Permissions reloaded from file.
+[2026-10-29 10:06:21:896 INFO] Function and script files have been reloaded.
+[2026-10-29 10:06:23:401 INFO] There are 2/10 players online:
+CmdActor, CmdWatcher
+[2026-10-29 10:07:33:835 INFO] Player disconnected: CmdActor, xuid: , pfid: 
+[2026-10-29 10:07:33:845 INFO] Player disconnected: CmdWatcher, xuid: , pfid: 
+[2026-10-29 10:07:33:870 INFO] Server stop requested.
+[2026-10-29 10:07:33:945 INFO] Stopping server...
+Quit correctly

@@ -1,0 +1,215 @@
+## drill starts at 1793267275387
+## /kill @e[type=!player]
+     24 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1026 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   1026 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1026 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   1026 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1026 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /gamerule randomtickspeed 0
+   2027 watcher GameRulesChanged randomTickSpeed=Int(0)
+   2027 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2027 actor   GameRulesChanged randomTickSpeed=Int(0)
+   2027 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+## /gamemode creative @s
+   3026 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3026 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   3026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp @s 0.5 ~ 0.5 -90 0
+   4026 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4026 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "0.50"]
+   4026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill ~-2 ~-1 ~-6 ~12 ~-1 ~8 stone
+   5032 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill ~-2 ~ ~-6 ~12 ~6 ~8 air
+   6039 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /clear @s
+   7025 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   7025 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 stone
+   9080 watcher UpdateSubchunkBlocks 4 64 -1 stone[]; 4 65 -1 stone[]; 4 66 -1 stone[]; 5 64 -1 stone[]; 5 65 -1 stone[]; 5 66 -1 stone[]; 6 64 -1 stone[]; 6 65 -1 stone[]; 6 66 -1 stone[] | extra: 
+   9080 watcher UpdateSubchunkBlocks 4 64 0 stone[]; 4 64 1 stone[]; 4 65 0 stone[]; 4 65 1 stone[]; 4 66 0 stone[]; 4 66 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 5 65 0 stone[]; 5 65 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[] | extra: 
+   9081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9081 actor   UpdateSubchunkBlocks 4 64 -1 stone[]; 4 65 -1 stone[]; 4 66 -1 stone[]; 5 64 -1 stone[]; 5 65 -1 stone[]; 5 66 -1 stone[]; 6 64 -1 stone[]; 6 65 -1 stone[]; 6 66 -1 stone[] | extra: 
+   9081 actor   UpdateSubchunkBlocks 4 64 0 stone[]; 4 64 1 stone[]; 4 65 0 stone[]; 4 65 1 stone[]; 4 66 0 stone[]; 4 66 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 5 65 0 stone[]; 5 65 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[] | extra: 
+   9081 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+## /setblock ~5 ~1 ~ chest
+  10076 watcher UpdateBlock 5 65 0 layer 0 chest[minecraft:cardinal_direction=north]
+  10076 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0))]) } }
+  10076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10076 actor   UpdateBlock 5 65 0 layer 0 chest[minecraft:cardinal_direction=north]
+  10076 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0))]) } }
+  10076 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /structure save anim ~4 ~ ~-1 ~6 ~2 ~1
+  11076 actor   CommandOutput success_count=1 data=None commands.structure.save.success success=true ["mystructure:anim"]
+  11076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.save.success\",\"with\":{\"rawtext\":[{\"text\":\"mystructure:anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  12079 watcher UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  12079 watcher UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  12079 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12079 actor   UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  12079 actor   UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  12079 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+## /
+  13825 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  13825 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /structure load anim ~4 ~ ~-1 0_degrees none layer_by_layer 2
+  14076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.load.success\",\"with\":{\"rawtext\":[{\"text\":\"anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14076 actor   CommandOutput success_count=1 data=None commands.structure.load.success success=true ["anim"]
+  14778 watcher UpdateSubchunkBlocks 4 64 -1 stone[]; 5 64 -1 stone[]; 6 64 -1 stone[]; 4 64 -1 stone[]; 5 64 -1 stone[]; 6 64 -1 stone[] | extra: 
+  14778 watcher UpdateSubchunkBlocks 4 64 0 stone[]; 4 64 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[]; 4 64 0 stone[]; 4 64 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[] | extra: 
+  14778 actor   UpdateSubchunkBlocks 4 64 -1 stone[]; 5 64 -1 stone[]; 6 64 -1 stone[]; 4 64 -1 stone[]; 5 64 -1 stone[]; 6 64 -1 stone[] | extra: 
+  14778 actor   UpdateSubchunkBlocks 4 64 0 stone[]; 4 64 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[]; 4 64 0 stone[]; 4 64 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[] | extra: 
+## /
+  15427 watcher UpdateSubchunkBlocks 4 65 -1 stone[]; 5 65 -1 stone[]; 6 65 -1 stone[]; 4 65 -1 stone[]; 5 65 -1 stone[]; 6 65 -1 stone[] | extra: 
+  15427 watcher UpdateSubchunkBlocks 4 65 0 stone[]; 4 65 1 stone[]; 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[]; 4 65 0 stone[]; 4 65 1 stone[]; 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[] | extra: 
+  15428 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  15428 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  15428 actor   UpdateSubchunkBlocks 4 65 -1 stone[]; 5 65 -1 stone[]; 6 65 -1 stone[]; 4 65 -1 stone[]; 5 65 -1 stone[]; 6 65 -1 stone[] | extra: 
+  15428 actor   UpdateSubchunkBlocks 4 65 0 stone[]; 4 65 1 stone[]; 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[]; 4 65 0 stone[]; 4 65 1 stone[]; 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[] | extra: 
+  15428 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  15428 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+## /
+  16075 watcher UpdateSubchunkBlocks 4 66 -1 stone[]; 5 66 -1 stone[]; 6 66 -1 stone[]; 4 66 -1 stone[]; 5 66 -1 stone[]; 6 66 -1 stone[] | extra: 
+  16075 watcher UpdateSubchunkBlocks 4 66 0 stone[]; 4 66 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[]; 4 66 0 stone[]; 4 66 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[] | extra: 
+  16075 actor   UpdateSubchunkBlocks 4 66 -1 stone[]; 5 66 -1 stone[]; 6 66 -1 stone[]; 4 66 -1 stone[]; 5 66 -1 stone[]; 6 66 -1 stone[] | extra: 
+  16075 actor   UpdateSubchunkBlocks 4 66 0 stone[]; 4 66 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[]; 4 66 0 stone[]; 4 66 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[] | extra: 
+## /
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  18079 watcher UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  18079 watcher UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  18079 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18079 actor   UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  18079 actor   UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  18079 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+## /
+## /structure load anim ~4 ~ ~-1 0_degrees none block_by_block 2
+  20077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.load.success\",\"with\":{\"rawtext\":[{\"text\":\"anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20077 actor   CommandOutput success_count=1 data=None commands.structure.load.success success=true ["anim"]
+  20176 watcher UpdateSubchunkBlocks 4 64 -1 stone[]; 4 64 -1 stone[] | extra: 
+  20177 actor   UpdateSubchunkBlocks 4 64 -1 stone[]; 4 64 -1 stone[] | extra: 
+  20225 actor   UpdateSubchunkBlocks 4 64 0 stone[]; 4 64 0 stone[] | extra: 
+  20225 watcher UpdateSubchunkBlocks 4 64 0 stone[]; 4 64 0 stone[] | extra: 
+  20326 watcher UpdateSubchunkBlocks 4 64 1 stone[]; 4 64 1 stone[] | extra: 
+  20326 actor   UpdateSubchunkBlocks 4 64 1 stone[]; 4 64 1 stone[] | extra: 
+  20376 watcher UpdateSubchunkBlocks 5 64 -1 stone[]; 5 64 -1 stone[] | extra: 
+  20376 actor   UpdateSubchunkBlocks 5 64 -1 stone[]; 5 64 -1 stone[] | extra: 
+  20476 actor   UpdateSubchunkBlocks 5 64 0 stone[]; 5 64 0 stone[] | extra: 
+  20476 watcher UpdateSubchunkBlocks 5 64 0 stone[]; 5 64 0 stone[] | extra: 
+  20526 actor   UpdateSubchunkBlocks 5 64 1 stone[]; 5 64 1 stone[] | extra: 
+  20526 watcher UpdateSubchunkBlocks 5 64 1 stone[]; 5 64 1 stone[] | extra: 
+  20625 watcher UpdateSubchunkBlocks 6 64 -1 stone[]; 6 64 -1 stone[] | extra: 
+  20625 actor   UpdateSubchunkBlocks 6 64 -1 stone[]; 6 64 -1 stone[] | extra: 
+  20675 watcher UpdateSubchunkBlocks 6 64 0 stone[]; 6 64 0 stone[] | extra: 
+  20676 actor   UpdateSubchunkBlocks 6 64 0 stone[]; 6 64 0 stone[] | extra: 
+  20777 watcher UpdateSubchunkBlocks 6 64 1 stone[]; 6 64 1 stone[] | extra: 
+  20777 actor   UpdateSubchunkBlocks 6 64 1 stone[]; 6 64 1 stone[] | extra: 
+  20826 watcher UpdateSubchunkBlocks 4 65 -1 stone[]; 4 65 -1 stone[] | extra: 
+  20826 actor   UpdateSubchunkBlocks 4 65 -1 stone[]; 4 65 -1 stone[] | extra: 
+  20927 watcher UpdateSubchunkBlocks 4 65 0 stone[]; 4 65 0 stone[] | extra: 
+  20927 actor   UpdateSubchunkBlocks 4 65 0 stone[]; 4 65 0 stone[] | extra: 
+  20976 watcher UpdateSubchunkBlocks 4 65 1 stone[]; 4 65 1 stone[] | extra: 
+  20977 actor   UpdateSubchunkBlocks 4 65 1 stone[]; 4 65 1 stone[] | extra: 
+## /
+  21077 watcher UpdateSubchunkBlocks 5 65 -1 stone[]; 5 65 -1 stone[] | extra: 
+  21077 actor   UpdateSubchunkBlocks 5 65 -1 stone[]; 5 65 -1 stone[] | extra: 
+  21126 actor   UpdateSubchunkBlocks 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 0 chest[minecraft:cardinal_direction=north] | extra: 
+  21126 watcher UpdateSubchunkBlocks 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 0 chest[minecraft:cardinal_direction=north] | extra: 
+  21126 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  21127 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  21127 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  21127 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  21226 watcher UpdateSubchunkBlocks 5 65 1 stone[]; 5 65 1 stone[] | extra: 
+  21226 actor   UpdateSubchunkBlocks 5 65 1 stone[]; 5 65 1 stone[] | extra: 
+  21277 watcher UpdateSubchunkBlocks 6 65 -1 stone[]; 6 65 -1 stone[] | extra: 
+  21277 actor   UpdateSubchunkBlocks 6 65 -1 stone[]; 6 65 -1 stone[] | extra: 
+  21376 watcher UpdateSubchunkBlocks 6 65 0 stone[]; 6 65 0 stone[] | extra: 
+  21377 actor   UpdateSubchunkBlocks 6 65 0 stone[]; 6 65 0 stone[] | extra: 
+  21426 watcher UpdateSubchunkBlocks 6 65 1 stone[]; 6 65 1 stone[] | extra: 
+  21427 actor   UpdateSubchunkBlocks 6 65 1 stone[]; 6 65 1 stone[] | extra: 
+  21526 actor   UpdateSubchunkBlocks 4 66 -1 stone[]; 4 66 -1 stone[] | extra: 
+  21526 watcher UpdateSubchunkBlocks 4 66 -1 stone[]; 4 66 -1 stone[] | extra: 
+  21576 watcher UpdateSubchunkBlocks 4 66 0 stone[]; 4 66 0 stone[] | extra: 
+  21577 actor   UpdateSubchunkBlocks 4 66 0 stone[]; 4 66 0 stone[] | extra: 
+  21676 watcher UpdateSubchunkBlocks 4 66 1 stone[]; 4 66 1 stone[] | extra: 
+  21677 actor   UpdateSubchunkBlocks 4 66 1 stone[]; 4 66 1 stone[] | extra: 
+  21726 actor   UpdateSubchunkBlocks 5 66 -1 stone[]; 5 66 -1 stone[] | extra: 
+  21726 watcher UpdateSubchunkBlocks 5 66 -1 stone[]; 5 66 -1 stone[] | extra: 
+  21826 watcher UpdateSubchunkBlocks 5 66 0 stone[]; 5 66 0 stone[] | extra: 
+  21826 actor   UpdateSubchunkBlocks 5 66 0 stone[]; 5 66 0 stone[] | extra: 
+  21876 watcher UpdateSubchunkBlocks 5 66 1 stone[]; 5 66 1 stone[] | extra: 
+  21876 actor   UpdateSubchunkBlocks 5 66 1 stone[]; 5 66 1 stone[] | extra: 
+  21976 watcher UpdateSubchunkBlocks 6 66 -1 stone[]; 6 66 -1 stone[] | extra: 
+  21976 actor   UpdateSubchunkBlocks 6 66 -1 stone[]; 6 66 -1 stone[] | extra: 
+  22027 watcher UpdateSubchunkBlocks 6 66 0 stone[]; 6 66 0 stone[] | extra: 
+  22027 actor   UpdateSubchunkBlocks 6 66 0 stone[]; 6 66 0 stone[] | extra: 
+## /
+  22076 watcher UpdateSubchunkBlocks 6 66 1 stone[]; 6 66 1 stone[] | extra: 
+  22077 actor   UpdateSubchunkBlocks 6 66 1 stone[]; 6 66 1 stone[] | extra: 
+## /
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  24079 watcher UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  24080 watcher UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  24080 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24080 actor   UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  24080 actor   UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  24081 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+## /
+## /structure load anim ~4 ~ ~-1 0_degrees none block_by_block 0
+  26080 watcher UpdateSubchunkBlocks 4 64 -1 stone[]; 5 64 -1 stone[]; 6 64 -1 stone[]; 4 65 -1 stone[]; 5 65 -1 stone[]; 6 65 -1 stone[]; 4 66 -1 stone[]; 5 66 -1 stone[]; 6 66 -1 stone[]; 4 64 -1 stone[]; 4 65 -1 stone[]; 4 66 -1 stone[]; 5 64 -1 stone[]; 5 65 -1 stone[]; 5 66 -1 stone[]; 6 64 -1 stone[]; 6 65 -1 stone[]; 6 66 -1 stone[] | extra: 
+  26080 watcher UpdateSubchunkBlocks 4 64 0 stone[]; 4 64 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[]; 4 65 0 stone[]; 4 65 1 stone[]; 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[]; 4 66 0 stone[]; 4 66 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[]; 4 64 0 stone[]; 4 64 1 stone[]; 4 65 0 stone[]; 4 65 1 stone[]; 4 66 0 stone[]; 4 66 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[] | extra: 
+  26080 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  26081 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  26081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.load.success\",\"with\":{\"rawtext\":[{\"text\":\"anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26081 actor   UpdateSubchunkBlocks 4 64 -1 stone[]; 5 64 -1 stone[]; 6 64 -1 stone[]; 4 65 -1 stone[]; 5 65 -1 stone[]; 6 65 -1 stone[]; 4 66 -1 stone[]; 5 66 -1 stone[]; 6 66 -1 stone[]; 4 64 -1 stone[]; 4 65 -1 stone[]; 4 66 -1 stone[]; 5 64 -1 stone[]; 5 65 -1 stone[]; 5 66 -1 stone[]; 6 64 -1 stone[]; 6 65 -1 stone[]; 6 66 -1 stone[] | extra: 
+  26081 actor   UpdateSubchunkBlocks 4 64 0 stone[]; 4 64 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[]; 4 65 0 stone[]; 4 65 1 stone[]; 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[]; 4 66 0 stone[]; 4 66 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[]; 4 64 0 stone[]; 4 64 1 stone[]; 4 65 0 stone[]; 4 65 1 stone[]; 4 66 0 stone[]; 4 66 1 stone[]; 5 64 0 stone[]; 5 64 1 stone[]; 5 65 0 chest[minecraft:cardinal_direction=north]; 5 65 1 stone[]; 5 66 0 stone[]; 5 66 1 stone[]; 6 64 0 stone[]; 6 64 1 stone[]; 6 65 0 stone[]; 6 65 1 stone[]; 6 66 0 stone[]; 6 66 1 stone[] | extra: 
+  26081 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  26081 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  26081 actor   CommandOutput success_count=1 data=None commands.structure.load.success success=true ["anim"]
+  26625 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  26625 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  28079 actor   UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  28079 actor   UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  28079 watcher UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  28080 watcher UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  28080 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+  28080 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /structure load anim ~4 ~ ~-1 90_degrees none layer_by_layer 0.5
+  30076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.load.success\",\"with\":{\"rawtext\":[{\"text\":\"anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30076 actor   CommandOutput success_count=1 data=None commands.structure.load.success success=true ["anim"]
+  30276 watcher UpdateSubchunkBlocks 6 64 -1 stone[]; 5 64 -1 stone[]; 4 64 -1 stone[]; 6 64 -1 stone[]; 5 64 -1 stone[]; 4 64 -1 stone[] | extra: 
+  30276 watcher UpdateSubchunkBlocks 6 64 0 stone[]; 5 64 0 stone[]; 4 64 0 stone[]; 6 64 1 stone[]; 5 64 1 stone[]; 4 64 1 stone[]; 6 64 0 stone[]; 5 64 0 stone[]; 4 64 0 stone[]; 6 64 1 stone[]; 5 64 1 stone[]; 4 64 1 stone[] | extra: 
+  30277 actor   UpdateSubchunkBlocks 6 64 -1 stone[]; 5 64 -1 stone[]; 4 64 -1 stone[]; 6 64 -1 stone[]; 5 64 -1 stone[]; 4 64 -1 stone[] | extra: 
+  30277 actor   UpdateSubchunkBlocks 6 64 0 stone[]; 5 64 0 stone[]; 4 64 0 stone[]; 6 64 1 stone[]; 5 64 1 stone[]; 4 64 1 stone[]; 6 64 0 stone[]; 5 64 0 stone[]; 4 64 0 stone[]; 6 64 1 stone[]; 5 64 1 stone[]; 4 64 1 stone[] | extra: 
+  30427 actor   UpdateSubchunkBlocks 6 65 -1 stone[]; 5 65 -1 stone[]; 4 65 -1 stone[]; 6 65 -1 stone[]; 5 65 -1 stone[]; 4 65 -1 stone[] | extra: 
+  30428 actor   UpdateSubchunkBlocks 6 65 0 stone[]; 5 65 0 chest[minecraft:cardinal_direction=east]; 4 65 0 stone[]; 6 65 1 stone[]; 5 65 1 stone[]; 4 65 1 stone[]; 6 65 0 stone[]; 5 65 0 chest[minecraft:cardinal_direction=east]; 4 65 0 stone[]; 6 65 1 stone[]; 5 65 1 stone[]; 4 65 1 stone[] | extra: 
+  30428 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  30428 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  30428 watcher UpdateSubchunkBlocks 6 65 -1 stone[]; 5 65 -1 stone[]; 4 65 -1 stone[]; 6 65 -1 stone[]; 5 65 -1 stone[]; 4 65 -1 stone[] | extra: 
+  30428 watcher UpdateSubchunkBlocks 6 65 0 stone[]; 5 65 0 chest[minecraft:cardinal_direction=east]; 4 65 0 stone[]; 6 65 1 stone[]; 5 65 1 stone[]; 4 65 1 stone[]; 6 65 0 stone[]; 5 65 0 chest[minecraft:cardinal_direction=east]; 4 65 0 stone[]; 6 65 1 stone[]; 5 65 1 stone[]; 4 65 1 stone[] | extra: 
+  30428 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  30428 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 5, y: 65, z: 0 }, nbt: Nbt { name: "", value: Compound([("id", String("Chest")), ("x", Int(5)), ("y", Int(65)), ("z", Int(0)), ("forceunpair", Byte(1))]) } }
+  30578 watcher UpdateSubchunkBlocks 6 66 -1 stone[]; 5 66 -1 stone[]; 4 66 -1 stone[]; 6 66 -1 stone[]; 5 66 -1 stone[]; 4 66 -1 stone[] | extra: 
+  30579 actor   UpdateSubchunkBlocks 6 66 -1 stone[]; 5 66 -1 stone[]; 4 66 -1 stone[]; 6 66 -1 stone[]; 5 66 -1 stone[]; 4 66 -1 stone[] | extra: 
+  30579 actor   UpdateSubchunkBlocks 6 66 0 stone[]; 5 66 0 stone[]; 4 66 0 stone[]; 6 66 1 stone[]; 5 66 1 stone[]; 4 66 1 stone[]; 6 66 0 stone[]; 5 66 0 stone[]; 4 66 0 stone[]; 6 66 1 stone[]; 5 66 1 stone[]; 4 66 1 stone[] | extra: 
+  30579 watcher UpdateSubchunkBlocks 6 66 0 stone[]; 5 66 0 stone[]; 4 66 0 stone[]; 6 66 1 stone[]; 5 66 1 stone[]; 4 66 1 stone[]; 6 66 0 stone[]; 5 66 0 stone[]; 4 66 0 stone[]; 6 66 1 stone[]; 5 66 1 stone[]; 4 66 1 stone[] | extra: 
+## /
+## /
+## /fill ~4 ~ ~-1 ~6 ~2 ~1 air
+  33128 watcher UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  33128 watcher UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  33129 actor   UpdateSubchunkBlocks 4 64 -1 air[]; 4 65 -1 air[]; 4 66 -1 air[]; 5 64 -1 air[]; 5 65 -1 air[]; 5 66 -1 air[]; 6 64 -1 air[]; 6 65 -1 air[]; 6 66 -1 air[] | extra: 
+  33129 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"27\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  33129 actor   UpdateSubchunkBlocks 4 64 0 air[]; 4 64 1 air[]; 4 65 0 air[]; 4 65 1 air[]; 4 66 0 air[]; 4 66 1 air[]; 5 64 0 air[]; 5 64 1 air[]; 5 65 0 air[]; 5 65 1 air[]; 5 66 0 air[]; 5 66 1 air[]; 6 64 0 air[]; 6 64 1 air[]; 6 65 0 air[]; 6 65 1 air[]; 6 66 0 air[]; 6 66 1 air[] | extra: 
+  33129 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["27"]
+## /structure delete anim
+  34125 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.structure.delete.success\",\"with\":{\"rawtext\":[{\"text\":\"mystructure:anim\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34125 actor   CommandOutput success_count=1 data=None commands.structure.delete.success success=true ["mystructure:anim"]
+## /
+probe exit 0

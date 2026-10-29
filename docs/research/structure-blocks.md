@@ -31,12 +31,26 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
   apart; 27 blocks over 2 s, two every three ticks. Order: y, then x, then z of the template before it is turned.
   0 s puts everything at once.
 
+## Drilled 2026-10-29
+
+- `/structure load` animations (`bds-structanim.txt`): sapling loaded at once; `StructureLoad` now carries the
+  animation (`StructureAnimation`, `load_structure_animated`) and matches, 26 updates either side.
+- With entities (`bds-structanim2.txt`): layer by layer over 2 s, the armour stand comes with the last layer on
+  both.
+- The editor's click (`bds-structclick.txt`): ContainerOpen `StructureEditor` alone; sapling sent the entity
+  first, as for a command block; fixed. A structure block placed from the hand in any mode is `save` at once
+  (sapling showed `data` first); fixed (`place.rs`, `structure_blocks::as_placed`).
+- Saves by power and from the editor (`bds-structpower.txt`): all three queried back alike on sapling, but for
+  the empty `entities` list, which BDS sends untyped (tag 0); fixed (`structures/export.rs`).
+- Re-drilled `structclick`: the same. `structpower2` on sapling: the same three refusals.
+- After a restart (`bds-structpower2.txt`): none of three saves by block (by power with `redstoneSaveMode` 0
+  and 1, from the editor) could be queried or loaded; BDS logs "Structure 'pw0' must be prefixed by a
+  namespace" for each bare name.
+
 ## Not copied or not drilled
 
-- `/structure load` animations: the parsed animation mode and seconds have no field in sapling-api's `StructureLoad`
-  (public, not `non_exhaustive`), so the command still loads at once; the shard's animation serves structure blocks.
-- The editor's click (BlockEntityData then ContainerOpen `StructureEditor`, as a command block's) and placement by
-  creative operators only, as for command blocks.
+- Placement and the editor by creative operators only, as for command blocks (a survival click and place were
+  refused on BDS too).
 - A save from the editor goes to the world; one by power follows `redstoneSaveMode` (1: world, else memory).
 - When an animated load brings in its entities (with its last step here); the export form of a liquid layer.
 - Data and corner modes do nothing on the server; export mode's file is the client's.

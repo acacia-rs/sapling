@@ -1,10 +1,10 @@
 //! `/structure save|load|delete`, answered as BDS answered (research/captures/bds-structures.txt):
 //! a name without a namespace is `mystructure:`'s, the box is at most 64x384x64, and a load stays
-//! within the world's height. Animated loads place at once.
+//! within the world's height. Animated loads go in over their seconds (`ShardCtx::load_structure_animated`).
 // TODO: heights are the overworld's in every dimension; BDS's answer for an unloaded box is not known.
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, parse_choice};
-use sapling_api::{Command, CommandEnum, Mirror, Output, Permission, Rotation, Sender, ShardCtx, StructureError, StructureLoad};
+use sapling_api::{Command, CommandEnum, Mirror, Output, Permission, Rotation, Sender, ShardCtx, StructureAnimation, StructureError, StructureLoad};
 
 /// The largest box a structure holds.
 const MOST: [i32; 3] = [64, 384, 64];
@@ -22,7 +22,7 @@ pub(crate) enum SaveMode {
 #[derive(Debug, PartialEq)]
 enum Action {
     Save { from: BlockCoords, to: BlockCoords, include_entities: bool, include_blocks: bool, to_disk: bool },
-    Load { to: BlockCoords, how: StructureLoad, integrity: f32 },
+    Load { to: BlockCoords, how: StructureLoad, integrity: f32, animation: Option<(StructureAnimation, f32)> },
     Delete,
 }
 
@@ -95,16 +95,17 @@ fn parse_load(args: &mut Args<'_>) -> Result<Action, ParseError> {
     if args.peek().is_some() && !is_bool(args.peek()) {
         how.mirror = parse_choice(args, &MIRRORS)?;
     }
+    let mut animation = None;
     if args.peek().is_some_and(|word| ANIMATIONS.iter().any(|mode| mode.eq_ignore_ascii_case(word))) {
-        args.word()?;
-        Option::<f32>::parse(args)?;
+        let mode = parse_choice(args, &[(ANIMATIONS[0], StructureAnimation::LayerByLayer), (ANIMATIONS[1], StructureAnimation::BlockByBlock)])?;
+        animation = Some((mode, Option::<f32>::parse(args)?.unwrap_or(0.0)));
     }
     how.include_entities = Option::<bool>::parse(args)?.unwrap_or(true);
     how.include_blocks = Option::<bool>::parse(args)?.unwrap_or(true);
     how.waterlogged = Option::<bool>::parse(args)?.unwrap_or(false);
     let integrity = Option::<f32>::parse(args)?.unwrap_or(100.0);
     how.seed = Option::<String>::parse(args)?.unwrap_or_default();
-    Ok(Action::Load { to, how, integrity })
+    Ok(Action::Load { to, how, integrity, animation })
 }
 
 fn is_bool(word: Option<&str>) -> bool {
@@ -130,7 +131,7 @@ impl Command for StructureCommand {
                     Err(_) => out.translate("commands.structure.error", Vec::new(), false),
                 }
             }
-            Action::Load { to, mut how, integrity } => {
+            Action::Load { to, mut how, integrity, animation } => {
                 if !(0.0..=100.0).contains(&integrity) {
                     return out.translate("commands.structure.invalid.integrity", Vec::new(), false);
                 }
@@ -146,7 +147,11 @@ impl Command for StructureCommand {
                 if !how.include_entities && !how.include_blocks {
                     return out.translate("commands.structure.empty.load", Vec::new(), false);
                 }
-                match ctx.load_structure(&self.name, at, &how) {
+                let loaded = match animation {
+                    Some((mode, seconds)) => ctx.load_structure_animated(&self.name, at, &how, mode, seconds),
+                    None => ctx.load_structure(&self.name, at, &how),
+                };
+                match loaded {
                     Ok(()) => out.translate("commands.structure.load.success", vec![self.name], true),
                     Err(StructureError::NotFound) => out.translate("commands.structure.notFound", vec![full], false),
                     Err(_) => out.translate("commands.structure.error", Vec::new(), false),
@@ -181,8 +186,9 @@ mod tests {
     fn load_takes_turns_an_animation_and_flags() {
         let Ok((_, Action::Load { how, integrity, .. })) = parsed("load s1 58 99 4 0_degrees none false true false 50 abc") else { panic!() };
         assert_eq!((how.include_entities, how.include_blocks, integrity, how.seed.as_str()), (false, true, 50.0, "abc"));
-        let Ok((_, Action::Load { how, .. })) = parsed("load s1 16 99 12 90_degrees xz block_by_block 0 true false") else { panic!() };
+        let Ok((_, Action::Load { how, animation, .. })) = parsed("load s1 16 99 12 90_degrees xz block_by_block 0.5 true false") else { panic!() };
         assert_eq!((how.rotation, how.mirror, how.include_entities, how.include_blocks), (Rotation::Clockwise90, Mirror::XZ, true, false));
+        assert_eq!(animation, Some((StructureAnimation::BlockByBlock, 0.5)));
         assert!(parsed("load s1 1 2 3 45_degrees").is_err() && parsed("move s1").is_err());
     }
 }

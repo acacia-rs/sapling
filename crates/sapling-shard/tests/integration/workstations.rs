@@ -7,7 +7,7 @@ use crate::common;
 use std::sync::Arc;
 
 use acacia_proto::nbt::{List, Value};
-use acacia_proto::packets::{AddEntity, AddItemEntity, BlockEntityData, ContainerOpen, MobEffect, PlayerEnchantOptions};
+use acacia_proto::packets::{AddEntity, AddItemEntity, BlockEntityData, ContainerOpen, InventoryContent, MobEffect, PlayerEnchantOptions};
 use acacia_proto::types::{
     Action as BlockAction, ContainerSlotType as Container, ItemV4Extra, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentBeaconPayment as Payment,
     ItemStackRequestActionsItemContentCraftGrindstoneRequest as Grind, ItemStackRequestActionsItemContentCraftLoomRequest as Loom, ItemStackRequestActionsItemContentDestroy as Destroy,
@@ -200,6 +200,17 @@ fn a_smithing_table_upgrades_to_netherite_keeping_the_sword() {
 }
 
 #[test]
+fn an_anvil_answers_status_9_to_a_rename_to_the_items_own_name() {
+    let (mut h, _storage, _) = at("minecraft:anvil", &[], PlayerData { main: vec![stack("minecraft:diamond_sword", 1, None)], ..PlayerData::default() });
+    put(&mut h, 0, 1, Container::AnvilInput, 1);
+    let rename = vec![Action::Optional(Optional { recipe_network_id: 0, filtered_string_index: 0 }), consume(1, slot(Container::AnvilInput, 1, 0)), out(1, 2)];
+    h.receive(1, &renaming(-3, rename, "Diamond Sword"));
+    let sent = h.tick(1);
+    assert_eq!(answer(&sent).0, Status::Unknown(9));
+    assert!(all::<InventoryContent>(&sent).is_empty(), "nothing resent");
+}
+
+#[test]
 fn a_loom_adds_the_dyes_pattern_after_the_banners_own() {
     let banner = Some(ItemStack { damage: 15, ..stack("minecraft:banner", 1, Some(compound([("Type", Value::Int(0))]))).unwrap() });
     let (mut h, storage, opened) = at("minecraft:loom", &[], PlayerData { main: vec![banner, stack("minecraft:red_dye", 2, None)], ..PlayerData::default() });
@@ -216,6 +227,21 @@ fn a_loom_adds_the_dyes_pattern_after_the_banners_own() {
     assert_eq!(patterns.items, [compound([("Color", Value::Int(1)), ("Pattern", Value::String("bo".into()))])]);
     assert_eq!(kept.main[0].as_ref().map(|banner| banner.damage), Some(15));
     assert_eq!(kept.main[1].as_ref().map(|dye| dye.count), Some(1));
+}
+
+#[test]
+fn a_loom_refuses_a_seventh_pattern_with_status_7_and_resends_nothing() {
+    let layer = compound([("Color", Value::Int(1)), ("Pattern", Value::String("bo".into()))]);
+    let full = compound([("Patterns", Value::List(List { tag: 10, items: vec![layer; 6] })), ("Type", Value::Int(0))]);
+    let banner = Some(ItemStack { damage: 15, ..stack("minecraft:banner", 1, Some(full)).unwrap() });
+    let (mut h, _storage, _) = at("minecraft:loom", &[], PlayerData { main: vec![banner, stack("minecraft:red_dye", 1, None)], ..PlayerData::default() });
+    put(&mut h, 0, 1, Container::LoomInput, 9);
+    put(&mut h, 1, 1, Container::LoomDye, 10);
+    let loom = vec![Action::CraftLoomRequest(Loom { pattern: "bo".into(), times_crafted: 1 }), consume(1, slot(Container::LoomInput, 9, 0)), consume(1, slot(Container::LoomDye, 10, 0)), out(1, 0)];
+    h.receive(1, &request(-3, loom));
+    let sent = h.tick(1);
+    assert_eq!(answer(&sent).0, Status::Unknown(7));
+    assert!(all::<InventoryContent>(&sent).is_empty(), "nothing resent");
 }
 
 #[test]

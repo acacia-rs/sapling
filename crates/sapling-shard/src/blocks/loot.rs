@@ -177,15 +177,18 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
 pub(super) struct Tags(Vec<(String, Option<acacia_proto::nbt::Value>)>);
 
 impl Tags {
-    /// Whether one goes on a stack of the item `name`.
-    pub(super) fn tags(&self, name: &str) -> bool {
-        self.0.iter().any(|(tagged, _)| tagged == name)
+    /// The tag the next stack of `name` gets, taken out.
+    pub(super) fn take(&mut self, name: &str) -> Option<acacia_proto::nbt::Value> {
+        let at = self.0.iter().position(|(tagged, _)| tagged == name)?;
+        self.0.remove(at).1
+    }
+
+    pub(super) fn one(name: &str, tag: Option<acacia_proto::nbt::Value>) -> Self {
+        Tags(vec![(name.to_owned(), tag)])
     }
 
     fn put_on(&mut self, stack: &mut sapling_world::ItemStack) {
-        if let Some(at) = self.0.iter().position(|(name, _)| *name == stack.name)
-            && let Some(tag) = self.0.remove(at).1
-        {
+        if let Some(tag) = self.take(&stack.name) {
             stack.tag = Some(tag);
         }
     }

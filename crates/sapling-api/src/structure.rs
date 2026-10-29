@@ -25,6 +25,13 @@ pub enum Mirror {
     XZ,
 }
 
+/// How an animated load puts a structure in over time: a layer (y) at a time or a block at a time.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StructureAnimation {
+    LayerByLayer,
+    BlockByBlock,
+}
+
 /// How a structure is loaded.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StructureLoad {
@@ -70,6 +77,13 @@ impl ShardCtx<'_> {
         self.backend.load_structure(name, at, how)
     }
 
+    /// [`ShardCtx::load_structure`] spread over `seconds` as `animation` steps, as `/structure load`
+    /// with an animation mode does: `t` ticks in, `floor(t * N / (seconds * 20))` of the N layers or
+    /// blocks are in, the entities with the last. Under a tick it places everything at once.
+    pub fn load_structure_animated(&mut self, name: &str, at: BlockPos, how: &StructureLoad, animation: StructureAnimation, seconds: f32) -> Result<(), StructureError> {
+        self.backend.load_structure_animated(name, at, how, animation, seconds)
+    }
+
     /// The cells a structure spans along x, y and z, as saved (before any turn).
     pub fn structure_size(&mut self, name: &str) -> Option<[i32; 3]> {
         self.backend.structure_size(name)
@@ -102,6 +116,10 @@ impl ShardCtx<'_> {
 pub trait StructureBackend {
     fn save_structure(&mut self, name: &str, from: BlockPos, to: BlockPos, include_entities: bool, include_blocks: bool, to_disk: bool) -> Result<(), StructureError>;
     fn load_structure(&mut self, name: &str, at: BlockPos, how: &StructureLoad) -> Result<(), StructureError>;
+    /// Loads at once unless a backend animates.
+    fn load_structure_animated(&mut self, name: &str, at: BlockPos, how: &StructureLoad, _animation: StructureAnimation, _seconds: f32) -> Result<(), StructureError> {
+        self.load_structure(name, at, how)
+    }
     fn structure_size(&mut self, name: &str) -> Option<[i32; 3]>;
     fn delete_structure(&mut self, name: &str) -> bool;
     fn structures(&self) -> Vec<String>;

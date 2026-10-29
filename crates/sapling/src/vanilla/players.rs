@@ -1,7 +1,7 @@
 //! The commands aimed at players and entities: `/gamemode`, `/summon`, `/kill` and `/difficulty`
 //! (`/tp`: teleport.rs, `/damage`: damage.rs, `/give` and `/clear`: items.rs).
 
-use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
+use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Difficulty, GameMode, Output, Permission, Sender, ShardCtx};
 
 use super::{display_name, no_target, players, targets, tell_target};
@@ -83,7 +83,7 @@ impl Command for DifficultyCommand {
 #[derive(Command)]
 #[command(crate = "crate", name = "summon", description = "Summons an entity", permission = "operator")]
 pub(crate) struct Summon {
-    kind: String,
+    kind: EntityName,
     position: Option<Coords>,
     yaw: Option<f32>,
     pitch: Option<f32>,
@@ -91,11 +91,31 @@ pub(crate) struct Summon {
     event: Option<String>,
 }
 
+/// An entity name `/summon` takes: BDS knows its newer villagers only by the older names, so a
+/// `_v2` name is a syntax error there (research/captures/bds-server.txt).
+pub(crate) struct EntityName(String);
+
+impl Parameter for EntityName {
+    fn kind() -> ParamKind {
+        <String as Parameter>::kind()
+    }
+
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
+        let mark = args.mark();
+        let name = String::parse(args)?;
+        let plain = name.strip_prefix("minecraft:").unwrap_or(&name);
+        if matches!(plain, "villager_v2" | "zombie_villager_v2") {
+            return Err(args.error_at(mark));
+        }
+        Ok(Self(name))
+    }
+}
+
 impl Command for Summon {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let at = self.position.map_or_else(|| ctx.origin(sender), |position| position.resolve(ctx, sender));
         // BDS summons its newer villager and zombie villager under the older ones' names, and knows no others.
-        let kind = match namespaced(&self.kind) {
+        let kind = match namespaced(&self.kind.0) {
             kind if kind == "minecraft:zombie_villager" || kind == "minecraft:villager" => format!("{kind}_v2"),
             kind => kind,
         };

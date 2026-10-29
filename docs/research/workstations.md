@@ -27,7 +27,8 @@ screen for the others); a request whose consumes do not match is refused.
 
 - **Bookshelves** (`EnchantUtils::findBookshelves` 141b658a0, BDSRE): for each direction
   (dx, dz) in {-1,0,1}² but (0,0) the gap column (dx, y and y+1, dz) must both be clear (block
-  flag `+0x163 & 0x40`, taken as air); then shelves count at (2dx, 2dz) on both layers, and off a
+  flag `+0x163 & 0x40`: drilled, air, a carpet and a snow layer let a shelf count; a torch, short
+  grass, glass and stone do not, research/captures/bds-enchants.txt); then shelves count at (2dx, 2dz) on both layers, and off a
   diagonal also at (2dx, dz) and (dx, 2dz). Only `minecraft:bookshelf` (not chiseled). At most 15.
   Unlike Java, a shelf off a corner looks through the corner cell, not the side.
 - **RNG**: one MT19937 `Random` seeded with the player's enchant seed for all three offers;
@@ -37,7 +38,12 @@ screen for the others); a request whose consumes do not match is refused.
 - **Costs** (141b63d40): `base = nextInt(8) + 1 + b/2 + nextInt(b+1)`;
   `[max(base/3, 1), base·2/3 + 1, max(base, 2b)]`. No zeroing of low offers (Java has it).
 - **Per offer, in order**: select enchantments, then the name (`nextInt(2)+3` words, each
-  `nextInt(55)` from BDS's word table at 14a7733a0, the Java list cut at "stale").
+  `nextInt(55)` from BDS's word table at 14a7733a0, the Java list cut at "stale"; each word keeps
+  its space, the last one too). An offer with no enchantments is still sent.
+- **Drilled whole** (research/captures/bds-enchants.txt): BDS's seed for the drill's player was
+  found by searching all 2³¹ seeds for the fishing rod's draws (1893008896); sapling's offers for
+  it match BDS's for 8 items at 0 and 2 shelves, costs, enchantments, lists and names
+  (`workstations/enchanting_tests.rs`).
 - **Select** (`EnchantUtils::selectEnchantments` 141b62f70):
   - `a, b = nextInt(e/4+1)` twice; `L = max(1, (int)((nextFloat·0.3 − 0.15 + 1)·(cost+a+b+1) + 0.5))`
     in f32 (Java uses two floats).
@@ -94,6 +100,10 @@ Frequency / primary slots / secondary slots / minCost(l) / max level. Slot bits 
 | 40 | breach | 3 | mace | | 9l+6 | 4 |
 | 41 | lunge | 10 | spear | | 8l−3 | 3 |
 
+Activation lists as BDS sent them: knockback, power and piercing on the item itself, unbreaking
+held, sharpness, smite, fire aspect, density and impaling held, the armour ones worn. The rest are
+not seen.
+
 Clashes (141b5b290): protection 0, 1, 3, 4; damage 9, 10, 11, 39, 40; silk touch with fortune;
 depth strider with frost walker; infinity with mending; riptide with loyalty and with
 channeling; multishot with piercing.
@@ -103,7 +113,9 @@ channeling; multishot with piercing.
 Tools by tier (BDSRE): wood 15, stone 5, copper 13, iron 14, diamond 10, gold 22, netherite 15.
 Armour: leather 15, chain 12, copper 8, iron 9, gold 25, diamond 10, turtle 9, netherite 15.
 Carrot/fungus on a stick, trident, fishing rod: 1. Shears, flint and steel, shield, brush,
-compass, elytra: 0 (never offered).
+compass, elytra: 0 (never offered). Drilled: bow, crossbow and book 1; spears by tier (wooden
+15); the mace 8 to 11, not the wiki's 15 (sapling takes 10). A spear's uses are the sword's of
+its tier in sapling, not drilled.
 
 ## Anvil (`Anvil_Cartography_computeResult_lambda` 148b7fd20, BDSRE)
 
@@ -164,29 +176,43 @@ secondary slots allow (Silk Touch on shears, the blade enchantments on a spear, 
 - Load 141f0c460 and save 141f0c0f0 read and write `Base`, `Type`, `Patterns` (`{Color, Pattern}`).
 - Loom (`CraftHandlerLoom` 1446e4100): a banner with more than five patterns is refused (1446e43b5), so six
   is the most.
-- Breaking (sapling, inf): the banner item gets `{Patterns, Type}` back from the entity (nothing for a plain
-  one), by hand, by losing its support and in a blast, where it is not merged with other banners.
-  `loot::Tags` carries it, since a plugin's `Item` has no tag.
+- Breaking (drilled, research/captures/bds-banners.txt): the item gets
+  `{BlockEntityVersion 0, Patterns, Type}` from the entity, a plain one `{BlockEntityVersion 0, Type 0}`; by
+  hand, by losing its support and in a blast, where like banners merge (two plain ones dropped as one
+  stack of 2). Sapling dropped plain banners bare and never merged blast drops; fixed (`blocks/entities.rs`,
+  `blocks/blown.rs`). `loot::Tags` carries the tag, since a plugin's `Item` has no tag.
+- Loom (drilled): a seventh pattern is refused with status 7, nothing resent; sapling answered 0; fixed
+  (`inventory/requests.rs`, test `a_loom_refuses_a_seventh_pattern_with_status_7_and_resends_nothing`).
+- An aux-15 banner is "White Banner" on BDS; sapling's `data/names.tsv` held data 0 only ("Black Banner").
+  `bds_name_probe` now asks for banner data 0 to 15; regenerate `names.tsv` (sapling-data README) to fix it.
+- Re-drilled (sapling-banners.txt): the same drops and tags; in the blast BDS spawned the plain banner before
+  the merged pair, sapling after.
+- Still different: a `/replaceitem` banner carries `{Type: 0}` on BDS, bare on sapling.
+
+## Anvil (drilled, research/captures/bds-anvilnames.txt)
+
+- A craft that makes nothing (a rename to the item's own name, as "Diamond Sword") is status 9; sapling
+  renamed it; fixed (`enchant/anvil.rs`, `requests.rs`, test `an_anvil_answers_status_9_...`).
+- The Optional action's `filtered_string_index` picks the request's name by position (`First|Second`
+  with 1 named it "Second"); -1 is status 9. Which list is the filtered one cannot be seen: an offline
+  BDS filters nothing.
+- Re-drilled after the fix (sapling-anvilnames.txt): the same statuses and names as BDS up to where BDS
+  dropped the probe (its last `!uiback` moved a count of 0).
+- Statuses 5 (Consumes not what BDS uses up) and 50 (a stale stack id) come from a client's mistake; BDS
+  keeps a refused input in the anvil after the screen closes.
 
 ## Brewing
 
 A hopper fills a bottle slot only when it is empty (`canPushInItem` 141f219d0, docs/research/brewing.md).
+Drilled (research/captures/bds-hopperbrew.txt): two bottles in, five in the hopper: one went to the empty
+slot, four stayed. Sapling stacked bottles into the filled slots; fixed (`hoppers.rs`, test
+`a_hopper_beside_a_brewing_stand_fills_its_empty_bottle_place_only`); re-drilled the same
+(sapling-hopperbrew.txt).
 
 ## Not drilled
 
-- The bookshelf gap flag (taken as air only; may include replaceable blocks).
-- Bow, crossbow, book and mace enchantability (1, 1, 1, 15 from the wiki).
-- Whether an offer with no enchantments is sent (sapling sends all three).
-- The offer name's trailing space (sapling trims it).
-- The activation list (worn / held / itself) each enchantment is sent in.
-- Whether a rename to an item's default name counts (sapling compares the custom name only).
-- Whether a 1.26 client still sends `AnvilDamagePacket`. BDS's handler (1409aa040) rolls the wear
-  again for an anvil within 8.7 of the player (14 in creative); sapling does the same out of
-  creative. A creative player's packet got no answer at all (research/captures/bds-packets.txt).
-- Which of the request's two name lists is the filtered one.
-- `/enchant` by the slot bits: spear, shears and head cases (only sword, stone, book were captured).
-- A broken banner's item tag (`{Patterns, Type}`, none for a plain one), a placed banner keeping the
-  item's `Type`, and a banner in a blast not merging.
-- The loom's limit of six patterns and the block's cap of six on placing (read, not played).
-- A hopper refusing a bottle onto a filled bottle slot of a brewing stand.
-- No `bds_*` drill was run against BDS for any of this; the numbers are from the exe only.
+- Spear durability (sapling uses the material's sword; TODO in `gear.rs`).
+- `AnvilDamagePacket`: client-only (BDS's handler 1409aa040 rolls the wear for an anvil within 8.7 of the
+  player, 14 in creative; a creative player's packet got no answer, research/captures/bds-packets.txt).
+- An ominous banner: the creative entry the drill picked was a plain one (Type 0).
+- The block's cap of six patterns on placing (read, not played).

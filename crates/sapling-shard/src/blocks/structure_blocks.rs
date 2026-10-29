@@ -89,15 +89,22 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     }
 }
 
+/// The block a player puts for the block `id`: BDS put a structure block of any mode as `save`
+/// straight away (research/captures/bds-structclick.txt).
+pub(super) fn as_placed(registry: &sapling_world::BlockRegistry, id: u32) -> u32 {
+    let is_one = registry.get(id).is_some_and(|state| state.name == BLOCK);
+    let save = || send::resolve(registry, &Block::new(BLOCK).with(format!("structure_block_type={}", MODES[SAVE as usize])));
+    if is_one { save().unwrap_or(id) } else { id }
+}
+
 fn mode_block(world: &World, layer: Entity, mode: i64) -> Option<u32> {
     let mode = MODES.get(usize::try_from(mode).ok()?)?;
     send::resolve(level(world, layer)?.registry(), &Block::new(BLOCK).with(format!("structure_block_type={mode}")))
 }
 
 /// A click on the block `name`. False for anything but a structure block.
-// TODO: BDS's answer to a click was not captured; this is the command block's.
 pub(super) fn open_editor(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    name == BLOCK && super::command_blocks::show_editor(world, player, layer, pos, WindowType::StructureEditor)
+    name == BLOCK && super::command_blocks::show_editor(world, player, layer, pos, WindowType::StructureEditor, false)
 }
 
 /// A structure block's signal changed: it keeps `isPowered`, and a rise saves or loads.

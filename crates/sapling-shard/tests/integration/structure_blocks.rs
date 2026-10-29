@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::packets::{
-    BlockEntityData, StructureBlockUpdate, StructureTemplateDataExportRequest, StructureTemplateDataExportRequestRequestType as Request, StructureTemplateDataExportResponse, UpdateBlock,
+    BlockEntityData, ContainerOpen, StructureBlockUpdate, StructureTemplateDataExportRequest, StructureTemplateDataExportRequestRequestType as Request, StructureTemplateDataExportResponse, UpdateBlock,
 };
 use acacia_proto::types::{
     BlockCoordinates, StructureBlockSettings, StructureBlockSettingsAnimationMode as Animation, StructureBlockSettingsMirror, StructureBlockSettingsRotation, Vec3f,
@@ -101,6 +101,15 @@ fn a_block_put_as_load_is_shown_then_turned_save_a_tick_on() {
 }
 
 #[test]
+fn an_operators_click_opens_the_editor_without_the_entity() {
+    let mut h = set_up();
+    h.receive(1, &common::click(SAVER, 1, None));
+    let sent = h.tick_all().to(1).to_vec();
+    assert_eq!(all::<ContainerOpen>(&sent).len(), 1);
+    assert!(all::<BlockEntityData>(&sent).is_empty(), "as BDS (bds-structclick.txt)");
+}
+
+#[test]
 fn the_editor_saves_by_the_name_as_typed_and_loads_it() {
     let mut h = set_up();
     h.receive(1, &update(SAVER, SAVE, "sb1", Animation::None, true));
@@ -117,6 +126,9 @@ fn the_editor_saves_by_the_name_as_typed_and_loads_it() {
         h.receive(1, &request);
         let answer = all::<StructureTemplateDataExportResponse>(h.tick_all().to(1)).pop().expect("answered");
         assert_eq!((answer.success, answer.nbt.is_some()), (found, found), "{name}");
+        if let Some(nbt) = answer.nbt {
+            assert!(format!("{nbt:?}").contains(r#"("entities", List(List { tag: 0, items: [] }))"#), "untyped, as BDS (bds-structpower.txt)");
+        }
     }
 }
 

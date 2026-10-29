@@ -84,18 +84,32 @@ field sapling already reads from stored actors (sapling-leveldb actors.rs). `Air
 breath, 300 full) is the matching Actor field. sapling writes both, takes them up at load, and tells a
 player coming back short of breath its `Air` metadata in the join greeting.
 
+## Drilled 2026-10-29 (research/captures/bds-server.txt, bds-server-console.txt)
+
+- An operator bot gets `commands.generic.error.permissions` for `/reload`, `/reload all`, `/permission`,
+  `/save` and `/stop` (owner-level on BDS); `/list` as above.
+- Console `save hold`: `Saving...`; a `save query` 1.5 s later was ready: `Data saved. Files are now ready to
+  be copied.` then one line `blocks/db/CURRENT:16, blocks/db/MANIFEST-000002:50, blocks/db/000003.log:21948,
+  blocks/level.dat:3008, blocks/level.dat_old:3008, blocks/levelname.txt:6` (world folder first, sorted,
+  `, `-joined, no LOCK/LOG). `save resume`: `Changes to the world are resumed.`
+- Console `permission list`: `###* {"command":"ops","result":[]}` and ` *###`, then the same for
+  `permissions`; `permission reload`: `Ops reloaded from file.` / `Permissions reloaded from file.`
+- Console `reload all`: `Function and script files have been reloaded.` (sapling answers `onlyHost`).
+- `/difficulty peaceful` took every monster still alive at once, stray, husk, drowned, bogged and wither
+  skeleton among them; shulker, sulfur cube, ender dragon, camel husk, skeleton and zombie horses and polar
+  bear stayed. A zombie summoned on peaceful is `commands.summon.failed`.
+- Against `sapling-server.txt`: sapling took the shulker and summoned a zombie on peaceful, and took
+  `/summon zombie_villager_v2` (BDS: `commands.generic.syntax`); all three fixed (`spawning/peaceful.rs`,
+  `creatures/backend.rs`, `vanilla/players.rs`). Left as sapling's choice: an operator may `/save` and
+  `/stop` (sapling has no owner level; BDS: `commands.generic.error.permissions`), and the probe's sapling
+  has no `/reload` or `/permission` registered. Piglin and hoglin were gone on BDS before the switch (likely
+  zombified), so their peaceful rule was not judged.
+
 ## Not drilled
 
-- `/save`'s file list: which files BDS lists (sapling: every file but LOCK/LOG), their order and separator
-  in the console; whether a query right after hold is already ready on BDS (sapling: once the writes land).
-- `/permission list`'s output: how BDS shows the tagged JSON (sapling prints it as the answer's line) and
-  the JSON's spacing.
-- `/reload all` on BDS (sapling: `commands.reload.onlyHost`).
-- `/stop` run by command rather than typed in BDS's console.
-- Peaceful's set of kinds: the factory walk (depth 7) did not reach every `monster`-family kind. For
-  example stray, husk, wither skeleton, drowned and bogged are missing, likely through shared subclass
-  constructors. sapling assumes the family matches the class; a live check on BDS would settle it.
-- `Air` as a key: no plain "Air" string turned up in the exe (it may be inlined), so the name and type
-  come from the documented Bedrock actor format. Also not drilled: whether BDS shows a player's
-  burning flag in its first metadata after joining (sapling: from the first fire hurt).
-- The tick a monster goes after `/difficulty peaceful` (sapling: the same tick, after despawning).
+- Sapling's console side of the above: `tools/remote-drill.sh` feeds a console to BDS only.
+- `/stop` typed in the console of a sapling server.
+- Peaceful for the kinds that died before the switch in the drill (burnt in daylight or despawned): blaze,
+  piglin, silverfish, zoglin, zombie pigman, zombie villager and others; the family rule stands for them.
+- `Air` is drilled (`bds-swim.txt`: a Short named `Air`). Whether BDS shows a player's burning flag in its
+  first metadata after joining needs the same signed identity twice; not drillable offline.

@@ -1,0 +1,171 @@
+## drill starts at 1793269057461
+## /kill @e[type=!player]
+     19 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1021 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1022 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1022 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /gamerule randomtickspeed 0
+   2020 watcher GameRulesChanged randomTickSpeed=Int(0)
+   2020 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2020 actor   GameRulesChanged randomTickSpeed=Int(0)
+   2021 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+   2572 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   2572 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /gamemode creative @s
+   3019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3019 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3019 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /tp @s 0.5 ~ 0.5 -90 0
+   4019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4020 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4020 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "0.50"]
+## /fill ~-2 ~-1 ~-6 ~12 ~-1 ~8 stone
+   5086 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill ~-2 ~ ~-6 ~12 ~6 ~8 air
+   6081 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /clear @s
+   7069 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   7070 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /
+## /setblock ~2 ~ ~ structure_block ["structure_block_type"="save"]
+   9072 watcher UpdateBlock 2 64 0 layer 0 structure_block[structure_block_type=save]
+   9072 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(0)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+   9072 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9073 actor   UpdateBlock 2 64 0 layer 0 structure_block[structure_block_type=save]
+   9073 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(0)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+   9073 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9119 watcher UpdateBlock 2 64 0 layer 0 structure_block[structure_block_type=save]
+   9119 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(0)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+   9120 actor   UpdateBlock 2 64 0 layer 0 structure_block[structure_block_type=save]
+   9120 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(0)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+## /
+## /!click 2 0 0
+## clicked: Ok(())
+  11119 actor   ContainerOpen ContainerOpen { window_id: Unknown(2), window_type: StructureEditor, coordinates: BlockCoordinates { x: 2, y: 64, z: 0 }, runtime_entity_id: -1 }
+## /
+## /
+## /!close
+## closed: Ok(())
+  15368 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  15368 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /
+## /gamemode survival @s
+  16669 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16670 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16670 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /
+## /!click 2 0 0
+## clicked: Ok(())
+## /
+## /
+## /!close
+## closed: Err(NotPossible("no container is open"))
+## /
+## /gamemode creative @s
+  23670 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23670 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+  23671 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /replaceitem entity @s slot.hotbar 0 structure_block
+  24782 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.hotbar\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Structure Block\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  24782 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.hotbar", "0", "CmdActor", "1", "Structure Block"]
+## /
+## /!place 2 -1 2
+  26693 watcher UpdateBlock 2 64 2 layer 0 structure_block[structure_block_type=save]
+  26693 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 2.5, y: 64.5, z: 2.5 }, extra_data: 388079635, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  26693 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 2 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(2)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+## placed: Ok(())
+  26737 actor   UpdateBlock 2 63 2 layer 0 stone[]
+  26737 actor   UpdateBlock 2 64 2 layer 0 structure_block[structure_block_type=save]
+  26737 actor   UpdateBlock 2 62 2 layer 0 stone[]
+  26737 actor   UpdateBlock 2 64 2 layer 0 structure_block[structure_block_type=save]
+  26737 actor   UpdateBlock 2 65 2 layer 0 air[]
+  26737 actor   UpdateBlock 2 63 2 layer 0 stone[]
+  26737 actor   UpdateBlock 2 64 2 layer 0 structure_block[structure_block_type=save]
+  26737 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 2.5, y: 64.5, z: 2.5 }, extra_data: 388079635, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  26737 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 2 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(2)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+  26739 watcher UpdateBlock 2 64 2 layer 0 structure_block[structure_block_type=save]
+  26739 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 2 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(2)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+  26739 actor   UpdateBlock 2 64 2 layer 0 structure_block[structure_block_type=save]
+  26740 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 2 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(2)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+## /
+  28239 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  28240 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /gamemode survival @s
+  29790 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  29790 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  29790 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /replaceitem entity @s slot.hotbar 0 structure_block
+  30793 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.hotbar\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Structure Block\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30794 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.hotbar", "0", "CmdActor", "1", "Structure Block"]
+## /
+## /!place 2 -1 -2
+## placed: Err(Rejected("placing at [2, 64, -2]: the server showed no change after 3 tries"))
+  33000 actor   UpdateBlock 2 63 -2 layer 0 stone[]
+  33000 actor   UpdateBlock 2 63 -2 layer 1 air[]
+  33000 actor   UpdateBlock 2 64 -2 layer 0 air[]
+  33000 actor   UpdateBlock 2 64 -2 layer 1 air[]
+  33000 actor   UpdateBlock 2 63 -2 layer 0 stone[]
+  33000 actor   UpdateBlock 2 63 -2 layer 1 air[]
+  33000 actor   UpdateBlock 2 64 -2 layer 0 air[]
+  33000 actor   UpdateBlock 2 64 -2 layer 1 air[]
+  33000 actor   UpdateBlock 2 63 -2 layer 0 stone[]
+  33000 actor   UpdateBlock 2 63 -2 layer 1 air[]
+  33000 actor   UpdateBlock 2 64 -2 layer 0 air[]
+  33000 actor   UpdateBlock 2 64 -2 layer 1 air[]
+## /
+## /
+## /gamemode creative @s
+  36042 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36042 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36042 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /fill ~2 ~ ~-2 ~2 ~ ~2 air
+  37041 watcher UpdateSubchunkBlocks 2 64 0 air[]; 2 64 2 air[] | extra: 
+  37042 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"2\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37042 actor   UpdateSubchunkBlocks 2 64 0 air[]; 2 64 2 air[] | extra: 
+  37042 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["2"]
+## /setblock ~2 ~ ~ structure_block ["structure_block_type"="save"]
+  38040 watcher UpdateBlock 2 64 0 layer 0 structure_block[structure_block_type=save]
+  38040 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(0)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+  38040 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  38040 actor   UpdateBlock 2 64 0 layer 0 structure_block[structure_block_type=save]
+  38040 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(0)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+  38041 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  38089 watcher UpdateBlock 2 64 0 layer 0 structure_block[structure_block_type=save]
+  38090 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(0)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+  38090 actor   UpdateBlock 2 64 0 layer 0 structure_block[structure_block_type=save]
+  38090 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 2, y: 64, z: 0 }, nbt: Nbt { name: "", value: Compound([("BlockEntityVersion", Int(0)), ("animationMode", Byte(0)), ("animationSeconds", Float(0.0)), ("data", Int(1)), ("dataField", String("")), ("id", String("StructureBlock")), ("ignoreEntities", Byte(0)), ("includePlayers", Byte(0)), ("integrity", Float(100.0)), ("isPowered", Byte(0)), ("lastTouchedPlayerId", Long(-1)), ("mirror", Byte(0)), ("redstoneSaveMode", Int(0)), ("removeBlocks", Byte(0)), ("rotation", Byte(0)), ("seed", Long(0)), ("showBoundingBox", Byte(1)), ("structureName", String("")), ("x", Int(2)), ("xStructureOffset", Int(0)), ("xStructureSize", Int(5)), ("y", Int(64)), ("yStructureOffset", Int(-1)), ("yStructureSize", Int(5)), ("z", Int(0)), ("zStructureOffset", Int(0)), ("zStructureSize", Int(5))]) } }
+## /deop @s
+  39039 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.deop.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  39039 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.deop.message\",\"with\":{\"rawtext\":null}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  39039 actor   CommandOutput success_count=1 data=None commands.deop.success success=true ["CmdActor"]
+## /
+## /!click 2 0 0
+  41040 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## clicked: Ok(())
+  41071 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /
+## /
+## /replaceitem entity @s slot.hotbar 0 structure_block
+  44089 actor   CommandOutput success_count=0 data=None commands.generic.permission.selector success=false []
+## /
+## /!place 2 -1 2
+## placed: Err(Rejected("placing at [2, 64, 2]: the server showed no change after 3 tries"))
+  46314 actor   UpdateBlock 2 63 2 layer 0 stone[]
+  46314 actor   UpdateBlock 2 63 2 layer 1 air[]
+  46314 actor   UpdateBlock 2 64 2 layer 0 air[]
+  46314 actor   UpdateBlock 2 64 2 layer 1 air[]
+  46314 actor   UpdateBlock 2 63 2 layer 0 stone[]
+  46314 actor   UpdateBlock 2 63 2 layer 1 air[]
+  46314 actor   UpdateBlock 2 64 2 layer 0 air[]
+  46314 actor   UpdateBlock 2 64 2 layer 1 air[]
+  46314 actor   UpdateBlock 2 63 2 layer 0 stone[]
+  46314 actor   UpdateBlock 2 63 2 layer 1 air[]
+  46314 actor   UpdateBlock 2 64 2 layer 0 air[]
+  46314 actor   UpdateBlock 2 64 2 layer 1 air[]
+## /
+## /
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1

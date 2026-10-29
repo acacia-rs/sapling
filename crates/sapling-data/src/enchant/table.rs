@@ -42,9 +42,10 @@ pub fn is_shelf(block: &str) -> bool {
     block == SHELF
 }
 
-/// Whether a block between a shelf and the table lets it count.
+/// Whether a block between a shelf and the table lets it count: on BDS air, a carpet and a snow
+/// layer do; a torch, short grass, glass and stone do not (research/captures/bds-enchants.txt).
 pub fn lets_through(block: &str) -> bool {
-    block == "minecraft:air"
+    matches!(block, "minecraft:air" | "minecraft:snow_layer") || block.ends_with("_carpet")
 }
 
 /// The lapis the offer at `index` takes.
@@ -114,11 +115,10 @@ fn chosen(slots: u32, enchantability: u8, cost: u8, draws: &mut dyn Draws) -> Ve
     chosen
 }
 
-/// An offer's name: three or four of the table's words.
+/// An offer's name: three or four of the table's words, each with its space; BDS keeps the last.
 fn name(draws: &mut dyn Draws) -> String {
     let words = draws.int(2) + 3;
-    let name: String = (0..words).map(|_| WORDS[draws.int(WORDS.len() as i32) as usize]).collect();
-    name.trim_end().to_owned()
+    (0..words).map(|_| WORDS[draws.int(WORDS.len() as i32) as usize]).collect()
 }
 
 /// The three offers for `item` with `shelves` around the table, drawn from the player's seed

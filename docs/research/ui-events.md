@@ -132,3 +132,7 @@ None of this was checked against BDS or a live client. These rest on reading:
 - `WorldCloseEvent` on shard close is offered once per layer, so a realm's Nether and End close
   separately.
 - `SetOnFireEvent` is for players only. Mobs catching fire are not offered.
+
+Drill pass (2026-10-29): none of these can be drilled with the probe bots. The boss-bar follow, several bars at
+once, name tags and a dialogue staying open are what a vanilla client draws, and the bots draw nothing. The rest
+are sapling's plugin API, which BDS doesn't have.
