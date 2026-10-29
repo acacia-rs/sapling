@@ -16,7 +16,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, StructureBackend, StructureError, StructureLoad};
+use sapling_api::{BlockPos, StructureAnimation, StructureBackend, StructureError, StructureLoad};
 use sapling_world::{StructureTemplate, structure_name};
 
 use crate::components::Layer;
@@ -109,6 +109,17 @@ impl StructureBackend for Ctx<'_> {
         let template = self.saved_template(name)?;
         let layer = worlds::current(self.world);
         animate::load(self.world, layer, template, at, how, Animation::None, 0.0);
+        Ok(())
+    }
+
+    fn load_structure_animated(&mut self, name: &str, at: BlockPos, how: &StructureLoad, animation: StructureAnimation, seconds: f32) -> Result<(), StructureError> {
+        let template = self.saved_template(name)?;
+        let layer = worlds::current(self.world);
+        let animation = match animation {
+            StructureAnimation::LayerByLayer => Animation::LayerByLayer,
+            StructureAnimation::BlockByBlock => Animation::BlockByBlock,
+        };
+        animate::load(self.world, layer, template, at, how, animation, seconds);
         Ok(())
     }
 

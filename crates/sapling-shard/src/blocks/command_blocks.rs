@@ -141,19 +141,22 @@ pub(super) fn may_edit(world: &World, player: Entity) -> bool {
 
 /// A click on the block `name`. False for anything but a command block.
 pub(super) fn open_editor(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
-    Kind::of(name).is_some() && show_editor(world, player, layer, pos, WindowType::CommandBlock)
+    Kind::of(name).is_some() && show_editor(world, player, layer, pos, WindowType::CommandBlock, true)
 }
 
-/// An editor's click: the block's entity, then its screen; anyone else's: nothing, as BDS sent
+/// An editor's click: the block's entity when `with_entity` (a structure block's is not,
+/// research/captures/bds-structclick.txt), then its screen; anyone else's: nothing, as BDS sent
 /// nothing to a survival click. False where the block has no entity.
-pub(super) fn show_editor(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, screen: WindowType) -> bool {
+pub(super) fn show_editor(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, screen: WindowType, with_entity: bool) -> bool {
     if !may_edit(world, player) {
         return true;
     }
     let Some(shown) = level(world, layer).and_then(|level| level.block_entity(pos)).map(|entity| send::block_entity_data(pos, entity)) else { return false };
     let Some(window) = world.get_mut::<Inventory>(player).map(|mut inventory| inventory.next_window()) else { return false };
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-        out.0.push(shown);
+        if with_entity {
+            out.0.push(shown);
+        }
         out.push(&sapling_data::block_screen(WindowID::from_raw(window.into()), screen, pos));
     }
     true

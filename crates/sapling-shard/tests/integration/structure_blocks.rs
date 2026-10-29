@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::packets::{
-    BlockEntityData, StructureBlockUpdate, StructureTemplateDataExportRequest, StructureTemplateDataExportRequestRequestType as Request, StructureTemplateDataExportResponse, UpdateBlock,
+    BlockEntityData, ContainerOpen, StructureBlockUpdate, StructureTemplateDataExportRequest, StructureTemplateDataExportRequestRequestType as Request, StructureTemplateDataExportResponse, UpdateBlock,
 };
 use acacia_proto::types::{
     BlockCoordinates, StructureBlockSettings, StructureBlockSettingsAnimationMode as Animation, StructureBlockSettingsMirror, StructureBlockSettingsRotation, Vec3f,
@@ -98,6 +98,15 @@ fn a_block_put_as_load_is_shown_then_turned_save_a_tick_on() {
         assert_eq!((all::<UpdateBlock>(sent).len(), all::<BlockEntityData>(sent).len()), (1, 1));
     }
     assert!(block_at(&mut h, LOADER).contains("structure_block_type=save"));
+}
+
+#[test]
+fn an_operators_click_opens_the_editor_without_the_entity() {
+    let mut h = set_up();
+    h.receive(1, &common::click(SAVER, 1, None));
+    let sent = h.tick_all().to(1).to_vec();
+    assert_eq!(all::<ContainerOpen>(&sent).len(), 1);
+    assert!(all::<BlockEntityData>(&sent).is_empty(), "as BDS (bds-structclick.txt)");
 }
 
 #[test]

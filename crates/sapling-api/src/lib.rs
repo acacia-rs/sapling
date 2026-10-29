@@ -57,7 +57,7 @@ pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
 pub use block_entity::{BlockEntityBackend, BlockEntityData};
 pub use border::{BorderBackend, WorldBorder};
 pub use generation::{GenerationBackend, PlaceError};
-pub use structure::{Mirror, Rotation, StructureBackend, StructureError, StructureLoad};
+pub use structure::{Mirror, Rotation, StructureAnimation, StructureBackend, StructureError, StructureLoad};
 pub use ticking::{MOST_TICKING_AREAS, TickingArea, TickingBackend};
 pub use server::{SaveState, SavedFile, ScriptEvent, ServerBackend};
 pub use spawns::SpawnBackend;

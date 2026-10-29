@@ -10,7 +10,7 @@ use acacia_proto::nbt::Value;
 use acacia_proto::packets::{Respawn, StartGame, UpdatePlayerGameType};
 use acacia_proto::types::{GameMode as WireGameMode, Vec3f};
 use common::{Harness, all, config, platform};
-use sapling_api::{Block, GameMode, Item, Mirror, PlayerId, Rotation, ShardCtx, StructureError, StructureLoad, TickingArea, WorldBorder};
+use sapling_api::{Block, GameMode, Item, Mirror, PlayerId, Rotation, ShardCtx, StructureAnimation, StructureError, StructureLoad, TickingArea, WorldBorder};
 use sapling_world::{Level, MemoryStorage, StructureTemplate, World};
 
 const STEVE: PlayerId = PlayerId(1);
@@ -51,6 +51,24 @@ fn a_saved_structure_loads_turned_with_what_it_holds() {
         feet.sort_by(|a, b| a[0].total_cmp(&b[0]));
         assert_eq!(feet, [[1.5, 65.0, 1.5], [5.5, 65.0, 1.5]]);
     });
+    h.tick_all();
+}
+
+/// bds-structanim.txt: `/structure load … layer_by_layer 2` put its three layers in at ≈14, 27, 40 ticks.
+#[test]
+fn an_animated_load_puts_a_layer_each_third_of_its_time() {
+    let mut h = Harness::new();
+    h.enter(1, "Steve");
+    h.remote.run(|ctx| {
+        build(ctx);
+        assert_eq!(ctx.save_structure("house", [0, 64, 0], [2, 66, 2], false, true, false), Ok(()));
+        assert_eq!(ctx.load_structure_animated("house", [0, 70, 0], &StructureLoad::default(), StructureAnimation::LayerByLayer, 2.0), Ok(()));
+        assert!(ctx.block([0, 70, 0]).is_some_and(|block| block.is_air()), "nothing at once");
+    });
+    (0..18).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert_eq!((ctx.block([0, 70, 0]), ctx.block([1, 71, 0]).is_some_and(|block| block.is_air())), (Some(Block::new("stone")), true)));
+    (0..25).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert_eq!(ctx.block([1, 71, 0]), Some(Block::new("chest").with("minecraft:cardinal_direction=east"))));
     h.tick_all();
 }
 
