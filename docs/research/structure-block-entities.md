@@ -22,7 +22,10 @@ Every compound has `BlockEntityVersion` Int 0, `id`, `x`, `y`, `z`, keys in sort
 
 Tables are pack paths (`loot_tables/chests/simple_dungeon.json`); a template's Java table
 `minecraft:chests/x` becomes `loot_tables/chests/x.json`. BDS also writes beds, flower pots, cauldrons,
-sculk blocks and the mansion's pre-filled chests (template `Items`), left out here.
+sculk blocks and the mansion's pre-filled chests (template `Items`), left out here. Seen in the oracle
+world `20261003-structures` (`block_entity_dump`, 2026-10-29): `Bed` `color` Byte (0, 4, 10, 11, 13, 14),
+`Bell` `Direction` Int 0, `Ringing` Byte 0, `Ticks` Int (24, 33 seen), `FlowerPot` `PlantBlock` {name,
+states, version 18168865}, `Cauldron` `Items` [], `PotionId` and `PotionType` Short -1.
 
 ## Where the tables and seeds come from
 
@@ -99,13 +102,18 @@ starts pulling; comparators beside one lit nothing before it was opened.
 
 - Suspicious blocks' loot is kept but never rolled (no brushing). A broken decorated pot rolls its table
   into its one slot as a container does and leaves that beside itself (`blocks/entities.rs`; the probe's
-  pot of seed 1434522187 left item 307, one, as `containers::loot::tests` expects); a pot shot or broken
-  in creative was not drilled. Brushing was not drilled: the probe's repeated `UseItem` clicks with a
+  pot of seed 1434522187 left item 307, one, as `containers::loot::tests` expects). Broken in creative,
+  BDS's pot of that seed left item 307 and not the pot (bds-loot-probe2.txt); sapling leaves nothing
+  there. Not fixed: a pot set with a `LootTable` entity through the API read back without its entity
+  in a shard test, unexplained after two runs. A shot pot was not drilled. Brushing was not drilled: the probe's repeated `UseItem` clicks with a
   brush only made BDS resend the cell, so it needs the held-use input acacia-bot lacks. Found so far: `BrushableBlockActor` (vtable 14a786450; load 141f24d50, save 141f25010 with
   `brush_direction` +0x344 and `brush_count` +0x340) sets `brushed_progress` from its count (slot 52,
   141f25530): 0 at 0, 1 at 1-2, 2 at 3-5, 3 from 6.
-- The mansion template chests' own `Items`; flower pots, beds, cauldrons and the other non-loot entities.
-- A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation).
+- The mansion template chests' own `Items`; flower pots, beds, bells, cauldrons and the other non-loot
+  entities (fields above). Without them a generated village has no bed or bell entity, so a raid
+  (raids/village.rs) does not find it; writing them needs the templates' entities in templates.bin.
+- A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
+  before the vault's first tick rewrites it, so left.
 
 ## Unverified
 
