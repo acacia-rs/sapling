@@ -124,21 +124,22 @@ seconds in, half of them by 19: BDS's pace.
 
 ## Light
 
-Read from the bds-blocks build with bdsre (labels in `bdsre/names.user.json`); not drilled.
+Read from the bds-blocks build with bdsre (labels in `bdsre/names.user.json`); drilled 2026-10-29 as the list at
+the end says.
 "Light" is `BlockSource::getRawBrightness` (1415f7870): sky light less `skyDarken` where the
 night counts ("darkened"), or block light if brighter. [D] decompiled, [I] inferred.
 
 | What | BDS | Sapling |
 | --- | --- | --- |
 | crops (`CropBlock::randomTick` 1471459b0) | grow in darkened light >= a field (9 [I]) in their own cell [D] | 9 in the cell |
-| crops (`CropBlock::canSurvive` 147146150) | break when light, night not counted, < a field (8 [I]) and the cell is under the heightmap [D] | on a neighbour's change (`blocks/ground.rs`), not on placing [I] |
+| crops (`CropBlock::canSurvive` 147146150) | break when light, night not counted, < a field (8 [I]) and the cell is under the heightmap [D]; but `neighborChanged` asks only the ground, and drilled wheat in the dark stayed through a change beside and below it | never break by light |
 | stems (146616700) | darkened light >= 9 in their cell [D] | as BDS |
 | bamboo (1458106a0, 145812a70) | one tick in 3, darkened light >= 9 over it; a stalk up to 12 + a hash of its column % 5 [D] | the light; its odds and height stay as measured above |
 | berry bush (1471efab0), cocoa (148b2b230), vines (1425e0490), cave vines (148b208d0) | no light read [D] | none |
 | grass (`GrassBlockBase::randomTick` 147165820) | dirt if `_canBeGrass` (147165b50) fails: liquid or a block that keeps light out over it; with darkened light >= 9 over it, 4 tries 1 across, 3 under to 1 over, at dirt that could be grass [D] | dies under a block of filter 15 or liquid; the dirt must be open to the air |
-| mycelium (1465eb280) | light, night not counted: dies with < 4 over it under a solid block; with >= 9 over it, 4 tries 1 across, 2 either way, at dirt with >= 4 over it and nothing solid or liquid [D] | as BDS, the dirt open to the air |
+| mycelium (1465eb280) | light, night not counted: dies with < 4 over it under a solid block unless that has a tag (0x14cd22f48, unread); with >= 9 over it, 4 tries 1 across, 2 either way, at dirt with >= 4 over it and nothing solid or liquid [D]. Drilled: under stone in the dark it lived 60 s at 200 | spreads as BDS, the dirt open to the air; never dies (TODO in `growth/cover.rs`) |
 | ice (`IceBlock::randomTick` 142fd3470) | block light in its cell > 11 - its light block (0): water, air in an ultrawarm dimension [D] | block light in its cell, or one less beside it, >= 12: sapling's light table gives ice filter 2, where BDS's constructor gives none |
-| snow layer (`TopSnowBlock::randomTick` 1471fb850) | block light b >= 12 in its cell melts b - 11 layers, up to 8 [D]; also one layer now and then in a biome over 0.15 when not snowing | the light; not the warm biome |
+| snow layer (`TopSnowBlock::randomTick` 1471fb850) | block light b >= 12 in its cell melts b - 11 layers, up to 8 [D]; also one layer now and then in a biome over 0.15 when not snowing: drilled at light 11 in plains, 8 layers in about 32 s at 200 | the light; in a warm biome one layer a random tick in 16 |
 | freezing (`LevelChunk::tick` 1409f98a0) | `randomTickSpeed` picks a chunk a tick at the rain top; one in 16 freezes still water that is not water on all four sides, biome <= 0.15, block light < 10 (`Weather::shouldFreeze` 14119e860), whatever the weather [D] | as BDS, up to 16 picks a column a tick, chunks within 4 of a player (`growth/snowfall.rs`) |
 | snow lying | while raining, `doWeatherCycle` on, one in 256 - min(512 x rain x downfall, 240); block light < 12, cold, ground that holds it; layers up to the biome's most (`Weather::canPlaceTopSnow` 14119d880) [D] | one in 16 (full rain, downfall >= 0.47); a layer more on a snow layer under the biome's most ("Snow layers" below) |
 | mushrooms (1465ea600, `canSurvive` 1465eac10) | spread one tick in 25, at most 5 in 9x3x9; survive on mycelium and podzol [I], else light, night not counted, < 13 [D] | as BDS ("Wild plants" below) |
@@ -177,9 +178,31 @@ mountains and ice spikes. Sapling counts the layers in the cell and a full layer
 (`growth/snowfall.rs`); BDS's smoothing, which may put the layer on a lower neighbour instead, is
 not ported [I].
 
-- Light: none of "Light" above was drilled against BDS; the crops' 9 and 8, the soils mushrooms
-  keep to and snow's odds are inferred. Daylight detectors read the sky light in their cell by the
-  reckoning in redstone.md.
+- Light, drilled 2026-10-29 with `lightgrow`, `lightpoke` and `croprates` (`examples/shared/growth_drill.rs`;
+  `research/captures/bds-lightgrow.txt`, `bds-lightpoke.txt`, `bds-croprates.txt`). The scenes use sealed rooms lit
+  by light blocks, at `randomtickspeed` 200 for 60 s. Tests: `tests/integration/growth_drilled.rs`, `lit_rules.rs`.
+  - Drilled same:
+    - Wheat, carrots and melon stems grow at light 9 and not at 8.
+    - Bamboo grows at 9 and not at 8.
+    - Mycelium spreads at 9.
+    - Covered grass turns to dirt at once.
+    - Ice melts at block light 12 and not at 11.
+    - Snow melts several layers a tick at 13 and one at 12.
+    - A mushroom in daylight on stone breaks when a neighbour changes; one on mycelium stays.
+    - Wheat, beetroot, carrots and potatoes ripen at one pace (median ripe about 20 to 26 s); beetroot is not slower.
+  - Fixed:
+    - Crops never break by light. They had broken in sapling as a neighbour changed in the dark, a fill's crops among them.
+    - Mycelium under stone does not die.
+    - Snow in a warm biome loses a layer one random tick in 16.
+  - Left:
+    - Grass spread at light 9 over its dirt, but within 60 s not at 10; sapling's did the reverse. Read as chance.
+    - BDS did not break a mushroom at light 13 when a light block was set beside it. Its light likely was not in yet
+      at that update, and sapling, which relights first, breaks it.
+    - Freezing, snow lying and the sun need a cold biome or weather the flat drill world lacks, so they are undrillable
+      here.
+  - Sapling's drill world has ground at y 60 to 63 over the drills (`drill_server.rs`), so a scene that needs daylight
+    at y -26 clears it first.
+  - Daylight detectors read the sky light in their cell by the reckoning in redstone.md.
 - Trees from saplings: built from the decompile (saplings.md), not checked against the timing
   measured above.
 - Farmland getting wet was not measured; a pumpkin's facing, and what ground a fruit takes, are
@@ -188,4 +211,5 @@ not ported [I].
   (`blocks/fire.rs`, `blocks/ores.rs`). Sapling's wild plants were not drilled against BDS's
   timing; a vine's sideways growth onto the top of a block (Java's last case) has no Bedrock state
   and is left out.
-- Beetroot's and the other crops' own odds, which were not measured.
+- Each crop's own odds are drilled: all four ripen at one pace ("Light" above, `croprates`).
+- Wild plants' timing against `bds-plants.txt`: sapling's `plants` run was not compared.

@@ -62,13 +62,13 @@ fn wheat_grows_in_the_light_and_not_shut_in_the_dark() {
 }
 
 #[test]
-fn wheat_in_the_dark_breaks_when_a_neighbour_changes_and_in_the_light_does_not() {
+fn wheat_stays_when_a_neighbour_changes_in_the_dark_and_in_the_light() {
     let mut set = vec![([2, 64, 0], block("farmland", "")), ([2, 65, 0], block("wheat", "")), ([2, 64, 4], block("farmland", "")), ([2, 65, 4], block("wheat", ""))];
     set.extend(stone(walled([2, 65, 0])));
     set.extend(stone(walled([2, 65, 4])).filter(|(at, _)| at[1] != 66));
     let mut h = lit_world(0, set);
     h.receive(1, &block_actions(&[(BlockAction::PredictBreak, [1, 65, 0]), (BlockAction::PredictBreak, [1, 65, 4])]));
-    assert_eq!(blocks(&mut h, 2, vec![[2, 65, 0], [2, 65, 4]]), ["air[]", "wheat[growth=0]"]);
+    assert_eq!(blocks(&mut h, 2, vec![[2, 65, 0], [2, 65, 4]]), ["wheat[growth=0]", "wheat[growth=0]"]);
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn grass_dies_under_stone_and_spreads_in_the_light_only() {
 }
 
 #[test]
-fn ice_and_snow_melt_by_glowstone_and_not_in_daylight() {
+fn ice_melts_by_glowstone_and_not_in_daylight_and_snow_in_plains_melts_either_way() {
     let set = vec![
         ([3, 65, -3], block("ice", "")),
         ([4, 65, -3], block("glowstone", "")),
@@ -104,7 +104,8 @@ fn ice_and_snow_melt_by_glowstone_and_not_in_daylight() {
     let mut h = lit_world(1000, set);
     let after = blocks(&mut h, 300, vec![[3, 65, -3], [3, 65, 5], [-5, 65, -3], [-5, 65, 5]]);
     let names: Vec<&str> = after.iter().map(|name| name.split('[').next().unwrap_or_default()).collect();
-    assert!(names[0].ends_with("water") && names[1..] == ["air", "ice", "snow_layer"], "{after:?}");
+    // Plains are over 0.15: a layer goes one random tick in 16 by day too (research/captures/bds-lightgrow.txt).
+    assert!(names[0].ends_with("water") && names[1..] == ["air", "ice", "air"], "{after:?}");
 }
 
 #[test]

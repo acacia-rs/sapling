@@ -196,8 +196,7 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
         hazards::sound_wall(world, player, layer, harm);
     }
     crate::blocks::trample(world, layer, position.feet, dropped);
-    let sneaking = world.get::<Motion>(player).is_some_and(|motion| motion.pose.sneaking);
-    crate::blocks::tread_turtle_eggs(world, layer, "minecraft:player", position.feet, position.on_ground, landed, sneaking);
+    crate::blocks::tread_turtle_eggs(world, layer, "minecraft:player", position.feet, position.on_ground, landed);
     if position.on_ground {
         crate::blocks::tread_ore(world, layer, position.feet);
     }

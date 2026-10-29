@@ -7,7 +7,7 @@ use crate::common;
 use crate::riding::{interact, spawned};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, ContainerOpen, Interact, InteractActionId, LevelSoundEvent, MobArmorEquipment, SetEntityData, UpdateEquipment};
+use acacia_proto::packets::{AddItemEntity, ContainerOpen, Interact, InventoryContent, InteractActionId, LevelSoundEvent, MobArmorEquipment, SetEntityData, UpdateEquipment};
 use acacia_proto::types::{
     InputData, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, WindowType,
 };
@@ -34,10 +34,13 @@ fn ask(action_id: InteractActionId, target: u64) -> Interact {
 }
 
 /// The horse screens Alex was shown in `sent`: the mob each names and how many slots it has.
+/// The horse screens opened, as (mob, slots): BDS sends `UpdateEquipment` alone, size 0, and then
+/// the window's content (research/captures/bds-tack.txt).
 fn screens(sent: &[RawPacket]) -> Vec<(i64, u8)> {
-    let opened: Vec<ContainerOpen> = all::<ContainerOpen>(sent).into_iter().filter(|open| open.window_type == WindowType::Horse).collect();
-    let equipped = all::<UpdateEquipment>(sent);
-    opened.iter().filter_map(|open| equipped.iter().find(|told| told.window_id == open.window_id && told.window_type == WindowType::Horse).map(|told| (open.runtime_entity_id, told.size))).collect()
+    assert!(all::<ContainerOpen>(sent).is_empty(), "no ContainerOpen");
+    let contents = all::<InventoryContent>(sent);
+    let equipped = all::<UpdateEquipment>(sent).into_iter().filter(|told| told.window_type == WindowType::Horse && told.size == 0);
+    equipped.filter_map(|told| contents.iter().find(|content| format!("{:?}", content.window_id) == format!("{:?}", told.window_id)).map(|content| (told.entity_id, content.input.len() as u8))).collect()
 }
 
 #[test]
@@ -110,7 +113,7 @@ fn click_holding(h: &mut Harness, mob: EntityId, item: &'static str) -> Vec<RawP
 }
 
 #[test]
-fn a_llama_shows_its_strength_wears_a_carpet_and_spills_its_goods_when_it_dies() {
+fn a_llama_shows_its_strength_wears_a_carpet_and_spills_its_chest_but_not_its_carpet_when_it_dies() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     let made = Arc::new(Mutex::new(None));
@@ -140,5 +143,22 @@ fn a_llama_shows_its_strength_wears_a_carpet_and_spills_its_goods_when_it_dies()
     let sent = ticks(&mut h, 2);
     let mut left: Vec<&str> = all::<AddItemEntity>(&sent).iter().filter_map(|lying| sapling_data::item_name(lying.item.network_id.into())).collect();
     left.sort_unstable();
-    assert!(left.contains(&"minecraft:red_carpet") && left.contains(&"minecraft:chest"), "{left:?}");
+    // BDS's dying llama kept its carpet (research/captures/bds-tack.txt).
+    assert!(!left.contains(&"minecraft:red_carpet") && left.contains(&"minecraft:chest"), "{left:?}");
+}
+
+#[test]
+fn a_donkey_summoned_tame_opens_to_a_sneaking_click_even_holding_a_chest() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let made = Arc::new(Mutex::new(None));
+    let slot = made.clone();
+    h.remote.run(move |ctx| *slot.lock().unwrap() = ctx.summon_as(None, "minecraft:donkey", [2.5, 65.0, 0.5], 0.0, Some("minecraft:spawn_tame_adult")));
+    ticks(&mut h, 2);
+    let donkey = made.lock().unwrap().expect("a donkey");
+    h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:chest", 1)))));
+    let sent = sneaking_click(&mut h, donkey);
+    // BDS's opened its screen and took no chest (research/captures/bds-tack.txt).
+    assert!(!all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "add.chest"));
+    assert_eq!(screens(&sent), [(donkey.0 as i64, 2)]);
 }

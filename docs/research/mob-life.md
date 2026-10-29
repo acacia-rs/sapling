@@ -3,7 +3,8 @@
 Tags: **BDSRE** (bdsre on BDS 1.26.52, `acacia/.testserver/bds-blocks/bedrock_server.exe`; VAs as given), **ED** (the
 vanilla behaviour pack's entity JSONs, `research/bedrock-samples-ui/behavior_pack/entities`, and its loot tables),
 **RP** (the same samples' resource pack: what the client animates by), **JAVA** (the Java game's rules, used only where
-BDS was not read). No BDS drill was run for any of this. Items under "Not drilled" at the end are what sapling guesses.
+BDS was not read). Drilled on BDS 2026-10-29 with `bds_command_probe` scenes from `examples/shared/eggs_drill.rs` and
+`tack_drill.rs`: see "Drilled" at the end; "Not drilled" is what sapling still guesses.
 
 ## Egg blocks
 
@@ -26,7 +27,7 @@ BDS was not read). No BDS drill was run for any of this. Items under "Not drille
 - A hatched turtle's home is the egg's cell: `HomePos` (float list) and `HomeDimensionId` in its compound
   (sapling-leveldb `actor_home.rs`).
 - Trampling (JAVA): any living thing but a turtle or bat, a mob only with `mobGriefing`, breaks one egg with odds of 1
-  in 100 per tick on it, or 1 in 3 when it lands on it. A player does not break eggs while sneaking. Sound `.break`.
+  in 100 per tick on it, or 1 in 3 when it lands on it. Sneaking does not spare them on BDS ("Drilled"). Sound `.break`.
 
 ### Frogspawn (blocks/eggs/frogspawn.rs)
 
@@ -51,17 +52,17 @@ BDS was not read). No BDS drill was run for any of this. Items under "Not drille
 
 ## Mount inventories (riding/packs.rs)
 
-- No BDS capture of the horse screen exists. BDSRE found `HorseContainerManagerModel` (lambdas 1480929b0, 148092d00) and
+- The screen's packets are drilled (`bds-tack.txt`, "Drilled"). BDSRE found `HorseContainerManagerModel` (lambdas 1480929b0, 148092d00) and
   `ServerPlayer::openInventory` 140756800, but they were not read further.
 - Sapling's layout:
   - Slot 0 is the saddle and slot 1 the armour (horse) or carpet (llama).
   - Chest slots follow from 2: 15 for a donkey or mule, 3 × strength for a llama (strength 3 here).
 - The screen sapling sends:
-  - `ContainerOpen` with `WindowType::Horse` and the mob's runtime id, then `InventoryContent` (`containers::show_carried`).
-  - Then `UpdateEquipment` (window, type Horse, size, entity id). Its NBT `slots` list gives each tack slot's
+  - `UpdateEquipment` (window, type Horse, size 0, entity id), then `InventoryContent` (`containers::show_carried`),
+    and no `ContainerOpen`. Its NBT `slots` list gives each tack slot's
     `slotNumber`, its outline `item` (`horsesaddle`, `horsearmor`, `carpet`) and `acceptedItems`.
 - What opens it:
-  - A sneaking click on a tamed mount.
+  - A sneaking click on a tamed mount, even one holding a chest (`bds-tack.txt`).
   - The inventory key (`Interact OpenInventory`) while riding a mob. A ride without an inventory opens the player's own.
 - A chest used on a tamed grown donkey, mule or llama sets `Chested` (ED: `minecraft:equippable` / chest groups) with
   sound `add.chest`.
@@ -70,6 +71,8 @@ BDS was not read). No BDS drill was run for any of this. Items under "Not drille
 - Kept in the compound:
   - `Saddled` and `Chested`.
   - `ChestItems` by slot, tack included; slot 1's armour is worn again on load.
+- Death (`bds-tack.txt`): the goods spill with `doMobLoot` on or off; the saddle, armour and carpet stay with the
+  mob (a horse's saddle came from its loot). Whether the chest itself drops is not seen; sapling drops it.
 
 ## Sniffers (creatures/husbandry/sniffing.rs)
 
@@ -88,18 +91,36 @@ BDS was not read). No BDS drill was run for any of this. Items under "Not drille
 - Breeding (ED): `causes_pregnancy`. The pregnant sniffer's `spawn_entity` drops a `sniffer_egg` item with sound
   `plop` and no baby (creatures/husbandry/breeding.rs `LAYS_EGG`).
 
+## Drilled (2026-10-29)
+
+Captures in `research/captures/`; sapling's own runs of the same scenes match except as noted. Tests:
+`tests/integration/eggs_drilled.rs`, `mount_packs.rs`.
+
+- Turtle eggs (`bds-eggs.txt`), fixed: every hatched turtle comes out at `(x - 0.12, y, z)` of the cell (the corner,
+  not JAVA's spread), with no spawn sound. The hatch is 2001 per egg at the corner, the block's `UpdateBlock`, then
+  the hatch sound at the corner, data -1. A state-only `/setblock` raises no place event: drilled same.
+- Trampling (`bds-eggtrample.txt`): pigs broke eggs with `mobGriefing` on and none with it off, and turtles broke none.
+  A player standing on eggs broke them about 1 in 100 a tick. **Sneaking did not save them**, which is fixed. A break
+  sends 2001 at the corner, the block, then `.break` at the corner. Fixed: sapling's mobs sink into the egg's cell,
+  so that cell is checked first.
+- Frogspawn (`bds-eggs.txt`), fixed: placed on water it is heard (`lay_spawn`). With its water gone it breaks at once
+  (a neighbour change), drops nothing and hatches nothing. Set on stone it stays.
+- Sniffer eggs (`bds-sniffers.txt`), fixed: each sparkle names the egg's new state (the cracked one on a crack). The
+  baby comes out at the cell's corner, after the block goes, then the hatch sound. BDS's one hatch was at z - 0.3025
+  of the corner, which is not ported.
+- The horse screen (`bds-tack.txt`), fixed: there is **no `ContainerOpen`**. `UpdateEquipment` (window, type Horse,
+  size 0, the mob, the slots NBT as above) then `InventoryContent`.
+- A llama's carpet (`bds-tack.txt`): `MobArmorEquipment` body; fixed to sound `armor`, then `armor.equip_generic`.
+- The sniffer's extended flags (`bds-sniffers.txt`), fixed: base word `i64::MIN | 1 << 25`, sent after its
+  announcement.
+
 ## Not drilled
 
-- Turtle trampling odds and who tramples (JAVA). The hatched turtles' places, 0.3 + 0.2 per egg along x (JAVA).
-- Whether frogspawn with no water under it breaks or waits for its next tick. Sapling breaks it, with particles and
-  no tadpoles.
-- The sniffer egg's hatch position (sapling: the cell's centre) and whether `BlockPlaceEvent` fires on a state change.
-- The whole horse screen:
-  - Packet order and `UpdateEquipment` NBT.
-  - Whether `ChestItems` keeps the tack.
-  - The llama's strength roll, carpet display, and the chest's goods spilling on death.
+- Whether `ChestItems` keeps the tack. The world was left with a chested donkey and a carpeted llama for
+  `actor_dump`, but it was not read.
 - The sniffer:
-  - Its extended flags' base word (sapling: `1 << 25`, as breezes and creakings were recorded).
-  - How a search position is chosen (sapling: the highest open soil in a random column within reach).
-  - The search's give-up time (sapling: 30 s, not in the pack), and whether dug spots are remembered.
-  - None of its state is kept in a world folder.
+  - In 240 s at noon, four sniffers on grass neither searched nor dug, so these are undrillable in a few minutes:
+    how a search position is chosen (sapling: the highest open soil in a random column within reach), the
+    give-up time (sapling: 30 s, not in the pack), and whether dug spots are remembered.
+  - Its state not being kept in a world folder needs a restart, which the drill harness has none of.
+  - BDS sends one full `SetEntityData` right after each summoned sniffer's announcement. Sapling sends no such packet.

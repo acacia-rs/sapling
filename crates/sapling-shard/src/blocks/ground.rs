@@ -101,6 +101,8 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
     match block {
         _ if CROPS.contains(&block) => under == Some("minecraft:farmland"),
         "minecraft:nether_wart" => under == Some("minecraft:soul_sand"),
+        // Its water taken away, it breaks at once (research/captures/bds-eggs.txt).
+        "minecraft:frog_spawn" => is_water(level, below(pos)),
         "minecraft:fire" | "minecraft:soul_fire" => super::fire::stands(level, pos),
         "minecraft:sweet_berry_bush" => under.is_some_and(|under| VEGETATION.contains(&under)) && !is_wet(level, pos),
         REEDS => cane_may_stand(level, pos),
@@ -133,16 +135,15 @@ const BAMBOO_GROUND: &[&str] = &[
 ];
 
 /// Whether the block `id` at `pos` has the wrong light to stay when a neighbour changes, its
-/// brightness read with no night in it: a crop under 8 (`CropBlock::canSurvive`; open sky over
-/// it always gives that), a mushroom from 13 up off mycelium and podzol (`MushroomBlock`'s).
+/// brightness read with no night in it: a mushroom from 13 up off mycelium and podzol
+/// (`MushroomBlock`'s). Crops never: `CropBlock::neighborChanged` asks only the ground
+/// (research/captures/bds-lightgrow.txt).
 pub(super) fn is_wrongly_lit(level: &World, [x, y, z]: BlockPos, id: u32) -> bool {
-    const DARK_KILLS: &[&str] = &["minecraft:wheat", "minecraft:carrots", "minecraft:potatoes", "minecraft:beetroot", "minecraft:torchflower_crop"];
     const MUSHROOMS: &[&str] = &["minecraft:brown_mushroom", "minecraft:red_mushroom"];
     const MUSHROOM_GROUND: &[&str] = &["minecraft:mycelium", "minecraft:podzol"];
     let Some(name) = level.registry().get(id).map(|state| state.name) else { return false };
     let light = || level.brightness_at(x, y, z, 0).unwrap_or(0);
     match name {
-        _ if DARK_KILLS.contains(&name) => level.light_at(x, y, z).is_some() && light() < 8,
         _ if MUSHROOMS.contains(&name) => !self::name(level, [x, y - 1, z]).is_some_and(|under| MUSHROOM_GROUND.contains(&under)) && light() >= 13,
         _ => false,
     }
@@ -150,7 +151,7 @@ pub(super) fn is_wrongly_lit(level: &World, [x, y, z]: BlockPos, id: u32) -> boo
 
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {
-    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire"];
+    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire", "minecraft:frog_spawn"];
     [CROPS, DIODES, RAILS, VINES, OTHERS].iter().any(|list| list.contains(&name))
 }
 

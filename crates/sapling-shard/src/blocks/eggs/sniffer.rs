@@ -1,12 +1,11 @@
 //! Sniffer eggs (`SnifferEggBlock`, docs/research/mob-life.md "Sniffer eggs"): each tick comes 7200
 //! to 8799 ticks after the last, half that on moss; it cracks the egg once more with a sparkle, and
-//! the tick after the second crack hatches a baby sniffer.
+//! the tick after the second crack hatches a baby sniffer at the cell's corner.
 
-use acacia_proto::packets::LevelEventEvent;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::{again, crack, cracks, level_event, name_at, roll};
+use super::{again, crack, cracks, egg_sound, name_at, roll, sparkle};
 use crate::blocks::{level, send};
 
 pub(super) const EGG: &str = "minecraft:sniffer_egg";
@@ -27,8 +26,8 @@ fn wait(world: &mut World, layer: Entity, pos: BlockPos) {
 
 /// A sniffer egg came at `pos`: on moss it sparkles (146607830).
 pub(super) fn placed(world: &mut World, layer: Entity, pos: BlockPos) {
-    if on_moss(world, layer, pos) {
-        send::to_viewers(world, layer, pos, &[level_event(LevelEventEvent::ParticleTurtleEgg, pos, 0)]);
+    if let Some(sparkle) = level(world, layer).filter(|_| on_moss(world, layer, pos)).map(|level| sparkle(level, pos)) {
+        send::to_viewers(world, layer, pos, &[sparkle]);
     }
     wait(world, layer, pos);
 }
@@ -37,16 +36,14 @@ pub(super) fn placed(world: &mut World, layer: Entity, pos: BlockPos) {
 pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(level) = level(world, layer) else { return };
     if cracks(level, pos) < 2 {
-        send::to_viewers(world, layer, pos, &[level_event(LevelEventEvent::ParticleTurtleEgg, pos, 0)]);
-        crack(world, layer, pos, "block.sniffer_egg.crack");
+        crack(world, layer, pos, "block.sniffer_egg.crack", true);
         return wait(world, layer, pos);
     }
-    let [x, y, z] = pos;
-    let (id, air) = (level.block(x, y, z), level.registry().air_id());
-    let heard = send::sound("block.sniffer_egg.hatch", level.registry(), pos, id);
+    let air = level.registry().air_id();
     if !send::set(world, layer, pos, air) {
         return;
     }
-    send::to_viewers(world, layer, pos, &[heard]);
-    crate::creatures::hatch(world, layer, SNIFFER, [x as f32 + 0.5, y as f32, z as f32 + 0.5]);
+    // TODO: BDS's one hatch seen came out at z - 0.3025 of the corner (research/captures/bds-sniffers.txt).
+    crate::creatures::hatch(world, layer, SNIFFER, pos.map(|c| c as f32));
+    send::to_viewers(world, layer, pos, &[egg_sound("block.sniffer_egg.hatch", pos)]);
 }

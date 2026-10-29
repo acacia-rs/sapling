@@ -1,7 +1,7 @@
 //! Opening and closing the screens of blocks: containers, crafting tables, stonecutters and the
 //! workstations (workstations.rs).
 
-use acacia_proto::packets::{ContainerClose, ContainerOpen};
+use acacia_proto::packets::{ContainerClose, ContainerOpen, UpdateEquipment};
 use acacia_proto::types::{WindowID, WindowType};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -47,13 +47,18 @@ pub(super) fn still_shows(screen: Screen, block: &str) -> bool {
     }
 }
 
-/// Opens the screen of the goods `slots` of `vehicle` (its id `id`, its cell `pos`) for a player.
-pub(crate) fn show_carried(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, vehicle: (Entity, u64), window_type: WindowType, slots: &[Option<Held>]) -> bool {
+/// Opens the screen of the goods `slots` of `vehicle` (its id `id`, its cell `pos`) for a player:
+/// by `ContainerOpen`, or for a mount by the `UpdateEquipment` that `equipment` makes for the
+/// window, which BDS sends alone (research/captures/bds-tack.txt).
+pub(crate) fn show_carried(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, vehicle: (Entity, u64), window_type: WindowType, slots: &[Option<Held>], equipment: Option<&dyn Fn(u8) -> UpdateEquipment>) -> bool {
     close(world, player);
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
     let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
     let window = inventory.next_window();
-    out.push(&ContainerOpen { runtime_entity_id: vehicle.1 as i64, ..sapling_data::block_screen(WindowID::from_raw(window.into()), window_type, pos) });
+    match equipment {
+        Some(equipment) => out.push(&equipment(window)),
+        None => out.push(&ContainerOpen { runtime_entity_id: vehicle.1 as i64, ..sapling_data::block_screen(WindowID::from_raw(window.into()), window_type, pos) }),
+    }
     out.push(&content(window, slots));
     world.entity_mut(player).insert(Viewing { layer, pos, window, screen: Screen::Carried(vehicle.0) });
     true
