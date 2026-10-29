@@ -87,6 +87,33 @@ fn a_player_dying_near_a_catalyst_leaves_its_experience_to_it() {
     assert!(count(&mut h, "minecraft:sculk") > 0);
 }
 
+/// Kills a cow summoned with its feet at `feet`; what each of the next four ticks sent.
+fn kill_cow(h: &mut Harness, feet: [f32; 3]) -> Vec<Vec<RawPacket>> {
+    let (tx, rx) = mpsc::channel();
+    h.remote.run(move |ctx| tx.send(ctx.spawn_entity("minecraft:cow", feet).expect("a cow")).unwrap());
+    h.tick_all();
+    let cow = rx.recv().unwrap();
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(cow)));
+    (0..4).map(|_| ticks(h, 1)).collect()
+}
+
+#[test]
+fn a_death_9_9_off_blooms_one_10_4_off_does_not_and_the_charge_moves_a_tick_late() {
+    // research/captures/bds-catalyst.txt: range 10 from the catalyst's middle; the charge is first
+    // shown the tick after the bloom's particles.
+    let mut h = ready();
+    let sent = kill_cow(&mut h, [-4.5, 65.0, -4.5]);
+    let death = sent.iter().position(|tick| events(tick, BLOOM) == 1).expect("the bloom");
+    let moved = |tick: &[RawPacket]| events(tick, CHARGE) + events(tick, 2038 << 1);
+    assert_eq!(moved(&sent[death]), 0, "no charge in the death's tick");
+    // This kill lands after the catalysts' tick, so a tick later than the drill's `/kill` did.
+    let shown: Vec<usize> = sent.iter().map(|tick| moved(tick)).collect();
+    assert!(shown[death + 1..].iter().take(2).any(|moved| *moved > 0), "the charge moves within two ticks: death {death}, {shown:?}");
+    ticks(&mut h, 40);
+    let sent = kill_cow(&mut h, [-4.85, 65.0, -4.85]);
+    assert!(sent.iter().all(|tick| events(tick, BLOOM) == 0), "10.4 off is out of range");
+}
+
 #[test]
 fn a_death_out_of_range_does_nothing() {
     let mut h = ready();

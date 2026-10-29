@@ -33,6 +33,8 @@ const CHARGE_POP: u32 = 2038 << 1;
 #[derive(Resource)]
 pub(crate) struct Catalysts {
     cursors: BTreeMap<(Entity, BlockPos), Vec<Cursor>>,
+    /// Charge from this tick's deaths, first moved the next tick as BDS's (research/captures/bds-catalyst.txt).
+    fresh: Vec<((Entity, BlockPos), [i32; 3], i32)>,
     /// The level's generator, which BDS's spreader draws from.
     random: Mt19937,
 }
@@ -40,7 +42,7 @@ pub(crate) struct Catalysts {
 fn catalysts(world: &mut World) -> Mut<'_, Catalysts> {
     if !world.contains_resource::<Catalysts>() {
         let seed = world.get_resource_or_insert_with(Dice::default).roll(u32::MAX);
-        world.insert_resource(Catalysts { cursors: BTreeMap::new(), random: Mt19937::new(seed) });
+        world.insert_resource(Catalysts { cursors: BTreeMap::new(), fresh: Vec::new(), random: Mt19937::new(seed) });
     }
     world.resource_mut::<Catalysts>()
 }
@@ -70,7 +72,7 @@ pub(crate) fn mob_died(world: &mut World, layer: Entity, at: [f32; 3], reward: i
     let Some(catalyst) = nearest(world, layer, at) else { return false };
     if let Some(points) = reward(world).filter(|points| *points > 0) {
         let cell = at.map(|c| c.floor() as i32);
-        sculk::add_cursors(catalysts(world).cursors.entry((layer, catalyst)).or_default(), cell, points);
+        catalysts(world).fresh.push(((layer, catalyst), cell, points));
     }
     bloom(world, layer, catalyst);
     true
@@ -118,6 +120,9 @@ pub(super) fn tick(world: &mut World) {
         }
     }
     spent.iter().for_each(|key| _ = catalysts.cursors.remove(key));
+    for (key, cell, points) in std::mem::take(&mut catalysts.fresh) {
+        sculk::add_cursors(catalysts.cursors.entry(key).or_default(), cell, points);
+    }
     world.insert_resource(catalysts);
 }
 

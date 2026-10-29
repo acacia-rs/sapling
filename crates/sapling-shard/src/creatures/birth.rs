@@ -17,6 +17,9 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]
     spawn_as(world, layer, kind, feet, reason, 0.0, None)
 }
 
+/// Spawn events that make a baby (`summon cow ~ ~ ~ 0 0 minecraft:entity_born`).
+const BABY_EVENTS: [&str; 3] = ["entity_born", "as_baby", "spawn_baby"];
+
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
 pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
     let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
@@ -24,6 +27,9 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {
         entities::restore(world, entity, |compound, _| sapling_world::varied_actor(compound, gene.0, yaw).ok());
+    }
+    if event.is_some_and(|event| BABY_EVENTS.contains(&event.trim_start_matches("minecraft:"))) {
+        husbandry::be_born(world, entity, kind);
     }
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
