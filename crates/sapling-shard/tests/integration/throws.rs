@@ -5,7 +5,7 @@ use crate::common;
 
 use std::sync::{Arc, Mutex};
 
-use acacia_proto::packets::{LevelSoundEvent, RemoveEntity};
+use acacia_proto::packets::{LevelSoundEvent, MobEffect, RemoveEntity};
 use common::orbs::worths;
 use common::shooting::{ALEX, FEET, added, healths, held, ready, spawn, throw};
 use common::{Harness, all};
@@ -67,6 +67,19 @@ fn a_splash_potion_of_harming_harms_a_cow_and_a_lingering_one_leaves_a_cloud() {
     let mut h = ready(GameMode::Creative, &[("minecraft:lingering_potion", 1, 23)], 30.0);
     let sent = throw(&mut h, 20);
     assert_eq!((added(&sent, "minecraft:lingering_potion").len(), added(&sent, "minecraft:area_effect_cloud").len()), (1, 1));
+}
+
+/// research/captures/bds-clouds2.txt: poison thrown down on its thrower, a player standing 2.5
+/// along got 519 of its 900 ticks, a share by the gap from the break to the nearest of its box.
+#[test]
+fn a_splash_potion_shares_its_time_by_the_gap_to_each_box() {
+    let mut h = ready(GameMode::Survival, &[("minecraft:splash_potion", 1, 25)], 90.0);
+    h.remote.run(|ctx| ctx.teleport(sapling_api::PlayerId(2), [FEET[0] + 2.0, FEET[1], FEET[2]]));
+    h.tick_all();
+    h.receive(1, &common::shooting::click_air());
+    let mut told: Vec<i32> = (0..30).flat_map(|_| all::<MobEffect>(h.tick_all().to(2))).filter(|effect| effect.effect_id == 19).map(|effect| effect.duration).collect();
+    told.sort();
+    assert!(told.len() == 2 && (500..=530).contains(&told[0]) && told[1] == 900, "Steve's share, then Alex's whole: {told:?}");
 }
 
 #[test]

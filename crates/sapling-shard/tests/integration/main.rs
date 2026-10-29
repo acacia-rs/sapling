@@ -48,6 +48,7 @@ mod gliding;
 mod instruments;
 mod item_buckets;
 mod fishing;
+mod foods;
 mod fish;
 mod hearts;
 mod held_drops;

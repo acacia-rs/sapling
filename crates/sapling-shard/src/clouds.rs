@@ -20,7 +20,6 @@ use crate::{entities, mobs};
 pub(crate) const KIND: &str = "minecraft:area_effect_cloud";
 pub(crate) const SIZE: [f32; 2] = [0.6, 1.8];
 const FLAGS: u64 = 0x6_0000_0000_0000;
-const PARTICLE: i32 = 49;
 const SHRINK_ON_PICKUP: f32 = -0.5;
 const PULSE: u64 = 5;
 const SMALLEST: f32 = 0.5;
@@ -30,12 +29,13 @@ const INSTANT_SHARE: f32 = 0.5;
 /// Mobs no cloud gives to.
 const UNAFFECTED: &[&str] = &["minecraft:ender_dragon"];
 
-/// What a cloud is: its potion and colour, its radius and how that changes a tick of its age and
-/// for each one given, its life, and the ticks one given is spared.
+/// What a cloud is: its potion, colour and particle, its radius and how that changes a tick of its
+/// age and for each one given, its life, and the ticks one given is spared.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Spec {
     pub potion: i16,
     pub colour: i32,
+    pub particle: i32,
     pub radius: f32,
     pub per_tick: f32,
     pub on_use: f32,
@@ -88,7 +88,7 @@ fn announcement(id: u64, at: [f32; 3], yaw: f32, spec: &Spec) -> Vec<Bytes> {
         item(Key::BoundingboxWidth, Plain::Float(SIZE[0])),
         item(Key::BoundingboxHeight, Plain::Float(SIZE[1])),
         item(Key::AreaEffectCloudRadius, Plain::Float(spec.radius)),
-        item(Key::AreaEffectCloudParticleId, Plain::Int(PARTICLE)),
+        item(Key::AreaEffectCloudParticleId, Plain::Int(spec.particle)),
         item(Key::AreaEffectCloudDuration, Plain::Int(spec.ticks as i32)),
         item(Key::AreaEffectCloudChangeRate, Plain::Float(spec.per_tick)),
         item(Key::AreaEffectCloudChangeOnPickup, Plain::Float(SHRINK_ON_PICKUP)),
@@ -137,8 +137,10 @@ fn pulse(world: &mut World, cloud: Entity, layer: Entity, now: u64) -> Option<()
     }
     world.get_mut::<Cloud>(cloud)?.spared.retain(|_, until| *until > age);
     for (victim, feet, is_player) in bodies(world, layer) {
-        let near = (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>() <= reach * reach;
-        if !near || world.get::<Cloud>(cloud)?.spared.contains_key(&victim) {
+        // BDS gathers from a box half as high as it is wide (bds-clouds.txt: a cow on a pillar 1.5 up was left out).
+        let near = (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>() <= reach * reach && feet[1] < at[1].floor() + reach / 2.0;
+        let refuses = !is_player && !crate::creatures::takes_potion(world, victim, spec.potion);
+        if !near || refuses || world.get::<Cloud>(cloud)?.spared.contains_key(&victim) {
             continue;
         }
         let mut kept = world.get_mut::<Cloud>(cloud)?;

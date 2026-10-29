@@ -1,8 +1,7 @@
 //! What eating or drinking an item gives: hunger and saturation as the Java game and Dragonfly
 //! have them (BDS's apple drilled the same, research/captures/bds-eat.txt), and the effects BDS
 //! gave (docs/research/food-effects.md).
-// TODO: a suspicious stew and chorus fruit do nothing but feed; the potions of wind charging, weaving, oozing and infestation are water; a stew's bowl and a potion's
-// bottle are the Java game's, not drilled.
+// TODO: suspicious stews over data 14 were not drilled and give nothing, as 13 and 14 did on BDS.
 
 /// Ticks use is held on a food before it is eaten.
 const USE_TICKS: u32 = 32;
@@ -23,6 +22,9 @@ pub struct Food {
     pub ends_poison: bool,
     /// Drunk, not eaten.
     pub drunk: bool,
+    /// An ominous bottle: its omen is given without particles, and it is heard as BDS's
+    /// (research/captures/bds-fx3.txt).
+    pub ominous: bool,
 }
 
 /// An effect a food gives: its name (`sapling_api::Effect::name`), for how many ticks, at what
@@ -36,7 +38,7 @@ pub struct Gives {
 }
 
 const fn plain(hunger: f32, saturation: f32) -> Food {
-    Food { hunger, saturation, always: false, ticks: USE_TICKS, gives: &[], leaves: None, cures: false, ends_poison: false, drunk: false }
+    Food { hunger, saturation, always: false, ticks: USE_TICKS, gives: &[], leaves: None, cures: false, ends_poison: false, drunk: false, ominous: false }
 }
 
 /// What the item `name` (`minecraft:bread`) feeds; `None` for what is not eaten.
@@ -44,13 +46,16 @@ pub fn food(name: &str) -> Option<Food> {
     Some(match name.strip_prefix("minecraft:").unwrap_or(name) {
         "apple" | "chorus_fruit" => plain(4.0, 2.4),
         "baked_potato" | "bread" | "cooked_cod" | "cooked_rabbit" => plain(5.0, 6.0),
-        "beef" | "porkchop" | "rabbit" => plain(3.0, 1.8),
+        // BDS's f32 product, 1.8000001 (bds-foods2.txt).
+        "beef" | "porkchop" | "rabbit" => plain(3.0, 3.0 * 0.3 * 2.0),
         "cooked_beef" | "cooked_porkchop" => plain(8.0, 12.8),
         "beetroot" => plain(1.0, 1.2),
         "cooked_chicken" => plain(6.0, 7.2),
-        "beetroot_soup" | "mushroom_stew" | "suspicious_stew" => Food { leaves: Some("minecraft:bowl"), ..plain(6.0, 7.2) },
+        "beetroot_soup" | "mushroom_stew" => Food { leaves: Some("minecraft:bowl"), ..plain(6.0, 7.2) },
         "carrot" => plain(3.0, 3.6),
-        "cod" | "salmon" | "cookie" | "sweet_berries" | "glow_berries" => plain(2.0, 0.4),
+        "cod" | "salmon" | "cookie" => plain(2.0, 0.4),
+        // research/captures/bds-foods.txt and bds-foods2.txt: Bedrock's berries feed as a melon slice.
+        "sweet_berries" | "glow_berries" => plain(2.0, 1.2),
         "cooked_mutton" | "cooked_salmon" => plain(6.0, 9.6),
         "dried_kelp" => Food { ticks: USE_TICKS / 2, ..plain(1.0, 0.2) },
         "tropical_fish" => plain(1.0, 0.2),
@@ -145,8 +150,8 @@ fn potion(data: i16) -> Food {
     Food { always: true, gives: potion_effects(data), leaves: Some("minecraft:glass_bottle"), drunk: true, ..plain(0.0, 0.0) }
 }
 
-/// An ominous bottle's bad omen, its data value the amplifier (the Java game's, 100 minutes; not
-/// drilled, docs/research/effects-raids.md).
+/// An ominous bottle's bad omen, its data value the amplifier, for 120000 ticks without particles
+/// (research/captures/bds-fx3.txt).
 fn ominous_bottle(data: i16) -> Food {
     let gives: &'static [Gives] = match data {
         1 => gives!["bad_omen" 120000 1],
@@ -155,7 +160,25 @@ fn ominous_bottle(data: i16) -> Food {
         4 => gives!["bad_omen" 120000 4],
         _ => gives!["bad_omen" 120000 0],
     };
-    Food { always: true, gives, drunk: true, ..plain(0.0, 0.0) }
+    Food { always: true, gives, drunk: true, ominous: true, ..plain(0.0, 0.0) }
+}
+
+/// A suspicious stew of the data value `data`, its flower (research/captures/bds-foods2.txt, bds-foods3.txt).
+fn suspicious_stew(data: i16) -> Food {
+    let gives: &'static [Gives] = match data {
+        0 | 10 => gives!["night_vision" 100 0],
+        1 => gives!["jump_boost" 100 0],
+        2 => gives!["weakness" 140 0],
+        3 | 11 => gives!["blindness" 140 0],
+        4 => gives!["poison" 220 0],
+        5 | 6 => gives!["saturation" 6 0],
+        7 => gives!["fire_resistance" 60 0],
+        8 => gives!["regeneration" 140 0],
+        9 => gives!["wither" 140 0],
+        12 => gives!["nausea" 140 0],
+        _ => &[],
+    };
+    Food { leaves: Some("minecraft:bowl"), gives, ..plain(6.0, 7.2) }
 }
 
 /// What the item `name` with the data value `damage` gives one who eats or drinks it.
@@ -163,6 +186,7 @@ pub fn consumable(name: &str, damage: i16) -> Option<Food> {
     match name.strip_prefix("minecraft:").unwrap_or(name) {
         "potion" => Some(potion(damage)),
         "ominous_bottle" => Some(ominous_bottle(damage)),
+        "suspicious_stew" => Some(suspicious_stew(damage)),
         _ => food(name),
     }
 }
@@ -184,5 +208,17 @@ mod tests {
         assert!(consumable("minecraft:potion", 0).unwrap().gives.is_empty() && consumable("minecraft:stone", 0).is_none());
         assert_eq!((food("minecraft:stone"), food("dried_kelp").map(|food| food.ticks)), (None, Some(16)));
         assert!(food("minecraft:golden_apple").is_some_and(|food| food.always));
+    }
+
+    #[test]
+    fn berries_stews_and_omens_are_as_bds_gave_them() {
+        assert_eq!(food("minecraft:glow_berries").map(|food| (food.hunger, food.saturation)), Some((2.0, 1.2)));
+        assert_eq!(food("minecraft:beef").map(|food| food.saturation.to_string()).as_deref(), Some("1.8000001"));
+        let stew = consumable("minecraft:suspicious_stew", 4).unwrap();
+        assert_eq!((stew.gives, stew.leaves), (&[Gives { effect: "poison", ticks: 220, amplifier: 0, chance: 1.0 }][..], Some("minecraft:bowl")));
+        let given = |data: i16| consumable("minecraft:suspicious_stew", data).unwrap().gives.iter().map(|gives| (gives.effect, gives.ticks)).collect::<Vec<_>>();
+        assert_eq!((given(1), given(10), given(12), given(13)), (vec![("jump_boost", 100)], vec![("night_vision", 100)], vec![("nausea", 140)], vec![]), "bds-foods3.txt");
+        let bottle = consumable("minecraft:ominous_bottle", 2).unwrap();
+        assert!(bottle.ominous && bottle.gives[0].ticks == 120000 && bottle.gives[0].amplifier == 2 && bottle.leaves.is_none());
     }
 }

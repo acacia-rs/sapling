@@ -48,21 +48,26 @@ pub(super) fn burst(world: &mut World, layer: Entity, at: [f32; 3], from: [f32; 
     let cell = at.map(|c| c.floor() as i32);
     crate::view::to_viewers(world, layer, cell, &[sapling_net::encode(&splash)]);
     late_sounds::play_later(world, 1, layer, cell, super::arrows::sound("glass", at, ""));
-    let share = |feet: [f32; 3], who: Entity| match struck == Some(who) {
+    // BDS shares by how far the break is from the nearest point of each box (bds-clouds2.txt).
+    let share = |body: &Body, who: Entity| match struck == Some(who) {
         true => 1.0,
-        false => 1.0 - (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>().sqrt() / REACH,
+        false => {
+            let (low, high) = body.bounds();
+            1.0 - (0..3).map(|axis| (low[axis] - at[axis]).max(at[axis] - high[axis]).max(0.0).powi(2)).sum::<f32>().sqrt() / REACH
+        }
     };
     for player in in_world(world) {
         let Some(feet) = world.get::<Position>(player).map(|position| position.feet).filter(|_| world.get::<InLayer>(player).is_some_and(|on| on.0 == layer)) else { continue };
-        if share(feet, player) > 0.0 {
-            vitals::splashed(world, player, data, share(feet, player), from);
+        let share = share(&Body::new(feet, [0.0; 3], vitals::SIZE), player);
+        if share > 0.0 {
+            vitals::splashed(world, player, data, share, from);
         }
     }
     let mobs: Vec<(Entity, f32)> = world
         .query_filtered::<(Entity, &InLayer, &Body), (With<Creature>, Without<Dying>)>()
         .iter(world)
         .filter(|(_, on, _)| on.0 == layer)
-        .map(|(mob, _, body)| (mob, share(body.at, mob)))
+        .map(|(mob, _, body)| (mob, share(body, mob)))
         .filter(|(_, share)| *share > 0.0)
         .collect();
     for (mob, share) in mobs {

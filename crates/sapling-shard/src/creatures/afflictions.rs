@@ -82,6 +82,19 @@ fn is_undead(world: &World, mob: Entity) -> bool {
     world.get::<entities::Kind>(mob).is_some_and(|kind| sapling_data::is_undead(&kind.0))
 }
 
+/// Whether the mob takes nothing of `effect`: the undead poison and regeneration, spiders poison
+/// (research/captures/bds-clouds2.txt); fatal poison takes on the undead (bds-fx3.txt).
+fn refuses(world: &World, mob: Entity, effect: Effect) -> bool {
+    let spider = world.get::<entities::Kind>(mob).is_some_and(|kind| matches!(kind.0.as_str(), "minecraft:spider" | "minecraft:cave_spider"));
+    (is_undead(world, mob) && matches!(effect, Effect::Poison | Effect::Regeneration)) || (spider && effect == Effect::Poison)
+}
+
+/// Whether a cloud of the potion `data` reaches the mob: it takes one of the potion's effects.
+pub(crate) fn takes_potion(world: &World, mob: Entity, data: i16) -> bool {
+    let mut effects = sapling_data::potion_effects(data).iter().filter_map(|gives| Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect));
+    effects.any(|effect| !refuses(world, mob, effect))
+}
+
 /// The level, from 0, of an effect on a mob.
 pub(super) fn level(world: &World, mob: Entity, effect: Effect) -> Option<u8> {
     world.get::<Afflicted>(mob)?.0.iter().find(|active| active.effect == effect).map(|active| active.amplifier)
@@ -94,10 +107,10 @@ pub(super) fn pace(world: &World, mob: Entity) -> f32 {
     (by(Effect::Speed, QUICKENS) * by(Effect::Slowness, -SLOWS)).max(0.0)
 }
 
-/// Gives a living mob an effect, as `ShardCtx::give_effect` gives a player one; an undead one
-/// takes no poison or regeneration. Whether it took it.
+/// Gives a living mob an effect, as `ShardCtx::give_effect` gives a player one, unless it
+/// [`refuses`] it. Whether it took it.
 pub(super) fn give(world: &mut World, mob: Entity, effect: Effect, ticks: u32, amplifier: u8) -> bool {
-    if world.get::<Health>(mob).is_none() || world.get::<Dying>(mob).is_some() || (is_undead(world, mob) && matches!(effect, Effect::Poison | Effect::FatalPoison | Effect::Regeneration)) {
+    if world.get::<Health>(mob).is_none() || world.get::<Dying>(mob).is_some() || refuses(world, mob, effect) {
         return false;
     }
     let Some(id) = world.get::<NetId>(mob).map(|id| id.0) else { return false };

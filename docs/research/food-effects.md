@@ -54,12 +54,55 @@ The rest (`drink2`, `research/captures/bds-drink2.txt`):
 | 40, 41 | slow falling | I | 1800, 4800 |
 | 43, 44, 45, 46 | effects 32, 33, 34, 35 | I | 3600 |
 
+## Stews, chorus fruit, leftovers, chances (`foods`, `foods2`, `foods3`, `food-odds`)
+
+Drilled 2026-10-29 (`research/captures/bds-foods.txt`, `bds-foods2.txt`, `bds-foods3.txt`,
+`bds-food-odds.txt`); the bot kept hungry and eating from its hand.
+
+- Every food's hunger and saturation were the Java game's but sweet and glow berries: 2 and 1.2
+  on BDS, as a melon slice (sapling had 2 and 0.4; fixed). Saturation is kept up to the hunger.
+- A stew (mushroom, beetroot, rabbit, suspicious) and a potion leave a bowl (324) and a glass
+  bottle (431) in the hand, sent in `InventoryContent`; honey a glass bottle.
+- Suspicious stew by its data value: 0 and 10 night vision 100 ticks, 1 jump boost 100, 2 weakness
+  140, 3 and 11 blindness 140, 4 poison 220, 5 and 6 saturation 6, 7 fire resistance 60, 8
+  regeneration 140, 9 wither 140, 12 nausea 140; 13 and 14 nothing (sapling gave nothing; fixed).
+- Chorus fruit: before `CompletedUsingItem`, `MovePlayer` of mode `Teleport`, cause `ChorusFruit`,
+  source entity type 1, to the eater and its viewers, and `CorrectPlayerMovePrediction`; the next
+  tick `teleport` heard at the eyes where it was and where it came, then the burp at the new place.
+  A sample moved (3.78, 0, -0.65). Sapling did not move the eater; it now tries 16 spots in the
+  box 8 about the feet as the Java game (`vitals/chorus.rs`).
+- Chances over every capture so far (sick, more, food-odds): raw chicken 10 of 33, rotten flesh 16
+  of 25, poisonous potato 13 of 23: the Java game's 3, 8 and 6 in 10 within the spread (rotten
+  flesh two deviations low); kept.
+- Ominous bottle (`fx3`, research/captures/bds-fx3.txt): see effects-raids.md.
+- Raw beef, porkchop and rabbit told saturation 1.8000001, the f32 product 3 x 0.3 x 2 (sapling
+  1.8; fixed). The bowl or bottle left in an empty hand is not heard (sapling popped it; fixed).
+- A suspicious stew's effect comes as `MobEffect` `Add` and then `Update`, same values; saturation
+  from one lasts its 6 ticks, feeding a hunger a tick and leaving saturation be (effects.md;
+  sapling made it instant; fixed).
+- Run against sapling (research/captures/sapling-foods.txt, sapling-foods2.txt, sapling-foods3.txt)
+  after the fixes above every food's values, effects and leftovers match. Chorus fruit's
+  `teleport` sounds come before `CompletedUsingItem` on sapling, after it on BDS, and BDS told the
+  cooldown at the start only (bds-small.txt had it at the end too); left. Sapling also tells
+  hunger and saturation after a potion, which BDS did not.
+
+## Splash and lingering potions (`clouds`, `clouds2`)
+
+Drilled 2026-10-29 (research/captures/bds-clouds.txt, bds-clouds2.txt): poison thrown straight
+down on the thrower, the watcher standing off along x.
+
+- The thrower, hit, got the whole 900 ticks. Another got `1 - d / 4` of them, `d` the gap from
+  where it broke to the nearest point of the other's box: 744, 519, 294 and 69 ticks with the box
+  0.7, 1.7, 2.7 and 3.7 off. Sapling measured to the feet; fixed (`creatures/splashes.rs`).
+- The lingering cloud: items.md, "Area effect clouds". It is added in the middle of the block it
+  broke in (0.5, -19.5, 0.5 for a break at (0.508, -20, 0.5)); sapling added it where it broke
+  (fixed, `shots/clouds.rs`).
+- Run against sapling (research/captures/sapling-clouds.txt, sapling-clouds2.txt): the splash data,
+  the 225 ticks of a lingering pulse and the glass sound match.
+
 ## Not drilled
 
-The chances themselves (taken as the Java game's 8, 3 and 6 in 10), what a hit does to
-absorption, suspicious stew, chorus fruit, what honey leaves in the hand (taken as a glass
-bottle), splash and lingering potions, what
-a potion leaves in the hand (taken as a glass bottle), a stew's bowl.
+What a hit does to absorption.
 
 ## Sapling
 
