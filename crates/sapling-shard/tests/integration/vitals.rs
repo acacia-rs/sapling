@@ -258,9 +258,9 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     assert_eq!(shown(&sent), [(MobEffectEventId::Add, 10, 450)]);
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:glass_bottle".to_owned())));
     h.tick_all();
-    // An ominous bottle of data 2: bad omen III, the bottle gone.
+    // An ominous bottle of data 2: bad omen III without particles, the bottle gone (bds-ominous.txt).
     let sent = swallow_this(&mut h, Item { damage: 2, ..Item::new("minecraft:ominous_bottle", 1) });
-    assert_eq!(all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.amplifier, effect.duration)).collect::<Vec<_>>(), [(28, 2, 120000)]);
+    assert_eq!(all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.amplifier, effect.duration, effect.particles)).collect::<Vec<_>>(), [(28, 2, 120000, false)]);
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)), None));
     h.tick_all();
 }

@@ -1,7 +1,7 @@
 //! Raids (docs/research/effects-raids.md "Raids"): a player's raid omen run out in a village
 //! (omens.rs, village.rs) starts one. After a 300-tick wait each wave of BDS's raid groups comes
-//! (waves.rs), the next once the last is dead; with the last dead the raid is won and its heroes
-//! take Hero of the Village, and it is lost once no villager is left. Shown on a boss bar (bar.rs),
+//! (waves.rs), the next once the last is dead; with the last dead the raid is won and the players
+//! who slew a raider take Hero of the Village (none for raiders `/kill`ed: bds-raid.txt, bds-raidhero.txt), and it is lost once no villager is left. Shown on a boss bar (bar.rs),
 //! which stays 30 s past the end. Its raiders make for the village and celebrate its fall
 //! (raiders.rs); they hunt villagers and golems as their kind does (hunting/prey.rs). Raids are
 //! kept with the world (kept.rs).
@@ -21,12 +21,15 @@ use bevy_ecs::prelude::*;
 use sapling_api::Effect;
 
 use super::{Health, is_alive};
-use crate::components::{InLayer, Position, Settings, Tick, in_world};
+use crate::components::{Settings, Tick};
 use crate::vitals;
 
 /// Ticks before each wave; ticks the bar stays once it is over.
 const GATHERS: u64 = 300;
 const ENDS: u64 = 600;
+/// Ticks between a wave's last death and the next wait (or the win), the bar showing no raiders
+/// left (research/captures/bds-raid.txt).
+const CLEARS: u64 = 40;
 /// Players this near the village's middle are in its raid.
 const REACH: f32 = 96.0;
 /// Hero of the Village's ticks, at the raid's level less one.
@@ -82,26 +85,28 @@ fn start(world: &mut World, raids: &mut Vec<Raid>, trigger: omens::Trigger, now:
     let Some(middle) = village::centre(world, trigger.layer, trigger.at) else { return };
     if let Some(raid) = raids.iter_mut().find(|raid| !raid.is_over() && raid.reaches(trigger.layer, middle)) {
         raid.level = raid.level.saturating_add(trigger.level).min(MOST);
-        raid.heroes.push(trigger.player);
         return;
     }
     let waves = waves::count(world.resource::<Settings>().0.difficulty);
     if waves > 0 {
         let level = trigger.level.min(MOST);
-        raids.push(Raid { layer: trigger.layer, middle, level, waves, spawned: 0, stage: Stage::Gathering(now + GATHERS), raiders: Vec::new(), unloaded: Vec::new(), most: 1.0, heroes: vec![trigger.player] });
+        raids.push(Raid { layer: trigger.layer, middle, level, waves, spawned: 0, stage: Stage::Gathering(now + GATHERS), raiders: Vec::new(), unloaded: Vec::new(), most: 1.0, heroes: Vec::new() });
     }
 }
 
-/// The raid is won: its heroes, and the players in it now, take Hero of the Village.
+/// The player slew `raider`: a hero of its raid.
+pub(super) fn slain(world: &mut World, player: Entity, raider: Entity) {
+    let Some(mut raids) = world.get_resource_mut::<Raids>() else { return };
+    if let Some(raid) = raids.0.iter_mut().find(|raid| raid.raiders.contains(&raider)) {
+        if !raid.heroes.contains(&player) {
+            raid.heroes.push(player);
+        }
+    }
+}
+
+/// The raid is won: its heroes take Hero of the Village.
 fn win(world: &mut World, raid: &mut Raid, now: u64) {
     raid.stage = Stage::Won(now);
-    let near: Vec<Entity> = in_world(world)
-        .into_iter()
-        .filter(|player| world.get::<InLayer>(*player).zip(world.get::<Position>(*player)).is_some_and(|(on, at)| raid.reaches(on.0, at.feet)))
-        .collect();
-    raid.heroes.extend(near);
-    raid.heroes.sort();
-    raid.heroes.dedup();
     for hero in raid.heroes.clone() {
         if vitals::is_mortal(world, hero) {
             vitals::give_effect(world, hero, Effect::HeroOfTheVillage, HEROES_FOR, raid.level - 1, false);
@@ -111,6 +116,11 @@ fn win(world: &mut World, raid: &mut Raid, now: u64) {
 
 fn step(world: &mut World, raid: &mut Raid, now: u64) {
     match raid.stage {
+        Stage::Gathering(until) if raid.spawned >= raid.waves && raid.spawned > 0 => {
+            if now + GATHERS >= until {
+                return win(world, raid, now);
+            }
+        }
         Stage::Gathering(until) if now >= until => {
             raid.raiders = waves::spawn(world, raid.layer, raid.middle, raid.spawned);
             for &raider in &raid.raiders {
@@ -126,10 +136,7 @@ fn step(world: &mut World, raid: &mut Raid, now: u64) {
             }
             raid.raiders.retain(|raider| is_alive(world, *raider));
             if raid.raiders.is_empty() && raid.unloaded.is_empty() {
-                if raid.spawned >= raid.waves {
-                    return win(world, raid, now);
-                }
-                raid.stage = Stage::Gathering(now + GATHERS);
+                raid.stage = Stage::Gathering(now + CLEARS + GATHERS);
             }
         }
         _ => {}

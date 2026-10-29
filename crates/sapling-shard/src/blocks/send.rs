@@ -245,6 +245,7 @@ pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: 
         super::pistons::furnish(world, layer, pos);
         super::command_blocks::furnish(world, layer, pos, before.as_ref());
         super::structure_blocks::furnish(world, layer, pos, before.as_ref());
+        super::entities::furnish(world, layer, pos, name);
     }
     Some(true)
 }

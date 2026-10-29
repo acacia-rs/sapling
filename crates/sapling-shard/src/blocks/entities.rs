@@ -64,6 +64,21 @@ fn skull_rotation(placing: &Placing) -> f32 {
     if on_floor && placing.yaw.is_finite() { (placing.yaw * 16.0 / 360.0 + 0.5).floor() * 22.5 } else { 0.0 }
 }
 
+/// Blocks a command or plugin sets that get their placed entity: those a raid's village is found by
+/// (creatures/raids/village.rs); BDS's `/setblock bell` made a village that raided.
+const FURNISHED: [&str; 2] = ["minecraft:bell", "minecraft:bed"];
+
+/// Gives a bell or bed set at `pos` without an entity the one a player's placing gives it.
+pub(super) fn furnish(world: &mut bevy_ecs::world::World, layer: bevy_ecs::entity::Entity, pos: BlockPos, block: &str) {
+    let bare = world.get::<crate::components::Layer>(layer).is_some_and(|level| level.world.block_entity(pos).is_none());
+    if !bare || !FURNISHED.contains(&block) {
+        return;
+    }
+    if let Some(entity) = placed(block, pos, &Placing { damage: 0, tag: None, yaw: 0.0, properties: "" }) {
+        super::send::keep_entity(world, layer, pos, &entity);
+    }
+}
+
 /// The entity the block `block` gets when placed at `pos`; `None` for a block without one.
 /// Containers get theirs from containers.rs.
 pub(super) fn placed(block: &str, pos: BlockPos, placing: &Placing) -> Option<Value> {
