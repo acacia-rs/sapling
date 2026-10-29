@@ -149,7 +149,8 @@ pub(super) fn nearest(level: &Level, claimed: &Claimed, layer: Entity, feet: [i3
 
 /// A villager's look at its job and bed (beds.rs): whether its site still stands, or for a free
 /// one, which it can take (a few searches a tick, shard-wide).
-pub(super) fn look(world: &mut World, entity: Entity, layer: Entity, now: u64) {
+/// A baby looks for a bed only (research/captures/bds-village.txt: a baby slept in one).
+pub(super) fn look(world: &mut World, entity: Entity, layer: Entity, now: u64, baby: bool) {
     let Some(mut trader) = world.get::<Trader>(entity).cloned() else { return };
     let feet = world.get::<Body>(entity).map_or([0; 3], |body| body.at.map(|c| c.floor() as i32));
     let mut claimed = world.remove_resource::<Claimed>().unwrap_or_default();
@@ -159,7 +160,10 @@ pub(super) fn look(world: &mut World, entity: Entity, layer: Entity, now: u64) {
     let changed = match world.get::<Layer>(layer) {
         Some(level) => {
             super::beds::decide(&level.world, &mut claimed, &mut trader, (entity, layer, feet, now));
-            decide(&level.world, &mut claimed, &mut trader, (entity, layer, feet, now), &mut dice)
+            match baby {
+                true => Vec::new(),
+                false => decide(&level.world, &mut claimed, &mut trader, (entity, layer, feet, now), &mut dice),
+            }
         }
         None => Vec::new(),
     };

@@ -10,6 +10,7 @@
 mod beds;
 mod deals;
 mod fear;
+mod golems;
 mod jobs;
 mod schedule;
 mod standing;
@@ -128,6 +129,7 @@ fn tell(world: &mut World, entity: Entity, changed: Vec<MetadataDictionaryItem>)
 /// Makes a mob of `kind` that trades a trader: as its actor compound keeps it when `loaded`, or
 /// new, as the spawn `event` makes it where it names one.
 pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str, loaded: bool, event: Option<&str>) {
+    golems::arm(world, entity, kind, event);
     let villager = kind == VILLAGER || kind == OLD_VILLAGER;
     if !villager && kind != WANDERING_TRADER {
         return;
@@ -169,8 +171,9 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity) -> bool {
     if wanders {
         return wandering::tick(world, entity, layer, now);
     }
-    if now >= next_look && !super::shown::is_baby(world, entity) {
-        jobs::look(world, entity, layer, now);
+    if now >= next_look {
+        let baby = super::shown::is_baby(world, entity);
+        jobs::look(world, entity, layer, now, baby);
     }
     false
 }
@@ -183,10 +186,14 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
         super::legs::rest(world, entity);
         return true;
     }
+    let activity = schedule::now(world, entity, layer);
+    if activity != Some(schedule::Activity::Bed) {
+        beds::lie(world, entity, false);
+    }
     if fear::hides(world, entity, layer, &body) || fear::flees(world, entity, layer, &body) {
         return true;
     }
-    match schedule::now(world, entity, layer) {
+    match activity {
         Some(schedule::Activity::Work) | None => jobs::work(world, entity, layer),
         Some(activity) => schedule::steer(world, entity, layer, activity),
     }

@@ -4,8 +4,9 @@
 //! `child_schedule` for a baby. Work is jobs.rs; gathering walks to the village's middle
 //! (`behavior.mingle`), home to its bed (`move_towards_dwelling_restriction`), bed time sleeps on
 //! it (beds.rs); wandering and play are strolling.
-// TODO: BDS checks the schedule every 0 to 10 s (`max_delay_secs`); here every tick. Mingling
-// villagers do not pair up.
+// Every tick: on BDS a villager by its bed lay down the tick after 12000 and all three sleepers
+// rose the tick 24000 came, whatever the pack's `max_delay_secs` (research/captures/bds-village.txt).
+// TODO: mingling villagers do not pair up.
 
 use bevy_ecs::prelude::*;
 

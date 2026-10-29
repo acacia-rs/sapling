@@ -3,7 +3,7 @@
 //! on an adult villager takes 1 and on a baby 3, killing a villager takes 2 more and an iron golem
 //! 5. Two village-wide timers (`Village::tick`, 0x142a23bc0) step every good standing down every
 //! 120000 ticks and every bad one up every 12000. An iron golem takes the nearest player at -15 or
-//! lower (`getClosestBadStandingPlayer`, 0x142a30c80). Prices take no standing.
+//! lower (`getClosestBadStandingPlayer`, 0x142a30c80), if it is the village's (golems.rs). Prices take no standing.
 // TODO: standing is not kept with the world (BDS's `VILLAGE_<id>_PLAYERS`), and only melee hits
 // count; BDS's other changes (0x142445c80 +5, 0x141ba8d80 +1, the founding reward) are not copied.
 
@@ -93,7 +93,11 @@ pub(in crate::creatures) fn hit(world: &mut World, player: Entity, mob: Entity, 
     let Some(at) = world.get::<Body>(mob).map(|body| body.at) else { return };
     let delta = match kind {
         _ if VILLAGERS.contains(&kind) => {
-            let hurt = if super::super::shown::is_baby(world, mob) { HURT_BABY } else { HURT };
+            let baby = super::super::shown::is_baby(world, mob);
+            if !baby {
+                super::golems::defend(world, player, layer, at);
+            }
+            let hurt = if baby { HURT_BABY } else { HURT };
             hurt + if killed { KILLED_VILLAGER } else { 0 }
         }
         GOLEM if killed => KILLED_GOLEM,
@@ -102,9 +106,10 @@ pub(in crate::creatures) fn hit(world: &mut World, player: Entity, mob: Entity, 
     change(world, player, layer, at, delta);
 }
 
-/// For an iron golem at `body`: the nearest player within `sight` in bad standing with its village.
-pub(in crate::creatures) fn outlaw(world: &mut World, layer: Entity, kind: &str, body: &Body, sight: f32) -> Option<(Entity, [f32; 3])> {
-    if kind != GOLEM {
+/// For the iron golem `golem` at `body`, if its village's: the nearest player within `sight` in bad
+/// standing with its village.
+pub(in crate::creatures) fn outlaw(world: &mut World, golem: Entity, layer: Entity, kind: &str, body: &Body, sight: f32) -> Option<(Entity, [f32; 3])> {
+    if kind != GOLEM || world.get::<super::golems::VillageGolem>(golem).is_none() {
         return None;
     }
     let key = (layer, village_of(world, layer, body.at)?);

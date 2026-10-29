@@ -88,7 +88,12 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 ## Beds
 
 - At its job looks a villager without a bed claims the nearest free bed head in the job site's reach,
-  and gives it up once the bed goes [sapling; BDS claims beds as village POIs]. Babies claim none.
+  and gives it up once the bed goes [sapling; BDS claims beds as village POIs]. Babies claim one too:
+  with 4 villagers and 3 beds BDS laid an unskilled adult, the armorer and the baby down
+  [bds-village.txt].
+- Lying down: SetEntityData box 1.0 by 0.3 and `FlagsExtended` bit 12 over bits 17 and 25; getting up
+  sends its own box and the bits back. The first lay down the tick after 12000, the rest as they reached
+  their beds; all rose the tick after 24000. The bed's `occupied_bit` stays 0 [bds-village.txt].
 
 ## Fear
 
@@ -111,7 +116,10 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   12000, by as many steps as periods passed [BDS `Village::tick` 142a23bc0,
   `mGoodStandingDecayTimer`/`mBadStandingDecayTimer`].
 - A village's iron golem takes the nearest player at -15 or lower [BDS `getClosestBadStandingPlayer`
-  0x142a30c80 from the defend-village goal 148a38fd0; pack `behavior.defend_village_target`].
+  0x142a30c80 from the defend-village goal 148a38fd0; pack `behavior.defend_village_target`]. Only a golem
+  of the village defends: one spawned with `minecraft:from_village` (its `village_created` group) took
+  a player at its first hit on a grown villager; a `from_player` golem and a plain one never did; ten
+  hits on a baby moved none [bds-golems.txt]. Sapling marks golems by that spawn event (`golems.rs`).
 - Prices take no standing: `economy_trade_table` reads only the cured, nearby-cured and hero discounts
   [BDS definition 141ba86e0].
 
@@ -132,12 +140,17 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 - The wandering trader leaves after 2400 or 3600 seconds (its `minecraft:timer`, taken as seconds) or
   once sold out, when no player is within 24 blocks; its timer is not kept by the actor compound.
 
+Drilled: bds-village.txt, bds-golems.txt (`bds_command_probe village|golems`): sleeping (fixed: lying
+shown, babies sleep), which golems defend (fixed). bds-golems2.txt (a restart) only counted the golems.
+
 ## Not drilled
 
-- Every rule above under Schedules, Beds, Fear and Standing: none was compared with a live BDS.
-- The sleeper's flags, pose and the bed's `occupied_bit`; a sleeper here only rests on its bed.
-- The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick.
-- Which golems defend a village: BDS's `village_created` group; sapling takes every iron golem.
+- Gathering, homing and the other schedule goals' walks; standing's numbers (no packet shows them).
+- Fear: a caged zombie moved no villager out of 8 in bds-village.txt; inconclusive, left as built.
+- The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick, which matched the
+  drilled sleep and wake ticks.
+- Whether a golem is the village's is not kept with the world; a baby's hurt standing (-3) moved no
+  BDS golem within 30 s, not explained.
 - Standing from ranged kills, the +5 of 0x142445c80, the +1 of 0x141ba8d80 and the founding reward;
   standing kept with the world (`VILLAGE_<id>_PLAYERS`); the aggressor a golem defends against.
 
@@ -147,4 +160,4 @@ Gossip (and so discounts for curing and for Hero of the Village, whose effect th
 villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
 makes a baby's unskilled trader), zombie villagers and curing, explorer maps (their trades are never
 offered), the llamas' leashes and their going with their trader, a villager picking up and sharing food,
-farmers farming, iron golems spawning and defending a hurt villager, the old trading screen.
+farmers farming, iron golems spawning, the old trading screen.
