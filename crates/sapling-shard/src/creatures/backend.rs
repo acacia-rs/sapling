@@ -20,6 +20,11 @@ impl EntityBackend for Ctx<'_> {
 
     fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], yaw: f32, event: Option<&str>) -> Option<EntityId> {
         let made_alone = [ORB, crate::dragon::CRYSTAL, tnt::KIND, crate::lightning::KIND].contains(&kind);
+        // BDS summoned no zombie on peaceful (research/captures/bds-server.txt).
+        let peaceful = self.world.resource::<crate::components::Settings>().0.difficulty == sapling_api::Difficulty::Peaceful;
+        if peaceful && crate::spawning::removed_in_peaceful(kind) {
+            return None;
+        }
         let summoned = match made_alone {
             _ if crate::vehicles::is_vehicle(kind) => crate::vehicles::summon(self.world, worlds::current(self.world), kind, feet, yaw)?,
             true => self.spawn_entity(kind, feet)?,

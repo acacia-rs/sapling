@@ -99,6 +99,10 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     for (line, expected) in steps {
         assert_eq!(answer(&mut alice, line).await, *expected, "/{line}");
     }
+    // Still peaceful, from `difficulty 0` (bds-server.txt).
+    assert_eq!(answer(&mut alice, "summon zombie").await, "commands.summon.failed [] 0");
+    let v2 = answer(&mut alice, "summon zombie_villager_v2 ~ ~ ~").await;
+    assert!(v2.starts_with("commands.generic.syntax [") && v2.contains(r#""zombie_villager_v2""#), "{v2}");
     let seed = answer(&mut alice, "seed").await;
     assert!(seed.starts_with("commands.seed.success [") && seed.ends_with("] 1"), "{seed}");
     let version = answer(&mut alice, "version").await;

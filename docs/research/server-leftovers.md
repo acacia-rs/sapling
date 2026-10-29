@@ -98,6 +98,12 @@ player coming back short of breath its `Air` metadata in the join greeting.
 - `/difficulty peaceful` took every monster still alive at once, stray, husk, drowned, bogged and wither
   skeleton among them; shulker, sulfur cube, ender dragon, camel husk, skeleton and zombie horses and polar
   bear stayed. A zombie summoned on peaceful is `commands.summon.failed`.
+- Against `sapling-server.txt`: sapling took the shulker and summoned a zombie on peaceful, and took
+  `/summon zombie_villager_v2` (BDS: `commands.generic.syntax`); all three fixed (`spawning/peaceful.rs`,
+  `creatures/backend.rs`, `vanilla/players.rs`). Left as sapling's choice: an operator may `/save` and
+  `/stop` (sapling has no owner level; BDS: `commands.generic.error.permissions`), and the probe's sapling
+  has no `/reload` or `/permission` registered. Piglin and hoglin were gone on BDS before the switch (likely
+  zombified), so their peaceful rule was not judged.
 
 ## Not drilled
 
