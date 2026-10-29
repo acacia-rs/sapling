@@ -18,6 +18,7 @@ mod bundles;
 mod cartography;
 mod blocks;
 mod brewing;
+mod brushing;
 mod bonemeal;
 mod chat;
 mod chunks;

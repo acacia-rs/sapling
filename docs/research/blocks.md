@@ -96,12 +96,9 @@ on partial and full, `tilt_up.big_dripleaf` going back (names from BDS's sound t
 sapling: `blocks/dripleaf.rs`, `Job::Dripleaf`. Whether a fully tilted leaf lets bodies fall
 through is the collision data's, not checked.
 
-## Not done
+## Brushing
 
-- Brushing suspicious sand and gravel: the archaeology tables are in `mob-loot.json`
-  (`entities/*_brushable_block`) and structures already write `BrushableBlock` entities, but how
-  the Bedrock client asks to brush (repeated use transactions or an item-use action) needs a
-  capture before the progress and `brushed_progress` states can be served.
+Suspicious sand and gravel: see structure-block-entities.md "Brushing".
 
 ## Not drilled
 
