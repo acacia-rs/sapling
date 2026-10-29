@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, LevelSoundEvent, RemoveEntity, SetEntityData};
+use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, RemoveEntity, SetEntityData};
 use acacia_proto::types::{MetadataDictionaryItemValue as Value, MetadataFlags1};
 use common::asking::ask;
 use common::{Harness, all};
@@ -75,9 +75,11 @@ fn a_struck_rod_is_powered_eight_ticks_and_scrapes_the_copper_it_stands_on() {
     h.remote.run(|ctx| {
         ctx.set_block([3, 64, 3], &Block::new("minecraft:oxidized_copper"));
         ctx.set_block([3, 65, 3], &Block::new("minecraft:lightning_rod").with("facing_direction=1,powered_bit=0"));
-        ctx.spawn_entity(BOLT, [3.0, 65.0, 3.0]);
+        // On the rod's top: a bolt strikes the block under it (research/captures/bds-rsdevices.txt).
+        ctx.spawn_entity(BOLT, [3.5, 66.0, 3.5]);
     });
-    watch(&mut h, 1);
+    let sparks = all::<LevelEvent>(&watch(&mut h, 1)).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [3.0, 65.0, 3.0]).count();
+    assert_eq!(sparks, 6, "BDS's sparks at the rod's corner");
     let rod = ask(&mut h, |ctx| ctx.block([3, 65, 3]).unwrap());
     assert!(rod.name == "minecraft:lightning_rod" && rod.properties.contains("powered_bit=1"), "{rod:?}");
     let copper = ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name);

@@ -18,7 +18,9 @@ pub(super) fn powered(world: &mut World, layer: Entity, pos: BlockPos, was: bool
     if now {
         next = with_property(registry, next, "lit", if lit { "0" } else { "1" }).unwrap_or(next);
     }
-    let sound = now.then(|| send::sound(if lit { "copper_bulb.turn_off" } else { "copper_bulb.turn_on" }, registry, pos, next));
+    // At the cell's corner, after the block (research/captures/bds-rsdevices.txt).
+    let corner = acacia_proto::types::Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
+    let sound = now.then(|| send::sound_at(if lit { "block.copper_bulb.turn_off" } else { "block.copper_bulb.turn_on" }, registry, corner, next));
     if send::set(world, layer, pos, next) {
         send::to_viewers(world, layer, pos, &sound.into_iter().collect::<Vec<_>>());
     }

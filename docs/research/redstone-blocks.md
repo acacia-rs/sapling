@@ -222,6 +222,15 @@ direction 14cd24f50, facing_direction 14cd26368, lit 14cd25b50, sculk_sensor_pha
 - Notes are not stored in a block actor; Bedrock saves byte `note` only (B5).
 - jukebox.rs has no bounce (8, 234 s) and needs the redstone signal 15 while playing (B13).
 
+## Parity drill (2026-10-29, research/captures/bds-rsdevices.txt)
+
+- A bolt summoned on a rod's top strikes the rod (the cell under the bolt, Java `getStrikePosition`), and
+  storms draw bolts to the top of a rod; six `ParticleElectricSpark` at the rod's corner, data 0, before it
+  powers (B29). Fixed in `lightning.rs`, `lightning/rods.rs`, `blocks/rods.rs`.
+- A copper bulb toggling plays `block.copper_bulb.turn_on`/`turn_off` at the cell's corner after the block
+  (B34). Fixed in `blocks/bulbs.rs`.
+- Same: note blocks, jukebox, target, crafter and dispenser power as written above.
+
 ## Unverified
 
 - U1 The version gates on the head-above and copper-trumpet instruments (14cc48618/14cc48418).

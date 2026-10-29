@@ -63,7 +63,10 @@ pub(crate) fn strike(world: &mut World, layer: Entity, at: [f32; 3], harms: bool
     world.entity_mut(bolt).insert(Bolt { life: LIFE, flashes, harms });
     let cell = at.map(|c| c.floor() as i32);
     entities::after_announcing(world, layer, cell, vec![sound("thunder", at), sound("explode", at)]);
-    crate::blocks::lightning_struck(world, layer, cell);
+    // The block under the bolt, as the Java game's `getStrikePosition`: one summoned on a rod's top
+    // powered it on BDS (research/captures/bds-rsdevices.txt).
+    let under = [cell[0], (f64::from(at[1]) - 1e-6).floor() as i32, cell[2]];
+    crate::blocks::lightning_struck(world, layer, under);
     kindle(world, layer, cell, harms, MORE_FIRES);
     if harms {
         hurt(world, layer, at);
