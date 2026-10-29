@@ -17,9 +17,9 @@ use super::{Raised, shown};
 use crate::blocks::Dice;
 use crate::components::{Layer, NetId};
 
-/// The extended flags a mob is told with besides these (breezes.rs, creaking.rs); a sniffer's
-/// own was not recorded.
-const BASE: i64 = 1 << 25;
+/// The extended flags a sniffer is told with besides these: BDS's word after its announcement
+/// (research/captures/bds-sniffers.txt).
+const BASE: i64 = i64::MIN | 1 << 25;
 
 const SNIFFER: &str = "minecraft:sniffer";
 const SOILS: [&str; 9] = [

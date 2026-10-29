@@ -31,8 +31,22 @@ pub(crate) fn is_owner(world: &World, entity: Entity, player: Entity) -> bool {
 /// The mob of `kind` is tamed by the player whose `UniqueID` is `owner`: its tamed groups and,
 /// where they give one, a tamed one's full health.
 pub(super) fn tame_to(world: &mut World, entity: Entity, kind: &str, owner: i64) {
+    tame(world, entity, kind, Some(owner));
+}
+
+/// A mob summoned with a `spawn_tame_adult` event (horses, donkeys, mules, llamas) comes tamed
+/// with no owner (research/captures/bds-tack.txt); false for any other event.
+pub(crate) fn tame_by_event(world: &mut World, entity: Entity, kind: &str, event: &str) -> bool {
+    if event.trim_start_matches("minecraft:") != "spawn_tame_adult" || sapling_data::husbandry(kind).is_none_or(|rules| rules.temper.is_none()) {
+        return false;
+    }
+    tame(world, entity, kind, None);
+    true
+}
+
+fn tame(world: &mut World, entity: Entity, kind: &str, owner: Option<i64>) {
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {
-        (raised.kept.tamed, raised.kept.owner) = (true, Some(owner));
+        (raised.kept.tamed, raised.kept.owner) = (true, owner);
     }
     keep_for_good(world, entity);
     let rules = sapling_data::husbandry(kind);

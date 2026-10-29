@@ -15,7 +15,7 @@ use sapling_api::BlockPos;
 use super::queued::{self, Job};
 use super::{Dice, level, send};
 
-pub(crate) use nests::{egg_near as turtle_egg_near, lay as lay_turtle_eggs, nest_near as turtle_nest_near, stomp_out as stomp_turtle_eggs};
+pub(crate) use nests::{dig as turtle_dig, egg_near as turtle_egg_near, lay as lay_turtle_eggs, nest_near as turtle_nest_near, stomp_out as stomp_turtle_eggs, stomped_at as stomping_turtle_eggs};
 pub(crate) use turtle::trodden as tread_turtle_eggs;
 
 type Level = sapling_world::World;
@@ -37,11 +37,17 @@ fn cracks(level: &Level, pos: BlockPos) -> usize {
 }
 
 /// Cracks the egg at `pos` once more, heard as `sound`.
-fn crack(world: &mut World, layer: Entity, pos: BlockPos, sound: &str) {
+/// Cracks the egg at `pos` once more, heard as `sound`; one that `sparkles` names its cracked state
+/// in a sparkle sent first (research/captures/bds-sniffers.txt).
+fn crack(world: &mut World, layer: Entity, pos: BlockPos, sound: &str, sparkles: bool) {
     let Some(level) = level(world, layer) else { return };
     let id = level.block(pos[0], pos[1], pos[2]);
     let Some(cracked) = CRACKS.get(cracks(level, pos) + 1).and_then(|next| super::with_property(level.registry(), id, "cracked_state", next)) else { return };
-    let heard = send::sound(sound, level.registry(), pos, id);
+    let heard = egg_sound(sound, pos);
+    if sparkles {
+        let sparkle = level_event(LevelEventEvent::ParticleTurtleEgg, pos, sapling_world::block_hash(level.registry(), cracked) as i32);
+        send::to_viewers(world, layer, pos, &[sparkle]);
+    }
     if send::set(world, layer, pos, cracked) {
         send::to_viewers(world, layer, pos, &[heard]);
     }
@@ -51,8 +57,28 @@ fn roll(world: &mut World, sides: u32) -> u32 {
     world.get_resource_or_insert_with(Dice::default).roll(sides)
 }
 
-fn level_event(event: LevelEventEvent, [x, y, z]: BlockPos, data: i32) -> bytes::Bytes {
-    sapling_net::encode(&LevelEvent { event, position: Vec3f { x: x as f32, y: y as f32, z: z as f32 }, data })
+fn corner([x, y, z]: BlockPos) -> Vec3f {
+    Vec3f { x: x as f32, y: y as f32, z: z as f32 }
+}
+
+fn level_event(event: LevelEventEvent, pos: BlockPos, data: i32) -> bytes::Bytes {
+    sapling_net::encode(&LevelEvent { event, position: corner(pos), data })
+}
+
+/// An egg's sounds come from the cell's corner and say nothing of the block (research/captures/bds-eggs.txt).
+fn egg_sound(name: &str, pos: BlockPos) -> bytes::Bytes {
+    send::noise(name, corner(pos), -1)
+}
+
+/// An egg's sparkle, naming the egg block there as BDS's does.
+fn sparkle(level: &Level, pos: BlockPos) -> bytes::Bytes {
+    let id = level.block(pos[0], pos[1], pos[2]);
+    level_event(LevelEventEvent::ParticleTurtleEgg, pos, sapling_world::block_hash(level.registry(), id) as i32)
+}
+
+/// The destroy particles of a hatching egg, at the cell's corner as its sound.
+fn hatch_burst(level: &Level, pos: BlockPos, id: u32) -> bytes::Bytes {
+    level_event(LevelEventEvent::ParticleDestroy, pos, sapling_world::block_hash(level.registry(), id) as i32)
 }
 
 /// Whether the block `name` is one that hatches.

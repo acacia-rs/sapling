@@ -47,6 +47,7 @@ const RENAMED: &[(&str, &str)] = &[
     ("red_nether_brick", "red_nether_bricks"),
     ("undyed_shulker_box", "shulker_box"),
     ("hardened_clay", "terracotta"),
+    ("frog_spawn", "frogspawn"),
 ];
 
 /// Which tool a row asks for.

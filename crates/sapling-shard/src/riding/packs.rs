@@ -1,10 +1,10 @@
 //! A tamed mount's inventory (docs/research/mob-life.md "Mount inventories"): slot 0 its saddle,
 //! 1 a horse's armour or a llama's carpet, and from 2 the goods of the chest a donkey, mule or
 //! llama was given (15 slots, a llama 3 for each point of strength). It opens on the horse screen
-//! (`ContainerOpen` of type Horse naming the mob, then `UpdateEquipment` saying what each tack slot
-//! takes) to a sneaking player's click and to its rider's inventory key; what is in it is kept in
-//! the mob's `ChestItems` by slot, and slots 0 and 1 are the tack it shows. It dies spilling all
-//! of it, and the chest itself.
+//! (`UpdateEquipment` naming the mob and saying what each tack slot takes, no `ContainerOpen`)
+//! to a sneaking player's click and to its rider's inventory key; what is in it is kept in
+//! the mob's `ChestItems` by slot, and slots 0 and 1 are the tack it shows. It dies spilling the
+//! goods ([`spilled`]).
 // TODO: a donkey's chest does not switch its component groups.
 
 use acacia_proto::nbt::{self, List, Nbt, Network, Raw, Value};
@@ -16,7 +16,7 @@ use sapling_world::ItemStack;
 
 use super::mounts::Tack;
 use crate::body::Body;
-use crate::components::{InLayer, NetId, Outgoing};
+use crate::components::{InLayer, NetId};
 use crate::creatures::Raised;
 use crate::entities::{self, Kind, Stored};
 use crate::inventory::{Held, Inventory};
@@ -119,13 +119,14 @@ fn goods(world: &World, mob: Entity) -> Vec<(u8, ItemStack)> {
     saddle.into_iter().chain(armor).chain(stored.into_iter().filter(|(slot, _)| usize::from(*slot) >= TACK)).collect()
 }
 
-/// What a dying mount lets go of: its tack and goods, and the chest they were in (Java's
-/// `AbstractChestedHorse.dropEquipment`).
+/// What a dying mount lets go of, `doMobLoot` or not: its goods and the chest they were in; its
+/// saddle, armour and carpet stay with it (research/captures/bds-tack.txt).
+// TODO: the chest's own drop is Java's; BDS's chested donkey was not seen.
 pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
     if !world.get::<Kind>(mob).is_some_and(|kind| has_pack(&kind.0)) {
         return Vec::new();
     }
-    let mut spilled: Vec<ItemStack> = goods(world, mob).into_iter().map(|(_, stack)| stack).collect();
+    let mut spilled: Vec<ItemStack> = goods(world, mob).into_iter().filter(|(slot, _)| usize::from(*slot) >= TACK).map(|(_, stack)| stack).collect();
     spilled.extend(chested(world, mob).then(|| stack(CHEST)));
     spilled
 }
@@ -238,15 +239,12 @@ fn equipment(kind: &str) -> Option<Raw<Network>> {
 pub(crate) fn open(world: &mut World, player: Entity, mob: Entity) -> bool {
     let Some(kind) = world.get::<Kind>(mob).map(|kind| kind.0.clone()).filter(|kind| has_pack(kind) && tamed(world, mob)) else { return false };
     let (Some(slots), Some(id), Some(layer), Some(body)) = (pack(world, mob), world.get::<NetId>(mob).map(|id| id.0), world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(mob).copied()) else { return false };
-    if !containers::show_carried(world, player, layer, body.at.map(|c| c.floor() as i32), (mob, id), WindowType::Horse, &slots) {
+    if equipment(&kind).is_none() {
         return false;
     }
-    let (Some((_, window)), Some(inventory)) = (containers::carried_viewers(world, mob).into_iter().find(|(viewer, _)| *viewer == player), equipment(&kind)) else { return true };
-    let told = UpdateEquipment { window_id: WindowID::from_raw(window.into()), window_type: WindowType::Horse, size: slots.len() as u8, entity_id: id as i64, inventory };
-    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
-        out.push(&told);
-    }
-    true
+    // BDS tells a size of 0 whatever the slots (research/captures/bds-tack.txt).
+    let told = |window: u8| UpdateEquipment { window_id: WindowID::from_raw(window.into()), window_type: WindowType::Horse, size: 0, entity_id: id as i64, inventory: equipment(&kind).expect("made above") };
+    containers::show_carried(world, player, layer, body.at.map(|c| c.floor() as i32), (mob, id), WindowType::Horse, &slots, Some(&told))
 }
 
 /// A player's click on `mob` with what it holds: a tamed grown donkey, mule or llama takes the
@@ -254,7 +252,8 @@ pub(crate) fn open(world: &mut World, player: Entity, mob: Entity) -> bool {
 pub(super) fn clicked(world: &mut World, player: Entity, mob: Entity, kind: &str, sneaking: bool) -> bool {
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
     let tame_grown = tamed(world, mob) && !creatures::is_baby(world, mob);
-    if held.as_deref() == Some(CHEST) && tame_grown && CHESTED.contains(&kind) && !chested(world, mob) {
+    // A sneaking click opens even holding a chest (research/captures/bds-tack.txt).
+    if !sneaking && held.as_deref() == Some(CHEST) && tame_grown && CHESTED.contains(&kind) && !chested(world, mob) {
         if let Some(mut raised) = world.get_mut::<Raised>(mob) {
             raised.chested = true;
         }

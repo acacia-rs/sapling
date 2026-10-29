@@ -5,7 +5,7 @@
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::{again, name_at, roll};
+use super::{Level, again, egg_sound, name_at, roll};
 use crate::blocks::{Dice, level, send};
 
 pub(super) const SPAWN: &str = "minecraft:frog_spawn";
@@ -18,8 +18,15 @@ const TADPOLES: (u32, u32) = (2, 5);
 /// Tadpoles come this far down from the spawn's cell, into the water.
 const DOWN: f32 = 0.5;
 
-/// Frogspawn came at `pos`.
+fn afloat(level: &Level, [x, y, z]: BlockPos) -> bool {
+    name_at(level, [x, y - 1, z]).is_some_and(|under| WATER.contains(&under))
+}
+
+/// Frogspawn came at `pos`: on water it is heard laid (research/captures/bds-eggs.txt).
 pub(super) fn placed(world: &mut World, layer: Entity, pos: BlockPos) {
+    if level(world, layer).is_some_and(|level| afloat(level, pos)) {
+        send::to_viewers(world, layer, pos, &[egg_sound("lay_spawn", pos)]);
+    }
     let delay = HATCHES_IN.0 + u64::from(roll(world, HATCHES_IN.1));
     again(world, layer, pos, delay);
 }
@@ -29,8 +36,8 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(level) = level(world, layer) else { return };
     let [x, y, z] = pos;
     let (id, air) = (level.block(x, y, z), level.registry().air_id());
-    let (heard, burst) = (send::sound("block.frog_spawn.hatch", level.registry(), pos, id), send::destroy_particles(level.registry(), pos, id));
-    let afloat = name_at(level, [x, y - 1, z]).is_some_and(|under| WATER.contains(&under));
+    let (heard, burst) = (egg_sound("block.frog_spawn.hatch", pos), send::destroy_particles(level.registry(), pos, id));
+    let afloat = afloat(level, pos);
     if !send::set(world, layer, pos, air) {
         return;
     }

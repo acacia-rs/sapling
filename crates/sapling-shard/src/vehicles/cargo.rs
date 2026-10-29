@@ -73,7 +73,7 @@ pub(crate) fn open(world: &mut World, player: Entity, vehicle: Entity) -> bool {
     let Some((_, window)) = world.get::<Kind>(vehicle).and_then(|kind| hold(&kind.0)) else { return false };
     let (Some(slots), Some(id), Some(layer), Some(body)) = (cargo(world, vehicle), world.get::<NetId>(vehicle).map(|id| id.0), world.get::<InLayer>(vehicle).map(|layer| layer.0), world.get::<Body>(vehicle)) else { return false };
     let pos = body.at.map(|c| c.floor() as i32);
-    containers::show_carried(world, player, layer, pos, (vehicle, id), window, &slots)
+    containers::show_carried(world, player, layer, pos, (vehicle, id), window, &slots, None)
 }
 
 /// Tosses out everything `vehicle` carries, as it breaks.

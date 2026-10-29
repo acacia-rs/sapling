@@ -31,6 +31,9 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     if event.is_some_and(|event| BABY_EVENTS.contains(&event.trim_start_matches("minecraft:"))) {
         husbandry::be_born(world, entity, kind);
     }
+    if let Some(event) = event {
+        husbandry::tame_by_event(world, entity, kind, event);
+    }
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
     super::captains::arm(world, entity, kind, event);
@@ -83,7 +86,9 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
     wither::begin(world, entity, layer);
     let id = world.get::<NetId>(entity)?.0;
     harm::first_breath(world, entity, layer, id, kind, &body);
-    entities::after_announcing(world, layer, [x, y, z], vec![spawn_sound(sound, id, kind, &body)]);
+    // A hatched mob comes unheard (research/captures/bds-eggs.txt); its egg's sound is enough.
+    let heard = (reason != SpawnReason::Hatched).then(|| spawn_sound(sound, id, kind, &body));
+    entities::after_announcing(world, layer, [x, y, z], heard.into_iter().collect());
     let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, strides::keep(sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]), rolled));
     if crate::riding::give_strength(world, entity, kind) {

@@ -3,15 +3,14 @@
 //! time, cracks an egg on sand once more, or hatches one cracked twice into a baby turtle per egg
 //! whose home is the egg's cell; then the next tick is queued 750 to 1499 ticks on. A living thing
 //! but a turtle or bat breaks an egg treading on it, one in 100 a tick and one in 3 landing on it,
-//! a mob only with `mobGriefing` on, a player not while sneaking.
+//! a mob only with `mobGriefing` on, a player sneaking or not.
 // Laying and stomping out: nests.rs.
 
-use acacia_proto::packets::LevelEventEvent;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::{Level, again, crack, cracks, level_event, name_at, roll, value_of};
-use crate::blocks::{level, send, updates};
+use super::{Level, again, crack, cracks, egg_sound, hatch_burst, name_at, roll, sparkle, value_of};
+use crate::blocks::{level, send};
 
 pub(super) const EGG: &str = "minecraft:turtle_egg";
 const TURTLE: &str = "minecraft:turtle";
@@ -23,9 +22,9 @@ const NEXT_TICK: (u64, u32) = (750, 750);
 /// The sun's turn (`light::sun_turn`) between which every tick cracks, and the odds at other times.
 const DAWN: (f64, f64) = (0.65, 0.69);
 const ODDS: u32 = 500;
-/// Turtles hatch this far into the egg's cell, each one this much further along x.
-const HATCH_AT: f32 = 0.3;
-const HATCH_STEP: f32 = 0.2;
+/// Every turtle of an egg block comes out at the cell's corner, this far along x (BDS spawns at the
+/// corner and announces it 0.12 west: research/captures/bds-eggs.txt).
+const HATCH_X: f32 = -0.12;
 /// The odds of breaking an egg stood on for a tick, and landed on.
 const STEP_ODDS: u32 = 100;
 const FALL_ODDS: u32 = 3;
@@ -47,8 +46,8 @@ fn eggs(level: &Level, pos: BlockPos) -> usize {
 
 /// A turtle egg came at `pos`.
 pub(super) fn placed(world: &mut World, layer: Entity, pos: BlockPos) {
-    if level(world, layer).is_some_and(|level| on_sand(level, pos)) {
-        send::to_viewers(world, layer, pos, &[level_event(LevelEventEvent::ParticleTurtleEgg, pos, 0)]);
+    if let Some(sparkle) = level(world, layer).filter(|level| on_sand(level, pos)).map(|level| sparkle(level, pos)) {
+        send::to_viewers(world, layer, pos, &[sparkle]);
     }
     again(world, layer, pos, FIRST_TICK);
 }
@@ -64,7 +63,7 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
         if cracked >= 2 {
             return hatch(world, layer, pos);
         }
-        crack(world, layer, pos, "block.turtle_egg.crack");
+        crack(world, layer, pos, "block.turtle_egg.crack", false);
     }
     let delay = NEXT_TICK.0 + u64::from(roll(world, NEXT_TICK.1));
     again(world, layer, pos, delay);
@@ -74,50 +73,50 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
 fn hatch(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(level) = level(world, layer) else { return };
     let (id, air, count) = (level.block(pos[0], pos[1], pos[2]), level.registry().air_id(), eggs(level, pos));
-    let (heard, burst) = (send::sound("block.turtle_egg.hatch", level.registry(), pos, id), send::destroy_particles(level.registry(), pos, id));
+    let burst = hatch_burst(level, pos, id);
+    send::to_viewers(world, layer, pos, &vec![burst; count]);
     if !send::set(world, layer, pos, air) {
         return;
     }
-    send::to_viewers(world, layer, pos, &[heard]);
     let [x, y, z] = pos.map(|c| c as f32);
-    for egg in 0..count {
-        send::to_viewers(world, layer, pos, std::slice::from_ref(&burst));
-        let feet = [x + HATCH_AT + egg as f32 * HATCH_STEP, y, z + HATCH_AT];
-        if let Some(turtle) = crate::creatures::hatch(world, layer, TURTLE, feet) {
+    for _ in 0..count {
+        if let Some(turtle) = crate::creatures::hatch(world, layer, TURTLE, [x + HATCH_X, y, z]) {
             crate::creatures::make_home(world, turtle, pos);
         }
     }
+    send::to_viewers(world, layer, pos, &[egg_sound("block.turtle_egg.hatch", pos)]);
 }
 
-/// One egg of those at `pos` breaks: the last takes the block with it.
+/// One egg of those at `pos` breaks, the last taking the block with it: particles, the block,
+/// then the sound, all at the cell's corner (research/captures/bds-eggtrample.txt).
 pub(super) fn break_one(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(level) = level(world, layer) else { return };
     let (id, count) = (level.block(pos[0], pos[1], pos[2]), eggs(level, pos));
-    let heard = send::sound("block.turtle_egg.break", level.registry(), pos, id);
-    let fewer = COUNTS.get(count.wrapping_sub(2)).and_then(|fewer| crate::blocks::with_property(level.registry(), id, "turtle_egg_count", fewer));
-    let burst = send::destroy_particles(level.registry(), pos, id);
-    send::to_viewers(world, layer, pos, &[heard]);
-    match fewer {
-        Some(fewer) if send::set(world, layer, pos, fewer) => send::to_viewers(world, layer, pos, &[burst]),
-        Some(_) => {}
-        None => updates::pop(world, layer, pos),
+    let fewer = COUNTS.get(count.wrapping_sub(2)).map_or(Some(level.registry().air_id()), |fewer| crate::blocks::with_property(level.registry(), id, "turtle_egg_count", fewer));
+    let Some(fewer) = fewer else { return };
+    send::to_viewers(world, layer, pos, &[hatch_burst(level, pos, id)]);
+    if send::set(world, layer, pos, fewer) {
+        send::to_viewers(world, layer, pos, &[egg_sound("block.turtle_egg.break", pos)]);
     }
 }
 
 /// A tick of a living thing of `kind` with its feet at `feet`: on the ground over a turtle egg it
-/// may break one, more likely when it `landed` this tick; a `careful` (sneaking) one only by landing.
-pub(crate) fn trodden(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], on_ground: bool, landed: bool, careful: bool) {
+/// may break one, more likely when it `landed` this tick. Sneaking spares none on BDS.
+pub(crate) fn trodden(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], on_ground: bool, landed: bool) {
     if !on_ground || SPARE.contains(&kind) {
         return;
     }
-    let pos = [feet[0].floor() as i32, (feet[1] - ON_UNDER).floor() as i32, feet[2].floor() as i32];
+    // TODO: sapling's mobs sink into an egg's cell where BDS's stand on its top (y -25.55 in
+    // research/captures/bds-eggtrample.txt), so the cell at the feet counts too.
+    let cell = |y: f32| [feet[0].floor() as i32, y.floor() as i32, feet[2].floor() as i32];
+    let pos = Some(cell(feet[1])).filter(|inside| is_egg_at(world, layer, *inside)).unwrap_or_else(|| cell(feet[1] - ON_UNDER));
     if !is_egg_at(world, layer, pos) || kind != PLAYER && !level(world, layer).is_some_and(|level| level.level().rules.on(GRIEFING)) {
         return;
     }
     if landed && kind != ZOMBIE && roll(world, FALL_ODDS) == 0 {
         break_one(world, layer, pos);
     }
-    if !careful && is_egg_at(world, layer, pos) && roll(world, STEP_ODDS) == 0 {
+    if is_egg_at(world, layer, pos) && roll(world, STEP_ODDS) == 0 {
         break_one(world, layer, pos);
     }
 }

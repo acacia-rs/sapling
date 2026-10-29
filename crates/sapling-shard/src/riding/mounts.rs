@@ -128,6 +128,10 @@ fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
     world.entity_mut(mob).insert(tack);
     let (Some(id), Some(body)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Body>(mob).copied()) else { return true };
     let mut told = worn(world, mob);
+    // A carpet put on is heard as `armor` too, first (research/captures/bds-tack.txt).
+    if sound == "armor.equip_generic" {
+        told.push(packets::sound("armor", id, kind, body.at));
+    }
     told.push(packets::sound(sound, id, kind, body.at));
     super::tell(world, mob, mob, told);
     super::packs::tack_changed(world, mob);
