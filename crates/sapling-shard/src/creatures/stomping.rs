@@ -1,8 +1,8 @@
 //! Zombies and their kin going for turtle eggs (ED `behavior.stomp_turtle_egg` on the zombie,
 //! husk, drowned, zombie villager and zombie pigman: one tick in 20, eggs within 10 across and 2
-//! up or down, within 1.14 is there). What it does there is JAVA's `RemoveBlockGoal`: it hops on
-//! the eggs, 0.3 up each tick on the ground, and 60 ticks in stomps them all out; it gives up a
-//! walk of 1200 ticks. Only with `mobGriefing` on, and not while it hunts (creatures.rs).
+//! up or down, within 1.14 is there). There, as BDS showed: it hops on the eggs, 0.3 up every 6
+//! ticks, heard each hop, the eggs crumbling every tick, and 48 ticks in stomps the whole
+//! block out at once. It gives up a walk of 1200 ticks (JAVA `RemoveBlockGoal`). Only with `mobGriefing` on, and not while it hunts (creatures.rs).
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -17,7 +17,11 @@ const ACROSS: i32 = 10;
 const UP: i32 = 2;
 const NEAR: f32 = 1.14;
 const HOP: f32 = 0.3;
-const STOMPS_FOR: u32 = 60;
+/// It hops, heard, every 6 ticks at the eggs from its third (research/captures/bds-stomping.txt).
+const HOP_EVERY: u32 = 6;
+const HOP_FIRST: u32 = 2;
+/// Ticks at the eggs till they go: 48 and 51 on BDS (research/captures/bds-stomping.txt).
+const STOMPS_FOR: u32 = 48;
 const GIVES_UP: u32 = 1200;
 const GRIEFING: &str = "mobGriefing";
 
@@ -27,6 +31,10 @@ pub(super) struct Stomping {
     eggs: BlockPos,
     walked: u32,
     stomped: u32,
+}
+
+fn unique(world: &World, entity: Entity) -> i64 {
+    world.get::<crate::tags::UniqueId>(entity).map_or(-1, |id| id.0)
 }
 
 fn griefs(world: &World, layer: Entity) -> bool {
@@ -60,15 +68,18 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         Stomping { walked: stomping.walked + 1, ..stomping }
     } else {
         legs::rest(world, entity);
-        if body.on_ground
+        let hops = stomping.stomped % HOP_EVERY == HOP_FIRST;
+        if hops
+            && body.on_ground
             && let Some(mut body) = world.get_mut::<Body>(entity)
         {
             body.walk([0.0, 0.0], Some(HOP));
         }
+        crate::blocks::stomping_turtle_eggs(world, layer, stomping.eggs, kind, unique(world, entity), hops);
         Stomping { stomped: stomping.stomped + 1, ..stomping }
     };
-    if next.stomped > STOMPS_FOR {
-        crate::blocks::stomp_turtle_eggs(world, layer, stomping.eggs);
+    if next.stomped >= STOMPS_FOR {
+        crate::blocks::stomp_turtle_eggs(world, layer, stomping.eggs, kind, unique(world, entity));
         world.entity_mut(entity).remove::<Stomping>();
     } else {
         world.entity_mut(entity).insert(next);

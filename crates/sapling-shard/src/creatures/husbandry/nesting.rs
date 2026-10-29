@@ -24,6 +24,8 @@ const ACROSS: i32 = 16;
 const UP: i32 = 4;
 const NEST_NEAR: f32 = 1.5;
 const DIGS_FOR: u64 = 200;
+/// Ticks between the sand's dust while it digs (research/captures/bds-nesting.txt).
+const DUST_EVERY: u64 = 5;
 const MOST_EGGS: u32 = 4;
 /// Ticks between looks for sand while it wants to lay (not in the pack).
 const LOOKS_EVERY: u64 = 20;
@@ -114,9 +116,14 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
         Nesting::Laying { nest: None, .. } if now.is_multiple_of(LOOKS_EVERY) => Nesting::Laying { nest: crate::blocks::turtle_nest_near(world, layer, body.at, ACROSS, UP), until: None },
         Nesting::Laying { nest: Some(nest), until: None } if across(body.at, middle(nest)) <= NEST_NEAR => {
             shown::flag(world, entity, Flags::LAYING_EGG, true);
+            crate::blocks::turtle_dig(world, layer, nest);
             Nesting::Laying { nest: Some(nest), until: Some(now + DIGS_FOR) }
         }
         Nesting::Laying { nest: Some(nest), until: Some(until) } if now >= until => return lay(world, entity, layer, nest),
+        Nesting::Laying { nest: Some(nest), until: Some(until) } if (until - now).is_multiple_of(DUST_EVERY) => {
+            crate::blocks::turtle_dig(world, layer, nest);
+            return;
+        }
         unchanged => unchanged,
     };
     world.entity_mut(entity).insert(next);

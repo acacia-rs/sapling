@@ -1,7 +1,8 @@
 # Leftovers: grid map crafts, item repair, mounts, turtles
 
 Small items earlier workstreams left (crafting-storage.md, mob-life.md). BDS read with bdsre `c` on
-`bds-blocks/bedrock_server.exe`. No BDS drill was run: everything below is in "Not drilled".
+`bds-blocks/bedrock_server.exe`. Mounts and turtles were drilled on BDS 2026-10-29 ("Drilled" at the end); the
+grid crafts were not.
 
 ## Special recipes in the grid (inventory/special/)
 
@@ -45,8 +46,8 @@ The full uuids are in the exe as text (`D392B075-4BA1-40AE-8789-AF868D56F6CE`,
 - **Carpets**: slot 1 of a llama (`minecraft:equippable` slot 1, `carpet`) is worn as the horse's armour is:
   `MobArmorEquipment`'s body slot. A tamed grown llama takes a held carpet by a click (the tamed groups'
   `equip_item_slot`, sound `armor.equip_generic`).
-- **Death**: a dying mount lets go of its tack, its goods and, when chested, the chest (JAVA
-  `AbstractChestedHorse.dropEquipment`, outside the `doMobLoot` gate), where its loot appears.
+- **Death**: a dying mount lets go of its goods outside the `doMobLoot` gate, but not its saddle, armour or
+  carpet (`bds-tack.txt`); sapling also drops the chest (JAVA `AbstractChestedHorse.dropEquipment`).
 
 ## Turtles (creatures/husbandry/nesting.rs, creatures/stomping.rs, blocks/eggs/nests.rs)
 
@@ -68,18 +69,41 @@ what follows is the pack (ED `turtle.json`, `zombie.json` and kin) and the Java 
 - **Stomping** (`behavior.stomp_turtle_egg` on zombie, husk, drowned, zombie villager (both) and zombie
   pigman: interval 20, search 10 across and 2 up or down, goal radius 1.14): one tick in 20 a zombie that
   does not hunt picks the nearest turtle egg and walks there. At the eggs it hops (0.3 up while on the
-  ground) and after 60 ticks every egg breaks (JAVA `RemoveBlockGoal`/`ZombieAttackTurtleEggGoal`); it gives
-  up after 1200 ticks of walking. Only with `mobGriefing` (JAVA).
+  ground), and the eggs break as "Drilled" says (JAVA `RemoveBlockGoal`/`ZombieAttackTurtleEggGoal`). It gives up
+  after 1200 ticks of walking. Only with `mobGriefing` (JAVA).
+
+## Drilled (2026-10-29)
+
+Scenes `tack`, `llamabreed`, `nesting`, `stomping` (`examples/shared/tack_drill.rs`, `eggs_drill.rs`); captures in
+`research/captures/`.
+
+- Llama strength (`bds-tack.txt`, `bds-llamabreed.txt`): it comes in a `SetEntityData` right after the announcement.
+  Sixteen summoned llamas fit the weights. Drilled same. Bred babies got 2, 1, 3 and 3, which is too few to tell
+  sapling's fresh roll from Java's rule; sapling keeps its roll. They come with `born` and experience.
+- The carpet (`bds-tack.txt`): taken by a click and shown in `MobArmorEquipment`'s body slot. Fixed: it is heard as
+  `armor` and then `armor.equip_generic`.
+- Fixed: `/summon <mount> ~ ~ ~ 0 0 minecraft:spawn_tame_adult` comes tamed, with no owner. A sneaking click opens
+  the screen even holding a chest, and takes no chest (`bds-tack.txt`).
+- Death (`bds-tack.txt`), fixed: the goods spill with `doMobLoot` on or off; the carpet, horse armour and saddle do
+  not (a horse's saddle comes from its loot).
+- Nesting (`bds-nesting.txt`): a bred turtle set off 36 and 51 s after breeding (1 in 700 a tick: 35 s on average).
+  It dug 200 ticks, then laid. Fixed: while digging it throws the sand's 2001 dust at the nest cell's corner every
+  5 ticks, the first as it starts.
+- Stomping (`bds-stomping.txt`), fixed: at the eggs a zombie crumbles them every tick (`ParticleBreakingEgg` at the
+  corner, data the plain egg). It hops and is heard (`block.turtle_egg.attack`, with its type and id) every 6 ticks
+  from its third. After 48 to 51 ticks the block goes with 2003 (`ParticleDestroyEgg`), then the break sound with its
+  type. Zombies also tread eggs as any mob does.
 
 ## Not drilled
 
-- Grid map extending, upgrading and item repair: all read from the decompile, none crafted on a live BDS.
-  Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
-- The llama's carpet in `MobArmorEquipment`'s body slot, and whether BDS sends `Strength`/`MaxStrength`
-  in the mob's announcement or after it.
-- A bred llama's strength: sapling rolls afresh (Java takes the higher parent's with a chance of more).
-- Goods and chest spilled on a mount's death regardless of `doMobLoot`.
-- Turtles: the 1 in 700 home start, the 10 s dig, the 1 to 4 egg count, the nearest-sand pick, the nest
-  search's 20-tick look, and home for a turtle never hatched: all ED or JAVA.
-- Stomping: the 1 in 20 start, the hop, the 60-tick stomp out, the 1200-tick give-up and the walking
-  speed (the mob's stroll speed).
+- Grid map extending, upgrading and item repair. These were read from the decompile and never crafted on a live
+  BDS; the bot cannot send the custom-recipe `ItemStackRequest`s.
+  - Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
+- The chest's own drop on a chested mount's death: the drill's mounts were never chested (see above).
+- `/replaceitem` on a mount: BDS fills `slot.inventory` of an unchested donkey (it spilled the goods on death) and
+  plays `saddle` for `slot.saddle`. Sapling does neither, and this was not fixed.
+- Turtles:
+  - The 1 to 4 egg count (two clutches seen), the nearest-sand pick and the nest search's 20-tick look.
+  - Home for a turtle never hatched.
+  - The `lay_egg` sound's height: BDS's is 0.34 over the feet, sapling's 0.2.
+- Stomping: the 1 in 20 start, the 1200-tick give-up, and the walking speed.
