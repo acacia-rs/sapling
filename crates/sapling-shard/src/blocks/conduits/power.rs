@@ -1,11 +1,15 @@
-//! What an active conduit does every 40 ticks, by the Java game's `ConduitBlockEntity`
-//! (docs/research/effects-raids.md "Conduits"): conduit power to each player in water or rain
-//! whose block is nearer than 16 for every 7 frame blocks; with all 42, 4 damage to one hostile
-//! mob in water or rain within 8, kept as its `Target` until it dies or leaves.
+//! What an active conduit does every 40 ticks (docs/research/effects-raids.md "Conduit"): conduit
+//! power, not ambient, to each player in water or rain whose block is less than 16 for every 7
+//! frame blocks off along each axis (research/captures/bds-conduit2.txt); with all 42, one hostile
+//! mob in water or rain within 8 is kept as its `Target` until it dies or leaves, and bitten for 4
+//! from the pulse after it was taken, `conduit.attack` heard at the conduit.
+// TODO: BDS left a zombie in rain 7 off unbitten (bds-conduit2.txt); sapling bites it.
 
 use std::collections::HashMap;
 
 use acacia_proto::nbt::Value;
+use acacia_proto::packets::LevelSoundEvent;
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Effect, Weather};
 
@@ -38,15 +42,21 @@ fn is_near(pos: BlockPos, feet: [f32; 3], reach: i32) -> bool {
     (0..3).map(|axis| i64::from(cell[axis] - pos[axis]).pow(2)).sum::<i64>() < i64::from(reach).pow(2)
 }
 
+/// Whether the block `feet` stand in is less than `reach` off `pos` along every axis.
+fn is_within(pos: BlockPos, feet: [f32; 3], reach: i32) -> bool {
+    let cell = feet.map(|c| c.floor() as i32);
+    (0..3).all(|axis| (cell[axis] - pos[axis]).abs() < reach)
+}
+
 pub(super) fn empower(world: &mut World, layer: Entity, pos: BlockPos, frame: usize) {
     let reach = (frame / RANGE_PER) as i32 * RANGE_STEP;
     let players: Vec<Entity> = in_world(world)
         .into_iter()
         .filter(|player| world.get::<InLayer>(*player).is_some_and(|on| on.0 == layer))
-        .filter(|player| world.get::<Position>(*player).is_some_and(|at| is_near(pos, at.feet, reach) && is_wet(world, layer, at.feet)))
+        .filter(|player| world.get::<Position>(*player).is_some_and(|at| is_within(pos, at.feet, reach) && is_wet(world, layer, at.feet)))
         .collect();
     for player in players {
-        crate::vitals::give_ambient(world, player, Effect::ConduitPower, LASTS, 0);
+        crate::vitals::give_effect(world, player, Effect::ConduitPower, LASTS, 0, true);
     }
 }
 
@@ -85,9 +95,16 @@ pub(super) fn hunt(world: &mut World, layer: Entity, pos: BlockPos, frame: usize
         };
         show_target(world, layer, pos, target);
     }
-    if let Some(mob) = target {
+    if let Some(mob) = target.filter(|mob| held == Some(*mob)) {
         crate::creatures::wound(world, mob, layer, BITES, Cause::Magic);
+        bite_sound(world, layer, pos);
     }
+}
+
+fn bite_sound(world: &mut World, layer: Entity, pos: BlockPos) {
+    let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
+    let sound = LevelSoundEvent { sound_id: "conduit.attack".into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
+    send::to_viewers(world, layer, pos, &[sapling_net::encode(&sound)]);
 }
 
 /// Keeps the conduit's `Target`, the mob's unique id or -1, and shows it.

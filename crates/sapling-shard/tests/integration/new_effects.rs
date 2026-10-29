@@ -1,14 +1,13 @@
 //! Fatal poison, darkness and conduit power, against research/captures/bds-fx2.txt and bds-dig.txt;
-//! the conduit's power and hunt by the Java game's rule (docs/research/effects-raids.md).
+//! the conduit's power and hunt as bds-conduit2.txt showed (docs/research/effects-raids.md).
 
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::nbt::Value;
-use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, MobEffect, MobEffectEventId, SetEntityData, UpdateAttributes};
+use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MobEffect, MobEffectEventId, SetEntityData, UpdateAttributes};
 use acacia_proto::types::{Action, MetadataDictionaryItemKey as Key};
 use common::{Harness, all, block_actions};
-use sapling_api::{Block, BlockEntityData, DamageCause, Difficulty, Effect, PlayerId};
+use sapling_api::{Block, DamageCause, Difficulty, Effect, PlayerId};
 
 const ALEX: PlayerId = PlayerId(1);
 
@@ -38,6 +37,19 @@ fn fatal_poison_goes_on_past_one_health_and_kills() {
     assert_eq!(effects(&sent)[0], (MobEffectEventId::Add, 25, true, 120, false));
     assert_eq!(health(&sent)[..3], [2.0, 1.0, 0.0], "a point every 25 ticks from its first, as poison, but on to death");
     assert_eq!(all::<DeathInfo>(&sent).len(), 1);
+}
+
+/// research/captures/bds-fx3.txt: `/effect` of fatal poison took on a zombified piglin, which
+/// lost a point every 25 ticks, where poison takes nothing on the undead.
+#[test]
+fn fatal_poison_takes_on_the_undead_and_poison_does_not() {
+    let mut h = ready();
+    let id = common::asking::ask(&mut h, |ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.spawn_entity("minecraft:zombie", [3.5, 65.0, 3.5]).expect("a zombie")
+    });
+    let given = common::asking::ask(&mut h, move |ctx| (ctx.give_entity_effect(id, Effect::Poison, 100, 0), ctx.give_entity_effect(id, Effect::FatalPoison, 100, 0)));
+    assert_eq!(given, (false, true));
 }
 
 #[test]
@@ -88,11 +100,8 @@ fn conduit(h: &mut Harness, frame: usize) {
         ctx.teleport(ALEX, [4.5, 69.0, 3.5]);
     });
     h.tick_all();
-    let [x, y, z] = CONDUIT;
-    let fields = [("Active", Value::Byte(0)), ("Target", Value::Long(-1)), ("id", Value::String("Conduit".into())), ("x", Value::Int(x)), ("y", Value::Int(y)), ("z", Value::Int(z))];
-    let entity = Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect());
-    let done = common::asking::ask(h, move |ctx| (ctx.set_block(CONDUIT, &Block::new("conduit")), ctx.set_block_entity(CONDUIT, &BlockEntityData::new(entity))));
-    assert_eq!(done, (true, true));
+    // Set as by /setblock, it gets its entity unasked (bds-conduit2.txt).
+    assert!(common::asking::ask(h, move |ctx| ctx.set_block(CONDUIT, &Block::new("conduit"))));
 }
 
 #[test]
@@ -100,10 +109,11 @@ fn an_active_conduit_gives_conduit_power_to_a_player_in_its_water_and_bites_a_mo
     let mut h = ready();
     conduit(&mut h, 42);
     let zombie = common::shooting::spawn(&mut h, "minecraft:zombie", [3.5, 69.0, 5.5]);
-    let sent: Vec<RawPacket> = (0..81).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
-    assert!(effects(&sent).contains(&(MobEffectEventId::Add, 26, true, 260, true)), "{:?}", effects(&sent));
+    let sent: Vec<RawPacket> = (0..121).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(effects(&sent).contains(&(MobEffectEventId::Add, 26, true, 260, false)), "not ambient, as on BDS: {:?}", effects(&sent));
     let bitten = all::<EntityEvent>(&sent).into_iter().filter(|event| event.runtime_entity_id == zombie && event.event_id == EntityEventEventId::HurtAnimation).count();
-    assert!(bitten >= 1, "4 damage every 40 ticks");
+    let heard = all::<LevelSoundEvent>(&sent).into_iter().filter(|sound| sound.sound_id == "conduit.attack").count();
+    assert!(bitten >= 1 && heard == bitten, "4 damage every 40 ticks from the pulse after it was taken, each heard");
 }
 
 #[test]
