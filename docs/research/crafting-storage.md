@@ -69,6 +69,10 @@ and recording what it made of each state, so they stand for BDS's upgrader. drag
 
 ## Not drilled
 
+- Grid crafts (`crafting_drill.rs` `grid`, research/captures/bds-grid.txt): BDS dropped the probe on its
+  first special craft (CraftRecipe, ResultsDeprecated, Consume) twice, with the result counts tried
+  largest first and then smallest first; the legacy ids are right since the anvil runs. The probe's
+  request shape for a grid craft needs a vanilla client capture first, so none of the below was judged.
 - Every special recipe's `matches`: sapling's grid rules are Java's (one patterned and one blank
   banner of a colour; one written book and writable books; one filled map and empty maps; a shield
   without patterns) and the read of `assemble` above.
