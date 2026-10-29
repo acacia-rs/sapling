@@ -65,7 +65,6 @@ pub(crate) fn start(world: &mut World, player: Entity) {
 }
 
 /// Chorus fruit cools down once eaten; BDS told it as the eating started too (research/captures/bds-small.txt).
-// TODO: the fruit does not teleport its eater.
 fn holds_chorus(world: &World, player: Entity) -> bool {
     world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).is_some_and(|held| held.stack.name == "minecraft:chorus_fruit")
 }
@@ -98,8 +97,11 @@ fn afflict(world: &mut World, player: Entity, food: &sapling_data::Food) {
     }
     for gives in food.gives {
         let lucky = gives.chance >= 1.0 || world.get_resource_or_insert_with(Dice::default).fraction() < gives.chance;
-        if let Some(effect) = sapling_api::Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect).filter(|_| lucky) {
-            effects::give(world, player, effect, gives.ticks, gives.amplifier, true);
+        let Some(effect) = sapling_api::Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect).filter(|_| lucky) else { continue };
+        // A stew's effect is told twice, Add then Update (bds-foods2.txt).
+        let told = if food.leaves == Some("minecraft:bowl") { 2 } else { 1 };
+        for _ in 0..told {
+            effects::give(world, player, effect, gives.ticks, gives.amplifier, !food.ominous);
         }
     }
 }
@@ -108,18 +110,27 @@ fn afflict(world: &mut World, player: Entity, food: &sapling_data::Food) {
 fn leave(world: &mut World, player: Entity, food: &sapling_data::Food) {
     let registry = world.get::<InLayer>(player).and_then(|layer| world.get::<Layer>(layer.0)).map(|layer| layer.world.registry());
     if let Some(left) = food.leaves.zip(registry).and_then(|(name, registry)| inventory::stored(&sapling_api::Item::new(name, 1), registry)) {
-        inventory::give_and_pop(world, player, &left);
+        inventory::leave_in_hand(world, player, &left);
     }
 }
 
 /// A drink is gone: the bottle is heard emptied, under the eyes and ahead of them, as BDS's
-/// (research/captures/bds-drink.txt).
+/// (research/captures/bds-drink.txt); an ominous bottle as the omen taking hold and its own end
+/// (bds-fx3.txt).
 // TODO: only drunk facing south (yaw 0): the way ahead is taken to turn with the yaw.
-fn drained(world: &mut World, player: Entity) {
-    let Some(position) = world.get::<Position>(player).copied() else { return };
+fn drained(world: &mut World, player: Entity, ominous: bool) {
+    let (Some(position), Some(id)) = (world.get::<Position>(player).copied(), world.get::<NetId>(player).map(|id| id.0)) else { return };
     let ([x, y, z], (sin, cos)) = (position.feet, position.yaw.to_radians().sin_cos());
     let position = Vec3f { x: x - sin * BOTTLE_AHEAD, y: y + EYE_HEIGHT - BOTTLE_BELOW, z: z + cos * BOTTLE_AHEAD };
-    tell(world, player, &LevelSoundEvent { sound_id: "bottle.empty".into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None });
+    let heard = |sound_id: &str, entity_type: &str, entity_unique_id: i64| LevelSoundEvent {
+        sound_id: sound_id.into(), position: position.clone(), extra_data: -1, entity_type: entity_type.into(), is_baby_mob: false, is_global: false, entity_unique_id, fire_at_position: None,
+    };
+    if ominous {
+        tell(world, player, &heard("apply_effect.bad_omen", "minecraft:player", id as i64));
+        tell(world, player, &heard("ominous_bottle.end_use", "", -1));
+    } else {
+        tell(world, player, &heard("bottle.empty", "", -1));
+    }
 }
 
 /// The food is eaten: one less in the hand, the hunger fed, and a burp; a drink empties its bottle.
@@ -136,6 +147,7 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     let used = CompletedUsingItem { used_item_id: meal.id, use_method };
     if holds_chorus(world, player) {
         crate::cooldowns::tell(world, player, CHORUS, CHORUS_COOLDOWN, true);
+        super::chorus::scatter(world, player);
     }
     // BDS tells the effects first.
     afflict(world, player, &meal.food);
@@ -149,7 +161,7 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     tell(world, player, &hunger.told(id, now));
     show(world, player, false);
     if meal.food.drunk {
-        drained(world, player);
+        drained(world, player, meal.food.ominous);
         return;
     }
     let position = Vec3f { x, y: y + EYE_HEIGHT - MOUTH, z };

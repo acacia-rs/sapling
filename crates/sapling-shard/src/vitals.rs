@@ -5,6 +5,7 @@
 // TODO: a block over the head alone does not
 // make a player crawl; the breathing flag is not told.
 
+mod chorus;
 mod death;
 pub(crate) mod eating;
 pub(crate) mod effects;
@@ -43,7 +44,7 @@ use crate::visibility::ToViewers;
 
 const MAX: f32 = 20.0;
 /// A player's box: across, and up.
-const SIZE: [f32; 2] = [0.6, 1.8];
+pub(crate) const SIZE: [f32; 2] = [0.6, 1.8];
 const FIERY: &[&str] = &["minecraft:lava", "minecraft:flowing_lava", "minecraft:fire", "minecraft:soul_fire"];
 const LAVA: &[&str] = &["minecraft:lava", "minecraft:flowing_lava"];
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
@@ -60,7 +61,7 @@ const WALLED: u8 = 7;
 const JUMP_TIRES: f32 = 0.05;
 const LEAP_TIRES: f32 = 0.2;
 const SPRINT_TIRES: f32 = 0.1;
-/// Exhaustion of a block broken with what harvests it, and of a hit that lands
+/// Exhaustion of a block broken with what harvests it, and of a hit on a mob in reach
 /// (research/captures/bds-toil.txt).
 pub(crate) const BREAK_TIRES: f32 = 0.005;
 pub(crate) const HIT_TIRES: f32 = 0.1;
@@ -69,8 +70,6 @@ const LONGEST_STEP: f32 = 1.0;
 const RESISTS: f32 = 0.2;
 /// What a helmet lets through of a hit on the head (research/captures/bds-worn.txt).
 const HELMETED: f32 = 0.75;
-/// Health an empty hunger leaves a player (hunger.rs).
-const STARVED: f32 = 10.0;
 
 #[derive(Component, Clone, Copy)]
 pub(crate) struct Vitals {
@@ -290,7 +289,11 @@ impl HealthBackend for Ctx<'_> {
     }
 
     fn hurt_player(&mut self, player: PlayerId, amount: f32, cause: DamageCause) -> bool {
-        self.entity(player).is_some_and(|entity| hurt(self.world, entity, amount, cause))
+        let Some(entity) = self.entity(player) else { return false };
+        self.world.entity_mut(entity).insert(death::Told);
+        let hurt = hurt(self.world, entity, amount, cause);
+        self.world.entity_mut(entity).remove::<death::Told>();
+        hurt
     }
 
     fn kill_player(&mut self, player: PlayerId) -> bool {

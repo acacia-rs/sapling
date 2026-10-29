@@ -1,11 +1,13 @@
 //! A player's hunger: what mending costs it and what an empty one costs the player, as BDS was
 //! seen to (docs/research/player-damage.md, "Mending" and "Starving").
-// TODO: mining, hits, swimming and being hurt tire nobody (not drilled).
-// Starving stops at half health, as on the drilled
-// server (easy); the world's difficulty is not read.
+// TODO: mining and being hurt tire nobody (not drilled).
 
 use acacia_proto::packets::UpdateAttributes;
 use acacia_proto::types::PlayerAttributesItem;
+use bevy_ecs::prelude::*;
+use sapling_api::Difficulty;
+
+use crate::components::Settings;
 
 const FULL: f32 = 20.0;
 const SATED: f32 = 5.0;
@@ -16,6 +18,16 @@ const EVERY: u32 = 80;
 const MEND_TIRES: f32 = 6.0;
 /// Exhaustion that takes one of the saturation, or of the hunger once that is gone.
 const SPENT: f32 = 4.0;
+
+/// Health an empty hunger leaves a player: 10 on easy and peaceful, 1 on normal, none on hard
+/// (research/captures/bds-hurt2.txt).
+pub(super) fn starved(world: &World) -> f32 {
+    match world.resource::<Settings>().0.difficulty {
+        Difficulty::Hard => 0.0,
+        Difficulty::Normal => 1.0,
+        Difficulty::Easy | Difficulty::Peaceful => 10.0,
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum Turn {

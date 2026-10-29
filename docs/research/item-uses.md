@@ -19,8 +19,19 @@ devbox's BDS; the captures are `research/captures/bds-<drill>.txt`, sapling's `s
   PlayerHotbar `select_slot true`, one rocket spent; AddEntity `fireworks_rocket` at the glider with
   only the launch wobble for velocity, `launch` heard; it bursts at the end of its life as any rocket.
   BDS also sent the glider's whole UpdateAttributes and SetEntityData then, which sapling does not.
-- Not drilled: water, levitation, riding and creative flight ending a glide; the fly-into-wall damage
+- **Ends** (`glide2`, research/captures/bds-glide2.txt, 2026-10-29): a glider put in water was stopped
+  by the server as on landing (flag off, `BoundingboxHeight` 1.8); sapling did not, and now does
+  (`gliding.rs` `in_water`). One that started riding was stopped too, as in sapling. Levitation did
+  not stop it: BDS corrected the levitating glider each 300 ms and left the flag on, as sapling.
+- Not drilled: creative flight ending a glide (the drill bot cannot fly); the fly-into-wall damage
   (combat's).
+
+## Armour from the hand (`fx3`; `inventory/donning.rs`)
+
+A click in the air with a chestplate or boots in the hand put it on (research/captures/bds-fx3.txt):
+`InventorySlot` of the armour slot, the inventory sent, `armor.equip_iron` a tick on. Sapling did
+nothing; fixed, swapping with what was worn (only an empty slot drilled). An elytra put on by
+`/replaceitem` is heard as `armor.equip_elytra` (bds-glide2.txt; sapling was silent; fixed).
 
 ## Buckets (`buckets`; `blocks/buckets.rs`, `creatures/scooping.rs`)
 
@@ -31,8 +42,9 @@ devbox's BDS; the captures are `research/captures/bds-<drill>.txt`, sapling's `s
   `bucket.fill.fish` at the integer corner of the mob's cell (for the axolotl too) and became
   `cod_bucket` whose tag is the mob's whole actor compound (`Variant`, `MarkVariant`, `Color`,
   attributes and the rest). sapling keeps the stored compound and makes the mob from it again where
-  the bucket pours. BDS refused the bot's pour of a fish bucket (the bot claims the held item without
-  its tag), so the pour's `bucket.empty.fish` is the Java game's name, unconfirmed.
+  the bucket pours. A `/replaceitem` cod bucket (no tag) poured on BDS (`glide2`, 2026-10-29): the cod
+  came, heard `ambient.in.water`, and the pour was `bucket.empty.fish` (extra data -1, no entity type)
+  at the pourer's feet, the name sapling uses.
 
 ## Books and lecterns (`books`; `books.rs`, `blocks/lectern.rs`)
 

@@ -34,6 +34,22 @@ pub(crate) fn swap_held_for(world: &mut World, player: Entity, new: ItemStack) {
     }
 }
 
+/// Puts `stack` in the player's empty hand, unheard, as BDS left a stew's bowl
+/// (research/captures/bds-foods.txt); with the hand still full, [`give_and_pop`].
+pub(crate) fn leave_in_hand(world: &mut World, player: Entity, stack: &ItemStack) {
+    let placed = super::change(world, player, |inventory| {
+        let slot = super::Place::Main(inventory.selected.into());
+        let empty = inventory.slot(slot).is_some_and(Option::is_none);
+        if empty {
+            inventory.put(slot, Some(stack.clone()));
+        }
+        empty
+    });
+    if placed != Some(true) {
+        give_and_pop(world, player, stack);
+    }
+}
+
 /// Takes one of the stack the player holds; false when it holds nothing.
 pub(crate) fn use_up_held(world: &mut World, player: Entity) -> bool {
     super::change(world, player, |inventory| {

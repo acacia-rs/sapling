@@ -22,7 +22,10 @@ Bedrock was found.
 - Conduit power keeps air topped up as water breathing does [cap bds-fx2.txt], and digs as haste of its
   level [cap bds-dig.txt: conduit power 0 cracks at 629, haste 0 the same].
 - Darkness is never shown with particles, whatever was asked [cap bds-fx2.txt].
-- Undead refuse fatal poison as they refuse poison [Java `MobEffectUtil`; not drilled].
+- Undead take fatal poison: `/effect` of it on a zombified piglin answered success, set
+  `VisibleMobEffects` and cost it a point at once and every 25 ticks to death, as a cow [cap
+  bds-fx3.txt]. They refuse plain poison (a lingering poison cloud left one alone, bds-clouds2.txt).
+  Sapling refused both; fixed.
 - Dolphin's Grace is not an effect on Bedrock: BDS has `DolphinBoostSystem` (`IsNearDolphinsFlagComponent`,
   `PredictDolphinBoost`), a client-predicted swim boost, and no effect id for it [BDS strings]. Not built.
 
@@ -34,10 +37,21 @@ Bedrock was found.
 
 ## Conduit
 
-- Every 40 ticks an active conduit gives conduit power (260 ticks, ambient) to players in water or rain
-  within `frame / 7 * 16` blocks [Java `ConduitBlockEntity.applyEffects`].
-- With its whole frame (42 blocks) it bites one hostile (family `monster`) in water or rain within 8 for 4
-  magic damage, keeping it as `Target` while it stays in reach [Java `updateDestroyTarget`].
+- Every 40 ticks an active conduit gives conduit power (260 ticks, particles, not ambient) to players in
+  water or rain whose block is less than `frame / 7 * 16` off along each axis: with the ring of 16, 31
+  along x and (23, 2, 23) on the diagonal were reached, 32 along x was not [cap bds-conduit2.txt]. Sapling
+  had the Java game's sphere and ambient; fixed.
+- With its whole frame (42 blocks) it takes one hostile (family `monster`) in water or rain within 8 as
+  its `Target` (BlockEntityData) and bites it from the next pulse on: 4 magic (HurtAnimation 14) every 40
+  ticks to death, `conduit.attack` heard at the conduit's corner a tick after each [cap bds-conduit2.txt].
+  Sapling bit at once and silently; fixed.
+- A zombie standing in rain 7 off was never taken in 10 s [cap bds-conduit2.txt]; sapling takes it (not
+  understood).
+- `/setblock ... conduit` gives it its entity (`Active` 0, `Target` -1), shown as `BlockEntityData`
+  [cap bds-conduit2.txt]. Sapling gave none, so the drill's conduit never woke there
+  (research/captures/sapling-conduit2.txt, first run); fixed (`blocks/conduits.rs` `furnish`).
+  Re-run, sapling gives the power and bites the zombie in the water to death in 5 bites as BDS; it
+  hears `conduit.attack` in the bite's tick, not the next, and bites the rain zombie too.
 
 ## Raids
 
@@ -80,7 +94,9 @@ Bedrock was found.
 
 ## Ominous bottle and trial omen
 
-- An ominous bottle gives bad omen 120000 ticks at its data value as amplifier; drunk, no bottle left [Java].
+- An ominous bottle gives bad omen 120000 ticks at its data value as amplifier, without particles;
+  drunk, no bottle left, `apply_effect.bad_omen` (the player's) and `ominous_bottle.end_use` heard
+  [cap bds-fx3.txt, bds-trialomen.txt]. Sapling showed particles and the empty-bottle sound; fixed.
 - A trial spawner waiting or active that scans an omened player in range turns ominous: bad omen becomes
   trial omen for 18000 ticks a level, LevelEvent 3616 at the spawner, its mobs removed, the ominous config
   [docs/research/spawners.md "Ominous"; Java `TrialSpawner.tryDetectPlayers`].
@@ -93,11 +109,14 @@ Bedrock was found.
 ## Not drilled
 
 - Every [Java] rule above: village detection, wave spot and timing, victory and defeat, the boss bar's
-  progress, hero reach and length, ominous bottle length, hero discount, conduit range and bite.
-- Fatal poison refused by undead.
+  progress, hero reach and length, hero discount.
 - Raiders seeking the village, captains and banners, celebrating, saved raids: built from the pack and
   bdsre, never compared with a live BDS raid. The village uuid sapling keys a raid by is its own.
 - Joining passing raiders (`RaidRecruitSystem` 0x141959650): not built.
-- Bells lighting raiders (Bedrock has no glowing).
-- Ominous item spawners from an active ominous trial spawner.
+- Ominous item spawners from an active ominous trial spawner: a `/setblock` trial spawner has an empty
+  block entity and never woke for an omened player 4.5 off in 30 s (bds-trialomen.txt); it needs a trial
+  chamber's spawner.
+
+Drilled the same: a bell rung with a slowed pillager 4 off sent nothing for the pillager (bds-fx3.txt),
+as sapling (Bedrock has no glowing).
 - Villager schedules, sleeping and standing: see villagers.md.

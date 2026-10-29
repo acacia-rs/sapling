@@ -1,23 +1,24 @@
 //! Elytra flight, as BDS ran it (research/captures/bds-glide.txt). The client flies itself; the
 //! server starts a glide its input asks for when the player wears an elytra that still flies, is
-//! off the ground and rides nothing, and ends it on the ground, in a vehicle, out of survival's
-//! modes or when the elytra wears out, without waiting to be asked. Either edge is told to the
+//! off the ground, out of water and rides nothing, and ends it on the ground, in water, in a
+//! vehicle, out of survival's modes or when the elytra wears out, without waiting to be asked;
+//! levitation does not end it (research/captures/bds-glide2.txt). Either edge is told to the
 //! player and its viewers with the flag and the box's height. A second of gliding wears the
 //! elytra by one; a rocket used while gliding boosts the glider for twice the rocket's life
 //! (`MovementEffect`), as the client predicts from its use.
-// TODO: water and levitation do not end a glide here; BDS's checks for them were not drilled.
 
 use acacia_proto::packets::MovementEffect;
 use acacia_proto::types::MovementEffectType;
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
 
-use crate::components::{InLayer, Mode, NetId, Outgoing, Position, Stage};
+use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, Stage};
 use crate::movement::{self, Motion};
 use crate::{fireworks, inventory};
 
 /// Ticks of gliding between two wears of the elytra.
 const WEAR_EVERY: u64 = 20;
+const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
 
 /// How long a player has been gliding, in ticks.
 #[derive(Component, Default)]
@@ -39,10 +40,16 @@ fn wears(world: &World, player: Entity) -> bool {
     world.get::<Mode>(player).is_some_and(|mode| matches!(mode.0, GameMode::Survival | GameMode::Adventure))
 }
 
-/// Whether the player could glide now: in the air, riding nothing, not a spectator, alive, with
-/// an elytra that flies.
+fn in_water(world: &World, player: Entity) -> bool {
+    let (Some(position), Some(layer)) = (world.get::<Position>(player), world.get::<InLayer>(player)) else { return false };
+    let body = crate::body::Body::new(position.feet, [0.0; 3], [0.6, 0.6]);
+    world.get::<Layer>(layer.0).is_some_and(|layer| crate::creatures::touches(&layer.world, &body, WATER))
+}
+
+/// Whether the player could glide now: in the air and out of water, riding nothing, not a
+/// spectator, alive, with an elytra that flies.
 fn may_glide(world: &World, player: Entity) -> bool {
-    let airborne = world.get::<Position>(player).is_some_and(|position| !position.on_ground);
+    let airborne = world.get::<Position>(player).is_some_and(|position| !position.on_ground) && !in_water(world, player);
     let free = world.get::<crate::riding::Riding>(player).is_none() && world.get::<Mode>(player).is_some_and(|mode| mode.0 != GameMode::Spectator);
     let alive = !crate::vitals::is_dead(world, player);
     airborne && free && alive && world.get::<inventory::Inventory>(player).is_some_and(inventory::elytra_flies)

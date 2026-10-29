@@ -130,7 +130,9 @@ pub(crate) fn equipped(world: &mut World, player: Entity, before: &[Option<(i32,
 /// `armor.equip_<material>` of an armour piece; `None` for anything else.
 // TODO: chainmail, gold, turtle and elytra are named as the client's sounds are, not drilled.
 pub(crate) fn equip_sound_name(piece: &str) -> Option<String> {
-    sapling_data::armour_lasts(piece)?;
+    if piece != ELYTRA {
+        sapling_data::armour_lasts(piece)?;
+    }
     let plain = piece.strip_prefix("minecraft:").unwrap_or(piece);
     let material = match plain.split('_').next() {
         Some(material @ ("leather" | "iron" | "diamond" | "netherite")) => material,

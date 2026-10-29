@@ -136,6 +136,13 @@ fn a_lingering_potion_of_harming_harms_a_cow_standing_in_its_cloud() {
     assert!(gone(&sent, "minecraft:lingering_potion"));
     // Half an instant harm, then spared for 40 ticks (AreaEffectCloud::normalTick 1429b01a0).
     assert_eq!(healths(&sent), [7.0]);
+    // research/captures/bds-clouds.txt: particle 35, and it grows by half a block over its 600 ticks.
+    use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain};
+    let cloud = added(&sent, "minecraft:area_effect_cloud").pop().expect("a cloud");
+    let value = |key: Key| cloud.metadata.iter().find(|item| item.key == key).map(|item| item.value.clone());
+    assert_eq!(value(Key::AreaEffectCloudParticleId), Some(MetadataDictionaryItemValue::Default(Plain::Int(35))));
+    assert_eq!(value(Key::AreaEffectCloudChangeRate), Some(MetadataDictionaryItemValue::Default(Plain::Float(0.5 / 600.0))));
+    assert!([cloud.position.x, cloud.position.y, cloud.position.z].iter().all(|c| c.rem_euclid(1.0) == 0.5), "in the middle of its block");
 }
 
 #[test]

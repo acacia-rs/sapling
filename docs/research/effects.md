@@ -71,10 +71,21 @@ third level with 60, 48, 36, 24 and 12.
 - Health boost (21) writes `minecraft:health` with a higher most: 28 at its second level, the
   modifier `HealthBoost` (`5d6f0ba2-1186-46ac-b896-c61c5cee99cc`) of 8, operation 0, operand 1.
 
+## Armour and a late viewer (`fx3`)
+
+Drilled 2026-10-29 (research/captures/bds-fx3.txt):
+
+- Instant damage took 6 from the actor in a whole suit of iron, as bare: armour stops none of it, as
+  sapling (`DamageCause::is_stopped_by_armour`).
+- A viewer that came after the watcher was given an effect got no `MobEffect` for it; the watcher's
+  `AddPlayer` carried `VisibleMobEffects` 16 (jump boost, `id << 1`). Sapling sends neither the
+  `MobEffect` nor `VisibleMobEffects` for a player (not fixed: the AddPlayer metadata and a player's
+  `SetEntityData` of it are unbuilt).
+
 ## Not drilled
 
-Every other effect (food, milk and potions: food-effects.md), what armour does against instant damage,
-effects on mobs, a death under an effect, what a late viewer is told.
+Every other effect (food, milk and potions: food-effects.md). The record's names and what a join is
+told: the drill bot comes back with a new identity, so BDS gave it a new player (L).
 
 ## Sapling
 
@@ -84,6 +95,19 @@ so levitation lifts as far as the client does it and invisibility hides nobody f
 Run against sapling the drill gave BDS's speeds, falls and strong hits (7.7 and 6.01 left of a
 cow's 10); its bare and its weak hit missed a cow that had strolled off, and a test holds them.
 
+Effects on mobs, run against sapling (research/captures/sapling-mob-effects2.txt against
+bds-mob-effects2.txt): the same `MobEffect` and `VisibleMobEffects` (536 for slowness and fire
+resistance). A slowed zombie standing in fire was hurt as in fire (cause 6) to death on BDS; on
+sapling as burning (cause 7), seven times (mob fire harm, mob-attacks.md; not fixed here).
+
+The four omen effects on mobs (research/captures/sapling-effects3.txt against bds-effects3.txt):
+the same keys, `VisibleMobEffects` 576-582, wind burst, cobwebs, slimes and silverfish (their
+counts are random); sapling also tells each new mob `VisibleMobEffects` 0, which BDS did not.
+
+A player dying under an omen effect (research/captures/sapling-player-omens.txt against
+bds-player-omens.txt): the same wind burst, cobwebs and slimes, at the drill world's own floor;
+sapling sends the burst's particle a tick before the push, BDS with it.
+
 Effects wait in storage with a player's items (`ActiveEffects`, `sapling-leveldb/src/player.rs`)
 and are told to it as added when it is back; neither the record's names nor what BDS tells at a
 join was measured, and absorption's cushion comes back empty.
@@ -91,6 +115,7 @@ join was measured, and absorption's cushion comes back empty.
 
 `vitals/effects.rs`, `sapling::vanilla` `/effect`, plugins by `give_effect`, `remove_effect` and
 `clear_effects`. The eight effects above, by these numbers, absorption and nausea (food-effects.md; nausea is only told), resistance and fire resistance. Different: `Remove` always holds the
-ticks left; no `VisibleMobEffects`; saturation gives twice its hunger in saturation, the Java
-game's rule; effects end unsaid when the player rises. Run against sapling
+ticks left; effects end unsaid when the player rises. Saturation feeds hunger alone, its level a
+tick for every tick it lasts, as a stew's did on BDS (bds-foods2.txt: 6 ticks fed hunger 6 to 12,
+saturation stayed 6); `/effect` gives it, like the instant ones, for one tick. Run against sapling
 (`research/captures/sapling-effects.txt`) the drill gives the same packets, turns and answers.

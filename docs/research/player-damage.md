@@ -144,10 +144,34 @@ day and clicks it.
 - With the bed gone it is sent the cell once more, then rises at the world's spawn as before, and
   is told `tile.bed.notValid` (not grey).
 
+## Drilled 2026-10-29 (`hurt2`, `deaths`, `fx3`, `void`)
+
+research/captures/bds-hurt2.txt, bds-deaths.txt, bds-fx3.txt, bds-void.txt:
+
+- An iron helmet given at 164 (`/replaceitem ... iron_helmet 1 164`) wore to 165 by a hit of 4 and
+  stayed on: the data value is the wear.
+- Exhaustion: a block that breaks at once costs 0.005; a hit on a mob inside its guard still
+  costs 0.1; swimming 0.01 a metre.
+- An empty hunger hurts down to 10 on easy, 1 on normal, and kills on hard (`death.attack.starve`).
+- Out of breath inside a block the bot was pushed out, so whether it is hurt as under water is
+  not seen. A `keepInventory` death keeps everything.
+- `/damage` words: no cause and `entity_attack`, `contact`, `projectile`, `thorns`, `magma`,
+  `campfire` say `death.attack.generic`; `fall` `death.attack.fall`; `block_explosion`
+  `death.attack.explosion.by.bed`; the rest their own. `/damage ... entity <mob>` says
+  `death.attack.mob`.
+- A rise at the world's spawn is searched for at y 32767 above its column, then found at a spot
+  within the spawn radius.
+- Protection IV on an iron chestplate and Feather Falling IV on iron boots (8 points), each hit 10:
+  `entity_attack`, `fire`, `projectile` and `block_explosion` took 7.392, `fall` 3.6, `magic` 8.4.
+  The Java game's EPF rule: 4 a Protection level, 3 more a Feather Falling level for falls, each
+  point 4 % off after the armour. Instant damage ignores the armour. A creative or spectator
+  player answers `/damage` with `commands.damage.failed`.
+- The void (`/tp` to y -110): 4 every half second (cause 12) until dead, `death.attack.outOfWorld`.
+
 ## Not drilled
 
-A piece of armour worn out, enchantments, the words of most deaths, hunger from swimming, from a hit inside a mob's guard or from a block that breaks at once, each food's values (what else it does: food-effects.md), starving on normal and hard, the void, whether a player out of breath in a
-block is hurt as one under water, `keepInventory`, an anchor's spawn, a bed in another world, creative and spectator.
+A piece of armour worn out (one at 165 of 165 took a hit and stayed), whether a player out of breath in
+a block is hurt as one under water, a bed in another world.
 
 ## Another player's hit (`pvp`)
 
@@ -190,13 +214,23 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
 - Glass and leaves smother nothing (glass drilled; leaves taken as glass).
 - Mending and starving are built to the numbers above (`vitals/hunger.rs`), and so is what a jump and
   a sprint cost (`vitals.rs`), a block broken with what harvests it and a hit that takes health
-  from a mob (an armour stand has none here). Swimming costs nothing yet.
+  from a mob (an armour stand has none here), swimming, and a hit inside the guard; starving stops
+  by the difficulty (`vitals/hunger.rs` `starved`). A durable item's data value is its wear, kept in
+  its `Damage` tag (`inventory/plugin.rs`); armour in the hand goes on by a click in the air
+  (`inventory/donning.rs`). `/damage` deaths are said as above (`vitals/death.rs` `told_words`);
+  the `entity` form is not parsed. A rise at the world's spawn is searched for at y 32767 first,
+  but found at the spawn itself, not a spot in its radius.
 - Armour stops what it stopped on BDS, by the same rule (`creatures/health.rs` `shielded`,
   `sapling-data/src/armour.rs`, `sapling_api::DamageCause::is_stopped_by_armour`); a helmet takes
   its quarter. What it stops wears it as measured (`inventory/armour_wear.rs`); how long a piece
   lasts is the Java game's number, and one that breaks goes silently.
 - Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
   sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
-  drilled; the others are the Java game's. A stew leaves no bowl, and no food does more than feed.
-- Not built: drinks, effects, lying down under a block. A player rises by the bed or Nether anchor it
+  drilled; the others are the Java game's. What else a food does and leaves: food-effects.md.
+- Run against sapling (research/captures/sapling-hurt2.txt, sapling-deaths.txt, sapling-void.txt,
+  sapling-fx3.txt) after the fixes the causes, words, the helmet's 165, the enchanted armour's
+  12.608 / 16.4 / 11.6, the search at y 32767 and the void's rhythm and depth match.
+  `bedspawn` matches (sapling-bedspawn.txt). `anchor` could not be set up on sapling: its relative
+  `/fill` in the Nether filled nothing (sapling-anchor.txt); tests hold the anchor (anchors.rs).
+- Not built: lying down under a block. A player rises by the bed or Nether anchor it
   last clicked while it stands (`sleep/spawn.rs` `spawn_of`), and either waits in storage with the player's items, as does its last death (`vitals/last_death.rs`). Health, hunger, breath (`Air`) and burning (`Fire`) wait in storage with a player's items (`vitals/kept.rs`), as do effects (`vitals/effects.rs`); one who left dead comes back whole.

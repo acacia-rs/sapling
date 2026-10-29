@@ -130,7 +130,7 @@ fn aimed(dice: &mut Dice, at: [f32; 3], feet: [f32; 3]) -> [f32; 3] {
 
 /// Where a body teleported to `at` stands: down onto the first block below with a collision
 /// box, if its own box is free there and in no liquid.
-fn landing(level: &Level, body: &Body, at: [f32; 3]) -> Option<[f32; 3]> {
+pub(crate) fn landing(level: &Level, body: &Body, at: [f32; 3]) -> Option<[f32; 3]> {
     let [x, z] = [at[0].floor() as i32, at[2].floor() as i32];
     let blocks = |y: i32| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| !state.boxes.is_empty());
     let mut y = at[1].floor() as i32;

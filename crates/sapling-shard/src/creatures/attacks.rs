@@ -112,13 +112,14 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
             smash::follow(world, player, entity, body.at, weapon.as_ref());
         }
         super::enchanted::struck(world, entity, &kind, weapon.as_ref());
-        crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);
         super::strolling::startle(world, entity);
         super::hunting::provoke(world, entity, layer, id, &kind, &body, player);
         super::teleports::startle(world, entity);
         super::owner_hit(world, player, entity);
         super::villagers::hurt_standing(world, player, entity, layer, &kind, health.left() <= 0.0);
     }
+    // A hit inside the mob's guard tires as one that lands (research/captures/bds-hurt2.txt).
+    crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);
     entities::tell_viewers(world, entity, layer, cell, packets);
     blows::wear(world, player);
     if health.left() <= 0.0 {

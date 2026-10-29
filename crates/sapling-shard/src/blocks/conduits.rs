@@ -53,6 +53,20 @@ fn framed(level: &Level, [x, y, z]: BlockPos) -> usize {
     framed.count()
 }
 
+/// A conduit set by command gets the entity a placed one does, shown (bds-conduit2.txt).
+pub(crate) fn furnish(world: &mut World, layer: Entity, pos @ [x, y, z]: BlockPos) {
+    let Some(level) = level(world, layer) else { return };
+    let is_bare = level.registry().get(level.block(x, y, z)).is_some_and(|state| state.name == "minecraft:conduit") && level.block_entity(pos).is_none();
+    if !is_bare {
+        return;
+    }
+    let mut entity = sapling_world::new_block_entity(ENTITY, pos);
+    if let Value::Compound(fields) = &mut entity {
+        fields.extend([("Active".into(), Value::Byte(0)), ("Target".into(), Value::Long(-1))]);
+    }
+    super::send::keep_entity(world, layer, pos, &entity);
+}
+
 /// Every 40 ticks, the conduits near players: those that woke or slept since kept so, and the
 /// active ones' power given.
 pub(crate) fn tick(world: &mut World) {

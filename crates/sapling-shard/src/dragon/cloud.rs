@@ -11,11 +11,13 @@ use crate::clouds::{self, Spec};
 pub(crate) use crate::clouds::{item, with};
 
 const HARMING: i16 = 23;
+/// The particle BDS named in its breath's clouds.
+const BREATH: i32 = 49;
 
 /// Where a fireball meets something.
-pub(super) const FIREBALL: Spec = Spec { potion: HARMING, colour: -5_675_670, radius: 6.0, per_tick: -0.0, on_use: 0.0, ticks: 2400, again: 20 };
+pub(super) const FIREBALL: Spec = Spec { potion: HARMING, colour: -5_675_670, particle: BREATH, radius: 6.0, per_tick: -0.0, on_use: 0.0, ticks: 2400, again: 20 };
 /// By the flaming dragon's head.
-pub(super) const FLAMES: Spec = Spec { potion: HARMING, colour: 14_418_159, radius: 5.0, per_tick: -0.0, on_use: 0.0, ticks: 200, again: 0 };
+pub(super) const FLAMES: Spec = Spec { potion: HARMING, colour: 14_418_159, particle: BREATH, radius: 5.0, per_tick: -0.0, on_use: 0.0, ticks: 200, again: 0 };
 
 /// A cloud of `breath` at `at`, turned `yaw`.
 pub(super) fn spawn(world: &mut World, layer: Entity, at: [f32; 3], yaw: f32, breath: Spec) -> Option<Entity> {

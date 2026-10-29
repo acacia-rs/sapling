@@ -225,12 +225,20 @@ So a lingering potion of harming takes 3 off a cow on its first pulse (age 5), a
 (`shot_hits::a_lingering_potion_of_harming_harms_a_cow_standing_in_its_cloud`). The dragon's breath is the same
 rule with potion 23; it had been written separately with the same numbers.
 
-Not drilled:
+Drilled 2026-10-29 (`research/captures/bds-clouds.txt`, `bds-clouds2.txt`): lingering potions thrown down
+by the actor among a cow, a spider and a zombified piglin.
 
-- every row above (decompile only); in particular the cloud's first pulse at age 5 and the half-strength instant
-  harm on a player from a lingering cloud;
-- `RadiusPerTick` of a lingering potion's cloud: sapling keeps the Java game's `-radius / duration`; where BDS's
-  `SpawnAoECloudSubcomponent` (pack reader 142409a00) sets it was not found;
-- the box's half-height (r/2) limiting who is reached; sapling tests the 3D distance from the feet only;
-- the ender dragon left out of every cloud (sapling `clouds.rs` `UNAFFECTED`), taken from the old dragon code;
-- 140d5b950 (a can-be-affected test before the distance) and vt+0x338 (per-effect `canBeAffected`) not read.
+- The cloud's AddEntity is at the break, half a block up (0.5, -19.5, 0.5), with `AreaEffectCloudRadius` 3.0,
+  `AreaEffectCloudParticleId` 35, `AreaEffectCloudDuration` 600, `AreaEffectCloudChangeRate` +0.000833
+  (0.5 / 600: it grows) and `AreaEffectCloudChangeOnPickup` -0.5. Sapling had a shrinking rate and the dragon's
+  particle; fixed (`shots/clouds.rs`; the dragon's breath keeps 49).
+- First pulse at age 5; harming took 3 off the cow and the player (half strength); poison gave 225 ticks (900 / 4)
+  and was given again every 40 ticks. Each one given takes 0.5 off the radius metadata.
+- A cow on a pillar 1.5 up was left out: the box's half-height holds (sapling now tests it).
+- A spider (poison) and a zombified piglin (undead) inside the radius took nothing and took nothing off the radius:
+  the can-be-affected test comes first. Sapling now skips a mob that takes none of the potion's effects
+  (`creatures::takes_potion`), spiders refusing poison as the undead do.
+- A creative player was reached as a survival one (sapling left creative out; fixed).
+
+Not drilled: the ender dragon left out of every cloud (sapling `clouds.rs` `UNAFFECTED`): it needs the End
+fight (L).

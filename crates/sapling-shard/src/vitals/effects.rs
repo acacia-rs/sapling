@@ -198,7 +198,8 @@ fn give_as(world: &mut World, player: Entity, new: Active) -> bool {
     let effect = new.effect;
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
     // bds-fx2.txt: darkness came without particles though the command asked for them.
-    let new = Active { left: if effect.is_instant() { 1 } else { new.left }, particles: new.particles && effect != Effect::Darkness, ..new };
+    // A stew's saturation feeds every tick it lasts (bds-foods2.txt); /effect gives it one.
+    let new = Active { left: if effect.is_instant() && effect != Effect::Saturation { 1 } else { new.left }, particles: new.particles && effect != Effect::Darkness, ..new };
     let before = shown(world, player);
     if world.get::<Effects>(player).is_none() {
         world.entity_mut(player).insert(Effects::default());
@@ -258,7 +259,8 @@ fn act(world: &mut World, player: Entity, active: &Active) {
         Effect::FatalPoison if turn(POISONS) => drop(hurt(world, player, 1.0, Cause::Magic)),
         Effect::Wither if turn(WITHERS) => drop(hurt(world, player, 1.0, Cause::Wither)),
         Effect::Hunger => super::tire(world, player, HUNGERS * levels),
-        Effect::Saturation => feed(world, player, |hunger| hunger.feed(levels, levels * 2.0)),
+        // BDS left saturation at 6 while a stew's six ticks fed hunger 6 to 12 (bds-foods2.txt).
+        Effect::Saturation => feed(world, player, |hunger| hunger.feed(levels, 0.0)),
         // Resistance, fire resistance, jump boost and slow falling: `vitals::dress`. Water
         // breathing and conduit power: `vitals::stand`. Strength and weakness: `hits_for`.
         _ => {}
