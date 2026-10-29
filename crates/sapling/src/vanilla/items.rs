@@ -10,8 +10,9 @@ use super::{item_display_name, item_named, no_target, players, tell_target};
 const MOST: i32 = 32_767;
 /// The colours old names number by data value: `/give @s wool 3 14` gave red wool.
 const COLOURS: [&str; 16] = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"];
-// TODO: only `wool` was tried on BDS; the rest are the same flattening.
-const COLOURED: [(&str, &str); 7] = [
+/// Drilled with data 14 each (research/captures/bds-spread.txt).
+const COLOURED: [(&str, &str); 8] = [
+    ("shulker_box", "shulker_box"),
     ("wool", "wool"),
     ("carpet", "carpet"),
     ("concrete", "concrete"),
@@ -25,11 +26,25 @@ const COLOURED: [(&str, &str); 7] = [
 /// takes its colour from the data.
 fn item_and_data(name: &str, data: Option<i32>) -> (String, Option<i16>) {
     let plain = name.strip_prefix("minecraft:").unwrap_or(name);
+    if let (CORAL_BLOCK, Some(data)) = (plain, data) {
+        return (old_coral_block(data), None);
+    }
     let coloured = COLOURED.iter().find(|(old, _)| *old == plain).zip(data.and_then(|data| COLOURS.get(usize::try_from(data).ok()?)));
     match coloured {
         Some(((_, new), colour)) => (format!("minecraft:{colour}_{new}"), None),
         None => (item_named(name), data.map(|data| data as i16)),
     }
+}
+
+const CORAL_BLOCK: &str = "coral_block";
+
+/// The old `coral_block` by data: its kind in the low three bits (tube past horn), dead with 8;
+/// BDS gave data 14 as a dead tube coral block (research/captures/bds-spread.txt).
+fn old_coral_block(data: i32) -> String {
+    const KINDS: [&str; 5] = ["tube", "brain", "bubble", "fire", "horn"];
+    let kind = KINDS.get((data & 7) as usize).unwrap_or(&KINDS[0]);
+    let dead = if data & 8 != 0 { "dead_" } else { "" };
+    format!("minecraft:{dead}{kind}_coral_block")
 }
 
 /// An item name that names an item and that BDS's commands take, or a syntax error at it.
@@ -105,11 +120,13 @@ impl Command for Give {
         };
         let (name, data) = item_and_data(&self.item, self.data);
         let item = Item { damage: data.unwrap_or(0), keep_on_death, lock, ..Item::new(name, 1) };
+        // BDS tells the recipient at most 36 stacks, whatever fit (research/captures/bds-spread.txt).
+        let told = amount.min(36 * i32::from(sapling_data::max_stack(&item.name).max(1))).to_string();
         let (shown, count) = (item_display_name(&item.name, item.damage), amount.to_string());
         let given = players(ctx, sender, Some(&self.player));
         for player in &given {
             give_all(ctx, player, &item, amount);
-            tell_target(ctx, player.id, "commands.give.successRecipient", &[shown.clone(), count.clone()]);
+            tell_target(ctx, player.id, "commands.give.successRecipient", &[shown.clone(), told.clone()]);
         }
         match given.is_empty() {
             true => no_target(out),
@@ -121,8 +138,8 @@ impl Command for Give {
     }
 }
 
-/// Gives `amount` of `item` a stack at a time, until the inventory is full.
-// TODO: BDS gave 32767 stone into a 2304-stone inventory; whether it dropped the rest was not seen.
+/// Gives `amount` of `item` a stack at a time, until the inventory is full; the rest is not
+/// dropped (BDS's 5000 stone left no items, research/captures/bds-spread.txt).
 fn give_all(ctx: &mut ShardCtx<'_>, player: &Player, item: &Item, amount: i32) {
     let stack = i32::from(sapling_data::max_stack(&item.name).max(1));
     let mut left = amount;
@@ -182,8 +199,8 @@ impl Command for Clear {
                 Some((name, data)) => take(ctx, player, name, *data, self.max_count),
             };
             match (removed, self.max_count) {
-                (count, Some(0)) => out.translate("commands.clear.testing", vec![player.name.clone(), count.to_string()], count > 0),
                 (0, _) => out.translate("commands.clear.failure.no.items", vec![player.name.clone()], false),
+                (count, Some(0)) => out.translate("commands.clear.testing", vec![player.name.clone(), count.to_string()], true),
                 (removed, _) => out.translate("commands.clear.success", vec![player.name.clone(), removed.to_string()], true),
             }
         }

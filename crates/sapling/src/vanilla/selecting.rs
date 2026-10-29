@@ -75,8 +75,9 @@ impl Command for SpreadPlayers {
             match free {
                 Some(at) => placed.push(at),
                 None => {
-                    let parameters = vec![count.to_string(), shown(centre[0]), shown(centre[1]), TRIES.to_string()];
-                    return out.translate("commands.spreadplayers.failure.players.unsafe", parameters, false);
+                    // TODO: BDS's fourth (Java's "spread of at most") was 0.00 in both drilled failures (bds-spread.txt).
+                    let parameters = vec![count.to_string(), shown(centre[0]), shown(centre[1]), shown(0.0)];
+                    return out.translate("commands.spreadplayers.failure.players", parameters, false);
                 }
             }
         }
