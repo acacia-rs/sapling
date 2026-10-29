@@ -76,6 +76,19 @@ fn a_blast_lights_the_tnt_it_reaches_and_a_summoned_one_is_primed() {
 }
 
 #[test]
+fn tnt_summoned_under_water_makes_no_splash() {
+    // research/captures/bds-bkblocks.txt: none at its first tick in the water, nor after.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        (64..=67).for_each(|y| assert!(ctx.set_block([4, y, 0], &Block::new("minecraft:water"))));
+        assert!(ctx.spawn_entity("minecraft:tnt", [4.5, 65.0, 0.5]).is_some());
+    });
+    let sent: Vec<RawPacket> = (0..20).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(all::<acacia_proto::packets::LevelSoundEvent>(&sent).iter().all(|sound| sound.sound_id != "splash"));
+}
+
+#[test]
 fn a_blast_throws_a_pig_in_the_open_off_and_up() {
     // research/captures/bds-blasts.txt: TNT 3 west of a pig threw it at (0.88, 0.48, -0.14); the
     // primed TNT hops, so how far it is here is not pinned.
@@ -117,10 +130,12 @@ fn a_charged_respawn_anchor_bursts_when_clicked_in_the_overworld() {
 }
 
 #[test]
-fn a_fire_charge_from_a_dispenser_lights_the_tnt_it_hits() {
+fn a_fire_charge_from_a_dispenser_sets_fire_before_the_tnt_it_hits() {
+    // research/captures/bds-bkticks.txt: fire in the cell west of the TNT, and no TNT primed.
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("doFireTick", sapling_api::RuleValue::Bool(false)));
         assert!(ctx.update_block([3, 65, 3], &Block::new("dispenser").with("facing_direction=5")));
         assert!(ctx.set_container_item([3, 65, 3], 0, Some(&sapling_api::Item::new("minecraft:fire_charge", 1))));
         assert!(ctx.update_block([6, 65, 3], &Block::new("minecraft:tnt")));
@@ -128,5 +143,6 @@ fn a_fire_charge_from_a_dispenser_lights_the_tnt_it_hits() {
     (0..4).for_each(|_| _ = h.tick_all());
     h.remote.run(|ctx| assert!(ctx.update_block([3, 65, 4], &Block::new("redstone_block"))));
     let sent: Vec<RawPacket> = (0..30).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
-    assert!(all::<AddEntity>(&sent).iter().any(|added| added.entity_type == "minecraft:tnt"), "primed");
+    assert!(all::<AddEntity>(&sent).iter().all(|added| added.entity_type != "minecraft:tnt"), "primed");
+    assert_eq!(common::asking::ask(&mut h, |ctx| ctx.block([5, 65, 3]).map(|block| block.name)).as_deref(), Some("minecraft:fire"));
 }

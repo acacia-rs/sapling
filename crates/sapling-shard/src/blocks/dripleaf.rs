@@ -33,10 +33,15 @@ fn wait(tilt: &str) -> u64 {
     if tilt == FULL { 100 } else { 10 }
 }
 
-/// Sets the leaf at `pos` to `tilt`, heard as BDS names it, and queues its next step.
+/// Sets the leaf at `pos` to `tilt`, heard as BDS names it, and queues its next step. A leaf on
+/// ground it may not stand on breaks instead, as BDS's did on stone (research/captures/bds-bkblocks.txt).
 fn set(world: &mut World, layer: Entity, pos: BlockPos, tilt: &str) {
     let Some(level) = level(world, layer) else { return };
     let id = level.block(pos[0], pos[1], pos[2]);
+    if !super::ground::may_stand(level, pos, id) {
+        super::updates::pop(world, layer, pos);
+        return;
+    }
     let Some(tilted) = with_property(level.registry(), id, TILT, tilt) else { return };
     send::set(world, layer, pos, tilted);
     let heard = match tilt {
@@ -45,7 +50,8 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, tilt: &str) {
         _ => None,
     };
     if let Some(heard) = heard {
-        let [x, y, z] = pos.map(|c| c as f32 + 0.5);
+        // At the cell's corner, as BDS (research/captures/bds-bkblocks.txt).
+        let [x, y, z] = pos.map(|c| c as f32);
         send::to_viewers(world, layer, pos, &[send::noise(heard, Vec3f { x, y, z }, -1)]);
     }
     queued::cancel(world, layer, pos, Job::Dripleaf);

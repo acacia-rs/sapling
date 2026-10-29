@@ -49,16 +49,28 @@ fn block_in_nether(h: &mut Harness, pos: [i32; 3]) -> String {
 }
 
 #[test]
-fn a_bed_bursts_in_the_nether_between_its_halves() {
+fn a_bed_bursts_in_the_nether_at_its_head() {
+    // research/captures/bds-bknether.txt: the blast at the head's middle, not between the halves.
     let mut h = by_a_nether_bed(true);
     h.receive(1, &click(FOOT, 1, None));
     let sent: Vec<RawPacket> = h.tick_all().to(1).to_vec();
     let flash = all::<LevelEvent>(&sent).into_iter().find(|event| event.event == LevelEventEvent::ParticleExplosion).expect("a blast");
-    assert_eq!((flash.data, flash.position.x, flash.position.y, flash.position.z), (5, 2.5, 70.5, 1.0));
+    assert_eq!((flash.data, flash.position.x, flash.position.y, flash.position.z), (5, 2.5, 70.5, 1.5));
     for half in [FOOT, HEAD] {
         let left = block_in_nether(&mut h, half);
         assert!(left == "minecraft:air" || left == "minecraft:fire", "{half:?}: {left}");
     }
+}
+
+#[test]
+fn a_wet_sponge_set_in_the_nether_dries_with_bds_s_steam() {
+    // research/captures/bds-bknether.txt: event 3501 at 0.875 up the cell, then the dry sponge.
+    let mut h = by_a_nether_bed(false);
+    h.remote.run(|ctx| assert_eq!(ctx.within(NETHER_NAME, |ctx| ctx.update_block([-3, 70, 0], &Block::new("minecraft:wet_sponge"))), Some(true)));
+    let sent: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let steam = all::<LevelEvent>(&sent).into_iter().find(|event| event.event == LevelEventEvent::CauldronExplode).expect("the steam");
+    assert_eq!([steam.position.x, steam.position.y, steam.position.z], [-2.5, 70.875, 0.5]);
+    assert_eq!(block_in_nether(&mut h, [-3, 70, 0]), "minecraft:sponge");
 }
 
 fn silverfish(h: &mut Harness) -> Vec<[f32; 3]> {
@@ -156,11 +168,14 @@ fn a_big_dripleaf_tilts_under_a_player_and_comes_back_up() {
     const LEAF: [i32; 3] = [2, 65, 0];
     let mut h = Harness::new();
     h.enter(1, "Alex");
-    h.remote.run(|ctx| assert!(ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 64, 0], &Block::new("minecraft:dirt")) && ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
     h.tick_all();
     shooting::face(&mut h, 1, ALEX, [2.5, 65.9375, 0.5], 0.0);
     let mut seen = vec![tilt_at(&mut h, LEAF)];
-    (0..10).for_each(|_| drop(h.tick_all()));
+    let sent: Vec<RawPacket> = (0..10).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    // research/captures/bds-bkblocks.txt: heard at the cell's corner.
+    let down = all::<acacia_proto::packets::LevelSoundEvent>(&sent).into_iter().find(|sound| sound.sound_id == "tilt_down.big_dripleaf").expect("tilted");
+    assert_eq!([down.position.x, down.position.y, down.position.z], [2.0, 65.0, 0.0]);
     seen.push(tilt_at(&mut h, LEAF));
     (0..10).for_each(|_| drop(h.tick_all()));
     seen.push(tilt_at(&mut h, LEAF));
@@ -171,10 +186,23 @@ fn a_big_dripleaf_tilts_under_a_player_and_comes_back_up() {
 }
 
 #[test]
+fn a_big_dripleaf_on_stone_breaks_when_stood_on() {
+    // research/captures/bds-bkblocks.txt: BDS broke one set on stone as it tilted.
+    const LEAF: [i32; 3] = [2, 65, 0];
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 64, 0], &Block::new("minecraft:stone")) && ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
+    h.tick_all();
+    shooting::face(&mut h, 1, ALEX, [2.5, 65.9375, 0.5], 0.0);
+    h.tick_all();
+    assert_eq!(ask(&mut h, |ctx| ctx.block(LEAF).map(|block| block.name)).as_deref(), Some("minecraft:air"));
+}
+
+#[test]
 fn an_arrow_tilts_a_big_dripleaf_fully() {
     const LEAF: [i32; 3] = [0, 65, 0];
     let mut h = shooting::ready(GameMode::Survival, &[("minecraft:bow", 1, 0), ("minecraft:arrow", 4, 0)], 90.0);
-    h.remote.run(|ctx| assert!(ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
+    h.remote.run(|ctx| assert!(ctx.set_block([0, 64, 0], &Block::new("minecraft:dirt")) && ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
     h.tick_all();
     shooting::face(&mut h, 1, ALEX, [0.5, 69.0, 0.5], 90.0);
     shooting::draw(&mut h, 20, 10);
