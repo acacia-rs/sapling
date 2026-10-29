@@ -126,6 +126,9 @@ fn the_editor_saves_by_the_name_as_typed_and_loads_it() {
         h.receive(1, &request);
         let answer = all::<StructureTemplateDataExportResponse>(h.tick_all().to(1)).pop().expect("answered");
         assert_eq!((answer.success, answer.nbt.is_some()), (found, found), "{name}");
+        if let Some(nbt) = answer.nbt {
+            assert!(format!("{nbt:?}").contains(r#"("entities", List(List { tag: 0, items: [] }))"#), "untyped, as BDS (bds-structpower.txt)");
+        }
     }
 }
 

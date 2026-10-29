@@ -40,6 +40,9 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
 - The editor's click (`bds-structclick.txt`): ContainerOpen `StructureEditor` alone; sapling sent the entity
   first, as for a command block; fixed. A structure block placed from the hand in any mode is `save` at once
   (sapling showed `data` first); fixed (`place.rs`, `structure_blocks::as_placed`).
+- Saves by power and from the editor (`bds-structpower.txt`): all three queried back alike on sapling, but for
+  the empty `entities` list, which BDS sends untyped (tag 0); fixed (`structures/export.rs`).
+- Re-drilled `structclick`: the same. `structpower2` on sapling: the same three refusals.
 - After a restart (`bds-structpower2.txt`): none of three saves by block (by power with `redstoneSaveMode` 0
   and 1, from the editor) could be queried or loaded; BDS logs "Structure 'pw0' must be prefixed by a
   namespace" for each bare name.

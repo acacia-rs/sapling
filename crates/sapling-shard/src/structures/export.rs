@@ -18,8 +18,14 @@ pub(crate) fn network_nbt(template: &StructureTemplate) -> Option<Raw<Network>> 
             "structure" => {
                 let indices = template.layers.iter().enumerate().filter(|(layer, cells)| *layer == 0 || cells.iter().any(|&cell| cell >= 0));
                 let indices = Value::List(List { tag: INT_ARRAY, items: indices.map(|(_, cells)| Value::IntArray(cells.clone())).collect() });
-                if let Value::Compound(structure) = value {
-                    structure.iter_mut().filter(|(key, _)| &**key == "block_indices").for_each(|(_, kept)| *kept = indices.clone());
+                let Value::Compound(structure) = value else { continue };
+                for (key, kept) in structure.iter_mut() {
+                    match (&**key, kept) {
+                        ("block_indices", kept) => *kept = indices.clone(),
+                        // BDS sent no entities as an untyped empty list (research/captures/bds-structpower.txt).
+                        ("entities", Value::List(list)) if list.items.is_empty() => list.tag = 0,
+                        _ => {}
+                    }
                 }
             }
             _ => {}
