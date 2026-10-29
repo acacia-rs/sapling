@@ -294,11 +294,34 @@ chicken and the zombie had strolled out of reach):
 - The cow ran one stretch and stood 60 ticks after the hit; the pig ran three, turning between,
   and stood after 80. Then each strolled again at its own pace.
 
+## Fights (2026-10-29, `bds_command_probe fights`, research/captures/bds-fights.txt)
+
+Sapling's run: sapling-fights.txt. The actor under resistance on a stone floor, healed each second.
+
+- A zombie hit 3 on normal, a second apart, as sapling's. On hard one hit 4.5, 5.5 s after it came;
+  sapling's hard zombie took the actor and never hit it (not settled).
+- A baby zombie hit 2.5 on easy, its first some 4.5 s after it came; sapling's 7 blocks off took no
+  target in the run (not settled).
+- A spider at noon and at midnight under the open sky took no target in either run; sapling the same.
+- A cave spider took the actor 3 s after it came, dropped it 1.6 s later and never hit, so its poison
+  was not seen. Sapling's hunted at once and hit 2 a second (differs, not followed: what made BDS's
+  let go is not known).
+- A creeper with its prey 6 off was lit and went out; one with prey 3.5 off burst; one whose prey
+  went creative went out. Sapling the same.
+- `/summon creeper ... minecraft:start_exploding_forced`: lit 3 ticks after, burst 30 after that with no
+  prey, and hurt the actor 1 behind an obsidian wall. Sapling's had no fuse; now `blast::light_forced`
+  (the rerun: lit 1 tick after, burst 29 after that, the actor hurt behind the wall).
+- A skeleton's first arrow struck a cow standing between it and the actor (4). Sapling's arrows rose
+  more steeply (0.19 to 0.25 against BDS's -0.15 to 0.28) and passed over the cow: not settled.
+- 7 off behind a glass wall a zombie took the actor 3.65 s after it came; behind oak leaves none did;
+  in the open one took it at once. Sapling's took it only in the open (glass not followed).
+- A zombie the actor hit took and dropped it every 10 ticks for 4.4 s; sapling's took nothing (not
+  followed).
+
 ## Not drilled
 
-Normal and hard (taken as 3 and 4.5), a way with drops, water or doors in it, a hole in the way, what hides a player besides a full block, whether prey that goes behind a wall is kept, a zombie hit
-back, daylight (a spider hunts only in the dark), baby zombies, a cave spider's poison on
-normal and hard (7 and 15 seconds in its definition), the kinds not named here, a creeper whose prey walks off, a blast behind a wall, what a blast
+A way with drops, water or doors in it, a hole in the way, whether prey that goes behind a wall is
+kept, a cave spider's poison, the kinds not named here, what a blast
 leaves of the blocks it breaks and of softer ground, and what `within_radius` 25 does: a zombie on
 open grass 30 off took and dropped its target every 10 ticks, one on the stone floor kept it.
 

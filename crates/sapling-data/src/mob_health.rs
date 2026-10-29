@@ -13,7 +13,6 @@ use crate::entity::mob_flags;
 const HEALTH: &str = "minecraft:health";
 
 /// What does not hurt a kind of mob.
-// TODO: `no_air`, a fish out of water, is in the table and not read.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct MobTraits {
     pub fire_immune: bool,
@@ -21,6 +20,8 @@ pub struct MobTraits {
     pub burns_in_sun: bool,
     pub no_fall: bool,
     pub breathes_water: bool,
+    /// It cannot breathe air: out of water it holds its breath, then smothers (a fish).
+    pub no_air: bool,
     /// The ticks of breath it holds, where they are more than the usual 300 (a dolphin's 4800).
     pub breath: Option<u32>,
     /// It teleports about by itself (its `minecraft:teleport`'s `random_teleports`).
@@ -117,7 +118,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), varies: number("varies="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once"), preys: value("preys=") });
     let roams = value("roams=").and_then(|roams| roams.split_once('x')).and_then(|(across, up)| Some([across.parse().ok()?, up.parse().ok()?]));
     let swims = number("swims=").zip(roams);
-    MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
+    MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), no_air: has("no_air"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
 }
 
 /// The mob `id` has `left` of `max` health.

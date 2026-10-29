@@ -1,8 +1,7 @@
 //! What hurts a mob where it is: a fall, fire and lava, a block its head is in, and water it
 //! cannot breathe in, found each tick and told to its viewers as BDS tells them
 //! (docs/research/mob-damage.md). The rules themselves: health.rs.
-// TODO: any full block but glass and leaves smothers (glass drilled, bds-smother.txt); a fish out of water breathes;
-// breath comes back at once; an armour stand has no health here, though BDS burns it.
+// TODO: breath comes back at once; an armour stand has no health here, though BDS burns it.
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -16,8 +15,11 @@ use crate::components::Layer;
 use crate::sync::Told;
 use crate::{entities, late_sounds, splash};
 
-const FIERY: &[&str] = &["minecraft:lava", "minecraft:flowing_lava", "minecraft:fire", "minecraft:soul_fire"];
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
+/// Kinds that rain and water hurt, 1 a hit as drowning: BDS's endermen in the rain
+/// (research/captures/bds-kinds3.txt).
+// TODO: the pack's blaze and snow golem too, not drilled; a wet enderman's teleports.
+const WATER_HURTS: [&str; 1] = ["minecraft:enderman"];
 /// A fall that costs more than this sounds big.
 const BIG_FALL: f32 = 4.0;
 /// A fall is heard the tick after it hurts.
@@ -150,14 +152,17 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let (in_wall, under_water) = held_breath(world, entity, layer, kind, start);
         let (darken, weather) = (crate::light::darken(world, layer), crate::weather::of(world, layer));
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
-        let touching = burns && level.is_some_and(|level| touches(level, start, FIERY));
-        // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt).
+        let touching = if burns { level.and_then(|level| super::heat::fire_harm(level, start)) } else { None };
+        let scorched = burns && now.on_ground && level.is_some_and(|level| super::heat::on_magma(level, now));
+        // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt) and put out a burning cow.
         let feet = start.at.map(|c| c.floor() as i32);
-        let sunlit = traits.burns_in_sun && level.is_some_and(|level| is_sunlit(level, head, darken) && !is_rained_on(level, feet, weather));
+        let rained = level.is_some_and(|level| is_rained_on(level, feet, weather));
+        let sunlit = traits.burns_in_sun && !rained && level.is_some_and(|level| is_sunlit(level, head, darken));
         health.begin();
         let weigh = |world: &mut World, health: &mut Health, before: Health, cause: Cause| crate::damage::weigh(world, entity, health, &before, cause);
         let before = health;
-        if let Some((harm, from)) = health.fall(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall)
+        let soften = level.map_or(1.0, |level| super::heat::softening(level, now.at));
+        if let Some((harm, from)) = health.fall_onto(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall, soften)
             && weigh(world, &mut health, before, Cause::Fall)
         {
             packets.push(strike(id, &health, Cause::Fall, Some(now.at)));
@@ -168,6 +173,9 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
             health.kindle(SUN_BURNS);
         }
         let (lit, before) = (health.is_burning(), health);
+        if rained {
+            health.rained_on();
+        }
         let fire = if burns { health.burn(touching, wet) } else { None };
         let fire = fire.filter(|cause| weigh(world, &mut health, before, *cause));
         if lit && !health.is_burning() && wet {
@@ -175,6 +183,14 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
             splash::fizz(world, layer, now, DOUSED);
         }
         packets.extend(fire.map(|cause| strike(id, &health, cause, None)));
+        let before = health;
+        if scorched && health.scorch() && weigh(world, &mut health, before, Cause::Magma) {
+            packets.push(strike(id, &health, Cause::Magma, None));
+        }
+        let before = health;
+        if WATER_HURTS.contains(&kind) && (wet || rained) && health.hurt(health.warded(1.0, Cause::Drowning)) && weigh(world, &mut health, before, Cause::Drowning) {
+            packets.push(strike(id, &health, Cause::Drowning, None));
+        }
         let before = health;
         if health.smother(in_wall, WALLED) && weigh(world, &mut health, before, Cause::Suffocation) {
             packets.push(strike(id, &health, Cause::Suffocation, None));
@@ -184,19 +200,25 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         if burns && now.liquid() == Some(Liquid::Lava) && health.scald() && weigh(world, &mut health, before, Cause::Lava) {
             packets.push(strike(id, &health, Cause::Lava, None));
         }
-        let breath = health.breathe(in_wall || under_water);
+        let dry = traits.no_air && now.liquid() != Some(Liquid::Water);
+        let held = in_wall || under_water || dry;
+        let breath = health.breathe(held);
         let before = health;
         if health.drown(under_water) && weigh(world, &mut health, before, Cause::Drowning) {
             packets.push(strike(id, &health, Cause::Drowning, None));
         }
-        packets.extend(breath_told(world, entity, id, in_wall || under_water, breath));
+        let before = health;
+        if health.gasp(dry) && weigh(world, &mut health, before, Cause::Suffocation) {
+            packets.push(strike(id, &health, Cause::Suffocation, None));
+        }
+        packets.extend(breath_told(world, entity, id, held, breath));
         if under_water {
             packets.push(sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleBubble, position: Vec3f { x, y, z }, data: BUBBLES }));
         }
     } else {
         // BDS puts a burning body out while it lies dead.
         if health.is_burning() && now.liquid() == Some(Liquid::Water) {
-            health.burn(false, true);
+            health.burn(None, true);
             packets.push(steam(now));
             splash::fizz(world, layer, now, DOUSED);
         }

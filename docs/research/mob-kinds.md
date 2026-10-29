@@ -300,6 +300,21 @@ nothing in the next 11 s. sapling (`creatures/piglins.rs`) keeps both hands with
 (`Mainhand`, `Offhand`; it also writes the armour stand's `Pose`, which BDS's piglins may not have) and
 does not resume admiring after a load.
 
+## Witches and endermen again (2026-10-29, `bds_command_probe kinds3`, research/captures/bds-kinds3.txt)
+
+Sapling's run: sapling-kinds3.txt.
+
+- A witch threw every 3.05 s or so (sapling 3.0). Its poison splash gave the actor it hit 900 ticks
+  on both; a watcher beside the actor got 540 on BDS, 379 on sapling (the share by distance differs,
+  not followed). A splashed instant damage sent no `MobEffect` on BDS; sapling sends an add of 1 tick.
+- An enderman stared at from 6 off, with and without a carved pumpkin, took no target in either
+  run, so the pumpkin was not judged. BDS flipped its `MOVING` flag throughout.
+- Endermen in the rain were hurt 1 every 10 ticks, cause 9, and teleported often. Sapling's took
+  nothing; now rain hurts them as water does (`creatures/harm.rs` `WATER_HURTS`, tested in
+  tests/integration/mob_heat.rs), without the teleports. The drill_server rerun still showed no
+  rain hurt (see mob-damage.md, "Fire, magma, rain").
+- The evoker and its vexes were not drilled again.
+
 ## Sapling
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
@@ -315,13 +330,15 @@ for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player
 cone). It teleports at random a tick in 100 in the dark and in 20 in the sun (the component's dark
 default and its pack's `light_teleport_chance`; BDS's came 5.2 seconds apart at midnight), and
 water it touches costs it 1 by drowning, with a `splash`, and sends it off that tick. It does not
-teleport from beside its prey, rain is not water to it, a carved pumpkin does not hide a stare,
+teleport from beside its prey, rain hurts it without sending it off, a carved pumpkin does not hide a stare,
 and its `ANGRY` flag is not shown.
 
 A goat rams players and mobs as above (`creatures/rams.rs`), the nearest of either it sees,
 charging at most 8 blocks; a mob it meets is hurt and thrown at once by half a hit's throw and the
-push, and runs. It shows no prey between rams, a baby rams as hard as a grown one, and a charge at
-prey that moved goes along its axis, where BDS's went at where the prey stood.
+push, and runs. It charges at where its prey stood as it sounded `pre_ram` and stops within 0.25
+of it (bds-goat-cows-findings.md, "The miss"); a baby's ram costs 1 and pushes a fixed 0.468 of a
+grown one's at any step (fixed 2026-10-29 from those captures; they had said so, sapling had not
+followed). It shows no prey between rams.
 
 An evoker casts its fangs as above (`creatures/spells.rs`, `fights=spells` in `mob-traits.tsv`), its
 line's way taken as the first fang rises, and strolls between casts; one cast in four, while

@@ -30,7 +30,7 @@ fn a_pig_in_lava_is_hurt_as_bds_hurt_one() {
     let mut seen = Vec::new();
     for tick in 1..=23 {
         pig.begin();
-        let fire = pig.burn(true, false);
+        let fire = pig.burn(Some((1.0, true)), false);
         let after_fire = pig.left;
         let lava = tick >= 3 && pig.scald();
         if fire.is_some() || lava {
@@ -43,17 +43,17 @@ fn a_pig_in_lava_is_hurt_as_bds_hurt_one() {
 #[test]
 fn out_of_lava_a_mob_burns_on_for_eight_seconds_hurt_each_second() {
     let mut golem = Health::new(100.0, None, 0);
-    assert_eq!(golem.burn(true, false), Some(Cause::Fire));
+    assert_eq!(golem.burn(Some((1.0, true)), false), Some(Cause::Fire));
     let hits: Vec<u16> = (1..=200)
         .filter(|_| {
             golem.begin();
-            golem.burn(false, false) == Some(Cause::FireTick)
+            golem.burn(None, false) == Some(Cause::FireTick)
         })
         .collect();
     assert_eq!(hits, [20, 40, 60, 80, 100, 120, 140]);
     assert!(!golem.is_burning() && golem.left() == 92.0);
-    golem.burn(true, false);
-    assert!(golem.is_burning() && golem.burn(false, true).is_none() && !golem.is_burning(), "water puts it out");
+    golem.burn(Some((1.0, true)), false);
+    assert!(golem.is_burning() && golem.burn(None, true).is_none() && !golem.is_burning(), "water puts it out");
 }
 
 #[test]
@@ -73,6 +73,49 @@ fn a_fall_costs_each_block_begun_past_three_as_on_bds() {
     cow.fall(at(80.0), 70.0, false, false);
     cow.fall(at(70.0), 65.0, false, true);
     assert_eq!((cow.fall(at(65.0), 64.0, true, false), cow.fall(at(64.0), 64.0, true, false)), (None, None), "water breaks a fall");
+}
+
+#[test]
+fn a_campfire_and_fire_resistance_light_no_fire_and_rain_puts_one_out_at_its_next_burn() {
+    // research/captures/bds-burn2.txt.
+    let mut cow = Health::new(10.0, None, 0);
+    assert!(cow.burn(Some((1.0, false)), false).is_some() && !cow.is_burning(), "a campfire hurts and lights nothing");
+    let mut resisting = Health::new(10.0, None, 0);
+    resisting.ward(1.0, true);
+    assert!(resisting.burn(Some((1.0, true)), false).is_none() && !resisting.is_burning());
+    cow.burn(Some((1.0, true)), false);
+    let out_at = (1..=40u32).find(|_| {
+        cow.begin();
+        cow.rained_on();
+        cow.burn(None, false);
+        !cow.is_burning()
+    });
+    assert_eq!(out_at, Some(20), "where the first burn on would have come");
+}
+
+#[test]
+fn a_fish_on_dry_land_holds_its_breath_15_s_then_loses_2_a_hit() {
+    // research/captures/bds-harm2.txt: a cod's first hurt came 299 ticks after it was summoned, its second 10 after.
+    let mut cod = Health::new(3.0, None, 0);
+    let hurt_at: Vec<u32> = (1..=320u32).filter(|_| {
+        cod.begin();
+        cod.breathe(true);
+        cod.gasp(true)
+    }).collect();
+    assert_eq!((hurt_at, cod.left()), (vec![300, 310], 0.0));
+}
+
+#[test]
+fn hay_slime_and_a_bed_soften_a_fall_as_on_bds() {
+    // research/captures/bds-harm2.txt: 8 blocks cost 5 on stone, none on hay or slime; 8.44 onto a bed cost 1.
+    let cost = |height: f32, block: &str| {
+        let mut cow = Health::new(10.0, None, 0);
+        let soften = crate::creatures::heat::softens(block);
+        cow.fall_onto([0.5, 60.0 + height, 0.5], 60.0, false, false, soften);
+        cow.fall_onto([0.5, 60.0, 0.5], 60.0, true, false, soften);
+        cow.fall_onto([0.5, 60.0, 0.5], 60.0, true, false, soften).map(|(harm, _)| harm)
+    };
+    assert_eq!([cost(8.0, "minecraft:stone"), cost(8.0, "minecraft:hay_block"), cost(8.0, "minecraft:slime"), cost(8.4375, "minecraft:bed")], [Some(5.0), None, None, Some(1.0)]);
 }
 
 #[test]
@@ -100,7 +143,7 @@ fn a_spared_hit_gives_back_its_cost_and_guard_and_keeps_its_timers() {
     let mut cow = Health::new(10.0, None, 0);
     cow.fall(at(70.0), 60.0, true, false);
     let before = cow;
-    assert!(cow.burn(true, false).is_some() && cow.fall(at(60.0), 60.0, true, false).is_some());
+    assert!(cow.burn(Some((1.0, true)), false).is_some() && cow.fall(at(60.0), 60.0, true, false).is_some());
     cow.reweigh(&before, None);
     assert_eq!((cow.left(), cow.guarded, cow.burning, cow.landed), (10.0, 0, BURNS, None), "the landing is spent, the fire lit");
 

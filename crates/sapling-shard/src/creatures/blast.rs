@@ -31,9 +31,9 @@ const KNOCK: f32 = 0.4;
 const EYES: f32 = 0.9;
 const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
 
-/// A lit fuse: the ticks left of it.
+/// A lit fuse: the ticks left of it, and whether it was forced (it does not go out).
 #[derive(Component)]
-pub(super) struct Fuse(i32);
+pub(super) struct Fuse(i32, bool);
 
 pub(super) fn is_lit(world: &World, entity: Entity) -> bool {
     world.get::<Fuse>(entity).is_some()
@@ -46,15 +46,27 @@ fn tell(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 
 /// Lights the mob's fuse, if it is not lit.
 pub(super) fn light(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
+    light_as(world, entity, layer, id, kind, body, false);
+}
+
+/// Lights the fuse of a creeper summoned with `minecraft:start_exploding_forced`: BDS's hissed 2
+/// ticks after and burst 30 after, with no prey (research/captures/bds-fights.txt).
+pub(super) fn light_forced(world: &mut World, entity: Entity, layer: Entity, kind: &str) {
+    if let (Some(id), Some(body)) = (world.get::<NetId>(entity).map(|id| id.0), world.get::<Body>(entity).copied()) {
+        light_as(world, entity, layer, id, kind, &body, true);
+    }
+}
+
+fn light_as(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, forced: bool) {
     if !is_lit(world, entity) {
-        world.entity_mut(entity).insert(Fuse(FUSE - 1));
+        world.entity_mut(entity).insert(Fuse(FUSE - 1, forced));
         tell(world, entity, layer, id, kind, body, FUSE - 1);
     }
 }
 
-/// Puts the mob's fuse out, if it is lit: its prey is gone or far.
+/// Puts the mob's fuse out, if it is lit and not forced: its prey is gone or far.
 pub(super) fn put_out(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
-    if world.entity_mut(entity).take::<Fuse>().is_some() {
+    if world.get::<Fuse>(entity).is_some_and(|fuse| !fuse.1) && world.entity_mut(entity).take::<Fuse>().is_some() {
         let unlit = sapling_data::mob_flags_set(id, entities::mob_flags(world, entity, kind, MetadataFlags1::IGNITED, false));
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&unlit)]);
     }
@@ -268,9 +280,9 @@ fn throw_primed(world: &mut World, layer: Entity, at: [f32; 3], reach: f32) {
 
 /// A tick of a lit fuse; whether the mob burst, and is gone.
 pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> bool {
-    let Some(left) = world.get::<Fuse>(entity).map(|fuse| fuse.0 - 1) else { return false };
+    let Some((left, forced)) = world.get::<Fuse>(entity).map(|fuse| (fuse.0 - 1, fuse.1)) else { return false };
     let Some(power) = sapling_data::mob_traits(kind).hunts.and_then(|hunts| hunts.explodes).filter(|_| left < 0) else {
-        world.entity_mut(entity).insert(Fuse(left));
+        world.entity_mut(entity).insert(Fuse(left, forced));
         tell(world, entity, layer, id, kind, body, left);
         if left == FUSE - 1 - HISSES {
             let position = Vec3f { x: body.at[0], y: body.at[1] + HEAD * body.size[1], z: body.at[2] };

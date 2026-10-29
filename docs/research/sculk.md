@@ -303,7 +303,22 @@ sapling: the nearest catalyst in range takes a death (BDS: the first in dispatch
 catalyst (BDS saves them in the block actor), live blocks the generator never places read as bedrock, the
 "It Spreads" advancement hook (142d3c8f0) is left out.
 
+## Drilled (2026-10-29, `bds_command_probe catalyst`, research/captures/bds-catalyst.txt)
+
+A catalyst in a stone floor and deaths by `/kill` at midnight on easy:
+
+- Range 10 (C1): cows 3.04, 8.41 and 9.91 from the catalyst's middle bloomed it; one 10.41 off did not.
+- Bloom (C3): `LevelEventGeneric` 2036 in the death's tick, `bloom=1` shown the next tick, `bloom=0` 8 ticks after that.
+- A baby cow and a snow golem bloomed it and made no charge; four zombies killed at once bloomed it once each
+  (four 2036 in the tick, no orbs, their loot dropped) and made four separate cursors (5, 4, 4, 4 shown).
+- The charge starts in the cell of the mob's feet (y -26 over the floor at -27) and is first moved, and shown
+  (2037, or 2038 when spent), the tick after the death; sapling moved it in the death's tick (fixed: a death's
+  cursors join the catalyst's after its tick, `catalyst.rs` `fresh`). BDS shows the spread's blocks and sounds a
+  tick after the 2037/2038 of the same move; sapling sends them together.
+- sapling's `/summon … minecraft:entity_born` made a grown cow, whose death left a cursor (fixed: `entity_born`,
+  `as_baby` and `spawn_baby` make a baby, `creatures/birth.rs`). With that, research/captures/sapling-catalyst.txt
+  matches but for the cows' random rewards and walks.
+
 ## Not drilled
 
-- Everything in "Catalyst" (C1-C4): decompiled only. In particular range 10 rather than Java's 8, the cursor start
-  cell, the bloom end tick, the merge and event order, and that a baby or zero-reward death still blooms.
+- Two catalysts in range of one death (which takes it), and cursors that meet on one cell (the merge).

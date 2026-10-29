@@ -85,6 +85,7 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
     let (thorns, in_void, in_snow) = (hazards::thorns(level, &body), hazards::in_void(level, position.feet[1]), touches(level, &body, frost::POWDER_SNOW));
     let on_soul = soles::on_soul(level, position);
+    let soften = crate::creatures::softening(level, position.feet);
     let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
     // BDS lays a player with only its head in a block down, unhurt.
     let (under_water, in_wall) = (holds(level, eyes, WATER) && !gilled, is_full_block(level, eyes) && is_full_block(level, low));
@@ -114,11 +115,11 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let dropped = if position.on_ground && !(water || lava || carried) { health.dropped(from[1], fallen_to) } else { 0.0 };
     let landed = position.on_ground && health.is_airborne() && !(water || lava || carried);
     let before = *health;
-    let fell = health.fall(from, fallen_to, position.on_ground, water || lava || carried).map(|_| Cause::Fall);
+    let fell = health.fall_onto(from, fallen_to, position.on_ground, water || lava || carried, soften).map(|_| Cause::Fall);
     let landing = landed.then(|| (health.landing(), crate::rules::spares_player(&rules, Cause::Fall)));
     take(health, before, fell);
     let (lit, before) = (health.is_burning(), *health);
-    let burnt = health.burn(fire, water).map(|cause| if lit { Cause::FireTick } else { cause });
+    let burnt = health.burn(fire.then_some((1.0, true)), water).map(|cause| if lit { Cause::FireTick } else { cause });
     take(health, before, burnt);
     let before = *health;
     let scalded = (lava && health.scald()).then_some(Cause::Lava);

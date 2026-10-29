@@ -191,10 +191,15 @@ impl Health {
     /// last tick's landing if it hurt, as what it cost and where that tick began. BDS hurts a
     /// tick after the move that lands.
     pub(crate) fn fall(&mut self, from: [f32; 3], to: f32, on_ground: bool, in_liquid: bool) -> Option<(f32, [f32; 3])> {
+        self.fall_onto(from, to, on_ground, in_liquid, 1.0)
+    }
+
+    /// [`Health::fall`] onto a block that counts the fall's height times `soften` (heat.rs).
+    pub(crate) fn fall_onto(&mut self, from: [f32; 3], to: f32, on_ground: bool, in_liquid: bool, soften: f32) -> Option<(f32, [f32; 3])> {
         let due = self.landed.take().filter(|(harm, _)| self.hurt(self.warded(*harm, Cause::Fall)));
         let peak = self.peak.map_or(from[1], |peak| peak.max(from[1])).max(to);
         self.peak = (!on_ground && !in_liquid).then_some(peak);
-        let harm = (peak - to - SAFE_FALL - self.springs).ceil();
+        let harm = ((peak - to) * soften - SAFE_FALL - self.springs).ceil();
         if on_ground && !in_liquid && harm > 0.0 {
             self.landed = Some((harm, from));
         }
@@ -237,11 +242,14 @@ impl Health {
         }
     }
 
-    /// A tick of fire, `touching` fire or lava, or in water: what hurt it, if anything.
-    pub(crate) fn burn(&mut self, touching: bool, wet: bool) -> Option<Cause> {
-        if touching {
-            self.burning = self.warding.burns_for(BURNS);
-            return (!self.fireproof && self.hurt(self.warded(self.shielded(FIRE_HARM), Cause::Fire))).then_some(Cause::Fire);
+    /// A tick of fire, `touching` fire that costs that much a hit (heat.rs), or wet: what hurt it, if anything.
+    pub(crate) fn burn(&mut self, touching: Option<(f32, bool)>, wet: bool) -> Option<Cause> {
+        if let Some((harm, kindles)) = touching {
+            // BDS's cows on campfires and in lava with fire resistance never showed ONFIRE (bds-burn2.txt).
+            if kindles && !self.fireproof {
+                self.burning = self.warding.burns_for(BURNS);
+            }
+            return (!self.fireproof && self.hurt(self.warded(self.shielded(harm), Cause::Fire))).then_some(Cause::Fire);
         }
         if wet || self.burning == 0 {
             self.burning = 0;
@@ -251,10 +259,23 @@ impl Health {
         (self.burning > 0 && self.burning % BURN_EVERY == 0 && !self.fireproof && self.hurt(self.warded(FIRE_HARM, Cause::FireTick))).then_some(Cause::FireTick)
     }
 
+    /// Rain falling on it puts its fire out where the next burn would hurt: BDS's cow went out 20 ticks
+    /// after its last burn, the rain begun between (bds-burn2.txt).
+    pub(crate) fn rained_on(&mut self) {
+        if self.burning > 1 && (self.burning - 1) % BURN_EVERY == 0 {
+            self.burning = 0;
+        }
+    }
+
     /// A tick with its head in a block or not: whether the block, borne `spared` ticks, hurt it.
     pub(crate) fn smother(&mut self, in_wall: bool, spared: u8) -> bool {
         self.walled = if in_wall { self.walled.saturating_add(1) } else { 0 };
         self.walled > spared && self.hurt(SMOTHER_HARM)
+    }
+
+    /// Whether standing on magma hurt it.
+    pub(crate) fn scorch(&mut self) -> bool {
+        !self.fireproof && self.hurt(self.warded(self.shielded(FIRE_HARM), Cause::Magma))
     }
 
     pub(crate) fn scald(&mut self) -> bool {
@@ -270,6 +291,12 @@ impl Health {
     /// Whether, out of breath under water, it was hurt.
     pub(crate) fn drown(&mut self, under_water: bool) -> bool {
         under_water && self.air == 0 && self.hurt(self.warded(DROWN_HARM, Cause::Drowning))
+    }
+
+    /// Whether, out of breath out of the water it needs (a fish), it was hurt: 2 a hit, as a cod, a
+    /// salmon and a pufferfish on dry stone 15 s on BDS (research/captures/bds-harm2.txt).
+    pub(crate) fn gasp(&mut self, dry: bool) -> bool {
+        dry && self.air == 0 && self.hurt(SMOTHER_HARM)
     }
 }
 

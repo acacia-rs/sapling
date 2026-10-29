@@ -159,7 +159,7 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     let lit = burning && world.get::<Motion>(player).is_some_and(|motion| !motion.pose.burning);
     let burning = burning && !(lit && !crate::hand_events::may_burn(world, player, ticks));
     if lit && !burning && let Some(mut vitals) = world.get_mut::<Vitals>(player) {
-        vitals.health.burn(false, true);
+        vitals.health.burn(None, true);
     }
     if let Some(mut motion) = world.get_mut::<Motion>(player).filter(|motion| motion.pose.burning != burning) {
         motion.pose.burning = burning;

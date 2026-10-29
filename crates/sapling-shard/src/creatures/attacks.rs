@@ -81,7 +81,10 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     let harm =if kind == crate::dragon::DRAGON { crate::dragon::body_harm(blow.harm) } else { blow.harm };
     let hitter = in_world_identity(world, player).map(sapling_api::Attacker::Player);
     let before = health.left();
-    if crate::damage::ask(world, entity, harm, Cause::Attack, hitter).is_some_and(|harm| health.hurt(harm)) {
+    if crate::damage::ask(world, entity, harm, Cause::Attack, hitter).is_some_and(|harm| {
+        let harm = health.shielded(harm);
+        health.hurt(harm)
+    }) {
         if kind == crate::dragon::DRAGON {
             crate::dragon::hurt(world, entity, before, &mut health);
         }
