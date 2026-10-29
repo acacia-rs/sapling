@@ -58,7 +58,7 @@ cluster. Water stays as layer 1.
 Java `SpongeBlock`: a dry sponge written, or one beside a write, queues a tick this tick; it soaks up water
 breadth first through water, 6 steps from it, at most 64 cells (water, flowing water, bubble columns,
 waterlogged water; kelp and seagrass break), and turns wet. A wet sponge written in the Nether dries at
-once, with `ParticleEvaporateWater` at its middle (dragonfly's `Sponge.UseOnBlock`, Java `WetSpongeBlock`).
+once, with event 3501 0.875 up its cell (drilled, below; dragonfly's `Sponge.UseOnBlock`, Java `WetSpongeBlock`).
 
 ## Lectern (`blocks/lectern.rs`)
 
@@ -73,12 +73,29 @@ stopped by TNT lights it (Java `TntBlock.onProjectileHit`). Fire lighting TNT, T
 nothing, blasts throwing entities and primed TNT saved with its column were already built (fire.md,
 block-uses.md "TNT").
 
+## Parity drill (2026-10-29, `bds_command_probe bkticks` and `bknether`)
+
+Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
+
+- Same: chorus on end stone growing (`chorusgrow`), budding amethyst and vines growing under fast
+  ticks; a sponge soaking the pool and breaking its seagrass and kelp; a lectern with a book broken in
+  survival dropping the book, then the lectern.
+- A sponge soaking is told by event 2021 (data 1302137) and `sponge.absorb`, both at the cell's
+  corner (`blocks/sponge.rs`). Fixed.
+- A wet sponge drying in the Nether: event 3501 at 0.875 up the cell, not `ParticleEvaporateWater`.
+  Fixed.
+- A small fireball (a dispensed fire charge) meeting TNT lights the cell before the face it met, and
+  not the TNT (`blocks/target.rs`, Java `SmallFireball.onHitBlock`). Fixed.
+- Left: BDS's `/setblock` of a coral fan or wall fan writes water into its cell, which spreads and
+  washes the coral plant away; sapling's writes none, so its fans die. The coral block died about
+  45 ticks after it was set on BDS, 80 on sapling: one sample, Java's wait is 60 to 99.
+- Left: BDS's `/setblock` gives kelp and nether vines a random age (19, 8, 7 seen); sapling's gives 0.
+- Undrillable here: arrows (`/summon arrow` is inert in sapling's drill).
+
 ## Not drilled
 
-- Coral's wait (Java's 60 to 99), and how fans and wall fans die on BDS.
-- The nether vines' chance (Java's 0.1) and that they use kelp's random-queue wait.
-- Chorus flower growth, its odds and sounds; budding amethyst's one in five; both Java rules.
-- Sponge reach and count (Java's 6 and 64), the plants it breaks, the queued tick's delay, the Nether drying
-  particle.
-- The lectern's hit taking the book, and whether BDS plays a sound.
-- Burning arrows and fire charges lighting TNT; whether BDS also asks `mobGriefing` for a mob's shot.
+- Coral's wait (Java's 60 to 99): one sample above.
+- The nether vines' chance (Java's 0.1), chorus and amethyst odds: grown in kind only.
+- Sponge reach and count (Java's 6 and 64) and the queued tick's delay.
+- A punch on a lectern taking the book without breaking it.
+- Burning arrows lighting TNT; whether BDS also asks `mobGriefing` for a mob's shot.

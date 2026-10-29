@@ -116,7 +116,10 @@ fn a_sponge_set_in_water_soaks_it_up_and_turns_wet() {
     });
     h.tick(1);
     h.remote.run(|ctx| set(ctx, [5, 70, 0], Block::new("sponge")));
-    (0..3).for_each(|_| _ = h.tick(1));
+    let sent: Vec<acacia_proto::RawPacket> = (0..3).flat_map(|_| h.tick(1)).collect();
+    // research/captures/bds-bkticks.txt: heard at the cell's corner.
+    let absorbed = common::all::<acacia_proto::packets::LevelSoundEvent>(&sent).into_iter().find(|sound| sound.sound_id == "sponge.absorb").expect("the sponge heard");
+    assert_eq!([absorbed.position.x, absorbed.position.y, absorbed.position.z], [5.0, 70.0, 0.0]);
     let mut looked = vec![[5, 70, 0]];
     looked.extend(pool);
     let after = names(&mut h, looked);
