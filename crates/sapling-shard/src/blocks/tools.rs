@@ -37,6 +37,8 @@ enum Cost {
 enum Told {
     /// A sound, with the new block in it or not.
     Sound(&'static str, [f32; 3], bool),
+    /// A sound naming the block `id` there was.
+    SoundOf(&'static str, [f32; 3], u32),
     Event(LevelEventEvent, [f32; 3], i32),
 }
 
@@ -66,6 +68,10 @@ fn change(registry: &BlockRegistry, held: &str, id: u32, face: Face) -> Option<C
     let level: u8 = get("fill_level").and_then(|level| level.parse().ok()).unwrap_or(0);
     let surface = |level: u8| [0.5, 0.375 + f32::from(level) / 8.0, 0.5];
     match held.strip_prefix("minecraft:")? {
+        // research/captures/bds-bkuses.txt: dirt and hanging roots, as the Java game.
+        hoe if hoe.ends_with("_hoe") && bare == "dirt_with_roots" => {
+            Some(Change { id: registry.find("minecraft:dirt", "")?, told: Told::Sound("item.use.on", MIDDLE, true), leaves: ("minecraft:hanging_roots", 1), cost: Cost::Wear })
+        }
         hoe if hoe.ends_with("_hoe") => {
             let tilled = match bare {
                 "dirt" | "grass_block" | "grass_path" => registry.find("minecraft:farmland", "moisturized_amount=0"),
@@ -75,6 +81,10 @@ fn change(registry: &BlockRegistry, held: &str, id: u32, face: Face) -> Option<C
             done(tilled?, Told::Sound("item.use.on", MIDDLE, true), Cost::Wear)
         }
         shovel if shovel.ends_with("_shovel") && bare.ends_with("campfire") && get("extinguished") == Some("0") => done(set("extinguished", "1")?, Told::Sound("extinguish.fire", CORNER, false), Cost::Wear),
+        // research/captures/bds-bkuses.txt: a layer of snow, shovelled off, leaves a snowball.
+        shovel if shovel.ends_with("_shovel") && bare == "snow_layer" && get("height") == Some("0") => {
+            Some(Change { id: registry.air_id(), told: Told::SoundOf("item.use.on", MIDDLE, id), leaves: ("minecraft:snowball", 1), cost: Cost::Wear })
+        }
         shovel if shovel.ends_with("_shovel") && matches!(bare, "grass_block" | "dirt" | "coarse_dirt" | "podzol" | "mycelium" | "dirt_with_roots") => {
             done(registry.find("minecraft:grass_path", "")?, Told::Sound("item.use.on", MIDDLE, true), Cost::Wear)
         }
@@ -144,6 +154,7 @@ fn telling(registry: &BlockRegistry, pos: BlockPos, change: &Change) -> Bytes {
     let at = |offset: [f32; 3]| Vec3f { x: pos[0] as f32 + offset[0], y: pos[1] as f32 + offset[1], z: pos[2] as f32 + offset[2] };
     match change.told {
         Told::Sound(name, offset, names_block) => send::noise(name, at(offset), if names_block { registry.network_hash(change.id) as i32 } else { -1 }),
+        Told::SoundOf(name, offset, id) => send::noise(name, at(offset), registry.network_hash(id) as i32),
         Told::Event(event, offset, data) => sapling_net::encode(&LevelEvent { event, position: at(offset), data }),
     }
 }

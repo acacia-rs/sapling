@@ -27,6 +27,25 @@ fn tools_make_of_blocks_what_they_made_on_bds() {
 }
 
 #[test]
+fn a_hoe_unroots_rooted_dirt_and_a_shovel_clears_a_snow_layer_as_on_bds() {
+    // research/captures/bds-bkuses.txt: the sound names the block left, which the snow's does too.
+    let registry = BlockRegistry::vanilla();
+    let used = |held: &str, block: &str| {
+        let id = registry.states_of(block).find(|(_, state)| ["covered_bit", "height"].iter().all(|key| state.property(key).is_none_or(|value| value == "0"))).map(|(id, _)| id).expect("a block");
+        let change = change(&registry, held, id, Face::Up).expect("a change");
+        (registry.get(change.id).map(|state| state.name.to_owned()), change.leaves, telling(&registry, [0, 0, 0], &change))
+    };
+    let heard = |sent: &Bytes| match acacia_proto::RawPacket::parse(sent.clone()).ok().and_then(|raw| raw.decode::<acacia_proto::packets::LevelSoundEvent>().ok()) {
+        Some(sound) => (sound.sound_id, sound.extra_data),
+        None => (String::new(), 0),
+    };
+    let (block, leaves, told) = used("minecraft:iron_hoe", "minecraft:dirt_with_roots");
+    assert_eq!((block.as_deref(), leaves, heard(&told)), (Some("minecraft:dirt"), ("minecraft:hanging_roots", 1), ("item.use.on".into(), -2108756090)));
+    let (block, leaves, told) = used("minecraft:iron_shovel", "minecraft:snow_layer");
+    assert_eq!((block.as_deref(), leaves, heard(&told)), (Some("minecraft:air"), ("minecraft:snowball", 1), ("item.use.on".into(), -595350462)));
+}
+
+#[test]
 fn what_holds_something_gives_and_takes_it() {
     assert_eq!(made("glass_bottle", "cauldron", "cauldron_liquid=water,fill_level=6"), Some(("cauldron".into(), "cauldron_liquid=water,fill_level=4".into())));
     assert_eq!([name("glass_bottle", "cauldron", "cauldron_liquid=water,fill_level=0"), name("water_bucket", "cauldron", "cauldron_liquid=water,fill_level=6")], [None, None]);
