@@ -96,23 +96,36 @@ on partial and full, `tilt_up.big_dripleaf` going back (names from BDS's sound t
 sapling: `blocks/dripleaf.rs`, `Job::Dripleaf`. Whether a fully tilted leaf lets bodies fall
 through is the collision data's, not checked.
 
-## Not done
+## Brushing
 
-- Brushing suspicious sand and gravel: the archaeology tables are in `mob-loot.json`
-  (`entities/*_brushable_block`) and structures already write `BrushableBlock` entities, but how
-  the Bedrock client asks to brush (repeated use transactions or an item-use action) needs a
-  capture before the progress and `brushed_progress` states can be served.
+Suspicious sand and gravel: see structure-block-entities.md "Brushing".
+
+## Parity drill (2026-10-29, `bds_command_probe bkblocks` and `bknether`)
+
+Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
+
+- Same: a frame popping when its stone goes; a framed map's `item_frame_map_bit`; underwater TNT
+  breaking nothing; an infested block's silverfish heard at the cell's corner, from a survival hand and
+  from a blast, and none with `doTileDrops` off (sapling's drill world is peaceful, so its silverfish
+  went at once); a charged anchor's blast lighting fire (cells differ, random).
+- A bed's burst is at the head's middle, not between the halves (`blocks/bed_burst.rs`; the foot then
+  pops). Fixed. Which middle a click on the foot gives was not drilled.
+- With `respawnBlocksExplode` off BDS did nothing; sapling's bot could not reach the second bed.
+- TNT summoned under water makes no splash (`splash.rs`: the first check only notes the water). Fixed.
+- A big dripleaf on stone breaks when it would tilt (`blocks/dripleaf.rs`). Fixed. On dirt BDS tilts
+  as below: `unstable`, 10 ticks `partial_tilt`, 10 `full_tilt`, 100 back to `none`, power setting it
+  back. Same, but its tilt sounds are at the cell's corner, not its middle. Fixed. Left: with the
+  player still on it, BDS's leaf tilted again as soon as it came back up; sapling's did not (its
+  player had dropped into the leaf's cell while it was tilted).
+- A wet sponge set in the Nether: event 3501 0.875 up the cell, then the dry sponge
+  (`blocks/sponge.rs`). Fixed.
+- Left: BDS's `/setblock` of a bed writes both halves, sapling's only the one named (commands).
+- Left: lodestones (not in the scenes).
 
 ## Not drilled
 
-- An item frame popping when its block goes (inferred).
-- A bed's burst: halves removed, blast at their middle, nothing with `respawnBlocksExplode` off
-  (decompiled).
-- Fire from a bed's or an anchor's blast (Java's rule; BDS's fire pass not read).
-- Underwater TNT breaking nothing (pack JSON and parser read; sapling's existing rule).
-- Infested blocks: the silverfish at the cell's corner, whether a blast lets one out and whether
-  `doTileDrops` gates it.
-- A framed map's `item_frame_map_bit`; a comparator reading a wall frame past a block, by turn.
+- A bed's burst clicked at its foot; fire from a bed's blast cell by cell (BDS's fire pass not read).
+- A comparator reading a wall frame past a block, by turn.
 - Lodestone: the record's fields, the broadcast's actions, a compass in creative being swapped,
   status 1 for a gone lodestone, and whether BDS tells clients unasked when one breaks.
-- Big dripleaf: every delay, the 0.6875 height, power, sounds and the shot.
+- Big dripleaf: the 0.6875 height and the shot (arrows are inert in sapling's drill).

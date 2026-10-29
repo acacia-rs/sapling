@@ -110,15 +110,34 @@ fn a_powered_iron_door_opens_its_lower_half_with_a_sound_and_shuts_again() {
     let halves = [([10, 65, 8], state("minecraft:iron_door", &lower), 3), ([10, 66, 8], state("minecraft:iron_door", &upper), 2)];
     assert_eq!(together, halves, "both halves in one update, the upper with flags 2, as /setblock on BDS (bds-held-use.txt)");
 
-    put(&mut h, &[([11, 65, 8], "redstone_block", "")]);
+    // Powered at the upper half: both halves in one update, the sound from the upper's middle naming
+    // the lower half as it was (research/captures/bds-rsparts.txt).
+    put(&mut h, &[([11, 66, 8], "redstone_block", "")]);
     let opened: Vec<RawPacket> = watch(&mut h, 4).concat();
-    assert!(block_changes(&opened).contains(&([10, 65, 8], state("minecraft:iron_door", &door(0, 1)))), "the lower half opens");
-    let sounds: Vec<String> = all::<LevelSoundEvent>(&opened).iter().map(|sound| format!("{} {:?}", sound.sound_id, sound.position)).collect();
-    assert!(sounds.iter().any(|sound| sound.starts_with("door.open")), "{sounds:?}");
+    let together: Vec<([i32; 3], u32)> = all::<acacia_proto::packets::UpdateSubchunkBlocks>(&opened).iter().flat_map(|update| update.blocks.iter().map(|cell| ([cell.position.x, cell.position.y, cell.position.z], cell.runtime_id))).collect();
+    assert_eq!(together, [([10, 65, 8], state("minecraft:iron_door", &door(0, 1))), ([10, 66, 8], state("minecraft:iron_door", &upper))]);
+    let sounds: Vec<(String, [f32; 3], i32)> = all::<LevelSoundEvent>(&opened).iter().map(|sound| (sound.sound_id.clone(), [sound.position.x, sound.position.y, sound.position.z], sound.extra_data)).collect();
+    assert_eq!(sounds, [("door.open".to_owned(), [10.5, 66.5, 8.5], state("minecraft:iron_door", &lower) as i32)]);
 
-    put(&mut h, &[([11, 65, 8], "air", "")]);
+    put(&mut h, &[([11, 66, 8], "air", "")]);
     let shut: Vec<RawPacket> = watch(&mut h, 4).concat();
-    assert!(block_changes(&shut).contains(&([10, 65, 8], state("minecraft:iron_door", &lower))));
+    let sounds: Vec<(String, i32)> = all::<LevelSoundEvent>(&shut).iter().map(|sound| (sound.sound_id.clone(), sound.extra_data)).collect();
+    assert_eq!(sounds, [("door.close".to_owned(), state("minecraft:iron_door", &door(0, 1)) as i32)]);
+}
+
+#[test]
+fn ice_takes_no_power_where_packed_and_blue_ice_do() {
+    // research/captures/bds-rsparts.txt: dust into each, a lamp past it.
+    let mut h = ready();
+    let mut rigs = Vec::new();
+    for (index, block) in ["ice", "packed_ice", "blue_ice"].into_iter().enumerate() {
+        let x = -6 + 2 * index as i32;
+        rigs.extend([([x, 65, 5], "redstone_wire", ""), ([x, 65, 6], block, ""), ([x, 65, 7], "redstone_lamp", ""), ([x, 65, 4], "redstone_block", "")]);
+    }
+    put(&mut h, &rigs);
+    let shown = watch(&mut h, 5);
+    let lit: Vec<bool> = (0..3).map(|index| when(&shown, [-6 + 2 * index, 65, 7], hash("minecraft:lit_redstone_lamp")).is_some()).collect();
+    assert_eq!(lit, [false, true, true]);
 }
 
 #[test]
@@ -263,7 +282,10 @@ fn a_comparator_passes_what_is_behind_it_unless_a_side_is_stronger_or_less_its_s
     assert_eq!(when(&on, [1, 65, 2], dust(11)), Some(lit + 2), "the dust past it an evaluation later, as strong");
     assert_eq!(when(&on, [5, 65, 2], dust(15)), Some(lit + 2), "nothing at the side yet");
 
-    put(&mut h, &[([0, 65, 1], "redstone_block", ""), ([4, 65, 6], "redstone_block", "")]);
+    // A block of redstone at the side is no side input (research/captures/bds-rsparts.txt); dust from it is.
+    put(&mut h, &[([0, 65, 1], "redstone_block", "")]);
+    assert_eq!(when(&watch(&mut h, 8), [0, 65, 2], comparator(false, false)), None, "a block at the side");
+    put(&mut h, &[([0, 65, 1], "redstone_wire", ""), ([0, 65, 0], "redstone_block", ""), ([4, 65, 6], "redstone_block", "")]);
     let sided = watch(&mut h, 8);
     let out = when(&sided, [0, 65, 2], comparator(false, false)).expect("a stronger side puts it out");
     assert_eq!(when(&sided, [1, 65, 2], dust(0)), Some(out + 2));
@@ -308,9 +330,13 @@ fn a_click_turns_a_comparator_to_subtracting_and_back() {
     let pos = [2, 65, 2];
     put(&mut h, &[(pos, "unpowered_comparator", "minecraft:cardinal_direction=west")]);
     watch(&mut h, 2);
-    for subtracts in [true, false] {
+    // research/captures/bds-rsreads.txt: `power.off` naming the state it had as it starts subtracting.
+    for (subtracts, sound) in [(true, "power.off"), (false, "power.on")] {
         h.receive(1, &common::click(pos, 1, None));
-        assert!(block_changes(h.tick_all().to(2)).contains(&(pos, comparator(false, subtracts))), "{subtracts}");
+        let sent = h.tick_all().to(2).to_vec();
+        assert!(block_changes(&sent).contains(&(pos, comparator(false, subtracts))), "{subtracts}");
+        let heard: Vec<(String, i32)> = all::<LevelSoundEvent>(&sent).iter().map(|heard| (heard.sound_id.clone(), heard.extra_data)).collect();
+        assert_eq!(heard, [(sound.to_owned(), comparator(false, !subtracts) as i32)]);
     }
 }
 

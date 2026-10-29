@@ -1,0 +1,25 @@
+## drill starts at 1793265193405
+## /gamemode creative @s
+     40 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     40 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+     40 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /clear @s
+   1002 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   1003 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+   1335 actor   RemoveEntity RemoveEntity { entity_id_self: -8589934589 }
+   1335 watcher RemoveEntity RemoveEntity { entity_id_self: -8589934589 }
+## /tp @s 10.5 -60 10.5
+   2008 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"10.50, -60.00, 10.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2008 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "10.50", "-60.00", "10.50"]
+   2008 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"10.50\"},{\"text\":\"-60.00\"},{\"text\":\"10.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /!click 2 0 0
+## clicked: Ok(())
+   4121 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: ChangeState, data: 4 }
+   4122 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: ChangeState, data: 4 }
+   4136 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 260, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+   4136 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 260, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+   5231 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 973, paused: false }] }) }
+   5231 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 973, paused: false }] }) }
+probe exit 0

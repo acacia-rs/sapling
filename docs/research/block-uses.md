@@ -258,6 +258,15 @@ two ways: the first candle, pickle and snow layer are told by `place` where BDS 
 - A jukebox's music: BDS sent no sound packet for it, and sapling keeps the disc in memory
   (`blocks/jukebox.rs`).
 
+## Parity drill (2026-10-29, `bds_command_probe bkuses`, research/captures/bds-bkuses.txt)
+
+- A hoe on rooted dirt makes dirt and throws out hanging roots; a shovel on a one-layer snow layer
+  clears it and throws out a snowball. Both play `item.use.on` at the middle, the hoe's naming the
+  dirt left, the shovel's the snow taken (`blocks/tools.rs`). Fixed.
+- Same: note block instruments by the block under, and the other tool uses of the scene. The
+  sounds BDS plays after `/setblock` of a head, and the blocks it sends again after a frame or
+  jukebox click, are not copied.
+
 ## A comparator behind a jukebox
 
 Measured with `bds_command_probe discs` (`bds-discs.txt`, `sapling-discs.txt`): a comparator

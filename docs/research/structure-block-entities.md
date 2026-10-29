@@ -95,19 +95,45 @@ holds the container (opened, fed by a hopper, broken). `tools/bds-loot-setup.sh`
 `containers::loot::tests` expects, slot for slot. A hopper under such a chest unpacks it the same way and
 starts pulling; comparators beside one lit nothing before it was opened.
 
+## Brushing
+
+Captured on BDS (`research/captures/bds-brush.txt`, `examples/bds_loot_probe.rs brush`) and decompiled;
+sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
+
+- Input: `PlayerAction StartItemUseOn`, a ClickBlock with trigger PlayerInput, then one ClickBlock a tick
+  with trigger SimulationTick (prediction Failure), then `StopItemUseOn`. PlayerInput clicks alone do
+  nothing (`examples/shared/brush_hold.rs` sends the held form).
+- Brush use-on (147a943b0): a cell with a `BrushableBlock` actor is brushed (141f23fa0); any other
+  plays sound `brush` at the centre, extra the block's first-state hash, at most every 9 ticks
+  (per-player cooldown: play if cooldown < now, then cooldown = now + 8).
+- A stroke: refused while now <= next_due; `brush_direction` 6 takes the face; next_due = (next_due or
+  now) + 10, so strokes owed after a pause come one a tick; the loot is rolled into `item` (Count,
+  Damage, Name, WasPickedUp) at the first stroke and `LootTable`/`LootTableSeed` removed; count + 1;
+  a tick is queued at +40 and the block marked brushed until now + 40.
+- Queued tick (141f25300), not deduplicated: still brushed → again at +20; else count 0 → direction 6,
+  stop; else count - 2 (floor 0), again at +10. The capture's first fall came ~49 ticks after the last
+  stroke, the next 9 later.
+- `brushed_progress` follows the count (slot 52, 141f25530): 0 at 0, 1 at 1-2, 2 at 3-5, 3 from 6;
+  BlockEntityData goes out only with those UpdateBlocks.
+- The tenth stroke (141f241c0): LevelEvent 2021 at the cell corner (data the current hash), the cell
+  set to sand, gravel or air, then the item at the neighbour on the brushed side (+0.5, no motion)
+  and sound `brush_completed` at the centre; the brush takes 1 damage. Seeds 1461741536 (desert
+  pyramid sand) and -1306338408 (gravel) gave `archer_pottery_sherd` and `yellow_dye`, as sapling rolls.
+
 ## Left out
 
-- Suspicious blocks' loot is kept but never rolled (no brushing). A broken decorated pot rolls its table
-  into its one slot as a container does and leaves that beside itself (`blocks/entities.rs`; the probe's
-  pot of seed 1434522187 left item 307, one, as `containers::loot::tests` expects); a pot shot or broken
-  in creative was not drilled. Brushing was not drilled: the probe's repeated `UseItem` clicks with a
-  brush only made BDS resend the cell, so it needs the held-use input acacia-bot lacks. Found so far: `BrushableBlockActor` (vtable 14a786450; load 141f24d50, save 141f25010 with
-  `brush_direction` +0x344 and `brush_count` +0x340) sets `brushed_progress` from its count (slot 52,
-  141f25530): 0 at 0, 1 at 1-2, 2 at 3-5, 3 from 6.
+- A decorated pot broken by hand rolls its table into its one slot as a container does and leaves that
+  beside itself (`blocks/entities.rs`; the probe's pot of seed 1434522187 left item 307, one, as
+  `containers::loot::tests` expects); a pot shot or broken in creative was not drilled.
+- Brushing's dust particles (0x56) and BDS's InventoryContent resyncs while a brush is held.
 - The mansion template chests' own `Items`; flower pots, beds, cauldrons and the other non-loot entities.
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation).
 
 ## Unverified
+
+- [U] Brushing's catch-up rate: the decompile gives one owed stroke a tick (sapling's), but the
+  capture's gravel brushed again after a pause showed progress 1, 2, 3 and done ~5, 10, 16 ticks in
+  (one a tick would be 2, 5, 9). Probe a second pause with tick stamps to settle it.
 
 - [U] `enchant_randomly` (a dungeon's book) draws nothing in sapling; a table that rolls a book desyncs
   after it. Checked on one seed only.

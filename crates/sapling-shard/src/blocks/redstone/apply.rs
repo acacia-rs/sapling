@@ -121,26 +121,34 @@ fn use_signal(world: &mut World, layer: Entity, pos: BlockPos, id: u32, user: Us
 }
 
 /// Opens or shuts a door, trapdoor or gate to match its signal, with its sound. A door is powered
-/// by either half and only its lower half stores `open_bit`; its upper is shown again with it.
+/// by either half and only its lower half stores `open_bit`; both halves are shown together, and
+/// its sound comes from the half powered, naming the lower half as it was (bds-rsparts.txt).
 fn open(world: &mut World, layer: Entity, pos: BlockPos, opens: Opens, signal: u8) {
     let (lower, upper) = match doors::other_half(world, layer, pos).filter(|_| opens == Opens::Door) {
         Some(other) if other[1] < pos[1] => (other, Some(pos)),
         other => (pos, other),
     };
     let powered = signal > 0 || [Some(lower), upper].into_iter().flatten().any(|half| power_at(world, layer, half) > 0);
+    let Some(before) = level(world, layer).map(|level| level.block(lower[0], lower[1], lower[2])) else { return };
     let Some(id) = with(world, layer, lower, "open_bit", if powered { "1" } else { "0" }) else { return };
-    if !send::set(world, layer, lower, id) {
-        return;
-    }
-    if let Some(upper) = upper {
-        send::show(world, layer, upper);
-    }
     let sound = match opens {
         Opens::Door => ["door.open", "door.close"],
         Opens::Trapdoor => ["trapdoor.open", "trapdoor.close"],
         Opens::Gate => ["fence_gate.open", "fence_gate.close"],
-    };
-    play(world, layer, lower, sound[usize::from(!powered)]);
+    }[usize::from(!powered)];
+    match upper {
+        Some(upper) => {
+            if !send::set_quietly(world, layer, lower, id) {
+                return;
+            }
+            send::show_together(world, layer, &[(lower, send::FLAGS), (upper, send::FLAGS)]);
+            let Some(level) = level(world, layer) else { return };
+            let heard = send::sound(sound, level.registry(), pos, before);
+            send::to_viewers(world, layer, pos, &[heard]);
+        }
+        None if send::set(world, layer, lower, id) => play(world, layer, lower, sound),
+        None => {}
+    }
 }
 
 /// Puts out the lamps whose delay is up and that still get no signal.

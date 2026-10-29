@@ -51,6 +51,13 @@ beside it (`ground.rs`), any fire written ticks, and a tick under rain and an op
 fire that does not burn on. It also sends the fire's `ParticleDestroy` when its hold goes, which
 BDS did not.
 
+## Parity drill (2026-10-29, `bds_command_probe bkfire`, research/captures/bds-bkfire.txt)
+
+Lava with air over it in a stone pit, planks around it at each distance, `randomTickSpeed` 30: on
+both servers the lava lit fire beside the planks within a few seconds and the planks burned away;
+which cells caught and when differ run to run, so the odds are not pinned. A burning shot is in
+world-ticks.md "Parity drill".
+
 ## Left
 
 - BDS's own rule and odds: the capture fits the Java game's only loosely, and its wool went in

@@ -19,29 +19,39 @@ const SIGNAL: &str = "redstone_signal";
 const EVERY: u64 = 20;
 const FULL: i32 = 15;
 
-/// Where detectors are, by world.
+/// Where detectors are, by world, and those written since the last tick, read on the next.
 #[derive(Resource, Default)]
-pub(crate) struct Detectors(HashSet<(Entity, BlockPos)>);
+pub(crate) struct Detectors(HashSet<(Entity, BlockPos)>, HashSet<(Entity, BlockPos)>);
 
 /// The signal of a detector with `sky` light in its cell at `time`: the Java game's reckoning,
 /// which under an open sky gave each of the twenty readings BDS showed but one
 /// (research/captures/bds-daylight.txt).
 pub(super) fn signal(time: i64, weather: Weather, sky: u8) -> u8 {
-    let bright = i32::from(sky) - i32::from(crate::light::sky_darken(time, weather));
+    let bright = bright(time, weather, sky);
     let sun = crate::light::sun_turn(time) * 2.0 * PI;
     let towards = if sun < PI { 0.0 } else { 2.0 * PI };
     (bright as f32 * (sun + (towards - sun) * 0.2).cos()).round().clamp(0.0, FULL as f32) as u8
+}
+
+/// The sky light in the cell, darkened for the time and weather; an inverted detector gives 15 less
+/// this, without the sun's angle (research/captures/bds-rsplace.txt: 0, 6, 11, 6 at 6000, 13000,
+/// 18000 and 23000).
+fn bright(time: i64, weather: Weather, sky: u8) -> i32 {
+    i32::from(sky) - i32::from(crate::light::sky_darken(time, weather))
 }
 
 fn is_detector(name: &str) -> bool {
     name == DETECTOR || name == INVERTED
 }
 
-/// A cell was written: a detector there is read from now on.
+/// A cell was written: a detector there is read on the next tick, as BDS read one put down
+/// (bds-rsplace.txt), and every second from then on.
 pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
     let is_one = level(world, layer).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).is_some_and(|state| is_detector(state.name));
     if is_one {
-        world.get_resource_or_insert_with(Detectors::default).0.insert((layer, pos));
+        let mut detectors = world.get_resource_or_insert_with(Detectors::default);
+        detectors.0.insert((layer, pos));
+        detectors.1.insert((layer, pos));
     }
 }
 
@@ -63,20 +73,26 @@ fn read(world: &mut World, layer: Entity, [x, y, z]: BlockPos, turned: Option<u3
     let registry = level.registry();
     let id = turned.unwrap_or_else(|| level.block(x, y, z));
     let Some(state) = registry.get(id).filter(|state| is_detector(state.name)) else { return false };
-    let sky = signal(level.level().time, weather, level.light_at(x, y, z).map_or(0, |(sky, _)| sky));
-    let shown = if state.name == INVERTED { FULL as u8 - sky } else { sky };
+    let (time, sky) = (level.level().time, level.light_at(x, y, z).map_or(0, |(sky, _)| sky));
+    let shown = match state.name == INVERTED {
+        true => (FULL - bright(time, weather, sky)).clamp(0, FULL) as u8,
+        false => signal(time, weather, sky),
+    };
     if let Some(now) = super::with_property(registry, id, SIGNAL, &shown.to_string()) {
         send::set(world, layer, [x, y, z], now);
     }
     true
 }
 
-/// Reads every detector each second.
+/// Reads every detector each second, and those written since the last tick.
 pub(crate) fn tick(world: &mut World) {
-    if world.resource::<Tick>().0 % EVERY != 0 {
-        return;
-    }
-    let detectors: Vec<(Entity, BlockPos)> = world.get_resource::<Detectors>().map(|detectors| detectors.0.iter().copied().collect()).unwrap_or_default();
+    let every = world.resource::<Tick>().0 % EVERY == 0;
+    let Some(mut detectors) = world.get_resource_mut::<Detectors>() else { return };
+    let fresh = std::mem::take(&mut detectors.1);
+    let detectors: Vec<(Entity, BlockPos)> = match every {
+        true => detectors.0.iter().copied().collect(),
+        false => fresh.into_iter().collect(),
+    };
     for (layer, pos) in detectors {
         if !read(world, layer, pos, None) {
             world.resource_mut::<Detectors>().0.remove(&(layer, pos));

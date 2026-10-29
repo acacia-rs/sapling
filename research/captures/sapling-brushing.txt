@@ -1,0 +1,278 @@
+## drill starts at 1793268590367
+## /gamerule domobspawning false
+     18 watcher GameRulesChanged doMobSpawning=Bool(false)
+     18 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     18 actor   GameRulesChanged doMobSpawning=Bool(false)
+     18 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /kill @e[type=!player]
+   1016 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill 2 -61 2 20 -61 20 stone
+   2025 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 2 -60 2 20 -55 20 air
+   3034 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /gamemode creative @s
+   4018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4018 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4018 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /clear @s
+   5017 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5017 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /tp @s 10.5 -60 10.5
+   6019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"10.50\"},{\"text\":\"-60.00\"},{\"text\":\"10.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6019 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"10.50, -60.00, 10.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6019 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "10.50", "-60.00", "10.50"]
+## /
+   7069 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   7069 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /gamemode survival @s
+   8069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8069 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8069 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /setblock 12 -61 10 suspicious_sand
+   9071 watcher UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=0,hanging=1]
+   9071 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9072 actor   UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=0,hanging=1]
+   9072 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 11 -61 11 suspicious_gravel
+  10069 watcher UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=0,hanging=1]
+  10069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10069 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=0,hanging=1]
+  10069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 9 -61 10 sand
+  11069 watcher UpdateBlock 9 -61 10 layer 0 sand[]
+  11069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11069 actor   UpdateBlock 9 -61 10 layer 0 sand[]
+  11069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /give @s brush
+  12172 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.give.success\",\"with\":{\"rawtext\":[{\"text\":\"Brush\"},{\"text\":\"1\"},{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12173 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.give.successRecipient\",\"with\":{\"rawtext\":[{\"text\":\"Brush\"},{\"text\":\"1\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12173 actor   CommandOutput success_count=1 data=None commands.give.success success=true ["Brush", "1", "CmdActor"]
+  12178 watcher LevelSoundEvent LevelSoundEvent { sound_id: "pop", position: Vec3f { x: 10.5, y: -58.37999, z: 10.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  12178 actor   LevelSoundEvent LevelSoundEvent { sound_id: "pop", position: Vec3f { x: 10.5, y: -58.37999, z: 10.5 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /!brush 2 -1 0 200
+## look: Ok(())
+  14179 watcher UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=1,hanging=1]
+  14179 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -61, z: 10 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(1)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(12)), ("y", Int(-61)), ("z", Int(10))]) } }
+  14179 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  14628 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15078 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15228 watcher UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=2,hanging=1]
+  15229 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -61, z: 10 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(3)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(12)), ("y", Int(-61)), ("z", Int(10))]) } }
+  15529 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15980 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  16428 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  16728 watcher UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=3,hanging=1]
+  16728 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -61, z: 10 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(6)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(12)), ("y", Int(-61)), ("z", Int(10))]) } }
+  16878 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  17328 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  17778 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  18228 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  18678 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  18729 watcher LevelEvent LevelEvent { event: ParticleDestroyBlockNoSound, position: Vec3f { x: 12.0, y: -61.0, z: 10.0 }, data: 1340528924 }
+  18729 watcher UpdateBlock 12 -61 10 layer 0 sand[]
+  18729 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush_completed", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1340528924, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19129 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19580 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19928 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  20029 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20478 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20929 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  21379 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  21878 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  22328 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  22778 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  23229 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  23678 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24128 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## let go
+  24538 actor   UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=0,hanging=1]
+  24538 actor   UpdateBlock 12 -61 10 layer 1 air[]
+  24538 actor   UpdateBlock 12 -60 10 layer 0 air[]
+  24538 actor   UpdateBlock 12 -60 10 layer 1 air[]
+  24538 actor   UpdateBlock 12 -62 10 layer 0 stone[]
+  24538 actor   UpdateBlock 12 -62 10 layer 1 air[]
+  24538 actor   UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=1,hanging=1]
+  24538 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -61, z: 10 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(1)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(12)), ("y", Int(-61)), ("z", Int(10))]) } }
+  24538 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24538 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=2,hanging=1]
+  24539 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -61, z: 10 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(3)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(12)), ("y", Int(-61)), ("z", Int(10))]) } }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   UpdateBlock 12 -61 10 layer 0 suspicious_sand[brushed_progress=3,hanging=1]
+  24539 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -61, z: 10 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(6)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(12)), ("y", Int(-61)), ("z", Int(10))]) } }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1099051358, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelEvent LevelEvent { event: ParticleDestroyBlockNoSound, position: Vec3f { x: 12.0, y: -61.0, z: 10.0 }, data: 1340528924 }
+  24539 actor   UpdateBlock 12 -61 10 layer 0 sand[]
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush_completed", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 1340528924, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24539 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24578 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24578 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 12.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /!brush 1 -1 1 30
+## look: Ok(())
+  26679 watcher UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=1,hanging=1]
+  26679 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(1)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  26680 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27130 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27579 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27729 watcher UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=2,hanging=1]
+  27729 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(3)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  28031 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## let go
+  28151 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=0,hanging=1]
+  28151 actor   UpdateBlock 11 -61 11 layer 1 air[]
+  28151 actor   UpdateBlock 11 -60 11 layer 0 air[]
+  28151 actor   UpdateBlock 11 -60 11 layer 1 air[]
+  28151 actor   UpdateBlock 11 -62 11 layer 0 stone[]
+  28151 actor   UpdateBlock 11 -62 11 layer 1 air[]
+  28151 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=1,hanging=1]
+  28151 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(1)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  28151 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  28151 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  28151 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  28151 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=2,hanging=1]
+  28151 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(3)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  28151 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  30230 watcher UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=1,hanging=1]
+  30230 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(1)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  30230 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=1,hanging=1]
+  30230 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(1)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  30679 watcher UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=0,hanging=1]
+  30679 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(0)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  30680 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=0,hanging=1]
+  30680 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(0)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+## /
+## /
+  32732 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  32732 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /
+## /!brush 1 -1 1 200
+## look: Ok(())
+  35233 watcher UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=1,hanging=1]
+  35233 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(1)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  35233 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35330 watcher UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=2,hanging=1]
+  35330 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(3)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  35530 watcher UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=3,hanging=1]
+  35530 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(6)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  35679 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35729 watcher LevelEvent LevelEvent { event: ParticleDestroyBlockNoSound, position: Vec3f { x: 11.0, y: -61.0, z: 11.0 }, data: 1881416009 }
+  35730 watcher UpdateBlock 11 -61 11 layer 0 gravel[]
+  35730 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush_completed", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1881416009, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  36129 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  36581 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  37032 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  37480 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  37939 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  38387 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  38829 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  39279 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  39732 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  40179 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  40631 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  41079 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  41533 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  41988 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  42429 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  42879 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43329 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43780 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44230 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  44682 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45129 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45532 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  45581 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## let go
+  45668 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=0,hanging=1]
+  45668 actor   UpdateBlock 11 -61 11 layer 1 air[]
+  45668 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(0)), ("brush_direction", Byte(6)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  45668 actor   UpdateBlock 11 -60 11 layer 0 air[]
+  45668 actor   UpdateBlock 11 -60 11 layer 1 air[]
+  45668 actor   UpdateBlock 11 -62 11 layer 0 stone[]
+  45668 actor   UpdateBlock 11 -62 11 layer 1 air[]
+  45668 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=1,hanging=1]
+  45668 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(1)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=2,hanging=1]
+  45668 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(3)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  45668 actor   UpdateBlock 11 -61 11 layer 0 suspicious_gravel[brushed_progress=3,hanging=1]
+  45668 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 11, y: -61, z: 11 }, nbt: Nbt { name: "", value: Compound([("brush_count", Int(6)), ("brush_direction", Byte(1)), ("id", String("BrushableBlock")), ("x", Int(11)), ("y", Int(-61)), ("z", Int(11))]) } }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1055929607, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   LevelEvent LevelEvent { event: ParticleDestroyBlockNoSound, position: Vec3f { x: 11.0, y: -61.0, z: 11.0 }, data: 1881416009 }
+  45668 actor   UpdateBlock 11 -61 11 layer 0 gravel[]
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush_completed", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1881416009, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45668 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  45669 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  45669 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 11.5, y: -60.5, z: 11.5 }, extra_data: 1529044762, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!brush -1 -1 0 30
+## look: Ok(())
+  46830 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 9.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  47279 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 9.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  47729 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 9.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48180 watcher LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 9.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## let go
+  48292 actor   UpdateBlock 9 -61 10 layer 0 sand[]
+  48292 actor   UpdateBlock 9 -61 10 layer 1 air[]
+  48292 actor   UpdateBlock 9 -60 10 layer 0 air[]
+  48292 actor   UpdateBlock 9 -60 10 layer 1 air[]
+  48292 actor   UpdateBlock 9 -62 10 layer 0 stone[]
+  48292 actor   UpdateBlock 9 -62 10 layer 1 air[]
+  48292 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 9.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48293 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 9.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48293 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 9.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48293 actor   LevelSoundEvent LevelSoundEvent { sound_id: "brush", position: Vec3f { x: 9.5, y: -60.5, z: 10.5 }, extra_data: 138639715, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /gamemode creative @s
+  49331 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  49331 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+  49331 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /clear @s
+  50331 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50331 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+  50332 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "1"]
+## /kill @e[type=item]
+  51331 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1

@@ -1,6 +1,6 @@
 //! A bed used outside the Overworld bursts, as BDS's `BedBlock::use` (142cd8100): with
-//! `respawnBlocksExplode` on, both halves go and a burning blast of 5 goes off between their
-//! middles; off, the click does nothing (docs/research/blocks.md).
+//! `respawnBlocksExplode` on, both halves go and a burning blast of 5 goes off at the head's
+//! middle; off, the click does nothing (docs/research/blocks.md).
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos};
@@ -21,8 +21,7 @@ pub(crate) fn bursts(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
         return true;
     }
     let other = doors::other_half(world, layer, pos);
-    let middle = |cell: BlockPos| cell.map(|c| c as f32 + 0.5);
-    let at = other.map_or(middle(pos), |other| std::array::from_fn(|axis| (middle(pos)[axis] + middle(other)[axis]) * 0.5));
+    let at = doors::bed_head(world, layer, pos).unwrap_or(pos).map(|c| c as f32 + 0.5);
     update_block(world, layer, pos, &Block::air());
     if let Some(other) = other {
         update_block(world, layer, other, &Block::air());

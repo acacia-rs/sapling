@@ -92,6 +92,23 @@ fn a_piston_pushes_12_blocks_and_not_13_or_obsidian_and_breaks_a_torch() {
 }
 
 #[test]
+fn a_piston_leaves_a_jukebox_and_breaks_leaves_a_melon_and_a_shulker_box_as_on_bds() {
+    // research/captures/bds-rspistons.txt: the piston stayed in for the one, the others broke.
+    let mut h = ready();
+    let rigs: [(i32, &str, &str); 4] = [(0, "jukebox", ""), (2, "oak_leaves", ""), (4, "melon_block", ""), (6, "undyed_shulker_box", "")];
+    let mut blocks: Vec<([i32; 3], &str, &str)> = rigs.iter().map(|(z, _, _)| ([-7, 65, *z], "piston", EAST)).collect();
+    blocks.extend(rigs.iter().map(|(z, name, properties)| ([-6, 65, *z], *name, *properties)));
+    put(&mut h, &blocks);
+    watch(&mut h, 4);
+    put(&mut h, &rigs.map(|(z, _, _)| ([-7, 66, z], "redstone_block", "")));
+    let changed = block_changes(&watch(&mut h, 10).concat());
+    assert!(!changed.iter().any(|(pos, _)| pos[2] == 0 && pos[1] == 65), "the jukebox stays: {changed:?}");
+    for z in [2, 4, 6] {
+        assert!(changed.contains(&([-6, 65, z], arm(false))) && !changed.iter().any(|(pos, _)| *pos == [-5, 65, z]), "broken, not pushed: {z}");
+    }
+}
+
+#[test]
 fn a_sticky_piston_brings_its_block_back_and_a_chest_goes_with_what_it_holds() {
     let mut h = ready();
     put(&mut h, &[

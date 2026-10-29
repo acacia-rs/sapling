@@ -1,0 +1,910 @@
+## drill starts at 1793269939079
+## /gamerule domobspawning false
+     31 watcher GameRulesChanged doMobSpawning=Bool(false)
+     31 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     32 actor   GameRulesChanged doMobSpawning=Bool(false)
+     32 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /kill @e[type=!player]
+   1030 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill 2 -61 2 20 -61 20 stone
+   2045 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 2 -60 2 20 -55 20 air
+   3061 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /gamemode creative @s
+   4030 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4031 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4031 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   4230 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   4230 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /clear @s
+   5030 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5031 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /tp @s 10.5 -60 10.5
+   6030 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"10.50\"},{\"text\":\"-60.00\"},{\"text\":\"10.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6031 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"10.50, -60.00, 10.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6031 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "10.50", "-60.00", "10.50"]
+## /
+## /clear @s
+   8030 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   8030 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /setblock 12 -61 10 gold_block
+   9084 actor   UpdateBlock 12 -61 10 layer 0 gold_block[]
+   9084 watcher UpdateBlock 12 -61 10 layer 0 gold_block[]
+   9084 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9084 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  10081 watcher UpdateBlock 12 -60 10 layer 0 noteblock[]
+  10081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10082 actor   UpdateBlock 12 -60 10 layer 0 noteblock[]
+  10082 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0
+## clicked: Ok(())
+  11089 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(1))]) } }
+  11089 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(1))]) } }
+  11089 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(6), data: 1 }
+  11089 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(6), data: 1 }
+  11089 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 1537, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  11089 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 1537, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 clay
+  13081 watcher UpdateBlock 12 -61 10 layer 0 clay[]
+  13081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13082 actor   UpdateBlock 12 -61 10 layer 0 clay[]
+  13082 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  14079 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  15082 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(2))]) } }
+  15082 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(5), data: 2 }
+  15082 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 1282, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  15082 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(2))]) } }
+  15082 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(5), data: 2 }
+  15083 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 1282, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  17029 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  17029 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /setblock 12 -61 10 packed_ice
+  17081 actor   UpdateBlock 12 -61 10 layer 0 packed_ice[]
+  17081 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  17081 watcher UpdateBlock 12 -61 10 layer 0 packed_ice[]
+  17081 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 noteblock
+  18129 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  19131 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(3))]) } }
+  19131 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(8), data: 3 }
+  19131 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 2051, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  19132 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(3))]) } }
+  19132 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(8), data: 3 }
+  19132 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 2051, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 white_wool
+  21130 watcher UpdateBlock 12 -61 10 layer 0 white_wool[]
+  21130 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21130 actor   UpdateBlock 12 -61 10 layer 0 white_wool[]
+  21130 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  22130 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  23130 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(4))]) } }
+  23131 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(7), data: 4 }
+  23131 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 1796, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  23131 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(4))]) } }
+  23131 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(7), data: 4 }
+  23131 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 1796, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 bone_block
+  25132 watcher UpdateBlock 12 -61 10 layer 0 bone_block[deprecated=0,pillar_axis=y]
+  25132 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  25132 actor   UpdateBlock 12 -61 10 layer 0 bone_block[deprecated=0,pillar_axis=y]
+  25132 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  26131 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  27180 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(5))]) } }
+  27180 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(9), data: 5 }
+  27180 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 2309, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27180 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(5))]) } }
+  27180 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(9), data: 5 }
+  27180 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 2309, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 iron_block
+  29180 watcher UpdateBlock 12 -61 10 layer 0 iron_block[]
+  29180 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  29180 actor   UpdateBlock 12 -61 10 layer 0 iron_block[]
+  29180 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  29828 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  29828 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /setblock 12 -60 10 noteblock
+  30178 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  31179 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(6))]) } }
+  31179 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(10), data: 6 }
+  31179 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 2566, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  31179 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(6))]) } }
+  31179 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(10), data: 6 }
+  31179 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 2566, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 soul_sand
+  33178 watcher UpdateBlock 12 -61 10 layer 0 soul_sand[]
+  33178 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  33179 actor   UpdateBlock 12 -61 10 layer 0 soul_sand[]
+  33179 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  34180 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  35178 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(7))]) } }
+  35178 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(11), data: 7 }
+  35178 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 2823, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35179 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(7))]) } }
+  35179 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(11), data: 7 }
+  35179 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 2823, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 pumpkin
+  37178 watcher UpdateBlock 12 -61 10 layer 0 pumpkin[minecraft:cardinal_direction=south]
+  37179 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37179 actor   UpdateBlock 12 -61 10 layer 0 pumpkin[minecraft:cardinal_direction=south]
+  37179 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  38178 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  39179 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(8))]) } }
+  39179 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(12), data: 8 }
+  39179 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(8))]) } }
+  39179 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 3080, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  39179 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(12), data: 8 }
+  39179 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 3080, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 emerald_block
+  41179 watcher UpdateBlock 12 -61 10 layer 0 emerald_block[]
+  41179 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41179 actor   UpdateBlock 12 -61 10 layer 0 emerald_block[]
+  41179 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  42185 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+  42629 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  42630 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /!click 2 0 0
+## clicked: Ok(())
+  43232 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(9))]) } }
+  43233 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(13), data: 9 }
+  43233 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 3337, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  43233 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(9))]) } }
+  43233 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(13), data: 9 }
+  43233 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 3337, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 hay_block
+  45233 watcher UpdateBlock 12 -61 10 layer 0 hay_block[deprecated=0,pillar_axis=y]
+  45233 actor   UpdateBlock 12 -61 10 layer 0 hay_block[deprecated=0,pillar_axis=y]
+  45233 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  45233 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 noteblock
+  46236 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  47230 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(10))]) } }
+  47230 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(14), data: 10 }
+  47230 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 3594, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  47231 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(10))]) } }
+  47231 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(14), data: 10 }
+  47231 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 3594, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 glowstone
+  49280 watcher UpdateBlock 12 -61 10 layer 0 glowstone[]
+  49280 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  49281 actor   UpdateBlock 12 -61 10 layer 0 glowstone[]
+  49281 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  50280 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  51305 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(11))]) } }
+  51305 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(15), data: 11 }
+  51305 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 3851, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  51305 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(11))]) } }
+  51305 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(15), data: 11 }
+  51305 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 3851, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 oak_planks
+  53280 watcher UpdateBlock 12 -61 10 layer 0 oak_planks[]
+  53281 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  53281 actor   UpdateBlock 12 -61 10 layer 0 oak_planks[]
+  53281 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  54281 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  55282 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(12))]) } }
+  55283 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(4), data: 12 }
+  55283 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 1036, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  55283 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(12))]) } }
+  55283 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(4), data: 12 }
+  55283 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 1036, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  55430 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  55430 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /
+## /setblock 12 -61 10 sand
+  57282 watcher UpdateBlock 12 -61 10 layer 0 sand[]
+  57282 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  57282 actor   UpdateBlock 12 -61 10 layer 0 sand[]
+  57282 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  58280 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  59280 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(13))]) } }
+  59280 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(13))]) } }
+  59281 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(2), data: 13 }
+  59281 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 525, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  59281 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(2), data: 13 }
+  59281 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 525, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 glass
+  61281 watcher UpdateBlock 12 -61 10 layer 0 glass[]
+  61281 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  61281 actor   UpdateBlock 12 -61 10 layer 0 glass[]
+  61281 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 noteblock
+  62279 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  63330 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(14))]) } }
+  63330 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(3), data: 14 }
+  63330 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 782, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  63330 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(14))]) } }
+  63330 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(3), data: 14 }
+  63330 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 782, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -61 10 stone
+  65329 actor   UpdateBlock 12 -61 10 layer 0 stone[]
+  65329 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  65329 watcher UpdateBlock 12 -61 10 layer 0 stone[]
+  65329 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 noteblock
+  66330 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /!click 2 0 0
+## clicked: Ok(())
+  67330 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(15))]) } }
+  67330 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: ChangeState, data: 15 }
+  67330 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 271, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  67330 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(15))]) } }
+  67330 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: ChangeState, data: 15 }
+  67330 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 271, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  68227 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  68227 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+## /
+## /setblock 12 -61 10 stone
+  69327 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /setblock 12 -60 10 noteblock
+  70329 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /setblock 12 -59 10 zombie_head ["facing_direction"=1]
+  71328 watcher UpdateBlock 12 -59 10 layer 0 zombie_head[facing_direction=1]
+  71328 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  71328 actor   UpdateBlock 12 -59 10 layer 0 zombie_head[facing_direction=1]
+  71328 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 west
+## clicked: Ok(())
+  72327 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(16))]) } }
+  72328 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(20), data: 9 }
+  72328 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 5129, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  72328 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(16))]) } }
+  72328 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(20), data: 9 }
+  72328 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 5129, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -60 10 noteblock
+  74377 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /setblock 12 -59 10 skeleton_skull ["facing_direction"=1]
+  75379 actor   UpdateBlock 12 -59 10 layer 0 skeleton_skull[facing_direction=1]
+  75379 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  75379 watcher UpdateBlock 12 -59 10 layer 0 skeleton_skull[facing_direction=1]
+  75379 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 west
+## clicked: Ok(())
+  76379 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(17))]) } }
+  76380 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(21), data: 9 }
+  76380 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(17))]) } }
+  76380 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(21), data: 9 }
+  76380 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 5385, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  76380 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 5385, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -60 10 noteblock
+  78378 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /setblock 12 -59 10 creeper_head ["facing_direction"=1]
+  79436 actor   UpdateBlock 12 -59 10 layer 0 creeper_head[facing_direction=1]
+  79436 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  79436 watcher UpdateBlock 12 -59 10 layer 0 creeper_head[facing_direction=1]
+  79436 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 west
+## clicked: Ok(())
+  80430 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(18))]) } }
+  80430 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(22), data: 9 }
+  80430 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 5641, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  80431 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(18))]) } }
+  80431 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(22), data: 9 }
+  80431 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 5641, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  81029 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+  81029 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+## /
+## /setblock 12 -60 10 noteblock
+  82428 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /setblock 12 -59 10 piglin_head ["facing_direction"=1]
+  83427 watcher UpdateBlock 12 -59 10 layer 0 piglin_head[facing_direction=1]
+  83427 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  83427 actor   UpdateBlock 12 -59 10 layer 0 piglin_head[facing_direction=1]
+  83427 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 west
+## clicked: Ok(())
+  84427 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(19))]) } }
+  84427 watcher BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(25), data: 9 }
+  84427 watcher LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 6409, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  84427 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("id", String("Music")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10)), ("note", Byte(19))]) } }
+  84427 actor   BlockEvent BlockEvent { position: BlockCoordinates { x: 12, y: -60, z: 10 }, type: Unknown(25), data: 9 }
+  84427 actor   LevelSoundEvent LevelSoundEvent { sound_id: "note", position: Vec3f { x: 12.0, y: -60.0, z: 10.0 }, extra_data: 6409, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -59 10 air
+  86427 watcher UpdateBlock 12 -59 10 layer 0 air[]
+  86427 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  86428 actor   UpdateBlock 12 -59 10 layer 0 air[]
+  86428 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /replaceitem entity @s slot.weapon.mainhand 0 iron_axe
+  87537 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Iron Axe\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  87538 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Iron Axe"]
+## /setblock 12 -60 10 air
+  88443 watcher UpdateBlock 12 -60 10 layer 0 air[]
+  88443 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  88443 actor   UpdateBlock 12 -60 10 layer 0 air[]
+  88443 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 exposed_copper
+  89444 watcher UpdateBlock 12 -60 10 layer 0 exposed_copper[]
+  89445 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  89445 actor   UpdateBlock 12 -60 10 layer 0 exposed_copper[]
+  89445 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+  90443 watcher LevelEvent LevelEvent { event: ParticleScrape, position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, data: 0 }
+  90443 watcher UpdateBlock 12 -60 10 layer 0 copper_block[]
+  90444 actor   LevelEvent LevelEvent { event: ParticleScrape, position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, data: 0 }
+  90444 actor   UpdateBlock 12 -60 10 layer 0 copper_block[]
+  90444 actor   UpdateBlock 12 -60 10 layer 0 copper_block[]
+  90444 actor   UpdateBlock 12 -60 10 layer 1 air[]
+  90444 actor   UpdateBlock 12 -59 10 layer 0 air[]
+  90444 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+  92443 watcher UpdateBlock 12 -60 10 layer 0 air[]
+  92443 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  92443 actor   UpdateBlock 12 -60 10 layer 0 air[]
+  92443 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 waxed_copper
+  93443 watcher UpdateBlock 12 -60 10 layer 0 waxed_copper[]
+  93443 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  93443 actor   UpdateBlock 12 -60 10 layer 0 waxed_copper[]
+  93443 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  93892 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8305, paused: false }] }) }
+  93892 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8305, paused: false }] }) }
+## /!click 2 0 0 up
+## clicked: Ok(())
+  94494 watcher LevelEvent LevelEvent { event: ParticleWaxOff, position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, data: 0 }
+  94495 watcher UpdateBlock 12 -60 10 layer 0 copper_block[]
+  94495 actor   LevelEvent LevelEvent { event: ParticleWaxOff, position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, data: 0 }
+  94495 actor   UpdateBlock 12 -60 10 layer 0 copper_block[]
+  94495 actor   UpdateBlock 12 -60 10 layer 0 copper_block[]
+  94495 actor   UpdateBlock 12 -60 10 layer 1 air[]
+  94495 actor   UpdateBlock 12 -59 10 layer 0 air[]
+  94495 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+  96493 watcher UpdateBlock 12 -60 10 layer 0 air[]
+  96493 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  96494 actor   UpdateBlock 12 -60 10 layer 0 air[]
+  96494 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 oak_wood
+  97496 watcher UpdateBlock 12 -60 10 layer 0 oak_wood[pillar_axis=y]
+  97496 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  97496 actor   UpdateBlock 12 -60 10 layer 0 oak_wood[pillar_axis=y]
+  97496 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+  98493 watcher UpdateBlock 12 -60 10 layer 0 stripped_oak_wood[pillar_axis=y]
+  98493 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 2055607698, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  98494 actor   UpdateBlock 12 -60 10 layer 0 stripped_oak_wood[pillar_axis=y]
+  98494 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 2055607698, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  98494 actor   UpdateBlock 12 -60 10 layer 0 stripped_oak_wood[pillar_axis=y]
+  98494 actor   UpdateBlock 12 -60 10 layer 1 air[]
+  98494 actor   UpdateBlock 12 -59 10 layer 0 air[]
+  98494 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 100545 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 100545 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 100545 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 100545 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 warped_stem
+ 101543 actor   UpdateBlock 12 -60 10 layer 0 warped_stem[pillar_axis=y]
+ 101543 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 101543 watcher UpdateBlock 12 -60 10 layer 0 warped_stem[pillar_axis=y]
+ 101544 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 102543 watcher UpdateBlock 12 -60 10 layer 0 stripped_warped_stem[pillar_axis=y]
+ 102544 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 74387233, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 102544 actor   UpdateBlock 12 -60 10 layer 0 stripped_warped_stem[pillar_axis=y]
+ 102544 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 74387233, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 102544 actor   UpdateBlock 12 -60 10 layer 0 stripped_warped_stem[pillar_axis=y]
+ 102544 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 102544 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 102544 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 104543 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 104543 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 104543 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 104543 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 crimson_hyphae
+ 105594 actor   UpdateBlock 12 -60 10 layer 0 crimson_hyphae[pillar_axis=y]
+ 105594 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 105594 watcher UpdateBlock 12 -60 10 layer 0 crimson_hyphae[pillar_axis=y]
+ 105594 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 106593 watcher UpdateBlock 12 -60 10 layer 0 stripped_crimson_hyphae[pillar_axis=y]
+ 106593 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1851001188, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 106593 actor   UpdateBlock 12 -60 10 layer 0 stripped_crimson_hyphae[pillar_axis=y]
+ 106593 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1851001188, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 106593 actor   UpdateBlock 12 -60 10 layer 0 stripped_crimson_hyphae[pillar_axis=y]
+ 106593 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 106593 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 106593 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 106692 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8561, paused: false }] }) }
+ 106692 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8561, paused: false }] }) }
+## /
+## /setblock 12 -60 10 air
+ 108593 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 108593 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 108593 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 108593 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 pale_oak_log
+ 109593 watcher UpdateBlock 12 -60 10 layer 0 pale_oak_log[pillar_axis=y]
+ 109593 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 109593 actor   UpdateBlock 12 -60 10 layer 0 pale_oak_log[pillar_axis=y]
+ 109593 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 110592 watcher UpdateBlock 12 -60 10 layer 0 stripped_pale_oak_log[pillar_axis=y]
+ 110592 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1627143190, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 110593 actor   UpdateBlock 12 -60 10 layer 0 stripped_pale_oak_log[pillar_axis=y]
+ 110593 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1627143190, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 110593 actor   UpdateBlock 12 -60 10 layer 0 stripped_pale_oak_log[pillar_axis=y]
+ 110593 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 110593 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 110593 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 112594 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 112594 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 112595 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 112595 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 weathered_cut_copper
+ 113593 watcher UpdateBlock 12 -60 10 layer 0 weathered_cut_copper[]
+ 113593 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 113593 actor   UpdateBlock 12 -60 10 layer 0 weathered_cut_copper[]
+ 113593 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 114643 watcher LevelEvent LevelEvent { event: ParticleScrape, position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, data: 0 }
+ 114643 watcher UpdateBlock 12 -60 10 layer 0 exposed_cut_copper[]
+ 114643 actor   LevelEvent LevelEvent { event: ParticleScrape, position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, data: 0 }
+ 114643 actor   UpdateBlock 12 -60 10 layer 0 exposed_cut_copper[]
+ 114643 actor   UpdateBlock 12 -60 10 layer 0 exposed_cut_copper[]
+ 114643 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 114643 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 114643 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 116643 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 116643 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 116643 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 116643 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 pumpkin
+ 117644 watcher UpdateBlock 12 -60 10 layer 0 pumpkin[minecraft:cardinal_direction=south]
+ 117644 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 117644 actor   UpdateBlock 12 -60 10 layer 0 pumpkin[minecraft:cardinal_direction=south]
+ 117644 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 118644 actor   UpdateBlock 12 -60 10 layer 0 pumpkin[minecraft:cardinal_direction=south]
+ 118644 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 118644 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 118644 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 118644 actor   UpdateBlock 12 -61 10 layer 0 stone[]
+ 118644 actor   UpdateBlock 12 -61 10 layer 1 air[]
+ 119493 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8817, paused: false }] }) }
+ 119494 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8817, paused: false }] }) }
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 iron_shovel
+ 120646 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Iron Shovel\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 120647 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Iron Shovel"]
+## /setblock 12 -60 10 air
+ 121644 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 121644 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 121644 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 121644 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 grass_block
+ 122644 watcher UpdateBlock 12 -60 10 layer 0 grass_block[]
+ 122644 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 122645 actor   UpdateBlock 12 -60 10 layer 0 grass_block[]
+ 122645 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 123644 watcher UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 123644 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 123644 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 123644 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 123644 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 123644 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 123644 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 123644 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 125643 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 125643 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 125644 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 125644 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 dirt
+ 126644 watcher UpdateBlock 12 -60 10 layer 0 dirt[]
+ 126644 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 126644 actor   UpdateBlock 12 -60 10 layer 0 dirt[]
+ 126644 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 127643 watcher UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 127643 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 127643 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 127643 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 127644 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 127644 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 127644 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 127644 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 129696 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 129696 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 129696 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 129696 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 podzol
+ 130695 watcher UpdateBlock 12 -60 10 layer 0 podzol[]
+ 130695 actor   UpdateBlock 12 -60 10 layer 0 podzol[]
+ 130695 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 130695 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 131744 watcher UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 131744 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 131744 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 131744 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 131744 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 131744 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 131744 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 131744 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 132295 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9073, paused: false }] }) }
+ 132295 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9073, paused: false }] }) }
+## /
+## /setblock 12 -60 10 air
+ 133747 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 133747 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 133747 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 133747 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 mycelium
+ 134745 watcher UpdateBlock 12 -60 10 layer 0 mycelium[]
+ 134745 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 134745 actor   UpdateBlock 12 -60 10 layer 0 mycelium[]
+ 134745 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 135743 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 135744 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 135744 watcher UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 135744 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 135744 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 135744 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 135744 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 135744 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /setblock 12 -60 10 air
+ 137744 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 137744 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 137744 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 137744 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 coarse_dirt
+ 138744 watcher UpdateBlock 12 -60 10 layer 0 coarse_dirt[]
+ 138744 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 138744 actor   UpdateBlock 12 -60 10 layer 0 coarse_dirt[]
+ 138744 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 139794 watcher UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 139794 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 139794 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 139794 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 139794 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 139794 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 139794 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 139794 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 141796 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 141796 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 141796 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 141796 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 dirt_with_roots
+ 142795 watcher UpdateBlock 12 -60 10 layer 0 dirt_with_roots[]
+ 142795 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 142795 actor   UpdateBlock 12 -60 10 layer 0 dirt_with_roots[]
+ 142795 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 143844 watcher UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 143844 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 143844 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 143844 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 1942424059, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 143844 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 143844 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 143844 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 143844 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+ 145093 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9329, paused: false }] }) }
+ 145093 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9329, paused: false }] }) }
+## /setblock 12 -60 10 air
+ 145844 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 145844 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 145844 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 145844 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 farmland
+ 146843 watcher UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 146844 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 146844 actor   UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 146844 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 147845 actor   UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 147845 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 147846 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 147846 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 147846 actor   UpdateBlock 12 -61 10 layer 0 stone[]
+ 147846 actor   UpdateBlock 12 -61 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 149894 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 149894 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 149895 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 149895 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 snow_layer
+ 150894 watcher UpdateBlock 12 -60 10 layer 0 snow_layer[covered_bit=0,height=0]
+ 150894 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 150895 actor   UpdateBlock 12 -60 10 layer 0 snow_layer[covered_bit=0,height=0]
+ 150895 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 151898 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 151898 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: -595350462, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 151899 watcher AddItemEntity AddItemEntity { entity_id_self: 3, runtime_entity_id: 3, item: ItemV4 { network_id: 377, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, position: Vec3f { x: 12.651703, y: -59.8092, z: 10.491551 }, velocity: Vec3f { x: 0.087746434, y: 0.2, z: 0.038616948 }, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844424930131968)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: OwnerEid, type: Long, legacy_type: 7, value: Default(Long(-1)) }, MetadataDictionaryItem { key: Air, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: ChargeAmount, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: LeadHolderEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Scale, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: InteractiveTag, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: MaxAirdataMaxAir, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: MarkVariant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerType, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ContainerBaseSize, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerExtraSlotsPerStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.25)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.25)) }, MetadataDictionaryItem { key: FuseLength, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: RiderSeatPosition, type: Vec3f, legacy_type: 8, value: Default(Vec3f(Vec3f { x: 0.0, y: 0.0, z: 0.0 })) }, MetadataDictionaryItem { key: RiderRotationLocked, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderMaxRotation, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: RiderMinRotation, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderSeatRotationOffset, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: HasCommandBlock, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: CommandBlockCommand, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockLastOutput, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockTrackOutput, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: ControllingRiderSeatNumber, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Strength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: EvokerSpellCastingColor, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: LimitedLife, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AlwaysShowNametag, type: Byte, legacy_type: 0, value: Default(Byte(-1)) }, MetadataDictionaryItem { key: Color2, type: Byte, le
+ 151899 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 151899 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: -595350462, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 151899 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 151899 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 151899 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 151899 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 151900 actor   AddItemEntity AddItemEntity { entity_id_self: 3, runtime_entity_id: 3, item: ItemV4 { network_id: 377, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, position: Vec3f { x: 12.651703, y: -59.8092, z: 10.491551 }, velocity: Vec3f { x: 0.087746434, y: 0.2, z: 0.038616948 }, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844424930131968)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: OwnerEid, type: Long, legacy_type: 7, value: Default(Long(-1)) }, MetadataDictionaryItem { key: Air, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: ChargeAmount, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: LeadHolderEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Scale, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: InteractiveTag, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: MaxAirdataMaxAir, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: MarkVariant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerType, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ContainerBaseSize, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerExtraSlotsPerStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.25)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.25)) }, MetadataDictionaryItem { key: FuseLength, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: RiderSeatPosition, type: Vec3f, legacy_type: 8, value: Default(Vec3f(Vec3f { x: 0.0, y: 0.0, z: 0.0 })) }, MetadataDictionaryItem { key: RiderRotationLocked, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderMaxRotation, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: RiderMinRotation, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderSeatRotationOffset, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: HasCommandBlock, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: CommandBlockCommand, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockLastOutput, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockTrackOutput, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: ControllingRiderSeatNumber, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Strength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: EvokerSpellCastingColor, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: LimitedLife, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AlwaysShowNametag, type: Byte, legacy_type: 0, value: Default(Byte(-1)) }, MetadataDictionaryItem { key: Color2, type: Byte, le
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 iron_hoe
+ 153948 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Iron Hoe\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 153949 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Iron Hoe"]
+## /setblock 12 -60 10 air
+ 154945 actor   CommandOutput success_count=0 data=None commands.setblock.noChange success=false []
+## /setblock 12 -60 10 coarse_dirt
+ 155949 watcher UpdateBlock 12 -60 10 layer 0 coarse_dirt[]
+ 155949 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 155950 actor   UpdateBlock 12 -60 10 layer 0 coarse_dirt[]
+ 155950 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 157000 watcher UpdateBlock 12 -60 10 layer 0 dirt[]
+ 157000 actor   UpdateBlock 12 -60 10 layer 0 dirt[]
+ 157000 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: -2108756090, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 157000 actor   UpdateBlock 12 -60 10 layer 0 dirt[]
+ 157000 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 157000 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: -2108756090, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 157000 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 157000 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 157896 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9585, paused: false }] }) }
+ 157897 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9585, paused: false }] }) }
+## /
+## /setblock 12 -60 10 air
+ 159003 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 159003 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 159003 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 159003 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 dirt_with_roots
+ 159998 watcher UpdateBlock 12 -60 10 layer 0 dirt_with_roots[]
+ 159998 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 160000 actor   UpdateBlock 12 -60 10 layer 0 dirt_with_roots[]
+ 160000 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 161000 watcher UpdateBlock 12 -60 10 layer 0 dirt[]
+ 161000 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: -2108756090, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 161000 watcher AddItemEntity AddItemEntity { entity_id_self: 4, runtime_entity_id: 4, item: ItemV4 { network_id: -319, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 2949505364, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, position: Vec3f { x: 12.155093, y: -59.724, z: 10.608209 }, velocity: Vec3f { x: 0.028833963, y: 0.2, z: 0.08329219 }, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844424930131968)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: OwnerEid, type: Long, legacy_type: 7, value: Default(Long(-1)) }, MetadataDictionaryItem { key: Air, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: ChargeAmount, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: LeadHolderEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Scale, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: InteractiveTag, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: MaxAirdataMaxAir, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: MarkVariant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerType, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ContainerBaseSize, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerExtraSlotsPerStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.25)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.25)) }, MetadataDictionaryItem { key: FuseLength, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: RiderSeatPosition, type: Vec3f, legacy_type: 8, value: Default(Vec3f(Vec3f { x: 0.0, y: 0.0, z: 0.0 })) }, MetadataDictionaryItem { key: RiderRotationLocked, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderMaxRotation, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: RiderMinRotation, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderSeatRotationOffset, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: HasCommandBlock, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: CommandBlockCommand, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockLastOutput, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockTrackOutput, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: ControllingRiderSeatNumber, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Strength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: EvokerSpellCastingColor, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: LimitedLife, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AlwaysShowNametag, type: Byte, legacy_type: 0, value: Default(Byte(-1)) }, MetadataDictionaryItem { key: Color2, type: 
+ 161003 actor   UpdateBlock 12 -60 10 layer 0 dirt[]
+ 161003 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: -2108756090, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 161003 actor   UpdateBlock 12 -60 10 layer 0 dirt[]
+ 161003 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 161003 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 161003 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 161004 actor   AddItemEntity AddItemEntity { entity_id_self: 4, runtime_entity_id: 4, item: ItemV4 { network_id: -319, count: 1, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 2949505364, extra: Default(Some(ItemExtraDataWithoutBlockingTick { has_nbt: False, nbt: None, can_place_on: [], can_destroy: [] })) }, position: Vec3f { x: 12.155093, y: -59.724, z: 10.608209 }, velocity: Vec3f { x: 0.028833963, y: 0.2, z: 0.08329219 }, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844424930131968)) }, MetadataDictionaryItem { key: Health, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: Variant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: Color, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Nametag, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: OwnerEid, type: Long, legacy_type: 7, value: Default(Long(-1)) }, MetadataDictionaryItem { key: Air, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: ChargeAmount, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: LeadHolderEid, type: Long, legacy_type: 7, value: Default(Long(0)) }, MetadataDictionaryItem { key: Scale, type: Float, legacy_type: 3, value: Default(Float(1.0)) }, MetadataDictionaryItem { key: InteractiveTag, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: MaxAirdataMaxAir, type: Short, legacy_type: 1, value: Default(Short(300)) }, MetadataDictionaryItem { key: MarkVariant, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerType, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: ContainerBaseSize, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: ContainerExtraSlotsPerStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.25)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.25)) }, MetadataDictionaryItem { key: FuseLength, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: RiderSeatPosition, type: Vec3f, legacy_type: 8, value: Default(Vec3f(Vec3f { x: 0.0, y: 0.0, z: 0.0 })) }, MetadataDictionaryItem { key: RiderRotationLocked, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderMaxRotation, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: RiderMinRotation, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: RiderSeatRotationOffset, type: Float, legacy_type: 3, value: Default(Float(0.0)) }, MetadataDictionaryItem { key: HasCommandBlock, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: CommandBlockCommand, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockLastOutput, type: String, legacy_type: 4, value: Default(String("")) }, MetadataDictionaryItem { key: CommandBlockTrackOutput, type: Byte, legacy_type: 0, value: Default(Byte(1)) }, MetadataDictionaryItem { key: ControllingRiderSeatNumber, type: Byte, legacy_type: 0, value: Default(Byte(0)) }, MetadataDictionaryItem { key: Strength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: MaxStrength, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: EvokerSpellCastingColor, type: Int, legacy_type: 2, value: Default(Int(0)) }, MetadataDictionaryItem { key: LimitedLife, type: Int, legacy_type: 2, value: Default(Int(-1)) }, MetadataDictionaryItem { key: AlwaysShowNametag, type: Byte, legacy_type: 0, value: Default(Byte(-1)) }, MetadataDictionaryItem { key: Color2, type: 
+## /
+## /setblock 12 -60 10 air
+ 163004 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 163004 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 163007 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 163007 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 grass_path
+ 164002 watcher UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 164002 actor   UpdateBlock 12 -60 10 layer 0 grass_path[]
+ 164002 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 164002 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 165052 watcher UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 165052 watcher LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 360492383, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 165053 actor   UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 165053 actor   LevelSoundEvent LevelSoundEvent { sound_id: "item.use.on", position: Vec3f { x: 12.5, y: -59.5, z: 10.5 }, extra_data: 360492383, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+ 165053 actor   UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 165053 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 165053 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 165053 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 167050 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 167050 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 167050 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 167050 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 podzol
+ 168058 watcher UpdateBlock 12 -60 10 layer 0 podzol[]
+ 168058 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 168059 actor   UpdateBlock 12 -60 10 layer 0 podzol[]
+ 168059 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 169102 actor   UpdateBlock 12 -60 10 layer 0 podzol[]
+ 169102 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 169102 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 169102 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 169102 actor   UpdateBlock 12 -61 10 layer 0 stone[]
+ 169102 actor   UpdateBlock 12 -61 10 layer 1 air[]
+## /
+ 170698 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9841, paused: false }] }) }
+ 170698 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9841, paused: false }] }) }
+## /setblock 12 -60 10 air
+ 171101 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 171101 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 171101 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 171101 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -60 10 mycelium
+ 172104 watcher UpdateBlock 12 -60 10 layer 0 mycelium[]
+ 172104 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 172105 actor   UpdateBlock 12 -60 10 layer 0 mycelium[]
+ 172105 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 173100 actor   UpdateBlock 12 -60 10 layer 0 mycelium[]
+ 173100 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 173100 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 173100 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 173100 actor   UpdateBlock 12 -61 10 layer 0 stone[]
+ 173100 actor   UpdateBlock 12 -61 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 air
+ 175151 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 175151 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 175151 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 175151 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 10 farmland
+ 176154 watcher UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 176154 actor   UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 176154 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 176154 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 177148 actor   UpdateBlock 12 -60 10 layer 0 farmland[moisturized_amount=0]
+ 177148 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 177148 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 177148 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 177148 actor   UpdateBlock 12 -61 10 layer 0 stone[]
+ 177148 actor   UpdateBlock 12 -61 10 layer 1 air[]
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 bucket
+ 179150 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Bucket\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 179151 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Bucket"]
+## /setblock 12 -60 10 cauldron ["cauldron_liquid"="water","fill_level"=6]
+ 180150 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+ 180150 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 180150 watcher UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=6]
+ 180150 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 181198 watcher LevelEvent LevelEvent { event: CauldronTakeWater, position: Vec3f { x: 12.5, y: -58.875, z: 10.5 }, data: -1087090343 }
+ 181198 watcher UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 181198 actor   LevelEvent LevelEvent { event: CauldronTakeWater, position: Vec3f { x: 12.5, y: -58.875, z: 10.5 }, data: -1087090343 }
+ 181198 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 181198 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 181198 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 181198 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 181198 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 cauldron ["cauldron_liquid"="lava","fill_level"=6]
+ 183203 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=lava,fill_level=6]
+ 183203 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 183203 watcher UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=lava,fill_level=6]
+ 183203 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 183500 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10097, paused: false }] }) }
+ 183500 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10097, paused: false }] }) }
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 184204 watcher LevelEvent LevelEvent { event: Unknown(3513), position: Vec3f { x: 12.5, y: -58.875, z: 10.5 }, data: -1087090343 }
+ 184204 watcher UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 184205 actor   LevelEvent LevelEvent { event: Unknown(3513), position: Vec3f { x: 12.5, y: -58.875, z: 10.5 }, data: -1087090343 }
+ 184205 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 184206 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 184206 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 184206 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 184206 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /setblock 12 -60 10 cauldron ["cauldron_liquid"="powder_snow","fill_level"=6]
+ 186200 watcher UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=powder_snow,fill_level=6]
+ 186200 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=powder_snow,fill_level=6]
+ 186200 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 186200 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 187249 actor   LevelEvent LevelEvent { event: Unknown(3515), position: Vec3f { x: 12.5, y: -58.875, z: 10.5 }, data: -1087090343 }
+ 187250 watcher LevelEvent LevelEvent { event: Unknown(3515), position: Vec3f { x: 12.5, y: -58.875, z: 10.5 }, data: -1087090343 }
+ 187250 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 187250 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10))]) } }
+ 187250 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 187250 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 187250 watcher UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=0]
+ 187250 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10))]) } }
+ 187250 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 187250 actor   UpdateBlock 12 -59 10 layer 1 air[]
+ 187250 watcher BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10))]) } }
+## /
+## /setblock 12 -60 10 cauldron ["cauldron_liquid"="water","fill_level"=3]
+ 189250 watcher UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=3]
+ 189250 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=3]
+ 189250 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 189250 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 2 0 0 up
+## clicked: Ok(())
+ 190250 actor   UpdateBlock 12 -60 10 layer 0 cauldron[cauldron_liquid=water,fill_level=3]
+ 190250 actor   UpdateBlock 12 -60 10 layer 1 air[]
+ 190250 actor   BlockEntityData BlockEntityData { position: BlockCoordinates { x: 12, y: -60, z: 10 }, nbt: Nbt { name: "", value: Compound([("PotionId", Short(-1)), ("PotionType", Short(-1)), ("id", String("Cauldron")), ("x", Int(12)), ("y", Int(-60)), ("z", Int(10))]) } }
+ 190250 actor   UpdateBlock 12 -59 10 layer 0 air[]
+ 190250 actor   UpdateBlock 12 -59 10 layer 1 air[]
+## /
+## /clear @s
+ 192248 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 192249 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+ 192250 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "1"]
+## /setblock 12 -60 10 air
+ 193249 watcher UpdateBlock 12 -60 10 layer 0 air[]
+ 193249 actor   UpdateBlock 12 -60 10 layer 0 air[]
+ 193249 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 193249 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+probe exit 0

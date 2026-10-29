@@ -268,6 +268,9 @@ impl Request<'_> {
     /// the hand holds none, it is the one the client names.
     fn click(&mut self, pos: BlockPos, face: Option<Face>, click: &TransactionUseItem) {
         let Some(face) = face else { return self.resync(&[pos]) };
+        if super::brushing::stroke(self.world, self.entity, pos, face, click) {
+            return;
+        }
         let target = face.neighbour(pos);
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, target]) };
         let Some((registry, clicked)) = self.block(&site, pos) else { return };

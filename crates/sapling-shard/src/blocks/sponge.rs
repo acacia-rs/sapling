@@ -53,6 +53,7 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
             if soaked.is_empty() {
                 return;
             }
+            told_soaking(world, layer, pos);
             for cell in soaked {
                 let plant = level(world, layer).and_then(|level| name_at(level, cell)).is_some_and(|name| PLANTS.contains(&name));
                 if plant {
@@ -65,6 +66,16 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
         }
         _ => {}
     }
+}
+
+/// What BDS sent with a sponge soaking: event 2021 with this data, then `sponge.absorb`, both
+/// at the cell's corner (research/captures/bds-bkticks.txt).
+const SOAK_DATA: i32 = 1_302_137;
+
+fn told_soaking(world: &mut World, layer: Entity, pos: BlockPos) {
+    let [x, y, z] = pos.map(|c| c as f32);
+    let event = sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleDestroyBlockNoSound, position: Vec3f { x, y, z }, data: SOAK_DATA });
+    send::to_viewers(world, layer, pos, &[event, send::noise("sponge.absorb", Vec3f { x, y, z }, -1)]);
 }
 
 /// The cells of water the sponge at `pos` soaks up: breadth first through water, nearest first.
@@ -89,11 +100,12 @@ fn soaked(level: &Level, pos: BlockPos) -> Vec<BlockPos> {
     found
 }
 
-/// A wet sponge in the Nether becomes a dry one, with the steam BDS shows for water poured there.
+/// A wet sponge in the Nether becomes a dry one, its steam told first: event 3501 (the protocol
+/// crate's `CauldronExplode`) 0.875 up the cell, as BDS (research/captures/bds-bknether.txt).
 fn dry(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(id) = level(world, layer).and_then(|level| level.registry().states_of(DRY).next()).map(|(id, _)| id) else { return };
-    send::set(world, layer, pos, id);
-    let [x, y, z] = pos.map(|c| c as f32 + 0.5);
-    let steam = sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleEvaporateWater, position: Vec3f { x, y, z }, data: 0 });
+    let [x, z] = [pos[0], pos[2]].map(|c| c as f32 + 0.5);
+    let steam = sapling_net::encode(&LevelEvent { event: LevelEventEvent::CauldronExplode, position: Vec3f { x, y: pos[1] as f32 + 0.875, z }, data: 0 });
     send::to_viewers(world, layer, pos, &[steam]);
+    send::set(world, layer, pos, id);
 }

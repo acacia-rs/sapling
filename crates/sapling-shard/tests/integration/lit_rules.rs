@@ -120,6 +120,24 @@ fn a_daylight_detector_reads_the_sky_light_in_its_cell() {
 }
 
 #[test]
+fn an_inverted_detector_gives_the_dark_without_the_sun_s_angle_and_a_new_one_reads_at_once() {
+    // research/captures/bds-rsplace.txt: 0, 6, 11 and 6 at these times; one put down read the next tick.
+    let mut h = lit_world(0, vec![([0, 65, 3], block("daylight_detector_inverted", ""))]);
+    let mut read = Vec::new();
+    for time in [6000, 13000, 18000, 23000] {
+        h.remote.run(move |ctx| ctx.set_time(time));
+        read.extend(blocks(&mut h, 21, vec![[0, 65, 3]]));
+    }
+    let signals: Vec<&str> = read.iter().map(|state| state.split("redstone_signal=").nth(1).unwrap_or_default().trim_end_matches(']')).collect();
+    assert_eq!(signals, ["0", "6", "11", "6"], "{read:?}");
+    h.remote.run(|ctx| {
+        ctx.set_time(6000);
+        assert!(ctx.set_block([2, 65, 3], &block("daylight_detector", "")));
+    });
+    assert_eq!(blocks(&mut h, 1, vec![[2, 65, 3]]), ["daylight_detector[redstone_signal=15]"]);
+}
+
+#[test]
 fn the_sun_burns_a_zombie_under_glass_and_not_under_leaves() {
     // research/captures/bds-sun.txt: glass let the sun through, leaves did not.
     let burnt = |roof: &'static str| {

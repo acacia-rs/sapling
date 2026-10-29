@@ -154,11 +154,10 @@ impl Part {
     }
 }
 
-/// Whether BDS passes power through a block (research/captures/bds-conductors.txt): the full cubes
-/// but for these, and two that are lower.
-// TODO: ice and TNT are taken as conductors undrilled.
+/// Whether BDS passes power through a block (research/captures/bds-conductors.txt; ice, unlike packed
+/// and blue ice, bds-rsparts.txt): the full cubes but for these, and two that are lower.
 fn conducts(name: &str, is_full_cube: bool) -> bool {
-    const CLEAR: [&str; 5] = ["sea_lantern", "observer", "jukebox", "beacon", "scaffolding"];
+    const CLEAR: [&str; 6] = ["sea_lantern", "observer", "jukebox", "beacon", "scaffolding", "ice"];
     match name {
         "soul_sand" | "mud" => true,
         _ if name.ends_with("glass") || name.ends_with("leaves") || name.ends_with("copper_grate") || CLEAR.contains(&name) => false,

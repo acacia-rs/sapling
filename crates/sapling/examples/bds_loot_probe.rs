@@ -3,7 +3,11 @@
 //! 357601146 fills on first open; whether a hopper under one or a comparator beside one unpacks it;
 //! what a decorated pot with loot drops when broken; what brushing suspicious sand and gravel does
 //! (states, counts, the item). The ground truth for sapling's loot (docs/research/structure-block-entities.md).
-//! `cargo run -p sapling --example bds_loot_probe -- <server> > probe.txt` (offline, operators)
+//! `cargo run -p sapling --example bds_loot_probe -- <server> [brush] > probe.txt` (offline, operators;
+//! `brush`: only the brushing, held as a client holds it).
+#[path = "shared/brush_hold.rs"]
+mod brush_hold;
+
 use std::time::{Duration, Instant};
 
 use acacia_bot::client::{Client, PacketFilter};
@@ -14,9 +18,7 @@ use acacia_bot::{Bot, BotConfig, BotEvent};
 /// Characters of a decoded packet shown; item tags are long.
 const SHOWN: usize = 4000;
 const SETTLE: Duration = Duration::from_millis(1500);
-/// Clicks of a brush and the pause between them.
-const BRUSH_CLICKS: u32 = 24;
-const BRUSH_EVERY: Duration = Duration::from_millis(250);
+const TICK: Duration = Duration::from_millis(50);
 
 macro_rules! shown {
     ($($t:ident),* $(,)?) => {
@@ -86,13 +88,18 @@ impl Probe {
         self.act("close", closed).await
     }
 
-    async fn brush(&mut self, label: &str, pos: [i32; 3]) -> Result<(), String> {
-        println!("## brush {label}");
-        for click in 0..BRUSH_CLICKS {
-            let used = self.bot.use_item_on_block(pos, Face::Up).await;
-            println!("## click {click} -> {used:?}");
-            self.settle(BRUSH_EVERY).await?;
+    /// Holds use on the block's top for `ticks` ticks, then lets go and waits.
+    async fn brush(&mut self, label: &str, pos: [i32; 3], ticks: u32) -> Result<(), String> {
+        println!("## brush {label} for {ticks} ticks");
+        let top = [pos[0] as f32 + 0.5, pos[1] as f32 + 1.0, pos[2] as f32 + 0.5];
+        println!("## look -> {:?}", self.bot.look_at(top).await);
+        brush_hold::press(&self.bot, pos, Face::Up);
+        for _ in 0..ticks {
+            self.settle(TICK).await?;
+            brush_hold::held(&self.bot, pos, Face::Up);
         }
+        brush_hold::release(&self.bot, pos);
+        println!("## let go");
         self.settle(SETTLE).await
     }
 }
@@ -103,7 +110,8 @@ fn place(pos: [i32; 3]) -> String {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let server = std::env::args().nth(1).ok_or("usage: bds_loot_probe <server>")?;
+    let server = std::env::args().nth(1).ok_or("usage: bds_loot_probe <server> [brush]")?;
+    let brush_only = std::env::args().nth(2).as_deref() == Some("brush");
     let config = BotConfig { physics: true, subscribe: PacketFilter::all(), ..BotConfig::default() };
     let mut bot = Bot::connect(Client::builder(&server).offline("Prober"), config).await?;
     bot.wait_ticks(60).await?;
@@ -119,6 +127,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let origin = [feet[0] - 5, feet[1], feet[2] + 2];
     let at = |k: i32| [origin[0] + k, origin[1], origin[2]];
     p.command(&format!("structure load loot:row {}", place(origin))).await?;
+    if brush_only {
+        p.command("gamemode survival").await?;
+        p.command("give @s brush").await?;
+        let selected = p.bot.select_hotbar(0);
+        p.act("select the brush", selected).await?;
+        p.brush("suspicious sand", at(8), 200).await?;
+        p.brush("suspicious gravel, a while", at(10), 30).await?;
+        p.settle(Duration::from_secs(6)).await?;
+        p.brush("suspicious gravel again", at(10), 200).await?;
+        p.settle(Duration::from_secs(2)).await?;
+        p.bot.disconnect().await;
+        return Ok(());
+    }
 
     // 1. Chest 0 opened: the slots its loot fills.
     p.open("open chest 0", at(0)).await?;
@@ -139,14 +160,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     p.command("gamemode survival").await?;
     let broken = p.bot.break_block(at(6)).await;
     p.act("break the pot (survival)", broken).await?;
-    p.settle(Duration::from_secs(2)).await?;
-
-    // 5. Brushing, in survival with a brush in the first slot.
-    p.command("give @s brush").await?;
-    let selected = p.bot.select_hotbar(0);
-    p.act("select the brush", selected).await?;
-    p.brush("suspicious sand", at(8)).await?;
-    p.brush("suspicious gravel", at(10)).await?;
     p.settle(Duration::from_secs(2)).await?;
     p.bot.disconnect().await;
     Ok(())

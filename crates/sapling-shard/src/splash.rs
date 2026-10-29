@@ -19,14 +19,24 @@ const LOUDNESS: f32 = 0.2;
 #[derive(Component)]
 pub(crate) struct InWater;
 
+/// An entity checked once already: the first check only notes where it is, as the Java game's
+/// `firstTick` (TNT summoned under water made no splash on BDS, research/captures/bds-bkblocks.txt).
+#[derive(Component)]
+pub(crate) struct WaterChecked;
+
 /// After the entity `kind` (`id`), whose body water treats by `rule`, moved by `moved` to
 /// `body`: the splash if that took it into water. BDS's volume, packed as its sounds pack one, is
 /// from the move's motion before drag.
 pub(crate) fn check(world: &mut World, entity: Entity, id: u64, kind: &str, moved: [f32; 3], body: &Body, rule: InLiquid) -> Option<Bytes> {
     let layer = world.get::<InLayer>(entity)?.0;
     let wet = in_liquid(&world.get::<Layer>(layer)?.world, body, rule, Liquid::Water);
-    let was = world.get::<InWater>(entity).is_some();
+    let first = world.get::<WaterChecked>(entity).is_none();
+    if first {
+        world.entity_mut(entity).insert(WaterChecked);
+    }
+    let was = world.get::<InWater>(entity).is_some() || (first && wet);
     match (wet, was) {
+        (true, _) if first => drop(world.entity_mut(entity).insert(InWater)),
         (true, false) => drop(world.entity_mut(entity).insert(InWater)),
         (false, true) => drop(world.entity_mut(entity).remove::<InWater>()),
         _ => {}

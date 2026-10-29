@@ -64,7 +64,8 @@ fn a_note_block_keeps_its_note_and_plays_it_on_a_rising_signal() {
 fn a_copper_bulb_turns_on_and_off_with_each_rise() {
     let mut h = ready(vec![([3, 65, 6], Block::new("copper_bulb"))]);
     put(&mut h, [3, 65, 7], "redstone_block");
-    ticks(&mut h, 6);
+    let heard: Vec<(String, [f32; 3])> = ticks(&mut h, 6).iter().flat_map(|packet| all::<acacia_proto::packets::LevelSoundEvent>(std::slice::from_ref(packet))).map(|sound| (sound.sound_id, [sound.position.x, sound.position.y, sound.position.z])).collect();
+    assert_eq!(heard, [("block.copper_bulb.turn_on".to_owned(), [3.0, 65.0, 6.0])], "at the corner (research/captures/bds-rsdevices.txt)");
     assert_eq!(properties(&mut h, [3, 65, 6]), "lit=1,powered_bit=1");
     put(&mut h, [3, 65, 7], "air");
     ticks(&mut h, 6);
