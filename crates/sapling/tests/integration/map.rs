@@ -74,13 +74,21 @@ fn saved_chunks() -> Vec<Chunk> {
     around.map(|key| world.load_column(key).unwrap().expect("a fixture column").chunk).collect()
 }
 
-/// Blocks where the bot's decoded terrain differs from the save, bottom to top of the dimension.
+/// The bot's own registry: custom blocks another test's server registered in this process shift its ids.
+fn bot_registry(bot: &Bot) -> Arc<BlockRegistry> {
+    bot.world().and_then(|w| w.registry()).cloned().expect("a registry from StartGame")
+}
+
+/// Blocks where the bot's decoded terrain differs from the save, bottom to top of the dimension,
+/// compared by network hash since the two sides number states differently.
 fn differences(bot: &Bot, saved: &[Chunk]) -> usize {
     let view = bot.world().and_then(|w| w.view()).expect("a chunk view");
+    let (seen, kept) = (bot_registry(bot), BlockRegistry::vanilla());
+    let same = |seen_id: u32, kept_id: u32| seen.get(seen_id).map(|s| s.network_hash) == kept.get(kept_id).map(|s| s.network_hash);
     let mut differences = 0;
     for chunk in saved {
         for (x, z) in (0..16).flat_map(|x| (0..16).map(move |z| (chunk.x * 16 + x, chunk.z * 16 + z))) {
-            differences += (-64..320).filter(|&y| view.block(x, y, z) != chunk.block(x, y, z) || view.liquid(x, y, z) != chunk.liquid(x, y, z)).count();
+            differences += (-64..320).filter(|&y| !same(view.block(x, y, z), chunk.block(x, y, z)) || !same(view.liquid(x, y, z), chunk.liquid(x, y, z))).count();
         }
     }
     differences
@@ -97,7 +105,7 @@ async fn arrive(server: &Server, name: &str, store: Option<Arc<Counting>>) -> Bo
     });
     assert!(matched.await.is_ok(), "{} blocks still differ from the save", differences(&bot, &saved));
 
-    let registry = BlockRegistry::vanilla();
+    let registry = bot_registry(&bot);
     let view = bot.world().and_then(|w| w.view()).expect("a chunk view");
     let under = registry.get(view.block(SPAWN.0, GROUND, SPAWN.1)).expect("a known block");
     assert!(under.is_solid() && under.name == "minecraft:grass_block", "under the spawn: {}", under.name);

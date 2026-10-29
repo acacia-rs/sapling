@@ -31,6 +31,7 @@ recorded packets.
 | Custom states save to LevelDB by name and states like vanilla ones and load back by name. | sapling-leveldb `custom_states.rs` test |
 | Break time is `destructible_by_mining` seconds by hand (hardness = seconds / 1.5); drops are the plugin's (`BlockDrop`). | sapling choice; shard test `custom_blocks` |
 | Server physics reads a custom block with a collision box as stone and one without as air. | sapling choice (`blocks/custom.rs` `stand_in`) |
+| Custom states are registered process-wide (runtime ids are), so every server in a process advertises every custom block; a client then numbers vanilla states differently. Tests compare blocks by network hash (`tests/integration/map.rs`). | sapling choice |
 
 ## The generated pack
 
