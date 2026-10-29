@@ -183,8 +183,11 @@ secondary slots allow (Silk Touch on shears, the blade enchantments on a spear, 
   `blocks/blown.rs`). `loot::Tags` carries the tag, since a plugin's `Item` has no tag.
 - Loom (drilled): a seventh pattern is refused with status 7, nothing resent; sapling answered 0; fixed
   (`inventory/requests.rs`, test `a_loom_refuses_a_seventh_pattern_with_status_7_and_resends_nothing`).
-- Still different: a `/replaceitem` banner carries `{Type: 0}` on BDS, bare on sapling; `/kill` names an aux-15
-  banner "White Banner" on BDS, "Black Banner" on sapling.
+- An aux-15 banner is "White Banner" on BDS; sapling's `data/names.tsv` held data 0 only ("Black Banner").
+  `bds_name_probe` now asks for banner data 0 to 15; regenerate `names.tsv` (sapling-data README) to fix it.
+- Re-drilled (sapling-banners.txt): the same drops and tags; in the blast BDS spawned the plain banner before
+  the merged pair, sapling after.
+- Still different: a `/replaceitem` banner carries `{Type: 0}` on BDS, bare on sapling.
 
 ## Anvil (drilled, research/captures/bds-anvilnames.txt)
 
@@ -193,6 +196,8 @@ secondary slots allow (Silk Touch on shears, the blade enchantments on a spear, 
 - The Optional action's `filtered_string_index` picks the request's name by position (`First|Second`
   with 1 named it "Second"); -1 is status 9. Which list is the filtered one cannot be seen: an offline
   BDS filters nothing.
+- Re-drilled after the fix (sapling-anvilnames.txt): the same statuses and names as BDS up to where BDS
+  dropped the probe (its last `!uiback` moved a count of 0).
 - Statuses 5 (Consumes not what BDS uses up) and 50 (a stale stack id) come from a client's mistake; BDS
   keeps a refused input in the anvil after the screen closes.
 
@@ -201,7 +206,8 @@ secondary slots allow (Silk Touch on shears, the blade enchantments on a spear, 
 A hopper fills a bottle slot only when it is empty (`canPushInItem` 141f219d0, docs/research/brewing.md).
 Drilled (research/captures/bds-hopperbrew.txt): two bottles in, five in the hopper: one went to the empty
 slot, four stayed. Sapling stacked bottles into the filled slots; fixed (`hoppers.rs`, test
-`a_hopper_beside_a_brewing_stand_fills_its_empty_bottle_place_only`).
+`a_hopper_beside_a_brewing_stand_fills_its_empty_bottle_place_only`); re-drilled the same
+(sapling-hopperbrew.txt).
 
 ## Not drilled
 

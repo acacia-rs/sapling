@@ -11,7 +11,7 @@ use acacia_bot::proto::{Packet, packets};
 use acacia_bot::{Bot, BotConfig, BotEvent};
 
 /// Items whose name follows their data value, with the highest value tried.
-const BY_DATA: &[(&str, u16)] = &[("minecraft:potion", 46), ("minecraft:splash_potion", 46), ("minecraft:lingering_potion", 46), ("minecraft:arrow", 47)];
+const BY_DATA: &[(&str, u16)] = &[("minecraft:potion", 46), ("minecraft:splash_potion", 46), ("minecraft:lingering_potion", 46), ("minecraft:arrow", 47), ("minecraft:banner", 15)];
 /// Network ids scanned for items; BDS's registry fits well inside.
 const IDS: std::ops::Range<i32> = -2048..4096;
 /// Gives between clearing the inventory.
