@@ -320,8 +320,10 @@ and its `ANGRY` flag is not shown.
 
 A goat rams players and mobs as above (`creatures/rams.rs`), the nearest of either it sees,
 charging at most 8 blocks; a mob it meets is hurt and thrown at once by half a hit's throw and the
-push, and runs. It shows no prey between rams, a baby rams as hard as a grown one, and a charge at
-prey that moved goes along its axis, where BDS's went at where the prey stood.
+push, and runs. It charges at where its prey stood as it sounded `pre_ram` and stops within 0.25
+of it (bds-goat-cows-findings.md, "The miss"); a baby's ram costs 1 and pushes a fixed 0.468 of a
+grown one's at any step (fixed 2026-10-29 from those captures; they had said so, sapling had not
+followed). It shows no prey between rams.
 
 An evoker casts its fangs as above (`creatures/spells.rs`, `fights=spells` in `mob-traits.tsv`), its
 line's way taken as the first fang rises, and strolls between casts; one cast in four, while

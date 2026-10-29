@@ -1,11 +1,10 @@
 //! A goat's ram (docs/research/mob-kinds.md, "The goat"), as BDS's were seen to
 //! (research/captures/bds-goat-findings.md, bds-goat-cows-findings.md): 30 to 300 seconds after it
 //! came and after each ram it runs to a place 7 off its prey, the nearest survival player or mob
-//! but a goat, along an axis, stands, and charges along that axis into whoever is in the way. A mob
-//! it meets is hurt and thrown in one move, half a hit's throw and the push, and runs.
-// TODO: a goat takes and drops prey between rams, as BDS's did, without showing it here; a baby
-// rams as hard as a grown one; a charge at prey that moved off goes along the axis, where BDS's
-// went at where it stood.
+//! but a goat, along an axis, stands, and charges at where its prey stood then, into whoever is in
+//! the way. A mob it meets is hurt and thrown in one move, half a hit's throw and the push, and
+//! runs. A baby's ram costs 1 and pushes a fixed 0.468 of a grown one's.
+// TODO: a goat takes and drops prey between rams, as BDS's did, without showing it here.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
@@ -34,11 +33,16 @@ const STANDS: u64 = 23;
 /// Each tick's step of its charge, then the last again until it has gone [`CHARGES`].
 const STEPS: [f32; 11] = [0.0282, 0.0583, 0.1131, 0.1888, 0.2859, 0.4043, 0.5458, 0.7090, 0.8950, 0.9965, 1.0521];
 const CHARGES: f32 = 8.0;
+const AIMED: f32 = 0.25;
 /// A standing body's fall in a tick, which keeps the charge on the ground.
 const SETTLING: f32 = -0.0784;
 /// What its ram costs on normal difficulty, and its push: these times its step squared, across and up.
 const HARM: f32 = 2.0;
 const PUSH: [f32; 2] = [1.5, 0.18];
+/// A baby's ram costs this and pushes this share of [`PUSH`], whatever its step
+/// (bds-goat-cows-findings.md, "Hits on cows").
+const BABY_HARM: f32 = 1.0;
+const BABY_PUSH: f32 = 0.468;
 const PLAYER: [f32; 2] = [0.6, 1.8];
 /// A hit's throw, away and up; a mob gets half of it with the push.
 const THROW: f32 = 0.4;
@@ -50,8 +54,9 @@ const MIDDLE: f32 = 0.5;
 enum Stage {
     Idle,
     Running { spot: [f32; 2], axis: [f32; 2], since: u64 },
-    Standing { axis: [f32; 2], until: u64 },
-    Charging { axis: [f32; 2], step: usize, gone: f32 },
+    /// `aim`: where its prey stood as it sounded `pre_ram`, which the charge goes at.
+    Standing { axis: [f32; 2], aim: [f32; 2], until: u64 },
+    Charging { axis: [f32; 2], aim: [f32; 2], step: usize, gone: f32 },
 }
 
 #[derive(Component)]
@@ -117,7 +122,9 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
             if (spot[0] - body.at[0]).hypot(spot[1] - body.at[2]) < ARRIVED {
                 legs::rest(world, entity);
                 late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound("pre_ram", kind, id, body.at));
-                Stage::Standing { axis, until: now + STANDS }
+                let ahead = [body.at[0] - axis[0] * RAMS_FROM[0] as f32, body.at[2] - axis[1] * RAMS_FROM[0] as f32];
+                let aim = prey(world, entity, layer, &body).map_or(ahead, |feet| [feet[0], feet[2]]);
+                Stage::Standing { axis, aim, until: now + STANDS }
             } else if now >= since + GIVES_UP {
                 end(world, entity);
                 return false;
@@ -126,22 +133,26 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
                 Stage::Running { spot, axis, since }
             }
         }
-        (_, Stage::Standing { axis, until }) if now < until => {
+        (_, Stage::Standing { axis, aim, until }) if now < until => {
             face(world, entity, axis);
-            Stage::Standing { axis, until }
+            Stage::Standing { axis, aim, until }
         }
-        (_, Stage::Standing { axis, .. }) => Stage::Charging { axis: [-axis[0], -axis[1]], step: 0, gone: 0.0 },
-        (_, Stage::Charging { gone, .. }) if gone >= CHARGES => {
+        (_, Stage::Standing { axis, aim, .. }) => Stage::Charging { axis: [-axis[0], -axis[1]], aim, step: 0, gone: 0.0 },
+        // BDS's charge at prey that walked off stopped within 0.25 of where it stood (Java's closerThan).
+        (_, Stage::Charging { aim, gone, .. }) if gone >= CHARGES || (aim[0] - body.at[0]).hypot(aim[1] - body.at[2]) < AIMED => {
             end(world, entity);
             return false;
         }
-        (_, Stage::Charging { axis, step, gone }) => {
+        (_, Stage::Charging { aim, step, gone, .. }) => {
             let s = STEPS[step.min(STEPS.len() - 1)];
+            let (dx, dz) = (aim[0] - body.at[0], aim[1] - body.at[2]);
+            let far = dx.hypot(dz);
+            let axis = [dx / far, dz / far];
             face(world, entity, axis);
             if let Some(mut body) = world.get_mut::<Body>(entity) {
                 body.throw([axis[0] * s, SETTLING, axis[1] * s]);
             }
-            Stage::Charging { axis, step: step + 1, gone: gone + s }
+            Stage::Charging { axis, aim, step: step + 1, gone: gone + s }
         }
     };
     if let Some(mut ram) = world.get_mut::<Ram>(entity) {
@@ -182,8 +193,9 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
         return;
     }
     let s = STEPS[(step.max(1) - 1).min(STEPS.len() - 1)];
-    let push = [axis[0] * PUSH[0] * s * s, PUSH[1] * s * s, axis[1] * PUSH[0] * s * s];
-    let Some(harm) = hunting::on_difficulty(world, HARM) else { return };
+    let (harm, share) = blow(super::shown::is_baby(world, entity), s);
+    let push = [axis[0] * PUSH[0] * share, PUSH[1] * share, axis[1] * PUSH[0] * share];
+    let Some(harm) = hunting::on_difficulty(world, harm) else { return };
     let cell = body.at.map(|c| c.floor() as i32);
     let swing = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArmSwing, data: 0, fire_at_position: None };
     entities::tell_viewers(world, entity, layer, cell, vec![sapling_net::encode(&swing)]);
@@ -204,4 +216,19 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     late_sounds::play_later(world, 1, layer, cell, sound("attack", kind, id, [body.at[0], body.at[1] + body.size[1] * MIDDLE, body.at[2]]));
     late_sounds::play_later(world, 1, layer, cell, sound("ram_impact", kind, id, body.at));
     end(world, entity);
+}
+
+/// What a ram at step `s` costs on normal and the share of [`PUSH`] it pushes by.
+fn blow(baby: bool, s: f32) -> (f32, f32) {
+    if baby { (BABY_HARM, BABY_PUSH) } else { (HARM, s * s) }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_baby_rams_for_1_and_a_fixed_push() {
+        // bds-goat-cows-findings.md: a baby's push 0.702 / 0.084 at steps 0.9998 and 1.0825 alike.
+        assert_eq!(super::blow(true, 1.0825), (1.0, 0.468));
+        assert_eq!(super::blow(false, 0.5), (2.0, 0.25));
+    }
 }
