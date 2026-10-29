@@ -2625,6 +2625,7 @@ dependencies = [
  "acacia-proto",
  "acacia-world",
  "bytes",
+ "sapling-api",
  "serde_json",
 ]
 

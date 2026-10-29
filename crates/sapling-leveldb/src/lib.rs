@@ -12,6 +12,7 @@ mod actor_tags;
 mod actors;
 mod block_entities;
 mod container;
+mod custom_states;
 mod data3d;
 mod db;
 mod dragon_fight;
@@ -61,6 +62,9 @@ pub use keys::{ChunkKey, ParsedKey, Tag};
 pub use level_dat::{LevelDat, WeatherRecord};
 pub use maps::{MAP_PREFIX, MapRecord};
 pub use states::{BlockStates, PLACEHOLDER, block_of_hash, palette_block};
+pub use custom_states::{
+    CustomBlockStates, CustomState, block_hash, block_name, custom_ids, custom_state, custom_states, first_custom_id, id_of_hash, register_custom_block,
+};
 pub use structure::{STRUCTURE_PREFIX, StructureTemplate, structure_name};
 pub use sub_chunk::{Layer, SubChunk};
 pub use raids::RaidRecord;

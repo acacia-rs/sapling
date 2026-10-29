@@ -138,6 +138,11 @@ fn tool_slot(tool: Tool) -> u32 {
 
 /// What the workstations know of the item `name` (namespaced); `None` for one they do nothing with.
 pub fn gear(name: &str) -> Option<Gear> {
+    if let Some(custom) = crate::custom_items::by_name(name) {
+        const WORN: [u32; 4] = [slot::HEAD, slot::TORSO, slot::LEGS, slot::FEET];
+        let slots = custom.armour.map_or(0, |(at, _)| WORN[usize::from(at.min(3))]);
+        return custom.durability.map(|lasts| Gear { slots, enchantability: 0, lasts, repair: &[] });
+    }
     if let Some((_, slots, enchantability, lasts, repair)) = OTHERS.iter().find(|(known, ..)| *known == name) {
         return Some(Gear { slots: *slots, enchantability: *enchantability, lasts: *lasts, repair });
     }

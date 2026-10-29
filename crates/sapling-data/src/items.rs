@@ -13,6 +13,7 @@ use acacia_proto::types::{
 };
 
 use crate::templates::{CREATIVE_CONTENT, ITEM_REGISTRY, decode};
+use crate::{custom_creative, custom_items};
 
 /// The one item whose extra data carries a blocking tick (acacia-proto docs/proto.md).
 pub(crate) const SHIELD: &str = "minecraft:shield";
@@ -41,7 +42,7 @@ pub(crate) fn described(item: ItemLegacy) -> Option<CreativeItem> {
         ItemLegacyExtra::Default(extra) => extra.and_then(|extra| extra.nbt).map(|nbt| nbt.nbt.value),
         ItemLegacyExtra::ShieldItemID(extra) => extra.and_then(|extra| extra.nbt).map(|nbt| nbt.nbt.value),
     };
-    let name = *NAMES.get(&i16::try_from(item.network_id).ok()?)?;
+    let name = item_name(item.network_id)?;
     let block = Some(item.block_runtime_id as u32).filter(|hash| *hash != 0);
     Some(CreativeItem { name, damage: item.metadata as i16, block, tag })
 }
@@ -78,26 +79,35 @@ pub fn set_shield_item_id() {
 
 /// Whether the bundled ItemRegistry lists the item, so that a client can be shown it.
 pub fn is_item(name: &str) -> bool {
-    NETWORK_IDS.contains_key(name)
+    NETWORK_IDS.contains_key(name) || custom_items::by_name(name).is_some()
 }
 
 /// The name of the item a stack on the wire names by `network_id`.
 pub fn item_name(network_id: i32) -> Option<&'static str> {
-    NAMES.get(&i16::try_from(network_id).ok()?).copied()
+    let id = i16::try_from(network_id).ok()?;
+    NAMES.get(&id).copied().or_else(|| custom_items::by_id(id).map(|item| item.name))
 }
 
 /// `name` as the ItemRegistry spells it, kept for the whole run; `None` for an unlisted item.
 pub fn static_item_name(name: &str) -> Option<&'static str> {
-    NETWORK_IDS.get_key_value(name).map(|(name, _)| name.as_str())
+    NETWORK_IDS.get_key_value(name).map(|(name, _)| name.as_str()).or_else(|| custom_items::by_name(name).map(|item| item.name))
 }
 
 /// What a client names by `entry_id` when it takes an item from the creative inventory.
-pub fn creative_item(entry_id: u32) -> Option<&'static CreativeItem> {
-    CREATIVE.get(&entry_id)
+pub fn creative_item(entry_id: u32) -> Option<CreativeItem> {
+    CREATIVE.get(&entry_id).cloned().or_else(|| custom_creative::entry(entry_id))
+}
+
+/// The network id of the item `name`, custom items included.
+pub(crate) fn network_id(name: &str) -> Option<i16> {
+    NETWORK_IDS.get(name).copied().or_else(|| custom_items::by_name(name).map(|item| item.id))
 }
 
 /// How many of an item one slot holds.
 pub fn max_stack(name: &str) -> u8 {
+    if let Some(custom) = custom_items::by_name(name) {
+        return custom.max_stack;
+    }
     let ends = |list: &[&str]| list.iter().any(|end| name.ends_with(end));
     // A disc's name ends with which one it is; BDS gave two as two (bds-item-names.txt).
     match (ends(SIXTEEN), ends(SINGLE) || name.contains(":music_disc_")) {
@@ -145,7 +155,7 @@ pub fn no_item() -> ItemV4 {
 /// a packet carries stacks without one). `None` for an item the registry does not list.
 pub fn item(stack: &Stack<'_>, stack_id: Option<i32>) -> Option<ItemV4> {
     Some(ItemV4 {
-        network_id: *NETWORK_IDS.get(stack.name)?,
+        network_id: network_id(stack.name)?,
         count: stack.count.into(),
         metadata: stack.damage.max(0) as u32,
         has_stack_id: stack_id.is_some(),

@@ -26,7 +26,7 @@ const THIN_SNOW: &str = "height=0";
 /// The block a stack places on `face`: the one it names by `hash`, or the one its item builds
 /// (items.rs).
 fn block_of_stack(registry: &BlockRegistry, hash: Option<u32>, item: Option<&str>, face: Face) -> Option<u32> {
-    let named = hash.and_then(|hash| registry.runtime_id_from_hash(hash)).filter(|id| registry.get(*id).is_some_and(|state| !state.is_air()));
+    let named = hash.and_then(|hash| sapling_world::id_of_hash(registry, hash)).filter(|id| super::custom::clicked_name(registry, *id).is_some());
     named.or_else(|| items::block_of(registry, item?, face))
 }
 

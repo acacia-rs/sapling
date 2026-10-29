@@ -13,6 +13,11 @@ use crate::{
 /// shards in an `Arc` it holds.
 pub trait Plugin: Send + Sync + 'static {
     fn build(&self, plugin: &mut PluginBuilder<'_>);
+
+    /// Adds custom items and blocks, once for the whole server, before any shard is built.
+    fn content(&self, content: &mut crate::Content) {
+        let _ = content;
+    }
 }
 
 /// What [`Plugin::build`] adds to: commands, and listeners and tasks for the whole shard.

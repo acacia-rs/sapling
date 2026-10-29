@@ -6,7 +6,7 @@ sapling is MIT-licensed ([LICENSE](LICENSE)). It includes or derives from these 
 |---|---|---|
 | [Cubitect/cubiomes](https://github.com/Cubitect/cubiomes), [xpple/cubiomes](https://github.com/xpple/cubiomes) | (c) 2020 Cubitect | `sapling-worldgen/src/biome/btree/` (generated from `btree262` by `scripts/btree_to_rust.py`); the density terms in `sapling-worldgen/src/shaper/overworld.rs` (`terrainnoise.c`) |
 | [stirante/featurelab](https://github.com/stirante/featurelab) | (c) 2026 stirante | the `sapling-worldgen/src/feature/` files that name it in their header (trees, ores, vegetation patches, growing plants and others) |
-| [df-mc/dragonfly](https://github.com/df-mc/dragonfly) | (c) 2019 Dragonfly Tech | server design and game values, as noted in [docs/DESIGN.md](docs/DESIGN.md) and the source |
+| [df-mc/dragonfly](https://github.com/df-mc/dragonfly) | (c) 2019 Dragonfly Tech | server design and game values, as noted in [docs/DESIGN.md](docs/DESIGN.md) and the source; `sapling/src/packs/generated.rs` (ported from `internal/packbuilder`), the custom item and block components of `sapling-data/src/custom_items.rs` and `custom_blocks.rs` (from `internal/iteminternal` and `internal/blockinternal`), the custom state hash of `sapling-leveldb/src/custom_states.rs` (`world/network_block_hash.go`) |
 | [df-mc/worldupgrader](https://github.com/df-mc/worldupgrader) | (c) 2023 Dragonfly | `sapling-leveldb/src/upgrade/schema.rs` (ported from `blockupgrader`) |
 
 Each is used under the MIT License:

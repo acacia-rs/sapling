@@ -144,7 +144,7 @@ impl World {
 
     /// The runtime id of a block's default-ordered first state, e.g. `minecraft:stone`.
     pub fn block_id(&self, name: &str) -> Option<u32> {
-        self.registry.states_of(name).next().map(|(id, _)| id)
+        self.registry.states_of(name).next().map(|(id, _)| id).or_else(|| sapling_leveldb::custom_ids(name).next())
     }
 
     pub fn is_loaded(&self, pos: ChunkPos) -> bool {

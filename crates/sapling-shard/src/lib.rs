@@ -107,6 +107,7 @@ mod workstations;
 mod world_events;
 mod worlds;
 
+pub use blocks::custom::register as register_custom_block;
 pub use config::{MovementCheck, ShardConfig, TICK};
 pub use packs::{ResourcePack, ResourcePacks};
 pub use handoff::Link;

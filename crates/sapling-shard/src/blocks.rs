@@ -19,6 +19,7 @@ mod coral;
 mod composter;
 mod copper;
 mod crafter;
+pub(crate) mod custom;
 mod daylight;
 mod dispensers;
 mod dripleaf;

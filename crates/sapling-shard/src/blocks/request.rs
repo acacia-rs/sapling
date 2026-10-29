@@ -190,8 +190,8 @@ impl Request<'_> {
             return;
         }
         let Some((registry, id)) = self.block(&site, pos) else { return };
-        let Some(state) = registry.get(id).filter(|state| site.mode != GameMode::Spectator && !state.is_air() && !state.is_liquid()) else { return };
-        let (packet, hardness, block) = (send::punch_particles(registry, pos, face, id), state.mining, send::describe(registry, id));
+        let Some(hardness) = super::custom::breakable(registry, id).filter(|_| site.mode != GameMode::Spectator) else { return };
+        let (packet, block) = (send::punch_particles(registry, pos, face, id), send::describe(registry, id));
         if !crate::hand_events::may_start_break(self.world, self.entity, pos, block) {
             return;
         }
@@ -214,8 +214,8 @@ impl Request<'_> {
         let took_its_time = mining::finish(self.world, self.entity, pos);
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, above]) };
         let Some((registry, id)) = self.block(&site, pos) else { return };
-        let Some(state) = registry.get(id).filter(|state| !state.is_air() && !state.is_liquid()) else { return self.resync(&[pos, above]) };
-        let (block, mining) = (send::describe(registry, id), state.mining);
+        let Some(mining) = super::custom::breakable(registry, id) else { return self.resync(&[pos, above]) };
+        let block = send::describe(registry, id);
         let name = block.name.clone();
         let by = mining::breaker(self.world, self.entity, &mining);
         let (mut drops, mut tags) = (Vec::new(), loot::Tags::default());
@@ -271,7 +271,7 @@ impl Request<'_> {
         let target = face.neighbour(pos);
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, target]) };
         let Some((registry, clicked)) = self.block(&site, pos) else { return };
-        let Some(name) = registry.get(clicked).filter(|state| !state.is_air()).map(|state| state.name) else { return self.resync(&[pos, target]) };
+        let Some(name) = super::custom::clicked_name(registry, clicked) else { return self.resync(&[pos, target]) };
         // The clicked block's own use comes first, unless the player sneaks or works copper.
         let held = self.held_item(site.mode, click);
         let builds = site.sneaking || !is_used(name) || held.as_deref().is_some_and(|held| super::copper::is_worked_by(name, held));

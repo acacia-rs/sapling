@@ -33,7 +33,9 @@ impl Props {
     /// A cell holding `block` with `liquid` in its second layer: the stronger emission and filter
     /// of the two, so waterlogged leaves stop what leaves stop.
     pub fn cell(&self, block: u32, liquid: u32, air: u32) -> u8 {
-        let of = |id: u32| self.0.get(id as usize).copied().unwrap_or(FULL_LIGHT);
+        // Custom states follow the vanilla ids and may be registered after the world was made.
+        let custom = |id| sapling_leveldb::custom_state(id).map_or(FULL_LIGHT, |state| state.light_emission.min(15) << 4 | state.light_filter.min(15));
+        let of = |id: u32| self.0.get(id as usize).copied().unwrap_or_else(|| custom(id));
         let first = of(block);
         if liquid == air {
             return first;

@@ -27,6 +27,8 @@ mod commands;
 mod container_access;
 mod containers;
 mod copper;
+mod custom_blocks;
+mod custom_items;
 mod daylight;
 mod dimension_saves;
 mod dimensions;

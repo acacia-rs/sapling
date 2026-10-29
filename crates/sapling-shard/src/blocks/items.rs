@@ -56,6 +56,9 @@ fn standing_or_wall(name: &str, face: Face) -> Option<String> {
 /// The block the item `name` places on `face`, in the state the item gives it before it is
 /// turned.
 pub(super) fn block_of(registry: &BlockRegistry, name: &str, face: Face) -> Option<u32> {
+    if let Some(custom) = super::custom::placed_by(name) {
+        return Some(custom);
+    }
     let first = |block: &str| registry.states_of(block).next().map(|(id, _)| id);
     if name.ends_with("_hanging_sign") {
         // Under a ceiling it hangs, on a wall it sticks out; it does not stand.

@@ -13,6 +13,7 @@ use acacia_world::{BlockRegistry, BlockState};
 use bytes::BytesMut;
 
 use crate::Error;
+use crate::custom_states;
 use crate::upgrade::{self, States};
 
 /// The block vanilla itself shows for blocks it does not know.
@@ -110,11 +111,15 @@ impl BlockStates {
 
     fn exact(&self, name: &str, states: &States) -> Option<u32> {
         let properties = properties(&compound_of(states));
-        self.by_name.get(name)?.iter().copied().find(|&id| self.registry.get(id).is_some_and(|state| state.properties == properties))
+        let Some(ids) = self.by_name.get(name) else { return custom_states::custom_id_of(name, &properties) };
+        ids.iter().copied().find(|&id| self.registry.get(id).is_some_and(|state| state.properties == properties))
     }
 
     /// The block's first state, or [`PLACEHOLDER`] for an unknown block; logged.
     fn nearest(&self, name: &str, states: &States) -> u32 {
+        if let Some(first) = custom_states::custom_ids(name).next() {
+            return first;
+        }
         let Some(ids) = self.by_name.get(name) else {
             self.report("unknown block", name);
             return self.placeholder;
@@ -129,9 +134,14 @@ impl BlockStates {
             out.extend_from_slice(entry);
             return Ok(());
         }
-        let state = self.registry.get(id).ok_or_else(|| Error::State(format!("runtime id {id}")))?;
-        let states = typed_states(state).ok_or_else(|| Error::State(format!("{}[{}]", state.name, state.properties)))?;
-        let entry: Arc<[u8]> = compound(vec![name_field(state), ("states".into(), states), ("version".into(), Value::Int(STATE_VERSION))]).into();
+        let (name, states) = match self.registry.get(id) {
+            Some(state) => (name_field(state), typed_states(state).ok_or_else(|| Error::State(format!("{}[{}]", state.name, state.properties)))?),
+            None => {
+                let custom = custom_states::custom_state(id).ok_or_else(|| Error::State(format!("runtime id {id}")))?;
+                (("name".into(), Value::String(custom.name.into())), custom.states.clone())
+            }
+        };
+        let entry: Arc<[u8]> = compound(vec![name, ("states".into(), states), ("version".into(), Value::Int(STATE_VERSION))]).into();
         out.extend_from_slice(&entry);
         self.written.lock().expect("writer lock").insert(id, entry);
         Ok(())
@@ -171,7 +181,10 @@ pub(crate) fn network_hash(block: &Value) -> Option<u32> {
 /// The `{name, states, version}` compound of the state a network hash names, as an item stack
 /// stores the block it places.
 pub fn block_of_hash(registry: &BlockRegistry, hash: u32) -> Option<Value> {
-    let state = registry.get(registry.runtime_id_from_hash(hash)?)?;
+    let Some(state) = registry.runtime_id_from_hash(hash).and_then(|id| registry.get(id)) else {
+        let custom = custom_states::custom_state(custom_states::custom_id_of_hash(hash)?)?;
+        return Some(Value::Compound(vec![("name".into(), Value::String(custom.name.into())), ("states".into(), custom.states.clone()), ("version".into(), Value::Int(STATE_VERSION))]));
+    };
     Some(Value::Compound(vec![name_field(state), ("states".into(), typed_states(state)?), ("version".into(), Value::Int(STATE_VERSION))]))
 }
 
@@ -210,7 +223,7 @@ pub fn palette_block(entry: &Value) -> Option<(String, String)> {
     Some((name.to_string(), entry.get("states").map(properties).unwrap_or_default()))
 }
 
-fn properties(states: &Value) -> String {
+pub(crate) fn properties(states: &Value) -> String {
     let Value::Compound(entries) = states else { return String::new() };
     let text = |value: &Value| match value {
         Value::Byte(v) => v.to_string(),

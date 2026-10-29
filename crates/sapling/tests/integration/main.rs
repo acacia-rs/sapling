@@ -8,6 +8,7 @@ mod blocks;
 mod chest;
 mod client_commands;
 mod craft;
+mod custom_content;
 mod end;
 mod execute;
 mod eyes;

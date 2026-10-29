@@ -10,6 +10,9 @@ const OTHERS: &[(&str, f32)] = &[("trident", 9.0), ("mace", 6.0)];
 
 /// The health a hit with the item `name` in hand takes; a bare hand's for `None`.
 pub fn item_attack(name: Option<&str>) -> f32 {
+    if let Some(custom) = name.and_then(crate::custom_items::by_name) {
+        return custom.attack.unwrap_or(HAND);
+    }
     let Some(name) = name.map(|name| name.strip_prefix("minecraft:").unwrap_or(name)) else { return HAND };
     if let Some((_, harm)) = OTHERS.iter().find(|(other, _)| *other == name) {
         return *harm;

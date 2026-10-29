@@ -41,7 +41,10 @@ pub(crate) static TEMPLATE: LazyLock<StartGame> = LazyLock::new(|| decode(START_
 pub fn start_game(o: &StartGameOptions) -> StartGame {
     let [x, y, z] = o.position;
     let [sx, sy, sz] = o.world_spawn;
+    let mut block_properties = TEMPLATE.block_properties.clone();
+    block_properties.extend(crate::custom_blocks::block_properties());
     StartGame {
+        block_properties,
         difficulty: o.difficulty,
         gamerules: o.rules.start_game(),
         entity_id: o.entity_id,
