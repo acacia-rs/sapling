@@ -148,6 +148,8 @@ Sapling's run: sapling-hits2.txt. Each mob held by slowness 255, the actor put b
 - A hit while the actor jumped (`!jump`) cost a cow 12, the sword's 8 times 1.5.
 - A hit cow ran off out of reach (3.6 blocks), so the sword's wear and repeated hits were not seen.
 - `effect` health_boost raised BDS's cows to 30 health; sapling's stay at 10 (not followed).
+- Sapling's run matched each sword, enchantment and the zombie's 7.872, but not the jump: its cow lost
+  8, no critical hit (not followed), and its chestplate zombie took 7.872, the chestplate refused.
 
 ## Not drilled
 
