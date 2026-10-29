@@ -95,6 +95,16 @@ fn a_roof_shades_across_borders_and_a_hole_in_it_lets_the_sky_down() {
 }
 
 #[test]
+fn a_solid_block_filled_and_cleared_lets_the_sky_back_in() {
+    let mut world = loaded((-1..=1).flat_map(|x| (-1..=1).map(move |z| ground(x, z))).collect());
+    world.fill([-7, 64, -7], [15, 69, 7], stone());
+    world.relight();
+    world.fill([-7, 64, -7], [15, 69, 7], air());
+    world.relight();
+    assert_eq!((light(&world, [6, 65, 0]).0, light(&world, [-4, 64, -4]).0), (15, 15));
+}
+
+#[test]
 fn light_waits_at_a_column_not_loaded_and_crosses_once_it_is() {
     let mut lamp = ground(0, 0);
     lamp.set(15, 64, 8, 0, glowstone());

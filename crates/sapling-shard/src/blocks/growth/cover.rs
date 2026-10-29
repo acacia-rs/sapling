@@ -17,10 +17,13 @@ const SNOW: &str = "minecraft:snow_layer";
 /// Of the 45 cells a grass block's random tick may pick, it tries this many.
 const SPREAD_CELLS: u32 = 45;
 const SPREAD_TRIES: u32 = 4;
-/// Over dirt with less light than this mycelium does not spread, and mycelium under a block dies.
+/// Over dirt with less light than this mycelium does not spread.
 const DIM: u8 = 4;
 /// Block light in its cell from which ice melts and snow loses a layer for each level more.
 const MELTING_LIGHT: u8 = 12;
+/// Snow in a biome warmer than 0.15 loses a layer one random tick in this many, unlit
+/// (`TopSnowBlock::randomTick` 1471fb850; research/captures/bds-lightgrow.txt).
+const WARM_ODDS: u32 = 16;
 
 type Level = sapling_world::World;
 
@@ -35,6 +38,7 @@ pub(super) fn is_kept(level: &Level, pos: BlockPos, name: &str) -> bool {
     match name {
         DIRT => is_air(level, Face::Up.neighbour(pos)),
         GRASS | MYCELIUM => dies(level, pos, name),
+        SNOW => melting(level, pos) > 0 || !level.is_cold(pos[0], pos[1], pos[2]),
         _ => melting(level, pos) > 0,
     }
 }
@@ -43,20 +47,21 @@ fn brightness(level: &Level, [x, y, z]: BlockPos, darken: u8) -> u8 {
     level.brightness_at(x, y, z, darken).unwrap_or(0)
 }
 
-/// Whether the grass or mycelium `name` at `pos` dies (`GrassBlockBase::_canBeGrass`,
-/// `MyceliumBlock::randomTick`): grass under a block that stops light or under water, mycelium
-/// under a solid block in the dark.
+/// Whether the grass or mycelium `name` at `pos` dies (`GrassBlockBase::_canBeGrass`): grass under
+/// a block that stops light or under water. Mycelium never yet: under stone in the dark BDS's
+/// lived 60 seconds at 200 (research/captures/bds-lightgrow.txt).
+// TODO: `MyceliumBlock::randomTick` 1465eb280 kills in the dark under a solid block unless that has the tag at 0x14cd22f48; find the tag.
 fn dies(level: &Level, pos: BlockPos, name: &str) -> bool {
-    let over @ [x, y, z] = Face::Up.neighbour(pos);
+    if name == MYCELIUM {
+        return false;
+    }
+    let [x, y, z] = Face::Up.neighbour(pos);
     let registry = level.registry();
     if !level.in_height(y) {
         return false;
     }
     let states = [level.block(x, y, z), level.liquid(x, y, z)].map(|id| registry.get(id));
-    match name {
-        GRASS => states.iter().flatten().any(|state| state.light_filter >= sapling_world::FULL_LIGHT || state.is_liquid()),
-        _ => brightness(level, over, 0) < DIM && states[0].is_some_and(|state| state.is_solid()),
-    }
+    states.iter().flatten().any(|state| state.light_filter >= sapling_world::FULL_LIGHT || state.is_liquid())
 }
 
 /// The block light in the cell of `pos`, or one less than beside it: sapling's light table has
@@ -125,6 +130,7 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, name: &str, darken: u8, picks
         GRASS | MYCELIUM if dies(level, pos, name) => to(DIRT).map(|id| shown(pos, id)),
         ICE if melting(level, pos) > 0 => melted_ice(level, pos),
         SNOW => match melting(level, pos) {
+            0 if !level.is_cold(pos[0], pos[1], pos[2]) && picks.below(WARM_ODDS) == 0 => melted_snow(level, pos, level.block(pos[0], pos[1], pos[2]), 1),
             0 => None,
             layers => melted_snow(level, pos, level.block(pos[0], pos[1], pos[2]), layers),
         },
