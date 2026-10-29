@@ -79,6 +79,20 @@ fn a_hopper_takes_from_the_chest_above_and_fills_the_one_it_faces() {
     assert_eq!(counts(&open(&mut h, 1, [2, 66, 0]).1)[0], 3);
 }
 
+#[test]
+fn a_hopper_beside_a_brewing_stand_fills_its_empty_bottle_place_only() {
+    let hopper = Block::new("hopper").with("facing_direction=4,toggle_bit=0");
+    let mut h = setup(false, Vec::new(), vec![(HERE, Block::new("brewing_stand")), (THERE, hopper)]);
+    h.remote.run(|ctx| {
+        let bottle = |count| Item::new("minecraft:glass_bottle", count);
+        assert!(ctx.set_container_item(HERE, 1, Some(&bottle(1))) && ctx.set_container_item(HERE, 2, Some(&bottle(1))));
+        assert!(ctx.set_container_item(THERE, 0, Some(&bottle(5))));
+    });
+    ticks(&mut h, 40);
+    assert_eq!(counts(&open(&mut h, 1, HERE).1), [0, 1, 1, 1, 0], "as BDS (bds-hopperbrew.txt)");
+    assert_eq!(counts(&open(&mut h, 1, THERE).1)[0], 4);
+}
+
 /// The `Items` an item carries in its tag, as (slot, count).
 fn held_items(item: &ItemV4) -> Vec<(i8, i8)> {
     let ItemV4Extra::Default(Some(extra)) = &item.extra else { return Vec::new() };

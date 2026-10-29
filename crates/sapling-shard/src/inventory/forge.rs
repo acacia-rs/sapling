@@ -16,6 +16,7 @@ mod cartography;
 mod loom;
 
 pub(crate) use cartography::{CARTOGRAPHY_INPUT, Chart, remade};
+pub(crate) use loom::holds_a_full_banner;
 
 const ANVIL_INPUT: usize = 1;
 const ANVIL_MATERIAL: usize = 2;
@@ -180,6 +181,14 @@ impl Forge {
         let mut forge = Self::new(vec![(Place::Ui(ENCHANTING_INPUT), 1), (Place::Ui(LAPIS), lapis)], Forged::Enchanted);
         forge.spared = creative.then_some(Place::Ui(LAPIS));
         Ok(forge)
+    }
+
+    /// Whether the anvil's input, its material and `name` make nothing: BDS answers status 9 and
+    /// resends nothing (research/captures/bds-anvilnames.txt: no name, index -1, the own name).
+    pub fn repairs_nothing(inventory: &Inventory, name: Option<&str>) -> bool {
+        let Some(input) = held(inventory, ANVIL_INPUT) else { return false };
+        let material = held(inventory, ANVIL_MATERIAL).map(|held| stack(&held.stack));
+        anvil::repair(&stack(&input.stack), material.as_ref(), name).is_none()
     }
 
     /// An anvil's craft (`CraftRecipeOptional`), renaming to `name` when the request names one.

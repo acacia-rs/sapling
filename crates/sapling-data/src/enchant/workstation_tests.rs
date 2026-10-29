@@ -39,7 +39,7 @@ fn the_tables_three_costs_follow_the_shelves() {
 #[test]
 fn an_offer_is_named_with_three_or_four_words() {
     let offered = offers(0, &stack("minecraft:iron_pickaxe", None), &mut Script(Vec::new()));
-    assert!(offered.iter().all(|offer| offer.name.split(' ').count() == 3 && offer.name.starts_with("the the")), "{offered:?}");
+    assert!(offered.iter().all(|offer| offer.name == "the the the "), "{offered:?}");
     assert!(offers(0, &stack("minecraft:shears", None), &mut Script(Vec::new())).is_empty(), "shears take nothing from the table");
 }
 
@@ -60,6 +60,8 @@ fn shelves_count_in_a_ring_two_out_on_two_layers() {
     let spots: Vec<_> = table::shelf_spots().collect();
     assert_eq!(spots.len(), 32);
     assert!(spots.contains(&([2, 1, -1], [[1, 0, -1], [1, 1, -1]])) && spots.contains(&([-2, 0, 0], [[-1, 0, 0], [-1, 1, 0]])));
+    let through = ["air", "white_carpet", "snow_layer", "torch", "short_grass", "glass", "stone"].map(|name| table::lets_through(&format!("minecraft:{name}")));
+    assert_eq!(through, [true, true, true, false, false, false, false]);
 }
 
 #[test]

@@ -116,7 +116,8 @@ const OTHERS: &[(&str, u32, u8, u16, &[&str])] = &[
     ("minecraft:elytra", slot::ELYTRA, 0, 432, &["minecraft:phantom_membrane"]),
     ("minecraft:carrot_on_a_stick", slot::CARROT_STICK, 1, 25, &[]),
     ("minecraft:warped_fungus_on_a_stick", slot::FUNGUS_STICK, 1, 100, &[]),
-    ("minecraft:mace", slot::MACE, 15, 500, &["minecraft:breeze_rod"]),
+    // Not the wiki's 15: BDS's offers fit 8 to 11 only (research/captures/bds-enchants.txt).
+    ("minecraft:mace", slot::MACE, 10, 500, &["minecraft:breeze_rod"]),
     ("minecraft:brush", slot::BRUSH, 0, 64, &[]),
     ("minecraft:turtle_helmet", slot::HEAD, 9, 275, &["minecraft:turtle_scute"]),
     ("minecraft:compass", slot::COMPASS, 0, 0, &[]),
@@ -151,6 +152,11 @@ pub fn gear(name: &str) -> Option<Gear> {
     if let Some(tool) = Tool::from_identifier(name).filter(|tool| tool.tier.is_some()) {
         return Some(Gear { slots: tool_slot(tool), enchantability: *tools, lasts: tool.max_durability(), repair });
     }
+    if piece == "spear" {
+        // TODO: a spear's uses are not drilled; the sword of its material's are taken.
+        let lasts = Tool::from_identifier(&format!("minecraft:{material}_sword"))?.max_durability();
+        return Some(Gear { slots: slot::SPEAR, enchantability: *tools, lasts, repair });
+    }
     let (_, slots) = PIECES.iter().find(|(known, _)| *known == piece)?;
     Some(Gear { slots: *slots, enchantability: *armour, lasts: crate::armour_lasts(name)?, repair })
 }
@@ -175,6 +181,7 @@ mod tests {
         assert_eq!((helmet.slots, helmet.enchantability, helmet.lasts), (slot::HEAD, 25, 77));
         assert!(gear("minecraft:wooden_pickaxe").unwrap().is_repaired_by("minecraft:birch_planks"));
         assert_eq!(gear("minecraft:book").map(|book| book.enchantability), Some(1));
+        assert_eq!(gear("minecraft:wooden_spear").map(|spear| (spear.slots, spear.enchantability)), Some((slot::SPEAR, 15)));
         assert_eq!([gear("minecraft:stone"), gear("minecraft:iron_ingot"), gear("minecraft:leather_sword")], [None; 3]);
     }
 }

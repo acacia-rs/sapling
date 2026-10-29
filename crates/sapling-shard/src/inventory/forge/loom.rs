@@ -35,6 +35,13 @@ fn allows(material: Option<&str>, pattern: &str) -> bool {
     ITEM_PATTERNS.iter().any(|(item, given)| Some(*item) == kind && *given == pattern)
 }
 
+/// Whether the banner in the loom has its six patterns: BDS answers a loom craft then with status
+/// 7 and resends nothing (research/captures/bds-banners.txt).
+pub(crate) fn holds_a_full_banner(inventory: &Inventory) -> bool {
+    let patterns = held(inventory, LOOM_INPUT).and_then(|held| held.stack.tag.as_ref()?.get("Patterns").cloned());
+    matches!(patterns, Some(Value::List(list)) if list.items.len() >= MAX_PATTERNS)
+}
+
 /// `tag` with `{Color, Pattern}` added to its `Patterns`; `None` where it has its fill.
 fn patterned(tag: Option<&Value>, pattern: &str, colour: u8) -> Option<Value> {
     let mut fields = match tag {

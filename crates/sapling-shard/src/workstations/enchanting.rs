@@ -15,6 +15,10 @@ use sapling_worldgen::random::Mt19937;
 use crate::components::{Layer, Outgoing};
 use crate::inventory::{Inventory, enchanting_input, stack};
 
+#[cfg(test)]
+#[path = "enchanting_tests.rs"]
+mod tests;
+
 /// The offers made for the item last in a player's enchanting table.
 #[derive(Component, Default, Clone)]
 pub(crate) struct Offers {

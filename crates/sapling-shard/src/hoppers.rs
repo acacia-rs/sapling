@@ -124,16 +124,22 @@ pub(crate) fn takes_items(world: &World, layer: Entity, target: BlockPos) -> boo
 pub(crate) fn put_one(world: &mut World, layer: Entity, target: BlockPos, face: Face, item: &ItemStack) -> bool {
     let Some(kind) = containers::kind_at(world, layer, target).filter(|kind| kind.holds_items()) else { return false };
     let item = ItemStack { count: 1, ..item.clone() };
-    let empty: Vec<bool> = containers::slots_at(world, layer, target).map(|slots| slots.iter().map(Option::is_none).collect()).unwrap_or_default();
-    let was_empty = !empty.is_empty() && empty.iter().all(|empty| *empty);
-    let moved = match crate::blocks::crafter_slot(world, layer, target, &item) {
-        Some(slot) => containers::with_slots(world, layer, target, |world, into| insert(world, into, &item, |at| Some(at) == slot) > 0),
-        None => containers::with_slots(world, layer, target, |world, into| insert(world, into, &item, |at| kind.takes_from_hopper(at, face, empty.get(at).copied().unwrap_or(true), &item)) > 0),
-    };
-    if moved == Some(true) && kind.is_hopper() && was_empty {
+    let crafter = crate::blocks::crafter_slot(world, layer, target, &item);
+    // Emptiness is read from the slots the insert sees: a stand not yet loaded once read as empty
+    // and stacked bottles (research/captures/bds-hopperbrew.txt).
+    let moved = containers::with_slots(world, layer, target, |world, into| {
+        let empty: Vec<bool> = into.iter().map(Option::is_none).collect();
+        let accepts = |at: usize| match crafter {
+            Some(slot) => Some(at) == slot,
+            None => kind.takes_from_hopper(at, face, empty[at], &item),
+        };
+        (insert(world, into, &item, accepts) > 0, !empty.is_empty() && empty.iter().all(|empty| *empty))
+    });
+    let Some((moved, was_empty)) = moved else { return false };
+    if moved && kind.is_hopper() && was_empty {
         delay_receiver(world, layer, target);
     }
-    moved == Some(true)
+    moved
 }
 
 /// Moves one item from the first slot that can give one into the container the hopper faces.

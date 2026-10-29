@@ -117,8 +117,11 @@ pub fn repair(input: &Stack<'_>, material: Option<&Stack<'_>>, name: Option<&str
             return None;
         }
     }
+    // BDS refused a rename of a plain diamond sword to "Diamond Sword" (research/captures/bds-anvilnames.txt).
+    let own_name = crate::item_display_name(input.name, input.damage.max(0) as u16).or_else(|| crate::item_display_name(input.name, 0));
     let renamed = match (name, custom_name(input.tag)) {
         (Some(""), Some(_)) => Some(None),
+        (Some(name), None) if Some(name) == own_name => None,
         (Some(name), had) if !name.is_empty() && Some(name) != had => Some(Some(name)),
         _ => None,
     };
