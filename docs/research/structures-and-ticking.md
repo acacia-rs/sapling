@@ -61,8 +61,14 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   with each line ended by "\n", then `inuse` [count, "10"].
 - Stored in the level (`sapling-leveldb/src/ticking_areas.rs`) and kept loaded with nobody near
   (`sapling-shard/src/kept.rs`), as are a plugin's forced chunks.
-- Bedrock keeps no spawn chunks (no such string in the executable; not drilled): only ticking
-  areas stay.
+- Bedrock keeps no spawn chunks: a repeating command block's clock stopped within a second of the
+  players going 3000 blocks off, and with `tickingarea add circle 0 -60 0 1` it counted on at 20 a
+  second (answer centre `8, 0, 8`) [bds-spawnchunks.txt, `bds_command_probe spawnchunks`]; only
+  ticking areas stay. Sapling kept counting: a column stays loaded while its writes are being saved,
+  and a repeating block writes every run. Fixed: a repeating block in a column no player sees and no
+  ticking area keeps waits (`command_blocks/run.rs`;
+  `command_blocks::a_repeating_block_stops_once_nobody_is_near_as_bds_keeps_no_spawn_chunks`). Other
+  block ticks in such a column are not checked.
 
 ## Hardcore
 

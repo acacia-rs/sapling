@@ -46,6 +46,14 @@ fn mark_condition(world: &World, layer: Entity, pos: BlockPos, shape: &Shape, fi
     fields.set_flag("conditionMet", met);
 }
 
+/// Whether a player sees the block's column or the world keeps it: BDS's repeating block stopped
+/// once nobody was near and ran on in a ticking area (research/captures/bds-spawnchunks.txt), where
+/// a column here stays loaded while its block's writes are saved.
+fn simulated(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let kept = world.get::<crate::kept::Kept>(layer).is_some_and(|kept| kept.holds(sapling_world::ChunkPos::of_block(pos[0], pos[2])));
+    kept || !crate::view::viewers(world, layer, pos).is_empty()
+}
+
 /// A queued run: an impulse or repeating block runs where its condition is met and then its
 /// chain, a repeating one queuing its next run while powered or always active; a chain block
 /// that waited its delay runs and goes on with its chain.
@@ -56,6 +64,9 @@ pub(crate) fn tick(world: &mut World, layer: Entity, pos: BlockPos) {
             chain(world, layer, pos);
         }
         return;
+    }
+    if shape.kind == Kind::Repeating && !simulated(world, layer, pos) {
+        return queued::after(world, layer, pos, 1, Job::Command);
     }
     let Some(mut fields) = super::read(world, layer, pos) else { return };
     if shape.kind == Kind::Repeating {

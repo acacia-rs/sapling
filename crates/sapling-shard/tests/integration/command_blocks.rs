@@ -5,10 +5,10 @@ use crate::common;
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{
-    BlockEntityData, CommandBlockUpdate, CommandBlockUpdateContent, CommandBlockUpdateContentTrue, CommandBlockUpdateContentTrueMode as Mode, ContainerOpen, Text, TextContent, UpdateBlock,
+    BlockEntityData, CommandBlockUpdate, PlayerAuthInput, CommandBlockUpdateContent, CommandBlockUpdateContentTrue, CommandBlockUpdateContentTrueMode as Mode, ContainerOpen, Text, TextContent, UpdateBlock,
 };
-use acacia_proto::types::{BlockCoordinates, WindowType};
-use common::shooting::{ALEX, ready};
+use acacia_proto::types::{BlockCoordinates, InputData, WindowType};
+use common::shooting::{ALEX, STEVE, ready};
 use common::{Harness, all, click};
 use sapling_api::{Block, BlockPos, Command, GameMode, Output, Permission, RuleValue, Sender, ShardCtx};
 
@@ -27,6 +27,45 @@ impl Command for Stamp {
         ctx.set_block([x, y - 1, z], &Block::new(WOOL));
         out.print("stamped");
     }
+}
+
+static COUNTED: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+/// Counts its runs in [`COUNTED`].
+#[derive(Command)]
+#[command(crate = "sapling_api", permission = "operator")]
+struct Count;
+
+impl Command for Count {
+    fn run(self, _: &mut ShardCtx<'_>, _: &Sender, _: &mut Output) {
+        COUNTED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+#[test]
+fn a_repeating_block_stops_once_nobody_is_near_as_bds_keeps_no_spawn_chunks() {
+    let mut h = ready(GameMode::Creative, &[], 0.0);
+    h.shard.add_command::<Count>();
+    h.remote.run(|ctx| {
+        ctx.set_permission(ALEX, Permission::Operator);
+        assert!(ctx.set_block(HEAD, &Block::new("minecraft:repeating_command_block").with("conditional_bit=0,facing_direction=5")));
+    });
+    h.tick_all();
+    h.receive(1, &update(HEAD, Mode::Repeat, false, "count"));
+    let ran = |h: &mut Harness, ticks: usize| {
+        let before = COUNTED.load(std::sync::atomic::Ordering::Relaxed);
+        (0..ticks).for_each(|_| drop(h.tick_all()));
+        COUNTED.load(std::sync::atomic::Ordering::Relaxed) - before
+    };
+    assert!(ran(&mut h, 40) >= 35, "it runs every tick");
+    const FAR: [f32; 3] = [3000.5, 65.0, 0.5];
+    h.remote.run(|ctx| [ALEX, STEVE].into_iter().for_each(|player| ctx.teleport(player, FAR)));
+    h.tick_all();
+    for client in [1, 2] {
+        h.receive(client, &PlayerAuthInput { input_data: vec![InputData::HandledTeleport], ..common::input_at(FAR) });
+    }
+    ran(&mut h, 220);
+    assert_eq!(ran(&mut h, 100), 0, "research/captures/bds-spawnchunks.txt: stopped within a second");
 }
 
 fn update(pos: BlockPos, mode: Mode, needs_redstone: bool, command: &str) -> CommandBlockUpdate {
