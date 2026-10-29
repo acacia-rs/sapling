@@ -37,7 +37,7 @@ done
 job="$job
 echo 0 > $name.done"
 printf '%s\n' "$job" | ssh $opts testbox "rm -f $run/$name.done && cat > $run/$name.sh" || exit 1
-ssh $opts testbox "{ nohup flock $run/lock sh $run/$name.sh </dev/null >/dev/null 2>&1 & }" || exit 1
+ssh $opts testbox "{ nohup flock -o $run/lock sh $run/$name.sh </dev/null >/dev/null 2>&1 & }" || exit 1
 until ssh $opts testbox "test -f $run/$name.done" 2>/dev/null; do sleep 10; done
 mkdir -p "$out"
 scp -q $opts "testbox:$run/$name.out" "$out/$name.out"

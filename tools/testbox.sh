@@ -60,7 +60,7 @@ write_job() { printf '%s\n' "$job" | ssh $opts testbox "rm -f $run/$name.done &&
 retry ssh $opts testbox "bash -s -- $remote" <"$root/tools/testbox-target.sh" || exit 1
 retry upload || exit 1
 retry write_job || exit 1
-retry ssh $opts testbox "{ nohup flock $run/lock sh $run/$name.sh </dev/null >/dev/null 2>&1 & }" || exit 1
+retry ssh $opts testbox "{ nohup flock -o $run/lock sh $run/$name.sh </dev/null >/dev/null 2>&1 & }" || exit 1
 # Poll with short calls; a single long ssh would die with the link.
 until ssh $opts testbox "test -f $run/$name.done" 2>/dev/null; do sleep 10; done
 mkdir -p "$out"

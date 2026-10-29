@@ -8,7 +8,7 @@
 set -uo pipefail
 source "$(dirname "$0")/remote-sync.sh"
 args=$(printf '%q ' "$@")
-retry ssh $opts $host "cd $remote || exit; rm -f test.log test.done; { nohup flock target/.busy sh -c 'ACACIA_TICK_SCALE=${TICK_SCALE:-2} ACACIA_HUMAN_SCALE=${HUMAN_SCALE:-0.1} $cargo test $args >test.log 2>&1; echo \$? >test.done' </dev/null >/dev/null 2>&1 & }" || exit 1
+retry ssh $opts $host "cd $remote || exit; rm -f test.log test.done; { nohup flock -o target/.busy sh -c 'ACACIA_TICK_SCALE=${TICK_SCALE:-2} ACACIA_HUMAN_SCALE=${HUMAN_SCALE:-0.1} $cargo test $args >test.log 2>&1; echo \$? >test.done' </dev/null >/dev/null 2>&1 & }" || exit 1
 # Poll with short calls; a single long ssh would die with the link.
 until ssh $opts $host "test -f $remote/test.done" 2>/dev/null; do sleep 5; done
 retry ssh $opts $host "cd $remote; grep -E '^(error|warning)|^\s+--> |test result|FAILED|panicked|left:|right:' test.log | head -60; echo exit: \$(cat test.done)"

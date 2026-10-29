@@ -19,7 +19,7 @@ for word in $words; do
 done
 wait"
 printf '%s\n' "$job" | retry ssh $opts $host "cat > $remote/drills.sh" || exit 1
-retry ssh $opts $host "cd $remote || exit; rm -f drills.log drills.done; { nohup flock target/.busy sh -c 'bash drills.sh; echo \$? >drills.done' >drills.log 2>&1 </dev/null & }" || exit 1
+retry ssh $opts $host "cd $remote || exit; rm -f drills.log drills.done; { nohup flock -o target/.busy sh -c 'bash drills.sh; echo \$? >drills.done' >drills.log 2>&1 </dev/null & }" || exit 1
 # Poll with short calls; a single long ssh would die with the link.
 until ssh $opts $host "test -f $remote/drills.done" 2>/dev/null; do sleep 5; done
 mkdir -p "$out"

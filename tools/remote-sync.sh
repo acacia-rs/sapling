@@ -2,6 +2,7 @@
 # Copies the worktree's sources (or REF's, a git ref) to testbox's $REMOTE_DIR (default work/<this worktree's
 # folder>), keeping its build cache, which lives on tmpfs (tools/testbox-target.sh).
 # Sourced by remote-test.sh, remote-drill.sh and remote-drills.sh, which use `retry`, `opts`, `host`, `remote` and `cargo` after.
+# Every tools/ lock is `flock -o`: a build may start the shared sccache server, which inherited a plain flock's fd and held it.
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 remote=${REMOTE_DIR:-work/$(basename "$root")}
 # REMOTE_HOST=devbox runs on the second box (16 threads, 62 GB, a copy of testbox's BDS dirs).

@@ -88,7 +88,7 @@ upload() { pack | ssh $opts testbox "mkdir -p $run && cat > $run/$name.tgz"; }
 write_job() { printf '%s\n' "$job" | ssh $opts testbox "rm -f $run/$name.bdone && cat > $run/$name.bench.sh"; }
 retry upload || exit 1
 retry write_job || exit 1
-retry ssh $opts testbox "{ nohup flock $run/lock sh $run/$name.bench.sh </dev/null >/dev/null 2>&1 & }" || exit 1
+retry ssh $opts testbox "{ nohup flock -o $run/lock sh $run/$name.bench.sh </dev/null >/dev/null 2>&1 & }" || exit 1
 until ssh $opts testbox "test -f $run/$name.bdone" 2>/dev/null; do sleep 10; done
 mkdir -p "$out"
 code=$(retry ssh $opts testbox "cat $run/$name.bdone")
