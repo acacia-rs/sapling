@@ -65,7 +65,8 @@ impl<F: FnMut(BlockPos) -> Part> Search<'_, F> {
             Part::Repeater { input, .. } if face == opposite(input) => self.offer(Via::Input, pos, strength, origin),
             Part::Repeater { input, .. } if locks && ACROSS.contains(&face) && face != input => self.offer(Via::Lock, pos, strength, origin),
             Part::Comparator { input, .. } if face == opposite(input) => self.offer(Via::Input, pos, strength, origin),
-            Part::Comparator { input, .. } if ACROSS.contains(&face) && face != input => self.offer(Via::Side, pos, strength, origin),
+            // A block of redstone beside one is no side input (research/captures/bds-rsparts.txt).
+            Part::Comparator { input, .. } if ACROSS.contains(&face) && face != input && !matches!((self.part)(from), Part::Producer { .. }) => self.offer(Via::Side, pos, strength, origin),
             Part::Dust { .. } if to_dust => self.offer(Via::Dust, pos, strength, origin),
             user @ Part::User(_) if user.takes_from(opposite(face)) => self.offer(Via::User, pos, strength, origin),
             Part::Conductor if strong => self.offer(Via::Strong, pos, strength, origin),

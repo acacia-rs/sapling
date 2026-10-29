@@ -13,7 +13,12 @@ const LIMIT: usize = 12;
 const STAYS: &[&str] = &[
     "obsidian", "bedrock", "barrier", "end_portal_frame", "end_portal", "portal", "end_gateway", "enchanting_table", "beacon", "mob_spawner", "respawn_anchor",
     "reinforced_deepslate", "moving_block", "piston_arm_collision", "command_block", "structure_block", "jigsaw",
+    // Seen staying on BDS (research/captures/bds-rspistons.txt).
+    "ender_chest", "jukebox", "lodestone", "grindstone", "vault", "trial_spawner",
 ];
+/// Solid blocks a push breaks, seen on BDS (bds-rspistons.txt); and any of these name endings.
+const BREAKS: &[&str] = &["ladder", "scaffolding", "pumpkin", "melon_block", "flower_pot", "cactus", "dragon_egg"];
+const BREAKS_ENDING: &[&str] = &["_leaves", "shulker_box"];
 const STICKY: [&str; 2] = ["slime", "honey_block"];
 const SIDES: [Face; 6] = [Face::Up, Face::Down, Face::North, Face::South, Face::West, Face::East];
 
@@ -51,7 +56,7 @@ impl Plan<'_> {
         match () {
             _ if state.is_air() || state.is_liquid() => Cell::Empty,
             _ if pos == self.piston || STAYS.iter().any(|stays| name.ends_with(stays)) || is_out() || is_busy() => Cell::Stays,
-            _ if !state.is_solid() => Cell::Breaks,
+            _ if !state.is_solid() || BREAKS.contains(&name) || BREAKS_ENDING.iter().any(|ending| name.ends_with(ending)) => Cell::Breaks,
             _ => Cell::Moves,
         }
     }

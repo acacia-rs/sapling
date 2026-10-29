@@ -202,8 +202,8 @@ pub(crate) fn release_buttons(world: &mut World) {
     }
 }
 
-/// Sets the repeater at `pos` to its next delay, the fourth back to the first.
-// TODO: what BDS plays for it is not captured.
+/// Sets the repeater at `pos` to its next delay, the fourth back to the first; BDS played nothing
+/// (research/captures/bds-rsreads.txt).
 fn turn_repeater(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     let Some(level) = level(world, layer) else { return };
     let (registry, id) = (level.registry(), level.block(x, y, z));
@@ -213,14 +213,17 @@ fn turn_repeater(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     }
 }
 
-/// Turns the comparator at `pos` from comparing to subtracting or back.
-// TODO: what BDS plays for it is not captured.
+/// Turns the comparator at `pos` from comparing to subtracting or back, with `power.off` naming
+/// the state it had as it starts subtracting (research/captures/bds-rsreads.txt).
+// TODO: `power.on` back to comparing is inferred, not captured.
 fn turn_comparator(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     let Some(level) = level(world, layer) else { return };
-    let (registry, id) = (level.registry(), level.block(x, y, z));
-    let subtracts = property(registry, id, SUBTRACTS) == Some("1");
-    if let Some(id) = with(registry, id, SUBTRACTS, if subtracts { "0" } else { "1" }) {
-        send::set(world, layer, [x, y, z], id);
+    let (registry, before) = (level.registry(), level.block(x, y, z));
+    let subtracts = property(registry, before, SUBTRACTS) == Some("1");
+    if let Some(id) = with(registry, before, SUBTRACTS, if subtracts { "0" } else { "1" }) {
+        if send::set(world, layer, [x, y, z], id) {
+            play_as(world, layer, [x, y, z], if subtracts { "power.on" } else { "power.off" }, before);
+        }
     }
 }
 

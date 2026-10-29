@@ -232,7 +232,7 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
 - C1, C2: done, see the end: 2–3 ticks on, 6–7 off for `/setblock` changes.
 - C3 Evaluation phase: two levers flipped in consecutive ticks should update lamps in the same tick sometimes.
 - C4 Chunk ticking before lambda_76 (R4): if lamps never update, the order is reversed; capture says they do.
-- C5: done, see the end. Not drilled: ice, TNT and pistons (the TNT went off and took the pistons).
+- C5: done, see the end and "Parity drill" (ice). Not drilled: TNT and pistons (the TNT went off and took the pistons).
 - C6 Lamp's consumer component source (no setup callback found) and its flags (acceptHalfPulse?).
 - C7 Redstone block's producer component (none found in its vtable): confirm it powers dust, lamp, adjacent blocks
   (weakly or strongly?) — e.g. redstone block next to a solid block next to a lamp.
@@ -240,8 +240,8 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
 - C9 `mPromotedToProducer` overwrite order (R11): block strongly powered by lever and also touched by dust.
 - C10: done, see the end. Not drilled: a torch clock seen through a lamp (half-pulse).
 - C11 `redstone_signal` of dust after placement next to a lit source (setup writes current strength, R16).
-- C12 Door: power one half only (top vs bottom), iron door; door sound position = which half.
-- C13 Wooden button with arrow (141a34cb0 not read).
+- C12: done, see "Parity drill".
+- C13 Wooden button with arrow (141a34cb0 not read). Undrillable here: `/summon arrow` is inert in sapling.
 
 ## Checked on BDS (2026-10-08, `bds_command_probe redstone`, research/captures/bds-redstone.txt)
 
@@ -313,7 +313,7 @@ No decompile: all of this is from the captures. An evaluation is 2 ticks.
   from it again at the evaluation it flips, it flips back `delay + 1` evaluations later.
 - Lock: a lit repeater pointing into the side of another holds it as it is, lit or not, whatever is behind it.
   When the holding one goes out, the held one takes up its input one evaluation later.
-- Not drilled: a click's sound, a comparator as the one that holds, a pulse shorter than the delay from a
+- A click's sound: none ("Parity drill"). Not drilled: a comparator as the one that holds, a pulse shorter than the delay from a
   steady state other than the 2-tick clock, a held repeater that was counting down.
 
 ## Comparators (2026-10-09, `bds_command_probe comparators`, research/captures/bds-redstone-comparators.txt)
@@ -340,9 +340,9 @@ No decompile: all of this is from the capture.
 - Holders (`bds_command_probe holders`, research/captures/bds-holders.txt, 2026-10-17): a decorated pot reads as a
   one-slot container, 1 at a stone, 2 at five, 3 at ten, 0 once broken. A frame or glow frame lying face up read 0
   with a diamond in it at every turn, also behind a comparator put down after the item was turned.
-- Not drilled: equal strengths behind and at a side (sapling passes it, as Java), a repeater or power block at a
-  side, lectern, a wall frame facing the comparator, a cauldron of lava or powder snow, a chiseled bookshelf, a
-  click's sound.
+- A block of redstone at a side and a click's sound: "Parity drill". Not drilled: equal strengths behind and
+  at a side (sapling passes it, as Java), a repeater at a side, lectern, a wall frame facing the comparator, a
+  cauldron of lava or powder snow, a chiseled bookshelf (the bot's click lands on a different slot each run).
 
 ## Observers (2026-10-09, `bds_command_probe observer-facing` and `observers`, research/captures/bds-redstone-observers.txt)
 
@@ -364,7 +364,7 @@ No decompile: all of this is from the captures.
   change in one evaluation, a tick or two after the click. Off, the dust goes out at the next
   evaluation and both lamps four ticks after it, as lamps do; the button lets go 22 ticks after the click.
   Sapling gives them no lag either.
-- Not drilled: a change while it is on, a piston moving it, a plate stepped on.
+- A piston moving one and a plate stepped on: "Parity drill". Not drilled: a change while it is on.
 
 ## Pistons (2026-10-09, `bds_command_probe piston-facing` and `pistons`, research/captures/bds-redstone-pistons.txt)
 
@@ -462,3 +462,23 @@ lightning rods, jukeboxes: redstone-blocks.md. Sculk sensors and shriekers: scul
 copper.md. In sapling a producer whose block does not store its strength (target, sculk sensor,
 jukebox) is held by `redstone::emit`; users firing on a rising edge keep the edge in their state
 (`triggered_bit`, `powered_bit`) or, for a note block, in the evaluation's old and new signal.
+
+## Parity drill (2026-10-29, `bds_command_probe rsparts`, `rsdevices`, `rspistons`, `rsobserve`)
+
+Captures research/captures/bds-<scene>.txt against sapling-<scene>.txt.
+
+- Same: note block instruments by the block under, observers pulsing on a piston's move and a plate,
+  pistons pushing and breaking the other blocks of `rspistons`, a comparator with no side input.
+- A piston does not move an ender chest, jukebox, lodestone, grindstone, vault or trial spawner, and
+  breaks a ladder, scaffolding, leaves, a shulker box, pumpkin, melon, flower pot, cactus and dragon
+  egg (`pistons/plan.rs`). Fixed. Left: a torch on the side of a block slime moves broke on BDS and
+  stayed on sapling.
+- Ice takes no power; packed and blue ice do (`redstone/parts.rs` CLEAR). Fixed.
+- A block of redstone beside a comparator is no side input (`redstone/search.rs`). Fixed.
+- A door powered at either half opens both in one `UpdateSubchunkBlocks`, heard at the powered half
+  naming the lower half as it was (`redstone/apply.rs`). Fixed.
+- A repeater's click plays nothing; a comparator's plays `power.off` going to subtract and `power.on`
+  back, naming the state before (`blocks/doors.rs`). Fixed.
+- An inverted daylight detector gives 15 less the light without the sun's angle, and a new detector
+  reads at the next tick (`blocks/daylight.rs`). Not drilled on sapling: its drill world is roofed.
+- Left: a comparator replaced by `/setblock` is not evaluated again on BDS; sapling evaluates it.

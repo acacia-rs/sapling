@@ -69,6 +69,12 @@ mod cmdlinks;
 mod structblocks;
 #[path = "shared/parity_drill.rs"]
 mod parity;
+#[path = "shared/redstone_parts_drill.rs"]
+mod redstone_parts;
+#[path = "shared/block_ticks_drill.rs"]
+mod block_ticks;
+#[path = "shared/brush_hold.rs"]
+mod brush_hold;
 
 use std::time::{Duration, Instant};
 
@@ -249,7 +255,7 @@ async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&st
 /// Does the actor's `!` line while the watcher's packets are shown, so they keep their times.
 async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str], line: &str) -> Result<(), String> {
     let action = async {
-        if !maps::act(actor, line).await && !bundles::act(actor, line).await && !creatures::act(actor, line).await && !cmdblocks::act(actor, line).await && !structblocks::act(actor, line).await {
+        if !maps::act(actor, line).await && !bundles::act(actor, line).await && !creatures::act(actor, line).await && !cmdblocks::act(actor, line).await && !structblocks::act(actor, line).await && !block_ticks::act(actor, line).await {
             player::act(actor, line).await;
         }
     };
@@ -299,7 +305,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)).or_else(|| cmdblocks::drill(other)).or_else(|| cmdlinks::drill(other)).or_else(|| structblocks::drill(other)).or_else(|| parity::drill(other)).or_else(|| companion::drill(other)) {
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)).or_else(|| cmdblocks::drill(other)).or_else(|| cmdlinks::drill(other)).or_else(|| structblocks::drill(other)).or_else(|| parity::drill(other)).or_else(|| companion::drill(other)).or_else(|| redstone_parts::drill(other)).or_else(|| block_ticks::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },
