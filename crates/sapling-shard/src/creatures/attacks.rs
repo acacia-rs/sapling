@@ -123,6 +123,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     entities::tell_viewers(world, entity, layer, cell, packets);
     blows::wear(world, player);
     if health.left() <= 0.0 {
+        super::raids::slain(world, player, entity);
         slay(world, entity, &kind, enchant::level(weapon.as_ref(), Enchant::Looting));
         super::die(world, entity, layer, &kind, &body);
     }

@@ -85,6 +85,8 @@ mod block_ticks;
 mod brush_hold;
 #[path = "shared/vitality_drill.rs"]
 mod vitality;
+#[path = "shared/village_drill.rs"]
+mod villages;
 
 use std::time::{Duration, Instant};
 
@@ -315,7 +317,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)).or_else(|| cmdblocks::drill(other)).or_else(|| cmdlinks::drill(other)).or_else(|| structblocks::drill(other)).or_else(|| parity::drill(other)).or_else(|| companion::drill(other)).or_else(|| harm::drill(other)).or_else(|| fights::drill(other)).or_else(|| crafting::drill(other)).or_else(|| server::drill(other)).or_else(|| redstone_parts::drill(other)).or_else(|| block_ticks::drill(other)).or_else(|| vitality::drill(other)) {
+        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)).or_else(|| cmdblocks::drill(other)).or_else(|| cmdlinks::drill(other)).or_else(|| structblocks::drill(other)).or_else(|| parity::drill(other)).or_else(|| companion::drill(other)).or_else(|| harm::drill(other)).or_else(|| fights::drill(other)).or_else(|| crafting::drill(other)).or_else(|| server::drill(other)).or_else(|| redstone_parts::drill(other)).or_else(|| block_ticks::drill(other)).or_else(|| vitality::drill(other)).or_else(|| villages::drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },

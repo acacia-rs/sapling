@@ -9,7 +9,7 @@ use acacia_proto::packets::{AddEntity, SetEntityData};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Meta, MetadataDictionaryItemValueDefault as Plain};
 use common::raising::feet_of;
 use common::{Harness, all, attack, click, config};
-use sapling_api::{Block, BlockEntityData, Difficulty, EntityId, PlayerId};
+use sapling_api::{Block, BlockEntityData, Difficulty, PlayerId};
 use sapling_world::World;
 
 const BELL: [i32; 3] = [12, 65, 12];
@@ -60,13 +60,41 @@ fn an_unskilled_villager_gathers_at_the_bell_in_the_afternoon() {
     assert!(came <= 2.5, "at the bell: {came}");
 }
 
+/// The villager `id`'s box and `FlagsExtended` as each `SetEntityData` in `sent` changed them.
+fn lying(sent: &[acacia_proto::RawPacket], id: u64) -> Vec<(f32, f32, i64)> {
+    let told = all::<SetEntityData>(sent).into_iter().filter(|data| data.runtime_entity_id == id);
+    let float = |data: &SetEntityData, key| data.metadata.iter().find(|item| item.key == key).and_then(|item| if let Meta::Default(Plain::Float(v)) = item.value { Some(v) } else { None });
+    told.filter_map(|data| {
+        let extended = data.metadata.iter().find_map(|item| if let Meta::FlagsExtended(flags) = &item.value { Some(flags.0) } else { None })?;
+        Some((float(&data, Key::BoundingboxWidth)?, float(&data, Key::BoundingboxHeight)?, extended))
+    })
+    .collect()
+}
+
 #[test]
-fn a_villager_sleeps_in_its_bed_at_night() {
+fn a_villager_sleeps_in_its_bed_at_night_lying_down_as_bds_shows() {
     let (mut h, id) = village(18_000, [0.5, 65.0, 0.5], "minecraft:become_unskilled");
-    let came = walks_to(&mut h, id, HEAD, 0.8, 1200);
-    assert!(came <= 0.8, "on its bed: {came}");
+    let mut sent = Vec::new();
+    for _ in 0..120 {
+        (0..10).for_each(|_| sent.extend(h.tick_all().to(1).to_vec()));
+        if off(feet_of(&mut h, id), HEAD) <= 0.6 {
+            break;
+        }
+    }
+    (0..5).for_each(|_| sent.extend(h.tick_all().to(1).to_vec()));
+    assert_eq!(lying(&sent, id), [(1.0, 0.3, (1 << 25) | (1 << 17) | (1 << 12))], "research/captures/bds-village.txt");
     (0..100).for_each(|_| drop(h.tick_all()));
     assert!(off(feet_of(&mut h, id), HEAD) <= 0.8, "it stays asleep");
+    h.remote.run(|ctx| ctx.set_time(24_000));
+    let woke: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert_eq!(lying(&woke, id), [(0.6, 1.9, (1 << 25) | (1 << 17))], "it rises the tick morning comes");
+}
+
+#[test]
+fn a_baby_villager_takes_a_bed_too() {
+    let (mut h, id) = village(18_000, [0.5, 65.0, 0.5], "minecraft:entity_born");
+    let came = walks_to(&mut h, id, HEAD, 0.8, 1200);
+    assert!(came <= 0.8, "on its bed: {came}");
 }
 
 #[test]
@@ -94,23 +122,21 @@ fn golem_targets(sent: &[acacia_proto::RawPacket], golem: u64) -> Vec<i64> {
     items.filter(|item| item.key == Key::TargetEid).filter_map(|item| if let Meta::Default(Plain::Long(id)) = item.value { Some(id) } else { None }).collect()
 }
 
+/// The golems' runtime ids, one summoned by each of `events` (`None` plainly).
+fn golems(h: &mut Harness, events: [Option<&'static str>; 2]) -> Vec<u64> {
+    for (n, event) in events.into_iter().enumerate() {
+        h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", [6.5 + 4.0 * n as f32, 65.0, 6.5], 0.0, event).is_some()));
+    }
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:iron_golem").map(|added| added.runtime_id).collect()
+}
+
 #[test]
-fn an_iron_golem_turns_on_a_player_who_hit_a_villager_fifteen_times() {
+fn only_the_village_golem_takes_a_player_who_hit_a_grown_villager_as_bds_shows() {
     let (mut h, id) = village(6_000, [3.5, 65.0, 0.5], "minecraft:become_unskilled");
     h.remote.run(|ctx| ctx.teleport(PlayerId(1), [0.5, 65.0, 0.5]));
-    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:iron_golem", [6.5, 65.0, 6.5]).is_some()));
-    let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
-    let golem = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:iron_golem").expect("the golem shown").runtime_id;
-    let mut seen = Vec::new();
-    for hit in 1..=15 {
-        h.remote.run(move |ctx| assert!(ctx.move_entity(EntityId(id), [2.0, 65.0, 0.5])));
-        h.tick_all();
-        h.receive(1, &attack(id));
-        (0..12).for_each(|_| seen.extend(h.tick_all().to(1).to_vec()));
-        if hit == 14 {
-            assert_eq!(golem_targets(&seen, golem), [0i64; 0], "-14 is not low enough");
-        }
-    }
-    (0..40).for_each(|_| seen.extend(h.tick_all().to(1).to_vec()));
-    assert_eq!(golem_targets(&seen, golem), [1], "at -15 the golem takes Alex");
+    let ids = golems(&mut h, [Some("minecraft:from_village"), None]);
+    h.receive(1, &attack(id));
+    let seen: Vec<_> = (0..10).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert_eq!((golem_targets(&seen, ids[0]), golem_targets(&seen, ids[1])), (vec![1], vec![]), "bds-golems.txt");
 }

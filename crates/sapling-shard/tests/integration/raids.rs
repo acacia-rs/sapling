@@ -6,8 +6,8 @@ use crate::common;
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{AddEntity, BossEvent, BossEventType, LevelSoundEvent, MobArmorEquipment, MobEffect, MobEffectEventId};
-use common::{Harness, all, config};
-use sapling_api::{Block, BlockEntityData, Difficulty, Effect, EntityInfo, PlayerId};
+use common::{Harness, all, attack, config};
+use sapling_api::{Block, BlockEntityData, DamageCause, Difficulty, Effect, EntityInfo, PlayerId};
 use sapling_world::World;
 
 const ALEX: PlayerId = PlayerId(1);
@@ -21,13 +21,12 @@ fn village() -> Harness {
     level.fill([-48, 64, -48], [47, 64, 47], stone);
     let mut h = Harness::with(config(), level);
     h.enter(1, "Alex");
-    let [x, y, z] = BELL;
-    let entity = Value::Compound(vec![("id".into(), Value::String("Bell".into())), ("x".into(), Value::Int(x)), ("y".into(), Value::Int(y)), ("z".into(), Value::Int(z))]);
+    // A bell set bare gets its entity, which the village is found by, as BDS's `/setblock bell`.
     let done = common::asking::ask(&mut h, move |ctx| {
         ctx.set_difficulty(Difficulty::Easy);
-        (ctx.set_block(BELL, &Block::new("bell")), ctx.set_block_entity(BELL, &BlockEntityData::new(entity)), ctx.spawn_entity("minecraft:villager_v2", [5.5, 65.0, 5.5]).is_some())
+        (ctx.set_block(BELL, &Block::new("bell")), ctx.spawn_entity("minecraft:villager_v2", [5.5, 65.0, 5.5]).is_some())
     });
-    assert_eq!(done, (true, true, true));
+    assert_eq!(done, (true, true));
     h
 }
 
@@ -52,22 +51,35 @@ fn bad_omen_in_a_village_brings_a_raid_whose_three_waves_on_easy_won_make_a_hero
     let mut h = village();
     h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 1, true)));
     let told: Vec<(MobEffectEventId, i32, i32)> = effects(&ticks(&mut h, 2)).into_iter().map(|(event, id, amplifier, _)| (event, id, amplifier)).collect();
-    assert_eq!(told, [(MobEffectEventId::Add, 28, 1), (MobEffectEventId::Remove, 28, 1), (MobEffectEventId::Add, 36, 1)], "the player pack's gain_raid_omen");
+    assert_eq!(told, [(MobEffectEventId::Add, 28, 1), (MobEffectEventId::Remove, 28, 1), (MobEffectEventId::Add, 36, 0)], "the player pack's gain_raid_omen, at amplifier 0 whatever the bad omen's");
     let sent = ticks(&mut h, 600);
-    assert_eq!(bars(&sent).first(), Some(&(BossEventType::ShowBar, "%raid.name".to_owned())), "the omen ran out: the raid starts");
+    assert_eq!(bars(&sent).first(), Some(&(BossEventType::ShowBar, "raid.name".to_owned())), "the omen ran out: the raid starts");
     let (mut waves, mut after) = (Vec::new(), Vec::new());
-    for _ in 0..3 {
+    for n in 0..3 {
         assert!((0..400).any(|_| !raiders(&mut h).is_empty()), "a wave within 300 ticks");
         let wave = raiders(&mut h);
         let mut kinds: Vec<String> = wave.iter().map(|raider| raider.kind.clone()).collect();
         kinds.sort();
         waves.push(kinds);
-        h.remote.run(move |ctx| wave.iter().for_each(|raider| assert!(ctx.kill_entity(raider.id))));
-        after = ticks(&mut h, 25);
+        // Alex slays the last wave's last pillager; the others are `/kill`ed.
+        let slain = wave.iter().find(|raider| n == 2 && raider.kind == "minecraft:pillager").map(|raider| raider.id);
+        h.remote.run(move |ctx| wave.iter().filter(|raider| Some(raider.id) != slain).for_each(|raider| assert!(ctx.kill_entity(raider.id))));
+        if let Some(slain) = slain {
+            h.remote.run(move |ctx| assert!(ctx.hurt_entity(slain, 23.5, DamageCause::Generic)));
+            ticks(&mut h, 12);
+            h.remote.run(move |ctx| {
+                let feet = ctx.entity(slain).expect("alive").feet;
+                ctx.teleport(ALEX, [feet[0] + 0.5, feet[1], feet[2]]);
+            });
+            h.tick_all();
+            h.receive(1, &attack(slain.0));
+        }
+        // A wave's end shows no raiders left for 40 ticks before the next wait or the win.
+        after = ticks(&mut h, 45);
     }
     let named = |kind: &str, n: usize| vec![format!("minecraft:{kind}"); n];
     assert_eq!(waves, [named("pillager", 4), [named("pillager", 3), named("vindicator", 2)].concat(), [named("pillager", 3), named("ravager", 1)].concat()]);
-    assert!(effects(&after).contains(&(MobEffectEventId::Add, 29, 1, 48000)), "{:?}", effects(&after));
+    assert!(effects(&after).contains(&(MobEffectEventId::Add, 29, 0, 48000)), "the slayer is a hero at amplifier 0 (bds-raidhero.txt): {:?}", effects(&after));
     assert!(bars(&after).contains(&(BossEventType::SetBarTitle, "%raid.name - %raid.victory".to_owned())), "{:?}", bars(&after));
     assert_eq!(bars(&ticks(&mut h, 600)), [(BossEventType::HideBar, String::new())], "30 s on");
 }
@@ -134,7 +146,7 @@ fn a_raid_is_kept_with_the_world_and_goes_on_after_a_restart() {
     let mut sent = common::stored::enter_stored(&mut h, 1);
     sent.extend(ticks(&mut h, 25));
     let shown = bars(&sent).into_iter().find(|(event, _)| *event == BossEventType::ShowBar);
-    assert_eq!(shown, Some((BossEventType::ShowBar, "%raid.name".to_owned())), "the kept raid goes on");
+    assert_eq!(shown, Some((BossEventType::ShowBar, "raid.name".to_owned())), "the kept raid goes on");
 }
 
 #[test]

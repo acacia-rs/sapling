@@ -22,7 +22,10 @@ Every compound has `BlockEntityVersion` Int 0, `id`, `x`, `y`, `z`, keys in sort
 
 Tables are pack paths (`loot_tables/chests/simple_dungeon.json`); a template's Java table
 `minecraft:chests/x` becomes `loot_tables/chests/x.json`. BDS also writes beds, flower pots, cauldrons,
-sculk blocks and the mansion's pre-filled chests (template `Items`), left out here.
+sculk blocks and the mansion's pre-filled chests (template `Items`), left out here. Seen in the oracle
+world `20261003-structures` (`block_entity_dump`, 2026-10-29): `Bed` `color` Byte (0, 4, 10, 11, 13, 14),
+`Bell` `Direction` Int 0, `Ringing` Byte 0, `Ticks` Int (24, 33 seen), `FlowerPot` `PlantBlock` {name,
+states, version 18168865}, `Cauldron` `Items` [], `PotionId` and `PotionType` Short -1.
 
 ## Where the tables and seeds come from
 
@@ -124,10 +127,16 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
 
 - A decorated pot broken by hand rolls its table into its one slot as a container does and leaves that
   beside itself (`blocks/entities.rs`; the probe's pot of seed 1434522187 left item 307, one, as
-  `containers::loot::tests` expects); a pot shot or broken in creative was not drilled.
+  `containers::loot::tests` expects). Broken in creative, BDS's pot of that seed left item 307 and not
+  the pot (bds-loot-probe2.txt); sapling leaves nothing there. Not fixed: a pot set with a `LootTable`
+  entity through the API read back without its entity in a shard test, unexplained after two runs. A
+  shot pot was not drilled.
 - Brushing's dust particles (0x56) and BDS's InventoryContent resyncs while a brush is held.
-- The mansion template chests' own `Items`; flower pots, beds, cauldrons and the other non-loot entities.
-- A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation).
+- The mansion template chests' own `Items`; flower pots, beds, bells, cauldrons and the other non-loot
+  entities (fields above). Without them a generated village has no bed or bell entity, so a raid
+  (raids/village.rs) does not find it; writing them needs the templates' entities in templates.bin.
+- A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
+  before the vault's first tick rewrites it, so left.
 
 ## Unverified
 

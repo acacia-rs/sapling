@@ -141,7 +141,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     // One provoked by players still takes the mobs its kind hunts.
     let traits = sapling_data::mob_traits(kind).hunts?;
     if found.is_none() && hunts && !dazzled && (now + id).is_multiple_of(LOOKS) {
-        let player = if traits.provoked { super::villagers::outlaw(world, layer, kind, body, sight) } else { nearest(world, layer, body, sight) };
+        let player = if traits.provoked { super::villagers::outlaw(world, entity, layer, kind, body, sight) } else { nearest(world, layer, body, sight) };
         let mob = prey::nearest(world, entity, layer, body, sight, traits);
         found = [player, mob].into_iter().flatten().min_by(|a, b| distance(a.1, body.at).total_cmp(&distance(b.1, body.at)));
     }

@@ -1,0 +1,30 @@
+## drill starts at 1793272563454
+## /testfor @e[type=iron_golem]
+     43 actor   CommandOutput success_count=3 data=None commands.testfor.success success=true ["Iron Golem, Iron Golem, Iron Golem"]
+     43 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.testfor.success\",\"with\":{\"rawtext\":[{\"text\":\"Iron Golem, Iron Golem, Iron Golem\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp @s 0.5 -60 0.5
+   1013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-60.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1013 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -60.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1013 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-60.00", "0.50"]
+## /
+## /
+## /
+## /
+   5282 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+   5283 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+## /
+## /
+   7083 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.1, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.02, default_min: 0.0, default_max: 3.4028235e38, default: 0.02, name: "minecraft:underwater_movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.02, default_min: 0.0, default_max: 3.4028235e38, default: 0.02, name: "minecraft:lava_movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }], tick: 195 }
+   7083 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.1, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.02, default_min: 0.0, default_max: 3.4028235e38, default: 0.02, name: "minecraft:underwater_movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.02, default_min: 0.0, default_max: 3.4028235e38, default: 0.02, name: "minecraft:lava_movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }], tick: 195 }
+   7382 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 16, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.1, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.02, default_min: 0.0, default_max: 3.4028235e38, default: 0.02, name: "minecraft:underwater_movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.02, default_min: 0.0, default_max: 3.4028235e38, default: 0.02, name: "minecraft:lava_movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }], tick: 195 }
+   7382 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 16, attributes: [PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.1, default_min: 0.0, default_max: 3.4028235e38, default: 0.1, name: "minecraft:movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.02, default_min: 0.0, default_max: 3.4028235e38, default: 0.02, name: "minecraft:underwater_movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 3.4028235e38, current: 0.02, default_min: 0.0, default_max: 3.4028235e38, default: 0.02, name: "minecraft:lava_movement", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }], tick: 195 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+probe exit 0

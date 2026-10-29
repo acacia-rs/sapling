@@ -1,7 +1,7 @@
 //! Shows what a vanilla server does with seeded loot it has not rolled yet, on tools/bds-loot-setup.sh's
 //! `loot:row` structure (tools/loot_structures.py): the slots a chest of `simple_dungeon.json` seed
 //! 357601146 fills on first open; whether a hopper under one or a comparator beside one unpacks it;
-//! what a decorated pot with loot drops when broken; what brushing suspicious sand and gravel does
+//! what a decorated pot with loot drops when broken in survival and in creative; what brushing suspicious sand and gravel does
 //! (states, counts, the item). The ground truth for sapling's loot (docs/research/structure-block-entities.md).
 //! `cargo run -p sapling --example bds_loot_probe -- <server> [brush] > probe.txt` (offline, operators;
 //! `brush`: only the brushing, held as a client holds it).
@@ -112,7 +112,8 @@ fn place(pos: [i32; 3]) -> String {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server = std::env::args().nth(1).ok_or("usage: bds_loot_probe <server> [brush]")?;
     let brush_only = std::env::args().nth(2).as_deref() == Some("brush");
-    let config = BotConfig { physics: true, subscribe: PacketFilter::all(), ..BotConfig::default() };
+    // Mouse input: BDS ignores a creative break from touch input.
+    let config = BotConfig { physics: true, subscribe: PacketFilter::all(), mouse_input: true, ..BotConfig::default() };
     let mut bot = Bot::connect(Client::builder(&server).offline("Prober"), config).await?;
     bot.wait_ticks(60).await?;
     for line in ["gamemode creative", "clear @s", "fill ~-8 ~-1 ~-8 ~12 ~-1 ~8 stone", "fill ~-8 ~ ~-8 ~12 ~4 ~8 air"] {
@@ -161,6 +162,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let broken = p.bot.break_block(at(6)).await;
     p.act("break the pot (survival)", broken).await?;
     p.settle(Duration::from_secs(2)).await?;
+    // 4b. A second row's pot broken in creative.
+    p.command("gamemode creative").await?;
+    let second = [origin[0], origin[1], origin[2] + 3];
+    p.command(&format!("structure load loot:row {}", place(second))).await?;
+    let broken = p.bot.break_block([second[0] + 6, second[1], second[2]]).await;
+    p.act("break the pot (creative)", broken).await?;
+    p.settle(Duration::from_secs(2)).await?;
+    p.command("gamemode survival").await?;
     p.bot.disconnect().await;
     Ok(())
 }
