@@ -11,7 +11,7 @@ use sapling_data::enchant;
 
 use super::{frost, hazards, soles};
 use super::{
-    AIR, BREATH, DROWN_HARM, FIERY, GASP, JUMP_TIRES, LAVA, LEAP_TIRES, LONGEST_STEP, SIZE, SPRINT_TIRES, STARVED, Vitals, WALLED, WATER, dress, effects, flash, hunger,
+    AIR, BREATH, DROWN_HARM, FIERY, GASP, JUMP_TIRES, LAVA, LEAP_TIRES, LONGEST_STEP, SIZE, SPRINT_TIRES, Vitals, WALLED, WATER, dress, effects, flash, hunger,
     settle, tell,
 };
 use crate::blocks::Dice;
@@ -21,6 +21,8 @@ use crate::creatures::{Cause, Health, holds, is_full_block, touches};
 use crate::movement::Motion;
 
 const NATURAL_REGENERATION: &str = "naturalRegeneration";
+/// Exhaustion of a block moved in water (research/captures/bds-hurt2.txt).
+const SWIM_TIRES: f32 = 0.01;
 /// A landing that costs more than this is a big one.
 const BIG_FALL: f32 = 4.0;
 
@@ -87,7 +89,8 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let on_soul = soles::on_soul(level, position);
     let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
     // BDS lays a player with only its head in a block down, unhurt.
-    let (under_water, in_wall) = (holds(level, eyes, WATER) && !gilled, is_full_block(level, eyes) && is_full_block(level, low));
+    let eyes_wet = holds(level, eyes, WATER);
+    let (under_water, in_wall) = (eyes_wet && !gilled, is_full_block(level, eyes) && is_full_block(level, low));
     // A teleport is no fall: until the client follows it, the height starts anew.
     let (carried, sprinting, jumps) = world.get_mut::<Motion>(player).map_or((false, false, 0), |mut motion| (motion.awaits_teleport(), motion.pose.sprinting, std::mem::take(&mut motion.jumps)));
     let freezes = frost::chill(world, player, in_snow);
@@ -95,9 +98,13 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let from = vitals.was.replace(position.feet).unwrap_or(position.feet);
     let run = (position.feet[0] - from[0]).hypot(position.feet[2] - from[2]);
     let ran = if sprinting && position.on_ground && !carried && run <= LONGEST_STEP { run } else { 0.0 };
+    // In water a move costs its length, the rise and fall too once the eyes are under.
+    let rise = if eyes_wet { position.feet[1] - from[1] } else { 0.0 };
+    let stroke = run.hypot(rise);
+    let swum = if water && !carried && stroke <= LONGEST_STEP { stroke } else { 0.0 };
     let fed = vitals.hunger;
     if rules.on(sapling_data::HUNGER) {
-        vitals.hunger.tire(f32::from(jumps) * if sprinting { LEAP_TIRES } else { JUMP_TIRES } + ran * SPRINT_TIRES);
+        vitals.hunger.tire(f32::from(jumps) * if sprinting { LEAP_TIRES } else { JUMP_TIRES } + ran * SPRINT_TIRES + swum * SWIM_TIRES);
     }
     let (health, breath) = (&mut vitals.health, vitals.air);
     let mut hits = Vec::new();
@@ -153,7 +160,7 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let left = vitals.health.left();
     match vitals.hunger.tick(rules.on(NATURAL_REGENERATION) && left > 0.0 && left < vitals.health.max()) {
         Some(hunger::Turn::Mend) => vitals.health.mend(crate::life_events::healed(world, player, 1.0, sapling_api::HealSource::Natural)),
-        Some(hunger::Turn::Starve) => hits.extend((left > STARVED && vitals.health.hurt(1.0)).then_some(Cause::Starving)),
+        Some(hunger::Turn::Starve) => hits.extend((left > hunger::starved(world) && vitals.health.hurt(1.0)).then_some(Cause::Starving)),
         None => {}
     }
     if !crate::life_events::may_lose_food(world, player, fed.shown().0, vitals.hunger.shown().0) {

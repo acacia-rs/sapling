@@ -59,3 +59,36 @@ fn slowness_slows_a_player_by_the_modifier_bds_wrote() {
     let most: Vec<(f32, f32, String)> = all::<UpdateAttributes>(&own).iter().flat_map(|told| told.attributes.clone()).filter(|told| told.name == "minecraft:health" && !told.modifiers.is_empty()).map(|told| (told.current, told.max, told.modifiers[0].name.clone())).collect();
     assert!(!most.is_empty() && most.iter().all(|told| *told == (20.0, 28.0, "HealthBoost".to_owned())), "{most:?}");
 }
+
+#[test]
+fn an_items_data_value_is_its_wear_as_bds_set_it_by_replaceitem() {
+    // research/captures/bds-hurt2.txt: a helmet given at 164 wore to 165 by a hit of 4.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Armor(0), Some(&Item { damage: 164, ..Item::new("minecraft:iron_helmet", 1) }))));
+    assert_eq!(hit(&mut h, 4.0, DamageCause::Contact), (vec![vec![165]], 0));
+    assert_eq!(common::asking::ask(&mut h, |ctx| ctx.item(ALEX, Slot::Armor(0)).map(|item| item.damage)), Some(165));
+}
+
+#[test]
+fn a_click_in_the_air_puts_on_the_armour_in_hand_and_hands_back_what_was_worn() {
+    // research/captures/bds-fx3.txt: boots used from the hand, heard as iron put on.
+    use acacia_proto::packets::LevelSoundEvent;
+    use acacia_proto::types::{TransactionTransactionData, TransactionUseItemActionType};
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:iron_boots", 1))));
+        assert!(ctx.set_item(ALEX, Slot::Armor(3), Some(&Item::new("minecraft:leather_boots", 1))));
+    });
+    h.tick_all();
+    let mut click = common::click([0, 0, 0], 255, None);
+    if let TransactionTransactionData::ItemUse(used) = &mut click.transaction.transaction_data {
+        used.action_type = TransactionUseItemActionType::ClickAir;
+    }
+    h.receive(1, &click);
+    let heard: Vec<String> = (0..3).flat_map(|_| all::<LevelSoundEvent>(h.tick_all().to(1))).map(|sound| sound.sound_id).collect();
+    assert_eq!(heard, ["armor.equip_iron"]);
+    let names = common::asking::ask(&mut h, |ctx| [Slot::Armor(3), Slot::Main(0)].map(|slot| ctx.item(ALEX, slot).map(|item| item.name)));
+    assert_eq!(names, [Some("minecraft:iron_boots".to_owned()), Some("minecraft:leather_boots".to_owned())]);
+}

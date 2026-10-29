@@ -92,7 +92,7 @@ fn lava_kills_a_player_who_leaves_what_it_held_and_rises_whole_at_the_spawn() {
     ask_to_rise(&mut h);
     let sent = h.tick_all();
     let risen = sent.to(1);
-    assert_eq!(all::<Respawn>(risen).into_iter().map(|respawn| (respawn.state, respawn.position.y)).collect::<Vec<_>>(), [(1, 65.0 + sapling_data::EYE_HEIGHT)]);
+    assert_eq!(all::<Respawn>(risen).into_iter().map(|respawn| (respawn.state, respawn.position.y)).collect::<Vec<_>>(), [(0, 32767.0), (1, 65.0 + sapling_data::EYE_HEIGHT)], "searched, then found (bds-deaths.txt)");
     assert_eq!((all::<SetHealth>(risen).len(), health(risen), events(sent.to(2))), (1, vec![20.0], vec![(EntityEventEventId::Respawn, 0)]));
     h.remote.run(|ctx| {
         assert_eq!((ctx.health(ALEX), ctx.position(ALEX).map(|position| position.feet), Some(ctx.spawn())), (Some(20.0), Some(ctx.spawn()), Some(ctx.spawn())));

@@ -50,19 +50,9 @@ fn clicked(height: f32) -> Option<usize> {
     }
 }
 
-/// The slot an item is worn in.
-// TODO: heads, skulls and carved pumpkins go on the head by name; BDS asks the block's own component.
+/// The stand's slot an item is worn in.
 fn worn_in(name: &str) -> Option<usize> {
-    let plain = name.strip_prefix("minecraft:")?;
-    match plain {
-        "turtle_helmet" | "carved_pumpkin" => Some(HEAD),
-        "elytra" => Some(CHEST),
-        _ if plain.ends_with("_helmet") || plain.ends_with("_head") || plain.ends_with("_skull") => Some(HEAD),
-        _ if plain.ends_with("_chestplate") => Some(CHEST),
-        _ if plain.ends_with("_leggings") => Some(LEGS),
-        _ if plain.ends_with("_boots") => Some(FEET),
-        _ => None,
-    }
+    inventory::worn_in(name).map(|piece| HEAD + piece)
 }
 
 fn gear_of(world: &World, stand: Entity) -> Gear {

@@ -1,8 +1,8 @@
 //! A player's death and its rising, in the packets BDS sends for them
 //! (docs/research/player-damage.md, "Death"). `doImmediateRespawn` asks nothing of the server:
 //! BDS answered a client's respawn alike with it on (research/captures/bds-anchor.txt).
-// TODO: only the words of fall, fire, lava, `/kill` and a zombie were seen on BDS, the rest are
-// the game's keys from memory.
+// TODO: the words of a natural death by contact, magma, a falling block, thorns or fireworks were
+// not seen on BDS; `/damage` of each cause was (research/captures/bds-deaths.txt).
 
 use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, Respawn, SetHealth};
 use acacia_proto::types::Vec3f;
@@ -31,6 +31,20 @@ const BODY_MIDDLE: f32 = 0.1;
 /// The kind of the mob that last hit a player: named if that hit is what it dies of.
 #[derive(Component)]
 pub(super) struct Slayer(pub String);
+
+/// On a player while a hit `/damage` or a plugin asked for lands: it has no block or mob behind it.
+#[derive(Component)]
+pub(super) struct Told;
+
+/// The words of a death from a told hit, as BDS said them for `/damage` of each cause.
+fn told_words(cause: Cause) -> &'static str {
+    match cause {
+        Cause::Fall => "death.attack.fall",
+        Cause::BlockExplosion => "death.attack.explosion.by.bed",
+        Cause::Attack | Cause::Projectile | Cause::Contact | Cause::FallingBlock | Cause::Magma | Cause::Thorns | Cause::Campfire | Cause::SoulCampfire => "death.attack.generic",
+        _ => words(cause),
+    }
+}
 
 /// Before the name of a player in [`Slayer`], which else holds a mob's kind.
 pub(super) const BY_PLAYER: &str = "player:";
@@ -114,12 +128,14 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     }
     super::omens::died(world, player);
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None });
-    let slayer = world.get::<Slayer>(player).filter(|_| matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| slayer.0.clone());
+    let told = world.get::<Told>(player).is_some();
+    let slayer = world.get::<Slayer>(player).filter(|_| !told && matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| slayer.0.clone());
     let by_player = slayer.as_deref().and_then(|slayer| slayer.strip_prefix(BY_PLAYER)).map(str::to_owned);
     let key = match (slayer.is_some(), by_player.is_some(), cause) {
         (true, true, _) => "death.attack.player",
         (true, _, Cause::Projectile) => "death.attack.arrow",
         (true, ..) => "death.attack.mob",
+        (false, ..) if told => told_words(cause),
         (false, ..) => words(cause),
     };
     let slayer = by_player.or(slayer.map(|kind| format!("%entity.{}.name", kind.trim_start_matches("minecraft:"))));
@@ -186,7 +202,11 @@ pub(super) fn rise(world: &mut World) {
         if unfound {
             leave_now(world, player, died_in);
             crate::dimensions::respawn_home(world, player, layer, own.unwrap_or(spawn));
-            world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, state: SEARCHING, runtime_entity_id: 0 });
+        }
+        // A rise at the world's spawn is searched for above its column, even in the same world (bds-deaths.txt, bds-bedspawn.txt).
+        if unfound || own.is_none() {
+            let searched = Vec3f { x: spawn[0].floor(), y: 32767.0, z: spawn[2].floor() };
+            world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: searched, state: SEARCHING, runtime_entity_id: 0 });
         }
         if let Some([x, y, z]) = own {
             // BDS names the cell first, then the place in it.

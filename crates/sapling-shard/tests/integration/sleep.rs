@@ -175,6 +175,6 @@ fn a_player_rises_by_the_bed_it_clicked_while_the_bed_stands() {
     h.remote.run(|ctx| assert!(ctx.set_block(FOOT, &Block::new("air")) && ctx.set_block(HEAD, &Block::new("air"))));
     h.tick(1);
     let (risen, told) = rise(&mut h);
-    assert_eq!(risen, [(0, 0.0, 0.0), (1, 0.5, 0.5)], "the cell named once more, then the world's spawn once the bed is gone");
+    assert_eq!(risen, [(0, 0.0, 0.0), (0, 0.0, 0.0), (1, 0.5, 0.5)], "the cell named once more, then the world's spawn searched and found once the bed is gone");
     assert!(told.iter().any(|line| line.contains("tile.bed.notValid")), "{told:?}");
 }

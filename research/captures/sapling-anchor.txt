@@ -1,0 +1,301 @@
+## drill starts at 1793269581436
+## /difficulty peaceful
+     14 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"PEACEFUL\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     15 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["PEACEFUL"]
+## /gamerule domobspawning false
+   1015 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1015 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1015 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+   1015 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /execute in nether run tp @s 0.5 100 0.5
+   2017 actor   ChangeDimension ChangeDimension { dimension: 1, position: Vec3f { x: 0.5, y: 100.0, z: 0.5 }, respawn: false, loading_screen_id: Some(0) }
+   2017 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 100.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2017 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "100.00", "0.50"]
+   2017 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"100.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /kill @e[type=!player]
+   5080 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill -3 99 -3 6 99 6 stone
+   6096 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   6097 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   6097 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill -3 100 -3 6 104 6 air
+   7075 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s 0.5 100 0.5
+   8066 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"100.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8066 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 101.62001, z: 0.5 }, pitch: -0.026209123, yaw: -0.029724121, head_yaw: -0.029724121, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 93 }
+   8066 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 100.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8066 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "100.00", "0.50"]
+## /
+## /gamemode survival @s
+  10048 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10048 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10048 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /
+  11159 actor   UpdateBlock 23 76 10 layer 0 weeping_vines[weeping_vines_age=25]
+  11717 actor   UpdateBlock -1 38 2 layer 0 weeping_vines[weeping_vines_age=24]
+## /setblock ~2 ~ ~ respawn_anchor
+  12060 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12061 actor   UpdateBlock 2 100 0 layer 0 respawn_anchor[respawn_anchor_charge=0]
+  12061 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  12209 actor   CorrectPlayerMovePrediction CorrectPlayerMovePrediction { prediction_type: Player, position: Vec3f { x: 0.5, y: 101.62001, z: 0.5 }, delta: Vec3f { x: 0.0, y: -0.0784, z: 0.0 }, rotation: Vec2f { x: 0.0, z: 0.0 }, angular_velocity: None, on_ground: true, tick: 93 }
+## /replaceitem entity @s slot.weapon.mainhand 0 glowstone 2
+  13241 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"2\"},{\"text\":\"Glowstone\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13242 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "2", "Glowstone"]
+## /
+  14527 actor   UpdateSubchunkBlocks 57 101 5 lava[liquid_depth=3]; 57 101 6 lava[liquid_depth=4]; 57 101 7 lava[liquid_depth=5]; 56 101 8 lava[liquid_depth=5] | extra: 
+  15004 actor   UpdateSubchunkBlocks 58 101 5 lava[liquid_depth=4]; 58 101 6 lava[liquid_depth=5]; 58 101 7 lava[liquid_depth=6]; 57 101 8 lava[liquid_depth=6] | extra: 
+## /!click 2 0 0
+## clicked: Err(NotVisible("block [2, 97, 0] is behind other blocks"))
+  15512 actor   UpdateSubchunkBlocks 59 101 5 lava[liquid_depth=5]; 58 101 4 lava[liquid_depth=5]; 59 101 6 lava[liquid_depth=6]; 59 101 7 lava[liquid_depth=7] | extra: 
+  15926 actor   UpdateBlock -64 85 20 layer 0 red_mushroom[]
+## /
+  16041 actor   UpdateSubchunkBlocks 60 101 5 lava[liquid_depth=6]; 59 101 4 lava[liquid_depth=6]; 60 101 6 lava[liquid_depth=7] | extra: 
+## /!click 2 0 0
+## clicked: Err(NotVisible("block [2, 97, 0] is behind other blocks"))
+  17915 actor   UpdateBlock 7 41 87 layer 0 weeping_vines[weeping_vines_age=24]
+## /
+  18124 actor   UpdateBlock 41 76 9 layer 0 weeping_vines[weeping_vines_age=25]
+## /replaceitem entity @s slot.weapon.mainhand 0 air
+  19093 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  19093 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Air\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  19094 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  19095 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Air"]
+  19663 actor   LevelEvent LevelEvent { event: SoundFizz, position: Vec3f { x: -87.5, y: 109.5, z: -1.5 }, data: 2877 }
+  19663 actor   UpdateBlock -88 109 -2 layer 0 lava[liquid_depth=9]
+## /
+  20144 actor   UpdateBlock -87 109 -2 layer 0 lava[liquid_depth=1]
+  20642 actor   UpdateBlock -86 109 -2 layer 0 lava[liquid_depth=2]
+  20842 actor   UpdateBlock 46 82 53 layer 0 weeping_vines[weeping_vines_age=25]
+  20993 actor   UpdateSubchunkBlocks 40 34 101 lava[liquid_depth=2]; 36 32 104 lava[liquid_depth=11]; 39 33 104 lava[liquid_depth=12] | extra: 
+## /!click 2 0 0
+## clicked: Err(NotVisible("block [2, 97, 0] is behind other blocks"))
+  21160 actor   UpdateBlock -86 108 -2 layer 0 lava[liquid_depth=10]
+  21523 actor   UpdateBlock 40 34 102 layer 0 lava[liquid_depth=3]
+  21664 actor   UpdateBlock -85 108 -2 layer 0 lava[liquid_depth=1]
+  22016 actor   UpdateBlock 40 34 103 layer 0 lava[liquid_depth=4]
+## /
+  22173 actor   UpdateBlock -85 107 -2 layer 0 lava[liquid_depth=9]
+  22516 actor   UpdateBlock 40 34 104 layer 0 lava[liquid_depth=5]
+  22668 actor   UpdateBlock -84 107 -2 layer 0 lava[liquid_depth=1]
+  22762 actor   UpdateBlock 66 83 58 layer 0 weeping_vines[weeping_vines_age=25]
+  23013 actor   UpdateBlock 40 33 104 layer 0 lava[liquid_depth=13]
+## /!click 2 0 0
+## clicked: Err(NotVisible("block [2, 97, 0] is behind other blocks"))
+  23168 actor   UpdateBlock -83 107 -2 layer 0 lava[liquid_depth=2]
+  23688 actor   UpdateBlock -83 106 -2 layer 0 lava[liquid_depth=10]
+  23867 actor   UpdateSubchunkBlocks 25 101 113 lava[liquid_depth=3]; 25 101 112 lava[liquid_depth=4] | extra: 
+## /
+  24187 actor   UpdateBlock -82 106 -2 layer 0 lava[liquid_depth=1]
+  24335 actor   LevelEvent LevelEvent { event: SoundFizz, position: Vec3f { x: -23.5, y: 35.5, z: 127.5 }, data: 2221 }
+  24335 actor   UpdateSubchunkBlocks -24 36 126 lava[liquid_depth=10]; -24 35 127 lava[liquid_depth=9] | extra: 
+  24358 actor   LevelEvent LevelEvent { event: SoundFizz, position: Vec3f { x: 26.5, y: 101.5, z: 112.5 }, data: 2298 }
+  24358 actor   UpdateBlock 25 101 111 layer 0 lava[liquid_depth=5]
+  24358 actor   UpdateSubchunkBlocks 26 101 113 lava[liquid_depth=4]; 26 101 112 lava[liquid_depth=5] | extra: 
+  24699 actor   UpdateBlock -82 105 -2 layer 0 lava[liquid_depth=9]
+  24791 actor   UpdateSubchunkBlocks 121 52 59 lava[liquid_depth=6]; 121 52 58 lava[liquid_depth=7]; 121 52 60 lava[liquid_depth=7] | extra: 
+  24843 actor   UpdateBlock 26 101 111 layer 0 lava[liquid_depth=6]
+  24843 actor   UpdateSubchunkBlocks 27 101 113 lava[liquid_depth=5]; 27 101 112 lava[liquid_depth=6] | extra: 
+## /tp @s ~-2 ~ ~2
+  25089 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-1.50\"},{\"text\":\"97.00\"},{\"text\":\"2.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  25091 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: -1.5, y: 98.62001, z: 2.5 }, pitch: -0.026209123, yaw: -0.029724121, head_yaw: -0.029724121, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 334 }
+  25091 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-1.50, 97.00, 2.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  25091 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-1.50", "97.00", "2.50"]
+  25198 actor   UpdateBlock -81 105 -2 layer 0 lava[liquid_depth=1]
+  25447 actor   LevelEvent LevelEvent { event: SoundFizz, position: Vec3f { x: 27.5, y: 101.5, z: 111.5 }, data: 2878 }
+  25447 actor   UpdateSubchunkBlocks 28 101 113 lava[liquid_depth=6]; 28 101 112 lava[liquid_depth=7] | extra: 
+  25447 actor   UpdateSubchunkBlocks 27 101 111 lava[liquid_depth=7]; 26 101 110 lava[liquid_depth=7] | extra: 
+  25447 actor   UpdateBlock -126 62 11 layer 0 twisting_vines[twisting_vines_age=14]
+  25807 actor   UpdateBlock -81 104 -2 layer 0 lava[liquid_depth=9]
+  25914 actor   UpdateBlock 29 101 113 layer 0 lava[liquid_depth=7]
+## /
+  26260 actor   UpdateBlock -81 103 -2 layer 0 lava[liquid_depth=9]
+  26773 actor   UpdateBlock -80 103 -2 layer 0 lava[liquid_depth=1]
+  26774 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  26774 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  26774 actor   Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.fell.accident.generic", parameters: ["CmdActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26774 actor   DeathInfo DeathInfo { cause: "death.fell.accident.generic", messages: ["CmdActor"] }
+  26774 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: PlayerLastDeathPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: -2, y: 68, z: 2 })) }, MetadataDictionaryItem { key: PlayerLastDeathDimension, type: Int, legacy_type: 2, value: Default(Int(1)) }, MetadataDictionaryItem { key: PlayerHasDied, type: Byte, legacy_type: 0, value: Default(Byte(1)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 919 }
+  26775 actor   Respawn Respawn { position: Vec3f { x: -1.5, y: 68.62001, z: 2.5 }, state: 0, runtime_entity_id: 0 }
+## /kill @s
+  27134 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+  27274 actor   UpdateBlock -80 102 -2 layer 0 lava[liquid_depth=9]
+  27372 actor   UpdateBlock 19 92 -15 layer 0 weeping_vines[weeping_vines_age=24]
+  27819 actor   UpdateBlock -79 102 -2 layer 0 lava[liquid_depth=1]
+  27820 actor   LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: -1.5, y: 67.1, z: 2.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  27872 actor   UpdateSubchunkBlocks -136 40 9 lava[liquid_depth=2]; -137 40 9 lava[liquid_depth=3]; -138 40 9 lava[liquid_depth=4] | extra: 
+## /
+  28286 actor   UpdateBlock -79 101 -2 layer 0 lava[liquid_depth=9]
+  28332 actor   UpdateSubchunkBlocks -136 40 10 lava[liquid_depth=3]; -137 40 10 lava[liquid_depth=4]; -138 40 10 lava[liquid_depth=5] | extra: 
+  28780 actor   UpdateSubchunkBlocks -78 101 -2 lava[liquid_depth=1]; -79 101 -1 lava[liquid_depth=1] | extra: 
+  28834 actor   UpdateSubchunkBlocks -137 40 11 lava[liquid_depth=5]; -139 40 10 lava[liquid_depth=6]; -138 40 11 lava[liquid_depth=6] | extra: 
+  28881 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  28881 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  28881 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 961 }
+  28881 watcher LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.0, y: 32767.1, z: 0.0 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  28881 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.6)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(1.8)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  28881 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.002589561, yaw: -0.050354004, head_yaw: -0.050354004, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 367 }
+  28884 actor   ChangeDimension ChangeDimension { dimension: 0, position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, respawn: false, loading_screen_id: None }
+  28885 actor   PlayerAction PlayerAction { runtime_entity_id: 1, action: DimensionChangeAck, position: BlockCoordinates { x: 0, y: 0, z: 0 }, result_position: BlockCoordinates { x: 0, y: 0, z: 0 }, face: 0 }
+  28885 actor   Respawn Respawn { position: Vec3f { x: 0.0, y: 32767.0, z: 0.0 }, state: 0, runtime_entity_id: 0 }
+  28885 actor   Respawn Respawn { position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, state: 1, runtime_entity_id: 0 }
+  28885 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.002589561, yaw: -0.050354004, head_yaw: -0.050354004, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 367 }
+  28885 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  28885 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  28885 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 961 }
+  28885 actor   SetHealth SetHealth { health: 20 }
+  28885 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 24791.0, current: 0.0, default_min: 0.0, default_max: 24791.0, default: 0.0, name: "minecraft:player.level", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.0, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 24791.0, current: 0.0, default_min: 0.0, default_max: 24791.0, default: 0.0, name: "minecraft:player.level", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.0, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }], tick: 961 }
+  28885 actor   LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.0, y: 32767.1, z: 0.0 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  28885 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.6)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(1.8)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+## /
+## /
+## /
+  32034 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  32034 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /
+## /kill @s
+  34141 watcher Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["CmdActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34141 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34142 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  34142 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  34142 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: PlayerLastDeathPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: 0, y: 65, z: 0 })) }, MetadataDictionaryItem { key: PlayerLastDeathDimension, type: Int, legacy_type: 2, value: Default(Int(0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 1066 }
+  34143 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  34144 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  34144 actor   Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["CmdActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  34144 actor   DeathInfo DeathInfo { cause: "death.attack.generic", messages: ["CmdActor"] }
+  34144 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: PlayerLastDeathPosition, type: Vec3i, legacy_type: 6, value: Default(Vec3i(Vec3i { x: 0, y: 65, z: 0 })) }, MetadataDictionaryItem { key: PlayerLastDeathDimension, type: Int, legacy_type: 2, value: Default(Int(0)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 1066 }
+  34144 actor   Respawn Respawn { position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, state: 0, runtime_entity_id: 0 }
+  34144 actor   CommandOutput success_count=1 data=None commands.kill.successful success=true ["CmdActor"]
+## /
+  35130 watcher LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  35130 actor   LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+## /
+  36239 actor   Respawn Respawn { position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, state: 1, runtime_entity_id: 0 }
+  36239 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.002589561, yaw: -0.050354004, head_yaw: -0.050354004, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 456 }
+  36239 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  36239 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  36239 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  36239 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1108 }
+  36239 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  36239 actor   SetHealth SetHealth { health: 20 }
+  36239 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1108 }
+  36239 watcher LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  36239 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.6)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(1.8)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  36239 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 24791.0, current: 0.0, default_min: 0.0, default_max: 24791.0, default: 0.0, name: "minecraft:player.level", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.0, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 24791.0, current: 0.0, default_min: 0.0, default_max: 24791.0, default: 0.0, name: "minecraft:player.level", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.0, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }], tick: 1108 }
+  36240 actor   LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  36240 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.6)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(1.8)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  36280 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: -0.02450072, yaw: -0.02229309, head_yaw: -0.02229309, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 457 }
+## /
+## /
+## /
+## /
+## /kill @s
+  41142 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  41142 watcher Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["CmdActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41142 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41142 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  41142 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  41142 actor   Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["CmdActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41143 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  41143 actor   DeathInfo DeathInfo { cause: "death.attack.generic", messages: ["CmdActor"] }
+  41143 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.2)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 1206 }
+  41143 actor   Respawn Respawn { position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, state: 0, runtime_entity_id: 0 }
+  41143 actor   CommandOutput success_count=1 data=None commands.kill.successful success=true ["CmdActor"]
+  41143 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.2)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 1206 }
+## /
+  42130 watcher LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  42130 actor   LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+## /
+  43232 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  43232 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  43232 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1248 }
+  43232 watcher LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  43232 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.6)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(1.8)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  43233 actor   Respawn Respawn { position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, state: 1, runtime_entity_id: 0 }
+  43233 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: -0.02450072, yaw: -0.02229309, head_yaw: -0.02229309, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 552 }
+  43233 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  43233 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  43233 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1248 }
+  43233 actor   SetHealth SetHealth { health: 20 }
+  43233 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 24791.0, current: 0.0, default_min: 0.0, default_max: 24791.0, default: 0.0, name: "minecraft:player.level", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.0, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 24791.0, current: 0.0, default_min: 0.0, default_max: 24791.0, default: 0.0, name: "minecraft:player.level", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.0, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }], tick: 1248 }
+  43233 actor   LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  43234 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.6)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(1.8)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  43279 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: -0.005204538, yaw: -0.01210022, head_yaw: -0.01210022, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 553 }
+  43330 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: -0.005204538, yaw: -0.01210022, head_yaw: -0.01210022, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 554 }
+  43379 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: -0.005204538, yaw: -0.01210022, head_yaw: -0.01210022, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 555 }
+  43429 watcher LevelSoundEvent LevelSoundEvent { sound_id: "land", position: Vec3f { x: 0.5, y: 64.0, z: 0.5 }, extra_data: -2144268767, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+## /
+  44828 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  44828 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /gamerule doimmediaterespawn true
+  50179 watcher GameRulesChanged doImmediateRespawn=Bool(true)
+  50179 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doimmediaterespawn\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50179 actor   GameRulesChanged doImmediateRespawn=Bool(true)
+  50179 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doimmediaterespawn", "true"]
+## /
+## /kill @s
+  52189 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  52189 watcher Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["CmdActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  52189 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  52189 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  52189 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  52189 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.2)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 1427 }
+  52189 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: DeathAnimation, data: 0, fire_at_position: None }
+  52189 actor   Text Text { needs_translation: true, category: Parameters, type: Translation, content: Translation(TextContentTranslation { message: "death.attack.generic", parameters: ["CmdActor"] }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  52190 actor   DeathInfo DeathInfo { cause: "death.attack.generic", messages: ["CmdActor"] }
+  52190 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.2)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(0.2)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 1427 }
+  52190 actor   Respawn Respawn { position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, state: 0, runtime_entity_id: 0 }
+  52190 actor   CommandOutput success_count=1 data=None commands.kill.successful success=true ["CmdActor"]
+## /
+  53177 actor   LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  53178 watcher LevelSoundEvent LevelSoundEvent { sound_id: "disappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+## /
+  54279 actor   Respawn Respawn { position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, state: 1, runtime_entity_id: 0 }
+  54279 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: -0.005204538, yaw: -0.01210022, head_yaw: -0.01210022, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 728 }
+  54279 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  54280 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: Respawn, data: 0, fire_at_position: None }
+  54280 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  54280 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:health", modifiers: [] }], tick: 0 }
+  54280 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1469 }
+  54280 actor   SetHealth SetHealth { health: 20 }
+  54280 actor   UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 24791.0, current: 0.0, default_min: 0.0, default_max: 24791.0, default: 0.0, name: "minecraft:player.level", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.0, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 24791.0, current: 0.0, default_min: 0.0, default_max: 24791.0, default: 0.0, name: "minecraft:player.level", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 1.0, current: 0.0, default_min: 0.0, default_max: 1.0, default: 0.0, name: "minecraft:player.experience", modifiers: [] }], tick: 1469 }
+  54280 watcher UpdateAttributes UpdateAttributes { runtime_entity_id: 1, attributes: [PlayerAttributesItem { min: 0.0, max: 20.0, current: 20.0, default_min: 0.0, default_max: 20.0, default: 20.0, name: "minecraft:player.hunger", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 5.0, default_min: 0.0, default_max: 20.0, default: 5.0, name: "minecraft:player.saturation", modifiers: [] }, PlayerAttributesItem { min: 0.0, max: 20.0, current: 0.0, default_min: 0.0, default_max: 20.0, default: 0.0, name: "minecraft:player.exhaustion", modifiers: [] }], tick: 1469 }
+  54280 actor   LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  54280 actor   SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.6)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(1.8)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  54280 watcher LevelSoundEvent LevelSoundEvent { sound_id: "reappeared", position: Vec3f { x: 0.5, y: 64.1, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  54280 watcher SetEntityData SetEntityData { runtime_entity_id: 1, metadata: [MetadataDictionaryItem { key: Flags, type: Long, legacy_type: 7, value: Flags(MetadataFlags1(844459290394624)) }, MetadataDictionaryItem { key: BoundingboxWidth, type: Float, legacy_type: 3, value: Default(Float(0.6)) }, MetadataDictionaryItem { key: BoundingboxHeight, type: Float, legacy_type: 3, value: Default(Float(1.8)) }], properties: EntityProperties { ints: [], floats: [] }, tick: 0 }
+  54378 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.022347724, yaw: -0.025161743, head_yaw: -0.025161743, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 730 }
+  54478 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 0.5 }, pitch: 0.022347724, yaw: -0.025161743, head_yaw: -0.025161743, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 731 }
+  54527 watcher LevelSoundEvent LevelSoundEvent { sound_id: "land", position: Vec3f { x: 0.5, y: 64.0, z: 0.5 }, extra_data: -2144268767, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+## /
+## /
+## /
+  57626 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  57626 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /gamerule doimmediaterespawn false
+  58176 watcher GameRulesChanged doImmediateRespawn=Bool(false)
+  58176 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"doimmediaterespawn\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  58176 actor   GameRulesChanged doImmediateRespawn=Bool(false)
+  58176 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["doimmediaterespawn", "false"]
+## /gamemode creative @s
+  59177 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  59178 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  59178 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /difficulty easy
+  60175 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"EASY\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  60175 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["EASY"]
+## /gamerule domobspawning true
+  61178 watcher GameRulesChanged doMobSpawning=Bool(true)
+  61178 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"true\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  61178 actor   GameRulesChanged doMobSpawning=Bool(true)
+  61178 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "true"]
+## /
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1

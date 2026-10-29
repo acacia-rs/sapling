@@ -40,7 +40,7 @@ fn a_fist_costs_a_cow_one_throws_it_and_ten_kill_it_for_experience_as_on_bds() {
     let sent = h.tick_all().to(2).to_vec();
     let events: Vec<_> = all::<EntityEvent>(&sent).into_iter().map(|event| (event.event_id, event.data)).collect();
     assert_eq!((events, health(&sent)), (vec![(EntityEventEventId::HurtAnimation, 2)], vec![9.0]), "the second hit is within the first one's guard");
-    assert_eq!(named(&sent, "minecraft:player.exhaustion"), [0.1], "the hit that landed tires the hitter");
+    assert_eq!(named(&sent, "minecraft:player.exhaustion"), [0.1, 0.2], "each hit tires the hitter, landed or not (bds-hurt2.txt)");
     let swings: Vec<_> = all::<LevelSoundEvent>(&sent).into_iter().map(|sound| (sound.sound_id, sound.position.y, sound.entity_type)).collect();
     assert_eq!(swings, vec![("attack.strong".to_owned(), 65.9, "minecraft:player".to_owned()); 2], "each is heard");
     // Thrown 0.4 away and up in this tick; the next slows it as one that left the ground.

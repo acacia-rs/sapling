@@ -11,6 +11,7 @@ const ENCH: &str = "ench";
 pub(super) const KEEP_ON_DEATH: &str = "minecraft:keep_on_death";
 /// 1 locks a stack in its slot, 2 in the inventory (research/captures/bds-itemcmds.txt).
 const ITEM_LOCK: &str = "minecraft:item_lock";
+const DAMAGE: &str = "Damage";
 /// `TAG_Compound`, the element tag of `ench`.
 const COMPOUND: u8 = 10;
 
@@ -31,12 +32,24 @@ pub(crate) fn stored(item: &Item, registry: &sapling_world::BlockRegistry) -> Op
 /// own fields.
 fn stored_over(item: &Item, registry: &sapling_world::BlockRegistry, previous: Option<&Value>) -> Option<ItemStack> {
     let block = registry.states_of(&item.name).next().map(|(id, _)| registry.network_hash(id));
-    sapling_data::is_item(&item.name).then(|| ItemStack { name: item.name.clone(), count: item.count, damage: item.damage, block, tag: tag(item, previous) })
+    let mut tag = tag(item, previous);
+    let worn = wears(&item.name);
+    if worn && item.damage > 0 {
+        super::wear::set_damage(&mut tag, item.damage.into());
+    }
+    let damage = if worn { 0 } else { item.damage };
+    sapling_data::is_item(&item.name).then(|| ItemStack { name: item.name.clone(), count: item.count, damage, block, tag })
+}
+
+/// Whether the item wears with use, its wear kept in its `Damage` tag, not its data value: BDS's
+/// `/replaceitem ... iron_helmet 1 164` left a helmet one hit from breaking (bds-hurt2.txt).
+fn wears(name: &str) -> bool {
+    sapling_data::armour_lasts(name).is_some() || sapling_data::gear(name).is_some_and(|gear| gear.lasts > 0)
 }
 
 fn tag(item: &Item, previous: Option<&Value>) -> Option<Value> {
     let mut fields: Vec<(Str, Value)> = match previous {
-        Some(Value::Compound(fields)) => fields.iter().filter(|(key, _)| ![ENCH, KEEP_ON_DEATH, ITEM_LOCK].contains(&key.as_str())).cloned().collect(),
+        Some(Value::Compound(fields)) => fields.iter().filter(|(key, _)| ![ENCH, KEEP_ON_DEATH, ITEM_LOCK, DAMAGE].contains(&key.as_str())).cloned().collect(),
         _ => Vec::new(),
     };
     let enchantment = |&(id, level): &(i16, i16)| Value::Compound(vec![(Str::from("id"), Value::Short(id)), (Str::from("lvl"), Value::Short(level))]);
@@ -65,7 +78,8 @@ pub(crate) fn described(stack: &ItemStack) -> Item {
         _ => None,
     };
     let keep_on_death = matches!(field(KEEP_ON_DEATH), Some(Value::Byte(1)));
-    Item { damage: stack.damage, enchantments, keep_on_death, lock, ..Item::new(stack.name.clone(), stack.count) }
+    let damage = if wears(&stack.name) { super::wear::damage(&stack.tag) as i16 } else { stack.damage };
+    Item { damage, enchantments, keep_on_death, lock, ..Item::new(stack.name.clone(), stack.count) }
 }
 
 /// What a slot holds, for a plugin.
