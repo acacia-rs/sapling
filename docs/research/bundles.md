@@ -43,9 +43,13 @@ ItemStackRequests from `crates/sapling/examples/shared/bundle_drill.rs`). saplin
   longer anywhere: cleared, replaced by air, or thrown and then killed as an item; one lying as an item
   stayed. Two at once came newest first. sapling: `inventory/bundle_cleanup.rs`.
 
+## Shulker boxes (drilled 2026-10-29)
+
+Both puts of a shulker box into a bundle are refused with status 55 and the put of another item after them is
+Ok, on BDS and sapling alike (research/captures/bds-bundleshulker.txt, sapling-bundleshulker.txt).
+
 ## Open
 
-- Shulker boxes in bundles were not drilled (sapling refuses them, as Java does).
 - A rejoin with a filled bundle on BDS, to confirm the window 125 content sapling sends. `bundlekeep3`
   (bds-bundlekeep3.txt) tried: BDS let the probe back in as a new player, its inventory empty (the
   offline probe sends an empty `SelfSignedId`, likely why BDS found no saved player), yet a take from the old bundle's
