@@ -40,6 +40,7 @@ selecting,session,items,enchanting}.rs`.
 - `/clear <item> 0 0` with none is `commands.clear.failure.no.items`, not `.testing`; fixed.
 - `/spreadplayers` with no room: `commands.spreadplayers.failure.players` with
   `[count, x, z, "0.00"]`, not `.unsafe`; fixed. Success answers and `num.tooSmall` were the same.
+- Re-drilled (`sapling-spread.txt`): every answer above now the same.
 
 ## Not seen; sapling's choice
 
