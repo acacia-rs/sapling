@@ -85,6 +85,7 @@ mod life_events;
 mod liquids;
 mod mechanisms;
 mod mob_commands;
+mod mob_heat;
 mod mob_life;
 mod mount_packs;
 mod movement_policy;

@@ -37,6 +37,9 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     if event.is_some() {
         super::warden::arm(world, entity, kind, event);
     }
+    if kind == "minecraft:creeper" && event.is_some_and(|event| event.trim_start_matches("minecraft:") == "start_exploding_forced") {
+        super::blast::light_forced(world, entity, layer, kind);
+    }
     Some(id)
 }
 
@@ -167,6 +170,15 @@ fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>,
     if let Some(max) = sapling_data::mob_health(kind).filter(|_| !NO_DEATH.contains(&kind)) {
         let max = genes::health(kind, world.get::<genes::Gene>(entity).copied(), max);
         let max = world.get::<strides::Strode>(entity).map_or(max, |strode| strode.0.health);
-        world.entity_mut(entity).insert(Health::new(max, left, burning));
+        let mut health = Health::new(max, left, burning);
+        if SKIN_ARMOUR.contains(&kind) {
+            health.wear([2.0, 0.0], Default::default());
+        }
+        world.entity_mut(entity).insert(health);
     }
 }
+
+/// Kinds that come with 2 points of armour on no armour worn: BDS's zombie and baby zombie took 0.94 of
+/// fire's 1 and 7.872 of a sword's 8 (research/captures/bds-burn2.txt, bds-hits2.txt); the rest of the
+/// family as the Java game's, not drilled.
+const SKIN_ARMOUR: [&str; 4] = ["minecraft:zombie", "minecraft:husk", "minecraft:drowned", "minecraft:zombie_villager_v2"];

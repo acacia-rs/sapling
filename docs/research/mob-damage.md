@@ -98,12 +98,58 @@ have, and one in powder snow, which sapling does not ask.
 - BDS's loot appears the tick after the death; sapling's with it.
 - A mob left inside a block (lava under it made stone) is lifted onto it on BDS and stays in it on sapling.
 - A cow shut in water swims up on BDS; sapling's sinks. Both drown at the same tick.
-- Any full block smothers on sapling, and a fish out of water breathes.
 - BDS also flips `MOVING` (bit 34) and another flag (bit 35) on mobs; sapling sends their recorded flags.
+
+## Landings, roofs, fish (2026-10-29, `bds_command_probe harm2`, research/captures/bds-harm2.txt)
+
+Sapling's run: sapling-harm2.txt (after the fixes below).
+
+- 8 blocks onto stone cost a cow, a baby cow and a zombie 5; onto hay, slime or water nothing; 8.44 onto
+  a bed 1. The actor in survival: 5 onto stone, nothing onto hay or water. Sapling counted every landing
+  in full; it now counts the height times 0.2 on hay, 0 on slime and 0.4 on a bed (`creatures/heat.rs`
+  `softens`; the bed's share fitted to that one drop, the Java game's half would cost 2).
+- A roof one block up of stone smothered a cow (2 every 10 ticks, cause 4); glass, leaves and a bottom
+  slab did not. Sapling the same.
+- A cod, a salmon and a pufferfish on dry stone were hurt 2 (cause 4) 299 ticks after they came and
+  died 10 ticks later (3 health). Sapling's fish breathed air; now a `no_air` kind out of water holds
+  its breath and then smothers (`Health::gasp`). `/summon tropical_fish` fails on both.
+- A cow shut in water drowned at the same ticks on both (2 every 10, cause 9) before the water was
+  drained, so how breath comes back stays undrilled.
+- The actor standing in fire: 1 every 10 ticks, then 7 burns on, 1 a second, on both.
+
+## Fire, magma, rain (2026-10-29, `bds_command_probe burn2`, research/captures/bds-burn2.txt)
+
+Sapling's run: sapling-burn2.txt.
+
+- Soul fire cost a cow 2 a hit and a lit soul campfire 2, a campfire and fire 1, every 10 ticks, cause
+  6; a campfire of either kind never set the cow alight (no `ONFIRE`). Magma under it cost 1 every 10
+  ticks, cause 22. Sapling hurt only on fire and lava; now `creatures/heat.rs`.
+- Out of fire after 1 s, a cow burnt on 160 ticks, 7 burns of 1 (cause 7), as sapling's; one out of
+  lava after 1 s burnt on until it died.
+- With fire resistance in lava a cow took nothing and was never shown `ONFIRE`; sapling showed it.
+  Fixed: fire resistance lights no fire.
+- A zombie and a baby zombie in lava took 0.94 of fire's 1 and 2.996 of lava's 4 (its own 2 armour);
+  in full diamond 0.21. Sapling's mobs had no armour; the zombie family now has 2 (`birth.rs`
+  `SKIN_ARMOUR`), and a player's sword goes through it as BDS's (7.872 of a diamond sword's 8,
+  bds-hits2.txt). `replaceitem` armour on a mob is refused on sapling (noTargetMatch), so the
+  diamond zombie is not followed.
+- An armour stand in lava had 6 health and lost 0.05 every 10 ticks (cause -1); sapling's has none.
+- A burning cow in rain went out 20 ticks after its last burn, the rain begun between: at the turn
+  of its next burn. Sapling's burnt on; now `Health::rained_on`.
+
+## Hits (2026-10-29, `bds_command_probe hits2`, research/captures/bds-hits2.txt)
+
+Sapling's run: sapling-hits2.txt. Each mob held by slowness 255, the actor put back on its mark.
+
+- A diamond sword cost a cow 8, a spider 8, a zombie 7.872 (its 2 armour); Sharpness I 9, V 14;
+  Smite II a zombie 12.792; Bane of Arthropods II a spider 13. A zombie in a diamond chestplate took
+  5.824. Knockback I with an iron sword 7, a wooden sword 5.
+- Fire Aspect I burnt a cow a second apart after the iron sword's 7 (cause 7).
+- A hit while the actor jumped (`!jump`) cost a cow 12, the sword's 8 times 1.5.
+- A hit cow ran off out of reach (3.6 blocks), so the sword's wear and repeated hits were not seen.
+- `effect` health_boost raised BDS's cows to 30 health; sapling's stay at 10 (not followed).
 
 ## Not drilled
 
-How breath comes back out of water (sapling gives all of it at once), a fall into water or onto slime, hay
-or a bed, which blocks do not smother (glass, leaves), fish out of water, soul fire, magma, campfires, a fire block's burn time against lava's, rain, fire resistance, armour, a baby,
-the armour stand's own burning (bds-lava.txt: hurt animations with data -1), players. Of hits: critical hits, enchantments, an item's wear, the hitter's
-hunger, a baby's experience, what a mob does once hit.
+How breath comes back out of water; players' burns beyond fire; a baby's experience counted; the
+hitter's hunger; an item's wear (the cow fled); what a mob does once hit beyond running.

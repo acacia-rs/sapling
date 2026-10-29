@@ -94,7 +94,8 @@ pub fn fights() -> Vec<String> {
 /// One mob held still 2 north of the actor for each weapon: `kind` summoned, `item` given with
 /// `enchants`, hit `times` a second apart, watched `after` seconds.
 fn struck(lines: &mut Vec<String>, kind: &str, item: &str, enchants: &[&str], times: usize, after: usize) {
-    lines.extend(["kill @e[type=!player]".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {item}")]);
+    // Mobs push the actor off its mark and `!hit` reaches only 3 (bds-hits2.txt).
+    lines.extend(["kill @e[type=!player]".into(), "tp @s 0.5 -26 0.5".into(), format!("replaceitem entity @s slot.weapon.mainhand 0 {item}")]);
     lines.extend(enchants.iter().map(|enchant| format!("enchant @s {enchant}")));
     lines.push(summon(kind, 0.5, -26.0, -1.5));
     held(lines);
@@ -123,7 +124,7 @@ pub fn hits2() -> Vec<String> {
     struck(&mut lines, "zombie", "diamond_sword", &["smite 2"], 1, 1);
     struck(&mut lines, "spider", "diamond_sword", &[], 1, 1);
     struck(&mut lines, "spider", "diamond_sword", &["bane_of_arthropods 2"], 1, 1);
-    lines.extend(["kill @e[type=!player]", "summon zombie 0.5 -26 -1.5", "replaceitem entity @e[type=zombie] slot.armor.chest 0 diamond_chestplate"].map(String::from));
+    lines.extend(["kill @e[type=!player]", "tp @s 0.5 -26 0.5", "summon zombie 0.5 -26 -1.5", "replaceitem entity @e[type=zombie] slot.armor.chest 0 diamond_chestplate"].map(String::from));
     held(&mut lines);
     lines.extend(["replaceitem entity @s slot.weapon.mainhand 0 diamond_sword", "", "!hit zombie", "", ""].map(String::from));
     struck(&mut lines, "cow", "iron_sword", &["fire_aspect 1"], 1, 10);
@@ -133,7 +134,7 @@ pub fn hits2() -> Vec<String> {
     struck(&mut lines, "cow", "diamond_sword", &[], 4, 1);
     lines.extend(["!stop", ""].map(String::from));
     for kind in ["cow", "cow 0 0 minecraft:entity_born", "zombie 0 0 minecraft:as_baby"] {
-        lines.extend(["kill @e[type=!player]", "replaceitem entity @s slot.weapon.mainhand 0 diamond_sword"].map(String::from));
+        lines.extend(["kill @e[type=!player]", "tp @s 0.5 -26 0.5", "replaceitem entity @s slot.weapon.mainhand 0 diamond_sword"].map(String::from));
         lines.extend([summon(kind, 0.5, -26.0, -1.5), String::new()]);
         held(&mut lines);
         let name = kind.split(' ').next().unwrap_or(kind);

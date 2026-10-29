@@ -156,8 +156,11 @@ pub fn burn2() -> Vec<String> {
             lines.push("effect @e[type=cow,x=8.5,y=-26,z=-13.5,r=1] fire_resistance 60 0 true".into());
         }
         lines.push(format!("setblock {x} -26 -14 {inside}"));
+        // Each line takes a second, so these go out a second after they came in.
+        if at == 4 || at == 5 {
+            lines.push(format!("setblock {x} -26 -14 air"));
+        }
     }
-    lines.extend(["", "setblock 0 -26 -14 air", "setblock 4 -26 -14 air"].map(String::from));
     wait(&mut lines, 12);
     lines.extend(["kill @e[type=!player]", "fill -18 -27 -16 18 -27 -12 stone", "fill -18 -26 -16 18 -16 -12 air", ""].map(String::from));
     let kinds = ["zombie", "zombie", "zombie 0 0 minecraft:as_baby", "armor_stand"];
