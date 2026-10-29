@@ -135,7 +135,9 @@ Sapling's run: sapling-burn2.txt.
   diamond zombie is not followed.
 - An armour stand in lava had 6 health and lost 0.05 every 10 ticks (cause -1); sapling's has none.
 - A burning cow in rain went out 20 ticks after its last burn, the rain begun between: at the turn
-  of its next burn. Sapling's burnt on; now `Health::rained_on`.
+  of its next burn. Sapling's burnt on; now `Health::rained_on` (tests/integration/mob_heat.rs). In
+  sapling's drill_server rerun the cow still burnt on, as kinds3's endermen took no rain there: rain
+  does not reach mobs in that void world (not settled). The campfire and fire resistance cows matched.
 
 ## Hits (2026-10-29, `bds_command_probe hits2`, research/captures/bds-hits2.txt)
 
