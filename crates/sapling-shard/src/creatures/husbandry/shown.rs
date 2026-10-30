@@ -47,9 +47,14 @@ pub(super) fn event(world: &mut World, entity: Entity, event_id: EntityEventEven
 
 /// The mob's sound `name`, from the middle of its box.
 pub(super) fn sound(world: &mut World, entity: Entity, name: &str) {
+    sound_from(world, entity, name, 0.5);
+}
+
+/// The mob's sound `name`, from `up` of its height over its feet.
+pub(super) fn sound_from(world: &mut World, entity: Entity, name: &str, up: f32) {
     let Some((_, id, kind, body)) = of(world, entity) else { return };
     let is_baby = world.get::<Raised>(entity).is_some_and(Raised::is_baby);
-    let position = Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] };
+    let position = Vec3f { x: body.at[0], y: body.at[1] + body.size[1] * up, z: body.at[2] };
     let sound = LevelSoundEvent { sound_id: name.into(), position, extra_data: -1, entity_type: kind, is_baby_mob: is_baby, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
     tell(world, entity, vec![sapling_net::encode(&sound)]);
 }

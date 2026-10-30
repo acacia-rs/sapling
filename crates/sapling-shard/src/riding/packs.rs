@@ -120,8 +120,8 @@ fn goods(world: &World, mob: Entity) -> Vec<(u8, ItemStack)> {
 }
 
 /// What a dying mount lets go of, `doMobLoot` or not: its goods and the chest they were in; its
-/// saddle, armour and carpet stay with it (research/captures/bds-tack.txt).
-// TODO: the chest's own drop is Java's; BDS's chested donkey was not seen.
+/// saddle, armour and carpet stay with it (research/captures/bds-tack.txt), the chest last
+/// (bds-chestdie.txt).
 pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
     if !world.get::<Kind>(mob).is_some_and(|kind| has_pack(&kind.0)) {
         return Vec::new();

@@ -174,7 +174,8 @@ fn bred_turtles_have_no_baby_and_one_goes_home_and_lays_eggs_on_sand() {
     sent.extend(watch(&mut h, 6000));
     assert!(added(&sent, "minecraft:turtle").is_empty(), "no baby");
     assert!(turtles.iter().any(|turtle| has_flag(&sent, *turtle, MetadataFlags1::PREGNANT).is_some()), "pregnant");
-    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "lay_egg"), "laid");
+    let laid = all::<LevelSoundEvent>(&sent).into_iter().find(|sound| sound.sound_id == "lay_egg").expect("laid");
+    assert!((laid.position.y - 65.34).abs() < 1e-4, "0.85 of a turtle's height up: {}", laid.position.y);
     assert!(names(&mut h, around([2, 2], 65, 8)).iter().any(|name| name.starts_with("minecraft:turtle_egg[")), "eggs on the sand");
 }
 

@@ -136,6 +136,9 @@ pub(super) fn give(world: &mut World, mob: Entity, effect: Effect, ticks: u32, a
         packets.push(told(id, event_id, &now));
     }
     tell(world, mob, packets);
+    if effect == Effect::HealthBoost {
+        super::boosts::boost(world, mob);
+    }
     true
 }
 
@@ -164,6 +167,9 @@ fn lose(world: &mut World, mob: Entity, gone: &[Active]) {
         health.ward(1.0, false);
     }
     tell(world, mob, packets);
+    if gone.iter().any(|active| active.effect == Effect::HealthBoost) {
+        super::boosts::boost(world, mob);
+    }
 }
 
 /// Gives a mob the effect named `effect` at its first level for `ticks`.

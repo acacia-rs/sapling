@@ -104,6 +104,10 @@ Bedrock was found.
   while its middle is unloaded. BDS's kept raid showed its bar 129 ms after a rejoin, its raiders still
   there, and went on to defeat [bds-raidkeep.txt, bds-raidkeep2.txt; sapling's drill server keeps no
   world, so BDS only].
+- A raider's `TargetEid` (2026-10-30 check): BDS sends the target's unique id (the player's
+  -4294967295 in bds-raid.txt, bds-fights.txt). Sapling sends `NetId`, which is the unique id it
+  announces too: every `AddEntity`/`AddPlayer`/`StartGame` carries unique id = runtime id
+  (`sapling_data::add_entity`, `player.rs`, `join.rs`), so the client resolves it. Same; nothing to fix.
 
 ## Ominous bottle and trial omen
 

@@ -266,7 +266,7 @@ pub(super) fn first_breath(world: &mut World, entity: Entity, layer: Entity, id:
 fn tell(world: &mut World, entity: Entity, health: &mut Health, id: u64, kind: &str, burns: bool, packets: &mut Vec<Bytes>) {
     if health.left() != health.told {
         health.told = health.left();
-        packets.push(sapling_net::encode(&sapling_data::mob_health_update(id, health.left(), health.max())));
+        packets.push(sapling_net::encode(&super::boosts::told(world, entity, id, health)));
     }
     if burns && health.is_burning() != health.lit {
         health.lit = health.is_burning();
