@@ -1,22 +1,25 @@
 //! What a broken block leaves behind, by the game's loot tables (`sapling_data::block_loot`:
 //! the Java game's, which Bedrock follows for the blocks checked). The tables speak Java's
-//! block states; `state_holds` reads them off a Bedrock block.
+//! block states; `state_holds` reads them off a Bedrock block. Putting it in the world: spill.rs.
 // TODO: a row about a state this cannot read off the Bedrock block is skipped, stems leave
 // nothing (their seed count is a formula the table file does not carry).
 
-use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Item};
+use sapling_api::Item;
 use sapling_data::{BlockLoot, Fortune, LootRow, StateTest, Tooling};
 
-use crate::components::Layer;
-use crate::{drops, inventory};
+mod dice;
+mod spill;
+#[cfg(test)]
+mod tests;
+
+pub(crate) use dice::Dice;
+pub(crate) use spill::mined;
+pub(super) use spill::{Tags, add_entity_loot, let_go, spill, spill_tagged, thrown};
 
 /// Java states that count from one where Bedrock's count from zero: Java's, Bedrock's.
 const FROM_ONE: &[(&str, &str)] = &[("candles", "candles"), ("pickles", "cluster_count"), ("layers", "height"), ("flower_amount", "growth"), ("segment_amount", "growth")];
 /// Bedrock's `growth` of a ripe crop.
 const RIPE: i32 = 7;
-const TILE_DROPS: &str = "doTileDrops";
-const ENTITY_DROPS: &str = "doEntityDrops";
 /// Chances are thrown out of this many.
 const CHANCE_SIDES: u32 = 1_000_000;
 
@@ -37,37 +40,6 @@ pub(crate) struct Breaker {
 impl Breaker {
     /// A block that breaks on its own, having lost its hold.
     pub const UNAIDED: Breaker = Breaker { harvests: true, silk_touch: false, shears: false, pickaxe: false, fortune: 0, by_entity: false };
-}
-
-/// The shard's dice: xorshift, the same throws on every run.
-#[derive(Resource)]
-pub(crate) struct Dice(u64);
-
-impl Default for Dice {
-    fn default() -> Self {
-        Self(0x9E37_79B9_7F4A_7C15)
-    }
-}
-
-impl Dice {
-    /// A number below `sides`.
-    pub fn roll(&mut self, sides: u32) -> u32 {
-        self.0 ^= self.0 << 13;
-        self.0 ^= self.0 >> 7;
-        self.0 ^= self.0 << 17;
-        ((self.0 >> 32) as u32) % sides.max(1)
-    }
-
-    /// A number from 0 up to 1.
-    pub fn fraction(&mut self) -> f32 {
-        self.roll(1 << 20) as f32 / (1 << 20) as f32
-    }
-
-    /// A number from the normal spread about 0 (Box-Muller).
-    pub fn gaussian(&mut self) -> f32 {
-        let (u, v) = (1.0 - self.fraction(), self.fraction());
-        (-2.0 * u.ln()).sqrt() * (std::f32::consts::TAU * v).cos()
-    }
 }
 
 fn some(name: &str, count: u32) -> Vec<Item> {
@@ -168,141 +140,4 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
         }
     }
     left
-}
-
-/// The tags a broken block's entity gives the items it leaves, which a plugin's [`Item`] cannot
-/// carry: each goes, in order, on the next spilled stack of its item; a `None` keeps that stack's
-/// place for an untagged held stack.
-#[derive(Default)]
-pub(super) struct Tags(Vec<(String, Option<acacia_proto::nbt::Value>)>);
-
-impl Tags {
-    /// The tag the next stack of `name` gets, taken out.
-    pub(super) fn take(&mut self, name: &str) -> Option<acacia_proto::nbt::Value> {
-        let at = self.0.iter().position(|(tagged, _)| tagged == name)?;
-        self.0.remove(at).1
-    }
-
-    pub(super) fn one(name: &str, tag: Option<acacia_proto::nbt::Value>) -> Self {
-        Tags(vec![(name.to_owned(), tag)])
-    }
-
-    fn put_on(&mut self, stack: &mut sapling_world::ItemStack) {
-        if let Some(tag) = self.take(&stack.name) {
-            stack.tag = Some(tag);
-        }
-    }
-}
-
-/// Adds to `items`, left by the block at `pos`, what its entity kept (entities.rs); the tags
-/// for [`spill_tagged`]. Call before the block goes.
-pub(super) fn add_entity_loot(world: &World, layer: Entity, pos: BlockPos, items: &mut Vec<Item>) -> Tags {
-    let Some(kept) = world.get::<Layer>(layer).and_then(|layer| layer.world.block_entity(pos)) else { return Tags::default() };
-    super::entities::into_loot(&kept.nbt, items);
-    Tags(super::entities::loot_tags(&kept.nbt))
-}
-
-/// [`of`] with the shard's dice.
-pub(super) fn thrown(world: &mut World, block: &str, properties: &str, by: &Breaker) -> Vec<Item> {
-    if let Some(drops) = super::custom::drops(block) {
-        return drops;
-    }
-    let mut dice = world.get_resource_or_insert_with(Dice::default);
-    of(block, properties, by, &mut |sides| dice.roll(sides))
-}
-
-/// What the block at `pos` would drop to `tool` (`/loot ... mine`); the block stays. Nothing from
-/// air, a liquid or a cell outside the world.
-pub(crate) fn mined(world: &mut World, layer: Entity, pos: BlockPos, tool: Option<&Item>) -> Vec<Item> {
-    let Some(level) = super::level(world, layer).filter(|level| level.in_height(pos[1]) && level.is_loaded(super::send::column(pos))) else { return Vec::new() };
-    let Some(state) = level.registry().get(level.block(pos[0], pos[1], pos[2])).filter(|state| !state.is_air() && !state.is_liquid()) else { return Vec::new() };
-    let (name, properties, by) = (state.name.to_owned(), state.properties.to_owned(), super::mining::breaker_of(tool, &state.mining));
-    thrown(world, &name, &properties, &by)
-}
-
-/// `items` as stacks; items the game lacks are left out.
-fn stacks(world: &World, layer: Entity, items: &[Item]) -> Vec<sapling_world::ItemStack> {
-    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return Vec::new() };
-    items.iter().filter(|item| item.count > 0).filter_map(|item| inventory::stored(item, registry)).collect()
-}
-
-/// Lays `items` where the block at `pos` was, tossed out of its cell, unless the world's
-/// `doTileDrops` is off.
-pub(super) fn spill(world: &mut World, layer: Entity, pos: BlockPos, items: &[Item]) {
-    spill_tagged(world, layer, pos, items, &mut Tags::default());
-}
-
-/// [`spill`], `tags` going on the stacks of their items.
-pub(super) fn spill_tagged(world: &mut World, layer: Entity, pos: BlockPos, items: &[Item], tags: &mut Tags) {
-    if !crate::rules::on(world, layer, TILE_DROPS) {
-        return;
-    }
-    for mut stack in stacks(world, layer, items) {
-        tags.put_on(&mut stack);
-        drops::spill(world, layer, stack, pos);
-    }
-}
-
-/// Tosses `items` out of `centre`, where an entity that broke up was, unless the world's
-/// `doEntityDrops` is off.
-pub(super) fn let_go(world: &mut World, layer: Entity, centre: [f32; 3], items: &[Item]) {
-    if !crate::rules::on(world, layer, ENTITY_DROPS) {
-        return;
-    }
-    for stack in stacks(world, layer, items) {
-        drops::let_go(world, layer, stack, centre);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    const HAND: Breaker = Breaker { by_entity: true, ..Breaker::UNAIDED };
-
-    /// What a block leaves when every throw comes up `thrown` (capped below the sides).
-    fn left_of(block: &str, properties: &str, by: Breaker, thrown: u32) -> Vec<(String, u8)> {
-        of(&format!("minecraft:{block}"), properties, &by, &mut |sides| thrown.min(sides - 1)).into_iter().map(|item| (item.name, item.count)).collect()
-    }
-
-    fn left(block: &str, by: Breaker, thrown: u32) -> Vec<(String, u8)> {
-        left_of(block, "", by, thrown)
-    }
-
-    fn named(item: &str, count: u8) -> Vec<(String, u8)> {
-        vec![(format!("minecraft:{item}"), count)]
-    }
-
-    #[test]
-    fn a_block_leaves_itself_or_what_its_table_names() {
-        assert_eq!([left("dirt", HAND, 0), left("stone", HAND, 0), left("oak_planks", HAND, 0)], [named("dirt", 1), named("cobblestone", 1), named("oak_planks", 1)]);
-        assert_eq!([left("deepslate_diamond_ore", HAND, 0), left("lit_redstone_ore", HAND, u32::MAX), left("reeds", HAND, 0)], [named("diamond", 1), named("redstone", 5), named("sugar_cane", 1)]);
-        assert_eq!([left("glass", HAND, 0), left("blue_ice", HAND, 0), left("mob_spawner", HAND, 0)], [vec![], vec![], vec![]]);
-        assert_eq!([left("oak_slab", HAND, 0), left("oak_double_slab", HAND, 0)], [named("oak_slab", 1), named("oak_slab", 2)]);
-        assert!(left("stone", Breaker { harvests: false, ..HAND }, 0).is_empty(), "nothing from a block the tool does not harvest");
-        assert!(of("mod:lamp", "", &HAND, &mut |_| 0).is_empty(), "no item stands for it");
-        let signs = [left("standing_sign", HAND, 0), left("wall_sign", HAND, 0), left("spruce_standing_sign", HAND, 0), left("darkoak_wall_sign", HAND, 0)];
-        assert_eq!(signs, [named("oak_sign", 1), named("oak_sign", 1), named("spruce_sign", 1), named("dark_oak_sign", 1)]);
-        assert_eq!([left("standing_banner", HAND, 0), left("wall_banner", HAND, 0)], [named("banner", 1), named("banner", 1)]);
-    }
-
-    #[test]
-    fn chance_enchantments_and_shears_change_what_is_left() {
-        assert_eq!([left("gravel", HAND, 0), left("gravel", HAND, u32::MAX)], [named("flint", 1), named("gravel", 1)]);
-        assert_eq!([left("short_grass", HAND, 0), left("short_grass", HAND, u32::MAX), left("oak_leaves", HAND, u32::MAX)], [named("wheat_seeds", 1), vec![], vec![]]);
-        assert_eq!(left("oak_leaves", HAND, 0), [named("apple", 1), named("oak_sapling", 1), named("stick", 1)].concat());
-        let silk = Breaker { silk_touch: true, ..HAND };
-        assert_eq!([left("stone", silk, 0), left("glass", silk, 0), left("diamond_ore", silk, 0)], [named("stone", 1), named("glass", 1), named("diamond_ore", 1)]);
-        assert_eq!(left("oak_leaves", Breaker { shears: true, ..HAND }, u32::MAX), named("oak_leaves", 1));
-        let fortune = Breaker { fortune: 3, ..HAND };
-        assert_eq!([left("diamond_ore", fortune, u32::MAX), left("diamond_ore", fortune, 0), left("stone", fortune, u32::MAX)], [named("diamond", 4), named("diamond", 1), named("cobblestone", 1)]);
-    }
-
-    #[test]
-    fn the_tables_states_are_read_off_bedrock_blocks() {
-        assert_eq!(left_of("wheat", "growth=3", HAND, 0), named("wheat_seeds", 1));
-        assert_eq!(left_of("wheat", "growth=7", HAND, 0), [named("wheat", 1), named("wheat_seeds", 4)].concat(), "every try of the binomial succeeds");
-        assert_eq!([left_of("beetroot", "growth=7", HAND, u32::MAX), left_of("beetroot", "growth=4", HAND, 0)], [[named("beetroot", 1), named("beetroot_seeds", 1)].concat(), named("beetroot_seeds", 1)]);
-        assert_eq!([left_of("snow_layer", "covered_bit=0,height=2", HAND, 0), left_of("snow_layer", "covered_bit=0,height=2", Breaker::UNAIDED, 0)], [named("snowball", 3), vec![]]);
-    }
 }
