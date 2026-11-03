@@ -2,7 +2,7 @@
 //! ground four blocks deep under the drills (a flat world's, so that what a drill digs has
 //! something under it), everyone an operator in creative mode, vanilla's commands, nothing
 //! protected. `tools/sapling-drill.sh` runs a probe against it. `SAPLING_DRILL_WORLD` picks
-//! another overworld: `strongholds` or `generated` (below).
+//! another overworld: `strongholds`, `generated` (below) or `lowflat` (the flat ground only).
 //! `cargo run -p sapling --example drill_server -- [port]` (default 19190)
 #[path = "shared/clock.rs"]
 #[allow(dead_code)]
@@ -49,7 +49,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = std::env::args().nth(1).and_then(|port| port.parse().ok()).unwrap_or(19190);
     let mut ground = World::void();
     let stone = ground.block_id("minecraft:stone").ok_or("no stone")?;
-    ground.fill(GROUND.0, GROUND.1, stone);
+    // `lowflat`: no raised ground, so the surface is the flat one's as on BDS (raid waves, village_drill.rs).
+    if std::env::var("SAPLING_DRILL_WORLD").as_deref() != Ok("lowflat") {
+        ground.fill(GROUND.0, GROUND.1, stone);
+    }
     // Where a BDS flat world's ground is, for drills that name places (portal_drill.rs).
     ground.fill(FLAT.0, FLAT.1, stone);
     // Portals are made with the world seed's draws, as on the test BDS.
@@ -60,6 +63,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let builder = match std::env::var("SAPLING_DRILL_WORLD").as_deref() {
         Ok("strongholds") => builder.world(World::with_storage(std::sync::Arc::new(Strongholds(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 1)))), [0.5, 64.0, 0.5]),
         Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 2))), GENERATED_SPAWN),
+        // Joining over the void, the probes' first commands went unanswered.
+        Ok("lowflat") => builder.world(ground, [0.5, (FLAT.1[1] + 1) as f32, 0.5]),
         _ => builder.world(ground, [0.5, 64.0, 0.5]),
     };
     // The test BDS's Nether, generated from its seed (tools/bds-drill.sh worlds: bds-nether's level-seed).

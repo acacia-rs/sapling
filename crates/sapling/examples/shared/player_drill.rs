@@ -153,6 +153,12 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         println!("## crafted: {:?}", actor.craft(&format!("minecraft:{item}"), 1, None).await);
         return true;
     }
+    // `!gridcraft item dx dy dz`: one craft laid out by hand in the table's grid at that offset.
+    if let Some((item, offset)) = line.strip_prefix("!gridcraft ").and_then(|rest| rest.split_once(' ')) {
+        let table = from_feet(actor, offset);
+        println!("## crafted: {:?}", actor.craft_with(&format!("minecraft:{item}"), 1, table, acacia_bot::workstation::CraftMode::Grid).await);
+        return true;
+    }
     if let Some(slot) = line.strip_prefix("!take ").and_then(|slot| slot.parse().ok()) {
         println!("## took: {:?}", actor.move_to_inventory(slot).await);
         return true;

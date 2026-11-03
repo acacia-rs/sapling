@@ -63,9 +63,11 @@ impl Command for EffectCommand {
                     out.translate("commands.effect.success.removed", vec![format!("%{}", effect.key()), name], true);
                 }
                 Named::Effect(effect) => {
-                    let ticks = if effect.is_instant() { 1 } else { seconds as u32 * TICKS };
+                    // BDS takes an instant effect's seconds as ticks and answers them in seconds:
+                    // saturation 1000 lasted 1000 ticks, answered 50 (bds-raid.txt).
+                    let ticks = if effect.is_instant() { seconds as u32 } else { seconds as u32 * TICKS };
                     target.give(ctx, effect, ticks, amplifier.max(0) as u8, self.hide_particles != Some(true));
-                    let shown = if effect.is_instant() { 0 } else { seconds };
+                    let shown = ticks / TICKS;
                     out.translate("commands.effect.success", vec![format!("%{}", effect.key()), amplifier.to_string(), name, shown.to_string()], true);
                 }
             }

@@ -95,6 +95,38 @@ fn grid() -> Vec<String> {
     out
 }
 
+/// A stick laid out by hand (the bot's own grid craft), then the multi recipes: two worn swords
+/// mended (one cursed and sharpened), a filled map extended with eight paper, a filled and an empty
+/// map upgraded with a compass, and two unlike swords refused.
+fn grid_mend() -> Vec<String> {
+    let mut out = floor();
+    out.extend(lines(["setblock ~2 ~ ~ crafting_table", ""]));
+    out.extend(reset());
+    out.extend(lines(["replaceitem entity @s slot.hotbar 0 oak_planks 2", "", "!gridcraft stick 2 0 0", "", "!inv"]));
+    out.extend(reset());
+    out.extend(lines(["replaceitem entity @s slot.hotbar 0 iron_sword 1 150", "", "enchant @s vanishing 1", "enchant @s sharpness 2", "replaceitem entity @s slot.hotbar 1 iron_sword 1 130", "", "!inv"]));
+    out.extend(crafted("!grid repair 1 0 1"));
+    out.extend(reset());
+    out.extend(lines(["replaceitem entity @s slot.hotbar 0 iron_sword 1 10", "replaceitem entity @s slot.hotbar 1 iron_sword 1 5", ""]));
+    out.extend(crafted("!grid repair 1 0 1"));
+    out.extend(reset());
+    out.extend(lines(["replaceitem entity @s slot.hotbar 0 empty_map", "", "!map", "", ""]));
+    out.extend((1..=8).map(|slot| format!("replaceitem entity @s slot.hotbar {slot} paper")));
+    out.extend(lines(["", "!inv"]));
+    out.extend(crafted("!grid extend 1 1 2 3 4 0 5 6 7 8"));
+    out.extend(reset());
+    out.extend(lines(["replaceitem entity @s slot.hotbar 0 empty_map", "", "!map", "", "", "replaceitem entity @s slot.hotbar 1 compass", "", "!inv"]));
+    out.extend(crafted("!grid upgrade 1 0 1"));
+    out.extend(reset());
+    out.extend(lines(["replaceitem entity @s slot.hotbar 0 empty_map", "replaceitem entity @s slot.hotbar 1 compass", ""]));
+    out.extend(crafted("!grid upgrade 1 0 1"));
+    out.extend(reset());
+    out.extend(lines(["replaceitem entity @s slot.hotbar 0 iron_sword 1 10", "replaceitem entity @s slot.hotbar 1 golden_sword 1 5", ""]));
+    out.extend(crafted("!grid repair 1 0 1"));
+    out.extend(reset());
+    out
+}
+
 /// An enchanting table two east with two bookshelves behind a gap: a sword laid in for each
 /// block in the gap's lower cell; then other items with the gap open and shut; `/enchant` on
 /// shears, a spear and a skull.
@@ -186,6 +218,7 @@ fn bundle_shulker() -> Vec<String> {
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     let lines = match name {
         "grid" => grid(),
+        "gridmend" => grid_mend(),
         "enchants" => enchants(),
         "anvilnames" => anvil_names(),
         "banners" => banners(),

@@ -95,6 +95,9 @@ async fn world_and_item_commands_answer_as_bds_answered() {
         ("spreadplayers ~ ~ -1 5 @a", r#"commands.generic.num.tooSmall ["-1.00", "0.00"] 0"#),
         ("spreadplayers ~ ~ 10 1 @a", r#"commands.generic.num.tooSmall ["1.00", "11.00"] 0"#),
         ("spreadplayers ~ ~ 1 5 nobody", "commands.generic.noTargetMatch [] 0"),
+        // An instant effect's seconds are its ticks (bds-raid.txt, bds-effects.txt).
+        ("effect @s saturation 1000 0 true", r#"commands.effect.success ["%potion.saturation", "0", "Alice", "50"] 1"#),
+        ("effect @s instant_health 1 0", r#"commands.effect.success ["%potion.heal", "0", "Alice", "0"] 1"#),
     ];
     for (line, expected) in steps {
         assert_eq!(answer(&mut alice, line).await, *expected, "/{line}");

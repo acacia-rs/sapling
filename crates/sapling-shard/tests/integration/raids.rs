@@ -14,11 +14,11 @@ const ALEX: PlayerId = PlayerId(1);
 const BELL: [i32; 3] = [3, 65, 3];
 const RAIDERS: [&str; 5] = ["minecraft:pillager", "minecraft:vindicator", "minecraft:ravager", "minecraft:witch", "minecraft:evocation_illager"];
 
-/// Stone wide enough for a wave to come 32 out, a bell and a villager by it, and Alex on easy.
+/// Stone wide enough for a wave to come 48 out, a bell and a villager by it, and Alex on easy.
 fn village() -> Harness {
     let mut level = World::void();
     let stone = level.block_id("minecraft:stone").unwrap();
-    level.fill([-48, 64, -48], [47, 64, 47], stone);
+    level.fill([-64, 64, -64], [63, 64, 63], stone);
     let mut h = Harness::with(config(), level);
     h.enter(1, "Alex");
     // A bell set bare gets its entity, which the village is found by, as BDS's `/setblock bell`.
@@ -82,6 +82,23 @@ fn bad_omen_in_a_village_brings_a_raid_whose_three_waves_on_easy_won_make_a_hero
     assert!(effects(&after).contains(&(MobEffectEventId::Add, 29, 0, 48000)), "the slayer is a hero at amplifier 0 (bds-raidhero.txt): {:?}", effects(&after));
     assert!(bars(&after).contains(&(BossEventType::SetBarTitle, "%raid.name - %raid.victory".to_owned())), "{:?}", bars(&after));
     assert_eq!(bars(&ticks(&mut h, 600)), [(BossEventType::HideBar, String::new())], "30 s on");
+}
+
+/// BDS's waves came 40 to 50 out from the player in the village (bds-raidlost.txt), not 32 from its middle.
+#[test]
+fn a_wave_comes_32_to_48_out_from_the_village_s_player_away_from_the_middle() {
+    let mut h = village();
+    common::asking::ask(&mut h, |ctx| ctx.teleport(ALEX, [-4.5, 65.0, -4.5]));
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 0, true)));
+    ticks(&mut h, 602);
+    assert!((0..400).any(|_| !raiders(&mut h).is_empty()), "the first wave");
+    for raider in raiders(&mut h) {
+        let [x, _, z] = raider.feet;
+        let out = (x + 4.5).hypot(z + 4.5);
+        assert!((31.0..=50.0).contains(&out), "{out} out from Alex");
+        // Alex is to the bell's (3, 3) -x -z: the wave is not on the bell's side of Alex.
+        assert!(-(x + 4.5) - (z + 4.5) >= -1.5, "{x} {z} on the far side");
+    }
 }
 
 #[test]

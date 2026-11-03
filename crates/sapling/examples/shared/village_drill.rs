@@ -4,7 +4,8 @@
 //! across a restart (`raidkeep`, then `raidkeep2` with KEEP_WORLD=1), a village's golems and a
 //! player's standing (`golems`, `golems2` kept), a night and a zombie (`village`), an ominous
 //! bottle (`ominous`) and a command block in a far chunk (`spawnchunks`). Every place is absolute
-//! on the flat ground (stand at y -60).
+//! on the flat ground (stand at y -60); on sapling drill with `SAPLING_DRILL_WORLD=lowflat`, or the
+//! waves land on the drill server's raised ground.
 
 pub const VILLAGE_SHOWN: &[&str] = &[
     "MobEffect", "BossEvent", "AddEntity", "RemoveEntity", "SetEntityData", "EntityEvent", "LevelSoundEvent", "LevelEvent", "UpdateTrade", "MobArmorEquipment", "MobEquipment",

@@ -143,6 +143,12 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 Drilled: bds-village.txt, bds-golems.txt (`bds_command_probe village|golems`): sleeping (fixed: lying
 shown, babies sleep), which golems defend (fixed). bds-golems2.txt (a restart) only counted the golems.
 
+Re-run on sapling 2026-11-03 at TICK_SCALE 1, `SAPLING_DRILL_WORLD=lowflat` (research/captures/
+sapling-village.txt, sapling-golems.txt): golems the same as BDS. Village: by night 2-3 villagers lay
+within 3 of (-4, 9) where BDS had 1-2, and by morning sapling's had walked out of 8 of (0, 2) before the
+zombie came, where one of BDS's stayed through it; the schedule walks below, not fixed. Answers named
+`Villager V2` were fixed to `Villager` (effects-raids.md).
+
 ## Not drilled
 
 - Gathering, homing and the other schedule goals' walks; standing's numbers (no packet shows them).
