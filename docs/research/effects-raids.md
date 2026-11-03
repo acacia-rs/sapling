@@ -163,6 +163,14 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
   `noTargetMatch`. Fixed: a player-dealt `/damage` (`ctx.hurt_entity_by`) kills as the player's hit,
   `/damage` counts each one hurt and answers `noTargetMatch` to none. BDS re-sends the raid bar once a
   second as a ShowBar; sapling sent each tick's change (918 BossEvents against 100): now once a second.
+  Re-drilled after the fix (sapling-raidhero.txt): hero added, orbs dropped, counts 4, 5, 4 on the
+  raiders (BDS's first 7 took 3 wild slimes too), `noTargetMatch`, 124 BossEvents.
+- LAGGED at 1x (2026-11-03, raidaim under `perf record` on testbox at load ~49): the debug drill_server
+  fell behind once at the setup fills (+8 s), once at +17 s, then 8 to 64 ticks over 5 s from the wave's
+  spawn (+79 s). The profile is flat; on top are debug-build costs (SipHash of `ChunkPos` per block
+  read, ub precondition checks, memmove) and the pillagers' routing (`paths::route`, `holds`,
+  `is_standable`, `landing`, each block read through `World::block`'s hashed chunk map). Not cut: no
+  single sapling hot spot; a per-route chunk cache in `paths` is the lever if it matters.
 - Not ported: BDS's wave raiders stand a few cells apart on integer corners (46,56), (40,57), (42,58),
   (42,56); sapling's share one cell's middle. The spread is the level spawner's group spawn (a virtual
   call from `_createRaid` lambda_10, 0x142a50270), not read.
