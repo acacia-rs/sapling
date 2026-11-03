@@ -77,8 +77,8 @@ fn spot(world: &mut World, layer: Entity, middle: [f32; 3]) -> Option<[f32; 3]> 
     let length = away[0].hypot(away[1]);
     let away = if length >= 1e-4 { away.map(|axis| axis / length) } else { [0.0, 0.0] };
     for _ in 0..TRIES {
-        let out = OUT + world.resource_mut::<Dice>().fraction() * OUT_MORE;
-        let angle = world.resource_mut::<Dice>().fraction() * std::f32::consts::TAU;
+        let mut dice = world.get_resource_or_insert_with(Dice::default);
+        let (out, angle) = (OUT + dice.fraction() * OUT_MORE, dice.fraction() * std::f32::consts::TAU);
         let mut way = [angle.cos() * out, angle.sin() * out];
         let along = way[0] * away[0] + way[1] * away[1];
         if along < 0.0 {
