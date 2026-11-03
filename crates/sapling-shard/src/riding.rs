@@ -12,6 +12,7 @@ mod mounts;
 mod packets;
 mod packs;
 mod rearing;
+mod replaced;
 mod seats;
 mod strength;
 
@@ -33,6 +34,7 @@ use mounts::predicted;
 pub(crate) use packets::sound as sound_packet;
 pub(crate) use packs::{load as load_pack, open as open_pack, refusal as pack_refusal, slots as pack_slots, spilled};
 pub(crate) use seats::layout;
+pub(crate) use replaced::{is_mount, set as set_mount_item};
 use seats::PLAYER;
 
 /// A vehicle's riders, the driver first.

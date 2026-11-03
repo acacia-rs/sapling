@@ -29,7 +29,7 @@ const SADDLED: [&str; 5] = ["minecraft:horse", "minecraft:donkey", "minecraft:mu
 const CHESTED: [&str; 4] = ["minecraft:donkey", "minecraft:mule", "minecraft:llama", "minecraft:trader_llama"];
 const LLAMAS: [&str; 2] = ["minecraft:llama", "minecraft:trader_llama"];
 const HORSE: &str = "minecraft:horse";
-const TACK: usize = 2;
+pub(super) const TACK: usize = 2;
 const DONKEY_CHEST: usize = 15;
 const PER_STRENGTH: usize = 3;
 const HORSE_ARMOR: [&str; 6] = ["leather", "copper", "iron", "golden", "diamond", "netherite"];
@@ -64,6 +64,15 @@ fn size(world: &World, mob: Entity, kind: &str) -> usize {
     TACK + chest
 }
 
+/// How many slots the chest `mob` carries has; 0 with none.
+pub(super) fn goods_size(world: &World, mob: Entity, kind: &str) -> usize {
+    size(world, mob, kind) - TACK
+}
+
+pub(super) fn carries_chest(kind: &str) -> bool {
+    CHESTED.contains(&kind)
+}
+
 fn stack(name: &str) -> ItemStack {
     ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: None }
 }
@@ -96,7 +105,7 @@ pub(crate) fn slots(world: &World, mob: Entity) -> Option<Vec<Option<Held>>> {
 }
 
 /// Puts `armor` on `mob`, or takes it off.
-fn wear(world: &mut World, mob: Entity, armor: Option<ItemStack>) {
+pub(super) fn wear(world: &mut World, mob: Entity, armor: Option<ItemStack>) {
     match world.get_mut::<Tack>(mob) {
         Some(mut tack) => tack.armor = armor,
         None => {
@@ -152,7 +161,7 @@ pub(super) fn adopt(world: &mut World, mob: Entity) {
 }
 
 /// The slots of `mob`'s inventory, made from what it wears and keeps when first asked for.
-fn pack(world: &mut World, mob: Entity) -> Option<Vec<Option<Held>>> {
+pub(super) fn opened(world: &mut World, mob: Entity) -> Option<Vec<Option<Held>>> {
     let kind = world.get::<Kind>(mob)?.0.clone();
     let size = size(world, mob, &kind);
     if let Some(Pack(slots)) = world.get::<Pack>(mob).filter(|pack| pack.0.len() == size) {
@@ -238,7 +247,7 @@ fn equipment(kind: &str) -> Option<Raw<Network>> {
 /// Opens `mob`'s inventory for `player`; false for a mob that has none or is not tamed.
 pub(crate) fn open(world: &mut World, player: Entity, mob: Entity) -> bool {
     let Some(kind) = world.get::<Kind>(mob).map(|kind| kind.0.clone()).filter(|kind| has_pack(kind) && tamed(world, mob)) else { return false };
-    let (Some(slots), Some(id), Some(layer), Some(body)) = (pack(world, mob), world.get::<NetId>(mob).map(|id| id.0), world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(mob).copied()) else { return false };
+    let (Some(slots), Some(id), Some(layer), Some(body)) = (opened(world, mob), world.get::<NetId>(mob).map(|id| id.0), world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(mob).copied()) else { return false };
     if equipment(&kind).is_none() {
         return false;
     }

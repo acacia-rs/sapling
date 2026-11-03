@@ -131,8 +131,11 @@ Sapling's run: sapling-burn2.txt.
 - A zombie and a baby zombie in lava took 0.94 of fire's 1 and 2.996 of lava's 4 (its own 2 armour);
   in full diamond 0.21. Sapling's mobs had no armour; the zombie family now has 2 (`birth.rs`
   `SKIN_ARMOUR`), and a player's sword goes through it as BDS's (7.872 of a diamond sword's 8,
-  bds-hits2.txt). `replaceitem` armour on a mob is refused on sapling (noTargetMatch), so the
-  diamond zombie is not followed.
+  bds-hits2.txt). `replaceitem` armour on a mob is now taken and shown as BDS's
+  (bds-fixreplace.txt, `creatures/command_gear.rs`): MobArmorEquipment and `armor.equip_<kind>`
+  for a worn piece, MobEquipment alone for the main hand, `armor.equip_generic` for an offhand
+  shield, stone on the feet taken unseen, saddle and inventory slots an exception. Left: that
+  armour does not yet count against damage, so the diamond zombie is still not followed.
 - An armour stand in lava had 6 health and lost 0.05 every 10 ticks (cause -1); sapling's has none.
 - A burning cow in rain went out 20 ticks after its last burn, the rain begun between: at the turn
   of its next burn. Sapling's burnt on; now `Health::rained_on` (tests/integration/mob_heat.rs). In

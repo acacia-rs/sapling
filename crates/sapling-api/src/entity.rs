@@ -154,4 +154,7 @@ pub trait EntityBackend {
     fn families(&self, _kind: &str) -> Vec<String> {
         Vec::new()
     }
+    fn set_mob_item(&mut self, _id: EntityId, _slot: crate::MobSlot, _item: Option<&crate::Item>) -> Result<(), crate::MobSlotRefusal> {
+        Err(crate::MobSlotRefusal::NoSlot)
+    }
 }

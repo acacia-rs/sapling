@@ -63,6 +63,10 @@ fn tag(item: &Item, previous: Option<&Value>) -> Option<Value> {
     if let Some(lock) = item.lock {
         fields.push((Str::from(ITEM_LOCK), Value::Byte(if lock == ItemLock::InSlot { 1 } else { 2 })));
     }
+    // BDS's `/give` and `/replaceitem` banners carry `{Type: 0}` (research/captures/bds-banners.txt, bds-item-names.txt).
+    if item.name == "minecraft:banner" && !fields.iter().any(|(key, _)| key.as_str() == "Type") {
+        fields.push((Str::from("Type"), Value::Int(0)));
+    }
     (!fields.is_empty()).then_some(Value::Compound(fields))
 }
 
