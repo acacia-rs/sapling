@@ -334,6 +334,10 @@ The actor in survival at midnight on a walled stone floor, healed and put back b
 - Glass (fights.txt, corrected): BDS's zombie behind the glass wall took the actor only once it had
   strolled past the wall's end, as line 21 says; it does not see through glass. Sapling the same.
 - A raider's `TargetEid`: see effects-raids.md (same).
+- Sapling's run (sapling-targets2.txt, after the fix): the hard zombie took the actor 0.39 s after it
+  came and hit every second from 1.4 s; the baby took it at 0.25 s but first hit at 4.4 s (BDS 2.4 s,
+  not followed); the cave spiders took and let go over and over as BDS's, but one held 5 off bit
+  (BDS's held ones never did; not followed).
 
 ## Not drilled
 

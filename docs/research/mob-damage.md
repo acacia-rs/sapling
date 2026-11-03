@@ -164,6 +164,8 @@ Sapling's run: sapling-hits2.txt. Each mob held by slowness 255, the actor put b
   then cost it 5.824, armour and its own 2 points as a sword's hit. Fixed: a mob wears armour
   (`creatures/worn.rs`, `ShardCtx::set_entity_armour`, and a world folder's `Armor`), and `/damage`
   of a cause armour stops goes through it. Sapling's `/replaceitem` still names players only (fix1's).
+- Sapling's run (sapling-boosts.txt): every health line the same as BDS's; its zombie lost 7.872 to
+  `/damage`, as its `/replaceitem` could not yet dress a mob.
 - The actor's `!hit` fell 8.5 blocks short (the held cow and zombie had been pushed); the sword's
   5.824 stands from bds-hits2.txt.
 
