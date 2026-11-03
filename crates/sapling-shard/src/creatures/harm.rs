@@ -44,7 +44,8 @@ pub(super) fn wound_by(world: &mut World, mob: Entity, layer: Entity, cost: f32,
         *world.get_mut::<Health>(mob)? = health;
         entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), vec![strike(id, &health, cause, None)]);
         if health.left() <= 0.0 {
-            if by.is_some() {
+            if let Some(player) = by {
+                super::raids::slain(world, player, mob);
                 super::attacks::slay(world, mob, &kind, 0);
             }
             super::die(world, mob, layer, &kind, &body);

@@ -15,6 +15,8 @@ const NAME: &str = "raid.name";
 const CLEARED: &str = "%raid.name - %raid.progress 0";
 const VICTORY: &str = "%raid.name - %raid.victory";
 const DEFEAT: &str = "%raid.name - %raid.defeat";
+/// Ticks between two showings.
+pub(super) const EVERY: u64 = 20;
 
 fn bar(world: &World, raid: &Raid, now: u64) -> BossBar {
     let left = || (super::health(world, &raid.raiders) / raid.most).clamp(0.0, 1.0);

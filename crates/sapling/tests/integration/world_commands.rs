@@ -106,6 +106,12 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     assert_eq!(answer(&mut alice, "summon zombie").await, "commands.summon.failed [] 0");
     let v2 = answer(&mut alice, "summon zombie_villager_v2 ~ ~ ~").await;
     assert!(v2.starts_with("commands.generic.syntax [") && v2.contains(r#""zombie_villager_v2""#), "{v2}");
+    // bds-raidhero.txt: none matched answers noTargetMatch; each one hurt is counted.
+    assert_eq!(answer(&mut alice, "damage @e[type=cow] 1").await, "commands.generic.noTargetMatch [] 0");
+    for _ in 0..2 {
+        assert_eq!(answer(&mut alice, "summon cow ~ ~ ~3").await, "commands.summon.success [] 1");
+    }
+    assert_eq!(answer(&mut alice, "damage @e[type=cow] 1 entity_attack entity @s").await, r#"commands.damage.success ["Cow, Cow"] 2"#);
     let seed = answer(&mut alice, "seed").await;
     assert!(seed.starts_with("commands.seed.success [") && seed.ends_with("] 1"), "{seed}");
     let version = answer(&mut alice, "version").await;

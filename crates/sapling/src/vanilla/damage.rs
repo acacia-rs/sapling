@@ -65,6 +65,10 @@ impl Command for Damage {
             },
         };
         let (found, mobs) = targets(ctx, sender, Some(&self.target));
+        // BDS's raidhero answered `noTargetMatch` once the raiders were gone (bds-raidhero.txt).
+        if found.is_empty() && mobs.is_empty() {
+            return no_target(out);
+        }
         let names = || found.iter().map(|player| player.name.clone()).chain(mobs.iter().map(|mob| display_name(mob))).collect::<Vec<_>>().join(", ");
         // BDS fails `suffocation` for anyone (research/captures/bds-worn.txt).
         if self.cause == DamageCause::Suffocation {
@@ -79,11 +83,20 @@ impl Command for Damage {
             })
             .map(|player| player.name.clone())
             .collect();
-        hurt.extend(mobs.iter().filter(|mob| ctx.hurt_entity(mob.id, amount, cause)).map(|mob| display_name(mob)));
-        match hurt.is_empty() {
-            true => out.translate("commands.damage.failed", vec![names()], false),
-            false => out.translate("commands.damage.success", vec![hurt.join(", ")], true),
+        hurt.extend(
+            mobs.iter()
+                .filter(|mob| match &attacker {
+                    Some(by) => ctx.hurt_entity_by(mob.id, amount, cause, by),
+                    None => ctx.hurt_entity(mob.id, amount, cause),
+                })
+                .map(|mob| display_name(mob)),
+        );
+        if hurt.is_empty() {
+            return out.translate("commands.damage.failed", vec![names()], false);
         }
+        // BDS counts each one hurt: 7 for seven raiders (bds-raidhero.txt).
+        out.done_to(hurt.len() as u32);
+        out.translate("commands.damage.success", vec![hurt.join(", ")], true);
     }
 }
 
