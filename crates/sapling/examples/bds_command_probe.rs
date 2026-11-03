@@ -109,6 +109,8 @@ mod open3;
 mod dwellers;
 #[path = "shared/mount_plant_drill.rs"]
 mod mount_plant;
+#[path = "shared/saddle_drill.rs"]
+mod saddles;
 
 use std::time::{Duration, Instant};
 
@@ -162,6 +164,7 @@ const DRILLS: &[fn(&str) -> Named] = &[
     open3::drill,
     dwellers::drill,
     mount_plant::drill,
+    saddles::drill,
 ];
 
 fn owned(lines: &[&str]) -> Vec<String> {

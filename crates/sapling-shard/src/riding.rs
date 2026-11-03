@@ -7,6 +7,7 @@
 mod backend;
 mod carry;
 mod drive;
+mod evented;
 mod exit;
 mod mounts;
 mod packets;
@@ -27,6 +28,7 @@ use crate::sync::Told as Shown;
 use packets::LinkKind;
 
 pub(crate) use carry::carry;
+pub(crate) use evented::{is_bare as saddled_bare, looted_saddle, saddle_by_event};
 pub(crate) use strength::{dress as dress_strength, give as give_strength, kept as kept_strength, of as strength_of, roll as roll_strength, shown as strength_shown};
 pub(crate) use drive::{Leaving, Reins, drive, is_driven};
 pub(crate) use mounts::{Rein, boost, reaches, saddle_flags, steers, used_on};

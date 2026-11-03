@@ -1,7 +1,8 @@
 //! The still-open wave's mounts (research/captures/bds-mountflags.txt, bds-mountslots.txt,
 //! bds-mountdeath.txt): a summon naming an event unheard, a saddle's control flags, a chested
 //! donkey's `slot.chest` bound, a mob's command-held hands saved, a dying mount's saddle and a
-//! llama's announced strength.
+//! llama's announced strength; and the third wave's (bds-saddleevents.txt, bds-saddlerule.txt): the
+//! saddling spawn events, a pig's saddle on death, and which mounts take tack by command.
 
 use crate::common;
 use crate::riding::interact;
@@ -139,4 +140,49 @@ fn a_llama_is_announced_with_its_own_strength_and_three_slots_a_point() {
     // research/captures/bds-mountslots.txt: BDS's announcement already held both.
     assert_eq!((int(&added.metadata, Key::Strength), int(&added.metadata, Key::ContainerExtraSlotsPerStrength)), (Some(strength), Some(3)));
     assert_eq!(int(&data, Key::ContainerExtraSlotsPerStrength), Some(3));
+}
+
+fn left_on_death(h: &mut Harness, mob: EntityId) -> Vec<&'static str> {
+    let (_, sent) = told(h, move |ctx| ctx.kill_entity(mob));
+    all::<AddItemEntity>(&sent).iter().filter_map(|lying| sapling_data::item_name(lying.item.network_id.into())).collect()
+}
+
+#[test]
+fn a_saddling_spawn_event_shows_the_saddle_and_only_a_pig_s_drops() {
+    let mut h = alex();
+    let saddle = |sent: &[RawPacket]| all::<LevelSoundEvent>(sent).iter().any(|sound| sound.sound_id == "saddle");
+    let (horse, sent) = summoned(&mut h, "minecraft:horse", Some("minecraft:horse_saddled"), 0.5);
+    let controls = Flags::SADDLED.0 | Flags::WASD_CONTROLLED.0 | Flags::CAN_POWER_JUMP.0;
+    assert!(flags(&sent, horse).last().is_some_and(|word| word & controls == controls), "{:?}", flags(&sent, horse));
+    assert!(saddle(&sent), "the event's play_sound");
+    // research/captures/bds-saddleevents.txt: the horse family's event holds no saddle, and with no
+    // adult group the mob has no loot (a zombie horse's is 2 to 3 rotten flesh).
+    assert_eq!(left_on_death(&mut h, horse), Vec::<&str>::new());
+    let (zombie_horse, _) = summoned(&mut h, "minecraft:zombie_horse", Some("minecraft:horse_saddled"), 8.5);
+    assert_eq!(left_on_death(&mut h, zombie_horse), Vec::<&str>::new());
+
+    let (pig, sent) = summoned(&mut h, "minecraft:pig", Some("minecraft:on_saddled"), 4.5);
+    assert!(flags(&sent, pig).last().is_some_and(|word| word & Flags::SADDLED.0 != 0), "{:?}", flags(&sent, pig));
+    assert!(!saddle(&sent), "a pig's event is unheard");
+    assert_eq!(left_on_death(&mut h, pig).first(), Some(&"minecraft:saddle"), "BDS's saddle came first");
+}
+
+#[test]
+fn slot_saddle_takes_only_a_grown_tamed_mount_and_never_a_skeleton_horse() {
+    let mut h = alex();
+    // research/captures/bds-saddlerule.txt
+    let cases = [
+        ("minecraft:horse", Some("minecraft:spawn_adult"), Err(MobSlotRefusal::NoSlot)),
+        ("minecraft:horse", Some("minecraft:entity_born"), Err(MobSlotRefusal::NoSlot)),
+        ("minecraft:donkey", Some("minecraft:spawn_adult"), Err(MobSlotRefusal::NoSlot)),
+        ("minecraft:zombie_horse", Some("minecraft:spawn_adult"), Err(MobSlotRefusal::NoSlot)),
+        ("minecraft:zombie_horse", Some("minecraft:spawn_tame_adult"), Ok(())),
+        ("minecraft:skeleton_horse", None, Err(MobSlotRefusal::NoSlot)),
+        ("minecraft:camel", Some("minecraft:entity_born"), Err(MobSlotRefusal::NoSlot)),
+        ("minecraft:pig", None, Err(MobSlotRefusal::NoSlot)),
+    ];
+    for (index, (kind, event, answer)) in cases.into_iter().enumerate() {
+        let (mob, _) = summoned(&mut h, kind, event, index as f32 * 3.0 + 0.5);
+        assert_eq!(put(&mut h, mob, MobSlot::Saddle, Some("minecraft:saddle")).0, answer, "{kind} {event:?}");
+    }
 }
