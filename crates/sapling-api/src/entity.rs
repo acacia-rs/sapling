@@ -116,6 +116,13 @@ impl ShardCtx<'_> {
         self.backend.hurt_entity(id, amount, cause)
     }
 
+    /// Puts `item` on a living mob as its armour `piece` (0 the helmet, 1 the chestplate, 2 the
+    /// leggings, 3 the boots), or takes that piece off for `None`: its viewers see it and it wears it
+    /// against hits. False for a piece past the boots, or a mob that is gone or dying.
+    pub fn set_entity_armour(&mut self, id: EntityId, piece: u8, item: Option<&Item>) -> bool {
+        self.backend.set_entity_armour(id, piece, item)
+    }
+
     /// The families vanilla puts entities of `kind` in (`minecraft:player` is `player`,
     /// `minecraft:zombie` `zombie undead monster mob`), what a selector's `family=` tests.
     pub fn families(&self, kind: &str) -> Vec<String> {
@@ -149,6 +156,9 @@ pub trait EntityBackend {
         false
     }
     fn hurt_entity(&mut self, _id: EntityId, _amount: f32, _cause: DamageCause) -> bool {
+        false
+    }
+    fn set_entity_armour(&mut self, _id: EntityId, _piece: u8, _item: Option<&Item>) -> bool {
         false
     }
     fn families(&self, _kind: &str) -> Vec<String> {

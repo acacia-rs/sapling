@@ -88,6 +88,7 @@ fn shown_now(world: &World, entity: Entity) -> Option<Vec<Bytes>> {
     shown.extend(super::drowned::held(world, entity, id));
     shown.extend(super::piglins::held(world, entity, id));
     shown.extend(super::captains::worn(world, entity, id));
+    shown.extend(super::worn::shown(world, entity, id));
     shown.extend(super::command_gear::shown(world, entity, id));
     shown.extend(crate::riding::strength_shown(world, entity));
     let flags = world.get::<Told>(entity).and_then(Told::mob_flags);

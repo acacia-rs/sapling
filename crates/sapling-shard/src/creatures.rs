@@ -13,6 +13,7 @@ mod bees;
 mod birth;
 mod blast;
 mod blows;
+mod boosts;
 mod breezes;
 mod captains;
 mod command_gear;
@@ -70,6 +71,7 @@ mod villagers;
 mod warden;
 mod wings;
 mod wither;
+mod worn;
 
 use bevy_ecs::prelude::*;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};

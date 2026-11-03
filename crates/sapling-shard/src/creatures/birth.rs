@@ -120,6 +120,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     }
     give_legs(world, entity, &kind);
     give_health(world, entity, &kind, actor.health, actor.fire.max(0) as u16);
+    super::worn::adopt(world, entity, &actor.armor);
     afflictions::adopt(world, entity, &compound);
     wither::adopt(world, entity, &compound);
     husbandry::adopt(world, entity, &kind, Some((&actor, &compound)));
@@ -176,14 +177,7 @@ fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>,
         let max = genes::health(kind, world.get::<genes::Gene>(entity).copied(), max);
         let max = world.get::<strides::Strode>(entity).map_or(max, |strode| strode.0.health);
         let mut health = Health::new(max, left, burning);
-        if SKIN_ARMOUR.contains(&kind) {
-            health.wear([2.0, 0.0], Default::default());
-        }
+        health.wear(super::worn::skin(kind), Default::default());
         world.entity_mut(entity).insert(health);
     }
 }
-
-/// Kinds that come with 2 points of armour on no armour worn: BDS's zombie and baby zombie took 0.94 of
-/// fire's 1 and 7.872 of a sword's 8 (research/captures/bds-burn2.txt, bds-hits2.txt); the rest of the
-/// family as the Java game's, not drilled.
-const SKIN_ARMOUR: [&str; 4] = ["minecraft:zombie", "minecraft:husk", "minecraft:drowned", "minecraft:zombie_villager_v2"];

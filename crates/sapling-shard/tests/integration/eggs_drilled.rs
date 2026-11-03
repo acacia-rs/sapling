@@ -52,7 +52,7 @@ fn a_sniffer_egg_on_moss_sparkles_its_cracked_state_and_hatches_at_the_cells_cor
     assert_eq!(sparkles.len(), 2, "placed, then cracked once");
     assert_eq!(Some(&sparkles[1]), states.last(), "the sparkle names the cracked state: {states:?}");
     let born: Vec<[f32; 3]> = all::<AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:sniffer").map(|added| [added.position.x, added.position.y, added.position.z]).collect();
-    assert_eq!(born, [[8.0, 65.0, 4.0]]);
+    assert_eq!(born, [[8.0, 65.0, 4.0 - 0.3025]], "0.3025 toward -z of the corner (bds-sniffdig.txt)");
 }
 
 #[test]

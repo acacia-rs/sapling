@@ -99,7 +99,6 @@ Scenes `tack`, `llamabreed`, `nesting`, `stomping` (`examples/shared/tack_drill.
 - Grid map extending, upgrading and item repair. These were read from the decompile and never crafted on a live
   BDS; the bot cannot send the custom-recipe `ItemStackRequest`s.
   - Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
-- The chest's own drop on a chested mount's death: the drill's mounts were never chested (see above).
 - `/replaceitem` on a mount, drilled (bds-fixreplace.txt) and fixed (`riding/replaced.rs`, test
   `mounts_take_tack_by_slot_as_bds_s_did`):
   - `slot.saddle`: the horse family, `saddle` heard at the feet and the flags; a llama is
@@ -115,5 +114,8 @@ Scenes `tack`, `llamabreed`, `nesting`, `stomping` (`examples/shared/tack_drill.
 - Turtles:
   - The 1 to 4 egg count (two clutches seen), the nearest-sand pick and the nest search's 20-tick look.
   - Home for a turtle never hatched.
-  - The `lay_egg` sound's height: BDS's is 0.34 over the feet, sapling's 0.2.
 - Stomping: the 1 in 20 start, the 1200-tick give-up, and the walking speed.
+
+Drilled since (2026-10-30): a chested mount's chest drops after its goods (mob-life.md, `bds-chestdie.txt`), as
+sapling's did. The `lay_egg` sound's 0.34 over a turtle's feet is fixed: 0.85 of its height, from the
+bds-nesting.txt capture (mob_life.rs).

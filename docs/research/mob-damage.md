@@ -134,8 +134,8 @@ Sapling's run: sapling-burn2.txt.
   bds-hits2.txt). `replaceitem` armour on a mob is now taken and shown as BDS's
   (bds-fixreplace.txt, `creatures/command_gear.rs`): MobArmorEquipment and `armor.equip_<kind>`
   for a worn piece, MobEquipment alone for the main hand, `armor.equip_generic` for an offhand
-  shield, stone on the feet taken unseen, saddle and inventory slots an exception. Left: that
-  armour does not yet count against damage, so the diamond zombie is still not followed.
+  shield, stone on the feet taken unseen, saddle and inventory slots an exception. The armour is
+  `creatures/worn.rs`'s, so it counts against damage.
 - An armour stand in lava had 6 health and lost 0.05 every 10 ticks (cause -1); sapling's has none.
 - A burning cow in rain went out 20 ticks after its last burn, the rain begun between: at the turn
   of its next burn. Sapling's burnt on; now `Health::rained_on` (tests/integration/mob_heat.rs). In
@@ -152,9 +152,25 @@ Sapling's run: sapling-hits2.txt. Each mob held by slowness 255, the actor put b
 - Fire Aspect I burnt a cow a second apart after the iron sword's 7 (cause 7).
 - A hit while the actor jumped (`!jump`) cost a cow 12, the sword's 8 times 1.5.
 - A hit cow ran off out of reach (3.6 blocks), so the sword's wear and repeated hits were not seen.
-- `effect` health_boost raised BDS's cows to 30 health; sapling's stay at 10 (not followed).
+- `effect` health_boost raised BDS's cows to 30 health; sapling's stay at 10 (fixed, see "Health boost").
 - Sapling's run matched each sword, enchantment and the zombie's 7.872, but not the jump: its cow lost
   8, no critical hit (not followed), and its chestplate zombie took 7.872, the chestplate refused.
+
+## Health boost and armour on mobs (2026-10-30, `bds_command_probe boosts`, research/captures/bds-boosts.txt)
+
+- Health boost on a cow: told a tick after the command as a player's is (`UpdateAttributes` health, max 10 +
+  4 a level, `default_max` 10, the `HealthBoost` modifier); it does not heal. Healed it shows 30 of 30; a
+  weaker boost over it changes nothing; `effect clear` or running out drops the most back, the health
+  clamped to it (25 to 10; a zombie's 20 of 24 to 20). Fixed: `creatures/boosts.rs`, shared with players
+  in `vitals/boost.rs` (mob_commands.rs).
+- `replaceitem ... slot.armor.chest` on a zombie: `MobArmorEquipment` at once. `/damage` 8 (no cause)
+  then cost it 5.824, armour and its own 2 points as a sword's hit. Fixed: a mob wears armour
+  (`creatures/worn.rs`, `ShardCtx::set_entity_armour`, and a world folder's `Armor`), and `/damage`
+  of a cause armour stops goes through it. `/replaceitem` on a mob now dresses it through `worn.rs`.
+- Sapling's run (sapling-boosts.txt): every health line the same as BDS's; its zombie lost 7.872 to
+  `/damage`, as its `/replaceitem` could not yet dress a mob (before fix1; not re-drilled).
+- The actor's `!hit` fell 8.5 blocks short (the held cow and zombie had been pushed); the sword's
+  5.824 stands from bds-hits2.txt.
 
 ## Not drilled
 

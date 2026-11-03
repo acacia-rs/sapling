@@ -5,7 +5,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{DeathInfo, LevelSoundEvent, MobArmorEquipment, MobEquipment, SetEntityData, UpdateBlock, UpdateSubchunkBlocks};
+use acacia_proto::packets::{DeathInfo, LevelSoundEvent, MobArmorEquipment, MobEquipment, SetEntityData, UpdateAttributes, UpdateBlock, UpdateSubchunkBlocks};
 use common::asking::ask;
 use common::{Harness, all};
 use sapling_api::{Attacker, Block, DamageCause, Difficulty, EntityId, GameMode, Item, MobSlot, MobSlotRefusal, PlayerId, ShardCtx};
@@ -107,6 +107,12 @@ fn a_zombie_wears_and_holds_what_replaceitem_gives_it_as_bds_showed() {
     assert_eq!((all::<MobEquipment>(&sent).len(), sounds(&sent).len()), (1, 0), "a hand is shown, not heard");
     let (put_on, sent) = put(&mut h, zombie, MobSlot::Armor(3), "minecraft:stone");
     assert_eq!((put_on, all::<MobArmorEquipment>(&sent).len()), (Ok(()), 0), "stone on the feet is taken unseen");
+    let plated = summoned(&mut h, "minecraft:zombie");
+    assert_eq!(put(&mut h, plated, MobSlot::Armor(1), "minecraft:diamond_chestplate").0, Ok(()));
+    let (_, mut sent) = told(&mut h, move |ctx| assert!(ctx.hurt_entity(plated, 8.0, DamageCause::Generic)));
+    sent.extend(h.tick_all().to(1).to_vec());
+    let left: Vec<f32> = all::<UpdateAttributes>(&sent).into_iter().filter(|told| told.runtime_entity_id == plated.0).flat_map(|told| told.attributes).filter(|it| it.name == "minecraft:health").map(|it| it.current).collect();
+    assert!(left.first().is_some_and(|left| (left - 14.176).abs() < 1e-3), "the chestplate is worn against harm, as bds-boosts.txt: {left:?}");
     assert_eq!(put(&mut h, zombie, MobSlot::Saddle, "minecraft:saddle").0, Err(MobSlotRefusal::NoSlot));
     assert_eq!(put(&mut h, zombie, MobSlot::Inventory(0), "minecraft:stone").0, Err(MobSlotRefusal::NoSlot));
 }

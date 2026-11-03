@@ -43,10 +43,31 @@ fn a_spider_in_the_sun_leaves_a_player_be_and_one_under_a_roof_does_not() {
                 (0..=5).for_each(|z| assert!(ctx.set_block([0, 69, z], &Block::new("stone"))));
             }
         });
-        let sent: Vec<RawPacket> = (0..80).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+        // It looks one tick in 100 (bds-targets2.txt), so give it time.
+        let sent: Vec<RawPacket> = (0..400).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
         all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation)
     };
     assert_eq!([bitten(false), bitten(true)], [false, true]);
+}
+
+/// research/captures/bds-targets2.txt: four cave spiders held 5 off at midnight took the player 0.2
+/// to 11 s after they came, and let it go 0.7 to 12 s after taking it, again and again.
+#[test]
+fn cave_spiders_take_their_prey_now_and_then_and_let_it_go_now_and_then() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_time(18000);
+        for [x, z] in [[5.5, 0.5], [-4.5, 0.5], [0.5, 5.5], [0.5, -4.5]] {
+            let spider = ctx.spawn_entity("minecraft:cave_spider", [x, 65.0, z]).expect("a cave spider");
+            assert!(ctx.give_entity_effect(spider, sapling_api::Effect::Slowness, 2000, 255));
+        }
+    });
+    let sent: Vec<RawPacket> = (0..1200).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let targets = |player: bool| all::<acacia_proto::packets::SetEntityData>(&sent).iter().flat_map(|data| data.metadata.clone()).filter(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::TargetEid).filter(|item| matches!(item.value, acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Long(id)) if (id == 1) == player)).count();
+    let (taken, dropped) = (targets(true), targets(false));
+    assert!(taken >= 5 && dropped >= 3, "taken {taken}, let go {dropped}");
 }
 
 #[test]

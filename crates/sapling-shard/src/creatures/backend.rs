@@ -1,6 +1,6 @@
 //! The entity side of the handlers' context.
 
-use sapling_api::{DamageCause, Effect, EntityBackend, EntityId, EntityInfo, MobSlot, MobSlotRefusal, PlayerId};
+use sapling_api::{DamageCause, Effect, EntityBackend, EntityId, EntityInfo, Item, MobSlot, MobSlotRefusal, PlayerId};
 
 use super::health::Health;
 use crate::components::{InLayer, NetId};
@@ -97,9 +97,19 @@ impl EntityBackend for Ctx<'_> {
         entities::find(self.world, id).is_some_and(|mob| super::afflictions::take(self.world, mob, None))
     }
 
+    fn set_entity_armour(&mut self, id: EntityId, piece: u8, item: Option<&Item>) -> bool {
+        let Some(mob) = entities::find(self.world, id) else { return false };
+        let level = self.world.get::<InLayer>(mob).and_then(|layer| self.world.get::<crate::components::Layer>(layer.0));
+        let stack = item.and_then(|item| crate::inventory::stored(item, level?.world.registry()));
+        (item.is_none() || stack.is_some()) && super::worn::put_on(self.world, mob, piece.into(), stack)
+    }
+
     fn hurt_entity(&mut self, id: EntityId, amount: f32, cause: DamageCause) -> bool {
         let Some(mob) = entities::find(self.world, id).filter(|mob| self.world.get::<super::Dying>(*mob).is_none()) else { return false };
-        let (Some(layer), Some(before)) = (self.world.get::<InLayer>(mob).map(|layer| layer.0), self.world.get::<Health>(mob).map(Health::left)) else { return false };
+        let (Some(layer), Some(health)) = (self.world.get::<InLayer>(mob).map(|layer| layer.0), self.world.get::<Health>(mob).copied()) else { return false };
+        let before = health.left();
+        // BDS's `/damage` of 8 cost a zombie in a diamond chestplate 5.824 (research/captures/bds-boosts.txt).
+        let amount = if cause.is_stopped_by_armour() { health.shielded(amount) } else { amount };
         super::harm::wound(self.world, mob, layer, amount, cause);
         self.world.get::<super::Dying>(mob).is_some() || self.world.get::<Health>(mob).is_some_and(|health| health.left() < before)
     }

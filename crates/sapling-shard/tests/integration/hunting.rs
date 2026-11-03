@@ -128,7 +128,8 @@ fn each_kind_hunts_at_its_speed_with_its_hit_and_what_the_hit_gives() {
     let cases = [("minecraft:husk", 17.5, 0.114_189, vec![(17, 600)]), ("minecraft:spider", 18.0, 0.194_273, vec![]), ("minecraft:vindicator", 12.5, 0.264_427, vec![]), ("minecraft:wither_skeleton", 14.5, 0.210_799, vec![(20, 200)]), ("minecraft:silverfish", 19.0, 0.134_912, vec![])];
     for (kind, left, speed, given) in cases {
         let (mut h, mob) = hunted_by(kind, Difficulty::Easy);
-        let (_, sent) = until_hit(&mut h, 60);
+        // A spider looks for prey one tick in 100 (research/captures/bds-targets2.txt).
+        let (_, sent) = until_hit(&mut h, if kind == "minecraft:spider" { 600 } else { 60 });
         let effects: Vec<(i32, i32)> = all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.duration)).collect();
         assert_eq!((health(&sent), effects), (vec![left], given), "{kind}");
         h.remote.run(move |ctx| {

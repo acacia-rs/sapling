@@ -5,6 +5,7 @@
 // TODO: a block over the head alone does not
 // make a player crawl; the breathing flag is not told.
 
+pub(crate) mod boost;
 mod chorus;
 mod death;
 pub(crate) mod eating;

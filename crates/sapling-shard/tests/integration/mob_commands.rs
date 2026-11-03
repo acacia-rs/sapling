@@ -6,10 +6,10 @@ use crate::common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{EntityEvent, EntityEventEventId, MobEffect, MobEffectEventId, SetEntityData};
+use acacia_proto::packets::{EntityEvent, EntityEventEventId, MobArmorEquipment, MobEffect, MobEffectEventId, SetEntityData, UpdateAttributes};
 use acacia_proto::types::{MetadataDictionaryItemValue as MetaValue, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};
 use common::{Harness, all};
-use sapling_api::{Block, DamageCause, Effect, EntityId, GameMode, PlayerId, ShardCtx};
+use sapling_api::{Block, DamageCause, Effect, EntityId, GameMode, Item, PlayerId, ShardCtx, Slot};
 
 /// A creative player and a cow 4 off it.
 fn cow() -> (Harness, EntityId) {
@@ -42,6 +42,55 @@ fn a_mobs_effects_come_off_one_or_all_and_its_viewers_are_told() {
     assert_eq!(removed, [Effect::Slowness.id()]);
     let (cleared, _) = ask(&mut h, move |ctx| (ctx.clear_entity_effects(id), ctx.clear_entity_effects(id)));
     assert_eq!(cleared, (true, false), "speed was left, then nothing");
+}
+
+/// BDS's cow under health boost V: most 30 over its own 10, the boost's 20 as a modifier
+/// (research/captures/bds-hits2.txt, bds-boosts.txt).
+#[test]
+fn a_health_boost_raises_a_mobs_most_health_until_it_comes_off() {
+    let (mut h, id) = cow();
+    let health = |sent: &[RawPacket]| -> Vec<[f32; 4]> {
+        let told = all::<UpdateAttributes>(sent).into_iter().filter(|told| told.runtime_entity_id == id.0);
+        told.filter_map(|told| told.attributes.into_iter().find(|it| it.name == "minecraft:health")).map(|it| [it.current, it.max, it.default_max, it.modifiers.iter().map(|it| it.amount).sum()]).collect()
+    };
+    let (_, sent) = ask(&mut h, move |ctx| ctx.give_entity_effect(id, Effect::HealthBoost, 600, 4));
+    assert_eq!(health(&sent), [[10.0, 30.0, 10.0, 20.0]]);
+    let (_, mut sent) = ask(&mut h, move |ctx| ctx.give_entity_effect(id, Effect::InstantHealth, 1, 4));
+    sent.extend(ask(&mut h, |_| ()).1);
+    assert_eq!(health(&sent), [[30.0, 30.0, 10.0, 20.0]]);
+    let (_, sent) = ask(&mut h, move |ctx| ctx.remove_entity_effect(id, Effect::HealthBoost));
+    assert_eq!(health(&sent), [[10.0, 10.0, 10.0, 0.0]]);
+}
+
+/// BDS's zombie in a diamond chestplate took 5.824 of a diamond sword's 8: its own 2 points with
+/// the chestplate's 8 and toughness 2 (research/captures/bds-hits2.txt).
+#[test]
+fn a_zombie_in_a_diamond_chestplate_shows_it_and_takes_less_of_a_sword() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let (zombie, sent) = ask(&mut h, |ctx| {
+        // Peaceful takes monsters away.
+        ctx.set_difficulty(sapling_api::Difficulty::Easy);
+        ctx.set_time(18_000);
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        assert!(ctx.set_item(PlayerId(1), Slot::Main(0), Some(&Item::new("minecraft:diamond_sword", 1))));
+        let zombie = ctx.spawn_entity("minecraft:zombie", [0.5, 65.0, 2.0]).expect("a zombie");
+        assert!(ctx.set_entity_armour(zombie, 1, Some(&Item::new("minecraft:diamond_chestplate", 1))));
+        assert!(!ctx.set_entity_armour(zombie, 4, None), "no fifth piece");
+        zombie
+    });
+    let worn = all::<MobArmorEquipment>(&sent);
+    assert!(worn.iter().any(|worn| worn.runtime_entity_id == zombie.0 && worn.chestplate.network_id != 0), "the chestplate is shown");
+    h.receive(1, &common::attack(zombie.0));
+    let sent: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let left: Vec<f32> = all::<UpdateAttributes>(&sent).into_iter().filter(|told| told.runtime_entity_id == zombie.0).flat_map(|told| told.attributes).filter(|it| it.name == "minecraft:health").map(|it| it.current).collect();
+    assert!(left.first().is_some_and(|left| (left - 14.176).abs() < 1e-3), "{left:?}");
+    // `/damage` goes through it too (research/captures/bds-boosts.txt), once the hit's guard is over.
+    (0..12).for_each(|_| drop(h.tick_all()));
+    let (_, mut sent) = ask(&mut h, move |ctx| assert!(ctx.hurt_entity(zombie, 8.0, DamageCause::Generic)));
+    sent.extend(ask(&mut h, |_| ()).1);
+    let left: Vec<f32> = all::<UpdateAttributes>(&sent).into_iter().filter(|told| told.runtime_entity_id == zombie.0).flat_map(|told| told.attributes).filter(|it| it.name == "minecraft:health").map(|it| it.current).collect();
+    assert!(left.first().is_some_and(|left| (left - 8.352).abs() < 1e-3), "{left:?}");
 }
 
 #[test]

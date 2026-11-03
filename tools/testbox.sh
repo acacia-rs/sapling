@@ -61,8 +61,10 @@ retry ssh $opts testbox "bash -s -- $remote" <"$root/tools/testbox-target.sh" ||
 retry upload || exit 1
 retry write_job || exit 1
 retry ssh $opts testbox "{ nohup flock -o $run/lock sh $run/$name.sh </dev/null >/dev/null 2>&1 & }" || exit 1
-# Poll with short calls; a single long ssh would die with the link.
-until ssh $opts testbox "test -f $run/$name.done" 2>/dev/null; do sleep 10; done
+# Poll with short calls; a single long ssh would die with the link. The job script lives in the target, so
+# its going (an eviction, tools/testbox-target.sh) means the job never ran.
+until ssh $opts testbox "test -f $run/$name.done || ! test -f $run/$name.sh" 2>/dev/null; do sleep 10; done
+ssh $opts testbox "test -f $run/$name.done" || { echo "exit: 99 (target evicted before the job ran)"; exit 99; }
 mkdir -p "$out"
 retry scp -q $opts "testbox:$run/$name.log" "$out/$name.log"
 if [ -n "${FETCH:-}" ]; then
