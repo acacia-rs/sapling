@@ -135,7 +135,7 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   read back because `set_block_entity` kept an entity without `x`/`y`/`z`, which the column drops
   (`pistons::at_place` now adds them). A shot pot was not drilled.
 - Brushing's dust particles (0x56) and BDS's InventoryContent resyncs while a brush is held.
-- The mansion template chests' own `Items`; template flower pots (below) and the other non-loot entities.
+- The mansion template chests' own `Items` and the other non-loot entities (flower pots: below).
   Beds, bells and cauldrons are written since 2026-11-03 (templates.bin kinds `bed`, `bell`, `cauldron`;
   the witch hut's cauldron in `scattered/hut.rs`). `block_entity_diff 20261003 20261003-structures`:
   every bed (0, 4, 10, 11, 13, 14), bell and cauldron same. BDS saved the trial chambers' magenta and
@@ -152,12 +152,20 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   bell was loaded, not anything generation draws; sapling's 0 is a bell never ticked. Left.
 - Flower pots (2026-11-03): BDS saved 46, every one `FlowerPot` {`PlantBlock` {name, `states` {},
   `version` 18168865}}. The witch hut's (block `update_bit=1`) holds `minecraft:red_mushroom`;
-  sapling writes it (`hut.rs`, `generated_flower_pot`), `block_entity_diff` same. Not done: the 45
-  template pots (allium 11, deadbush 22, white tulip 5, red tulip 4, oxeye daisy 2, cactus 1).
-  templates.bin carries no plant: `templates_to_rust.py` `block_entity` needs a `flowerpot` kind
-  named from the Java block, and template_blocks.tsv lists only potted cactus, dandelion, dead bush,
-  poppy and spruce sapling, none of the tulips, allium or daisy BDS saved, so how BDS names the plant
-  of the other templates' pots (legacy `flower_pot` + item data?) is unread.
+  sapling writes it (`hut.rs`, `generated_flower_pot`), `block_entity_diff` same.
+- Template flower pots (2026-11-03, `block_entity_dump` of 20261003-structures): the 45 others hold
+  allium 11, deadbush 22, white tulip 5, red tulip 4, oxeye daisy 2 and cactus 1. The tulips, allium
+  and daisy are the mansion's: its 1.11 templates save a legacy `flower_pot` whose block state
+  (`contents=cactus` or `empty`) says nothing, and a `FlowerPot` entity with `Item`
+  `minecraft:red_flower` and `Data` (2 allium, 4 red tulip, 6 white tulip, 8 oxeye daisy; also
+  `yellow_flower`, `sapling` 2, `cactus`), which BDS names by the plant's own Bedrock block. Newer
+  templates name it in the block (`potted_dead_bush` is `minecraft:deadbush`). `PlantBlock`'s
+  `states` are the plant's own: the cactus saved `age` Int 0, the flowers `{}`. Sapling:
+  templates.bin kind `flower_pot` (`templates_to_rust.py` `flower_pot_plant`; regenerate it, no
+  palette index moved), `generated_flower_pot` writes a cactus's `age` and a sapling's `age_bit`
+  ([U]: no oracle pot held a sapling), test `templates_keep_their_block_entities`.
+  `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
+  chambers' dead bush at (-446, -11, -425), is water in our blocks there (a block difference).
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
   before the vault's first tick rewrites it, so left.
 

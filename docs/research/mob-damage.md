@@ -153,9 +153,31 @@ Sapling's run: sapling-burn2.txt.
   times in 7 ticks, out of sight. Sapling's rain hurt it as BDS's, but rain did not drive it off
   (`teleports.rs` counted water alone); now rain on its feet or head counts, test
   `an_enderman_in_rain_teleports_on_and_on`. Re-drilled on sapling (sapling-enderrain.txt): it
-  teleports every tick of the rain, hurt 1 (cause 9) every 10 ticks, as BDS's while in sight. Left:
-  BDS's first rain hurt came ~0.9 s after `/weather rain`, sapling's at once (BDS's rain level
-  ramps up; sapling's rain is on or off), and BDS's left sight after seven, sapling's stayed near.
+  teleports every tick of the rain, hurt 1 (cause 9) every 10 ticks, as BDS's while in sight.
+- Rain sets in (2026-11-03): BDS's first rain hurt came 1009 ms (20 ticks) after `/weather rain`,
+  sapling's at once. `Weather::tick` (0x14119d160) moves the rain level 0.01 a tick towards its
+  target (both clamped to 0..1), and `isRainingAt` (0x14119d6b0, reached from
+  `ActorInWaterOrRainTest` through 0x140d2a130) wants it over 0.2: in f32 that is the 20th tick of
+  rain, and rain still falls 80 ticks after `/weather clear`. bds-rainvoid.txt agrees: its burning
+  cow burnt once more on the `/weather rain` tick and was put out, the enderman beside it first
+  hurt, 1005 ms after. Fixed: `weather::rains` follows the
+  level (`Falling`), which mob harm, the enderman's teleports and snow golems read; tests
+  `rain_sets_in_over_20_ticks_and_clears_over_81`, `an_enderman_in_rain_teleports_on_and_on`.
+  `/weather` still answers and tells clients at once, as BDS's did. TODO, by the same rule but not
+  drilled: fire, fishing, tridents, cauldrons and the sky's darkening still read the sky's state;
+  lightning's level ramps too (0.01 a tick, +0x44 to +0x48) and is on or off here.
+- The enderman leaving sight (2026-11-03, `bds_command_probe farmobs`, bds-farmobs.txt): not its
+  teleports, which are the same ±16 cube on both (mean step 8-10 blocks). BDS shows a mob only
+  within a circle of `tick-distance` (4) chunks about the player: slowed mobs moved 3,2 and 4,0
+  chunks off stayed shown, 3,3 and 5,0 off were removed (`RemoveEntity` the tick after), and
+  `tp` found them and moved them back (`AddEntity` again), so the level kept them. The enderman's
+  last teleport landed 3,3 chunks off. Sapling showed mobs as far as the client's chunk radius
+  (8 here); now `mobs::update` takes `tick-distance` (test
+  `a_mob_is_shown_only_within_the_tick_distance_circle_as_on_bds`). Sapling's drill enderman also
+  stayed within z ±48 because `SAPLING_DRILL_WORLD=open`'s ground ends there. [U] whether the
+  circle is `tick-distance` or a fixed 4 (the BDS copy runs 4), whether BDS ticks a hidden mob, and
+  whether players and their packets about hidden mobs follow the same circle (sapling still sends
+  a mob's moves to every view covering it).
 
 ## Hits (2026-10-29, `bds_command_probe hits2`, research/captures/bds-hits2.txt)
 

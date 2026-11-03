@@ -22,7 +22,7 @@ pub enum BlockEntity {
     Bell,
     /// A cauldron of water or nothing and the potion id in it (-1 none; the witch hut's: `hut.rs`).
     Cauldron(i16),
-    /// A flower pot and the plant in it (`minecraft:red_mushroom`).
+    /// A flower pot and the plant in it (`minecraft:red_mushroom`; templates' by templates_to_rust.py).
     FlowerPot(&'static str),
 }
 

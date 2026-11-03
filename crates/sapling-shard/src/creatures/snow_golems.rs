@@ -102,12 +102,12 @@ pub(super) fn tick(world: &mut World) {
         .filter(|(_, _, kind, _)| kind.0 == GOLEM)
         .map(|(golem, layer, _, body)| (golem, layer.0, *body))
         .collect();
-    let weather = |world: &World, layer| crate::weather::of(world, layer);
     for (golem, layer, body) in golems {
+        let rains = crate::weather::rains(world, layer);
         let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
         let [x, y, z] = body.at.map(|c| c.floor() as i32);
         let warmth = level.temperature(x, y, z);
-        let rained = harm::is_rained_on(level, [x, y, z], weather(world, layer));
+        let rained = harm::is_rained_on(level, [x, y, z], rains);
         if warmth.is_some_and(|t| t < SNOWS_UNDER) {
             leave_snow(world, layer, &body);
         }

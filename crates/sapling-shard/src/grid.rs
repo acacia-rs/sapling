@@ -40,12 +40,20 @@ impl<T: PartialEq> Grid<T> {
 
     /// What `view` covers in `layer`.
     pub fn covered<'a>(&'a self, layer: Entity, view: &'a View) -> impl Iterator<Item = &'a T> {
-        let cells = view.center().into_iter().flat_map(move |center| {
+        self.within(layer, view, view.radius())
+    }
+
+    /// What lies in `layer` within a circle of `radius` columns about `view`'s centre, and in view.
+    pub fn within<'a>(&'a self, layer: Entity, view: &'a View, radius: i32) -> impl Iterator<Item = &'a T> {
+        let radius = radius.min(view.radius());
+        let center = view.center();
+        let cells = center.into_iter().flat_map(move |center| {
             let (_, x, z) = cell(layer, center);
-            let reach = (view.radius() + CELL - 1) / CELL;
+            let reach = (radius + CELL - 1) / CELL;
             (x - reach..=x + reach).flat_map(move |x| (z - reach..=z + reach).map(move |z| (layer, x, z)))
         });
-        cells.filter_map(|key| self.cells.get(&key)).flatten().filter(|(pos, _)| view.covers(*pos)).map(|(_, item)| item)
+        let inside = move |pos: &ChunkPos| center.is_some_and(|c| (pos.x - c.x).pow(2) + (pos.z - c.z).pow(2) <= radius * radius);
+        cells.filter_map(|key| self.cells.get(&key)).flatten().filter(move |(pos, _)| inside(pos)).map(|(_, item)| item)
     }
 }
 

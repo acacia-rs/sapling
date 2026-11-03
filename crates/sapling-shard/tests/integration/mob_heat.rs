@@ -67,11 +67,15 @@ fn rain_puts_out_a_burning_cow() {
         assert!(ctx.set_block([6, 65, 0], &Block::air()));
         ctx.set_weather(Weather::Rain, None);
     });
-    sent.extend(ticks(&mut h, 60));
+    let rain = ticks(&mut h, 60);
+    // research/captures/bds-rainvoid.txt: steam as water's when the rain put it out, at a burn's turn
+    // once the rain had set in (20 ticks on); a burn before that, none after.
+    let out = rain.iter().position(|tick| all::<LevelEvent>(tick).iter().any(|event| event.event == LevelEventEvent::ParticleFizzEffect));
+    assert!(out.is_some_and(|at| at >= 19), "steam {out:?} ticks into the rain");
+    let burns = all::<EntityEvent>(&rain[out.unwrap() + 1..].concat()).iter().filter(|event| event.event_id == EntityEventEventId::HurtAnimation && event.data == 7).count();
+    sent.extend(rain);
     let (_, causes) = told(&sent);
-    assert!(causes.contains(&6) && !causes.contains(&7), "no burning on in the rain: {causes:?}");
-    // research/captures/bds-rainvoid.txt: steam as water's when the rain put it out.
-    assert!(all::<LevelEvent>(&sent.concat()).iter().any(|event| event.event == LevelEventEvent::ParticleFizzEffect), "steam");
+    assert!(causes.contains(&6) && burns == 0, "no burning on in the rain: {causes:?}, {burns} after the steam");
 }
 
 #[test]
@@ -81,6 +85,8 @@ fn rain_hurts_an_enderman_1_each_10_ticks_as_drowning() {
         ctx.set_difficulty(Difficulty::Easy);
         ctx.set_weather(Weather::Rain, None);
     });
+    // Until the rain has set in (an_enderman_in_rain_teleports_on_and_on).
+    ticks(&mut h, 20);
     penned(&mut h, 6, "stone", Block::air(), "minecraft:enderman");
     let (health, causes) = told(&ticks(&mut h, 25));
     assert_eq!((health, causes), (37.0, vec![9, 9, 9]));
@@ -88,7 +94,8 @@ fn rain_hurts_an_enderman_1_each_10_ticks_as_drowning() {
 
 #[test]
 fn an_enderman_in_rain_teleports_on_and_on() {
-    // research/captures/bds-enderrain.txt: seven teleports in the 7 ticks after rain first hurt it.
+    // research/captures/bds-enderrain.txt: the rain set in and first hurt it 20 ticks after
+    // `/weather rain`, then seven teleports in 7 ticks.
     let mut h = ready();
     h.remote.run(|ctx| {
         ctx.set_difficulty(Difficulty::Easy);
@@ -97,9 +104,12 @@ fn an_enderman_in_rain_teleports_on_and_on() {
     });
     ticks(&mut h, 5);
     h.remote.run(|ctx| ctx.set_weather(Weather::Rain, None));
-    let sent = ticks(&mut h, 10).concat();
-    let jumps = all::<acacia_proto::packets::MoveEntityDelta>(&sent).iter().filter(|moved| moved.force_move).count();
-    assert!(jumps >= 5, "{jumps} teleports in 10 ticks of rain");
+    let sent = ticks(&mut h, 30);
+    let hurt = sent.iter().position(|tick| all::<EntityEvent>(tick).iter().any(|event| event.event_id == EntityEventEventId::HurtAnimation && event.data == 9));
+    assert!(hurt.is_some_and(|at| (19..=21).contains(&at)), "first rain hurt {hurt:?} ticks in");
+    let jumps = |ticks: &[Vec<RawPacket>]| all::<acacia_proto::packets::MoveEntityDelta>(&ticks.concat()).iter().filter(|moved| moved.force_move).count();
+    assert!(jumps(&sent[..18]) <= 1, "{} teleports before the rain set in", jumps(&sent[..18]));
+    assert!(jumps(&sent[19..]) >= 5, "{} teleports in 11 ticks of rain", jumps(&sent[19..]));
 }
 
 #[test]
