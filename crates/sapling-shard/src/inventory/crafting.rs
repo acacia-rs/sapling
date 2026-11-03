@@ -51,6 +51,12 @@ fn special(inventory: &Inventory, network_id: u32, at: Station, map: Option<(i64
     Some((Recipe { inputs, outputs, station: Station::Hand, shape: None }, super::special::forged(network_id, &grid)))
 }
 
+/// Whether a craft of the special recipe `network_id` at `at` is refused for what the grid holds:
+/// BDS's status 35, `MismatchedRecipeForInputGridItems` (bds-gridmend.txt: two unlike swords).
+pub(super) fn mismatches_grid(inventory: &Inventory, network_id: u32, at: Station, map: Option<(i64, u8, bool)>) -> bool {
+    sapling_data::recipe(network_id).is_none() && sapling_data::is_special_recipe(network_id) && at != Station::Stonecutter && special(inventory, network_id, at, map).is_none()
+}
+
 /// The map id of the first filled map in either crafting grid.
 pub(crate) fn grid_map_id(inventory: &Inventory) -> Option<i64> {
     let held = |slot: usize| inventory.slot(Place::Ui(slot)).and_then(Option::as_ref);

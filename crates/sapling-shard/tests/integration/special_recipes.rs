@@ -83,7 +83,8 @@ fn a_banner_goes_on_a_shield_by_its_own_recipe_only() {
     let (mut h, storage) = steve(vec![stack("minecraft:shield", 1, 0, None), stack("minecraft:banner", 1, 4, patterned())], false);
     lay(&mut h, 0, 28);
     lay(&mut h, 1, 29);
-    assert_eq!(answer(&craft(&mut h, FIREWORKS, &[28, 29], &[(0, 1)], 2)).0, Status::Error, "the fireworks recipe makes nothing of these");
+    // BDS's `MismatchedRecipeForInputGridItems` (bds-gridmend.txt: two unlike swords to repair).
+    assert_eq!(answer(&craft(&mut h, FIREWORKS, &[28, 29], &[(0, 1)], 2)).0, Status::Unknown(35), "the fireworks recipe makes nothing of these");
     assert_eq!(answer(&craft(&mut h, SHIELD_BANNER, &[28, 29], &[(0, 1)], 2)).0, Status::Ok);
     let kept = kept(h, &storage);
     let tag = kept.main[2].as_ref().and_then(|shield| shield.tag.clone()).expect("the decorated shield");
@@ -149,4 +150,12 @@ fn two_worn_tools_repair_into_one() {
     let pickaxe = kept.main[2].as_ref().expect("the repaired pickaxe");
     assert_eq!((pickaxe.name.as_str(), pickaxe.tag.as_ref().and_then(|tag| tag.get("Damage"))), ("minecraft:iron_pickaxe", Some(&Value::Int(88))));
     assert!(kept.main[0].is_none() && kept.main[1].is_none());
+}
+
+#[test]
+fn unlike_tools_are_not_repaired() {
+    let (mut h, _) = steve(vec![stack("minecraft:iron_sword", 1, 0, None), stack("minecraft:golden_sword", 1, 0, None)], false);
+    lay(&mut h, 0, 28);
+    lay(&mut h, 1, 31);
+    assert_eq!(answer(&craft(&mut h, REPAIR, &[28, 31], &[(0, 1)], 2)).0, Status::Unknown(35), "bds-gridmend.txt");
 }

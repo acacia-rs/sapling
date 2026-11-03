@@ -4,7 +4,10 @@
 
 use sapling_data::CreativeItem;
 use sapling_data::enchant::{all, kind_of, with_all};
-use sapling_data::gear::{damage, gear, with_damage};
+use acacia_proto::nbt::Value;
+use sapling_data::gear::{damage, gear, with_field};
+
+const DAMAGE: &str = "Damage";
 
 use super::{Grid, Made};
 
@@ -26,13 +29,15 @@ pub(super) fn repaired(grid: &Grid) -> Option<Made> {
         }
     }
     let name = sapling_data::static_item_name(&first.name)?;
-    Some(vec![(CreativeItem { name, damage: 0, block: None, tag: with_all(with_damage(None, worn), &curses) }, 1)])
+    // `Damage` even at 0: BDS's mended sword carried `Damage: 0` (bds-gridmend.txt).
+    let worn = with_field(None, DAMAGE, Some(Value::Int(worn)));
+    Some(vec![(CreativeItem { name, damage: 0, block: None, tag: with_all(worn, &curses) }, 1)])
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use acacia_proto::nbt::Value;
+    use sapling_data::gear::with_damage;
     use sapling_world::ItemStack;
 
     fn sword(worn: i32, enchants: &[(i16, u8)]) -> ItemStack {
@@ -51,7 +56,8 @@ mod tests {
         let (item, count) = &made[0];
         assert_eq!((item.name, count, damage(item.tag.as_ref())), ("minecraft:iron_sword", &1, 18));
         assert_eq!(all(item.tag.as_ref()), [(28, 1)], "only the curse, once");
-        assert_eq!(damage(repaired(&grid(&[sword(10, &[]), sword(5, &[])])).expect("repairs")[0].0.tag.as_ref()), 0);
+        let mended = repaired(&grid(&[sword(10, &[]), sword(5, &[])])).expect("repairs");
+        assert_eq!(mended[0].0.tag, Some(Value::Compound(vec![("Damage".into(), Value::Int(0))])), "Damage kept at 0 (bds-gridmend.txt)");
     }
 
     #[test]

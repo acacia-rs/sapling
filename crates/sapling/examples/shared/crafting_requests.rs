@@ -12,16 +12,19 @@ use acacia_bot::proto::types::{
     ContainerSlotType as Kind, FullContainerName, ItemStackRequest, ItemStackRequestActionsItem as Action, ItemStackRequestActionsItemContent as Content,
     ItemStackRequestActionsItemContentConsume as Consume, ItemStackRequestActionsItemContentCraftRecipe as CraftRecipe,
     ItemStackRequestActionsItemContentCreate as Create, ItemStackRequestActionsItemContentDrop as Drop, ItemStackRequestActionsItemContentOptional as Optional,
-    ItemStackRequestActionsItemContentPlace as Place, ItemStackRequestActionsItemContentResultsDeprecated as Results, ItemStackRequestActionsItemTypeId as TypeId, ItemStackRequestCause, StackRequestSlotInfo,
+    ItemStackRequestActionsItemContentPlace as Place, ItemStackRequestActionsItemTypeId as TypeId, ItemStackRequestCause, StackRequestSlotInfo,
 };
 use acacia_bot::{Bot, BotEvent};
 
 /// The multi recipes `!grid` names (docs/research/crafting-storage.md).
-const RECIPES: [(&str, &str); 4] = [
+const RECIPES: [(&str, &str); 7] = [
     ("dup", "b5c5d105-75a2-4076-af2b-923ea2bf4bf0"),
     ("shield", "00000000-0000-0000-0000-0000000000c8"),
     ("book", "d1ca6b84-338e-4f2f-9c6b-76cc8b4bd98d"),
     ("map", "85939755-ba10-4d9d-a4cc-efb7a8e943c4"),
+    ("extend", "d392b075-4ba1-40ae-8789-af868d56f6ce"),
+    ("upgrade", "aecd2294-4b94-434b-8667-4499bb2c9327"),
+    ("repair", "00000000-0000-0000-0000-000000000001"),
 ];
 const TABLE_GRID: u8 = 32;
 const CREATED: u8 = 50;
@@ -167,9 +170,8 @@ async fn grid(actor: &mut Bot, words: &[&str], keep: bool) {
     let cells: Vec<u8> = words.iter().skip(2).enumerate().filter(|(_, word)| **word != "-").map(|(cell, _)| TABLE_GRID + cell as u8).collect();
     request(actor, places, Vec::new()).await;
     for counts in tries {
-        // Vanilla follows the craft with its results, which BDS ignores at the grid.
-        let results = Content::ResultsDeprecated(Results { result_items: Vec::new(), times_crafted: 1 });
-        let mut actions = vec![act_of(TypeId::CraftRecipe, Content::CraftRecipe(CraftRecipe { recipe_network_id: network_id, times_crafted: 1 })), act_of(TypeId::ResultsDeprecated, results)];
+        // No ResultsDeprecated: an empty one dropped the actor on BDS (bds-grid.txt); BDS ignores a full one.
+        let mut actions = vec![act_of(TypeId::CraftRecipe, Content::CraftRecipe(CraftRecipe { recipe_network_id: network_id, times_crafted: 1 }))];
         actions.extend(cells.iter().map(|&cell| act_of(TypeId::Consume, Content::Consume(Consume { count: 1, source: ui(cell).0 }))));
         let dests: Vec<u8> = empty_hotbar(actor).into_iter().take(counts.len()).collect();
         let id = NEXT.load(std::sync::atomic::Ordering::Relaxed);

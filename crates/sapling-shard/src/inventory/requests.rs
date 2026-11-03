@@ -194,6 +194,8 @@ const NOTHING_THERE: Status = Status::Unknown(49);
 const BANNER_FULL: Status = Status::Unknown(7);
 /// What BDS answers an anvil craft that makes nothing ([`repairs_nothing`]).
 const NOTHING_MADE: Status = Status::Unknown(9);
+/// What BDS answers a special craft its grid does not make (crafting::mismatches_grid).
+const GRID_MISMATCH: Status = Status::Unknown(35);
 
 fn refusal(request_id: i32, status: Status) -> ItemStackResponse {
     ItemStackResponse { responses: vec![ItemStackResponsesItem { status, request_id, containers: None }] }
@@ -240,6 +242,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     let takes_nothing = bundles::takes_nothing(&trial, request);
     let looms_a_full_banner = forge::holds_a_full_banner(&trial) && request.actions.iter().any(|action| matches!(action.content, Action::CraftLoomRequest(_)));
     let makes_nothing = repairs_nothing(&trial, request, at);
+    let mismatched = at.bench.is_none() && request.actions.iter().any(|action| matches!(&action.content, Action::CraftRecipe(asked) if super::crafting::mismatches_grid(&trial, asked.recipe_network_id, at.station, at.grid_map)));
     let mut unrefused = Inventory { refuses: None, ..trial.clone() };
     // Tried on a copy first: the handlers see a drop before anything has left the inventory.
     let tried = apply(&mut trial, request, creative, at);
@@ -271,6 +274,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
         _ if failed && takes_nothing => out.push(&refusal(request.request_id, NOTHING_THERE)),
         _ if failed && looms_a_full_banner => out.push(&refusal(request.request_id, BANNER_FULL)),
         _ if failed && makes_nothing => out.push(&refusal(request.request_id, NOTHING_MADE)),
+        _ if failed && mismatched => out.push(&refusal(request.request_id, GRID_MISMATCH)),
         // Only the container's refusal or a bundle's weight stood in the way: the client undoes it
         // by itself.
         _ if overfilled || (failed && apply(&mut unrefused, request, creative, at).is_ok()) => out.push(&refusal(request.request_id, CANNOT_HOLD)),

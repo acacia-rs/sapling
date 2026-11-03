@@ -94,11 +94,19 @@ Scenes `tack`, `llamabreed`, `nesting`, `stomping` (`examples/shared/tack_drill.
   from its third. After 48 to 51 ticks the block goes with 2003 (`ParticleDestroyEgg`), then the break sound with its
   type. Zombies also tread eggs as any mob does.
 
+Drilled 2026-11-03 (research/captures/bds-gridmend.txt, sapling-gridmend.txt; `bds_command_probe gridmend`,
+the special crafts sent by hand as crafting-storage.md "Grid crafts" says): two worn iron swords (150 with
+Sharpness II and Vanishing, 130) made one worn 18 keeping only Vanishing; two of 10 and 5 one with
+`Damage: 0` (sapling left no tag; fixed, special/repair.rs); a filled map and eight paper the map under
+the next id with `map_is_init` 1; a filled map and a compass the map with `map_display_players` 1; an
+empty map and a compass a bare `empty_map` of damage 2; an iron and a golden sword status 35
+`MismatchedRecipeForInputGridItems`, nothing resent (sapling answered Error and resent; fixed,
+`crafting::mismatches_grid`). The rest as built. Seen on the way, not fixed: `/enchant` of Vanishing then
+Sharpness left BDS's `ench` as [Sharpness, Vanishing], sapling's in the order given (one sample).
+
 ## Not drilled
 
-- Grid map extending, upgrading and item repair. These were read from the decompile and never crafted on a live
-  BDS; the bot cannot send the custom-recipe `ItemStackRequest`s.
-  - Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
+- Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
 - The chest's own drop on a chested mount's death: the drill's mounts were never chested (see above).
 - `/replaceitem` on a mount: BDS fills `slot.inventory` of an unchested donkey (it spilled the goods on death) and
   plays `saddle` for `slot.saddle`. Sapling does neither, and this was not fixed.
