@@ -70,6 +70,8 @@ fn rain_puts_out_a_burning_cow() {
     sent.extend(ticks(&mut h, 60));
     let (_, causes) = told(&sent);
     assert!(causes.contains(&6) && !causes.contains(&7), "no burning on in the rain: {causes:?}");
+    // research/captures/bds-rainvoid.txt: steam as water's when the rain put it out.
+    assert!(all::<LevelEvent>(&sent.concat()).iter().any(|event| event.event == LevelEventEvent::ParticleFizzEffect), "steam");
 }
 
 #[test]

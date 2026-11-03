@@ -56,6 +56,15 @@ else: remove WasInWaterFlag
   Actor's slot +0x400 is empty, so no sound. Which of the two systems runs last was not read. Confidence: low.
 - `actor+0x269` set (inferred: removed/dead) skips it.
 
+## Drilled (2026-11-03, `bds_command_probe wetflags`)
+
+research/captures/bds-wetflags.txt, sapling-wetflags.txt: a cow and a zombie dropped into a pool
+splashed at the same place and loudness as sapling's (1962992 against 1962964), and their in-water
+flags came and went alike. A cow killed in the water made no more splash on BDS; sapling's splashed
+again bobbing while dying. Fixed (`entities.rs` `step`, `creatures::is_dying`). Left: an item thrown
+out of the dead cow splashed on sapling, not on BDS; BDS's zombie burnt in the sun and fizzed
+going in, sapling's drill world has no sun on it.
+
 ## For sapling
 
 On the first tick a non-player entity's water check turns true (and it is not riding a boat), during its move

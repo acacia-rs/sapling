@@ -178,7 +178,8 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     let moved = world.resource_scope(|world, mut dice: Mut<Dice>| Some(body.step(&world.get::<Layer>(layer)?.world, physics, &mut || dice.fraction())))?;
     *world.get_mut::<Body>(entity)? = body;
     let kind = world.get::<Kind>(entity)?.0.clone();
-    let splash = splash::check(world, entity, id, &kind, moved, &body, physics.liquid);
+    // BDS's cow killed in water made no splash bobbing in and out while dying (bds-wetflags.txt).
+    let splash = splash::check(world, entity, id, &kind, moved, &body, physics.liquid).filter(|_| !crate::creatures::is_dying(world, entity));
     let in_lava = body.liquid() == Some(Liquid::Lava);
     if in_lava && (physics.burns || physics.liquid == InLiquid::Buoyant) {
         splash::fizz(world, layer, &start, 0);

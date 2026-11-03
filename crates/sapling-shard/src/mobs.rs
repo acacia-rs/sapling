@@ -5,8 +5,9 @@
 
 use std::collections::HashMap;
 
-use acacia_proto::packets::{AddItemEntity, RemoveEntity, SetEntityData};
-use acacia_proto::types::{EntityProperties, MetadataFlags1};
+use acacia_proto::RawPacket;
+use acacia_proto::packets::{AddEntity, AddItemEntity, RemoveEntity, SetEntityData};
+use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataFlags1};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_data::{AddEntityOptions, Stack};
@@ -158,6 +159,19 @@ pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes
     if let Some(mut mob) = world.get_mut::<Mob>(mob) {
         mob.announcement = announcement;
     }
+}
+
+/// Puts `item` in the metadata of the entity's `AddEntity` for those who come to see it later,
+/// over the item of its key; an entity announced otherwise is left as it is.
+pub(crate) fn reannounce_item(world: &mut World, mob: Entity, item: MetadataDictionaryItem) {
+    let Some(mut shown) = announced(world, mob) else { return };
+    let Some(mut added) = shown.first().and_then(|first| RawPacket::parse(first.clone()).ok()?.decode::<AddEntity>().ok()) else { return };
+    match added.metadata.iter_mut().find(|old| old.key == item.key) {
+        Some(old) => *old = item,
+        None => added.metadata.push(item),
+    }
+    shown[0] = sapling_net::encode(&added);
+    reannounce(world, mob, shown);
 }
 
 /// What players who come to see the entity later are told once every entity they are shown with

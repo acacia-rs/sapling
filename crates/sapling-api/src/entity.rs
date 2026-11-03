@@ -99,6 +99,12 @@ impl ShardCtx<'_> {
         self.backend.give_entity_effect(id, effect, ticks, amplifier)
     }
 
+    /// [`give_entity_effect`](Self::give_entity_effect), its particles shown or hidden as
+    /// `give_effect`'s: a hidden one is left out of the mob's `VisibleMobEffects`.
+    pub fn give_entity_effect_shown(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
+        self.backend.give_entity_effect_shown(id, effect, ticks, amplifier, particles)
+    }
+
     /// Takes `effect` off a mob. False where it had none of it, or is gone or no mob.
     pub fn remove_entity_effect(&mut self, id: EntityId, effect: Effect) -> bool {
         self.backend.remove_entity_effect(id, effect)
@@ -142,6 +148,9 @@ pub trait EntityBackend {
     fn remove_entity(&mut self, id: EntityId) -> bool;
     fn kill_entity(&mut self, id: EntityId) -> bool;
     fn give_entity_effect(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8) -> bool;
+    fn give_entity_effect_shown(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8, _particles: bool) -> bool {
+        self.give_entity_effect(id, effect, ticks, amplifier)
+    }
     fn remove_entity_effect(&mut self, _id: EntityId, _effect: Effect) -> bool {
         false
     }

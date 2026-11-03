@@ -103,6 +103,9 @@ pub(super) fn reshow(world: &mut World, entity: Entity) {
     if let Some(shown) = shown_now(world, entity) {
         mobs::reannounce(world, entity, shown);
     }
+    if let Some(effects) = super::afflictions::visible(world, entity) {
+        mobs::reannounce_item(world, entity, effects);
+    }
 }
 
 /// Where a mob's head is, as BDS places it; it faces +z (yaw 0).

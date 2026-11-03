@@ -5,9 +5,8 @@
 //! takes no poison or regeneration at all. A mob an effect hurts runs. Its effects are kept with
 //! it as BDS keeps them (`ActiveEffects`, research/captures/bds-keepmobs.txt).
 // TODO: BDS's flags for fire resistance and water breathing (fire immune, breathing) are not
-// shown, nor is speed's change to the movement attribute; one who comes to see a mob is not told
-// its effects, strength and weakness do not change its hit, and levitation, slow falling and jump
-// boost do nothing to it.
+// shown, nor is speed's change to the movement attribute; strength and weakness do not change its hit, and levitation, slow falling
+// and jump boost do nothing to it.
 
 use acacia_proto::packets::{MobEffect, MobEffectEventId};
 use bevy_ecs::prelude::*;
@@ -69,8 +68,21 @@ fn told(id: u64, event_id: MobEffectEventId, active: &Active) -> bytes::Bytes {
     sapling_net::encode(&MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: active.left as i32, tick: 0, ambient: false })
 }
 
-fn shown(id: u64, active: &[Active]) -> bytes::Bytes {
-    sapling_net::encode(&sapling_data::visible_effects(id, active.iter().map(|active| active.effect.id())))
+/// The mob's `VisibleMobEffects` (those with particles), also written into its announcement for
+/// viewers coming later (research/captures/bds-lateeffects.txt).
+fn shown_and_announced(world: &mut World, mob: Entity, id: u64, active: &[Active]) -> bytes::Bytes {
+    let shown = visible_effects(id, active);
+    crate::mobs::reannounce_item(world, mob, shown.metadata[0].clone());
+    sapling_net::encode(&shown)
+}
+
+fn visible_effects(id: u64, active: &[Active]) -> acacia_proto::packets::SetEntityData {
+    sapling_data::visible_effects(id, active.iter().filter(|active| active.particles).map(|active| active.effect.id()))
+}
+
+/// The `VisibleMobEffects` an afflicted mob's announcement carries, for one rebuilt.
+pub(super) fn visible(world: &World, mob: Entity) -> Option<acacia_proto::types::MetadataDictionaryItem> {
+    Some(visible_effects(world.get::<NetId>(mob)?.0, &world.get::<Afflicted>(mob)?.0).metadata.remove(0))
 }
 
 fn tell(world: &mut World, mob: Entity, packets: Vec<bytes::Bytes>) {
@@ -110,11 +122,14 @@ pub(super) fn pace(world: &World, mob: Entity) -> f32 {
 /// Gives a living mob an effect, as `ShardCtx::give_effect` gives a player one, unless it
 /// [`refuses`] it. Whether it took it.
 pub(super) fn give(world: &mut World, mob: Entity, effect: Effect, ticks: u32, amplifier: u8) -> bool {
+    give_shown(world, mob, effect, ticks, amplifier, true)
+}
+pub(super) fn give_shown(world: &mut World, mob: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
     if world.get::<Health>(mob).is_none() || world.get::<Dying>(mob).is_some() || refuses(world, mob, effect) {
         return false;
     }
     let Some(id) = world.get::<NetId>(mob).map(|id| id.0) else { return false };
-    let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles: true };
+    let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles };
     if world.get::<Afflicted>(mob).is_none() {
         world.entity_mut(mob).insert(Afflicted::default());
     }
@@ -131,7 +146,8 @@ pub(super) fn give(world: &mut World, mob: Entity, effect: Effect, ticks: u32, a
             (MobEffectEventId::Add, new)
         }
     };
-    let mut packets = vec![shown(id, &afflicted.0)];
+    let list = afflicted.0.clone();
+    let mut packets = vec![shown_and_announced(world, mob, id, &list)];
     if is_told(effect) {
         packets.push(told(id, event_id, &now));
     }
@@ -155,8 +171,8 @@ fn lose(world: &mut World, mob: Entity, gone: &[Active]) {
     if gone.is_empty() {
         return;
     }
-    let left = afflicted.0.is_empty();
-    let mut packets = vec![shown(id, &afflicted.0)];
+    let (left, list) = (afflicted.0.is_empty(), afflicted.0.clone());
+    let mut packets = vec![shown_and_announced(world, mob, id, &list)];
     packets.extend(gone.iter().filter(|active| is_told(active.effect)).map(|active| told(id, MobEffectEventId::Remove, active)));
     if left
         && let Some(mut health) = world.get_mut::<Health>(mob)
