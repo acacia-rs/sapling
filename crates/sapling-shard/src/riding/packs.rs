@@ -138,8 +138,8 @@ pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
         spilled.extend(goods(world, mob).into_iter().filter(|(slot, _)| usize::from(*slot) >= TACK).map(|(_, stack)| stack));
         spilled.extend(chested(world, mob).then(|| stack(CHEST)));
     }
-    // A saddled pig's or strider's death was not drilled.
-    let drops_saddle = world.get::<Kind>(mob).is_some_and(|kind| SADDLED.contains(&kind.0.as_str()) || kind.0 == CAMEL);
+    // A pig's or strider's saddle is loot (riding/evented.rs); a spawn event's holds none.
+    let drops_saddle = world.get::<Kind>(mob).is_some_and(|kind| SADDLED.contains(&kind.0.as_str()) || kind.0 == CAMEL) && !super::evented::is_bare(world, mob);
     spilled.extend((drops_saddle && super::mounts::saddled(world, mob)).then(|| stack(SADDLE)));
     spilled
 }

@@ -76,9 +76,13 @@ pub(super) fn leave_remains(world: &mut World, entity: Entity, layer: Entity, ki
         Some(slain) => sapling_data::Killer::Player { looting: slain.1 },
         None => sapling_data::Killer::None,
     };
-    if leaves_loot(world, layer) {
-        leave_loot(world, layer, kind, on_fire, killer, body.at);
+    if leaves_loot(world, layer) && !crate::riding::saddled_bare(world, entity) {
         let [x, y, z] = body.at;
+        // BDS dropped a pig's or strider's saddle before the rest (research/captures/bds-saddleevents.txt).
+        if let Some(saddle) = crate::riding::looted_saddle(world, entity, kind) {
+            drops::toss(world, layer, saddle, [x, y + LOOT_LIFT, z]);
+        }
+        leave_loot(world, layer, kind, on_fire, killer, body.at);
         let mut dropped = super::drowned::let_go(world, entity, by_player);
         dropped.extend(super::captains::let_go(world, entity, by_player));
         for stack in dropped {

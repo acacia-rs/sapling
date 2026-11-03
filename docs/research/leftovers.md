@@ -133,11 +133,32 @@ research/captures/bds-*.txt against sapling-*; tests in tests/integration/mounts
   armour and a carpet stay.
   A horse summoned with `minecraft:horse_saddled` drops none.
 - Fixed: `/replaceitem ... slot.armor.body` puts a horse's armour or a llama's carpet as `slot.armor` does;
-  sapling's parser refused it (`vanilla/containers.rs`).
-- Left: `minecraft:horse_saddled` shows the saddle flags on BDS; sapling ignores the event. A saddled pig's
-  or strider's death was not drilled; sapling drops no saddle for them. A `spawn_adult` (untamed) skeleton
-  horse's `slot.saddle` is `commands.generic.exception` on BDS, success on sapling: one sample, untamed and
-  skeleton not told apart. Right after a summon BDS's flag word lacks BREATHING and carries TAMED at once.
+  sapling's parser refused it (`vanilla/containers.rs`). Corrected by `bds-saddlerule.txt` below: BDS's
+  `slot.armor.body` is not `slot.armor`.
+- Right after a summon BDS's flag word lacks BREATHING and carries TAMED at once (left).
+
+Drilled 2026-11-03, third wave (`bds_command_probe saddleevents`, `saddlerule`, examples/shared/saddle_drill.rs;
+research/captures/bds-saddle*.txt; sapling's re-drill in the report, not kept; tests in
+tests/integration/mounts_drilled.rs):
+
+- Fixed: a summon naming a kind's saddling event (`horse_saddled` for a horse or zombie horse,
+  `donkey_saddled`, `mule_saddled`, `camel_saddled`) shows SADDLED and the controls and is heard as `saddle`
+  (the event's `play_sound`), tamed or not; the mob holds no saddle and, as the summon runs that event
+  alone and never the one adding the `<kind>_adult` group its loot table sits in, it dies leaving nothing
+  (BDS's zombie horse: no rotten flesh, whose table's least is 2). `riding/evented.rs`. Left: BDS shows
+  SADDLED in the announcement's own word; sapling in the word after.
+- Fixed: a pig's or strider's `on_saddled` shows SADDLED, unheard; a saddled pig or strider, by the event or
+  by a click with a saddle, dies leaving the saddle first, then its meat or string (the `pig_saddled`
+  and `strider_saddled` tables), and nothing with `doMobLoot` off. `slot.saddle` on a pig is
+  `commands.generic.exception` (sapling's already was).
+- Fixed, the saddle rule: `slot.saddle` takes only a grown, tamed horse, donkey, mule or zombie horse, and a
+  grown camel; an untamed one (`spawn_adult`) and a foal are `commands.generic.exception`. A skeleton
+  horse is refused always, though tamed from birth: its pack gives it no `minecraft:equippable` at all.
+  The 2026-10-29 sample was this, not untamed.
+- Left (needs a `sapling-api` `MobSlot` variant): BDS's `slot.armor.body` is the generic body slot, not
+  `slot.armor`'s tack: every mount takes horse armour (donkey, mule, zombie and skeleton horse, camel,
+  foals; sapling refuses all but the horse), with MobArmorEquipment and no `armor` sound (sapling plays
+  one), and keeps it on death; an untamed llama's carpet answers success and shows nothing.
 - Fixed: hand items given by `/replaceitem` are kept in the mob's `Mainhand` and `Offhand`
   (`creatures/command_gear.rs`, test `hands_given_by_command_are_saved_with_the_mob`), as BDS's actor format
   keeps them; the drill cannot read BDS's world folder, so the save itself was not compared.
@@ -148,7 +169,7 @@ research/captures/bds-*.txt against sapling-*; tests in tests/integration/mounts
 - `/replaceitem` on a mount, drilled (bds-fixreplace.txt) and fixed (`riding/replaced.rs`, test
   `mounts_take_tack_by_slot_as_bds_s_did`):
   - `slot.saddle`: the horse family, `saddle` heard at the feet and the flags; a llama is
-    `commands.generic.exception`.
+    `commands.generic.exception`. Which mounts take it: drilled 2026-11-03 (`bds-saddlerule.txt`), above.
   - `slot.armor`: a horse takes horse armour or a carpet (MobArmorEquipment, `armor` mid-body); a
     llama a carpet the same, anything else unseen; a donkey is an exception.
   - `slot.chest` on an unchested mount: `badSlotNumber ["0","0","-1"]`; a horse is an exception.

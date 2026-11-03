@@ -73,6 +73,7 @@ BDS was not read). Drilled on BDS 2026-10-29 with `bds_command_probe` scenes fro
   - `ChestItems` by slot, tack included; slot 1's armour is worn again on load.
 - Death (`bds-tack.txt`): the goods spill with `doMobLoot` on or off; the saddle, armour and carpet stay with the
   mob (a horse's saddle came from its loot). The chest drops too, after the goods (`bds-chestdie.txt`).
+  Corrected for the saddle, and a pig's and strider's: see leftovers.md "Drilled 2026-11-03".
 
 ## Sniffers (creatures/husbandry/sniffing.rs)
 

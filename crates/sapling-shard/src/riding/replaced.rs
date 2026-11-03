@@ -19,6 +19,7 @@ const SADDLED: [&str; 5] = ["minecraft:horse", "minecraft:donkey", "minecraft:mu
 const LLAMAS: [&str; 2] = ["minecraft:llama", "minecraft:trader_llama"];
 const HORSE: &str = "minecraft:horse";
 const CAMEL: &str = "minecraft:camel";
+const SKELETON_HORSE: &str = "minecraft:skeleton_horse";
 
 /// Where a mount's tack goes.
 enum Tacked {
@@ -31,6 +32,13 @@ fn tack_slots(kind: &str) -> Vec<Tacked> {
     let saddle = SADDLED.contains(&kind).then_some(Tacked::Saddle);
     let body = (kind == HORSE || LLAMAS.contains(&kind)).then_some(Tacked::Body);
     saddle.into_iter().chain(body).collect()
+}
+
+/// Whether `slot.saddle` saddles `mob`: a grown camel, or a grown, tamed horse, donkey, mule or
+/// zombie horse; never a skeleton horse, tamed as it is (research/captures/bds-saddlerule.txt).
+fn takes_saddle(world: &World, mob: Entity, kind: &str) -> bool {
+    let tamed = kind == CAMEL || (SADDLED.contains(&kind) && kind != SKELETON_HORSE && world.get::<Raised>(mob).is_some_and(Raised::is_tamed));
+    tamed && !crate::creatures::is_baby(world, mob)
 }
 
 /// Whether `mob` is one this module dresses.
@@ -47,7 +55,7 @@ pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<It
     match slot {
         // Air named for the saddle answered success and left it on (bds-mountflags.txt).
         MobSlot::Saddle if item.is_none() && (SADDLED.contains(&kind.as_str()) || kind == CAMEL) => Ok(()),
-        MobSlot::Saddle if SADDLED.contains(&kind.as_str()) || kind == CAMEL => put_tack(world, mob, &kind, Tacked::Saddle, item, true),
+        MobSlot::Saddle if takes_saddle(world, mob, &kind) => put_tack(world, mob, &kind, Tacked::Saddle, item, true),
         MobSlot::Body if kind == HORSE || LLAMAS.contains(&kind.as_str()) => {
             let is_carpet = item.as_ref().is_some_and(|item| item.name.ends_with("_carpet"));
             // A llama took horse armour and showed nothing (bds-fixreplace.txt).

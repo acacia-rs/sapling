@@ -35,6 +35,7 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     }
     if let Some(event) = event {
         husbandry::tame_by_event(world, entity, kind, event);
+        crate::riding::saddle_by_event(world, entity, kind, event);
     }
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
