@@ -17,7 +17,6 @@ case $target in
   *) echo "first argument: bds or sapling" >&2; exit 2 ;;
 esac
 retry ssh $opts $host "cd $remote || exit; rm -f drill.log drill.done drill.txt; { nohup flock -o target/.busy sh -c '$cargo build -q -p sapling $build && $run; echo \$? >drill.done' >drill.log 2>&1 </dev/null & }" || exit 1
-# Poll with short calls; a single long ssh would die with the link.
-until ssh $opts $host "test -f $remote/drill.done" 2>/dev/null; do sleep 5; done
+await drill.done
 retry ssh $opts $host "cd $remote; tail -n 20 drill.log"
 retry scp $opts "$host:$remote/drill.txt" "$out"
