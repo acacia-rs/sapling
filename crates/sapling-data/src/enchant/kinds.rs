@@ -30,7 +30,8 @@ pub struct Kind {
     pub activation: Activation,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// In the order BDS keeps an item's enchantments in: worn ones first, then held, then the rest.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Activation {
     Equipped,
     Held,
@@ -83,7 +84,8 @@ pub const KINDS: [Kind; 42] = [
     kind(9, "sharpness", "enchantment.damage.all", 5, Rarity(30, 1, 11), BLADE, AXE, group::DAMAGE, Held),
     kind(10, "smite", "enchantment.damage.undead", 5, Rarity(10, 5, 8), BLADE | MACE, AXE, group::DAMAGE, Held),
     kind(11, "bane_of_arthropods", "enchantment.damage.arthropods", 5, Rarity(10, 5, 8), BLADE | MACE, AXE, group::DAMAGE, Held),
-    // Knockback, unbreaking, power and piercing sit where BDS listed them (research/captures/bds-enchants.txt).
+    // Knockback, unbreaking, power and piercing sit where BDS listed them (research/captures/bds-enchants.txt);
+    // punch, flame and infinity where BDS's `ench` order put them (bds-enchorder.txt).
     kind(12, "knockback", "enchantment.knockback", 2, Rarity(10, 5, 20), BLADE, 0, 0, Itself),
     kind(13, "fire_aspect", "enchantment.fire", 2, Rarity(3, 10, 20), BLADE | MACE, 0, 0, Held),
     kind(14, "looting", "enchantment.lootBonus", 3, Rarity(3, 15, 9), BLADE, 0, 0, Held),
@@ -92,9 +94,9 @@ pub const KINDS: [Kind; 42] = [
     kind(17, "unbreaking", "enchantment.durability", 3, Rarity(10, 5, 8), WORN_FIRST, WORN_ALSO, 0, Held),
     kind(18, "fortune", "enchantment.lootBonusDigger", 3, Rarity(3, 15, 9), DIGGING, 0, group::MINING, Held),
     kind(19, "power", "enchantment.arrowDamage", 5, Rarity(30, 1, 10), BOW, 0, 0, Itself),
-    kind(20, "punch", "enchantment.arrowKnockback", 2, Rarity(3, 12, 20), BOW, 0, 0, Held),
-    kind(21, "flame", "enchantment.arrowFire", 1, Rarity(3, 20, 0), BOW, 0, 0, Held),
-    kind(22, "infinity", "enchantment.arrowInfinite", 1, Rarity(1, 20, 0), BOW, 0, group::INFINITE, Held),
+    kind(20, "punch", "enchantment.arrowKnockback", 2, Rarity(3, 12, 20), BOW, 0, 0, Itself),
+    kind(21, "flame", "enchantment.arrowFire", 1, Rarity(3, 20, 0), BOW, 0, 0, Equipped),
+    kind(22, "infinity", "enchantment.arrowInfinite", 1, Rarity(1, 20, 0), BOW, 0, group::INFINITE, Itself),
     kind(23, "luck_of_the_sea", "enchantment.lootBonusFishing", 3, Rarity(3, 15, 9), FISHING_ROD, 0, 0, Held),
     kind(24, "lure", "enchantment.fishingSpeed", 3, Rarity(3, 15, 9), FISHING_ROD, 0, 0, Held),
     treasure(kind(25, "frost_walker", "enchantment.frostwalker", 2, Rarity(3, 10, 10), FEET, 0, group::WATER_WALK, Equipped)),
@@ -146,6 +148,18 @@ pub fn kind_of(id: i16) -> Option<&'static Kind> {
 /// The enchantment `/enchant` calls `word`, in any case.
 pub fn named(word: &str) -> Option<&'static Kind> {
     KINDS.iter().find(|kind| kind.word.eq_ignore_ascii_case(word))
+}
+
+/// Puts `kind` at `level` among an item's `enchants` as BDS keeps them (research/captures/
+/// bds-enchorder.txt): a level raised in place, a new one last of its [`Activation`].
+pub fn place<L>(enchants: &mut Vec<(i16, L)>, kind: &Kind, level: L) {
+    if let Some(had) = enchants.iter_mut().find(|(id, _)| *id == kind.id) {
+        had.1 = level;
+        return;
+    }
+    let before = |id: i16| kind_of(id).is_none_or(|other| other.activation <= kind.activation);
+    let at = enchants.iter().rposition(|(id, _)| before(*id)).map_or(0, |last| last + 1);
+    enchants.insert(at, (kind.id, level));
 }
 
 /// Whether two enchantments can be on one item: one goes with itself.

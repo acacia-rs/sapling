@@ -101,8 +101,14 @@ Sharpness II and Vanishing, 130) made one worn 18 keeping only Vanishing; two of
 the next id with `map_is_init` 1; a filled map and a compass the map with `map_display_players` 1; an
 empty map and a compass a bare `empty_map` of damage 2; an iron and a golden sword status 35
 `MismatchedRecipeForInputGridItems`, nothing resent (sapling answered Error and resent; fixed,
-`crafting::mismatches_grid`). The rest as built. Seen on the way, not fixed: `/enchant` of Vanishing then
-Sharpness left BDS's `ench` as [Sharpness, Vanishing], sapling's in the order given (one sample).
+`crafting::mismatches_grid`). The rest as built. Seen on the way: `/enchant` of Vanishing then
+Sharpness left BDS's `ench` as [Sharpness, Vanishing], sapling's in the order given. Drilled and fixed
+2026-11-03 (research/captures/bds-enchorder.txt, `bds_command_probe enchorder`): BDS keeps an item's
+enchantments by activation, worn ones first, then held, then the item's own, each group in the order
+given, and a raised level stays in place (`enchant::place`). Swords gave [Sharpness 3, Unbreaking,
+Looting, Vanishing, Knockback, Mending], a bow [Flame, Unbreaking, Power 3, Infinity, Punch]: Flame acts
+worn and Punch and Infinity as the item's own, which sapling had as held; changed in `enchant/kinds.rs`,
+so the table's offers list them there too (not seen in an offer).
 
 ## Not drilled
 

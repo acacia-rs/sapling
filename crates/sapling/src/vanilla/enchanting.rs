@@ -79,8 +79,7 @@ impl Command for Enchant {
                 out.translate("commands.enchant.cantEnchant", vec![player.name.clone()], false);
                 continue;
             }
-            item.enchantments.retain(|(id, _)| *id != kind.id);
-            item.enchantments.push((kind.id, level as i16));
+            enchant::place(&mut item.enchantments, kind, level as i16);
             ctx.set_item(player.id, sapling_api::Slot::Main(slot), Some(&item));
             out.translate("commands.enchant.success", vec![player.name.clone()], true);
         }

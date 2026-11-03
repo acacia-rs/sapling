@@ -121,3 +121,19 @@ fn one_table_numbers_names_and_places_every_enchantment() {
     // BDS's secondary slots: Silk Touch goes on shears, Thorns on boots; curses on a head.
     assert!(goes_on(Enchant::SilkTouch.kind(), "minecraft:shears") && goes_on(Enchant::Thorns.kind(), "minecraft:iron_boots"));
     assert!(goes_on(Enchant::Vanishing.kind(), "minecraft:zombie_head") && !goes_on(Enchant::Unbreaking.kind(), "minecraft:zombie_head"));}
+
+#[test]
+fn enchantments_are_kept_worn_then_held_then_the_rest_as_bds_orders_ench() {
+    // research/captures/bds-enchorder.txt: each item's `/enchant`s in turn, then its `ench` list.
+    let given = |adds: &[(&str, i16)]| {
+        let mut enchants = Vec::new();
+        adds.iter().for_each(|(word, level)| place(&mut enchants, named(word).unwrap(), *level));
+        enchants
+    };
+    let sword = given(&[("vanishing", 1), ("knockback", 1), ("sharpness", 1), ("unbreaking", 1), ("sharpness", 3), ("looting", 2), ("mending", 1)]);
+    assert_eq!(sword, [(9, 3), (17, 1), (14, 2), (28, 1), (12, 1), (26, 1)]);
+    let chestplate = given(&[("mending", 1), ("unbreaking", 1), ("protection", 2), ("thorns", 1), ("binding", 1), ("protection", 4)]);
+    assert_eq!(chestplate, [(0, 4), (5, 1), (17, 1), (26, 1), (27, 1)]);
+    let bow = given(&[("power", 1), ("infinity", 1), ("punch", 1), ("flame", 1), ("unbreaking", 2), ("power", 3)]);
+    assert_eq!(bow, [(21, 1), (17, 2), (19, 3), (22, 1), (20, 1)]);
+}
