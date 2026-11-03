@@ -72,7 +72,7 @@ BDS was not read). Drilled on BDS 2026-10-29 with `bds_command_probe` scenes fro
   - `Saddled` and `Chested`.
   - `ChestItems` by slot, tack included; slot 1's armour is worn again on load.
 - Death (`bds-tack.txt`): the goods spill with `doMobLoot` on or off; the saddle, armour and carpet stay with the
-  mob (a horse's saddle came from its loot). Whether the chest itself drops is not seen; sapling drops it.
+  mob (a horse's saddle came from its loot). The chest drops too, after the goods (`bds-chestdie.txt`).
 
 ## Sniffers (creatures/husbandry/sniffing.rs)
 
@@ -106,21 +106,46 @@ Captures in `research/captures/`; sapling's own runs of the same scenes match ex
 - Frogspawn (`bds-eggs.txt`), fixed: placed on water it is heard (`lay_spawn`). With its water gone it breaks at once
   (a neighbour change), drops nothing and hatches nothing. Set on stone it stays.
 - Sniffer eggs (`bds-sniffers.txt`), fixed: each sparkle names the egg's new state (the cracked one on a crack). The
-  baby comes out at the cell's corner, after the block goes, then the hatch sound. BDS's one hatch was at z - 0.3025
-  of the corner, which is not ported.
+  baby comes out at the cell's corner, after the block goes, then the hatch sound. BDS's hatches are at z - 0.3025
+  of the corner (ported 2026-10-30, below).
 - The horse screen (`bds-tack.txt`), fixed: there is **no `ContainerOpen`**. `UpdateEquipment` (window, type Horse,
   size 0, the mob, the slots NBT as above) then `InventoryContent`.
 - A llama's carpet (`bds-tack.txt`): `MobArmorEquipment` body; fixed to sound `armor`, then `armor.equip_generic`.
 - The sniffer's extended flags (`bds-sniffers.txt`), fixed: base word `i64::MIN | 1 << 25`, sent after its
   announcement.
 
+## Drilled (2026-10-30, `bds_command_probe chestdie`, `sniffdig`)
+
+- A chested tamed donkey killed with `doMobLoot` on (`bds-chestdie.txt`): its 5 diamonds, 2 emeralds, then
+  the chest. Sapling the same (riding/packs.rs `spilled`).
+- `/replaceitem ... slot.inventory 0` on a donkey replaced its saddle (`Saddled` went off); on a llama it
+  replaced the carpet. BDS's slot 0 is the first tack slot (fix1's `/replaceitem`, not followed here).
+- The saved world (`actor_dump`, sapling-leveldb): `ChestItems` lists every slot from 0, empty ones as
+  `Count` 0 and `Name` "", tack in slot 0 (a horse's saddle) but **not** a horse's armour: that is `Armor`'s
+  fifth entry (after the four pieces), slot 1 left empty; a llama's body item is there too. `Strength` and
+  `StrengthMax` on every mount (0 for a horse). Fixed: sapling keeps the body item in `Armor`[4]
+  (`bodied_actor`/`actor_body`), still reading slot 1 of older folders. Empty slots not written (not followed).
+- Sniffer eggs: four hatches now, each baby at `(x, y, z - 0.3025)` of the cell, 180–206 s after the egg
+  was set `max_cracked` on moss. Fixed (blocks/eggs/sniffer.rs `HATCH_BACK`; eggs_drilled.rs).
+- Digging (`bds-sniffdig.txt`, sniffers sent `/event entity @e[type=sniffer] on_scenting_success` on dirt and
+  moss): it skips scenting. Each searched 8.6–21 s, dug 8.25–8.55 s, raised dust
+  (`ParticleDestroyBlockNoSound`, data the block under) at the spot 2.25 ahead on its feet' level every 4
+  ticks from 35 ticks in to 119, and threw the find there at 120 ticks, 0.125 over the feet, 0.2 up. Once
+  done: searching for one tick, then `timer_flag_2` with `timer_flag_3` together for 2–5 s. BDS's extended
+  bits sit one above acacia-proto's names: searching 49, digging 42, timer flags 2 and 3 52 and 53 (warden
+  digging 42 as well). Fixed in sniffing.rs: the bits, the dust, the find's height, `timer_flag_3` at the end
+  not at the find (mob_life.rs). The one-tick searching blip is not followed.
+
 ## Not drilled
 
-- Whether `ChestItems` keeps the tack. The world was left with a chested donkey and a carpeted llama for
-  `actor_dump`, but it was not read.
 - The sniffer:
-  - In 240 s at noon, four sniffers on grass neither searched nor dug, so these are undrillable in a few minutes:
-    how a search position is chosen (sapling: the highest open soil in a random column within reach), the
-    give-up time (sapling: 30 s, not in the pack), and whether dug spots are remembered.
+  - Without `/event`, sniffers are undrillable in a few minutes (the pack's 400–500 s `timer_flag_1`
+    cooldown), and sapling has no `/event`, so sapling's search and dig were checked by test, not drill.
+    How a search position is chosen (sapling: the highest open soil in a random column within reach),
+    the give-up time (sapling: 30 s, not in the pack; BDS's longest search here 21 s), and whether dug spots
+    are remembered.
   - Its state not being kept in a world folder needs a restart, which the drill harness has none of.
-  - BDS sends one full `SetEntityData` right after each summoned sniffer's announcement. Sapling sends no such packet.
+  - BDS sends one full `SetEntityData` right after every summoned mob's announcement (the sniffer's: all
+    the AddEntity keys but `JumpDuration`, `Scale`, `BoundingboxWidth`, `RiderSeatPosition`, plus defaults
+    such as `Strength` and `SkinId`). Sapling sends only the flags. Not ported: the client has it all from
+    `AddEntity`, and the extra keys are BDS's defaults.

@@ -318,6 +318,23 @@ Sapling's run: sapling-fights.txt. The actor under resistance on a stone floor, 
 - A zombie the actor hit took and dropped it every 10 ticks for 4.4 s; sapling's took nothing (not
   followed).
 
+## Fights again (2026-10-30, `bds_command_probe targets2`, research/captures/bds-targets2.txt)
+
+The actor in survival at midnight on a walled stone floor, healed and put back between steps.
+
+- Hard: a zombie 3 off took the actor 0.45 s after it came and hit every second from 1.5 s. Easy: a
+  baby zombie 7 off took it 0.35 s after and hit every second from 2.4 s. The fights.txt misses
+  were the actor falling off its floor, not the mobs.
+- Four cave spiders held 5 off on normal took the actor 0.2 to 11 s after they came, let it go 0.7 to
+  12 s after taking it, and took it again, over and over; a free one took it only 9.2 s after it came.
+  Spiders the same, those within reach biting while they held it. The pack: hostile
+  `nearest_attackable_target` `attack_interval` 5 s and `melee_box_attack` `random_stop_interval`
+  100, none of it in `spider_angry`. Fixed: spiders and cave spiders look one tick in 100 and let go
+  one tick in 100 unless their prey hit them (`searches`/`stops` in mob-traits.tsv; daylight.rs).
+- Glass (fights.txt, corrected): BDS's zombie behind the glass wall took the actor only once it had
+  strolled past the wall's end, as line 21 says; it does not see through glass. Sapling the same.
+- A raider's `TargetEid`: see effects-raids.md (same).
+
 ## Not drilled
 
 A way with drops, water or doors in it, a hole in the way, whether prey that goes behind a wall is

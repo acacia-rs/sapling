@@ -12,6 +12,8 @@ use crate::{Error, ItemStack};
 const LINKS: &str = "LinksTag";
 const LINK_ID: &str = "linkID";
 const CHEST_ITEMS: &str = "ChestItems";
+const ARMOR: &str = "Armor";
+const BODY: usize = 4;
 const COMPOUND: u8 = 10;
 const FLOAT: u8 = 5;
 
@@ -76,6 +78,21 @@ pub fn chested_actor(compound: &[u8], items: &[(u8, ItemStack)], registry: &Bloc
     Ok(written(Value::Compound(fields)))
 }
 
+/// What a stored horse or llama wears on its body: `Armor`'s fifth entry, after the four pieces,
+/// where BDS keeps a horse's armour and a llama's carpet; its `ChestItems` slot 1 stays empty
+/// (research/captures/bds-chestdie.txt).
+pub fn actor_body(compound: &[u8]) -> Option<ItemStack> {
+    let fields = fields_of(compound).ok()?;
+    let Some((_, Value::List(armor))) = fields.iter().find(|(name, _)| name == ARMOR) else { return None };
+    armor.items.get(BODY).and_then(ItemStack::parse)
+}
+
+/// A stored mount wearing `body` ([`actor_body`]).
+pub fn bodied_actor(compound: &[u8], body: Option<&ItemStack>, registry: &BlockRegistry) -> Result<Vec<u8>, Error> {
+    let armor = [None, None, None, None, body.cloned()];
+    crate::actors::with_fields(compound, [(ARMOR, crate::player::parts::stacks(&armor, registry))])
+}
+
 /// A stored actor of the look `variant` (a boat's wood) facing `yaw`.
 pub fn varied_actor(compound: &[u8], variant: i32, yaw: f32) -> Result<Vec<u8>, Error> {
     let mut fields = fields_of(compound)?;
@@ -118,6 +135,17 @@ mod tests {
         let llama = crate::new_actor(7, "minecraft:llama", [0.5, 64.0, 0.5], [0.0; 3]);
         assert_eq!(actor_strength(&llama), None);
         assert_eq!(actor_strength(&strong_actor(&llama, 4, 5).unwrap()), Some((4, 5)));
+    }
+
+    #[test]
+    fn a_horses_armour_is_kept_as_its_fifth_armour_entry() {
+        let horse = crate::new_actor(7, "minecraft:horse", [0.5, 64.0, 0.5], [0.0; 3]);
+        assert_eq!(actor_body(&horse), None);
+        let armour = ItemStack { name: "minecraft:iron_horse_armor".into(), count: 1, damage: 0, block: None, tag: None };
+        let bodied = bodied_actor(&horse, Some(&armour), &BlockRegistry::vanilla()).unwrap();
+        assert_eq!(actor_body(&bodied), Some(armour));
+        assert_eq!(crate::actors(&bodied).unwrap()[0].armor.len(), 5);
+        assert_eq!(actor_body(&bodied_actor(&bodied, None, &BlockRegistry::vanilla()).unwrap()), None);
     }
 
     #[test]

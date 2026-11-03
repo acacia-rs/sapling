@@ -1,14 +1,15 @@
 //! A grown sniffer's sniffing and digging, as the vanilla pack's sniffer.json gives it (docs/
 //! research/mob-life.md "Sniffers"): every 400 to 500 seconds it scents for 2 seconds
 //! (`timer_flag_1`), then picks open soil within 20 across and 3 up or down (5 tries), walks to
-//! within 2 of it at 1.25 times its pace (searching), and digs 8 to 10 seconds; 6 seconds in it turns
-//! up a torchflower seed or a pitcher pod 2.25 ahead and is happy 2 to 5 seconds (`timer_flag_3`),
-//! and once done it stands up 2 to 5 seconds (`timer_flag_2`). The client animates by these flags.
+//! within 2 of it at 1.25 times its pace (searching), and digs 8 to 10 seconds, raising dust 2.25
+//! ahead every 4 ticks from 35 ticks in; 6 seconds in it turns up a torchflower seed or a pitcher
+//! pod there, and once done it stands up (`timer_flag_2`) and is happy (`timer_flag_3`), each 2 to 5
+//! seconds. The client animates by these flags. BDS's digs: research/captures/bds-sniffdig.txt.
 // TODO: the search gives up after SEARCH_FOR (not in the pack); dug spots are not remembered and
 // the state is not kept in the world folder.
 
-use acacia_proto::packets::SetEntityData;
-use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2 as Flags};
+use acacia_proto::packets::{LevelEvent, LevelEventEvent, SetEntityData};
+use acacia_proto::types::{Vec3f, EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2 as Flags};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 use sapling_world::ItemStack;
@@ -20,6 +21,12 @@ use crate::components::{Layer, NetId};
 /// The extended flags a sniffer is told with besides these: BDS's word after its announcement
 /// (research/captures/bds-sniffers.txt).
 const BASE: i64 = i64::MIN | 1 << 25;
+// BDS's bits sit one above acacia-proto's names of them (as warden.rs's digging; bds-sniffdig.txt).
+const SEARCHING: Flags = Flags(1 << 49);
+const DIGGING: Flags = Flags(1 << 42);
+const TIMER_FLAG_1: Flags = Flags(1 << 51);
+const TIMER_FLAG_2: Flags = Flags(1 << 52);
+const TIMER_FLAG_3: Flags = Flags(1 << 53);
 
 const SNIFFER: &str = "minecraft:sniffer";
 const SOILS: [&str; 9] = [
@@ -38,7 +45,12 @@ const SEARCH_FOR: u64 = 600;
 /// Ticks of digging: the least, and how many more; the find comes this far in.
 const DIGS_FOR: (u64, u32) = (160, 40);
 const FINDS_AT: u64 = 120;
+/// Dust from this many ticks into a dig, every [`DUSTS_EVERY`], until the find.
+const DUSTS_FROM: u64 = 35;
+const DUSTS_EVERY: u64 = 4;
 const AHEAD: f32 = 2.25;
+/// The find comes this far over the feet.
+const FIND_UP: f32 = 0.125;
 /// Ticks of standing up after, and of being happy: the least, and how many more.
 const AFTER: (u64, u32) = (40, 60);
 
@@ -92,6 +104,21 @@ fn flag(world: &mut World, entity: Entity, flag: Flags, on: bool) {
     shown::tell(world, entity, vec![sapling_net::encode(&told)]);
 }
 
+/// The spot on its feet' level [`AHEAD`] in front of the sniffer, where it digs.
+fn ahead(world: &World, entity: Entity, body: &crate::body::Body) -> [f32; 3] {
+    let yaw = world.get::<super::super::legs::Legs>(entity).map_or(0.0, |legs| legs.yaw).to_radians();
+    [body.at[0] - yaw.sin() * AHEAD, body.at[1], body.at[2] + yaw.cos() * AHEAD]
+}
+
+/// Dust of the block under the digging spot, told to the sniffer's viewers.
+fn dust(world: &mut World, entity: Entity, layer: Entity, body: &crate::body::Body) {
+    let [x, y, z] = ahead(world, entity, body);
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let data = level.registry().network_hash(level.block(x.floor() as i32, y.floor() as i32 - 1, z.floor() as i32)) as i32;
+    let told = LevelEvent { event: LevelEventEvent::ParticleDestroyBlockNoSound, position: Vec3f { x, y, z }, data };
+    shown::tell(world, entity, vec![sapling_net::encode(&told)]);
+}
+
 fn into(world: &mut World, entity: Entity, stage: Stage, from: Option<Flags>, to: Option<Flags>) {
     if let Some(mut sniffing) = world.get_mut::<Sniffing>(entity) {
         sniffing.stage = stage;
@@ -113,33 +140,33 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
     };
     if happy_until.is_some_and(|until| now >= until) {
         world.get_mut::<Sniffing>(entity).expect("read above").happy_until = None;
-        flag(world, entity, Flags::TIMER_FLAG_3, false);
+        flag(world, entity, TIMER_FLAG_3, false);
     }
     match stage {
-        Stage::Idle if now >= next => into(world, entity, Stage::Scenting { until: now + SCENTS_FOR }, None, Some(Flags::TIMER_FLAG_1)),
+        Stage::Idle if now >= next => into(world, entity, Stage::Scenting { until: now + SCENTS_FOR }, None, Some(TIMER_FLAG_1)),
         Stage::Scenting { until } if now >= until => {
             world.get_mut::<Sniffing>(entity).expect("read above").next = now + roll(world, SCENTS_EVERY);
             let found = pick(world, layer, body.at).map(|target| Stage::Searching { target, until: now + SEARCH_FOR });
-            into(world, entity, found.unwrap_or(Stage::Idle), Some(Flags::TIMER_FLAG_1), found.map(|_| Flags::SEARCHING));
+            into(world, entity, found.unwrap_or(Stage::Idle), Some(TIMER_FLAG_1), found.map(|_| SEARCHING));
         }
-        Stage::Searching { until, .. } if now >= until => into(world, entity, Stage::Idle, Some(Flags::SEARCHING), None),
+        Stage::Searching { until, .. } if now >= until => into(world, entity, Stage::Idle, Some(SEARCHING), None),
         Stage::Searching { target, .. } if (body.at[0] - target[0] as f32 - 0.5).hypot(body.at[2] - target[2] as f32 - 0.5) <= NEAR => {
             let until = now + roll(world, DIGS_FOR);
-            into(world, entity, Stage::Digging { started: now, until }, Some(Flags::SEARCHING), Some(Flags::DIGGING));
+            into(world, entity, Stage::Digging { started: now, until }, Some(SEARCHING), Some(DIGGING));
         }
         Stage::Digging { started, .. } if now == started + FINDS_AT => {
-            let yaw = world.get::<super::super::legs::Legs>(entity).map_or(0.0, |legs| legs.yaw).to_radians();
             let find = FINDS[world.get_resource_or_insert_with(Dice::default).roll(FINDS.len() as u32) as usize];
-            let ahead = [body.at[0] - yaw.sin() * AHEAD, body.at[1] + body.size[1] / 2.0, body.at[2] + yaw.cos() * AHEAD];
-            crate::drops::toss(world, layer, ItemStack { name: find.into(), count: 1, damage: 0, block: None, tag: None }, ahead);
-            world.get_mut::<Sniffing>(entity).expect("read above").happy_until = Some(now + roll(world, AFTER));
-            flag(world, entity, Flags::TIMER_FLAG_3, true);
+            let [x, y, z] = ahead(world, entity, &body);
+            crate::drops::toss(world, layer, ItemStack { name: find.into(), count: 1, damage: 0, block: None, tag: None }, [x, y + FIND_UP, z]);
         }
+        Stage::Digging { started, .. } if now >= started + DUSTS_FROM && now < started + FINDS_AT && (now - started - DUSTS_FROM).is_multiple_of(DUSTS_EVERY) => dust(world, entity, layer, &body),
         Stage::Digging { until, .. } if now >= until => {
             let rising = Stage::Rising { until: now + roll(world, AFTER) };
-            into(world, entity, rising, Some(Flags::DIGGING), Some(Flags::TIMER_FLAG_2));
+            world.get_mut::<Sniffing>(entity).expect("read above").happy_until = Some(now + roll(world, AFTER));
+            into(world, entity, rising, Some(DIGGING), Some(TIMER_FLAG_2));
+            flag(world, entity, TIMER_FLAG_3, true);
         }
-        Stage::Rising { until } if now >= until => into(world, entity, Stage::Idle, Some(Flags::TIMER_FLAG_2), None),
+        Stage::Rising { until } if now >= until => into(world, entity, Stage::Idle, Some(TIMER_FLAG_2), None),
         _ => {}
     }
 }

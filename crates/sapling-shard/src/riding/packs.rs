@@ -133,20 +133,24 @@ pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
 
 /// Writes `mob`'s tack and goods into what a world folder keeps of it.
 pub(super) fn keep(world: &mut World, mob: Entity) {
-    let items = goods(world, mob);
+    let (body, items): (Vec<_>, Vec<_>) = goods(world, mob).into_iter().partition(|(slot, _)| *slot == 1);
+    let body = body.into_iter().next().map(|(_, stack)| stack);
     let (saddled, chested) = world.get::<Raised>(mob).map_or((false, false), |raised| (raised.saddled, raised.chested));
     entities::restore(world, mob, |compound, registry| {
         let flagged = sapling_world::flagged_actor(compound, "Saddled", saddled).ok()?;
         let flagged = sapling_world::flagged_actor(&flagged, "Chested", chested).ok()?;
-        sapling_world::chested_actor(&flagged, &items, registry).ok()
+        let bodied = sapling_world::bodied_actor(&flagged, body.as_ref(), registry).ok()?;
+        sapling_world::chested_actor(&bodied, &items, registry).ok()
     });
 }
 
-/// A mob a world folder kept: the armour or carpet in its slot 1 is worn again.
+/// A mob a world folder kept: the armour or carpet on its body is worn again, or in its slot 1 as
+/// sapling once kept it.
 pub(super) fn adopt(world: &mut World, mob: Entity) {
     let Some(kind) = world.get::<Kind>(mob).map(|kind| kind.0.clone()).filter(|kind| has_pack(kind)) else { return };
-    let stored = world.get::<Stored>(mob).map(|stored| sapling_world::actor_chest(&stored.compound)).unwrap_or_default();
-    if let Some((_, armor)) = stored.into_iter().find(|(slot, stack)| *slot == 1 && takes(&kind, 1, &stack.name)) {
+    let Some(compound) = world.get::<Stored>(mob).map(|stored| stored.compound.clone()) else { return };
+    let slot_1 = || sapling_world::actor_chest(&compound).into_iter().find(|(slot, _)| *slot == 1).map(|(_, stack)| stack);
+    if let Some(armor) = sapling_world::actor_body(&compound).or_else(slot_1).filter(|stack| takes(&kind, 1, &stack.name)) {
         wear(world, mob, Some(armor));
     }
 }
