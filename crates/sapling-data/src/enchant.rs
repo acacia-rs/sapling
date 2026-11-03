@@ -15,7 +15,7 @@ pub mod table;
 mod warding;
 
 pub use archery::{FLAME_BURNS, charge_ticks, impaling, loyalty_pull, multishot, piercing, power_bonus, punch, riptide};
-pub use kinds::{Activation, KINDS, Kind, compatible, goes_on, kind_of, named, slots_of};
+pub use kinds::{Activation, KINDS, Kind, compatible, goes_on, kind_of, named, place, slots_of};
 pub use list::{all, with_all};
 pub use table::Offer;
 pub use warding::{Harm, THORNS_WEAR, Warding, thorns};

@@ -109,12 +109,22 @@ impl EntityBackend for Ctx<'_> {
     }
 
     fn hurt_entity(&mut self, id: EntityId, amount: f32, cause: DamageCause) -> bool {
+        self.hurt_entity_by(id, amount, cause, None)
+    }
+
+    /// A player's harm kills as its hit does: the mob is its slain, for experience and a raid's
+    /// heroes (research/captures/bds-raidhero.txt).
+    fn hurt_entity_by(&mut self, id: EntityId, amount: f32, cause: DamageCause, by: Option<&sapling_api::Attacker>) -> bool {
         let Some(mob) = entities::find(self.world, id).filter(|mob| self.world.get::<super::Dying>(*mob).is_none()) else { return false };
         let (Some(layer), Some(health)) = (self.world.get::<InLayer>(mob).map(|layer| layer.0), self.world.get::<Health>(mob).copied()) else { return false };
+        let player = match by {
+            Some(sapling_api::Attacker::Player(player)) => self.entity(player.id),
+            _ => None,
+        };
         let before = health.left();
         // BDS's `/damage` of 8 cost a zombie in a diamond chestplate 5.824 (research/captures/bds-boosts.txt).
         let amount = if cause.is_stopped_by_armour() { health.shielded(amount) } else { amount };
-        super::harm::wound(self.world, mob, layer, amount, cause);
+        super::harm::wound_by(self.world, mob, layer, amount, cause, player);
         self.world.get::<super::Dying>(mob).is_some() || self.world.get::<Health>(mob).is_some_and(|health| health.left() < before)
     }
 

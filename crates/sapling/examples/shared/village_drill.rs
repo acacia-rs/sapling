@@ -12,7 +12,7 @@ pub const VILLAGE_SHOWN: &[&str] = &[
     "UpdateBlock", "SetEntityLink", "Text", "UpdateAttributes",
 ];
 
-const UNSKILLED: [&str; 2] = ["summon villager -4.5 -60 4.5 0 0 minecraft:become_unskilled", "summon villager -2.5 -60 4.5 0 0 minecraft:become_unskilled"];
+pub const UNSKILLED: [&str; 2] = ["summon villager -4.5 -60 4.5 0 0 minecraft:become_unskilled", "summon villager -2.5 -60 4.5 0 0 minecraft:become_unskilled"];
 /// The armorer is summoned last, so `!trade villager_v2` takes it.
 const ARMORER: [&str; 2] = ["setblock 6 -60 4 blast_furnace", "summon villager 4.5 -60 4.5 0 0 minecraft:become_armorer"];
 const TRADE: [&str; 4] = ["tp @s 4.5 -60 2.5 facing 4.5 -59 4.5", "", "!trade villager_v2 0 0", ""];
@@ -22,12 +22,12 @@ fn lines<const N: usize>(lines: [&str; N]) -> Vec<String> {
     lines.map(String::from).into()
 }
 
-fn wait(out: &mut Vec<String>, seconds: usize) {
+pub fn wait(out: &mut Vec<String>, seconds: usize) {
     out.extend(std::iter::repeat_n(String::new(), seconds));
 }
 
 /// `line`, then `gap` seconds, `times` over.
-fn every(out: &mut Vec<String>, line: &str, gap: usize, times: usize) {
+pub fn every(out: &mut Vec<String>, line: &str, gap: usize, times: usize) {
     for _ in 0..times {
         out.push(line.into());
         wait(out, gap);
@@ -36,7 +36,7 @@ fn every(out: &mut Vec<String>, line: &str, gap: usize, times: usize) {
 
 /// A cleared square of grass about the origin with three beds and a bell, the actor in survival
 /// beside it and unhurt by anything; then `summon`, and ten seconds for the villagers to claim.
-fn village(summon: &[&str]) -> Vec<String> {
+pub fn village(summon: &[&str]) -> Vec<String> {
     let mut out = lines([
         "kill @e[type=!player]", "gamerule domobspawning false", "gamerule dodaylightcycle false", "gamerule doweathercycle false", "weather clear", "time set 1000", "difficulty easy",
         "tp @a 0.5 -60 0.5", "fill -24 -61 -24 24 -61 24 grass_block", "fill -24 -60 -24 24 -52 24 air", "",

@@ -122,6 +122,12 @@ impl ShardCtx<'_> {
         self.backend.hurt_entity(id, amount, cause)
     }
 
+    /// As [`Self::hurt_entity`], dealt by `by`: a mob a player's harm kills is the player's kill,
+    /// as its hit's would be.
+    pub fn hurt_entity_by(&mut self, id: EntityId, amount: f32, cause: DamageCause, by: &crate::Attacker) -> bool {
+        self.backend.hurt_entity_by(id, amount, cause, Some(by))
+    }
+
     /// Puts `item` on a living mob as its armour `piece` (0 the helmet, 1 the chestplate, 2 the
     /// leggings, 3 the boots), or takes that piece off for `None`: its viewers see it and it wears it
     /// against hits. False for a piece past the boots, or a mob that is gone or dying.
@@ -166,6 +172,9 @@ pub trait EntityBackend {
     }
     fn hurt_entity(&mut self, _id: EntityId, _amount: f32, _cause: DamageCause) -> bool {
         false
+    }
+    fn hurt_entity_by(&mut self, id: EntityId, amount: f32, cause: DamageCause, _by: Option<&crate::Attacker>) -> bool {
+        self.hurt_entity(id, amount, cause)
     }
     fn set_entity_armour(&mut self, _id: EntityId, _piece: u8, _item: Option<&Item>) -> bool {
         false

@@ -52,8 +52,10 @@ fn bad_omen_in_a_village_brings_a_raid_whose_three_waves_on_easy_won_make_a_hero
     h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 1, true)));
     let told: Vec<(MobEffectEventId, i32, i32)> = effects(&ticks(&mut h, 2)).into_iter().map(|(event, id, amplifier, _)| (event, id, amplifier)).collect();
     assert_eq!(told, [(MobEffectEventId::Add, 28, 1), (MobEffectEventId::Remove, 28, 1), (MobEffectEventId::Add, 36, 0)], "the player pack's gain_raid_omen, at amplifier 0 whatever the bad omen's");
-    let sent = ticks(&mut h, 600);
+    let sent = ticks(&mut h, 620);
     assert_eq!(bars(&sent).first(), Some(&(BossEventType::ShowBar, "raid.name".to_owned())), "the omen ran out: the raid starts");
+    let filling = bars(&ticks(&mut h, 100)).len();
+    assert!((4..=6).contains(&filling), "shown once a second as BDS's (bds-raidhero.txt): {filling} in 5 s");
     let (mut waves, mut after) = (Vec::new(), Vec::new());
     for n in 0..3 {
         assert!((0..400).any(|_| !raiders(&mut h).is_empty()), "a wave within 300 ticks");
@@ -74,14 +76,36 @@ fn bad_omen_in_a_village_brings_a_raid_whose_three_waves_on_easy_won_make_a_hero
             h.tick_all();
             h.receive(1, &attack(slain.0));
         }
-        // A wave's end shows no raiders left for 40 ticks before the next wait or the win.
-        after = ticks(&mut h, 45);
+        // A wave's end shows no raiders left for 40 ticks before the next wait or the win; the bar
+        // is re-sent once a second.
+        after = ticks(&mut h, 65);
     }
     let named = |kind: &str, n: usize| vec![format!("minecraft:{kind}"); n];
     assert_eq!(waves, [named("pillager", 4), [named("pillager", 3), named("vindicator", 2)].concat(), [named("pillager", 3), named("ravager", 1)].concat()]);
     assert!(effects(&after).contains(&(MobEffectEventId::Add, 29, 0, 48000)), "the slayer is a hero at amplifier 0 (bds-raidhero.txt): {:?}", effects(&after));
     assert!(bars(&after).contains(&(BossEventType::SetBarTitle, "%raid.name - %raid.victory".to_owned())), "{:?}", bars(&after));
     assert_eq!(bars(&ticks(&mut h, 600)), [(BossEventType::HideBar, String::new())], "30 s on");
+}
+
+/// bds-raidhero.txt: raiders killed by `/damage … entity <player>` left experience and won the
+/// player Hero of the Village, as raiders it hit to death would.
+#[test]
+fn raiders_a_player_s_damage_kills_make_it_a_hero() {
+    let mut h = village();
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 1, true)));
+    ticks(&mut h, 602);
+    let mut sent = Vec::new();
+    for _ in 0..3 {
+        assert!((0..400).any(|_| !raiders(&mut h).is_empty()), "a wave within 300 ticks");
+        let wave = raiders(&mut h);
+        h.remote.run(move |ctx| {
+            let alex = sapling_api::Attacker::Player(ctx.players().find(|player| player.id == ALEX).expect("Alex"));
+            wave.iter().for_each(|raider| assert!(ctx.hurt_entity_by(raider.id, 200.0, DamageCause::Attack, &alex)));
+        });
+        sent.extend(ticks(&mut h, 45));
+    }
+    assert!(all::<AddEntity>(&sent).iter().any(|added| added.entity_type == "minecraft:xp_orb"), "the kills left experience");
+    assert!(effects(&sent).contains(&(MobEffectEventId::Add, 29, 0, 48000)), "a hero: {:?}", effects(&sent));
 }
 
 /// BDS's waves came 40 to 50 out from the player in the village (bds-raidlost.txt), not 32 from its middle.

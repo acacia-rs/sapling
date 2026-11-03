@@ -70,16 +70,18 @@ pub(super) fn hides(world: &mut World, entity: Entity, layer: Entity, body: &Bod
     super::beds::go_to(world, entity, layer, body, HIDES, HIDDEN)
 }
 
-/// A villager walks away from the nearest mob it fears: false with none near.
+/// A villager walks away from the nearest mob it fears and sees: false with none near. A zombie
+/// caged in glass moved no BDS villager (research/captures/bds-village.txt).
 pub(super) fn flees(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool {
     let off = |at: [f32; 3]| (at[0] - body.at[0]).hypot(at[2] - body.at[2]);
-    let feared = world
+    let near: Vec<[f32; 3]> = world
         .query_filtered::<(&InLayer, &Kind, &Body), (With<Creature>, Without<Dying>)>()
         .iter(world)
         .filter(|(on, _, at)| on.0 == layer && (at.at[1] - body.at[1]).abs() <= FEARS_WITHIN && off(at.at) <= FEARS_WITHIN)
         .filter(|(_, kind, _)| sapling_data::mob_families(&kind.0).iter().any(|family| FEARED.contains(family)))
         .map(|(_, _, at)| at.at)
-        .min_by(|a, b| off(*a).total_cmp(&off(*b)));
+        .collect();
+    let feared = near.into_iter().filter(|at| super::super::hunting::in_sight(world, layer, body, *at)).min_by(|a, b| off(*a).total_cmp(&off(*b)));
     let Some(from) = feared else { return false };
     let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
     let length = dx.hypot(dz).max(0.01);

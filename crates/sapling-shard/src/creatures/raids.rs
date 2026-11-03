@@ -165,7 +165,10 @@ pub(super) fn tick(world: &mut World) {
     let (gone, kept): (Vec<Raid>, Vec<Raid>) = raids.into_iter().partition(|raid| matches!(raid.stage, Stage::Won(since) | Stage::Lost(since) if now >= since + ENDS));
     let raids = kept;
     gone.iter().for_each(|raid| raiders::disband(world, &raid.raiders));
-    bar::show(world, &raids, now);
+    // BDS re-sent the bar once a second, not as it changed (research/captures/bds-raidhero.txt).
+    if now.is_multiple_of(bar::EVERY) {
+        bar::show(world, &raids, now);
+    }
     if now.is_multiple_of(LOOKS) || raids.len() != count {
         kept::keep(world, &raids, now);
     }

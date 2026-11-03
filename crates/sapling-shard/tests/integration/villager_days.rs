@@ -107,6 +107,41 @@ fn a_villager_flees_a_zombie() {
 }
 
 #[test]
+fn a_villager_stays_by_a_zombie_caged_in_glass() {
+    // research/captures/bds-village.txt: a zombie in glass 1 to 7 off moved no villager. At night it
+    // walks west to its bed unless it runs east.
+    let (mut h, id) = village(18_000, [20.5, 65.0, 0.5], "minecraft:become_unskilled");
+    h.remote.run(|ctx| {
+        for x in 15..=17 {
+            for y in 65..=67 {
+                for z in -1..=1 {
+                    let inside = x == 16 && z == 0 && y < 67;
+                    assert!(ctx.set_block([x, y, z], &Block::new(if inside { "air" } else { "glass" })));
+                }
+            }
+        }
+        assert!(ctx.spawn_entity("minecraft:zombie", [16.5, 65.0, 0.5]).is_some());
+    });
+    let mut farthest = 0.0f32;
+    for _ in 0..40 {
+        drop(h.tick_all());
+        farthest = farthest.max(feet_of(&mut h, id)[0]);
+    }
+    assert!(farthest < 21.5, "it did not run: {farthest}");
+}
+
+#[test]
+fn going_home_a_villager_strolls_and_seeks_its_bed_only_at_bed_time() {
+    // research/captures/bds-village.txt: from 11400 BDS's three came to their beds one by one past 12000.
+    let (mut h, id) = village(11_100, [0.5, 65.0, 0.5], "minecraft:become_unskilled");
+    let came = walks_to(&mut h, id, HEAD, 2.0, 400);
+    assert!(came > 2.0, "not at its bed by 11500: {came}");
+    h.remote.run(|ctx| ctx.set_time(12_000));
+    let came = walks_to(&mut h, id, HEAD, 0.8, 1200);
+    assert!(came <= 0.8, "on its bed: {came}");
+}
+
+#[test]
 fn a_rung_bell_sends_villagers_to_their_beds() {
     let (mut h, id) = village(0, [4.5, 65.0, 4.5], "minecraft:become_unskilled");
     h.remote.run(|ctx| assert!(ctx.set_block([2, 65, 0], &Block::new("bell").with("attachment=standing,direction=0,toggle_bit=0"))));

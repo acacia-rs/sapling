@@ -81,9 +81,13 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   0–8000, gather 8000–10000, work 10000–11000, home 11000–12000, bed 12000–24000. `basic_schedule`
   (unskilled): wander in place of work. `jobless_schedule` (nitwit): bed 0–2000, wander 2000–13000,
   home 13000–14000, bed after. `child_schedule`: play 0–11000, home 11000–12000, bed after.
-- Gathering walks to the village's middle (`behavior.mingle`, `mingle_distance` 2, speed 0.5); home walks
-  to its bed (`move_towards_dwelling_restriction`, speed 0.6); bed time sleeps on it (`behavior.sleep`,
-  speed 0.6) [pack]. Speeds are `minecraft:movement` 0.5 times the goal's multiplier.
+- Gathering walks to the village's middle (`behavior.mingle`, `mingle_distance` 2, speed 0.5); bed time
+  walks to its bed and sleeps on it (`behavior.sleep`, speed 0.6) [pack]. Speeds are `minecraft:movement`
+  0.5 times the goal's multiplier.
+- Home adds no goal (`home_schedule_villager` is `{}`; `move_towards_dwelling_restriction` is a base goal
+  for one outside its village): a villager strolls. Corrected 2026-11-03: sapling walked it to its bed
+  from 11000, so all three were by the beds 5 s after `time set 11400`; BDS's came one at a time and all
+  three only past 12000 [bds-village.txt].
 
 ## Beds
 
@@ -97,8 +101,10 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 
 ## Fear
 
-- `behavior.avoid_mob_type`: a zombie, zombie villager, illager, vex or zoglin within 8 walks it away at
-  0.6 [pack].
+- `behavior.avoid_mob_type`: a zombie, zombie villager, illager, vex or zoglin within 8 that it sees
+  (glass hides, as for hunters) walks it away at 0.6 [pack; `ignore_visibility` unset]. Corrected
+  2026-11-03: a zombie caged in glass 1 to 7 off moved none of BDS's villagers in 24 s; sapling's,
+  which feared it unseen, walked out of 8 of it [bds-village.txt, sapling-village.txt].
 - `behavior.hide` (priority 0, 30 s, a bed, speed 0.8) [pack]. A bell rung by hand or by power marks
   every actor with `minecraft:hide` in the bell's box grown 32 across and 12 up, then rests 300 ticks; a
   bell a villager rings in a raid marks none [BDS 0x141f1c400, its callers 141f1c130, 142ce0770,
@@ -146,13 +152,17 @@ shown, babies sleep), which golems defend (fixed). bds-golems2.txt (a restart) o
 Re-run on sapling 2026-11-03 at TICK_SCALE 1, `SAPLING_DRILL_WORLD=lowflat` (research/captures/
 sapling-village.txt, sapling-golems.txt): golems the same as BDS. Village: by night 2-3 villagers lay
 within 3 of (-4, 9) where BDS had 1-2, and by morning sapling's had walked out of 8 of (0, 2) before the
-zombie came, where one of BDS's stayed through it; the schedule walks below, not fixed. Answers named
-`Villager V2` were fixed to `Villager` (effects-raids.md).
+zombie came, where one of BDS's stayed through it. Answers named `Villager V2` were fixed to
+`Villager` (effects-raids.md). After the home and fear fixes (same day), villagers within 3 of the beds
+per check: BDS `0 1 1 1 2 1 2 3 3 3 3 3 2 1 1 1 1 1`, sapling before `1 3 3 3 3 3 3 3 3 3 3 3 2 2 2 1 1 1`,
+after `0 0 0 0 0 0 0 2 2 2 2 2 1 1 1 1 0 0`: no early rush to bed; BDS's single early sleeper and its third
+bed-goer not matched (strolls are random on both).
 
 ## Not drilled
 
-- Gathering, homing and the other schedule goals' walks; standing's numbers (no packet shows them).
-- Fear: a caged zombie moved no villager out of 8 in bds-village.txt; inconclusive, left as built.
+- Gathering and the other schedule goals' walks beyond the home and bed counts above; standing's
+  numbers (no packet shows them).
+- Fear in the open (a zombie seen within 8): only the shard test.
 - The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick, which matched the
   drilled sleep and wake ticks.
 - Whether a golem is the village's is not kept with the world; a baby's hurt standing (-3) moved no

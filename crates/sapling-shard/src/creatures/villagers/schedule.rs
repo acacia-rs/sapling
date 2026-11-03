@@ -2,8 +2,9 @@
 //! time of day): `work_schedule` (and the farmer's, fisher's and librarian's, the same hours) for
 //! one with a profession, `basic_schedule` for an unskilled one, `jobless_schedule` for a nitwit,
 //! `child_schedule` for a baby. Work is jobs.rs; gathering walks to the village's middle
-//! (`behavior.mingle`), home to its bed (`move_towards_dwelling_restriction`), bed time sleeps on
-//! it (beds.rs); wandering and play are strolling.
+//! (`behavior.mingle`), bed time sleeps on its bed (beds.rs); wandering, play and home are
+//! strolling: `home_schedule_villager` adds no goal, and BDS's villagers came to their beds only
+//! after 12000 (research/captures/bds-village.txt).
 // Every tick: on BDS a villager by its bed lay down the tick after 12000 and all three sleepers
 // rose the tick 24000 came, whatever the pack's `max_delay_secs` (research/captures/bds-village.txt).
 // TODO: mingling villagers do not pair up.
@@ -16,12 +17,10 @@ use crate::body::Body;
 use crate::components::Layer;
 
 const DAY: i64 = 24_000;
-/// `minecraft:movement` 0.5 times each goal's `speed_multiplier`: mingle 0.5, dwelling 0.6.
+/// `minecraft:movement` 0.5 times `behavior.mingle`'s `speed_multiplier` 0.5.
 const MINGLES: f32 = 0.25;
-const GOES_HOME: f32 = 0.3;
-/// The middle is reached this near (`mingle_distance` 2), home this near its bed.
+/// The middle is reached this near (`mingle_distance` 2).
 const MINGLE_DISTANCE: f32 = 2.0;
-const AT_HOME: f32 = 2.0;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(super) enum Activity {
@@ -66,7 +65,6 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, activity: 
             }
             true
         }
-        Activity::Home => beds::go_to(world, entity, layer, &body, GOES_HOME, AT_HOME),
         Activity::Bed => beds::sleep(world, entity, layer, &body),
         _ => false,
     }

@@ -142,11 +142,38 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
   every wave on it, 120 above the village). Same now: the waves' kinds, the bar, the omen. Fixed:
   the wave's spot (above), `/effect ... saturation` answers (vanilla/effects.rs: an instant effect's
   seconds are taken as ticks, saturation 1000 answered 50 and lasted 1000 ticks), villagers named
-  `Villager` in answers (sapling said `Villager V2`). Still different, not fixed: BDS's pillagers shot
-  the survival actor (19 hurts in raidlost) and two stayed within 16 of the village 30 s after its
-  fall; sapling's took only villagers, came within 16 at once and walked off to celebrate. raidhero
-  waits on `/damage ... entity <who>` parsing (group 1). The drills still mark LAGGED at 1x: one to six
-  skipped ticks around the setup fills, not in the waves.
+  `Villager` in answers (sapling said `Villager V2`). BDS's pillagers shot the survival actor (19 hurts
+  in raidlost) and two stayed within 16 of the village 30 s after its fall; sapling's took only
+  villagers, came within 16 at once and walked off to celebrate. Explained 2026-11-03: geometry, not
+  the hunt. BDS's wave came from the east, where the actor at (0.5, 0.5) was nearer than the villagers;
+  sapling's from the west, where the villagers were, and they chased a fleeing villager out of the
+  village. `raidaim` (bds-raidaim.txt) held the wave still: 10 from a villager (14.6 from the actor)
+  all four took the villager; moved 12 from the actor (15.5 from it) all four took the actor in the same
+  tick (pack `reselect_targets`; sapling kept its first prey: fixed, the pillager's `reselects` trait
+  in mob-traits.tsv); after the villagers' kill they kept the actor, stayed within 16 and none
+  celebrated, as sapling's goal order has it (a hunter with prey does not celebrate). Re-drilled on
+  sapling after the fix (2026-11-03): the swap to the actor matches, but sapling's slowed pillagers
+  then shot the actor from 12 off; BDS's neither loaded nor shot from there (they did from 10 off of
+  the villager, with the pack's `ranged_attack` `attack_radius` 8). Likely (positions not captured) the
+  arrows' knockback put the actor past the villager, so sapling's swapped back, lost it at the villagers' kill and celebrated. Open:
+  an archer's shooting range (somewhere in 10 to 12 for the pillager, not 8), not ported.
+- raidhero on sapling 2026-11-03 (sapling-raidhero.txt): `/damage … entity CmdActor` killed every
+  raider but made no hero, left no experience, counted 1 and answered `commands.damage.failed [""]`
+  with no raider left. BDS: 11 orbs, Hero of the Village after the win, success counts 7, 5 and 4,
+  `noTargetMatch`. Fixed: a player-dealt `/damage` (`ctx.hurt_entity_by`) kills as the player's hit,
+  `/damage` counts each one hurt and answers `noTargetMatch` to none. BDS re-sends the raid bar once a
+  second as a ShowBar; sapling sent each tick's change (918 BossEvents against 100): now once a second.
+  Re-drilled after the fix (sapling-raidhero.txt): hero added, orbs dropped, counts 4, 5, 4 on the
+  raiders (BDS's first 7 took 3 wild slimes too), `noTargetMatch`, 124 BossEvents.
+- LAGGED at 1x (2026-11-03, raidaim under `perf record` on testbox at load ~49): the debug drill_server
+  fell behind once at the setup fills (+8 s), once at +17 s, then 8 to 64 ticks over 5 s from the wave's
+  spawn (+79 s). The profile is flat; on top are debug-build costs (SipHash of `ChunkPos` per block
+  read, ub precondition checks, memmove) and the pillagers' routing (`paths::route`, `holds`,
+  `is_standable`, `landing`, each block read through `World::block`'s hashed chunk map). Not cut: no
+  single sapling hot spot; a per-route chunk cache in `paths` is the lever if it matters.
+- Not ported: BDS's wave raiders stand a few cells apart on integer corners (46,56), (40,57), (42,58),
+  (42,56); sapling's share one cell's middle. The spread is the level spawner's group spawn (a virtual
+  call from `_createRaid` lambda_10, 0x142a50270), not read.
 - Joining passing raiders (`RaidRecruitSystem` 0x141959650): not built.
 - Ominous item spawners from an active ominous trial spawner: a `/setblock` trial spawner has an empty
   block entity and never woke for an omened player 4.5 off in 30 s (bds-trialomen.txt); it needs a trial
