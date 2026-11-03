@@ -152,8 +152,11 @@ shown, babies sleep), which golems defend (fixed). bds-golems2.txt (a restart) o
 Re-run on sapling 2026-11-03 at TICK_SCALE 1, `SAPLING_DRILL_WORLD=lowflat` (research/captures/
 sapling-village.txt, sapling-golems.txt): golems the same as BDS. Village: by night 2-3 villagers lay
 within 3 of (-4, 9) where BDS had 1-2, and by morning sapling's had walked out of 8 of (0, 2) before the
-zombie came, where one of BDS's stayed through it; the schedule walks below, not fixed. Answers named
-`Villager V2` were fixed to `Villager` (effects-raids.md).
+zombie came, where one of BDS's stayed through it. Answers named `Villager V2` were fixed to
+`Villager` (effects-raids.md). After the home and fear fixes (same day), villagers within 3 of the beds
+per check: BDS `0 1 1 1 2 1 2 3 3 3 3 3 2 1 1 1 1 1`, sapling before `1 3 3 3 3 3 3 3 3 3 3 3 2 2 2 1 1 1`,
+after `0 0 0 0 0 0 0 2 2 2 2 2 1 1 1 1 0 0`: no early rush to bed; BDS's single early sleeper and its third
+bed-goer not matched (strolls are random on both).
 
 ## Not drilled
 
