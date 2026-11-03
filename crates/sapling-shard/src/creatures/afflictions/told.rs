@@ -19,12 +19,16 @@ pub(super) fn told(id: u64, event_id: MobEffectEventId, active: &Active) -> byte
     sapling_net::encode(&MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: active.left as i32, tick: 0, ambient: false })
 }
 
-/// The mob's `VisibleMobEffects` (those with particles), also written into its announcement for
-/// viewers coming later (research/captures/bds-lateeffects.txt).
-pub(super) fn shown_and_announced(world: &mut World, mob: Entity, id: u64, active: &[Active]) -> bytes::Bytes {
+/// The mob's `VisibleMobEffects` (those with particles) where `active` shows other effects than
+/// `before`, also written into its announcement for viewers coming later; BDS sent it after the
+/// `MobEffect` and not for an unshown one (research/captures/bds-lateeffects.txt).
+pub(super) fn shown_and_announced(world: &mut World, mob: Entity, id: u64, before: &[Active], active: &[Active]) -> Option<bytes::Bytes> {
     let shown = visible_effects(id, active);
+    if shown.metadata == visible_effects(id, before).metadata {
+        return None;
+    }
     crate::mobs::reannounce_item(world, mob, shown.metadata[0].clone());
-    sapling_net::encode(&shown)
+    Some(sapling_net::encode(&shown))
 }
 
 fn visible_effects(id: u64, active: &[Active]) -> acacia_proto::packets::SetEntityData {

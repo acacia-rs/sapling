@@ -79,6 +79,7 @@ pub(super) fn give_shown(world: &mut World, mob: Entity, effect: Effect, ticks: 
         world.entity_mut(mob).insert(Afflicted::default());
     }
     let mut afflicted = world.get_mut::<Afflicted>(mob).expect("put above");
+    let before = afflicted.0.clone();
     let (event_id, now) = match afflicted.0.iter_mut().find(|active| active.effect == effect) {
         Some(old) => {
             if (new.amplifier, new.left) > (old.amplifier, old.left) {
@@ -92,10 +93,8 @@ pub(super) fn give_shown(world: &mut World, mob: Entity, effect: Effect, ticks: 
         }
     };
     let list = afflicted.0.clone();
-    let mut packets = vec![shown_and_announced(world, mob, id, &list)];
-    if is_told(effect) {
-        packets.push(told::told(id, event_id, &now));
-    }
+    let mut packets: Vec<bytes::Bytes> = is_told(effect).then(|| told::told(id, event_id, &now)).into_iter().collect();
+    packets.extend(shown_and_announced(world, mob, id, &before, &list));
     tell(world, mob, packets);
     if effect == Effect::HealthBoost {
         super::boosts::boost(world, mob);
@@ -120,8 +119,9 @@ fn lose(world: &mut World, mob: Entity, gone: &[Active]) {
         return;
     }
     let (left, list) = (afflicted.0.is_empty(), afflicted.0.clone());
-    let mut packets = vec![shown_and_announced(world, mob, id, &list)];
-    packets.extend(gone.iter().filter(|active| is_told(active.effect)).map(|active| told::told(id, MobEffectEventId::Remove, active)));
+    let before: Vec<Active> = list.iter().chain(gone).copied().collect();
+    let mut packets: Vec<bytes::Bytes> = gone.iter().filter(|active| is_told(active.effect)).map(|active| told::told(id, MobEffectEventId::Remove, active)).collect();
+    packets.extend(shown_and_announced(world, mob, id, &before, &list));
     if left
         && let Some(mut health) = world.get_mut::<Health>(mob)
     {

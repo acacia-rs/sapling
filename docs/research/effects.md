@@ -78,15 +78,20 @@ Drilled 2026-10-29 (research/captures/bds-fx3.txt):
 - Instant damage took 6 from the actor in a whole suit of iron, as bare: armour stops none of it, as
   sapling (`DamageCause::is_stopped_by_armour`).
 - A viewer that came after the watcher was given an effect got no `MobEffect` for it; the watcher's
-  `AddPlayer` carried `VisibleMobEffects` 16 (jump boost, `id << 1`). Sapling sends neither the
-  `MobEffect` nor `VisibleMobEffects` for a player (not fixed: the AddPlayer metadata and a player's
-  `SetEntityData` of it are unbuilt).
+  `AddPlayer` carried `VisibleMobEffects` 16 (jump boost, `id << 1`). Sapling's carried 0
+  (sapling-lateeffects.txt, re-drilled 2026-11-03); fixed (`vitals::effects::announced`,
+  `visibility.rs`), test `a_viewer_coming_later_finds_a_players_effects_in_its_announcement`.
 - A mob (2026-11-03, `bds_command_probe lateeffects`, research/captures/bds-lateeffects.txt): the
   rejoined actor's `AddEntity` of a cow under speed and slowness-without-particles carried
   `VisibleMobEffects` 2, speed alone. Sapling's carried 0, then 260 (slowness shown: `/effect`'s
   hide flag was dropped for mobs). Fixed: the announcement keeps the mob's effects
   (`creatures/afflictions.rs`, `mobs::reannounce_item`), and `/effect` hides a mob's particles
   (`ShardCtx::give_entity_effect_shown`); test `a_viewer_coming_later_finds_a_mobs_effects_in_its_announcement`.
+  Re-drilled on sapling 2026-11-03 (sapling-lateeffects.txt): the cow's `AddEntity` carried 2 as
+  BDS's. BDS sent a mob's `MobEffect` before its `VisibleMobEffects` and no `VisibleMobEffects`
+  for slowness without particles (nothing shown changed); sapling sent it first and again.
+  Fixed (`creatures/afflictions/told.rs`), test
+  `a_mobs_effect_is_told_before_what_it_shows_and_a_hidden_one_shows_nothing`.
 
 ## Not drilled
 

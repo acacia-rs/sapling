@@ -61,9 +61,26 @@ else: remove WasInWaterFlag
 research/captures/bds-wetflags.txt, sapling-wetflags.txt: a cow and a zombie dropped into a pool
 splashed at the same place and loudness as sapling's (1962992 against 1962964), and their in-water
 flags came and went alike. A cow killed in the water made no more splash on BDS; sapling's splashed
-again bobbing while dying. Fixed (`entities.rs` `step`, `creatures::is_dying`). Left: an item thrown
-out of the dead cow splashed on sapling, not on BDS; BDS's zombie burnt in the sun and fizzed
-going in, sapling's drill world has no sun on it.
+again bobbing while dying. Fixed (`entities.rs` `step`, `creatures::is_dying`), test
+`a_dying_cow_falling_into_water_makes_no_splash_as_on_bds`. BDS's zombie burnt in the sun and
+fizzed going in, sapling's drill world has no sun on it.
+
+Re-drilled on sapling 2026-11-03 (sapling-wetflags.txt): the cow and zombie the same. The item
+thrown out of the dead cow is the same rule: `bds_command_probe wetloot` (bds-wetloot.txt, moves
+shown) killed the cow higher in its bob, and BDS's two items, thrown up 0.2 out of the water, came
+down and splashed 9 ticks after (extra 222757 and 218482); in wetflags BDS's item appeared at
+y -24.14, 0.6 under sapling's, and made none. A body in water when it first checks makes no splash on either.
+
+## Players (2026-11-03)
+
+bds-wetflags.txt: the actor put 1 over the pool splashed (`entity_type` `minecraft:player`,
+extra 1501553, from the middle of its box), heard by it and the watcher; ~5 ticks later
+`ambient.underwater.enter` (its eyes under the surface) and, put back on the floor,
+`ambient.underwater.exit`, both `extra_data` -1 from the middle of its box. Sapling played none.
+Now `movement/wet.rs` on each input: the mob rule's box check and loudness from the input's
+`delta`, the eye cell's water surface for the eyes; test
+`a_player_splashes_into_water_and_hears_its_eyes_go_under_and_out_as_on_bds`. [U] where exactly
+BDS puts the eye line (Java takes 0.11 off it); not drilled on sapling.
 
 ## For sapling
 

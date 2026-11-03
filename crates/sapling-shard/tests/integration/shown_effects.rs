@@ -3,7 +3,7 @@
 
 use crate::common;
 
-use acacia_proto::RawPacket;
+use acacia_proto::{Packet, RawPacket};
 use acacia_proto::packets::SetEntityData;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use common::{Harness, all};
@@ -45,4 +45,40 @@ fn a_viewer_coming_later_finds_a_mobs_effects_in_its_announcement() {
     let cow = all::<acacia_proto::packets::AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:cow").expect("the cow announced");
     let visible = cow.metadata.iter().find(|item| item.key == Key::VisibleMobEffects).map(|item| item.value.clone());
     assert_eq!(visible, Some(Value::Default(Plain::Long(2))));
+}
+
+#[test]
+fn a_viewer_coming_later_finds_a_players_effects_in_its_announcement() {
+    // research/captures/bds-lateeffects.txt: the rejoined actor's AddPlayer of the watcher under jump boost carried 16.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::JumpBoost, 1200, 0, true)));
+    h.tick_all();
+    let mut sent: Vec<RawPacket> = h.enter(2, "Steve").to(2).to_vec();
+    (0..5).for_each(|_| sent.extend(h.tick_all().to(2).to_vec()));
+    let alex = all::<acacia_proto::packets::AddPlayer>(&sent).into_iter().find(|added| added.username == "Alex").expect("Alex announced");
+    let visible = alex.metadata.iter().find(|item| item.key == Key::VisibleMobEffects).map(|item| item.value.clone());
+    assert_eq!(visible, Some(Value::Default(Plain::Long(16))));
+    assert!(all::<acacia_proto::packets::MobEffect>(&sent).is_empty(), "BDS told no MobEffect with it");
+}
+
+#[test]
+fn a_mobs_effect_is_told_before_what_it_shows_and_a_hidden_one_shows_nothing() {
+    // research/captures/bds-lateeffects.txt: speed's MobEffect then VisibleMobEffects 2; slowness
+    // without particles its MobEffect alone.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let id = common::asking::ask(&mut h, |ctx| ctx.spawn_entity("minecraft:cow", [3.5, 64.0, 0.5]).expect("a cow"));
+    h.tick_all();
+    let shows = |p: &RawPacket| p.decode::<SetEntityData>().is_ok_and(|data| data.metadata.iter().any(|item| item.key == Key::VisibleMobEffects));
+    let told = |sent: &[RawPacket]| sent.iter().filter(|p| p.id == acacia_proto::packets::MobEffect::ID || (p.id == SetEntityData::ID && shows(p))).map(|p| p.id).collect::<Vec<u32>>();
+    h.remote.run(move |ctx| assert!(ctx.give_entity_effect(id, Effect::Speed, 600, 1)));
+    let sent = h.tick_all();
+    let shows = told(sent.to(1));
+    assert_eq!(shows.first(), Some(&acacia_proto::packets::MobEffect::ID), "{shows:?}");
+    assert!(all::<SetEntityData>(sent.to(1)).iter().flat_map(|data| &data.metadata).any(|item| item.key == Key::VisibleMobEffects));
+    h.remote.run(move |ctx| assert!(ctx.give_entity_effect_shown(id, Effect::Slowness, 600, 255, false)));
+    let sent = h.tick_all();
+    assert!(!all::<SetEntityData>(sent.to(1)).iter().flat_map(|data| &data.metadata).any(|item| item.key == Key::VisibleMobEffects), "nothing more shown");
+    assert_eq!(all::<acacia_proto::packets::MobEffect>(sent.to(1)).len(), 1);
 }

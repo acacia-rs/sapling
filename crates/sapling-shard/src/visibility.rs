@@ -6,6 +6,7 @@
 use std::collections::{HashMap, HashSet};
 
 use acacia_proto::packets::RemoveEntity;
+use acacia_proto::types::MetadataDictionaryItemKey as Key;
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_data::AddPlayerOptions;
@@ -19,6 +20,7 @@ use crate::labels::Labels;
 use crate::movement::Motion;
 use crate::roster::Profile;
 use crate::view::View;
+use crate::vitals::effects::{self, Effects};
 
 /// The other players this player's client has as entities.
 #[derive(Component, Default)]
@@ -35,12 +37,12 @@ impl ToViewers {
 }
 
 type Viewer<'a> = (Entity, &'a Stage, &'a InLayer, &'a View, &'a mut Sees, &'a mut Outgoing, Option<&'a Hidden>);
-type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>);
+type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>, Option<&'a Effects>);
 
 /// The player as a new viewer needs it: with what it holds, then what it wears, then the labels
 /// plugins gave it.
-fn spawn_packets((id, identity, position, motion, profile, inventory, labels): (&NetId, &Identity, &Position, &Motion, &Profile, &Inventory, Option<&Labels>)) -> Vec<Bytes> {
-    let player = sapling_net::encode(&sapling_data::add_player(&AddPlayerOptions {
+fn spawn_packets((id, identity, position, motion, profile, inventory, labels, effects): (&NetId, &Identity, &Position, &Motion, &Profile, &Inventory, Option<&Labels>, Option<&Effects>)) -> Vec<Bytes> {
+    let mut player = sapling_data::add_player(&AddPlayerOptions {
         held: inventory::in_hand(inventory),
         uuid: profile.uuid,
         name: &identity.0.name,
@@ -52,7 +54,11 @@ fn spawn_packets((id, identity, position, motion, profile, inventory, labels): (
         flags: motion.pose.flags(),
         device_id: &profile.device_id,
         device_os: profile.device_os,
-    }));
+    });
+    if let Some(item) = player.metadata.iter_mut().find(|item| item.key == Key::VisibleMobEffects) {
+        *item = effects::announced(id.0, effects);
+    }
+    let player = sapling_net::encode(&player);
     std::iter::once(player).chain(inventory::spawn_packets(id.0, inventory)).chain(crate::labels::packet(labels, id.0)).collect()
 }
 
@@ -73,8 +79,8 @@ pub(crate) fn update(mut viewers: Query<Viewer>, seen: Query<Seen>) {
         let mut covered: Vec<(u64, Entity)> = grid.covered(in_layer.0, view).copied().filter(|(_, other)| *other != viewer && !Hidden::hides(hidden, *other)).collect();
         covered.sort_unstable();
         for (_, other) in covered.iter().filter(|(_, other)| !sees.0.contains(other)) {
-            if let Ok((_, _, _, id, identity, position, motion, profile, inventory, labels)) = seen.get(*other) {
-                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets((id, identity, position, motion, profile, inventory, labels))));
+            if let Ok((_, _, _, id, identity, position, motion, profile, inventory, labels, effects)) = seen.get(*other) {
+                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets((id, identity, position, motion, profile, inventory, labels, effects))));
             }
         }
         let now: HashSet<Entity> = covered.into_iter().map(|(_, other)| other).collect();

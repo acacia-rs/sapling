@@ -5,6 +5,7 @@
 
 mod placing;
 mod pose;
+mod wet;
 
 use std::collections::HashSet;
 
@@ -58,6 +59,7 @@ pub(crate) struct Motion {
     pub jumps: u8,
     /// Changing dimension: inputs are from the loading screen (dimensions.rs).
     held: bool,
+    wet: wet::Wet,
 }
 
 /// Takes none of a player's inputs until [`release`].
@@ -150,6 +152,7 @@ pub(crate) fn player_input(
     mut blocks: ResMut<BlockInputs>,
     mut moves: ResMut<Moves>,
     mut inputs: ResMut<crate::player_events::Inputs>,
+    mut to_viewers: ResMut<ToViewers>,
     layers: Query<&Layer>,
     mut players: Query<Mover>,
 ) {
@@ -225,6 +228,15 @@ pub(crate) fn player_input(
             moves.record(entity, *position, moved);
         }
         *position = moved;
+        if *stage == Stage::InWorld
+            && let Ok(layer) = layers.get(in_layer.0)
+        {
+            let delta = motion.delta;
+            for sound in wet::sounds(&mut motion.wet, &layer.world, id.0, position.feet, delta) {
+                out.push(&sound);
+                to_viewers.push(entity, &sound);
+            }
+        }
     }
 }
 

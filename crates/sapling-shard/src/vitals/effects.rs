@@ -1,7 +1,7 @@
 //! Effects on a player, counted down a tick at a time and told as BDS tells them
 //! (docs/research/effects.md).
-// TODO: the effects drilled and no others; one who comes
-// to see a player is not told its effects or `VisibleMobEffects`; they end unsaid as the
+// TODO: the effects drilled and no others; one who comes to see a player is told its
+// `VisibleMobEffects` (`announced`) and, as on BDS, no `MobEffect`; they end unsaid as the
 // player rises. Kept between visits (inventory/store.rs) are the effects and not what is left
 // of absorption's cushion, and what BDS tells of them at a join was not drilled.
 
@@ -130,9 +130,19 @@ pub(crate) fn dig_speed(world: &World, player: Entity) -> f32 {
 
 /// The ids of the effects on a player that show their particles, in order.
 fn shown(world: &World, player: Entity) -> Vec<i32> {
-    let mut ids: Vec<i32> = world.get::<Effects>(player).map_or_else(Vec::new, |effects| effects.0.iter().filter(|active| active.particles).map(|active| active.effect.id()).collect());
+    shown_of(world.get::<Effects>(player))
+}
+
+fn shown_of(effects: Option<&Effects>) -> Vec<i32> {
+    let mut ids: Vec<i32> = effects.map_or_else(Vec::new, |effects| effects.0.iter().filter(|active| active.particles).map(|active| active.effect.id()).collect());
     ids.sort_unstable();
     ids
+}
+
+/// The `VisibleMobEffects` a player's AddPlayer carries: BDS announced one under jump boost
+/// with 16 (research/captures/bds-lateeffects.txt).
+pub(crate) fn announced(id: u64, effects: Option<&Effects>) -> acacia_proto::types::MetadataDictionaryItem {
+    sapling_data::visible_effects(id, shown_of(effects)).metadata.remove(0)
 }
 
 /// Tells the player and its viewers the effects it shows, where they are not `before`'s.
