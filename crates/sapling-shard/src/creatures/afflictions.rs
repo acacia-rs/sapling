@@ -1,16 +1,24 @@
 //! Effects on a mob, as BDS's were drilled (research/captures/bds-mob-effects-findings.md): the
 //! turns and sizes of a player's (`vitals::effects`), counted down a tick at a time, shown to its
-//! viewers in `VisibleMobEffects` and, for speed and slowness alone, a `MobEffect`. An undead mob
-//! is mended by instant damage and hurt, unflashed, by instant health, each its own size, and
-//! takes no poison or regeneration at all. A mob an effect hurts runs. Its effects are kept with
-//! it as BDS keeps them (`ActiveEffects`, research/captures/bds-keepmobs.txt).
+//! viewers (`told`). An undead mob is mended by instant damage and hurt, unflashed, by instant
+//! health, each its own size, and takes no poison or regeneration at all. A mob an effect hurts
+//! runs. Its effects are kept with it (`kept`); potions on it: `potions`.
 // TODO: BDS's flags for fire resistance and water breathing (fire immune, breathing) are not
 // shown, nor is speed's change to the movement attribute; strength and weakness do not change its hit, and levitation, slow falling
 // and jump boost do nothing to it.
 
-use acacia_proto::packets::{MobEffect, MobEffectEventId};
+mod kept;
+mod potions;
+mod told;
+
+use acacia_proto::packets::MobEffectEventId;
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
+
+pub(super) use kept::{adopt, keep};
+pub(crate) use potions::{clouded, splashed, takes_potion};
+pub(super) use told::visible;
+use told::{is_told, shown_and_announced, tell};
 
 use super::health::{Cause, Health};
 use super::{Creature, Dying, harm, strolling};
@@ -21,8 +29,6 @@ use crate::vitals::effects::{HARMS, HEALS, POISONED, POISONS, QUICKENS, REGENERA
 
 /// What a level of resistance takes off a hit.
 const RESISTS: f32 = 0.2;
-/// Effects shorter than this, shared out by a splash, are not given.
-const SHORTEST: f32 = 20.0;
 
 #[derive(Clone, Copy)]
 struct Active {
@@ -35,61 +41,6 @@ struct Active {
 #[derive(Component, Default)]
 pub(super) struct Afflicted(Vec<Active>);
 
-/// Puts the effects a world folder kept with the mob (its compound `compound`) back on it.
-pub(super) fn adopt(world: &mut World, mob: Entity, compound: &[u8]) {
-    let active = |[id, amplifier, left, shown]: [i32; 4]| {
-        let effect = Effect::ALL.into_iter().find(|known| known.id() == id)?;
-        Some(Active { effect, amplifier: u8::try_from(amplifier).ok()?, left: u32::try_from(left).ok().filter(|left| *left > 0)?, particles: shown != 0 })
-    };
-    let kept: Vec<Active> = sapling_world::actor_effects(compound).into_iter().filter_map(active).collect();
-    if !kept.is_empty() {
-        world.entity_mut(mob).insert(Afflicted(kept));
-    }
-}
-
-/// Writes each kept mob's effects into what the world folder keeps of it.
-pub(super) fn keep(world: &mut World) {
-    let afflicted: Vec<(Entity, Vec<[i32; 4]>)> = world
-        .query_filtered::<(Entity, &Afflicted), With<entities::Stored>>()
-        .iter(world)
-        .map(|(mob, afflicted)| (mob, afflicted.0.iter().map(|active| [active.effect.id(), i32::from(active.amplifier), active.left as i32, i32::from(active.particles)]).collect()))
-        .collect();
-    for (mob, effects) in afflicted {
-        entities::restore(world, mob, |compound, _| sapling_world::effected_actor(compound, &effects).ok());
-    }
-}
-
-/// Whether BDS tells a mob's viewers of the effect with a `MobEffect`, as it did speed and slowness alone.
-fn is_told(effect: Effect) -> bool {
-    matches!(effect, Effect::Speed | Effect::Slowness)
-}
-
-fn told(id: u64, event_id: MobEffectEventId, active: &Active) -> bytes::Bytes {
-    sapling_net::encode(&MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: active.left as i32, tick: 0, ambient: false })
-}
-
-/// The mob's `VisibleMobEffects` (those with particles), also written into its announcement for
-/// viewers coming later (research/captures/bds-lateeffects.txt).
-fn shown_and_announced(world: &mut World, mob: Entity, id: u64, active: &[Active]) -> bytes::Bytes {
-    let shown = visible_effects(id, active);
-    crate::mobs::reannounce_item(world, mob, shown.metadata[0].clone());
-    sapling_net::encode(&shown)
-}
-
-fn visible_effects(id: u64, active: &[Active]) -> acacia_proto::packets::SetEntityData {
-    sapling_data::visible_effects(id, active.iter().filter(|active| active.particles).map(|active| active.effect.id()))
-}
-
-/// The `VisibleMobEffects` an afflicted mob's announcement carries, for one rebuilt.
-pub(super) fn visible(world: &World, mob: Entity) -> Option<acacia_proto::types::MetadataDictionaryItem> {
-    Some(visible_effects(world.get::<NetId>(mob)?.0, &world.get::<Afflicted>(mob)?.0).metadata.remove(0))
-}
-
-fn tell(world: &mut World, mob: Entity, packets: Vec<bytes::Bytes>) {
-    let (Some(layer), Some(at)) = (world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(mob).map(|body| body.at)) else { return };
-    entities::tell_viewers(world, mob, layer, at.map(|c| c.floor() as i32), packets);
-}
-
 fn is_undead(world: &World, mob: Entity) -> bool {
     world.get::<entities::Kind>(mob).is_some_and(|kind| sapling_data::is_undead(&kind.0))
 }
@@ -99,12 +50,6 @@ fn is_undead(world: &World, mob: Entity) -> bool {
 fn refuses(world: &World, mob: Entity, effect: Effect) -> bool {
     let spider = world.get::<entities::Kind>(mob).is_some_and(|kind| matches!(kind.0.as_str(), "minecraft:spider" | "minecraft:cave_spider"));
     (is_undead(world, mob) && matches!(effect, Effect::Poison | Effect::Regeneration)) || (spider && effect == Effect::Poison)
-}
-
-/// Whether a cloud of the potion `data` reaches the mob: it takes one of the potion's effects.
-pub(crate) fn takes_potion(world: &World, mob: Entity, data: i16) -> bool {
-    let mut effects = sapling_data::potion_effects(data).iter().filter_map(|gives| Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect));
-    effects.any(|effect| !refuses(world, mob, effect))
 }
 
 /// The level, from 0, of an effect on a mob.
@@ -149,7 +94,7 @@ pub(super) fn give_shown(world: &mut World, mob: Entity, effect: Effect, ticks: 
     let list = afflicted.0.clone();
     let mut packets = vec![shown_and_announced(world, mob, id, &list)];
     if is_told(effect) {
-        packets.push(told(id, event_id, &now));
+        packets.push(told::told(id, event_id, &now));
     }
     tell(world, mob, packets);
     if effect == Effect::HealthBoost {
@@ -176,7 +121,7 @@ fn lose(world: &mut World, mob: Entity, gone: &[Active]) {
     }
     let (left, list) = (afflicted.0.is_empty(), afflicted.0.clone());
     let mut packets = vec![shown_and_announced(world, mob, id, &list)];
-    packets.extend(gone.iter().filter(|active| is_told(active.effect)).map(|active| told(id, MobEffectEventId::Remove, active)));
+    packets.extend(gone.iter().filter(|active| is_told(active.effect)).map(|active| told::told(id, MobEffectEventId::Remove, active)));
     if left
         && let Some(mut health) = world.get_mut::<Health>(mob)
     {
@@ -193,48 +138,6 @@ pub(super) fn afflict(world: &mut World, mob: Entity, effect: &str, ticks: u32) 
     if let Some(effect) = Effect::ALL.into_iter().find(|known| known.name() == effect) {
         give(world, mob, effect, ticks, 0);
     }
-}
-
-/// The potion of data value `data` broke `share` of its full strength on a mob.
-pub(crate) fn splashed(world: &mut World, mob: Entity, data: i16, share: f32) {
-    for gives in sapling_data::potion_effects(data) {
-        let Some(effect) = Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect) else { continue };
-        let ticks = gives.ticks as f32 * share;
-        if effect.is_instant() || ticks >= SHORTEST {
-            give(world, mob, effect, (ticks + 0.5) as u32, gives.amplifier);
-        }
-    }
-}
-
-/// A cloud's pulse of the potion of data value `data` on a mob (clouds.rs): `share` of each
-/// effect's time and of an instant one's strength, the undead harmed and mended the other way.
-pub(crate) fn clouded(world: &mut World, mob: Entity, layer: Entity, data: i16, [time, instant]: [f32; 2]) {
-    for gives in sapling_data::potion_effects(data) {
-        let Some(effect) = Effect::ALL.into_iter().find(|effect| effect.name() == gives.effect) else { continue };
-        let strength = 2f32.powi(i32::from(gives.amplifier)) * instant;
-        match effect {
-            Effect::InstantDamage => breathed_on(world, mob, layer, strength),
-            Effect::InstantHealth if is_undead(world, mob) => drop(harm::wound(world, mob, layer, HEALS * strength, Cause::Magic)),
-            Effect::InstantHealth => {
-                if let Some(mut health) = world.get_mut::<Health>(mob) {
-                    health.mend(HEALS * strength);
-                }
-            }
-            _ => drop(give(world, mob, effect, (gives.ticks as f32 * time) as u32, gives.amplifier)),
-        }
-    }
-}
-
-/// A cloud's instant harm on a mob, at `share` of a potion's (the undead are mended instead).
-fn breathed_on(world: &mut World, mob: Entity, layer: Entity, share: f32) {
-    if is_undead(world, mob) {
-        if let Some(mut health) = world.get_mut::<Health>(mob) {
-            health.mend(HARMS * share);
-        }
-        return;
-    }
-    harm::wound(world, mob, layer, HARMS * share, Cause::Magic);
-    strolling::startle(world, mob);
 }
 
 /// A tick of one effect on a mob: it turns when what is left of it is a whole number of its
