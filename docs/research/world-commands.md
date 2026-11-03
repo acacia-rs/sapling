@@ -42,6 +42,14 @@ selecting,session,items,enchanting}.rs`.
   `[count, x, z, "0.00"]`, not `.unsafe`; fixed. Success answers and `num.tooSmall` were the same.
 - Re-drilled (`sapling-spread.txt`): every answer above now the same.
 
+## Drilled 2026-10-30 (`bds-fixmisc.txt` against `sapling-fixmisc.txt`)
+
+- `/time set noon` sets the next noon to come and answers the new time: 6000 from a fresh 540,
+  then 30000, midnight 42000, noon 54000; `set 100` answers 100. Sapling's 30000 was the next noon
+  from its later clock; same rule, nothing to fix.
+- Relative `/fill` (`~`) answers its count (4) in the overworld, and in the Nether through
+  `execute in nether` (49 absolute, 9 relative). Sapling's answers were the same; the old 0 is gone.
+
 ## Not seen; sapling's choice
 
 - `/defaultgamemode`, `/seed` and `/version` do not exist on BDS 1.26.52: sapling answers under
