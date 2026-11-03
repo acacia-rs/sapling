@@ -127,7 +127,8 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
   (`blocks/sponge.rs`). Fixed.
 - `/setblock bed` (bds-fixset.txt): both halves in one UpdateSubchunkBlocks, the named cell the head
   even with `head_piece_bit` 0, the foot behind it. Sapling wrote one; fixed (`blocks/commanded.rs`,
-  test `a_bed_set_by_command_lies_whole_with_its_head_in_the_cell_named`). BDS sends the pair twice.
+  test `a_bed_set_by_command_lies_whole_with_its_head_in_the_cell_named`). BDS sends the pair twice,
+  one entry a write; not matched, for world-ticks.md "Packet shape"'s reason.
 - Left: lodestones (not in the scenes).
 
 ## Not drilled

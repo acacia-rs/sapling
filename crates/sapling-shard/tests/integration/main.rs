@@ -100,6 +100,7 @@ mod new_effects;
 mod omens;
 mod operations;
 mod pending_ticks;
+mod plants_drilled;
 mod pistons;
 mod player_events;
 mod recipe_book;

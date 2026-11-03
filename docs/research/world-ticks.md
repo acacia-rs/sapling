@@ -94,8 +94,19 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
 - `/setblock` gives weeping, twisting and cave vines a random age (2 to 17 seen, bds-fixset.txt),
   and kelp under water (19, bds-bkticks.txt); kelp under glass kept 0. Sapling gave 0; fixed
   (`nextInt(25)`, same file, test `nether_and_cave_vines_set_by_command_take_a_random_age_unless_one_is_named`).
-- Left: in bds-fixset.txt kelp in a one-deep trough and two twisting vines popped (ParticleDestroy)
-  at a neighbour's setblock; sapling's stayed.
+- Kelp and vines losing their hold, drilled 2026-11-03 (`bds_command_probe plantpop`, `plantpop2`,
+  research/captures/bds-plantpop*.txt; tests in tests/integration/plants_drilled.rs). Fixed (`blocks/ground.rs`):
+  kelp on glass goes at a neighbour's change, leaving its water, on stone it stays (magma, refused as Java
+  `KelpBlock` does, was not drilled); twisting vines go
+  without a top under them, weeping vines without a bottom above, unless on their own kind. Kelp set by
+  command into air takes a water source beside itself, as a live coral fan does (`blocks/commanded.rs`).
+- Fixed: water run in beside twisting, weeping or cave vines breaks them (`ParticleDestroy` as it enters
+  layer 1, the vine's loot, the water then `liquid_depth=1` in layer 0); sapling's stood in it
+  (`blocks/liquid.rs` `set`, bds-plantpop2.txt).
+- Packet shape, not matched: BDS shows a commanded block written twice in a tick as one UpdateSubchunkBlocks
+  listing each write (an aged vine twice; kelp or a coral fan with its water as both `water` and
+  `flowing_water` in the extra layer); sapling sends an UpdateBlock a layer. Matching it needs a log of every
+  write in the tick, with layer 1, which sapling's batches (`send/sections.rs`) do not keep.
 - Undrillable here: arrows (`/summon arrow` is inert in sapling's drill).
 
 ## Not drilled
