@@ -2,8 +2,8 @@
 //! (research/captures/bds-ender-findings.md): on its first tick, the tick after a hit, towards
 //! prey that has been more than 16 off for 30 ticks, a tick in 100 in the dark and in 20 in
 //! the sun (its pack's `light_teleport_chance`, the component's dark default: BDS's came 5.2
-//! seconds apart at midnight), and away from water it touches, which costs it 1.
-// TODO: none from beside its prey; rain does not count as water.
+//! seconds apart at midnight), and away from water it touches or rain on it, which costs it 1.
+// TODO: none from beside its prey.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -79,8 +79,14 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, prey: Optio
     let now = world.resource::<Tick>().0;
     let (Some(body), true) = (world.get::<Body>(entity).copied(), world.get::<Blinks>(entity).is_some()) else { return };
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
-    let (wet, lit) = (world.get::<Layer>(layer).is_some_and(|layer| super::harm::touches(&layer.world, &body, WATER)), super::harm::sun_on(world, layer, head));
-    if wet {
+    let weather = crate::weather::of(world, layer);
+    let feet = body.at.map(|c| c.floor() as i32);
+    let level = world.get::<Layer>(layer).map(|layer| &layer.world);
+    let soaked = level.is_some_and(|level| super::harm::touches(level, &body, WATER));
+    let rained = level.is_some_and(|level| super::harm::is_rained_on(level, feet, weather) || super::harm::is_rained_on(level, head, weather));
+    let (wet, lit) = (soaked || rained, super::harm::sun_on(world, layer, head));
+    // Rain's own harm is harm.rs's; here it only drives the mob off.
+    if soaked {
         drench(world, entity, layer, &body);
     }
     let Some(mut blinks) = world.get_mut::<Blinks>(entity) else { return };

@@ -87,6 +87,22 @@ fn rain_hurts_an_enderman_1_each_10_ticks_as_drowning() {
 }
 
 #[test]
+fn an_enderman_in_rain_teleports_on_and_on() {
+    // research/captures/bds-enderrain.txt: seven teleports in the 7 ticks after rain first hurt it.
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_time(18000);
+        assert!(ctx.spawn_entity("minecraft:enderman", [6.5, 65.0, 0.5]).is_some());
+    });
+    ticks(&mut h, 5);
+    h.remote.run(|ctx| ctx.set_weather(Weather::Rain, None));
+    let sent = ticks(&mut h, 10).concat();
+    let jumps = all::<acacia_proto::packets::MoveEntityDelta>(&sent).iter().filter(|moved| moved.force_move).count();
+    assert!(jumps >= 5, "{jumps} teleports in 10 ticks of rain");
+}
+
+#[test]
 fn a_cod_on_dry_stone_holds_its_breath_15_s_then_smothers() {
     let mut h = ready();
     penned(&mut h, 6, "stone", Block::air(), "minecraft:cod");
