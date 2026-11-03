@@ -18,7 +18,7 @@ const OFFHAND: &str = "slot.weapon.offhand";
 const PLAYER_SLOTS: &[(&str, u8, u8)] = &[("slot.hotbar", 0, 9), ("slot.inventory", 9, 27)];
 const ARMOUR_SLOTS: [&str; 4] = ["slot.armor.head", "slot.armor.chest", "slot.armor.legs", "slot.armor.feet"];
 /// Slot types only mobs have.
-const MOB_SLOTS: [&str; 3] = ["slot.saddle", "slot.armor", "slot.chest"];
+const MOB_SLOTS: [&str; 4] = ["slot.saddle", "slot.armor", "slot.armor.body", "slot.chest"];
 const MOST: i32 = 64;
 
 enum Target {
@@ -52,7 +52,8 @@ fn mob_slot(kind: &str, slot: usize) -> Option<MobSlot> {
         HAND => MobSlot::MainHand,
         OFFHAND => MobSlot::OffHand,
         "slot.saddle" => MobSlot::Saddle,
-        "slot.armor" => MobSlot::Body,
+        // BDS took both for a horse's armour and a llama's carpet (bds-mountdeath.txt).
+        "slot.armor" | "slot.armor.body" => MobSlot::Body,
         "slot.chest" => MobSlot::Chest(slot),
         "slot.inventory" => MobSlot::Inventory(slot),
         _ => MobSlot::Armor(ARMOUR_SLOTS.iter().position(|known| *known == kind)? as u8),
@@ -189,5 +190,16 @@ impl Command for ReplaceItem {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn slot_armor_body_is_a_mob_s_body_as_slot_armor_is() {
+        assert!(is_slot_type("slot.armor.body"));
+        assert_eq!([mob_slot("slot.armor.body", 0), mob_slot("slot.armor", 0)], [Some(MobSlot::Body); 2]);
     }
 }

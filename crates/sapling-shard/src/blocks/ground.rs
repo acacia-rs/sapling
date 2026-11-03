@@ -23,6 +23,9 @@ const CANE_GROUND: &[&str] = &[
     "minecraft:pale_moss_block", "minecraft:mud", "minecraft:muddy_mangrove_roots", "minecraft:sand", "minecraft:red_sand", "minecraft:suspicious_sand",
 ];
 const REEDS: &str = "minecraft:reeds";
+const KELP: &str = "minecraft:kelp";
+const TWISTING: &str = "minecraft:twisting_vines";
+const WEEPING: &str = "minecraft:weeping_vines";
 /// What lets redstone dust lie on it without a top to lie on.
 const LIT_FROM_BELOW: &[&str] = &["minecraft:glowstone", "minecraft:redstone_lamp", "minecraft:lit_redstone_lamp"];
 const DIODES: &[&str] = &["minecraft:unpowered_repeater", "minecraft:powered_repeater", "minecraft:unpowered_comparator", "minecraft:powered_comparator"];
@@ -121,6 +124,14 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
         "minecraft:bamboo" | "minecraft:bamboo_sapling" => under.is_some_and(|under| BAMBOO_GROUND.contains(&under)),
         // Nor these on stone (bds-placing2.txt); the ground they take is the bush's here.
         "minecraft:pink_petals" | "minecraft:big_dripleaf" | "minecraft:mangrove_propagule" => under.is_some_and(|under| VEGETATION.contains(&under)),
+        // On glass it went at a neighbour's change, on stone it stayed (research/captures/bds-plantpop.txt).
+        KELP => under == Some(KELP) || has_top(level, below(pos), true) && under.is_some_and(|under| !under.ends_with("glass") && under != "minecraft:magma"),
+        // Water run in beside a nether vine broke it (bds-plantpop2.txt), as it does cave vines.
+        TWISTING => !is_wet(level, pos) && (under == Some(TWISTING) || has_top(level, below(pos), false)),
+        WEEPING => {
+            let above = [pos[0], pos[1] + 1, pos[2]];
+            !is_wet(level, pos) && (name(level, above) == Some(WEEPING) || level.in_height(above[1]) && has_bottom(level, above))
+        }
         _ if VINES.contains(&block) => {
             let above = [pos[0], pos[1] + 1, pos[2]];
             !is_wet(level, pos) && (name(level, above).is_some_and(|above| VINES.contains(&above)) || level.in_height(above[1]) && has_bottom(level, above))
@@ -151,7 +162,7 @@ pub(super) fn is_wrongly_lit(level: &World, [x, y, z]: BlockPos, id: u32) -> boo
 
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {
-    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire", "minecraft:frog_spawn"];
+    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire", "minecraft:frog_spawn", KELP, TWISTING, WEEPING];
     [CROPS, DIODES, RAILS, VINES, OTHERS].iter().any(|list| list.contains(&name))
 }
 

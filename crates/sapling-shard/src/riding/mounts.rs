@@ -5,6 +5,7 @@
 // A tamed mount's inventory, and a chest put on one, are packs.rs's.
 // TODO: a wild mount that is not tamed throws its rider off at once; BDS lets it ride a while first.
 
+use acacia_proto::types::MetadataFlags1;
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_world::ItemStack;
@@ -52,6 +53,17 @@ const CAMEL_SPEED: f32 = 0.09;
 pub(crate) struct Tack {
     pub armor: Option<ItemStack>,
     boosted_until: u64,
+}
+
+/// The flags a saddle shows on `kind`: with the horse family's `input_ground_controlled` and
+/// `can_power_jump`, a camel's `dash_action` (research/captures/bds-mountflags.txt).
+pub(crate) fn saddle_flags(kind: &str) -> MetadataFlags1 {
+    let controls = match kind {
+        CAMEL => MetadataFlags1::WASD_CONTROLLED.0 | MetadataFlags1::CAN_DASH.0,
+        _ if TAMED_SADDLED.contains(&kind) => MetadataFlags1::WASD_CONTROLLED.0 | MetadataFlags1::CAN_POWER_JUMP.0,
+        _ => 0,
+    };
+    MetadataFlags1(MetadataFlags1::SADDLED.0 | controls)
 }
 
 /// Whether the mob has a saddle on.
@@ -143,7 +155,7 @@ fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
 pub(super) fn worn(world: &mut World, mob: Entity) -> Vec<Bytes> {
     let Some(tack) = world.get::<Tack>(mob).cloned() else { return Vec::new() };
     let (Some(id), Some(kind)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Kind>(mob).map(|kind| kind.0.clone())) else { return Vec::new() };
-    let word = entities::mob_flags(world, mob, &kind, acacia_proto::types::MetadataFlags1::SADDLED, saddled(world, mob));
+    let word = entities::mob_flags(world, mob, &kind, saddle_flags(&kind), saddled(world, mob));
     let mut shown = vec![packets::flags(id, word)];
     if let Some(armor) = &tack.armor {
         let slots = [None, None, None, None, Some(crate::inventory::stack(armor))];

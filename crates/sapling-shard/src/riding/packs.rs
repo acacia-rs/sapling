@@ -24,6 +24,7 @@ use crate::{blocks, containers, creatures};
 
 const SADDLE: &str = "minecraft:saddle";
 const CHEST: &str = "minecraft:chest";
+const CAMEL: &str = "minecraft:camel";
 /// Kinds whose inventory has a saddle slot, and those that take a chest.
 const SADDLED: [&str; 5] = ["minecraft:horse", "minecraft:donkey", "minecraft:mule", "minecraft:skeleton_horse", "minecraft:zombie_horse"];
 const CHESTED: [&str; 4] = ["minecraft:donkey", "minecraft:mule", "minecraft:llama", "minecraft:trader_llama"];
@@ -31,7 +32,7 @@ const LLAMAS: [&str; 2] = ["minecraft:llama", "minecraft:trader_llama"];
 const HORSE: &str = "minecraft:horse";
 pub(super) const TACK: usize = 2;
 const DONKEY_CHEST: usize = 15;
-const PER_STRENGTH: usize = 3;
+pub(super) const PER_STRENGTH: usize = 3;
 const HORSE_ARMOR: [&str; 6] = ["leather", "copper", "iron", "golden", "diamond", "netherite"];
 const CARPETS: [&str; 18] = [
     "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black", "moss", "pale_moss",
@@ -128,15 +129,18 @@ fn goods(world: &World, mob: Entity) -> Vec<(u8, ItemStack)> {
     saddle.into_iter().chain(armor).chain(stored.into_iter().filter(|(slot, _)| usize::from(*slot) >= TACK)).collect()
 }
 
-/// What a dying mount lets go of, `doMobLoot` or not: its goods and the chest they were in; its
-/// saddle, armour and carpet stay with it (research/captures/bds-tack.txt), the chest last
-/// (bds-chestdie.txt).
+/// What a dying mount lets go of, `doMobLoot` or not: its goods, the chest they were in
+/// (bds-chestdie.txt), then its saddle, a camel's too; its armour and carpet stay with it
+/// (research/captures/bds-tack.txt, bds-mountdeath.txt).
 pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
-    if !world.get::<Kind>(mob).is_some_and(|kind| has_pack(&kind.0)) {
-        return Vec::new();
+    let mut spilled: Vec<ItemStack> = Vec::new();
+    if world.get::<Kind>(mob).is_some_and(|kind| has_pack(&kind.0)) {
+        spilled.extend(goods(world, mob).into_iter().filter(|(slot, _)| usize::from(*slot) >= TACK).map(|(_, stack)| stack));
+        spilled.extend(chested(world, mob).then(|| stack(CHEST)));
     }
-    let mut spilled: Vec<ItemStack> = goods(world, mob).into_iter().filter(|(slot, _)| usize::from(*slot) >= TACK).map(|(_, stack)| stack).collect();
-    spilled.extend(chested(world, mob).then(|| stack(CHEST)));
+    // A saddled pig's or strider's death was not drilled.
+    let drops_saddle = world.get::<Kind>(mob).is_some_and(|kind| SADDLED.contains(&kind.0.as_str()) || kind.0 == CAMEL);
+    spilled.extend((drops_saddle && super::mounts::saddled(world, mob)).then(|| stack(SADDLE)));
     spilled
 }
 

@@ -23,7 +23,9 @@ const BABY_EVENTS: [&str; 3] = ["entity_born", "as_baby", "spawn_baby"];
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
 pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
     let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
-    let id = born(world, layer, kind, feet, Birth { reason, yaw, gene, sound: "spawn" })?;
+    // BDS played no `spawn` at any of 112 summons naming an event (research/captures/bds-*.txt).
+    let sound = (reason != SpawnReason::Command || event.is_none()).then_some("spawn");
+    let id = born(world, layer, kind, feet, Birth { reason, yaw, gene, sound })?;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {
         entities::restore(world, entity, |compound, _| sapling_world::varied_actor(compound, gene.0, yaw).ok());
@@ -46,12 +48,12 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     Some(id)
 }
 
-/// How a mob comes: why, facing where, of which gene, and heard as what.
+/// How a mob comes: why, facing where, of which gene, and heard as what, if at all.
 pub(super) struct Birth {
     pub reason: SpawnReason,
     pub yaw: f32,
     pub gene: Option<genes::Gene>,
-    pub sound: &'static str,
+    pub sound: Option<&'static str>,
 }
 
 /// [`spawn`] as `birth` has it.
@@ -69,7 +71,8 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
     let body = Body::new(feet, [0.0; 3], slimes::sizes::body_size(kind, gene).unwrap_or(size));
     let properties = super::properties::rolled(world, layer, kind, feet, reason == SpawnReason::Bred);
     let rolled = strides::roll(world, kind);
-    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, Some(&properties), rolled.as_ref()), None, yaw, gene.map_or(0, |gene| gene.0))))?;
+    let strength = crate::riding::roll_strength(world, kind);
+    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, Some(&properties), rolled.as_ref(), strength), None, yaw, gene.map_or(0, |gene| gene.0))))?;
     world.entity_mut(entity).insert((Creature { look: None }, properties));
     if let Some(rolled) = rolled {
         world.entity_mut(entity).insert(strides::Strode(rolled));
@@ -87,11 +90,11 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
     let id = world.get::<NetId>(entity)?.0;
     harm::first_breath(world, entity, layer, id, kind, &body);
     // A hatched mob comes unheard (research/captures/bds-eggs.txt); its egg's sound is enough.
-    let heard = (reason != SpawnReason::Hatched).then(|| spawn_sound(sound, id, kind, &body));
+    let heard = sound.filter(|_| reason != SpawnReason::Hatched).map(|sound| spawn_sound(sound, id, kind, &body));
     entities::after_announcing(world, layer, [x, y, z], heard.into_iter().collect());
     let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, strides::keep(sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]), rolled));
-    if crate::riding::give_strength(world, entity, kind) {
+    if crate::riding::give_strength(world, entity, kind, strength) {
         reshow(world, entity);
     }
     Some(EntityId(id))
@@ -111,7 +114,8 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let gene = genes::stored(&kind, actor.variant);
     let body = Body::new(actor.position, [0.0; 3], slimes::sizes::body_size(&kind, gene).unwrap_or(size));
     let (kept, compound) = strides::stored(world, &kind, compound);
-    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, None, kept.as_ref()), None, 0.0, actor.variant))) else { return false };
+    let strength = crate::riding::kept_strength(&compound);
+    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, None, kept.as_ref(), strength), None, 0.0, actor.variant))) else { return false };
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }
@@ -132,7 +136,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     }
     entities::keep(world, entity, layer, unique_id, compound);
     villagers::arm(world, entity, layer, &kind, true, None);
-    crate::riding::give_strength(world, entity, &kind);
+    crate::riding::give_strength(world, entity, &kind, None);
     reshow(world, entity);
     crate::riding::adopt(world, entity);
     true

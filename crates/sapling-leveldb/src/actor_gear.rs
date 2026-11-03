@@ -30,10 +30,24 @@ pub fn geared_actor(compound: &[u8], armor: &[Option<ItemStack>; 4], hands: &[Op
     ])
 }
 
+/// `compound` holding `hands` (main, off), the rest of it as it was.
+pub fn handed_actor(compound: &[u8], hands: &[Option<ItemStack>; 2], registry: &BlockRegistry) -> Result<Vec<u8>, Error> {
+    with_fields(compound, [("Mainhand", stacks(&hands[..1], registry)), ("Offhand", stacks(&hands[1..], registry))])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::actors::{actors, new_actor};
+
+    #[test]
+    fn a_mob_reads_back_the_hands_it_was_given() {
+        let registry = BlockRegistry::vanilla();
+        let sword = ItemStack { name: "minecraft:iron_sword".into(), count: 1, damage: 0, block: None, tag: None };
+        let zombie = new_actor(-4, "minecraft:zombie", [8.5, 64.0, 0.5], [0.0; 3]);
+        let actor = actors(&handed_actor(&zombie, &[Some(sword.clone()), None], &registry).unwrap()).unwrap().remove(0);
+        assert_eq!((actor.mainhand.as_ref(), actor.offhand.as_ref()), (Some(&sword), None));
+    }
 
     #[test]
     fn a_stand_reads_back_what_it_was_given() {

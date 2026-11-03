@@ -189,6 +189,11 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, depth: O
     let in_layer_zero = !beside_block || liquid == Liquid::Lava || !holds && waterlog::reaction(registry, block) != LiquidReaction::Noreaction;
     let Some(id) = depth.map_or(Some(registry.air_id()), |depth| registry.find(liquid.name(), &format!("liquid_depth={depth}"))) else { return false };
     let written = if in_layer_zero { send::set(world, layer, pos, id) } else { send::set_liquid(world, layer, pos, id) };
+    // A block that cannot stand in the water run in beside it breaks, the water taking its cell
+    // (cave and nether vines, research/captures/bds-plantpop2.txt).
+    if written && !in_layer_zero && super::level(world, layer).is_some_and(|level| !super::ground::may_stand(level, pos, block)) {
+        super::updates::pop(world, layer, pos);
+    }
     if written {
         disturb(world, layer, pos);
     }

@@ -1,7 +1,7 @@
 //! What BDS's `/setblock` (and so `ShardCtx::update_block`) writes beyond the block named
 //! (research/captures/bds-fixset.txt, bds-bkticks.txt): a bed is laid whole with its head in the
 //! named cell; nether vines, cave vines and kelp under water take a random age; a live coral fan
-//! keeps a water source beside itself, which then runs.
+//! or kelp keeps a water source beside itself, which then runs.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Face};
@@ -45,7 +45,8 @@ pub(super) fn put_bed(world: &mut World, layer: Entity, pos: BlockPos, id: u32) 
 pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
     let block = aged(world, layer, pos, block);
     let put = send::put_block(world, layer, pos, &block)?;
-    if put && is_live_fan(&block.name) {
+    // Kelp set in air got a source beside itself too (research/captures/bds-plantpop.txt).
+    if put && (is_live_fan(&block.name) || block.name == "minecraft:kelp") {
         liquid::pour(world, layer, pos, liquid::Liquid::Water, true);
     }
     Some(put)
