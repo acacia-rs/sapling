@@ -1,7 +1,7 @@
 //! A villager's bed (its pack's `minecraft:dweller`, `behavior.move_towards_dwelling_restriction`
 //! and `behavior.sleep`): at its looks (jobs.rs) one without a bed claims the nearest free bed's
-//! head as it does a job site; its schedule (schedule.rs) takes it home to it, and at bed time it
-//! lies on it until its schedule wakes it.
+//! head as it does a job site; at bed time (schedule.rs) it walks to it and lies on it until its
+//! schedule wakes it.
 // TODO: BDS's bed claim is a village POI, not decompiled; a sleeper here rests on its bed's head.
 
 use acacia_proto::packets::SetEntityData;
