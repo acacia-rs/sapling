@@ -23,7 +23,8 @@ fn ours(entity: &BlockEntity) -> (String, Option<i32>) {
         BlockEntity::Vault { table, key } => (format!("vault {table} {key}"), None),
         BlockEntity::Bed(color) => (format!("bed {color}"), None),
         BlockEntity::Bell => ("bell".into(), None),
-        BlockEntity::Cauldron => ("cauldron".into(), None),
+        BlockEntity::Cauldron(potion) => (format!("cauldron {potion}"), None),
+        BlockEntity::FlowerPot(plant) => (format!("flower pot {plant}"), None),
     }
 }
 
@@ -50,7 +51,8 @@ fn theirs(nbt: &Value) -> Option<(String, Option<i32>)> {
         "DecoratedPot" => (format!("pot {}", string("LootTable").unwrap_or("-".into())), seed),
         "Bed" => (format!("bed {}", match nbt.get("color") { Some(Value::Byte(color)) => *color as u8, _ => 255 }), None),
         "Bell" => ("bell".into(), None),
-        "Cauldron" => ("cauldron".into(), None),
+        "Cauldron" => (format!("cauldron {}", match nbt.get("PotionId") { Some(Value::Short(id)) => *id, _ => -2 }), None),
+        "FlowerPot" => (format!("flower pot {}", text(nbt.get("PlantBlock").and_then(|plant| plant.get("name"))).unwrap_or_default()), None),
         _ => (format!("loot {}", string("LootTable")?), seed),
     })
 }

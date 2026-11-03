@@ -25,8 +25,9 @@ Tables are pack paths (`loot_tables/chests/simple_dungeon.json`); a template's J
 (sapling too since 2026-11-03, below), flower pots, sculk blocks and the mansion's pre-filled chests
 (template `Items`), the last three left out here. Seen in the oracle
 world `20261003-structures` (`block_entity_dump`, 2026-10-29): `Bed` `color` Byte (0, 4, 10, 11, 13, 14),
-`Bell` `Direction` Int 0, `Ringing` Byte 0, `Ticks` Int (24, 33 seen), `FlowerPot` `PlantBlock` {name,
-states, version 18168865}, `Cauldron` `Items` [], `PotionId` and `PotionType` Short -1.
+`Bell` `Direction` Int 0, `Ringing` Byte 0, `Ticks` Int (24, 33 seen; ticks loaded, below), `FlowerPot`
+`PlantBlock` {name, states, version 18168865}, `Cauldron` `Items` [], `PotionId` (-1, the witch hut's
+drawn) and `PotionType` Short -1.
 
 ## Where the tables and seeds come from
 
@@ -134,12 +135,29 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   read back because `set_block_entity` kept an entity without `x`/`y`/`z`, which the column drops
   (`pistons::at_place` now adds them). A shot pot was not drilled.
 - Brushing's dust particles (0x56) and BDS's InventoryContent resyncs while a brush is held.
-- The mansion template chests' own `Items`; flower pots (`PlantBlock`) and the other non-loot entities.
+- The mansion template chests' own `Items`; template flower pots (below) and the other non-loot entities.
   Beds, bells and cauldrons are written since 2026-11-03 (templates.bin kinds `bed`, `bell`, `cauldron`;
   the witch hut's cauldron in `scattered/hut.rs`). `block_entity_diff 20261003 20261003-structures`:
   every bed (0, 4, 10, 11, 13, 14), bell and cauldron same. BDS saved the trial chambers' magenta and
-  brown beds red (14), which the script copies. Bells' `Ticks` (24, 33) and a hut cauldron's potion are
-  0/none here (TODOs). No template holds a plain pot.
+  brown beds red (14), which the script copies. No template holds a plain pot.
+- The witch hut's cauldron (`SwamplandHut::postProcess` 14836de70, 2026-11-03): after the level's
+  `nextInt(3)` the hut draws `nextInt(100)` and sets the cauldron actor's potion id (+0x288, saved
+  `PotionId`; `PotionType` stays -1): below 10 water breathing (19), 15 fire resistance (12), 30
+  swiftness (14), 40 slowness (17), 65 poison (25), 75 weakness (34), else healing (21). The
+  globals (14ccc09f8 ...) were named by the potion registry that stores them (14222a750). Sapling:
+  `scattered/hut.rs`, test `the_cauldrons_potion_follows_bds_bounds`. The oracle's one hut
+  (3844 72 -1818) saved `PotionId` 25, `PotionType` -1; `block_entity_diff` same.
+- Bells' `Ticks` (2026-11-03, `block_entity_dump` of both oracle worlds): the same two bells saved
+  24/33 in 20261003-structures and 21/21 in 20261003-structures-still, so it counts the ticks the
+  bell was loaded, not anything generation draws; sapling's 0 is a bell never ticked. Left.
+- Flower pots (2026-11-03): BDS saved 46, every one `FlowerPot` {`PlantBlock` {name, `states` {},
+  `version` 18168865}}. The witch hut's (block `update_bit=1`) holds `minecraft:red_mushroom`;
+  sapling writes it (`hut.rs`, `generated_flower_pot`), `block_entity_diff` same. Not done: the 45
+  template pots (allium 11, deadbush 22, white tulip 5, red tulip 4, oxeye daisy 2, cactus 1).
+  templates.bin carries no plant: `templates_to_rust.py` `block_entity` needs a `flowerpot` kind
+  named from the Java block, and template_blocks.tsv lists only potted cactus, dandelion, dead bush,
+  poppy and spruce sapling, none of the tulips, allium or daisy BDS saved, so how BDS names the plant
+  of the other templates' pots (legacy `flower_pot` + item data?) is unread.
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
   before the vault's first tick rewrites it, so left.
 

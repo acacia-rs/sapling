@@ -20,8 +20,10 @@ pub enum BlockEntity {
     Bed(u8),
     /// A bell, unrung.
     Bell,
-    /// A cauldron of water or nothing, no potion in it.
-    Cauldron,
+    /// A cauldron of water or nothing and the potion id in it (-1 none; the witch hut's: `hut.rs`).
+    Cauldron(i16),
+    /// A flower pot and the plant in it (`minecraft:red_mushroom`).
+    FlowerPot(&'static str),
 }
 
 impl BlockEntity {
@@ -46,7 +48,8 @@ impl BlockEntity {
             Self::Vault { .. } => name == "vault",
             Self::Bed(_) => name == "bed",
             Self::Bell => name == "bell",
-            Self::Cauldron => name == "cauldron",
+            Self::Cauldron(_) => name == "cauldron",
+            Self::FlowerPot(_) => name == "flower_pot",
         }
     }
 }
