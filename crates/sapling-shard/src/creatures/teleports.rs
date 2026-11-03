@@ -79,11 +79,11 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, prey: Optio
     let now = world.resource::<Tick>().0;
     let (Some(body), true) = (world.get::<Body>(entity).copied(), world.get::<Blinks>(entity).is_some()) else { return };
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
-    let weather = crate::weather::of(world, layer);
+    let rains = crate::weather::rains(world, layer);
     let feet = body.at.map(|c| c.floor() as i32);
     let level = world.get::<Layer>(layer).map(|layer| &layer.world);
     let soaked = level.is_some_and(|level| super::harm::touches(level, &body, WATER));
-    let rained = level.is_some_and(|level| super::harm::is_rained_on(level, feet, weather) || super::harm::is_rained_on(level, head, weather));
+    let rained = level.is_some_and(|level| super::harm::is_rained_on(level, feet, rains) || super::harm::is_rained_on(level, head, rains));
     let (wet, lit) = (soaked || rained, super::harm::sun_on(world, layer, head));
     // Rain's own harm is harm.rs's; here it only drives the mob off.
     if soaked {

@@ -91,10 +91,10 @@ pub(super) fn sun_on(world: &World, layer: Entity, at: [i32; 3]) -> bool {
     world.get::<Layer>(layer).is_some_and(|layer| is_sunlit(&layer.world, at, darken))
 }
 
-/// Whether rain falls on the cell `at` in `weather`: the sky is over it and the biome is not
+/// Whether rain falls on the cell `at` while it `rains` (`weather::rains`): the sky is over it and the biome is not
 /// cold enough for snow, which does not put a burning mob out (`Actor::isInWaterOrRain`).
-pub(super) fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], weather: sapling_api::Weather) -> bool {
-    weather != sapling_api::Weather::Clear && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT) && !level.is_cold(x, y, z)
+pub(super) fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], rains: bool) -> bool {
+    rains && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT) && !level.is_cold(x, y, z)
 }
 
 pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
@@ -151,13 +151,13 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let [x, y, z] = super::head(kind, start);
         let head = head_cell(kind, start);
         let (in_wall, under_water) = held_breath(world, entity, layer, kind, start);
-        let (darken, weather) = (crate::light::darken(world, layer), crate::weather::of(world, layer));
+        let (darken, rains) = (crate::light::darken(world, layer), crate::weather::rains(world, layer));
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
         let touching = if burns { level.and_then(|level| super::heat::fire_harm(level, start)) } else { None };
         let scorched = burns && now.on_ground && level.is_some_and(|level| super::heat::on_magma(level, now));
         // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt) and put out a burning cow.
         let feet = start.at.map(|c| c.floor() as i32);
-        let rained = level.is_some_and(|level| is_rained_on(level, feet, weather));
+        let rained = level.is_some_and(|level| is_rained_on(level, feet, rains));
         let sunlit = traits.burns_in_sun && !rained && level.is_some_and(|level| is_sunlit(level, head, darken));
         health.begin();
         let weigh = |world: &mut World, health: &mut Health, before: Health, cause: Cause| crate::damage::weigh(world, entity, health, &before, cause);
