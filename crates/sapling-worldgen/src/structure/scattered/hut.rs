@@ -3,6 +3,7 @@
 
 use super::{STAIRS_DATA, stairs};
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::random::Mt19937;
 use crate::structure::canvas::Canvas;
 use crate::structure::piece::Frame;
@@ -40,6 +41,8 @@ pub fn post_process(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
     let (x, y, z) = f.world(4, 2, 6);
     if canvas.bb.contains(x, y, z) && !CAULDRONS.contains(&canvas.get(x, y, z)) {
         canvas.set(x, y, z, CAULDRONS[random.next_int(3) as usize]);
+        canvas.set_entity(x, y, z, BlockEntity::Cauldron);
+        // TODO: BDS may brew a potion into it by this draw; the oracle's hut cauldrons were not read.
         random.next_int(100);
     }
     f.place(canvas, fence, 1, 2, 1);

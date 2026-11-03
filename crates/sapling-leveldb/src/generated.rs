@@ -113,6 +113,22 @@ pub fn generated_vault(pos: [i32; 3], table: &str, key: &str) -> Value {
     entity("Vault", pos, vec![("config", config), ("data", data)])
 }
 
+/// Either half of a bed of colour `color` (14 red).
+pub fn generated_bed(pos: [i32; 3], color: u8) -> Value {
+    entity("Bed", pos, vec![("color", Value::Byte(color as i8))])
+}
+
+/// A bell no one has rung.
+// TODO: BDS's generated bells saved `Ticks` 24 and 33 (oracle 20261003-structures), unexplained; 0 here.
+pub fn generated_bell(pos: [i32; 3]) -> Value {
+    entity("Bell", pos, vec![("Direction", Value::Int(0)), ("Ringing", Value::Byte(0)), ("Ticks", Value::Int(0))])
+}
+
+/// A cauldron with no potion in it, of water or empty.
+pub fn generated_cauldron(pos: [i32; 3]) -> Value {
+    entity("Cauldron", pos, vec![("Items", empty()), ("PotionId", Value::Short(-1)), ("PotionType", Value::Short(-1))])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -135,5 +151,8 @@ mod tests {
         assert_eq!(spawner.get("EntityIdentifier"), Some(&string("minecraft:zombie")));
         assert_eq!(keys(&spawner)[..2], ["BlockEntityVersion", "Delay"]);
         assert_eq!(keys(&generated_pot([0, 0, 0], None, 0, None)), ["BlockEntityVersion", "animation", "id", "item", "x", "y", "z"]);
+        assert_eq!(keys(&generated_bed([0, 0, 0], 14)), ["BlockEntityVersion", "color", "id", "x", "y", "z"]);
+        assert_eq!(keys(&generated_bell([0, 0, 0]))[..4], ["BlockEntityVersion", "Direction", "Ringing", "Ticks"]);
+        assert_eq!(keys(&generated_cauldron([0, 0, 0]))[..4], ["BlockEntityVersion", "Items", "PotionId", "PotionType"]);
     }
 }

@@ -164,4 +164,7 @@ fn templates_keep_their_block_entities() {
     assert!(has(&|e| matches!(e, BlockEntity::TrialSpawner { .. })));
     assert!(has(&|e| matches!(e, BlockEntity::Spawner("minecraft:magma_cube"))));
     assert!(has(&|e| matches!(e, BlockEntity::Pot { table: Some(_), .. })));
+    // The oracle's village beds were red, yellow, purple, blue, green and white (structure-block-entities.md).
+    assert!([0, 4, 10, 11, 13, 14].iter().all(|color| has(&|e| *e == BlockEntity::Bed(*color))));
+    assert!(has(&|e| *e == BlockEntity::Bell) && has(&|e| *e == BlockEntity::Cauldron));
 }

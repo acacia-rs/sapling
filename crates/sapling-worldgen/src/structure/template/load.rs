@@ -97,6 +97,9 @@ impl Reader {
             "trial" => BlockEntity::TrialSpawner { normal: self.short_str(), ominous: self.short_str() },
             "vault" => BlockEntity::Vault { table: self.short_str(), key: self.short_str() },
             "spawner" => BlockEntity::Spawner(self.short_str()),
+            "bed" => BlockEntity::Bed(self.short_str().parse().expect("templates.bin: a bed's colour")),
+            "bell" => BlockEntity::Bell,
+            "cauldron" => BlockEntity::Cauldron,
             kind => panic!("templates.bin: unknown block entity {kind}"),
         }
     }

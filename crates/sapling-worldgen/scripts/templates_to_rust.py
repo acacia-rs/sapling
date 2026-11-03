@@ -31,6 +31,9 @@ FAMILIES = ['igloo', 'shipwreck', 'ruin', 'ruined_portal', 'village', 'pillagero
 # Transcribed after FAMILIES in this order, each family's states and palette entries appended (templates_palette.state_table
 # `stages`): a new family goes at the end.
 APPENDED = ['bastion', 'endcity']
+# Java's dye colours by Bedrock's bed `color`.
+COLOURS = ['white', 'orange', 'magenta', 'light_blue', 'yellow', 'lime', 'pink', 'gray', 'light_gray', 'cyan', 'purple', 'blue', 'brown',
+           'green', 'red', 'black']
 
 
 def version(pack):
@@ -150,14 +153,25 @@ def table(java):
     return f"loot_tables/{java.removeprefix('minecraft:')}.json" if java else ''
 
 
-def block_entity(nbt):
+def block_entity(key, nbt):
     """What BDS keeps of a template block's entity (docs/research/structure-block-entities.md): a kind, then its
     strings. `loot` table; `pot` table, four sherds (empty when plain); `trial` normal and ominous configs;
-    `vault` table, key item; `spawner` mob. None for the rest."""
+    `vault` table, key item; `spawner` mob; `bed` colour; `bell`; `cauldron`. None for the rest. Beds, bells and
+    cauldrons are named by their block (`key`): Java saves no entity for a cauldron, and a bed's colour is its name."""
     kind = nbt.get('id', '').removeprefix('minecraft:')
+    block = key.partition('[')[0].removeprefix('minecraft:')
+    if block.endswith('_bed') and block[:-4] in COLOURS:
+        # The oracle's trial chambers saved their magenta and brown beds red (20261003-structures).
+        return ['bed', str(14 if block[:-4] in ('magenta', 'brown') else COLOURS.index(block[:-4]))]
+    if block == 'bed':
+        return ['bed', str(nbt.get('color', 14))]
+    if block == 'bell':
+        return ['bell']
+    if block in ('cauldron', 'water_cauldron', 'lava_cauldron', 'powder_snow_cauldron'):
+        return ['cauldron']
     if kind in ('chest', 'trapped_chest', 'barrel', 'dispenser') and nbt.get('LootTable'):
         return ['loot', table(nbt['LootTable'])]
-    if kind == 'decorated_pot' and ('LootTable' in nbt or 'sherds' in nbt):
+    if kind == 'decorated_pot' or block == 'decorated_pot':
         sherds = nbt.get('sherds', [])
         return ['pot', table(nbt.get('LootTable', ''))] + (sherds if len(sherds) == 4 else [''] * 4)
     if kind == 'trial_spawner':
@@ -268,7 +282,7 @@ def main():
                 specials.append((i, 2, [], None))
             elif key.startswith('minecraft:vine[') and 'up=true' in key:
                 specials.append((i, 3, [], None))
-            entity = block_entity(nbt)
+            entity = block_entity(key, nbt)
             if entity:
                 specials.append((i, 4, entity, None))
         out += struct.pack('<H', len(specials))

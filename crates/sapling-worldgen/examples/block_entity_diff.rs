@@ -1,5 +1,6 @@
 //! `block_entity_diff <seed> <world> [max chunks]`: every overworld chunk where BDS saved a
-//! block entity the generator makes (spawners, loot, trial spawners, vaults, pots) against ours,
+//! block entity the generator makes (spawners, loot, trial spawners, vaults, pots, beds, bells,
+//! cauldrons) against ours,
 //! tallied per kind and table as `same`, `seed` (only the loot seed differs), `other`, `missing`
 //! (BDS only) and `extra` (ours only); the first `other`, `missing` and `extra` are printed.
 //! `<world>` is a folder under `$SAPLING_ORACLE_WORLDS` (e.g. 20261003-structures). `SEEDS=<text>`
@@ -20,6 +21,9 @@ fn ours(entity: &BlockEntity) -> (String, Option<i32>) {
         BlockEntity::Pot { table, seed, .. } => (format!("pot {}", table.unwrap_or("-")), table.map(|_| *seed)),
         BlockEntity::TrialSpawner { normal, .. } => (format!("trial {normal}"), None),
         BlockEntity::Vault { table, key } => (format!("vault {table} {key}"), None),
+        BlockEntity::Bed(color) => (format!("bed {color}"), None),
+        BlockEntity::Bell => ("bell".into(), None),
+        BlockEntity::Cauldron => ("cauldron".into(), None),
     }
 }
 
@@ -44,6 +48,9 @@ fn theirs(nbt: &Value) -> Option<(String, Option<i32>)> {
         "TrialSpawner" => (format!("trial {}", string("normal_config")?), None),
         "Vault" => (format!("vault {table} {key}"), None),
         "DecoratedPot" => (format!("pot {}", string("LootTable").unwrap_or("-".into())), seed),
+        "Bed" => (format!("bed {}", match nbt.get("color") { Some(Value::Byte(color)) => *color as u8, _ => 255 }), None),
+        "Bell" => ("bell".into(), None),
+        "Cauldron" => ("cauldron".into(), None),
         _ => (format!("loot {}", string("LootTable")?), seed),
     })
 }
