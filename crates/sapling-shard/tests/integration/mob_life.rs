@@ -153,10 +153,16 @@ fn a_grown_sniffer_scents_walks_to_soil_and_digs_up_a_seed() {
     h.enter(1, "Alex");
     let sniffer = spawn(&mut h, "minecraft:sniffer", [0.5, 65.0, 0.5]);
     let sent: Vec<_> = (0..30_000).flat_map(|_| h.tick(1)).collect();
-    for flag in [MetadataFlags2::TIMER_FLAG_1, MetadataFlags2::SEARCHING, MetadataFlags2::DIGGING, MetadataFlags2::TIMER_FLAG_2, MetadataFlags2::TIMER_FLAG_3] {
-        assert!(ever_flagged(&sent, sniffer, flag), "{flag:?}");
+    // BDS's bits for timer flag 1, searching, digging, timer flags 2 and 3 (bds-sniffdig.txt).
+    for bit in [51, 49, 42, 52, 53] {
+        assert!(ever_flagged(&sent, sniffer, MetadataFlags2(1 << bit)), "bit {bit}");
     }
-    assert!(!all::<AddItemEntity>(&sent).is_empty(), "a find came up");
+    let finds = all::<AddItemEntity>(&sent);
+    assert!(finds.first().is_some_and(|find| (find.position.y - 65.125).abs() < 1e-4), "a find came up at 0.125 over the feet");
+    let dust = all::<acacia_proto::packets::LevelEvent>(&sent).into_iter().filter(|event| event.event == acacia_proto::packets::LevelEventEvent::ParticleDestroyBlockNoSound).collect::<Vec<_>>();
+    assert!(dust.len() >= 22 && dust.iter().all(|event| event.position.y == 65.0), "dust every 4 ticks from 35 to 119: {}", dust.len());
+    let (find, first) = (&finds[0].position, &dust[0].position);
+    assert!((find.x - first.x).abs() < 0.1 && (find.z - first.z).abs() < 0.1, "the find comes where the dust rose");
 }
 
 /// The cells within `reach` of `centre` across at height `y`.
@@ -174,7 +180,8 @@ fn bred_turtles_have_no_baby_and_one_goes_home_and_lays_eggs_on_sand() {
     sent.extend(watch(&mut h, 6000));
     assert!(added(&sent, "minecraft:turtle").is_empty(), "no baby");
     assert!(turtles.iter().any(|turtle| has_flag(&sent, *turtle, MetadataFlags1::PREGNANT).is_some()), "pregnant");
-    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "lay_egg"), "laid");
+    let laid = all::<LevelSoundEvent>(&sent).into_iter().find(|sound| sound.sound_id == "lay_egg").expect("laid");
+    assert!((laid.position.y - 65.34).abs() < 1e-4, "0.85 of a turtle's height up: {}", laid.position.y);
     assert!(names(&mut h, around([2, 2], 65, 8)).iter().any(|name| name.starts_with("minecraft:turtle_egg[")), "eggs on the sand");
 }
 

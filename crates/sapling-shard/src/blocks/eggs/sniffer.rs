@@ -13,6 +13,9 @@ const SNIFFER: &str = "minecraft:sniffer";
 const MOSS: &str = "minecraft:moss_block";
 /// Ticks to the next tick: the least, and how many more it may be; on moss it is halved.
 const NEXT_TICK: (u64, u32) = (7200, 1600);
+/// BDS's hatched babies came out this far toward -z of the cell's corner, all four seen
+/// (research/captures/bds-sniffers.txt, bds-sniffdig.txt).
+const HATCH_BACK: f32 = 0.3025;
 
 fn on_moss(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
     level(world, layer).and_then(|level| name_at(level, [x, y - 1, z])) == Some(MOSS)
@@ -43,7 +46,7 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
     if !send::set(world, layer, pos, air) {
         return;
     }
-    // TODO: BDS's one hatch seen came out at z - 0.3025 of the corner (research/captures/bds-sniffers.txt).
-    crate::creatures::hatch(world, layer, SNIFFER, pos.map(|c| c as f32));
+    let [x, y, z] = pos.map(|c| c as f32);
+    crate::creatures::hatch(world, layer, SNIFFER, [x, y, z - HATCH_BACK]);
     send::to_viewers(world, layer, pos, &[egg_sound("block.sniffer_egg.hatch", pos)]);
 }

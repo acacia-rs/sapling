@@ -8,7 +8,6 @@
 mod attributes;
 
 use acacia_proto::packets::{MobEffect, MobEffectEventId};
-use acacia_proto::types::PlayerAttributesItemModifiersItem;
 pub(crate) use attributes::{Paced, cushion, tell_pace};
 use bevy_ecs::prelude::*;
 use sapling_api::{Effect, EffectBackend, PlayerId};
@@ -33,9 +32,6 @@ const HUNGERS: f32 = 0.005;
 /// What a level of speed adds of a player's walking speed, and a level of slowness takes.
 pub(crate) const QUICKENS: f32 = 0.2;
 pub(crate) const SLOWS: f32 = 0.15;
-/// Health a level of health boost adds to the most a player has.
-const BOOSTS: f32 = 4.0;
-const BOOSTS_AS: &str = "5d6f0ba2-1186-46ac-b896-c61c5cee99cc";
 /// A level of strength multiplies a hit by the first and adds the second; of weakness likewise
 /// (research/captures/bds-fx.txt: a fist's 1 was 3.99 at strength's second level, 0.3 weak).
 const STRENGTHENS: [f32; 2] = [1.3, 0.3];
@@ -101,12 +97,10 @@ fn pad(world: &mut World, player: Entity, amount: f32) {
 
 /// Sets the most health a player has under the health boost on it now, and tells it.
 fn boost(world: &mut World, player: Entity, id: u64) {
-    let more = level(world, player, Effect::HealthBoost).map(|level| BOOSTS * (f32::from(level) + 1.0));
+    let boosted = level(world, player, Effect::HealthBoost);
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
-    vitals.health.grow(super::MAX + more.unwrap_or(0.0));
-    let mut told = sapling_data::mob_health_update(id, vitals.health.left(), vitals.health.max());
-    (told.attributes[0].default, told.attributes[0].default_max) = (super::MAX, super::MAX);
-    told.attributes[0].modifiers = more.map(|amount| PlayerAttributesItemModifiersItem { id: BOOSTS_AS.into(), name: "HealthBoost".into(), amount, operation: 0, operand: 1, serializable: false }).into_iter().collect();
+    vitals.health.grow(super::boost::boosted_max(super::MAX, boosted));
+    let told = super::boost::boosted_health(id, vitals.health.left(), super::MAX, boosted);
     tell(world, player, &told);
 }
 

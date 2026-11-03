@@ -132,7 +132,8 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
 fn lay(world: &mut World, entity: Entity, layer: Entity, nest: BlockPos) {
     let eggs = 1 + world.get_resource_or_insert_with(Dice::default).roll(MOST_EGGS) as usize;
     if crate::blocks::lay_turtle_eggs(world, layer, nest, eggs) {
-        shown::sound(world, entity, "lay_egg");
+        // BDS's came 0.34 over a turtle's feet, 0.85 of its 0.4 (research/captures/bds-nesting.txt).
+        shown::sound_from(world, entity, "lay_egg", 0.85);
     }
     world.entity_mut(entity).remove::<Nesting>();
     shown::flag(world, entity, Flags::LAYING_EGG, false);

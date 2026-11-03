@@ -62,6 +62,8 @@ pub(super) struct Hunter {
     /// The cells of its way round what stands before its prey, and the tick it found them in.
     way: Vec<[i32; 3]>,
     planned: u64,
+    /// Its prey hit it: a spider's anger keeps it (no `random_stop_interval` in `spider_angry`).
+    angered: bool,
 }
 
 /// Makes the mob a hunter if its kind is one.
@@ -124,6 +126,15 @@ pub(super) fn let_go(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     }
 }
 
+/// Whether the hunter `id`'s `draw` comes up one in `odds` at tick `now`: hashed, so that no
+/// shared random state shifts with how many hunt.
+fn chance(now: u64, id: u64, draw: u64, odds: u32) -> bool {
+    let mut mixed = now.wrapping_mul(0x9e37_79b9_7f4a_7c15) ^ id.rotate_left(32) ^ draw.wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    mixed = (mixed ^ (mixed >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    mixed = (mixed ^ (mixed >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+    (mixed ^ (mixed >> 31)).is_multiple_of(u64::from(odds.max(1)))
+}
+
 /// Keeps or picks the hunter's prey and tells its viewers of a change; where the prey is.
 fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<[f32; 3]> {
     let now = world.resource::<Tick>().0;
@@ -133,14 +144,17 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let since = world.get::<Hunter>(entity)?.since;
     let calm = sapling_data::mob_traits(kind).hunts?.calms.is_some_and(|calms| now >= since + u64::from(calms));
     let keeps = |prey| if prey::is_mob(world, prey) { prey::kept(world, prey, layer, body.at, sight) } else { seen(world, prey, layer, body.at, sight) };
-    let mut found = had.filter(|_| hunts && !calm).and_then(|prey| Some((prey, keeps(prey)?)));
+    let traits = sapling_data::mob_traits(kind).hunts?;
+    let angered = world.get::<Hunter>(entity)?.angered;
+    let stops = !angered && traits.stops.is_some_and(|stops| chance(now, id, 0, stops));
+    let mut found = had.filter(|_| hunts && !calm && !stops).and_then(|prey| Some((prey, keeps(prey)?)));
     // A spider under the sun by day took none on BDS; under a roof or by night it did
     // (research/captures/bds-spiders.txt).
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
     let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && super::harm::sun_on(world, layer, head);
     // One provoked by players still takes the mobs its kind hunts.
-    let traits = sapling_data::mob_traits(kind).hunts?;
-    if found.is_none() && hunts && !dazzled && (now + id).is_multiple_of(LOOKS) {
+    let looks = traits.searches.map_or((now + id).is_multiple_of(LOOKS), |searches| chance(now, id, 1, searches));
+    if found.is_none() && hunts && !dazzled && looks {
         let player = if traits.provoked { super::villagers::outlaw(world, entity, layer, kind, body, sight) } else { nearest(world, layer, body, sight) };
         let mob = prey::nearest(world, entity, layer, body, sight, traits);
         found = [player, mob].into_iter().flatten().min_by(|a, b| distance(a.1, body.at).total_cmp(&distance(b.1, body.at)));
@@ -156,7 +170,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, prey: Option<Entity>) -> Option<()> {
     let now = world.resource::<Tick>().0;
     let mut hunter = world.get_mut::<Hunter>(entity)?;
-    (hunter.prey, hunter.since) = (prey, now);
+    (hunter.prey, hunter.since, hunter.angered) = (prey, now, false);
     let target = prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |id| id.0 as i64);
     let cell = body.at.map(|c| c.floor() as i32);
     let mut told = vec![targets(id, target)];
@@ -182,7 +196,8 @@ pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64,
         take(world, entity, layer, id, kind, body, Some(player));
         // BDS's first hit back came a second or more after, a llama's spit as long as it aims.
         let now = world.resource::<Tick>().0;
-        world.get_mut::<Hunter>(entity).expect("a hunter, above").ready = now + hunts.aims.map_or(COOLDOWN, u64::from);
+        let mut hunter = world.get_mut::<Hunter>(entity).expect("a hunter, above");
+        (hunter.ready, hunter.angered) = (now + hunts.aims.map_or(COOLDOWN, u64::from), true);
         super::bees::spread_anger(world, entity, layer, body.at, player);
     }
 }
