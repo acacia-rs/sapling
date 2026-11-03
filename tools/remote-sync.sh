@@ -12,6 +12,12 @@ opts="-o ConnectTimeout=20 -o ServerAliveInterval=10"
 cargo="env RUSTC_WRAPPER=\$(command -v sccache || echo \$HOME/.cargo/bin/sccache) \$HOME/.cargo/bin/cargo +stable"
 # testbox's link drops connections intermittently
 retry() { for i in 1 2 3 4 5; do "$@" && return 0; echo "retry $i: $1" >&2; sleep 3; done; return 1; }
+# Polls with short calls (a single long ssh would die with the link) for the job's $remote/<file>; a target
+# evicted under a queued job means it never runs, so that ends the wait with exit 99.
+await() {
+  until ssh $opts $host "test -f $remote/$1 || ! test -d $remote/target/" 2>/dev/null; do sleep "${2:-5}"; done
+  ssh $opts $host "test -f $remote/$1" || { echo "exit: 99 (target evicted before the job ran)"; exit 99; }
+}
 
 retry ssh $opts $host "bash -s -- $remote" <"$root/tools/testbox-target.sh" || exit 1
 # Captures and notes stay behind: nothing built or run there reads them, and they are most of the tree.

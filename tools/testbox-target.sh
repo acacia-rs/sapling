@@ -17,7 +17,9 @@ if [ ! -L "$remote/target" ]; then
   ln -s "$mine" "$remote/target"
 fi
 touch "$mine/.used"
-busy() { ! flock -n "$1/.busy" true || ! flock -n "$1/testbox/lock" true 2>/dev/null; }
+# A job synced but still queued for its lock holds nothing; the 3 h grace on .used keeps its target (and job
+# script) from going under it, which left pollers waiting for a .done forever (2026-10-30).
+busy() { ! flock -n "$1/.busy" true || ! flock -n "$1/testbox/lock" true 2>/dev/null || [ -n "$(find "$1/.used" -mmin -180 2>/dev/null)" ]; }
 # Cargo's incremental dir only grows (5 GB of an 11 GB target on 2026-10-24, when tmpfs filled the box's
 # RAM and swap and ssh stopped answering); past 2 GB it goes, costing one slower rebuild.
 incremental=$mine/debug/incremental
