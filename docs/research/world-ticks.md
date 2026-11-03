@@ -86,10 +86,16 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
   Fixed.
 - A small fireball (a dispensed fire charge) meeting TNT lights the cell before the face it met, and
   not the TNT (`blocks/target.rs`, Java `SmallFireball.onHitBlock`). Fixed.
-- Left: BDS's `/setblock` of a coral fan or wall fan writes water into its cell, which spreads and
-  washes the coral plant away; sapling's writes none, so its fans die. The coral block died about
-  45 ticks after it was set on BDS, 80 on sapling: one sample, Java's wait is 60 to 99.
-- Left: BDS's `/setblock` gives kelp and nether vines a random age (19, 8, 7 seen); sapling's gives 0.
+- `/setblock` of a live coral fan or wall fan (bds-fixset.txt) puts a water source in its layer 1,
+  which runs from the next liquid tick; a dead fan stays dry. Sapling's wrote none; fixed
+  (`blocks/commanded.rs`, test `a_live_coral_fan_set_by_command_keeps_a_water_source_beside_itself`).
+  BDS shows fan and water in one UpdateSubchunkBlocks, sapling in two UpdateBlocks. The coral block
+  died about 45 ticks after it was set on BDS, 80 on sapling: one sample, Java's wait is 60 to 99.
+- `/setblock` gives weeping, twisting and cave vines a random age (2 to 17 seen, bds-fixset.txt),
+  and kelp under water (19, bds-bkticks.txt); kelp under glass kept 0. Sapling gave 0; fixed
+  (`nextInt(25)`, same file, test `nether_and_cave_vines_set_by_command_take_a_random_age_unless_one_is_named`).
+- Left: in bds-fixset.txt kelp in a one-deep trough and two twisting vines popped (ParticleDestroy)
+  at a neighbour's setblock; sapling's stayed.
 - Undrillable here: arrows (`/summon arrow` is inert in sapling's drill).
 
 ## Not drilled

@@ -15,6 +15,7 @@ mod buckets;
 mod bulbs;
 mod cauldrons;
 mod command_blocks;
+mod commanded;
 mod conduits;
 mod coral;
 mod composter;
@@ -167,8 +168,8 @@ pub(crate) fn update_block(world: &mut World, layer: Entity, pos: BlockPos, bloc
         (Some(registry), Some((put, id))) if put != id => Some(send::describe(registry, put)),
         _ => None,
     };
-    let door = put_as.and_then(|(put, _)| doors::put_whole(world, layer, pos, put));
-    let put = door.or_else(|| put_block(world, layer, pos, swapped.as_ref().unwrap_or(block)));
+    let door = put_as.and_then(|(put, _)| doors::put_whole(world, layer, pos, put).or_else(|| commanded::put_bed(world, layer, pos, put)));
+    let put = door.or_else(|| commanded::put(world, layer, pos, swapped.as_ref().unwrap_or(block)));
     if put == Some(true) {
         updates::settle(world, layer, pos);
     }
