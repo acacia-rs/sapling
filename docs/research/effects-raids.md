@@ -69,10 +69,14 @@ Bedrock was found.
   5 pillagers 2 vindicators 1 evoker; 6 vindicators 1 witch 2 evokers 2 ridden ravagers. Raiders spawn
   with `minecraft:spawn_for_raid` (ravagers `..._with_pillager_rider` / `..._with_evoker_rider`).
 - 300 ticks before each wave (the bar fills over them), the first wave ~15 s after the start; the next
-  wave once all are dead [bds-raid.txt]. A wave comes 32 out at a random angle on the surface [Java];
-  BDS's horns were 48-70 from the beds and bell, its search 10 tries at `rand*16+32` from an actor,
-  turned away from the village middle [`_createRaid` lambda_9 0x142a50c10], not copied. Villagers ring
-  the bell every ~3.5 s while a raid gathers [bds-raid.txt; not built].
+  wave once all are dead [bds-raid.txt]. A wave's spot: the actor in the village bounds grown by 16
+  farthest (across) from the middle (callback 142a4de30), then up to 10 tries at `rand*16+32` from it at a
+  random angle, folded to the side away from the middle, then a spawn search about that point
+  [`_createRaid` lambda_9 case 1, 0x142a50c10]. BDS's waves came 40-50 from the actor in raidlost and
+  raidhero's first wave, its four raiders a few blocks apart. Sapling (waves.rs): the farthest player
+  within 32 of the middle stands for the bounds, all raiders on one surface cell; it was 32 from the
+  middle [Java] until sapling-raid.txt showed it arriving at once. Villagers ring the bell every ~3.5 s
+  while a raid gathers [bds-raid.txt; not built].
 - A cleared wave shows `%raid.name - %raid.progress 0` at progress 0 for ~2 s (40 ticks) before the next
   wait, or before victory [bds-raid.txt].
 - Won after the last wave: Hero of the Village (29) for 48000 ticks at amplifier 0 (raid level - 1),
@@ -126,11 +130,19 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
 
 ## Not drilled
 
-- Every [Java] rule above: village detection, the wave's spot, hero discount (the trade after the win
-  missed its villager).
-- Raiders seeking the village and captains (BDS's drilled raids had none, no banners). The village uuid
-  sapling keys a raid by is its own. Sapling's own raid drills ran LAGGED at TICK_SCALE 2; the shard
-  tests in `tests/integration/raids.rs` carry the rules.
+- Every [Java] rule above: village detection, hero discount (the trade after the win missed its
+  villager).
+- Captains (BDS's drilled raids had none, no banners). The village uuid sapling keys a raid by is its own.
+- Re-run on sapling 2026-11-03 at TICK_SCALE 1 with `SAPLING_DRILL_WORLD=lowflat` (research/captures/
+  sapling-raid.txt, sapling-raidlost.txt; the default drill world's raised ground at y 60-63 had put
+  every wave on it, 120 above the village). Same now: the waves' kinds, the bar, the omen. Fixed:
+  the wave's spot (above), `/effect ... saturation` answers (vanilla/effects.rs: an instant effect's
+  seconds are taken as ticks, saturation 1000 answered 50 and lasted 1000 ticks), villagers named
+  `Villager` in answers (sapling said `Villager V2`). Still different, not fixed: BDS's pillagers shot
+  the survival actor (19 hurts in raidlost) and two stayed within 16 of the village 30 s after its
+  fall; sapling's took only villagers, came within 16 at once and walked off to celebrate. raidhero
+  waits on `/damage ... entity <who>` parsing (group 1). The drills still mark LAGGED at 1x: one to six
+  skipped ticks around the setup fills, not in the waves.
 - Joining passing raiders (`RaidRecruitSystem` 0x141959650): not built.
 - Ominous item spawners from an active ominous trial spawner: a `/setblock` trial spawner has an empty
   block entity and never woke for an omened player 4.5 off in 30 s (bds-trialomen.txt); it needs a trial

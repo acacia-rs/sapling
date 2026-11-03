@@ -157,7 +157,9 @@ fn display_name(entity: &EntityInfo) -> String {
         return item_display_name(&item.name, item.damage);
     }
     let id = entity.kind.as_str();
-    sapling_data::entity_display_name(id).or_else(|| sapling_data::item_display_name(id, 0)).map_or_else(|| title_case(id), str::to_owned)
+    // names.tsv lists only `villager`; BDS names a `villager_v2` "Villager" too (bds-raid.txt).
+    let listed = |id: &str| sapling_data::entity_display_name(id).or_else(|| id.strip_suffix("_v2").and_then(sapling_data::entity_display_name));
+    listed(id).or_else(|| sapling_data::item_display_name(id, 0)).map_or_else(|| title_case(id), str::to_owned)
 }
 
 /// An item of `data` as BDS names it in a command's answer: `Raw Chicken`, `Potion of Slowness`.
@@ -197,4 +199,17 @@ fn split(found: Vec<Selected>) -> (Vec<Player>, Vec<EntityInfo>) {
 /// The players `selector` names; the sender where there is none.
 fn players(ctx: &mut ShardCtx<'_>, sender: &Sender, selector: Option<&Selector>) -> Vec<Player> {
     targets(ctx, sender, selector).0
+}
+
+#[cfg(test)]
+mod tests {
+    use sapling_api::EntityId;
+
+    use super::*;
+
+    #[test]
+    fn a_v2_kind_takes_its_listed_kind_s_name() {
+        let named = |kind: &str| display_name(&EntityInfo::new(EntityId(1), kind.into(), [0.0; 3], [0.0; 3], true));
+        assert_eq!([named("minecraft:villager_v2"), named("minecraft:zombie_villager_v2"), named("minecraft:evocation_illager")], ["Villager", "Zombie Villager", "Evoker"]);
+    }
 }
