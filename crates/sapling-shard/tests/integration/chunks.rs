@@ -170,7 +170,7 @@ impl WorldStorage for Gated {
 
 /// Ticks, pausing between, until `conn` was sent `count` columns in total.
 fn tick_until_columns(h: &mut Harness, conn: u64, count: usize) -> Vec<RawPacket> {
-    let deadline = Instant::now() + Duration::from_secs(10);
+    let deadline = Instant::now() + Duration::from_secs(60);
     let mut sent = Vec::new();
     while all::<LevelChunk>(&sent).len() < count {
         assert!(Instant::now() < deadline, "only {} of {count} columns arrived", all::<LevelChunk>(&sent).len());
@@ -215,7 +215,7 @@ fn loads_nobody_sees_any_more_are_dropped() {
     let mut h = Harness::with(config(), World::with_storage(Arc::new(storage.clone())));
     h.join_to_radius(1, 4);
     (0..3).for_each(|_| drop(h.tick(1)));
-    let deadline = Instant::now() + Duration::from_secs(5);
+    let deadline = Instant::now() + Duration::from_secs(60);
     while storage.started.load(Ordering::SeqCst) < 2 {
         assert!(Instant::now() < deadline, "the I/O threads never took a load");
         std::thread::sleep(Duration::from_millis(1));

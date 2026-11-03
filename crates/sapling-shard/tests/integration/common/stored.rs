@@ -62,7 +62,8 @@ pub fn floor_holding(actors: Vec<u8>, blocks: &[([i32; 3], &str)]) -> Arc<Memory
 /// Joins `conn` and ticks until it is in the world; returns everything it was sent.
 pub fn enter_stored(h: &mut Harness, conn: u64) -> Vec<RawPacket> {
     let joined = h.join_to_radius(conn, 2);
-    let deadline = Instant::now() + Duration::from_secs(10);
+    // Only a failure waits it out; a loaded full run (agents' builds beside it) missed 10 s.
+    let deadline = Instant::now() + Duration::from_secs(60);
     let mut sent = Vec::new();
     while all::<PlayStatus>(&sent).is_empty() {
         assert!(Instant::now() < deadline, "the player never spawned");

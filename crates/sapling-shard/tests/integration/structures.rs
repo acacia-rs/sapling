@@ -113,10 +113,10 @@ fn a_deleted_structure_is_gone_and_a_missed_name_deletes_once() {
     h.tick_all();
 }
 
-/// Ticks until `done` holds, at most ten seconds.
+/// Ticks until `done` holds, at most a minute.
 fn tick_until(h: &mut Harness, done: impl Fn(&mut ShardCtx<'_>) -> bool + Send + Sync + 'static) {
     let done = Arc::new(done);
-    let deadline = Instant::now() + Duration::from_secs(10);
+    let deadline = Instant::now() + Duration::from_secs(60);
     loop {
         let (sender, answer) = std::sync::mpsc::channel();
         let check = done.clone();
