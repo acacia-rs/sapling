@@ -167,4 +167,7 @@ fn templates_keep_their_block_entities() {
     // The oracle's village beds were red, yellow, purple, blue, green and white (structure-block-entities.md).
     assert!([0, 4, 10, 11, 13, 14].iter().all(|color| has(&|e| *e == BlockEntity::Bed(*color))));
     assert!(has(&|e| *e == BlockEntity::Bell) && has(&|e| *e == BlockEntity::Cauldron(-1)));
+    // The oracle's template pots: a mansion's legacy items by their data, a desert village's dead bush.
+    let plants = ["allium", "white_tulip", "red_tulip", "oxeye_daisy", "deadbush", "cactus"].map(|plant| format!("minecraft:{plant}"));
+    assert!(plants.iter().all(|plant| has(&|e| matches!(e, BlockEntity::FlowerPot(p) if *p == plant.as_str()))));
 }

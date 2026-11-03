@@ -34,6 +34,15 @@ APPENDED = ['bastion', 'endcity']
 # Java's dye colours by Bedrock's bed `color`.
 COLOURS = ['white', 'orange', 'magenta', 'light_blue', 'yellow', 'lime', 'pink', 'gray', 'light_gray', 'cyan', 'purple', 'blue', 'brown',
            'green', 'red', 'black']
+# A legacy pot's `Item` by its `Data`, and a `potted_` block's plant, as Bedrock names the plant BDS saves.
+LEGACY_PLANTS = {
+    'minecraft:red_flower': ['poppy', 'blue_orchid', 'allium', 'azure_bluet', 'red_tulip', 'orange_tulip', 'white_tulip', 'pink_tulip',
+                             'oxeye_daisy'],
+    'minecraft:sapling': ['oak_sapling', 'spruce_sapling', 'birch_sapling', 'jungle_sapling', 'acacia_sapling', 'dark_oak_sapling'],
+    'minecraft:yellow_flower': ['dandelion'],
+    'minecraft:cactus': ['cactus'],
+}
+POTTED = {'dead_bush': 'deadbush'}
 
 
 def version(pack):
@@ -153,10 +162,21 @@ def table(java):
     return f"loot_tables/{java.removeprefix('minecraft:')}.json" if java else ''
 
 
+def flower_pot_plant(block, nbt):
+    """The plant BDS names in a template pot's `PlantBlock`: a `potted_` block's, or a legacy pot's `Item` and `Data`
+    (the mansion's pots, whose `contents` state says nothing of it). None for an empty pot."""
+    if block.startswith('potted_'):
+        plant = block.removeprefix('potted_')
+        return 'minecraft:' + POTTED.get(plant, plant)
+    if block == 'flower_pot' and nbt.get('Item') in LEGACY_PLANTS:
+        return 'minecraft:' + LEGACY_PLANTS[nbt['Item']][nbt.get('Data', 0)]
+    return None
+
+
 def block_entity(key, nbt):
     """What BDS keeps of a template block's entity (docs/research/structure-block-entities.md): a kind, then its
     strings. `loot` table; `pot` table, four sherds (empty when plain); `trial` normal and ominous configs;
-    `vault` table, key item; `spawner` mob; `bed` colour; `bell`; `cauldron`. None for the rest. Beds, bells and
+    `vault` table, key item; `spawner` mob; `bed` colour; `bell`; `cauldron`; `flower_pot` plant. None for the rest. Beds, bells and
     cauldrons are named by their block (`key`): Java saves no entity for a cauldron, and a bed's colour is its name."""
     kind = nbt.get('id', '').removeprefix('minecraft:')
     block = key.partition('[')[0].removeprefix('minecraft:')
@@ -169,6 +189,9 @@ def block_entity(key, nbt):
         return ['bell']
     if block in ('cauldron', 'water_cauldron', 'lava_cauldron', 'powder_snow_cauldron'):
         return ['cauldron']
+    plant = flower_pot_plant(block, nbt)
+    if plant:
+        return ['flower_pot', plant]
     if kind in ('chest', 'trapped_chest', 'barrel', 'dispenser') and nbt.get('LootTable'):
         return ['loot', table(nbt['LootTable'])]
     if kind == 'decorated_pot' or block == 'decorated_pot':

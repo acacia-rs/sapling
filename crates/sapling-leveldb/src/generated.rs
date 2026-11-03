@@ -132,7 +132,13 @@ pub fn generated_cauldron(pos: [i32; 3], potion: i16) -> Value {
 
 /// A flower pot holding the stateless plant `plant` (`minecraft:red_mushroom`).
 pub fn generated_flower_pot(pos: [i32; 3], plant: &str) -> Value {
-    let block = compound(vec![("name", string(plant)), ("states", compound(Vec::new())), ("version", Value::Int(crate::states::STATE_VERSION))]);
+    // The plant's first state, as BDS saved a template's cactus (`age` 0); a sapling's `age_bit` is unseen.
+    let states = match plant {
+        "minecraft:cactus" => vec![("age", Value::Int(0))],
+        sapling if sapling.ends_with("_sapling") => vec![("age_bit", Value::Byte(0))],
+        _ => Vec::new(),
+    };
+    let block = compound(vec![("name", string(plant)), ("states", compound(states)), ("version", Value::Int(crate::states::STATE_VERSION))]);
     entity("FlowerPot", pos, vec![("PlantBlock", block)])
 }
 
@@ -162,5 +168,7 @@ mod tests {
         assert_eq!(keys(&generated_bell([0, 0, 0]))[..4], ["BlockEntityVersion", "Direction", "Ringing", "Ticks"]);
         assert_eq!(keys(&generated_cauldron([0, 0, 0], -1))[..4], ["BlockEntityVersion", "Items", "PotionId", "PotionType"]);
         assert_eq!(keys(&generated_flower_pot([0, 0, 0], "minecraft:red_mushroom")), ["BlockEntityVersion", "PlantBlock", "id", "x", "y", "z"]);
+        let cactus = generated_flower_pot([0, 0, 0], "minecraft:cactus");
+        assert_eq!(cactus.get("PlantBlock").and_then(|plant| plant.get("states")).and_then(|states| states.get("age")), Some(&Value::Int(0)));
     }
 }
