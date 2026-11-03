@@ -108,7 +108,8 @@ enchantments by activation, worn ones first, then held, then the item's own, eac
 given, and a raised level stays in place (`enchant::place`). Swords gave [Sharpness 3, Unbreaking,
 Looting, Vanishing, Knockback, Mending], a bow [Flame, Unbreaking, Power 3, Infinity, Punch]: Flame acts
 worn and Punch and Infinity as the item's own, which sapling had as held; changed in `enchant/kinds.rs`,
-so the table's offers list them there too (not seen in an offer).
+so the table's offers list them there too (not seen in an offer). Re-drilled on sapling
+(sapling-enchorder.txt): all four items' `ench` lists the same as BDS's.
 
 ## Not drilled
 
