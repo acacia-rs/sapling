@@ -119,7 +119,9 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
   player had dropped into the leaf's cell while it was tilted).
 - A wet sponge set in the Nether: event 3501 0.875 up the cell, then the dry sponge
   (`blocks/sponge.rs`). Fixed.
-- Left: BDS's `/setblock` of a bed writes both halves, sapling's only the one named (commands).
+- `/setblock bed` (bds-fixset.txt): both halves in one UpdateSubchunkBlocks, the named cell the head
+  even with `head_piece_bit` 0, the foot behind it. Sapling wrote one; fixed (`blocks/commanded.rs`,
+  test `a_bed_set_by_command_lies_whole_with_its_head_in_the_cell_named`). BDS sends the pair twice.
 - Left: lodestones (not in the scenes).
 
 ## Not drilled

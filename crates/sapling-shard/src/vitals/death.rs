@@ -129,11 +129,12 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     super::omens::died(world, player);
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None });
     let told = world.get::<Told>(player).is_some();
-    let slayer = world.get::<Slayer>(player).filter(|_| !told && matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| slayer.0.clone());
+    // A told hit has a slayer only from `/damage ... entity <who>`: BDS said `death.attack.mob` for its projectile too (bds-fixmisc.txt).
+    let slayer = world.get::<Slayer>(player).filter(|_| matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| slayer.0.clone());
     let by_player = slayer.as_deref().and_then(|slayer| slayer.strip_prefix(BY_PLAYER)).map(str::to_owned);
     let key = match (slayer.is_some(), by_player.is_some(), cause) {
         (true, true, _) => "death.attack.player",
-        (true, _, Cause::Projectile) => "death.attack.arrow",
+        (true, _, Cause::Projectile) if !told => "death.attack.arrow",
         (true, ..) => "death.attack.mob",
         (false, ..) if told => told_words(cause),
         (false, ..) => words(cause),

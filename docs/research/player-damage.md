@@ -159,6 +159,13 @@ research/captures/bds-hurt2.txt, bds-deaths.txt, bds-fx3.txt, bds-void.txt:
   `campfire` say `death.attack.generic`; `fall` `death.attack.fall`; `block_explosion`
   `death.attack.explosion.by.bed`; the rest their own. `/damage ... entity <mob>` says
   `death.attack.mob`.
+- `/damage <target> <n> <cause> entity <who>` (bds-fixmisc.txt): the damager may be a player or a
+  mob, and the death names it (`death.attack.mob` with the zombie even for `projectile`); without a
+  cause `entity` is a syntax error, as is `entity` with nothing after; a cow damager is
+  `noTargetMatch`, two `commands.damage.tooManySources`. Sapling refused the form; fixed
+  (`vanilla/damage.rs`, `ShardCtx::hurt_player_by`; tests
+  `damage_takes_a_damager_after_a_cause_and_refuses_unknown_words`,
+  `a_player_killed_by_damage_from_a_mob_dies_by_that_mob`). Re-drilled: every answer the same.
 - A rise at the world's spawn is searched for at y 32767 above its column, then found at a spot
   within the spawn radius.
 - Protection IV on an iron chestplate and Feather Falling IV on iron boots (8 points), each hit 10:

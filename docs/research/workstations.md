@@ -187,7 +187,10 @@ secondary slots allow (Silk Touch on shears, the blade enchantments on a spear, 
   `bds_name_probe` now asks for banner data 0 to 15; regenerate `names.tsv` (sapling-data README) to fix it.
 - Re-drilled (sapling-banners.txt): the same drops and tags; in the blast BDS spawned the plain banner before
   the merged pair, sapling after.
-- Still different: a `/replaceitem` banner carries `{Type: 0}` on BDS, bare on sapling.
+- A `/replaceitem` or `/give` banner carries `{Type: 0}` on BDS; sapling's was bare. Fixed
+  (`inventory/plugin.rs` `tag`). `names.tsv` regenerated from BDS (data 1 to 15 added, 15 "White
+  Banner"); it is ignored, so every checkout must regenerate it. Re-drilled (bds-fixreplace.txt):
+  the same.
 
 ## Anvil (drilled, research/captures/bds-anvilnames.txt)
 

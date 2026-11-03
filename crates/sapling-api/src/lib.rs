@@ -30,6 +30,7 @@ mod life_event;
 mod light;
 mod listen;
 mod loot;
+mod mob_items;
 mod movement;
 mod player;
 mod player_event;
@@ -79,6 +80,7 @@ pub use experience::ExperienceBackend;
 pub use weather::{Weather, WeatherBackend};
 pub use light::{Light, LightBackend};
 pub use entity::{EntityBackend, EntityId, EntityInfo};
+pub use mob_items::{MobSlot, MobSlotRefusal};
 pub use world::{RuleValue, WorldBackend};
 pub use world_event::{BlockGrowEvent, BlockSpreadEvent, EntitySpawnEvent, ExplosionEvent, SpawnReason};
 pub use event::{

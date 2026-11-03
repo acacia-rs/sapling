@@ -482,3 +482,6 @@ Captures research/captures/bds-<scene>.txt against sapling-<scene>.txt.
 - An inverted daylight detector gives 15 less the light without the sun's angle, and a new detector
   reads at the next tick (`blocks/daylight.rs`). Not drilled on sapling: its drill world is roofed.
 - Left: a comparator replaced by `/setblock` is not evaluated again on BDS; sapling evaluates it.
+- Drilled same (bds-fixset.txt): `/setblock` of the container beside a comparator (chest to barrel,
+  cake, air) re-evaluates it about 4 ticks later, and a comparator set beside a full chest powers
+  up 4 ticks after; sapling did both already.

@@ -16,6 +16,7 @@ mod blows;
 mod boosts;
 mod breezes;
 mod captains;
+mod command_gear;
 mod dolphins;
 mod drinks;
 mod drowned;

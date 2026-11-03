@@ -107,8 +107,18 @@ Sharpness left BDS's `ench` as [Sharpness, Vanishing], sapling's in the order gi
 ## Not drilled
 
 - Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
-- `/replaceitem` on a mount: BDS fills `slot.inventory` of an unchested donkey (it spilled the goods on death) and
-  plays `saddle` for `slot.saddle`. Sapling does neither, and this was not fixed.
+- `/replaceitem` on a mount, drilled (bds-fixreplace.txt) and fixed (`riding/replaced.rs`, test
+  `mounts_take_tack_by_slot_as_bds_s_did`):
+  - `slot.saddle`: the horse family, `saddle` heard at the feet and the flags; a llama is
+    `commands.generic.exception`.
+  - `slot.armor`: a horse takes horse armour or a carpet (MobArmorEquipment, `armor` mid-body); a
+    llama a carpet the same, anything else unseen; a donkey is an exception.
+  - `slot.chest` on an unchested mount: `badSlotNumber ["0","0","-1"]`; a horse is an exception.
+  - `slot.inventory 0` is the first tack slot (a horse's saddle, a llama's carpet), so an item there
+    unsaddles; the flags are sent only when they change.
+  - Left: a `spawn_tame_adult` horse saddled shows WASD_CONTROLLED and CAN_POWER_JUMP in its flags
+    on BDS; sapling never sets them. Sapling plays `spawn` at that summon, BDS nothing.
+  - Not drilled: a chested mount's `slot.chest` and `slot.inventory` past the tack.
 - Turtles:
   - The 1 to 4 egg count (two clutches seen), the nearest-sand pick and the nest search's 20-tick look.
   - Home for a turtle never hatched.

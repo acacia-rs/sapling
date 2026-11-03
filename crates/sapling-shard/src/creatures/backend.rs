@@ -1,6 +1,6 @@
 //! The entity side of the handlers' context.
 
-use sapling_api::{DamageCause, Effect, EntityBackend, EntityId, EntityInfo, Item, PlayerId};
+use sapling_api::{DamageCause, Effect, EntityBackend, EntityId, EntityInfo, Item, MobSlot, MobSlotRefusal, PlayerId};
 
 use super::health::Health;
 use crate::components::{InLayer, NetId};
@@ -116,5 +116,21 @@ impl EntityBackend for Ctx<'_> {
 
     fn families(&self, kind: &str) -> Vec<String> {
         sapling_data::mob_families(kind).into_iter().map(str::to_owned).collect()
+    }
+
+    fn set_mob_item(&mut self, id: EntityId, slot: MobSlot, item: Option<&sapling_api::Item>) -> Result<(), MobSlotRefusal> {
+        let mob = entities::find(self.world, id).ok_or(MobSlotRefusal::NoSlot)?;
+        let stack = match item {
+            Some(item) => {
+                let layer = self.world.get::<crate::components::Layer>(worlds::current(self.world)).ok_or(MobSlotRefusal::NoSlot)?;
+                Some(crate::inventory::stored(item, layer.world.registry()).ok_or(MobSlotRefusal::NoSlot)?)
+            }
+            None => None,
+        };
+        match slot {
+            MobSlot::Armor(_) | MobSlot::MainHand | MobSlot::OffHand => super::command_gear::set(self.world, mob, slot, stack),
+            _ if crate::riding::is_mount(self.world, mob) => crate::riding::set_mount_item(self.world, mob, slot, stack),
+            _ => Err(MobSlotRefusal::NoSlot),
+        }
     }
 }

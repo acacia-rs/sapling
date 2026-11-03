@@ -297,6 +297,19 @@ impl HealthBackend for Ctx<'_> {
         hurt
     }
 
+    fn hurt_player_by(&mut self, player: PlayerId, amount: f32, cause: DamageCause, by: &sapling_api::Attacker) -> bool {
+        let Some(entity) = self.entity(player) else { return false };
+        let slayer = match by {
+            sapling_api::Attacker::Player(by) => format!("{}{}", death::BY_PLAYER, by.name),
+            sapling_api::Attacker::Mob { kind } => kind.clone(),
+            _ => return self.hurt_player(player, amount, cause),
+        };
+        self.world.entity_mut(entity).insert(death::Slayer(slayer));
+        let hurt = self.hurt_player(player, amount, cause);
+        self.world.entity_mut(entity).remove::<death::Slayer>();
+        hurt
+    }
+
     fn kill_player(&mut self, player: PlayerId) -> bool {
         let Some(entity) = self.entity(player).filter(|entity| is_mortal(self.world, *entity)) else { return false };
         let whole = self.world.get::<Vitals>(entity).map_or(0.0, |vitals| vitals.health.left() + vitals.health.cushion());

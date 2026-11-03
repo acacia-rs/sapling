@@ -12,6 +12,7 @@ use super::health::Health;
 use crate::body::Body;
 use crate::components::{InLayer, NetId};
 use crate::entities::{self, Kind};
+use crate::inventory::worn_in;
 
 const PIECES: usize = 4;
 /// Kinds with 2 points of armour of their own: BDS's zombie and baby zombie took 0.94 of fire's 1
@@ -32,8 +33,10 @@ fn stack(item: &ItemStack) -> sapling_data::Stack<'_> {
     sapling_data::Stack { name: &item.name, count: item.count, damage: item.damage, block: item.block, tag: item.tag.as_ref() }
 }
 
+/// A piece in a slot that does not wear it (stone on the feet) is shown to no one, as BDS's
+/// `/replaceitem` zombie (research/captures/bds-fixreplace.txt).
 fn shown_as(id: u64, worn: &Worn) -> Bytes {
-    let slots: Vec<_> = worn.0.iter().map(|piece| piece.as_ref().map(stack)).collect();
+    let slots: Vec<_> = worn.0.iter().enumerate().map(|(slot, piece)| piece.as_ref().filter(|piece| worn_in(&piece.name) == Some(slot)).map(stack)).collect();
     sapling_net::encode(&sapling_data::mob_armor(id, &slots))
 }
 
@@ -64,18 +67,25 @@ pub(super) fn adopt(world: &mut World, mob: Entity, armor: &[Option<ItemStack>])
 /// Puts `item` on the living mob as its `piece` (0 the helmet to 3 the boots), or takes that piece
 /// off; its viewers see it and its health wears it. False for a piece past the boots.
 pub(crate) fn put_on(world: &mut World, mob: Entity, piece: usize, item: Option<ItemStack>) -> bool {
+    let Some((shown, _)) = wear(world, mob, piece, item) else { return false };
+    let (Some(layer), Some(at)) = (world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(mob).map(|body| body.at)) else { return true };
+    entities::tell_viewers(world, mob, layer, at.map(|c| c.floor() as i32), shown.into_iter().collect());
+    true
+}
+
+/// [`put_on`] telling no one: what would show the mob's armour now, and the piece taken off.
+/// `None` where [`put_on`] is false.
+pub(super) fn wear(world: &mut World, mob: Entity, piece: usize, item: Option<ItemStack>) -> Option<(Option<Bytes>, Option<ItemStack>)> {
     if piece >= PIECES || world.get::<Health>(mob).is_none() || world.get::<super::Dying>(mob).is_some() {
-        return false;
+        return None;
     }
     let mut worn = world.get::<Worn>(mob).cloned().unwrap_or_default();
-    worn.0[piece] = item;
+    let off = std::mem::replace(&mut worn.0[piece], item);
     if let Some(look) = world.get_mut::<Creature>(mob).and_then(|creature| creature.into_inner().look.as_mut()) {
         look.armor = worn.0.to_vec();
     }
     world.entity_mut(mob).insert(worn.clone());
     dress(world, mob);
     super::shown::reshow(world, mob);
-    let (Some(id), Some(layer), Some(at)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(mob).map(|body| body.at)) else { return true };
-    entities::tell_viewers(world, mob, layer, at.map(|c| c.floor() as i32), vec![shown_as(id, &worn)]);
-    true
+    Some((world.get::<NetId>(mob).map(|id| shown_as(id.0, &worn)), off))
 }

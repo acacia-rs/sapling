@@ -115,6 +115,12 @@ impl ShardCtx<'_> {
         self.backend.hurt_player(player, amount, cause)
     }
 
+    /// [`ShardCtx::hurt_player`] with `by` named as who dealt it, as `/damage ... entity <who>`
+    /// does: a death by it is told as by that mob or player.
+    pub fn hurt_player_by(&mut self, player: PlayerId, amount: f32, cause: DamageCause, by: &crate::Attacker) -> bool {
+        self.backend.hurt_player_by(player, amount, cause, by)
+    }
+
     /// Kills a player as `/kill` does. False for one already dead, or in creative or spectator.
     pub fn kill_player(&mut self, player: PlayerId) -> bool {
         self.backend.kill_player(player)
@@ -125,6 +131,9 @@ impl ShardCtx<'_> {
 pub trait HealthBackend {
     fn health(&self, player: PlayerId) -> Option<f32>;
     fn hurt_player(&mut self, player: PlayerId, amount: f32, cause: DamageCause) -> bool;
+    fn hurt_player_by(&mut self, player: PlayerId, amount: f32, cause: DamageCause, _by: &crate::Attacker) -> bool {
+        self.hurt_player(player, amount, cause)
+    }
     fn kill_player(&mut self, player: PlayerId) -> bool;
 }
 

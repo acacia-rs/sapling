@@ -131,8 +131,11 @@ Sapling's run: sapling-burn2.txt.
 - A zombie and a baby zombie in lava took 0.94 of fire's 1 and 2.996 of lava's 4 (its own 2 armour);
   in full diamond 0.21. Sapling's mobs had no armour; the zombie family now has 2 (`birth.rs`
   `SKIN_ARMOUR`), and a player's sword goes through it as BDS's (7.872 of a diamond sword's 8,
-  bds-hits2.txt). `replaceitem` armour on a mob is refused on sapling (noTargetMatch), so the
-  diamond zombie is not followed.
+  bds-hits2.txt). `replaceitem` armour on a mob is now taken and shown as BDS's
+  (bds-fixreplace.txt, `creatures/command_gear.rs`): MobArmorEquipment and `armor.equip_<kind>`
+  for a worn piece, MobEquipment alone for the main hand, `armor.equip_generic` for an offhand
+  shield, stone on the feet taken unseen, saddle and inventory slots an exception. The armour is
+  `creatures/worn.rs`'s, so it counts against damage.
 - An armour stand in lava had 6 health and lost 0.05 every 10 ticks (cause -1); sapling's has none.
 - A burning cow in rain went out 20 ticks after its last burn, the rain begun between: at the turn
   of its next burn. Sapling's burnt on; now `Health::rained_on` (tests/integration/mob_heat.rs). In
@@ -163,9 +166,9 @@ Sapling's run: sapling-hits2.txt. Each mob held by slowness 255, the actor put b
 - `replaceitem ... slot.armor.chest` on a zombie: `MobArmorEquipment` at once. `/damage` 8 (no cause)
   then cost it 5.824, armour and its own 2 points as a sword's hit. Fixed: a mob wears armour
   (`creatures/worn.rs`, `ShardCtx::set_entity_armour`, and a world folder's `Armor`), and `/damage`
-  of a cause armour stops goes through it. Sapling's `/replaceitem` still names players only (fix1's).
+  of a cause armour stops goes through it. `/replaceitem` on a mob now dresses it through `worn.rs`.
 - Sapling's run (sapling-boosts.txt): every health line the same as BDS's; its zombie lost 7.872 to
-  `/damage`, as its `/replaceitem` could not yet dress a mob.
+  `/damage`, as its `/replaceitem` could not yet dress a mob (before fix1; not re-drilled).
 - The actor's `!hit` fell 8.5 blocks short (the held cow and zombie had been pushed); the sword's
   5.824 stands from bds-hits2.txt.
 

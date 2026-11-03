@@ -41,7 +41,7 @@ pub(crate) fn with(registry: &BlockRegistry, id: u32, key: &str, value: &str) ->
 }
 
 /// The cell a bed's head lies in, seen from its foot.
-fn ahead(registry: &BlockRegistry, id: u32, [x, y, z]: BlockPos, steps: i32) -> Option<BlockPos> {
+pub(super) fn ahead(registry: &BlockRegistry, id: u32, [x, y, z]: BlockPos, steps: i32) -> Option<BlockPos> {
     let [across, along] = *AHEAD.get(property(registry, id, "direction")?.parse::<usize>().ok()?)?;
     Some([x + across * steps, y, z + along * steps])
 }
