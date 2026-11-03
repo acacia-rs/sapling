@@ -11,6 +11,10 @@ mod burn;
 mod comparator;
 #[path = "shared/functions_drill.rs"]
 mod functions;
+#[path = "shared/command_lists.rs"]
+mod command_lists;
+#[path = "shared/command_show.rs"]
+mod command_show;
 #[path = "shared/dump.rs"]
 #[allow(dead_code)]
 mod dump;
@@ -102,155 +106,54 @@ mod leftovers;
 
 use std::time::{Duration, Instant};
 
-use acacia_bot::{Bot, BotEvent};
-use acacia_bot::proto::{Packet, packets};
+use acacia_bot::Bot;
+use command_show::show;
 use probe::{SETTLE, clock, connect};
 use liquid::{CONCRETE, CONCRETE_SHOWN, LAVA, LAVA_SHOWN, WATER, WATER_SETTLE, WATER_SHOWN};
+use command_lists::{DEFAULTS, DEFAULTS_SHOWN, GAMERULE, KILL, KILL_SETTLE, KILL_SHOWN, REPLACEITEM, REPLACEITEM_SHOWN};
 
-const GAMERULE: &[&str] = &[
-    "gamerule",
-    "gamerule dodaylightcycle",
-    "gamerule dodaylightcycle false",
-    "gamerule dodaylightcycle false",
-    "gamerule DoDaylightCycle true",
-    "gamerule randomtickspeed",
-    "gamerule randomtickspeed 5",
-    "gamerule randomtickspeed true",
-    "gamerule randomtickspeed -3",
-    "gamerule dodaylightcycle 3",
-    "gamerule nosuchrule true",
-    "gamerule spawnradius 2000000000",
-    "gamerule playerssleepingpercentage 150",
-    "gamerule playerssleepingpercentage -1",
-    "gamerule playerssleepingpercentage 100",
-    "gamerule randomtickspeed 1",
-    "gamerule randomtickspeed 4097",
-    "gamerule spawnradius 128",
-    "gamerule spawnradius -1",
-    "gamerule functioncommandlimit 0",
-    "gamerule functioncommandlimit 10001",
-    "gamerule maxcommandchainlength -1",
-    "gamerule DoDaylightCycle",
-    "gamerule playerwaypoints",
-    "gamerule playerwaypoints banana",
-    "gamerule playerwaypoints off",
-    "gamerule playerwaypoints 0",
-    "gamerule playerwaypoints everyone",
-    "gamerule locatorbar",
-    "gamerule locatorbar false",
-    "gamerule locatorbar true",
-    "gamerule dodaylightcycle true extra",
-    "gamerule",
+/// A drill a scene module names: its lines and the packets shown.
+type Named = Option<(Vec<String>, &'static [&'static str])>;
+
+/// Every scene module's `drill`, one a line; a new module adds its line here.
+const DRILLS: &[fn(&str) -> Named] = &[
+    player::drill,
+    structures::drill,
+    nature::drill,
+    blast::drill,
+    hold::drill,
+    rail::drill,
+    cauldron::drill,
+    keeper::drill,
+    execute::drill,
+    client::drill,
+    maps::drill,
+    bundles::drill,
+    creatures::drill,
+    warden::drill,
+    props::drill,
+    rules::drill,
+    protocol::drill,
+    cmdblocks::drill,
+    cmdlinks::drill,
+    structblocks::drill,
+    parity::drill,
+    companion::drill,
+    harm::drill,
+    fights::drill,
+    crafting::drill,
+    server::drill,
+    redstone_parts::drill,
+    block_ticks::drill,
+    vitality::drill,
+    villages::drill,
+    eggs::drill,
+    tack::drill,
+    growth::drill,
+    mobfix::drill,
+    command_fix::drill,
+    leftovers::drill,
 ];
-
-/// Mobs killed: the death, the loot and when they go; with `domobloot` off, no loot.
-const KILL: &[&str] = &[
-    "gamerule domobspawning false",
-    "summon chicken ~2 ~ ~",
-    "kill @e[type=chicken]",
-    "summon pig ~-2 ~ ~",
-    "kill @e[type=pig]",
-    "summon armor_stand ~ ~ ~2",
-    "kill @e[type=armor_stand]",
-    "gamerule domobloot false",
-    "summon chicken ~2 ~ ~",
-    "kill @e[type=chicken]",
-    "gamerule domobloot true",
-];
-/// Items put into a chest's slots, and the ways that fails.
-const REPLACEITEM: &[&str] = &[
-    "setblock ~2 ~ ~ chest",
-    "replaceitem block ~2 ~ ~ slot.container 0 diamond 10",
-    "replaceitem block ~2 ~ ~ slot.container 1 diamond",
-    "replaceitem block ~2 ~ ~ slot.container 2 stone 70",
-    "replaceitem block ~2 ~ ~ slot.container 27 diamond",
-    "replaceitem block ~2 ~ ~ slot.container -1 diamond",
-    "replaceitem block ~2 ~ ~ slot.container 3 no_such_item",
-    "replaceitem block ~2 ~ ~ slot.container 0 air",
-    "replaceitem block ~ ~-1 ~ slot.container 0 diamond",
-    "replaceitem block ~2 ~ ~ slot.inventory 0 diamond",
-];
-const REPLACEITEM_SHOWN: &[&str] = &["InventorySlot", "InventoryContent", "BlockEntityData"];
-
-/// Which state `/setblock` gives a block named without states.
-const DEFAULTS: &[&str] = &[
-    "setblock ~2 ~ ~ chest",
-    "testforblock ~2 ~ ~ chest [\"minecraft:cardinal_direction\"=\"north\"]",
-    "testforblock ~2 ~ ~ chest [\"minecraft:cardinal_direction\"=\"south\"]",
-    "setblock ~3 ~ ~ furnace",
-    "testforblock ~3 ~ ~ furnace [\"minecraft:cardinal_direction\"=\"north\"]",
-    "testforblock ~3 ~ ~ furnace [\"minecraft:cardinal_direction\"=\"south\"]",
-    "setblock ~4 ~ ~ oak_stairs",
-    "testforblock ~4 ~ ~ oak_stairs [\"weirdo_direction\"=0]",
-    "setblock ~5 ~ ~ hopper",
-    "testforblock ~5 ~ ~ hopper [\"facing_direction\"=0]",
-    // Blocks whose creative item records another state than their first.
-    "setblock ~6 ~ ~ dropper",
-    "testforblock ~6 ~ ~ dropper [\"facing_direction\"=3]",
-    "setblock ~7 ~ ~ piston",
-    "testforblock ~7 ~ ~ piston [\"facing_direction\"=1]",
-    "setblock ~8 ~ ~ amethyst_cluster",
-    "testforblock ~8 ~ ~ amethyst_cluster [\"minecraft:block_face\"=\"up\"]",
-    "setblock ~9 ~ ~ brown_mushroom_block",
-    "testforblock ~9 ~ ~ brown_mushroom_block [\"huge_mushroom_bits\"=14]",
-    "setblock ~12 ~ ~ pointed_dripstone",
-    "testforblock ~12 ~ ~ pointed_dripstone [\"hanging\"=true]",
-    "setblock ~11 ~ ~ small_dripleaf_block",
-    "testforblock ~11 ~ ~ small_dripleaf_block [\"upper_block_bit\"=true]",
-    "testforblock ~11 ~ ~ small_dripleaf_block [\"minecraft:cardinal_direction\"=\"east\"]",
-    "setblock ~12 ~ ~ stonecutter_block",
-    "testforblock ~12 ~ ~ stonecutter_block [\"minecraft:cardinal_direction\"=\"north\"]",
-    "setblock ~13 ~ ~ suspicious_sand",
-    "testforblock ~13 ~ ~ suspicious_sand [\"hanging\"=true]",
-];
-const DEFAULTS_SHOWN: &[&str] = &["UpdateBlock"];
-
-const KILL_SHOWN: &[&str] = &["EntityEvent", "AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "SetEntityData", "Animate", "MobEffect"];
-/// How long each line of the kill drill is watched: a dead mob goes a second after.
-const KILL_SETTLE: Duration = Duration::from_millis(2500);
-
-fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> Result<(), String> {
-    let packet = match event {
-        Some(BotEvent::Packet(packet)) => packet,
-        Some(BotEvent::Disconnected(reason)) => return Err(format!("{who} disconnected: {reason:?}")),
-        Some(_) => return Ok(()),
-        None => return Err(format!("{who} is gone")),
-    };
-    let ms = clock::tick_ms(start);
-    if packet.id == packets::CommandOutput::ID {
-        let answer = packet.decode::<packets::CommandOutput>().map_err(|e| e.to_string())?;
-        let lines: Vec<String> = answer.output.iter().map(|line| format!("{} success={} {:?}", line.message_id, line.success, line.parameters)).collect();
-        println!("{ms:>7} {who:<7} CommandOutput success_count={} data={:?} {}", answer.success_count, answer.data, lines.join(" | "));
-    } else if packet.id == packets::GameRulesChanged::ID {
-        let rules = packet.decode::<packets::GameRulesChanged>().map_err(|e| e.to_string())?;
-        let shown: Vec<String> = rules.rules.iter().map(|rule| format!("{}={:?}", rule.name, rule.value)).collect();
-        println!("{ms:>7} {who:<7} GameRulesChanged {}", shown.join(" "));
-    } else if let Some(rows) = parity::listed(&packet).filter(|_| shown.contains(&"AvailableCommands")) {
-        rows.iter().for_each(|row| println!("{ms:>7} {who:<7} {row}"));
-    } else if let Some(rows) = maps::pixels(&packet).filter(|_| shown.contains(&"MapPixels")) {
-        let text: String = dump::dump(&packet).unwrap_or_default().split(", pixels").next().unwrap_or_default().to_owned();
-        println!("{ms:>7} {who:<7} ClientboundMapItemData {text}");
-        rows.iter().for_each(|row| println!("{ms:>7} {who:<7} {row}"));
-    } else if let Some(text) = protocol::properties(&packet).filter(|_| shown.contains(&"Properties")) {
-        println!("{ms:>7} {who:<7} {text}");
-    } else if let Some(cells) = structures::block_names(&packet).filter(|_| shown.contains(&"UpdateSubchunkBlocks")) {
-        println!("{ms:>7} {who:<7} {cells}");
-    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| ["Text", "SetTime", "SyncWorldClocks"].contains(name) || shown.contains(name)) {
-        let text: String = dump::dump(&packet).unwrap_or_default().chars().take(SHOWN).collect();
-        println!("{ms:>7} {who:<7} {name} {text}");
-    } else if acacia_bot::proto::packet_name(packet.id).is_none() && (shown.contains(&"Unknown") || shown.contains(&"*")) {
-        println!("{ms:>7} {who:<7} Unknown id {} {} bytes", packet.id, packet.body.len());
-    } else if let Some(name) = acacia_bot::proto::packet_name(packet.id).filter(|name| shown.contains(&"*") && !EVERY_TICK.contains(name)) {
-        println!("{ms:>7} {who:<7} {name} {} bytes", packet.body.len());
-    }
-    Ok(())
-}
-
-/// What a `*` drill leaves out: the packets that come whatever a command does.
-const EVERY_TICK: &[&str] = &["MovePlayer", "MoveEntityAbsolute", "MoveEntityDelta", "SetEntityMotion", "SetEntityData", "UpdateAttributes", "NetworkChunkPublisherUpdate", "LevelChunk", "SubChunk", "NetworkStackLatency", "CurrentStructureFeature"];
-
-/// Characters of a drill's own packets shown.
-const SHOWN: usize = 12000;
 
 fn owned(lines: &[&str]) -> Vec<String> {
     lines.iter().map(|line| line.to_string()).collect()
@@ -279,7 +182,16 @@ async fn strike(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&st
 /// Does the actor's `!` line while the watcher's packets are shown, so they keep their times.
 async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str], line: &str) -> Result<(), String> {
     let action = async {
-        if !maps::act(actor, line).await && !bundles::act(actor, line).await && !creatures::act(actor, line).await && !cmdblocks::act(actor, line).await && !structblocks::act(actor, line).await && !crafting::act(actor, line).await && !block_ticks::act(actor, line).await && !tack::act(actor, line).await {
+        // A module that does `!` lines adds its line here; the player's is the fallback.
+        let done = maps::act(actor, line).await
+            || bundles::act(actor, line).await
+            || creatures::act(actor, line).await
+            || cmdblocks::act(actor, line).await
+            || structblocks::act(actor, line).await
+            || crafting::act(actor, line).await
+            || block_ticks::act(actor, line).await
+            || tack::act(actor, line).await;
+        if !done {
             player::act(actor, line).await;
         }
     };
@@ -329,7 +241,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("worldcmds") => (world_commands::world(), world_commands::WORLD_SHOWN, SETTLE),
         Some("itemcmds") => (world_commands::items(), world_commands::ITEM_SHOWN, SETTLE),
         Some("functions") => (functions::functions(), functions::FUNCTIONS_SHOWN, SETTLE),
-        Some(other) => match player::drill(other).or_else(|| structures::drill(other)).or_else(|| nature::drill(other)).or_else(|| blast::drill(other)).or_else(|| hold::drill(other)).or_else(|| rail::drill(other)).or_else(|| cauldron::drill(other)).or_else(|| keeper::drill(other)).or_else(|| execute::drill(other)).or_else(|| client::drill(other)).or_else(|| maps::drill(other)).or_else(|| bundles::drill(other)).or_else(|| creatures::drill(other)).or_else(|| warden::drill(other)).or_else(|| props::drill(other)).or_else(|| rules::drill(other)).or_else(|| protocol::drill(other)).or_else(|| cmdblocks::drill(other)).or_else(|| cmdlinks::drill(other)).or_else(|| structblocks::drill(other)).or_else(|| parity::drill(other)).or_else(|| companion::drill(other)).or_else(|| harm::drill(other)).or_else(|| fights::drill(other)).or_else(|| crafting::drill(other)).or_else(|| server::drill(other)).or_else(|| redstone_parts::drill(other)).or_else(|| block_ticks::drill(other)).or_else(|| vitality::drill(other)).or_else(|| villages::drill(other)).or_else(|| eggs::drill(other)).or_else(|| tack::drill(other)).or_else(|| growth::drill(other)).or_else(|| mobfix::drill(other)).or_else(|| command_fix::drill(other)).or_else(|| leftovers::drill(other)) {
+        Some(other) => match DRILLS.iter().find_map(|drill| drill(other)) {
             Some((lines, shown)) => (lines, shown, burn::BURN_SETTLE),
             None => return Err(format!("no drill {other}").into()),
         },
