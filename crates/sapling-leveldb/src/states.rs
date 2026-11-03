@@ -19,7 +19,7 @@ use crate::upgrade::{self, States};
 /// The block vanilla itself shows for blocks it does not know.
 pub const PLACEHOLDER: &str = "minecraft:info_update";
 /// The `version` of written entries (1.21.60.33); tests/world.rs holds it to what BDS saves.
-const STATE_VERSION: i32 = 18_168_865;
+pub(crate) const STATE_VERSION: i32 = 18_168_865;
 
 pub struct BlockStates {
     registry: Arc<BlockRegistry>,

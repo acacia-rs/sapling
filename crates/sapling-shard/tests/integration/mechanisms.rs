@@ -91,6 +91,46 @@ fn sand_falling_into_water_splashes_once_as_on_bds() {
 }
 
 #[test]
+fn a_dying_cow_falling_into_water_makes_no_splash_as_on_bds() {
+    // research/captures/bds-wetflags.txt: a cow killed in the pool splashed no more; a living one does.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block([6, 65, 0], &Block::new("water")) && ctx.set_block([10, 65, 0], &Block::new("water"))));
+    h.tick_all();
+    let dying = common::asking::ask(&mut h, |ctx| ctx.spawn_entity("minecraft:cow", [6.5, 67.0, 0.5]).expect("a cow"));
+    common::asking::ask(&mut h, |ctx| ctx.spawn_entity("minecraft:cow", [10.5, 67.0, 0.5]).expect("a cow"));
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(dying)));
+    let sent: Vec<RawPacket> = (0..30).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let splashes: Vec<f32> = all::<LevelSoundEvent>(&sent).into_iter().filter(|sound| sound.sound_id == "splash").map(|sound| sound.position.x).collect();
+    assert_eq!(splashes, [10.5], "the living cow's alone");
+}
+
+#[test]
+fn a_player_splashes_into_water_and_hears_its_eyes_go_under_and_out_as_on_bds() {
+    // research/captures/bds-wetflags.txt: the actor put over the pool splashed (from the middle of
+    // its box), then `ambient.underwater.enter`, and `exit` when put back out; its viewer heard each.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| {
+        (65..68).for_each(|y| assert!(ctx.set_block([6, y, 0], &Block::new("water"))));
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+    });
+    h.tick_all();
+    let mut heard = Vec::new();
+    let falling = acacia_proto::types::Vec3f { x: 0.0, y: -0.45, z: 0.0 };
+    for (feet, delta) in [([6.5, 70.0, 0.5], None), ([6.5, 67.5, 0.5], Some(falling.clone())),([6.5, 65.0, 0.5], Some(falling)), ([6.5, 70.0, 0.5], None)] {
+        h.receive(1, &acacia_proto::packets::PlayerAuthInput { delta: delta.unwrap_or(input_at(feet).delta), ..input_at(feet) });
+        let sent = h.tick_all();
+        let sounds = |to| all::<LevelSoundEvent>(sent.to(to)).into_iter().filter(|sound| sound.entity_type == "minecraft:player").map(|sound| (sound.sound_id, sound.extra_data)).collect::<Vec<_>>();
+        assert_eq!(sounds(1), sounds(2), "the player and its viewer alike");
+        heard.extend(sounds(2));
+    }
+    let volume = ((0.45f32 * 0.45).sqrt() * 0.2 * 16_777_215.0) as i32;
+    assert_eq!(heard, [("splash".to_owned(), volume), ("ambient.underwater.enter".to_owned(), -1), ("ambient.underwater.exit".to_owned(), -1)]);
+}
+
+#[test]
 fn concrete_powder_sets_where_water_touches_it_as_on_bds() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

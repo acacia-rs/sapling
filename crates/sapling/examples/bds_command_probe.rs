@@ -103,6 +103,8 @@ mod mobfix;
 mod command_fix;
 #[path = "shared/leftover_drill.rs"]
 mod leftovers;
+#[path = "shared/open3_drill.rs"]
+mod open3;
 
 use std::time::{Duration, Instant};
 
@@ -153,6 +155,7 @@ const DRILLS: &[fn(&str) -> Named] = &[
     mobfix::drill,
     command_fix::drill,
     leftovers::drill,
+    open3::drill,
 ];
 
 fn owned(lines: &[&str]) -> Vec<String> {

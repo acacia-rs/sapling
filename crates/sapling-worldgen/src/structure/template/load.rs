@@ -99,7 +99,7 @@ impl Reader {
             "spawner" => BlockEntity::Spawner(self.short_str()),
             "bed" => BlockEntity::Bed(self.short_str().parse().expect("templates.bin: a bed's colour")),
             "bell" => BlockEntity::Bell,
-            "cauldron" => BlockEntity::Cauldron,
+            "cauldron" => BlockEntity::Cauldron(-1),
             kind => panic!("templates.bin: unknown block entity {kind}"),
         }
     }

@@ -118,15 +118,22 @@ pub fn generated_bed(pos: [i32; 3], color: u8) -> Value {
     entity("Bed", pos, vec![("color", Value::Byte(color as i8))])
 }
 
-/// A bell no one has rung.
-// TODO: BDS's generated bells saved `Ticks` 24 and 33 (oracle 20261003-structures), unexplained; 0 here.
+/// A bell no one has rung, never ticked: BDS's `Ticks` counts the ticks it has been loaded
+/// (the same two bells saved 24/33 in one oracle run, 21/21 in another).
 pub fn generated_bell(pos: [i32; 3]) -> Value {
     entity("Bell", pos, vec![("Direction", Value::Int(0)), ("Ringing", Value::Byte(0)), ("Ticks", Value::Int(0))])
 }
 
-/// A cauldron with no potion in it, of water or empty.
-pub fn generated_cauldron(pos: [i32; 3]) -> Value {
-    entity("Cauldron", pos, vec![("Items", empty()), ("PotionId", Value::Short(-1)), ("PotionType", Value::Short(-1))])
+/// A cauldron of water or empty with the potion `potion` in it (-1 none); generation leaves its
+/// `PotionType` -1 even with a potion (`SwamplandHut::postProcess` 14836de70 sets the id alone).
+pub fn generated_cauldron(pos: [i32; 3], potion: i16) -> Value {
+    entity("Cauldron", pos, vec![("Items", empty()), ("PotionId", Value::Short(potion)), ("PotionType", Value::Short(-1))])
+}
+
+/// A flower pot holding the stateless plant `plant` (`minecraft:red_mushroom`).
+pub fn generated_flower_pot(pos: [i32; 3], plant: &str) -> Value {
+    let block = compound(vec![("name", string(plant)), ("states", compound(Vec::new())), ("version", Value::Int(crate::states::STATE_VERSION))]);
+    entity("FlowerPot", pos, vec![("PlantBlock", block)])
 }
 
 #[cfg(test)]
@@ -153,6 +160,7 @@ mod tests {
         assert_eq!(keys(&generated_pot([0, 0, 0], None, 0, None)), ["BlockEntityVersion", "animation", "id", "item", "x", "y", "z"]);
         assert_eq!(keys(&generated_bed([0, 0, 0], 14)), ["BlockEntityVersion", "color", "id", "x", "y", "z"]);
         assert_eq!(keys(&generated_bell([0, 0, 0]))[..4], ["BlockEntityVersion", "Direction", "Ringing", "Ticks"]);
-        assert_eq!(keys(&generated_cauldron([0, 0, 0]))[..4], ["BlockEntityVersion", "Items", "PotionId", "PotionType"]);
+        assert_eq!(keys(&generated_cauldron([0, 0, 0], -1))[..4], ["BlockEntityVersion", "Items", "PotionId", "PotionType"]);
+        assert_eq!(keys(&generated_flower_pot([0, 0, 0], "minecraft:red_mushroom")), ["BlockEntityVersion", "PlantBlock", "id", "x", "y", "z"]);
     }
 }

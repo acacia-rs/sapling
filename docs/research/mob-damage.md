@@ -147,6 +147,15 @@ Sapling's run: sapling-burn2.txt.
   drops it (sapling-rainvoid.txt): the cow went out, without the steam; fixed
   (`creatures/harm.rs`, tests/integration/mob_heat.rs). Its enderman teleported under the drill
   floor and took no rain, so that was not judged. The campfire and fire resistance cows matched.
+  Re-drilled 2026-11-03 on open ground (`bds_command_probe enderrain`, bds-enderrain.txt: an
+  enderman on the flat ground 60 east of the floor, the bots beside it): BDS's teleported now and
+  then before the rain; ~1 s into it, it was hurt 1 (cause 9, no `splash`) and teleported seven
+  times in 7 ticks, out of sight. Sapling's rain hurt it as BDS's, but rain did not drive it off
+  (`teleports.rs` counted water alone); now rain on its feet or head counts, test
+  `an_enderman_in_rain_teleports_on_and_on`. Re-drilled on sapling (sapling-enderrain.txt): it
+  teleports every tick of the rain, hurt 1 (cause 9) every 10 ticks, as BDS's while in sight. Left:
+  BDS's first rain hurt came ~0.9 s after `/weather rain`, sapling's at once (BDS's rain level
+  ramps up; sapling's rain is on or off), and BDS's left sight after seven, sapling's stayed near.
 
 ## Hits (2026-10-29, `bds_command_probe hits2`, research/captures/bds-hits2.txt)
 
