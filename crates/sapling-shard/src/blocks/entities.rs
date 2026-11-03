@@ -11,6 +11,8 @@ const SKULLS: &[&str] = &[
 ];
 const BANNERS: &[&str] = &["minecraft:standing_banner", "minecraft:wall_banner"];
 const CAMPFIRES: &[&str] = &["minecraft:campfire", "minecraft:soul_campfire"];
+/// The one block whose entity's stacks a creative break leaves.
+pub(super) const POT: &str = "minecraft:decorated_pot";
 /// Opaque black, ARGB.
 const BLACK: i32 = -16_777_216;
 /// Items that keep a field of their block's entity as their damage.

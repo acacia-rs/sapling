@@ -186,6 +186,26 @@ fn a_big_dripleaf_tilts_under_a_player_and_comes_back_up() {
 }
 
 #[test]
+fn a_big_dripleaf_tilts_again_under_a_player_who_fell_into_its_cell() {
+    // research/captures/bds-leafstand.txt: back to none and unstable in one update, the player at the cell's bottom.
+    const LEAF: [i32; 3] = [2, 65, 0];
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 64, 0], &Block::new("minecraft:dirt")) && ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
+    h.tick_all();
+    shooting::face(&mut h, 1, ALEX, [2.5, 65.9375, 0.5], 0.0);
+    (0..25).for_each(|_| drop(h.tick_all()));
+    assert_eq!(tilt_at(&mut h, LEAF), "full_tilt");
+    shooting::face(&mut h, 1, ALEX, [2.5, 65.0, 0.5], 0.0);
+    let mut seen = Vec::new();
+    for _ in 0..100 {
+        h.tick_all();
+        seen.push(tilt_at(&mut h, LEAF));
+    }
+    assert!(!seen.contains(&"none".to_owned()) && seen.contains(&"unstable".to_owned()), "{seen:?}");
+}
+
+#[test]
 fn a_big_dripleaf_on_stone_breaks_when_stood_on() {
     // research/captures/bds-bkblocks.txt: BDS broke one set on stone as it tilted.
     const LEAF: [i32; 3] = [2, 65, 0];
@@ -207,6 +227,34 @@ fn an_arrow_tilts_a_big_dripleaf_fully() {
     shooting::face(&mut h, 1, ALEX, [0.5, 69.0, 0.5], 90.0);
     shooting::draw(&mut h, 20, 10);
     assert_eq!(tilt_at(&mut h, LEAF), "full_tilt");
+}
+
+#[test]
+fn a_seeded_pot_broken_in_creative_leaves_its_loot_and_not_itself() {
+    // research/captures/bds-loot-probe2.txt: the pot of seed 1434522187 left item 307, one, and no pot.
+    const POT: [i32; 3] = [1, 64, 0];
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.set_block(POT, &Block::new("minecraft:decorated_pot")));
+    });
+    h.tick_all();
+    let kept = acacia_proto::nbt::Value::Compound(vec![
+        ("id".into(), acacia_proto::nbt::Value::String("DecoratedPot".into())),
+        ("LootTable".into(), acacia_proto::nbt::Value::String("loot_tables/pots/trial_chambers/corridor.json".into())),
+        ("LootTableSeed".into(), acacia_proto::nbt::Value::Int(1_434_522_187)),
+    ]);
+    h.remote.run(move |ctx| assert!(ctx.set_block_entity(POT, &sapling_api::BlockEntityData::new(kept))));
+    h.tick_all();
+    let table = ask(&mut h, |ctx| ctx.block_entity(POT).and_then(|data| data.get::<acacia_proto::nbt::Value>().and_then(|nbt| nbt.get("LootTable").cloned())));
+    assert!(table.is_some(), "the pot keeps the entity it was given");
+    h.receive(1, &block_actions(&[(BlockAction::StartBreak, POT)]));
+    h.receive(1, &block_actions(&[(BlockAction::PredictBreak, POT)]));
+    (0..3).for_each(|_| drop(h.tick_all()));
+    let left: Vec<(String, u8)> = ask(&mut h, |ctx| ctx.entities().into_iter().filter_map(|entity| entity.item).map(|item| (item.name, item.count)).collect());
+    let bds = sapling_data::item_name(307).expect("item 307").to_owned();
+    assert_eq!(left, [(bds, 1)]);
 }
 
 #[test]

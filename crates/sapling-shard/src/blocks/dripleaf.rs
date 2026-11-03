@@ -60,15 +60,24 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, tilt: &str) {
     }
 }
 
-/// Makes unstable each still, unpowered leaf something stands on.
+/// The cells a body stands on: a mob's under its middle, high enough up; each a player's feet
+/// overlap, however low, so a leaf coming back up under a player who fell into it tilts again at
+/// once, as BDS's did with the player's middle a cell over; a cow there did not
+/// (research/captures/bds-leafstand.txt).
+fn stood_on(body: &super::plates::Body) -> Vec<BlockPos> {
+    let y = body.min[1].floor() as i32;
+    if !body.is_player {
+        let [x, z] = [0, 2].map(|axis| ((body.min[axis] + body.max[axis]) / 2.0).floor() as i32);
+        return if body.min[1] - y as f32 >= ON_TOP { vec![[x, y, z]] } else { Vec::new() };
+    }
+    let span = |axis: usize| body.min[axis].floor() as i32..=(body.max[axis] - 1e-4).floor() as i32;
+    span(0).flat_map(|x| span(2).map(move |z| [x, y, z])).collect()
+}
+
+/// Makes unstable each still, unpowered leaf something stands on ([`stood_on`]).
 pub(crate) fn tilt_under(world: &mut World) {
-    let mut stood: Vec<(Entity, BlockPos)> = super::plates::bodies(world)
-        .into_iter()
-        .filter(|body| !body.spectator)
-        .map(|body| (body.layer, [((body.min[0] + body.max[0]) / 2.0).floor() as i32, body.min[1].floor() as i32, ((body.min[2] + body.max[2]) / 2.0).floor() as i32], body.min[1]))
-        .filter(|(_, [_, y, _], feet)| feet - *y as f32 >= ON_TOP)
-        .map(|(layer, cell, _)| (layer, cell))
-        .collect();
+    let mut stood: Vec<(Entity, BlockPos)> =
+        super::plates::bodies(world).into_iter().filter(|body| !body.spectator).flat_map(|body| stood_on(&body).into_iter().map(move |cell| (body.layer, cell))).collect();
     stood.sort_unstable();
     stood.dedup();
     for (layer, pos) in stood {
@@ -97,5 +106,9 @@ pub(super) fn step(world: &mut World, layer: Entity, pos: BlockPos) {
     };
     if next != now {
         set(world, layer, pos, next);
+    }
+    // BDS tilted it again in the same update when back up under a body.
+    if next == NONE {
+        tilt_under(world);
     }
 }

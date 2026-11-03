@@ -471,8 +471,14 @@ Captures research/captures/bds-<scene>.txt against sapling-<scene>.txt.
   pistons pushing and breaking the other blocks of `rspistons`, a comparator with no side input.
 - A piston does not move an ender chest, jukebox, lodestone, grindstone, vault or trial spawner, and
   breaks a ladder, scaffolding, leaves, a shulker box, pumpkin, melon, flower pot, cactus and dragon
-  egg (`pistons/plan.rs`). Fixed. Left: a torch on the side of a block slime moves broke on BDS and
-  stayed on sapling.
+  egg (`pistons/plan.rs`). Fixed. The torch on the side of a block slime moves (drilled again
+  2026-11-03, `bds_command_probe unheld`, research/captures/bds-unheld.txt, sapling-unheld.txt):
+  BDS shows its `ParticleDestroy` as the push starts and takes it out with its item a tick later;
+  sapling broke it at the push's end. Fixed (`blocks/updates/unheld.rs` `around`, from
+  `pistons.rs`). The old scene's torch hung on air: BDS's rule for any torch, button or rail set
+  where nothing holds it, the same particles then gone a tick later (a rail without particles; a
+  lever, ladder, poppy, carpet or wall sign stays). Sapling kept them; fixed (`unheld.rs`, a bare
+  `redstone_torch`'s `unknown` facing counted as on top; tests/integration/unheld_blocks.rs).
 - Ice takes no power; packed and blue ice do (`redstone/parts.rs` CLEAR). Fixed.
 - A block of redstone beside a comparator is no side input (`redstone/search.rs`). Fixed.
 - A door powered at either half opens both in one `UpdateSubchunkBlocks`, heard at the powered half

@@ -114,9 +114,15 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
 - TNT summoned under water makes no splash (`splash.rs`: the first check only notes the water). Fixed.
 - A big dripleaf on stone breaks when it would tilt (`blocks/dripleaf.rs`). Fixed. On dirt BDS tilts
   as below: `unstable`, 10 ticks `partial_tilt`, 10 `full_tilt`, 100 back to `none`, power setting it
-  back. Same, but its tilt sounds are at the cell's corner, not its middle. Fixed. Left: with the
-  player still on it, BDS's leaf tilted again as soon as it came back up; sapling's did not (its
-  player had dropped into the leaf's cell while it was tilted).
+  back. Same, but its tilt sounds are at the cell's corner, not its middle. Fixed. Re-tilt drilled
+  2026-11-03 (`bds_command_probe leafstand`, research/captures/bds-leafstand.txt, sapling-leafstand.txt):
+  with the player fallen into the leaf's cell, BDS's leaf went `none` and `unstable` in one update and
+  cycled again, the player's middle drifted 0.12 into the next cell; a cow fallen into its leaf's cell
+  and a player on a leaf over its stem did not re-tilt it. Sapling now counts a player whose feet box
+  overlaps the cell, at any height, and looks again when a leaf comes back up (`blocks/dripleaf.rs`
+  `stood_on`; test `a_big_dripleaf_tilts_again_under_a_player_who_fell_into_its_cell`). Sapling's
+  drill player drifted further (x 3.43, out of the cell) and so saw one re-tilt, not two: movement.
+  Sapling sends the tilt sound before the block, BDS after (not followed).
 - A wet sponge set in the Nether: event 3501 0.875 up the cell, then the dry sponge
   (`blocks/sponge.rs`). Fixed.
 - Left: BDS's `/setblock` of a bed writes both halves, sapling's only the one named (commands).
@@ -128,4 +134,5 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
 - A comparator reading a wall frame past a block, by turn.
 - Lodestone: the record's fields, the broadcast's actions, a compass in creative being swapped,
   status 1 for a gone lodestone, and whether BDS tells clients unasked when one breaks.
-- Big dripleaf: the 0.6875 height and the shot (arrows are inert in sapling's drill).
+- Big dripleaf: the 0.6875 height and the shot (arrows are inert in sapling's drill); a stem's leaf
+  under a player (BDS's did not re-tilt; sapling's player fell through it, its head breaking).
