@@ -2,8 +2,7 @@
 //! (research/captures/bds-fixreplace.txt): a piece is worn as [`super::worn`] keeps it, shown in
 //! MobArmorEquipment and heard as put on, at the head for a helmet and mid-body for the rest;
 //! something no slot wears (stone on the feet) is taken and shown to no one; the main hand is
-//! shown silently, the offhand heard.
-// TODO: hand items are kept in no world folder.
+//! shown silently, the offhand heard. The hands are kept in the mob's `Mainhand` and `Offhand`.
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -42,8 +41,10 @@ pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<It
         return Err(MobSlotRefusal::NoSlot);
     };
     let mid = [body.at[0], body.at[1] + body.size[1] * 0.5, body.at[2]];
-    let mut gear = world.get::<Gear>(mob).cloned().unwrap_or_default();
+    let stored = world.get::<Creature>(mob).and_then(|creature| creature.look.as_ref()).map(|look| Gear { main: look.mainhand.clone(), off: look.offhand.clone() });
+    let mut gear = world.get::<Gear>(mob).cloned().or(stored).unwrap_or_default();
     let mut told = Vec::new();
+    let is_hand = matches!(slot, MobSlot::MainHand | MobSlot::OffHand);
     match slot {
         MobSlot::Armor(piece) => {
             let piece = usize::from(piece.min(3));
@@ -67,7 +68,11 @@ pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<It
         }
         _ => return Err(MobSlotRefusal::NoSlot),
     }
+    let hands = [gear.main.clone(), gear.off.clone()];
     world.entity_mut(mob).insert(gear);
+    if is_hand {
+        entities::restore(world, mob, |compound, registry| sapling_world::handed_actor(compound, &hands, registry).ok());
+    }
     if let Some(layer) = world.get::<InLayer>(mob).map(|layer| layer.0) {
         entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), told);
     }

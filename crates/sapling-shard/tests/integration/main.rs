@@ -95,6 +95,7 @@ mod mob_life;
 mod eggs_drilled;
 mod growth_drilled;
 mod mount_packs;
+mod mounts_drilled;
 mod movement_policy;
 mod new_effects;
 mod omens;

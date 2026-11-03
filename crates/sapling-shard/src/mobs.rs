@@ -72,12 +72,13 @@ pub(crate) struct MobGrid {
 /// What shows a stored actor as it was stored; `None` for a dropped item that names no item a
 /// client knows.
 pub(crate) fn announcement(actor: &Actor, id: u64) -> Option<Vec<Bytes>> {
-    announcement_with(actor, id, MetadataFlags1(0), None, None)
+    announcement_with(actor, id, MetadataFlags1(0), None, (None, None))
 }
 
 /// [`announcement`] with `extra` flags on top of those its stored states show, its entity
-/// `properties` where they are known, and the `strides` a mount was born with.
-pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, properties: Option<EntityProperties>, strides: Option<&sapling_data::Strides>) -> Option<Vec<Bytes>> {
+/// `properties` where they are known, and the `strides` a mount was born with and a llama's
+/// `strength`.
+pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, properties: Option<EntityProperties>, (strides, strength): (Option<&sapling_data::Strides>, Option<i32>)) -> Option<Vec<Bytes>> {
     if actor.identifier == ITEM {
         return Some(item_shown(sapling_data::add_item_entity(id, &stack(actor.item.as_ref()?), actor.position, [0.0; 3])?));
     }
@@ -110,6 +111,9 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, p
     }
     if let Some(strides) = strides {
         sapling_data::dress_strides(&mut added, strides, actor.health);
+    }
+    if let Some(strength) = strength {
+        crate::riding::dress_strength(&mut added, strength);
     }
     let mut packets = vec![sapling_net::encode(&added)];
     if actor.armor.iter().any(Option::is_some) {

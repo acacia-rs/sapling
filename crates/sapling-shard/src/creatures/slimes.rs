@@ -164,7 +164,7 @@ pub(super) fn split(world: &mut World, entity: Entity) -> Option<()> {
     sizes::of(&kind, Some(smaller))?;
     let count = SPLITS[0] + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll(SPLITS[1] - SPLITS[0] + 1);
     for _ in 0..count {
-        super::born(world, layer, &kind, [at[0], at[1] + SPLIT_UP, at[2]], super::Birth { reason: sapling_api::SpawnReason::Split, yaw: 0.0, gene: Some(smaller), sound: "born" });
+        super::born(world, layer, &kind, [at[0], at[1] + SPLIT_UP, at[2]], super::Birth { reason: sapling_api::SpawnReason::Split, yaw: 0.0, gene: Some(smaller), sound: Some("born") });
     }
     Some(())
 }

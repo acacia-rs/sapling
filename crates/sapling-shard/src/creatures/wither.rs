@@ -106,7 +106,7 @@ pub(super) fn keep(world: &mut World) {
 
 /// A wither built of blocks with its feet at `feet` (it charges as [`begin`] has it).
 pub(crate) fn build(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option<Entity> {
-    let id = super::born(world, layer, KIND, feet, Birth { reason: SpawnReason::Built, yaw: 0.0, gene: None, sound: "spawn" })?;
+    let id = super::born(world, layer, KIND, feet, Birth { reason: SpawnReason::Built, yaw: 0.0, gene: None, sound: Some("spawn") })?;
     entities::find(world, id)
 }
 

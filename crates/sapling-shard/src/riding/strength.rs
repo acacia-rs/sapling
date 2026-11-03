@@ -1,12 +1,16 @@
 //! A llama's strength (ED `llama.json` and `trader_llama.json`, `minecraft:add_attributes`): 1, 2
 //! or 3 at 32 in 100 each, 4 or 5 at 2 in 100, of at most 5. Its chest holds 3 slots a point
 //! (`additional_slots_per_strength`). Kept as `Strength` and `StrengthMax` (Actor::load
-//! 140d48140) and shown as the `Strength` and `MaxStrength` metadata.
+//! 140d48140) and shown as the `Strength`, `MaxStrength` and `ContainerExtraSlotsPerStrength`
+//! metadata, in its announcement already (research/captures/bds-mountslots.txt).
 
+use acacia_proto::packets::AddEntity;
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 
 use super::packets;
+use super::packs::PER_STRENGTH;
 use crate::blocks::Dice;
 use crate::components::NetId;
 use crate::entities::Stored;
@@ -29,14 +33,24 @@ fn picked(mut draw: u32) -> i32 {
     MAX
 }
 
-/// Gives a llama the strength its stored compound kept, or one rolled now and kept there; false
-/// for a mob that is no llama.
-pub(crate) fn give(world: &mut World, mob: Entity, kind: &str) -> bool {
+/// A strength drawn for a new `kind`; none for a mob that is no llama.
+pub(crate) fn roll(world: &mut World, kind: &str) -> Option<i32> {
+    KINDS.contains(&kind).then(|| picked(world.get_resource_or_insert_with(Dice::default).roll(WEIGHTS.iter().sum())))
+}
+
+/// The strength a stored llama's `compound` kept.
+pub(crate) fn kept(compound: &[u8]) -> Option<i32> {
+    sapling_world::actor_strength(compound).map(|(strength, _)| strength.clamp(1, MAX))
+}
+
+/// Gives a llama the strength its stored compound kept, else `rolled` (or one rolled now), kept
+/// there; false for a mob that is no llama.
+pub(crate) fn give(world: &mut World, mob: Entity, kind: &str, rolled: Option<i32>) -> bool {
     if !KINDS.contains(&kind) {
         return false;
     }
-    let kept = world.get::<Stored>(mob).and_then(|stored| sapling_world::actor_strength(&stored.compound)).map(|(strength, _)| strength);
-    let strength = kept.unwrap_or_else(|| picked(world.get_resource_or_insert_with(Dice::default).roll(WEIGHTS.iter().sum())));
+    let kept = world.get::<Stored>(mob).and_then(|stored| kept(&stored.compound));
+    let strength = kept.or(rolled).or_else(|| roll(world, kind)).unwrap_or(1);
     world.entity_mut(mob).insert(Strength(strength.clamp(1, MAX)));
     if let Some(mut stored) = world.get_mut::<Stored>(mob).filter(|_| kept.is_none())
         && let Ok(compound) = sapling_world::strong_actor(&stored.compound, strength, MAX)
@@ -47,13 +61,26 @@ pub(crate) fn give(world: &mut World, mob: Entity, kind: &str) -> bool {
 }
 
 /// How strong `mob` is; none for a mob that is no llama.
-pub(super) fn of(world: &World, mob: Entity) -> Option<i32> {
+pub(crate) fn of(world: &World, mob: Entity) -> Option<i32> {
     world.get::<Strength>(mob).map(|strength| strength.0)
+}
+
+/// Shows `strength` in a llama's announcement over the recorded llama's.
+pub(crate) fn dress(added: &mut AddEntity, strength: i32) {
+    for item in &mut added.metadata {
+        let value = match item.key {
+            Key::Strength => strength,
+            Key::MaxStrength => MAX,
+            Key::ContainerExtraSlotsPerStrength => PER_STRENGTH as i32,
+            _ => continue,
+        };
+        item.value = Value::Default(Plain::Int(value));
+    }
 }
 
 /// What shows `mob`'s strength to its viewers, after its announcement.
 pub(crate) fn shown(world: &World, mob: Entity) -> Option<Bytes> {
-    Some(packets::strength(world.get::<NetId>(mob)?.0, of(world, mob)?, MAX))
+    Some(packets::strength(world.get::<NetId>(mob)?.0, of(world, mob)?, MAX, PER_STRENGTH as i32))
 }
 
 #[cfg(test)]

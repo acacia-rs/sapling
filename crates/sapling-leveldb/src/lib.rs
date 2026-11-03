@@ -38,7 +38,7 @@ mod world;
 
 use std::path::PathBuf;
 
-pub use actor_gear::{actor_pose, geared_actor};
+pub use actor_gear::{actor_pose, geared_actor, handed_actor};
 pub use actor_harm::{actor_attributes, attributed_actor, harmed_actor};
 pub use actor_home::{actor_home, homed_actor};
 pub use actor_riding::{actor_body, actor_chest, actor_links, actor_strength, bodied_actor, chested_actor, flagged_actor, linked_actor, strong_actor, varied_actor};

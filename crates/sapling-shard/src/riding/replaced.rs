@@ -1,9 +1,8 @@
 //! A mount's tack and goods put by `/replaceitem entity` (research/captures/bds-fixreplace.txt):
-//! `slot.saddle` on the horse family, heard as `saddle` at its feet; `slot.armor` on a horse
+//! `slot.saddle` on the horse family and a camel, heard as `saddle` at its feet; `slot.armor` on a horse
 //! (horse armour or a carpet) or a llama (a carpet; anything else taken unseen), heard as `armor`
 //! mid-body; `slot.chest` into a carried chest's goods; `slot.inventory` over the slots the mob has,
 //! tack first: a horse's saddle and armour, a donkey's saddle, a llama's carpet, then the chest.
-// TODO: a chested mount's `slot.chest` and `slot.inventory` past the tack were not drilled.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{MobSlot, MobSlotRefusal};
@@ -19,6 +18,7 @@ use crate::entities::Kind;
 const SADDLED: [&str; 5] = ["minecraft:horse", "minecraft:donkey", "minecraft:mule", "minecraft:skeleton_horse", "minecraft:zombie_horse"];
 const LLAMAS: [&str; 2] = ["minecraft:llama", "minecraft:trader_llama"];
 const HORSE: &str = "minecraft:horse";
+const CAMEL: &str = "minecraft:camel";
 
 /// Where a mount's tack goes.
 enum Tacked {
@@ -35,7 +35,7 @@ fn tack_slots(kind: &str) -> Vec<Tacked> {
 
 /// Whether `mob` is one this module dresses.
 pub(crate) fn is_mount(world: &World, mob: Entity) -> bool {
-    world.get::<Kind>(mob).is_some_and(|kind| !tack_slots(&kind.0).is_empty())
+    world.get::<Kind>(mob).is_some_and(|kind| kind.0 == CAMEL || !tack_slots(&kind.0).is_empty())
 }
 
 /// Puts `item` in a mount's slot as `/replaceitem entity` does; [`MobSlotRefusal::NoSlot`] for a
@@ -45,7 +45,9 @@ pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<It
     let tack = tack_slots(&kind);
     let goods = packs::goods_size(world, mob, &kind);
     match slot {
-        MobSlot::Saddle if SADDLED.contains(&kind.as_str()) => put_tack(world, mob, &kind, Tacked::Saddle, item, true),
+        // Air named for the saddle answered success and left it on (bds-mountflags.txt).
+        MobSlot::Saddle if item.is_none() && (SADDLED.contains(&kind.as_str()) || kind == CAMEL) => Ok(()),
+        MobSlot::Saddle if SADDLED.contains(&kind.as_str()) || kind == CAMEL => put_tack(world, mob, &kind, Tacked::Saddle, item, true),
         MobSlot::Body if kind == HORSE || LLAMAS.contains(&kind.as_str()) => {
             let is_carpet = item.as_ref().is_some_and(|item| item.name.ends_with("_carpet"));
             // A llama took horse armour and showed nothing (bds-fixreplace.txt).
@@ -57,7 +59,8 @@ pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<It
         MobSlot::Inventory(index) if index < tack.len() => put_tack(world, mob, &kind, tack.into_iter().nth(index).expect("in range"), item, false),
         MobSlot::Inventory(index) if index - tack.len() < goods => put_goods(world, mob, index - tack.len(), item),
         MobSlot::Inventory(_) => Err(MobSlotRefusal::BadSlot { size: tack.len() + goods }),
-        MobSlot::Chest(index) if packs::carries_chest(&kind) => match index < goods {
+        // BDS refused the last goods slot by `slot.chest` (14 of a donkey's 15) and named it in its answer.
+        MobSlot::Chest(index) if packs::carries_chest(&kind) => match index + 1 < goods {
             true => put_goods(world, mob, index, item),
             false => Err(MobSlotRefusal::BadSlot { size: goods }),
         },
@@ -75,7 +78,7 @@ fn put_tack(world: &mut World, mob: Entity, kind: &str, tacked: Tacked, item: Op
             let saddled = item.as_ref().is_some_and(|item| item.name == "minecraft:saddle");
             let was = world.get_mut::<Raised>(mob).map(|mut raised| std::mem::replace(&mut raised.saddled, saddled));
             let changed = was != Some(saddled);
-            let word = changed.then(|| crate::entities::mob_flags(world, mob, kind, acacia_proto::types::MetadataFlags1::SADDLED, saddled));
+            let word = changed.then(|| crate::entities::mob_flags(world, mob, kind, super::saddle_flags(kind), saddled));
             let sound = (by_name && saddled).then(|| super::packets::sound("saddle", id, kind, body.at));
             (sound.into_iter().chain(word.map(|word| super::packets::flags(id, word))).collect::<Vec<_>>(), changed)
         }
