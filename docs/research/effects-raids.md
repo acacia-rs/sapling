@@ -151,7 +151,12 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
   all four took the villager; moved 12 from the actor (15.5 from it) all four took the actor in the same
   tick (pack `reselect_targets`; sapling kept its first prey: fixed, the pillager's `reselects` trait
   in mob-traits.tsv); after the villagers' kill they kept the actor, stayed within 16 and none
-  celebrated, as sapling's goal order has it (a hunter with prey does not celebrate).
+  celebrated, as sapling's goal order has it (a hunter with prey does not celebrate). Re-drilled on
+  sapling after the fix (2026-11-03): the swap to the actor matches, but sapling's slowed pillagers
+  then shot the actor from 12 off; BDS's neither loaded nor shot from there (they did from 10 off of
+  the villager, with the pack's `ranged_attack` `attack_radius` 8). Likely (positions not captured) the
+  arrows' knockback put the actor past the villager, so sapling's swapped back, lost it at the villagers' kill and celebrated. Open:
+  an archer's shooting range (somewhere in 10 to 12 for the pillager, not 8), not ported.
 - raidhero on sapling 2026-11-03 (sapling-raidhero.txt): `/damage … entity CmdActor` killed every
   raider but made no hero, left no experience, counted 1 and answered `commands.damage.failed [""]`
   with no raider left. BDS: 11 orbs, Hero of the Village after the win, success counts 7, 5 and 4,
