@@ -144,6 +144,7 @@ mod structures;
 mod survival;
 mod throws;
 mod tnt;
+mod unheld_blocks;
 mod vanilla_rules;
 mod vehicles;
 mod villager_days;

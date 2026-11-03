@@ -223,6 +223,9 @@ impl Request<'_> {
         if site.mode == GameMode::Survival {
             drops = loot::thrown(self.world, &block.name, &block.properties, &by);
             tags = loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
+        } else if site.mode == GameMode::Creative && name == super::entities::POT {
+            // Its loot and stack, not the pot (research/captures/bds-loot-probe2.txt).
+            tags = loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
         }
         let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
         let event = plugins::offer(self.world,BreakEvent::new(self.player.clone(), pos, block, drops, allowed));

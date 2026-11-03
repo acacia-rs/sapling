@@ -16,6 +16,12 @@ pub enum BlockEntity {
     TrialSpawner { normal: &'static str, ominous: &'static str },
     /// A vault's reward table and the key it takes (`minecraft:trial_key`).
     Vault { table: &'static str, key: &'static str },
+    /// Either half of a bed of this colour (Bedrock's `color`, 14 red).
+    Bed(u8),
+    /// A bell, unrung.
+    Bell,
+    /// A cauldron of water or nothing, no potion in it.
+    Cauldron,
 }
 
 impl BlockEntity {
@@ -38,6 +44,9 @@ impl BlockEntity {
             Self::Pot { .. } => name == "decorated_pot",
             Self::TrialSpawner { .. } => name == "trial_spawner",
             Self::Vault { .. } => name == "vault",
+            Self::Bed(_) => name == "bed",
+            Self::Bell => name == "bell",
+            Self::Cauldron => name == "cauldron",
         }
     }
 }

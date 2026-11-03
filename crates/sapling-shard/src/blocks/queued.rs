@@ -40,6 +40,8 @@ pub(crate) enum Job {
     Dripleaf,
     /// A turtle egg, frogspawn or sniffer egg cracks or hatches (eggs.rs).
     Hatch,
+    /// A torch, button or rail set with nothing holding it goes (updates/unheld.rs).
+    Unheld,
 }
 
 #[derive(Resource, Default)]
@@ -139,5 +141,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Sponge => super::sponge::ticked(world, layer, pos),
         Job::Dripleaf => super::dripleaf::step(world, layer, pos),
         Job::Hatch => super::eggs::ticked(world, layer, pos),
+        Job::Unheld => super::updates::unheld::popped(world, layer, pos),
     }
 }

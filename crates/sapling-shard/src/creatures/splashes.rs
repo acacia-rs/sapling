@@ -24,6 +24,9 @@ const WEAKENS_WITHIN: f32 = 3.0;
 const WEAKENS: f32 = 0.25;
 /// A potion reaches those within this of where it broke.
 const REACH: f32 = 4.0;
+/// How far round each box the share is measured from: BDS's three watchers' shares were 1 - d/4
+/// to within a tick for d the gap to their boxes grown by this.
+const GROWN: f32 = 0.05;
 
 /// The potion a witch `far` from its prey throws at it.
 pub(super) fn choose(world: &mut World, prey: Entity, far: f32) -> i16 {
@@ -40,6 +43,12 @@ pub(super) fn choose(world: &mut World, prey: Entity, far: f32) -> i16 {
     }
 }
 
+/// The share of a potion broken at `at` for the box `(low, high)`: by how far the break is from
+/// the box's nearest point, the box grown by [`GROWN`] (research/captures/bds-splashshare.txt).
+fn share_of((low, high): ([f32; 3], [f32; 3]), at: [f32; 3]) -> f32 {
+    1.0 - (0..3).map(|axis| (low[axis] - GROWN - at[axis]).max(at[axis] - high[axis] - GROWN).max(0.0).powi(2)).sum::<f32>().sqrt() / REACH
+}
+
 /// The potion of data value `data` breaks at `at`, flying from `from`, on the player or mob `struck` if it
 /// met one: that one gets it in full, others within reach a share by how far off they are.
 pub(super) fn burst(world: &mut World, layer: Entity, at: [f32; 3], from: [f32; 3], data: i16, struck: Option<Entity>) {
@@ -48,13 +57,9 @@ pub(super) fn burst(world: &mut World, layer: Entity, at: [f32; 3], from: [f32; 
     let cell = at.map(|c| c.floor() as i32);
     crate::view::to_viewers(world, layer, cell, &[sapling_net::encode(&splash)]);
     late_sounds::play_later(world, 1, layer, cell, super::arrows::sound("glass", at, ""));
-    // BDS shares by how far the break is from the nearest point of each box (bds-clouds2.txt).
     let share = |body: &Body, who: Entity| match struck == Some(who) {
         true => 1.0,
-        false => {
-            let (low, high) = body.bounds();
-            1.0 - (0..3).map(|axis| (low[axis] - at[axis]).max(at[axis] - high[axis]).max(0.0).powi(2)).sum::<f32>().sqrt() / REACH
-        }
+        false => share_of(body.bounds(), at),
     };
     for player in in_world(world) {
         let Some(feet) = world.get::<Position>(player).map(|position| position.feet).filter(|_| world.get::<InLayer>(player).is_some_and(|on| on.0 == layer)) else { continue };
@@ -72,5 +77,16 @@ pub(super) fn burst(world: &mut World, layer: Entity, at: [f32; 3], from: [f32; 
         .collect();
     for (mob, share) in mobs {
         super::afflictions::splashed(world, mob, data, share);
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn bds_watchers_got_their_share_of_900_ticks() {
+    // research/captures/bds-splashshare.txt: the break and each watcher's feet, and the ticks BDS gave.
+    let at = [3.15, -25.7998, 4.5];
+    for (feet, ticks) in [([3.5, -26.0, 6.6], 506), ([5.6, -26.0, 4.5], 428), ([3.5, -26.0, 3.5], 754)] {
+        let bounds = ([feet[0] - 0.3, feet[1], feet[2] - 0.3], [feet[0] + 0.3, feet[1] + 1.8, feet[2] + 0.3]);
+        assert_eq!((900.0 * share_of(bounds, at) + 0.5) as u32, ticks, "{feet:?}");
     }
 }

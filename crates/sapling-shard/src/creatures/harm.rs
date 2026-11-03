@@ -178,7 +178,8 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         }
         let fire = if burns { health.burn(touching, wet) } else { None };
         let fire = fire.filter(|cause| weigh(world, &mut health, before, *cause));
-        if lit && !health.is_burning() && wet {
+        // Rain put BDS's cow out with the same steam and fizz as water (research/captures/bds-rainvoid.txt).
+        if lit && !health.is_burning() && (wet || rained) {
             packets.push(steam(now));
             splash::fizz(world, layer, now, DOUSED);
         }

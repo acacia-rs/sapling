@@ -86,7 +86,7 @@ impl Target {
     fn give(self, ctx: &mut ShardCtx<'_>, effect: Effect, ticks: u32, amplifier: u8, particles: bool) {
         match self {
             Target::Player(id) => drop(ctx.give_effect(id, effect, ticks, amplifier, particles)),
-            Target::Entity(id) => drop(ctx.give_entity_effect(id, effect, ticks, amplifier)),
+            Target::Entity(id) => drop(ctx.give_entity_effect_shown(id, effect, ticks, amplifier, particles)),
         }
     }
 

@@ -130,6 +130,11 @@ impl Creature {
 #[derive(Component)]
 struct Dying(u64);
 
+/// Whether the entity is a mob that died and is not gone yet.
+pub(crate) fn is_dying(world: &World, entity: Entity) -> bool {
+    world.get::<Dying>(entity).is_some()
+}
+
 /// Whether the entity is a mob that has not died.
 pub(crate) fn is_alive(world: &World, entity: Entity) -> bool {
     world.get::<Creature>(entity).is_some() && world.get::<Dying>(entity).is_none()

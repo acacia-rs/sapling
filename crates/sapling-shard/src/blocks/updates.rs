@@ -12,6 +12,8 @@ use super::falling::{self, Change};
 use super::growth::vines;
 use super::{doors, ground, level, liquid, loot, send, shapes, with_property};
 
+pub(super) mod unheld;
+
 /// Cells looked at for one change: a tower of sand is one cell a step.
 const MAX_STEPS: usize = 512;
 /// Blocks that need the block under them (the Java game's `canSurvive`).
@@ -45,7 +47,8 @@ fn depended(registry: &BlockRegistry, id: u32, face: Face) -> bool {
     let Some(state) = registry.get(id).filter(|state| !state.is_air()) else { return false };
     let (index, is) = (face as usize, |key: &str, value: &str| has(state.properties, key, value));
     if state.name.ends_with("torch") {
-        return face != Face::Down && is("torch_facing_direction", TORCH_ON[index]);
+        // A bare `/setblock` torch (`unknown`) went on BDS as one on top would (bds-unheld.txt).
+        return face != Face::Down && (is("torch_facing_direction", TORCH_ON[index]) || face == Face::Up && is("torch_facing_direction", "unknown"));
     }
     if state.name.ends_with("lever") {
         return LEVER_ON[index].iter().any(|on| is("lever_direction", on));
@@ -77,6 +80,11 @@ pub(super) fn pop(world: &mut World, layer: Entity, pos: BlockPos) {
 
 /// Breaks the block at `pos` with what `by` makes it leave.
 pub(super) fn pop_by(world: &mut World, layer: Entity, pos: BlockPos, by: &loot::Breaker) {
+    take(world, layer, pos, by, true);
+}
+
+/// Breaks the block at `pos` with what `by` makes it leave, showing it break where `shown`.
+fn take(world: &mut World, layer: Entity, pos: BlockPos, by: &loot::Breaker, shown: bool) {
     let Some((registry, id)) = block(world, layer, pos) else { return };
     let (air, particles) = (registry.air_id(), send::destroy_particles(registry, pos, id));
     let (name, properties) = registry.get(id).map_or(("", ""), |state| (state.name, state.properties));
@@ -84,7 +92,9 @@ pub(super) fn pop_by(world: &mut World, layer: Entity, pos: BlockPos, by: &loot:
     let mut tags = loot::add_entity_loot(world, layer, pos, &mut left);
     doors::remove_other_half(world, layer, pos);
     if send::set(world, layer, pos, air) {
-        send::to_viewers(world, layer, pos, &[particles]);
+        if shown {
+            send::to_viewers(world, layer, pos, &[particles]);
+        }
         loot::spill_tagged(world, layer, pos, &left, &mut tags);
     }
 }
@@ -123,6 +133,7 @@ fn loosen(world: &mut World, layer: Entity, pos: BlockPos, changed: BlockPos) ->
 
 /// Lets everything that the change at `pos` unsettled fall or break, and what that unsettles.
 pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
+    unheld::noticed(world, layer, pos);
     let mut changed = VecDeque::from([pos]);
     for _ in 0..MAX_STEPS {
         let Some(pos) = changed.pop_front() else { return };

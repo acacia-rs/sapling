@@ -305,8 +305,13 @@ does not resume admiring after a load.
 Sapling's run: sapling-kinds3.txt.
 
 - A witch threw every 3.05 s or so (sapling 3.0). Its poison splash gave the actor it hit 900 ticks
-  on both; a watcher beside the actor got 540 on BDS, 379 on sapling (the share by distance differs,
-  not followed). A splashed instant damage sent no `MobEffect` on BDS; sapling sends an add of 1 tick.
+  on both; a watcher beside the actor got 540 on BDS, 379 on sapling. Drilled 2026-11-03
+  (`bds_command_probe splashshare`, research/captures/bds-splashshare.txt): a dispensed poison
+  potion broken on the actor at (3.15, -25.80, 4.5) gave watchers 2.1 south, 2.1 east and 1 north
+  506, 428 and 754 of 900: 1 - d/4, rounded, for d the gap to the box grown by 0.05 a side (the
+  plain box gap gives 495, 416, 742). Fixed (`creatures/splashes.rs` `share_of`, its unit test). The
+  potion's flight differs (sapling's broke at y -26.07, BDS's -25.80), so the run's shares still
+  differ by a few ticks. A splashed instant damage sent no `MobEffect` on BDS; sapling sends an add of 1 tick.
 - An enderman stared at from 6 off, with and without a carved pumpkin, took no target in either
   run, so the pumpkin was not judged. BDS flipped its `MOVING` flag throughout.
 - Endermen in the rain were hurt 1 every 10 ticks, cause 9, and teleported often. Sapling's took

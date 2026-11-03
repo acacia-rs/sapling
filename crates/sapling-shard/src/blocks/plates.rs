@@ -88,12 +88,13 @@ pub(super) struct Body {
     pub(super) max: [f32; 3],
     is_mob: bool,
     pub(super) spectator: bool,
+    pub(super) is_player: bool,
 }
 
 impl Body {
     fn around(layer: Entity, feet: [f32; 3], half_width: f32, height: f32, is_mob: bool, spectator: bool) -> Body {
         let min = [feet[0] - half_width, feet[1], feet[2] - half_width];
-        Body { layer, min, max: [feet[0] + half_width, feet[1] + height, feet[2] + half_width], is_mob, spectator }
+        Body { layer, min, max: [feet[0] + half_width, feet[1] + height, feet[2] + half_width], is_mob, spectator, is_player: false }
     }
 
     fn presses(&self, layer: Entity, [x, y, z]: BlockPos) -> bool {
@@ -118,7 +119,7 @@ pub(super) fn bodies(world: &mut World) -> Vec<Body> {
     let mut bodies: Vec<Body> = players
         .iter(world)
         .filter(|(_, stage, ..)| **stage == Stage::InWorld)
-        .map(|(layer, _, position, mode)| Body::around(layer.0, position.feet, PLAYER_HALF_WIDTH, PLAYER_HEIGHT, true, mode.0 == GameMode::Spectator))
+        .map(|(layer, _, position, mode)| Body { is_player: true, ..Body::around(layer.0, position.feet, PLAYER_HALF_WIDTH, PLAYER_HEIGHT, true, mode.0 == GameMode::Spectator) })
         .collect();
     // Experience orbs press nothing; anything else but a mob only wooden and weighted plates.
     let others = entities::bodies(world).into_iter().filter(|(_, kind, _)| kind != ORB);

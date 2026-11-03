@@ -81,6 +81,12 @@ Drilled 2026-10-29 (research/captures/bds-fx3.txt):
   `AddPlayer` carried `VisibleMobEffects` 16 (jump boost, `id << 1`). Sapling sends neither the
   `MobEffect` nor `VisibleMobEffects` for a player (not fixed: the AddPlayer metadata and a player's
   `SetEntityData` of it are unbuilt).
+- A mob (2026-11-03, `bds_command_probe lateeffects`, research/captures/bds-lateeffects.txt): the
+  rejoined actor's `AddEntity` of a cow under speed and slowness-without-particles carried
+  `VisibleMobEffects` 2, speed alone. Sapling's carried 0, then 260 (slowness shown: `/effect`'s
+  hide flag was dropped for mobs). Fixed: the announcement keeps the mob's effects
+  (`creatures/afflictions.rs`, `mobs::reannounce_item`), and `/effect` hides a mob's particles
+  (`ShardCtx::give_entity_effect_shown`); test `a_viewer_coming_later_finds_a_mobs_effects_in_its_announcement`.
 
 ## Not drilled
 

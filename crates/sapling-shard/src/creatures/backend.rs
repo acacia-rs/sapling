@@ -89,6 +89,10 @@ impl EntityBackend for Ctx<'_> {
         entities::find(self.world, id).is_some_and(|mob| super::afflictions::give(self.world, mob, effect, ticks, amplifier))
     }
 
+    fn give_entity_effect_shown(&mut self, id: EntityId, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
+        entities::find(self.world, id).is_some_and(|mob| super::afflictions::give_shown(self.world, mob, effect, ticks, amplifier, particles))
+    }
+
     fn remove_entity_effect(&mut self, id: EntityId, effect: Effect) -> bool {
         entities::find(self.world, id).is_some_and(|mob| super::afflictions::take(self.world, mob, Some(effect)))
     }
