@@ -105,6 +105,13 @@ pub(super) fn calm(world: &mut World, entity: Entity, kind: &str, item: &str) ->
     true
 }
 
+/// A new mount's temper, rolled in its kind's range as BDS's `MountTamingComponent` starts it
+/// (148f38bb0; two of three fresh horses were tamed by their first ride, bds-n3ride.txt); 0 for others.
+pub(super) fn first_temper(world: &mut World, kind: &str) -> i32 {
+    let Some((least, most)) = sapling_data::husbandry(kind).and_then(|rules| rules.temper) else { return 0 };
+    least + world.get_resource_or_insert_with(Dice::default).roll((most - least).max(1) as u32) as i32
+}
+
 /// A rider tries to ride the wild mount `entity`: it is tamed if its kind's most temper, rolled,
 /// is below its temper; else it grows calmer and its viewers see it refuse. True when it is tamed
 /// now; for the riding code, which throws the rider off where it is not.

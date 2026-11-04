@@ -106,8 +106,7 @@ pub(crate) fn trodden(world: &mut World, layer: Entity, kind: &str, feet: [f32; 
     if !on_ground || SPARE.contains(&kind) {
         return;
     }
-    // TODO: sapling's mobs sink into an egg's cell where BDS's stand on its top (y -25.55 in
-    // research/captures/bds-eggtrample.txt), so the cell at the feet counts too.
+    // Mobs stand on an egg's top, inside its cell (y -25.55 on both, research/captures/bds-n3eggs.txt).
     let cell = |y: f32| [feet[0].floor() as i32, y.floor() as i32, feet[2].floor() as i32];
     let pos = Some(cell(feet[1])).filter(|inside| is_egg_at(world, layer, *inside)).unwrap_or_else(|| cell(feet[1] - ON_UNDER));
     if !is_egg_at(world, layer, pos) || kind != PLAYER && !level(world, layer).is_some_and(|level| level.level().rules.on(GRIEFING)) {

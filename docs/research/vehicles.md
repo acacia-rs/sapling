@@ -120,4 +120,28 @@ were not found in any of these; sapling does what is listed there.
 - Detector rail timing (Java's), hopper minecart pick-up range, the activator lock of a hopper minecart (not done).
 - What raises a boat's underwater counter (not done); boat fall breaking (none found).
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
-- The horse screen: done without a capture, see mob-life.md "Mount inventories"; the strider and pig boost by stick use.
+- The horse screen: done without a capture, see mob-life.md "Mount inventories".
+
+## Drilled (2026-11-04, `bds_command_probe n3stick`, `n3exit`; examples/shared/ninth3_drill.rs)
+
+- **The carrot stick** (research/captures/bds-n3stick.txt, a saddled pig penned, then one falling
+  from y 60): each use boosted it, heard as `boost` at the pig's head, and wore the stick 2 (21, 23,
+  25); the third broke it (`break` at the rider's eyes) and left a fishing rod in the hand (the
+  rider's interact text became `action.interact.fishing`). A pig falling through the air boosted
+  too. Sapling wore the stick but made no sound and left an empty hand; fixed in
+  `riding/mounts.rs` `boost` and `inventory::wear_hand_leaving`, test
+  `a_worn_out_carrot_on_a_stick_boosts_once_more_and_leaves_a_fishing_rod`. Re-drilled
+  (sapling-n3stick.txt): the three boosts heard at the pig's head as BDS's, the rod left, the
+  falling pig boosted. Left: BDS showed the watcher a `MobEquipment` with each new wear, sapling
+  does not; BDS heard the `break` 0.5 higher (the seated rider's eyes).
+- **Rearing** is cleared the tick the ridden horse lands (riding/rearing.rs `grounded`, test
+  `a_ridden_horse_rears_from_its_jump_until_it_lands`), as research/captures/bds-horse-jump.txt had it.
+- **Exit spots** (bds-n3exit.txt, a saddled pig with a block of twelve kinds on its north side, the
+  rider let off by `/ride stop_riding`): with a still pig BDS tries north first. Water, fire,
+  cobweb, a ripe berry bush, powder snow, a wither rose, and a magma floor all let it off north
+  into that cell, as sapling does; stone and a hole in the floor sent it south, as sapling.
+  Differences left (exit.rs TODO): next to lava and to a campfire BDS sent no correction at all
+  (the client stayed put; in lava it caught fire); by a ladder it was put at (-0.94, -0.06) from the
+  seat; and BDS's correction kept the rider 0.16 to 0.23 above the floor where sapling puts it on
+  the floor. Off a harnessed happy ghast (slowed) BDS put the rider on top of it (`on_top_center`);
+  sapling has no seat layout for the ghast.

@@ -67,11 +67,11 @@ pub use recipes::{
 };
 pub use gear::{Gear, Made, gear};
 pub use spawn::{no_player_spawn, world_spawn};
-pub use spawn_rules::{Medium, SpawnRule, Spot, biome_downfall, biome_has_tag, biome_id, despawn_distances, spawn_category, spawn_rules};
+pub use spawn_rules::{HerdEvents, Medium, SpawnRule, Spot, biome_downfall, biome_has_tag, biome_id, despawn_distances, spawn_category, spawn_rules};
 pub use player::{AddPlayerOptions, add_player, entity_data, experience_attributes, player_flags_extended, player_metadata, update_abilities, update_attributes};
 pub use game_rules::{DAYLIGHT_CYCLE, GameRules, HUNGER, LIQUID_FLOW, MOB_AI, REDSTONE, RuleValue};
 pub use start_game::{EYE_HEIGHT, StartGameOptions, start_game};
-pub use strides::{Strides, dress_strides, has_strides, kept_strides, roll_strides, stride_attributes};
+pub use strides::{Strides, blend_strides, dress_strides, has_strides, kept_strides, roll_strides, stride_attributes};
 pub use templates::{pre_start_packets, registry_packets};
 pub use husbandry::{Husbandry, Swap, husbandry};
 pub use raised_look::{mob_age_set, mob_colour_set, mob_links_set, mob_look, mob_name_set};

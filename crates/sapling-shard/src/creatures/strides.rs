@@ -34,6 +34,30 @@ pub(super) fn stored(world: &mut World, kind: &str, compound: Vec<u8>) -> (Optio
     (rolled, compound)
 }
 
+/// A foal of `kind` takes its `parents`' strides blended, where both are of its kind: its health,
+/// its kept compound and its announcement follow (`sapling_data::blend_strides`).
+pub(super) fn blend(world: &mut World, foal: Entity, parents: [Entity; 2], kind: &str) {
+    let same = parents.iter().all(|parent| world.get::<crate::entities::Kind>(*parent).is_some_and(|of| of.0 == kind));
+    let [Some(a), Some(b)] = parents.map(|parent| world.get::<Strode>(parent).map(|strode| strode.0)) else { return };
+    if !same {
+        return;
+    }
+    let draws = {
+        let mut dice = world.get_resource_or_insert_with(Dice::default);
+        std::array::from_fn(|_| std::array::from_fn(|_| dice.fraction()))
+    };
+    let Some(blended) = sapling_data::blend_strides(kind, &a, &b, draws) else { return };
+    world.entity_mut(foal).insert(Strode(blended));
+    if let Some(mut health) = world.get_mut::<super::Health>(foal) {
+        health.grow(blended.health);
+        health.mend(blended.health);
+    }
+    if let Some(mut stored) = world.get_mut::<crate::entities::Stored>(foal) {
+        stored.compound = keep(std::mem::take(&mut stored.compound), Some(blended));
+    }
+    super::shown::reshow(world, foal);
+}
+
 /// `compound` keeping `strides`.
 pub(super) fn keep(compound: Vec<u8>, strides: Option<Strides>) -> Vec<u8> {
     match strides {

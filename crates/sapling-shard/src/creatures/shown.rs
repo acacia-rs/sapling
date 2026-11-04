@@ -115,7 +115,7 @@ pub(super) fn reshow(world: &mut World, entity: Entity) {
 }
 
 /// Where a mob's head is, as BDS places it; it faces +z (yaw 0).
-pub(super) fn head(kind: &str, body: &Body) -> [f32; 3] {
+pub(crate) fn head(kind: &str, body: &Body) -> [f32; 3] {
     let ([x, y, z], [width, height]) = (body.at, body.size);
     let forward = if ANIMALS.contains(&kind) { HEAD_FORWARD * width } else { 0.0 };
     [x, y + HEAD_UP * height, z + forward]

@@ -1,7 +1,8 @@
 //! Mobs that swim up in water, as BDS's with `minecraft:behavior.float` (research/captures/bds-swim.txt):
 //! with water more than [`DEPTH`] over its feet, a mob swims up [`UP`] faster, after the drag and
 //! the pull down of sinking, on four ticks in five; a zombie, a skeleton or a golem sinks.
-// TODO: how deep BDS lets it be before it swims is Java's FloatGoal threshold, not fitted.
+// DEPTH is Java's FloatGoal threshold; drilled (bds-n3float.txt): in flowing water of levels 1 to 6
+// neither server's cows swam up, and chickens only where their box reached the source.
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;

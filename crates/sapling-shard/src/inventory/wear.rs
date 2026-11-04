@@ -120,6 +120,18 @@ pub(crate) fn wear_hand_by(world: &mut World, player: Entity, uses: i32, lasts: 
     }
 }
 
+/// [`wear_hand_by`], with a stack of `left` put in the hand when it breaks: a worn-out carrot on a
+/// stick leaves its fishing rod (research/captures/bds-n3stick.txt).
+pub(crate) fn wear_hand_leaving(world: &mut World, player: Entity, uses: i32, lasts: u16, left: &str) {
+    let held = |world: &World| world.get::<Inventory>(player).is_some_and(|inventory| inventory.in_hand().is_some());
+    let had = held(world);
+    wear_hand_by(world, player, uses, lasts);
+    if had && !held(world) {
+        let stack = sapling_world::ItemStack { name: left.into(), count: 1, damage: 0, block: None, tag: None };
+        change(world, player, |inventory| inventory.put(Place::Main(usize::from(inventory.selected) % HOTBAR), Some(stack)));
+    }
+}
+
 /// What BDS let the player and those who see it hear of a stack of its that broke: `break` at its
 /// eyes (research/captures/bds-swing-wear.txt).
 pub(crate) fn sound_broken(world: &mut World, player: Entity) {

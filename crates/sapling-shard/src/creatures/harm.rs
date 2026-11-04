@@ -1,7 +1,8 @@
 //! What hurts a mob where it is: a fall, fire and lava, a block its head is in, and water it
 //! cannot breathe in, found each tick and told to its viewers as BDS tells them
 //! (docs/research/mob-damage.md). The rules themselves: health.rs.
-// TODO: breath comes back at once; an armour stand has no health here, though BDS burns it.
+// Breath comes back at once out of water, as BDS's cow's 120 went to 300 (bds-n3breath.txt); an
+// armour stand in fire is armour_stands/burning.rs's.
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -52,6 +53,14 @@ pub(super) fn wound_by(world: &mut World, mob: Entity, layer: Entity, cost: f32,
         }
     }
     Some(took)
+}
+
+/// A hit that costs nothing (a snowball on a cow): its viewers see it flinch, as BDS showed
+/// (`HurtAnimation` 3, research/captures/bds-n3knock.txt).
+pub(super) fn flinch(world: &mut World, mob: Entity, layer: Entity, cause: Cause) -> Option<()> {
+    let (id, at, health) = (world.get::<crate::components::NetId>(mob)?.0, world.get::<Body>(mob)?.at, *world.get::<Health>(mob)?);
+    entities::tell_viewers(world, mob, layer, at.map(|c| c.floor() as i32), vec![strike(id, &health, cause, None)]);
+    Some(())
 }
 
 /// Whether the body's box reaches into a cell holding one of `names`, however full.

@@ -55,8 +55,9 @@ def blocks(listed):
 
 def condition(kind, category, held):
     places = [place for key, place in PLACES.items() if key in held]
-    herd = held.get("minecraft:herd", {})
-    herd = herd[0] if isinstance(herd, list) else herd
+    herds = held.get("minecraft:herd", {})
+    herds = herds if isinstance(herds, list) else [herds]
+    herd = herds[0]
     fields = []
     if "minecraft:brightness_filter" in held:
         light = held["minecraft:brightness_filter"]
@@ -75,6 +76,10 @@ def condition(kind, category, held):
         fields.append("permute=" + ",".join(f"{p['weight']}:{p.get('entity_type', kind)}" for p in held["minecraft:permute_type"]))
     if "minecraft:disallow_spawns_in_bubble" in held:
         fields.append("no_bubble")
+    # BDS picks one of a condition's herds at random; the vanilla ones of a condition share a size.
+    if any("event" in each or "initial_event" in each for each in herds):
+        assert all((each.get("min_size"), each.get("max_size")) == (herd.get("min_size"), herd.get("max_size")) for each in herds), kind
+        fields.append("herds=" + "|".join(f"{each.get('event', '')}@{each.get('event_skip_count', 0)}/{each.get('initial_event', '')}@{each.get('initial_event_count', 0)}" for each in herds))
     weight = held.get("minecraft:weight", {}).get("default", 1)
     size = f"{herd.get('min_size', 1)}-{herd.get('max_size', 1)}"
     return f"{kind}\t{category}\t{','.join(places)}\t{weight}\t{size}\t{' '.join(fields)}\t{biome(held.get('minecraft:biome_filter', []))}\n"

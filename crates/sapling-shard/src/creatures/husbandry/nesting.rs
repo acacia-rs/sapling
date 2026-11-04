@@ -4,6 +4,7 @@
 //! (`minecraft:wants_to_lay_egg`) `behavior.lay_egg` finds open sand within 16 across and 4 up or
 //! down, walks to within 1.5 of it, digs 10 s (`LAYING_EGG`) and lays 1 to 4 eggs there, heard as
 //! `lay_egg`. Its home is the cell it hatched in, or the one it was first seen in (`minecraft:home`).
+// TODO: BDS's pregnant turtles walked straight home once set off; sapling's stray (bds-n3home.txt, sapling-n3home.txt).
 
 use acacia_proto::types::MetadataFlags1 as Flags;
 use bevy_ecs::prelude::*;

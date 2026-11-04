@@ -116,3 +116,19 @@ fn a_creative_hit_knocks_it_over_leaving_nothing() {
     assert_eq!(events(&told), [LevelEventEvent::ParticleDestroyArmorStand, LevelEventEvent::SoundArmorStandBreak]);
     assert_eq!((all::<RemoveEntity>(&told).len(), all::<AddItemEntity>(&told).len()), (1, 0));
 }
+
+#[test]
+fn a_stand_in_lava_flinches_every_ten_ticks_alight_and_never_dies() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    ask(&mut h, |ctx| ctx.set_block([2, 65, 0], &sapling_api::Block::new("minecraft:lava")));
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:armor_stand", STAND).is_some()));
+    let told: Vec<RawPacket> = (0..25).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let stand = all::<AddEntity>(&told).into_iter().find(|added| added.entity_type == "minecraft:armor_stand").expect("shown").runtime_id;
+    // research/captures/bds-n3breath.txt: HurtAnimation -1 on its first tick and each 10th after.
+    let flinches = all::<acacia_proto::packets::EntityEvent>(&told).into_iter().filter(|event| event.runtime_entity_id == stand && event.data == -1).count();
+    assert_eq!(flinches, 3);
+    let alight = all::<SetEntityData>(&told).into_iter().filter(|data| data.runtime_entity_id == stand).flat_map(|data| data.metadata).any(|item| matches!(item.value, Value::Flags(flags) if flags.0 & acacia_proto::types::MetadataFlags1::ONFIRE.0 != 0));
+    assert!(alight, "shown alight");
+    assert!(all::<RemoveEntity>(&told).is_empty(), "never dies");
+}

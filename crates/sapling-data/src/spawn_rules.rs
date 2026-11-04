@@ -3,11 +3,13 @@
 //! README.md "Spawn rules".
 
 mod biomes;
+mod herds;
 
 use std::sync::LazyLock;
 
 use biomes::Filter;
 pub use biomes::{biome_downfall, biome_has_tag, biome_id};
+pub use herds::HerdEvents;
 
 /// Where a spot is: under open sky or below something, and in what.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -63,6 +65,8 @@ pub struct SpawnRule {
     not_on: Vec<&'static str>,
     /// Kinds it may appear as instead, by weight.
     pub permute: Vec<(u32, &'static str)>,
+    /// The herds it picks one of at random, where they fire events.
+    pub herds: Vec<HerdEvents>,
     biomes: Filter,
 }
 
@@ -98,6 +102,7 @@ fn parse(row: &'static str) -> Option<SpawnRule> {
         on: Vec::new(),
         not_on: Vec::new(),
         permute: Vec::new(),
+        herds: Vec::new(),
         biomes: Filter::parse(biomes),
     };
     for field in fields.split(' ').filter(|field| !field.is_empty()) {
@@ -118,6 +123,7 @@ fn parse(row: &'static str) -> Option<SpawnRule> {
             "on" => rule.on = value.split(',').collect(),
             "not_on" => rule.not_on = value.split(',').collect(),
             "permute" => rule.permute = value.split(',').filter_map(|entry| entry.split_once(':')).filter_map(|(weight, kind)| Some((weight.parse().ok()?, kind))).collect(),
+            "herds" => rule.herds = HerdEvents::parse_all(value),
             _ => {}
         }
     }

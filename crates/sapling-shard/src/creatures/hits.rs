@@ -4,6 +4,8 @@
 //! fireball burns. A mob a player's shot kills is the player's. One that pierces flies on; a
 //! trident bounces off and hurts nothing more.
 
+use acacia_proto::packets::SetEntityMotion;
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_data::{enchant, shots};
 
@@ -15,8 +17,8 @@ use crate::body::{Body, Liquid};
 use crate::components::{NetId, Position};
 use crate::{entities, late_sounds, vitals};
 
-/// A player's shot throws the mob it hits as a hit does: this fast away and up.
-// TODO: the melee throw (attacks.rs); BDS's for a projectile was not measured.
+/// A shot throws the mob it hits this fast along its way across and up, a dispenser's arrow as a
+/// player's (research/captures/bds-n3knock.txt: (0.399, 0.4, 0.029) along an arrow's way).
 const THROW: f32 = 0.4;
 const PLAYER_HEIGHT: f32 = 1.8;
 
@@ -128,11 +130,22 @@ fn burn(world: &mut World, struck: Entity, is_player: bool, ticks: u16) {
     }
 }
 
+/// A shot throws the mob it met by `speed`, told to its viewers in the same tick: BDS sent a
+/// struck cow's (0.4, 0.4) at once and its moved speed the tick after (bds-n3knock.txt).
+pub(super) fn throw_at_once(world: &mut World, mob: Entity, layer: Entity, speed: [f32; 3]) -> Option<()> {
+    let mut body = world.get_mut::<Body>(mob)?;
+    body.throw(speed);
+    let at = body.at;
+    let id = world.get::<NetId>(mob)?.0;
+    let told = SetEntityMotion { runtime_entity_id: id, velocity: Vec3f { x: speed[0], y: speed[1], z: speed[2] }, tick: 0 };
+    entities::tell_viewers(world, mob, layer, at.map(|c| c.floor() as i32), vec![sapling_net::encode(&told)]);
+    Some(())
+}
+
 /// A mob a player's shot hurt is thrown along the shot's way, and turns on the player.
 fn throw_mob(world: &mut World, mob: Entity, layer: Entity, motion: [f32; 3], push: [f32; 3], player: Option<Entity>) -> Option<()> {
     let across = motion[0].hypot(motion[2]).max(1e-4);
-    let mut body = world.get_mut::<Body>(mob)?;
-    body.throw([motion[0] / across * THROW + push[0], THROW + push[1], motion[2] / across * THROW + push[2]]);
+    throw_at_once(world, mob, layer, [motion[0] / across * THROW + push[0], THROW + push[1], motion[2] / across * THROW + push[2]])?;
     let (id, body, kind) = (world.get::<NetId>(mob)?.0, *world.get::<Body>(mob)?, world.get::<entities::Kind>(mob)?.0.clone());
     hunting::provoke(world, mob, layer, id, &kind, &body, player?);
     super::strolling::startle(world, mob);

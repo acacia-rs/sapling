@@ -50,7 +50,8 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
 - A horse and a donkey have a mule (not in the packs; BDS's code).
 - The hearts shown on falling in love are `InLoveParticles` (26), not `LoveParticles` (21).
 - A tamed mob more than 12 blocks behind teleports 2 to 3 blocks from its owner (the Java game's).
-- A failed ride makes a mount 5 calmer (the Java game's).
+- A failed ride makes a mount 5 calmer (the Java game's; BDS's `attemptTemperMod`, default 5 in
+  `MountTamingComponent`'s set-up 141de92d0).
 - A lead pulls past 4 blocks, drags past 6 and snaps past 10; a holder not found again for 100
   ticks lets go; a knot sits a quarter block up its fence, and a knot holding nothing goes.
 - A wolf defending its owner looks 16 blocks, bites every 20 ticks within 0.8 past its box, and its
@@ -60,11 +61,47 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
 - A new mooshroom's `MarkVariant` is -1; sheep the shard spawns are white; a baby's coat is not its parents'.
 - A stored mob in love does not show its hearts until fed again.
 
+## Drilled (2026-11-04, `bds_command_probe n3ride`, `n3foals`)
+
+- **A wild mount lets its rider stay 60 ticks** (research/captures/bds-n3ride.txt): three fresh
+  horses each showed `TameSuccess` or `TameFail` 2.9 s after the rider's link, the failed one
+  throwing the rider off then (`SetEntityLink` type 0, `rider_initiated`, and a
+  `CorrectPlayerMovePrediction`). `MountTamingSystem::tick` 14848cba0 → 14848d3c0 counts the ticks
+  a player rides it, resets the count when nobody does, and on the 60th rolls the temper as the
+  Java game does. Two of the three were tamed by their first ride: a new mount's temper is rolled
+  in its range (148f38bb0), not 0. Sapling: `riding/breaking.rs`, `owners::first_temper`; test
+  `a_wild_horse_throws_its_rider_off_until_its_temper_lets_a_ride_tame_it`. Re-drilled
+  (sapling-n3ride.txt): `TameFail` 2.95 s after each link, as BDS's 2.9.
+- **A foal's strides are its parents' blended** (bds-n3foals.txt, six pairs of tamed horses fed
+  golden carrots): each of a foal's health, movement and jump strength lay within the parents' mean
+  ± half of (their gap + 0.3 of the kind's range), and its health was not whole (22.289 from 24 and
+  23). That is Java's `createOffspringAttribute` (mean + spread × (three fractions' mean − 0.5),
+  mirrored at the range's ends); the six foals' draws came out −0.26 to 0.22. The C++ was not found
+  (no `blend_attributes` user decompiled). Sapling: `sapling_data::blend_strides`,
+  `creatures/strides.rs` `blend`.
+- **A lead** (bds-n3ride.txt, a cow led by a player teleported 3 blocks further each 3 s): it held
+  6.6 blocks off and the cow walked up to 0.5 to 3.5 of the holder; it snapped (the lead dropped
+  where the cow stood) the tick after the holder was put 15.5 off. Consistent with the pack's
+  defaults (soft 4, hard 6, max 10) that sapling uses; the exact snap distance between 6.6 and 15.5
+  was not pinned.
+
+## Herds of babies (ported from the packs)
+
+A spawn rule's `herd` list (`event`, `event_skip_count`, `initial_event`, `initial_event_count`)
+is now in spawn-rules.tsv's `herds=` field; `_spawnMobCluster` 1415ed230 picks one herd at random
+(`nextInt(herds)`) and fcn 1415ed0d0 fires `initial_event` on members below `initial_event_count`
+and `event` on those at or past `event_skip_count`. Sapling fires `minecraft:entity_born` that way
+(`spawning/herds.rs`), so a fox herd is two grown then babies; other herd events are a TODO there.
+Not drilled live: natural spawning takes a random spot and time.
+
 ## Left out
 
-Riding (the vehicles work reads `Raised::saddled`/`chested` and calls `owners::tame_by_riding`),
-cats' and parrots' own behaviours (sitting on chests and shoulders, gifts), turtles' eggs and
-scutes, breeding of villagers, foxes' trust, bees, axolotls in buckets, natural herds of babies.
+Riding (the vehicles work reads `Raised::saddled`/`chested`), cats' and parrots' own behaviours
+(sitting on chests and shoulders, gifts; parrots below), turtles' scutes, breeding of villagers,
+foxes' trust (`entity_born` gives `trusting_fox`: `minecraft:trust` and a `defend_trusted_target`
+within 25; BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strings at 141171c40 and
+141172080): each needs goals sapling's mobs do not have (sitting on blocks, gift loot, trusted
+targets). Bees and axolotls in buckets are ported (creatures/bees.rs, creatures/scooping.rs).
 
 ## Parrots on shoulders (`parrots`, not built)
 
@@ -81,3 +118,11 @@ as it was shown (no delay), and its death sent the link's removal `immediate` af
 The pack's `find_mount` (`start_delay` 100, `within_radius` 16, `mount_distance` 2, `target_needed`
 false) is C++; when it tries again after a dismount was not found. Sapling's seats (riding/, the
 vehicles work) take no player as a vehicle.
+
+## Not drilled
+
+- `property_inheritance` (which parent a baby's climate variant comes from): the drill world is
+  flat with one biome, so every parent is temperate; bdsre finds no `property_inheritance` string
+  or hash user to read instead. Sapling picks a parent at random.
+- Herds of babies from natural spawning (above); cats', parrots' and foxes' own goals (Left out).
+- The exact distance a lead snaps at, between 6.6 and 15.5.

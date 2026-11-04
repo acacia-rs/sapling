@@ -20,6 +20,10 @@ fn ready(difficulty: Difficulty) -> Harness {
     h
 }
 
+fn kinds(h: &mut Harness) -> Vec<String> {
+    ask(h, |ctx| ctx.entities().into_iter().map(|entity| entity.kind).collect())
+}
+
 fn watch(h: &mut Harness, ticks: usize) -> Vec<RawPacket> {
     (0..ticks).flat_map(|_| h.tick_all().to(1).to_vec()).collect()
 }
@@ -63,8 +67,11 @@ fn a_pig_becomes_a_zombified_piglin_and_a_creeper_is_charged_unhurt() {
         ctx.spawn_entity(BOLT, [-5.5, 65.0, -5.5]);
     });
     let sent = watch(&mut h, 2);
-    let kinds = ask(&mut h, |ctx| ctx.entities().into_iter().map(|entity| entity.kind).collect::<Vec<_>>());
+    assert!(kinds(&mut h).contains(&"minecraft:pig".to_owned()), "a pig turns half a second after the strike (bds-n3struck.txt)");
+    let turning = watch(&mut h, 11);
+    let kinds = kinds(&mut h);
     assert!(kinds.contains(&"minecraft:zombie_pigman".to_owned()) && !kinds.contains(&"minecraft:pig".to_owned()), "{kinds:?}");
+    assert!(all::<LevelSoundEvent>(&turning).iter().any(|sound| sound.sound_id == "mob.pig.death" && sound.entity_unique_id == -1), "heard turning");
     let powered = all::<SetEntityData>(&sent).into_iter().filter(|data| data.runtime_entity_id == creeper).flat_map(|data| data.metadata).any(|item| matches!(item.value, Value::Flags(flags) if flags.contains(MetadataFlags1::POWERED)));
     assert!(powered, "the creeper is told it is charged");
 }

@@ -1,9 +1,9 @@
 //! Mobs that take a rider (docs/research/vehicles.md "Rideable mobs"): a saddle or horse armour
 //! put on by hand, getting on by a click, and how a ridden pig, strider or camel is steered. A
 //! tamed and saddled horse, donkey or mule is moved by its rider's client (drive.rs). Tamed and
-//! saddled are the mob's raising (`creatures::Raised`); getting on a wild mount tries to tame it.
+//! saddled are the mob's raising (`creatures::Raised`); a wild mount ridden a while tries to be
+//! tamed (breaking.rs).
 // A tamed mount's inventory, and a chest put on one, are packs.rs's.
-// TODO: a wild mount that is not tamed throws its rider off at once; BDS lets it ride a while first.
 
 use acacia_proto::types::MetadataFlags1;
 use bevy_ecs::prelude::*;
@@ -114,8 +114,8 @@ pub(crate) fn used_on(world: &mut World, player: Entity, target: Entity) -> bool
     if super::seat(world, player, target).is_err() {
         return false;
     }
-    if wild && !creatures::tame_by_riding(world, target, player) {
-        super::unseat(world, player, true);
+    if wild {
+        super::breaking::start(world, target);
     }
     true
 }
@@ -202,9 +202,9 @@ pub(crate) fn steers(world: &World, mob: Entity, kind: &str, body: &Body) -> Rei
     if TAMED_SADDLED.contains(&kind) { Rein::Held } else { Rein::Free }
 }
 
-/// A rider using the stick that steers what it drives boosts it and wears the stick; false when
-/// it drives nothing that stick steers.
-// TODO: unverified that BDS boosts on the stick's use in the air; a worn-out stick is not left as a fishing rod.
+/// A rider using the stick that steers what it drives boosts it and wears the stick, on the ground
+/// or in the air, a worn-out stick leaving a fishing rod (its pack's `boostable`, as BDS did:
+/// research/captures/bds-n3stick.txt); false when it drives nothing that stick steers.
 pub(crate) fn boost(world: &mut World, player: Entity) -> bool {
     let Some(mob) = super::driven_by(world, player) else { return false };
     let Some(kind) = world.get::<Kind>(mob).map(|kind| kind.0.clone()) else { return false };
@@ -216,6 +216,10 @@ pub(crate) fn boost(world: &mut World, player: Entity) -> bool {
     }
     tack.boosted_until = now + steered.boost_ticks;
     world.entity_mut(mob).insert(tack);
-    crate::inventory::wear_hand_by(world, player, steered.boost_wear, steered.lasts);
+    if let (Some(id), Some(body)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Body>(mob).copied()) {
+        let heard = packets::sound("boost", id, &kind, creatures::head_of(&kind, &body));
+        super::tell(world, mob, mob, vec![heard]);
+    }
+    crate::inventory::wear_hand_leaving(world, player, steered.boost_wear, steered.lasts, "minecraft:fishing_rod");
     true
 }

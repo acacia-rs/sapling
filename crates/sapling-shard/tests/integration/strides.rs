@@ -71,6 +71,6 @@ fn a_ridden_horse_rears_from_its_jump_until_it_lands() {
         h.receive(1, &driving);
         seen.push(rearing(&h.tick(1), horse));
     }
-    // Down at 64 it has landed; it stops rearing once the height holds (see rearing.rs's TODO).
-    assert_eq!(seen, [vec![], vec![true], vec![], vec![], vec![], vec![], vec![false]]);
+    // It stops rearing the tick it lands back on the floor at 64, as BDS's did (bds-horse-jump.txt).
+    assert_eq!(seen, [vec![], vec![true], vec![], vec![], vec![], vec![false], vec![]]);
 }

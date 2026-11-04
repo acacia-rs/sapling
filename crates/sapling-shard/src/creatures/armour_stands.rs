@@ -3,9 +3,10 @@
 //! sneaking click moves the stand to its next pose (142a044f0). Evidence: docs/research/mob-kinds.md
 //! "Armour stands". Hits knock them over (hits.rs).
 
+mod burning;
 mod hits;
 
-pub(super) use hits::{struck, tick};
+pub(super) use hits::struck;
 
 use acacia_proto::packets::{MobArmorEquipment, MobEquipment, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, WindowID};
@@ -31,6 +32,12 @@ const LEGS: usize = 4;
 const FEET: usize = 5;
 /// Its eyes, where an armour piece put on it is heard from, as a share of its height.
 const EYES: f32 = 0.85;
+
+/// Hit stands wobble on and stands in fire flinch.
+pub(super) fn tick(world: &mut World) {
+    hits::tick(world);
+    burning::tick(world);
+}
 
 /// What a stand holds by BDS's equipment slots (main hand, offhand, head, chest, legs, feet) and its pose.
 #[derive(Component, Clone, Default)]
