@@ -86,7 +86,18 @@ pub(crate) fn stop(world: &mut World, layer: Entity) {
     }
     let now = world.resource::<Tick>().0;
     let spell = |salt| spell(CLEAR_SPELL, now, layer, salt);
+    let home = dimensions::home(world, layer);
+    let rained: Vec<Entity> = in_world(world)
+        .into_iter()
+        .filter(|player| world.get::<InLayer>(*player).is_some_and(|in_layer| dimensions::home(world, in_layer.0) == home) && world.get::<Told>(*player).is_some_and(|told| told.0 == Weather::Rain))
+        .collect();
     put(world, layer, WeatherRecord { rain_level: 0.0, rain_time: spell(1), lightning_level: 0.0, lightning_time: spell(2) });
+    // BDS ends the thunder too where only rain fell (research/captures/bds-rainnight.txt).
+    for player in rained {
+        if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+            out.push(&event(LevelEventEvent::StopThunder, 0));
+        }
+    }
 }
 
 fn event(event: LevelEventEvent, data: i32) -> LevelEvent {

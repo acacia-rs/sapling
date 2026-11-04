@@ -355,8 +355,13 @@ target. Sapling: `weather/falling.rs` (`Falling`, both levels). What reads which
   one may sleep, and stay asleep, is `skyDarken >= 4` of the levels alone; the skip keeps the
   state's window, which every skip above fits (test
   `rain_lets_one_sleep_early_only_once_it_darkens_the_sky`). Re-drilled (sapling-rainnight.txt):
-  refused, refused, slept and skipped, woken in the clearing, skipped, skipped, as BDS. Sapling
-  sends `StopRain` after the clock, BDS before it.
+  refused, refused, slept and skipped, woken in the clearing, skipped, skipped, as BDS.
+- The skip's packets (2026-11-04, bds-rainnight.txt). BDS sends WakeUp, then `StopRain` and
+  `StopThunder` (thunder too, where only rain fell), then the clock. It sends no sleeper count
+  (LevelEventGeneric 19602) at the skip's wake. A dry skip sends WakeUp and the clock alone.
+  Sapling sent WakeUp, the count, the clock, then `StopRain`. Fixed: `sleep::tick` wakes without
+  the count and stops the weather before the clock, and `weather::stop` adds `StopThunder` for
+  those told rain. Test `a_night_slept_through_is_skipped`.
 - Not drilled: monster spawns reckon brightness at the storm's 10 once rain times lightning is over
   0.9 (`weather::storms`, `isThundering`, the Java game's).
 

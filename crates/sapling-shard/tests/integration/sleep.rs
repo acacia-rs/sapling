@@ -5,7 +5,8 @@ use crate::common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{Animate, AnimateActionId, LevelEventGeneric, SetEntityData, SetSpawnPosition, Text, TextContent};
+use acacia_proto::Packet;
+use acacia_proto::packets::{Animate, AnimateActionId, LevelEvent, LevelEventEvent, LevelEventGeneric, SetEntityData, SetSpawnPosition, SyncWorldClocks, Text, TextContent};
 use acacia_proto::types::MetadataDictionaryItemKey as Key;
 use common::{Harness, all, click};
 use sapling_api::{Item, PlayerId, Slot};
@@ -148,8 +149,12 @@ fn a_night_slept_through_is_skipped() {
         19602,
         vec![("ableToSleep".into(), Value::Int(1)), ("overworldPlayerCount".into(), Value::Int(1)), ("sleepingPlayerCount".into(), Value::Int(1))]
     )]);
-    let woke = (0..110).any(|_| all::<Animate>(&h.tick(1)).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
-    assert!(woke, "woken after 100 ticks");
+    let woke = (0..110).map(|_| h.tick(1)).find(|sent| all::<Animate>(sent).iter().any(|animate| animate.action_id == AnimateActionId::WakeUp));
+    let woke = woke.expect("woken after 100 ticks");
+    // bds-rainnight.txt: no sleeper count, the rain's and thunder's end, then the clock.
+    let told: Vec<_> = woke.iter().filter(|packet| [LevelEvent::ID, SyncWorldClocks::ID, LevelEventGeneric::ID].contains(&packet.id)).map(|packet| packet.id).collect();
+    assert_eq!(told, [LevelEvent::ID, LevelEvent::ID, SyncWorldClocks::ID]);
+    assert_eq!(all::<LevelEvent>(&woke).iter().map(|event| event.event).collect::<Vec<_>>(), [LevelEventEvent::StopRain, LevelEventEvent::StopThunder]);
     assert!(time(&mut h).rem_euclid(24_000) < 200, "it is morning");
     let weather = Arc::new(Mutex::new(sapling_api::Weather::Rain));
     let out = weather.clone();
