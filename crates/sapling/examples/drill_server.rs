@@ -2,7 +2,7 @@
 //! ground four blocks deep under the drills (a flat world's, so that what a drill digs has
 //! something under it), everyone an operator in creative mode, vanilla's commands, nothing
 //! protected. `tools/sapling-drill.sh` runs a probe against it. `SAPLING_DRILL_WORLD` picks
-//! another overworld: `strongholds`, `generated` or `lowflat` (also `open`, below).
+//! another overworld: `strongholds`, `generated`, `cold` or `lowflat` (also `open`, below).
 //! `cargo run -p sapling --example drill_server -- [port]` (default 19190)
 #[path = "shared/clock.rs"]
 #[allow(dead_code)]
@@ -17,6 +17,26 @@ const NETHER_SEED: i64 = 20261018;
 /// `SAPLING_DRILL_WORLD=lowflat` (or `open`): the flat ground alone, its surface and sky the test BDS's, for raid
 /// waves (village_drill.rs) and rain (docs/research/mob-damage.md); GROUND's roof shades the drills below it.
 const OPEN_SPAWN: [f32; 3] = [0.5, (FLAT.1[1] + 1) as f32, 0.5];
+
+/// `SAPLING_DRILL_WORLD=cold`: `open`'s ground in ice plains, as a BDS flat world whose `FlatWorldLayers`
+/// name biome 12 (drill `u1cold`); columns past the ground are void ice plains.
+fn cold_ground() -> std::sync::Arc<MemoryStorage> {
+    const ICE_PLAINS: u32 = 12;
+    let registry = sapling_world::BlockRegistry::vanilla();
+    let stone = registry.states_of("minecraft:stone").next().expect("stone").0;
+    let storage = std::sync::Arc::new(MemoryStorage::default());
+    for cx in (FLAT.0[0] >> 4)..=(FLAT.1[0] >> 4) {
+        for cz in (FLAT.0[2] >> 4)..=(FLAT.1[2] >> 4) {
+            let mut chunk = sapling_world::Chunk::empty(cx, cz, sapling_world::Dimension::overworld(registry.air_id()));
+            chunk.fill_biomes(ICE_PLAINS);
+            for (x, z, y) in (0..16).flat_map(|x| (0..16).flat_map(move |z| (FLAT.0[1]..=FLAT.1[1]).map(move |y| (x, z, y)))) {
+                chunk.set(x, y, z, 0, stone);
+            }
+            storage.store_column(ChunkPos::new(cx, cz), 0, &sapling_world::StoredColumn::of(chunk)).expect("stored");
+        }
+    }
+    storage
+}
 
 /// `SAPLING_DRILL_WORLD=generated`: the seed's terrain, for timing joins over a slow link
 /// (acacia's tools/netem-pacing.sh); release builds only, as below.
@@ -67,6 +87,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let builder = builder.tick_distance(std::env::var("SAPLING_TICK_DISTANCE").ok().and_then(|chunks| chunks.parse().ok()).unwrap_or(4));
     let builder = match std::env::var("SAPLING_DRILL_WORLD").as_deref() {
         Ok("strongholds") => builder.world(World::with_storage(std::sync::Arc::new(Strongholds(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 1)))), [0.5, 64.0, 0.5]),
+        Ok("cold") => {
+            let mut cold = World::with_storage(cold_ground());
+            cold.level_mut().seed = NETHER_SEED;
+            builder.world(cold, OPEN_SPAWN)
+        }
         Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 2))), GENERATED_SPAWN),
         // Joining over the void, the probes' first commands went unanswered.
         _ => builder.world(ground, if open { OPEN_SPAWN } else { [0.5, 64.0, 0.5] }),
