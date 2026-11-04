@@ -165,6 +165,40 @@ fn a_cow_left_alone_strolls_at_its_pace_and_stays_on_the_floor() {
 }
 
 #[test]
+fn cows_in_the_corners_of_a_small_floor_still_set_off_about_a_tick_in_120() {
+    // research/captures/bds-strollstart.txt: on a walled floor 25 across BDS's cows set off once in
+    // 114 ticks stood still; a single try at a place from a corner mostly lands off the floor.
+    let mut h = Harness::with(sapling_shard::ShardConfig { mobs_stroll: true, ..common::config() }, common::platform());
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        let _ = ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Spectator);
+        for at in [[-7.0, 65.0, -7.0], [7.0, 65.0, -7.0], [-7.0, 65.0, 7.0], [7.0, 65.0, 7.0]] {
+            assert!(ctx.spawn_entity("minecraft:cow", at).is_some());
+        }
+    });
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    for _ in 0..2400 {
+        let seen = seen.clone();
+        h.remote.run(move |ctx| seen.lock().unwrap().push(ctx.entities().iter().map(|cow| (cow.id, cow.feet)).collect::<Vec<_>>()));
+        h.tick_all();
+    }
+    let seen = seen.lock().unwrap().clone();
+    let walking = |tick: usize, cow: usize| seen[tick][cow].1[0] != seen[tick - 1][cow].1[0] || seen[tick][cow].1[2] != seen[tick - 1][cow].1[2];
+    let (mut starts, mut idle) = (0, 0);
+    for cow in 0..4 {
+        for tick in 2..seen.len() {
+            match (walking(tick - 1, cow), walking(tick, cow)) {
+                (false, true) => starts += 1,
+                (false, false) => idle += 1,
+                _ => {}
+            }
+        }
+    }
+    let every = idle / starts.max(1);
+    assert!((80..170).contains(&every), "{starts} starts in {idle} idle ticks");
+}
+
+#[test]
 fn a_cow_a_player_hit_runs_off_faster_than_it_strolls() {
     use acacia_proto::packets::InventoryTransaction;
     use acacia_proto::types::{ItemV4, ItemV4Extra, Transaction, TransactionLegacy, TransactionTransactionData, TransactionTransactionDataItemUseOnEntity, TransactionTransactionDataItemUseOnEntityActionType as Action, TransactionTransactionType, Vec3f};

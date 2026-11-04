@@ -283,6 +283,23 @@ A zombie and a cow left alone for a minute on a floor 40 blocks square, the acto
 - Each walk ends with one more move of about 0.006.
 - A chicken strolled at 0.135 (movement 0.25).
 
+How often (2026-11-04, seventh wave, `bds_command_probe strolls` and `strollstart`,
+research/captures/bds-strolls.txt, bds-strollstart.txt; tools: walks of 1 block or more, pauses under
+1 s inside a walk): unslowed cows, sheep, pigs and zombies (by night) on a stone floor 25 across walled
+three high. A stood mob sets off about a tick in 120 (`random_stroll`'s default `interval`): cows
+once in 114 idle ticks over 91 walks, pigs 102 over 48 (strolls: 118 to 152 a kind), and the first
+walk after a summon comes as soon (cows 0.2 to 23 s, mean 6 s, over 32). A walk goes 7.0 to 8.4
+blocks on average (uniform places within 10 along each axis give 7.65) and takes 108 to 174 ticks,
+some 80 of them pauses of 2 to 20 ticks on the way. Corrected: the sixth wave's "sapling's strolls
+start more often" came from the seconds before `/effect` in `gaze`; on these floors sapling's started
+less often (cows 1 in 157 idle ticks, pigs 132), because it tried one place a start and a place off
+the floor or behind the wall meant no stroll, where BDS (as Java's `RandomPos`, ten tries) finds one.
+Fixed: `creatures/strolling.rs` tries ten places (`TRIES`); test
+`cows_in_the_corners_of_a_small_floor_still_set_off_about_a_tick_in_120`. Re-drilled on sapling
+(sapling-strollstart.txt, sapling-strolls.txt): cows 1 in 103, pigs 99, zombies 116, sheep 140. Still
+different: sapling's walks are 5.9 to 7.7 blocks and 79 to 104 ticks, with fewer pauses, as it walks
+straight at its place where BDS follows a path (the TODO in strolling.rs).
+
 ## Fleeing (`flee`)
 
 A cow and a pig, each hit once by the actor in creative (`research/captures/bds-flee.txt`; the
@@ -349,9 +366,9 @@ open grass 30 off took and dropped its target every 10 ticks, one on the stone f
 ## Sapling
 
 Every kind that walks strolls (`creatures/strolling.rs`, `strolls=` in `mob-traits.tsv`, the
-shard's `mobs_stroll`): a tick in 120 it picks a place up to 10 blocks off along each axis and
-walks straight there at its stroll speed, giving up at an edge, at a block in its way or after ten
-seconds. How often and how far are fitted by eye to the two mobs above. A mob a player hit, of a
+shard's `mobs_stroll`): a tick in 120 it picks the first of ten places up to 10 blocks off along
+each axis that has floor, and walks straight there at its stroll speed, giving up at an edge, at a
+block in its way or after ten seconds (how often: "Strolling" above, drilled). A mob a player hit, of a
 kind with `panics=`, runs for 70 ticks from place to place within 5 blocks at that speed.
 
 A creeper is lit, burns and bursts so (`creatures/blast.rs`): its blast hurts and throws players
