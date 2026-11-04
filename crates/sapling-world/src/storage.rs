@@ -1,17 +1,16 @@
 //! Where a world's columns come from. See docs/DESIGN.md "Storage".
 
-use std::collections::HashMap;
-use std::path::Path;
-use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
+mod leveldb;
+mod memory;
 
 use acacia_world::Chunk;
-use sapling_leveldb::{ChunkKey, LevelDat, LevelDbWorld, PlayerData};
+use sapling_leveldb::PlayerData;
 use sapling_worldgen::{ChunkShape, PlaceFailure, StructureWrites};
 
 use crate::ChunkPos;
 pub use crate::level::Level;
-use crate::level::{read_rules, read_structures, write_rules};
+pub use leveldb::LevelDbStorage;
+pub use memory::MemoryStorage;
 
 pub type StorageError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -148,177 +147,5 @@ impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
     }
     fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         (**self).jigsaw_writes(pool, target, max_depth, at, load)
-    }
-}
-
-/// Columns kept in memory: empty, it is the void.
-#[derive(Default)]
-pub struct MemoryStorage {
-    columns: Mutex<HashMap<(i32, ChunkPos), StoredColumn>>,
-    players: Mutex<HashMap<String, PlayerData>>,
-}
-
-impl MemoryStorage {
-    pub fn insert(&self, dimension: i32, chunk: Chunk) {
-        let pos = ChunkPos::new(chunk.x, chunk.z);
-        self.columns.lock().expect("memory storage lock").insert((dimension, pos), StoredColumn::of(chunk));
-    }
-}
-
-impl WorldStorage for MemoryStorage {
-    fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
-        Ok(self.columns.lock().expect("memory storage lock").get(&(dimension, pos)).cloned())
-    }
-
-    fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
-        self.columns.lock().expect("memory storage lock").insert((dimension, pos), column.clone());
-        Ok(())
-    }
-
-    fn load_player(&self, id: &str) -> Result<Option<PlayerData>, StorageError> {
-        Ok(self.players.lock().expect("memory storage lock").get(id).cloned())
-    }
-
-    fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), StorageError> {
-        self.players.lock().expect("memory storage lock").insert(id.to_string(), player.clone());
-        Ok(())
-    }
-
-    fn columns(&self, dimension: i32) -> Result<Vec<ChunkPos>, StorageError> {
-        let mut held: Vec<ChunkPos> = self.columns.lock().expect("memory storage lock").keys().filter(|(dim, _)| *dim == dimension).map(|(_, pos)| *pos).collect();
-        held.sort();
-        Ok(held)
-    }
-}
-
-/// A vanilla world folder.
-pub struct LevelDbStorage(LevelDbWorld);
-
-impl LevelDbStorage {
-    /// Opens the folder's database in place (`sapling_leveldb::Db::open`).
-    pub fn open(folder: &Path) -> Result<Self, sapling_leveldb::Error> {
-        LevelDbWorld::open(folder).map(Self)
-    }
-
-    /// Serves the world from a copy in memory; the folder is only read.
-    pub fn open_in_memory(folder: &Path) -> Result<Self, sapling_leveldb::Error> {
-        LevelDbWorld::open_in_memory(folder).map(Self)
-    }
-
-    /// `level.dat` as it was when the folder was opened.
-    pub fn level_dat(&self) -> &LevelDat {
-        self.0.level()
-    }
-
-    /// What `level.dat` says of [`Level`]'s fields.
-    pub fn level(&self) -> Level {
-        let dat = self.0.level();
-        let portals = self.0.load_portals().unwrap_or_else(|error| {
-            tracing::warn!(%error, "the portal records are unreadable; portals find none");
-            Vec::new()
-        });
-        let dragon_fight = self.0.load_dragon_fight().unwrap_or_else(|error| {
-            tracing::warn!(%error, "the dragon fight is unreadable; a new one begins");
-            None
-        });
-        let scoreboard = self.0.load_scoreboard().unwrap_or_else(|error| {
-            tracing::warn!(%error, "the scoreboard is unreadable; it starts empty");
-            None
-        });
-        let [folder_structures, structures] = read_structures(&self.0);
-        let ticking_areas = self.0.load_ticking_areas().unwrap_or_else(|error| {
-            tracing::warn!(%error, "the ticking areas are unreadable; there are none");
-            Vec::new()
-        });
-        let maps = self.0.load_maps().unwrap_or_else(|error| {
-            tracing::warn!(%error, "the maps are unreadable; there are none");
-            Vec::new()
-        });
-        let (spawn, rules, seed, hardcore) = (dat.spawn(), read_rules(dat), dat.seed().unwrap_or(0), dat.hardcore());
-        let (structures, folder_structures) = (structures.into(), folder_structures.into());
-        let (time, weather, difficulty) = (dat.time().unwrap_or(Level::default().time), dat.weather().unwrap_or(Level::default().weather), dat.difficulty());
-        let maps = maps.into();
-        let (trackers, last_tracker) = self.0.load_trackers().unwrap_or_else(|error| {
-            tracing::warn!(%error, "the lodestone targets are unreadable; compasses find none");
-            (Vec::new(), 0)
-        });
-        let villages = self.0.load_villages().unwrap_or_else(|error| {
-            tracing::warn!(%error, "the villages are unreadable; no raid goes on, no standing is kept");
-            Vec::new()
-        });
-        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None }
-    }
-}
-
-/// The game version sapling writes worlds for, as `lastOpenedWithVersion` spells it.
-fn game_version() -> [i32; 5] {
-    let mut parts = acacia_proto::GAME_VERSION.split('.').map(|part| part.parse().unwrap_or(0));
-    std::array::from_fn(|_| parts.next().unwrap_or(0))
-}
-
-impl WorldStorage for LevelDbStorage {
-    fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
-        let column = self.0.load_column(ChunkKey::new(pos.x, pos.z, dimension))?;
-        Ok(column.map(|c| StoredColumn { chunk: c.chunk, block_entities: c.block_entities, actors: c.actors, pending_ticks: c.pending_ticks }))
-    }
-
-    fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
-        Ok(self.0.store_column(ChunkKey::new(pos.x, pos.z, dimension), &column.chunk, &column.block_entities, &column.actors, &column.pending_ticks)?)
-    }
-
-    fn load_player(&self, id: &str) -> Result<Option<PlayerData>, StorageError> {
-        Ok(self.0.load_player(id)?)
-    }
-
-    fn store_player(&self, id: &str, player: &PlayerData) -> Result<(), StorageError> {
-        Ok(self.0.store_player(id, player)?)
-    }
-
-    fn columns(&self, dimension: i32) -> Result<Vec<ChunkPos>, StorageError> {
-        Ok(self.0.columns()?.into_iter().filter(|key| key.dimension == dimension).map(|key| ChunkPos::new(key.x, key.z)).collect())
-    }
-
-    fn flush(&self, level: &Level) -> Result<(), StorageError> {
-        let mut dat = self.0.level().clone();
-        dat.set_last_played(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64);
-        // The game's own stamp of this version carries a revision ours lacks: keep it.
-        let version = game_version();
-        if !dat.last_opened_with().is_some_and(|stamp| stamp.get(..3) == Some(&version[..3])) {
-            dat.set_last_opened_with(version);
-        }
-        dat.set_time(level.time);
-        dat.set_weather(level.weather);
-        if let Some(difficulty) = level.difficulty {
-            dat.set_difficulty(difficulty);
-        }
-        if let Some(chunks) = level.chunk_tick_range {
-            dat.set_chunk_tick_range(chunks);
-        }
-        write_rules(&mut dat, &level.rules);
-        if let Some(spawn) = level.spawn {
-            dat.set_spawn(spawn);
-        }
-        self.0.store_portals(&level.portals)?;
-        if let Some(board) = &level.scoreboard {
-            self.0.store_scoreboard(board)?;
-        }
-        if let Some(fight) = &level.dragon_fight {
-            self.0.store_dragon_fight(fight)?;
-        }
-        let structures: Vec<(String, Vec<u8>)> = level.structures.iter().map(|(name, bytes)| (name.clone(), bytes.clone())).collect();
-        self.0.store_structures(&structures)?;
-        self.0.store_ticking_areas(&level.ticking_areas)?;
-        self.0.store_maps(&level.maps)?;
-        self.0.store_trackers(&level.trackers, level.last_tracker)?;
-        self.0.store_villages(&level.villages)?;
-        Ok(self.0.flush(&dat)?)
-    }
-
-    fn sync(&self) -> Result<(), StorageError> {
-        Ok(self.0.db().flush()?)
-    }
-
-    fn folder(&self) -> Option<std::path::PathBuf> {
-        Some(self.0.folder().to_path_buf())
     }
 }
