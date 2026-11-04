@@ -70,7 +70,9 @@ pub(crate) fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: 
         (_, false) => crate::paintings::from_storage(world, layer, home, &actor, unique_id),
         _ => false,
     };
-    if !moved {
+    if moved {
+        crate::entities::loaded(world, unique_id);
+    } else {
         let feet = [home.x as f32 * 16.0, actor.position[1], home.z as f32 * 16.0];
         let filed = if ChunkPos::of_block(actor.position[0].floor() as i32, actor.position[2].floor() as i32) == home { actor.position } else { feet };
         if mobs::spawn_shown(world, layer, filed, |id| mobs::announcement(&actor, id)).is_none() {

@@ -177,9 +177,29 @@ and are not kept; tests in tests/integration/mounts_drilled.rs):
   in `bds-tack.txt` with `doMobLoot` on, so a carpet is not loot.
 - Fixed: a summon's spawn event (tame, saddle, baby) shows in the AddEntity's own flag word, and the first
   word after it, with BREATHING, carries it too (`creatures/birth.rs` `arrive`): the words now match
-  BDS's for every summon in mountflags and saddleevents. Left: BDS sends one more SetEntityData right
-  after any AddEntity repeating its word, and at every mob's death a MobEquipment for each hand and a
-  MobArmorEquipment of its body; sapling sends neither (packet shape only).
+  BDS's for every summon in mountflags and saddleevents. The SetEntityData after every AddEntity and the
+  death's armour: fixed in the fifth wave, below.
+
+Drilled 2026-11-04, fifth wave (`bds_command_probe bodysave`, examples/shared/fifth1_drill.rs;
+research/captures/bds-bodysave.txt, its world read with sapling-leveldb's `actor_dump`; tests in
+tests/integration/mob_packets.rs):
+
+- Fixed: BDS keeps any mob's body slot as `Armor`'s fifth entry (a pig's and a husk's horse armour, a
+  wolf's wolf armour, the husk's helmet still first), and a tamed horse's `slot.armor` in `ChestItems`
+  slot 1 besides: gold by `slot.armor` then diamond by `slot.armor.body` saved `Armor[4]` diamond and
+  slot 1 gold. `riding/body.rs` keeps the body (`bodied_actor` now keeps the four pieces), `packs::keep`
+  slot 1, and a loaded mob wears both again (`body::adopt`, `packs::adopt`). Sapling's older saves, with
+  slot 1's armour only in `Armor[4]`, load it as the body alone.
+- Fixed: BDS follows every new entity's AddEntity with one SetEntityData (`entities/first_data.rs`):
+  not the flag word alone but the whole announced metadata, in order, less the items still as every
+  actor is made (scale 1, a 0.6 x 1.8 box, a zero seat, no shooter, extended flags 0 and the like), with
+  the AddEntity's properties. It is not sent when a mob is shown again or to a player who comes later;
+  for a mob loaded from a world folder it was not drilled and sapling sends none.
+- Fixed: at a mob's death, after its two emptied hands, a MobArmorEquipment of what it wears with its
+  body slot (`creatures/worn.rs` `shown_dead`), as bds-bodyslot.txt's horse (body iron at death).
+  Re-drilled on sapling (bodyslot, mountflags; sapling-mountflags.txt): each summon's two SetEntityData
+  and each death's MobEquipment, MobEquipment, MobArmorEquipment now line up with BDS's. Left: BDS's
+  further SetEntityData at a death (`MinecartDisplayBlock` 128 among them), not ported.
 
 ## Not drilled
 

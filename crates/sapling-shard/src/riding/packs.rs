@@ -108,8 +108,9 @@ pub(crate) fn slots(world: &World, mob: Entity) -> Option<Vec<Option<Held>>> {
 /// Puts `armor` in `mob`'s slot 1 and its body slot, or takes it off.
 pub(super) fn wear(world: &mut World, mob: Entity, armor: Option<ItemStack>) {
     let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
-    (tack.armor, tack.body) = (armor.clone(), armor);
+    tack.armor = armor.clone();
     world.entity_mut(mob).insert(tack);
+    super::body::dress(world, mob, armor);
 }
 
 /// The horse armour in a dying horse's slot 1, which it leaves as loot after its own
@@ -146,8 +147,8 @@ pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
 
 /// Writes `mob`'s tack and goods into what a world folder keeps of it.
 pub(super) fn keep(world: &mut World, mob: Entity) {
-    let (body, items): (Vec<_>, Vec<_>) = goods(world, mob).into_iter().partition(|(slot, _)| *slot == 1);
-    let body = body.into_iter().next().map(|(_, stack)| stack);
+    let items = goods(world, mob);
+    let body = super::body::worn(world, mob);
     let (saddled, chested) = world.get::<Raised>(mob).map_or((false, false), |raised| (raised.saddled, raised.chested));
     entities::restore(world, mob, |compound, registry| {
         let flagged = sapling_world::flagged_actor(compound, "Saddled", saddled).ok()?;
@@ -157,14 +158,16 @@ pub(super) fn keep(world: &mut World, mob: Entity) {
     });
 }
 
-/// A mob a world folder kept: the armour or carpet on its body is worn again, or in its slot 1 as
-/// sapling once kept it.
+/// A mount a world folder kept has the armour or carpet of its `ChestItems` slot 1 in slot 1
+/// again; its body slot is riding/body.rs `adopt`'s.
 pub(super) fn adopt(world: &mut World, mob: Entity) {
     let Some(kind) = world.get::<Kind>(mob).map(|kind| kind.0.clone()).filter(|kind| has_pack(kind)) else { return };
     let Some(compound) = world.get::<Stored>(mob).map(|stored| stored.compound.clone()) else { return };
-    let slot_1 = || sapling_world::actor_chest(&compound).into_iter().find(|(slot, _)| *slot == 1).map(|(_, stack)| stack);
-    if let Some(armor) = sapling_world::actor_body(&compound).or_else(slot_1).filter(|stack| takes(&kind, 1, &stack.name)) {
-        wear(world, mob, Some(armor));
+    let slot_1 = sapling_world::actor_chest(&compound).into_iter().find(|(slot, _)| *slot == 1).map(|(_, stack)| stack);
+    if let Some(armor) = slot_1.filter(|stack| takes(&kind, 1, &stack.name)) {
+        let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
+        tack.armor = Some(armor);
+        world.entity_mut(mob).insert(tack);
     }
 }
 

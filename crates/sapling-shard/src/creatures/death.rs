@@ -60,11 +60,11 @@ fn feed_catalyst(world: &mut World, entity: Entity, layer: Entity, kind: &str, b
     }
 }
 
-/// Its viewers see both its hands emptied.
+/// Its viewers see both its hands emptied, then what it wears.
 pub(super) fn empty_hands(world: &mut World, entity: Entity, layer: Entity, body: &Body) {
     let Some(id) = world.get::<NetId>(entity).map(|id| id.0) else { return };
     let hand = |slot: u8, window_id| sapling_net::encode(&MobEquipment { runtime_entity_id: id, item: sapling_data::no_item(), slot, selected_slot: slot, window_id });
-    let emptied = vec![hand(0, WindowID::Inventory), hand(1, WindowID::Offhand)];
+    let emptied = vec![hand(0, WindowID::Inventory), hand(1, WindowID::Offhand), super::worn::shown_dead(world, entity, id)];
     entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), emptied);
 }
 
