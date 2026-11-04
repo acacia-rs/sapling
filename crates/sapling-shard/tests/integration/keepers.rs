@@ -72,3 +72,17 @@ fn a_potion_poured_into_an_empty_cauldron_fills_two_levels_of_it() {
     assert_eq!(shown_field(&sent, "PotionId"), Some(Value::Short(14)));
     assert!(properties(&mut h).contains("fill_level=2"));
 }
+
+#[test]
+fn a_bell_counts_its_ticks_to_fifty_and_a_ring_ends_at_the_wrap() {
+    // research/captures/bds-t3bells.txt: copies of a bell 80, 140 and 200 ticks on held Ticks 30, 41 and 1.
+    let mut h = ready(Item::new("minecraft:stone", 1), Block::new("bell").with("attachment=standing,direction=0,toggle_bit=0"));
+    let fields = |h: &mut Harness| common::asking::ask(h, |ctx| ctx.block_entity(AT).and_then(|data| data.get::<Value>().map(|nbt| (nbt.get("Ticks").cloned(), nbt.get("Ringing").cloned()))));
+    use_on(&mut h, WEST);
+    (0..30).for_each(|_| _ = h.tick_all());
+    let Some((Some(Value::Int(ticks)), Some(Value::Byte(1)))) = fields(&mut h) else { panic!("{:?}", fields(&mut h)) };
+    assert!((29..=32).contains(&ticks), "{ticks}");
+    (0..25).for_each(|_| _ = h.tick_all());
+    let Some((Some(Value::Int(ticks)), Some(Value::Byte(0)))) = fields(&mut h) else { panic!("{:?}", fields(&mut h)) };
+    assert!(ticks < 10, "{ticks}");
+}
