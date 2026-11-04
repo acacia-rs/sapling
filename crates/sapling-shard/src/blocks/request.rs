@@ -281,7 +281,8 @@ impl Request<'_> {
         let Some(name) = super::custom::clicked_name(registry, clicked) else { return self.resync(&[pos, target]) };
         // The clicked block's own use comes first, unless the player sneaks or works copper.
         let held = self.held_item(site.mode, click);
-        let builds = site.sneaking || !is_used(name) || held.as_deref().is_some_and(|held| super::copper::is_worked_by(name, held));
+        let used = is_used(name) || super::handled::takes_click(registry, clicked, held.as_deref());
+        let builds = site.sneaking || !used || held.as_deref().is_some_and(|held| super::copper::is_worked_by(name, held));
         let held = held.filter(|_| builds);
         let at = [click.click_pos.x, click.click_pos.y, click.click_pos.z];
         if !site.sneaking && super::bookshelves::use_on(self.world, self.entity, site.layer, pos, face, at, site.mode == GameMode::Creative) {

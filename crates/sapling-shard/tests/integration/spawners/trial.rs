@@ -62,8 +62,12 @@ fn a_spawn_egg_gives_a_bare_spawner_its_mob() {
     put(&mut h, Block::new("minecraft:trial_spawner"), SPAWNER, compound([("id", Value::String("TrialSpawner".into()))]));
     held(&mut h, "minecraft:husk_spawn_egg", 1);
     h.receive(1, &click(SPAWNER, 1, None));
-    run(&mut h, 3);
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     assert_eq!(state(&mut h), "1", "waiting for players now");
+    // bds-t3trial.txt: the entity shown is its `spawn_data` alone.
+    let shown: Vec<_> = common::all::<acacia_proto::packets::BlockEntityData>(&sent).into_iter().filter_map(|data| data.nbt.decode().ok()).map(|nbt| nbt.value).collect();
+    let data = compound([("TypeId", Value::String("minecraft:husk".into())), ("Weight", Value::Int(1))]);
+    assert!(shown.contains(&compound([("spawn_data", data)])), "{shown:?}");
     assert_eq!(ask(&mut h, |ctx| ctx.item(ALEX, Slot::Main(0)).map(|held| held.count)), Some(1), "kept in creative");
 }
 

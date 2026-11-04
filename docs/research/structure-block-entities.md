@@ -134,8 +134,13 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   `a_seeded_pot_broken_in_creative_leaves_its_loot_and_not_itself`). The earlier test's entity never
   read back because `set_block_entity` kept an entity without `x`/`y`/`z`, which the column drops
   (`pistons::at_place` now adds them). A shot pot was not drilled.
-- Brushing's dust particles (0x56) and BDS's InventoryContent resyncs while a brush is held.
-- The mansion template chests' own `Items` and the other non-loot entities (flower pots: below).
+- Brushing (2026-11-04, `bds_command_probe t3brush`, bds-t3brush.txt): BDS sent no dust particles,
+  and answered each brushing click with the whole inventory, armour, UI and offhand windows; the brush
+  sound's extra data is the block's hash. Sapling resends the four windows (`blocks/brushing.rs`
+  `resend_windows`).
+- The mansion template chests' own `Items` and the other non-loot entities (flower pots: below). Not
+  drilled 2026-11-04: needs a worldgen oracle run with a mansion and `block_entity_diff`, which the
+  command-probe lanes do not reach.
   Beds, bells and cauldrons are written since 2026-11-03 (templates.bin kinds `bed`, `bell`, `cauldron`;
   the witch hut's cauldron in `scattered/hut.rs`). `block_entity_diff 20261003 20261003-structures`:
   every bed (0, 4, 10, 11, 13, 14), bell and cauldron same. BDS saved the trial chambers' magenta and
@@ -149,7 +154,9 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   (3844 72 -1818) saved `PotionId` 25, `PotionType` -1; `block_entity_diff` same.
 - Bells' `Ticks` (2026-11-03, `block_entity_dump` of both oracle worlds): the same two bells saved
   24/33 in 20261003-structures and 21/21 in 20261003-structures-still, so it counts the ticks the
-  bell was loaded, not anything generation draws; sapling's 0 is a bell never ticked. Left.
+  bell was loaded, not anything generation draws. Since 2026-11-04 sapling counts every bell's `Ticks`
+  while its column ticks, wrapping at 50 (`blocks/bells.rs`; bds-t3bells.txt's copies of a bell held
+  its count since placing, mod 50), so a generated bell counts once loaded as BDS's did.
 - Flower pots (2026-11-03): BDS saved 46, every one `FlowerPot` {`PlantBlock` {name, `states` {},
   `version` 18168865}}. The witch hut's (block `update_bit=1`) holds `minecraft:red_mushroom`;
   sapling writes it (`hut.rs`, `generated_flower_pot`), `block_entity_diff` same.
@@ -217,7 +224,9 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
   chambers' dead bush at (-446, -11, -425), is water in our blocks there (a block difference).
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
-  before the vault's first tick rewrites it, so left.
+  before the vault's first tick rewrites it (`spawners/vault.rs` takes the lesser of it and now + 1
+  step), so left. Undrillable as a difference: the generator has no level clock to save, and a loaded
+  vault steps at its first tick either way (2026-11-04).
 
 ## Unverified
 

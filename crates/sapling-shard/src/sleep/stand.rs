@@ -1,8 +1,8 @@
 //! Where a sleeper stands up, as BDS's `BedBlock::findStandUpPosition` (142cd9510) picks it: the
 //! first of twelve cells around the bed's foot, turned with the bed, that has a floor, room for
-//! the feet and air for the head, and is not fire or lava. Of two tables, the one for the side
-//! of the bed the sleeper lay down from. Matched on BDS for an open spot, a walled one and a walled
-//! ring (research/captures/bds-rest.txt).
+//! the feet and air for the head, and neither feet nor floor of lava, magma or a wither rose. Of two
+//! tables, the one for the side of the bed the sleeper lay down from. Matched on BDS for an open
+//! spot, a walled one and a walled ring (research/captures/bds-rest.txt).
 
 use sapling_api::BlockPos;
 use sapling_world::{BlockRegistry, World as Level};
@@ -12,9 +12,12 @@ const NEAR_SIDE: [[i32; 3]; 12] = [[1, 0, 0], [1, 0, 1], [1, 0, 2], [0, 0, 2], [
 const FAR_SIDE: [[i32; 3]; 12] = [[-1, 0, 0], [-1, 0, 1], [-1, 0, 2], [0, 0, 2], [1, 0, 2], [1, 0, 1], [1, 0, 0], [1, 0, -1], [0, 0, -1], [-1, 0, -1], [0, 1, 0], [0, 1, 1]];
 /// The turn BDS gives each bed `direction` (14a6820f4).
 const TURN: [usize; 4] = [2, 3, 0, 1];
-// TODO: BDS's own danger test reads a block flag and material 6 of feet and floor; fire and lava
-// stand in for it here.
-const DANGEROUS: [&str; 5] = ["minecraft:fire", "minecraft:soul_fire", "minecraft:lava", "minecraft:flowing_lava", "minecraft:magma"];
+/// BDS's danger test of feet and floor (142cd9510): material 6 (lava), the block flag only magma sets
+/// (+0x132 bit 0x40, 1484efd59) and a wither rose (14ccdb680). Fire is safe.
+const DANGEROUS: [&str; 4] = ["minecraft:lava", "minecraft:flowing_lava", "minecraft:magma", "minecraft:wither_rose"];
+const BEDS: [&str; 2] = ["minecraft:bed", "minecraft:straw_bed"];
+/// What the feet may not stand in even when it is not solid (14ccdb078, 14ccdd2b0).
+const NO_FEET: [&str; 2] = ["minecraft:end_portal", "minecraft:end_portal_frame"];
 
 fn turned([x, y, z]: [i32; 3], turn: usize) -> [i32; 3] {
     match turn {
@@ -52,8 +55,8 @@ pub(super) fn stand_up_cell(level: &Level, foot: BlockPos, direction: usize, ent
         let cell = [foot[0] + dx, foot[1] + dy, foot[2] + dz];
         let (floor, feet, head) = (at([cell[0], cell[1] - 1, cell[2]]), at(cell), at([cell[0], cell[1] + 1, cell[2]]));
         let has_floor = registry.get(floor).is_some_and(|state| state.is_solid());
-        let is_bed = name(registry, feet) == "minecraft:bed";
-        let feet_free = is_bed || registry.get(feet).is_some_and(|state| !state.is_solid());
+        let is_bed = BEDS.contains(&name(registry, feet));
+        let feet_free = is_bed || registry.get(feet).is_some_and(|state| !state.is_solid() && !NO_FEET.contains(&state.name));
         let head_free = registry.get(head).is_some_and(|state| state.is_air()) && (!is_bed || registry.get(at([cell[0], cell[1] + 2, cell[2]])).is_some_and(|state| state.is_air()));
         if !(has_floor && feet_free && head_free) {
             continue;
@@ -76,5 +79,21 @@ mod tests {
         let order: Vec<[i32; 3]> = NEAR_SIDE.iter().map(|offset| turned(*offset, TURN[0])).take(3).collect();
         assert_eq!(order, [[-1, 0, 0], [-1, 0, -1], [-1, 0, -2]], "own cell, then one north, then two");
         assert!(!far_side(0, [1, 0, 0], [0.5, 0.0, 0.5]));
+    }
+
+    #[test]
+    fn a_sleeper_stands_in_fire_but_not_by_a_wither_rose_or_on_magma() {
+        let mut level = Level::void();
+        let registry = BlockRegistry::vanilla();
+        let id = |name: &str| registry.states_of(name).next().unwrap().0;
+        // Foot at 1 64 0 facing south: its first three cells are west of it.
+        level.set_block(1, 64, 0, id("minecraft:bed"));
+        for z in -2..=0 {
+            level.set_block(0, 63, z, id("minecraft:stone"));
+        }
+        level.set_block(0, 64, 0, id("minecraft:wither_rose"));
+        level.set_block(0, 63, -1, id("minecraft:magma"));
+        level.set_block(0, 64, -2, id("minecraft:fire"));
+        assert_eq!(stand_up_cell(&level, [1, 64, 0], 0, [0.5, 64.0, 0.5]), Some([0, 64, -2]));
     }
 }

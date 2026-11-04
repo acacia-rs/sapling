@@ -55,3 +55,8 @@ fn a_cluster_leaves_two_shards_but_to_a_pickaxe_and_a_pot_leaves_itself() {
     assert_eq!([left("amethyst_cluster", Breaker::UNAIDED, 0), left("amethyst_cluster", HAND, 0), left("amethyst_cluster", pickaxe, 0)], [named("amethyst_shard", 2), named("amethyst_shard", 2), named("amethyst_shard", 4)]);
     assert_eq!(left_of("decorated_pot", "direction=0", Breaker::UNAIDED, 0), named("decorated_pot", 1));
 }
+
+#[test]
+fn a_decorated_pot_broken_by_hand_leaves_itself() {
+    assert_eq!(left_of("decorated_pot", "direction=0", HAND, 0), named("decorated_pot", 1));
+}

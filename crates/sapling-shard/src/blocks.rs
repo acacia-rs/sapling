@@ -6,7 +6,7 @@
 mod after_break;
 mod bed_burst;
 mod bonemeal;
-mod bells;
+pub(crate) mod bells;
 mod blown;
 mod bookshelves;
 mod brushing;
@@ -88,7 +88,7 @@ mod updates;
 mod waterlog;
 
 pub(crate) use blown::blow_out;
-pub(crate) use command_blocks::dispatch_updates as dispatch_command_block_updates;
+pub(crate) use command_blocks::{dispatch_updates as dispatch_command_block_updates, run_for_cart};
 pub(crate) use shown_again::show_due as show_blocks_again;
 pub(crate) use structure_blocks::{dispatch_exports as dispatch_structure_exports, dispatch_updates as dispatch_structure_block_updates};
 pub(crate) use falling::from_storage as falling_from_storage;

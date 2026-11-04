@@ -104,6 +104,10 @@ fn parse_load(args: &mut Args<'_>) -> Result<Action, ParseError> {
     how.include_blocks = Option::<bool>::parse(args)?.unwrap_or(true);
     how.waterlogged = Option::<bool>::parse(args)?.unwrap_or(false);
     let integrity = Option::<f32>::parse(args)?.unwrap_or(100.0);
+    // BDS answered a bare number for the seed (`50 1`) with a syntax error at it (bds-t3integ.txt).
+    if args.peek().is_some_and(|seed| seed.parse::<f64>().is_ok()) {
+        return Err(args.error_at(args.mark()));
+    }
     how.seed = Option::<String>::parse(args)?.unwrap_or_default();
     Ok(Action::Load { to, how, integrity, animation })
 }
@@ -190,5 +194,7 @@ mod tests {
         assert_eq!((how.rotation, how.mirror, how.include_entities, how.include_blocks), (Rotation::Clockwise90, Mirror::XZ, true, false));
         assert_eq!(animation, Some((StructureAnimation::BlockByBlock, 0.5)));
         assert!(parsed("load s1 1 2 3 45_degrees").is_err() && parsed("move s1").is_err());
+        let syntax = ParseError::Syntax { before: " false 50 ".into(), token: "12345".into(), after: String::new() };
+        assert_eq!(parsed("load s1 2 -60 52 0_degrees none true true false 50 12345").err(), Some(syntax));
     }
 }

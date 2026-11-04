@@ -7,6 +7,7 @@
 mod boats;
 mod cargo;
 mod carts;
+mod command_cart;
 mod pull;
 mod rails;
 
@@ -27,6 +28,7 @@ use crate::movement::Motion;
 use crate::sync::Told;
 
 pub(crate) use cargo::{Cargo, cargo, load_cargo};
+pub(crate) use command_cart::set_command as set_cart_command;
 
 /// Riders who asked for their inventory while riding a vehicle with goods: that opens instead
 /// (inventory/equipment.rs takes the asks in).
@@ -38,7 +40,7 @@ pub(crate) const BOAT: &str = "minecraft:boat";
 pub(crate) const CHEST_BOAT: &str = "minecraft:chest_boat";
 pub(crate) const MINECART: &str = "minecraft:minecart";
 pub(crate) const TNT_MINECART: &str = "minecraft:tnt_minecart";
-const CARTS: [&str; 4] = [MINECART, "minecraft:chest_minecart", "minecraft:hopper_minecart", TNT_MINECART];
+const CARTS: [&str; 5] = [MINECART, "minecraft:chest_minecart", "minecraft:hopper_minecart", TNT_MINECART, command_cart::COMMAND_MINECART];
 /// Structural integrity, shown as `Health`; a hit takes this many times its damage off a boat, a
 /// minecart (docs/research/vehicles.md "Breaking").
 const INTEGRITY: i32 = 40;

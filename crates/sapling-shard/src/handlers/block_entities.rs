@@ -18,10 +18,15 @@ impl BlockEntityBackend for Ctx<'_> {
         if self.world.get::<Layer>(layer).is_none_or(|layer| layer.world.block(pos[0], pos[1], pos[2]) == layer.world.registry().air_id()) {
             return false;
         }
-        blocks::keep_entity(self.world, layer, pos, &blocks::block_entity_at(entity.clone(), pos));
+        blocks::keep_entity(self.world, layer, pos, &blocks::block_entity_at(crate::containers::carried(entity, pos), pos));
         if crate::spawners::is_spawner(entity) {
             crate::spawners::watch(self.world, layer, pos);
         }
         true
+    }
+
+    fn paired_with(&self, pos: BlockPos) -> Option<BlockPos> {
+        let halves = crate::containers::chest_halves(self.world, worlds::current(self.world), pos);
+        halves.into_iter().find(|half| *half != pos)
     }
 }

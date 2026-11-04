@@ -45,6 +45,8 @@ pub(crate) enum Job {
     Unheld,
     /// What lost its hold when a block beside it changed goes (updates/loosened.rs).
     Loosened,
+    /// A chest whose other half went stands alone (containers/pairs.rs).
+    Unpaired,
 }
 
 #[derive(Resource, Default)]
@@ -155,5 +157,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Hatch => super::eggs::ticked(world, layer, pos),
         Job::Unheld => super::updates::unheld::popped(world, layer, pos),
         Job::Loosened => super::updates::loosened::popped(world, layer, pos),
+        Job::Unpaired => crate::containers::stand_alone(world, layer, pos),
     }
 }

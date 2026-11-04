@@ -256,12 +256,27 @@ two ways: the first candle, pickle and snow layer are told by `place` where BDS 
 
 ## Left
 
-- From the second round: a compass linked on a lodestone is a lodestone compass by name and
-  points nowhere. A pot gives its stack back only when broken.
 - A frame's item comes out at the first blow, with `SoundItemframeRemoveItem` at the corner,
   and the frame stands (`bds-bonemeal2.txt`, its last steps); sapling does the same, and in
-  creative breaks the frame with the same blow, which was not tried on BDS. A respawn anchor clicked with a block in the hand has the
-  block put against it; in the nether it sets no spawn.
+  creative breaks the frame with the same blow, which was not tried on BDS.
+
+## Parity drill (2026-11-04, `bds_command_probe t3uses`, `t3nether`)
+
+Captures research/captures/bds-t3uses.txt, bds-t3nether.txt against sapling-*.
+
+- Lodestone: the compass's handle and the record's fields matched (lodestone compasses since
+  `blocks/lodestone.rs`'s rewrite). The first binding tells viewers an `Update` of the new record unasked,
+  a broken lodestone a `Destory` with status 2; a second binding in creative told nothing and gave
+  a second bound compass, keeping the hand. Sapling broadcast again; fixed.
+- Decorated pot: an insert sends LevelEventGeneric 4080 (x+0.5, y+1.25, z+0.5), then the pot with
+  `animation` 2; a click with nothing or another item, `animation` 1 and `block.decorated_pot.insert_fail`
+  at the corner. Broken by hand the pot dropped itself (not `cracked`) with its stack. A flower pot's
+  plant in or out shows `update_bit` 1 or 0 before the entity. Sapling had none of this; fixed
+  (`blocks/holders.rs`, `blocks/pots.rs`, `blocks/loot.rs`).
+- A charged respawn anchor clicked with dirt in the Overworld burst; sapling put the dirt against it.
+  Fixed: only glowstone below charge 4 is put to it (`blocks/handled.rs` `takes_click`). In the
+  Nether with dirt in hand: SetSpawnPosition, `tile.respawn_anchor.respawnSet` and
+  `respawn_anchor.set_spawn` on both, the second click nothing; BDS also resent the inventory.
 
 - Bone meal has its own drill and notes: `bone-meal.md`.
 - Fire has its own drill and notes: `fire.md`. The obsidian row above was taken with

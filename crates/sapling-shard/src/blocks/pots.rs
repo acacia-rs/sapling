@@ -37,6 +37,15 @@ fn holding(kept: Option<Value>, pos: BlockPos, plant: Option<Value>) -> Value {
     Value::Compound(fields)
 }
 
+/// Sets the pot's `update_bit`, which BDS set with a plant and cleared without one, the block
+/// shown before the entity (research/captures/bds-clicks.txt, bds-t3uses.txt).
+fn mark(world: &mut World, layer: Entity, pos: BlockPos, bit: &str) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    if let Some(marked) = super::with_property(level.registry(), level.block(pos[0], pos[1], pos[2]), "update_bit", bit) {
+        send::set(world, layer, pos, marked);
+    }
+}
+
 /// A click on the block `name` at `pos`: a pot takes the plant in the hand or gives its own
 /// back. False for any other block.
 pub(crate) fn use_pot(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
@@ -51,12 +60,8 @@ pub(crate) fn use_pot(world: &mut World, player: Entity, layer: Entity, pos: Blo
     match (potted, held) {
         (None, Some(stack)) if is_pottable(&stack.name) => {
             let Some(plant) = stack.block.and_then(|hash| block_of_hash(level.registry(), hash)) else { return true };
-            // BDS marks a pot that got a plant (research/captures/bds-clicks.txt).
-            let marked = super::with_property(level.registry(), level.block(pos[0], pos[1], pos[2]), "update_bit", "1");
+            mark(world, layer, pos, "1");
             send::keep_entity(world, layer, pos, &holding(kept, pos, Some(plant)));
-            if let Some(marked) = marked {
-                send::set(world, layer, pos, marked);
-            }
             if spends {
                 inventory::change(world, player, |inventory| inventory.take(Place::Main(inventory.selected.into()), 1).is_ok());
             }
@@ -64,6 +69,7 @@ pub(crate) fn use_pot(world: &mut World, player: Entity, layer: Entity, pos: Blo
         (Some(plant), None) => {
             let Some(Value::String(name)) = plant.get("name") else { return true };
             let Some(stack) = inventory::stored(&Item::new(name.clone(), 1), level.registry()) else { return true };
+            mark(world, layer, pos, "0");
             send::keep_entity(world, layer, pos, &holding(kept, pos, None));
             inventory::change(world, player, |inventory| inventory.put(Place::Main(inventory.selected.into()), Some(stack)));
         }

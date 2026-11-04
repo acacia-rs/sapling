@@ -177,4 +177,8 @@ ender chest and barrel actors; shulker box has its own AABB). Fields set by the 
   stand-up cell is `findStandUpPosition`'s, whose tables (14a7d6220, 14a7d62b0) turn about the bed's
   **foot**: an open spot gave the cell lain in from, that cell walled the one north of it, a walled ring
   the one two north.
+- Read 2026-11-04 (bdsre, not drilled): `findStandUpPosition`'s danger test of feet and floor is material 6
+  (lava), a block flag only magma sets (+0x132 bit 0x40, 1484efd59) and the wither rose (14ccdb680); fire
+  is safe. A straw bed counts as a bed, and the feet may not stand in an end portal or its frame
+  (14ccdb078, 14ccdd2b0). Copied in `sleep/stand.rs`; the stood-in fire was the old guess.
 - `containers.rs:8`: blocked chests open; no reach close (5 is still open in BDS too).

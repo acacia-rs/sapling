@@ -1,8 +1,8 @@
 //! Loads that put a template over time, as BDS's `layer_by_layer` and `block_by_block` did
 //! (research/captures/bds-structanim.txt): `t` ticks after the load, the first `floor(t * N / T)`
 //! of its N layers or blocks are in, T being the seconds asked times 20. Cells go in y, then x,
-//! then z order of the template before it is turned; its entities come with the last.
-// TODO: when BDS brings a template's entities into an animated load is not drilled.
+//! then z order of the template before it is turned; its entities come with the last, as on BDS
+//! (bds-structanim2.txt, bds-t3turn.txt).
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;

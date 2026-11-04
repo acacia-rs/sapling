@@ -137,11 +137,21 @@ fn a_blast_throws_a_pig_in_the_open_off_and_up() {
 
 #[test]
 fn a_charged_respawn_anchor_bursts_when_clicked_in_the_overworld() {
-    // research/captures/bds-clicks2.txt: a blast of power 5 at its middle.
+    // research/captures/bds-clicks2.txt: a blast of power 5 at its middle; bds-t3uses.txt: dirt in a
+    // survival hand burst it as well.
+    for survival in [false, true] {
+        anchor_bursts(survival);
+    }
+}
+
+fn anchor_bursts(survival: bool) {
     let mut h = Harness::new();
     h.enter(1, "Alex");
-    h.remote.run(|ctx| {
-        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+    h.remote.run(move |ctx| {
+        ctx.set_game_mode(PlayerId(1), if survival { GameMode::Survival } else { GameMode::Creative });
+        if survival {
+            assert!(ctx.set_item(PlayerId(1), sapling_api::Slot::Main(0), Some(&sapling_api::Item::new("minecraft:dirt", 4))));
+        }
         assert!(ctx.set_block([3, 65, 0], &Block { name: "minecraft:respawn_anchor".into(), properties: "respawn_anchor_charge=1".into() }));
     });
     h.tick_all();

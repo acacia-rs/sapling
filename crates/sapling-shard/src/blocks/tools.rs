@@ -215,7 +215,7 @@ impl Request<'_> {
             }
             return true;
         }
-        if super::lodestone::bind(self.world, self.entity, site.layer, pos, held) {
+        if super::lodestone::bind(self.world, self.entity, site.layer, pos, held, site.mode == GameMode::Creative) {
             return true;
         }
         if held == FLINT_AND_STEEL && crate::tnt::light(self.world, site.layer, pos) {

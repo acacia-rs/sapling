@@ -1,7 +1,7 @@
 //! A template as BDS sent it in StructureTemplateDataExportResponse (research/captures/
 //! bds-structblocks.txt): `format_version` 2, and its block indices as int arrays, the second
-//! layer only where it holds anything.
-// TODO: a template with liquids was not exported on BDS; the second layer's form is a guess.
+//! layer only where it holds anything: -1 but where a liquid lies (bds-t3turn.txt, a coral fan
+//! in water).
 
 use acacia_proto::nbt::{self, LittleEndian, List, Nbt, Network, Raw, Value};
 use bytes::BytesMut;

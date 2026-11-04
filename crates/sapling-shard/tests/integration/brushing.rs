@@ -93,6 +93,9 @@ fn a_held_brush_uncovers_suspicious_sand_in_ten_strokes_ten_ticks_apart() {
     let ticks = hold(&mut h, 100, true);
     // BDS: count 1 at the first click, then a stroke every 10 ticks; shown only as the progress moves.
     assert_eq!(shown(&ticks), [(0, 1), (21, 3), (51, 6)]);
+    // research/captures/bds-t3brush.txt: each brushing click answered by the whole inventory and offhand.
+    let windows = |packets: &[RawPacket]| all::<InventoryContent>(packets).iter().map(|window| window.window_id).collect::<Vec<_>>();
+    assert!(ticks[..90].iter().all(|packets| windows(packets).contains(&WindowIDVarint::Inventory) && windows(packets).contains(&WindowIDVarint::Offhand)), "{:?}", windows(&ticks[1]));
     let done = ticks.iter().position(|packets| sounds(packets).contains(&"brush_completed".to_owned())).expect("uncovered");
     assert_eq!(done, 91);
     let last = &ticks[done];

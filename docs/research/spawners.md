@@ -145,7 +145,19 @@ Left out:
 
 - A player's position as its eyes for every range check here; the 3615 charged-detection event; that a
   trial spawner's line of sight is a clip through any block with collision (BDS: a real ray clip, max 200).
-- The eject velocity's odd x/z term BDS's trial spawner adds (left out); the vault's per-axis spread.
-- What a spawn egg does to a trial spawner's configs (`14488a3a0`; here its kind goes into `spawn_data`, kept
-  over the cooldown while the config names none).
-- Positions of the vault's and the trial spawner's level events (sent at the block's middle).
+- The eject velocity's odd x/z term BDS's trial spawner adds (left out); the vault's per-axis spread. One BDS
+  reward (bds-t3trial.txt): item at x+0.5, y+1.0, z+0.5, moving (0.028, 0.156, 0.010), `eject_item` there
+  with extra data -718719502. Sapling's wave there never ended (its zombies did not burn by day, BDS's did)
+  and the vault click missed on both, twice; undrillable here.
+- What a spawn egg does to a trial spawner's configs (`14488a3a0`; no packet shows them).
+- The vault's level events' positions (sent at the block's middle).
+
+## Parity drill (2026-11-04, `bds_command_probe t3trial`, bds-t3trial.txt)
+
+- A zombie egg on a bare trial spawner: BDS showed the empty entity, then state 1 with an entity of
+  `spawn_data` `{TypeId minecraft:zombie, Weight 1}` alone, as every later one of the run. Sapling showed
+  it empty; fixed (`sapling-leveldb` `BlockEntity::updated`).
+- The trial spawner's detection, spawning and ejecting events are at the block's corner (sapling: its
+  middle), and a spawn is told as both puffs, then the mob, then `trial_spawner.spawn_mob`. Fixed
+  (`spawners/trial/waves.rs`, `trial.rs`).
+- `/effect @s trial_omen 120 0` by an active spawner turned it ominous on neither in 30 s.

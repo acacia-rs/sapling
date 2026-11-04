@@ -90,7 +90,13 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
   half keeps its own 27 `Items`.
 - **Unpairing**: `tick` (BDSRE-old 1420fc690) drops the pair when the partner's block entity is gone or
   `canPairWith` no longer holds; `onRemoved` unpairs the survivor. After either, send the survivor's
-  `BlockEntityData` without the pair keys (inf).
+  `BlockEntityData` without the pair keys (inf). Drilled 2026-11-04 (`bds_command_probe t3chests`,
+  bds-t3chests.txt): a half set to air or stone by command left the other shown alone a tick later;
+  a chest put between two singles paired with the one west (or north) of it. Sapling queues the same
+  (`containers/pairs.rs` `stand_alone`, test `containers::a_chest_whose_other_half_is_set_away_stands_alone_a_tick_later`).
+- `/clone` (same drill): a single chest's copy gets `forceunpair` 1; a whole pair's copies name each
+  other at the destination; one half alone answers `commands.clone.failed`. Sapling: `pairs.rs`
+  `carried`, `vanilla/copying.rs`.
 - A trapped chest's signal is the viewer count of both halves, capped at 15 (`ChestBlock::use`).
 
 ## C. Barrel, trapped chest, ender chest, shulker box

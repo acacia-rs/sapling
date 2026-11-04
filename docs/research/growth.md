@@ -68,6 +68,11 @@ at 20 than a tenth of its pace at 200 would be, so farmland is not in step with 
 and sapling's three random ticks to a crop's one is right only near 200 and near 1. The
 torchflower crop did not grow in the minute and a half.
 
+`bds_command_probe t3copper` (2026-11-04, bds-t3copper.txt) set 25 lone blocks of copper at the rule's
+100 for a minute: the median block was exposed after 19.9 s, weathered 30.8, oxidized 45.8 on BDS
+(23, 22, 20 of 25 got there), 12.7, 26.1 and 35.0 on sapling (24, 23, 22), whose odds are the
+binary's (copper.md O2). One sample a side; left as is.
+
 ## Leaves
 
 Measured with `bds_command_probe leaves` (`bds-leaves.txt`, `sapling-leaves.txt`), at

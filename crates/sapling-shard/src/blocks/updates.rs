@@ -141,6 +141,8 @@ fn loosen(world: &mut World, layer: Entity, pos: BlockPos, changed: BlockPos) ->
 /// Lets everything that the change at `pos` unsettled fall or break, and what that unsettles.
 pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     unheld::noticed(world, layer, pos);
+    super::lodestone::noticed(world, layer, pos);
+    super::bells::noticed(world, layer, pos);
     let mut changed = VecDeque::from([pos]);
     for _ in 0..MAX_STEPS {
         let Some(pos) = changed.pop_front() else { return };
@@ -156,6 +158,9 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
         let is_gone = !registry.get(id).is_some_and(|state| state.is_solid());
         for face in Face::ALL {
             let beside = face.neighbour(pos);
+            if crate::containers::lost_partner(world, layer, beside, pos) {
+                super::queued::after(world, layer, beside, 1, super::queued::Job::Unpaired);
+            }
             let Some((registry, id)) = block(world, layer, beside) else { continue };
             let stands = level(world, layer).is_none_or(|level| ground::may_stand(level, beside, id) && !ground::is_wrongly_lit(level, beside, id));
             // A tall plant's upper half stands on its own lower half, which is not solid.

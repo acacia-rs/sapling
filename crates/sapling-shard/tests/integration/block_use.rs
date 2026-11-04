@@ -57,6 +57,9 @@ fn a_pot_takes_a_plant_and_gives_it_back_to_an_empty_hand() {
     let shown = all::<BlockEntityData>(h.tick_all().to(2));
     assert_eq!(shown.iter().map(plant).collect::<Vec<_>>(), [None]);
     assert_eq!(held(&mut h).map(|item| (item.name, item.count)), Some(("minecraft:poppy".to_owned(), 1)));
+    // research/captures/bds-t3uses.txt: the emptied pot's `update_bit` cleared again.
+    let pot = common::asking::ask(&mut h, |ctx| ctx.block(AT).map(|pot| pot.properties));
+    assert_eq!(pot.as_deref(), Some("update_bit=0"));
 }
 
 #[test]

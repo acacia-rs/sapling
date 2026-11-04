@@ -78,6 +78,7 @@ pub(super) fn stroke(world: &mut World, player: Entity, pos: BlockPos, face: Fac
     if !held || click.trigger_type != TransactionUseItemTriggerType::SimulationTick {
         return false;
     }
+    resend_windows(world, player);
     let Some(layer) = world.get::<InLayer>(player).map(|layer| layer.0).filter(|_| super::reaches(world, player, pos)) else { return true };
     let Some(level) = level(world, layer).filter(|level| level.in_height(pos[1])) else { return true };
     let id = level.block(pos[0], pos[1], pos[2]);
@@ -101,6 +102,17 @@ pub(super) fn stroke(world: &mut World, player: Entity, pos: BlockPos, face: Fac
     let [x, y, z] = pos.map(|c| c as f32 + 0.5);
     send::to_viewers(world, layer, pos, &[send::noise("brush", Vec3f { x, y, z }, hash)]);
     true
+}
+
+/// The player's four windows shown again, as BDS answered each brushing click; it sent no dust,
+/// which clients draw themselves (research/captures/bds-t3brush.txt).
+fn resend_windows(world: &mut World, player: Entity) {
+    use acacia_proto::types::WindowIDVarint as Window;
+    let mut query = world.query::<(&Inventory, &mut crate::components::Outgoing)>();
+    let Ok((inventory, mut out)) = query.get_mut(world, player) else { return };
+    for window in [Window::Inventory, Window::Armor, Window::Ui, Window::Offhand] {
+        inventory.send_window(&mut out, window);
+    }
 }
 
 /// The block's entity as fields, made if it has none.

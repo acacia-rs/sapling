@@ -28,6 +28,7 @@ const EGG_REACH: [i32; 2] = [15, 7];
 const EGG_TRIES: usize = 64;
 /// A charged respawn anchor clicked outside the nether bursts with this power.
 const ANCHOR_POWER: f32 = 5.0;
+const ANCHOR_FULL: u8 = 4;
 const ANCHORS_EXPLODE: &str = "respawnBlocksExplode";
 const NETHER: i32 = 1;
 
@@ -40,6 +41,15 @@ fn egg_jump([dx, dy, dz]: [i32; 3]) -> i32 {
 
 fn property(properties: &str, key: &str) -> Option<u8> {
     properties.split(',').filter_map(|pair| pair.split_once('=')).find(|(name, _)| *name == key).and_then(|(_, value)| value.parse().ok())
+}
+
+/// Whether a click with `held` on the block `id` uses it before anything is built on it: a
+/// charged respawn anchor, but for glowstone that still charges it (bds-t3uses.txt: dirt on a
+/// charged anchor burst it outside the Nether).
+pub(super) fn takes_click(registry: &sapling_world::BlockRegistry, id: u32, held: Option<&str>) -> bool {
+    let Some(state) = registry.get(id).filter(|state| state.name == "minecraft:respawn_anchor") else { return false };
+    let charge = property(state.properties, "respawn_anchor_charge").unwrap_or(0);
+    charge > 0 && !(held == Some("minecraft:glowstone") && charge < ANCHOR_FULL)
 }
 
 /// A click on the block `name` at `pos`: false when it is none of these.

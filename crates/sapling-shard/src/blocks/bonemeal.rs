@@ -1,8 +1,7 @@
 //! Bone meal on a plant, as BDS grew them for a creative player (docs/research/bone-meal.md).
 // Saplings take theirs in saplings.rs.
 // TODO: outside creative a crop's step is the Java
-// game's 2 to 5, which BDS's steps of 2 to 4 fit; where grass and flowers come up, and which, is a guess at BDS's scatter; vines,
-// cocoa, moss, sea grass and the rest take none.
+// game's 2 to 5, which BDS's steps of 2 to 4 fit; where grass and flowers come up, and which, is a guess at BDS's scatter.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -11,11 +10,15 @@ use sapling_api::{Block, BlockPos};
 
 use super::{Dice, level, send, with_property};
 
+mod more;
+
 const RIPE: u8 = 7;
 const RIPE_BUSH: u8 = 3;
 /// What a stem grows by a click: BDS's went 0, 3, 6, 7.
 const STEM_STEP: u8 = 3;
-const CANE_HEIGHT: i32 = 3;
+/// Cane a click puts on the top of a stalk: BDS's one high went to three, three to five, and
+/// cane under more cane took none (research/captures/bds-t3meal.txt).
+const CANE_STEP: i32 = 2;
 const BAMBOO_HEIGHT: i32 = 12;
 const CROPS: [&str; 4] = ["wheat", "carrots", "potatoes", "beetroot"];
 const STEMS: [&str; 2] = ["melon_stem", "pumpkin_stem"];
@@ -95,15 +98,13 @@ fn grown(level: &Level, pos: BlockPos, creative: bool, roll: &mut dyn FnMut() ->
             sprouts.extend(around.into_iter().filter(|(cell, _)| *cell != above));
             Some(sprouts)
         }
-        "reeds" => {
-            let (top, tall) = top_of(level, pos, name);
-            Some((1..=CANE_HEIGHT - tall).map(|up| [x, top + up, z]).take_while(|cell| is_air(level, *cell)).map(|cell| (cell, id)).collect())
-        }
+        "reeds" if is_air(level, above) => Some((1..=CANE_STEP).map(|up| [x, y + up, z]).take_while(|cell| is_air(level, *cell)).map(|cell| (cell, id)).collect()),
         "bamboo_sapling" if is_air(level, above) => Some(vec![(pos, state(level, "bamboo", "bamboo_leaf_size=no_leaves")?), (above, state(level, "bamboo", "bamboo_leaf_size=small_leaves")?)]),
         "bamboo" => {
             let (top, tall) = top_of(level, pos, name);
             let over = [x, top + 1, z];
-            Some(if tall < BAMBOO_HEIGHT && is_air(level, over) { vec![(over, state(level, "bamboo", "bamboo_leaf_size=small_leaves")?)] } else { Vec::new() })
+            // BDS's sixteen high took none (bds-t3meal.txt).
+            (tall < BAMBOO_HEIGHT && is_air(level, over)).then(|| state(level, "bamboo", "bamboo_leaf_size=small_leaves")).flatten().map(|id| vec![(over, id)])
         }
         _ => None,
     }
@@ -160,6 +161,15 @@ fn huge_mushroom(world: &mut World, layer: Entity, pos: BlockPos, name: &str) {
 
 /// Bone meal on the block at `pos`: false when it takes none.
 pub(super) fn feed(world: &mut World, layer: Entity, pos: BlockPos, creative: bool) -> bool {
+    if let Some(grown) = more::grown(world, layer, pos) {
+        let Some(grown) = grown else { return false };
+        particle(world, layer, pos);
+        match grown.as_slice() {
+            [(cell, id)] => _ = send::set(world, layer, *cell, *id),
+            _ => _ = send::set_many(world, layer, &grown),
+        }
+        return true;
+    }
     if let Some(took) = wild(world, layer, pos, creative) {
         if took {
             particle(world, layer, pos);

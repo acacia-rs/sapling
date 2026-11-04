@@ -1,8 +1,8 @@
 //! A structure turned and mirrored as `/structure load` turns it: the mirror first, then the
 //! clockwise turn, each cell kept inside the box and each block's facing states turned with it
 //! (research/captures/bds-structures.txt: a chest, stairs and a log at every turn and mirror).
-// TODO: the turns of `coral_direction`, `huge_mushroom_bits` and the other states BDS turns that
-// no drill showed are left as saved.
+// BDS left `huge_mushroom_bits` as saved (bds-t3turn.txt).
+// TODO: the turns of the other states BDS turns that no drill showed are left as saved.
 
 use sapling_api::{Mirror, Rotation};
 
@@ -116,12 +116,16 @@ impl Turn {
             "weirdo_direction" => self.in_order(value, ["2", "1", "3", "0"]).map(str::to_owned),
             "direction" if block.ends_with("trapdoor") => self.in_order(value, ["2", "1", "3", "0"]).map(str::to_owned),
             "direction" => self.in_order(value, ["0", "1", "2", "3"]).map(str::to_owned),
+            // 0 west, 1 east, 2 north, 3 south (bds-t3turn.txt).
+            "coral_direction" => self.in_order(value, ["3", "0", "2", "1"]).map(str::to_owned),
             "pillar_axis" | "portal_axis" if odd => Some(match value { "x" => "z", "z" => "x", other => other }.to_owned()),
             "ground_sign_direction" => value.parse::<i32>().ok().map(|sixteenth| self.sixteenth(sixteenth).to_string()),
             "lever_direction" => Some(self.lever(value)),
             "rail_direction" => value.parse::<usize>().ok().map(|rail| self.rail(rail).to_string()),
             "vine_direction_bits" => value.parse::<u32>().ok().map(|bits| self.bits(bits, [1, 2, 4, 8]).to_string()),
             "multi_face_direction_bits" => value.parse::<u32>().ok().map(|bits| self.bits(bits, [4, 8, 16, 32]).to_string()),
+            // A crafter's facing and top: BDS turned `north_up` to `east_up`, `up_north` to `up_east` (bds-t3turn.txt).
+            "orientation" => value.split_once('_').map(|(facing, top)| format!("{}_{}", self.name(facing).unwrap_or(facing), self.name(top).unwrap_or(top))),
             _ => None,
         };
         let key = match key.rsplit_once('_') {
@@ -229,5 +233,21 @@ mod tests {
         assert_eq!(quarter.states("minecraft:vine", "vine_direction_bits=1"), "vine_direction_bits=2");
         assert_eq!(quarter.states("minecraft:cobblestone_wall", "wall_connection_type_east=short,wall_connection_type_north=none"), "wall_connection_type_east=none,wall_connection_type_south=short");
         assert_eq!(turn(0, true, false).states("minecraft:standing_sign", "ground_sign_direction=1"), "ground_sign_direction=7");
+    }
+
+    #[test]
+    fn crafters_and_bells_turn_and_mushroom_caps_stay_as_on_bds() {
+        // research/captures/bds-t3turn.txt.
+        let crafter = |turn: Turn, orientation: &str| turn.states("minecraft:crafter", &format!("crafting=0,orientation={orientation},triggered_bit=0"));
+        assert_eq!(crafter(turn(1, false, false), "west_up"), "crafting=0,orientation=north_up,triggered_bit=0");
+        assert_eq!(crafter(turn(1, false, false), "down_east"), "crafting=0,orientation=down_south,triggered_bit=0");
+        assert_eq!(crafter(turn(3, false, false), "up_north"), "crafting=0,orientation=up_west,triggered_bit=0");
+        assert_eq!(crafter(turn(0, true, false), "up_north"), "crafting=0,orientation=up_south,triggered_bit=0");
+        assert_eq!(turn(1, false, false).states("minecraft:bell", "attachment=standing,direction=3,toggle_bit=0"), "attachment=standing,direction=0,toggle_bit=0");
+        assert_eq!(turn(0, true, false).states("minecraft:bell", "attachment=standing,direction=0,toggle_bit=0"), "attachment=standing,direction=2,toggle_bit=0");
+        assert_eq!(turn(2, false, false).states("minecraft:brown_mushroom_block", "huge_mushroom_bits=4"), "huge_mushroom_bits=4");
+        let fan = |turn: Turn, direction: u8| turn.states("minecraft:dead_tube_coral_wall_fan", &format!("coral_direction={direction}"));
+        assert_eq!([0, 1, 2, 3].map(|direction| fan(turn(1, false, false), direction)), ["coral_direction=2", "coral_direction=3", "coral_direction=1", "coral_direction=0"]);
+        assert_eq!([fan(turn(0, true, false), 2), fan(turn(0, false, true), 0)], ["coral_direction=3", "coral_direction=1"]);
     }
 }

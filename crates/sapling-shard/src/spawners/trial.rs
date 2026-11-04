@@ -239,13 +239,14 @@ fn reward(world: &mut World, layer: Entity, pos: BlockPos, trial: &mut Trial) ->
     }
     let mouth = [pos[0] as f32 + 0.5, pos[1] as f32 + 1.0, pos[2] as f32 + 0.5];
     sound(world, layer, pos, "trial_spawner.eject_item", mouth, -1);
-    event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerEjecting, mouth, trial.ominous.into());
+    event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerEjecting, pos.map(|c| c as f32), trial.ominous.into());
     trial.told = true;
     None
 }
 
-/// A spawn egg on a trial spawner makes its wave of the egg's kind; spent outside creative.
-// TODO: [U] what BDS's egg (`14488a3a0`) does to the configs; here the kind is kept in `spawn_data`.
+/// A spawn egg on a trial spawner makes its wave of the egg's kind; spent outside creative. BDS
+/// showed `spawn_data` `{TypeId, Weight 1}` and the state going 1 (bds-t3trial.txt).
+// TODO: [U] what BDS's egg (`14488a3a0`) does to the configs, which no packet shows.
 pub(super) fn use_egg(world: &mut World, layer: Entity, pos: BlockPos, held: &str) -> Option<bool> {
     let kind = crate::spawning::egg_kind(held)?;
     let mut fields = Fields::at(world, layer, pos).unwrap_or_else(|| Fields(if let Value::Compound(base) = new_block_entity(TRIAL_SPAWNER, pos) { base } else { Vec::new() }));

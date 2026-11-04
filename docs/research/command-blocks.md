@@ -52,12 +52,13 @@ refused (ran this tick, blocks off) ends the chain.
   `commandBlocksEnabled` false ran nothing. `commandBlockOutput` false kept `say` but no echo.
 - Only the chain block a block faces runs after it (bds-cmdlinks2.txt).
 
-## Not copied
+## Copied since 2026-11-04 (`bds_command_probe t3cmd`, bds-t3cmd.txt)
 
-- The sender's name: sapling's `Sender` has no block variant, so `/say` from a block is `[Server]` (needs a new
-  public `Sender` variant or `Executed` field).
-- A repeating block made always active by its editor first ran ~8 ticks into a 10-tick delay on BDS; sapling waits 9.
-- Minecarts with command blocks.
-- `say hi @s` from a block: BDS said `[!§r] hi ` (bds-saysel.txt), sapling `[Server] hi `: the selector resolves
-  as BDS's did, the name is the console's (above).
+- The sender's name: a block's line runs with `Executed::with_name` (`!§r`, or its `CustomName`), so `/say`
+  from a block is `[!§r] text` (`vanilla/chat.rs` `speaker`).
+- A repeating block made always active by its editor first ran 8 ticks after the edit into a 10-tick delay,
+  then every 10; sapling starts an edited block two ticks ahead (`command_blocks/run.rs` `start_edited`).
+- A command block minecart on a powered activator rail ran its line every tick under `[!§r]`; its command is
+  set by CommandBlockUpdate's minecart form (`vehicles/command_cart.rs`). Its line is not saved and its
+  output not tracked (TODO there).
 - `seed` and `version` are sapling commands, so a block runs them; BDS has neither (a syntax error).

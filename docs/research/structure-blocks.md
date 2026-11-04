@@ -35,8 +35,10 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
 
 - `/structure load` animations (`bds-structanim.txt`): sapling loaded at once; `StructureLoad` now carries the
   animation (`StructureAnimation`, `load_structure_animated`) and matches, 26 updates either side.
-- With entities (`bds-structanim2.txt`): layer by layer over 2 s, the armour stand comes with the last layer on
-  both.
+- With entities (`bds-structanim2.txt`, again `bds-t3turn.txt` 2026-11-04: 3 layers a second apart from a
+  second after the command): the armour stand comes with the last layer on both.
+- Export of a template holding a liquid (`bds-t3turn.txt`, a coral fan in water): the second layer of
+  `block_indices` is sent whole, -1 but at the liquid's cell, as `structures/export.rs` sends it.
 - The editor's click (`bds-structclick.txt`): ContainerOpen `StructureEditor` alone; sapling sent the entity
   first, as for a command block; fixed. A structure block placed from the hand in any mode is `save` at once
   (sapling showed `data` first); fixed (`place.rs`, `structure_blocks::as_placed`).
@@ -46,11 +48,18 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
 - After a restart (`bds-structpower2.txt`): none of three saves by block (by power with `redstoneSaveMode` 0
   and 1, from the editor) could be queried or loaded; BDS logs "Structure 'pw0' must be prefixed by a
   namespace" for each bare name.
+- Integrity (`bds_command_probe t3integ`, bds-t3integ.txt, 2026-11-04): `/structure load ... 50 abc` of an
+  8x8 stone row kept 36 cells. BDS's draw (141f4ae40) keeps cell `i` of the template's order when the first
+  `nextFloat` of an MT19937 seeded with the seed's Java string hash plus `i`, times 100, is below the
+  integrity; sapling's own dice kept others. Fixed (`structures/place.rs`, cell for cell; test
+  `half_an_eight_by_eight_row_by_seed_abc_is_bds_half`). A bare number as the seed (`50 1`, `50 12345`) is a
+  syntax error at it on BDS; sapling loaded; fixed (`vanilla/structure.rs`).
 
 ## Not copied or not drilled
+
+- A structure block's numeric `seed` and an empty seed's draw (sapling: the tick).
 
 - Placement and the editor by creative operators only, as for command blocks (a survival click and place were
   refused on BDS too).
 - A save from the editor goes to the world; one by power follows `redstoneSaveMode` (1: world, else memory).
-- When an animated load brings in its entities (with its last step here); the export form of a liquid layer.
 - Data and corner modes do nothing on the server; export mode's file is the client's.

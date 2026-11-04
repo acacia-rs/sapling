@@ -56,7 +56,8 @@ cluster. Water stays as layer 1.
 ## Sponge (`blocks/sponge.rs`)
 
 Java `SpongeBlock`: a dry sponge written, or one beside a write, queues a tick this tick; it soaks up water
-breadth first through water, 6 steps from it, at most 64 cells (water, flowing water, bubble columns,
+breadth first through water, 7 steps from it (BDS soaked a channel 7 long, bds-t3sponge.txt; Java's is 6),
+at most 64 cells (water, flowing water, bubble columns,
 waterlogged water; kelp and seagrass break), and turns wet. A wet sponge written in the Nether dries at
 once, with event 3501 0.875 up its cell (drilled, below; dragonfly's `Sponge.UseOnBlock`, Java `WetSpongeBlock`).
 
@@ -109,10 +110,19 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
   write in the tick, with layer 1, which sapling's batches (`send/sections.rs`) do not keep.
 - Undrillable here: arrows (`/summon arrow` is inert in sapling's drill).
 
+## Parity drill (2026-11-04, `bds_command_probe t3odds`, `t3sponge`, `t3uses`)
+
+- A dry coral block died exactly 45 ticks after it was set, all nine timed (bds-t3odds.txt; the one
+  sample above was 45 too). Sapling drew Java's 60 to 99; fixed for coral blocks (`blocks/coral.rs`).
+- Odds at `randomtickspeed` 40 for a minute (counts of cells shown, BDS vs sapling): chorus flowers
+  243/215 and plants 191/168 from 7, weeping vines 91/78 and twisting 82/74 from 12 each, amethyst
+  buds small 37/30, medium 12/19, large 4/2 from 9. Within one sample of each other; Java's odds kept.
+- Sponge: BDS soaked a channel 7 long (above). Count (64) not reached.
+- A punch on a lectern with a book drops the book and keeps the lectern on both (bds-t3uses.txt).
+  Sapling does not send the BlockStartBreak LevelEvents back to the actor, as for any block.
+
 ## Not drilled
 
-- Coral's wait (Java's 60 to 99): one sample above.
-- The nether vines' chance (Java's 0.1), chorus and amethyst odds: grown in kind only.
-- Sponge reach and count (Java's 6 and 64) and the queued tick's delay.
-- A punch on a lectern taking the book without breaking it.
+- Coral plants' and fans' wait (Java's 60 to 99 kept).
+- The sponge's queued tick's delay.
 - Burning arrows lighting TNT; whether BDS also asks `mobGriefing` for a mob's shot.

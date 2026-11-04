@@ -81,6 +81,7 @@ pub(crate) fn dispatch(world: &mut World) {
     dimensions::acknowledge(world, &actions);
     sleep::tick(world, &actions);
     campfires::tick(world);
+    blocks::bells::count(world);
     blocks::wake_conduits(world);
     // After the requests: a block placed over a gap falls in the tick it was placed, as on BDS.
     blocks::fall_blocks(world);
