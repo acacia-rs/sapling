@@ -38,7 +38,7 @@ fn paired(entity: &Value, with: Option<(BlockPos, bool)>) -> Value {
 }
 
 /// The cells of the chest at `pos`, the lead half first: one cell, or two that name each other.
-pub(super) fn halves(world: &World, layer: Entity, pos: BlockPos) -> Vec<BlockPos> {
+pub(crate) fn halves(world: &World, layer: Entity, pos: BlockPos) -> Vec<BlockPos> {
     let Some(([x, z], leads)) = entity(world, layer, pos).as_ref().and_then(partner) else { return vec![pos] };
     let other = [x, pos[1], z];
     let is_mutual = entity(world, layer, other).as_ref().and_then(partner).is_some_and(|(back, _)| back == [pos[0], pos[2]]);

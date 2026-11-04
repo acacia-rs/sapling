@@ -487,7 +487,10 @@ Captures research/captures/bds-<scene>.txt against sapling-<scene>.txt.
   back, naming the state before (`blocks/doors.rs`). Fixed.
 - An inverted daylight detector gives 15 less the light without the sun's angle, and a new detector
   reads at the next tick (`blocks/daylight.rs`). Not drilled on sapling: its drill world is roofed.
-- Left: a comparator replaced by `/setblock` is not evaluated again on BDS; sapling evaluates it.
+- A comparator set by `/setblock` over one of its own block type (`powered_comparator` over
+  `powered_comparator`, whatever the mode) keeps its output until an input changes; over the other type,
+  or after air, it is evaluated (bds-e8cmpset.txt; glass above does not wake it). Fixed
+  (`redstone/kept.rs`), drilled same.
 - Drilled same (bds-fixset.txt): `/setblock` of the container beside a comparator (chest to barrel,
   cake, air) re-evaluates it about 4 ticks later, and a comparator set beside a full chest powers
   up 4 ticks after; sapling did both already.

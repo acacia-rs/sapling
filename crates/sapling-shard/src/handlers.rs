@@ -113,6 +113,7 @@ pub(crate) fn dispatch(world: &mut World) {
     furnaces::tick(world);
     crate::brewing::tick(world);
     crate::beacons::tick(world);
+    blocks::play_jukeboxes(world);
     hoppers::tick(world);
     entities::remove_left(world);
     drops::fly(world);

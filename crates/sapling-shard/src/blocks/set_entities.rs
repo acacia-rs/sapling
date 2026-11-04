@@ -9,6 +9,7 @@ use sapling_api::BlockPos;
 use sapling_world::new_block_entity;
 
 use super::entities::{BANNERS, CAMPFIRES, Placing, SKULLS, placed};
+use super::jukebox::FINISHED;
 use crate::components::Layer;
 
 /// Blocks a set gives an entity and shows it, beyond those [`placed`] makes (signs, skulls,
@@ -24,7 +25,6 @@ const AGAIN: [&str; 5] = ["minecraft:cauldron", "minecraft:frame", "minecraft:gl
 /// A commanded bed's colour: BDS's is red (bds-setshown.txt).
 const RED: i16 = 14;
 const JUKEBOX: &str = "Jukebox";
-const FINISHED: &str = "FinishedRecording";
 
 fn is_shown(block: &str) -> bool {
     SHOWN.contains(&block) || is_shown_again(block) || BANNERS.contains(&block)

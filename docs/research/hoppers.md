@@ -1,7 +1,7 @@
 # BDS hoppers: ground truth for sapling (2026-10-06)
 
 Tags as in `containers-crafting.md`: **REC**, **DATA**, **BDSRE** (current exe), **BDSRE-old**, **Java**, **mem**, **inf**.
-Nothing here was tested on a live server. No hopper traffic has been recorded.
+Decompiled; what was drilled since is under "Drilled".
 
 - Exe: `C:/Users/Hexay/acacia/acacia/.testserver/bds-molang/bedrock_server.exe` (bdsre cache `6ab54bee`; the
   default `.testserver/bds/` path does not exist). Run `BDS_EXE=<that> py -3 C:/Users/Hexay/acacia/bdsre/bdsre.py c <va>`.
@@ -136,6 +136,15 @@ through the shared slot-31 entry (BDSRE):
   traced.
 - Hopper minecarts run through `HopperSystem::tick` 148489110 -> 148489a30, which uses the same `Hopper`
   code with callbacks (`_tryMoveItems` callbacks overload 1429ce660). Just noted.
+
+## Drilled (2026-11-04, `bds_command_probe e8hopchain`, `e8juke`; research/captures/bds-e8*.txt)
+
+- Order: two four-stage hopper-under-chest chains, one stepping east, one west, released in one `/fill`,
+  lit their end comparators in one evaluation on BDS and on sapling (`hoppers/order.rs`, step 1.3 above).
+- Jukebox: a hopper above (or beside) an empty jukebox puts in the first disc it holds, past slots of other
+  items; the jukebox shows `RecordItem` in a BlockEntityData and tells no title. The hopper under it is
+  powered while the song plays (redstone-blocks.md B13) and takes the disc a tick after the song ends;
+  the jukebox then shows `FinishedRecording` 1 with no `RecordItem`. Same on sapling (`blocks/jukebox/songs.rs`).
 
 ## Not settled
 

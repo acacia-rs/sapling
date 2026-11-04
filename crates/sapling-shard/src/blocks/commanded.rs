@@ -1,7 +1,8 @@
 //! What BDS's `/setblock` (and so `ShardCtx::update_block`) writes beyond the block named
 //! (research/captures/bds-fixset.txt, bds-bkticks.txt): a bed is laid whole with its head in the
 //! named cell; nether vines, cave vines and kelp under water take a random age; a live coral fan
-//! or kelp keeps a water source beside itself, which then runs.
+//! or kelp keeps a water source beside itself, which then runs; a comparator set again in its own
+//! block type gives out what it gave (redstone/kept.rs).
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Face};
@@ -47,7 +48,11 @@ pub(super) fn put_bed(world: &mut World, layer: Entity, pos: BlockPos, id: u32) 
 /// Writes `block` at `pos` as [`send::put_block`] does, aged or wetted as BDS's command does.
 pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
     let block = aged(world, layer, pos, block);
+    let same_comparator = block.name.ends_with("_comparator") && send::block_at(world, layer, pos).is_some_and(|old| old.name == block.name);
     let put = send::put_block(world, layer, pos, &block)?;
+    if put && same_comparator {
+        super::redstone::hold_comparator(world, layer, pos);
+    }
     // Kelp set in air got a source beside itself too (research/captures/bds-plantpop.txt).
     if put && (is_live_fan(&block.name) || block.name == "minecraft:kelp") {
         liquid::pour(world, layer, pos, liquid::Liquid::Water, true);
