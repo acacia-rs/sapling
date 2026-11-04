@@ -56,7 +56,8 @@ fn build(difficulty: Difficulty) -> (Harness, Vec<RawPacket>) {
 fn a_skull_on_a_t_of_soul_sand_calls_a_wither_that_charges_then_bursts() {
     let (mut h, sent) = build(Difficulty::Normal);
     let wither = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == WITHER).expect("the wither");
-    assert!((wither.position.x, wither.position.z) == (0.5, 3.5) && (wither.position.y - 65.05).abs() < 0.1, "{:?}", wither.position);
+    // BDS's matcher corner, the skull at -1 67 3, plus (1.5, -1.95, 1.5) (research/captures/bds-n2wither.txt).
+    assert!((wither.position.x, wither.position.z) == (0.5, 4.5) && (wither.position.y - 65.05).abs() < 0.1, "{:?}", wither.position);
     let cleared = ask(&mut h, |ctx| [[0, 65, 3], [0, 66, 3], [-1, 67, 3], [0, 67, 3]].iter().all(|pos| ctx.block(*pos).is_some_and(|block| block.name == "minecraft:air")));
     assert!(cleared, "the T is taken away");
     let id = EntityId(wither.runtime_id);
@@ -181,4 +182,54 @@ fn its_heads_shoot_skulls_at_a_player_in_sight() {
     assert!(skulls >= 2, "{skulls}");
     let wither = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == WITHER).unwrap().runtime_id;
     assert!(told(&sent, wither, Key::WitherTarget1).contains(&1), "the middle head looks at Alex");
+}
+
+#[test]
+fn kill_ends_it_while_it_charges() {
+    // research/captures/bds-n2wither.txt: `/kill` 3 s into the charge, then its death began.
+    let (mut h, sent) = build(Difficulty::Normal);
+    let wither = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == WITHER).expect("built").runtime_id;
+    watch(&mut h, 60);
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(EntityId(wither))));
+}
+
+#[test]
+fn its_middle_head_shoots_in_volleys_of_four_then_rests_60_to_140_ticks() {
+    // research/captures/bds-t2wither.txt, bds-witherdash.txt: three black and a blue, 20 apart.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.spawn_entity(WITHER, [0.5, 66.0, 8.5]).is_some());
+    });
+    watch(&mut h, CHARGE);
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Survival);
+        assert!(ctx.give_effect(ALEX, sapling_api::Effect::Resistance, 1000, 4, false));
+    });
+    let shots: Vec<(usize, bool)> = (0..400).flat_map(|tick| all::<AddEntity>(h.tick_all().to(1)).into_iter().filter(|added| added.entity_type.starts_with("minecraft:wither_skull")).map(move |added| (tick, added.entity_type.ends_with("dangerous"))).collect::<Vec<_>>()).collect();
+    assert!(shots.len() >= 8, "{shots:?}");
+    let gaps: Vec<usize> = shots.windows(2).map(|pair| pair[1].0 - pair[0].0).collect();
+    assert_eq!(&shots[..8].iter().map(|shot| shot.1).collect::<Vec<_>>(), &[false, false, false, true, false, false, false, true], "{shots:?}");
+    assert!(gaps[..3] == [20, 20, 20] && (60..=140).contains(&gaps[3]) && gaps[3] % 20 == 0, "{gaps:?}");
+}
+
+#[test]
+fn a_skull_that_meets_a_mob_blows_up_on_it() {
+    // research/captures/bds-t2wither.txt: a held cow, taken while the actor was in creative, struck and dead.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.spawn_entity(WITHER, [0.5, 66.0, 8.5]).is_some());
+        let cow = ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 3.5]).expect("a cow");
+        assert!(ctx.give_entity_effect(cow, sapling_api::Effect::Slowness, 2000, 255));
+    });
+    let sent = watch(&mut h, CHARGE + 120);
+    let cow = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:cow").expect("shown").runtime_id;
+    let hurt = all::<acacia_proto::packets::EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == cow);
+    let blasts = all::<LevelEvent>(&sent).iter().filter(|event| event.event == LevelEventEvent::ParticleExplosion).count();
+    assert!(hurt && blasts >= 1, "{hurt} {blasts}");
 }

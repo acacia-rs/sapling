@@ -1,9 +1,11 @@
 //! A wither built of blocks, as BDS's `SkullBlock::checkMobSpawn`: off peaceful, a wither skeleton
 //! skull put down to finish three skulls over a T of soul sand or soul soil, the stem's sides
-//! empty, turns the blocks to air and calls the wither up over the stem's foot (creatures/wither).
-//! The T may stand or lie any way, as BDS's matcher found one lying on the floor (bds-n2wither.txt).
-// TODO: BDS put the wither one east of an upright T's foot and 4 east and 2 under a lying one's
-// (its match corner is not the foot); 120 soul particles are not shown.
+//! empty, turns the blocks to air and calls the wither up (creatures/wither) where BDS's matcher
+//! (0x1415f2940) puts it: its match corner, the skull row's lowest end, plus 1 east, 2 down and 1
+//! south in world axes whatever way the T stands, then (0.5, 0.05, 0.5). The T may stand or lie any
+//! way, as BDS's matcher found one lying on the floor (bds-n2wither.txt).
+// TODO: BDS's lying T's wither was announced one further east than its particles' centre (pushed out
+// of the floor?); 120 soul particles are not shown.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Difficulty};
@@ -13,8 +15,8 @@ use crate::components::Settings;
 
 const SKULL: &str = "minecraft:wither_skeleton_skull";
 const SOULS: [&str; 2] = ["minecraft:soul_sand", "minecraft:soul_soil"];
-/// The wither stands this far over the stem's foot.
-const RISES: f32 = 0.05;
+/// Where the wither stands from its match corner's cell.
+const FROM_CORNER: [f32; 3] = [1.5, -1.95, 1.5];
 const AXES: [[i32; 3]; 3] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
 
 fn name_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<&'static str> {
@@ -53,8 +55,8 @@ pub(super) fn placed(world: &mut World, layer: Entity, pos: BlockPos, name: &str
     for cell in &cells {
         send::put_block(world, layer, *cell, &air);
     }
-    let foot = cells[cells.len() - 1];
-    crate::creatures::build_wither(world, layer, [foot[0] as f32 + 0.5, foot[1] as f32 + RISES, foot[2] as f32 + 0.5]);
+    let corner = [0, 1, 2].map(|axis| cells[..3].iter().map(|cell| cell[axis]).min().unwrap_or(0));
+    crate::creatures::build_wither(world, layer, [0, 1, 2].map(|axis| corner[axis] as f32 + FROM_CORNER[axis]));
 }
 
 #[cfg(test)]

@@ -412,7 +412,9 @@ No decompile: all of this is from the captures.
   chiseled bookshelf, crafter, sniffer egg, bars, pane, fence, wall, gate, chain, smithing table, loom,
   stonecutter, blast furnace, observer, daylight detector, target, lightning rod, sponge, copper bulb, trapped
   chest, netherite block). Sapling moved the first group until 2026-11-04 (`pistons/plan.rs` `BREAKS`) and
-  now matches all 42. Left: BDS's broken amethyst cluster left 2 shards and the pot itself, sapling's neither.
+  now matches all 42. BDS's broken amethyst cluster left 2 shards and the pot itself, sapling's neither;
+  fixed 2026-11-04: the loot table's `!tool=` row (no pickaxe: 2 shards) is read (`block_loot.rs`
+  `no_pickaxe`), and a pot broken but by a shot is not `cracked`, so it drops itself (`blocks/loot.rs`).
 - Not drilled: a piston put
   beside power already on, power going while it moves, the place a real client's piston faces.
 - A mob in the way (2026-11-04, `bds_command_probe n2pistonmob`, research/captures/bds-n2pistonmob.txt; cows

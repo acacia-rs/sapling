@@ -1,8 +1,8 @@
 //! Wither skulls, as BDS's pack has them (`wither_skull`, `wither_skull_dangerous`): straight, at
-//! 1.2 a tick, a blue one at 0.6; one that meets a player or a block blows up there with power 1,
-//! and gives a player it met Wither II for 10 seconds on normal, 40 on hard.
-// TODO: a skull meets no mob; a blue one breaks no stronger block than a black one does
-// (`max_resistance` 4), and is not struck back.
+//! 1.2 a tick, a blue one at 0.6; one that meets a player, a mob or a block blows up there with
+//! power 1, and gives one it met Wither II for 10 seconds on normal, 40 on hard.
+// TODO: a blue one breaks no stronger block than a black one does (`max_resistance` 4), and is
+// not struck back.
 
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
@@ -58,12 +58,22 @@ pub(super) fn fire(world: &mut World, layer: Entity, wither: Entity, from: [f32;
     entities::after_announcing(world, layer, from.map(|c| c.floor() as i32), vec![super::heads::sound("shoot", from)]);
 }
 
-/// The player of `layer` whose box the skull's, its bottom middle at `at`, reaches into.
-fn met(world: &World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
-    let across = (PLAYER[0] + SIZE[0]) / 2.0;
-    in_world(world).into_iter().find(|player| {
-        let Some(feet) = world.get::<Position>(*player).map(|position| position.feet) else { return false };
-        world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer) && (at[0] - feet[0]).abs() < across && (at[2] - feet[2]).abs() < across && at[1] + SIZE[1] > feet[1] && at[1] < feet[1] + PLAYER[1]
+/// Whether the skull's box, its bottom middle at `at`, reaches into a box of `size` at `feet`.
+fn reaches(at: [f32; 3], feet: [f32; 3], size: [f32; 2]) -> bool {
+    let across = (size[0] + SIZE[0]) / 2.0;
+    (at[0] - feet[0]).abs() < across && (at[2] - feet[2]).abs() < across && at[1] + SIZE[1] > feet[1] && at[1] < feet[1] + size[1]
+}
+
+/// The player of `layer`, else the living mob other than its wither, whose box the skull meets
+/// (bds-t2wither.txt: a held cow, struck and blown up).
+fn met(world: &mut World, layer: Entity, at: [f32; 3], wither: Option<Entity>) -> Option<Entity> {
+    let player = in_world(world).into_iter().find(|player| world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer) && world.get::<Position>(*player).is_some_and(|position| reaches(at, position.feet, PLAYER)));
+    player.or_else(|| {
+        world
+            .query_filtered::<(Entity, &InLayer, &Body), (With<super::super::Creature>, Without<super::super::Dying>)>()
+            .iter(world)
+            .find(|(mob, on, body)| Some(*mob) != wither && on.0 == layer && reaches(at, body.at, body.size))
+            .map(|(mob, ..)| mob)
     })
 }
 
@@ -75,8 +85,14 @@ fn burst(world: &mut World, skull: Entity, layer: Entity, at: [f32; 3], struck: 
         Difficulty::Hard => Some(WITHERS[1]),
         _ => None,
     };
-    if let (Some(player), Some(ticks)) = (struck, withers) {
-        vitals::give_effect(world, player, Effect::Wither, ticks, LEVEL, true);
+    match (struck, withers) {
+        (Some(mob), Some(ticks)) if world.get::<super::super::Creature>(mob).is_some() => {
+            super::super::afflictions::give(world, mob, Effect::Wither, ticks, LEVEL);
+        }
+        (Some(player), Some(ticks)) => {
+            vitals::give_effect(world, player, Effect::Wither, ticks, LEVEL, true);
+        }
+        _ => {}
     }
     let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
     if let Some(wither) = wither {
@@ -97,8 +113,9 @@ fn fly(world: &mut World, skull: Entity, layer: Entity, id: u64, now: u64) -> Op
     }
     // Looked at a quarter of a step at a time: a whole one is longer than a player is across.
     let along = |part: f32| -> [f32; 3] { std::array::from_fn(|axis| body.at[axis] + body.motion[axis] * part) };
-    if let Some((player, at)) = [0.25, 0.5, 0.75, 1.0].into_iter().find_map(|part| met(world, layer, along(part)).map(|player| (player, along(part)))) {
-        burst(world, skull, layer, at, Some(player));
+    let wither = world.get::<Skull>(skull)?.wither;
+    if let Some((struck, at)) = [0.25, 0.5, 0.75, 1.0].into_iter().find_map(|part| met(world, layer, along(part), Some(wither)).map(|struck| (struck, along(part)))) {
+        burst(world, skull, layer, at, Some(struck));
         return None;
     }
     if !Body::new(along(1.0), [0.0; 3], SIZE).is_free(&world.get::<Layer>(layer)?.world) {

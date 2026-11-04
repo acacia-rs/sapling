@@ -1,5 +1,5 @@
 //! The wither's three heads, as BDS's aimed (`_performRangedAttack`, `setAlternativeTarget`): the
-//! middle one shoots its prey every 20 ticks, every fourth skull a blue one; off easy each side
+//! middle one shoots its prey in volleys of four 20 ticks apart, the fourth a blue one; off easy each side
 //! one takes a player at random within 30 across and 8 up or down that it sees, shoots it and
 //! looks again 40 to 59 ticks on, or after 15 looks with none shoots a blue skull at random near.
 // TODO: the middle head takes mobs too, and holds still while it moves; the side heads' wait
@@ -18,6 +18,9 @@ use crate::components::{InLayer, NetId, Position, Settings, Tick, in_world};
 
 const FIRE_RATE: u64 = 20;
 const BLUE_EVERY: u32 = 4;
+/// After each volley's blue skull the middle head waits 3 to 7 of its [`FIRE_RATE`]s
+/// (bds-t2wither.txt, bds-witherdash.txt: 60 to 140 ticks, in steps of 20).
+const RESTS: [u64; 2] = [3, 5];
 const SIGHT: f32 = 70.0;
 const REACH: [f32; 2] = [30.0, 8.0];
 const TRIES: usize = 10;
@@ -84,8 +87,10 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
     heads.targets[0] = prey.map(|(player, _)| player);
     if let Some((_, feet)) = prey.filter(|_| now >= heads.next[0]) {
         heads.shots += 1;
-        skulls::fire(world, layer, wither, mouth(body, yaw, 0), aim(feet), heads.shots % BLUE_EVERY == 0);
-        heads.next[0] = now + FIRE_RATE;
+        let blue = heads.shots % BLUE_EVERY == 0;
+        skulls::fire(world, layer, wither, mouth(body, yaw, 0), aim(feet), blue);
+        let rest = if blue { RESTS[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll(RESTS[1] as u32)) } else { 1 };
+        heads.next[0] = now + FIRE_RATE * rest;
     }
     for head in 1..3 {
         if !fights || now < heads.next[head] {
