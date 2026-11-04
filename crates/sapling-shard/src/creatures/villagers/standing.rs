@@ -1,11 +1,12 @@
 //! A player's standing with a village (BDS's `Village::mPlayerStanding`, docs/research/villagers.md
-//! "Standing"): kept in [-30, 10] (`Village::modifyStanding`, 0x142a31380), a trade adds 1, a hit
+//! "Standing"): kept in [-30, 10] (`Village::modifyStanding`, 0x142a31380), a trade's level-up
+//! adds 1 as it ends (trading.rs; a plain trade adds none), a hit
 //! on an adult villager takes 1 and on a baby 3, killing a villager takes 2 more and an iron golem
 //! 5. Two village-wide timers (`Village::tick`, 0x142a23bc0) step every good standing down every
 //! 120000 ticks and every bad one up every 12000. An iron golem takes the nearest player at -15 or
 //! lower (`getClosestBadStandingPlayer`, 0x142a30c80), if it is the village's (golems.rs). Prices take no standing.
 // TODO: standing is not kept with the world (BDS's `VILLAGE_<id>_PLAYERS`), and only melee hits
-// count; BDS's other changes (0x142445c80 +5, 0x141ba8d80 +1, the founding reward) are not copied.
+// count; BDS's other changes (0x142445c80 +5 on curing, the founding reward) are not copied.
 
 use std::collections::HashMap;
 
@@ -16,7 +17,7 @@ use crate::components::{Identity, InLayer, Position, Tick};
 
 const LEAST: i32 = -30;
 const MOST: i32 = 10;
-const TRADED: i32 = 1;
+const LEVELLED: i32 = 1;
 const HURT: i32 = -1;
 const HURT_BABY: i32 = -3;
 const KILLED_VILLAGER: i32 = -2;
@@ -82,10 +83,10 @@ fn change(world: &mut World, player: Entity, layer: Entity, at: [f32; 3], delta:
     standings.0.entry((layer, village)).or_insert_with(|| Village::new(now)).change(now, uuid, delta);
 }
 
-/// The player traded with the villager `trader`.
-pub(super) fn traded(world: &mut World, player: Entity, trader: Entity) {
+/// The player's trade levelled up the villager `trader`, whose level-up ended.
+pub(super) fn levelled(world: &mut World, player: Entity, trader: Entity) {
     let (Some(layer), Some(at)) = (world.get::<InLayer>(trader).map(|layer| layer.0), world.get::<Body>(trader).map(|body| body.at)) else { return };
-    change(world, player, layer, at, TRADED);
+    change(world, player, layer, at, LEVELLED);
 }
 
 /// The player hit the mob `kind`, and `killed` it if so.

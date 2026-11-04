@@ -140,19 +140,19 @@ fn a_hero_of_the_village_pays_less_by_its_level() {
 }
 
 #[test]
-fn an_armorer_restocks_at_its_job_site_once_a_work_period() {
+fn an_armorer_restocks_each_time_it_starts_work_at_its_job_site() {
     let (mut h, _, id) = villager(&[([4, 64, 0], FURNACE)], [2.5, 64.0, 2.5], "minecraft:become_armorer");
     (0..100).for_each(|_| drop(h.tick(1)));
-    let used_after = |h: &mut Harness| {
+    let used_after = |h: &mut Harness, ticks: usize| {
         let (window, offers) = open(h, id);
         pay(h, 0, 15);
         trade(h, int(&offers[0], "netId"));
         close(h, window);
-        (0..120).for_each(|_| drop(h.tick(1)));
+        (0..ticks).for_each(|_| drop(h.tick(1)));
         let (window, offers) = open(h, id);
         close(h, window);
         int(&offers[0], "uses")
     };
-    assert_eq!(used_after(&mut h), 0, "restocked on reaching its blast furnace");
-    assert_eq!(used_after(&mut h), 1, "not twice in one work period");
+    assert_eq!(used_after(&mut h, 60), 1, "not again while it works its 250 ticks");
+    assert_eq!(used_after(&mut h, 500), 0, "restocked on its next start of work, 450 ticks on");
 }

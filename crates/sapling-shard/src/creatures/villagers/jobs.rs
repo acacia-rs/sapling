@@ -1,8 +1,8 @@
 //! Professions and job sites: each profession's block, table and screen title (BDS's
 //! `villager_v2` behaviour pack); a villager's type by the biome it was born in; a villager
 //! without a job taking the nearest free job site and the profession it stands for, and losing
-//! it with its site if it never traded; going to its site in working hours and restocking there,
-//! twice a day at most (docs/research/villagers.md, "Professions").
+//! it with its site if it never traded; going to its site in working hours and restocking at each
+//! start of work (docs/research/villagers.md, "Professions").
 
 use std::collections::HashMap;
 
@@ -12,7 +12,7 @@ use sapling_world::World as Level;
 use super::{Trader, int, tell};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::Layer;
+use crate::components::{Layer, Tick};
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key};
 
 pub(super) struct Profession {
@@ -205,42 +205,48 @@ fn decide(level: &Level, claimed: &mut Claimed, trader: &mut Trader, (entity, la
     Vec::new()
 }
 
-/// The work period `time` falls in: BDS's work schedule works from 0 to 8000 and 10000 to 11000
-/// each day; `None` outside them.
-fn work_period(time: i64) -> Option<i64> {
-    let (day, hour) = (time.div_euclid(DAY), time.rem_euclid(DAY));
-    match hour {
-        0..8_000 => Some(day * 2),
-        10_000..11_000 => Some(day * 2 + 1),
-        _ => None,
-    }
+/// Whether `time` is in working hours: BDS's work schedule works from 0 to 8000 and 10000 to 11000
+/// each day.
+fn works_at(time: i64) -> bool {
+    matches!(time.rem_euclid(DAY), 0..8_000 | 10_000..11_000)
 }
 
-/// In working hours a villager goes to its job site, and restocks there once a work period.
-/// False when it does not work now.
+/// In working hours a villager keeps its pack's `behavior.work`: it goes to its job site, and on
+/// each arrival restocks (`on_arrival` `minecraft:resupply_trades`) and works there 250 ticks, then
+/// is free 200 (`active_time`, `goal_cooldown`). False when it does not work now.
 pub(super) fn work(world: &mut World, entity: Entity, layer: Entity) -> bool {
+    let now = world.resource::<Tick>().0;
     let (Some(trader), Some(body)) = (world.get::<Trader>(entity), world.get::<Body>(entity).copied()) else { return false };
     let Some(site) = trader.job else { return false };
-    let due = |period: i64| trader.restocked != Some(period) && trader.deals.iter().any(|deal| deal.uses > 0);
-    let Some(period) = world.get::<Layer>(layer).and_then(|layer| work_period(layer.world.level().time)) else { return false };
-    let restocks = due(period);
+    if !world.get::<Layer>(layer).is_some_and(|layer| works_at(layer.world.level().time)) {
+        return false;
+    }
+    if now < trader.work.0 {
+        super::super::legs::rest(world, entity);
+        return true;
+    }
+    if now < trader.work.1 {
+        return false;
+    }
     let [x, z] = [site[0] as f32 + 0.5, site[2] as f32 + 0.5];
     if (x - body.at[0]).hypot(z - body.at[2]) > AT_WORK + 0.5 {
         super::super::legs::walk(world, entity, layer, &body, [x, z], WALK, AT_WORK);
         return true;
     }
     super::super::legs::rest(world, entity);
-    if restocks {
-        restock(world, entity, period);
-    }
+    restock(world, entity, now);
     true
 }
 
-/// Every offer of the trader restocked (BDS's `minecraft:resupply_trades` on arriving at work).
-pub(super) fn restock(world: &mut World, entity: Entity, period: i64) {
+/// Ticks of `behavior.work`'s work at the site, and of its rest after.
+const WORKS_FOR: u64 = 250;
+const RESTS_FOR: u64 = 200;
+
+/// Every offer of the trader restocked as it starts work at `now`.
+fn restock(world: &mut World, entity: Entity, now: u64) {
     let Some(mut trader) = world.get_mut::<Trader>(entity) else { return };
     trader.deals.iter_mut().for_each(super::Deal::restock);
-    trader.restocked = Some(period);
+    trader.work = (now + WORKS_FOR, now + WORKS_FOR + RESTS_FOR);
     super::storage::keep(world, entity);
 }
 
@@ -249,8 +255,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a_day_has_two_work_periods() {
-        assert_eq!([0, 7_999, 8_000, 10_000, 11_000, 24_000 + 10_500].map(work_period), [Some(0), Some(0), None, Some(1), None, Some(3)]);
+    fn work_hours_are_the_schedules() {
+        assert_eq!([0, 7_999, 8_000, 10_000, 11_000, 24_000 + 10_500].map(works_at), [true, true, false, true, false, true]);
     }
 
     #[test]

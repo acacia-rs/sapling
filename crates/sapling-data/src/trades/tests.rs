@@ -75,3 +75,37 @@ fn a_wandering_trader_offers_from_each_of_its_groups() {
     assert!(offers.len() >= 6, "{offers:?}");
     assert!(roll(trade_table("wandering_trader").unwrap(), 1, 0, &mut Counting(0)).is_empty(), "one tier only");
 }
+
+/// Draws that hand out what they were given, in order.
+struct Scripted(Vec<i32>, Vec<f32>);
+
+impl Draws for Scripted {
+    fn int(&mut self, _bound: i32) -> i32 {
+        self.0.remove(0)
+    }
+
+    fn float(&mut self) -> f32 {
+        self.1.remove(0)
+    }
+}
+
+#[test]
+fn random_dye_mixes_one_to_three_dyes_as_bds_does() {
+    // Draw 3 lands on black; a second dye below 0.3, a third below 0.2.
+    assert_eq!(roll::random_dye(&mut Scripted(vec![3], vec![0.5, 0.5])), 0xFF1D_1D21);
+    assert_eq!(roll::random_dye(&mut Scripted(vec![0], vec![0.5, 0.5])), 0xFFF0_F0F0, "BDS's white");
+    assert_eq!(roll::random_dye(&mut Scripted(vec![0, 3], vec![0.1, 0.5])), 0xFF86_8688, "white and black, averaged and cut");
+    assert_eq!(roll::random_dye(&mut Scripted(vec![0, 0, 0], vec![0.1, 0.1])), 0xFFF0_F0F0);
+}
+
+#[test]
+fn drawn_trades_come_in_the_order_drawn() {
+    let table = trade_table("wandering_trader").unwrap();
+    let group = table.tiers[0].groups.iter().find(|group| group.select > 1 && (group.select as usize) < group.trades.len()).expect("a group drawn from");
+    let weights: i32 = group.trades.iter().map(|trade| trade.weight as i32).sum();
+    // The first draw lands on the last trade, which then leads.
+    let picked = roll::pick(&group.trades, group.select, &mut Scripted(vec![weights - 1; group.select as usize], Vec::new()));
+    assert_eq!(picked[0], group.trades.len() - 1, "{picked:?}");
+    assert_eq!(picked.len(), group.select as usize);
+    assert_eq!(roll::pick(&group.trades, 0, &mut Scripted(Vec::new(), Vec::new())).len(), group.trades.len(), "select 0 keeps all");
+}

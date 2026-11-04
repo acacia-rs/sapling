@@ -64,12 +64,13 @@ pub(crate) struct Trader {
     job: Option<[i32; 3]>,
     /// The head of the bed it claimed (beds.rs).
     bed: Option<[i32; 3]>,
-    /// The work period (jobs.rs) it last restocked in.
-    restocked: Option<i64>,
+    /// The ticks its work at its job site ends and it may next start work (jobs.rs).
+    work: (u64, u64),
     next_look: u64,
     /// A wandering trader's tick to leave at.
     leaves_at: Option<u64>,
     customer: Option<Entity>,
+    level_up: Option<trading::LevelUp>,
 }
 
 impl Trader {
@@ -171,6 +172,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity) -> bool {
     if wanders {
         return wandering::tick(world, entity, layer, now);
     }
+    trading::level_up(world, entity);
     if now >= next_look {
         let baby = super::shown::is_baby(world, entity);
         jobs::look(world, entity, layer, now, baby);
