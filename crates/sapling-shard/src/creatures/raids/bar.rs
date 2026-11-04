@@ -1,6 +1,7 @@
 //! A raid's boss bar, shown to each player within [`super::REACH`] of its village: `raid.name`,
-//! filling over the wait before a wave and emptying with the wave's health, `- %raid.progress 0`
-//! empty for the first seconds after a wave is cleared, then `%raid.name - %raid.victory`, or
+//! filling over the wait before a wave and emptying with the wave's health, named
+//! `- %raid.progress <n>` once two raiders or fewer are left, `- %raid.progress 0` empty for the
+//! first seconds after a wave is cleared, then `%raid.name - %raid.victory`, or
 //! `- %raid.defeat` with the health left (BDS's strings at 0x14116bbf0; bds-raid.txt, bds-raidlost.txt). It takes the raid slot of the player's extra bars, apart from a plugin's.
 
 use bevy_ecs::prelude::*;
@@ -13,6 +14,9 @@ use crate::extra_bars::{self, BarKey, ExtraBars};
 // BDS sends the running raid's name without the `%` the others have (research/captures/bds-raid.txt).
 const NAME: &str = "raid.name";
 const CLEARED: &str = "%raid.name - %raid.progress 0";
+const PROGRESS: &str = "%raid.name - %raid.progress ";
+/// The most raiders left the bar counts.
+const FEW: usize = 2;
 const VICTORY: &str = "%raid.name - %raid.victory";
 const DEFEAT: &str = "%raid.name - %raid.defeat";
 /// Ticks between two showings.
@@ -20,15 +24,18 @@ pub(super) const EVERY: u64 = 20;
 
 fn bar(world: &World, raid: &Raid, now: u64) -> BossBar {
     let left = || (super::health(world, &raid.raiders) / raid.most).clamp(0.0, 1.0);
+    let raiders = raid.raiders.len() + raid.unloaded.len();
     let (text, progress) = match raid.stage {
-        Stage::Gathering(until) if until.saturating_sub(now) > super::GATHERS => (CLEARED, 0.0),
-        Stage::Gathering(until) => (NAME, (1.0 - until.saturating_sub(now) as f32 / super::GATHERS as f32).clamp(0.0, 1.0)),
-        Stage::Fighting => (NAME, left()),
-        Stage::Won(_) => (VICTORY, 0.0),
+        Stage::Gathering(until) if until.saturating_sub(now) > super::GATHERS => (CLEARED.to_owned(), 0.0),
+        Stage::Gathering(until) => (NAME.to_owned(), (1.0 - until.saturating_sub(now) as f32 / super::GATHERS as f32).clamp(0.0, 1.0)),
+        // Two raiders or fewer are counted (0x14116bbf0; bds-n1recruit.txt: `progress 1`).
+        Stage::Fighting if raiders <= FEW => (format!("{PROGRESS}{raiders}"), left()),
+        Stage::Fighting => (NAME.to_owned(), left()),
+        Stage::Won(_) => (VICTORY.to_owned(), 0.0),
         // The bar keeps the wave's health left after a defeat (bds-raidlost.txt).
-        Stage::Lost(_) => (DEFEAT, left()),
+        Stage::Lost(_) => (DEFEAT.to_owned(), left()),
     };
-    BossBar { text: text.into(), progress, colour: BossBarColour::Red }
+    BossBar { text, progress, colour: BossBarColour::Red }
 }
 
 /// Shows each player the bar of the raid it is in, if any; extra_bars sends only what changed.
