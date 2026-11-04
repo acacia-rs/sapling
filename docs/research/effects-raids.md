@@ -236,7 +236,8 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
 - Joining passing raiders (`RaidRecruitSystem` 0x141959650): not built.
 - Ominous item spawners from an active ominous trial spawner: a `/setblock` trial spawner has an empty
   block entity and never woke for an omened player 4.5 off in 30 s (bds-trialomen.txt); it needs a trial
-  chamber's spawner.
+  chamber's spawner. Tried again 2026-11-04 with an egg-woken spawner mid-wave (bds-t3trial.txt): Trial
+  Omen did not turn it ominous in 30 s on BDS either. Undrillable without a generated chamber.
 
 Drilled the same: a bell rung with a slowed pillager 4 off sent nothing for the pillager (bds-fx3.txt),
 as sapling (Bedrock has no glowing).
