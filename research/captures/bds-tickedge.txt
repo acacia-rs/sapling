@@ -1,0 +1,230 @@
+## drill starts at 1793798504451
+## /kill @e[type=!player]
+     69 actor   CommandOutput success_count=5 data=None commands.kill.successful success=true ["Sheep, Cow, Sheep, Chicken, Cow"]
+     70 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"Sheep, Cow, Sheep, Chicken, Cow\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule domobspawning false
+   1014 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1014 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+   1014 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1014 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather clear
+   2008 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2008 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+## /difficulty easy
+   3018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"EASY\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3018 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["EASY"]
+## /gamemode creative @s
+   4019 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4019 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   4019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative CmdWatcher
+   5014 actor   CommandOutput success_count=1 data=None commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+   5014 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5014 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.other\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"},{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5139 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 394, paused: false }] }) }
+   5139 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 394, paused: false }] }) }
+## /effect @s clear
+   6022 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive.all success=false ["CmdActor"]
+## /clear @s
+   7024 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /fill -8 -27 -8 16 -27 8 stone
+   8024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"425\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8025 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["425"]
+## /fill -8 -26 -8 16 -16 8 air
+   9025 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s 0.5 -26 0.5 -90 0
+  10024 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10024 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+  10024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp CmdWatcher 0.5 -26 0.5
+  11025 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11025 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+  11025 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /tp @s 52.5 -60 0.5
+  13028 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"52.50, -60.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13028 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "52.50", "-60.00", "0.50"]
+  13029 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"52.50\"},{\"text\":\"-60.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp CmdWatcher 52.5 -60 2.5
+  14031 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "52.50", "-60.00", "2.50"]
+  14031 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"52.50, -60.00, 2.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14031 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"52.50\"},{\"text\":\"-60.00\"},{\"text\":\"2.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+  17939 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 650, paused: false }] }) }
+  17939 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 650, paused: false }] }) }
+## /fill 56 -40 8 56 -40 8 air
+  18039 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 56 -40 24 56 -40 24 air
+  19037 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 56 -40 40 56 -40 40 air
+  20038 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 56 -40 56 56 -40 56 air
+  21042 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 56 -40 72 56 -40 72 air
+  22040 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 56 -40 88 56 -40 88 air
+  23041 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 56 -40 104 56 -40 104 air
+  24043 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 72 -40 8 72 -40 8 air
+  25045 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 72 -40 24 72 -40 24 air
+  26039 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 72 -40 40 72 -40 40 air
+  27039 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 72 -40 56 72 -40 56 air
+  28048 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 72 -40 72 72 -40 72 air
+  29044 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 72 -40 88 72 -40 88 air
+  30046 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+  30739 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 906, paused: false }] }) }
+  30739 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 906, paused: false }] }) }
+## /fill 72 -40 104 72 -40 104 air
+  31054 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 88 -40 8 88 -40 8 air
+  32046 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 88 -40 24 88 -40 24 air
+  33044 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 88 -40 40 88 -40 40 air
+  34054 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 88 -40 56 88 -40 56 air
+  35058 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 88 -40 72 88 -40 72 air
+  36056 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 88 -40 88 88 -40 88 air
+  37057 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 88 -40 104 88 -40 104 air
+  38058 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 104 -40 8 104 -40 8 air
+  39054 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 104 -40 24 104 -40 24 air
+  40060 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 104 -40 40 104 -40 40 air
+  41057 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 104 -40 56 104 -40 56 air
+  42059 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 104 -40 72 104 -40 72 air
+  43057 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+  43531 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1162, paused: false }] }) }
+  43531 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1162, paused: false }] }) }
+## /fill 104 -40 88 104 -40 88 air
+  44063 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 104 -40 104 104 -40 104 air
+  45059 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 120 -40 8 120 -40 8 air
+  46064 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 120 -40 24 120 -40 24 air
+  47067 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 120 -40 40 120 -40 40 air
+  48068 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 120 -40 56 120 -40 56 air
+  49069 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 120 -40 72 120 -40 72 air
+  50070 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 120 -40 88 120 -40 88 air
+  51065 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 120 -40 104 120 -40 104 air
+  52073 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 136 -40 8 136 -40 8 air
+  53080 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 136 -40 24 136 -40 24 air
+  54078 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 136 -40 40 136 -40 40 air
+  55076 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 136 -40 56 136 -40 56 air
+  56075 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+  56339 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1418, paused: false }] }) }
+  56339 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1418, paused: false }] }) }
+## /fill 136 -40 72 136 -40 72 air
+  57079 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 136 -40 88 136 -40 88 air
+  58080 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 136 -40 104 136 -40 104 air
+  59074 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 152 -40 8 152 -40 8 air
+  60082 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 152 -40 24 152 -40 24 air
+  61074 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 152 -40 40 152 -40 40 air
+  62084 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 152 -40 56 152 -40 56 air
+  63089 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 152 -40 72 152 -40 72 air
+  64083 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 152 -40 88 152 -40 88 air
+  65087 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 152 -40 104 152 -40 104 air
+  66089 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill -8 -40 8 -8 -40 8 air
+  67089 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill -24 -40 8 -24 -40 8 air
+  68090 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 56 -40 -56 56 -40 -56 air
+  69091 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+  69129 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1674, paused: false }] }) }
+  69129 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1674, paused: false }] }) }
+## /fill 56 -40 -72 56 -40 -72 air
+  70092 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 8 -40 -24 8 -40 -24 air
+  71089 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 8 -40 -40 8 -40 -40 air
+  72089 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 24 -40 -40 24 -40 -40 air
+  73097 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 120 -40 -8 120 -40 -8 air
+  74096 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 40 -40 72 40 -40 72 air
+  75089 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 120 -40 -24 120 -40 -24 air
+  76099 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /setblock 120 -40 8 stone
+  77094 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  77094 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  77137 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 120, y: -40, z: 8 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+  77138 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 120, y: -40, z: 8 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(3), layer: 0 }
+## /setblock 136 -40 8 stone
+  78094 actor   CommandOutput success_count=0 data=None commands.setblock.outOfWorld success=false []
+## /testforblock 120 -40 8 stone
+  79102 actor   CommandOutput success_count=1 data=None commands.testforblock.success success=true ["120", "-40", "8"]
+  79102 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.testforblock.success\",\"with\":{\"rawtext\":[{\"text\":\"120\"},{\"text\":\"-40\"},{\"text\":\"8\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /testforblock 136 -40 8 stone
+  80096 actor   CommandOutput success_count=0 data=None commands.testforblock.outOfWorld success=false []
+## /clone 120 -40 8 120 -40 8 136 -40 8
+  81102 actor   CommandOutput success_count=0 data=None commands.generic.outOfWorld success=false []
+  81931 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1930, paused: false }] }) }
+  81931 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1930, paused: false }] }) }
+## /clone 136 -40 8 136 -40 8 120 -41 8
+  82108 actor   CommandOutput success_count=0 data=None commands.generic.outOfWorld success=false []
+## /testforblocks 120 -40 8 120 -40 8 136 -40 8
+  83103 actor   CommandOutput success_count=0 data=None commands.generic.outOfWorld success=false []
+## /fill 127 -40 8 127 -40 8 stone
+  84107 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+  84107 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  84139 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 127, y: -40, z: 8 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(2), layer: 0 }
+  84139 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 127, y: -40, z: 8 }, block_runtime_id: 2150698529, flags: UpdateBlockFlags(2), layer: 0 }
+## /fill 127 -40 8 128 -40 8 stone
+  85108 actor   CommandOutput success_count=0 data=None commands.fill.outOfWorld success=false []
+## /fill 120 -40 8 120 -40 8 air
+  86108 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  86108 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+  86134 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 120, y: -40, z: 8 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+  86134 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 120, y: -40, z: 8 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+## /fill 127 -40 8 127 -40 8 air
+  87110 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+  87110 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  87139 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 127, y: -40, z: 8 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+  87140 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 127, y: -40, z: 8 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+## /
+## /tp @s 0.5 -26 0.5
+  89113 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  89113 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+  89113 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp CmdWatcher 0.5 -26 0.5
+  90114 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+  90114 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  90114 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+probe exit 0

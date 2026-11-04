@@ -1,5 +1,5 @@
-//! Which mobs BDS ticks: those whose column is within `tick-distance` chunks (a circle) of a player in
-//! their world, or that the world keeps (kept.rs); the others neither move, think nor feel their
+//! Which mobs BDS ticks: those whose column is in the tick region of a player in their world
+//! (`crate::ticking::in_tick_region`), or that the world keeps (kept.rs); the others neither move, think nor feel their
 //! effects until a player comes near (research/captures/bds-tickcircle*.txt, docs/research/mob-damage.md).
 
 use std::collections::HashMap;
@@ -32,6 +32,6 @@ impl Ticked {
     pub(super) fn ticks(&self, world: &World, mob: Entity, layer: Entity) -> bool {
         let Some(centres) = self.centres.get(&layer) else { return true };
         let Some(at) = world.get::<Body>(mob).map(|body| ChunkPos::of_block(body.at[0].floor() as i32, body.at[2].floor() as i32)) else { return true };
-        centres.iter().any(|centre| (at.x - centre.x).pow(2) + (at.z - centre.z).pow(2) <= self.reach * self.reach) || world.get::<Kept>(layer).is_some_and(|kept| kept.holds(at))
+        centres.iter().any(|centre| crate::ticking::in_tick_region(at.x - centre.x, at.z - centre.z, self.reach)) || world.get::<Kept>(layer).is_some_and(|kept| kept.holds(at))
     }
 }

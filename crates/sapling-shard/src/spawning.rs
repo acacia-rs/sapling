@@ -74,8 +74,8 @@ pub(crate) fn watchers(world: &mut World) -> Vec<Watcher> {
         .collect()
 }
 
-/// Counts the players' sleeplessness, then rolls an attempt in every chunk within the tick
-/// distance (`crate::ticking::tick_distance`) of a player of a world where `doMobSpawning` is on.
+/// Counts the players' sleeplessness, then rolls an attempt in every chunk of the tick region
+/// (`crate::ticking::in_tick_region`) of a player of a world where `doMobSpawning` is on.
 pub(crate) fn tick(world: &mut World) {
     phantoms::count_sleepless(world);
     let watchers = watchers(world);
@@ -83,7 +83,7 @@ pub(crate) fn tick(world: &mut World) {
     let mut ticked = BTreeSet::new();
     for watcher in watchers.iter().filter(|watcher| crate::rules::on(world, watcher.layer, MOB_SPAWNING)) {
         let center = watcher.chunk();
-        for (dx, dz) in (-reach..=reach).flat_map(|dx| (-reach..=reach).map(move |dz| (dx, dz))).filter(|(dx, dz)| dx * dx + dz * dz <= reach * reach) {
+        for (dx, dz) in (-reach..=reach).flat_map(|dx| (-reach..=reach).map(move |dz| (dx, dz))).filter(|&(dx, dz)| crate::ticking::in_tick_region(dx, dz, reach)) {
             ticked.insert((watcher.layer, center.x + dx, center.z + dz));
         }
     }

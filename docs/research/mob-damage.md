@@ -190,8 +190,18 @@ Sapling's run: sapling-burn2.txt.
   came back whole and only then took the poison (10 of 10). Ticked, by offset: at 4 4,0; at 6 3,3,
   5,0 and 6,0, not 5,3, 5,4 or 7,0; at 8 5,3, 5,4 and 7,0, not 8,0, 7,4 or 6,6; at 10 up to 9,0, 8,0,
   7,4 and 6,5, not 6,6, 10,0 or 10,2. dx²+dz² <= tick-distance² fits all but four edge cells (5,3 at
-  6, 8,0 at 8, 6,6 and 10,0 at 10) [U: BDS's offset list, built behind a vfunc that
-  `LevelChunkTickingSystem::tick` (0x14661a960, through 0x146629910) adds to the player's chunk].
+  6, 8,0 at 8, 6,6 and 10,0 at 10). The region, read (2026-11-04): `LevelChunkTickingSystem::tick`
+  (0x14661a960) runs 0x146629910 per player, which takes `Level::getTickingOffsets` (Level vtable
+  +0x828, 0x1407db1b0: `ChunkTickOffsetManager` at Level+0x650) and ticks each offset's chunk from the
+  player's; `ChunkTickOffsetManager::initialize` (0x1409e6bd0, called with the tick range from
+  0x1407bd7c0) lists, for i in 0..r, the rows z = ±(r - i) with |x| <= i + 1, and the row z = 0 with
+  |x| <= r: a diamond, |x| + |z| <= r + 1 with |x|, |z| <= r. It fits every mob above but the tips 8,0
+  at 8 and 10,0 at 10, which are in the list yet did not tick; a chunk ticks only at load state 11
+  or more (0x146629910 checks `+0xf0`), and those tips lie at the edge of what the bots had loaded
+  (9,0 at 8 had unloaded): left as loading, not the region. `/fill` agrees with the list exactly
+  (below). Fixed: `ticking::in_tick_region`, used by mobs (creatures/ticked.rs), spawning, snowfall
+  and hives (`near_players`, before a square); tests `the_tick_region_is_bds_offset_list`, tick_circle.rs
+  (5,3 at 6 now unticked).
   Mobs 9 and 10 chunks off at 4, 6 and 8 were not found (`noTargetMatch`) when moved back: the level
   had unloaded them. Fixed: `mobs::update` shows a fixed 4 (`SHOWN_WITHIN`), and
   `creatures/ticked.rs` leaves a mob outside every player's `tick-distance` circle (and not in a kept
@@ -201,9 +211,19 @@ Sapling's run: sapling-burn2.txt.
   the same ones ticked but 5,3 at 6 (an edge cell above). A returning mob's first poison hit lands
   before its AddEntity on sapling (health 9 of 10), just after it on BDS (10, then 9 the same tick).
   Mobs 9 and 10 chunks off stayed on sapling: the drill world's ground columns never unload.
-  Not ported: BDS's `fill` answered `commands.fill.outOfWorld` in chunks outside the same region
-  (the drill's pads), sapling fills any loaded column; and sapling still sends a hidden mob's moves
-  to every view covering it (clients drop moves of mobs they were not shown).
+  Not ported here: sapling still sends a hidden mob's moves to every view covering it (clients drop
+  moves of mobs they were not shown; group 1's item).
+- Commands past the tick region (2026-11-04, `bds_command_probe tickedge` at `tick-distance` 4,
+  research/captures/bds-tickedge.txt, and the four tickcircle captures' pad fills): one-block fills
+  at every chunk offset 0..6 by 0..6 and ten on the other sides answered `commands.fill.outOfWorld`
+  exactly outside the diamond above, at 4, 6, 8 and 10. Into the first chunk past it `/setblock`
+  answered `commands.setblock.outOfWorld`, `/testforblock` `commands.testforblock.outOfWorld`, `/clone`
+  (from or to it) and `/testforblocks` `commands.generic.outOfWorld`; a fill of the last cell inside
+  worked, one cell further reaching over did not (BDS's `CommandArea`, 0x141205fe0, tries the box
+  grown by a block, then the box itself). Sapling filled any loaded column. Fixed: `ShardCtx::ticks_chunk`
+  (a player's region or a kept column; a world nobody is in ticks all), checked by fill
+  (`regions.rs`), clone and testforblocks (`copying.rs`), setblock and testforblock (`blocks.rs`); test
+  world_commands.rs. Drilled on sapling: sapling-tickedge.txt, same answers.
 
 ## What the rain's level drives (2026-11-04, `bds_command_probe rainramp`, research/captures/bds-rainramp.txt)
 

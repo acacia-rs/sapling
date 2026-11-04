@@ -133,4 +133,9 @@ impl TickingBackend for Ctx<'_> {
         let layer = worlds::current(self.world);
         self.world.get::<Kept>(layer).map(|kept| kept.forced.iter().map(|pos| [pos.x, pos.z]).collect()).unwrap_or_default()
     }
+
+    fn ticks_chunk(&mut self, [x, z]: [i32; 2]) -> bool {
+        let layer = worlds::current(self.world);
+        crate::ticking::ticks_column(self.world, layer, ChunkPos::new(x, z))
+    }
 }

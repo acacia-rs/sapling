@@ -29,14 +29,32 @@ pub(crate) fn tick_distance(world: &World) -> i32 {
     world.resource::<crate::components::Settings>().0.tick_distance
 }
 
-/// The columns within [`tick_distance`] across a square about each player, each once, in an
-/// order that does not turn on the hash.
+/// Whether the column `dx`, `dz` chunks off a player's is one BDS ticks about it at `tick-distance`
+/// `reach`: `ChunkTickOffsetManager::initialize` (0x1409e6bd0) lists the rows |z| = 1..=reach to
+/// |x| <= reach + 1 - |z| and the row z = 0 to |x| <= reach (docs/research/mob-damage.md).
+pub(crate) fn in_tick_region(dx: i32, dz: i32, reach: i32) -> bool {
+    dx.abs() <= reach && dz.abs() <= reach && dx.abs() + dz.abs() <= reach + 1
+}
+
+/// Whether `pos` of `layer` ticks: in a player's tick region ([`in_tick_region`]) or a kept column
+/// (kept.rs). A world nobody is in ticks everything (creatures/ticked.rs).
+pub(crate) fn ticks_column(world: &mut World, layer: Entity, pos: ChunkPos) -> bool {
+    let reach = tick_distance(world);
+    let mut players = world.query::<(&InLayer, &View)>();
+    let centres: Vec<Option<ChunkPos>> = players.iter(world).filter(|(in_layer, _)| in_layer.0 == layer).map(|(_, view)| view.center()).collect();
+    let near = centres.iter().flatten().any(|centre| in_tick_region(pos.x - centre.x, pos.z - centre.z, reach));
+    centres.is_empty() || near || world.get::<crate::kept::Kept>(layer).is_some_and(|kept| kept.holds(pos))
+}
+
+/// The columns of each player's tick region ([`in_tick_region`]), each once, in an order that
+/// does not turn on the hash.
 pub(crate) fn near_players(world: &mut World) -> Vec<(Entity, ChunkPos)> {
     let reach = tick_distance(world);
     let mut near = Vec::new();
     for (in_layer, view) in world.query::<(&InLayer, &View)>().iter(world) {
         let Some(center) = view.center() else { continue };
-        near.extend((-reach..=reach).flat_map(|dx| (-reach..=reach).map(move |dz| (in_layer.0, ChunkPos::new(center.x + dx, center.z + dz)))));
+        let offsets = (-reach..=reach).flat_map(|dx| (-reach..=reach).map(move |dz| (dx, dz))).filter(|&(dx, dz)| in_tick_region(dx, dz, reach));
+        near.extend(offsets.map(|(dx, dz)| (in_layer.0, ChunkPos::new(center.x + dx, center.z + dz))));
     }
     near.sort_by_key(|(layer, pos)| (*layer, pos.x, pos.z));
     near.dedup();
@@ -91,5 +109,37 @@ pub(crate) fn sweep(world: &mut World) {
     }
     for (layer, pos, watch) in found {
         watch(world, layer, pos);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::in_tick_region;
+
+    /// BDS's offset list as 0x1409e6bd0 builds it.
+    fn bds_offsets(reach: i32) -> Vec<(i32, i32)> {
+        let mut offsets = Vec::new();
+        for i in 0..reach {
+            for x in -(i + 1)..=(i + 1) {
+                offsets.extend([(x, reach - i), (x, i - reach)]);
+                if i == reach - 1 {
+                    offsets.push((x, 0));
+                }
+            }
+        }
+        offsets
+    }
+
+    #[test]
+    fn the_tick_region_is_bds_offset_list() {
+        for reach in 4..=12 {
+            let mut listed = bds_offsets(reach);
+            listed.sort_unstable();
+            let region: Vec<_> = (-reach - 2..=reach + 2).flat_map(|x| (-reach - 2..=reach + 2).map(move |z| (x, z))).filter(|&(x, z)| in_tick_region(x, z, reach)).collect();
+            assert_eq!(region, listed, "{reach}");
+        }
+        // research/captures/bds-tickcircle6.txt and 10: 5,3 off out at 6, 7,4 and 6,5 in at 10, 6,6 out.
+        assert!(in_tick_region(3, 3, 6) && in_tick_region(6, 0, 6) && !in_tick_region(5, 3, 6) && !in_tick_region(7, 0, 6));
+        assert!(in_tick_region(7, 4, 10) && in_tick_region(6, 5, 10) && !in_tick_region(6, 6, 10) && !in_tick_region(10, 2, 10));
     }
 }

@@ -66,19 +66,28 @@ fn skull_rotation(placing: &Placing) -> f32 {
     if on_floor && placing.yaw.is_finite() { (placing.yaw * 16.0 / 360.0 + 0.5).floor() * 22.5 } else { 0.0 }
 }
 
-/// Blocks a command or plugin sets that get their placed entity: those a raid's village is found by
-/// (creatures/raids/village.rs); BDS's `/setblock bell` made a village that raided.
-const FURNISHED: [&str; 2] = ["minecraft:bell", "minecraft:bed"];
+/// Blocks a command or plugin sets that get their placed entity, shown to those who see them at
+/// every set, as BDS's `/setblock` did (research/captures/bds-setshown.txt); with the skulls. A
+/// raid's village is found by its bells and beds (creatures/raids/village.rs).
+const FURNISHED: [&str; 6] = ["minecraft:bell", "minecraft:bed", "minecraft:flower_pot", "minecraft:cauldron", "minecraft:chiseled_bookshelf", "minecraft:beacon"];
+/// A commanded bed's colour: BDS's is red (bds-setshown.txt).
+const RED: i16 = 14;
 
-/// Gives a bell or bed set at `pos` without an entity the one a player's placing gives it.
+/// Gives a block set at `pos` without an entity the one a player's placing gives it, where BDS's
+/// command makes one, and shows it.
 pub(super) fn furnish(world: &mut bevy_ecs::world::World, layer: bevy_ecs::entity::Entity, pos: BlockPos, block: &str) {
-    let bare = world.get::<crate::components::Layer>(layer).is_some_and(|level| level.world.block_entity(pos).is_none());
-    if !bare || !FURNISHED.contains(&block) {
+    if !FURNISHED.contains(&block) && !SKULLS.contains(&block) {
         return;
     }
-    if let Some(entity) = placed(block, pos, &Placing { damage: 0, tag: None, yaw: 0.0, properties: "" }) {
-        super::send::keep_entity(world, layer, pos, &entity);
+    let Some(mut level) = world.get_mut::<crate::components::Layer>(layer) else { return };
+    let damage = if block == "minecraft:bed" { RED } else { 0 };
+    if level.world.block_entity(pos).is_none()
+        && let Some(entity) = placed(block, pos, &Placing { damage, tag: None, yaw: 0.0, properties: "" })
+    {
+        _ = level.world.set_block_entity(pos, &entity);
     }
+    let Some(entity) = level.world.block_entity(pos).map(|entity| super::send::block_entity_data(pos, entity)) else { return };
+    super::send::to_viewers(world, layer, pos, &[entity]);
 }
 
 /// The entity the block `block` gets when placed at `pos`; `None` for a block without one.

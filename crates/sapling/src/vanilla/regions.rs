@@ -48,6 +48,13 @@ impl Region {
     pub fn is_loaded(self, ctx: &ShardCtx<'_>) -> bool {
         self.cells().all(|pos| ctx.block(pos).is_some())
     }
+
+    /// Whether every chunk it reaches ticks (`ShardCtx::ticks_chunk`): BDS's commands answer
+    /// `outOfWorld` for a box reaching past (research/captures/bds-tickedge.txt).
+    pub fn ticks(self, ctx: &mut ShardCtx<'_>) -> bool {
+        let [low, high] = [self.low, self.high].map(|corner| [corner[0] >> 4, corner[2] >> 4]);
+        (low[0]..=high[0]).all(|x| (low[1]..=high[1]).all(|z| ctx.ticks_chunk([x, z])))
+    }
 }
 
 /// What `/fill` does with the blocks that are there.
@@ -120,6 +127,9 @@ impl Command for Fill {
         let region = Region::between(self.from.resolve(ctx, sender), self.to.resolve(ctx, sender));
         if region.count() > MOST_BLOCKS {
             return out.translate("commands.fill.tooManyBlocks", vec![region.count().to_string(), MOST_BLOCKS.to_string()], false);
+        }
+        if !region.ticks(ctx) {
+            return out.translate("commands.fill.outOfWorld", Vec::new(), false);
         }
         let block = block(&self.block, self.states.as_ref());
         let only = self.only.as_ref().map(|(name, states)| super::blocks::block(name, states.as_ref()));

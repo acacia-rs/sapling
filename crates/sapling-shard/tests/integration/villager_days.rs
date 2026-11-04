@@ -33,6 +33,8 @@ fn village(time: i64, feet: [f32; 3], event: &'static str) -> (Harness, u64) {
         assert!(ctx.set_block(FOOT, &half(0)) && ctx.set_block(HEAD, &half(1)));
         ctx.set_time(time);
         ctx.set_difficulty(Difficulty::Easy);
+        // A monster spawned near the bed wakes the sleeper, as the spawns' draws fall.
+        assert!(ctx.set_game_rule("doMobSpawning", sapling_api::RuleValue::Bool(false)));
         ctx.summon_as(None, "minecraft:villager_v2", feet, 0.0, Some(event)).expect("summoned").0
     });
     (h, id)

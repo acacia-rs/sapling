@@ -38,6 +38,10 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     let mut alice = common::spawn(common::client(&server, "Alice"), config()).await;
     let mut bob = common::spawn(common::client(&server, "Bob"), config()).await;
     alice.wait_ticks(20).await.expect("connected");
+    // The fixture's plains spawn cows about the players, which the `/damage` below must not find.
+    for line in ["gamerule domobspawning false", "kill @e[type=!player]"] {
+        answer(&mut alice, line).await;
+    }
 
     let steps: &[(&str, &str)] = &[
         ("setworldspawn 10 70 10", r#"commands.setworldspawn.success ["10", "70", "10"] 1"#),
@@ -61,6 +65,11 @@ async fn world_and_item_commands_answer_as_bds_answered() {
         ("fill ~3 ~5 ~3 ~5 ~7 ~5 dirt keep", r#"commands.fill.success ["1"] 1"#),
         ("fill ~3 ~5 ~3 ~5 ~7 ~5 glass replace stone", r#"commands.fill.success ["26"] 1"#),
         ("fill ~ ~ ~ ~40 ~40 ~40 stone outline", r#"commands.fill.tooManyBlocks ["68921", "32768"] 0"#),
+        // bds-tickedge.txt: six chunks off is past `tick-distance` 4's region.
+        ("fill ~96 ~5 ~ ~96 ~5 ~ stone", "commands.fill.outOfWorld [] 0"),
+        ("setblock ~96 ~5 ~ stone", "commands.setblock.outOfWorld [] 0"),
+        ("testforblock ~96 ~5 ~ stone", "commands.testforblock.outOfWorld [] 0"),
+        ("clone ~ ~5 ~ ~ ~5 ~ ~96 ~5 ~", "commands.generic.outOfWorld [] 0"),
         ("clone ~3 ~5 ~3 ~5 ~7 ~5 ~10 ~5 ~3", r#"commands.clone.success ["27"] 1"#),
         ("testforblocks ~3 ~5 ~3 ~5 ~7 ~5 ~10 ~5 ~3", r#"commands.compare.success ["27"] 1"#),
         ("testforblocks ~3 ~5 ~3 ~5 ~7 ~5 ~10 ~5 ~3 masked", r#"commands.compare.success ["27"] 1"#),

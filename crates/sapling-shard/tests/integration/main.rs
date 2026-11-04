@@ -137,6 +137,7 @@ mod slimes;
 mod snow_golems;
 mod spawners;
 mod spawning;
+mod set_shown;
 mod special_recipes;
 mod spectators;
 mod stored_mobs;
