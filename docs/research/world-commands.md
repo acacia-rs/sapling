@@ -50,6 +50,30 @@ selecting,session,items,enchanting}.rs`.
 - Relative `/fill` (`~`) answers its count (4) in the overworld, and in the Nether through
   `execute in nether` (49 absolute, 9 relative). Sapling's answers were the same; the old 0 is gone.
 
+## Drilled 2026-11-04 (`bds-t1dspread.txt`, `bds-t1dloot.txt`, `bds-t1denums.txt`)
+
+- `/spreadplayers` is BDS's iteration (bdsre 0x143b47550, `spread` in selecting.rs): random
+  points in the square, each pushed a block from the mean of those nearer than the spread and
+  kept in the square, up to 10000 iterations; once none moves, a target off safe ground starts
+  again. A target lands two blocks over the top block (feet -25 over stone at -27), carpets not
+  counted. Fire, water, lava, powder snow and a campfire refused; glass, a carpet and stone did not.
+  Out of iterations: `failure.players [n, x, z, closest "%.2f"]`, or with one target (no pair)
+  `failure.players.unsafe [1, x, z, "10000"]`. Its value parameters are type 4 as sapling sends.
+- `/loot replace entity` puts every stack made (or the count's first) from the slot on: a player
+  through its 36 slots (hotbar 7 ran on into the inventory), a mob through mainhand, offhand, then
+  armour; a cow's `slot.hotbar` is `invalidSlotTypeForEntity [name, slot type]`. The answer counts
+  the items, then the stacks: `["slot.weapon.mainhand", "0", "Cow", "5", "3"]`, `.block` alike.
+  A count past the container is `countExceedsContainerSize [slot type's size]`.
+- `/loot` takes every table of BDS's packs (fishing, bat, `empty`, barrels); an unknown one is
+  `invalidLootTable ["loot_tables/<name>.json"]`, a `.json` or `loot_tables/` in it kept.
+- `/playsound` counts and names those who heard it: one of two in range is `.single` with its name.
+- `/scriptevent`: 2048 characters (bdsre 0x1403ea1a0, `0x800`); a 2047-character line got the drill
+  bot disconnected, so the edge was not sent.
+- `/recipe give @s *` unlocked 4092 (bds-t1drecipe.txt): every recipe but the starting 20 and the
+  540 whose unlock list of ingredients is empty (barrel, `bed_dye_*`); again, no packet. BDS's
+  order is not CraftingData's, which sapling keeps.
+- `/gamerule` lists BDS's four overloads: `playerwaypoints`, 32 bool rules, 5 int rules.
+
 ## Not seen; sapling's choice
 
 - `/defaultgamemode`, `/seed` and `/version` do not exist on BDS 1.26.52: sapling answers under
@@ -62,7 +86,5 @@ selecting,session,items,enchanting}.rs`.
 - The enchantment table (max levels, what goes on what, exclusive groups) beyond the cases above
   is the game's as players know it (`sapling-data/src/enchant/table.rs`), as is the order of
   `/enchant`'s checks (id, targets, level, item).
-- `/spreadplayers` places at random tries within the range; BDS's own spreading was not drilled.
-  `maxHeight` caps where it looks for ground. The failure's fourth parameter is always `0.00`.
-- `ParamKind::Value` is sent as type 4 (minecraft-data's number).
+- `/spreadplayers` draws from its own random, not BDS's: the same rule, other places.
 - A cloned chest: BDS adds `forceunpair`; sapling copies the block entity as it is.

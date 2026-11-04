@@ -4,7 +4,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, ParameterSpec, ParseError};
 use sapling_api::{Command, Output, Permission, ScriptEvent, Sender, ShardCtx};
 
-// TODO: the Script API's limit as remembered; BDS's own was not read.
+/// BDS's `0x800` (docs/research/packs-and-functions.md).
 const MAX_MESSAGE: usize = 2048;
 
 pub(crate) struct ScriptEventCommand {

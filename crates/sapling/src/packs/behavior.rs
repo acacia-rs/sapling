@@ -63,8 +63,7 @@ impl BehaviorPacks {
 
     /// Adds the packs a world folder applies, as BDS does: those its `world_behavior_packs.json`
     /// names, from the world's `behavior_packs` folder or `packs`. The first named comes last, so
-    /// that its functions win.
-    // TODO: which pack's function BDS keeps when two have one of the same name was not checked.
+    /// that its functions win, as BDS's did listed either way (research/captures/bds-t1dfunc1.txt, -2.txt).
     pub fn world(mut self, world: impl AsRef<Path>, packs: impl AsRef<Path>) -> Result<Self, PackError> {
         self.origins.push(Origin::World(world.as_ref().to_path_buf(), packs.as_ref().to_path_buf()));
         let mut listed = world_packs(world.as_ref(), "world_behavior_packs.json", "behavior_packs", packs.as_ref())?;

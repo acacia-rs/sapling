@@ -1,5 +1,5 @@
-"""BDS's vanilla behaviour packs -> mob-loot.json: each entity's loot table and every table those
-name, as a world on BDS 1.26.52's newest base game version resolves them. See ../../README.md "Mob loot".
+"""BDS's vanilla behaviour packs -> mob-loot.json: each entity's loot table and every table of the
+packs, as a world on BDS 1.26.52's newest base game version resolves them. See ../../README.md "Mob loot".
 
 usage: py -3 mob-loot.py [--survey]
 """
@@ -129,7 +129,7 @@ BY_DATA = {
     ("minecraft:dye", 0): "minecraft:ink_sac", ("minecraft:dye", 3): "minecraft:cocoa_beans", ("minecraft:skull", 1): "minecraft:wither_skeleton_skull",
     ("minecraft:wool", "colour"): "minecraft:white_wool",
 }
-# Tables blocks eject, not named by any entity: trial spawners' and vaults' (spawners.rs in sapling-shard).
+# Tables the shard rolls by name, checked to exist: trial spawners' and vaults' (spawners.rs in sapling-shard).
 BLOCK_TABLES = [
     "loot_tables/spawners/trial_chamber/consumables.json", "loot_tables/spawners/trial_chamber/key.json",
     "loot_tables/spawners/ominous/trial_chamber/consumables.json", "loot_tables/spawners/ominous/trial_chamber/key.json",
@@ -140,8 +140,6 @@ BLOCK_TABLES = [
     # What a piglin hands back for gold (`minecraft:barter`), not what it leaves.
     "loot_tables/entities/piglin_barter.json",
 ]
-# Tables generated containers, pots and suspicious blocks roll when first opened or brushed (containers.rs in sapling-shard).
-CONTAINER_TABLES = re.compile(r"loot_tables/(chests|dispensers|pots)/.*\.json|loot_tables/entities/.*brushable_block.*\.json")
 # Kinds whose table is not what they leave when they die.
 NOT_MOBS = {"minecraft:fishing_hook", "minecraft:player", "minecraft:npc", "minecraft:tripod_camera"}
 
@@ -191,8 +189,8 @@ def main():
     for table in BLOCK_TABLES:
         if table not in tables:
             print(f"no file for {table}")
-        named_tables(table, tables, used)
-    for table in sorted(t for t in tables if CONTAINER_TABLES.fullmatch(t)):
+    # Every table, for `/loot` (BDS took each, research/captures/bds-t1dloot.txt).
+    for table in sorted(tables):
         named_tables(table, tables, used)
     with open(OUT, "w", encoding="utf-8", newline="\n") as out:
         json.dump({"entities": found, "tables": dict(sorted(used.items()))}, out, separators=(",", ":"), sort_keys=True)
