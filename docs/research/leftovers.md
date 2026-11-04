@@ -228,9 +228,37 @@ and tnt.rs):
   with ContainerType 12 and ContainerBaseSize 2 (horse kinds) or 16 (donkey, llama), an untamed one 0
   and 0 (a camel's `spawn_adult` 12 and 5); sapling's are 0. A skeleton horse by `spawn_adult` is
   announced with a 0.6 x 1.8 box (by `entity_born` 1.96 wide, plain 1.4), sapling's always 1.4 x 1.6.
-  BDS's horse showed 32 in data 16 idle (rearing or eating; bds-harm.txt). The per-tick flag words of
+  BDS's horse showed 32 in data 16 idle (seventh wave, below). The per-tick flag words of
   TNT, arrows, snowballs and items (bit 34 toggling, bit 14 on a shot) and their move counts still
-  differ (drill_vs_bds.py on the two captures); sapling's zombie did not catch fire in the drill.
+  differ (drill_vs_bds.py on the two captures); sapling's zombie did not catch fire (below).
+
+Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
+
+- The zombie that did not burn: not sapling's sun rule. sixth3's sapling run used drill_server's
+  default world, whose stone roof at y 60-63 shades the floor at -27 (`GROUND`); BDS's floor is in
+  the open. Re-drilled on sapling with `SAPLING_DRILL_WORLD=open` (sapling-firstdata.txt): the zombie
+  burns from its first tick, as BDS's (sapling's had strolled to 3.5 blocks of the TNT and died of
+  the blast; BDS's, further off, was put out for a tick and lit again). Drills of the sun or rain on
+  sapling need `open`. Still different, Group 3's: sapling
+  announces the zombie already burning (its summon tick runs before `mobs::update` and `reshow`
+  rebuilds the AddEntity) and then tells BREATHING and the fire in two packets; BDS announces it
+  unlit and tells both in one SetEntityData after the first data.
+- Fixed: data 16's 32 is `HorseFlags::Eating` (LeviLamina `HorseFlags.h`: Saddle 4, Eating 32,
+  Standing 64, OpenMouth 128), not rearing. Read in `Horse::postAiStep` (0x142a49530; the Horse
+  vtable 0x14a7c72f0 is the one family vtable overriding `Actor::setStanding`, slot 0x1d0;
+  `setHorseEating` 0x142a4a020 is `_setHorseFlag(0x20, b)`): a horse not eating and carrying no one
+  draws 1 in 300 a tick, and eats if the block under its feet is `minecraft:grass_block` (global
+  0x14ccdfc38); it stops when its count passes 50, or in the first tick its navigation has a path,
+  so a horse that draws while walking sets and clears it in one tick, which still sends data 16 (an
+  unchanged 0). It also heals 1 a tick in 900 (not ported: sapling's mobs do not heal). Drilled
+  (`horseeat`, bds-horseeat.txt): eleven horse-family mobs on grass and three horses on stone, 180 s
+  by night: every horse kind but the llama ate, meals of 50 ticks or cut short by a stroll (2 to 43),
+  unchanged 0s sent 2 to 11 times a mob, a zombie horse killed while eating showed 160, the stone
+  horses never ate. Fixed: `riding/grazing.rs` (told with the mouth by `riding/mouth.rs`; its own
+  draws), stopped by a stroll or flight under way (`strolling::is_under_way`); test
+  `grazing::a_horse_on_grass_grazes_for_50_ticks_now_and_then_and_one_on_stone_never`. Re-drilled
+  (sapling-horseeat.txt): the same kinds eat 50-tick meals or shorter ones, the llama and the stone
+  horses never, a mule killed eating showed 160.
 
 ## Not drilled
 

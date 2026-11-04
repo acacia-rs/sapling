@@ -10,6 +10,7 @@ mod carry;
 mod drive;
 mod evented;
 mod exit;
+mod grazing;
 mod mounts;
 mod mouth;
 mod packets;

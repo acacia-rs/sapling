@@ -105,6 +105,7 @@ pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, ow
 pub(crate) use omens::{Omens, befall, infested_hurt};
 pub(crate) use piglins::barter;
 pub(crate) use scooping::{held_kind as bucketed_kind, release as release_from_bucket, scoop};
+pub(crate) use strolling::is_under_way;
 pub(crate) use struck::struck_by_lightning;
 pub(crate) use teleports::landing as teleport_landing;
 pub(crate) use villagers::{alarm as hear_bell, bargains, interact as trade_with, stop_trading, traded};

@@ -1,8 +1,7 @@
 //! Mobs with nothing to do stroll: now and then one walks to a place nearby; one a player hit
 //! runs from place to place for a while (docs/research/mob-attacks.md, "Strolling", "Fleeing").
-// TODO: how often, how far and how long are fitted by eye to a zombie, a cow and a pig; a mob goes
-// straight there and gives up at an edge or when it is too long on the way; none looks around or
-// follows food. One the sun burns does not stroll out of the shade it stands in, as BDS's zombie
+// How often: docs/research/mob-attacks.md "Strolling". TODO: a mob goes straight there and gives up at
+// an edge or when it is too long on the way, where BDS's follows a path; none follows food. One the sun burns does not stroll out of the shade it stands in, as BDS's zombie
 // under a roof did not (research/captures/bds-sun.txt), but one in the sun looks for no shade.
 
 use bevy_ecs::prelude::*;
@@ -12,8 +11,9 @@ use crate::blocks::Dice;
 use crate::body::Body;
 use crate::components::{Layer, Tick};
 
-/// A tick in this many starts a stroll.
+/// A tick in this many starts a stroll, to the first of this many places tried that will do.
 const EVERY: f32 = 120.0;
+const TRIES: usize = 10;
 /// A stroll goes up to this far along each axis, ends this near its goal, and is given up after
 /// this many ticks.
 const FAR: f32 = 10.0;
@@ -39,6 +39,12 @@ pub(super) fn startle(world: &mut World, entity: Entity) {
     legs::rest(world, entity);
 }
 
+/// Whether the mob has somewhere to walk to: a stroll or a flight under way.
+pub(crate) fn is_under_way(world: &World, entity: Entity) -> bool {
+    let now = world.resource::<Tick>().0;
+    world.get::<Stroll>(entity).is_some_and(|stroll| stroll.0.is_some() || now < stroll.1)
+}
+
 /// Whether a mob could stand in the cell of `[x, z]` at its feet's height: floor under it, nothing in it.
 fn is_floor(world: &World, layer: Entity, body: &Body, [x, z]: [f32; 2]) -> bool {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
@@ -59,11 +65,11 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: O
         if !body.on_ground || (flees.is_none() && dice.fraction() * EVERY >= 1.0) {
             return None;
         }
-        let to = [body.at[0] + (dice.fraction() * 2.0 - 1.0) * far, body.at[2] + (dice.fraction() * 2.0 - 1.0) * far];
+        let tries: Vec<[f32; 2]> = (0..TRIES).map(|_| [body.at[0] + (dice.fraction() * 2.0 - 1.0) * far, body.at[2] + (dice.fraction() * 2.0 - 1.0) * far]).collect();
         let head = |[x, z]: [f32; 2]| [x, body.at[1] + body.size[1], z].map(|c| c.floor() as i32);
-        let into_sun = shuns_sun
-            && !super::harm::sun_on(world, layer, head([body.at[0], body.at[2]])) && super::harm::sun_on(world, layer, head(to));
-        (!into_sun && is_floor(world, layer, &body, to)).then_some((to, now + PATIENCE))
+        let shaded = shuns_sun && !super::harm::sun_on(world, layer, head([body.at[0], body.at[2]]));
+        let to = tries.into_iter().find(|to| !(shaded && super::harm::sun_on(world, layer, head(*to))) && is_floor(world, layer, &body, *to))?;
+        Some((to, now + PATIENCE))
     });
     let ahead = goal.map(|(to, _)| {
         let (dx, dz) = (to[0] - body.at[0], to[1] - body.at[2]);
