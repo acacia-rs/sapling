@@ -63,9 +63,11 @@ fn wait(world: &mut World) -> u64 {
     u64::from(least + world.get_resource_or_insert_with(Dice::default).roll(more))
 }
 
-/// A block was written at `pos`: fire, however it came there, ticks a step on.
-pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
-    if level(world, layer).and_then(|level| name_at(level, pos)) == Some(FIRE) {
+/// A block that `was` something else was written at `pos`: fire, however it came there, ticks a step on.
+/// A fire aging is no new fire: rescheduling it then put fires over stone out in 3 s at rule 4 against
+/// BDS's 5.9 (sapling-firepace.txt at 5ba26c16).
+pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str) {
+    if was != FIRE && level(world, layer).and_then(|level| name_at(level, pos)) == Some(FIRE) {
         schedule(world, layer, pos, FIRST);
     }
 }

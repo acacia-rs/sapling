@@ -181,7 +181,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     super::sculk::written(world, layer, pos, was, now);
     super::redstone::notice(world, layer, pos);
     super::daylight::written(world, layer, pos);
-    super::fire::written(world, layer, pos);
+    super::fire::written(world, layer, pos, was);
     super::bubbles::written(world, layer, pos);
     super::coral::written(world, layer, pos);
     super::sponge::written(world, layer, pos);
