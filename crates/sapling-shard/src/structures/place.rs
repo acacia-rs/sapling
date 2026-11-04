@@ -142,13 +142,18 @@ fn unpaired(entity: Value) -> Value {
 
 /// Which cells a load of integrity below 1 places, as BDS draws them (141f4ae40, fitted cell for cell
 /// to bds-t3integ.txt): cell `i` of the template's order is kept when the first `nextFloat` of an
-/// MT19937 seeded with the seed's Java string hash plus `i`, times 100, is below the integrity.
-// TODO: a structure block's numeric `seed` is hashed as its digits here; BDS's use of it is not drilled.
+/// MT19937 seeded with the seed's Java string hash plus `i`, times 100, is below the integrity. A
+/// number is a structure block's `seed`, taken as its low 32 bits, 0 too (bds-e3seed.txt); a
+/// command's seed cannot be one (`vanilla/structure.rs`).
 struct Integrity(u32);
 
 impl Integrity {
     fn new(seed: &str, tick: u64) -> Self {
-        Self(if seed.is_empty() { tick as u32 } else { seed.encode_utf16().fold(0u32, |hash, unit| hash.wrapping_mul(31).wrapping_add(unit.into())) })
+        Self(match seed.parse::<i64>() {
+            Ok(number) => number as u32,
+            Err(_) if seed.is_empty() => tick as u32,
+            Err(_) => seed.encode_utf16().fold(0u32, |hash, unit| hash.wrapping_mul(31).wrapping_add(unit.into())),
+        })
     }
 
     fn keeps(&self, cell: usize, integrity: f32) -> bool {
@@ -168,5 +173,16 @@ mod tests {
         let dice = Integrity::new("abc", 0);
         let placed: String = (0..8).map(|z| (0..8).map(|x| if dice.keeps(x * 8 + z, 0.5) { '#' } else { '.' }).collect::<String>()).collect::<Vec<_>>().join(" ");
         assert_eq!(placed, rows.join(" "));
+    }
+
+    #[test]
+    fn a_structure_block_s_numeric_seed_is_taken_as_it_is() {
+        // research/captures/bds-e3seed.txt: an 8x8 row at 50 by a structure block, cells in the template's order.
+        let kept = [("0", ".##..#.#.#.##...##.#.##...##...#.###..#.####...####...##.##.#.#."), ("12345", "...#..#....#.####...######..###.#.........#..##......###..##.#.."), ("4294967289", "####..#.##..#.#.#.##...##.#.##...##...#.###..#.####...####...##.")];
+        for (seed, cells) in kept {
+            let dice = Integrity::new(seed, 7);
+            let placed: String = (0..64).map(|cell| if dice.keeps(cell, 0.5) { '#' } else { '.' }).collect();
+            assert_eq!(placed, cells, "{seed}");
+        }
     }
 }

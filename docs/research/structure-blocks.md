@@ -54,10 +54,20 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
   integrity; sapling's own dice kept others. Fixed (`structures/place.rs`, cell for cell; test
   `half_an_eight_by_eight_row_by_seed_abc_is_bds_half`). A bare number as the seed (`50 1`, `50 12345`) is a
   syntax error at it on BDS; sapling loaded; fixed (`vanilla/structure.rs`).
+- A structure block's numeric `seed` (bds-e3seed.txt, 2026-11-04: 0 twice, 1, 12345, 4294967289 at 50) seeds
+  the same draw with its low 32 bits as they are: 0 picked the same cells twice and `n` is the cells of 0
+  moved on by `n`. Sapling hashed the digits and drew 0 from the tick; fixed (`structures/place.rs`, test
+  `a_structure_block_s_numeric_seed_is_taken_as_it_is`).
 
 ## Not copied or not drilled
 
-- A structure block's numeric `seed` and an empty seed's draw (sapling: the tick).
+- A `/structure load` with no seed (sapling: the tick).
+- After a load (bds-e3turn.txt, 2026-11-04: 64 turning blocks at 90, 180, 270 and mirrored, written as
+  sapling writes them, 756 cells alike) BDS lets the loaded blocks react to their neighbours: what lacks
+  support goes with its item (redstone torches, cocoa, activator rails, hanging signs), glow lichen and
+  resin lose unheld faces, fences and walls join only what is there, the first write of a fence already
+  short of later cells. Sapling keeps the template's states (`structures/place.rs` wakes only liquids).
+  A small dripleaf `/setblock` on stone broke a tick later on BDS (sapling kept it).
 
 - Placement and the editor by creative operators only, as for command blocks (a survival click and place were
   refused on BDS too).

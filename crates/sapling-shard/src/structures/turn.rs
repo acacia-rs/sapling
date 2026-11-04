@@ -2,7 +2,7 @@
 //! clockwise turn, each cell kept inside the box and each block's facing states turned with it
 //! (research/captures/bds-structures.txt: a chest, stairs and a log at every turn and mirror).
 // BDS left `huge_mushroom_bits` as saved (bds-t3turn.txt).
-// TODO: the turns of the other states BDS turns that no drill showed are left as saved.
+// 64 turning blocks at four turns and two mirrors were written as BDS's (bds-e3turn.txt).
 
 use sapling_api::{Mirror, Rotation};
 
