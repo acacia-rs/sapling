@@ -78,11 +78,11 @@ pub(crate) fn mob_died(world: &mut World, layer: Entity, at: [f32; 3], reward: i
     true
 }
 
-fn generic(event_id: u32, tags: Vec<Nbt>) -> bytes::Bytes {
+pub(super) fn generic(event_id: u32, tags: Vec<Nbt>) -> bytes::Bytes {
     sapling_net::encode(&LevelEventGeneric { event_id, nbt: tags })
 }
 
-fn int(name: &str, value: i32) -> Nbt {
+pub(super) fn int(name: &str, value: i32) -> Nbt {
     Nbt { name: name.to_owned(), value: NbtValue::Int(value) }
 }
 

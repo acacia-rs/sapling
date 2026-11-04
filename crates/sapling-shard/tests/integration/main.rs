@@ -140,6 +140,7 @@ mod shot_blocks;
 mod shot_buttons;
 mod shot_hits;
 mod shown_effects;
+mod shriekers;
 mod sleep;
 mod slimes;
 mod snow_golems;
