@@ -91,6 +91,24 @@ fn wheat_on_wet_farmland_ripens_by_itself() {
 }
 
 #[test]
+fn cocoa_rooted_dirt_cane_tops_and_nether_vines_take_it_as_on_bds() {
+    // research/captures/bds-t3meal.txt: cocoa a stage a click to 2, roots under rooted dirt once, cane
+    // two more on its top alone, a vine grown from its tip, bamboo sixteen high none.
+    let mut h = fed(false, &[([2, 65, 0], "minecraft:cocoa"), ([2, 67, 2], "minecraft:dirt_with_roots"), ([6, 65, 2], "minecraft:twisting_vines")]);
+    h.remote.run(|ctx| {
+        (65..=67).for_each(|y| assert!(ctx.set_block([4, y, 0], &Block::new("minecraft:reeds"))));
+        (65..=80).for_each(|y| assert!(ctx.set_block([6, y, 0], &Block::new("minecraft:bamboo"))));
+    });
+    h.tick_all();
+    let shown = [[2, 65, 0], [2, 65, 0], [2, 65, 0], [2, 67, 2], [2, 67, 2], [4, 65, 0], [4, 67, 0], [4, 67, 0], [6, 65, 0], [6, 65, 2]].map(|at| meal(&mut h, at));
+    assert_eq!(shown, [1, 1, 0, 1, 0, 0, 1, 0, 0, 1]);
+    let blocks = common::asking::ask(&mut h, |ctx| [[2, 65, 0], [2, 66, 2], [4, 69, 0], [4, 70, 0], [6, 66, 2]].map(|at| ctx.block(at).map(|block| format!("{}[{}]", block.name, block.properties))));
+    let [cocoa, roots, cane, over, vine] = blocks.map(Option::unwrap_or_default);
+    assert!(cocoa.contains("age=2") && roots == "minecraft:hanging_roots[]" && cane.starts_with("minecraft:reeds") && over == "minecraft:air[]", "{cocoa} {roots} {cane} {over}");
+    assert!(vine.starts_with("minecraft:twisting_vines"), "{vine}");
+}
+
+#[test]
 fn in_survival_a_crop_grows_some_stages_a_click_and_a_ripe_one_takes_none() {
     // research/captures/bds-bonemeal2.txt: wheat went 2, 4, 6, 7 and then took no more.
     let mut h = fed(false, &[([2, 64, 0], "minecraft:farmland"), ([2, 65, 0], "minecraft:wheat")]);

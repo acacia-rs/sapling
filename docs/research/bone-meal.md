@@ -47,7 +47,28 @@ one; a ripe crop takes none and spends none, where in creative it still took it.
 takes it as BDS's `SaplingBlock::onFertilized` does (saplings.md): a tree at once in creative,
 else 45 in 100 a click to age and then to grow.
 
+## More plants, in survival (2026-11-04, `bds_command_probe t3meal`, bds-t3meal.txt)
+
+Three clicks a plant, the actor two west of it:
+
+| Plant | What BDS did |
+| --- | --- |
+| vine on stone | nothing, no particles |
+| twisting vines, one | 2, 2, 1 more up from the tip; weeping vines 3 down, then particles with no room |
+| cocoa | a stage a click to age 2, then nothing |
+| moss block | a patch of radius 2: 17 moss and 12 plants on it |
+| rooted dirt | hanging roots under it once, then nothing |
+| brown mushroom on podzol | particles each click, no growth; the red one grew huge |
+| sugar cane three high | its bottom took nothing; its top grew two more |
+| bamboo sixteen high | nothing |
+
+Sapling (`blocks/bonemeal/more.rs`, `bonemeal.rs`): cocoa, rooted dirt and the nether vines as above
+(a vine grows Java's geometric count from its tip, each cell an age one more, to 25); moss Java's
+`moss_patch_bonemeal` on the shard (radius 1 or 2, corners kept three in four, plants six in ten);
+cane takes it on its top alone and grows two; full bamboo takes none. Test
+`bonemeal::cocoa_rooted_dirt_cane_tops_and_nether_vines_take_it_as_on_bds`. A `/setblock` vine or kelp
+of age 0 came up with an age BDS drew (20, 18, 24), which sapling keeps at 0.
+
 ## Left
 
-- Kelp, sea grass, vines, mushrooms, cocoa, moss, rooted dirt and the other plants that take it.
-- A click on sugar cane or bamboo that is fully grown.
+- Sea grass and kelp: the drill bot refused both clicks in water (`NotVisible`, bds-t3water.txt, twice).
