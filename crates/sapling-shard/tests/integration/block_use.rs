@@ -60,6 +60,27 @@ fn a_pot_takes_a_plant_and_gives_it_back_to_an_empty_hand() {
 }
 
 #[test]
+fn a_potted_plant_keeps_its_first_state_as_on_bds() {
+    let byte = |value| Value::Byte(value);
+    let text = |value: &str| Value::String(value.into());
+    // research/captures/bds-potsapling.txt, the world's pots read with block_entity_dump.
+    let cases = [
+        ("minecraft:oak_sapling", vec![("age_bit", byte(0))]),
+        ("minecraft:mangrove_propagule", vec![("hanging", byte(0)), ("propagule_stage", Value::Int(0))]),
+        ("minecraft:bamboo", vec![("age_bit", byte(0)), ("bamboo_leaf_size", text("no_leaves")), ("bamboo_stalk_thickness", text("thin"))]),
+        ("minecraft:cactus", vec![("age", Value::Int(0))]),
+    ];
+    for (name, states) in cases {
+        let mut h = at("flower_pot", Item::new(name, 1));
+        h.receive(1, &click(AT, 1, None));
+        let shown = all::<BlockEntityData>(h.tick_all().to(2));
+        let kept = shown.first().and_then(|entity| entity.nbt.decode().unwrap().value.get("PlantBlock")?.get("states").cloned());
+        let states = Value::Compound(states.into_iter().map(|(key, value)| (key.into(), value)).collect());
+        assert_eq!(kept, Some(states), "{name}");
+    }
+}
+
+#[test]
 fn a_bottle_put_into_a_brewing_stand_shows_on_it() {
     let mut h = at("brewing_stand", Item::new("minecraft:potion", 1));
     h.receive(1, &click(AT, 1, None));
