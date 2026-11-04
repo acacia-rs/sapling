@@ -39,10 +39,29 @@ fn coral_out_of_water_dies_and_coral_in_water_lives() {
     (0..10).for_each(|_| _ = h.tick(1));
     let block = names(&mut h, vec![[4, 70, 0]]);
     assert!(block[0].starts_with("minecraft:dead_tube_coral_block"), "{block:?}");
-    (0..60).for_each(|_| _ = h.tick(1));
+    (0..160).for_each(|_| _ = h.tick(1));
     let late = names(&mut h, vec![[4, 70, 0], [6, 71, 0], [8, 71, 0]]);
     assert!(late[1].starts_with("minecraft:brain_coral_block"), "water beside: {late:?}");
     assert!(late[2].starts_with("minecraft:dead_fire_coral_fan"), "{late:?}");
+}
+
+/// research/captures/bds-e3coralmany.txt: filled coral plants died 5 to 6 ticks on, a set one alone
+/// 58 to 141 (`CoralPlantBlock::neighborChanged` waits 5).
+#[test]
+fn a_dry_coral_plant_dies_five_ticks_after_its_neighbour_changes() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        set(ctx, [4, 70, 0], Block::new("stone"));
+        set(ctx, [4, 71, 0], Block::new("tube_coral"));
+        set(ctx, [5, 71, 0], Block::new("stone"));
+    });
+    (0..4).for_each(|_| _ = h.tick(1));
+    let early = names(&mut h, vec![[4, 71, 0]]);
+    assert!(early[0].starts_with("minecraft:tube_coral["), "{early:?}");
+    (0..2).for_each(|_| _ = h.tick(1));
+    let dead = names(&mut h, vec![[4, 71, 0]]);
+    assert!(dead[0].starts_with("minecraft:dead_tube_coral["), "{dead:?}");
 }
 
 #[test]

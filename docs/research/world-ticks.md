@@ -27,10 +27,20 @@ cane, sweet berries, snow layer, vine (and the script registry). Others of note:
 
 ## Coral (`blocks/coral.rs`)
 
-Live coral of the five kinds (block, plant, fan, wall fan) with no water in its cell or the six beside it
-(water, flowing water or a bubble column, in either layer) queues itself `60 + nextInt(40)` ticks on and
-turns into `dead_<name>` with its properties if still dry then (Java `CoralBlock`,
-`BaseCoralPlantTypeBlock`). Queued on any write in or beside it; the wait is kept with the column.
+Live coral of the five kinds (block, plant, fan, wall fan) turns into `dead_<name>` with its properties
+at a queued tick if then dry: no water in its cell or the six beside it (water, flowing water or a
+bubble column, in either layer). BDS's queue keeps every tick asked for (`add` 1415f50f0); the first
+decides. Decompiled 2026-11-04 (bdsre, pseudo-C not kept):
+
+| Coral | Written itself | A neighbour written | At its tick, wet |
+| --- | --- | --- | --- |
+| block (`CoralBlock` 14713b7c0, 14713bd50) | 45 if dry | `40 + nextInt(160)` | nothing |
+| plant (`CoralPlantBlock` 14713e660, 14713ebb0, 14713e950) | `40 + nextInt(160)` if its own cell has no water | 5 | waits `40 + nextInt(160)` again |
+| fan, wall fan (14713c770, tick 14713c9c0) | not decompiled; sapling keeps the long wait | `40 + nextInt(160)` | nothing |
+
+Drilled (bds-e3coralmany.txt): four plants set alone died after 87, 141, 58 and 89 ticks; forty filled
+in a block died 5 to 6 ticks on, nudged by their neighbours' writes. A fan or plant losing its ground
+(the tick's `canSurvive`) is left to sapling's support rules.
 
 ## Nether vines (`blocks/growth/kelp.rs`)
 
@@ -127,6 +137,8 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
 
 ## Not drilled
 
-- Coral plants' and fans' wait (Java's 60 to 99 kept).
 - The sponge's queued tick's delay.
+- A dry coral fan placed by hand is dead at once on BDS, `coral_fan_direction=1` from four diagonal
+  clicks (bds-e3coral.txt); sapling places it live with 0, its placement rule (fan slots 144/257,
+  14713d2e0, 14713d500) not read. BDS also plays `place` with the dead block's id when coral dies.
 - Burning arrows lighting TNT; whether BDS also asks `mobGriefing` for a mob's shot.
