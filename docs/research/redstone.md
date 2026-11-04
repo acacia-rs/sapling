@@ -300,6 +300,11 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
     2 ticks, 16 flips and out, as C10. The lamp lit in the first evaluation (the torch as it was put) and stayed
     lit through the flips, going out 8 ticks after the torch went out for good. Sapling's lit an evaluation later
     (it reads the torch after its flip, where its dust reads it before) and went out 4 ticks after. Not fixed.
+  - Re-drilled 2026-11-04 (`e3lamp`, bds-e3lamp.txt against sapling-e3lamp.txt, a lamp over the torch and one
+    under the dust): BDS lit both in the batch of the torch's first flip, sapling a batch later; both went out
+    8 ticks after the torch's last flip on BDS (6 after the dust's last 0), 4 on sapling. Still not fixed:
+    sapling's lamps take a torch's flipped output by the repeaters' second search (redstone.rs
+    `evaluate_circuit`), which repeaters need.
 
 ## Repeaters (2026-10-09, `bds_command_probe repeater-facing` and `repeaters`, research/captures/bds-redstone-repeaters.txt)
 
