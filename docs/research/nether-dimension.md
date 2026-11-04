@@ -127,6 +127,9 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
 
 ## Left
 
+- `execute in <dimension>` into a dimension nobody is in: sapling's world there reads and ticks every
+  column (headless shards run without players, ticking.rs `Region::ticks`), so `setblock` runs and a
+  structure loads at once where BDS answered `outOfWorld` and `load.queued` (sapling-t1dexec.txt).
 - Spectators in portals (the End: end-dimension.md), and BDS's
   per-tick UpdateSubchunkBlocks batching of other block changes.
 - Section order where it is not last-touched-first (-collide.txt x 1935): what puts the second section
