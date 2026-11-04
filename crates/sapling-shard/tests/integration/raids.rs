@@ -125,6 +125,26 @@ fn a_wave_comes_32_to_48_out_from_the_village_s_player_away_from_the_middle() {
     }
 }
 
+/// BDS's first wave stood on corners a few cells apart, (46, 56), (40, 57), (42, 58), (42, 56)
+/// (bds-raidlost.txt): each raider's own draw about the wave's spot.
+#[test]
+fn a_wave_s_raiders_stand_apart_on_cell_corners() {
+    let mut h = village();
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 0, true)));
+    ticks(&mut h, 602);
+    let mut sent = Vec::new();
+    assert!((0..400).any(|_| {
+        sent.extend(ticks(&mut h, 1));
+        !raiders(&mut h).is_empty()
+    }), "the first wave");
+    let spots: Vec<[f32; 3]> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:pillager").map(|added| [added.position.x, added.position.y, added.position.z]).collect();
+    assert_eq!(spots.len(), 4);
+    assert!(spots.iter().all(|spot| spot[0].fract() == 0.0 && spot[2].fract() == 0.0 && spot[1] == 65.0), "{spots:?}");
+    assert!(spots.iter().any(|spot| spot != &spots[0]), "not one spot: {spots:?}");
+    let spread = |axis: usize| spots.iter().map(|spot| spot[axis]).fold(f32::MIN, f32::max) - spots.iter().map(|spot| spot[axis]).fold(f32::MAX, f32::min);
+    assert!(spread(0) <= 8.0 && spread(2) <= 8.0, "{spots:?}");
+}
+
 #[test]
 fn raiders_make_for_the_village_kill_its_villager_and_celebrate_its_fall() {
     let mut h = village();

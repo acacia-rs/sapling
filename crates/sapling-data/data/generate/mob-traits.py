@@ -90,7 +90,7 @@ HUNTS = {
     "minecraft:piglin":"attack=9 speed=0.35 sees=16",
     "minecraft:piglin_brute": "attack=10 speed=0.35 sees=16",
     # `reselect_targets`: held nearer the actor it left a villager for it (bds-raidaim.txt).
-    "minecraft:pillager": "attack=0 speed=0.35 sees=16 shoots=46 closes reselects",
+    "minecraft:pillager": "attack=0 speed=0.35 sees=16 shoots=46 closes reselects fires=8",
     "minecraft:polar_bear": "attack=6 speed=0.25 sees=16 provoked every=39",
     "minecraft:ravager": "attack=12 speed=0.4 sees=16 every=31",
     "minecraft:shulker": "attack=0 speed=0 sees=15 shoots=41 aims=37 shot=shulker_bullet",

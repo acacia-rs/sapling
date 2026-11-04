@@ -30,6 +30,10 @@ pub(super) fn shoot(world: &mut World, entity: Entity, layer: Entity, kind: &str
             arrows::loose(world, layer, entity, kind, body, feet, hunts.gives, shot);
         }
     };
+    // Further off its crossbow stays loaded and goes once the prey comes near (bds-pillrange.txt).
+    if hunts.fires.is_some_and(|fires| super::hunting::distance(feet, body.at) > fires) && ready != 0 && now >= ready {
+        return Some(());
+    }
     let volley = world.get::<Hunter>(entity)?.volley;
     if let Some((left, _)) = volley.filter(|(_, due)| now >= *due) {
         fire(world);

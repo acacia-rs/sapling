@@ -21,7 +21,7 @@ const CORNERWISE: u32 = 14;
 
 type Cell = [i32; 3];
 
-fn holds(level: &Level, [x, y, z]: Cell) -> bool {
+pub(super) fn holds(level: &Level, [x, y, z]: Cell) -> bool {
     level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| !state.boxes.is_empty())
 }
 

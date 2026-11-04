@@ -78,7 +78,7 @@ pub(super) fn sound(name: &str, id: u64, kind: &str, body: &Body, up: f32) -> by
     sapling_net::encode(&LevelSoundEvent { sound_id: name.into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None })
 }
 
-fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
+pub(super) fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
     (0..3).map(|axis| (a[axis] - b[axis]).powi(2)).sum::<f32>().sqrt()
 }
 
