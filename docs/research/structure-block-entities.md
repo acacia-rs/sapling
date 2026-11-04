@@ -71,7 +71,7 @@ drawn) and `PotionType` Short -1.
 spawners whose block itself differs in the oracle already: 3 BDS has where ours is air or web, 1 the other way),
 every trial spawner's config, every vault's table and key, and every table match. Every seed matches
 (`SEEDS=loot` prints the rest) but 3 of 16 village chests and 1 of 7 desert pyramid suspicious sands;
-the desert well is not ported (no blocks, no `desert_well_brushable_block.json`). Before the draws
+the desert well's two match too since its port (worldgen-bds-features.md, "Desert well"). Before the draws
 above were ported, 447 seeds differed. Blocks are unchanged (`tools/replay-all.sh`, nether and end
 replays): the new draws are of generators nothing else reads after them.
 

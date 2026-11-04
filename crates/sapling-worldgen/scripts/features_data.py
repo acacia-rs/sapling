@@ -84,6 +84,7 @@ HARDCODED = {
     'minecraft:_weeping_vines_cluster_feature': _LEGACY.format('WeepingVines'),
     'minecraft:_twisting_vines_cluster_feature': _LEGACY.format('TwistingVines'),
     'minecraft:nether_fossil_feature': _LEGACY.format('NetherFossil'),
+    'minecraft:desert_well_feature': _LEGACY.format('DesertWell'),
 }
 EARLY_OUT = {'none': 'EarlyOut::None', 'first_failure': 'EarlyOut::FirstFailure', 'first_success': 'EarlyOut::FirstSuccess'}
 SEARCH_LOOPS = {'-x': ('x-', 'y+', 'z-'), '+x': ('x+', 'y+', 'z+'), '-y': ('y-', 'z+', 'x-'), '+y': ('y+', 'z+', 'x+'),

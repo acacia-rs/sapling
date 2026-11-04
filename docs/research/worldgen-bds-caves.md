@@ -315,7 +315,6 @@ order again.
 
 ## Left
 - Sulfur springs (`random_sulfur_spring_with_tuff_feature`: structure templates) and the spring trail.
-- Fossils (`fossil_feature`, desert/swamp 1 in 64 chunks) and the desert well: structure templates.
 - Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
   states of either (worldgen-bds-features.md, "Feature residue").
 - Dripstone and lush residue: no port difference is known; what is left follows the lichen's thread-local cell

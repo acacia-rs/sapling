@@ -11,6 +11,7 @@ mod cave;
 mod cave_spec;
 mod data;
 mod decorate;
+mod desert_well;
 mod disk;
 mod element;
 pub mod end;

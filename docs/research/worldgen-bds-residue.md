@@ -500,8 +500,7 @@ What was looked at and is not a port difference:
   thread-local feature put elsewhere.
 - Vein spreads at a hashed direction: worse (worldgen-bds-caves.md, "Sculk").
 
-Left, deterministic and unported: the desert fossil (60 bone blocks at -6088,-51,-3515; `fossil_feature`
-places structure templates), 117 snow layers over short grass beside the snowy-plains igloo (snow keeps the
+Left, deterministic and unported: 117 snow layers over short grass beside the snowy-plains igloo (snow keeps the
 plant in the second layer), grindstone, skull, shelf and end rod support by state.
 
 ## Tools added
