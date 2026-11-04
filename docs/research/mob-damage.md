@@ -247,7 +247,7 @@ Sapling's run: sapling-burn2.txt.
   or more (0x146629910 checks `+0xf0`), and those tips lie at the edge of what the bots had loaded
   (9,0 at 8 had unloaded): left as loading, not the region. `/fill` agrees with the list exactly
   (below). Fixed: `ticking::in_tick_region`, used by mobs (creatures/ticked.rs), spawning, snowfall
-  and hives (`near_players`, before a square); tests `the_tick_region_is_bds_offset_list`, tick_circle.rs
+  and hives (`ticked_columns` since 2026-11-04, block-entities.md); tests `the_tick_region_is_bds_offset_list`, tick_circle.rs
   (5,3 at 6 now unticked).
   Mobs 9 and 10 chunks off at 4, 6 and 8 were not found (`noTargetMatch`) when moved back: the level
   had unloaded them. Fixed: `mobs::update` shows a fixed 4 (`SHOWN_WITHIN`), and
