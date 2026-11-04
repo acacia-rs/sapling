@@ -61,6 +61,7 @@ refused (ran this tick, blocks off) ends the chain.
 - A repeating block made always active by its editor first ran 8 ticks after the edit into a 10-tick delay,
   then every 10; sapling starts an edited block two ticks ahead (`command_blocks/run.rs` `start_edited`).
 - A command block minecart on a powered activator rail ran its line every tick under `[!§r]`; its command is
-  set by CommandBlockUpdate's minecart form (`vehicles/command_cart.rs`). Its line is not saved and its
-  output not tracked (TODO there).
+  set by CommandBlockUpdate's minecart form (`vehicles/command_cart.rs`). Its saved actor keeps the line
+  as BDS's (bds-e3cart-actor.txt): `Command`, `LastExecution` (the tick), `LastOutput`,
+  `LastOutputParams`, `SuccessCount`, `TrackOutput` 1, `Version` 52 (sapling-leveldb `actor_command.rs`).
 - `seed` and `version` from a block are syntax errors, as on BDS, which has neither command.

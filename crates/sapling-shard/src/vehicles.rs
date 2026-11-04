@@ -108,6 +108,7 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], yaw: f32,
     };
     entities::keep(world, entity, layer, unique_id, compound);
     cargo::stow(world, entity, kind);
+    command_cart::recall(world, entity, kind);
     if is_boat(kind) {
         boats::fit(world, entity, wire, yaw);
     } else {

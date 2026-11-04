@@ -174,10 +174,9 @@ fn perform(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     fields.keep(world, layer, pos);
     let out = run_line(world, layer, pos.map(|c| c as f32 + 0.5), &line, &name);
     let Some(mut fields) = super::read(world, layer, pos) else { return true };
-    let count = if out.messages().is_empty() { 1 } else { out.success_count() };
-    fields.put("SuccessCount", Value::Int(i32::try_from(count).unwrap_or(i32::MAX)));
+    let (count, text, parameters) = tally(&out);
+    fields.put("SuccessCount", Value::Int(count));
     if fields.flag("TrackOutput") {
-        let (text, parameters) = out.messages().last().map_or((String::new(), Vec::new()), |last| (last.text.clone(), last.parameters.clone()));
         fields.set_output(&text, &parameters);
     }
     fields.keep(world, layer, pos);
@@ -190,15 +189,24 @@ fn perform(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
 
 /// A command block minecart's run of `line` from `at`, under `!§r` as BDS said it
 /// (research/captures/bds-t3cmd.txt), echoed as a block's is; nothing while command blocks are off.
-pub(crate) fn run_for_cart(world: &mut World, layer: Entity, at: [f32; 3], line: &str) {
+/// What it ran counts as a block's run does, with its last line; `None` where nothing ran.
+pub(crate) fn run_for_cart(world: &mut World, layer: Entity, at: [f32; 3], line: &str) -> Option<(i32, String, Vec<String>)> {
     const NAME: &str = "!§r";
     if !rules::on(world, layer, ENABLED) || line.trim().is_empty() {
-        return;
+        return None;
     }
     let out = run_line(world, layer, at, line, NAME);
     if rules::on(world, layer, OUTPUT) {
         crate::commands::echo_to_operators(world, None, NAME, &out);
     }
+    Some(tally(&out))
+}
+
+/// A run's `SuccessCount` (1 for a command that answered nothing) and its last line.
+fn tally(out: &Output) -> (i32, String, Vec<String>) {
+    let count = if out.messages().is_empty() { 1 } else { out.success_count() };
+    let (text, parameters) = out.messages().last().map_or((String::new(), Vec::new()), |last| (last.text.clone(), last.parameters.clone()));
+    (i32::try_from(count).unwrap_or(i32::MAX), text, parameters)
 }
 
 /// Runs `line` for the block or cart called `name` at `at`, as the console under `/execute`

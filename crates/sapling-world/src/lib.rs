@@ -35,6 +35,7 @@ pub use players::PlayerLoad;
 pub use sapling_leveldb::{Raising, actor_groups, raised_actor, raising, regrouped_actor};
 pub use sapling_leveldb::{actor_attributes, actor_pose, attributed_actor, geared_actor, handed_actor};
 pub use sapling_leveldb::{actor_home, homed_actor};
+pub use sapling_leveldb::{CartCommand, actor_command, commanded_actor};
 pub use sapling_leveldb::{WitherRecord, actor_effects, actor_fuse, effected_actor, fused_actor, wither_record, withered_actor};
 pub use sapling_leveldb::{Occupant, hive_occupants, new_hive, occupied_hive};
 pub use sapling_leveldb::{
