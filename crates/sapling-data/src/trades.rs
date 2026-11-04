@@ -57,7 +57,8 @@ struct Item {
 /// turns into the item's data).
 #[derive(Debug, Clone, PartialEq)]
 enum Function {
-    EnchantWithLevels([u8; 2]),
+    /// Its levels' range, and whether treasures may be drawn.
+    EnchantWithLevels([u8; 2], bool),
     /// The price its book asks: a base, a random part, and both again for each level.
     EnchantBook { base: i32, random: i32, per_level: i32, per_level_random: i32 },
     RandomAux([i16; 2]),
@@ -93,7 +94,7 @@ fn pair(value: &Value) -> [i64; 2] {
 
 fn function(value: &Value) -> Option<Function> {
     Some(match value["function"].as_str()? {
-        "enchant_with_levels" => Function::EnchantWithLevels(pair(&value["levels"]).map(|level| level.clamp(0, 255) as u8)),
+        "enchant_with_levels" => Function::EnchantWithLevels(pair(&value["levels"]).map(|level| level.clamp(0, 255) as u8), value["treasure"].as_bool().unwrap_or(false)),
         "enchant_book_for_trading" => Function::EnchantBook {
             base: int(&value["base_cost"]) as i32,
             random: int(&value["base_random_cost"]) as i32,

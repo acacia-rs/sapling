@@ -73,12 +73,12 @@ fn power(cost: u8, enchantability: u8, draws: &mut dyn Draws) -> i32 {
     ((spread * level as f32 + 0.5) as i32).max(1)
 }
 
-/// Every enchantment the table can give an item of `slots` at `power`, at its highest level
-/// whose least power that reaches.
-fn reachable(slots: u32, power: i32) -> Vec<(i16, u8)> {
+/// Every enchantment that can be drawn for an item of `slots` at `power`, at its highest level
+/// whose least power that reaches: none of [`UNFOUND`], and treasures only when `treasure`.
+fn reachable(slots: u32, power: i32, treasure: bool) -> Vec<(i16, u8)> {
     let level = |kind: &kinds::Kind| (1..=kind.max).rev().find(|level| kind.min_power(*level) <= power);
-    let fits = |kind: &&kinds::Kind| !kind.treasure && kind.goes_on(slots);
-    KINDS.iter().enumerate().filter(|(_, kind)| fits(kind)).filter_map(|(id, kind)| Some((id as i16, level(kind)?))).collect()
+    let fits = |id: usize, kind: &kinds::Kind| (treasure || !kind.treasure) && !UNFOUND.contains(&(id as i16)) && kind.goes_on(slots);
+    KINDS.iter().enumerate().filter(|(id, kind)| fits(*id, kind)).filter_map(|(id, kind)| Some((id as i16, level(kind)?))).collect()
 }
 
 /// Draws one of `pool` out by weight, and keeps it if it goes with what was chosen.
@@ -97,10 +97,11 @@ fn take(pool: &mut Vec<(i16, u8)>, chosen: &mut Vec<(i16, u8)>, draws: &mut dyn 
     }
 }
 
-/// The enchantments an offer of `cost` gives an item of `slots` and `enchantability`.
-fn chosen(slots: u32, enchantability: u8, cost: u8, draws: &mut dyn Draws) -> Vec<(i16, u8)> {
+/// The enchantments an offer of `cost` gives an item of `slots` and `enchantability`
+/// (`EnchantUtils::selectEnchantments`; the table allows no treasure).
+fn chosen(slots: u32, enchantability: u8, cost: u8, treasure: bool, draws: &mut dyn Draws) -> Vec<(i16, u8)> {
     let mut power = power(cost, enchantability, draws);
-    let mut pool = reachable(slots, power);
+    let mut pool = reachable(slots, power, treasure);
     let mut chosen = Vec::new();
     if pool.is_empty() {
         return chosen;
@@ -127,7 +128,7 @@ pub fn offers(shelves: u32, item: &Stack<'_>, draws: &mut dyn Draws) -> Vec<Offe
     let Some(gear) = gear(item.name).filter(|gear| gear.enchantability > 0 && all(item.tag).is_empty()) else { return Vec::new() };
     let costs = costs(shelves, draws);
     let offer = |cost: u8, draws: &mut dyn Draws| {
-        let enchants = chosen(gear.slots, gear.enchantability, cost, draws);
+        let enchants = chosen(gear.slots, gear.enchantability, cost, false, draws);
         Offer { cost, slots: gear.slots, enchants, name: name(draws) }
     };
     costs.into_iter().map(|cost| offer(cost, draws)).collect()
@@ -139,21 +140,23 @@ pub fn enchanted(item: &Stack<'_>, offer: &Offer) -> Option<Made> {
     Some(Made { name: name.to_owned(), tag: with_all(item.tag.cloned(), &offer.enchants) }).filter(|_| !offer.enchants.is_empty())
 }
 
-/// `item` enchanted as an offer of `cost` would enchant it: a trade's `enchant_with_levels`.
-// TODO: BDS's `enchant_with_levels` was not decompiled; this is the table's draw at that cost.
-pub fn with_levels(item: &Stack<'_>, cost: u8, draws: &mut dyn Draws) -> Option<Made> {
+/// `item` enchanted by a loot or trade `enchant_with_levels` of `cost` (BDS 14752bf20 calls
+/// `EnchantUtils::randomlyEnchant` 141b62a20): the table's draw, treasures in it when `treasure`.
+// BDS draws the enchantments from a thread's own random, not the loot's; sapling's shard dice are its own anyway.
+pub fn with_levels(item: &Stack<'_>, cost: u8, treasure: bool, draws: &mut dyn Draws) -> Option<Made> {
     let gear = gear(item.name).filter(|gear| gear.enchantability > 0)?;
-    let enchants = chosen(gear.slots, gear.enchantability, cost, draws);
+    let enchants = chosen(gear.slots, gear.enchantability, cost, treasure, draws);
     enchanted(item, &Offer { cost, slots: gear.slots, enchants, name: String::new() })
 }
 
-/// Enchantments a librarian never sells beside the curses: Soul Speed, Swift Sneak, Wind Burst.
-const UNTRADED: [i16; 3] = [36, 37, 38];
+/// Enchantments never drawn, nor sold by a librarian: Soul Speed, Swift Sneak, Wind Burst (their
+/// vtables' slot 0x80 answers false, 141b5be40).
+const UNFOUND: [i16; 3] = [36, 37, 38];
 
 /// A librarian's book: an enchantment other than a curse at any of its levels, and whether it is a
 /// treasure, which doubles its price.
 pub fn for_trade(draws: &mut dyn Draws) -> (i16, u8, bool) {
-    let sold: Vec<(i16, &kinds::Kind)> = KINDS.iter().enumerate().map(|(id, kind)| (id as i16, kind)).filter(|(id, kind)| !kind.curse && !UNTRADED.contains(id)).collect();
+    let sold: Vec<(i16, &kinds::Kind)> = KINDS.iter().enumerate().map(|(id, kind)| (id as i16, kind)).filter(|(id, kind)| !kind.curse && !UNFOUND.contains(id)).collect();
     let (id, kind) = sold[draws.int(sold.len() as i32) as usize];
     (id, draws.int(i32::from(kind.max)) as u8 + 1, kind.treasure)
 }

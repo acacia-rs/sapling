@@ -68,6 +68,17 @@ fn an_items_data_value_is_its_wear_as_bds_set_it_by_replaceitem() {
     h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Armor(0), Some(&Item { damage: 164, ..Item::new("minecraft:iron_helmet", 1) }))));
     assert_eq!(hit(&mut h, 4.0, DamageCause::Contact), (vec![vec![165]], 0));
     assert_eq!(common::asking::ask(&mut h, |ctx| ctx.item(ALEX, Slot::Armor(0)).map(|item| item.damage)), Some(165));
+    // research/captures/bds-t2ewear.txt: at its last use it stayed; the next hit took it, its slot sent
+    // empty, no PlayerArmorDamage, and `break` heard by the viewer too.
+    h.enter(2, "Steve");
+    (0..12).for_each(|_| drop(h.tick_all()));
+    h.remote.run(move |ctx| assert!(ctx.hurt_player(ALEX, 4.0, DamageCause::Contact)));
+    let sent = h.tick_all();
+    let sounds = |conn| all::<acacia_proto::packets::LevelSoundEvent>(sent.to(conn)).iter().filter(|sound| sound.sound_id == "break").count();
+    let slots = all::<InventorySlot>(sent.to(1));
+    assert!(all::<PlayerArmorDamage>(sent.to(1)).is_empty() && slots.len() == 1 && slots[0].item.network_id == 0, "{slots:?}");
+    assert_eq!((sounds(1), sounds(2)), (1, 1));
+    assert_eq!(common::asking::ask(&mut h, |ctx| ctx.item(ALEX, Slot::Armor(0)).map(|item| item.damage)), None);
 }
 
 #[test]

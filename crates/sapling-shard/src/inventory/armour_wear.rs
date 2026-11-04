@@ -1,7 +1,6 @@
 //! Armour wears by the hits it stops, as BDS's did (docs/research/player-damage.md, "Armour
 //! wear"): each piece by a quarter of the hit, the helmet by far more of what falls on it; a
 //! piece whose Thorns hurt back wears more besides.
-// TODO: a piece that breaks goes without a sound, and nobody else sees it go.
 
 use acacia_proto::packets::{InventorySlot, LevelSoundEvent, PlayerArmorDamage};
 use acacia_proto::types::{ArmorDamageEntry, ArmorDamageEntryArmorSlot, Vec3f, WindowIDVarint};
@@ -19,6 +18,8 @@ const SHARE: f32 = 4.0;
 const ON_HEAD: f32 = 4.0;
 const ON_HEAD_MORE: f32 = 2.0;
 const CHEST: usize = 1;
+const FEET: usize = 3;
+const SOLES_WEAR: f32 = 0.04;
 const ELYTRA: &str = "minecraft:elytra";
 /// An elytra's damage once it is worn to its last use: it lasts 432.
 const ELYTRA_WORN: i32 = 431;
@@ -49,6 +50,18 @@ pub(crate) fn wear_thorny(world: &mut World, player: Entity, pricked: [Option<bo
     wear(world, player, uses, None);
 }
 
+/// A tick of Soul Speed on soul sand wears the boots by one, one time in 25 (BDS's
+/// `SoulSpeedAttributeSystem` 1429ec430: a draw below 0.04; bds-t2esoles.txt), unless Unbreaking spares them.
+pub(crate) fn wear_soles(world: &mut World, player: Entity) {
+    let (draw, roll) = {
+        let mut dice = world.get_resource_or_insert_with(Dice::default);
+        (dice.fraction(), dice.roll(100))
+    };
+    if draw < SOLES_WEAR {
+        wear(world, player, |piece, held| i32::from(piece == FEET && roll < wear_chance(held, true)), None);
+    }
+}
+
 /// Wears each piece by `uses`, the helmet by `more` on top, and tells the client.
 fn wear(world: &mut World, player: Entity, uses: impl Fn(usize, &Held) -> i32, more: Option<i32>) {
     let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
@@ -56,35 +69,58 @@ fn wear(world: &mut World, player: Entity, uses: impl Fn(usize, &Held) -> i32, m
     if inventory.armor.iter().all(Option::is_none) {
         return;
     }
-    let mut broke = false;
+    let (mut broken, mut wore) = (Vec::new(), [false; 4]);
     for piece in 0..inventory.armor.len() {
         let Some(held) = inventory.armor[piece].as_mut() else { continue };
         let Some(lasts) = sapling_data::armour_lasts(&held.stack.name) else { continue };
         let uses = uses(piece, held) + more.filter(|_| piece == 0).unwrap_or(0);
         let worn = damage(&held.stack.tag) + uses;
         if worn > i32::from(lasts) {
-            (inventory.armor[piece], broke) = (None, true);
+            inventory.armor[piece] = None;
+            broken.push(piece);
         } else if uses > 0 {
             set_damage(&mut held.stack.tag, worn);
+            wore[piece] = true;
         }
+    }
+    if broken.is_empty() && !wore.contains(&true) {
+        return;
     }
     inventory.unsaved = true;
     if !inventory.sent {
         return;
     }
+    if !broken.is_empty() {
+        return broke(world, player, &broken);
+    }
     // The slots go as 0, 2, 4 and 6, as BDS sent them, which the packet's names do not fit;
-    // what fell on the helmet is not in it.
+    // what fell on the helmet is not in it. Only the pieces that wore are named (bds-t2esoles.txt).
     let unsaid = |piece: usize| more.filter(|_| piece == 0).unwrap_or(0);
-    let lost = |piece: usize| inventory.armor[piece].as_ref().map(|held| ArmorDamageEntry { armor_slot: ArmorDamageEntryArmorSlot::from_raw(piece as i64 * 2), damage: (damage(&held.stack.tag) - unsaid(piece)) as i16 });
+    let lost = |piece: usize| inventory.armor[piece].as_ref().filter(|_| wore[piece]).map(|held| ArmorDamageEntry { armor_slot: ArmorDamageEntryArmorSlot::from_raw(piece as i64 * 2), damage: (damage(&held.stack.tag) - unsaid(piece)) as i16 });
     out.push(&PlayerArmorDamage { entries: (0..inventory.armor.len()).filter_map(lost).collect() });
-    if broke {
-        inventory.send_all(&mut out, false);
-    } else if more.is_some() && inventory.armor[0].is_some() {
+    if more.is_some() && inventory.armor[0].is_some() {
         let id = inventory.new_id();
         inventory.armor[0].as_mut().expect("worn").id = id;
         out.push(&InventorySlot { window_id: WindowIDVarint::Armor, slot: 0, container: None, storage_item: None, item: wire(&inventory.armor[0], true) });
         let helmet = inventory.armor[0].as_ref().map(|held| held.stack.name.clone());
         helmet.into_iter().for_each(|helmet| equip_sound(world, player, &helmet));
+    }
+}
+
+/// Pieces worn past their last use, as BDS told it (research/captures/bds-t2ewear.txt): no
+/// PlayerArmorDamage, each slot sent empty, and `break` heard at the eyes once a piece, by all.
+// BDS's sounds came a tick after the slots; here they come with them.
+fn broke(world: &mut World, player: Entity, pieces: &[usize]) {
+    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+        for &piece in pieces {
+            out.push(&InventorySlot { window_id: WindowIDVarint::Armor, slot: piece as u32, container: None, storage_item: None, item: wire(&None, true) });
+        }
+    }
+    let Some([x, y, z]) = world.get::<Position>(player).map(|position| position.feet) else { return };
+    let position = Vec3f { x, y: y + sapling_data::EYE_HEIGHT, z };
+    let sound = LevelSoundEvent { sound_id: "break".into(), position, extra_data: -1, entity_type: String::new().into(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
+    for _ in pieces {
+        crate::vitals::tell(world, player, &sound);
     }
 }
 

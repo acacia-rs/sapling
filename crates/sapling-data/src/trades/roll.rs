@@ -91,10 +91,10 @@ fn ware(choice: &[Item], mark: i32, wanted: bool, draws: &mut dyn Draws) -> Opti
     let mut price = None;
     for function in &item.functions {
         match *function {
-            Function::EnchantWithLevels(levels) => {
+            Function::EnchantWithLevels(levels, treasure) => {
                 let cost = between(draws, levels.map(i32::from)) as u8;
                 let stack = Stack { name: &ware.name, count: ware.count, damage: ware.damage, block: None, tag: None };
-                if let Some(made) = table::with_levels(&stack, cost, draws) {
+                if let Some(made) = table::with_levels(&stack, cost, treasure, draws) {
                     (ware.name, ware.tag) = (made.name, made.tag);
                 }
             }

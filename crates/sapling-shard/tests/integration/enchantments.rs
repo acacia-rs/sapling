@@ -119,6 +119,20 @@ fn soul_speed_quickens_its_wearer_each_tick_on_soul_sand_and_lets_go_off_it() {
 }
 
 #[test]
+fn soul_speed_boots_wear_now_and_then_on_soul_sand() {
+    use acacia_proto::packets::PlayerArmorDamage;
+    // research/captures/bds-t2esoles.txt: one use at a time, the boots alone named (slot 6).
+    let mut h = alex_wearing(3, "minecraft:diamond_boots", vec![(36, 3)]);
+    h.remote.run(move |ctx| {
+        let [x, y, z] = ctx.position(PlayerId(1)).unwrap().feet;
+        assert!(ctx.set_block([x.floor() as i32, y.floor() as i32 - 1, z.floor() as i32], &Block::new("soul_sand")));
+    });
+    let told: Vec<Vec<(i64, i16)>> = (0..300).flat_map(|_| all::<PlayerArmorDamage>(h.tick_all().to(1))).map(|told| told.entries.iter().map(|entry| (entry.armor_slot.clone().to_raw(), entry.damage)).collect()).collect();
+    assert!((3..=30).contains(&told.len()), "about one tick in 25 of 300: {}", told.len());
+    assert!(told.iter().enumerate().all(|(at, entries)| entries[..] == [(6, at as i16 + 1)]), "{told:?}");
+}
+
+#[test]
 fn eyes_in_water_crack_a_block_five_times_slower_unless_a_helmet_has_aqua_affinity() {
     use acacia_proto::packets::{LevelEvent, LevelEventEvent};
     use acacia_proto::types::Action;

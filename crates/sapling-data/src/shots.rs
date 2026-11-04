@@ -31,8 +31,8 @@ pub const KNOCK: f32 = 0.4;
 pub const PEARL_FALL: f32 = 5.0;
 pub const ENDERMITE_CHANCE: f32 = 0.05;
 pub const PEARL_COOLDOWN: u64 = 20;
-/// A wind charge cannot be thrown again for this many ticks.
-// TODO: the Java game's; BDS's was not found.
+/// A wind charge cannot be thrown again for this many ticks: its `minecraft:cooldown` of 0.5 s in
+/// BDS's ItemRegistry (data/ItemRegistry.bin).
 pub const WIND_COOLDOWN: u64 = 10;
 /// An egg hatches a chick one time in 8, and four of them one time in 32 of those.
 const CHICK: f32 = 0.125;

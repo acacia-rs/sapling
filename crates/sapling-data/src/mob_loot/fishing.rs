@@ -74,7 +74,7 @@ fn item(entry: &Json, draws: &mut dyn Draws) -> Option<Caught> {
             Some("enchant_with_levels") => {
                 let levels = function["levels"].as_u64().unwrap_or(0) as u8;
                 let stack = Stack { name: &caught.name, count: caught.count, damage: caught.data, block: None, tag: caught.tag.as_ref() };
-                if let Some(made) = with_levels(&stack, levels, draws) {
+                if let Some(made) = with_levels(&stack, levels, function["treasure"].as_bool().unwrap_or(false), draws) {
                     (caught.name, caught.tag) = (made.name, made.tag);
                 }
             }
