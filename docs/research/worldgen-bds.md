@@ -239,7 +239,9 @@ nextFloat,consumeCount}`.
 2. Cavifier/Aquifer/OreVeinifier internals not decompiled constant-by-constant (only spot checks); `_prepareHeights`
    14822eb60 and 14822d4b0 are the functions to transcribe.
 3. Biome placement: when JSON `multinoise_generation_rules` override the hardcoded builder (never, for vanilla).
-4. Surface builders not ported: the legacy mesa variant 1487db280 (which worlds pick it?). NoiseGradient runs
+4. Surface builders not ported: the legacy mesa variant 1487db280, registered as id 6 by 14807cc50 (from
+   1418d8083) in place of 1487dcb80 only for a level whose base game version is below 1.18.0 or marked
+   never-compatible (the same gate as 1482f4580 and `CaveFeature::place`), so no new world uses it. NoiseGradient runs
    both as the subsurface pass and as a column's surface builder (worldgen-bds-caves.md). Capped is the
    Nether's; TheEnd finds no stone to change.
 5. Who calls slot 54; which rule places `underground_cave_carver_feature`; structure post-process a/b pairing
