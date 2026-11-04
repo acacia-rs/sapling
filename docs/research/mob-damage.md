@@ -104,7 +104,8 @@ Sapling's runs: sapling-bodies.txt, sapling-lifts.txt (after the fixes).
   in the air its fall after gravity and drag keeps 0.6 (`v' = 0.6 x 0.98 (v + 0.08)` while it was falling);
   in water it sinks as any mob. Sapling's fell as a cow; now `Physics::CHICKEN` (`flutter`), test
   `a_chicken_falls_as_slowly_as_bds_dropped_one`. One put on lava died on its 5th tick, a pig was in the
-  lava (cause 8) on its 3rd.
+  lava (cause 8) on its 3rd. Left: sapling's chicken on lava now dies on its 6th, a tick late; a body
+  under 0.802 high is judged in lava by its middle (`body/liquid.rs` `in_liquid`), which BDS seems not to.
 - Loot, a mount's chest and its saddle appear the tick after the death, at where the body is then: deaths
   by fire, lava, smothering and `/kill` (also bds-chestdie.txt, bds-harm.txt). Sapling tossed them with
   the death; now `creatures/death.rs` `Remains`.
