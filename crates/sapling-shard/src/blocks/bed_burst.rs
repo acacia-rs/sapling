@@ -8,7 +8,7 @@ use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos};
 
-use super::{doors, level, send, update_block};
+use super::{doors, level, put_settled as update_block, send};
 use crate::creatures::{Wreck, explode_burning};
 
 const OVERWORLD: i32 = 0;

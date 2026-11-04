@@ -69,9 +69,16 @@ fn set_only(block: &str, pos: BlockPos) -> Option<Value> {
     Some(entity)
 }
 
+/// Whether the block at `pos` is a frame with nothing to hang on: BDS's set one shows its break
+/// at once and is gone, its item dropped, a tick later (research/captures/bds-e3sets.txt).
+pub(super) fn is_unheld_frame(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    let Some(level) = super::level(world, layer) else { return false };
+    let id = level.block(pos[0], pos[1], pos[2]);
+    level.registry().get(id).is_some_and(|state| matches!(state.name, "minecraft:frame" | "minecraft:glow_frame")) && super::updates::lacks_support(world, layer, pos, id)
+}
+
 /// Gives a block set at `pos` without an entity the one BDS's command makes, shows it, and has
-/// it shown again on the next tick where BDS did; a bed's halves are shown again without their
-/// block.
+/// it shown again on the next tick where BDS did (shown_again.rs).
 pub(super) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &str) {
     let placing = Placing { damage: if block == "minecraft:bed" { RED } else { 0 }, tag: None, yaw: 0.0, properties: "" };
     if !is_shown(block) {
@@ -84,8 +91,13 @@ pub(super) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &s
     }
     let Some(entity) = level.world.block_entity(pos).map(|entity| super::send::block_entity_data(pos, entity)) else { return };
     super::send::to_viewers(world, layer, pos, &[entity]);
+    if is_unheld_frame(world, layer, pos) {
+        let Some(level) = super::level(world, layer) else { return };
+        let particles = super::send::destroy_particles(level.registry(), pos, level.block(pos[0], pos[1], pos[2]));
+        super::send::to_viewers(world, layer, pos, &[particles]);
+    }
     match block {
-        "minecraft:bed" => super::shown_again::entity_next_tick(world, layer, pos),
+        "minecraft:bed" => super::shown_again::bed_next_tick(world, layer, pos),
         _ if is_shown_again(block) => super::shown_again::next_tick(world, layer, pos),
         _ => {}
     }

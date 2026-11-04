@@ -115,7 +115,8 @@ fn a_sculk_sensor_hears_a_trapdoor_and_powers_by_its_distance_then_cools_down() 
     let mut h = ready(vec![([2, 65, -2], Block::new("trapdoor")), ([6, 65, -2], Block::new("sculk_sensor")), ([7, 65, -2], Block::new("redstone_wire"))]);
     h.receive(1, &click([2, 65, -2], 1, None));
     let heard = ticks(&mut h, 8);
-    assert!(all::<LevelSoundEvent>(&heard).iter().any(|sound| sound.sound_id == "power.on.sculk_sensor"));
+    let on: Vec<(f32, f32, i32)> = all::<LevelSoundEvent>(&heard).iter().filter(|sound| sound.sound_id == "power.on.sculk_sensor").map(|sound| (sound.position.x, sound.position.z, sound.extra_data)).collect();
+    assert_eq!(on, [(6.0, -2.0, -1)], "at the cell's corner, no block (bds-e3sets.txt)");
     assert!(properties(&mut h, [6, 65, -2]).contains("sculk_sensor_phase=1"));
     assert_eq!(dust(&mut h, [7, 65, -2]), 15 - 15 * 4 / 8, "four blocks off of eight");
     ticks(&mut h, 45);

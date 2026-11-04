@@ -4,6 +4,8 @@
 //! or kelp keeps a water source beside itself, which then runs; a comparator set again in its own
 //! block type gives out what it gave (redstone/kept.rs).
 
+use acacia_proto::packets::{LevelEvent, LevelEventEvent};
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Face};
 
@@ -57,7 +59,22 @@ pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block
     if put && (is_live_fan(&block.name) || block.name == "minecraft:kelp") {
         liquid::pour(world, layer, pos, liquid::Liquid::Water, true);
     }
+    if put {
+        super::daylight::left_for_the_second(world, layer, pos);
+    }
     Some(put)
+}
+
+/// Whether `pos` holds half a bed, whose other half then shows its break dust at its corner: BDS
+/// showed that before both halves, set over, in one UpdateSubchunkBlocks (research/captures/bds-e3sets.txt).
+pub(super) fn dust_bed_half(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let is_bed = send::block_at(world, layer, pos).is_some_and(|old| old.name == "minecraft:bed");
+    let Some(other) = doors::other_half(world, layer, pos).filter(|_| is_bed) else { return false };
+    let Some(hash) = level(world, layer).map(|level| level.registry().network_hash(level.block(other[0], other[1], other[2])) as i32) else { return false };
+    let [x, y, z] = other.map(|c| c as f32);
+    let dust = sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleDestroyBlockNoSound, position: Vec3f { x, y, z }, data: hash });
+    send::to_viewers(world, layer, other, &[dust]);
+    true
 }
 
 fn is_live_fan(name: &str) -> bool {

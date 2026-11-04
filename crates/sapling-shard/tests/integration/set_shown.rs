@@ -31,6 +31,7 @@ fn a_set_pot_or_bell_shows_its_entity_versioned_and_sorted() {
 fn a_set_block_shows_its_entity_as_bds_s_did_and_some_again() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block([-7, 65, 3], &Block::new("minecraft:stone"))));
     h.tick_all();
     let version = || "BlockEntityVersion".to_owned();
     let cases: [(&str, Option<Vec<&str>>, usize); 12] = [
@@ -57,4 +58,19 @@ fn a_set_block_shows_its_entity_as_bds_s_did_and_some_again() {
         let later = all::<BlockEntityData>(h.tick_all().to(1));
         assert_eq!(later.len(), again, "{block}");
     }
+}
+
+/// research/captures/bds-e3sets.txt: a frame set with nothing behind it showed its break at once
+/// and was gone a tick later, its item dropped.
+#[test]
+fn a_set_frame_with_nothing_to_hang_on_breaks_a_tick_later() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 65, 3], &Block::new("minecraft:frame"))));
+    let set = h.tick_all().to(1).to_vec();
+    assert_eq!(all::<acacia_proto::packets::LevelEvent>(&set).len(), 1, "its break shown with it");
+    let later = h.tick_all().to(1).to_vec();
+    assert_eq!(common::block_changes(&later), [([2, 65, 3], common::hash("minecraft:air"))]);
+    assert_eq!(all::<acacia_proto::packets::AddItemEntity>(&later).len(), 1, "its item");
 }
