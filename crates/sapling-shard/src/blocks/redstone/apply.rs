@@ -151,12 +151,17 @@ fn open(world: &mut World, layer: Entity, pos: BlockPos, opens: Opens, signal: u
     }
 }
 
-/// Puts out the lamps whose delay is up and that still get no signal.
+/// Puts out the lamps whose delay is up where the column ticks ([`crate::ticking::Region::runs_due`])
+/// and that still get no signal.
 pub(super) fn put_out_lamps(world: &mut World) {
     let tick = world.resource::<Tick>().0;
-    let mut circuits = world.resource_mut::<Circuits>();
-    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut circuits.lamps_off).into_iter().partition(|(when, ..)| *when <= tick);
-    circuits.lamps_off = waiting;
+    if world.resource::<Circuits>().lamps_off.is_empty() {
+        return;
+    }
+    let region = crate::ticking::Region::of(world);
+    let lamps = std::mem::take(&mut world.resource_mut::<Circuits>().lamps_off);
+    let (due, waiting): (Vec<_>, Vec<_>) = lamps.into_iter().partition(|&(when, layer, pos)| region.runs_due(world, when, tick, layer, pos));
+    world.resource_mut::<Circuits>().lamps_off = waiting;
     for (_, layer, pos) in due {
         let Some((id, Part::User(User::Lamp { lit: true }))) = at(world, layer, pos) else { continue };
         if power_at(world, layer, pos) == 0

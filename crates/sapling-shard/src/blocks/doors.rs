@@ -191,12 +191,16 @@ fn press(world: &mut World, layer: Entity, pos: BlockPos, name: &str) {
     }
 }
 
-/// Lets out the buttons whose time is up.
+/// Lets out the buttons whose time is up where the column ticks ([`crate::ticking::Region::runs_due`]).
 pub(crate) fn release_buttons(world: &mut World) {
     let tick = world.resource::<Tick>().0;
-    let Some(mut pressed) = world.get_resource_mut::<Pressed>().filter(|pressed| pressed.0.iter().any(|(until, ..)| *until <= tick)) else { return };
-    let (due, held): (Vec<_>, Vec<_>) = std::mem::take(&mut pressed.0).into_iter().partition(|(until, ..)| *until <= tick);
-    pressed.0 = held;
+    if !world.get_resource::<Pressed>().is_some_and(|pressed| pressed.0.iter().any(|(until, ..)| *until <= tick)) {
+        return;
+    }
+    let region = crate::ticking::Region::of(world);
+    let pressed = std::mem::take(&mut world.resource_mut::<Pressed>().0);
+    let (due, held): (Vec<_>, Vec<_>) = pressed.into_iter().partition(|&(until, layer, pos)| region.runs_due(world, until, tick, layer, pos));
+    world.resource_mut::<Pressed>().0 = held;
     for (_, layer, pos) in due {
         set_pressed(world, layer, pos, false);
     }

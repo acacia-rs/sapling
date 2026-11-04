@@ -6,6 +6,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
 use crate::components::Tick;
+use crate::ticking::Region;
 
 /// Jobs run in one tick at most; the rest wait for the next.
 const MAX_PER_TICK: usize = 256;
@@ -109,12 +110,16 @@ pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, delay: u64,
     }
 }
 
-/// Runs the jobs that are due, oldest first.
+/// Runs the jobs that are due whose column ticks, oldest first ([`Region::runs_due`]).
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let Some(mut queued) = world.get_resource_mut::<Queued>().filter(|queued| queued.0.iter().any(|(when, ..)| *when <= now)) else { return };
-    let (mut due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut queued.0).into_iter().partition(|(when, ..)| *when <= now);
-    queued.0 = waiting;
+    if !world.get_resource::<Queued>().is_some_and(|queued| queued.0.iter().any(|(when, ..)| *when <= now)) {
+        return;
+    }
+    let region = Region::of(world);
+    let queue = std::mem::take(&mut world.resource_mut::<Queued>().0);
+    let (mut due, waiting): (Vec<_>, Vec<_>) = queue.into_iter().partition(|&(when, layer, pos, _)| region.runs_due(world, when, now, layer, pos));
+    world.resource_mut::<Queued>().0 = waiting;
     due.sort_by_key(|(when, ..)| *when);
     if due.len() > MAX_PER_TICK {
         let later = due.split_off(MAX_PER_TICK);

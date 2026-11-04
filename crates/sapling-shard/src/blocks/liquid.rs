@@ -227,16 +227,20 @@ pub(super) fn take(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     disturb(world, layer, [x, y, z]);
 }
 
-/// Moves the liquid that is due.
+/// Moves the liquid that is due where its column ticks ([`crate::ticking::Region::runs_due`]).
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let Some(mut flows) = world.get_resource_mut::<Flows>() else { return };
-    let mut moving = Vec::new();
-    while moving.len() < MAX_PER_TICK {
-        let Some(entry) = flows.due.first_entry().filter(|entry| entry.key().0 <= now) else { break };
-        let due = entry.key().0;
-        let (layer, pos) = entry.remove();
-        flows.queued.remove(&(layer, pos, due));
+    if !world.get_resource::<Flows>().is_some_and(|flows| flows.due.first_key_value().is_some_and(|(&(due, _), _)| due <= now)) {
+        return;
+    }
+    let region = crate::ticking::Region::of(world);
+    let flows = world.resource::<Flows>();
+    let runs: Vec<(u64, u64)> = flows.due.range(..(now + 1, 0)).filter(|&(&(due, _), &(layer, pos))| region.runs_due(world, due, now, layer, pos)).map(|(key, _)| *key).take(MAX_PER_TICK).collect();
+    let mut flows = world.resource_mut::<Flows>();
+    let mut moving = Vec::with_capacity(runs.len());
+    for key in runs {
+        let Some((layer, pos)) = flows.due.remove(&key) else { continue };
+        flows.queued.remove(&(layer, pos, key.0));
         moving.push((layer, pos));
     }
     // A world with `sapling:liquidFlow` off drops its flows: its liquids stand as they are.

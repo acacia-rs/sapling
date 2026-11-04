@@ -167,15 +167,18 @@ fn falling_from(world: &mut World, layer: Entity, pos: BlockPos) -> Option<Entit
     Some(falling)
 }
 
-/// Moves the falling blocks and starts the falls that are due; the cells that changed, for their
+/// Moves the falling blocks and starts the falls that are due where the column ticks
+/// ([`crate::ticking::Region::runs_due`]); the cells that changed, for their
 /// neighbours to settle.
 /// A fall starts before the tick's moves: on BDS a new falling block is a second tick on at once.
 pub(super) fn tick(world: &mut World) -> Vec<(Entity, BlockPos)> {
     let now = world.resource::<Tick>().0;
     let mut changed = Vec::new();
-    if let Some(mut slides) = world.get_resource_mut::<Slides>() {
-        let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut slides.0).into_iter().partition(|(when, ..)| *when <= now);
-        slides.0 = waiting;
+    if world.get_resource::<Slides>().is_some_and(|slides| slides.0.iter().any(|(when, ..)| *when <= now)) {
+        let region = crate::ticking::Region::of(world);
+        let slides = std::mem::take(&mut world.resource_mut::<Slides>().0);
+        let (due, waiting): (Vec<_>, Vec<_>) = slides.into_iter().partition(|&(when, layer, pos)| region.runs_due(world, when, now, layer, pos));
+        world.resource_mut::<Slides>().0 = waiting;
         changed.extend(due.into_iter().filter_map(|(_, layer, pos)| Some((layer, slide(world, layer, pos)?))));
     }
     changed.extend(flight::fly(world));

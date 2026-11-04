@@ -190,7 +190,20 @@ now included, `ticking::ticked_columns`), and holds kelp, fire and lit ore out o
 ticks everywhere, for headless shards. Drilled on sapling after the fix (`sapling-tickrandom.txt`): every
 farmland, copper and fire answer as BDS's, in, out and kept. Two cells differ for other reasons: the wheat at 0,1, 4,0,
 4,1 and 3,2 did not grow, being under the drill world's ground at y 60 to 63 (the wheat past z ±48 grew), and the
-planks at 5,0 burnt 6 s after their fire was set, before the bots moved (fire's pace, the TODO in `blocks/fire.rs`).
+planks at 5,0 burnt 6 s after their fire was set, before the bots moved (fire's pace, since fixed: fire.md "Pace and rule").
+
+The block queue, drilled 2026-11-04 with `bds_command_probe tickqueue` (`examples/shared/seventh2_drill.rs`,
+`bds-tickqueue.txt`; `bds-tickqueue1.txt` is a first try whose commands past the diamond all answered
+`testforblock.out`). From chunk 3,0 each offset got six repeaters at delay 4 to a lamp, a lava source and sand, each held
+by a plug in one layer; one `/fill` took the plugs out and the bots went to chunk 0,0 a second later, for 5 s. At 4,0,
+4,1 and the ticking area 6,0 the lava ran and the lines went off while they were away; at 4,2, 5,0 and 5,1 both
+stopped mid-way and ran on once the bots were back (the lamps out some 0.25 s after), so the block queue and the
+circuit run only in a chunk that ticks, but up to the level's tick, so what fell due meanwhile runs at once. The sand had
+become falling blocks before the bots left; those out of range hung at y -35.9 for the 5 s and fell on on their return
+(116183), the rest landed. Sapling: `Region::runs_due` gates the queued blocks, liquids, falls, buttons, plates,
+scaffolding and lamps (`blocks/queued.rs`, `liquid.rs`, `falling.rs`, `doors.rs`, `plates.rs`, `scaffolds.rs`,
+`redstone/apply.rs`), `redstone.rs` holds a circuit's sources and writes out of range, and `falling/flight.rs` moves only
+falling blocks whose cell ticks; test `block_ticks_and_circuits_wait_out_of_the_tick_region_and_catch_up_as_on_bds`.
 `tools/bench.sh` times worldgen (sapling-world's `fill_views`), which this does
 not touch; the gate costs a tracked cell a map lookup and skips the block read for cells out of range.
 
