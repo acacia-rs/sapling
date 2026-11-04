@@ -125,4 +125,8 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
 
 - Coral plants' and fans' wait (Java's 60 to 99 kept).
 - The sponge's queued tick's delay.
-- Burning arrows lighting TNT; whether BDS also asks `mobGriefing` for a mob's shot.
+- Burning arrows lighting TNT, drilled since (bds-u1fire.txt, bds-u1blaze.txt, 2026-11-04): a player's
+  flame arrow primed TNT it struck on both servers (`SoundIgnite` at the block's middle, then the TNT);
+  a plain one did not. A blaze's fireballs set fire only under `mobGriefing`, as sapling's now do
+  (`blocks/target.rs` `shot_stopped`, test `blaze_griefing`). Sapling's arrow sticks 0.125 short of
+  the face it hit (7.875 against BDS's 8.0, its box against BDS's ray).

@@ -1,8 +1,9 @@
 //! A breeze, as BDS's fought (research/captures/bds-breeze-findings.md): it faces its prey for 16
 //! ticks and shoots a wind charge (`charges`); 4 ticks on it leaps at prey 4 to 20 off, after
 //! readying for 10, or walks out to 4 to 8 off prey nearer, then faces it again.
-// TODO: a leap lands on its prey, where BDS's landed 1 to 4 off by a rule not found; it leaps
-// over nothing in its way, its own bursts do not push it, and it does not turn as it faces.
+// TODO: a leap lands on its prey, where BDS's landed 1 to 4 off; the jump goal's landing pick
+// (14890ff00) and launch velocity (14890f450) are found, not yet read into a rule. It leaps over
+// nothing in its way, its own bursts do not push it, and it does not turn as it faces.
 
 use acacia_proto::packets::SetEntityData;
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2};

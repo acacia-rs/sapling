@@ -133,7 +133,8 @@ on the block they stand or hang on and candles no longer; test
 
 ## Left
 
-- Burning arrows light none. Lightning's fire ticks as any written fire does.
+- Burning arrows prime TNT, as on BDS, and light no other block (world-ticks.md "Not drilled").
+  Lightning's fire ticks as any written fire does.
 - Fire a world folder holds ticks only if its column kept its tick, as on BDS, where `FireBlock`
   takes no random tick and nothing else starts it (vtable 14a8e5550). Sapling saves the queue's
   wait in `PendingTicks` as game ticks at the rule of the save.

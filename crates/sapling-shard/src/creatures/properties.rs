@@ -133,7 +133,7 @@ pub(super) fn ambient_sound(name: &str) -> MetadataDictionaryItem {
 }
 
 /// The mob `baby` of `kind` was bred by `parents`: it takes one's climate, either alike.
-// TODO: which parent BDS's `property_inheritance` takes from was not drilled.
+// TODO: which parent BDS's `property_inheritance` takes from is not settled (husbandry.md "Not drilled").
 pub(super) fn inherit(world: &mut World, baby: Entity, parents: [Entity; 2], kind: &str) {
     let Some(index) = sapling_data::entity_property(kind, CLIMATE).map(|property| property.index) else { return };
     let parent = parents[dice(world).0.roll(2) as usize];

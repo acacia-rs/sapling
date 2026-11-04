@@ -111,5 +111,7 @@ player coming back short of breath its `Air` metadata in the join greeting.
 - `/stop` typed in the console of a sapling server.
 - Peaceful for the kinds that died before the switch in the drill (burnt in daylight or despawned): blaze,
   piglin, silverfish, zoglin, zombie pigman, zombie villager and others; the family rule stands for them.
-- `Air` is drilled (`bds-swim.txt`: a Short named `Air`). Whether BDS shows a player's burning flag in its
-  first metadata after joining needs the same signed identity twice; not drillable offline.
+- `Air` is drilled (`bds-swim.txt`: a Short named `Air`). A player that left burning (`u1rejoin`,
+  bds-u1rejoin.txt, 2026-11-04: lava, resistance 255, out and rejoined in 5 s) came back unlit on
+  both servers, in its own first metadata and in its watcher's `AddPlayer`. In the lava BDS told every
+  hit as lava's (8); sapling's, all of 0 under the resistance, as fire's (6) and then its tick's (7).

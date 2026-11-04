@@ -100,7 +100,8 @@ Tags as in `containers-crafting.md` (BDSRE, wiki, inf). Static reading only; not
 - **Frost walker** `FrostWalkSystem::fn0` 1484399b0 (BDSRE): skips riding (+0x269), horizontal motion
   ~0, spectators (game type 6); level from boots (armour slot 3), capped at 6; `r = level+2`; square loop
   dx,dz in [-r, r] around floor(feet pos): where the block at (x,y,z) is air and (x,y-1,z) is water
-  (material 5) source, and frosted_ice may be placed there, set frosted_ice (flags 3). Frosted ice melt: wiki.
+  (material 5) source, and frosted_ice may be placed there, set frosted_ice (flags 3). Frosted ice melt:
+  by light, drilled (growth.md, above the "Light" list).
 
 ## 7. Mending (BDSRE, in `ExperienceOrb::playerTouch` 142f9e210)
 

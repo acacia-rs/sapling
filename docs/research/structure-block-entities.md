@@ -138,9 +138,11 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   and answered each brushing click with the whole inventory, armour, UI and offhand windows; the brush
   sound's extra data is the block's hash. Sapling resends the four windows (`blocks/brushing.rs`
   `resend_windows`).
-- The mansion template chests' own `Items` and the other non-loot entities (flower pots: below). Not
-  drilled 2026-11-04: needs a worldgen oracle run with a mansion and `block_entity_diff`, which the
-  command-probe lanes do not reach.
+- The mansion template chests' own `Items` and the other non-loot entities (flower pots: below). The
+  oracle world 20261003-structures holds a mansion (2026-11-04, `block_entity_dump`): of its template
+  chests two keep 8 allium in `Items` and 47 are empty with `Findable` 0. Left: templates.bin has no
+  kind for a chest's own items, so the port is a new kind in `templates_to_rust.py` and a regenerated
+  templates.bin (append-only, templates-bin append families), then `block_entity_diff`.
   Beds, bells and cauldrons are written since 2026-11-03 (templates.bin kinds `bed`, `bell`, `cauldron`;
   the witch hut's cauldron in `scattered/hut.rs`). `block_entity_diff 20261003 20261003-structures`:
   every bed (0, 4, 10, 11, 13, 14), bell and cauldron same. BDS saved the trial chambers' magenta and

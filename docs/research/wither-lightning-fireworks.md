@@ -47,8 +47,15 @@ id -1); the new mob makes no `spawn` sound. Sapling now does the same (`creature
 `Turning`; test `a_pig_becomes_a_zombified_piglin_and_a_creeper_is_charged_unhurt`). A villager 3 blocks off the pig's bolt
 turned into a witch in the same tick as the pig, with no sound. `/summon villager_v2` is a syntax
 error on BDS; `villager` summons one.
-Left out: the skeleton horse trap (1 in {134, 67, 45} by difficulty, 0x142cb06f0), a trident
-hitting a rod, items struck, a charged creeper kept in the world folder.
+Skeleton horse traps (2026-11-04, `bds_command_probe u1trap`, bds-u1trap.txt): a bolt not drawn to a
+rod leaves one 1 in {134, 67, 45} by difficulty with `doMobSpawning` on (0x142cb06f0, table 0x14a7d4940),
+a skeleton horse with `minecraft:set_trap` at the floored spot. `/summon skeleton_horse … minecraft:set_trap`
+makes one too. It sprang the tick a creative or a survival actor came within 10 (one 40 off waited
+60 s): four new skeleton horses where it stood, each pushed off within ±1.15 on x and z, each ridden by a
+skeleton in an iron helmet holding a bow BDS enchants at random (unbreaking 1, power 1), a bolt there,
+the trap taken away. Sapling does the same (`creatures/skeleton_traps.rs`, `lightning/storms.rs`; test
+`a_trap_springs_four_riders_for_a_creative_player_within_ten`), less the enchanting.
+Left out: a trident hitting a rod, items struck, a charged creeper kept in the world folder.
 
 ## The wither
 

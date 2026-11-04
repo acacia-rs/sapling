@@ -2,8 +2,10 @@
 //! bds-end-gateway.txt; block actor tick 1487fcae0): in the End, a body in the gateway block is
 //! teleported at once to its exit, a block up and in the middle of the cell, told twice; the
 //! next tick the gateway is shown again.
-// TODO: the beam BDS shows every 200 ticks or so; gateways whose block entity has no exit (those a
-// dragon's death makes) find one first.
+// TODO: BDS showed no beam in 150 s by a worldgen gateway; it sent the block and its block entity
+// (Age, EndGatewayBadPosChecked 1, ExitPortal) at Age 1 and 200 after the player came
+// (bds-u1gate.txt), which sapling, with no gateway block entities, does not. Gateways with no exit
+// (a dragon's) find one first; `/setblock end_gateway` is a syntax error on BDS.
 
 use acacia_proto::packets::{MovePlayerTeleportCause, UpdateBlock};
 use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags};
