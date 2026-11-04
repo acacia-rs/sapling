@@ -5,7 +5,8 @@
 //! actor joining again (`u1rejoin`); a glide ended by flight and one into a wall (`u1fly`); an End gateway
 //! watched (`u1gate`, seed 20261018 on BDS); a trial spawner under Trial Omen and one set ominous
 //! (`u1omen`); a cold world's freezing and snow (`u1cold`, a flat ice plains world on both sides); a
-//! feature and feature rules placed on grass (`u1place`); squids in a shut box of still water (`u1squid`).
+//! feature and feature rules placed on grass (`u1place`); squids in a shut box of still water (`u1squid`);
+//! calves of a cold and a temperate cow (`u1inherit`, the ice plains world).
 
 use acacia_bot::Bot;
 
@@ -34,6 +35,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "u1place" => (placed(), SHOWN),
         "u1blaze" => (blaze_griefing(), SHOWN),
         "u1squid" => (squids(), SWIMS),
+        "u1inherit" => (inherited(), SHOWN),
         _ => return None,
     })
 }
@@ -186,4 +188,21 @@ fn cold() -> Vec<String> {
     lines.extend(owned(["weather clear"]));
     waits(&mut lines, 20);
     with(lines, &["gamerule randomtickspeed 1", ""])
+}
+
+/// In the ice plains world: four pens, each a cow summoned in the End (temperate) brought over and
+/// one summoned here (cold), held still and fed wheat once; whose climate each calf takes.
+fn inherited() -> Vec<String> {
+    const PENS: [i32; 4] = [-5, -2, 1, 4];
+    let mut lines = owned(["kill @e[type=!player]", "gamerule domobspawning false", "time set noon", "gamemode creative @s", "fill -3 -60 -7 3 -57 7 air", "execute in the_end run tp @s 0.5 80 40.5", "", ""]);
+    for z in PENS {
+        lines.extend(["summon cow ~ ~ ~".to_owned(), format!("execute as @e[type=cow,c=1] in overworld run tp @s 1.5 -60 {z}.5")]);
+    }
+    lines.extend(owned(["execute in overworld run tp @s -2.5 -60 0.5", "", ""]));
+    for z in PENS {
+        lines.extend([format!("summon cow -0.5 -60 {z}.5"), format!("fill -1 -60 {} 2 -59 {} glass", z - 1, z - 1)]);
+    }
+    lines.extend(owned(["fill -1 -60 6 2 -59 6 glass", "effect @e[type=cow] slowness 999 255 true", "replaceitem entity @s slot.weapon.mainhand 0 wheat 64", "", "!feedall cow"]));
+    waits(&mut lines, 15);
+    with(lines, &["kill @e[type=!player]", "fill -3 -60 -7 3 -57 7 air", ""])
 }
