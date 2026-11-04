@@ -31,8 +31,8 @@ pub struct ShardConfig {
     pub columns_per_tick: usize,
     /// Serve chunk data through the client blob cache to clients that report one.
     pub blob_cache: bool,
-    /// Mobs with nothing to do stroll, and flee when hit. Off, they stand where they are until
-    /// something moves them.
+    /// Mobs with nothing to do stroll, look about, and flee when hit. Off, they stand where they
+    /// are, head still, until something moves them.
     pub mobs_stroll: bool,
     pub movement_check: MovementCheck,
     /// Wall time between ticks: [`TICK`], or shorter for drills that compress time (drill_server.rs).

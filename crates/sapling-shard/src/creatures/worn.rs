@@ -40,6 +40,16 @@ fn shown_as(id: u64, worn: &Worn) -> Bytes {
     sapling_net::encode(&sapling_data::mob_armor(id, &slots))
 }
 
+/// What the dead mob `id` is shown wearing: its pieces and its body slot, as BDS tells a mob's
+/// viewers at every death (research/captures/bds-bodyslot.txt, bds-mountflags.txt).
+pub(super) fn shown_dead(world: &World, entity: Entity, id: u64) -> Bytes {
+    let worn = world.get::<Worn>(entity).cloned().unwrap_or_default();
+    let body = crate::riding::body_worn(world, entity);
+    let mut slots: Vec<_> = worn.0.iter().enumerate().map(|(slot, piece)| piece.as_ref().filter(|piece| worn_in(&piece.name) == Some(slot)).map(stack)).collect();
+    slots.push(body.as_ref().map(stack));
+    sapling_net::encode(&sapling_data::mob_armor(id, &slots))
+}
+
 /// What tells a viewer what the mob `id` wears, where its stored look does not already.
 pub(super) fn shown(world: &World, entity: Entity, id: u64) -> Option<Bytes> {
     let looks = world.get::<Creature>(entity).is_some_and(|creature| creature.look.is_some());
@@ -82,7 +92,8 @@ pub(super) fn wear(world: &mut World, mob: Entity, piece: usize, item: Option<It
     let mut worn = world.get::<Worn>(mob).cloned().unwrap_or_default();
     let off = std::mem::replace(&mut worn.0[piece], item);
     if let Some(look) = world.get_mut::<Creature>(mob).and_then(|creature| creature.into_inner().look.as_mut()) {
-        look.armor = worn.0.to_vec();
+        look.armor.resize(PIECES, None);
+        look.armor[..PIECES].clone_from_slice(&worn.0);
     }
     world.entity_mut(mob).insert(worn.clone());
     dress(world, mob);

@@ -78,19 +78,24 @@ pub fn chested_actor(compound: &[u8], items: &[(u8, ItemStack)], registry: &Bloc
     Ok(written(Value::Compound(fields)))
 }
 
-/// What a stored horse or llama wears on its body: `Armor`'s fifth entry, after the four pieces,
-/// where BDS keeps a horse's armour and a llama's carpet; its `ChestItems` slot 1 stays empty
-/// (research/captures/bds-chestdie.txt).
+/// What a stored mob wears in its body slot: `Armor`'s fifth entry, after the four pieces, where
+/// BDS keeps any mob's (a horse's, a pig's horse armour, a wolf's; research/captures/bds-bodysave.txt).
 pub fn actor_body(compound: &[u8]) -> Option<ItemStack> {
     let fields = fields_of(compound).ok()?;
     let Some((_, Value::List(armor))) = fields.iter().find(|(name, _)| name == ARMOR) else { return None };
     armor.items.get(BODY).and_then(ItemStack::parse)
 }
 
-/// A stored mount wearing `body` ([`actor_body`]).
+/// A stored mob wearing `body` ([`actor_body`]), its four pieces as they were.
 pub fn bodied_actor(compound: &[u8], body: Option<&ItemStack>, registry: &BlockRegistry) -> Result<Vec<u8>, Error> {
-    let armor = [None, None, None, None, body.cloned()];
-    crate::actors::with_fields(compound, [(ARMOR, crate::player::parts::stacks(&armor, registry))])
+    let fields = fields_of(compound)?;
+    let mut armor: Vec<Value> = match fields.iter().find(|(name, _)| name == ARMOR) {
+        Some((_, Value::List(kept))) => kept.items.iter().take(BODY).cloned().collect(),
+        _ => Vec::new(),
+    };
+    armor.resize(BODY, Value::Compound(ItemStack::no_fields()));
+    armor.push(Value::Compound(body.map_or_else(ItemStack::no_fields, |body| body.fields(registry))));
+    crate::actors::with_fields(compound, [(ARMOR, Value::List(List { tag: COMPOUND, items: armor }))])
 }
 
 /// A stored actor of the look `variant` (a boat's wood) facing `yaw`.
@@ -146,6 +151,17 @@ mod tests {
         assert_eq!(actor_body(&bodied), Some(armour));
         assert_eq!(crate::actors(&bodied).unwrap()[0].armor.len(), 5);
         assert_eq!(actor_body(&bodied_actor(&bodied, None, &BlockRegistry::vanilla()).unwrap()), None);
+    }
+
+    #[test]
+    fn a_body_slot_keeps_the_pieces_worn_before_it() {
+        let registry = BlockRegistry::vanilla();
+        let stack = |name: &str| ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag: None };
+        let husk = crate::new_actor(7, "minecraft:husk", [0.5, 64.0, 0.5], [0.0; 3]);
+        let helmeted = crate::actors::with_fields(&husk, [(ARMOR, crate::player::parts::stacks(&[Some(stack("minecraft:diamond_helmet")), None, None, None], &registry))]).unwrap();
+        let bodied = bodied_actor(&helmeted, Some(&stack("minecraft:iron_horse_armor")), &registry).unwrap();
+        let armor = &crate::actors(&bodied).unwrap()[0].armor;
+        assert_eq!((armor.len(), armor[0].as_ref(), armor[4].as_ref()), (5, Some(&stack("minecraft:diamond_helmet")), Some(&stack("minecraft:iron_horse_armor"))));
     }
 
     #[test]

@@ -9,7 +9,7 @@ import re
 import struct
 import sys
 
-PACKS = "C:/Users/hexay/acacia/acacia/.testserver/bds-blocks/behavior_packs/"
+PACKS = "/srv/agents/work/acacia/acacia/.testserver/bds-blocks/behavior_packs/"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mob-loot.json")
 
 

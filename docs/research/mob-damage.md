@@ -179,8 +179,22 @@ Sapling's run: sapling-burn2.txt.
   `a_mob_is_shown_only_within_the_tick_distance_circle_as_on_bds`). Sapling's drill enderman also
   stayed within z ±48 because `SAPLING_DRILL_WORLD=open`'s ground ends there. Re-drilled on
   sapling 2026-11-04 (sapling-farmobs.txt): the same mobs hidden (3,-3 and 5,0) and shown again on
-  the same lines. Left: BDS's slowed mobs still turn their heads (rotation-only `MoveEntityDelta`),
-  sapling's stand still.
+  the same lines. Their heads: the fifth wave's `gaze` drill, below.
+- Where a mob left to itself looks (2026-11-04, `bds_command_probe gaze`, research/captures/bds-gaze.txt;
+  bds-tickcircle4.txt, bds-farmobs.txt): six cows slowed by slowness 255, three 3 blocks from the bots
+  and three 20 off. `look_at_player` (a cow's: 6 blocks, 0.02 a tick, 2 to 4 s): the head turns 7 of
+  the wire's 256ths a tick (10 degrees) until it points at the nearest player's eyes (56 and 108
+  degrees, both exact), the pitch jumps at once to the eyes (251 or 252, about -6 degrees), and 53 to
+  79 ticks later the pitch is 0 again in one tick while the head stays. The far cows' heads turned
+  alone (`random_look_around`), their pitch never. With no look the head stays put; after the body
+  turned (a stroll's step even at speed 0, 21 a tick) it came round to the body at the same 10
+  degrees, but once it stayed. Fixed: `creatures/gaze.rs`, after the stroll, with each kind's
+  `looks=`/`glances` from the packs (mob-traits.tsv); off with `mobs_stroll` as strolling is; test
+  `a_slowed_cow_turns_its_head_and_pitches_at_a_player_near_it`. Re-drilled on sapling
+  (sapling-gaze.txt): the near cows' heads come round 7 a tick to 40 with pitch 251, as BDS's; pitch
+  changes 66 against BDS's 58, but 1846 moves against 592. Left: the random look's sides and length
+  (Java's 20 to 40 ticks and a side within 90 degrees of the body are used, and look too often), and
+  the body's turn rate (sapling's legs keep 60 a tick).
 - The view circle against `tick-distance` (2026-11-04, `bds_command_probe tickcircle` on BDS set to
   4, 6, 8 and 10, research/captures/bds-tickcircle<N>.txt): 14 slowed mobs moved from beside the bots
   (chunk 3,0) to chunk offsets from 4,0 to 10,2, poisoned there and moved back 6 s later. At every
@@ -211,8 +225,6 @@ Sapling's run: sapling-burn2.txt.
   the same ones ticked but 5,3 at 6 (an edge cell above). A returning mob's first poison hit lands
   before its AddEntity on sapling (health 9 of 10), just after it on BDS (10, then 9 the same tick).
   Mobs 9 and 10 chunks off stayed on sapling: the drill world's ground columns never unload.
-  Not ported here: sapling still sends a hidden mob's moves to every view covering it (clients drop
-  moves of mobs they were not shown; group 1's item).
 - Commands past the tick region (2026-11-04, `bds_command_probe tickedge` at `tick-distance` 4,
   research/captures/bds-tickedge.txt, and the four tickcircle captures' pad fills): one-block fills
   at every chunk offset 0..6 by 0..6 and ten on the other sides answered `commands.fill.outOfWorld`
@@ -224,6 +236,17 @@ Sapling's run: sapling-burn2.txt.
   (a player's region or a kept column; a world nobody is in ticks all), checked by fill
   (`regions.rs`), clone and testforblocks (`copying.rs`), setblock and testforblock (`blocks.rs`); test
   world_commands.rs. Drilled on sapling: sapling-tickedge.txt, same answers.
+- Fixed (fifth wave): a hidden mob's packets. BDS sent a client nothing of a mob it was not shown
+  but a `/tp`'s forced `MoveEntityDelta` (bds-tickcircle6.txt: 10 per client, all teleports;
+  bds-farmobs.txt), where sapling sent each covering view 72 moves and 41 health updates
+  (sapling-tickcircle6.txt). `entities/tell.rs` hands a mob's packets only to clients that have it
+  (`SeesMobs`), and `/tp` (`entities::teleport`) is a forced move told to every view covering the
+  mob, as BDS's; test `a_mob_hidden_from_a_player_is_not_told_to_it_but_its_teleport_is`.
+  Re-drilled on sapling (sapling-tickcircle6.txt, sapling-farmobs.txt): only forced teleport moves
+  reach a client that was not shown the mob, 13 per client to BDS's 10 (sapling keeps the far mobs
+  BDS unloaded, so more `tp`s find a target). farmobs' hidden watcher now gets the enderman's
+  `tp` back as BDS's: forced, `x: Some(56.5)`, told in the command's tick even when the mob is
+  outside every tick circle.
 
 ## What the rain's level drives (2026-11-04, `bds_command_probe rainramp`, research/captures/bds-rainramp.txt)
 

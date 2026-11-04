@@ -3,8 +3,8 @@
 //! MobArmorEquipment and unheard, and stays on at death. Anything else (stone, a helmet, a carpet,
 //! even on a llama) answers success and is shown to no one; air takes the armour off, told
 //! even where there was none. Armour put in a tamed mount's slot 1 fills the body slot too
-//! (riding/packs.rs `wear`); this leaves slot 1 alone.
-// TODO: a world folder keeps only slot 1's armour, not what this alone put on.
+//! (riding/packs.rs `wear`); this leaves slot 1 alone. A world folder keeps the body slot in
+//! `Armor`'s fifth entry, any mob's (research/captures/bds-bodysave.txt).
 
 use bevy_ecs::prelude::*;
 use sapling_world::ItemStack;
@@ -13,6 +13,7 @@ use super::mounts::{Tack, body_shown};
 use super::packs::HORSE_ARMOR;
 use crate::components::NetId;
 use crate::creatures::Creature;
+use crate::entities::{self, Stored};
 
 const WOLF_ARMOR: &str = "minecraft:wolf_armor";
 
@@ -20,6 +21,11 @@ const WOLF_ARMOR: &str = "minecraft:wolf_armor";
 fn is_body_armor(name: &str) -> bool {
     let metal = name.strip_prefix("minecraft:").and_then(|bare| bare.strip_suffix("_horse_armor"));
     name == WOLF_ARMOR || metal.is_some_and(|metal| HORSE_ARMOR.contains(&metal))
+}
+
+/// What a mob's body slot shows.
+pub(crate) fn worn(world: &World, mob: Entity) -> Option<ItemStack> {
+    world.get::<Tack>(mob).and_then(|tack| tack.body.clone())
 }
 
 /// Puts `item` in a mob's body slot as `/replaceitem entity ... slot.armor.body` does; false for
@@ -30,10 +36,29 @@ pub(crate) fn put(world: &mut World, mob: Entity, item: Option<ItemStack>) -> bo
         return true;
     }
     let worn = item.map(|item| ItemStack { count: 1, ..item });
-    let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
-    tack.body = worn.clone();
-    world.entity_mut(mob).insert(tack);
+    dress(world, mob, worn.clone());
     super::tell(world, mob, mob, vec![body_shown(id, worn.as_ref())]);
     super::retell(world, mob);
     true
+}
+
+/// Makes `body` what `mob`'s body slot holds, in its stored look and compound too.
+pub(super) fn dress(world: &mut World, mob: Entity, body: Option<ItemStack>) {
+    let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
+    tack.body = body.clone();
+    world.entity_mut(mob).insert(tack);
+    if let Some(mut creature) = world.get_mut::<Creature>(mob) {
+        creature.show_body(body.clone());
+    }
+    entities::restore(world, mob, |compound, registry| sapling_world::bodied_actor(compound, body.as_ref(), registry).ok());
+}
+
+/// A mob a world folder kept wears its stored body slot again.
+pub(super) fn adopt(world: &mut World, mob: Entity) {
+    let body = world.get::<Stored>(mob).and_then(|stored| sapling_world::actor_body(&stored.compound));
+    if body.is_some() {
+        let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
+        tack.body = body;
+        world.entity_mut(mob).insert(tack);
+    }
 }

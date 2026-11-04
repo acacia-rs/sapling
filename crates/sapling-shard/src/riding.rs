@@ -35,7 +35,7 @@ pub(crate) use drive::{Leaving, Reins, drive, is_driven};
 pub(crate) use mounts::{Rein, boost, reaches, saddle_flags, steers, used_on};
 use mounts::predicted;
 pub(crate) use packets::sound as sound_packet;
-pub(crate) use body::put as put_body;
+pub(crate) use body::{put as put_body, worn as body_worn};
 pub(crate) use packs::{load as load_pack, looted_armor, open as open_pack, refusal as pack_refusal, slots as pack_slots, spilled};
 pub(crate) use seats::layout;
 pub(crate) use replaced::{is_mount, set as set_mount_item};
@@ -242,6 +242,7 @@ struct Awaits(Vec<i64>);
 /// before it that awaits it; a mount wears the armour it kept.
 // TODO: a player's `RideID` is neither kept nor read: a player loads standing.
 pub(crate) fn adopt(world: &mut World, entity: Entity) {
+    body::adopt(world, entity);
     packs::adopt(world, entity);
     let riders = world.get::<Stored>(entity).map(|stored| sapling_world::actor_links(&stored.compound)).unwrap_or_default();
     if !riders.is_empty() {
