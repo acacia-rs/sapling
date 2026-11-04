@@ -63,6 +63,11 @@ Kinds are by area except the mineshaft's (its blocks, or air against terrain, in
 the area kinds' rests are what the parentheses say, read off `structure_cells`.
 
 ### Left
+Settled since (2026-11-04, parity/tenth1): every item below is 0 under its region's one-worker canon
+(`tools/replay-all.sh`: stronghold, village, mansion, ruined portal, igloos, ancient city, badlands, frozen
+ocean all exact). The mineshaft drift was the 3x3 view a post-process reads, the foundation columns and walls
+the logged post-process order, the bars and fences the template update pass (worldgen-bds-order.md, "The full
+replay of the structures world"). What the stock worlds keep of them is their own run order.
 - Mineshafts, everywhere they are: scattered ceiling cells (the 0.8 float per cell), webs, rails and planks a
   few draws off, the drift of "Mineshaft drift" below. badlands (13), frozen ocean (54) and the city (469)
   look the same: no piece is missing or shifted, single cells differ. `BDS air` counts the ceiling cells BDS
@@ -300,6 +305,8 @@ under the desert pyramid region: `minecraft:fossil_feature` is not ported).
   cluster we do not place there. The blob counts one stone cell fewer, and every later blob of the rule
   shifts (ours-only coal counted wrong, BDS-only coal counted missing). It follows the dripstone residue.
   Cherry grove (204) was not traced that far: its first differing blobs each have one cell BDS left stone.
+  (2026-11-04: meadow, badlands and cherry grove are 0 under their canons; the blobs follow the stock run's
+  dripstone, not a port difference.)
 - Sulfur in windswept gravelly hills (306) and savanna (91): spike clusters, as in feat4 (scans stop at
   lichen).
 - Old growth pine taiga, chunk -333,340 (43): BDS's abandoned camp grows a spruce at (-5315,74,5452) and one at
@@ -468,7 +475,8 @@ change this: the read is of a neighbour's planks, not of a height.
   and about 30 redstone cells BDS has ticked (powered repeaters, wire signal, extended pistons). (Both resolved
   on worldgen/city3, top section: jigsaw draws, and the template's saved circuit, not ticks.)
 - Mansion: 25 wall cells on chunk corners (order of structure post-processing).
-- Mineshafts everywhere (stronghold, igloo, ocean ruins, city): draw drift from reads past the chunk.
+- Mineshafts everywhere (stronghold, igloo, ocean ruins, city): draw drift from reads past the chunk. (Settled:
+  "Left" of the structures section above.)
 
 ## After worldgen/struct4 (2026-10-10)
 Support classes from the block registry, the vein feature's full `can_place_on` and the sculk growth box

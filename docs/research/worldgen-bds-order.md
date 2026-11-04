@@ -692,7 +692,7 @@ What the first differing pieces and sources were:
 - **Leaf litter** needs a top face that holds an edge: about 70 cells on a village tree's leaves, a fence and
   a path (trees a village places stand before decoration; a fit of three block classes, not read out).
 
-Stronghold, left (132): water that runs through corridors under -88,-123 the other way (first source -87,-122,
+Stronghold, left (132; 0 on master by 2026-11-04, `c-st` in replay-all): water that runs through corridors under -88,-123 the other way (first source -87,-122,
 rank 96: ours has water at -1387,-4,-1948 where BDS has none; about 45 cells with the structure-stage ones),
 lava at the monster room's east wall (source -93,-124), sulfur spikes of source -93,-120 (15, a ring source),
 and two village items: the foundation columns of `plains_weaponsmith_1` in chunk -90,-124 differ by one

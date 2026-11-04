@@ -61,8 +61,13 @@ impl SurfaceNoises {
                 let (wx, wz) = (chunk.0 * 16 + x as i32, chunk.1 * 16 + z as i32);
                 let top = tops[x][z];
                 let biome = biomes.biome(x, (top + 1).min(MIN_Y + crate::HEIGHT as i32 - 1), z);
-                let Some(spec) = biomes::surface_spec(biome) else { continue };
                 let lower = (density.preliminary_surface(wx >> 2, wz >> 2) - 8).clamp(MIN_Y, TOP_Y);
+                let Some(spec) = biomes::surface_spec(biome) else {
+                    if let Some(gradient) = biomes::surface_gradient(biome) {
+                        self.gradients.build_top(shape, &gradient, ((x, z), (wx, wz)), top.min(TOP_Y), lower);
+                    }
+                    continue;
+                };
                 let mut column = Column { shape: &mut *shape, x, z, world: (wx, wz), start: (top + 1).min(TOP_Y), lower };
                 self.build_column(&mut column, biome, &spec, &tops, random);
             }
