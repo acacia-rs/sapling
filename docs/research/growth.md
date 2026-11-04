@@ -247,8 +247,9 @@ not ported [I].
     - Snow in a warm biome loses a layer one random tick in 16.
   - Left:
     - Grass spread at light 9 over its dirt, but within 60 s not at 10; sapling's did the reverse. Read as chance.
-    - BDS did not break a mushroom at light 13 when a light block was set beside it. Its light likely was not in yet
-      at that update, and sapling, which relights first, breaks it.
+      Re-drilled 2026-11-04 (bds-e3light.txt against sapling-e3light.txt): grass at 9 and 10 and the mushroom at
+      13 went the same way on both.
+    - BDS did not break a mushroom at light 13 when a light block was set beside it (same re-drill: alike).
     - Freezing, snow lying and the sun need a cold biome or weather the flat drill world lacks, so they are undrillable
       here.
   - Sapling's drill world has ground at y 60 to 63 over the drills (`drill_server.rs`), so a scene that needs daylight
