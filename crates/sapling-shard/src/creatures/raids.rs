@@ -15,6 +15,7 @@ mod village;
 mod waves;
 
 pub(super) use raiders::steer;
+pub(super) use kept::{village as village_uuid, village_middle};
 pub(super) use village::centre as village_centre;
 
 use bevy_ecs::prelude::*;

@@ -218,7 +218,8 @@ fn a_raid_is_kept_with_the_world_and_goes_on_after_a_restart() {
     ticks(&mut h, 640);
     h.shard.save_worlds();
     let level = storage.level().expect("flushed");
-    let [raid] = &level.raids[..] else { panic!("{} raids kept", level.raids.len()) };
+    let raids: Vec<_> = level.villages.iter().filter(|record| record.part == sapling_world::VillagePart::Raid).collect();
+    let [raid] = &raids[..] else { panic!("{} raids kept", raids.len()) };
     assert!(raid.village.ends_with("-4000-8000-000000000003"), "{}", raid.village);
     drop(h);
 

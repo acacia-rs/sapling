@@ -67,7 +67,7 @@ pub use custom_states::{
 };
 pub use structure::{STRUCTURE_PREFIX, StructureTemplate, structure_name};
 pub use sub_chunk::{Layer, SubChunk};
-pub use raids::RaidRecord;
+pub use raids::{VillagePart, VillageRecord};
 pub use ticking_areas::{TICKING_AREA_PREFIX, TickingAreaRecord};
 pub use trackers::{LAST_TRACKER_KEY, TRACKER_PREFIX, TrackerRecord, decode_last_tracker, encode_last_tracker};
 pub use world::{DiskColumn, LevelDbWorld};

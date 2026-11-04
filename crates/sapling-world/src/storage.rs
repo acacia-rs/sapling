@@ -234,11 +234,11 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the lodestone targets are unreadable; compasses find none");
             (Vec::new(), 0)
         });
-        let raids = self.0.load_raids().unwrap_or_else(|error| {
-            tracing::warn!(%error, "the raids are unreadable; none goes on");
+        let villages = self.0.load_villages().unwrap_or_else(|error| {
+            tracing::warn!(%error, "the villages are unreadable; no raid goes on, no standing is kept");
             Vec::new()
         });
-        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, raids, hardcore, weather, difficulty, chunk_tick_range: None }
+        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None }
     }
 }
 
@@ -302,7 +302,7 @@ impl WorldStorage for LevelDbStorage {
         self.0.store_ticking_areas(&level.ticking_areas)?;
         self.0.store_maps(&level.maps)?;
         self.0.store_trackers(&level.trackers, level.last_tracker)?;
-        self.0.store_raids(&level.raids)?;
+        self.0.store_villages(&level.villages)?;
         Ok(self.0.flush(&dat)?)
     }
 
