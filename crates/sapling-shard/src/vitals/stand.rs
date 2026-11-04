@@ -74,6 +74,15 @@ pub(crate) fn break_fall(world: &mut World, player: Entity) {
     }
 }
 
+/// What a player no harm comes to does where it stands: in creative it lights redstone ore under it, as
+/// BDS's did (bds-orestand.txt); a spectator nothing.
+pub(super) fn stand_unhurt(world: &mut World, player: Entity, layer: Entity) {
+    let is_creative = world.get::<crate::components::Mode>(player).is_some_and(|mode| mode.0 == sapling_api::GameMode::Creative);
+    if let Some(position) = world.get::<Position>(player).copied().filter(|position| is_creative && position.on_ground && !super::is_dead(world, player)) {
+        crate::blocks::tread_ore(world, layer, position.feet);
+    }
+}
+
 pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
     let warding = crate::enchants::warding(world, player);

@@ -279,6 +279,7 @@ pub(crate) fn tick(world: &mut World) {
             if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
                 vitals.was = None;
             }
+            stand::stand_unhurt(world, player, layer);
             death::leave(world, player, layer);
         }
     }

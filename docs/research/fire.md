@@ -60,8 +60,13 @@ Both scale with the rule: fire's queue steps, and lit ore's random ticks (block-
 ore"). Sapling (`blocks/fire.rs`, `fire/burning.rs`, `random_queue.rs`) does the above, the queue's
 steps per world; test `fire_and_lit_ore_go_at_the_pace_of_the_random_tick_speed_as_on_bds`.
 Sapling's drill (`sapling-firepace.txt`): fire over stone out at a mean 20.7, 4.5 and 1.0 s, planks'
-first change 15.3, 4.1 and 0.9 s, lit ore 1, 9 and 12 of 12 out (a first run had 10 of 12 at 1:
-the odds are the same per tick, the counts vary). A fire aging must not count as a new fire, or it
+first change 15.3, 4.1 and 0.9 s, lit ore 1, 9 and 12 of 12 out (a first run had 10 of 12 at 1).
+That spread was the drill, not the game: a probe at `TICK_SCALE` 2 counts nominal ticks, so a server
+falling behind (both runs were `LAGGED`) gave the ore fewer ticks than BDS's. The shard alone, 12 ores
+for 1200 ticks twelve times, put out 4 to 8 (binomial). `bds_command_probe orepace` (three rounds of
+63 s at 1): BDS 7, 9 and 10 of 12, sapling at `TICK_SCALE` 1 4, 5 and 6 (`bds-orepace.txt`,
+`sapling-orepace.txt`). Pooled over firepace, ores and orepace BDS's lit ore lives some 1400 ticks at 1
+against sapling's 1800; that gap is two standard errors and was left. A fire aging must not count as a new fire, or it
 ticks again a step on: before that fix fire over stone went in 3.0 s at 4.
 
 What burns is told by tag and name with the Java game's numbers (`burns` in `blocks/fire.rs`).
@@ -91,14 +96,45 @@ both servers the lava lit fire beside the planks within a few seconds and the pl
 which cells caught and when differ run to run, so the odds are not pinned. A burning shot is in
 world-ticks.md "Parity drill".
 
+## Lava's fire (2026-11-04, `bds_command_probe lavafire`, `examples/shared/eighth2_drill.rs`)
+
+BDS's random tick (`LiquidBlock::randomTick` 148b5cd10): with `doFireTick` on and air or a block whose
+`mLavaFlammable` (Block+0xa6) is set over the lava, up to ten cells within one each way are tried; the
+first that is flammable gets fire in the first air beside it, looked at +x, -x, +y, -y, +z, -z [D].
+Drilled at rule 40 for 30 s with five pockets, two rows each: lava in a floor hole with a plank
+diagonal over it lit the air beside the plank (+x, or -x where +x was stone); a plank lying on the
+lava lit the air beside it; lava in a stone ring lit the air over a plank set in the floor beside it;
+covered lava lit nothing. Sapling (`fire.rs` `kindled_by_lava`, `growth.rs` `sampled_at`) draws lava
+with air or what burns over it, and tries as BDS; test `lava_under_a_plank_lights_fire_beside_it_as_on_bds`.
+Drilled on sapling after (`sapling-lavafire.txt`): the same pockets lit and the covered ones did not;
+which cell beside a plank caught first differs run to run.
+What burns is sapling's flame odds (`fire/burning.rs`), not read off `mLavaFlammable`.
+
+## What lava takes (2026-11-04, `bds_command_probe lavaeats`)
+
+36 blocks were set one by one beside a still lava row in a stone box. BDS's lava took, within 1.5 s:
+carpet, moss carpet, repeater, skull, flower pot, end rod, snow layer, torch, rail, web, short grass,
+lever, redstone wire, leaf litter, pink petals. It stayed out of: stone button, pressure plates,
+standing sign and banner, sea pickle, decorated pot, conduit, candle, ladder, fence, glass pane, iron
+bars, cake, heavy core, pointed dripstone, amethyst bud, lantern, lightning rod, trapdoor, brewing
+stand. That is BDS's `isLavaBlocking` rule (assumptions-checked.md 4) but for the sea pickle, held out
+though its material is open. Sapling: `blocks/liquid/lava.rs`, test
+`lava_takes_what_bds_let_it_take_in_the_lavaeats_drill`; `sapling-lavaeats.txt` took the same 15 cells.
+
+## What burns away (2026-11-04, `bds_command_probe burnfloat`)
+
+Seven planks, each with fire beside it and on it a torch, sand, rail, redstone wire, stone pressure
+plate, lantern and candle, at rule 40. On BDS, a tick after a plank burnt, the torch, rail, wire,
+plate and lantern broke and the sand fell; the candle stayed floating. Sapling settles a burnt cell
+as a broken one in the same tick (`fire.rs` `tick`, `updates::settle`), with lanterns now depending
+on the block they stand or hang on and candles no longer; test
+`what_stood_on_a_burnt_block_falls_or_breaks_as_on_bds`. `sapling-burnfloat.txt` answered every
+`/testforblock` as BDS's: the sand down, the candle left floating, the rest air.
+
 ## Left
 
-- Burning arrows light none. Lava does, by BDS's random tick (`LiquidBlock::randomTick`
-  148b5cd10, decompiled, not drilled): with `doFireTick` on and air or something that burns over
-  it, up to ten cells within one each way are tried, and the first that burns gets fire in the first
-  air beside it, looked at +x, -x, +y, -y, +z, -z (`fire.rs` `kindled_by_lava`; sapling draws only
-  lava with air over it). Lightning's fire ticks as any written fire does.
+- Burning arrows light none. Lightning's fire ticks as any written fire does.
 - Fire a world folder holds ticks only if its column kept its tick, as on BDS, where `FireBlock`
   takes no random tick and nothing else starts it (vtable 14a8e5550). Sapling saves the queue's
   wait in `PendingTicks` as game ticks at the rule of the save.
-- What burns away leaves floating what stood on it.
+- Which blocks have `mLavaFlammable`, against sapling's flame odds, was not compared.

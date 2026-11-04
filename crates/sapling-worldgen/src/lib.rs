@@ -32,7 +32,7 @@ mod terrain;
 use std::sync::Arc;
 
 pub use biome::ChunkBiomes;
-pub use block::Block;
+pub use block::{Block, material_blocks_motion};
 pub use block_entity::BlockEntity;
 pub use end::EndGenerator;
 pub use nether::NetherGenerator;

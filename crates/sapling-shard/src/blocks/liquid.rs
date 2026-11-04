@@ -3,9 +3,8 @@
 //! `liquid_depth` is 0 for a source, 1 to 7 for how far it has run, and 8 to 15 for a falling
 //! liquid, which keeps the depth of the stream it fell from. The rule is flow.rs; lava meeting
 //! water hardens (harden.rs).
-// Lava's random tick sets fire (fire.rs `kindled_by_lava`).
-// TODO: which blocks lava burns is "has no collision", where BDS asks each block; `ctx.set_block`
-// starts nothing.
+// Lava's random tick sets fire (fire.rs `kindled_by_lava`); which blocks it takes is lava.rs.
+// TODO: `ctx.set_block` starts nothing.
 
 mod faces;
 mod flow;
@@ -95,7 +94,7 @@ pub(super) fn cell(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Cell {
     }
     match registry.get(block) {
         Some(state) if state.is_air() => Cell::Air,
-        Some(state) => Cell::Block(waterlog::reaction(registry, block), lava::keeps_out(state.name, state.is_solid())),
+        Some(state) => Cell::Block(waterlog::reaction(registry, block), lava::keeps_out(state.name)),
         None => Cell::Unknown,
     }
 }

@@ -55,6 +55,7 @@ mod support_table;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
+pub use material_table::material_blocks_motion;
 pub use plant_table::Block;
 pub use support::Kind as Support;
 

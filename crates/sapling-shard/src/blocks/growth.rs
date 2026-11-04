@@ -78,7 +78,7 @@ fn ticked_at(world: &World, layer: Entity, pos: BlockPos) -> Option<&str> {
 }
 
 /// Whether the block `name` with `properties` is one whose random ticks are drawn (sampled.rs):
-/// wild plants, stalactites and lava with air over it (BDS's also ticks lava under what burns).
+/// wild plants, stalactites and lava with air or what burns over it.
 fn is_sampled(name: &str, properties: &str) -> bool {
     wild::is_ticked(name) || name == "minecraft:pointed_dripstone" && properties.contains("hanging=1") || matches!(name, "minecraft:lava" | "minecraft:flowing_lava")
 }
@@ -86,8 +86,7 @@ fn is_sampled(name: &str, properties: &str) -> bool {
 fn sampled_at(level: &sapling_world::World, [x, y, z]: BlockPos) -> Option<&'static str> {
     let state = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten().filter(|state| is_sampled(state.name, state.properties))?;
     let is_lava = state.name.ends_with("lava");
-    let open = || level.in_height(y + 1) && level.registry().get(level.block(x, y + 1, z)).is_some_and(|over| over.is_air());
-    (!is_lava || open()).then_some(state.name)
+    (!is_lava || super::fire::lights_under(level, [x, y + 1, z])).then_some(state.name)
 }
 
 /// A block was written at `pos`: one a random tick changes is kept track of, and one that
