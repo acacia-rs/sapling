@@ -109,8 +109,9 @@ fn crack(event: LevelEventEvent, pos: BlockPos, data: i32) -> bytes::Bytes {
 }
 
 /// A survival player started on the block at `pos`: the break is timed from now, and those who
-/// see the block watch it crack, as from BDS.
-pub(crate) fn start(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, mining: &Mining) {
+/// see the block watch it crack, as from BDS: `BlockStartBreak`, the `punch` particles, then
+/// `BlockBreakSpeed` with the same speed (research/captures/bds-bkblocks.txt).
+pub(crate) fn start(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, mining: &Mining, punch: bytes::Bytes) {
     let (tool, [efficiency]) = held_tool(world, player, [Enchant::Efficiency]);
     // The sword and shears speeds are the Java game's, never faster than Bedrock's but perhaps
     // slower: a break with one of them is taken as soon as it is claimed.
@@ -123,9 +124,13 @@ pub(crate) fn start(world: &mut World, player: Entity, layer: Entity, pos: Block
     }
     // The first blow lights redstone ore (research/captures/bds-oresteps.txt).
     super::light_ore(world, layer, pos);
-    if let Some(needed) = needed {
-        send::to_viewers(world, layer, pos, &[crack(LevelEventEvent::BlockStartBreak, pos, (CRACK_SCALE / needed) as i32)]);
-        hit(world, player, layer, pos);
+    match needed {
+        Some(needed) => {
+            let speed = (CRACK_SCALE / needed) as i32;
+            send::to_viewers(world, layer, pos, &[crack(LevelEventEvent::BlockStartBreak, pos, speed), punch, crack(LevelEventEvent::BlockBreakSpeed, pos, speed)]);
+            hit(world, player, layer, pos);
+        }
+        None => send::to_viewers(world, layer, pos, &[punch]),
     }
 }
 

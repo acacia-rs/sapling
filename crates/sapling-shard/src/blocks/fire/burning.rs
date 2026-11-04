@@ -50,6 +50,24 @@ pub(super) fn burns(name: &str) -> Option<[u32; 2]> {
     })
 }
 
+/// Whether lava lights fire by the block `name`: BDS's `mLavaFlammable` (Block+0xa6, read by
+/// `LiquidBlock::randomTick` 148b5cd10), set apart from the flame odds by its registry 14849c7e0
+/// (docs/research/fire.md, "Lava").
+pub(super) fn lava_lights(name: &str) -> bool {
+    const NEVER: &[&str] = &["coal_block", "hay_block", "poppy", "dandelion"];
+    const ALWAYS: &[&str] = &[
+        "sunflower", "rose_bush", "lilac", "peony", "short_dry_grass", "tall_dry_grass", "hanging_roots", "pale_hanging_moss", "noteblock", "trapped_chest",
+        "daylight_detector", "daylight_detector_inverted", "red_mushroom_block", "brown_mushroom_block", "mushroom_stem", "chorus_plant", "chorus_flower",
+        "standing_banner", "wall_banner",
+    ];
+    const WOOD_PARTS: &[&str] = &["_door", "trapdoor", "standing_sign", "wall_sign", "_button", "_pressure_plate"];
+    const NOT_WOOD: &[&str] = &["iron", "stone", "copper", "gold", "blackstone", "weighted", "brick"];
+    let bare = name.strip_prefix("minecraft:").unwrap_or(name);
+    let is_nether_wood = ["crimson_", "warped_"].iter().any(|kind| bare.contains(kind)) && !["_nylium", "_roots", "_fungus", "_wart_block"].iter().any(|end| bare.ends_with(end));
+    let is_wooden_part = WOOD_PARTS.iter().any(|end| bare.ends_with(end)) && !NOT_WOOD.iter().any(|part| bare.contains(part));
+    !NEVER.contains(&bare) && (burns(name).is_some() || ALWAYS.contains(&bare) || is_nether_wood || is_wooden_part)
+}
+
 pub(super) fn name_at(level: &Level, [x, y, z]: BlockPos) -> Option<&str> {
     level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten().map(|state| state.name)
 }
@@ -191,5 +209,13 @@ mod tests {
     fn wood_and_wool_burn_and_stone_does_not() {
         let burning = ["minecraft:oak_planks", "minecraft:oak_log", "minecraft:white_wool", "minecraft:oak_leaves", "minecraft:stone", "minecraft:crimson_planks"].map(burns);
         assert_eq!(burning, [Some([5, 20]), Some([5, 5]), Some([30, 60]), Some([30, 60]), None, None]);
+    }
+
+    #[test]
+    fn lava_lights_by_bds_lava_flag_not_the_flame_odds() {
+        let lit = ["oak_planks", "crimson_planks", "stripped_warped_stem", "spruce_door", "wooden_pressure_plate", "standing_sign", "noteblock", "rose_bush"];
+        let unlit = ["coal_block", "hay_block", "dandelion", "iron_door", "stone_button", "crimson_nylium", "stone"];
+        assert!(lit.iter().all(|name| lava_lights(&format!("minecraft:{name}"))), "{lit:?}");
+        assert!(!unlit.iter().any(|name| lava_lights(&format!("minecraft:{name}"))), "{unlit:?}");
     }
 }

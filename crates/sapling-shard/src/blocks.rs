@@ -168,6 +168,16 @@ pub(crate) fn reaches(world: &World, player: Entity, pos: BlockPos) -> bool {
 /// and settles what is around it; a cell that already held it changes nothing. False where it
 /// could not be set.
 pub(crate) fn update_block(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
+    if !commanded::dust_bed_half(world, layer, pos) {
+        return put_settled(world, layer, pos, block);
+    }
+    let mut put = false;
+    send::batched(world, |world| put = put_settled(world, layer, pos, block));
+    put
+}
+
+/// [`update_block`] without a set bed's dust and batch.
+pub(super) fn put_settled(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
     let registry = level(world, layer).map(|level| level.registry());
     let put_as = registry.and_then(|registry| send::resolve(registry, block)).map(|id| (falling::as_put(world, layer, pos, id), id));
     let swapped = match (registry, put_as) {

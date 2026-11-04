@@ -71,7 +71,9 @@ selecting,session,items,enchanting}.rs`.
   bot disconnected, so the edge was not sent.
 - `/recipe give @s *` unlocked 4092 (bds-t1drecipe.txt): every recipe but the starting 20 and the
   540 whose unlock list of ingredients is empty (barrel, `bed_dye_*`); again, no packet. BDS's
-  order is not CraftingData's, which sapling keeps.
+  order is the recipes' network ids, not CraftingData's; sapling kept CraftingData's until
+  2026-11-04 and now sorts by network id (`recipes/book.rs`, test `give_all_lists_them_in_bds_order`:
+  first, every thousandth and last of BDS's 4092 alike).
 - `/gamerule` lists BDS's four overloads: `playerwaypoints`, 32 bool rules, 5 int rules.
 
 ## Not seen; sapling's choice

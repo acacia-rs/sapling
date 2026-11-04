@@ -12,7 +12,7 @@ use sapling_api::{Block, BlockPos, Difficulty, Face};
 
 use super::{Dice, level, random_queue, send};
 use crate::components::Settings;
-use burning::{Around, FIRE, SOUL_FIRE, burns, fire_of, is_air, name_at};
+use burning::{Around, FIRE, SOUL_FIRE, fire_of, is_air, lava_lights, name_at};
 
 pub(crate) use burning::stands;
 
@@ -92,7 +92,7 @@ pub(crate) fn light(world: &mut World, layer: Entity, into: BlockPos) -> bool {
 /// Whether lava under `over` may light fire on its random tick: air or what burns is over it (the
 /// lavafire drill's lava under a plank lit the air beside the plank).
 pub(super) fn lights_under(level: &sapling_world::World, over: BlockPos) -> bool {
-    is_air(level, over) || name_at(level, over).and_then(burns).is_some()
+    is_air(level, over) || name_at(level, over).is_some_and(lava_lights)
 }
 
 /// A random tick of the lava at `pos`: with air or what burns over it, up to ten cells around it
@@ -105,7 +105,7 @@ pub(super) fn kindled_by_lava(world: &mut World, layer: Entity, pos: BlockPos, r
         return;
     }
     let Some(level) = level(world, layer).filter(|level| lights_under(level, Face::Up.neighbour(pos))) else { return };
-    let flammable = |cell: BlockPos| name_at(level, cell).and_then(burns).is_some();
+    let flammable = |cell: BlockPos| name_at(level, cell).is_some_and(lava_lights);
     for _ in 0..TRIES {
         let tried: BlockPos = std::array::from_fn(|axis| pos[axis] + roll(3) as i32 - 1);
         if !flammable(tried) {

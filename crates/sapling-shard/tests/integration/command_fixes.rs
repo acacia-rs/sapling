@@ -36,11 +36,32 @@ fn a_bed_set_by_command_lies_whole_with_its_head_in_the_cell_named() {
     let mut h = alex();
     let (set, sent) = told(&mut h, |ctx| ctx.update_block([10, 65, -4], &Block::new("minecraft:bed")));
     assert!(set);
+    assert_eq!(all::<UpdateSubchunkBlocks>(&sent).len(), 1, "both shown together");
+    // research/captures/bds-e3sets.txt: a tick on, both again, foot first, and a sensor hears it.
+    let again = h.tick_all().to(1).to_vec();
+    let shown: Vec<i32> = all::<UpdateSubchunkBlocks>(&again).iter().flat_map(|packet| packet.blocks.iter().map(|block| block.position.z)).collect();
+    assert_eq!((shown, all::<acacia_proto::packets::BlockEntityData>(&again).len()), (vec![-5, -4], 2));
     assert!(properties(&mut h, [10, 65, -4]).contains("head_piece_bit=1"), "the named cell is the head");
     assert!(properties(&mut h, [10, 65, -5]).contains("head_piece_bit=0"), "the foot behind it, as BDS's direction 0");
-    assert_eq!(all::<UpdateSubchunkBlocks>(&sent).len(), 1, "both shown together");
+    ask(&mut h, |ctx| ctx.update_block([12, 65, -2], &Block::new("minecraft:sculk_sensor")));
+    ask(&mut h, |ctx| ctx.update_block([10, 65, -4], &Block::new("minecraft:air")));
+    ask(&mut h, |ctx| ctx.update_block([10, 65, -4], &Block::new("minecraft:bed")));
+    (0..6).for_each(|_| _ = h.tick_all());
+    assert!(properties(&mut h, [12, 65, -2]).contains("sculk_sensor_phase=1"), "the set bed is heard");
     ask(&mut h, |ctx| ctx.update_block([12, 65, -6], &Block::new("minecraft:bed").with("direction=1,head_piece_bit=1")));
     assert!(properties(&mut h, [13, 65, -6]).starts_with("minecraft:bed["), "a west-facing bed's foot lies east");
+}
+
+#[test]
+fn a_bed_set_to_air_shows_the_other_half_s_dust_then_both_halves_together() {
+    // research/captures/bds-e3sets.txt: dust at the head's corner, then one list, the cell set first.
+    let mut h = alex();
+    ask(&mut h, |ctx| ctx.update_block([10, 65, -4], &Block::new("minecraft:bed")));
+    (0..2).for_each(|_| _ = h.tick_all());
+    let (_, sent) = told(&mut h, |ctx| ctx.update_block([10, 65, -5], &Block::air()));
+    let dust: Vec<[f32; 3]> = all::<acacia_proto::packets::LevelEvent>(&sent).iter().filter(|event| event.event == acacia_proto::packets::LevelEventEvent::ParticleDestroyBlockNoSound).map(|event| [event.position.x, event.position.y, event.position.z]).collect();
+    let listed: Vec<Vec<i32>> = all::<UpdateSubchunkBlocks>(&sent).iter().map(|packet| packet.blocks.iter().map(|block| block.position.z).collect()).collect();
+    assert_eq!((dust, listed, all::<UpdateBlock>(&sent).len()), (vec![[10.0, 65.0, -4.0]], vec![vec![-5, -4]], 0));
 }
 
 #[test]

@@ -1,10 +1,9 @@
 //! `/recipe give|take <player> <recipe|*>`: the recipes each player's recipe book holds, starting
 //! with those a new player knows, answered and sent as BDS 1.26.52 does
 //! (research/captures/bds-controls.txt, bds-controls2.txt).
-//! `give *` gives what BDS gave (`sapling_data::given_recipe_ids`, bds-t1drecipe.txt).
-// TODO: `give *` lists them in CraftingData's order, not BDS's. The shard keeps the real book
-// (saved, filled by picked-up items); this one is not saved and misses those, until sapling-api
-// can read it.
+//! `give *` gives what BDS gave, in its order (`sapling_data::given_recipe_ids`, bds-t1drecipe.txt).
+// TODO: the shard keeps the real book (saved, filled by picked-up items); this one is not saved and
+// misses those, until sapling-api can read it.
 
 use std::collections::{HashMap, HashSet};
 

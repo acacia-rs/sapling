@@ -66,11 +66,21 @@ async fn a_bot_goes_to_the_nether_by_command_and_back() {
     alice.wait_ticks(20).await.expect("connected");
 
     let (x, z) = NETHER_SPAWN;
+    // bds-t1dexec.txt: a dimension nobody is in has no loaded columns for a command.
+    let set = format!("execute in nether run setblock {x} {} {z} stone", FLOOR_Y + 2);
+    assert_eq!(run(&mut alice, &set).await, ("commands.setblock.outOfWorld".to_owned(), false));
+    let load = format!("execute in nether run structure load nowhere {} {} {z}", x + 8, FLOOR_Y + 2);
+    assert!(run(&mut alice, &format!("structure save nowhere {} {GROUND} {} {} {GROUND} {}", SPAWN.0, SPAWN.1, SPAWN.0 + 1, SPAWN.1 + 1)).await.1);
+    assert_eq!(run(&mut alice, &load).await, ("commands.structure.load.queued".to_owned(), true));
     alice.client().command(&format!("execute in nether run tp @s {x}.5 {} {z}.5", FLOOR_Y + 1));
     let (change, placed) = arrive(&mut alice, 1).await;
     assert_eq!(([change.position.x, change.position.y, change.position.z], change.loading_screen_id), ([x as f32 + 0.5, (FLOOR_Y + 1) as f32, z as f32 + 0.5], Some(0)));
     assert_eq!((placed, block(&alice, [x, FLOOR_Y, z])), ([x, FLOOR_Y + 1, z], ("minecraft:netherrack", 1)));
     assert_eq!(run(&mut alice, &format!("tp @s {}.5 {} {z}.5", x + 3, FLOOR_Y + 1)).await, ("commands.tp.success.coordinates".to_owned(), true), "a tp in the Nether stays there");
+    let set = format!("setblock {x} {} {z} stone", FLOOR_Y + 3);
+    assert_eq!(run(&mut alice, &set).await, ("commands.setblock.success".to_owned(), true), "a setblock there sets the Nether's block");
+    let found = format!("testforblock {x} {} {z} stone", FLOOR_Y + 3);
+    assert_eq!(run(&mut alice, &found).await, ("commands.testforblock.success".to_owned(), true));
 
     alice.client().command(&format!("execute in overworld run tp @s {}.5 {} {}.5", SPAWN.0, GROUND + 1, SPAWN.1));
     let (back, placed) = arrive(&mut alice, 0).await;

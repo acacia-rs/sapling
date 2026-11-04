@@ -232,10 +232,10 @@ fn set_number(world: &mut World, layer: Entity, pos: BlockPos, key: &str, value:
     send::set(world, layer, pos, next)
 }
 
+/// A sensor's `sound` at its cell's corner with no block, as every BDS capture had it (bds-e3sets.txt).
 fn play(world: &mut World, layer: Entity, pos: BlockPos, sound: &str) {
-    let Some(level) = level(world, layer) else { return };
-    let noise = send::sound(sound, level.registry(), pos, level.block(pos[0], pos[1], pos[2]));
-    send::to_viewers(world, layer, pos, &[noise]);
+    let [x, y, z] = pos.map(|c| c as f32);
+    send::to_viewers(world, layer, pos, &[send::noise(sound, acacia_proto::types::Vec3f { x, y, z }, -1)]);
 }
 
 /// A vibration reached an idle sensor: it goes active, powered by how near it was (S9-S10).

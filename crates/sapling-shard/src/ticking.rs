@@ -53,11 +53,14 @@ impl Region {
         Self { centres, reach: tick_distance(world) }
     }
 
-    /// Whether `column` of `layer` ticks. A world nobody is in ticks everything: BDS's ticks
-    /// nothing, but headless shards and their tests run without players.
+    /// Whether `column` of `layer` ticks. A shard nobody is in ticks everything: BDS's ticks
+    /// nothing, but headless shards and their tests run without players. A world nobody is in
+    /// while others are ticks only its kept columns, as BDS's (`execute in` answers `outOfWorld`
+    /// there, research/captures/bds-t1dexec.txt).
     pub(crate) fn ticks(&self, world: &World, layer: Entity, column: ChunkPos) -> bool {
-        let Some(centres) = self.centres.get(&layer) else { return true };
-        centres.iter().any(|centre| in_tick_region(column.x - centre.x, column.z - centre.z, self.reach)) || world.get::<crate::kept::Kept>(layer).is_some_and(|kept| kept.holds(column))
+        let kept = || world.get::<crate::kept::Kept>(layer).is_some_and(|kept| kept.holds(column));
+        let Some(centres) = self.centres.get(&layer) else { return self.centres.is_empty() || kept() };
+        centres.iter().any(|centre| in_tick_region(column.x - centre.x, column.z - centre.z, self.reach)) || kept()
     }
 
     pub(crate) fn ticks_block(&self, world: &World, layer: Entity, pos: BlockPos) -> bool {
@@ -85,7 +88,9 @@ impl Region {
 
 /// Whether `pos` of `layer` ticks ([`Region::ticks`]).
 pub(crate) fn ticks_column(world: &mut World, layer: Entity, pos: ChunkPos) -> bool {
-    Region::of(world).ticks(world, layer, pos)
+    // A column still being made is not ticking yet: a command there would write nowhere (bds-t1dexec.txt).
+    let is_loaded = world.get::<crate::components::Layer>(layer).is_some_and(|level| level.world.is_loaded(pos));
+    is_loaded && Region::of(world).ticks(world, layer, pos)
 }
 
 /// The columns of [`near_players`] and the kept ones (kept.rs), each once, in an order that does

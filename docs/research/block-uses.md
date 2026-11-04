@@ -257,8 +257,9 @@ two ways: the first candle, pickle and snow layer are told by `place` where BDS 
 ## Left
 
 - A frame's item comes out at the first blow, with `SoundItemframeRemoveItem` at the corner,
-  and the frame stands (`bds-bonemeal2.txt`, its last steps); sapling does the same, and in
-  creative breaks the frame with the same blow, which was not tried on BDS.
+  and the frame stands (`bds-bonemeal2.txt`, its last steps); sapling does the same. In creative
+  (bds-e3mouseframe.txt, 2026-11-04) the same blow takes the item, drops nothing and breaks the
+  frame in that tick; sapling dropped the item, fixed (`holders::hit`).
 
 ## Parity drill (2026-11-04, `bds_command_probe t3uses`, `t3nether`)
 

@@ -61,8 +61,9 @@ pub(super) fn potted(world: &World, layer: Entity, pos: BlockPos) -> Option<Opti
 }
 
 /// A hit on the block at `pos`: a frame that holds an item lets it go and stands, as BDS's did
-/// at the first blow. False for anything else.
-pub(super) fn hit(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+/// at the first blow; it is dropped where `drops` (a creative blow dropped none and broke the frame
+/// in the same tick, research/captures/bds-e3mouseframe.txt). False for anything else.
+pub(super) fn hit(world: &mut World, layer: Entity, pos: BlockPos, drops: bool) -> bool {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
     let name = level.registry().get(level.block(pos[0], pos[1], pos[2])).map(|state| state.name);
     let Some(mut fields) = level.block_entity(pos).map(|entity| entity.nbt.clone()).filter(|_| FRAMES.iter().any(|(frame, _)| Some(*frame) == name)) else { return false };
@@ -72,7 +73,9 @@ pub(super) fn hit(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     }
     send::keep_entity(world, layer, pos, &fields);
     super::frames::show_map(world, layer, pos, None);
-    crate::drops::spill(world, layer, item, pos);
+    if drops {
+        crate::drops::spill(world, layer, item, pos);
+    }
     let corner = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
     send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEvent { event: LevelEventEvent::SoundItemframeRemoveItem, position: corner, data: 0 })]);
     true

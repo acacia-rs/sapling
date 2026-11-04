@@ -87,6 +87,11 @@ pub(super) fn pop_by(world: &mut World, layer: Entity, pos: BlockPos, by: &loot:
     take(world, layer, pos, by, true);
 }
 
+/// [`pop`] without the break's particles, shown before (set_entities.rs `is_unheld_frame`).
+pub(super) fn pop_unshown(world: &mut World, layer: Entity, pos: BlockPos) {
+    take(world, layer, pos, &loot::Breaker::UNAIDED, false);
+}
+
 /// Breaks the block at `pos` with what `by` makes it leave, showing it break where `shown`.
 fn take(world: &mut World, layer: Entity, pos: BlockPos, by: &loot::Breaker, shown: bool) {
     let Some((registry, id)) = block(world, layer, pos) else { return };

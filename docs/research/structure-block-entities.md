@@ -192,7 +192,11 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   `a_block_entity_is_shown_as_bds_shows_it_versioned_and_sorted`, set_shown.rs. Saved block
   entities are unchanged (sapling's own lack the version on disk). Left then: two block
   differences sapling-setshown.txt showed. BDS's unsupported set frame was gone by its removal
-  (`noChange`), and its bed's `setblock … air` sent no UpdateBlock.
+  (`noChange`), and its bed's `setblock … air` sent no UpdateBlock. Drilled 2026-11-04 (bds-e3sets.txt,
+  e3mouseframe): a frame set with nothing to hang on shows its break dust at the set and goes, item
+  left, a tick later (`set_entities::is_unheld_frame`); a bed half set to air shows the other half's
+  `ParticleDestroyBlockNoSound` at its corner, then both halves as air in one UpdateSubchunkBlocks
+  (`commanded::dust_bed_half`). Fixed; tests in set_shown.rs and command_fixes.rs.
 - Set entities (2026-11-04, `bds_command_probe s7ents`, bds-s7ents.txt against sapling-s7ents.txt):
   39 blocks set one by one. Fixed (blocks/set_entities.rs, `BlockEntity::shown` and `updated`):
   - A set frame, glow frame, lectern, jukebox (`FinishedRecording` 0, `TicksPlaying` 0), lodestone,
@@ -219,6 +223,10 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   - Re-drilled (sapling-s7ents.txt): every entity, its fields and its second send as BDS's. Left,
     not block entities: BDS's set daylight detector read 10 some 30 ticks on (sapling's stays 0,
     redstone.md), and its sculk sensor heard the bed's set (phases 1 and 2), sapling's did not.
+    Fixed 2026-11-04 (bds-e3sets.txt): a detector set by command waits for the next second's
+    reading (`daylight::left_for_the_second`; one placed by hand is read the next tick); the bed's
+    second show sends `BlockPlace` from its foot, heard by the sensor, whose power sounds play at
+    its corner with id -1 (`shown_again::show_beds`, `sculk::play`).
   - Not drilled: a shulker box holding stacks (its `Items` are shown as kept), a sign with text, a
     vault or trial spawner that ran.
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial

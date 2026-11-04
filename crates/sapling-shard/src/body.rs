@@ -157,11 +157,13 @@ impl Body {
     /// [`Body::mob_step`]. `random` is drawn on for an orb's waves and its throw out of lava. The
     /// motion it moved by.
     pub fn step(&mut self, level: &Level, physics: &Physics, random: &mut impl FnMut() -> f32) -> [f32; 3] {
-        let wanted = self.own_step(level, physics, random);
+        // BDS's piston pushes after a body's own tick: one pushed up or down this tick does not
+        // move again in it (research/captures/bds-e3pmob.txt).
         if let Some(on_ground) = self.pushed.take() {
             self.on_ground = on_ground;
+            return [0.0; 3];
         }
-        wanted
+        self.own_step(level, physics, random)
     }
 
     fn own_step(&mut self, level: &Level, physics: &Physics, random: &mut impl FnMut() -> f32) -> [f32; 3] {

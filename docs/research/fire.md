@@ -137,4 +137,16 @@ on the block they stand or hang on and candles no longer; test
 - Fire a world folder holds ticks only if its column kept its tick, as on BDS, where `FireBlock`
   takes no random tick and nothing else starts it (vtable 14a8e5550). Sapling saves the queue's
   wait in `PendingTicks` as game ticks at the rule of the save.
-- Which blocks have `mLavaFlammable`, against sapling's flame odds, was not compared.
+- Lava's flag by block name was read off registry call sites, not dumped live; a few sites came out
+  unnamed (scratch `flam2.tsv` of the 2026-11-04 decompile), so a single block's flag may be wrong.
+
+## Lava (decompiled 2026-11-04)
+
+`LiquidBlock::randomTick` 148b5cd10 reads only `mLavaFlammable` (Block+0xa6, an enum Never/Always on
+`BlockFlammableDescription` beside the flame and burn odds), for the cell over the lava and each tried
+cell. The registry 14849c7e0 sets it apart from the odds: Always with no odds for wooden doors,
+trapdoors, signs, buttons and pressure plates, the crimson and warped wood family, banners, note
+blocks, trapped chests, daylight detectors, mushroom blocks, chorus; Never with odds for the small
+flowers, petals, leaf litter, hay, coal blocks, campfires, azaleas and cave vines; a JSON
+`"minecraft:flammable": true` is Never. Sapling asked the flame odds; fixed (`fire/burning.rs`
+`lava_lights`).

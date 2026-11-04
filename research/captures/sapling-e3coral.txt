@@ -1,0 +1,172 @@
+## drill starts at 1793832709393
+## /gamerule domobspawning false
+     19 watcher GameRulesChanged doMobSpawning=Bool(false)
+     19 actor   GameRulesChanged doMobSpawning=Bool(false)
+     19 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+     19 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /kill @e[type=!player]
+   1019 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill 0 -61 0 20 -61 20 stone
+   2027 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 0 -60 0 20 -55 20 air
+   3041 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /gamemode creative @s
+   4018 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4018 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   4018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4768 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   4769 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /clear @s
+   5018 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5018 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /tp @s 10.5 -60 10.5
+   6069 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"10.50, -60.00, 10.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"10.50\"},{\"text\":\"-60.00\"},{\"text\":\"10.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6069 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "10.50", "-60.00", "10.50"]
+## /
+## /setblock 3 -60 16 tube_coral
+   8071 watcher UpdateBlock 3 -60 16 layer 0 tube_coral[]
+   8071 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8072 actor   UpdateBlock 3 -60 16 layer 0 tube_coral[]
+   8072 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 5 -60 16 tube_coral
+   9069 actor   UpdateBlock 5 -60 16 layer 0 tube_coral[]
+   9069 watcher UpdateBlock 5 -60 16 layer 0 tube_coral[]
+   9069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 15 -60 16 tube_coral
+  10069 actor   UpdateBlock 15 -60 16 layer 0 tube_coral[]
+  10069 watcher UpdateBlock 15 -60 16 layer 0 tube_coral[]
+  10069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  10069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 17 -60 16 tube_coral
+  11069 actor   UpdateBlock 17 -60 16 layer 0 tube_coral[]
+  11069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  11069 watcher UpdateBlock 17 -60 16 layer 0 tube_coral[]
+  11069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 12 -60 8 stone
+  12069 actor   UpdateBlock 12 -60 8 layer 0 stone[]
+  12069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  12069 watcher UpdateBlock 12 -60 8 layer 0 stone[]
+  12070 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12568 actor   UpdateBlock 3 -60 16 layer 0 dead_tube_coral[]
+  12569 watcher UpdateBlock 3 -60 16 layer 0 dead_tube_coral[]
+## /setblock 12 -60 12 stone
+  13069 watcher UpdateBlock 12 -60 12 layer 0 stone[]
+  13069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13069 actor   UpdateBlock 12 -60 12 layer 0 stone[]
+  13069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  13118 watcher UpdateBlock 15 -60 16 layer 0 dead_tube_coral[]
+  13118 actor   UpdateBlock 15 -60 16 layer 0 dead_tube_coral[]
+  13718 actor   UpdateBlock 5 -60 16 layer 0 dead_tube_coral[]
+  13718 watcher UpdateBlock 5 -60 16 layer 0 dead_tube_coral[]
+## /setblock 8 -60 12 stone
+  14068 actor   UpdateBlock 8 -60 12 layer 0 stone[]
+  14069 watcher UpdateBlock 8 -60 12 layer 0 stone[]
+  14069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 8 -60 8 stone
+  15069 actor   UpdateBlock 8 -60 8 layer 0 stone[]
+  15069 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  15070 actor   UpdateBlock 17 -60 16 layer 0 dead_tube_coral[]
+  15070 watcher UpdateBlock 8 -60 8 layer 0 stone[]
+  15070 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15070 watcher UpdateBlock 17 -60 16 layer 0 dead_tube_coral[]
+## /replaceitem entity @s slot.weapon.mainhand 0 tube_coral_fan 8
+  16174 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"8\"},{\"text\":\"Tube Coral Fan\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16174 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "8", "Tube Coral Fan"]
+## /
+  17630 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  17630 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /!place 2 0 -2 up
+  18081 watcher UpdateBlock 12 -59 8 layer 0 tube_coral_fan[coral_fan_direction=0]
+  18081 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 12.5, y: -58.5, z: 8.5 }, extra_data: 1658024058, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## placed: Ok(())
+  18095 actor   UpdateBlock 12 -60 8 layer 0 stone[]
+  18095 actor   UpdateBlock 12 -59 8 layer 0 tube_coral_fan[coral_fan_direction=0]
+  18095 actor   UpdateBlock 12 -61 8 layer 0 stone[]
+  18095 actor   UpdateBlock 12 -59 8 layer 0 tube_coral_fan[coral_fan_direction=0]
+  18095 actor   UpdateBlock 12 -58 8 layer 0 air[]
+  18095 actor   UpdateBlock 12 -60 8 layer 0 stone[]
+  18095 actor   UpdateBlock 12 -59 8 layer 0 tube_coral_fan[coral_fan_direction=0]
+  18095 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 12.5, y: -58.5, z: 8.5 }, extra_data: 1658024058, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!place 2 0 -2 east
+## placed: Err(NotVisible("East of [12, -60, 8] is hidden from the eye"))
+## /!place 2 0 2 up
+  20181 watcher UpdateBlock 12 -59 12 layer 0 tube_coral_fan[coral_fan_direction=0]
+  20181 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 12.5, y: -58.5, z: 12.5 }, extra_data: 1658024058, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## placed: Ok(())
+  20202 actor   UpdateBlock 12 -60 12 layer 0 stone[]
+  20202 actor   UpdateBlock 12 -59 12 layer 0 tube_coral_fan[coral_fan_direction=0]
+  20202 actor   UpdateBlock 12 -61 12 layer 0 stone[]
+  20202 actor   UpdateBlock 12 -59 12 layer 0 tube_coral_fan[coral_fan_direction=0]
+  20202 actor   UpdateBlock 12 -58 12 layer 0 air[]
+  20202 actor   UpdateBlock 12 -60 12 layer 0 stone[]
+  20202 actor   UpdateBlock 12 -59 12 layer 0 tube_coral_fan[coral_fan_direction=0]
+  20202 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 12.5, y: -58.5, z: 12.5 }, extra_data: 1658024058, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  21080 watcher UpdateBlock 12 -59 8 layer 0 dead_tube_coral_fan[coral_fan_direction=0]
+  21080 actor   UpdateBlock 12 -59 8 layer 0 dead_tube_coral_fan[coral_fan_direction=0]
+## /!place 2 0 2 east
+## placed: Err(NotVisible("East of [12, -60, 12] is hidden from the eye"))
+## /!place -2 0 2 up
+  22280 watcher UpdateBlock 8 -59 12 layer 0 tube_coral_fan[coral_fan_direction=0]
+  22280 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 8.5, y: -58.5, z: 12.5 }, extra_data: 1658024058, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## placed: Ok(())
+  22297 actor   UpdateBlock 8 -60 12 layer 0 stone[]
+  22298 actor   UpdateBlock 8 -59 12 layer 0 tube_coral_fan[coral_fan_direction=0]
+  22298 actor   UpdateBlock 8 -61 12 layer 0 stone[]
+  22298 actor   UpdateBlock 8 -59 12 layer 0 tube_coral_fan[coral_fan_direction=0]
+  22298 actor   UpdateBlock 8 -58 12 layer 0 air[]
+  22298 actor   UpdateBlock 8 -60 12 layer 0 stone[]
+  22298 actor   UpdateBlock 8 -59 12 layer 0 tube_coral_fan[coral_fan_direction=0]
+  22298 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 8.5, y: -58.5, z: 12.5 }, extra_data: 1658024058, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!place -2 0 2 west
+## placed: Err(NotVisible("West of [8, -60, 12] is hidden from the eye"))
+  24280 watcher UpdateBlock 12 -59 12 layer 0 dead_tube_coral_fan[coral_fan_direction=0]
+  24280 actor   UpdateBlock 12 -59 12 layer 0 dead_tube_coral_fan[coral_fan_direction=0]
+## /!place -2 0 -2 up
+  24383 watcher UpdateBlock 8 -59 8 layer 0 tube_coral_fan[coral_fan_direction=0]
+  24383 watcher LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 8.5, y: -58.5, z: 8.5 }, extra_data: 1658024058, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## placed: Ok(())
+  24424 actor   UpdateBlock 8 -60 8 layer 0 stone[]
+  24424 actor   UpdateBlock 8 -59 8 layer 0 tube_coral_fan[coral_fan_direction=0]
+  24424 actor   UpdateBlock 8 -61 8 layer 0 stone[]
+  24424 actor   UpdateBlock 8 -59 8 layer 0 tube_coral_fan[coral_fan_direction=0]
+  24424 actor   UpdateBlock 8 -58 8 layer 0 air[]
+  24424 actor   UpdateBlock 8 -60 8 layer 0 stone[]
+  24424 actor   UpdateBlock 8 -59 8 layer 0 tube_coral_fan[coral_fan_direction=0]
+  24424 actor   LevelSoundEvent LevelSoundEvent { sound_id: "place", position: Vec3f { x: 8.5, y: -58.5, z: 8.5 }, extra_data: 1658024058, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /!place -2 0 -2 west
+## placed: Err(NotVisible("West of [8, -60, 8] is hidden from the eye"))
+  25879 actor   UpdateBlock 8 -59 12 layer 0 dead_tube_coral_fan[coral_fan_direction=0]
+  25880 watcher UpdateBlock 8 -59 12 layer 0 dead_tube_coral_fan[coral_fan_direction=0]
+## /
+## /
+  28081 watcher UpdateBlock 8 -59 8 layer 0 dead_tube_coral_fan[coral_fan_direction=0]
+  28081 actor   UpdateBlock 8 -59 8 layer 0 dead_tube_coral_fan[coral_fan_direction=0]
+## /
+## /
+  30429 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  30429 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /clear @s
+  36478 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+  36478 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"8\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36479 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "8"]
+## /fill 0 -60 0 20 -59 20 air
+  37488 actor   UpdateBlock 17 -60 16 layer 0 air[]
+  37488 actor   UpdateSubchunkBlocks 3 -60 16 air[]; 5 -60 16 air[]; 15 -60 16 air[] | extra: 
+  37488 watcher UpdateBlock 17 -60 16 layer 0 air[]
+  37488 watcher UpdateSubchunkBlocks 3 -60 16 air[]; 5 -60 16 air[]; 15 -60 16 air[] | extra: 
+  37488 watcher UpdateSubchunkBlocks 8 -60 8 air[]; 8 -60 12 air[]; 8 -59 8 air[]; 8 -59 12 air[]; 12 -60 8 air[]; 12 -60 12 air[]; 12 -59 8 air[]; 12 -59 12 air[] | extra: 
+  37488 actor   UpdateSubchunkBlocks 8 -60 8 air[]; 8 -60 12 air[]; 8 -59 8 air[]; 8 -59 12 air[]; 12 -60 8 air[]; 12 -60 12 air[]; 12 -59 8 air[]; 12 -59 12 air[] | extra: 
+  37488 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["12"]
+  37488 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"12\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1

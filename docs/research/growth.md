@@ -71,7 +71,13 @@ torchflower crop did not grow in the minute and a half.
 `bds_command_probe t3copper` (2026-11-04, bds-t3copper.txt) set 25 lone blocks of copper at the rule's
 100 for a minute: the median block was exposed after 19.9 s, weathered 30.8, oxidized 45.8 on BDS
 (23, 22, 20 of 25 got there), 12.7, 26.1 and 35.0 on sapling (24, 23, 22), whose odds are the
-binary's (copper.md O2). One sample a side; left as is.
+binary's (copper.md O2). One sample a side; left as is. A second sample (`e3pace`, bds-e3pace.txt
+against sapling-e3pace.txt, 28 blocks at 100 for a minute, means of those that got there): exposed
+13.0 s vs 10.5, weathered 24.1 vs 23.5, oxidized 38.8 vs 32.0 (27/24/21 of 28 vs 28/27/22), within a
+standard error of each other but for oxidized, cut at 60 s; the same odds, nothing changed. Lit
+redstone ore in the same run (200 cells) went out after 795 vs 815 ticks at rule 1 (124 vs 126 out in
+90 s), 75 vs 60 at 20 and 20.3 vs 16.7 at 100: sapling's random ticks some 20% quicker at the high rules,
+two to three standard errors; not chased (the random-tick queue's draw, `blocks/random_queue.rs`).
 
 ## Leaves
 
@@ -247,8 +253,9 @@ not ported [I].
     - Snow in a warm biome loses a layer one random tick in 16.
   - Left:
     - Grass spread at light 9 over its dirt, but within 60 s not at 10; sapling's did the reverse. Read as chance.
-    - BDS did not break a mushroom at light 13 when a light block was set beside it. Its light likely was not in yet
-      at that update, and sapling, which relights first, breaks it.
+      Re-drilled 2026-11-04 (bds-e3light.txt against sapling-e3light.txt): grass at 9 and 10 and the mushroom at
+      13 went the same way on both.
+    - BDS did not break a mushroom at light 13 when a light block was set beside it (same re-drill: alike).
     - Freezing, snow lying and the sun need a cold biome or weather the flat drill world lacks, so they are undrillable
       here.
   - Sapling's drill world has ground at y 60 to 63 over the drills (`drill_server.rs`), so a scene that needs daylight

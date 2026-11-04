@@ -46,7 +46,9 @@ fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) -> R
 
 pub async fn connect(server: &str, name: &str) -> Result<Bot, Box<dyn std::error::Error>> {
     let trackers = acacia_bot::state::Trackers { entities: true, ..Default::default() };
-    let config = BotConfig { physics: true, subscribe: PacketFilter::all(), trackers, ..BotConfig::default() };
+    // A scene named for the mouse (bds_command_probe e3mouseframe) breaks in creative as BDS lets only a mouse's input.
+    let mouse_input = std::env::args().nth(2).is_some_and(|scene| scene.contains("mouse"));
+    let config = BotConfig { physics: true, subscribe: PacketFilter::all(), trackers, mouse_input, ..BotConfig::default() };
     // Wide enough that both bots see every drill, which spread over a hundred blocks.
     Ok(Bot::connect(Client::builder(server).offline(name).chunk_radius(8), config).await?)
 }

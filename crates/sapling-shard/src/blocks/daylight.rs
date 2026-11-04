@@ -55,6 +55,14 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
     }
 }
 
+/// A detector set by command waits for the next second's reading: BDS showed one set at 0 and
+/// read 15 twenty ticks on (research/captures/bds-e3sets.txt).
+pub(super) fn left_for_the_second(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some(mut detectors) = world.get_resource_mut::<Detectors>() {
+        detectors.1.remove(&(layer, pos));
+    }
+}
+
 /// A hand turns a detector inside out, as it stands.
 pub(super) fn turn(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     let Some(level) = level(world, layer) else { return };

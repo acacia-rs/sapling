@@ -136,6 +136,25 @@ fn an_item_frame_takes_an_item_and_turns_it_and_a_decorated_pot_takes_a_stack() 
 }
 
 #[test]
+fn a_creative_blow_on_a_frame_takes_its_item_without_a_drop() {
+    // research/captures/bds-e3mouseframe.txt: the remove sound, the frame broken, nothing left lying.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:diamond", 3))));
+        assert!(ctx.set_block([2, 65, 0], &Block { name: "minecraft:frame".into(), properties: "facing_direction=1".into() }));
+    });
+    h.tick_all();
+    h.receive(1, &click([2, 65, 0], 1, None));
+    h.tick_all();
+    h.receive(1, &common::block_actions(&[(acacia_proto::types::Action::StartBreak, [2, 65, 0])]));
+    let sent = h.tick_all().to(1).to_vec();
+    assert!(all::<LevelEvent>(&sent).iter().any(|event| event.event == acacia_proto::packets::LevelEventEvent::SoundItemframeRemoveItem));
+    assert!(all::<AddItemEntity>(&sent).is_empty(), "no diamond dropped");
+}
+
+#[test]
 fn redstone_ore_lights_under_a_standing_survival_player() {
     // research/captures/bds-oresteps.txt: lit a tick after it was set under the actor.
     let mut h = Harness::new();

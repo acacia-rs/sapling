@@ -128,12 +128,18 @@ pub(crate) fn power(world: &mut World, layer: Entity, pos: BlockPos, is_powered:
         false => Default::default(),
     };
     send::keep_entity(world, layer, pos, &arm(pos, if is_powered { EXPANDING } else { RETRACTING }, piston.is_sticky, &taken, &broken));
+    if is_powered {
+        // Only the arm pushes halfway, in the tick it starts, before it shows: what is behind a
+        // moved block goes once, a tick on (bds-shove.txt, bds-e3pmob.txt).
+        shove::shove(world, layer, &[pos], piston.front, HALFWAY);
+    }
     let started = world.resource::<Tick>().0;
     world.resource_mut::<Pistons>().0.push(Move { layer, pos, extends: is_powered, started, stages_done: 1, taken, broken, carried: Vec::new(), is_powered });
 }
 
-/// Takes the block at `from` to `to` as a moving block, for the piston at `piston`.
-fn carry(world: &mut World, layer: Entity, from: BlockPos, to: BlockPos, piston: BlockPos, extends: bool) -> Option<(BlockPos, u32, Option<Value>)> {
+/// Takes the block at `from` to `to` as a moving block, for the piston at `piston`, listing what
+/// to show in `shown`: the moving block, then air where it was.
+fn carry(world: &mut World, layer: Entity, from: BlockPos, to: BlockPos, piston: BlockPos, extends: bool, shown: &mut Vec<(BlockPos, u32)>) -> Option<(BlockPos, u32, Option<Value>)> {
     let level = level(world, layer)?;
     let (registry, id) = (level.registry(), level.block(from[0], from[1], from[2]));
     let entity = level.block_entity(from).map(|entity| entity.nbt.clone());
@@ -148,9 +154,10 @@ fn carry(world: &mut World, layer: Entity, from: BlockPos, to: BlockPos, piston:
         (Str::from("pistonPosZ"), Value::Int(piston[2])),
     ]);
     fields.extend(entity.clone().map(|entity| (Str::from("movingEntity"), entity)));
-    send::set(world, layer, from, air);
-    send::set(world, layer, to, moving);
-    send::keep_entity(world, layer, to, &Value::Compound(fields));
+    send::set_quietly(world, layer, to, moving);
+    send::set_quietly(world, layer, from, air);
+    send::keep_entity_quietly(world, layer, to, &Value::Compound(fields));
+    shown.extend([(to, moving), (from, air)]);
     Some((to, id, entity))
 }
 
@@ -188,37 +195,41 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
     match going.stages_done {
         1 => {
             going.broken.iter().for_each(|at| updates::pop(world, layer, *at));
+            let mut shown = Vec::new();
             if !going.extends {
                 let air = level(world, layer)?.registry().air_id();
-                send::set(world, layer, front, air);
+                send::set_quietly(world, layer, front, air);
+                shown.push((front, air));
             }
             let step = if going.extends { piston.front } else { back(piston.front) };
-            going.carried = going.taken.clone().into_iter().filter_map(|from| carry(world, layer, from, step.neighbour(from), pos, going.extends)).collect();
+            going.carried = going.taken.clone().into_iter().filter_map(|from| carry(world, layer, from, step.neighbour(from), pos, going.extends, &mut shown)).collect();
             updates::loosened::around(world, layer, &going.taken);
             if going.extends {
                 let name = if piston.is_sticky { "minecraft:sticky_piston_arm_collision" } else { "minecraft:piston_arm_collision" };
                 let head = level(world, layer)?.registry().find(name, &format!("facing_direction={}", piston.facing))?;
-                send::set(world, layer, front, head);
-                // Only the arm pushes halfway: what is behind a moved block goes once, at the end (bds-shove.txt).
-                shove::shove(world, layer, &[pos], piston.front, HALFWAY);
+                send::set_quietly(world, layer, front, head);
+                shown.push((front, head));
+            }
+            send::show_moved(world, layer, &shown, false);
+            if going.extends {
+                shove::shove(world, layer, &pushed(going), piston.front, 1.0);
             }
         }
         2 => {
             let [x, y, z] = pos.map(|c| c as f32);
             send::to_viewers(world, layer, pos, &[send::noise(if going.extends { "piston.out" } else { "piston.in" }, Vec3f { x, y, z }, -1)]);
             send::keep_entity(world, layer, pos, &arm(pos, if going.extends { EXPANDED } else { RETRACTED }, piston.is_sticky, &[], &[]));
-            if going.extends {
-                shove::shove(world, layer, &pushed(going), piston.front, 1.0);
-            }
         }
         _ => {
-            for (at, id, entity) in std::mem::take(&mut going.carried) {
-                send::set(world, layer, at, id);
+            let carried = std::mem::take(&mut going.carried);
+            for (at, id, entity) in &carried {
+                send::set_quietly(world, layer, *at, *id);
                 if let Some(entity) = entity {
-                    send::keep_entity(world, layer, at, &at_place(entity, at));
+                    send::keep_entity_quietly(world, layer, *at, &at_place(entity.clone(), *at));
                 }
-                updates::settle(world, layer, at);
             }
+            send::show_moved(world, layer, &carried.iter().map(|(at, id, _)| (*at, *id)).collect::<Vec<_>>(), true);
+            carried.iter().for_each(|(at, ..)| updates::settle(world, layer, *at));
             going.taken.iter().chain(&going.broken).chain([&front]).for_each(|at| updates::settle(world, layer, *at));
         }
     }

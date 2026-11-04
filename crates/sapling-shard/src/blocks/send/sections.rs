@@ -147,15 +147,49 @@ fn by_section(cells: impl Iterator<Item = Cell>) -> Vec<(BlockPos, Vec<Cell>)> {
     sections
 }
 
+/// Shows the cells a piston moved, as listed (a cell perhaps twice), as BDS did
+/// (research/captures/bds-redstone-pistons.txt): an UpdateSubchunkBlocks per sub-chunk, the last
+/// written first, each followed by its cells' block entities. `settled` blocks go with the priority
+/// flag too and their liquid layer as `extra`; the others' lone cell in a sub-chunk by UpdateBlock.
+pub(crate) fn show_moved(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)], settled: bool) {
+    let flags = if settled { FLAGS.0 | UpdateBlockFlags::PRIORITY.0 } else { FLAGS.0 };
+    let mut sections = by_section(cells.iter().map(|&(pos, id)| (pos, id, flags)));
+    sections.reverse();
+    let packets: Vec<(BlockPos, Vec<Bytes>)> = {
+        let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+        let registry = level.registry();
+        sections
+            .into_iter()
+            .map(|(corner, cells)| {
+                let shown = match cells.as_slice() {
+                    [(pos, id, flags)] if !settled => update_flagged(registry, *pos, *id, 0, UpdateBlockFlags(*flags)),
+                    _ => {
+                        let extra = if settled { cells.iter().map(|&([x, y, z], _, flags)| update_of(registry, &([x, y, z], level.liquid(x, y, z), flags))).collect() } else { Vec::new() };
+                        sapling_net::encode(&UpdateSubchunkBlocks { x: corner[0], y: corner[1], z: corner[2], blocks: cells.iter().map(|cell| update_of(registry, cell)).collect(), extra })
+                    }
+                };
+                let entities = cells.iter().filter_map(|&(pos, ..)| level.block_entity(pos).map(|entity| block_entity_data(pos, entity)));
+                (corner, std::iter::once(shown).chain(entities).collect())
+            })
+            .collect()
+    };
+    for (pos, packets) in packets {
+        to_viewers(world, layer, pos, &packets);
+    }
+}
+
+fn update_of(registry: &sapling_world::BlockRegistry, &([x, y, z], id, flags): &Cell) -> BlockUpdate {
+    BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: sapling_world::block_hash(registry, id), flags, entity_unique_id: i64::MIN, transition_type: BlockUpdateTransitionType::Entity }
+}
+
 fn show_sections(world: &mut World, layer: Entity, sections: Vec<(BlockPos, Vec<Cell>)>, single_as_block: bool) {
     let packets: Vec<(BlockPos, Bytes)> = {
         let Some(registry) = world.get::<Layer>(layer).map(|level| level.world.registry()) else { return };
-        let block = |&([x, y, z], id, flags): &Cell| BlockUpdate { position: BlockCoordinates { x, y, z }, runtime_id: sapling_world::block_hash(registry, id), flags, entity_unique_id: i64::MIN, transition_type: BlockUpdateTransitionType::Entity };
         sections
             .into_iter()
             .map(|(corner, cells)| match cells.as_slice() {
                 [(pos, id, flags)] if single_as_block => (*pos, update_flagged(registry, *pos, *id, 0, UpdateBlockFlags(*flags))),
-                _ => (corner, sapling_net::encode(&UpdateSubchunkBlocks { x: corner[0], y: corner[1], z: corner[2], blocks: cells.iter().map(block).collect(), extra: Vec::new() })),
+                _ => (corner, sapling_net::encode(&UpdateSubchunkBlocks { x: corner[0], y: corner[1], z: corner[2], blocks: cells.iter().map(|cell| update_of(registry, cell)).collect(), extra: Vec::new() })),
             })
             .collect()
     };

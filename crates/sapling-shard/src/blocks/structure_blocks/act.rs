@@ -47,10 +47,7 @@ pub(super) fn trigger(world: &mut World, layer: Entity, pos: BlockPos, mode: i64
                 include_blocks: !fields.flag("removeBlocks"),
                 waterlogged: matches!(by, By::Editor { waterlogged: true }),
                 integrity: (fields.float("integrity") / 100.0).clamp(0.0, 1.0),
-                seed: match fields.int("seed") {
-                    0 => String::new(),
-                    seed => seed.to_string(),
-                },
+                seed: fields.int("seed").to_string(),
             };
             let animation = [Animation::None, Animation::LayerByLayer, Animation::BlockByBlock][fields.int("animationMode").clamp(0, 2) as usize];
             structures::load_animated(world, layer, template, at, &how, animation, fields.float("animationSeconds"));
