@@ -173,8 +173,8 @@ and are not kept; tests in tests/integration/mounts_drilled.rs):
   `slot.armor.body` after it changes only what shows. An untamed horse's `slot.armor` is
   `commands.generic.exception` (no inventory); `slot.armor air` answers success and leaves the armour on.
 - Fixed, correcting the death entries above: the armour in a tamed horse's slot 1 drops as loot after the
-  leather (`riding::looted_armor`); in `bds-tack.txt` a clicked llama carpet stayed, which was with
-  `doMobLoot` off, so it is dropped only with it on (not drilled with it on).
+  leather, with `doMobLoot` on (`riding::looted_armor`; off not drilled); a clicked llama carpet stayed
+  in `bds-tack.txt` with `doMobLoot` on, so a carpet is not loot.
 - Fixed: a summon's spawn event (tame, saddle, baby) shows in the AddEntity's own flag word, and the first
   word after it, with BREATHING, carries it too (`creatures/birth.rs` `arrive`): the words now match
   BDS's for every summon in mountflags and saddleevents. Left: BDS sends one more SetEntityData right

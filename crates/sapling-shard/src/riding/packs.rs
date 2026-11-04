@@ -112,10 +112,10 @@ pub(super) fn wear(world: &mut World, mob: Entity, armor: Option<ItemStack>) {
     world.entity_mut(mob).insert(tack);
 }
 
-/// The armour or carpet in a dying mount's slot 1, which it leaves as loot after its own
-/// (research/captures/bds-bodyslot.txt; with `doMobLoot` off a llama's carpet stayed, bds-tack.txt).
+/// The horse armour in a dying horse's slot 1, which it leaves as loot after its own
+/// (research/captures/bds-bodyslot.txt); a llama's carpet stays (bds-tack.txt, `doMobLoot` on too).
 pub(crate) fn looted_armor(world: &World, mob: Entity) -> Option<ItemStack> {
-    world.get::<Tack>(mob).and_then(|tack| tack.armor.clone())
+    world.get::<Tack>(mob).and_then(|tack| tack.armor.clone()).filter(|armor| !armor.name.ends_with("_carpet"))
 }
 
 /// What `mob`'s goods are kept as: its pack's slots once opened, else its tack and the chest's
