@@ -4,9 +4,12 @@ use crate::common;
 
 use std::sync::{Arc, Mutex};
 
+use acacia_proto::nbt::Value;
+use common::raising::use_on;
+use common::stored::{compound, enter_stored};
 use common::{Harness, click};
 use sapling_api::{Difficulty, EntityInfo, GameMode, Item, PlayerId, RuleValue, ShardCtx, Slot};
-use sapling_world::World;
+use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, ItemStack, MemoryStorage, PlayerData, StoredColumn, World, WorldStorage};
 
 const ALEX: PlayerId = PlayerId(1);
 const MIDNIGHT: i64 = 18000;
@@ -96,6 +99,44 @@ fn natural_mobs_go_when_the_player_is_far_and_summoned_ones_stay() {
     run(&mut h, 3);
     let left: Vec<_> = monsters(&mut h).into_iter().map(|monster| monster.id).collect();
     assert_eq!(left, [summoned]);
+}
+
+/// Stored stone at y 63 under the chunks -3 to 2 each way, and Steve holding a name tag for "Dolly".
+fn stored_floor_with_a_name_tag() -> Arc<MemoryStorage> {
+    let registry = BlockRegistry::vanilla();
+    let stone = registry.states_of("minecraft:stone").next().unwrap().0;
+    let storage = Arc::new(MemoryStorage::default());
+    for (cx, cz) in (-3..3).flat_map(|cx| (-3..3).map(move |cz| (cx, cz))) {
+        let mut chunk = Chunk::empty(cx, cz, Dimension::overworld(registry.air_id()));
+        (0..16).for_each(|x| (0..16).for_each(|z| chunk.set(x, 63, z, 0, stone)));
+        storage.store_column(ChunkPos::new(cx, cz), 0, &StoredColumn::of(chunk)).unwrap();
+    }
+    let display = compound([("Name", Value::String("Dolly".into()))]);
+    let tag = ItemStack { name: "minecraft:name_tag".into(), count: 1, damage: 0, block: None, tag: Some(compound([("display", display)])) };
+    storage.store_player(&acacia_auth::login::offline_identity("Steve"), &PlayerData { main: vec![Some(tag)], ..PlayerData::default() }).unwrap();
+    storage
+}
+
+#[test]
+fn a_natural_mob_a_player_names_stays_when_the_player_goes() {
+    let mut h = Harness::with(common::config(), World::with_storage(stored_floor_with_a_name_tag()));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_time(MIDNIGHT);
+    });
+    run(&mut h, 400);
+    let named = monsters(&mut h).into_iter().next().expect("a natural monster");
+    let [x, y, z] = named.feet;
+    h.remote.run(move |ctx| ctx.teleport(ALEX, [x + 1.0, y, z]));
+    run(&mut h, 2);
+    h.receive(1, &use_on(named.id.0));
+    run(&mut h, 2);
+    h.remote.run(|ctx| ctx.teleport(ALEX, [1000.5, 65.0, 0.5]));
+    run(&mut h, 3);
+    let left: Vec<_> = monsters(&mut h).into_iter().map(|monster| monster.id).collect();
+    assert_eq!(left, [named.id]);
 }
 
 #[test]

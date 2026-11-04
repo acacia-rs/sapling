@@ -60,13 +60,19 @@ Decompiled from the bds-blocks build (`BDS_EXE=acacia/.testserver/bds-blocks/bed
   128; at tick range 4 the max is clamped to 44.
 - Brightness: `getRawBrightness` with the dimension's sky darkening (time and weather). With
   `adjust_for_weather`, when rain times thunder is over 0.9, it is recomputed with sky darkening 10.
-- Herd: size min..max [U: the exact expression], and every member on the same cell, at
-  (x + 0.49, y, z + 0.49) in worlds of 1.21 on. Herd events and guaranteed members are not built.
+- Herd: one of the rule's herds by `nextInt(count)` (default 1 to 1), size
+  `min + roundf(f² (max - min))` with `f` a `nextFloat` (`_spawnMobCluster` 1415ed230, `roundf` import
+  14a5bd080), so small herds are likelier; every member on the same cell, at (x + 0.49, y, z + 0.49) in
+  worlds of 1.21 on. Herd events and guaranteed members are not built.
 - Caps: counts over the 9×9 chunks round the cluster's chunk, split surface/underground: per category
-  (the cluster needs `count < cap`) and per kind (`density_limit`, clipping the herd to what is left).
-  Every spawn is also clipped so the world holds at most 200 spawnable mobs (BDS: those ticked last tick).
-  The per-category caps were not found (read off the dimension, `region vfunc 0x128`); sapling uses
-  monster 8, animal 4, water_animal 5, ambient 2 for both [U].
+  and per kind (`density_limit`, clipping the herd to what is left). The category cap is asked before
+  each member, `count <= cap`, so a category ends one over it. Every spawn is also clipped so the world
+  holds at most 200 spawnable mobs (BDS: those ticked last tick). The caps are floats the base
+  `Dimension` constructor stores (141878200, stores 141879818 to 141879884), surface at +0x104 and
+  underground at +0x120, indexed by `ActorSpawnRuleGroup`'s category (141d3b7f0): animal 4/4, monster
+  8/16, water_animal 36/36, villager 0/0, ambient 0/2, cat 4/0, pillager 8/8, the same in every
+  dimension. Sapling (`spawning/herds.rs`) uses these for its four categories; test
+  `herd_sizes_lean_small_as_bds_squares_the_roll`.
 - Monster spawner blocks: built, docs/research/spawners.md.
 
 ## Slimes [D]
@@ -109,13 +115,23 @@ with its column, stay: sapling keeps no `Persistent` flag, so a natural mob save
 save while it is near a player) comes back persistent. `despawn_from_inactivity` and the filter-only
 despawns (wandering trader, piglin brute, zoglin) are not built.
 
+Persistence by a player [D]: `Player::interact` (1402b7be0) gives the target `PersistentComponent`
+after any interaction that took the click, when the target is a `Mob` (Actor+0x210 bit 2): a name
+tag, a lead, food, taming, a bucket. The summon command's lambda (1423f1a60) also makes its mob
+persistent. Sapling drops `Natural` from a mob any of its click handlers took (`actions.rs` `keep`);
+test `a_natural_mob_a_player_names_stays_when_the_player_goes`. Picked-up items were not looked at.
+
 ## Left
 
-Per-category caps, the herd size expression, persistence from name tags, taming, leashes and picked-up
-items (no `PersistentComponent` seen besides rules' `mPersistence`), structure spawns (fortresses,
-monuments, huts: the tick's second part), patrols, herd events (spawner blocks:
-docs/research/spawners.md). Peaceful does not remove monsters already there [U]. Whether `doMobSpawning` stops
-spawners and eggs was not checked; sapling's eggs ignore it.
+- Structure spawns [D, not built]: `BedrockSpawner::tick` (1415eebf0) asks the chunk's hardcoded
+  spawn areas (1438cfcd0) at the attempt's cell; with none it runs the cluster above, with one it
+  spawns from the area's own list (fortress, monument, witch hut, pillager outpost), the same caps
+  asked per member, the members persistent when the area's flag says. Sapling cannot: its worlds
+  carry no spawn areas (BDS writes them per chunk with the structures; neither sapling-world reads
+  them nor sapling-worldgen writes them), so building it starts with that record.
+- Patrols: `pillager_patrol` needs the patrol spawner, world age and village checks; not read.
+- Herd events (spawner blocks: docs/research/spawners.md). Peaceful does not remove monsters already
+  there [U]. Whether `doMobSpawning` stops spawners and eggs was not checked; sapling's eggs ignore it.
 
 ## Spawn eggs [U]
 
