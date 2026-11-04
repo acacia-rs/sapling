@@ -165,8 +165,14 @@ random tick at that rate (`growth/rules.rs`), only where random ticks run.
 
 `bds_command_probe oresteps` (`bds-oresteps.txt`): ore set under a standing survival player
 was lit a tick later, both times, and an ore the player started to break by hand was lit with
-the first `BlockStartBreak`. Sapling lights the ore a survival player stands on and the ore a
-break starts on; mobs and creative players light none by standing.
+the first `BlockStartBreak`.
+
+`bds_command_probe orestand` (2026-11-04, `examples/shared/eighth2_drill.rs`, `bds-orestand.txt`): ore
+set under the actor lit in the same update in creative and in survival, and ore set under a cow, a
+zombie and an armour stand, each held still, lit a tick later. Sapling lights the ore any body on the
+ground stands on but a spectator's (`vitals/stand.rs` `stand_unhurt`, `creatures.rs`), and the ore a
+break starts on; test `a_creative_player_and_a_mob_light_redstone_ore_by_standing_on_it_as_on_bds`.
+`sapling-orestand.txt` lit all five.
 
 ## A second round
 

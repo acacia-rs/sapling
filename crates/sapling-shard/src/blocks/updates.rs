@@ -1,6 +1,7 @@
 //! What a changed block does to its neighbours: sand and gravel over a gap start to fall
 //! (falling.rs), and what stood on or hung off a block that is gone breaks and leaves its item.
-// TODO: the lists are name endings, not block data; a vine goes at once, where BDS took a tick.
+// TODO: the lists are name endings, not block data; what loses its hold goes at once, where BDS took a
+// tick (bds-holds.txt, bds-burnfloat.txt).
 
 use std::collections::VecDeque;
 
@@ -22,7 +23,7 @@ const STANDS: &[&str] = &[
     "cornflower", "pressure_plate", "standing_sign", "standing_banner", "redstone_wire", "repeater", "comparator", "wheat", "carrots", "potatoes", "beetroot",
     "reeds", "cactus", "_mushroom", "cake", "flower_pot", "lily_of_the_valley", "wither_rose", "torchflower", "sunflower", "lilac", "rose_bush", "peony",
     "pitcher_plant", "eyeblossom", "pink_petals", "wildflowers", "sweet_berry_bush", "nether_wart", "crimson_roots", "warped_roots", "_fungus", "nether_sprouts",
-    ":bamboo", "mangrove_propagule", "melon_stem", "pumpkin_stem", "_crop", "kelp", "seagrass", "sea_pickle", "waterlily", "candle", "leaf_litter",
+    ":bamboo", "mangrove_propagule", "melon_stem", "pumpkin_stem", "_crop", "kelp", "seagrass", "sea_pickle", "waterlily", "leaf_litter",
     "dry_grass", ":bush", "firefly_bush", "azalea", "dripleaf", "chorus_plant", "chorus_flower",
 ];
 /// Blocks whose `facing_direction` names the face of the block they hang or stand on.
@@ -52,6 +53,9 @@ fn depended(registry: &BlockRegistry, id: u32, face: Face) -> bool {
     }
     if state.name.ends_with("lever") {
         return LEVER_ON[index].iter().any(|on| is("lever_direction", on));
+    }
+    if state.name.ends_with("lantern") {
+        return face == if is("hanging", "1") { Face::Down } else { Face::Up };
     }
     ends(state.name, HANGS) && is("facing_direction", FACES[index]) || face == Face::Up && ends(state.name, STANDS) && !ground::has_rule(state.name)
 }

@@ -30,7 +30,7 @@ fn is_solid(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
 
 /// Whether the block at `pos` keeps lava out, the water a waterlogged one holds aside.
 fn keeps_lava_out(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
-    level(world, layer).is_some_and(|level| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| super::lava::keeps_out(state.name, state.is_solid())))
+    level(world, layer).is_some_and(|level| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| super::lava::keeps_out(state.name)))
 }
 
 /// Whether `liquid` at `from` cannot run into the cell on `toward`: that cell keeps it out (lava

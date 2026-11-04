@@ -27,3 +27,10 @@ pub(super) const OPEN_MATERIAL: &str =
      underwater_torch unlit_redstone_torch unpowered_comparator unpowered_repeater vine warped_fungus warped_roots \
      water web weeping_vines wheat white_candle white_carpet white_tulip wildflowers wither_rose \
      wither_skeleton_skull yellow_candle yellow_carpet zombie_head";
+
+static OPEN: std::sync::LazyLock<std::collections::HashSet<&str>> = std::sync::LazyLock::new(|| OPEN_MATERIAL.split_whitespace().collect());
+
+/// Whether the material of the block type `name` (with or without `minecraft:`) blocks motion.
+pub fn material_blocks_motion(name: &str) -> bool {
+    !OPEN.contains(name.strip_prefix("minecraft:").unwrap_or(name))
+}

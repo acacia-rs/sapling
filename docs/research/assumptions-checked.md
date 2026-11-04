@@ -11,7 +11,7 @@ column 6 is the material type).
 | 1 | Mirrored shaped recipes | matches for vanilla; sapling ignores the per-recipe flag | high |
 | 2 | Container close distance | unknown: no server distance close found | medium-low; drill needed |
 | 3 | Orb pickup box | box matches; sapling's numbers are too wide | high on the box, medium on the numbers |
-| 4 | Lava and non-collision blocks | differs | high |
+| 4 | Lava and non-collision blocks | fixed 2026-11-04, drilled | high |
 | 5 | Items lava does not burn | close; differs on 2 items and a game rule | high |
 | 6 | Burnable wooden blocks | matches except `stripped_bamboo_block` | high |
 
@@ -170,6 +170,12 @@ where `solid` means the state has a collision box (`liquid.rs:96`, `acacia-world
 generate a per-name table from `block_types.tsv` columns 2 (vtable), 7 and 8 (material +3/+5) plus the slot-0xc8
 override target. Then use it in `liquid.rs:79` and `flow.rs:35` instead of `state.is_solid()`. No drill is needed.
 A one-tick spot check of a rail, a ladder and a torch in a lava stream would confirm it.
+
+**Done 2026-11-04.** `blocks/liquid/lava.rs` `keeps_out`: the two lists, then material blocks-motion
+(`sapling_worldgen::material_blocks_motion`) or one of the four open types whose material is solid. Drilled with
+`bds_command_probe lavaeats` (fire.md "What lava takes"): 36 blocks set beside lava, every one as the rule says
+but the sea pickle, which held lava out though its material is open (an override not in the list above; sapling
+adds it to the holding list).
 
 ## 5. Items lava does not burn
 

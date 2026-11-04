@@ -89,6 +89,12 @@ pub(crate) fn light(world: &mut World, layer: Entity, into: BlockPos) -> bool {
     true
 }
 
+/// Whether lava under `over` may light fire on its random tick: air or what burns is over it (the
+/// lavafire drill's lava under a plank lit the air beside the plank).
+pub(super) fn lights_under(level: &sapling_world::World, over: BlockPos) -> bool {
+    is_air(level, over) || name_at(level, over).and_then(burns).is_some()
+}
+
 /// A random tick of the lava at `pos`: with air or what burns over it, up to ten cells around it
 /// are tried, and the first that burns sets fire to the first air beside it, +x, -x, +y, -y, +z, -z
 /// (`LiquidBlock::randomTick` 148b5cd10, not the Java game's rule).
@@ -98,12 +104,8 @@ pub(super) fn kindled_by_lava(world: &mut World, layer: Entity, pos: BlockPos, r
     if !crate::rules::on(world, layer, RULE) {
         return;
     }
-    let Some(level) = level(world, layer) else { return };
+    let Some(level) = level(world, layer).filter(|level| lights_under(level, Face::Up.neighbour(pos))) else { return };
     let flammable = |cell: BlockPos| name_at(level, cell).and_then(burns).is_some();
-    let over = Face::Up.neighbour(pos);
-    if !is_air(level, over) && !flammable(over) {
-        return;
-    }
     for _ in 0..TRIES {
         let tried: BlockPos = std::array::from_fn(|axis| pos[axis] + roll(3) as i32 - 1);
         if !flammable(tried) {
@@ -152,9 +154,11 @@ pub(crate) fn tick(world: &mut World) {
             send::set_quietly(world, layer, pos, aged);
         }
         for (cell, id) in burnt.set {
+            let burns_away = cell != pos && super::level(world, layer).is_some_and(|level| !is_air(level, cell));
             // The fire going out at `pos` is no spread.
-            if cell == pos || send::may_spread(world, layer, cell, pos, |_| Some(id)) {
-                send::set(world, layer, cell, id);
+            if (cell == pos || send::may_spread(world, layer, cell, pos, |_| Some(id))) && send::set(world, layer, cell, id) && burns_away {
+                // What stood on a burnt block falls or breaks, as BDS's did (bds-burnfloat.txt).
+                super::updates::settle(world, layer, cell);
             }
         }
         for cell in burnt.primed {

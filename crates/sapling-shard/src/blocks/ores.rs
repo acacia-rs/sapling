@@ -1,6 +1,6 @@
 //! Redstone ore lights when trodden or struck (docs/research/block-uses.md, "Redstone ore"); lit, it
-//! goes out on a random tick (growth/rules.rs), so it lasts less the higher `randomTickSpeed` is.
-// TODO: only a survival player lights ore by standing on it, no mob and no creative player.
+//! goes out on a random tick (growth/rules.rs), so it lasts less the higher `randomTickSpeed` is. Any
+//! player but a spectator, mob or armour stand on it lights it (bds-orestand.txt).
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;

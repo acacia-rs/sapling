@@ -22,9 +22,9 @@ const COUNTED: i32 = 4;
 /// The most spawnable mobs a world holds before none more appear.
 const ALL: usize = 200;
 
-/// A category's caps of mobs about a cluster on the surface and underground.
-// TODO: BDS reads these off the dimension (`region vfunc 0x128`); the numbers are not found yet.
-const CAPS: &[(&str, usize, usize)] = &[("monster", 8, 8), ("animal", 4, 4), ("water_animal", 5, 5), ("ambient", 2, 2)];
+/// A category's caps of mobs about a cluster on the surface and underground: the base `Dimension`
+/// constructor's (141878200, +0x104 and +0x120), so every dimension's (mob-spawning.md "Caps").
+const CAPS: &[(&str, usize, usize)] = &[("animal", 4, 4), ("monster", 8, 16), ("water_animal", 36, 36), ("ambient", 0, 2)];
 
 fn difficulty(world: &World) -> u8 {
     match world.resource::<Settings>().0.difficulty {
@@ -85,20 +85,28 @@ fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]
     let place = usize::from(!found.surface);
     let counts = count(world, layer, ChunkPos::of_block(found.cell[0], found.cell[2]));
     let cap = CAPS.iter().find(|(name, ..)| *name == rule.category).map(|&(_, surface, underground)| if found.surface { surface } else { underground })?;
-    if counts.categories.get(rule.category).map_or(0, |held| held[place]) >= cap {
-        return None;
-    }
+    let mut held = counts.categories.get(rule.category).map_or(0, |held| held[place]);
     let of_kind = counts.kinds.get(rule.kind).map_or(0, |held| held[place]) as u32;
     let room = rule.density_at(found.surface).map_or(u32::MAX, |density| density.saturating_sub(of_kind)).min(ALL.saturating_sub(counts.all) as u32);
-    let size = (rule.herd.0 + (fraction(world) * (rule.herd.1 - rule.herd.0 + 1) as f32) as u32).min(rule.herd.1).min(room);
+    let size = herd_size(rule.herd, fraction(world)).min(room);
+    // BDS asks the cap before each member, `held <= cap`, so a category ends one over it (1415ef8b2 on).
     for _ in 0..size {
+        if held > cap {
+            break;
+        }
         let kind = rule.permuted(fraction(world));
         let place = if kind == phantoms::PHANTOM { phantoms::place(world, layer, found) } else { Some(*found) };
-        if let Some(place) = place {
-            spawn(world, layer, kind, &place);
+        if place.is_some_and(|place| spawn(world, layer, kind, &place)) {
+            held += 1;
         }
     }
     Some(())
+}
+
+/// A herd's size between `least` and `most` by `roll` from 0 to 1, BDS's `least + roundf(roll² (most - least))`
+/// (`_spawnMobCluster` 1415ed230), so small herds are the likelier.
+fn herd_size((least, most): (u32, u32), roll: f32) -> u32 {
+    least + (roll * roll * most.saturating_sub(least) as f32).round() as u32
 }
 
 /// A rule of `admitted` by their weights, by `roll` from 0 to 1.
@@ -114,16 +122,17 @@ fn pick<'a>(admitted: &[&'a SpawnRule], roll: f32) -> Option<&'a SpawnRule> {
     None
 }
 
-/// A mob of `kind` at `place`, where it fits, that despawns.
-fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found) {
-    let Some([_, height]) = sapling_data::mob_size(kind) else { return };
+/// A mob of `kind` at `place`, where it fits, that despawns; whether one came.
+fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found) -> bool {
+    let Some([_, height]) = sapling_data::mob_size(kind) else { return false };
     if !world.get::<Layer>(layer).is_some_and(|level| spots::has_room(&level.world, place.cell, height)) {
-        return;
+        return false;
     }
-    let Some(id) = crate::creatures::spawn(world, layer, kind, place.feet(), SpawnReason::Natural) else { return };
+    let Some(id) = crate::creatures::spawn(world, layer, kind, place.feet(), SpawnReason::Natural) else { return false };
     if let Some(entity) = entities::find(world, id) {
         world.entity_mut(entity).insert(Natural);
     }
+    true
 }
 
 #[cfg(test)]
@@ -138,5 +147,11 @@ mod tests {
         assert_eq!(pick(&rules, 0.0).map(|rule| rule.kind), Some(rules[0].kind));
         assert_eq!(pick(&rules, first + 0.001).map(|rule| rule.kind), Some(rules[1].kind));
         assert!(pick(&[], 0.5).is_none());
+    }
+
+    #[test]
+    fn herd_sizes_lean_small_as_bds_squares_the_roll() {
+        assert_eq!([0.0, 0.5, 0.71, 0.99].map(|roll| herd_size((2, 4), roll)), [2, 3, 3, 4]);
+        assert_eq!(herd_size((1, 1), 0.9), 1);
     }
 }

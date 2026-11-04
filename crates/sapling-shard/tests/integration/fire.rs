@@ -127,3 +127,70 @@ fn fire_and_lit_ore_go_at_the_pace_of_the_random_tick_speed_as_on_bds() {
     set(&mut h, 20);
     assert_eq!(left(&mut h, 900), [0, 0]);
 }
+
+fn names(h: &mut Harness, cells: Vec<[i32; 3]>) -> Vec<String> {
+    ask(h, move |ctx| cells.iter().map(|at| ctx.block(*at).map(|block| block.name).unwrap_or_default()).collect())
+}
+
+#[test]
+fn lava_under_a_plank_lights_fire_beside_it_as_on_bds() {
+    // research/captures/bds-lavafire.txt: the plank over lava had fire in the air beside it.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    ask(&mut h, |ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(40)));
+        assert!(ctx.set_block([3, 63, 3], &Block::new("minecraft:stone")) && ctx.set_block([3, 64, 3], &Block::new("minecraft:lava")));
+        assert!(ctx.set_block([3, 65, 3], &Block::new("minecraft:oak_planks")));
+    });
+    let beside = vec![[4, 65, 3], [2, 65, 3], [3, 66, 3], [3, 65, 4], [3, 65, 2], [3, 65, 3]];
+    let lit = (0..60).any(|_| {
+        (0..20).for_each(|_| drop(h.tick_all()));
+        let found = names(&mut h, beside.clone());
+        found[..5].iter().any(|name| name == "minecraft:fire") || found[5] != "minecraft:oak_planks"
+    });
+    assert!(lit, "no fire by the plank over lava in a minute at 40");
+}
+
+#[test]
+fn what_stood_on_a_burnt_block_falls_or_breaks_as_on_bds() {
+    // research/captures/bds-burnfloat.txt: the torch, rail and lantern broke, the sand fell.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let on_top = ["minecraft:torch", "minecraft:sand", "minecraft:rail", "minecraft:lantern"];
+    ask(&mut h, move |ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(40)));
+        for (i, name) in on_top.iter().enumerate() {
+            let x = -6 + 3 * i as i32;
+            assert!(ctx.set_block([x, 65, -4], &Block::new("minecraft:oak_planks")) && ctx.set_block([x, 66, -4], &Block::new(*name)));
+            assert!(ctx.set_block([x + 1, 65, -4], &Block::new("minecraft:fire")));
+        }
+    });
+    let planks: Vec<[i32; 3]> = (0..4).map(|i| [-6 + 3 * i, 65, -4]).collect();
+    let burnt = (0..60).any(|_| {
+        (0..20).for_each(|_| drop(h.tick_all()));
+        names(&mut h, planks.clone()).iter().all(|name| name != "minecraft:oak_planks")
+    });
+    assert!(burnt, "the planks outlasted a minute of fire at 40");
+    (0..40).for_each(|_| drop(h.tick_all()));
+    let over: Vec<[i32; 3]> = (0..4).map(|i| [-6 + 3 * i, 66, -4]).collect();
+    assert!(names(&mut h, over).iter().all(|name| !on_top.contains(&name.as_str())), "something floats where a plank burnt");
+}
+
+#[test]
+fn a_creative_player_and_a_mob_light_redstone_ore_by_standing_on_it_as_on_bds() {
+    // research/captures/bds-orestand.txt: lit under the creative and the survival player, a cow,
+    // a zombie and an armour stand.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    ask(&mut h, |ctx| {
+        ctx.set_game_mode(ALEX, sapling_api::GameMode::Creative);
+        ctx.teleport(ALEX, [0.5, 65.0, 0.5]);
+    });
+    (0..5).for_each(|_| drop(h.tick_all()));
+    ask(&mut h, |ctx| {
+        assert!(ctx.set_block([0, 64, 0], &Block::new("minecraft:redstone_ore")) && ctx.set_block([5, 64, 5], &Block::new("minecraft:redstone_ore")));
+        assert!(ctx.spawn_entity("minecraft:cow", [5.5, 65.0, 5.5]).is_some());
+    });
+    (0..3).for_each(|_| drop(h.tick_all()));
+    assert_eq!(names(&mut h, vec![[0, 64, 0], [5, 64, 5]]), ["minecraft:lit_redstone_ore"; 2]);
+}
