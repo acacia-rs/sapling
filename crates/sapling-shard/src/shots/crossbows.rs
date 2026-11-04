@@ -97,10 +97,10 @@ pub(super) fn shoot(world: &mut World, player: Entity, stack: &ItemStack) -> boo
     if rocket {
         shoot_rockets(world, player, &arrow, &turns);
     }
-    for (index, turn) in turns.iter().enumerate().filter(|_| !rocket) {
-        let pickup = match (index, creative) {
-            (0, false) => Pickup::Anyone,
-            (0, true) => Pickup::Creative,
+    for turn in turns.iter().filter(|_| !rocket) {
+        let pickup = match (*turn == 0.0, creative) {
+            (true, false) => Pickup::Anyone,
+            (true, true) => Pickup::Creative,
             _ => Pickup::Never,
         };
         let loosed = Loosed { critical: true, tipped: ammo::tip(&arrow), pierces, ..Loosed::new(player, pickup, Some(arrow.clone())) };

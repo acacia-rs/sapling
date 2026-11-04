@@ -63,6 +63,28 @@ fn a_cast_spawns_a_hook_its_fisher_owns_and_a_use_reels_it_back_unworn() {
 }
 
 #[test]
+fn a_hook_cast_into_a_wall_slides_down_it_slowed_two_ticks() {
+    // research/captures/bds-t2efish.txt: down the glass by 0.04, then 0.1098, then on at 0.92's friction.
+    let mut h = ready(GameMode::Survival, &[], 0.0);
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new(ROD, 1))));
+        for x in -2..=2 {
+            for y in 65..=69 {
+                assert!(ctx.set_block([x, y, 3], &Block::new("glass")));
+            }
+        }
+    });
+    h.tick_all();
+    let sent = throw(&mut h, 12);
+    let hook = added(&sent, HOOK)[0].runtime_id;
+    let moves: Vec<_> = all::<acacia_proto::packets::MoveEntityDelta>(&sent).into_iter().filter(|moved| moved.runtime_entity_id == hook).collect();
+    let at_wall = moves.iter().rposition(|moved| moved.z.is_some()).expect("it flew");
+    let heights: Vec<f32> = moves[at_wall..].iter().filter_map(|moved| moved.y).collect();
+    let falls: Vec<f32> = heights.windows(2).map(|pair| pair[0] - pair[1]).collect();
+    assert!(falls.len() >= 2 && (falls[0] - 0.04).abs() < 2e-3 && (falls[1] - 0.1098).abs() < 2e-3, "{heights:?}");
+}
+
+#[test]
 fn a_fish_bites_in_water_and_reeling_it_gives_a_catch_experience_and_one_wear() {
     let mut h = at_the_pool(3, 20.0);
     let mut seen = throw(&mut h, 1);

@@ -108,8 +108,15 @@ player coming back short of breath its `Air` metadata in the join greeting.
 ## Not drilled
 
 - Sapling's console side of the above: `tools/remote-drill.sh` feeds a console to BDS only.
-- `/stop` typed in the console of a sapling server.
-- Peaceful for the kinds that died before the switch in the drill (burnt in daylight or despawned): blaze,
-  piglin, silverfish, zoglin, zombie pigman, zombie villager and others; the family rule stands for them.
+- `/stop` typed in the console of a sapling server: it now logs `Server stop requested.` in place of
+  the command's answer, as BDS's console does (`console.rs`); the sapling console is not drilled.
+
+## Peaceful, drilled 2026-11-04 (research/captures/bds-t2epeace.txt, bds-t2epeace2.txt)
+
+- Taken at the switch on both: blaze, bogged, breeze, cave spider, creeper, drowned, enderman,
+  endermite, evoker, magma cube, phantom, piglin brute, pillager, ravager, silverfish, skeleton, slime,
+  spider, stray, vex, vindicator, witch, zoglin, zombie, zombie pigman, zombie villager.
+- Kept on both: piglin and hoglin. The second drill summoned the kinds the first lost early (piglins
+  turn in the overworld, others fought) apart, unhurtable, and switched at once.
 - `Air` is drilled (`bds-swim.txt`: a Short named `Air`). Whether BDS shows a player's burning flag in its
   first metadata after joining needs the same signed identity twice; not drillable offline.

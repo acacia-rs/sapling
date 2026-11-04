@@ -44,9 +44,10 @@ pub fn charge_ticks(level: u8) -> u64 {
 }
 
 /// The turns, in degrees about the up axis, of the arrows a crossbow with Multishot at `level`
-/// shoots; the first is the one that is picked up.
+/// shoots, in the order BDS adds them (research/captures/bds-t2emulti.txt); the unturned one is the
+/// one that is picked up.
 pub fn multishot(level: u8) -> &'static [f32] {
-    if level == 0 { &[0.0] } else { &[0.0, -SIDE, SIDE] }
+    if level == 0 { &[0.0] } else { &[-SIDE, 0.0, SIDE] }
 }
 
 /// How many bodies an arrow with Piercing at `level` passes through before the one it stops in.

@@ -65,7 +65,7 @@ pub(crate) fn tick(world: &mut World) {
         let wait = match world.get::<Mode>(player).map(|mode| mode.0) {
             Some(GameMode::Creative) => CREATIVE_WAIT,
             Some(GameMode::Survival | GameMode::Adventure) => SURVIVAL_WAIT,
-            // TODO: BDS keeps a spectator's last wait; whether it is ever inside was not read.
+            // A spectator stood in a Nether portal 10 s and stayed (research/captures/bds-t2eportal.txt).
             _ => continue,
         };
         let (inside, arriving) = (is_inside(world, player, PORTAL), world.get::<Arriving>(player).is_some());

@@ -23,8 +23,8 @@ const PLAYER: [f32; 2] = [0.6, 1.8];
 const LIES: u64 = 1200;
 const SHAKES: i32 = 7;
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
-/// The wire's own key 18 carries a tipped arrow's potion, one more than its data value.
-// TODO: the key as remembered of the Bedrock protocol; no BDS capture of a tipped arrow was read.
+/// The wire's own key 18 carries a tipped arrow's item data, its potion plus one (an `arrow` of data
+/// 26 showed Byte 26; research/captures/bds-t2epack.txt).
 const TIP: Key = Key::MinecartHasDisplay;
 
 #[derive(Component)]

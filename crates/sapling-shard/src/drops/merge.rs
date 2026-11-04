@@ -1,7 +1,8 @@
 //! Lying items joining up as BDS's do (docs/research/items.md, merge): on every 25th tick of its
 //! age an item meets the items of its kind whose boxes touch its own grown by half a block, and
 //! of each two the bigger stack takes in the smaller whole, when the two fit in one stack.
-// TODO: BDS removes the smaller from its viewers a tick after the merge (bds-tools.txt 16505/16547); sapling at once.
+//! The one taken in leaves its viewers a tick after the merge, as BDS's did (bds-tools.txt
+//! 16505/16547; bds-t2epack.txt: gone 51 ticks after its drop, sapling's had gone at 50).
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
@@ -42,6 +43,17 @@ fn touching(world: &mut World, layer: Entity, item: &Lying) -> Vec<Entity> {
     found.into_iter().map(|(_, entity)| entity).collect()
 }
 
+/// An item taken in by another: no longer lying, still shown until [`remove_taken_in`] next tick.
+#[derive(Component)]
+pub(super) struct TakenIn;
+
+pub(super) fn remove_taken_in(world: &mut World) {
+    let taken: Vec<Entity> = world.query_filtered::<Entity, With<TakenIn>>().iter(world).collect();
+    for item in taken {
+        mobs::remove(world, item);
+    }
+}
+
 /// On the item's 25th ticks (`age` the ticks before this one), the items it takes in or goes into.
 pub(super) fn join(world: &mut World, entity: Entity, layer: Entity, age: u32) {
     if age == 0 || age % EVERY != 0 {
@@ -59,7 +71,7 @@ pub(super) fn join(world: &mut World, entity: Entity, layer: Entity, age: u32) {
         }
         let grown = Lying { stack: ItemStack { count, ..big.stack.clone() }, pickup_from: big.pickup_from.max(small.pickup_from), age: big.age.min(small.age), ..big };
         keep(world, layer, &grown);
-        mobs::remove(world, small.entity);
+        world.entity_mut(small.entity).remove::<(Dropped, Stored)>().insert(TakenIn);
         let merged = sapling_net::encode(&EntityEvent { runtime_entity_id: grown.id, event_id: EntityEventEventId::ItemEntityMerge, data: i32::from(count), fire_at_position: None });
         blocks::to_viewers(world, layer, grown.at.map(|c| c.floor() as i32), &[merged]);
         if small.entity == entity {

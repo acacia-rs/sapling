@@ -110,6 +110,8 @@ fn a_crossbow_loads_in_25_ticks_and_shoots_three_with_multishot() {
     let sent = throw(&mut h, 1);
     let arrows = added(&sent, "minecraft:arrow");
     assert!(arrows.len() == 3 && arrows.iter().all(is_critical), "{}", arrows.len());
+    let sideways: Vec<f32> = arrows.iter().map(|arrow| arrow.velocity.x).collect();
+    assert!(sideways[0] * sideways[2] < 0.0 && sideways[1].abs() < sideways[0].abs(), "a side one, the straight one, the other side (bds-t2emulti.txt): {sideways:?}");
     assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "crossbow.shoot"));
     assert!(added(&throw(&mut h, 1), "minecraft:arrow").is_empty(), "the next use loads it again");
 }

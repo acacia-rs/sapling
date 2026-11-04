@@ -38,6 +38,8 @@ pub(crate) struct Hook {
     nibble: i32,
     /// It hit a block (`mInGround`).
     in_ground: bool,
+    /// Ticks it is still slowed by a wall it flew into (see fishing/bob.rs `WALLED`).
+    walled: u8,
     /// What it hooked.
     target: Option<Entity>,
     /// It was cast in a jungle: the jungle's loot.
