@@ -108,6 +108,25 @@ fn raiders_a_player_s_damage_kills_make_it_a_hero() {
     assert!(effects(&sent).contains(&(MobEffectEventId::Add, 29, 0, 48000)), "a hero: {:?}", effects(&sent));
 }
 
+/// BDS's `RaidRecruitSystem`: a pillager of no raid by a raider in the village joins the raid, so
+/// the next wave waits for it too.
+#[test]
+fn a_pillager_by_a_raider_joins_its_raid() {
+    let mut h = village();
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 1, true)));
+    ticks(&mut h, 602);
+    assert!((0..400).any(|_| !raiders(&mut h).is_empty()), "a wave within 300 ticks");
+    let wave = raiders(&mut h);
+    let by = wave[0].feet;
+    let passer = common::asking::ask(&mut h, move |ctx| ctx.spawn_entity("minecraft:pillager", [by[0] + 2.0, by[1], by[2]]).expect("summoned"));
+    ticks(&mut h, 25);
+    h.remote.run(move |ctx| wave.iter().for_each(|raider| assert!(ctx.kill_entity(raider.id))));
+    ticks(&mut h, 400);
+    assert_eq!(raiders(&mut h).iter().map(|raider| raider.id).collect::<Vec<_>>(), [passer], "no next wave while the recruit lives");
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(passer)));
+    assert!((0..400).any(|_| raiders(&mut h).len() > 1), "the next wave once it is dead");
+}
+
 /// BDS's waves came 40 to 50 out from the player in the village (bds-raidlost.txt), not 32 from its middle.
 #[test]
 fn a_wave_comes_32_to_48_out_from_the_village_s_player_away_from_the_middle() {
