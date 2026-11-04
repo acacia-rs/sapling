@@ -12,7 +12,11 @@ Companion to [worldgen-bds.md](worldgen-bds.md) and [worldgen-bds-features.md](w
   the world's positional factory by name, here `minecraft:sulfur_cave_gradient` -5 [1, 0, 1]): per non-air,
   non-liquid block not in `non_replaceable_blocks`, the noise at the world block clamped to [-1, 1]; the first band
   with `min < v <= max` sets the block (cinnabar, sulfur, cinnabar).
-- Not ported: the same builder as a top-of-column surface builder (sulfur caves never top a column in the oracle).
+- The same builder as a column's surface builder (sulfur caves is its own `minecraft:surface_builder` too):
+  `buildChunkSurface` (14580d280) draws nothing itself and calls it with the column's heightmap top and the
+  preliminary surface minus 8; 1487e14c0 then walks top down to that bound, both included
+  (`surface/gradient.rs` `build_top`, 2026-11-04). No oracle column has sulfur caves on top, so it is judged
+  only as harmless (replay-all 0).
 
 ## Rules with unported features
 A rule's iterations may be `Math.Random(a, b)`, drawn from the generator every rule of the chunk shares. Rules are
@@ -314,9 +318,31 @@ mansion's -508,998 matches in all 997 calls although the oracle has 420 lush cel
 order again.
 
 ## Left
-- Sulfur springs (`random_sulfur_spring_with_tuff_feature`: structure templates) and the spring trail.
+- Sulfur springs and the spring trail: not ported (the before-surface rule draws its scatter and places
+  nothing). Read 2026-11-04 for the port:
+  - The rule places `sulfur_spring_trail_to_surface_snap_to_ceiling_feature` (snap to a ceiling within 64),
+    which places the hardcoded `sulfur_spring_trail_to_surface_feature`, registered in 1482f4580 (object
+    149d65f70, vtable 14a98ad70, place 149d660d0) with the spring feature's name, two block globals
+    (+0x40 = +0x48 = 0x14cce1a98), a block list 0x14ccd2788 (+0x50) and a predicate (+0x58). From the snapped
+    cell it climbs at most 184 cells, below the column's heightmap, to the first cell over a solid block (and
+    the predicate) whose cell and the cells above are air or water; sinks it one or two cells while the cells
+    under it are in the list; places `random_sulfur_spring_with_tuff_feature` there. On success, for each y
+    from the start to that cell, 20 tries at `nextInt(3) - nextInt(3)` in x and z set the +0x48 block where
+    the cell is in the list; then 20 tries round the start (y `nextInt(2) - nextInt(2)`) set the +0x40 block
+    in air over a solid block. The globals and the predicate are filled at startup: name them live.
+  - The ten springs are `minecraft:structure_template_feature`s (the only users of that type), each the
+    `.mcstructure` of the same name in `vanilla_1.26.30/structures/minecraft/`, then a tuff scatter.
+    `StructureTemplateFeature::place` (143bbc130): rotation drawn by the random when the feature has none,
+    offset -floor(size / 2) with `rotate_around_center`, a spiral over (2 * adjustment_radius + 1)^2 cells
+    (one here) until every constraint passes (`leveled`, `unburied`, `block_intersection`: their vt+8 still
+    to read), ground level clamped to the height (143bbc610 warns), the template placed with palette
+    `default`, integrity 100.
+  - Judge: no canon holds a spring (every region is 0 with the trail unported) and canons need the Win32
+    debugger, so a Linux stock world of a sulfur caves region with a spring has to be made first
+    (`/locate biome minecraft:sulfur_caves`).
 - Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
-  states of either (worldgen-bds-features.md, "Feature residue").
+  states of either (worldgen-bds-features.md, "Feature residue"). Given a run's thread draws they are exact
+  (every canon, 2026-11-04); without them BDS has no one answer to match (worldgen-bds-order.md, "One engine").
 - Dripstone and lush residue: no port difference is known; what is left follows the lichen's thread-local cell
   and BDS's same-phase decoration order (above). The order could be read off a run (`scripts/dbg_order.py`) and
   given to the oracle test to shrink that floor; the generator cannot follow it.
@@ -326,7 +352,11 @@ order again.
   carpet over anything but air (141a3eeb0), small dripleaf on clay or moss, or in water on the dirt list
   (1466059d0). The dirt list 0x14ccd3328, read live: dirt, grass block, podzol, coarse dirt, mycelium, rooted
   dirt, moss, pale moss, mud, muddy mangrove roots, farmland.
-- Bubble columns by ticks (edge routing).
+- Bubble columns by ticks: done 2026-11-04. BDS's tick-free world of seed 20261003 saves a `PendingTicks`
+  entry (due in 1) on each one-cell column decoration left (321 near the origin; chunk 1,-8's nine are ours
+  cell for cell), so the column climbs once its chunk ticks. sapling-world `generated/ticks.rs` writes them,
+  the shard's `pending.rs` grows the column from them (tests `a_generated_column_keeps_a_tick_per_bubble_column_cell`,
+  `a_generated_bubble_column_climbs_once_its_column_comes_in`).
 
 ## Labels (scratch bdsre `names.user.json`)
 1487e14c0/1487e0c20 `NoiseGradientSurfaceBuilder::{buildSurfaceAt,init}`, 149d62d10 `SpeleothemFeature::place`,

@@ -173,6 +173,11 @@ impl<S: WorldStorage> WorldStorage for Generated<S> {
         Some(generator.density().climate.biome_at(x, y, z))
     }
 
+    fn generated_height(&self, x: i32, z: i32) -> Option<i32> {
+        let Generator::Overworld(generator) = &self.generator else { return self.inner.generated_height(x, z) };
+        Some(generator.shape_height(x, z))
+    }
+
     fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         let Generator::Overworld(generator) = &self.generator else { return self.inner.structure_writes(name, start, load) };
         Some(on_demand::structure(generator, name, start, load))

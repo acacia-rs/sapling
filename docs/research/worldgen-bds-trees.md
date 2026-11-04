@@ -109,7 +109,8 @@ sync; swamp huge mushrooms sink through one or two water blocks (143b7f230, biom
 ## Left
 - Mangrove mud turned to dirt (~600 cells) was the grass disc, which takes mud too (worldgen-bds-features.md,
   disks); ported, mangrove swamp 98.92 -> 99.79%. Some hanging propagules BDS removes after placement; no
-  discriminator found.
+  discriminator found. (2026-11-04: the mangrove swamp canon is 0 under the replay, propagules included; the
+  stock world's were run order.)
 - The refused trees of bamboo jungle 171,348, pale garden -469,-285 and old growth pine taiga -332,340, and
   mangrove chunk -500,515: resolved, next section. Earlier guesses here (terrain hole, one-block drop, a fern at
   (2740,101,5574), "BDS's first tree") were wrong; the session that chased them is in the git history.

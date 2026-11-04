@@ -45,8 +45,8 @@ centre, x outer, z, then y clamped to the world, has an allowed biome. A point b
 | shipwreck | 24/4, 165745295, linear (10/5 tri old) | point biome in 16 26 0 44 42 46 15 24 45 43 47 40; containsOnly(r 20, or 10 on beaches 15 16 26, the centre's own biome); no monument nearby |
 | ruined portal | 40/15, 40552231, linear | none |
 | ancient city | 24/8, 20083232, tri | biome at (x*16, -27, z*16) is deep dark (190) |
-| trial chambers | 34/12, 94251327, linear, **Java LCG** | v2: biome at the start piece's centre (not ported: we test the chunk centre at y -30, not deep dark) |
-| trail ruins | 34/8, 83469867, linear, **Java LCG** | v2 `has_structure_trail_ruins` (155 30 21 32 160 5) at the start piece (approximated at centre, surface-15) |
+| trial chambers | 34/12, 94251327, linear, **Java LCG** | v2: not deep dark at the start piece's middle, y its drawn start height (`data_driven.rs`); `/locate` names that middle (9 233 in bds-locate.txt) |
+| trail ruins | 34/8, 83469867, linear, **Java LCG** | v2 `has_structure_trail_ruins` (155 30 21 32 160 5) at the start piece's middle, its surface - 15; `/locate` names that middle (610 30) |
 
 v2 grid: Java `Random(rx*341873128712 + rz*132897987541 + seed64 + salt)`, `nextInt(range)` x then z (144cfea60).
 Stronghold (148373d00, list 1483740e0): MT(levelSeed), angle `nextFloat()*2pi`, radius `nextInt(16)+40` chunks;

@@ -64,7 +64,7 @@ def main():
         builder = components['minecraft:surface_builder']['builder']
         kind = builder['type'].removeprefix('minecraft:')
         if kind == 'noise_gradient':
-            print(f'        {biome_id} => return None, // {name}: noise_gradient, not ported')
+            print(f'        {biome_id} => return None, // {name}: noise_gradient (surface_gradient)')
             continue
         materials = (f'Materials {{ top: {block(builder["top_material"])}, mid: {block(builder["mid_material"])}, '
                      f'sea_floor: {block(builder["sea_floor_material"])}, foundation: {block(builder["foundation_material"])}, '
@@ -91,13 +91,19 @@ def main():
     print('    })')
     print('}')
     print()
-    print('/// The `minecraft:subsurface_builder` of a biome (only noise gradients exist).')
-    print('pub fn subsurface_spec(biome: u32) -> Option<Gradient> {')
+    gradients(found, 'surface_gradient', 'minecraft:surface_builder', 'The noise gradient of a biome whose `minecraft:surface_builder` is one.')
+    print()
+    gradients(found, 'subsurface_spec', 'minecraft:subsurface_builder', 'The `minecraft:subsurface_builder` of a biome (only noise gradients exist).')
+
+
+def gradients(found, function, component, doc):
+    print(f'/// {doc}')
+    print(f'pub fn {function}(biome: u32) -> Option<Gradient> {{')
     print('    Some(match biome {')
     for name, biome_id in sorted(IDS.items(), key=lambda kv: kv[1]):
-        sub = found[name]['minecraft:biome']['components'].get('minecraft:subsurface_builder')
-        if sub:
-            print(f'        {biome_id} => {gradient(sub["builder"])}, // {name}')
+        builder = found[name]['minecraft:biome']['components'].get(component, {}).get('builder')
+        if builder and builder['type'] == 'minecraft:noise_gradient':
+            print(f'        {biome_id} => {gradient(builder)}, // {name}')
     print('        _ => return None,')
     print('    })')
     print('}')

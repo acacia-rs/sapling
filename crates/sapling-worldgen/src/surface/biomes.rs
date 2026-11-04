@@ -279,7 +279,15 @@ pub fn surface_spec(biome: u32) -> Option<SurfaceSpec> {
             materials: Materials { top: Block::GrassBlock, mid: Block::Dirt, sea_floor: Block::Gravel, foundation: Block::Stone, sea: Block::Water },
             adjustments: &[], steep: None,
         },
-        194 => return None, // sulfur_caves: noise_gradient, not ported
+        194 => return None, // sulfur_caves: noise_gradient (surface_gradient)
+        _ => return None,
+    })
+}
+
+/// The noise gradient of a biome whose `minecraft:surface_builder` is one.
+pub fn surface_gradient(biome: u32) -> Option<Gradient> {
+    Some(match biome {
+        194 => Gradient { noise: "minecraft:sulfur_cave_gradient", first_octave: -5, amplitudes: &[1.0, 0.0, 1.0], keep: &[Block::Bedrock], bands: &[(-0.4, -0.1, Block::Cinnabar), (0.0, 0.4, Block::Sulfur), (0.4, 1.0, Block::Cinnabar)] }, // sulfur_caves
         _ => return None,
     })
 }

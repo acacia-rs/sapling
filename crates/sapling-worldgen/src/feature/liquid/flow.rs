@@ -36,7 +36,7 @@ fn depth(view: &View, p: [i32; 3], lava: bool) -> Option<i32> {
     (b.is_fluid() && b.is_lava() == lava).then(|| b.liquid_depth().unwrap_or(0) as i32)
 }
 
-// TODO: Java's ultrawarm numbers, unconfirmed on BDS.
+/// `_tick` (148b5d060): lava waits 30, or 10 where the dimension is ultrawarm (+0x1a6), and drops `2 - ultrawarm`.
 fn delay(view: &View, lava: bool) -> u64 {
     match (lava, view.ultrawarm) {
         (false, _) => 5,

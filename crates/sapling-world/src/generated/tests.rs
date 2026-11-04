@@ -147,6 +147,8 @@ fn structures_are_located_where_bds_located_them() {
         ("shipwreck", [-216, -88]),
         ("ruined_portal", [120, 104]),
         ("ancient_city", [-312, -216]),
+        ("trial_chambers", [9, 233]),
+        ("trail_ruins", [610, 30]),
         ("pillager_outpost", [552, 136]),
         ("mansion", [-8584, 5592]),
         ("temple", [552, 648]),
@@ -159,13 +161,12 @@ fn structures_are_located_where_bds_located_them() {
 }
 
 #[test]
-fn a_biome_is_located_on_a_32_block_grid() {
+fn biomes_are_located_where_bds_located_them() {
     let world = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), LOCATE_SEED, 1)));
-    let plains = sapling_data::biome_id("minecraft:plains").unwrap();
-    let [x, _, z] = world.locate_biome(plains, [0, 120, 0]).expect("plains near the origin");
-    assert_eq!((x % 32, z % 32), (0, 0));
-    assert!(x * x + z * z <= 742 * 742, "BDS found plains at -736 -96: ({x}, {z})");
-    assert_eq!(World::void().locate_biome(plains, [0, 120, 0]), None);
+    let id = |name: &str| sapling_data::biome_id(name).unwrap();
+    let found = ["minecraft:plains", "minecraft:desert", "minecraft:mushroom_island", "minecraft:warm_ocean"].map(|name| world.locate_biome(id(name), [0, 120, 0]));
+    assert_eq!(found, [Some([-736, 125, -96]), Some([-2272, 84, 416]), None, None]);
+    assert_eq!(World::void().locate_biome(id("minecraft:plains"), [0, 120, 0]), None);
 }
 
 #[test]
@@ -174,6 +175,19 @@ fn a_generated_world_without_a_spawn_spawns_on_the_surface_above_the_origin() {
     let shape = OverworldGenerator::new(SEED).chunk_blocks(0, 0);
     let top = (MIN_Y..320).rev().find(|&y| shape.block(0, y, 0) != Block::Air).unwrap();
     assert_eq!(world.load_spawn(), [0.5, top as f32 + 1.0, 0.5]);
+}
+
+/// The bubble column cells decoration left keep their ticks: BDS's tick-free world of this seed saved these
+/// nine in chunk (1, -8), all due in 1 (`sapling-leveldb --example records <world> pending_ticks`).
+#[test]
+fn a_generated_column_keeps_a_tick_per_bubble_column_cell() {
+    let generated = Generated::with_areas(MemoryStorage::default(), SEED, 1);
+    let (saved_at, ticks) = crate::decode_pending_ticks(&generated.generate_column(ChunkPos::new(1, -8)).pending_ticks).unwrap();
+    let mut cells: Vec<[i32; 3]> = ticks.iter().filter(|tick| tick.name == "minecraft:bubble_column").map(|tick| tick.pos).collect();
+    cells.sort_unstable();
+    let bds = [[17, 6, -122], [18, 6, -123], [18, 6, -121], [19, 6, -123], [25, 7, -127], [30, 5, -122], [30, 5, -120], [31, 5, -121], [31, 5, -120]];
+    assert_eq!(cells, bds);
+    assert!(ticks.iter().all(|tick| tick.time - saved_at == 1), "{ticks:?}");
 }
 
 /// Decoration's leftover liquid ticks go out with their column, due at once (generated/ticks.rs).

@@ -32,12 +32,23 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 ## /locate
 
 - `structure <name> [useNewChunksOnly]`: `commands.locate.structure.success` [minecraft:name, x, z,
-  distance], x and z the middle of the start chunk (a stronghold where an eye flies), distance the
-  2D one from the sender rounded down. Unknown or absent kinds (abandoned camp, fortress, end city,
-  bastion in the overworld) → `structure.fail.nostructurefound` []. All 11 answers of the capture's
-  seed-12345 world are reproduced (`sapling-world/src/generated/tests.rs`).
+  distance], x and z the middle of the start chunk (a stronghold where an eye flies; trial chambers and
+  trail ruins the middle of their start piece), distance the 2D one from the sender rounded down. Unknown
+  or absent kinds (abandoned camp, fortress, end city, bastion in the overworld) →
+  `structure.fail.nostructurefound` []. All 13 answers of the capture's seed-12345 world are reproduced
+  (`sapling-world/src/generated/tests.rs`).
 - `biome <minecraft:name>`: a name without the namespace or unknown is a syntax error; success
-  [name, x, y, z, distance] on a 32-block grid; not found → `biome.fail` [name].
+  [name, x, y, z, distance]; not found → `biome.fail` [name]. The search [D] (143aad6a0, 143aaa5d0,
+  145807000, 145808020; `sapling-world/src/locate.rs`): a box 4000 out from the sender in x and z, from the
+  bottom + 5 to the top, on a 64-block lattice from its corner, cut into blocks of 16x16x16 points; blocks in
+  shells round the one holding the sender at the middle height, each block's points in shells round its
+  point nearest the sender (x, then y, then z innermost); the first point of the biome wins. Its column's
+  height (one above the noise shape's top block, 145807a20, for an unloaded chunk) is tested next and
+  answered if the biome is there; else a 16-block lattice 64 round it under that height, then the highest
+  open cell (it and the one above air, the biome in either) within 16 of that hit, in steps of two down
+  from 16 above. Nothing found: the whole search again from 32 further in x, y and z. The capture's two
+  answers and two failures are reproduced. Not drilled: a hit whose surface is not the biome (the
+  16-block step), and loaded chunks, whose height BDS reads from their blocks.
 
 ## /place
 
@@ -91,9 +102,6 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 - `commands.structure.error` for a save or load into unloaded columns (BDS queues a load,
   `load.queued`, which is not copied).
 - Animation modes place at once.
-- The biome search's reach (6400) and heights it tries; BDS's answers are only known to lie on a
-  32-block grid and to be nearer than or as near as sapling's.
-- Trial chambers and trail ruins: BDS named a place off their start chunk's middle (9 233, 610 30).
 - `/place`: no feature rule is known, so every `featurerule` is a syntax error; BDS's own list of
   `structure` names is not copied (sapling takes `/locate`'s names, `village` too, and BDS's
   `abandoned_camp_forest` is not one of them); a structure is drawn only over loaded columns

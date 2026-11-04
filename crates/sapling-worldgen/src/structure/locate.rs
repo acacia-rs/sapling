@@ -35,6 +35,13 @@ impl Structures {
         None
     }
 
+    /// The block column `/locate` names for `kind`'s start in `chunk`: trial chambers' and trail ruins' start
+    /// piece middle, other kinds' chunk middle (research/captures/bds-locate.txt).
+    pub fn located_column(&self, density: &Density, kind: StructureKind, chunk: (i32, i32)) -> (i32, i32) {
+        let v2 = matches!(kind, StructureKind::TrialChambers | StructureKind::TrailRuins);
+        v2.then(|| self.v2_start_middle(density, kind, chunk)).flatten().unwrap_or((chunk.0 * 16 + 8, chunk.1 * 16 + 8))
+    }
+
     /// The stronghold chunk an eye of ender flies to from a block position
     /// (`StrongholdFeature::getNearestGeneratedFeature` 1483745b0): the spiral's starts, then
     /// 200-chunk cells in rings round the origin's (the first ring the whole 3x3, a cell holding

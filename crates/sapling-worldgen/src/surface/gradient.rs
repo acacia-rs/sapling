@@ -3,7 +3,7 @@
 //! a `minecraft:subsurface_builder` go to it. Only `minecraft:noise_gradient` exists
 //! (`NoiseGradientSurfaceBuilder` 1487e14c0, seeded in 1487e0c20).
 
-use super::biomes::subsurface_spec;
+use super::biomes::{subsurface_spec, surface_gradient};
 use super::spec::Gradient;
 use crate::biome::ChunkBiomes;
 use crate::block::Block;
@@ -18,7 +18,7 @@ pub struct GradientNoises(Vec<(&'static str, NormalNoise)>);
 impl GradientNoises {
     pub fn new(factory: &PositionalFactory) -> Self {
         let mut noises: Vec<(&'static str, NormalNoise)> = Vec::new();
-        for spec in (0..256).filter_map(subsurface_spec) {
+        for spec in (0..256).filter_map(subsurface_spec).chain((0..256).filter_map(surface_gradient)) {
             if !noises.iter().any(|(name, _)| *name == spec.noise) {
                 noises.push((spec.noise, NormalNoise::new(factory, spec.noise, spec.first_octave, spec.amplitudes)));
             }
@@ -50,6 +50,12 @@ impl GradientNoises {
                 }
             }
         }
+    }
+
+    /// A gradient biome at a column's top (`buildChunkSurface`'s call): from the column's top block down to
+    /// `lower`, both included, as the subsurface run's loop does.
+    pub fn build_top(&self, shape: &mut ChunkShape, spec: &Gradient, column: ((usize, usize), (i32, i32)), top: i32, lower: i32) {
+        self.build_run(shape, spec, column, lower, top + 1);
     }
 
     /// BDS starts one below the run's top (`end - 1`), down to its start.

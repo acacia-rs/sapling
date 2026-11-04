@@ -239,12 +239,13 @@ nextFloat,consumeCount}`.
 2. Cavifier/Aquifer/OreVeinifier internals not decompiled constant-by-constant (only spot checks); `_prepareHeights`
    14822eb60 and 14822d4b0 are the functions to transcribe.
 3. Biome placement: when JSON `multinoise_generation_rules` override the hardcoded builder (never, for vanilla).
-4. Surface builders not ported: NoiseGradient as a top-of-column surface builder (the subsurface pass is); the
-   legacy mesa variant 1487db280 (which worlds pick it?). Capped is the Nether's; TheEnd finds no stone to change.
+4. Surface builders not ported: the legacy mesa variant 1487db280 (which worlds pick it?). NoiseGradient runs
+   both as the subsurface pass and as a column's surface builder (worldgen-bds-caves.md). Capped is the
+   Nether's; TheEnd finds no stone to change.
 5. Who calls slot 54; which rule places `underground_cave_carver_feature`; structure post-process a/b pairing
    (assumed as the large-feature seed's).
 6. Structures: mapped in [worldgen-bds-structures.md](worldgen-bds-structures.md); templates, jigsaw and the
-   beardifier not ported.
+   terrain adjustments (beards, buries, shavers) are ported there and replay-exact.
 7. Lighting/heightmap stage and `OverworldGenerator2d` selection rule (legacy worlds, `no_legacy_worldgen` 14393d890).
 
 ## Terrain port findings (crates/sapling-worldgen, 2026-10-06)

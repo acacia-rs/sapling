@@ -15,12 +15,11 @@ fn kind(name: &str) -> Option<StructureKind> {
 }
 
 /// The block BDS names for the nearest start: a stronghold's is where an eye of ender flies, the
-/// others' the middle of their start chunk (research/captures/bds-locate.txt).
-// TODO: BDS named trial chambers and trail ruins off the middle (9 233, 610 30): their start piece's place?
+/// others' as `OverworldGenerator::located_column` (research/captures/bds-locate.txt).
 pub(super) fn locate(generator: &OverworldGenerator, name: &str, x: i32, z: i32) -> Option<[i32; 2]> {
     match kind(name)? {
         StructureKind::Stronghold => generator.locate_stronghold(x, z).map(|[x, _, z]| [x, z]),
-        kind => generator.locate_structure(kind, x, z).map(|(x, z)| [x * 16 + 8, z * 16 + 8]),
+        kind => generator.locate_structure(kind, x, z).map(|(cx, cz)| generator.located_column(kind, cx, cz)),
     }
 }
 

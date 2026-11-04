@@ -1,4 +1,5 @@
-//! The generator's questions about structures: where they reach, where they start, and probes.
+//! The generator's questions about structures (where they reach, where they start, and probes) and
+//! the columns `/locate` reads.
 
 use crate::OverworldGenerator;
 use crate::block::Block;
@@ -57,6 +58,18 @@ impl OverworldGenerator {
     /// The start chunk `/locate structure` answers from a block position (grid-placed kinds).
     pub fn locate_structure(&self, kind: structure::StructureKind, x: i32, z: i32) -> Option<(i32, i32)> {
         self.structures.locate(&self.density, kind, (x, z))
+    }
+
+    /// The block column `/locate structure` names for `kind`'s start in a chunk.
+    pub fn located_column(&self, kind: structure::StructureKind, chunk_x: i32, chunk_z: i32) -> [i32; 2] {
+        let (x, z) = self.structures.located_column(&self.density, kind, (chunk_x, chunk_z));
+        [x, z]
+    }
+
+    /// One above the highest block of column (x, z) in its noise shape (density and aquifers), as BDS's
+    /// `/locate biome` reads a column no chunk is loaded for (145807a20).
+    pub fn shape_height(&self, x: i32, z: i32) -> i32 {
+        structure::RawHeights::new(&self.density).at(x, z)
     }
 
     /// The block an eye of ender thrown from (x, z) flies to: its stronghold's start chunk at
