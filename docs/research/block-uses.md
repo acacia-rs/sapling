@@ -195,7 +195,7 @@ Measured with `bds_command_probe clicks2` (`crates/sapling/examples/shared/click
 | end portal frame | eye of ender | its eye set, `block.end_portal_frame.fill` at the middle of its top |
 | crimson stem, bamboo block | axe | stripped, `item.use.on` |
 | cave vines with berries | nothing | a glow berry, `pick_berries.cave_vines` at the corner |
-| dragon egg | nothing | gone, `ParticleDragonEggTeleport` at the corner with the jump in its data: a byte for each length and a bit for each that is negative (15 east and 9 north was 68091913) |
+| dragon egg | nothing | gone, `ParticleDragonEggTeleport` at the corner with the jump in its data: a byte for each length and a bit for each that is positive: x 2^24, y 2^25, z 2^26 (15 west and 9 south was 68091913; the drill `n2egg` checked 27 jumps against where the egg was put) |
 | decorated pot | stone | `block.decorated_pot.insert` at the corner, a click a stone |
 | item frame | diamond | `SoundItemframeAddItem`, then `SoundItemframeRotateItem` a click |
 | lodestone | compass | `lodestone_compass.link_compass_to_lodestone` |
@@ -205,7 +205,9 @@ A chiseled bookshelf clicked on its top took no book, and a hoe on rooted dirt s
 
 Sapling does the rows down to the dragon egg the same, state for state and sound for sound, but
 for the powder snow, which it leaves alone. An egg jumps up to 15 across and 7 up or down to a
-free cell, the Java game's reach. A charged respawn anchor clicked outside the nether is gone
+free cell, each step the difference of two rolls: of BDS's 27 jumps (2026-11-04, `bds_command_probe
+n2egg`, research/captures/bds-n2egg.txt) 8 of 54 lengths across were 10 or more, as two rolls give
+(one even roll would give 21). None went down: the drill's ground is solid. A charged respawn anchor clicked outside the nether is gone
 in a blast of power 5 at its middle, which breaks blocks and leaves their items as TNT's does; in
 the nether it becomes the clicker's spawn (docs/research/player-damage.md).
 An item frame keeps the item in its entity as `Item` and turns it by `ItemRotation`, 45 a

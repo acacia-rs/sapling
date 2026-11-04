@@ -1,0 +1,475 @@
+## drill starts at 1793821163648
+## /kill @e[type=!player]
+     11 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1012 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1012 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1012 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1012 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /weather clear
+   2062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2062 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+## /difficulty easy
+   3064 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"EASY\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3064 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["EASY"]
+   3815 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   3815 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /gamemode creative @s
+   4065 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4066 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4066 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /gamemode creative CmdWatcher
+   5062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.other\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"},{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5062 actor   CommandOutput success_count=1 data=None commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+## /effect @s clear
+   6059 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive.all success=false ["CmdActor"]
+## /clear @s
+   7060 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /fill -8 -27 -8 16 -27 8 stone
+   8110 actor   UpdateSubchunkBlocks -8 -27 -8 stone[]; -8 -27 -7 stone[]; -8 -27 -6 stone[]; -8 -27 -5 stone[]; -8 -27 -4 stone[]; -8 -27 -3 stone[]; -8 -27 -2 stone[]; -8 -27 -1 stone[]; -7 -27 -8 stone[]; -7 -27 -7 stone[]; -7 -27 -6 stone[]; -7 -27 -5 stone[]; -7 -27 -4 stone[]; -7 -27 -3 stone[]; -7 -27 -2 stone[]; -7 -27 -1 stone[]; -6 -27 -8 stone[]; -6 -27 -7 stone[]; -6 -27 -6 stone[]; -6 -27 -5 stone[]; -6 -27 -4 stone[]; -6 -27 -3 stone[]; -6 -27 -2 stone[]; -6 -27 -1 stone[]; -5 -27 -8 stone[]; -5 -27 -7 stone[]; -5 -27 -6 stone[]; -5 -27 -5 stone[]; -5 -27 -4 stone[]; -5 -27 -3 stone[]; -5 -27 -2 stone[]; -5 -27 -1 stone[]; -4 -27 -8 stone[]; -4 -27 -7 stone[]; -4 -27 -6 stone[]; -4 -27 -5 stone[]; -4 -27 -4 stone[]; -4 -27 -3 stone[]; -4 -27 -2 stone[]; -4 -27 -1 stone[]; -3 -27 -8 stone[]; -3 -27 -7 stone[]; -3 -27 -6 stone[]; -3 -27 -5 stone[]; -3 -27 -4 stone[]; -3 -27 -3 stone[]; -3 -27 -2 stone[]; -3 -27 -1 stone[]; -2 -27 -8 stone[]; -2 -27 -7 stone[]; -2 -27 -6 stone[]; -2 -27 -5 stone[]; -2 -27 -4 stone[]; -2 -27 -3 stone[]; -2 -27 -2 stone[]; -2 -27 -1 stone[]; -1 -27 -8 stone[]; -1 -27 -7 stone[]; -1 -27 -6 stone[]; -1 -27 -5 stone[]; -1 -27 -4 stone[]; -1 -27 -3 stone[]; -1 -27 -2 stone[]; -1 -27 -1 stone[] | extra: 
+   8111 watcher UpdateSubchunkBlocks -8 -27 -8 stone[]; -8 -27 -7 stone[]; -8 -27 -6 stone[]; -8 -27 -5 stone[]; -8 -27 -4 stone[]; -8 -27 -3 stone[]; -8 -27 -2 stone[]; -8 -27 -1 stone[]; -7 -27 -8 stone[]; -7 -27 -7 stone[]; -7 -27 -6 stone[]; -7 -27 -5 stone[]; -7 -27 -4 stone[]; -7 -27 -3 stone[]; -7 -27 -2 stone[]; -7 -27 -1 stone[]; -6 -27 -8 stone[]; -6 -27 -7 stone[]; -6 -27 -6 stone[]; -6 -27 -5 stone[]; -6 -27 -4 stone[]; -6 -27 -3 stone[]; -6 -27 -2 stone[]; -6 -27 -1 stone[]; -5 -27 -8 stone[]; -5 -27 -7 stone[]; -5 -27 -6 stone[]; -5 -27 -5 stone[]; -5 -27 -4 stone[]; -5 -27 -3 stone[]; -5 -27 -2 stone[]; -5 -27 -1 stone[]; -4 -27 -8 stone[]; -4 -27 -7 stone[]; -4 -27 -6 stone[]; -4 -27 -5 stone[]; -4 -27 -4 stone[]; -4 -27 -3 stone[]; -4 -27 -2 stone[]; -4 -27 -1 stone[]; -3 -27 -8 stone[]; -3 -27 -7 stone[]; -3 -27 -6 stone[]; -3 -27 -5 stone[]; -3 -27 -4 stone[]; -3 -27 -3 stone[]; -3 -27 -2 stone[]; -3 -27 -1 stone[]; -2 -27 -8 stone[]; -2 -27 -7 stone[]; -2 -27 -6 stone[]; -2 -27 -5 stone[]; -2 -27 -4 stone[]; -2 -27 -3 stone[]; -2 -27 -2 stone[]; -2 -27 -1 stone[]; -1 -27 -8 stone[]; -1 -27 -7 stone[]; -1 -27 -6 stone[]; -1 -27 -5 stone[]; -1 -27 -4 stone[]; -1 -27 -3 stone[]; -1 -27 -2 stone[]; -1 -27 -1 stone[] | extra: 
+   8111 actor   UpdateSubchunkBlocks -8 -27 0 stone[]; -8 -27 1 stone[]; -8 -27 2 stone[]; -8 -27 3 stone[]; -8 -27 4 stone[]; -8 -27 5 stone[]; -8 -27 6 stone[]; -8 -27 7 stone[]; -8 -27 8 stone[]; -7 -27 0 stone[]; -7 -27 1 stone[]; -7 -27 2 stone[]; -7 -27 3 stone[]; -7 -27 4 stone[]; -7 -27 5 stone[]; -7 -27 6 stone[]; -7 -27 7 stone[]; -7 -27 8 stone[]; -6 -27 0 stone[]; -6 -27 1 stone[]; -6 -27 2 stone[]; -6 -27 3 stone[]; -6 -27 4 stone[]; -6 -27 5 stone[]; -6 -27 6 stone[]; -6 -27 7 stone[]; -6 -27 8 stone[]; -5 -27 0 stone[]; -5 -27 1 stone[]; -5 -27 2 stone[]; -5 -27 3 stone[]; -5 -27 4 stone[]; -5 -27 5 stone[]; -5 -27 6 stone[]; -5 -27 7 stone[]; -5 -27 8 stone[]; -4 -27 0 stone[]; -4 -27 1 stone[]; -4 -27 2 stone[]; -4 -27 3 stone[]; -4 -27 4 stone[]; -4 -27 5 stone[]; -4 -27 6 stone[]; -4 -27 7 stone[]; -4 -27 8 stone[]; -3 -27 0 stone[]; -3 -27 1 stone[]; -3 -27 2 stone[]; -3 -27 3 stone[]; -3 -27 4 stone[]; -3 -27 5 stone[]; -3 -27 6 stone[]; -3 -27 7 stone[]; -3 -27 8 stone[]; -2 -27 0 stone[]; -2 -27 1 stone[]; -2 -27 2 stone[]; -2 -27 3 stone[]; -2 -27 4 stone[]; -2 -27 5 stone[]; -2 -27 6 stone[]; -2 -27 7 stone[]; -2 -27 8 stone[]; -1 -27 0 stone[]; -1 -27 1 stone[]; -1 -27 2 stone[]; -1 -27 3 stone[]; -1 -27 4 stone[]; -1 -27 5 stone[]; -1 -27 6 stone[]; -1 -27 7 stone[]; -1 -27 8 stone[] | extra: 
+   8112 actor   UpdateSubchunkBlocks 0 -27 -8 stone[]; 0 -27 -7 stone[]; 0 -27 -6 stone[]; 0 -27 -5 stone[]; 0 -27 -4 stone[]; 0 -27 -3 stone[]; 0 -27 -2 stone[]; 0 -27 -1 stone[]; 1 -27 -8 stone[]; 1 -27 -7 stone[]; 1 -27 -6 stone[]; 1 -27 -5 stone[]; 1 -27 -4 stone[]; 1 -27 -3 stone[]; 1 -27 -2 stone[]; 1 -27 -1 stone[]; 2 -27 -8 stone[]; 2 -27 -7 stone[]; 2 -27 -6 stone[]; 2 -27 -5 stone[]; 2 -27 -4 stone[]; 2 -27 -3 stone[]; 2 -27 -2 stone[]; 2 -27 -1 stone[]; 3 -27 -8 stone[]; 3 -27 -7 stone[]; 3 -27 -6 stone[]; 3 -27 -5 stone[]; 3 -27 -4 stone[]; 3 -27 -3 stone[]; 3 -27 -2 stone[]; 3 -27 -1 stone[]; 4 -27 -8 stone[]; 4 -27 -7 stone[]; 4 -27 -6 stone[]; 4 -27 -5 stone[]; 4 -27 -4 stone[]; 4 -27 -3 stone[]; 4 -27 -2 stone[]; 4 -27 -1 stone[]; 5 -27 -8 stone[]; 5 -27 -7 stone[]; 5 -27 -6 stone[]; 5 -27 -5 stone[]; 5 -27 -4 stone[]; 5 -27 -3 stone[]; 5 -27 -2 stone[]; 5 -27 -1 stone[]; 6 -27 -8 stone[]; 6 -27 -7 stone[]; 6 -27 -6 stone[]; 6 -27 -5 stone[]; 6 -27 -4 stone[]; 6 -27 -3 stone[]; 6 -27 -2 stone[]; 6 -27 -1 stone[]; 7 -27 -8 stone[]; 7 -27 -7 stone[]; 7 -27 -6 stone[]; 7 -27 -5 stone[]; 7 -27 -4 stone[]; 7 -27 -3 stone[]; 7 -27 -2 stone[]; 7 -27 -1 stone[]; 8 -27 -8 stone[]; 8 -27 -7 stone[]; 8 -27 -6 stone[]; 8 -27 -5 stone[]; 8 -27 -4 stone[]; 8 -27 -3 stone[]; 8 -27 -2 stone[]; 8 -27 -1 stone[]; 9 -27 -8 stone[]; 9 -27 -7 stone[]; 9 -27 -6 stone[]; 9 -27 -5 stone[]; 9 -27 -4 stone[]; 9 -27 -3 stone[]; 9 -27 -2 stone[]; 9 -27 -1 stone[]; 10 -27 -8 stone[]; 10 -27 -7 stone[]; 10 -27 -6 stone[]; 10 -27 -5 stone[]; 10 -27 -4 stone[]; 10 -27 -3 stone[]; 10 -27 -2 stone[]; 10 -27 -1 stone[]; 11 -27 -8 stone[]; 11 -27 -7 stone[]; 11 -27 -6 stone[]; 11 -27 -5 stone[]; 11 -27 -4 stone[]; 11 -27 -3 stone[]; 11 -27 -2 stone[]; 11 -27 -1 stone[]; 12 -27 -8 stone[]; 12 -27 -7 stone[]; 12 -27 -6 stone[]; 12 -27 -5 stone[]; 12 -27 -4 stone[]; 12 -27 -3 stone[]; 12 -27 -2 stone[]; 12 -27 -1 stone[]; 13 -27 -8 stone[]; 13 -27 -7 stone[]; 13 -27 -6 stone[]; 13 -27 -5 stone[]; 13 -27 -4 stone[]; 13 -27 -3 stone[]; 13 -27 -2 stone[]; 13 -27 -1 stone[]; 14 -27 -8 stone[]; 14 -27 -7 stone[]; 14 -27 -6 stone[]; 14 -27 -5 stone[]; 14 -27 -4 stone[]; 14 -27 -3 stone[]; 14 -27 -2 stone[]; 14 -27 -1 stone[]; 15 -27 -8 stone[]; 15 -27 -7 stone[]; 15 -27 -6 stone[]; 15 -27 -5 stone[]; 15 -27 -4 stone[]; 15 -27 -3 stone[]; 15 -27 -2 stone[]; 15 -27 -1 stone[] | extra: 
+   8113 watcher UpdateSubchunkBlocks -8 -27 0 stone[]; -8 -27 1 stone[]; -8 -27 2 stone[]; -8 -27 3 stone[]; -8 -27 4 stone[]; -8 -27 5 stone[]; -8 -27 6 stone[]; -8 -27 7 stone[]; -8 -27 8 stone[]; -7 -27 0 stone[]; -7 -27 1 stone[]; -7 -27 2 stone[]; -7 -27 3 stone[]; -7 -27 4 stone[]; -7 -27 5 stone[]; -7 -27 6 stone[]; -7 -27 7 stone[]; -7 -27 8 stone[]; -6 -27 0 stone[]; -6 -27 1 stone[]; -6 -27 2 stone[]; -6 -27 3 stone[]; -6 -27 4 stone[]; -6 -27 5 stone[]; -6 -27 6 stone[]; -6 -27 7 stone[]; -6 -27 8 stone[]; -5 -27 0 stone[]; -5 -27 1 stone[]; -5 -27 2 stone[]; -5 -27 3 stone[]; -5 -27 4 stone[]; -5 -27 5 stone[]; -5 -27 6 stone[]; -5 -27 7 stone[]; -5 -27 8 stone[]; -4 -27 0 stone[]; -4 -27 1 stone[]; -4 -27 2 stone[]; -4 -27 3 stone[]; -4 -27 4 stone[]; -4 -27 5 stone[]; -4 -27 6 stone[]; -4 -27 7 stone[]; -4 -27 8 stone[]; -3 -27 0 stone[]; -3 -27 1 stone[]; -3 -27 2 stone[]; -3 -27 3 stone[]; -3 -27 4 stone[]; -3 -27 5 stone[]; -3 -27 6 stone[]; -3 -27 7 stone[]; -3 -27 8 stone[]; -2 -27 0 stone[]; -2 -27 1 stone[]; -2 -27 2 stone[]; -2 -27 3 stone[]; -2 -27 4 stone[]; -2 -27 5 stone[]; -2 -27 6 stone[]; -2 -27 7 stone[]; -2 -27 8 stone[]; -1 -27 0 stone[]; -1 -27 1 stone[]; -1 -27 2 stone[]; -1 -27 3 stone[]; -1 -27 4 stone[]; -1 -27 5 stone[]; -1 -27 6 stone[]; -1 -27 7 stone[]; -1 -27 8 stone[] | extra: 
+   8113 actor   UpdateSubchunkBlocks 0 -27 0 stone[]; 0 -27 1 stone[]; 0 -27 2 stone[]; 0 -27 3 stone[]; 0 -27 4 stone[]; 0 -27 5 stone[]; 0 -27 6 stone[]; 0 -27 7 stone[]; 0 -27 8 stone[]; 1 -27 0 stone[]; 1 -27 1 stone[]; 1 -27 2 stone[]; 1 -27 3 stone[]; 1 -27 4 stone[]; 1 -27 5 stone[]; 1 -27 6 stone[]; 1 -27 7 stone[]; 1 -27 8 stone[]; 2 -27 0 stone[]; 2 -27 1 stone[]; 2 -27 2 stone[]; 2 -27 3 stone[]; 2 -27 4 stone[]; 2 -27 5 stone[]; 2 -27 6 stone[]; 2 -27 7 stone[]; 2 -27 8 stone[]; 3 -27 0 stone[]; 3 -27 1 stone[]; 3 -27 2 stone[]; 3 -27 3 stone[]; 3 -27 4 stone[]; 3 -27 5 stone[]; 3 -27 6 stone[]; 3 -27 7 stone[]; 3 -27 8 stone[]; 4 -27 0 stone[]; 4 -27 1 stone[]; 4 -27 2 stone[]; 4 -27 3 stone[]; 4 -27 4 stone[]; 4 -27 5 stone[]; 4 -27 6 stone[]; 4 -27 7 stone[]; 4 -27 8 stone[]; 5 -27 0 stone[]; 5 -27 1 stone[]; 5 -27 2 stone[]; 5 -27 3 stone[]; 5 -27 4 stone[]; 5 -27 5 stone[]; 5 -27 6 stone[]; 5 -27 7 stone[]; 5 -27 8 stone[]; 6 -27 0 stone[]; 6 -27 1 stone[]; 6 -27 2 stone[]; 6 -27 3 stone[]; 6 -27 4 stone[]; 6 -27 5 stone[]; 6 -27 6 stone[]; 6 -27 7 stone[]; 6 -27 8 stone[]; 7 -27 0 stone[]; 7 -27 1 stone[]; 7 -27 2 stone[]; 7 -27 3 stone[]; 7 -27 4 stone[]; 7 -27 5 stone[]; 7 -27 6 stone[]; 7 -27 7 stone[]; 7 -27 8 stone[]; 8 -27 0 stone[]; 8 -27 1 stone[]; 8 -27 2 stone[]; 8 -27 3 stone[]; 8 -27 4 stone[]; 8 -27 5 stone[]; 8 -27 6 stone[]; 8 -27 7 stone[]; 8 -27 8 stone[]; 9 -27 0 stone[]; 9 -27 1 stone[]; 9 -27 2 stone[]; 9 -27 3 stone[]; 9 -27 4 stone[]; 9 -27 5 stone[]; 9 -27 6 stone[]; 9 -27 7 stone[]; 9 -27 8 stone[]; 10 -27 0 stone[]; 10 -27 1 stone[]; 10 -27 2 stone[]; 10 -27 3 stone[]; 10 -27 4 stone[]; 10 -27 5 stone[]; 10 -27 6 stone[]; 10 -27 7 stone[]; 10 -27 8 stone[]; 11 -27 0 stone[]; 11 -27 1 stone[]; 11 -27 2 stone[]; 11 -27 3 stone[]; 11 -27 4 stone[]; 11 -27 5 stone[]; 11 -27 6 stone[]; 11 -27 7 stone[]; 11 -27 8 stone[]; 12 -27 0 stone[]; 12 -27 1 stone[]; 12 -27 2 stone[]; 12 -27 3 stone[]; 12 -27 4 stone[]; 12 -27 5 stone[]; 12 -27 6 stone[]; 12 -27 7 stone[]; 12 -27 8 stone[]; 13 -27 0 stone[]; 13 -27 1 stone[]; 13 -27 2 stone[]; 13 -27 3 stone[]; 13 -27 4 stone[]; 13 -27 5 stone[]; 13 -27 6 stone[]; 13 -27 7 stone[]; 13 -27 8 stone[]; 14 -27 0 stone[]; 14 -27 1 stone[]; 14 -27 2 stone[]; 14 -27 3 stone[]; 14 -27 4 stone[]; 14 -27 5 stone[]; 14 -27 6 stone[]; 14 -27 7 stone[]; 14 -27 8 stone[]; 15 -27 0 stone[]; 15 -27 1 stone[]; 15 -27 2 stone[]; 15 -27 3 stone[]; 15 -27 4 stone[]; 15 -27 5 stone[]; 15 -27 6 stone[]; 15 -27 7 stone[]; 15 -27 8 stone[] | extra: 
+   8113 actor   UpdateSubchunkBlocks 16 -27 -8 stone[]; 16 -27 -7 stone[]; 16 -27 -6 stone[]; 16 -27 -5 stone[]; 16 -27 -4 stone[]; 16 -27 -3 stone[]; 16 -27 -2 stone[]; 16 -27 -1 stone[] | extra: 
+   8114 watcher UpdateSubchunkBlocks 0 -27 -8 stone[]; 0 -27 -7 stone[]; 0 -27 -6 stone[]; 0 -27 -5 stone[]; 0 -27 -4 stone[]; 0 -27 -3 stone[]; 0 -27 -2 stone[]; 0 -27 -1 stone[]; 1 -27 -8 stone[]; 1 -27 -7 stone[]; 1 -27 -6 stone[]; 1 -27 -5 stone[]; 1 -27 -4 stone[]; 1 -27 -3 stone[]; 1 -27 -2 stone[]; 1 -27 -1 stone[]; 2 -27 -8 stone[]; 2 -27 -7 stone[]; 2 -27 -6 stone[]; 2 -27 -5 stone[]; 2 -27 -4 stone[]; 2 -27 -3 stone[]; 2 -27 -2 stone[]; 2 -27 -1 stone[]; 3 -27 -8 stone[]; 3 -27 -7 stone[]; 3 -27 -6 stone[]; 3 -27 -5 stone[]; 3 -27 -4 stone[]; 3 -27 -3 stone[]; 3 -27 -2 stone[]; 3 -27 -1 stone[]; 4 -27 -8 stone[]; 4 -27 -7 stone[]; 4 -27 -6 stone[]; 4 -27 -5 stone[]; 4 -27 -4 stone[]; 4 -27 -3 stone[]; 4 -27 -2 stone[]; 4 -27 -1 stone[]; 5 -27 -8 stone[]; 5 -27 -7 stone[]; 5 -27 -6 stone[]; 5 -27 -5 stone[]; 5 -27 -4 stone[]; 5 -27 -3 stone[]; 5 -27 -2 stone[]; 5 -27 -1 stone[]; 6 -27 -8 stone[]; 6 -27 -7 stone[]; 6 -27 -6 stone[]; 6 -27 -5 stone[]; 6 -27 -4 stone[]; 6 -27 -3 stone[]; 6 -27 -2 stone[]; 6 -27 -1 stone[]; 7 -27 -8 stone[]; 7 -27 -7 stone[]; 7 -27 -6 stone[]; 7 -27 -5 stone[]; 7 -27 -4 stone[]; 7 -27 -3 stone[]; 7 -27 -2 stone[]; 7 -27 -1 stone[]; 8 -27 -8 stone[]; 8 -27 -7 stone[]; 8 -27 -6 stone[]; 8 -27 -5 stone[]; 8 -27 -4 stone[]; 8 -27 -3 stone[]; 8 -27 -2 stone[]; 8 -27 -1 stone[]; 9 -27 -8 stone[]; 9 -27 -7 stone[]; 9 -27 -6 stone[]; 9 -27 -5 stone[]; 9 -27 -4 stone[]; 9 -27 -3 stone[]; 9 -27 -2 stone[]; 9 -27 -1 stone[]; 10 -27 -8 stone[]; 10 -27 -7 stone[]; 10 -27 -6 stone[]; 10 -27 -5 stone[]; 10 -27 -4 stone[]; 10 -27 -3 stone[]; 10 -27 -2 stone[]; 10 -27 -1 stone[]; 11 -27 -8 stone[]; 11 -27 -7 stone[]; 11 -27 -6 stone[]; 11 -27 -5 stone[]; 11 -27 -4 stone[]; 11 -27 -3 stone[]; 11 -27 -2 stone[]; 11 -27 -1 stone[]; 12 -27 -8 stone[]; 12 -27 -7 stone[]; 12 -27 -6 stone[]; 12 -27 -5 stone[]; 12 -27 -4 stone[]; 12 -27 -3 stone[]; 12 -27 -2 stone[]; 12 -27 -1 stone[]; 13 -27 -8 stone[]; 13 -27 -7 stone[]; 13 -27 -6 stone[]; 13 -27 -5 stone[]; 13 -27 -4 stone[]; 13 -27 -3 stone[]; 13 -27 -2 stone[]; 13 -27 -1 stone[]; 14 -27 -8 stone[]; 14 -27 -7 stone[]; 14 -27 -6 stone[]; 14 -27 -5 stone[]; 14 -27 -4 stone[]; 14 -27 -3 stone[]; 14 -27 -2 stone[]; 14 -27 -1 stone[]; 15 -27 -8 stone[]; 15 -27 -7 stone[]; 15 -27 -6 stone[]; 15 -27 -5 stone[]; 15 -27 -4 stone[]; 15 -27 -3 stone[]; 15 -27 -2 stone[]; 15 -27 -1 stone[] | extra: 
+   8115 watcher UpdateSubchunkBlocks 0 -27 0 stone[]; 0 -27 1 stone[]; 0 -27 2 stone[]; 0 -27 3 stone[]; 0 -27 4 stone[]; 0 -27 5 stone[]; 0 -27 6 stone[]; 0 -27 7 stone[]; 0 -27 8 stone[]; 1 -27 0 stone[]; 1 -27 1 stone[]; 1 -27 2 stone[]; 1 -27 3 stone[]; 1 -27 4 stone[]; 1 -27 5 stone[]; 1 -27 6 stone[]; 1 -27 7 stone[]; 1 -27 8 stone[]; 2 -27 0 stone[]; 2 -27 1 stone[]; 2 -27 2 stone[]; 2 -27 3 stone[]; 2 -27 4 stone[]; 2 -27 5 stone[]; 2 -27 6 stone[]; 2 -27 7 stone[]; 2 -27 8 stone[]; 3 -27 0 stone[]; 3 -27 1 stone[]; 3 -27 2 stone[]; 3 -27 3 stone[]; 3 -27 4 stone[]; 3 -27 5 stone[]; 3 -27 6 stone[]; 3 -27 7 stone[]; 3 -27 8 stone[]; 4 -27 0 stone[]; 4 -27 1 stone[]; 4 -27 2 stone[]; 4 -27 3 stone[]; 4 -27 4 stone[]; 4 -27 5 stone[]; 4 -27 6 stone[]; 4 -27 7 stone[]; 4 -27 8 stone[]; 5 -27 0 stone[]; 5 -27 1 stone[]; 5 -27 2 stone[]; 5 -27 3 stone[]; 5 -27 4 stone[]; 5 -27 5 stone[]; 5 -27 6 stone[]; 5 -27 7 stone[]; 5 -27 8 stone[]; 6 -27 0 stone[]; 6 -27 1 stone[]; 6 -27 2 stone[]; 6 -27 3 stone[]; 6 -27 4 stone[]; 6 -27 5 stone[]; 6 -27 6 stone[]; 6 -27 7 stone[]; 6 -27 8 stone[]; 7 -27 0 stone[]; 7 -27 1 stone[]; 7 -27 2 stone[]; 7 -27 3 stone[]; 7 -27 4 stone[]; 7 -27 5 stone[]; 7 -27 6 stone[]; 7 -27 7 stone[]; 7 -27 8 stone[]; 8 -27 0 stone[]; 8 -27 1 stone[]; 8 -27 2 stone[]; 8 -27 3 stone[]; 8 -27 4 stone[]; 8 -27 5 stone[]; 8 -27 6 stone[]; 8 -27 7 stone[]; 8 -27 8 stone[]; 9 -27 0 stone[]; 9 -27 1 stone[]; 9 -27 2 stone[]; 9 -27 3 stone[]; 9 -27 4 stone[]; 9 -27 5 stone[]; 9 -27 6 stone[]; 9 -27 7 stone[]; 9 -27 8 stone[]; 10 -27 0 stone[]; 10 -27 1 stone[]; 10 -27 2 stone[]; 10 -27 3 stone[]; 10 -27 4 stone[]; 10 -27 5 stone[]; 10 -27 6 stone[]; 10 -27 7 stone[]; 10 -27 8 stone[]; 11 -27 0 stone[]; 11 -27 1 stone[]; 11 -27 2 stone[]; 11 -27 3 stone[]; 11 -27 4 stone[]; 11 -27 5 stone[]; 11 -27 6 stone[]; 11 -27 7 stone[]; 11 -27 8 stone[]; 12 -27 0 stone[]; 12 -27 1 stone[]; 12 -27 2 stone[]; 12 -27 3 stone[]; 12 -27 4 stone[]; 12 -27 5 stone[]; 12 -27 6 stone[]; 12 -27 7 stone[]; 12 -27 8 stone[]; 13 -27 0 stone[]; 13 -27 1 stone[]; 13 -27 2 stone[]; 13 -27 3 stone[]; 13 -27 4 stone[]; 13 -27 5 stone[]; 13 -27 6 stone[]; 13 -27 7 stone[]; 13 -27 8 stone[]; 14 -27 0 stone[]; 14 -27 1 stone[]; 14 -27 2 stone[]; 14 -27 3 stone[]; 14 -27 4 stone[]; 14 -27 5 stone[]; 14 -27 6 stone[]; 14 -27 7 stone[]; 14 -27 8 stone[]; 15 -27 0 stone[]; 15 -27 1 stone[]; 15 -27 2 stone[]; 15 -27 3 stone[]; 15 -27 4 stone[]; 15 -27 5 stone[]; 15 -27 6 stone[]; 15 -27 7 stone[]; 15 -27 8 stone[] | extra: 
+   8115 watcher UpdateSubchunkBlocks 16 -27 -8 stone[]; 16 -27 -7 stone[]; 16 -27 -6 stone[]; 16 -27 -5 stone[]; 16 -27 -4 stone[]; 16 -27 -3 stone[]; 16 -27 -2 stone[]; 16 -27 -1 stone[] | extra: 
+   8115 actor   UpdateSubchunkBlocks 16 -27 0 stone[]; 16 -27 1 stone[]; 16 -27 2 stone[]; 16 -27 3 stone[]; 16 -27 4 stone[]; 16 -27 5 stone[]; 16 -27 6 stone[]; 16 -27 7 stone[]; 16 -27 8 stone[] | extra: 
+   8115 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["425"]
+   8115 watcher UpdateSubchunkBlocks 16 -27 0 stone[]; 16 -27 1 stone[]; 16 -27 2 stone[]; 16 -27 3 stone[]; 16 -27 4 stone[]; 16 -27 5 stone[]; 16 -27 6 stone[]; 16 -27 7 stone[]; 16 -27 8 stone[] | extra: 
+   8115 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"425\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill -8 -26 -8 16 -16 8 air
+   9110 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s 0.5 -26 0.5 -90 0
+  10067 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10067 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10067 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+## /tp CmdWatcher 0.5 -26 0.5
+  11067 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14688 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+  14689 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+## /setblock 3 -26 0 dragon_egg
+  15717 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  15717 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15717 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  15717 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  16617 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  16617 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /!click 3 0 0
+## clicked: Ok(())
+  16717 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 17105678 }
+  16717 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  16718 watcher UpdateBlock 8 -29 -14 layer 0 dragon_egg[]
+  16718 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 17105678 }
+  16718 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  16718 actor   UpdateBlock 8 -29 -14 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  17717 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  17717 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  17717 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  17717 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  18767 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 100925963 }
+  18767 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  18767 watcher UpdateBlock -1 -24 11 layer 0 dragon_egg[]
+  18767 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 100925963 }
+  18767 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  18767 actor   UpdateBlock -1 -24 11 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  19767 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  19767 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  19767 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  19767 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  20767 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 100795137 }
+  20767 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  20767 watcher UpdateBlock 1 -23 1 layer 0 dragon_egg[]
+  20768 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 100795137 }
+  20768 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  20768 actor   UpdateBlock 1 -23 1 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  21769 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  21769 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21769 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  21769 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  22818 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 33555200 }
+  22819 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  22819 watcher UpdateBlock 3 -23 0 layer 0 dragon_egg[]
+  22819 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 33555200 }
+  22819 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  22819 actor   UpdateBlock 3 -23 0 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  23819 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  23819 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23819 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  23819 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  24819 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 67961612 }
+  24819 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  24819 watcher UpdateBlock -10 -29 12 layer 0 dragon_egg[]
+  24819 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 67961612 }
+  24819 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  24819 actor   UpdateBlock -10 -29 12 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  25818 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  25818 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  25819 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  25819 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  26819 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 17106177 }
+  26819 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  26819 watcher UpdateBlock 8 -31 -1 layer 0 dragon_egg[]
+  26819 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 17106177 }
+  26820 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  26820 actor   UpdateBlock 8 -31 -1 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  27817 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  27817 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  27818 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  27818 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  28868 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 101123585 }
+  28868 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  28868 watcher UpdateBlock -4 -20 1 layer 0 dragon_egg[]
+  28869 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 101123585 }
+  28869 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  28869 actor   UpdateBlock -4 -20 1 layer 0 dragon_egg[]
+  29417 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  29417 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /setblock 3 -26 0 dragon_egg
+  29868 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  29868 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  29868 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  29868 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 3 0 0
+## clicked: Ok(())
+  30919 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 84083206 }
+  30919 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  30919 watcher UpdateBlock 6 -28 6 layer 0 dragon_egg[]
+  30919 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 84083206 }
+  30919 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  30919 actor   UpdateBlock 6 -28 6 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  31919 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  31919 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31919 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  31919 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  32918 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 17302273 }
+  32919 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  32919 watcher UpdateBlock 11 -29 -1 layer 0 dragon_egg[]
+  32919 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 17302273 }
+  32919 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  32919 actor   UpdateBlock 11 -29 -1 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  33918 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  33918 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  33918 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  33918 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  34919 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 33620487 }
+  34919 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  34919 watcher UpdateBlock 2 -24 -7 layer 0 dragon_egg[]
+  34919 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 33620487 }
+  34919 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  34919 actor   UpdateBlock 2 -24 -7 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  35920 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  35920 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35920 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  35920 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  36968 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 197633 }
+  36968 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  36968 watcher UpdateBlock 0 -30 -1 layer 0 dragon_egg[]
+  36968 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 197633 }
+  36968 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  36968 actor   UpdateBlock 0 -30 -1 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  37969 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  37969 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37969 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  37969 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  38970 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 84148226 }
+  38970 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 84148226 }
+  38970 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  38970 actor   UpdateBlock 7 -26 2 layer 0 dragon_egg[]
+  38970 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  38970 watcher UpdateBlock 7 -26 2 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  39970 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  39971 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  39971 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  39971 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 3 0 0
+## clicked: Ok(())
+  41019 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 118030852 }
+  41019 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  41019 watcher UpdateBlock 12 -24 4 layer 0 dragon_egg[]
+  41019 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 118030852 }
+  41019 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  41019 actor   UpdateBlock 12 -24 4 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  42019 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  42019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42020 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  42020 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  42219 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  42219 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /!click 3 0 0
+## clicked: Ok(())
+  43018 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 33751303 }
+  43018 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  43018 watcher UpdateBlock 0 -25 -7 layer 0 dragon_egg[]
+  43018 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 33751303 }
+  43018 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  43018 actor   UpdateBlock 0 -25 -7 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  44020 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  44020 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  44020 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  44020 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 3 0 0
+## clicked: Ok(())
+  45019 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 50659840 }
+  45019 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  45019 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 50659840 }
+  45019 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  45019 watcher UpdateBlock 8 -24 0 layer 0 dragon_egg[]
+  45019 actor   UpdateBlock 8 -24 0 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  46021 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  46021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  46021 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  46021 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  47020 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 101122564 }
+  47020 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  47021 actor   UpdateBlock -4 -24 4 layer 0 dragon_egg[]
+  47021 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 101122564 }
+  47021 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  47021 watcher UpdateBlock -4 -24 4 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  48026 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  48026 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  48026 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  48026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /!click 3 0 0
+## clicked: Ok(())
+  49069 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 67634439 }
+  49069 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  49069 watcher UpdateBlock -5 -31 7 layer 0 dragon_egg[]
+  49069 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 67634439 }
+  49069 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  49070 actor   UpdateBlock -5 -31 7 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  50070 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  50070 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50070 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  50070 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  51118 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 34079237 }
+  51119 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  51119 watcher UpdateBlock -5 -24 -5 layer 0 dragon_egg[]
+  51119 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 34079237 }
+  51119 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  51119 actor   UpdateBlock -5 -24 -5 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  52120 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  52120 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  52120 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  52120 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  53170 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 117638146 }
+  53170 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  53170 watcher UpdateBlock 6 -22 2 layer 0 dragon_egg[]
+  53170 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 117638146 }
+  53170 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  53170 actor   UpdateBlock 6 -22 2 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  54170 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  54170 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  54170 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  54170 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  55018 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  55018 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /!click 3 0 0
+## clicked: Ok(())
+  55218 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 17171205 }
+  55218 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  55218 watcher UpdateBlock 9 -29 -5 layer 0 dragon_egg[]
+  55218 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 17171205 }
+  55218 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  55218 actor   UpdateBlock 9 -29 -5 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  56220 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  56220 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  56220 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  56220 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  57219 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 101319429 }
+  57219 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  57219 watcher UpdateBlock -7 -23 5 layer 0 dragon_egg[]
+  57220 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 101319429 }
+  57220 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  57220 actor   UpdateBlock -7 -23 5 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  58221 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  58221 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  58221 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  58222 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  59220 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 117506830 }
+  59220 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  59220 watcher UpdateBlock 4 -23 14 layer 0 dragon_egg[]
+  59220 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 117506830 }
+  59220 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  59220 actor   UpdateBlock 4 -23 14 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  60219 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  60219 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  60219 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  60219 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  61219 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 117506563 }
+  61219 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 117506563 }
+  61219 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  61219 actor   UpdateBlock 4 -24 3 layer 0 dragon_egg[]
+  61219 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  61219 watcher UpdateBlock 4 -24 3 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  62218 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  62218 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  62219 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  62219 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  63218 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 34275845 }
+  63218 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  63218 watcher UpdateBlock -8 -24 -5 layer 0 dragon_egg[]
+  63218 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 34275845 }
+  63218 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  63218 actor   UpdateBlock -8 -24 -5 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  64220 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  64220 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  64220 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  64220 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  65266 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 100991747 }
+  65267 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  65267 watcher UpdateBlock -2 -23 3 layer 0 dragon_egg[]
+  65267 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 100991747 }
+  65267 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  65267 actor   UpdateBlock -2 -23 3 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  66272 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  66273 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  66273 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  66273 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  67268 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 67698690 }
+  67268 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 67698690 }
+  67268 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  67268 actor   UpdateBlock -6 -26 2 layer 0 dragon_egg[]
+  67268 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  67268 watcher UpdateBlock -6 -26 2 layer 0 dragon_egg[]
+  67818 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  67819 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+## /setblock 3 -26 0 dragon_egg
+  68270 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  68270 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  68270 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  68270 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  69270 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 50463237 }
+  69270 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  69270 watcher UpdateBlock 5 -24 -5 layer 0 dragon_egg[]
+  69271 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 50463237 }
+  69271 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  69271 actor   UpdateBlock 5 -24 -5 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  70270 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  70270 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  70270 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  70270 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  71270 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 33816834 }
+  71270 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  71270 watcher UpdateBlock -1 -25 -2 layer 0 dragon_egg[]
+  71270 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 33816834 }
+  71270 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  71270 actor   UpdateBlock -1 -25 -2 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  72270 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  72270 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  72270 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  72270 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  73269 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 589835 }
+  73269 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  73269 watcher UpdateBlock -6 -26 -11 layer 0 dragon_egg[]
+  73269 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 589835 }
+  73269 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  73269 actor   UpdateBlock -6 -26 -11 layer 0 dragon_egg[]
+## /setblock 3 -26 0 dragon_egg
+  74270 watcher UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  74270 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  74270 actor   UpdateBlock 3 -26 0 layer 0 dragon_egg[]
+  74270 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /!click 3 0 0
+## clicked: Ok(())
+  75269 watcher LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 34275586 }
+  75269 watcher UpdateBlock 3 -26 0 layer 0 air[]
+  75269 watcher UpdateBlock -8 -25 -2 layer 0 dragon_egg[]
+  75269 actor   LevelEvent LevelEvent { event: ParticleDragonEggTeleport, position: Vec3f { x: 3.0, y: -26.0, z: 0.0 }, data: 34275586 }
+  75269 actor   UpdateBlock 3 -26 0 layer 0 air[]
+  75269 actor   UpdateBlock -8 -25 -2 layer 0 dragon_egg[]
+## /
+## /kill @e[type=falling_block]
+  77268 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill -8 -26 -8 16 -16 8 air
+  78374 watcher UpdateSubchunkBlocks -8 -25 -2 air[]; -8 -24 -5 air[]; -5 -24 -5 air[]; -1 -25 -2 air[] | extra: 
+  78375 watcher UpdateSubchunkBlocks -7 -23 5 air[]; -6 -26 2 air[]; -4 -24 4 air[]; -4 -20 1 air[]; -2 -23 3 air[] | extra: 
+  78375 watcher UpdateSubchunkBlocks 0 -25 -7 air[]; 2 -24 -7 air[]; 5 -24 -5 air[] | extra: 
+  78375 watcher UpdateSubchunkBlocks 1 -23 1 air[]; 3 -23 0 air[]; 4 -24 3 air[]; 6 -22 2 air[]; 7 -26 2 air[]; 8 -24 0 air[]; 12 -24 4 air[] | extra: 
+  78375 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"19\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  78375 actor   UpdateSubchunkBlocks -8 -25 -2 air[]; -8 -24 -5 air[]; -5 -24 -5 air[]; -1 -25 -2 air[] | extra: 
+  78375 actor   UpdateSubchunkBlocks -7 -23 5 air[]; -6 -26 2 air[]; -4 -24 4 air[]; -4 -20 1 air[]; -2 -23 3 air[] | extra: 
+  78375 actor   UpdateSubchunkBlocks 0 -25 -7 air[]; 2 -24 -7 air[]; 5 -24 -5 air[] | extra: 
+  78375 actor   UpdateSubchunkBlocks 1 -23 1 air[]; 3 -23 0 air[]; 4 -24 3 air[]; 6 -22 2 air[]; 7 -26 2 air[]; 8 -24 0 air[]; 12 -24 4 air[] | extra: 
+  78375 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["19"]
+## /kill @e[type=item]
+  79284 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /
+  80633 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+  80633 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1
