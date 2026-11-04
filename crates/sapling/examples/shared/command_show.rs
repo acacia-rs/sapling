@@ -35,6 +35,8 @@ pub fn show(start: Instant, shown: &[&str], who: &str, event: Option<BotEvent>) 
         let text: String = dump::dump(&packet).unwrap_or_default().split(", pixels").next().unwrap_or_default().to_owned();
         println!("{ms:>7} {who:<7} ClientboundMapItemData {text}");
         rows.iter().for_each(|row| println!("{ms:>7} {who:<7} {row}"));
+    } else if let Some(text) = crate::tenth1d::recipes(&packet).filter(|_| shown.contains(&"UnlockedRecipesAll")) {
+        println!("{ms:>7} {who:<7} {text}");
     } else if let Some(text) = protocol::properties(&packet).filter(|_| shown.contains(&"Properties")) {
         println!("{ms:>7} {who:<7} {text}");
     } else if let Some(cells) = structures::block_names(&packet).filter(|_| shown.contains(&"UpdateSubchunkBlocks")) {

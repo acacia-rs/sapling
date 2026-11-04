@@ -60,6 +60,10 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 - `structure <name>`: `minecraft:trail_ruins`, `abandoned_camp_forest`, `trial_chambers` placed;
   `minecraft:village` and unknown names → `invalidstructure.error` []. A place 9000 blocks off,
   unloaded, placed too.
+- Names (bds-t1dplace.txt, bds-t1denums.txt): `featurerule` takes the 170 of BDS's `featureRules`
+  enum (`minecraft:minecraft:savanna_mutated_...` among them), else a syntax error;
+  `structure` a soft enum, any name; `liquidSettings` `apply_waterlogging|ignore_waterlogging`,
+  `banana` a syntax error. Without level 4 the parsed line is `generic.error.permissions ["place"]`.
 - `jigsaw <pool> <target> <maxDepth>`: depth 0 and 30 → `maxdepth.error` []; an unknown pool or a
   target the pool lacks → `generation.error` []; `trail_ruins/tower road_anchor 3` and
   `village/plains/town_centers bottom 2` placed.
@@ -99,12 +103,13 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 
 ## Unverified
 
-- `commands.structure.error` for a save or load into unloaded columns (BDS queues a load,
-  `load.queued`, which is not copied).
 - Animation modes place at once.
-- `/place`: no feature rule is known, so every `featurerule` is a syntax error; BDS's own list of
-  `structure` names is not copied (sapling takes `/locate`'s names, `village` too, and BDS's
-  `abandoned_camp_forest` is not one of them); a structure is drawn only over loaded columns
+- `/place featurerule` places nothing (`invalidfeaturerule.error`): on the drill's flat world BDS
+  answered every rule, and `feature minecraft:beehive_feature`, at y -26 with `invalidposition.error`
+  (bds-t1dplace4.txt), and its console placed nothing (bds-t1dplacec.txt), so what a rule places is
+  unseen. `structure` names beyond those drilled: sapling takes `/locate`'s names, `village` too,
+  where BDS's `ancient_city` and `mineshaft` were `invalidstructure.error` and
+  `abandoned_camp_meadow` a `generation.error`; a structure is drawn only over loaded columns
   (`chunknotloaded.error`, where BDS placed one 9000 blocks off); a jigsaw target is matched by
   jigsaw name, which `village/.../town_centers bottom` is not here; the structure options
   (`ignoreStartHeight`, `keepJigsaws`, `includeEntities`, `liquidSettings`) are taken, not

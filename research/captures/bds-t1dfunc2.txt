@@ -1,0 +1,15 @@
+## drill starts at 1793827338050
+## /
+## /
+## /function probe/dup
+   2043 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] dup from the second listed" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2043 actor   CommandOutput success_count=1 data=None commands.function.success success=true ["1"]
+   2043 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] dup from the second listed" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2043 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.function.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /function probe/second
+   3013 actor   Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] only in the second" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3013 watcher Text Text { needs_translation: false, category: Authored, type: Announcement, content: Announcement(TextContentAnnouncement { source_name: "CmdActor", message: "[CmdActor] only in the second" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.function.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3013 actor   CommandOutput success_count=1 data=None commands.function.success success=true ["1"]
+## /
+probe exit 0

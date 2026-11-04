@@ -102,8 +102,7 @@ pub fn drawn_table_loot(table: &str, draws: &mut dyn Draws) -> Vec<(String, u32)
     left
 }
 
-/// Whether the table at `table` is kept: the mobs', those blocks eject and what their entries name.
-// TODO: BDS's tables nothing here names (`gameplay/fishing`, ..) are not kept: `/loot` calls them unknown.
+/// Whether BDS has the table at `table`: every one of its packs' is kept.
 pub fn has_loot_table(table: &str) -> bool {
     LOOT["tables"].get(table).is_some()
 }

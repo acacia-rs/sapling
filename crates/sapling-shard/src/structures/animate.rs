@@ -9,7 +9,7 @@ use sapling_api::BlockPos;
 use sapling_world::StructureTemplate;
 
 use super::place::Placing;
-use crate::components::Tick;
+use crate::components::{Layer, Tick};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Animation {
@@ -31,9 +31,26 @@ struct Run {
 #[derive(Resource, Default)]
 struct Animating(Vec<Run>);
 
-/// Loads `template` at `at`, over `seconds` as `animation` asks; at once without one.
+/// Loads into columns not loaded yet, put once they all are (BDS's `commands.structure.load.queued`,
+/// research/captures/bds-t1dexec.txt).
+#[derive(Resource, Default)]
+struct Waiting(Vec<(Entity, Placing, Animation, f32)>);
+
+fn loaded(world: &World, layer: Entity, placing: &Placing) -> bool {
+    world.get::<Layer>(layer).is_some_and(|layer| placing.columns().into_iter().all(|column| layer.world.is_loaded(column)))
+}
+
+/// Loads `template` at `at`, over `seconds` as `animation` asks; at once without one; when its
+/// columns are loaded.
 pub(crate) fn load(world: &mut World, layer: Entity, template: StructureTemplate, at: BlockPos, how: &sapling_api::StructureLoad, animation: Animation, seconds: f32) {
     let Some(placing) = Placing::new(world, layer, template, at, how) else { return };
+    if !loaded(world, layer, &placing) {
+        return world.get_resource_or_insert_with(Waiting::default).0.push((layer, placing, animation, seconds));
+    }
+    start(world, layer, placing, animation, seconds);
+}
+
+fn start(world: &mut World, layer: Entity, placing: Placing, animation: Animation, seconds: f32) {
     let ticks = f64::from(seconds) * 20.0;
     if animation == Animation::None || ticks < 1.0 {
         placing.place_cells(world, layer, &placing.kept);
@@ -52,8 +69,17 @@ pub(crate) fn load(world: &mut World, layer: Entity, template: StructureTemplate
     world.get_resource_or_insert_with(Animating::default).0.push(Run { layer, placing, steps, from, ticks, done: 0 });
 }
 
-/// Puts what each animated load is due to have put by now.
+/// Starts the waiting loads whose columns are in, then puts what each animated load is due to
+/// have put by now.
 pub(crate) fn tick(world: &mut World) {
+    let waiting = world.get_resource_mut::<Waiting>().map(|mut waiting| std::mem::take(&mut waiting.0)).unwrap_or_default();
+    if !waiting.is_empty() {
+        let (ready, still): (Vec<_>, Vec<_>) = waiting.into_iter().partition(|(layer, placing, ..)| loaded(world, *layer, placing));
+        world.resource_mut::<Waiting>().0 = still;
+        for (layer, placing, animation, seconds) in ready {
+            start(world, layer, placing, animation, seconds);
+        }
+    }
     let Some(mut animating) = world.get_resource_mut::<Animating>().filter(|animating| !animating.0.is_empty()) else { return };
     let runs = std::mem::take(&mut animating.0);
     let now = world.resource::<Tick>().0;

@@ -45,19 +45,19 @@ impl Command for PlaySound {
         }
         let at = self.position.map(|position| position.resolve(ctx, sender));
         let (volume, minimum) = (self.volume.unwrap_or(1.0), self.minimum_volume.unwrap_or(0.0));
-        let mut played = 0;
+        let mut hearers = Vec::new();
         for player in &found {
             let Some(feet) = ctx.position(player.id).map(|position| position.feet) else { continue };
             let eyes = [feet[0], feet[1] + EYES, feet[2]];
             let Some((position, volume)) = heard(eyes, at.unwrap_or(eyes), volume, minimum) else { continue };
             ctx.play_sound(player.id, &Sound::new(self.sound.clone(), position).volume(volume).pitch(self.pitch.unwrap_or(1.0)));
-            played += 1;
+            hearers.push(player.name.clone());
         }
-        // TODO: which answer BDS gives when some targets hear it and some do not was not drilled.
-        match (played, found.as_slice()) {
-            (0, _) => out.translate("commands.playsound.failed", Vec::new(), false),
-            (_, [one]) => out.translate("commands.playsound.success.single", vec![self.sound, one.name.clone()], true),
-            _ => out.translate("commands.playsound.success.multiple", vec![self.sound, found.len().to_string()], true),
+        // BDS counts and names those who heard it, not those targeted (bds-t1dloot.txt).
+        match hearers.as_slice() {
+            [] => out.translate("commands.playsound.failed", Vec::new(), false),
+            [one] => out.translate("commands.playsound.success.single", vec![self.sound, one.clone()], true),
+            _ => out.translate("commands.playsound.success.multiple", vec![self.sound, hearers.len().to_string()], true),
         }
     }
 }

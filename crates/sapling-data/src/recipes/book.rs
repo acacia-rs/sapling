@@ -4,17 +4,26 @@
 use std::sync::LazyLock;
 
 use acacia_proto::packets::{CraftingData, UnlockedRecipes};
+use acacia_proto::types::RecipeUnlockingRequirement;
 
 use crate::templates::{CRAFTING_DATA, UNLOCKED_RECIPES, decode};
 
-static IDS: LazyLock<Vec<String>> = LazyLock::new(|| {
+/// Every recipe's id, and whether `/recipe give *` gives it: BDS's 4092 left out the 540 that
+/// unlock by an empty list of ingredients (research/captures/bds-t1drecipe.txt).
+static IDS: LazyLock<Vec<(String, bool)>> = LazyLock::new(|| {
     crate::set_shield_item_id();
     let data = decode::<CraftingData>(CRAFTING_DATA);
-    let shaped = data.shaped_recipes.into_iter().chain(data.shaped_chemistry_recipes).map(|recipe| recipe.recipe_id);
-    let shapeless = data.shapeless_recipes.into_iter().chain(data.shulker_box_recipes).chain(data.shapeless_chemistry_recipes).map(|recipe| recipe.recipe_id);
-    let mut ids: Vec<String> = shaped.chain(shapeless).filter(|id| !id.is_empty()).collect();
-    ids.dedup();
+    let given = |requirement: &Option<RecipeUnlockingRequirement>| !requirement.as_ref().is_some_and(|requirement| requirement.ingredients.as_ref().is_some_and(Vec::is_empty));
+    let shaped = data.shaped_recipes.into_iter().chain(data.shaped_chemistry_recipes).map(|recipe| (recipe.recipe_id, given(&recipe.unlocking_requirement)));
+    let shapeless = data.shapeless_recipes.into_iter().chain(data.shulker_box_recipes).chain(data.shapeless_chemistry_recipes).map(|recipe| (recipe.recipe_id, given(&recipe.unlocking_requirement)));
+    let mut ids: Vec<(String, bool)> = shaped.chain(shapeless).filter(|(id, _)| !id.is_empty()).collect();
+    ids.dedup_by(|a, b| a.0 == b.0);
     ids
+});
+static ID_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| IDS.iter().map(|(id, _)| id.clone()).collect());
+static GIVEN: LazyLock<Vec<String>> = LazyLock::new(|| {
+    let mut seen = std::collections::HashSet::new();
+    IDS.iter().filter(|(id, given)| *given && seen.insert(id)).map(|(id, _)| id.clone()).collect()
 });
 
 /// The order BDS listed the starting recipes in after `/recipe take @s *` (bds-controls.txt),
@@ -34,7 +43,12 @@ static INITIAL: LazyLock<Vec<String>> = LazyLock::new(|| {
 
 /// Every crafting recipe's id (`minecraft:stick`), in BDS's order.
 pub fn recipe_ids() -> &'static [String] {
-    &IDS
+    &ID_NAMES
+}
+
+/// The recipes `/recipe give @s *` gives, in [`recipe_ids`]' order.
+pub fn given_recipe_ids() -> &'static [String] {
+    &GIVEN
 }
 
 /// The recipes a new player knows, which `/recipe take` cannot take for good, in BDS's order.
@@ -45,6 +59,13 @@ pub fn initial_recipes() -> &'static [String] {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn give_all_gives_what_bds_gave() {
+        let new = given_recipe_ids().iter().filter(|id| !initial_recipes().contains(id)).count();
+        assert_eq!(new, 4092, "bds-t1drecipe.txt");
+        assert!(recipe_ids().iter().any(|id| id == "minecraft:barrel") && !given_recipe_ids().iter().any(|id| id == "minecraft:barrel"));
+    }
 
     #[test]
     fn the_book_has_bds_ids() {

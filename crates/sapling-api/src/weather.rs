@@ -17,6 +17,12 @@ impl ShardCtx<'_> {
         self.backend.weather()
     }
 
+    /// What falls on the world in scope now, as `/weather query` names it: rain and lightning
+    /// follow a change over 100 ticks, and any lightning left is thunder (bds-t1dweather.txt).
+    pub fn falling_weather(&self) -> Weather {
+        self.backend.falling_weather()
+    }
+
     /// Sets the weather of the world in scope for `ticks` (`None`: `/weather`'s own 6000 to 17980),
     /// after which the `doWeatherCycle` rule turns it as BDS does; where the rule is off it stays.
     /// Its players see it at once.
@@ -28,6 +34,9 @@ impl ShardCtx<'_> {
 /// The weather side of [`crate::Backend`].
 pub trait WeatherBackend {
     fn weather(&self) -> Weather;
+    fn falling_weather(&self) -> Weather {
+        self.weather()
+    }
     fn set_weather(&mut self, weather: Weather, ticks: Option<u32>);
 }
 

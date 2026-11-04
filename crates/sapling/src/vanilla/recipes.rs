@@ -1,9 +1,10 @@
 //! `/recipe give|take <player> <recipe|*>`: the recipes each player's recipe book holds, starting
 //! with those a new player knows, answered and sent as BDS 1.26.52 does
 //! (research/captures/bds-controls.txt, bds-controls2.txt).
-// TODO: BDS's UnlockedRecipes for `give *` was cut short in the capture; here it lists every
-// recipe the player did not know, in CraftingData's order. The shard keeps the real book (saved,
-// filled by picked-up items); this one is not saved and misses those, until sapling-api can read it.
+//! `give *` gives what BDS gave (`sapling_data::given_recipe_ids`, bds-t1drecipe.txt).
+// TODO: `give *` lists them in CraftingData's order, not BDS's. The shard keeps the real book
+// (saved, filled by picked-up items); this one is not saved and misses those, until sapling-api
+// can read it.
 
 use std::collections::{HashMap, HashSet};
 
@@ -47,8 +48,10 @@ impl Command for Recipe {
             let book = ctx.state::<Books>().0.entry(player.id).or_insert_with(initial);
             let (key, sent) = match (give, recipe == ALL) {
                 (true, true) => {
-                    let new: Vec<String> = sapling_data::recipe_ids().iter().filter(|id| book.insert((*id).clone())).cloned().collect();
-                    ("commands.recipes.unlockedAllRecipes", vec![(new, RecipeChange::Learnt)])
+                    let new: Vec<String> = sapling_data::given_recipe_ids().iter().filter(|id| book.insert((*id).clone())).cloned().collect();
+                    // BDS sent nothing to a book that had them all (bds-t1drecipe.txt).
+                    let sent = if new.is_empty() { Vec::new() } else { vec![(new, RecipeChange::Learnt)] };
+                    ("commands.recipes.unlockedAllRecipes", sent)
                 }
                 (false, true) => {
                     *book = initial();

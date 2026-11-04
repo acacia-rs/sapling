@@ -1,7 +1,5 @@
 //! `/time`, `/xp`, `/weather` and `/toggledownfall`, answering as BDS does
-//! (research/captures/bds-clock.txt, bds-weather.txt).
-// TODO: a named time is set on the day it is, as BDS did on day 0 and day 15; whether a time
-// already past moves to the next day was not drilled.
+//! (research/captures/bds-clock.txt, bds-weather.txt, bds-t1dexec.txt).
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx, Weather};
@@ -14,7 +12,7 @@ const NAMED: [(&str, i64); 6] = [("day", 1000), ("noon", 6000), ("sunset", 12000
 pub(crate) enum Time {
     Set(i64),
     /// A time of day, its next coming: BDS's noon after a midnight was the next day's
-    /// (research/captures/bds-spiders.txt: noon 30000, midnight 42000, noon 54000).
+    /// (bds-spiders.txt: noon 30000, midnight 42000, noon 54000; each name in bds-t1dexec.txt).
     SetNamed(i64),
     Add(i64),
     Query(&'static str),
@@ -128,7 +126,6 @@ impl Command for Xp {
 /// `/weather <clear|rain|thunder|query> [duration]`; the duration is in ticks, BDS's own draw
 /// without one (the shard's weather.rs). `/toggledownfall` sets the command's spells, not the
 /// weather cycle's longer ones BDS gives it (bdsre 0x143a48410).
-// TODO: BDS's `query` named the weather before the last change, a lag not kept here.
 pub(crate) struct WeatherCommand {
     to: Option<Weather>,
     ticks: Option<u32>,
@@ -169,7 +166,7 @@ fn weather_word(weather: Weather) -> &'static str {
 impl Command for WeatherCommand {
     fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
         match self.to {
-            None => out.translate("commands.weather.query", vec![format!("%commands.weather.query.{}", weather_word(ctx.weather()))], true),
+            None => out.translate("commands.weather.query", vec![format!("%commands.weather.query.{}", weather_word(ctx.falling_weather()))], true),
             Some(weather) => {
                 ctx.set_weather(weather, self.ticks);
                 out.translate(&format!("commands.weather.{}", weather_word(weather)), Vec::new(), true);

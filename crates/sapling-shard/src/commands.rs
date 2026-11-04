@@ -20,7 +20,7 @@ use crate::plugins::{self, CommandRegistry};
 /// why the schema's own numbers are stale).
 const INT: u16 = 1;
 const FLOAT: u16 = 3;
-// TODO: minecraft-data's number, not checked against BDS's `/spreadplayers` list.
+/// `/spreadplayers`' x and z (research/captures/bds-t1denums.txt).
 const VALUE: u16 = 4;
 const TARGET: u16 = 8;
 /// `/function`'s and `/schedule`'s function (research/captures/bds-packs.txt).

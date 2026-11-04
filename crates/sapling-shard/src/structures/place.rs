@@ -50,6 +50,14 @@ impl Placing {
         std::array::from_fn(|axis| self.at[axis] + offset[axis])
     }
 
+    /// The columns the turned box covers.
+    pub(crate) fn columns(&self) -> Vec<ChunkPos> {
+        let [sx, _, sz] = self.template.size;
+        let corners = [[0, 0, 0], [sx - 1, 0, sz - 1]].map(|offset| self.turn.cell(offset, self.template.size)).map(|offset| [self.at[0] + offset[0], self.at[2] + offset[2]]);
+        let [low, high] = [0, 1].map(|end| [0, 1].map(|axis| if end == 0 { corners[0][axis].min(corners[1][axis]) } else { corners[0][axis].max(corners[1][axis]) } >> 4));
+        (low[0]..=high[0]).flat_map(|x| (low[1]..=high[1]).map(move |z| ChunkPos::new(x, z))).collect()
+    }
+
     fn id_of(&self, layer: usize, index: usize) -> Option<u32> {
         usize::try_from(self.template.layers[layer][index]).ok().and_then(|palette| self.ids.get(palette).copied().flatten())
     }

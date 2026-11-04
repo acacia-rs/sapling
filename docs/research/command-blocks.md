@@ -46,6 +46,8 @@ refused (ran this tick, blocks off) ends the chain.
   `daylock` counted `SuccessCount` 1 with no output line.
 - Permission: `op`, `deop`, `allowlist`, `setmaxplayers`, `transfer`, `place` answered
   `commands.generic.error.permissions` `[name]`; `kick`, `list`, `tp`, `gamerule`, `time` ran.
+- `seed` and `version`, sapling's commands BDS has not, keep `commands.generic.syntax ["", "seed", ""]`
+  as an unknown command does (bds-t1dtile.txt; from a player BDS answered `generic.unknown`).
 - Rules: `maxCommandChainLength` 2 ran two links of three; -1 (the test server's world had it) ran none, so
   `cmdchains` and `cmdrules` set the three rules to their defaults first (recaptured 2026-10-28; that world's
   redstone clocks and sculk sensors add UpdateBlocks that are not the drill's).
@@ -61,4 +63,4 @@ refused (ran this tick, blocks off) ends the chain.
 - A command block minecart on a powered activator rail ran its line every tick under `[!§r]`; its command is
   set by CommandBlockUpdate's minecart form (`vehicles/command_cart.rs`). Its line is not saved and its
   output not tracked (TODO there).
-- `seed` and `version` are sapling commands, so a block runs them; BDS has neither (a syntax error).
+- `seed` and `version` from a block are syntax errors, as on BDS, which has neither command.

@@ -19,7 +19,7 @@ mod molang;
 mod smithing;
 mod unlock;
 
-pub use book::{initial_recipes, recipe_ids};
+pub use book::{given_recipe_ids, initial_recipes, recipe_ids};
 pub use unlock::{UnlockContext, unlocked_by};
 pub use brewing::{brewed, is_brewing_bottle, is_brewing_ingredient};
 pub use smithing::smithed;

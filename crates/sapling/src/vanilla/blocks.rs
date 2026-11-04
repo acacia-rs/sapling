@@ -113,9 +113,7 @@ pub(crate) struct TestForBlock {
 
 impl Command for TestForBlock {
     /// BDS names the place in each answer, and both blocks where the kind is another
-    /// (research/captures/bds-defaults.txt).
-    // TODO: BDS names a block by its `tile.` key, which for some is not its name (stone is
-    // `tile.stone.stone.name`); here the key is made of the name.
+    /// (research/captures/bds-defaults.txt), each by its `tile.` key (`sapling_data::block_tile_key`).
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let pos = self.position.resolve(ctx, sender);
         // research/captures/bds-tickedge.txt: past the tick region, as `/setblock` and `/fill` there.
@@ -125,7 +123,7 @@ impl Command for TestForBlock {
         let place = || pos.map(|c| c.to_string()).to_vec();
         let wanted = block(&self.block.0, self.states.as_ref());
         let there = ctx.block(pos).unwrap_or_else(|| Block::new(Block::AIR));
-        let key = |name: &str| format!("%tile.{}.name", name.rsplit(':').next().unwrap_or(name));
+        let key = |name: &str| sapling_data::block_tile_key(name).map_or_else(|| format!("%tile.{}.name", name.rsplit(':').next().unwrap_or(name)), str::to_owned);
         if there.name != wanted.name {
             return out.translate("commands.testforblock.failed.tile", [place(), vec![key(&there.name), key(&wanted.name)]].concat(), false);
         }

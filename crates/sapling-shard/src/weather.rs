@@ -5,8 +5,8 @@
 //! is on, turning each when its count runs out and drawing how long the new spell lasts. A player
 //! is told whenever what it was last told differs from its world's sky, so one who joins or
 //! changes worlds is too.
-// TODO: BDS draws the spells from the level's random, here from a hash of the tick; `query`
-// answers thunder where lightning is on and rain is not, here clear; snow falls on no block.
+// TODO: BDS draws the spells from the level's random, here from a hash of the tick; snow falls
+// on no block.
 // Lightning: lightning.rs.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -188,6 +188,15 @@ struct Told(Weather);
 impl WeatherBackend for Ctx<'_> {
     fn weather(&self) -> Weather {
         of(self.world, worlds::current(self.world))
+    }
+
+    fn falling_weather(&self) -> Weather {
+        let now = falling(self.world, worlds::current(self.world));
+        match (now.lightning > 0.0, now.rain > 0.0) {
+            (true, _) => Weather::Thunder,
+            (false, true) => Weather::Rain,
+            (false, false) => Weather::Clear,
+        }
     }
 
     fn set_weather(&mut self, weather: Weather, ticks: Option<u32>) {

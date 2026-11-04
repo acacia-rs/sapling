@@ -29,6 +29,8 @@ the pack negotiation and the commands' syntax), `research/captures/bds-functions
 - Answer `commands.function.success [count]`; inner output goes nowhere (`say` still broadcasts),
   operators get the usual `[name: ...]` echo. Extra words: syntax error.
 - `tick.json` `values` run every tick (20 a second) as the server.
+- Two packs with a function of one name: the first listed in `world_behavior_packs.json` wins,
+  listed either way; a name only the other has still runs (bds-t1dfunc1.txt, -2.txt).
 
 ## /schedule (bdsre 0x143b10560; scheduled run 0x1409ebcf0)
 
@@ -44,15 +46,14 @@ the pack negotiation and the commands' syntax), `research/captures/bds-functions
 
 - Answer `Script event %%s has been sent [id]` (an untranslated literal), success. Message optional.
 - `hi`, `minecraft:hi`, `ns:` → `commands.scriptevent.invalidNamespace []`.
+- The message is at most 2048 (`0x800`, which `messageSizeExceed` shows); the drill bot was
+  disconnected sending 2047, so the edge itself was not seen (bds-t1dloot.txt).
 
 ## Unverified
 
-- `messageSizeExceed`'s limit: sapling assumes 2048 characters.
 - `/schedule` default mode when neither `replace` nor `append` is given: sapling replaces; the
   capture's replace/append runs did not show two queued copies running.
 - The due tick parameter: BDS's level tick; sapling gives the shard's tick.
-- Which pack wins when two behavior packs have a function of one name: sapling, the first listed in
-  `world_behavior_packs.json`.
 - The scheduled-run echo is sent as JsonWhisper (`tell_raw`), BDS sends Json; same text.
 - Encrypted packs (content keys, `contents.json`) were not recorded; the key is passed through.
 - CDN urls: not recorded; sapling passes the configured url and still serves chunks if asked.

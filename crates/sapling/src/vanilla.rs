@@ -10,7 +10,7 @@
 //! Positions take `~` and `^`; targets take names and every Bedrock selector with its filters
 //! ([`sapling_api::command::Selector`]). Blocks are written as `/setblock` writes them: their
 //! neighbours react.
-// TODO: the other vanilla commands.
+// TODO: the other vanilla commands (BDS's list against sapling's: docs/research/world-commands.md).
 
 mod access;
 mod allowlist;

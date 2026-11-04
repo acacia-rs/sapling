@@ -42,4 +42,17 @@ rm -rf "$world"
 mkdir -p "$world"
 echo '[{"pack_id":"5d9a0a52-5d2f-4b47-9a43-34c0e2b1f001","version":[1,0,0]}]' >"$world/world_resource_packs.json"
 echo '[{"pack_id":"5d9a0a52-5d2f-4b47-9a43-34c0e2b1f003","version":[1,0,0]}]' >"$world/world_behavior_packs.json"
+# DUP=1: a second behavior pack, listed after the first, both with a `probe/dup` function (which one runs);
+# DUP=2 lists it first.
+bp2=$to/behavior_packs/probe_bp2
+rm -rf "$bp2"
+if [ "${DUP:-0}" != 0 ]; then
+  mkdir -p "$bp2/functions/probe"
+  manifest probe_bp2 5d9a0a52-5d2f-4b47-9a43-34c0e2b1f005 data 5d9a0a52-5d2f-4b47-9a43-34c0e2b1f006 >"$bp2/manifest.json"
+  printf 'say dup from the first listed\n' >"$f/probe/dup.mcfunction"
+  printf 'say dup from the second listed\n' >"$bp2/functions/probe/dup.mcfunction"
+  printf 'say only in the second\n' >"$bp2/functions/probe/second.mcfunction"
+  first='{"pack_id":"5d9a0a52-5d2f-4b47-9a43-34c0e2b1f003","version":[1,0,0]}' second='{"pack_id":"5d9a0a52-5d2f-4b47-9a43-34c0e2b1f005","version":[1,0,0]}'
+  if [ "$DUP" = 2 ]; then echo "[$second,$first]"; else echo "[$first,$second]"; fi >"$world/world_behavior_packs.json"
+fi
 echo "bds-packs ready in $to on port $port"
