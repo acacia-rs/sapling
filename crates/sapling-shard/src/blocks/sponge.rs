@@ -1,6 +1,7 @@
 //! Sponges (docs/research/world-ticks.md, "Sponge"): BDS's `SpongeBlock` subscribes to the place
-//! and queued-tick events; the rule is the Java game's `SpongeBlock`. A dry sponge written, or one
-//! beside a cell that changed, soaks up the water within 6 steps through water, up to 64 cells, and
+//! and queued-tick events; the rule is the Java game's `SpongeBlock` but for its reach. A dry
+//! sponge written, or one beside a cell that changed, soaks up the water within 7 steps through
+//! water, as BDS's took a channel 7 long (research/captures/bds-t3sponge.txt), up to 64 cells, and
 //! turns wet; kelp and seagrass in it break. A wet sponge set in the Nether dries at once.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -13,7 +14,7 @@ use super::{level, liquid, send, updates};
 
 const DRY: &str = "minecraft:sponge";
 const WET: &str = "minecraft:wet_sponge";
-const REACH: u32 = 6;
+const REACH: u32 = 7;
 const MOST: usize = 64;
 /// What stands in water and breaks when it is soaked up.
 const PLANTS: [&str; 3] = ["minecraft:kelp", "minecraft:seagrass", "minecraft:tall_seagrass"];

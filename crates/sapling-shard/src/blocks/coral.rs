@@ -1,5 +1,5 @@
 //! Coral dying out of water (docs/research/world-ticks.md, "Coral"): live coral, its blocks, fans
-//! and wall fans with no water in or beside them wait 60 to 99 ticks on BDS's queued tick (the
+//! and wall fans with no water in or beside them wait on BDS's queued tick (the
 //! `BlockQueuedTickEvent` CoralBlock and CoralPlantBlock subscribe to) and then turn dead, unless
 //! water came back meanwhile.
 
@@ -11,8 +11,10 @@ use super::{Dice, level, send};
 
 const TYPES: [&str; 5] = ["tube", "brain", "bubble", "fire", "horn"];
 const FORMS: [&str; 4] = ["coral", "coral_block", "coral_fan", "coral_wall_fan"];
-/// The wait before a coral out of water dies: from this many ticks, to this many more (Java's
-/// `CoralBlock`, `BaseCoralPlantTypeBlock`).
+/// A dry coral block's wait: 45 ticks, every one of nine on BDS (research/captures/bds-t3odds.txt).
+const BLOCK_WAIT: u64 = 45;
+/// A plant's or fan's wait, not drilled: from this many ticks, to this many more (Java's
+/// `BaseCoralPlantTypeBlock`).
 const WAIT: u64 = 60;
 const WAIT_SPREAD: u32 = 40;
 
@@ -45,9 +47,9 @@ fn is_wet(level: &Level, pos: BlockPos) -> bool {
 /// After a write at `pos`: it and the coral beside it that are dry now wait to die.
 pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(level) = level(world, layer) else { return };
-    let dry: Vec<BlockPos> = std::iter::once(pos).chain(Face::ALL.map(|face| face.neighbour(pos))).filter(|cell| live_at(level, *cell).is_some() && !is_wet(level, *cell)).collect();
-    for cell in dry {
-        let delay = WAIT + u64::from(world.get_resource_or_insert_with(Dice::default).roll(WAIT_SPREAD));
+    let dry: Vec<(BlockPos, bool)> = std::iter::once(pos).chain(Face::ALL.map(|face| face.neighbour(pos))).filter(|cell| !is_wet(level, *cell)).filter_map(|cell| Some((cell, live_at(level, cell)?.ends_with("_coral_block")))).collect();
+    for (cell, is_block) in dry {
+        let delay = if is_block { BLOCK_WAIT } else { WAIT + u64::from(world.get_resource_or_insert_with(Dice::default).roll(WAIT_SPREAD)) };
         queued::again(world, layer, cell, delay, Job::Coral);
     }
 }

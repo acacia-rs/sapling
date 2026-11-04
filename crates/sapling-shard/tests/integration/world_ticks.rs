@@ -33,12 +33,14 @@ fn coral_out_of_water_dies_and_coral_in_water_lives() {
         set(ctx, [8, 70, 0], Block::new("stone"));
         set(ctx, [8, 71, 0], Block::new("fire_coral_fan"));
     });
-    (0..50).for_each(|_| _ = h.tick(1));
+    (0..40).for_each(|_| _ = h.tick(1));
     let early = names(&mut h, vec![[4, 70, 0]]);
-    assert!(early[0].starts_with("minecraft:tube_coral_block"), "waits 60 ticks at least: {early:?}");
+    assert!(early[0].starts_with("minecraft:tube_coral_block"), "a block waits 45 ticks: {early:?}");
+    (0..10).for_each(|_| _ = h.tick(1));
+    let block = names(&mut h, vec![[4, 70, 0]]);
+    assert!(block[0].starts_with("minecraft:dead_tube_coral_block"), "{block:?}");
     (0..60).for_each(|_| _ = h.tick(1));
     let late = names(&mut h, vec![[4, 70, 0], [6, 71, 0], [8, 71, 0]]);
-    assert!(late[0].starts_with("minecraft:dead_tube_coral_block"), "{late:?}");
     assert!(late[1].starts_with("minecraft:brain_coral_block"), "water beside: {late:?}");
     assert!(late[2].starts_with("minecraft:dead_fire_coral_fan"), "{late:?}");
 }
@@ -125,6 +127,26 @@ fn a_sponge_set_in_water_soaks_it_up_and_turns_wet() {
     let after = names(&mut h, looked);
     assert!(after[0].starts_with("minecraft:wet_sponge"), "{after:?}");
     assert!(after[1..].iter().all(|name| !name.contains("water")), "{after:?}");
+}
+
+#[test]
+fn a_sponge_reaches_seven_cells_along_a_channel() {
+    // research/captures/bds-t3sponge.txt: a channel of 14 lost its first 7.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        for x in 0..=15 {
+            (-1..=1).for_each(|z| set(ctx, [x, 69, z], Block::new("stone")));
+            [-1, 1].into_iter().for_each(|z| set(ctx, [x, 70, z], Block::new("stone")));
+        }
+        set(ctx, [15, 70, 0], Block::new("stone"));
+        (1..=14).for_each(|x| set(ctx, [x, 70, 0], Block::new("water")));
+    });
+    h.tick(1);
+    h.remote.run(|ctx| set(ctx, [0, 70, 0], Block::new("sponge")));
+    (0..2).for_each(|_| drop(h.tick(1)));
+    let after = names(&mut h, vec![[7, 70, 0], [8, 70, 0]]);
+    assert!(!after[0].contains("water") && after[1].contains("water"), "{after:?}");
 }
 
 #[test]
