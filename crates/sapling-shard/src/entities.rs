@@ -22,6 +22,7 @@ use crate::{mobs, splash};
 mod first_data;
 mod tell;
 
+pub(crate) use first_data::{first_metadata, show_first};
 pub(crate) use tell::{after_announcing, after_announcing_of, send_held_moves, tell_viewers};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.
@@ -93,7 +94,7 @@ pub(crate) fn remove_left(world: &mut World) {
 pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, body: Body, wire: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
     let entity = mobs::spawn_shown(world, layer, body.at, announce)?;
     let tick = world.resource::<Tick>().0;
-    world.entity_mut(entity).insert((Kind(kind.to_owned()), body, Told::new(wire), Born(tick), first_data::Due));
+    world.entity_mut(entity).insert((Kind(kind.to_owned()), body, Told::new(wire), Born(tick), first_data::Due::default()));
     Some(entity)
 }
 

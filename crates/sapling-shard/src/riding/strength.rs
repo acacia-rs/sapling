@@ -7,12 +7,9 @@
 use acacia_proto::packets::AddEntity;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use bevy_ecs::prelude::*;
-use bytes::Bytes;
 
-use super::packets;
 use super::packs::PER_STRENGTH;
 use crate::blocks::Dice;
-use crate::components::NetId;
 use crate::entities::Stored;
 
 const KINDS: [&str; 2] = ["minecraft:llama", "minecraft:trader_llama"];
@@ -76,11 +73,6 @@ pub(crate) fn dress(added: &mut AddEntity, strength: i32) {
         };
         item.value = Value::Default(Plain::Int(value));
     }
-}
-
-/// What shows `mob`'s strength to its viewers, after its announcement.
-pub(crate) fn shown(world: &World, mob: Entity) -> Option<Bytes> {
-    Some(packets::strength(world.get::<NetId>(mob)?.0, of(world, mob)?, MAX, PER_STRENGTH as i32))
 }
 
 #[cfg(test)]

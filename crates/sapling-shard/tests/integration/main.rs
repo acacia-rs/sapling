@@ -93,6 +93,7 @@ mod mob_commands;
 mod mob_heat;
 mod mob_life;
 mod mob_packets;
+mod first_data;
 mod eggs_drilled;
 mod growth_drilled;
 mod mount_packs;

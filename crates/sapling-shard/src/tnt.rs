@@ -44,8 +44,10 @@ fn wire([x, y, z]: [f32; 3]) -> [f32; 3] {
     [x, y + WIRE_OFFSET, z]
 }
 
-fn announcement(id: u64, body: &Body) -> Vec<Bytes> {
-    let options = AddEntityOptions { id, identifier: KIND, feet: wire(body.at), yaw: 0.0, pitch: 0.0, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1::IGNITED, health: None, name: "" };
+/// What shows the TNT; a new one's is not yet `lit`: BDS lit it in its first data (bds-firstdata.txt).
+fn announcement(id: u64, body: &Body, lit: bool) -> Vec<Bytes> {
+    let flags = if lit { MetadataFlags1::IGNITED } else { MetadataFlags1(0) };
+    let options = AddEntityOptions { id, identifier: KIND, feet: wire(body.at), yaw: 0.0, pitch: 0.0, variant: 0, mark_variant: 0, color: 0, baby: false, flags, health: None, name: "" };
     let [x, y, z] = body.motion;
     vec![sapling_net::encode(&AddEntity { velocity: Vec3f { x, y, z }, ..sapling_data::add_entity(&options) })]
 }
@@ -54,7 +56,7 @@ fn announcement(id: u64, body: &Body) -> Vec<Bytes> {
 pub(crate) fn prime(world: &mut World, layer: Entity, feet: [f32; 3], fuse: i32) -> Option<Entity> {
     let angle = world.get_resource_or_insert_with(Dice::default).fraction() * TAU;
     let body = Body::new(feet, [-angle.sin() * DRIFT, HOP, -angle.cos() * DRIFT], [SIZE, SIZE]);
-    let entity = entities::spawn(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body)))?;
+    let entity = entities::spawn(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body, false)))?;
     world.entity_mut(entity).insert(Primed(fuse));
     let unique_id = entities::new_unique_id(world, entity)?;
     let actor = sapling_world::new_actor(unique_id, KIND, feet, body.motion);
@@ -67,7 +69,7 @@ pub(crate) fn prime(world: &mut World, layer: Entity, feet: [f32; 3], fuse: i32)
 pub(crate) fn from_storage(world: &mut World, layer: Entity, feet: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
     let Some(fuse) = sapling_world::actor_fuse(&compound) else { return false };
     let body = Body::new(feet, [0.0; 3], [SIZE, SIZE]);
-    let Some(entity) = entities::spawn(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body))) else { return false };
+    let Some(entity) = entities::spawn(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body, true))) else { return false };
     world.entity_mut(entity).insert(Primed(fuse));
     entities::keep(world, entity, layer, unique_id, compound);
     true
@@ -138,9 +140,12 @@ pub(crate) fn burn(world: &mut World) {
         }
         world.entity_mut(entity).insert(Primed(left));
         if !packets.is_empty() {
-            mobs::reannounce(world, entity, announcement(id, &body));
+            mobs::reannounce(world, entity, announcement(id, &body, true));
         }
-        packets.insert(0, sapling_net::encode(&sapling_data::mob_fuse(id, sapling_data::grown_flags(KIND, MetadataFlags1::IGNITED), left)));
+        let fuse = sapling_data::mob_fuse(id, sapling_data::grown_flags(KIND, MetadataFlags1::IGNITED), left);
+        if !entities::show_first(world, entity, fuse.metadata.clone()) {
+            packets.insert(0, sapling_net::encode(&fuse));
+        }
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets);
     }
 }
