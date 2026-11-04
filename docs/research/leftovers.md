@@ -238,6 +238,7 @@ and tnt.rs):
   - Where: `riding/inventory.rs`, `Raised::ungrouped`, `owners::tame_by_upgrade`. Test
     `a_summoned_mount_shows_the_inventory_and_box_its_event_gives`.
   - Not drilled: a mount tamed by riding. It is now told the inventory with TAMED (a TODO).
+  - Re-drilled (sapling-s7mounts.txt): every announcement's and data's container and box as BDS's.
 - Flag words and moves of shots, TNT and items (2026-11-04, `s7shots`, bds-s7shots.txt; TNT in
   bds-firstdata.txt). Fixed:
   - A summoned arrow, snowball, egg, splash potion or bottle stays put the tick it comes. It falls from
@@ -254,7 +255,11 @@ and tnt.rs):
     `a_summoned_shot_falls_from_the_tick_after_and_is_shown_then`,
     `tnt_by_a_block_of_redstone_hops_burns_eighty_ticks_and_bursts`,
     `world_and_item_commands_answer_as_bds_answered`.
-  - Left: a mob's shot moves in the tick it is loosed on BDS, a tick later on sapling.
+  - Re-drilled (sapling-s7shots.txt, sapling-firstdata.txt): each shot's flag words, positions and
+    move count, and each TNT's words, are BDS's.
+  - Left: a mob's shot moves in the tick it is loosed on BDS, a tick later on sapling. BDS turns a
+    summoned shot to its fall at its first move (pitch byte 192); sapling's stays at 0. BDS sends a
+    shot's SetEntityMotion one move sooner than sapling (sync.rs's motion rule, all entities).
 - BDS's horse showed 32 in data 16 idle (rearing or eating; bds-harm.txt). Sapling's zombie did not
   catch fire in the drill.
 
