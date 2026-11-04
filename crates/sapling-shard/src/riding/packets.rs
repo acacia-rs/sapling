@@ -40,11 +40,6 @@ fn data(id: u64, metadata: Vec<Item>) -> Bytes {
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
 }
 
-/// The llama `id`'s strength, the most it may have and its chest's slots a point.
-pub(super) fn strength(id: u64, strength: i32, max: i32, per_strength: i32) -> Bytes {
-    data(id, vec![item(Key::Strength, Plain::Int(strength)), item(Key::MaxStrength, Plain::Int(max)), item(Key::ContainerExtraSlotsPerStrength, Plain::Int(per_strength))])
-}
-
 /// The rider `id`'s seat, `position` against its vehicle; with its turn held, all of BDS's items.
 pub(super) fn seat(id: u64, seat: &Seat, position: [f32; 3], whole: bool) -> Bytes {
     let [x, y, z] = position;

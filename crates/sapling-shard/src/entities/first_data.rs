@@ -2,6 +2,9 @@
 //! the announced metadata less the items still as an actor is made with them
 //! (research/captures/bds-mountflags.txt, bds-farmobs.txt). An entity shown again, shown to one
 //! who comes later, or loaded from a world folder gets none.
+//! It holds the announcement's values, but for what a kind's own first tick puts in it
+//! ([`show_first`]): a TNT's fuse and lit flag (bds-tnt.txt, bds-firstdata.txt). A mob's first
+//! breath or fire still follows it, alone, in the same tick (bds-firstdata.txt).
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{AddEntity, SetEntityData};
@@ -11,17 +14,35 @@ use bytes::Bytes;
 
 use crate::mobs;
 
-/// A new entity whose first data is still to follow its announcement.
-#[derive(Component)]
-pub(super) struct Due;
+/// A new entity whose first data is still to follow its announcement, with the items it shows
+/// over the announced ones.
+#[derive(Component, Default)]
+pub(super) struct Due(Vec<MetadataDictionaryItem>);
 
-/// Sends each new entity's first data, as it is announced now, to those just shown it; runs after
-/// the tick's announcements.
+/// Has the new entity's first data show `items` over its announcement's; false when that data
+/// is no longer due, and `items` are to be told on their own.
+pub(crate) fn show_first(world: &mut World, entity: Entity, items: Vec<MetadataDictionaryItem>) -> bool {
+    let Some(mut due) = world.get_mut::<Due>(entity) else { return false };
+    for item in items {
+        put(&mut due.0, item);
+    }
+    true
+}
+
+fn put(items: &mut Vec<MetadataDictionaryItem>, item: MetadataDictionaryItem) {
+    match items.iter_mut().find(|old| old.key == item.key) {
+        Some(old) => *old = item,
+        None => items.push(item),
+    }
+}
+
+/// Sends each new entity's first data, as it is announced now, to those just shown it; runs
+/// after the tick's announcements.
 pub(super) fn send(world: &mut World) {
     let due: Vec<Entity> = world.query_filtered::<Entity, With<Due>>().iter(world).collect();
     for entity in due {
-        world.entity_mut(entity).remove::<Due>();
-        if let Some(data) = mobs::announced(world, entity).and_then(|shown| after(shown.first()?)) {
+        let Some(Due(over)) = world.entity_mut(entity).take::<Due>() else { continue };
+        if let Some(data) = mobs::announced(world, entity).and_then(|shown| after(shown.first()?, over)) {
             super::tell::to_seers(world, entity, &[data]);
         }
     }
@@ -41,12 +62,19 @@ fn as_made(item: &MetadataDictionaryItem) -> bool {
     }
 }
 
-/// The first data that follows `announcement`, an `AddEntity`; `None` for anything else (an
-/// item's announcement holds its own: mobs.rs `item_shown`).
-fn after(announcement: &Bytes) -> Option<Bytes> {
-    let added = RawPacket::parse(announcement.clone()).ok()?.decode::<AddEntity>().ok()?;
-    let metadata = added.metadata.into_iter().filter(|item| !as_made(item)).collect();
-    Some(sapling_net::encode(&SetEntityData { runtime_entity_id: added.runtime_id, metadata, properties: added.properties, tick: 0 }))
+/// The announced `metadata` as a first data holds it: without the items still as made.
+pub(crate) fn first_metadata(metadata: Vec<MetadataDictionaryItem>) -> Vec<MetadataDictionaryItem> {
+    metadata.into_iter().filter(|item| !as_made(item)).collect()
+}
+
+/// The first data that follows `announcement`, an `AddEntity`, with `over` over its items; `None`
+/// for anything else (an item's announcement holds its own: mobs.rs `item_shown`).
+fn after(announcement: &Bytes, over: Vec<MetadataDictionaryItem>) -> Option<Bytes> {
+    let mut added = RawPacket::parse(announcement.clone()).ok()?.decode::<AddEntity>().ok()?;
+    for item in over {
+        put(&mut added.metadata, item);
+    }
+    Some(sapling_net::encode(&SetEntityData { runtime_entity_id: added.runtime_id, metadata: first_metadata(added.metadata), properties: added.properties, tick: 0 }))
 }
 
 #[cfg(test)]

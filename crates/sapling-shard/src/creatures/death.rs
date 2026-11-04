@@ -13,6 +13,7 @@ use crate::components::{Layer, NetId, Tick};
 use crate::{drops, entities, inventory};
 
 const MOB_LOOT: &str = "doMobLoot";
+const SADDLE: &str = "minecraft:saddle";
 /// How far above its feet a mob's loot appears (where the wire puts it), as BDS was seen to
 /// (research/captures/bds-kill.txt).
 const LOOT_LIFT: f32 = 0.075;
@@ -35,9 +36,12 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     omens::died(world, entity, layer, body);
     feed_catalyst(world, entity, layer, kind, body);
     let [x, y, z] = body.at;
-    for stack in crate::riding::spilled(world, entity) {
+    let spilled = crate::riding::spilled(world, entity);
+    let unsaddled = spilled.iter().any(|stack| stack.name == SADDLE);
+    for stack in spilled {
         drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
     }
+    crate::riding::mouth_at_death(world, entity, layer, kind, body, unsaddled);
     world.entity_mut(entity).insert(Dying(now + lasts.unwrap_or(DYING))).remove::<entities::Stored>();
     if let Some(mut health) = world.get_mut::<Health>(entity) {
         health.end();

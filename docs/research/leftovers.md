@@ -194,15 +194,43 @@ tests/integration/mob_packets.rs):
   not the flag word alone but the whole announced metadata, in order, less the items still as every
   actor is made (scale 1, a 0.6 x 1.8 box, a zero seat, no shooter, extended flags 0 and the like), with
   the AddEntity's properties. It is not sent when a mob is shown again or to a player who comes later;
-  for a mob loaded from a world folder it was not drilled and sapling sends none. Left: BDS's holds the
-  values after the entity's first tick (bds-tnt.txt: `FuseLength` -1 announced, 79 in the first data,
-  sometimes a tick later, as bds-beesout.txt's bee); sapling's repeats the announcement's, and the
-  first tick's change follows in its own SetEntityData. Tests read changes past it (`common/data.rs`).
+  for a mob loaded from a world folder it was not drilled and sapling sends none. The first data's
+  values: sixth wave, below. Tests read changes past it (`common/data.rs`).
 - Fixed: at a mob's death, after its two emptied hands, a MobArmorEquipment of what it wears with its
   body slot (`creatures/worn.rs` `shown_dead`), as bds-bodyslot.txt's horse (body iron at death).
   Re-drilled on sapling (bodyslot, mountflags; sapling-mountflags.txt): each summon's two SetEntityData
-  and each death's MobEquipment, MobEquipment, MobArmorEquipment now line up with BDS's. Left: BDS's
-  further SetEntityData at a death (`MinecartDisplayBlock` 128 among them), not ported.
+  and each death's MobEquipment, MobEquipment, MobArmorEquipment now line up with BDS's. The
+  SetEntityData at a death: sixth wave, below.
+
+Drilled 2026-11-04, sixth wave (`bds_command_probe firstdata`, examples/shared/sixth3_drill.rs;
+research/captures/bds-firstdata.txt, sapling-firstdata.txt; tests in tests/integration/first_data.rs
+and tnt.rs):
+
+- Corrected: the fifth wave read bds-tnt.txt as "the first data holds the values after the first
+  tick". Drilled over a cow, a zombie in the sun, a summoned arrow and snowball, an orb, TNT by
+  command and by signal, dropped items and five mounts, every first data equals its announcement
+  less the as-made items, but a TNT's: it is announced unlit with `FuseLength` -1 and its first data
+  holds IGNITED and 79, the first tick's burn, which is not told again. A mob's first-tick change (a
+  cow's or horse's BREATHING, the zombie's catching fire with it) follows the first data alone, in the
+  same tick, as sapling's did. Fixed: TNT (`tnt.rs`, `entities::show_first`); an item's metadata again
+  after its AddItemEntity leaves out the as-made items too (64 announced, 59 again; `mobs::item_shown`);
+  a llama's lone strength SetEntityData before its first data is gone (the announcement holds it).
+  The "sometimes a tick late" of bds-beesout.txt's bee was not seen again.
+- Fixed: BDS's data 16 (`MinecartDisplayBlock` on the wire) is a horse-family mob's open mouth: horse,
+  donkey, mule, skeleton and zombie horse, not a llama or camel. Any hurt, `/damage` or `/kill`, sets
+  it to 128 in the hurt's tick; it goes back to 0 29 ticks later (all four drilled: 1447-1452 ms). A
+  death opens it as a hurt does, told after the loot's AddItemEntity, and a saddled one's death clears
+  SADDLED, WASD_CONTROLLED and CAN_POWER_JUMP in that same packet (bds-mountdeath.txt; a spawn-event
+  saddle, which drops nothing, shows no flag change). A zombie horse by day opened it at its first burn
+  and never shut it while burning (bds-saddlerule.txt), so its death showed nothing more.
+  `riding/mouth.rs`. Re-drilled: sapling-firstdata.txt's mouths open and shut on the same ticks.
+- Not ported, seen in the drill: a mount tamed by its spawn event (`spawn_tame_adult`) is announced
+  with ContainerType 12 and ContainerBaseSize 2 (horse kinds) or 16 (donkey, llama), an untamed one 0
+  and 0 (a camel's `spawn_adult` 12 and 5); sapling's are 0. A skeleton horse by `spawn_adult` is
+  announced with a 0.6 x 1.8 box (by `entity_born` 1.96 wide, plain 1.4), sapling's always 1.4 x 1.6.
+  BDS's horse showed 32 in data 16 idle (rearing or eating; bds-harm.txt). The per-tick flag words of
+  TNT, arrows, snowballs and items (bit 34 toggling, bit 14 on a shot) and their move counts still
+  differ (drill_vs_bds.py on the two captures); sapling's zombie did not catch fire in the drill.
 
 ## Not drilled
 

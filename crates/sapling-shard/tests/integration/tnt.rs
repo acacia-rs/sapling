@@ -3,10 +3,10 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, CommandRequest, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityMotion};
+use acacia_proto::packets::{AddEntity, AddItemEntity, CommandRequest, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityData, SetEntityMotion};
 use acacia_proto::manual::Uuid;
 use acacia_proto::types::CommandOrigin;
-use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
+use acacia_proto::types::{MetadataDictionaryItem, MetadataFlags1, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use common::{Harness, all, click};
 use sapling_api::{Block, Difficulty, GameMode, PlayerId};
 
@@ -42,8 +42,13 @@ fn tnt_by_a_block_of_redstone_hops_burns_eighty_ticks_and_bursts() {
         burst(&sent).is_some()
     });
     assert_eq!(ticks, Some(80));
+    // bds-firstdata.txt: announced unlit at -1, its first data lit at 79, then 78 down told alone.
+    let lit = |items: &[MetadataDictionaryItem]| items.iter().find_map(|item| if let Value::Flags(flags) = item.value { Some(flags.0 & MetadataFlags1::IGNITED.0 != 0) } else { None });
+    let fuse = |items: &[MetadataDictionaryItem]| items.iter().find_map(|item| if let (Key::FuseLength, Value::Default(Plain::Int(left))) = (item.key, &item.value) { Some(*left) } else { None });
+    let first = all::<SetEntityData>(&sent).into_iter().find(|data| data.runtime_entity_id == tnt.runtime_id).expect("its first data");
+    assert_eq!((lit(&tnt.metadata), fuse(&tnt.metadata), lit(&first.metadata), fuse(&first.metadata)), (Some(false), Some(-1), Some(true), Some(79)));
     let fuses = fuses(&sent, tnt.runtime_id);
-    assert_eq!((fuses.len(), fuses.first(), fuses.last()), (80, Some(&79), Some(&0)));
+    assert_eq!((fuses.len(), fuses.first(), fuses.last()), (79, Some(&78), Some(&0)));
     let flash = burst(&sent).expect("found above");
     assert!(flash.data == 4 && (flash.position.y - 65.06125).abs() < 1e-3, "{flash:?}");
     sent.extend(h.tick_all().to(1).to_vec());

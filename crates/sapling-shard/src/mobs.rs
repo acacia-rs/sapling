@@ -133,9 +133,10 @@ pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], v
     Some(item_shown(AddItemEntity { is_from_fishing: fished, ..shown }))
 }
 
-/// An item's announcement and its metadata again, as BDS follows one (findings D9, bds-kill.txt).
+/// An item's announcement and its metadata again less what is as made, as BDS follows one
+/// (findings D9, bds-kill.txt, bds-firstdata.txt).
 fn item_shown(item: AddItemEntity) -> Vec<Bytes> {
-    let again = SetEntityData { runtime_entity_id: item.runtime_entity_id, metadata: item.metadata.clone(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
+    let again = SetEntityData { runtime_entity_id: item.runtime_entity_id, metadata: crate::entities::first_metadata(item.metadata.clone()), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
     vec![sapling_net::encode(&item), sapling_net::encode(&again)]
 }
 

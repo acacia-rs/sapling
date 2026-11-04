@@ -25,7 +25,7 @@ const REACH: f32 = 6.7;
 const EYES: f32 = 1.62;
 /// Saddled whether tamed or not; the horse family wants taming first.
 const ALWAYS_SADDLED: &[&str] = &["minecraft:pig", "minecraft:strider", "minecraft:camel"];
-const TAMED_SADDLED: &[&str] = &["minecraft:horse", "minecraft:donkey", "minecraft:mule", "minecraft:skeleton_horse", "minecraft:zombie_horse"];
+pub(super) const TAMED_SADDLED: &[&str] = &["minecraft:horse", "minecraft:donkey", "minecraft:mule", "minecraft:skeleton_horse", "minecraft:zombie_horse"];
 /// A sneaking player's click does not get it on these (`crouching_skip_interact`).
 const SNEAK_SKIPS: &[&str] = &["minecraft:strider", "minecraft:camel"];
 
