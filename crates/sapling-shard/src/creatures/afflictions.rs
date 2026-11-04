@@ -185,11 +185,11 @@ fn act(world: &mut World, mob: Entity, layer: Entity, active: &Active) {
 }
 
 /// A tick of every mob's effects; those whose time is up go, and its viewers are told what is left.
-pub(super) fn tick(world: &mut World) {
+pub(super) fn tick(world: &mut World, ticked: &super::ticked::Ticked) {
     let afflicted: Vec<(Entity, Entity, Vec<Active>)> = world
         .query_filtered::<(Entity, &InLayer, &Afflicted), (With<Creature>, Without<Dying>)>()
         .iter(world)
-        .filter(|(.., afflicted)| !afflicted.0.is_empty())
+        .filter(|(mob, layer, afflicted)| !afflicted.0.is_empty() && ticked.ticks(world, *mob, layer.0))
         .map(|(mob, layer, afflicted)| (mob, layer.0, afflicted.0.clone()))
         .collect();
     for (mob, layer, active) in afflicted {

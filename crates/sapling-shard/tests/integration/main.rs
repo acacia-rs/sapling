@@ -145,6 +145,7 @@ mod structure_blocks;
 mod structures;
 mod survival;
 mod throws;
+mod tick_circle;
 mod tnt;
 mod unheld_blocks;
 mod vanilla_rules;

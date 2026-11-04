@@ -154,6 +154,10 @@ Sapling's run: sapling-burn2.txt.
   (`teleports.rs` counted water alone); now rain on its feet or head counts, test
   `an_enderman_in_rain_teleports_on_and_on`. Re-drilled on sapling (sapling-enderrain.txt): it
   teleports every tick of the rain, hurt 1 (cause 9) every 10 ticks, as BDS's while in sight.
+  Re-drilled 2026-11-04 after the rain ramp (TICK_SCALE 1, `SAPLING_DRILL_WORLD=open`): first hurt
+  1005 ms after `/weather rain` (BDS 1009), teleports every tick from then, as BDS's. It stayed in
+  sight, 1 to 3 chunks off: its walk is random (BDS's left at 3,-3 after 0.4 s of teleports), and
+  sapling's ground ends at z ±48, where BDS's landed past. Same rule.
 - Rain sets in (2026-11-03): BDS's first rain hurt came 1009 ms (20 ticks) after `/weather rain`,
   sapling's at once. `Weather::tick` (0x14119d160) moves the rain level 0.01 a tick towards its
   target (both clamped to 0..1), and `isRainingAt` (0x14119d6b0, reached from
@@ -173,10 +177,33 @@ Sapling's run: sapling-burn2.txt.
   last teleport landed 3,3 chunks off. Sapling showed mobs as far as the client's chunk radius
   (8 here); now `mobs::update` takes `tick-distance` (test
   `a_mob_is_shown_only_within_the_tick_distance_circle_as_on_bds`). Sapling's drill enderman also
-  stayed within z ±48 because `SAPLING_DRILL_WORLD=open`'s ground ends there. [U] whether the
-  circle is `tick-distance` or a fixed 4 (the BDS copy runs 4), whether BDS ticks a hidden mob, and
-  whether players and their packets about hidden mobs follow the same circle (sapling still sends
-  a mob's moves to every view covering it).
+  stayed within z ±48 because `SAPLING_DRILL_WORLD=open`'s ground ends there. Re-drilled on
+  sapling 2026-11-04 (sapling-farmobs.txt): the same mobs hidden (3,-3 and 5,0) and shown again on
+  the same lines. Left: BDS's slowed mobs still turn their heads (rotation-only `MoveEntityDelta`),
+  sapling's stand still.
+- The view circle against `tick-distance` (2026-11-04, `bds_command_probe tickcircle` on BDS set to
+  4, 6, 8 and 10, research/captures/bds-tickcircle<N>.txt): 14 slowed mobs moved from beside the bots
+  (chunk 3,0) to chunk offsets from 4,0 to 10,2, poisoned there and moved back 6 s later. At every
+  `tick-distance` only the 4,0 mob stayed shown, so the view circle is a fixed 4 chunks, not
+  `tick-distance` (corrected: the third wave took it for `tick-distance`). A hidden mob is still
+  ticked within `tick-distance`: it came back poisoned (pig 3,3 off at 6: health 3 of 10), one past it
+  came back whole and only then took the poison (10 of 10). Ticked, by offset: at 4 4,0; at 6 3,3,
+  5,0 and 6,0, not 5,3, 5,4 or 7,0; at 8 5,3, 5,4 and 7,0, not 8,0, 7,4 or 6,6; at 10 up to 9,0, 8,0,
+  7,4 and 6,5, not 6,6, 10,0 or 10,2. dx²+dz² <= tick-distance² fits all but four edge cells (5,3 at
+  6, 8,0 at 8, 6,6 and 10,0 at 10) [U: BDS's offset list, built behind a vfunc that
+  `LevelChunkTickingSystem::tick` (0x14661a960, through 0x146629910) adds to the player's chunk].
+  Mobs 9 and 10 chunks off at 4, 6 and 8 were not found (`noTargetMatch`) when moved back: the level
+  had unloaded them. Fixed: `mobs::update` shows a fixed 4 (`SHOWN_WITHIN`), and
+  `creatures/ticked.rs` leaves a mob outside every player's `tick-distance` circle (and not in a kept
+  column) unmoved, unthinking and with its effects held, test tick_circle.rs. A world without
+  players still ticks its mobs (BDS's would not), for headless shards and tests. Re-drilled on
+  sapling at 4 and 6 (`SAPLING_TICK_DISTANCE`, sapling-tickcircle4/6.txt): the same mobs hidden, and
+  the same ones ticked but 5,3 at 6 (an edge cell above). A returning mob's first poison hit lands
+  before its AddEntity on sapling (health 9 of 10), just after it on BDS (10, then 9 the same tick).
+  Mobs 9 and 10 chunks off stayed on sapling: the drill world's ground columns never unload.
+  Not ported: BDS's `fill` answered `commands.fill.outOfWorld` in chunks outside the same region
+  (the drill's pads), sapling fills any loaded column; and sapling still sends a hidden mob's moves
+  to every view covering it (clients drop moves of mobs they were not shown).
 
 ## What the rain's level drives (2026-11-04, `bds_command_probe rainramp`, research/captures/bds-rainramp.txt)
 

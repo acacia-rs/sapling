@@ -231,17 +231,21 @@ pub(crate) fn despawn_unloaded(mut commands: Commands, tick: Res<Tick>, mut grid
 
 type Viewer<'a> = (&'a Stage, &'a InLayer, &'a View, &'a mut SeesMobs, &'a mut Outgoing, Option<&'a Hidden>);
 
-/// Adds the mobs whose column came within each player's `tick-distance` circle and removes those
-/// that left it or are gone (research/captures/bds-farmobs.txt: BDS hid a mob 3,3 and 5,0 chunks
-/// off and showed it 3,2 and 4,0 off, as it took it back). A player whose view stayed where it was
-/// while no mob came or went is skipped.
-pub(crate) fn update(grid: Res<MobGrid>, settings: Res<crate::components::Settings>, mut viewers: Query<Viewer>, mobs: Query<(&Mob, &NetId, Option<&Labels>)>) {
+/// How far from a player's chunk, in chunks (a circle), mobs are shown: BDS hid a mob 3,3 and 5,0
+/// chunks off and showed it 3,2 and 4,0 off at every `tick-distance` from 4 to 10, ticking the hidden
+/// ones within it (research/captures/bds-farmobs.txt, bds-tickcircle*.txt).
+const SHOWN_WITHIN: i32 = 4;
+
+/// Adds the mobs whose column came within each player's [`SHOWN_WITHIN`] circle and removes those
+/// that left it or are gone. A player whose view stayed where it was while no mob came or went is
+/// skipped.
+pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query<(&Mob, &NetId, Option<&Labels>)>) {
     for (stage, in_layer, view, mut sees, mut out, hidden) in &mut viewers {
         let made_for = Some((view.moves(), grid.changes));
         if *stage != Stage::InWorld || sees.made_for == made_for {
             continue;
         }
-        let mut covered: Vec<(Entity, u64)> = grid.grid.within(in_layer.0, view, settings.0.tick_distance).copied().filter(|(entity, _)| !Hidden::hides(hidden, *entity)).collect();
+        let mut covered: Vec<(Entity, u64)> = grid.grid.within(in_layer.0, view, SHOWN_WITHIN).copied().filter(|(entity, _)| !Hidden::hides(hidden, *entity)).collect();
         covered.sort_unstable_by_key(|(_, id)| *id);
         let new: Vec<_> = covered.iter().filter(|(entity, _)| !sees.mobs.contains_key(entity)).filter_map(|(entity, _)| mobs.get(*entity).ok()).collect();
         for (mob, id, labels) in &new {

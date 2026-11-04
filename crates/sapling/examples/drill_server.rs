@@ -63,6 +63,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let builder = Server::builder().bind(([127, 0, 0, 1], port).into()).name("sapling drills").online_mode(false).game_mode(GameMode::Creative);
     // The probes' bots and settles run `ACACIA_TICK_SCALE` times faster too (shared/clock.rs).
     let builder = builder.tick(clock::scaled(sapling_shard::TICK));
+    // `SAPLING_TICK_DISTANCE`: the BDS copy's `tick-distance` the drill is compared with (default 4).
+    let builder = builder.tick_distance(std::env::var("SAPLING_TICK_DISTANCE").ok().and_then(|chunks| chunks.parse().ok()).unwrap_or(4));
     let builder = match std::env::var("SAPLING_DRILL_WORLD").as_deref() {
         Ok("strongholds") => builder.world(World::with_storage(std::sync::Arc::new(Strongholds(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 1)))), [0.5, 64.0, 0.5]),
         Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 2))), GENERATED_SPAWN),

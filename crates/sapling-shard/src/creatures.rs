@@ -66,6 +66,7 @@ mod struck;
 mod summoned;
 mod swimming;
 mod teleports;
+mod ticked;
 mod vexes;
 mod villagers;
 mod warden;
@@ -181,8 +182,9 @@ fn kill(world: &mut World, id: EntityId) -> bool {
 
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.
 pub(crate) fn tick(world: &mut World) {
+    let ticked = ticked::Ticked::of(world);
     flight::tick(world);
-    afflictions::tick(world);
+    afflictions::tick(world, &ticked);
     omens::tick(world);
     spells::tick(world);
     bullets::tick(world);
@@ -209,8 +211,8 @@ pub(crate) fn tick(world: &mut World) {
     let all: Vec<(Entity, Entity, u64, String)> =
         world.query_filtered::<(Entity, &InLayer, &NetId, &entities::Kind), With<Creature>>().iter(world).map(|(entity, layer, id, kind)| (entity, layer.0, id.0, kind.0.clone())).collect();
     for (entity, layer, id, kind) in all {
-        // The fight moves its dragon (dragon.rs).
-        if kind == crate::dragon::DRAGON && world.get::<crate::dragon::Dragon>(entity).is_some() {
+        // The fight moves its dragon (dragon.rs); a mob far from every player waits (ticked.rs).
+        if kind == crate::dragon::DRAGON && world.get::<crate::dragon::Dragon>(entity).is_some() || !ticked.ticks(world, entity, layer) {
             continue;
         }
         // A rider is carried to its seat, a vehicle its driver's client moves put where it says (riding.rs).

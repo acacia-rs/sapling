@@ -132,7 +132,7 @@ pub fn generated_cauldron(pos: [i32; 3], potion: i16) -> Value {
 
 /// A flower pot holding the stateless plant `plant` (`minecraft:red_mushroom`).
 pub fn generated_flower_pot(pos: [i32; 3], plant: &str) -> Value {
-    // The plant's first state, as BDS saved a template's cactus (`age` 0); a sapling's `age_bit` is unseen.
+    // The plant's first state, as BDS saved a template's cactus (`age` 0) and a potted sapling (research/captures/bds-potsapling.txt).
     let states = match plant {
         "minecraft:cactus" => vec![("age", Value::Int(0))],
         sapling if sapling.ends_with("_sapling") => vec![("age_bit", Value::Byte(0))],

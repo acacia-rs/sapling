@@ -162,8 +162,17 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   templates name it in the block (`potted_dead_bush` is `minecraft:deadbush`). `PlantBlock`'s
   `states` are the plant's own: the cactus saved `age` Int 0, the flowers `{}`. Sapling:
   templates.bin kind `flower_pot` (`templates_to_rust.py` `flower_pot_plant`; regenerate it, no
-  palette index moved), `generated_flower_pot` writes a cactus's `age` and a sapling's `age_bit`
-  ([U]: no oracle pot held a sapling), test `templates_keep_their_block_entities`.
+  palette index moved), `generated_flower_pot` writes a cactus's `age` and a sapling's `age_bit`,
+  test `templates_keep_their_block_entities`.
+- A potted sapling (2026-11-04, `bds_command_probe potsapling`, research/captures/bds-potsapling.txt:
+  pots clicked with each plant, the world read with `block_entity_dump`): `PlantBlock` `states`
+  {`age_bit` Byte 0} for oak and cherry saplings, as `generated_flower_pot` writes; a mangrove
+  propagule {`hanging` Byte 0, `propagule_stage` Int 0}, bamboo {`age_bit` Byte 0,
+  `bamboo_leaf_size` "no_leaves", `bamboo_stalk_thickness` "thin"}, cactus {`age` Int 0}, poppy {}.
+  Sapling's click (`pots.rs`) keeps the same, test `a_potted_plant_keeps_its_first_state_as_on_bds`;
+  sapling-potsapling.txt sent the same `UpdateBlock`s and `PlantBlock`s. Left (packet shape): BDS
+  also sends the empty pot's `BlockEntityData` at its `/setblock`, and starts each with
+  `BlockEntityVersion` 0; sapling sends only the potted one, without it.
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
   chambers' dead bush at (-446, -11, -425), is water in our blocks there (a block difference).
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
