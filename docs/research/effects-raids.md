@@ -41,12 +41,30 @@ Bedrock was found.
   water or rain whose block is less than `frame / 7 * 16` off along each axis: with the ring of 16, 31
   along x and (23, 2, 23) on the diagonal were reached, 32 along x was not [cap bds-conduit2.txt]. Sapling
   had the Java game's sphere and ambient; fixed.
-- With its whole frame (42 blocks) it takes one hostile (family `monster`) in water or rain within 8 as
-  its `Target` (BlockEntityData) and bites it from the next pulse on: 4 magic (HurtAnimation 14) every 40
+- With its whole frame (42 blocks) it takes one hostile (family `monster`) in water or rain within its hunting box (below)
+  as its `Target` (BlockEntityData) and bites it from the next pulse on: 4 magic (HurtAnimation 14) every 40
   ticks to death, `conduit.attack` heard at the conduit's corner a tick after each [cap bds-conduit2.txt].
   Sapling bit at once and silently; fixed.
-- A zombie standing in rain 7 off was never taken in 10 s [cap bds-conduit2.txt]; sapling takes it (not
-  understood).
+- A zombie standing in rain 7 off was never taken in 10 s [cap bds-conduit2.txt]. Re-drilled
+  2026-11-04 after rain came to read the roofs (sapling-conduit2.txt: sapling still bit it), then
+  `conduitrain` (research/captures/bds-conduitrain.txt, examples/shared/fifth3_drill.rs): a fresh
+  conduit with its whole frame at midnight in rain left a held zombie 7 off alone for 14 s, then
+  took a zombie in the two-deep pool 5 off and bit it to death in 5, and the next pool zombie the
+  same; a dead target does not block the next. Neither rain nor water was the reason: `conduitspill`
+  showed the first zombie's cell held the conduit cube's spill, `liquid_depth` 4 on both servers,
+  and a zombie walled in glass there in set water of depth 4 was not taken either, while
+  `conduitdepth` took one 4 up and 5 north in set water of depth 4, 3, 2 and 1 (`/setblock` water is
+  not ticked on BDS, so a set depth stays). It was reach: `conduitreach` left a zombie in a
+  two-deep well level with the conduit 6 north alone, and `conduitspill` bit one in the spill 3
+  north once, then let it go as the flow carried it north. Fitted: the mob's box must meet the
+  conduit's block grown by 5 every way, to take it and to keep it (taken with its box 4.2 off, not
+  5.2: 5 is the round number between; Java's 8 from the block's cell). Sapling took them all within
+  8; fixed (`conduits/power.rs` `is_hunted_near`), test
+  `a_whole_conduit_leaves_a_monster_in_water_past_its_hunting_box_alone`; re-drilled
+  (sapling-conduitrain.txt, sapling-conduitreach.txt): as BDS, zombie for zombie. Whether rain alone wets a
+  mob for the hunt is not drilled: every rain zombie stood out of reach. Players still take its
+  power in rain [cap bds-conduit2.txt]. Captures research/captures/bds-conduit{rain,water,depth,
+  spill,reach}.txt and their sapling twins; scenes in examples/shared/fifth3_drill.rs.
 - `/setblock ... conduit` gives it its entity (`Active` 0, `Target` -1), shown as `BlockEntityData`
   [cap bds-conduit2.txt]. Sapling gave none, so the drill's conduit never woke there
   (research/captures/sapling-conduit2.txt, first run); fixed (`blocks/conduits.rs` `furnish`).
@@ -188,7 +206,19 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
   ticks later, took the returning actor 0 to 9 ticks after. Left, geometry rather than the rule:
   sapling's first pillager, which strolled before its slowness, kept the villager, and the three swapped
   back to the villager 1.7 s after each arrival, when arrows had thrown the actor 2.9 east (BDS's 1.96,
-  no swap back); BDS's pillagers' places were not captured.
+  no swap back); BDS's pillagers' places were not captured. Settled 2026-11-04 (`pillswitch2`, the
+  same lines with moves and throws shown; bds-pillswitch2.txt against sapling-pillswitch2.txt): the
+  places were alike (on both the first pillager strolled before its slowness, to 5.7,-1.5 on BDS and
+  4.1,1.6 on sapling; the other three stayed at x 10.5). The knockback differed twice over. BDS
+  threw the resistance V actor once a volley (6 throws, each with a `HurtAnimation`, cause 3) though
+  three bolts hit within 2 ticks, and threw it 0.4 across along the line from the pillager to it,
+  not the bolt's (from 3 west and 1 north: `(0.379, 0.4, 0.126)`); its villager the same. Sapling
+  threw on every bolt (2 or 3 a volley, no `HurtAnimation`: resistance V took the whole hit, so no
+  guard began) along the bolt. Fixed: a hit resistance takes whole still lands outside the guard,
+  losing nothing (`Health::hurt`), a bolt in the guard throws nothing (`struck::hit_from` asks
+  `Health::lands`), and a shot throws a player away from its archer (`hits.rs` `archer_feet`); test
+  `a_pillagers_bolt_throws_its_prey_away_from_the_pillager`. Re-drilled: one throw and hurt a volley,
+  6 in all, and the three no longer swap back to the villager while the actor is there.
 - raidhero on sapling 2026-11-03 (sapling-raidhero.txt): `/damage … entity CmdActor` killed every
   raider but made no hero, left no experience, counted 1 and answered `commands.damage.failed [""]`
   with no raider left. BDS: 11 orbs, Hero of the Village after the win, success counts 7, 5 and 4,

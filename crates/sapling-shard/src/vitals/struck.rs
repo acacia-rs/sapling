@@ -232,7 +232,7 @@ fn hit_from(world: &mut World, player: Entity, amount: f32, from: [f32; 3], push
     let Some(amount) = ask(world, player, amount, cause) else { return false };
     let (dx, dz) = (feet[0] - from[0], feet[2] - from[2]);
     let far = dx.hypot(dz).max(1e-4);
-    if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount) {
+    if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount && (!matches!(cause, Cause::Projectile) || vitals.health.lands(amount))) {
         throw(world, player, id, [dx / far * THROW + push[0], THROW + push[1], dz / far * THROW + push[2]]);
     }
     land(world, player, amount, cause)

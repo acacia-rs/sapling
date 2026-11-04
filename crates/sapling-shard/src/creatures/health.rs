@@ -132,11 +132,20 @@ impl Health {
         amount * (1.0 - (stops - pierced).max(0.0))
     }
 
-    /// Whether a hit of `amount` landed.
+    /// Whether a hit of `amount` would land now, before armour: outside the guard, or harder than
+    /// the hit that began it.
+    pub(crate) fn lands(&self, amount: f32) -> bool {
+        self.left > 0.0 && (self.guarded == 0 || amount * self.takes > self.last)
+    }
+
+    /// Whether a hit of `amount` landed. One resistance takes whole still lands outside the guard,
+    /// losing nothing: BDS flinched and threw a resistance V actor and villager once a volley
+    /// (research/captures/bds-pillswitch2.txt).
     pub(crate) fn hurt(&mut self, amount: f32) -> bool {
+        let whole = amount > 0.0 && self.takes == 0.0 && self.guarded == 0;
         let amount = amount * self.takes;
         let taken = if self.guarded > 0 { amount - self.last } else { amount };
-        if taken <= 0.0 || self.left <= 0.0 {
+        if self.left <= 0.0 || (taken <= 0.0 && !whole) {
             return false;
         }
         (self.last, self.guarded) = (amount, GUARD);

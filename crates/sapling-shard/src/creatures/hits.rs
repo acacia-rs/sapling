@@ -31,9 +31,15 @@ pub(super) enum After {
     Deflected,
 }
 
+/// Where the archer `by` stands: a player is thrown away from it, not from the shot
+/// (research/captures/bds-pillswitch2.txt: pillagers 3 west and 1 north threw it 0.4 along (3, 1)).
+fn archer_feet(world: &World, by: Entity) -> Option<[f32; 3]> {
+    world.get::<Position>(by).map(|position| position.feet).or_else(|| world.get::<Body>(by).map(|body| body.at))
+}
+
 /// The shot `arrow`, flying at `motion`, met `struck` at `at`.
 pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entity, is_player: bool, at: [f32; 3], motion: [f32; 3]) -> After {
-    let Some((archer, _, gives, shot)) = flight::shooter(world, arrow) else { return After::Gone };
+    let Some((archer, by, gives, shot)) = flight::shooter(world, arrow) else { return After::Gone };
     let loosed = world.get::<Loosed>(arrow).cloned();
     let speed = motion.iter().map(|c| c * c).sum::<f32>().sqrt();
     let from: [f32; 3] = std::array::from_fn(|axis| at[axis] - motion[axis]);
@@ -47,7 +53,7 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
     }
     let landed = match is_player {
         // One proof against fire lost nothing to a fireball on BDS (bds-blaze.txt).
-        true => !(loosed.is_none() && shot.burns > 0 && vitals::is_fireproof(world, struck)) && vitals::shot(world, struck, cost, &archer, from, shot.throws, push),
+        true => !(loosed.is_none() && shot.burns > 0 && vitals::is_fireproof(world, struck)) && vitals::shot(world, struck, cost, &archer, archer_feet(world, by).unwrap_or(from), shot.throws, push),
         false => harm::wound_by(world, struck, layer, cost, Cause::Projectile, loosed.as_ref().and_then(|loosed| loosed.player)) == Some(true),
     };
     if landed {
