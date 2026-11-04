@@ -137,6 +137,7 @@ pub(super) fn physics_of(kind: &str) -> &'static Physics {
         vexes::KIND => &Physics::GHOST,
         "minecraft:turtle" => &Physics::TURTLE,
         "minecraft:bat" => &Physics::BAT,
+        "minecraft:chicken" => &Physics::CHICKEN,
         "minecraft:allay" | super::bees::KIND => &Physics::HOVER,
         "minecraft:parrot" => &Physics::PARROT,
         "minecraft:squid" | "minecraft:glow_squid" => &Physics::SWIMMER,

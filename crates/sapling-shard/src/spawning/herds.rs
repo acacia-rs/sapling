@@ -13,7 +13,7 @@ use super::{gates, phantoms};
 use super::spots::{self, Found};
 use super::{Natural, SpawnDice, Watcher};
 use crate::body::Body;
-use crate::components::{InLayer, Layer, Settings, Tick};
+use crate::components::{InLayer, Layer, Settings};
 use crate::creatures::Creature;
 use crate::entities::{self, Kind};
 
@@ -121,9 +121,8 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found) {
         return;
     }
     let Some(id) = crate::creatures::spawn(world, layer, kind, place.feet(), SpawnReason::Natural) else { return };
-    let now = world.resource::<Tick>().0;
     if let Some(entity) = entities::find(world, id) {
-        world.entity_mut(entity).insert(Natural { born: now });
+        world.entity_mut(entity).insert(Natural);
     }
 }
 

@@ -94,11 +94,30 @@ have, and one in powder snow, which sapling does not ask.
 
 ## Where sapling differs
 
-- A chicken falls slowly on BDS and reaches the lava on its 8th tick; sapling's falls as any mob, on its 3rd.
-- BDS's loot appears the tick after the death; sapling's with it.
-- A mob left inside a block (lava under it made stone) is lifted onto it on BDS and stays in it on sapling.
-- A cow shut in water swims up on BDS; sapling's sinks. Both drown at the same tick.
 - BDS also flips `MOVING` (bit 34) and another flag (bit 35) on mobs; sapling sends their recorded flags.
+
+## Bodies (2026-11-04, `bds_command_probe bodies` and `lifts`, research/captures/bds-bodies.txt, bds-lifts.txt)
+
+Sapling's runs: sapling-bodies.txt, sapling-lifts.txt (after the fixes).
+
+- A chicken let go 10 up fell 0.0784, 0.0931, 0.1018, 0.1069 ... a tick, to 0.1142: from its second tick
+  in the air its fall after gravity and drag keeps 0.6 (`v' = 0.6 x 0.98 (v + 0.08)` while it was falling);
+  in water it sinks as any mob. Sapling's fell as a cow; now `Physics::CHICKEN` (`flutter`), test
+  `a_chicken_falls_as_slowly_as_bds_dropped_one`. One put on lava died on its 5th tick, a pig was in the
+  lava (cause 8) on its 3rd. Left: sapling's chicken on lava now dies on its 6th, a tick late; a body
+  under 0.802 high is judged in lava by its middle (`body/liquid.rs` `in_liquid`), which BDS seems not to.
+- Loot, a mount's chest and its saddle appear the tick after the death, at where the body is then: deaths
+  by fire, lava, smothering and `/kill` (also bds-chestdie.txt, bds-harm.txt). Sapling tossed them with
+  the death; now `creatures/death.rs` `Remains`.
+- A block set where a standing cow is, lower than a full one (a daylight detector 0.375, a slab, a
+  stonecutter, an enchanting table, an end portal frame, soul sand, farmland 0.9375), puts it on the
+  block's top the tick after. In a full block (stone under a cow, a pig, an iron golem in lava made stone)
+  it stays in, and smothers where its head is in it; a cow whose head was clear was moved 0.95 aside
+  (its box flush beyond the cell) and 0.9 back over two ticks, which sapling does not copy. The earlier
+  note that a mob in lava made stone is lifted onto it was wrong. Sapling left every mob in; now
+  `Body::rise_onto_low_block`, test `a_mob_in_a_block_lower_than_a_full_one_rises_onto_it_and_stays_in_a_full_one`.
+- A cow shut in water two deep under stone swims up to the roof (its head at the stone, -25.3) and bobs
+  there, on both: sapling's floating (`creatures/floating.rs`) already did. Same.
 
 ## Landings, roofs, fish (2026-10-29, `bds_command_probe harm2`, research/captures/bds-harm2.txt)
 

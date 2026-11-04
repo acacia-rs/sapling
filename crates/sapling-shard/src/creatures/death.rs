@@ -4,12 +4,13 @@ use acacia_proto::packets::MobEquipment;
 use acacia_proto::types::WindowID;
 use bevy_ecs::prelude::*;
 use sapling_api::Item;
+use sapling_world::ItemStack;
 
 use super::health::Health;
 use super::{DYING, Dying, attacks, hunting, omens, wither};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{Layer, NetId, Tick};
+use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::{drops, entities, inventory};
 
 const MOB_LOOT: &str = "doMobLoot";
@@ -18,9 +19,18 @@ const SADDLE: &str = "minecraft:saddle";
 /// (research/captures/bds-kill.txt).
 const LOOT_LIFT: f32 = 0.075;
 
+/// What a mob that died leaves, tossed where it is the tick after its death, as BDS's loot, a
+/// mount's chest and saddle came (research/captures/bds-bodies.txt, bds-chestdie.txt).
+#[derive(Component)]
+pub(super) struct Remains {
+    due: u64,
+    stacks: Vec<ItemStack>,
+}
+
 /// The mob, seen to die, is dead where it is, no longer kept by the world folder, and leaves its
-/// loot, cooked if it was on fire. Its viewers see both its hands emptied after its death, as
-/// BDS's (research/captures/bds-reach.txt). A wither does both at the end of its long death.
+/// loot, cooked if it was on fire, a tick later ([`Remains`]). Its viewers see both its hands
+/// emptied after its death, as BDS's (research/captures/bds-reach.txt). A wither does both at
+/// the end of its long death.
 pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
     if crate::dragon::dies(world, entity) {
         return;
@@ -35,19 +45,28 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     }
     omens::died(world, entity, layer, body);
     feed_catalyst(world, entity, layer, kind, body);
-    let [x, y, z] = body.at;
-    let spilled = crate::riding::spilled(world, entity);
-    let unsaddled = spilled.iter().any(|stack| stack.name == SADDLE);
-    for stack in spilled {
-        drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
-    }
+    let mut stacks = crate::riding::spilled(world, entity);
+    let unsaddled = stacks.iter().any(|stack| stack.name == SADDLE);
     crate::riding::mouth_at_death(world, entity, layer, kind, body, unsaddled);
-    world.entity_mut(entity).insert(Dying(now + lasts.unwrap_or(DYING))).remove::<entities::Stored>();
+    if lasts.is_none() {
+        stacks.extend(remains(world, entity, layer, kind));
+    }
+    world.entity_mut(entity).insert((Dying(now + lasts.unwrap_or(DYING)), Remains { due: now + 1, stacks })).remove::<entities::Stored>();
     if let Some(mut health) = world.get_mut::<Health>(entity) {
         health.end();
     }
-    if lasts.is_none() {
-        leave_remains(world, entity, layer, kind, body);
+}
+
+/// Tosses the [`Remains`] that are due where their mobs lie.
+pub(super) fn leave_due(world: &mut World) {
+    let now = world.resource::<Tick>().0;
+    let due: Vec<(Entity, Entity, [f32; 3])> =
+        world.query::<(Entity, &InLayer, &Body, &Remains)>().iter(world).filter(|(.., remains)| now >= remains.due).map(|(entity, layer, body, _)| (entity, layer.0, body.at)).collect();
+    for (entity, layer, [x, y, z]) in due {
+        let Some(remains) = world.entity_mut(entity).take::<Remains>() else { continue };
+        for stack in remains.stacks {
+            drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
+        }
     }
 }
 
@@ -72,28 +91,32 @@ pub(super) fn empty_hands(world: &mut World, entity: Entity, layer: Entity, body
     entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), emptied);
 }
 
-/// The dead mob's loot, where the world's rules let it leave any.
+/// The dead mob's loot, tossed now.
 pub(super) fn leave_remains(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
+    let [x, y, z] = body.at;
+    for stack in remains(world, entity, layer, kind) {
+        drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
+    }
+}
+
+/// The dead mob's loot, where the world's rules let it leave any.
+fn remains(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> Vec<ItemStack> {
     let on_fire = world.get::<Health>(entity).is_some_and(|health| health.is_burning());
     let by_player = world.get::<attacks::Slain>(entity).is_some();
     let killer = match world.get::<attacks::Slain>(entity) {
         Some(slain) => sapling_data::Killer::Player { looting: slain.1 },
         None => sapling_data::Killer::None,
     };
-    if leaves_loot(world, layer) && !crate::riding::saddled_bare(world, entity) {
-        let [x, y, z] = body.at;
-        // BDS dropped a pig's or strider's saddle before the rest (research/captures/bds-saddleevents.txt).
-        if let Some(saddle) = crate::riding::looted_saddle(world, entity, kind) {
-            drops::toss(world, layer, saddle, [x, y + LOOT_LIFT, z]);
-        }
-        leave_loot(world, layer, kind, on_fire, killer, body.at);
-        let mut dropped: Vec<_> = crate::riding::looted_armor(world, entity).into_iter().collect();
-        dropped.extend(super::drowned::let_go(world, entity, by_player));
-        dropped.extend(super::captains::let_go(world, entity, by_player));
-        for stack in dropped {
-            drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
-        }
+    if !leaves_loot(world, layer) || crate::riding::saddled_bare(world, entity) {
+        return Vec::new();
     }
+    // BDS dropped a pig's or strider's saddle before the rest (research/captures/bds-saddleevents.txt).
+    let mut stacks: Vec<_> = crate::riding::looted_saddle(world, entity, kind).into_iter().collect();
+    stacks.extend(loot(world, layer, kind, on_fire, killer));
+    stacks.extend(crate::riding::looted_armor(world, entity));
+    stacks.extend(super::drowned::let_go(world, entity, by_player));
+    stacks.extend(super::captains::let_go(world, entity, by_player));
+    stacks
 }
 
 /// Whether the world's `doMobLoot` lets the dead leave loot and experience.
@@ -101,14 +124,11 @@ pub(super) fn leaves_loot(world: &World, layer: Entity) -> bool {
     world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(MOB_LOOT))
 }
 
-fn leave_loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, killer: sapling_data::Killer, [x, y, z]: [f32; 3]) {
+fn loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, killer: sapling_data::Killer) -> Vec<ItemStack> {
     let loot = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         sapling_data::mob_loot(kind, on_fire, killer, &mut || dice.fraction())
     };
-    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
-    let stacks: Vec<_> = loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect();
-    for stack in stacks {
-        drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
-    }
+    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return Vec::new() };
+    loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect()
 }

@@ -103,11 +103,25 @@ BDS's `DespawnSystem` runs `_canDespawn` every tick [D]: no player at all, nothi
 within `min_distance`) despawn; at tick range 4, no player within `min(max_distance, 44)` despawns; and
 the simulation edge. Schema defaults [D]: inactivity 30, chance 800, all three on. sapling: a mob
 despawns only if it appeared naturally (`spawning::Natural`) and its kind has `despawn_from_distance`
-[P]; inactivity is counted from its spawn [U], the roll is 1 in 800 [U], the distances 32/128 are the
+[P]; the roll is 1 in 800 [U], the distances 32/128 are the
 add-on documentation's [U], and the edge is no player's view covering its column. Mobs spawned by commands, eggs or plugins, and every mob loaded
 with its column, stay: sapling keeps no `Persistent` flag, so a natural mob saved with its column (a
-save while it is near a player) comes back persistent. `despawn_from_inactivity` and the filter-only
-despawns (wandering trader, piglin brute, zoglin) are not built.
+save while it is near a player) comes back persistent. The filter-only despawns (wandering trader,
+piglin brute, zoglin) are not built.
+
+Inactivity and the 44 cap (2026-11-04, bdsre, settled by decompile; sapling `spawning/despawn.rs`):
+
+- The soft rules (0x141ba3960) read the mob's `NoActionTimeComponent` against `min_range_inactivity_timer`
+  × 20, then roll the chance, then look for a player within `min_distance`; one found sets the count to
+  0 (helper vtable 0x14a774710 slot 7, 0x141ba3940). Sapling counted ticks since the spawn.
+- The count goes up 1 a tick for every living mob that ticks (`PostAIUpdateSystem`, 0x1436a08c0) and
+  2 more for a `Monster` brighter than 0.5 at its feet plus 0.66 of its height, a blaze and a magma cube
+  always (`MonsterAiStepSystem::tickMonsterAiStep`, 0x141c652d0); `Mob::_hurt` sets it to 0. Sapling
+  keeps it in `Health` (`idle`), the monster test as the `monster` family and raw brightness 13 or more
+  (0.5 on the Java game's light ramp [U]).
+- The far cap: `if (level->getChunkTickRange() <= 4) far = min(max_distance, 44)` (0x141ba3a80, ILevel
+  slot 14); at a larger `tick-distance` the far distance is the pack's (128). Sapling kept 44 at every
+  distance; test `natural_mobs_70_off_go_at_tick_distance_4_and_stay_at_6`.
 
 ## Left
 
