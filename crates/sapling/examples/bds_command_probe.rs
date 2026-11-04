@@ -283,7 +283,7 @@ async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str],
             || block_ticks::act(actor, line).await
             || tack::act(actor, line).await
             || tenth3::act(actor, line).await
-            || eleventh3::act(actor, line).await;
+            || eleventh3::act(actor, line).await
             || eleventh1u::act(actor, line).await;
         if !done {
             player::act(actor, line).await;
