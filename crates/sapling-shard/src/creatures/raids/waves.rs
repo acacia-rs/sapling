@@ -1,10 +1,11 @@
 //! A raid's waves: BDS's raid groups (`definitions/spawn_groups/raid_group_<n>.json`, one a wave)
 //! and how many a raid has (`Village::_createRaid` at 0x142a29ac0: 3, 5 or 7 by difficulty),
-//! spawned together at a spot 32 to 48 out from the village's farthest player ([`spot`]).
+//! spawned about a spot 32 to 48 out from the village's farthest player ([`spot`]).
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Difficulty, SpawnReason};
 
+use super::super::paths::holds;
 use crate::blocks::Dice;
 use crate::components::{InLayer, Layer, Position, in_world};
 use crate::entities;
@@ -34,6 +35,9 @@ const OUT_MORE: f32 = 16.0;
 const TRIES: usize = 10;
 /// Players this near the middle (across) stand for BDS's village bounds grown by 16.
 const BOUNDS: f32 = 32.0;
+/// Each raider's own spot is drawn this many times, at most this far off the wave's on each axis.
+const SCATTER_TRIES: usize = 10;
+const SCATTER: i32 = 4;
 
 /// How many waves a raid on `difficulty` has: `0x07050300 >> 8 * difficulty`.
 pub(super) fn count(difficulty: Difficulty) -> u8 {
@@ -93,12 +97,37 @@ fn spot(world: &mut World, layer: Entity, middle: [f32; 3]) -> Option<[f32; 3]> 
     None
 }
 
-/// Spawns wave `wave` (from 0) of a raid on the village about `middle`: its raiders.
+/// A raider's own spot about the wave's `feet`, as BDS's group spawn scatters each mob
+/// (`Spawner::spawnMobGroup` 0x1415ec6c0, its search 0x14597bfc0): a cell drawn up to 4 off on
+/// each axis, the first floor in its column from there down 4 then up 3 that is no leaves with
+/// two open cells over it; the raider stands on that cell's corner. The wave's spot if none.
+fn scatter(world: &mut World, layer: Entity, feet: [f32; 3]) -> [f32; 3] {
+    for _ in 0..SCATTER_TRIES {
+        let off = {
+            let mut dice = world.get_resource_or_insert_with(Dice::default);
+            [(); 3].map(|_| dice.roll(2 * SCATTER as u32 + 1) as i32 - SCATTER)
+        };
+        let [x, y, z] = [0, 1, 2].map(|axis| (feet[axis] + off[axis] as f32).floor() as i32);
+        let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return feet };
+        let floor = |base: i32| {
+            let leaves = level.in_height(base) && level.registry().get(level.block(x, base, z)).is_some_and(|state| state.name.ends_with("leaves"));
+            holds(level, [x, base, z]) && !leaves && !holds(level, [x, base + 1, z]) && !holds(level, [x, base + 2, z])
+        };
+        if let Some(base) = (y - SCATTER..=y).rev().chain(y + 1..y + SCATTER).find(|base| floor(*base)) {
+            return [x as f32, (base + 1) as f32, z as f32];
+        }
+    }
+    feet
+}
+
+/// Spawns wave `wave` (from 0) of a raid on the village about `middle`: its raiders, each on its
+/// own spot about the wave's ([`scatter`]), a rider on its mount.
 pub(super) fn spawn(world: &mut World, layer: Entity, middle: [f32; 3], wave: u8) -> Vec<Entity> {
     let Some(feet) = spot(world, layer, middle) else { return Vec::new() };
     let mut raiders = Vec::new();
     let mut born = |world: &mut World, kind: &str, event: &str| {
-        let raider = super::super::spawn_as(world, layer, kind, feet, SpawnReason::Raid, 0.0, Some(event)).and_then(|id| entities::find(world, id));
+        let at = scatter(world, layer, feet);
+        let raider = super::super::spawn_as(world, layer, kind, at, SpawnReason::Raid, 0.0, Some(event)).and_then(|id| entities::find(world, id));
         raiders.extend(raider);
         raider
     };
