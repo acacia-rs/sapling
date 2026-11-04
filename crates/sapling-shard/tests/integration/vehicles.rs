@@ -103,6 +103,20 @@ fn a_chest_minecart_opens_its_own_screen() {
 }
 
 #[test]
+fn a_chest_boat_opens_to_its_riders_inventory_key_as_a_plain_container() {
+    // research/captures/bds-t2eboats.txt: window type Container at the boat's cell.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let boat = spawned(&mut h, &[("minecraft:chest_boat", [2.5, 65.0, 0.5])])[0];
+    h.receive(1, &interact(boat.0));
+    ticks(&mut h, 2);
+    let ask = acacia_proto::packets::Interact { action_id: acacia_proto::packets::InteractActionId::OpenInventory, target_entity_id: 1, has_position: false, position: None };
+    h.receive(1, &ask);
+    let opened = all::<ContainerOpen>(&ticks(&mut h, 2));
+    assert!(opened.len() == 1 && opened[0].window_type == WindowType::Container && opened[0].runtime_entity_id == boat.0 as i64, "{opened:?}");
+}
+
+#[test]
 fn flint_and_steel_primes_a_tnt_minecart_which_bursts_eighty_ticks_on() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

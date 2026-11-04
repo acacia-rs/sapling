@@ -1,11 +1,15 @@
 //! Item repair (`…-000000000001`, matches 141b56330, assemble 141b55170): two of a damageable
 //! item, one each, make one new of it worn `d1 + d2 - lasts - lasts / 20` (at least 0). Only the
 //! curses (binding, vanishing) of either are kept, each once; every other field is left behind.
+//! A spear, a pack item mended by its `minecraft:repairable` component, gets no twentieth and keeps
+//! its enchantments: two iron spears worn 150 and 130, one with sharpness II, made one worn 30 with
+//! it in either order (research/captures/bds-t2espear.txt).
+// TODO: which of two enchanted spears' enchantments BDS keeps was not drilled; both here, the first's level first.
 
 use sapling_data::CreativeItem;
 use sapling_data::enchant::{all, kind_of, with_all};
 use acacia_proto::nbt::Value;
-use sapling_data::gear::{damage, gear, with_field};
+use sapling_data::gear::{damage, gear, slot, with_field};
 
 const DAMAGE: &str = "Damage";
 
@@ -17,21 +21,24 @@ const BONUS_SHARE: i32 = 20;
 pub(super) fn repaired(grid: &Grid) -> Option<Made> {
     let filled = grid.filled();
     let [first, second] = filled.as_slice() else { return None };
-    let lasts = i32::from(gear(&first.name)?.lasts);
+    let made = gear(&first.name)?;
+    let lasts = i32::from(made.lasts);
     if first.name != second.name || first.count != 1 || second.count != 1 || lasts == 0 {
         return None;
     }
-    let worn = (damage(first.tag.as_ref()) + damage(second.tag.as_ref()) - lasts - lasts / BONUS_SHARE).max(0);
-    let mut curses: Vec<(i16, u8)> = Vec::new();
-    for curse in [first, second].into_iter().flat_map(|stack| all(stack.tag.as_ref())).filter(|(id, _)| kind_of(*id).is_some_and(|kind| kind.curse)) {
-        if !curses.contains(&curse) {
-            curses.push(curse);
+    let spear = made.slots == slot::SPEAR;
+    let bonus = if spear { 0 } else { lasts / BONUS_SHARE };
+    let worn = (damage(first.tag.as_ref()) + damage(second.tag.as_ref()) - lasts - bonus).max(0);
+    let mut enchantments: Vec<(i16, u8)> = Vec::new();
+    for kept in [first, second].into_iter().flat_map(|stack| all(stack.tag.as_ref())).filter(|(id, _)| spear || kind_of(*id).is_some_and(|kind| kind.curse)) {
+        if !enchantments.iter().any(|(id, _)| *id == kept.0) {
+            enchantments.push(kept);
         }
     }
     let name = sapling_data::static_item_name(&first.name)?;
     // `Damage` even at 0: BDS's mended sword carried `Damage: 0` (bds-gridmend.txt).
     let worn = with_field(None, DAMAGE, Some(Value::Int(worn)));
-    Some(vec![(CreativeItem { name, damage: 0, block: None, tag: with_all(worn, &curses) }, 1)])
+    Some(vec![(CreativeItem { name, damage: 0, block: None, tag: with_all(worn, &enchantments) }, 1)])
 }
 
 #[cfg(test)]
@@ -58,6 +65,15 @@ mod tests {
         assert_eq!(all(item.tag.as_ref()), [(28, 1)], "only the curse, once");
         let mended = repaired(&grid(&[sword(10, &[]), sword(5, &[])])).expect("repairs");
         assert_eq!(mended[0].0.tag, Some(Value::Compound(vec![("Damage".into(), Value::Int(0))])), "Damage kept at 0 (bds-gridmend.txt)");
+    }
+
+    #[test]
+    fn two_spears_make_one_with_just_their_uses_left_and_the_enchantments_kept() {
+        let spear = |worn, enchants: &[(i16, u8)]| ItemStack { name: "minecraft:iron_spear".into(), ..sword(worn, enchants) };
+        for pair in [[spear(130, &[]), spear(150, &[(9, 2)])], [spear(150, &[(9, 2)]), spear(130, &[])]] {
+            let made = repaired(&grid(&pair)).expect("repairs");
+            assert_eq!((damage(made[0].0.tag.as_ref()), all(made[0].0.tag.as_ref())), (30, vec![(9, 2)]), "bds-t2espear.txt");
+        }
     }
 
     #[test]

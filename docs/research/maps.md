@@ -10,7 +10,9 @@ Sources: BDSRE on `acacia/.testserver/bds-molang/bedrock_server.exe` (map update
 
 - Using an empty map (net id 526) in the air makes a `minecraft:filled_map` (423) with tag
   `{map_name_index: Int, map_uuid: Long}`, keys sorted; a locator map (damage 2) adds `map_display_players: Byte(1)`.
-  `map_name_index` counts maps made in the level from 1.
+  `map_name_index` counts the maps each player made, from 1: BDS keeps it on the player (`Player`
+  +0xb98, post-incremented in 0x1436f5c30, saved as `MapIndex`). Sapling keeps it the same way
+  (`maps.rs` `MapIndex`, `inventory/store.rs`; test `each_player_counts_its_own_map_names`).
 - Ids: BDS unique ids, top half all ones (`-4294967279`); a new map takes five, its own and its zoom levels'
   (`included_in`), so the next map is 5 on.
 - Centre: Java's `calculateCenter`: `floor((x + 64) / s) * s + s / 2 - 64`, `s = 128 << scale`; `origin.y` 0.
@@ -77,8 +79,7 @@ Java's `MapItem.update`: `f = 1 << scale`, `r = 128 / f` (halved under a ceiling
 - Only default block states were drawn; state-dependent colours (log axis, beds) use the default's.
 - Saving (sapling-leveldb `maps.rs`, from a BDS world's `map_<id>` records): BDS saved all five scales of a
   filled map at once, each `parentMapId` the id one up (-1 at scale 4); sapling saves the maps it made.
-  Unread: the RGBA byte order of `colors` (the BDS records seen were blank), BDS's `map_name_index` count
-  after a restart, and `decorations`.
+  Unread: the RGBA byte order of `colors` (the BDS records seen were blank) and `decorations`.
 - Locked maps' ids: `bds_command_probe maplock` (bds-maplock.txt) locked three maps (unique ids -4294967272,
   -4294967267, -4294967262) to 1396458477, 2162056098 and 3185328418, after 255902174 in the first capture:
   positive, 32 bits wide, in no order, apart from the unique-id run. Where BDS draws them was not found

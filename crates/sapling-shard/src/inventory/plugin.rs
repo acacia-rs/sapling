@@ -35,7 +35,8 @@ fn stored_over(item: &Item, registry: &sapling_world::BlockRegistry, previous: O
     let block = first.map(|id| sapling_world::block_hash(registry, id));
     let mut tag = tag(item, previous);
     let worn = wears(&item.name);
-    if worn && item.damage > 0 {
+    // Even unworn: `/replaceitem ... iron_helmet` came with `{Damage: 0}` (research/captures/bds-t2edon.txt).
+    if worn {
         super::wear::set_damage(&mut tag, item.damage.into());
     }
     let damage = if worn { 0 } else { item.damage };

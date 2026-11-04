@@ -110,12 +110,19 @@ were not found in any of these; sapling does what is listed there.
   10 + rand(20).
 - Pull-in (BDSRE 14241fde0, from the push collision): a mob narrower than 1.375, not riding, with a free seat.
 
+## Drilled 2026-11-04 (research/captures/bds-t2eboats.txt)
+
+- A chest boat's rider's inventory key opened its slots as ContainerOpen `Container` (not `ChestBoat`)
+  at the boat's cell, with the boat's id. Sapling sent `ChestBoat`; fixed (`vehicles/cargo.rs`
+  `open_seated`, test `a_chest_boat_opens_to_its_riders_inventory_key_as_a_plain_container`).
+- TNT 2, 4 and 6 blocks from three boats and three minecarts broke all six on both, each dropping its item.
+
 ## Unverified
 
 - The links' `immediate`/`rider_initiated` for a non-click mount; type 2 for a second rider.
 - The add link's order against `SetEntityData` for later viewers: sapling sends seats and links after AddEntity.
-- That BDS opens a ridden chest boat's slots on the inventory key (`Interact OpenInventory`).
-- A boat's or minecart's stored `Pos`: feet here.
+- A minecart's stored `Pos`: kept where the wire puts it, as a boat's (a boat on y -26 was kept at
+  -25.625, as shown; research/captures/bds-t2ekeep-dump.txt; `actors.rs` `compound_now`).
 - A placed minecart's height on its rail (box bottom on the rail block's floor here; BDS spawns at y + 0.5 then snaps).
 - Detector rail timing (Java's), hopper minecart pick-up range, the activator lock of a hopper minecart (not done).
 - What raises a boat's underwater counter (not done); boat fall breaking (none found).

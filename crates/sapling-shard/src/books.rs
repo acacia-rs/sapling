@@ -3,7 +3,9 @@
 //! the end pads with empty pages, an AddPage inserts, a DeletePage and a SwapPages touch only pages
 //! there are. A Sign makes the stack a written book with the client's `author`, `title` and `xuid`
 //! and `generation` 0. A tick's edits are answered with every window, the held slot selected.
-// TODO: BDS's limits on a page's and a title's length are not known; only the 50 pages are kept to.
+//! BDS kept pages of 256, 257 and 512 letters and titles of 17 and 40 whole, as sapling does
+//! (research/captures/bds-t2ebook.txt).
+// TODO: a 1000-letter page got its writer disconnected on BDS (bds-t2ebook1.txt); sapling keeps it.
 
 use acacia_proto::nbt::{List, Value};
 use acacia_proto::packets::{BookEdit, BookEditContent};

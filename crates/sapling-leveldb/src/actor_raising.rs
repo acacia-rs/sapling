@@ -1,8 +1,8 @@
 //! What a stored mob keeps of its raising, under BDS's names: its age, love and breeding cooldown,
 //! owner, temper, lead holder, name and whether it stays (`Persistent`), and the flags `Actor`
 //! reads too. Its `definitions` (the component groups BDS restores it with) follow its events.
-// TODO: `Age` is the old worlds' field (negative ticks to grow up), the one BDS's upgraders read; where today's
-// BDS keeps a baby's progress was not found.
+//! A baby's `Age` is the negative ticks left to grow up: BDS kept a calf summoned born shortly
+//! before as `Age` Int -23879 (research/captures/bds-t2ekeep-dump.txt).
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};
 

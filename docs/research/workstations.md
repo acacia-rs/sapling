@@ -214,8 +214,13 @@ slot, four stayed. Sapling stacked bottles into the filled slots; fixed (`hopper
 
 ## Not drilled
 
-- Spear durability (sapling uses the material's sword; TODO in `gear.rs`).
 - `AnvilDamagePacket`: client-only (BDS's handler 1409aa040 rolls the wear for an anvil within 8.7 of the
   player, 14 in creative; a creative player's packet got no answer, research/captures/bds-packets.txt).
-- An ominous banner: the creative entry the drill picked was a plain one (Type 0).
 - The block's cap of six patterns on placing (read, not played).
+
+## Drilled 2026-11-04 (tenth wave)
+
+- Spear durability: its `minecraft:durability` from BDS's item registry, not the sword's (iron 250; an
+  iron spear went 247 to 248 a hit, research/captures/bds-t2ewear.txt; `gear.rs` `SPEARS`).
+- A raid captain's dropped banner is `banner` aux 0, tag `{Type: 1}` (bds-t2ebanner.txt); sapling's
+  was aux 15. Fixed (`creatures/captains.rs`). A seventh loom pattern got status Unknown(7) on both.

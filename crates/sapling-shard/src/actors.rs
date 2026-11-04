@@ -14,7 +14,7 @@ use sapling_world::ChunkPos;
 use crate::body::Body;
 use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::{InLayer, Layer, Tick};
-use crate::entities::{Managed, Stored};
+use crate::entities::{Kind, Managed, Stored};
 use crate::kept::Kept;
 use crate::view::View;
 use crate::{blocks, creatures, drops, mobs, orbs};
@@ -44,9 +44,11 @@ pub(crate) fn arrive(world: &mut World) {
     }
 }
 
-/// A kept entity's stored compound with its place, motion, health, fire and raising as they are now.
-pub(crate) fn compound_now(body: &Body, stored: &Stored, health: Option<&creatures::Health>, raised: Option<&creatures::Raised>) -> Option<Vec<u8>> {
-    let moved = sapling_world::moved_actor(&stored.compound, body.at, body.motion).ok()?;
+/// A kept entity of `kind` as its stored compound with its place, motion, health, fire and raising
+/// as they are now. A vehicle's `Pos` is where the wire puts it (bds-t2ekeep-dump.txt: a boat's at -25.625 on -26).
+pub(crate) fn compound_now(kind: Option<&Kind>, body: &Body, stored: &Stored, health: Option<&creatures::Health>, raised: Option<&creatures::Raised>) -> Option<Vec<u8>> {
+    let lift = kind.map_or(0.0, |kind| crate::riding::wire_lift(&kind.0));
+    let moved = sapling_world::moved_actor(&stored.compound, [body.at[0], body.at[1] + lift, body.at[2]], body.motion).ok()?;
     let harmed = match health {
         Some(health) => sapling_world::harmed_actor(&moved, health.left(), health.max(), health.burning() as i16).ok()?,
         None => moved,
@@ -93,11 +95,11 @@ pub(crate) fn write_back(world: &mut World) {
     crate::tnt::keep_fuses(world);
     creatures::keep_state(world);
     let kept: Vec<(Entity, ChunkPos, i64, Vec<u8>)> = world
-        .query::<(&InLayer, &Body, &Stored, &crate::tags::UniqueId, Option<&creatures::Health>, Option<&creatures::Raised>)>()
+        .query::<(&InLayer, &Body, &Stored, &crate::tags::UniqueId, Option<&Kind>, Option<&creatures::Health>, Option<&creatures::Raised>)>()
         .iter(world)
-        .filter_map(|(layer, body, stored, unique_id, health, raised)| {
+        .filter_map(|(layer, body, stored, unique_id, kind, health, raised)| {
             let home = ChunkPos::of_block(body.at[0].floor() as i32, body.at[2].floor() as i32);
-            Some((layer.0, home, unique_id.0, compound_now(body, stored, health, raised)?))
+            Some((layer.0, home, unique_id.0, compound_now(kind, body, stored, health, raised)?))
         })
         .collect();
     let managed = world.get_resource::<Managed>().map(|managed| managed.0.clone()).unwrap_or_default();

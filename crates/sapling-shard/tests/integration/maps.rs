@@ -62,3 +62,19 @@ fn an_empty_map_fills_and_draws_the_platform_with_both_players_on_it() {
     assert!(answer[0].included_in.is_some() && answer[1].width == Some(128));
     assert_eq!(pixel(&answer[1], 64, 64), 0xFF60_6060);
 }
+
+#[test]
+fn each_player_counts_its_own_map_names() {
+    use sapling_api::{Item, PlayerId, Slot};
+    // BDSRE 1436f5c30: the index is the maker's own (`MapIndex`), from 1.
+    let mut h = ready(GameMode::Survival, &[("minecraft:empty_map", 2, 0)], 0.0);
+    let mut names = Vec::new();
+    for player in [1, 1, 2] {
+        h.remote.run(move |ctx| assert!(ctx.set_item(PlayerId(player), Slot::Main(0), Some(&Item::new("minecraft:empty_map", 1)))));
+        h.tick_all();
+        h.receive(player, &click_air());
+        let told = h.tick_all().to(player).to_vec();
+        names.push(first_tag(&told).into_iter().find(|(key, _)| key == "map_name_index").map(|(_, index)| index));
+    }
+    assert_eq!(names, [Some(Nbt::Int(1)), Some(Nbt::Int(2)), Some(Nbt::Int(1))]);
+}

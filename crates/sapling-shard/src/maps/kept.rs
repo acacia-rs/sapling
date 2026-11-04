@@ -44,8 +44,7 @@ fn restored(world: &mut World, home: Entity) -> Maps {
         maps.maps.insert(record.id, map);
     }
     let runs = records.iter().filter(|record| record.id > ID_BASE && record.id < 0).map(|record| (record.id - ID_BASE - 1) / IDS_PER_MAP + 1).max();
-    // TODO: BDS's own count of `map_name_index` was not found; a restarted world counts on from its runs.
-    (maps.made, maps.names) = (runs.unwrap_or(0), runs.unwrap_or(0) as i32);
+    maps.made = runs.unwrap_or(0);
     maps
 }
 

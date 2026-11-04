@@ -303,7 +303,11 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
 
 ## Not drilled
 
-- Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
+- Repair through `minecraft:repairable` (data-driven items naming themselves), drilled 2026-11-04 on
+  spears (research/captures/bds-t2espear.txt): two iron spears worn 150 and 130, one with sharpness
+  II, made one worn 30 (no twentieth) that kept sharpness II, in either hotbar order; sapling gave 18
+  and dropped it. Fixed (`special/repair.rs`, both items' enchantments kept). Not drilled: two
+  enchanted ones (the decompile says the first's tag is kept).
 - `/replaceitem` on a mount, drilled (bds-fixreplace.txt) and fixed (`riding/replaced.rs`, test
   `mounts_take_tack_by_slot_as_bds_s_did`):
   - `slot.saddle`: the horse family, `saddle` heard at the feet and the flags; a llama is
