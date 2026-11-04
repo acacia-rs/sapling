@@ -154,8 +154,11 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let dazzled = sapling_data::mob_traits(kind).hunts?.by_dark && super::harm::sun_on(world, layer, head);
     // One provoked by players still takes the mobs its kind hunts.
     let looks = traits.searches.map_or((now + id).is_multiple_of(LOOKS), |searches| chance(now, id, 1, searches));
-    // One that reselects swaps to nearer prey at its look (research/captures/bds-raidaim.txt).
-    if (found.is_none() || (traits.reselects && !angered)) && hunts && !dazzled && looks {
+    // One that reselects swaps to nearer prey the tick it is there, all at once; one that lost its
+    // prey takes none that tick (research/captures/bds-raidaim.txt, bds-pillswitch.txt).
+    let reselects = traits.reselects && !angered && found.is_some();
+    let lost = had.is_some() && found.is_none();
+    if ((found.is_none() && looks && !lost) || reselects) && hunts && !dazzled {
         let player = if traits.provoked { super::villagers::outlaw(world, entity, layer, kind, body, sight) } else { nearest(world, layer, body, sight) };
         let mob = prey::nearest(world, entity, layer, body, sight, traits);
         found = [found, player, mob].into_iter().flatten().min_by(|a, b| distance(a.1, body.at).total_cmp(&distance(b.1, body.at)));

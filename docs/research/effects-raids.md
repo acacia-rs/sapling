@@ -175,7 +175,20 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
   (sapling-raidaim.txt, sapling-pillrange.txt): no shot from 12 at the actor; after the villagers'
   kill all four kept the actor, stayed within 16 for 21 s and none celebrated, as BDS's. One
   difference left: at the move BDS's four swapped to the actor in the same tick; sapling's let the
-  villager go then took the actor over the next 0.45 s (their next looks).
+  villager go then took the actor over the next 0.45 s (their next looks). Drilled and fixed 2026-11-04
+  (`pillswitch`, examples/shared/last_drill.rs; research/captures/bds-pillswitch.txt against
+  sapling-pillswitch.txt): four pillagers held 6 east of a held villager took it; the survival actor
+  put 3 east of them was taken by all four in the very tick it came; sent 30 off, they let go in that
+  tick (one swapped straight to the villager) and took the villager again 1 to 9 ticks later; with
+  the villager dead and the actor back, they took it 0 to 9 ticks after it came. So a pillager with prey
+  reselects every tick, and one without looks every few ticks, as sapling's `LOOKS` has it. Sapling's
+  reselected only at its looks; now every tick while it has prey (`hunting::pick`), and one that lost
+  its prey takes none in that tick; test `a_pillager_swaps_to_the_nearer_prey_the_tick_it_is_there`.
+  Re-drilled: three of four swapped in the arrival tick, let go together, retook the villager 7 to 9
+  ticks later, took the returning actor 0 to 9 ticks after. Left, geometry rather than the rule:
+  sapling's first pillager, which strolled before its slowness, kept the villager, and the three swapped
+  back to the villager 1.7 s after each arrival, when arrows had thrown the actor 2.9 east (BDS's 1.96,
+  no swap back); BDS's pillagers' places were not captured.
 - raidhero on sapling 2026-11-03 (sapling-raidhero.txt): `/damage … entity CmdActor` killed every
   raider but made no hero, left no experience, counted 1 and answered `commands.damage.failed [""]`
   with no raider left. BDS: 11 orbs, Hero of the Village after the win, success counts 7, 5 and 4,

@@ -54,17 +54,17 @@ fn body_slot() -> Vec<String> {
     lines
 }
 
-/// Four slowed pillagers 6 east of a slowed villager, the survival actor 30 off: they take the
-/// villager. The actor comes 3 from them (nearer than the villager), leaves to 30, comes back;
+/// Four pillagers slowed before any prey is near, then a slowed villager 6 west of them, the
+/// survival actor 30 off: they take the villager. The actor comes 3 from them (nearer than the villager), leaves to 30, comes back;
 /// the villager is killed with the actor away, then the actor comes back once more.
 fn pill_switch() -> Vec<String> {
     let mut out: Vec<String> = [
         "kill @e[type=!player]", "gamerule domobspawning false", "gamerule dodaylightcycle false", "gamerule doweathercycle false", "weather clear", "time set 1000", "difficulty easy",
         "fill -8 -61 -8 44 -61 8 grass_block", "fill -8 -60 -8 44 -52 8 air", "tp CmdWatcher -4.5 -60 6.5", "gamemode creative CmdWatcher",
         "tp @s 40.5 -60 0.5", "gamemode survival @s", "clear @s", "effect @s resistance 1000 4 true", "effect @s saturation 1000 0 true",
-        "summon villager 4.5 -60 0.5 0 0 minecraft:become_unskilled","effect @e[type=villager_v2] slowness 1000 255 true", "effect @e[type=villager_v2] resistance 1000 4 true",
         "summon pillager 10.5 -60 -1.5", "summon pillager 10.5 -60 -0.5", "summon pillager 10.5 -60 1.5", "summon pillager 10.5 -60 2.5",
-        "effect @e[type=pillager] slowness 1000 255 true", "effect @e[type=pillager] resistance 1000 4 true", "", "", "",
+        "effect @e[type=pillager] slowness 1000 255 true", "effect @e[type=pillager] resistance 1000 4 true",
+        "summon villager 4.5 -60 0.5 0 0 minecraft:become_unskilled", "effect @e[type=villager_v2] slowness 1000 255 true", "effect @e[type=villager_v2] resistance 1000 4 true", "", "", "",
     ]
     .map(String::from)
     .into();
