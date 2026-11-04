@@ -3,9 +3,8 @@
 //! viewers (`told`). An undead mob is mended by instant damage and hurt, unflashed, by instant
 //! health, each its own size, and takes no poison or regeneration at all. A mob an effect hurts
 //! runs. Its effects are kept with it (`kept`); potions on it: `potions`.
-// TODO: BDS's flags for fire resistance and water breathing (fire immune, breathing) are not
-// shown, nor is speed's change to the movement attribute; strength and weakness do not change its hit, and levitation, slow falling
-// and jump boost do nothing to it.
+// TODO: speed's change to the movement attribute is not shown; strength and weakness do not change
+// its hit, and levitation, slow falling and jump boost do nothing to it.
 
 mod kept;
 mod potions;

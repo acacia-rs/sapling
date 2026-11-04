@@ -234,6 +234,8 @@ A snow golem on plains at noon with a zombie 8 off (`research/captures/bds-snowg
   within 6, walked at it, and threw its snowball 22 ticks after taking it (Java's `RangedAttackGoal`
   throws at 21 with a 20-tick interval), from about its eyes at 1.5 a tick, heard `shoot` from its
   middle. The zombie, which had taken the golem 4 ticks after it came, killed it (health 4) first.
+- Heat melts it by the pack's `hurt_on_condition` cause `temperature` (wire 26), not fire; the API's
+  `DamageCause::Temperature` is that (2026-11-04; plains is too cool to melt it, so not drilled).
 
 ## Drowned with tridents (`drowned`)
 
@@ -300,6 +302,14 @@ nothing in the next 11 s. sapling (`creatures/piglins.rs`) keeps both hands with
 (`Mainhand`, `Offhand`; it also writes the armour stand's `Pose`, which BDS's piglins may not have) and
 does not resume admiring after a load.
 
+`t2barter` (2026-11-04, research/captures/bds-t2barter.txt, sapling-t2barter.txt): a piglin handed an
+ingot by a click emptied its offhand 161 ticks on and threw its roll the tick after, from its feet plus
+1.125, at 0.3 up and 0.2 along the way to the nearest player's eyes within 10 (BDS 0x14190f060; none
+near: ±0.2 at random). Sapling threw it as the hand emptied, from where it stood; fixed
+(`piglins.rs` `hand_back`, test in tests/integration/piglins.rs), the same in the re-drill. Not
+ported: BDS's piglins in the overworld became zombified piglins 303 ticks after they came, hands kept
+(the pack's `zombification_sensor`, `start_zombification` 15 s, `become_zombie`).
+
 ## Witches and endermen again (2026-10-29, `bds_command_probe kinds3`, research/captures/bds-kinds3.txt)
 
 Sapling's run: sapling-kinds3.txt.
@@ -318,7 +328,12 @@ Sapling's run: sapling-kinds3.txt.
   nothing; now rain hurts them as water does (`creatures/harm.rs` `WATER_HURTS`, tested in
   tests/integration/mob_heat.rs), without the teleports. The drill_server rerun still showed no
   rain hurt (see mob-damage.md, "Fire, magma, rain").
-- The evoker and its vexes were not drilled again.
+- The evoker and its vexes, re-drilled 2026-11-04 (sapling-evoker.txt, sapling-vex.txt against
+  bds-evoker.txt, bds-vex.txt): an evoker's vex now tells its prey again every tick with `mob.warning`
+  (test `an_evokers_vex_tells_its_prey_every_tick`), and is not heard to `spawn` (BDS's three were
+  not; `vexes.rs` `summon`). Left: sapling's evoker summoned on its first cast where BDS's cast its
+  line, let its prey go 18 s in where BDS's held it, and so cast no fangs before the second came; a
+  vex spawned by command still charges here.
 
 ## Sapling
 
@@ -343,7 +358,9 @@ charging at most 8 blocks; a mob it meets is hurt and thrown at once by half a h
 push, and runs. It charges at where its prey stood as it sounded `pre_ram` and stops within 0.25
 of it (bds-goat-cows-findings.md, "The miss"); a baby's ram costs 1 and pushes a fixed 0.468 of a
 grown one's at any step (fixed 2026-10-29 from those captures; they had said so, sapling had not
-followed). It shows no prey between rams.
+followed). Between rams it takes the nearest it would ram, looking a tick in ten, shown as `TargetEid`
+with `mob.warning` a tick later, and lets it go (`TargetEid` 0) over 16 from its feet to the prey's eyes
+or as a ram starts (`hold`, test `a_goat_takes_a_player_near_it_between_rams_and_lets_it_go_past_16`).
 
 An evoker casts its fangs as above (`creatures/spells.rs`, `fights=spells` in `mob-traits.tsv`), its
 line's way taken as the first fang rises, and strolls between casts; one cast in four, while
@@ -359,6 +376,10 @@ spots of water up to 10 off, or at its hitter, which it bites as other hunters d
 breach, bob under the surface, turn 10 degrees at most, flock or swim with players, flop or dry
 out on land, or pass its anger on, and its anger does not end.
 
+A fish on land hops as BDS's cod did (`creatures/swimming/ashore.rs`, research/captures/bds-flop.txt),
+and is heard `flop` a tick after each hop from where it hopped, as bds-t2water.txt's cod was
+(test `a_cod_on_land_is_heard_to_flop_a_tick_after_each_hop`).
+
 A panda is born with a gene by its pack's genetics (`creatures/genes.rs`) and shows it; a weak one
 has 10 health, a normal or brown one hits its hitter back once, an aggressive one for 6 until it
 is calm, and the rest run. A lazy one keeps the common pace, a worried one keeps from nobody, a
@@ -367,8 +388,10 @@ playful one does not roll, and an aggressive one's anger is not passed on.
 A mob has effects as above (`creatures/afflictions.rs`): from a witch's potions, splashed or drunk,
 from a stray's and a bogged's arrows, and from a plugin (`ShardCtx::give_entity_effect`). The four
 newest do as above as it dies or is hurt (`creatures/omens.rs`), to a player too
-(`vitals/omens.rs`); the burst pushes no mob or item, and a slime of the second size does not split. Their flags (fire immune, breathing) and speed's movement
-attribute are not shown, they are not saved with it or told to one who comes, and strength,
+(`vitals/omens.rs`); the burst pushes no mob or item, and a slime of the second size does not split.
+Fire resistance sets and clears the mob's `FIRE_IMMUNE` flag with its `VisibleMobEffects` (one packet), as
+BDS's did in `t2flags` (research/captures/bds-t2flags.txt, sapling-t2flags.txt: the same packets); water
+breathing sets none (`afflictions/told.rs`). Speed's movement attribute is not shown, they are not saved with it or told to one who comes, and strength,
 weakness, levitation, slow falling and jump boost do nothing to it.
 
 A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),

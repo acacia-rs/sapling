@@ -30,7 +30,10 @@ with its mobs summoned into a wall). No decompile: all of this is from the captu
   and a tick later the sound `fizz` (-1) from the middle of the box. A mob lying dead is put out the same.
 - A mob that dies on fire leaves its meat cooked (the loot tables' `furnace_smelt` under `on_fire`).
 - The kinds fire, falls and water leave alone are those whose pack components say so
-  (`sapling-data/data/mob-traits.tsv`). Not drilled: the drill world refuses `/summon zombie_pigman`.
+  (`sapling-data/data/mob-traits.tsv`). Zombie pigmen drilled (`bds_command_probe t2pigman`,
+  research/captures/bds-t2pigman.txt, sapling-t2pigman.txt; the summon works on the flat world): in lava and
+  fire they took nothing, a 10-block fall cost 7 (cause 5), zombies beside them burned (causes 6 and 8) and
+  died; sapling's the same.
 
 ## Falls, blocks and water (2026-10-09, `bds_command_probe harm`, research/captures/bds-harm.txt)
 
@@ -390,8 +393,11 @@ target. Sapling: `weather/falling.rs` (`Falling`, both levels). What reads which
   the count and stops the weather before the clock, and `weather::stop` adds `StopThunder` for
   those told rain. Test `a_night_slept_through_is_skipped`. Re-drilled (sapling-rainnight.txt):
   each skip's packets in BDS's order.
-- Not drilled: monster spawns reckon brightness at the storm's 10 once rain times lightning is over
-  0.9 (`weather::storms`, `isThundering`, the Java game's).
+- Monster spawns reckon brightness at the storm's 10 once rain times lightning is over 0.9
+  (`weather::storms`, `isThundering`, the Java game's). Drilled in `t2storm` (2026-11-04, the open
+  world at noon, research/captures/bds-t2storm.txt, sapling-t2storm.txt): 30 s clear brought only
+  animals and slimes on both; thunder brought zombies, skeletons, spiders and creepers, BDS's first
+  5.3 s in, sapling's 6.5 s. The same.
 
 ## Hits (2026-10-29, `bds_command_probe hits2`, research/captures/bds-hits2.txt)
 
@@ -423,7 +429,15 @@ Sapling's run: sapling-hits2.txt. Each mob held by slowness 255, the actor put b
 - The actor's `!hit` fell 8.5 blocks short (the held cow and zombie had been pushed); the sword's
   5.824 stands from bds-hits2.txt.
 
+## Baby experience, the hitter's hunger (`bds_command_probe t2babyxp`, `t2hunger`)
+
+research/captures/bds-t2babyxp.txt, bds-t2hunger.txt. A baby cow and a baby pig dropped no experience; a
+baby zombie 12 (orbs 7, 3, 1, 1); a grown cow 1 to 3. Sapling gave babies their kind's grown share. Fixed:
+the pack's `experience_reward` under a baby group (`mob-traits.tsv` `baby_xp=`, `MobTraits::baby_experience`;
+none where the baby has no reward), `creatures/attacks.rs` `experience_reward`. One fist hit that landed on a
+cow cost the actor 0.1 exhaustion, as `HIT_TIRES`; the hit zombie fought back as it always does.
+
 ## Not drilled
 
-How breath comes back out of water; players' burns beyond fire; a baby's experience counted; the
-hitter's hunger; an item's wear (the cow fled); what a mob does once hit beyond running.
+How breath comes back out of water (left to ninth3's n3breath); players' burns beyond fire; an item's wear
+(the cow fled).

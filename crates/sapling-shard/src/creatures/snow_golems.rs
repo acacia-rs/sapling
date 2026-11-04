@@ -5,8 +5,8 @@
 //! at it (BDS: 22, the golem knocked about). Each tick it leaves a layer of snow where it is cold
 //! enough (`trail`, under 0.81), under the four corners a quarter block about where it stood, as
 //! BDS laid them; it melts where it is hot (over 1.0) and in water or rain (`hurt_on_condition`).
-// TODO: BDS's cause for the heat is `temperature`, which the API lacks (fire here); monsters do not
-// fight back, nor does a hit golem take its hitter.
+// The heat's cause is the pack's `temperature` (`hurt_on_condition`, wire 26).
+// TODO: monsters do not fight back, nor does a hit golem take its hitter.
 
 use bevy_ecs::prelude::*;
 
@@ -114,7 +114,7 @@ pub(super) fn tick(world: &mut World) {
         if body.liquid() == Some(Liquid::Water) || rained {
             harm::wound(world, golem, layer, 1.0, super::Cause::Drowning);
         } else if warmth.is_some_and(|t| t > MELTS_OVER) && super::afflictions::level(world, golem, sapling_api::Effect::FireResistance).is_none() {
-            harm::wound(world, golem, layer, 1.0, super::Cause::Fire);
+            harm::wound(world, golem, layer, 1.0, super::Cause::Temperature);
         }
     }
 }

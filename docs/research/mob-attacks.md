@@ -266,6 +266,13 @@ A guardian and an elder guardian in a pool beside a survival actor on normal
   amplifier 2 for 6000 ticks with particles, `EntityEvent` `ElderGuardianCurse` on the player.
   bdsre's `GuardianPreAIStepSystem` (1459a1130) skips one with amplifier 2 or more and 1200 ticks
   or more left; sapling follows it (`creatures/guardians.rs`).
+- A player whose guard took the laser's bite whole still flashed the magic (`HurtAnimation` 14);
+  sapling flashed nothing, now the same (`vitals::flash_guarded`).
+- In `t2water` (research/captures/bds-t2water.txt) a guardian took an axolotl unprovoked, as its
+  pack's `nearest_attackable_target` names squid and axolotls; sapling's took no mob. Now it takes
+  either (`preys=squid,axolotl` in `mob-traits.tsv`) and its laser lands on a mob as on a player,
+  then the magic (test `a_guardian_takes_a_squid_and_lands_its_laser_on_it`; sapling-t2water.txt's
+  guardian took the squid, BDS's pool drained and the run was not alike enough to compare further).
 
 ## Mobs that fight their own way
 

@@ -37,8 +37,13 @@ fn a_piglin_given_gold_admires_it_8_seconds_in_its_offhand_then_hands_back_its_b
     assert_eq!(emptied, 159, "161 ticks after it took the ingot");
     // An older mob-loot.json lacks the table (sapling-data README); the drop needs it.
     if sapling_data::has_loot_table("loot_tables/entities/piglin_barter.json") {
-        // A nugget it may take straight back up, as BDS's did (bds-goldpickup.txt).
-        assert!(!all::<AddItemEntity>(&admiring[emptied]).is_empty(), "its barter drops by it");
+        // bds-t2barter.txt: a tick on, from a metre up, 0.3 up and 0.2 of the way to Alex's eyes.
+        assert!(all::<AddItemEntity>(&admiring[emptied]).is_empty());
+        let handed = all::<AddItemEntity>(&admiring[emptied + 1]);
+        let (at, thrown) = (handed[0].position.clone(), handed[0].velocity.clone());
+        let to = [0.5 - at.x, 65.0 + sapling_data::EYE_HEIGHT - (at.y - 1.125), 0.5 - at.z];
+        let far = to.iter().map(|c| c * c).sum::<f32>().sqrt();
+        assert!((at.y - 66.125).abs() < 1e-4 && (thrown.x - to[0] / far * 0.2).abs() < 1e-4 && (thrown.y - 0.3).abs() < 1e-6 && (thrown.z - to[2] / far * 0.2).abs() < 1e-4, "{handed:?}");
     }
 }
 

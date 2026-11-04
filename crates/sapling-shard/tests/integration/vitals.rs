@@ -283,6 +283,7 @@ fn magic_goes_through_armour_and_a_helmet_takes_a_quarter_of_an_anvil() {
     let taken: Vec<f32> = [20.0].iter().chain(&left).zip(&left).map(|(before, after)| ((before - after) * 1000.0).round() / 1000.0).collect();
     assert_eq!(taken, [2.0, 0.88, 0.645]);
     assert_eq!((DamageCause::named("override"), DamageCause::named("sonic_boom").map(DamageCause::id), DamageCause::named("nosuch")), (Some(DamageCause::Generic), Some(31), None));
+    assert_eq!(DamageCause::named("temperature").map(DamageCause::id), Some(26));
 }
 
 #[test]

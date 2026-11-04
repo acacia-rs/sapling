@@ -7,9 +7,8 @@
 //! What it holds is kept with the world (research/captures/bds-piglinkeep.txt, bds-piglinkeep2.txt):
 //! a golden sword it admired went to its main hand as the offhand emptied, and after a restart it
 //! came back holding the sword and the ingot it was admiring, shown as stored, and did not barter.
-// TODO: BDS's handing back was not seen (its piglin in the drill picked a thrown ingot up and kept
-// it); here the roll drops at the piglin as the hand empties. One that was hit still barters
-// (`cooldown_after_being_attacked` 20).
+// TODO: one that was hit still barters (`cooldown_after_being_attacked` 20); BDS's was heard
+// `admire` again as its hand emptied with the player still holding gold (bds-t2barter.txt), not here.
 
 mod pickup;
 
@@ -37,12 +36,17 @@ const ADMIRES: u64 = 161;
 /// `admire` is heard from this much of its height up.
 const HEAD: f32 = 0.85;
 const OFFHAND: u8 = 1;
-const LIFT: f32 = 0.5;
+/// The roll's middle is this far over the piglin's feet (1 to the item's feet).
+const LIFT: f32 = 1.125;
+const THROW: f32 = 0.2;
+const THROW_UP: f32 = 0.3;
+const NEAR: f32 = 10.0;
 
-/// The tick a piglin's admiring ends.
+/// The tick a piglin's admiring ends, or with `bartered` the tick its roll is handed back.
 #[derive(Component)]
 pub(super) struct Admiring {
     until: u64,
+    bartered: bool,
 }
 
 /// What a piglin holds, main hand and offhand.
@@ -108,7 +112,7 @@ fn admire(world: &mut World, piglin: Entity, layer: Entity, item: ItemStack, del
     let cell = body.at.map(|c| c.floor() as i32);
     let shown = sapling_net::encode(&offhand(id, Some(&item)));
     let main = world.get_mut::<Hands>(piglin).and_then(|mut hands| hands.main.take());
-    world.entity_mut(piglin).insert((Admiring { until: now + ADMIRES }, Hands { main, off: Some(item) }));
+    world.entity_mut(piglin).insert((Admiring { until: now + ADMIRES, bartered: false }, Hands { main, off: Some(item) }));
     if delay == 0 {
         entities::tell_viewers(world, piglin, layer, cell, vec![shown]);
     } else {
@@ -132,17 +136,22 @@ pub(crate) fn barter(world: &mut World, player: Entity, piglin: Entity) -> bool 
     true
 }
 
-/// Piglins done admiring empty their offhand: an ingot is bartered, anything else goes to the main hand.
+/// Piglins done admiring empty their offhand: an ingot is bartered a tick on, anything else goes
+/// to the main hand (research/captures/bds-t2barter.txt).
 pub(super) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let done: Vec<(Entity, Entity, u64, Body)> = world
+    let done: Vec<(Entity, Entity, u64, Body, bool)> = world
         .query::<(Entity, &Admiring, &InLayer, &NetId, &Body)>()
         .iter(world)
         .filter(|(_, admiring, ..)| now >= admiring.until)
-        .map(|(piglin, _, layer, id, body)| (piglin, layer.0, id.0, *body))
+        .map(|(piglin, admiring, layer, id, body)| (piglin, layer.0, id.0, *body, admiring.bartered))
         .collect();
-    for (piglin, layer, id, body) in done {
+    for (piglin, layer, id, body, bartered) in done {
         world.entity_mut(piglin).remove::<Admiring>();
+        if bartered {
+            hand_back(world, layer, &body);
+            continue;
+        }
         let Some(mut hands) = world.get_mut::<Hands>(piglin) else { continue };
         let Some(admired) = hands.off.take() else { continue };
         let barters = admired.name == GOLD;
@@ -154,11 +163,13 @@ pub(super) fn tick(world: &mut World) {
         told.push(sapling_net::encode(&offhand(id, None)));
         entities::tell_viewers(world, piglin, layer, body.at.map(|c| c.floor() as i32), told);
         if barters {
-            hand_back(world, layer, &body);
+            world.entity_mut(piglin).insert(Admiring { until: now + 1, bartered: true });
         }
     }
 }
 
+/// BDS's barter (0x14190f060): each stack from a metre up, 0.3 up and 0.2 of the way to the first
+/// player in a box 10 out (to its position, at the eyes), else 0.2 at most each way at random.
 fn hand_back(world: &mut World, layer: Entity, body: &Body) {
     let loot = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
@@ -166,7 +177,27 @@ fn hand_back(world: &mut World, layer: Entity, body: &Body) {
     };
     let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
     let stacks: Vec<_> = loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect();
+    let player = player_near(world, layer, body.at).map(|feet| [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]]);
+    let across = match player {
+        Some(eye) => {
+            let to = [0, 1, 2].map(|axis| eye[axis] - body.at[axis]);
+            let far = to.iter().map(|c| c * c).sum::<f32>().sqrt();
+            if far < 1e-4 { [0.0; 2] } else { [to[0] / far * THROW, to[2] / far * THROW] }
+        }
+        None => {
+            let mut dice = world.get_resource_or_insert_with(Dice::default);
+            [dice.fraction() * 2.0 * THROW - THROW, dice.fraction() * 2.0 * THROW - THROW]
+        }
+    };
     for stack in stacks {
-        drops::toss(world, layer, stack, [body.at[0], body.at[1] + LIFT, body.at[2]]);
+        drops::eject(world, layer, stack, [body.at[0], body.at[1] + LIFT, body.at[2]], [across[0], THROW_UP, across[1]]);
     }
+}
+
+fn player_near(world: &World, layer: Entity, at: [f32; 3]) -> Option<[f32; 3]> {
+    crate::components::in_world(world)
+        .into_iter()
+        .filter(|player| world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer))
+        .filter_map(|player| world.get::<crate::components::Position>(player).map(|position| position.feet))
+        .find(|feet| (0..3).all(|axis| (feet[axis] - at[axis]).abs() <= NEAR))
 }

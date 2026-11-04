@@ -4,7 +4,7 @@
 //! but a goat, along an axis, stands, and charges at where its prey stood then, into whoever is in
 //! the way. A mob it meets is hurt and thrown in one move, half a hit's throw and the push, and
 //! runs. A baby's ram costs 1 and pushes a fixed 0.468 of a grown one's.
-// TODO: a goat takes and drops prey between rams, as BDS's did, without showing it here.
+//! Between rams it takes and lets go of its prey, shown ([`hold`]).
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
@@ -23,6 +23,8 @@ const RESTS: [u32; 2] = [600, 6000];
 /// How far off a prey it rams; it runs to a place this far, or no nearer than the least.
 const RAMS_FROM: [i32; 2] = [7, 4];
 const SEES: f32 = 16.0;
+/// Between rams it looks for prey one tick in this many.
+const LOOKS: u32 = 10;
 /// Its movement times its `run_speed`.
 const RUNS: f32 = 0.28;
 /// It stands once this near its place, gives up a run after this many ticks, and charges this
@@ -63,6 +65,8 @@ enum Stage {
 pub(super) struct Ram {
     next: u64,
     stage: Stage,
+    /// The prey it holds between rams.
+    held: Option<Entity>,
 }
 
 fn rest(world: &mut World) -> u64 {
@@ -73,7 +77,7 @@ fn rest(world: &mut World) -> u64 {
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if kind == KIND {
         let next = world.resource::<Tick>().0 + rest(world);
-        world.entity_mut(entity).insert(Ram { next, stage: Stage::Idle });
+        world.entity_mut(entity).insert(Ram { next, stage: Stage::Idle, held: None });
     }
 }
 
@@ -99,22 +103,69 @@ fn mobs(world: &mut World, goat: Entity, layer: Entity) -> Vec<(Entity, Body)> {
     mobs.iter(world).filter(|(mob, in_layer, _, kind)| *mob != goat && in_layer.0 == layer && kind.0 != KIND).map(|(mob, _, body, _)| (mob, *body)).collect()
 }
 
-/// Where the feet are of the nearest survival player or mob within [`SEES`] that the goat sees.
+fn far(body: &Body, feet: [f32; 3]) -> f32 {
+    (feet[0] - body.at[0]).hypot(feet[2] - body.at[2]).hypot(feet[1] - body.at[1])
+}
+
+/// The nearest survival player or mob within [`SEES`] that the goat sees, and its feet.
+fn prey_of(world: &mut World, goat: Entity, layer: Entity, body: &Body) -> Option<(Entity, [f32; 3])> {
+    let player = hunting::nearest(world, layer, body, SEES);
+    let mob = mobs(world, goat, layer).into_iter().map(|(mob, its)| (mob, its.at)).filter(|(_, feet)| far(body, *feet) <= SEES && hunting::in_sight(world, layer, body, *feet));
+    player.into_iter().chain(mob).min_by(|a, b| far(body, a.1).total_cmp(&far(body, b.1)))
+}
+
 fn prey(world: &mut World, goat: Entity, layer: Entity, body: &Body) -> Option<[f32; 3]> {
-    let far = |feet: [f32; 3]| (feet[0] - body.at[0]).hypot(feet[2] - body.at[2]).hypot(feet[1] - body.at[1]);
-    let player = hunting::nearest(world, layer, body, SEES).map(|(_, feet)| feet);
-    let mob = mobs(world, goat, layer).into_iter().map(|(_, its)| its.at).filter(|feet| far(*feet) <= SEES && hunting::in_sight(world, layer, body, *feet));
-    player.into_iter().chain(mob).min_by(|a, b| far(*a).total_cmp(&far(*b)))
+    prey_of(world, goat, layer, body).map(|(_, feet)| feet)
+}
+
+/// Between rams it takes its prey and lets it go, as BDS's did (bds-goat-findings.md, "Target"):
+/// `TargetEid`, `mob.warning` a tick on, at a one-in-ten look a tick (Java's target interval; BDS
+/// took 8 and 9 ticks after spawn); `TargetEid` 0 once over 16 from its feet to the prey's eyes.
+fn hold(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
+    let Some(held) = world.get::<Ram>(entity).map(|ram| ram.held) else { return };
+    let cell = body.at.map(|c| c.floor() as i32);
+    let told = match held {
+        Some(prey) => {
+            let player = world.get::<Position>(prey).is_some();
+            let eyes = hunting::feet_of(world, prey).map(|feet| [feet[0], feet[1] + if player { sapling_data::EYE_HEIGHT } else { 0.0 }, feet[2]]);
+            let lost = eyes.is_none_or(|eyes| far(body, eyes) > SEES) || world.get::<Dying>(prey).is_some() || (player && !vitals::is_mortal(world, prey));
+            if !lost {
+                return;
+            }
+            (None, 0)
+        }
+        None => {
+            if world.get_resource_or_insert_with(Dice::default).roll(LOOKS) != 0 {
+                return;
+            }
+            let Some((prey, _)) = prey_of(world, entity, layer, body) else { return };
+            late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", kind, id, [body.at[0], body.at[1] + body.size[1] * MIDDLE, body.at[2]]));
+            (Some(prey), world.get::<crate::components::NetId>(prey).map_or(0, |id| id.0 as i64))
+        }
+    };
+    if let Some(mut ram) = world.get_mut::<Ram>(entity) {
+        ram.held = told.0;
+    }
+    entities::tell_viewers(world, entity, layer, cell, vec![hunting::targets(id, told.1)]);
 }
 
 /// Before the goat's move: it starts, runs, stands or charges; false while it has no ram under way.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let now = world.resource::<Tick>().0;
     let (Some(body), Some(ram)) = (world.get::<Body>(entity).copied(), world.get::<Ram>(entity).map(|ram| (ram.next, ram.stage))) else { return false };
+    if matches!(ram.1, Stage::Idle) {
+        hold(world, entity, layer, id, kind, &body);
+    }
     let stage = match ram {
         (next, Stage::Idle) if now >= next && body.on_ground && world.resource::<Settings>().0.difficulty != sapling_api::Difficulty::Peaceful => {
             let Some((axis, along)) = prey(world, entity, layer, &body).and_then(|feet| Some((lane(world, layer, body.at, feet)?, feet))).map(|((axis, along), feet)| (axis, [feet[0] + axis[0] * along as f32, feet[2] + axis[1] * along as f32])) else { return false };
-            late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound("mob.warning", kind, id, [body.at[0], body.at[1] + body.size[1] * MIDDLE, body.at[2]]));
+            // A goat holding prey lets it go as it starts; one without is heard (bds-goat-findings.md).
+            let cell = body.at.map(|c| c.floor() as i32);
+            if world.get_mut::<Ram>(entity).and_then(|mut ram| ram.held.take()).is_some() {
+                entities::tell_viewers(world, entity, layer, cell, vec![hunting::targets(id, 0)]);
+            } else {
+                late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", kind, id, [body.at[0], body.at[1] + body.size[1] * MIDDLE, body.at[2]]));
+            }
             Stage::Running { spot: along, axis, since: now }
         }
         (_, Stage::Idle) => return false,
@@ -175,7 +226,7 @@ fn face(world: &mut World, entity: Entity, axis: [f32; 2]) {
 fn end(world: &mut World, entity: Entity) {
     let next = world.resource::<Tick>().0 + rest(world);
     if let Some(mut ram) = world.get_mut::<Ram>(entity) {
-        *ram = Ram { next, stage: Stage::Idle };
+        *ram = Ram { next, stage: Stage::Idle, held: None };
     }
 }
 

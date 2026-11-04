@@ -20,10 +20,11 @@ def unhurt_by(components, cause):
     return any(t.get("cause") in (cause, "all") and t.get("deals_damage") in (False, "no") and "on_damage" not in t for t in triggers)
 
 
-def experience(entity):
-    """`least-most` of what a grown one without equipment leaves a player who killed it."""
+def experience(entity, baby=False):
+    """`least-most` of what a grown one (or with `baby`, a baby, by its baby group's own reward) without
+    equipment leaves a player who killed it."""
     holders = [("", entity.get("components", {}))] + list(entity.get("component_groups", {}).items())
-    grown = [held["minecraft:experience_reward"].get("on_death") for group, held in holders if "minecraft:experience_reward" in held and "baby" not in group]
+    grown = [held["minecraft:experience_reward"].get("on_death") for group, held in holders if "minecraft:experience_reward" in held and ("baby" in group) == baby]
     if not grown:
         return None
     reward = str(grown[0])
@@ -118,7 +119,9 @@ HUNTS = {
 GROWN_VILLAGERS = "irongolem,wandering_trader,villager.grown"
 ZOMBIE_PREY = "preys=snowgolem,irongolem,villager,wandering_trader"
 PREYS = {
+    "minecraft:elder_guardian": "preys=squid,axolotl",
     "minecraft:evocation_illager": "preys=snowgolem," + GROWN_VILLAGERS,
+    "minecraft:guardian": "preys=squid,axolotl",
     "minecraft:husk": ZOMBIE_PREY,
     "minecraft:iron_golem": "preys=monster,!creeper,hoglin,zoglin",
     "minecraft:pillager": "preys=" + GROWN_VILLAGERS,
@@ -169,6 +172,8 @@ for document in packs.entities().values():
         held.append(f"breath={breath['total_supply'] * 20}")
     if entity["description"]["identifier"] != "minecraft:player" and experience(entity):
         held.append("xp=" + experience(entity))
+    if experience(entity, baby=True):
+        held.append("baby_xp=" + experience(entity, baby=True))
     for trait, behaviour, movement in [("strolls", "random_stroll", "minecraft:movement"), ("panics", "panic", "minecraft:movement"), ("swims", "random_swim", "minecraft:underwater_movement")]:
         if entity["description"]["identifier"] != "minecraft:player" and pace(entity, behaviour, movement) is not None:
             held.append(f"{trait}={pace(entity, behaviour, movement):g}")

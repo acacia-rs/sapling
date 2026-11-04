@@ -96,6 +96,7 @@ mod mob_commands;
 mod mob_heat;
 mod mob_life;
 mod mob_packets;
+mod mob_tells;
 mod first_data;
 mod grazing;
 mod eggs_drilled;

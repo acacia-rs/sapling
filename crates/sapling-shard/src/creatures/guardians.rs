@@ -6,8 +6,9 @@
 //! players within 50 that do not already have mining fatigue at its third level for a minute or
 //! more: six minutes of it (`ElderGuardianCurse`), as `GuardianPreAIStepSystem` does (bdsre
 //! 1459a1130).
-// TODO: BDS flashes the guarded magic too (`HurtAnimation` 14 after 2); guardians take no squid or
-// axolotl, spike no attacker, and swim at their prey as at nothing.
+// Squid and axolotls are prey too (the pack's `nearest_attackable_target`; bds-t2water.txt: a
+// guardian took an axolotl unprovoked). A guarded magic still flashes (`HurtAnimation` 14 after 2).
+// TODO: guardians spike no attacker and swim at their prey as at nothing.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
@@ -59,6 +60,9 @@ pub(super) fn steer(world: &mut World, mob: Entity, layer: Entity, id: u64, kind
 
 /// The laser lands on `victim`: the guardian's hit, then the magic.
 fn land(world: &mut World, mob: Entity, kind: &str, body: &Body, victim: Entity) {
+    if world.get::<super::Creature>(victim).is_some() {
+        return land_on_mob(world, mob, kind, body, victim);
+    }
     let Some(feet) = world.get::<Position>(victim).map(|at| at.feet) else { return };
     let Some(harm) = sapling_data::mob_traits(kind).hunts.and_then(|hunts| hunting::on_difficulty(world, hunts.attack)) else { return };
     let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
@@ -66,7 +70,18 @@ fn land(world: &mut World, mob: Entity, kind: &str, body: &Body, victim: Entity)
     if vitals::bitten(world, victim, harm, kind, [dx / far * THROW, THROW, dz / far * THROW]) {
         crate::enchants::thorns(world, victim, mob);
     }
-    vitals::hurt(world, victim, MAGIC, Cause::Magic);
+    if !vitals::hurt(world, victim, MAGIC, Cause::Magic) {
+        vitals::flash_guarded(world, victim, Cause::Magic);
+    }
+}
+
+/// A squid or axolotl takes the hit unscaled by difficulty, as a mob prey does, then the magic.
+fn land_on_mob(world: &mut World, mob: Entity, kind: &str, body: &Body, victim: Entity) {
+    let (Some(layer), Some(feet), Some(harm)) = (world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(victim).map(|at| at.at), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.attack)) else { return };
+    let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
+    let far = dx.hypot(dz).max(1e-4);
+    hunting::hit_mob(world, layer, victim, harm, [dx / far, dz / far]);
+    super::harm::wound(world, victim, layer, MAGIC, Cause::Magic);
 }
 
 /// Each elder curses the players near it on its own beat.

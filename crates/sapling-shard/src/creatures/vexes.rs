@@ -2,9 +2,10 @@
 //! goals: through blocks (`Physics::GHOST`), pushed 0.05 a tick towards a charge's end and a
 //! quarter of that towards a spot up to 7 off where it was summoned; a tick in 7 one with prey
 //! more than 2 off charges at its eyes and hits it where their boxes meet. An evoker's vexes
-//! start to waste 30 to 119 seconds after they come, 1 a second.
-// TODO: a vex re-sent its target every tick with `mob.warning` on BDS, which is not copied; one
-// spawned by command did not charge in 30 seconds there (bds-vex.txt), and does here.
+//! start to waste 30 to 119 seconds after they come, 1 a second. An evoker's vex tells its prey
+//! again every tick after it took it, `mob.warning` a tick on, as two of BDS's three did
+//! (bds-evoker.txt); one spawned by command tells it once (bds-vex.txt).
+// TODO: one spawned by command did not charge in 30 seconds on BDS (bds-vex.txt), and does here.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use acacia_proto::types::MetadataFlags1;
@@ -12,7 +13,7 @@ use bevy_ecs::prelude::*;
 
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{InLayer, Layer, Position, Tick};
+use crate::components::{InLayer, Layer, NetId, Position, Tick};
 use crate::{entities, late_sounds, vitals};
 use super::health::Cause;
 use super::{harm, hunting};
@@ -73,7 +74,9 @@ pub(super) fn summon(world: &mut World, layer: Entity, evoker: &Body) {
     let now = world.resource::<Tick>().0;
     for [dx, dz] in SUMMONS {
         let feet = [(evoker.at[0].floor() as i32 + dx) as f32, evoker.at[1], (evoker.at[2].floor() as i32 + dz) as f32];
-        let Some(vex) = super::spawn(world, layer, KIND, feet, sapling_api::SpawnReason::Summoned).and_then(|id| entities::find(world, id)) else { continue };
+        // Unheard: BDS played no `spawn` for an evoker's vexes (bds-evoker.txt).
+        let birth = super::Birth { reason: sapling_api::SpawnReason::Summoned, yaw: 0.0, gene: None, sound: None };
+        let Some(vex) = super::born(world, layer, KIND, feet, birth).and_then(|id| entities::find(world, id)) else { continue };
         let more = u64::from(world.get_resource_or_insert_with(Dice::default).roll(LASTS_MORE));
         if let Some(mut bound) = world.get_mut::<Vex>(vex) {
             (bound.home, bound.wastes) = (Some(evoker.at), Some(now + LASTS + more));
@@ -98,11 +101,24 @@ fn meets(body: &Body, feet: [f32; 3]) -> bool {
     (body.at[0] - feet[0]).abs() < across && (body.at[2] - feet[2]).abs() < across && body.at[1] < feet[1] + PLAYER[1] && feet[1] < body.at[1] + body.size[1]
 }
 
+/// Tells its prey again with its growl, as at a take, unless it took it this tick.
+fn retell(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
+    let now = world.resource::<Tick>().0;
+    let Some((prey, _)) = hunting::quarry(world, entity).filter(|(_, since)| *since < now) else { return };
+    let target = world.get::<NetId>(prey).map_or(0, |id| id.0 as i64);
+    let cell = body.at.map(|c| c.floor() as i32);
+    entities::tell_viewers(world, entity, layer, cell, vec![hunting::targets(id, target)]);
+    late_sounds::play_later(world, 1, layer, cell, hunting::sound("mob.warning", id, kind, body, hunting::HEAD));
+}
+
 /// Before its move, with its prey `prey`: it wastes, hits, charges, wanders and flies.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, prey: Option<Entity>) -> bool {
     let now = world.resource::<Tick>().0;
     let Some(vex) = world.get::<Vex>(entity) else { return false };
-    let (home, mut wanted, was_charging, wastes) = (vex.home.unwrap_or(body.at), vex.wanted, vex.charging, vex.wastes);
+    let (home, mut wanted, was_charging, wastes, summoned) = (vex.home.unwrap_or(body.at), vex.wanted, vex.charging, vex.wastes, vex.home.is_some());
+    if summoned {
+        retell(world, entity, layer, id, kind, body);
+    }
     if wastes.is_some_and(|from| now >= from && (now - from).is_multiple_of(WASTES_EVERY)) {
         harm::wound(world, entity, layer, 1.0, Cause::Generic);
     }
