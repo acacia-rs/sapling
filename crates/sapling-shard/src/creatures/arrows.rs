@@ -4,7 +4,8 @@
 //! llama's spit ("Hit back by day"), which falls and throws nobody, and a witch's potions ("The
 //! witch"), which break where they land (`splashes`). Their flight: flight.rs.
 // TODO: a mob's arrow is not picked up and goes after a minute; its aim and its spread are the
-// Java game's, fitted to no more than the speeds BDS showed.
+// Java game's, fitted to no more than the speeds BDS showed (BDS's wider spread and lower aim:
+// docs/research/mob-attacks.md "In the way").
 
 use bevy_ecs::prelude::*;
 
@@ -130,6 +131,8 @@ pub(super) fn loose(world: &mut World, layer: Entity, by: Entity, kind: &str, ar
     let long = aim.iter().map(|c| c * c).sum::<f32>().sqrt().max(1e-4);
     let mut dice = world.get_resource_or_insert_with(Dice::default);
     let motion = aim.map(|c| c / long * shot.speed + (dice.fraction() + dice.fraction() - 1.0) * shot.spread);
+    // TODO: BDS's makes its first move, by its whole launch speed, in the tick it is loosed (bds-shoot.txt);
+    // sapling's a tick on. A shot that met its prey in its first tick would be gone unannounced here.
     if flight::launch(world, Launch { layer, by, archer: kind.to_owned(), from, motion, shot, gives }, None).is_none() {
         return;
     }

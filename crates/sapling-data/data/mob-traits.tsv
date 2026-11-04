@@ -14,7 +14,7 @@ minecraft:breeze_wind_charge_projectile	unpushable
 minecraft:camel	floats xp=1-3 strolls=0.18 panics=0.36 looks=6:0.02:40-80 glances
 minecraft:camel_husk	breathes_water floats xp=1-3 strolls=0.18 looks=6:0.02:40-80 glances
 minecraft:cat	no_fall floats xp=1-3 strolls=0.24 panics=0.375 looks=8:0.02:40-80
-minecraft:cave_spider	floats xp=5-5 looks=6:0.02:40-80 glances attack=2 speed=0.3 sees=16 by_dark searches=100 stops=100
+minecraft:cave_spider	floats xp=5-5 looks=6:0.02:40-80 glances attack=2 speed=0.3 sees=16 by_dark searches=100 stops=100 hits=poison:140
 minecraft:chicken	no_fall floats xp=1-3 strolls=0.25 panics=0.375 looks=6:0.02:40-80 glances
 minecraft:cod	breathes_water no_air xp=1-3 swims=0.1 roams=16x4
 minecraft:copper_golem	no_fall strolls=0.2 panics=0.3 looks=6:0.02:20-40 glances
