@@ -21,7 +21,7 @@ fn an_evoker_casts_a_line_of_sixteen_fangs_a_tick_apart_that_bite_for_6_by_magic
     let (mut cast, mut fangs, mut bites, mut throws) = (None, Vec::new(), Vec::new(), Vec::new());
     for tick in 0..100 {
         let sent = h.tick_all().to(1).to_vec();
-        let spell = all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::EvokerSpellCastingColor));
+        let spell = common::data::changes(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::EvokerSpellCastingColor));
         cast = cast.or(spell.then_some(tick));
         fangs.extend(all::<acacia_proto::packets::AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:evocation_fang").map(|added| (tick, added.position.x, added.position.z)));
         bites.extend(all::<EntityEvent>(&sent).iter().filter(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation).map(|event| event.data));
@@ -48,7 +48,7 @@ fn a_shulker_opens_for_its_prey_and_its_bullet_flies_to_it_for_4_and_levitation(
     let (mut opened, mut fired, mut hit, mut lifted) = (None, Vec::new(), None, Vec::new());
     for tick in 0..120 {
         let sent = h.tick_all().to(1).to_vec();
-        let peeks = all::<acacia_proto::packets::SetEntityData>(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::ShulkerPeekId));
+        let peeks = common::data::changes(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::ShulkerPeekId));
         opened = opened.or(peeks.then_some(tick));
         fired.extend(all::<acacia_proto::packets::AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:shulker_bullet").map(|added| (tick, [added.position.x, added.position.y, added.position.z])));
         if hit.is_none() && all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation && event.data == 3) {

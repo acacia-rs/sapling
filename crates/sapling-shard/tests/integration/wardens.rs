@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, LevelSoundEvent, RemoveEntity, SetEntityData, SetEntityMotion, UpdateAttributes};
+use acacia_proto::packets::{AddEntity, LevelSoundEvent, RemoveEntity, SetEntityMotion, UpdateAttributes};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use common::{Harness, all, attack};
 use sapling_api::{Block, Difficulty, GameMode, PlayerId};
@@ -28,7 +28,7 @@ enum Told {
 
 fn told(tick: usize, sent: &[RawPacket], warden: u64) -> Vec<(usize, Told)> {
     let mut out = Vec::new();
-    for data in all::<SetEntityData>(sent).into_iter().filter(|data| data.runtime_entity_id == warden) {
+    for data in crate::common::data::changes(sent).into_iter().filter(|data| data.runtime_entity_id == warden) {
         for item in data.metadata {
             out.push((tick, match (item.key, item.value) {
                 (Key::FlagsExtended, Value::FlagsExtended(flags)) => Told::Flags(flags.0),

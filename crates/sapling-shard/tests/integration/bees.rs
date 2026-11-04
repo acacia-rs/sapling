@@ -137,6 +137,7 @@ fn a_broken_hives_bees_come_out_and_go_for_the_nearest_survival_player() {
     assert_eq!([out.position.x, out.position.y, out.position.z], [3.5, 65.5, 0.5], "out of the hive's middle");
     let bee = out.runtime_id;
     let target = |data: SetEntityData| (data.runtime_entity_id == bee).then(|| data.metadata.into_iter().find(|item| item.key == Key::TargetEid)).flatten();
-    let targets: Vec<Value> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).chain(sent).flat_map(|packet| all::<SetEntityData>(&[packet])).filter_map(target).map(|item| item.value).collect();
+    let told: Vec<_> = sent.into_iter().chain((0..3).flat_map(|_| h.tick_all().to(1).to_vec())).collect();
+    let targets: Vec<Value> = common::data::changes(&told).into_iter().filter_map(target).map(|item| item.value).collect();
     assert_eq!(targets, [Value::Default(Plain::Long(2))], "Steve, in survival; Alex is in creative");
 }

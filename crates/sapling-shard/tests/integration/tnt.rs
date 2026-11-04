@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, CommandRequest, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityData, SetEntityMotion};
+use acacia_proto::packets::{AddEntity, AddItemEntity, CommandRequest, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityMotion};
 use acacia_proto::manual::Uuid;
 use acacia_proto::types::CommandOrigin;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
@@ -12,7 +12,7 @@ use sapling_api::{Block, Difficulty, GameMode, PlayerId};
 
 /// The fuse lengths told of the entity `id` (an item's whole metadata has one too).
 fn fuses(sent: &[RawPacket], id: u64) -> Vec<i32> {
-    all::<SetEntityData>(sent).iter().filter(|data| data.runtime_entity_id == id).flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect()
+    common::data::changes(sent).iter().filter(|data| data.runtime_entity_id == id).flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect()
 }
 
 #[test]

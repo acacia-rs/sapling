@@ -3,7 +3,7 @@
 
 use crate::common;
 
-use acacia_proto::packets::{AddEntity, EntityEvent, EntityEventEventId, LevelSoundEvent, SetEntityData};
+use acacia_proto::packets::{AddEntity, EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use common::{Harness, all};
 use sapling_api::{Difficulty, EntityId};
@@ -30,7 +30,7 @@ fn a_medium_slime_takes_its_prey_squishes_as_it_hops_at_it_and_hurts_it_for_2_by
         let sent = h.tick_all().to(1).to_vec();
         shown = shown.or(all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:slime").map(|added| (added.runtime_id, width(&added), added.attributes.iter().find(|a| a.name == "minecraft:health").map(|a| a.max))));
         let Some((slime, ..)) = shown else { continue };
-        for data in all::<SetEntityData>(&sent).iter().filter(|data| data.runtime_entity_id == slime) {
+        for data in common::data::changes(&sent).iter().filter(|data| data.runtime_entity_id == slime) {
             targeted |= data.metadata.iter().any(|item| item.key == Key::TargetEid && matches!(item.value, Value::Default(Plain::Long(1))));
             ages.extend(data.metadata.iter().filter(|item| item.key == Key::EntityAge).filter_map(|item| match item.value {
                 Value::Default(Plain::Byte(age)) => Some(age),

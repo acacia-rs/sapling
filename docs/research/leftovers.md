@@ -194,7 +194,10 @@ tests/integration/mob_packets.rs):
   not the flag word alone but the whole announced metadata, in order, less the items still as every
   actor is made (scale 1, a 0.6 x 1.8 box, a zero seat, no shooter, extended flags 0 and the like), with
   the AddEntity's properties. It is not sent when a mob is shown again or to a player who comes later;
-  for a mob loaded from a world folder it was not drilled and sapling sends none.
+  for a mob loaded from a world folder it was not drilled and sapling sends none. Left: BDS's holds the
+  values after the entity's first tick (bds-tnt.txt: `FuseLength` -1 announced, 79 in the first data,
+  sometimes a tick later, as bds-beesout.txt's bee); sapling's repeats the announcement's, and the
+  first tick's change follows in its own SetEntityData. Tests read changes past it (`common/data.rs`).
 - Fixed: at a mob's death, after its two emptied hands, a MobArmorEquipment of what it wears with its
   body slot (`creatures/worn.rs` `shown_dead`), as bds-bodyslot.txt's horse (body iron at death).
   Re-drilled on sapling (bodyslot, mountflags; sapling-mountflags.txt): each summon's two SetEntityData
