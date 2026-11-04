@@ -59,6 +59,10 @@ them, at `randomTickSpeed` 1, 4 and 20:
 Both scale with the rule: fire's queue steps, and lit ore's random ticks (block-uses.md "Redstone
 ore"). Sapling (`blocks/fire.rs`, `fire/burning.rs`, `random_queue.rs`) does the above, the queue's
 steps per world; test `fire_and_lit_ore_go_at_the_pace_of_the_random_tick_speed_as_on_bds`.
+Sapling's drill (`sapling-firepace.txt`): fire over stone out at a mean 20.7, 4.5 and 1.0 s, planks'
+first change 15.3, 4.1 and 0.9 s, lit ore 1, 9 and 12 of 12 out (a first run had 10 of 12 at 1:
+the odds are the same per tick, the counts vary). A fire aging must not count as a new fire, or it
+ticks again a step on: before that fix fire over stone went in 3.0 s at 4.
 
 What burns is told by tag and name with the Java game's numbers (`burns` in `blocks/fire.rs`).
 
