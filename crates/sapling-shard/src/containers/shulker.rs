@@ -26,6 +26,7 @@ pub(super) fn placed(entity: Value, item_tag: Option<&Value>, face: Face, regist
     let items = item_tag.map(container_items).unwrap_or_default();
     let Value::Compound(mut fields) = entity else { return entity };
     fields.push((FACING.into(),Value::Byte(face as i8)));
+    fields.push(("Findable".into(), Value::Byte(0)));
     with_container_items(&Value::Compound(fields), &items, registry)
 }
 

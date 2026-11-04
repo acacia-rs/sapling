@@ -183,14 +183,32 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   (sapling-leveldb) adds the version and sorts, for chunks and `BlockEntityData` alike; blocks/entities.rs
   `furnish` makes and shows those entities (beds through `commanded::put_bed`); tests
   `a_block_entity_is_shown_as_bds_shows_it_versioned_and_sorted`, set_shown.rs. Saved block
-  entities are unchanged (sapling's own lack the version on disk). Left: BDS's network-only sign
-  fields (`FilteredText`, `LockedForEditingBy` -1, bds-unheld.txt), a set frame's, lectern's,
-  jukebox's, lodestone's, ender chest's and spawners' entities (sapling makes them on use, BDS at
-  the set), BDS's second send a tick later of a set cauldron and skull (flags 19), a cauldron's
-  empty `Items` (tag 0) that BDS shows and sapling's `without_items` drops, and two block
-  differences sapling-setshown.txt showed: BDS's unsupported set frame was gone by its removal
-  (`noChange`), and its bed's `setblock … air` sent no UpdateBlock. Re-drilled: sapling-setshown.txt
-  sends the same entities otherwise.
+  entities are unchanged (sapling's own lack the version on disk). Left then: two block
+  differences sapling-setshown.txt showed. BDS's unsupported set frame was gone by its removal
+  (`noChange`), and its bed's `setblock … air` sent no UpdateBlock.
+- Set entities (2026-11-04, `bds_command_probe s7ents`, bds-s7ents.txt against sapling-s7ents.txt):
+  39 blocks set one by one. Fixed (blocks/set_entities.rs, `BlockEntity::shown` and `updated`):
+  - A set frame, glow frame, lectern, jukebox (`FinishedRecording` 0, `TicksPlaying` 0), lodestone,
+    mob spawner (its defaults written out), trial spawner, vault, sign, hanging sign, campfire,
+    banner, enchanting table (`rott` 0), decorated pot (`animation`, an empty `item`) and suspicious
+    sand get their entity at the set and show it. Sapling made these on use, or not at all.
+  - A furnace, hopper, brewing stand or dispenser shows none at a set (sapling showed its
+    container), nor do a note block, daylight detector, comparator, beehive, the sculk blocks or a
+    creaking heart.
+  - A shulker box shows `Findable` 0 and its empty `Items`. A cauldron shows its empty `Items`.
+    An empty list is shown with no tag.
+  - A sign shows each side's `FilteredText` "" and `LockedForEditingBy` -1, as do signs placed
+    any other way (bds-unheld.txt).
+  - A `BlockEntityData` of a trial spawner is an empty compound. A vault's is `connected_particle_range`
+    4.5, `connected_players` [] and an empty `display_item`. A crafter's is `crafting_ticks_remaining`
+    and `disabled_slots`. None carries an id. Chunks still carry the saved compound.
+  - A tick later BDS shows a set frame, glow frame, lectern, jukebox (now `FinishedRecording` 1),
+    sign, campfire, cauldron, skull and command block again, block and entity. It shows a bed's two
+    halves' entities again without their block.
+  - Tests `a_set_block_shows_its_entity_as_bds_s_did_and_some_again`,
+    `a_cauldron_shows_its_empty_items_and_a_sign_its_wire_fields`.
+  - Not drilled: a shulker box holding stacks (its `Items` are shown as kept), a sign with text, a
+    vault or trial spawner that ran.
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
   chambers' dead bush at (-446, -11, -425), is water in our blocks there (a block difference).
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
