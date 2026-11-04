@@ -35,7 +35,7 @@ const REWARD_DELAY: i64 = 40;
 const REWARD_GAP: i64 = 30;
 /// Rewards come out this far over the block's corner, thrown up at [`EJECT_UP`] and by a normal
 /// spread of [`EJECT_SPREAD`] every way.
-const OUT: [f32; 3] = [0.5, 0.875, 0.5];
+const OUT: [f32; 3] = [0.5, 1.0, 0.5];
 const EJECT_UP: f32 = 0.2;
 const EJECT_SPREAD: f32 = 0.045;
 
@@ -238,7 +238,9 @@ fn reward(world: &mut World, layer: Entity, pos: BlockPos, trial: &mut Trial) ->
         item(world, layer, stack, at, motion);
     }
     let mouth = [pos[0] as f32 + 0.5, pos[1] as f32 + 1.0, pos[2] as f32 + 0.5];
-    sound(world, layer, pos, "trial_spawner.eject_item", mouth, -1);
+    // BDS's said what the block is (extra data -718719502, bds-t3trial.txt).
+    let block = world.get::<Layer>(layer).map_or(-1, |level| sapling_world::block_hash(level.world.registry(), level.world.block(pos[0], pos[1], pos[2])) as i32);
+    sound(world, layer, pos, "trial_spawner.eject_item", mouth, block);
     event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerEjecting, pos.map(|c| c as f32), trial.ominous.into());
     trial.told = true;
     None

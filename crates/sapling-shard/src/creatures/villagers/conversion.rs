@@ -85,8 +85,8 @@ pub(in crate::creatures) fn cure(world: &mut World, player: Entity, zombie: Enti
     let flags = entities::mob_flags(world, zombie, ZOMBIE_VILLAGER, MetadataFlags1::VIBRATING, true);
     let cell = body.at.map(|c| c.floor() as i32);
     let shaking = sapling_net::encode(&sapling_data::mob_flags_set(id, flags));
-    let remedy = super::super::hunting::sound(REMEDY, id, ZOMBIE_VILLAGER, &body, 0.5);
-    entities::tell_viewers(world, zombie, layer, cell, vec![shaking, remedy]);
+    entities::tell_viewers(world, zombie, layer, cell, vec![shaking]);
+    crate::late_sounds::play_later(world, 1, layer, cell, super::super::turning::heard(REMEDY, &body));
     let at = world.resource::<Tick>().0 + cure_delay(world);
     world.entity_mut(zombie).insert((Curing, Turning { into: VILLAGER, sound: Some(UNFECT), at, keeps_gear: false, reason: SpawnReason::Transformed }));
     true

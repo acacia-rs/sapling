@@ -211,8 +211,9 @@ fn a_villager_a_zombie_kills_on_hard_becomes_a_zombie_villager_keeping_its_profe
     }
 }
 
-/// A weakened zombie villager given a golden apple shakes, is heard `remedy` and becomes a villager
-/// 180 to 300 s on, heard `unfect`; the apple is used up (zombie_villager_v2.json, BDS 1424459c0).
+/// bds-f3cure.txt: a weakened zombie villager given a golden apple shook, was heard `remedy` a tick
+/// later from its middle, and became a villager 178 to 211 s on, heard `unfect` (BDS 1424459c0: 180
+/// to 300 s less what beds and iron bars took off); the apple is used up.
 #[test]
 fn a_weakened_zombie_villager_given_a_golden_apple_shakes_and_is_cured() {
     use acacia_proto::packets::LevelSoundEvent;
@@ -237,7 +238,8 @@ fn a_weakened_zombie_villager_given_a_golden_apple_shakes_and_is_cured() {
     h.receive(1, &use_on(zombie));
     let sent = h.tick(1);
     assert_eq!(common::raising::has_flag(&sent, zombie, MetadataFlags1::VIBRATING), Some(true), "it shakes");
-    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "remedy"), "remedy heard");
+    let remedy = all::<LevelSoundEvent>(&h.tick(1)).into_iter().find(|sound| sound.sound_id == "remedy").expect("remedy heard a tick on");
+    assert!((remedy.position.y - 64.95).abs() < 1e-4 && remedy.entity_unique_id == -1, "from its middle, of no entity");
     let left = common::asking::ask(&mut h, |ctx| ctx.item(sapling_api::PlayerId(1), sapling_api::Slot::Main(0)).map(|item| item.count));
     assert_eq!(left, Some(1), "the apple used up");
     let cured = (1..=6000).find_map(|tick| {

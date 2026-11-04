@@ -41,10 +41,14 @@ fn turn(world: &mut World, mob: Entity, layer: Entity, turning: &Turning) -> Opt
     }
     mobs::remove(world, mob);
     let (turned, sound) = (turned?, turning.sound?);
-    let position = acacia_proto::types::Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] };
-    let heard = LevelSoundEvent { sound_id: sound.into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
-    entities::tell_viewers(world, turned, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&heard)]);
+    entities::tell_viewers(world, turned, layer, body.at.map(|c| c.floor() as i32), vec![heard(sound, &body)]);
     Some(turned)
+}
+
+/// A turning's sound from the middle of `body`, of no entity.
+pub(super) fn heard(sound: &str, body: &Body) -> bytes::Bytes {
+    let position = acacia_proto::types::Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] };
+    sapling_net::encode(&LevelSoundEvent { sound_id: sound.into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None })
 }
 
 /// A tick: cures near beds and iron bars speed up, then mobs whose time came turn.
