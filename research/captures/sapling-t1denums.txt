@@ -1,0 +1,118 @@
+command	setblock	gamedirectors
+command	fill	gamedirectors
+command	testforblock	gamedirectors
+command	replaceitem	gamedirectors
+command	clone	gamedirectors
+command	testforblocks	gamedirectors
+command	tp	gamedirectors
+command	give	gamedirectors
+command	clear	gamedirectors
+command	enchant	gamedirectors
+command	gamemode	gamedirectors
+command	summon	gamedirectors
+command	kill	gamedirectors
+command	damage	gamedirectors
+command	difficulty	gamedirectors
+command	effect	gamedirectors
+command	gamerule	gamedirectors
+command	time	gamedirectors
+command	xp	gamedirectors
+command	weather	gamedirectors
+command	toggledownfall	gamedirectors
+command	execute	gamedirectors
+command	say	gamedirectors
+command	tell	any
+command	setworldspawn	gamedirectors
+command	spawnpoint	gamedirectors
+command	clearspawnpoint	gamedirectors
+command	testfor	gamedirectors
+command	spreadplayers	gamedirectors
+command	defaultgamemode	gamedirectors
+command	setmaxplayers	gamedirectors
+command	seed	gamedirectors
+command	version	gamedirectors
+command	transfer	gamedirectors
+command	kick	gamedirectors
+command	op	gamedirectors
+command	deop	gamedirectors
+command	me	any
+command	tellraw	gamedirectors
+command	title	gamedirectors
+command	titleraw	gamedirectors
+command	playsound	gamedirectors
+command	stopsound	gamedirectors
+command	particle	gamedirectors
+command	structure	gamedirectors
+command	tickingarea	gamedirectors
+command	place	gamedirectors
+command	locate	gamedirectors
+command	scoreboard	gamedirectors
+command	tag	gamedirectors
+command	scriptevent	gamedirectors
+command	ride	gamedirectors
+command	loot	gamedirectors
+command	camera	gamedirectors
+command	camerashake	gamedirectors
+command	fog	gamedirectors
+command	hud	gamedirectors
+command	playanimation	gamedirectors
+command	music	gamedirectors
+command	inputpermission	gamedirectors
+command	mobevent	gamedirectors
+command	daylock	gamedirectors
+command	recipe	gamedirectors
+command	list	any
+command	stop	gamedirectors
+command	save	gamedirectors
+/gamerule	0	rule?=Valid:56 value?=Valid:56
+/spreadplayers	0	x=Valid:4 z=Valid:4 spread_distance=Valid:3 max_range=Valid:3 victim=Valid:8 max_height?=Valid:4
+/place	0	feature=enum:place_feature(1) feature=Valid:56 position?=Valid:64
+/place	1	featurerule=enum:place_featurerule(1) featureRule=Valid:56 position?=Valid:64
+/place	2	structure=enum:place_structure(1) structure=Valid:56 position?=Valid:64 ignoreStartHeight?=enum:Boolean(2) keepJigsaws?=enum:Boolean(2) includeEntities?=enum:Boolean(2) liquidSettings?=enum:Boolean(2)
+/place	3	jigsaw=enum:place_jigsaw(1) pool=Valid:56 target=Valid:56 maxDepth=Valid:1 position?=Valid:64 keepJigsaws?=enum:Boolean(2) includeEntities?=enum:Boolean(2) liquidSettings?=enum:Boolean(2)
+/execute	0	as=enum:execute_as(1) origin=Valid:8 chainedCommand=Valid:68
+/execute	1	at=enum:execute_at(1) origin=Valid:8 chainedCommand=Valid:68
+/execute	2	in=enum:execute_in(1) Dimension=enum:Dimension(3) chainedCommand=Valid:68
+/execute	3	positioned=enum:execute_positioned(1) position=Valid:65 chainedCommand=Valid:68
+/execute	4	positioned=enum:execute_positioned(1) as=enum:execute_as(1) origin=Valid:8 chainedCommand=Valid:68
+/execute	5	rotated=enum:execute_rotated(1) yaw=Valid:4 pitch=Valid:4 chainedCommand=Valid:68
+/execute	6	rotated=enum:execute_rotated(1) as=enum:execute_as(1) origin=Valid:8 chainedCommand=Valid:68
+/execute	7	facing=enum:execute_facing(1) position=Valid:65 chainedCommand=Valid:68
+/execute	8	facing=enum:execute_facing(1) entity=enum:execute_entity(1) origin=Valid:8 ActorLocation=enum:ActorLocation(2) chainedCommand=Valid:68
+/execute	9	align=enum:execute_align(1) axes=Valid:56 chainedCommand=Valid:68
+/execute	10	anchored=enum:execute_anchored(1) ActorLocation=enum:ActorLocation(2) chainedCommand=Valid:68
+/execute	11	Option_If_Unless=enum:Option_If_Unless(2) block=enum:execute_block(1) position=Valid:64 block=Valid:56 chainedCommand?=Valid:68
+/execute	12	Option_If_Unless=enum:Option_If_Unless(2) blocks=enum:execute_blocks(1) begin=Valid:64 end=Valid:64 destination=Valid:64 BlocksScanMode=enum:BlocksScanMode(2) chainedCommand?=Valid:68
+/execute	13	Option_If_Unless=enum:Option_If_Unless(2) entity=enum:execute_entity(1) target=Valid:8 chainedCommand?=Valid:68
+/execute	14	Option_If_Unless=enum:Option_If_Unless(2) score=enum:execute_score(1) target=Valid:8 objective=Valid:56 operation=Valid:56 target=Valid:8 objective=Valid:56 chainedCommand?=Valid:68
+/execute	15	Option_If_Unless=enum:Option_If_Unless(2) score=enum:execute_score(1) target=Valid:8 objective=Valid:56 ScoreRangeMode=enum:ScoreRangeMode(1) range=Valid:56 chainedCommand?=Valid:68
+/execute	16	run=enum:execute_run(1) command=Valid:68
+/structure	0	save=enum:structure_save(1) name=Valid:56 from=Valid:64 to=Valid:64 includeEntities?=enum:Boolean(2) saveMode?=enum:SaveMode(2) includeBlocks?=enum:Boolean(2)
+/structure	1	save=enum:structure_save(1) name=Valid:56 from=Valid:64 to=Valid:64 saveMode?=enum:SaveMode(2)
+/structure	2	load=enum:structure_load(1) name=Valid:56 to=Valid:64 Rotation?=enum:Rotation(4) Mirror?=enum:Mirror(4) includeEntities?=enum:Boolean(2) includeBlocks?=enum:Boolean(2) waterlogged?=enum:Boolean(2) integrity?=Valid:3 seed?=Valid:56
+/structure	3	load=enum:structure_load(1) name=Valid:56 to=Valid:64 Rotation?=enum:Rotation(4) Mirror?=enum:Mirror(4) StructureAnimationMode?=enum:StructureAnimationMode(2) animationSeconds?=Valid:3 includeEntities?=enum:Boolean(2) includeBlocks?=enum:Boolean(2) waterlogged?=enum:Boolean(2) integrity?=Valid:3 seed?=Valid:56
+/structure	4	delete=enum:structure_delete(1) name=Valid:56
+/loot	0	spawn=enum:loot_spawn(1) position=Valid:65 loot=enum:loot_loot(1) loot_table=Valid:56 tool?=Valid:56
+/loot	1	spawn=enum:loot_spawn(1) position=Valid:65 kill=enum:loot_kill(1) entity=Valid:8 tool?=Valid:56
+/loot	2	spawn=enum:loot_spawn(1) position=Valid:65 mine=enum:loot_mine(1) TargetBlockPosition=Valid:64 tool?=Valid:56
+/loot	3	give=enum:loot_give(1) players=Valid:8 loot=enum:loot_loot(1) loot_table=Valid:56 tool?=Valid:56
+/loot	4	give=enum:loot_give(1) players=Valid:8 kill=enum:loot_kill(1) entity=Valid:8 tool?=Valid:56
+/loot	5	give=enum:loot_give(1) players=Valid:8 mine=enum:loot_mine(1) TargetBlockPosition=Valid:64 tool?=Valid:56
+/loot	6	insert=enum:loot_insert(1) position=Valid:64 loot=enum:loot_loot(1) loot_table=Valid:56 tool?=Valid:56
+/loot	7	insert=enum:loot_insert(1) position=Valid:64 kill=enum:loot_kill(1) entity=Valid:8 tool?=Valid:56
+/loot	8	insert=enum:loot_insert(1) position=Valid:64 mine=enum:loot_mine(1) TargetBlockPosition=Valid:64 tool?=Valid:56
+/loot	9	replace=enum:loot_replace(1) entity=enum:loot_entity(1) entity=Valid:8 slotType=Valid:56 slotId=Valid:1 count=Valid:1 loot=enum:loot_loot(1) loot_table=Valid:56 tool?=Valid:56
+/loot	10	replace=enum:loot_replace(1) entity=enum:loot_entity(1) entity=Valid:8 slotType=Valid:56 slotId=Valid:1 count=Valid:1 kill=enum:loot_kill(1) entity=Valid:8 tool?=Valid:56
+/loot	11	replace=enum:loot_replace(1) entity=enum:loot_entity(1) entity=Valid:8 slotType=Valid:56 slotId=Valid:1 count=Valid:1 mine=enum:loot_mine(1) TargetBlockPosition=Valid:64 tool?=Valid:56
+/loot	12	replace=enum:loot_replace(1) block=enum:loot_block(1) position=Valid:64 slot.container=enum:loot_slot.container(1) slotId=Valid:1 count=Valid:1 loot=enum:loot_loot(1) loot_table=Valid:56 tool?=Valid:56
+/loot	13	replace=enum:loot_replace(1) block=enum:loot_block(1) position=Valid:64 slot.container=enum:loot_slot.container(1) slotId=Valid:1 count=Valid:1 kill=enum:loot_kill(1) entity=Valid:8 tool?=Valid:56
+/loot	14	replace=enum:loot_replace(1) block=enum:loot_block(1) position=Valid:64 slot.container=enum:loot_slot.container(1) slotId=Valid:1 count=Valid:1 mine=enum:loot_mine(1) TargetBlockPosition=Valid:64 tool?=Valid:56
+/playsound	0	sound=Valid:56 player?=Valid:8 position?=Valid:65 volume?=Valid:3 pitch?=Valid:3 minimum_volume?=Valid:3
+/scriptevent	0	messageId=Valid:56 message=Valid:68
+/recipe	0	give=enum:recipe_give(1) player=Valid:8 recipe=Valid:56
+/recipe	1	take=enum:recipe_take(1) player=Valid:8 recipe=Valid:56
+/time	0	action=Valid:56 time=Valid:56
+/weather	0	type=Valid:56 duration?=Valid:56
+/testforblock	0	position=Valid:64 block=Valid:56 states?=Valid:84
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 1x; if this capture differs, rerun with TICK_SCALE=1

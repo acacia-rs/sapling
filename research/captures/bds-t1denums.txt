@@ -1,0 +1,953 @@
+enum	GameMode	9
+enum	RValueParam	3
+enum	ValueParam	9
+enum	IntParam	1
+enum	DigitsParam	2
+enum	Boolean	2
+enum	PermissionCategory	11
+enum	PermissionState	2
+enum	EntityPropertySelector	22
+enum	Item	3410
+enum	EntityEquipmentSlot	14
+enum	EntityTypeSelector	266
+enum	Dimension	3
+enum	CommandName	97
+enum	ScriptDebugModeDebugger	1
+enum	ScriptDebuggerListen	1
+enum	ScriptDebuggerConnect	1
+enum	ScriptDebuggerClose	1
+enum	ScriptDebugModeProfiler	1
+enum	ScriptProfilerStart	1
+enum	ScriptProfilerStop	1
+enum	ScriptDebugModeDiagnostics	1
+enum	ScriptDiagnosticsStartCapture	1
+enum	ScriptDiagnosticsStopCapture	1
+enum	Block	2648
+enum	features	286
+enum	featuresTest	396
+enum	EntityType	224
+enum	Biome	88
+enum	Enchant	42
+enum	Rotation	4
+enum	Mirror	4
+enum	Easing	32
+enum	AimAssistTargetMode	2
+enum	AimAssistActionSet	1
+enum	AimAssistActionClear	1
+enum	set	1
+enum	ease	1
+enum	pos	1
+enum	rot	1
+enum	fov_set	1
+enum	fov_clear	1
+enum	facing	1
+enum	attach_to_entity	1
+enum	detach_from_entity	1
+enum	play_spline	1
+enum	target_entity	1
+enum	target_center_offset	1
+enum	remove_target	1
+enum	view_offset	1
+enum	entity_offset	1
+enum	default	1
+enum	clear	1
+enum	fade	1
+enum	time	1
+enum	color	1
+enum	CameraShakeActionAdd	1
+enum	CameraShakeActionStop	1
+enum	CameraShakeType	2
+enum	MaskMode	2
+enum	MaskModeFiltered	1
+enum	CloneMode	3
+enum	CameraControlSchemeSet	1
+enum	CameraControlSchemeClear	1
+enum	controlscheme	5
+enum	DamageCause	36
+enum	DamageCauseSuicide	36
+enum	DamageOriginActor	1
+enum	daylockCommandAliases	2
+enum	DialogueOpenAction	1
+enum	DialogueChangeAction	1
+enum	Difficulty	8
+enum	ClearEffects	1
+enum	AddInfiniteEffect	1
+enum	Effect	37
+enum	EventEntityAction	1
+enum	ExecuteModeDetect	1
+enum	Option_As	1
+enum	Option_At	1
+enum	Option_In	1
+enum	Option_Positioned	1
+enum	Option_Rotated	1
+enum	Option_Facing	1
+enum	Option_Entity	1
+enum	Option_Align	1
+enum	Option_Anchored	1
+enum	Option_If_Unless	2
+enum	Option_Condition_Block	1
+enum	Option_Condition_Blocks	1
+enum	Option_Condition_Entity	1
+enum	Option_Condition_Score	1
+enum	Option_Run	1
+enum	ActorLocation	2
+enum	BlocksScanMode	2
+enum	ScoreRangeMode	1
+enum	FillMode	4
+enum	Replace	1
+enum	add	1
+enum	delete	2
+enum	playerwaypointsRule	1
+enum	playerwaypointsValues	2
+enum	locatorbarRule	1
+enum	BoolGameRule	32
+enum	IntGameRule	5
+enum	GameTestModeRun	1
+enum	GameTestModeRunThis	1
+enum	GameTestModeRunSet	1
+enum	GameTestModeRunSetUntilFail	1
+enum	GameTestModeClearAll	1
+enum	GameTestModeShowPosition	1
+enum	GameTestModeCreateTest	1
+enum	GameTestRunNearbyTests	1
+enum	GameTestStopTests	1
+enum	helpCommandAliases	2
+enum	HudElement	14
+enum	HudVisibility	2
+enum	Option_Set	1
+enum	Option_Query	1
+enum	permission	11
+enum	state	2
+enum	ListDetails	3
+enum	LocateSubcommandStructure	1
+enum	LocateSubcommandBiome	1
+enum	TargetSpawn	1
+enum	TargetGive	1
+enum	TargetInsert	1
+enum	TargetReplace	1
+enum	TargetEntity	1
+enum	TargetBlock	1
+enum	SourceLoot	1
+enum	SourceKill	1
+enum	SourceMine	1
+enum	BlockEquipmentSlot	1
+enum	MobEvent	4
+enum	MusicQueueAction	1
+enum	MusicPlayAction	1
+enum	MusicStopAction	1
+enum	MusicVolumeAction	1
+enum	MusicRepeatMode	2
+enum	stackType	2
+enum	verbose	1
+enum	exclude-vanilla	1
+enum	PermissionsAction	3
+enum	PermissionLevel	3
+enum	permissionCommandAliases	2
+enum	PlaceStructureAction	1
+enum	PlaceJigsawAction	1
+enum	LiquidSettings	2
+enum	PlaceFeatureAction	1
+enum	PlaceFeatureRuleAction	1
+enum	featureRules	170
+enum	reload_scripts	1
+enum	reload_all	1
+enum	ReplaceItemBlock	1
+enum	ReplaceItemEntity	1
+enum	ReplaceMode	2
+enum	RideModeStart	1
+enum	RideModeStop	1
+enum	RideModeEvict	1
+enum	RideModeSummonRider	1
+enum	RideModeSummonRide	1
+enum	FillType	2
+enum	TeleportRules	2
+enum	RideRules	3
+enum	ScheduleActionDelay	1
+enum	ScheduleActionOnAreaLoaded	1
+enum	ScheduleActionClear	1
+enum	RequestActionAdd	1
+enum	RequestActionClear	1
+enum	DelayMode	2
+enum	CircleArea	1
+enum	TickingArea	1
+enum	FunctionName	1
+enum	TickingAreaName	1
+enum	ScoreboardObjectivesCategory	1
+enum	ScoreboardPlayersCategory	1
+enum	ScoreboardAddAction	1
+enum	ScoreboardRemoveAction	1
+enum	ScoreboardRandomAction	1
+enum	ScoreboardSetDisplayAction	1
+enum	ScoreboardListAction	1
+enum	ScoreboardResetAction	1
+enum	ScoreboardTestAction	1
+enum	ScoreboardPlayersNumAction	3
+enum	ScoreboardOperationAction	1
+enum	ScoreboardSortOrder	2
+enum	ScoreboardDisplaySlotSortable	2
+enum	ScoreboardDisplaySlotNonSortable	1
+enum	ScoreboardCriteria	1
+enum	SetBlockMode	3
+enum	StructureSaveAction	1
+enum	StructureLoadAction	1
+enum	StructureDeleteAction	1
+enum	StructureSaveMode	2
+enum	StructureAnimationMode	2
+enum	TeleportFacing	1
+enum	TagChangeAction	2
+enum	TagListAction	1
+enum	teleportCommandAliases	2
+enum	tellCommandAliases	3
+enum	TestForBlocksMode	2
+enum	TickingAreaModeAdd	1
+enum	TickingAreaModeRemove	1
+enum	TickingAreaModeRemoveAll	1
+enum	TickingAreaModeList	1
+enum	TickingAreaModePreload	1
+enum	AddTickingAreaType	1
+enum	AllDimensions	1
+enum	TimeModeSet	1
+enum	TimeModeAdd	1
+enum	TimeModeQuery	1
+enum	TimeQuery	3
+enum	TimeSpec	6
+enum	TitleClear	1
+enum	TitleReset	1
+enum	TitleSet	3
+enum	TitleTimes	1
+enum	TitleRawClear	1
+enum	TitleRawReset	1
+enum	TitleRawSet	3
+enum	TitleRawTimes	1
+enum	WeatherType	3
+enum	WeatherQuery	1
+enum	wsserverCommandAliases	2
+enum	Take	1
+enum	Give	1
+enum	AgentTeleportFacing	1
+enum	AgentDirection	6
+enum	AgentTurnDirection	2
+enum	AgentDirectionCommand	7
+enum	AgentTurnCommand	1
+enum	AgentItemCommand	3
+enum	AgentCommand	2
+enum	AgentTPCommand	1
+enum	AgentTransferCommand	1
+enum	AgentDropCommand	1
+enum	AgentPlaceCommand	1
+enum	AgentCollectCommand	1
+enum	AgentCollectAllItems	1
+enum	AgentSetItemCommand	1
+enum	AGENT_DESTROY	1
+enum	AGENT_INSPECT	1
+enum	AGENT_INTERACT	1
+enum	CodeBuilderActionInventory	1
+enum	SaveMode	3
+enum	ServerIdentityAction	3
+enum	AllowListAction	6
+enum	allowlistCommandAliases	2
+enum	EditorAllowListAction	1
+enum	BoolSettingName	1
+enum	DifficultySettingName	1
+enum	RedirectLocation	2
+enum	3PServerOfferList	1
+soft	ScoreboardObjectives	0
+soft	TagValues	0
+soft	UnlockableRecipeValues	4202
+soft	FunctionName	0
+soft	poi_type_tag	0
+soft	poi_type	0
+soft	ItemTag	77
+soft	StructureFeature	35
+soft	JigsawStructure	20
+soft	EntityEvents	479
+soft	CameraPresets	6
+soft	GameTestName	0
+soft	GameTestTag	0
+soft	Tool	2078
+/gamerule	0	
+/gamerule	1	rule=enum:playerwaypointsRule(1) value=enum:playerwaypointsValues(2)
+/gamerule	2	rule=enum:BoolGameRule(32) value?=enum:Boolean(2)
+/gamerule	3	rule=enum:IntGameRule(5) value?=Valid:1
+/spreadplayers	0	x=Valid:4 z=Valid:4 spreadDistance=Valid:3 maxRange=Valid:3 victim=Valid:8 maxHeight?=Valid:4
+/place	0	action=enum:PlaceStructureAction(1) structure=soft:JigsawStructure pos?=Valid:64 ignoreStartHeight?=enum:Boolean(2) keepJigsaws?=enum:Boolean(2) includeEntities?=enum:Boolean(2) liquidSettings?=enum:LiquidSettings(2)
+/place	1	action=enum:PlaceJigsawAction(1) pool=Valid:17 jigsawTarget=Valid:56 maxDepth=Valid:1 pos?=Valid:64 keepJigsaws?=enum:Boolean(2) includeEntities?=enum:Boolean(2) liquidSettings?=enum:LiquidSettings(2)
+/place	2	action=enum:PlaceFeatureAction(1) feature=enum:features(286) position?=Valid:64
+/place	3	action=enum:PlaceFeatureRuleAction(1) featurerule=enum:featureRules(170) position?=Valid:64
+/execute	0	subcommand=enum:Option_As(1) origin=Valid:8 chainedCommand=ChainedSubcommand:0
+/execute	1	subcommand=enum:Option_At(1) origin=Valid:8 chainedCommand=ChainedSubcommand:0
+/execute	2	subcommand=enum:Option_In(1) dimension=enum:Dimension(3) chainedCommand=ChainedSubcommand:0
+/execute	3	subcommand=enum:Option_Positioned(1) position=Valid:65 chainedCommand=ChainedSubcommand:0
+/execute	4	subcommand=enum:Option_Positioned(1) secondary subcommand=enum:Option_As(1) origin=Valid:8 chainedCommand=ChainedSubcommand:0
+/execute	5	subcommand=enum:Option_Rotated(1) yaw=Valid:4 pitch=Valid:4 chainedCommand=ChainedSubcommand:0
+/execute	6	subcommand=enum:Option_Rotated(1) secondary subcommand=enum:Option_As(1) origin=Valid:8 chainedCommand=ChainedSubcommand:0
+/execute	7	subcommand=enum:Option_Facing(1) position=Valid:65 chainedCommand=ChainedSubcommand:0
+/execute	8	subcommand=enum:Option_Facing(1) secondary subcommand=enum:Option_Entity(1) origin=Valid:8 anchor=enum:ActorLocation(2) chainedCommand=ChainedSubcommand:0
+/execute	9	subcommand=enum:Option_Align(1) axes=Valid:56 chainedCommand=ChainedSubcommand:0
+/execute	10	subcommand=enum:Option_Anchored(1) anchored=enum:ActorLocation(2) chainedCommand=ChainedSubcommand:0
+/execute	11	subcommand=enum:Option_If_Unless(2) secondary subcommand=enum:Option_Condition_Block(1) position=Valid:64 block=enum:Block(2648) chainedCommand?=ChainedSubcommand:0
+/execute	12	subcommand=enum:Option_If_Unless(2) secondary subcommand=enum:Option_Condition_Block(1) position=Valid:64 block=enum:Block(2648) blockStates=Valid:84 chainedCommand?=ChainedSubcommand:0
+/execute	13	subcommand=enum:Option_If_Unless(2) secondary subcommand=enum:Option_Condition_Blocks(1) begin=Valid:64 end=Valid:64 destination=Valid:64 scan mode=enum:BlocksScanMode(2) chainedCommand?=ChainedSubcommand:0
+/execute	14	subcommand=enum:Option_If_Unless(2) secondary subcommand=enum:Option_Condition_Entity(1) target=Valid:8 chainedCommand?=ChainedSubcommand:0
+/execute	15	subcommand=enum:Option_If_Unless(2) secondary subcommand=enum:Option_Condition_Score(1) target=Valid:8 objective=soft:ScoreboardObjectives operation=Valid:7 source=Valid:8 objective=soft:ScoreboardObjectives chainedCommand?=ChainedSubcommand:0
+/execute	16	subcommand=enum:Option_If_Unless(2) secondary subcommand=enum:Option_Condition_Score(1) target=Valid:8 objective=soft:ScoreboardObjectives matches=enum:ScoreRangeMode(1) range=Valid:23 chainedCommand?=ChainedSubcommand:0
+/execute	17	subcommand=enum:Option_Run(1) command=Valid:90
+/structure	0	action=enum:StructureSaveAction(1) name=Valid:56 from=Valid:64 to=Valid:64 saveMode?=enum:StructureSaveMode(2)
+/structure	1	action=enum:StructureSaveAction(1) name=Valid:56 from=Valid:64 to=Valid:64 includeEntities?=enum:Boolean(2) saveMode?=enum:StructureSaveMode(2) includeBlocks?=enum:Boolean(2)
+/structure	2	action=enum:StructureDeleteAction(1) name=Valid:56
+/structure	3	action=enum:StructureLoadAction(1) name=Valid:56 to=Valid:64 rotation?=enum:Rotation(4) mirror?=enum:Mirror(4) includeEntities?=enum:Boolean(2) includeBlocks?=enum:Boolean(2) waterlogged?=enum:Boolean(2) integrity?=Valid:3 seed?=Valid:56
+/structure	4	action=enum:StructureLoadAction(1) name=Valid:56 to=Valid:64 rotation?=enum:Rotation(4) mirror?=enum:Mirror(4) animationMode?=enum:StructureAnimationMode(2) animationSeconds?=Valid:3 includeEntities?=enum:Boolean(2) includeBlocks?=enum:Boolean(2) waterlogged?=enum:Boolean(2) integrity?=Valid:3 seed?=Valid:56
+/loot	0	target=enum:TargetSpawn(1) position=Valid:65 source=enum:SourceLoot(1) loot_table=Valid:56 <tool>|mainhand|offhand?=soft:Tool
+/loot	1	target=enum:TargetSpawn(1) position=Valid:65 source=enum:SourceKill(1) entity=Valid:8 <tool>|mainhand|offhand?=soft:Tool
+/loot	2	target=enum:TargetSpawn(1) position=Valid:65 source=enum:SourceMine(1) TargetBlockPosition=Valid:65 <tool>|mainhand|offhand?=soft:Tool
+/loot	3	target=enum:TargetGive(1) players=Valid:8 source=enum:SourceLoot(1) loot_table=Valid:56 <tool>|mainhand|offhand?=soft:Tool
+/loot	4	target=enum:TargetGive(1) players=Valid:8 source=enum:SourceKill(1) entity=Valid:8 <tool>|mainhand|offhand?=soft:Tool
+/loot	5	target=enum:TargetGive(1) players=Valid:8 source=enum:SourceMine(1) TargetBlockPosition=Valid:65 <tool>|mainhand|offhand?=soft:Tool
+/loot	6	target=enum:TargetInsert(1) position=Valid:65 source=enum:SourceLoot(1) loot_table=Valid:56 <tool>|mainhand|offhand?=soft:Tool
+/loot	7	target=enum:TargetInsert(1) position=Valid:65 source=enum:SourceKill(1) entity=Valid:8 <tool>|mainhand|offhand?=soft:Tool
+/loot	8	target=enum:TargetInsert(1) position=Valid:65 source=enum:SourceMine(1) TargetBlockPosition=Valid:65 <tool>|mainhand|offhand?=soft:Tool
+/loot	9	target=enum:TargetReplace(1) entity=enum:TargetEntity(1) entity=Valid:8 slotType=enum:EntityEquipmentSlot(14) slotId=Valid:1 count=Valid:1 source=enum:SourceLoot(1) loot_table=Valid:56 <tool>|mainhand|offhand?=soft:Tool
+/loot	10	target=enum:TargetReplace(1) entity=enum:TargetEntity(1) entity=Valid:8 slotType=enum:EntityEquipmentSlot(14) slotId=Valid:1 source=enum:SourceLoot(1) loot_table=Valid:56 <tool>|mainhand|offhand?=soft:Tool
+/loot	11	target=enum:TargetReplace(1) entity=enum:TargetEntity(1) entity=Valid:8 slotType=enum:EntityEquipmentSlot(14) slotId=Valid:1 count=Valid:1 source=enum:SourceKill(1) entity=Valid:8 <tool>|mainhand|offhand?=soft:Tool
+/loot	12	target=enum:TargetReplace(1) entity=enum:TargetEntity(1) entity=Valid:8 slotType=enum:EntityEquipmentSlot(14) slotId=Valid:1 source=enum:SourceKill(1) entity=Valid:8 <tool>|mainhand|offhand?=soft:Tool
+/loot	13	target=enum:TargetReplace(1) entity=enum:TargetEntity(1) entity=Valid:8 slotType=enum:EntityEquipmentSlot(14) slotId=Valid:1 count=Valid:1 source=enum:SourceMine(1) TargetBlockPosition=Valid:65 <tool>|mainhand|offhand?=soft:Tool
+/loot	14	target=enum:TargetReplace(1) entity=enum:TargetEntity(1) entity=Valid:8 slotType=enum:EntityEquipmentSlot(14) slotId=Valid:1 source=enum:SourceMine(1) TargetBlockPosition=Valid:65 <tool>|mainhand|offhand?=soft:Tool
+/loot	15	target=enum:TargetReplace(1) block=enum:TargetBlock(1) position=Valid:65 slotType=enum:BlockEquipmentSlot(1) slotId=Valid:1 count=Valid:1 source=enum:SourceLoot(1) loot_table=Valid:56 <tool>|mainhand|offhand?=soft:Tool
+/loot	16	target=enum:TargetReplace(1) block=enum:TargetBlock(1) position=Valid:65 slotType=enum:BlockEquipmentSlot(1) slotId=Valid:1 source=enum:SourceLoot(1) loot_table=Valid:56 <tool>|mainhand|offhand?=soft:Tool
+/loot	17	target=enum:TargetReplace(1) block=enum:TargetBlock(1) position=Valid:65 slotType=enum:BlockEquipmentSlot(1) slotId=Valid:1 count=Valid:1 source=enum:SourceKill(1) entity=Valid:8 <tool>|mainhand|offhand?=soft:Tool
+/loot	18	target=enum:TargetReplace(1) block=enum:TargetBlock(1) position=Valid:65 slotType=enum:BlockEquipmentSlot(1) slotId=Valid:1 source=enum:SourceKill(1) entity=Valid:8 <tool>|mainhand|offhand?=soft:Tool
+/loot	19	target=enum:TargetReplace(1) block=enum:TargetBlock(1) position=Valid:65 slotType=enum:BlockEquipmentSlot(1) slotId=Valid:1 count=Valid:1 source=enum:SourceMine(1) TargetBlockPosition=Valid:65 <tool>|mainhand|offhand?=soft:Tool
+/loot	20	target=enum:TargetReplace(1) block=enum:TargetBlock(1) position=Valid:65 slotType=enum:BlockEquipmentSlot(1) slotId=Valid:1 source=enum:SourceMine(1) TargetBlockPosition=Valid:65 <tool>|mainhand|offhand?=soft:Tool
+/playsound	0	sound=Valid:56 player?=Valid:8 position?=Valid:65 volume?=Valid:3 pitch?=Valid:3 minimumVolume?=Valid:3
+/scriptevent	0	messageId=Valid:56 message=Valid:68
+/recipe	0	give=enum:Give(1) player=Valid:8 recipe=soft:UnlockableRecipeValues
+/recipe	1	take=enum:Take(1) player=Valid:8 recipe=soft:UnlockableRecipeValues
+/time	0	mode=enum:TimeModeAdd(1) amount=Valid:1
+/time	1	mode=enum:TimeModeSet(1) amount=Valid:1
+/time	2	mode=enum:TimeModeSet(1) time=enum:TimeSpec(6)
+/time	3	mode=enum:TimeModeQuery(1) time=enum:TimeQuery(3)
+/weather	0	type=enum:WeatherType(3) duration?=Valid:1
+/weather	1	query=enum:WeatherQuery(1)
+/testforblock	0	position=Valid:64 tileName=enum:Block(2648) blockStates?=Valid:84
+FeatureRule	(no such enum)
+featureRule	(no such enum)
+probe exit 0
+command	aimassist	gamedirectors
+command	allowlist	owner
+command	camera	gamedirectors
+command	camerashake	gamedirectors
+command	changesetting	owner
+command	clear	gamedirectors
+command	clearspawnpoint	gamedirectors
+command	clone	gamedirectors
+command	controlscheme	gamedirectors
+command	damage	gamedirectors
+command	daylock	gamedirectors
+command	deop	admin
+command	dialogue	gamedirectors
+command	difficulty	gamedirectors
+command	editor-allowlist	owner
+command	effect	gamedirectors
+command	enchant	gamedirectors
+command	event	gamedirectors
+command	execute	gamedirectors
+command	fill	gamedirectors
+command	fog	gamedirectors
+command	function	gamedirectors
+command	gamemode	gamedirectors
+command	gamerule	gamedirectors
+command	gametest	gamedirectors
+command	give	gamedirectors
+command	hud	gamedirectors
+command	inputpermission	gamedirectors
+command	kick	gamedirectors
+command	kill	gamedirectors
+command	list	any
+command	locate	gamedirectors
+command	loot	gamedirectors
+command	me	any
+command	mobevent	gamedirectors
+command	music	gamedirectors
+command	op	admin
+command	packstack	any
+command	particle	gamedirectors
+command	permission	admin
+command	place	admin
+command	playanimation	gamedirectors
+command	playsound	gamedirectors
+command	recipe	gamedirectors
+command	reload	admin
+command	reloadconfig	owner
+command	reloadpacketlimitconfig	owner
+command	replaceitem	gamedirectors
+command	ride	gamedirectors
+command	save	owner
+command	say	gamedirectors
+command	schedule	gamedirectors
+command	scoreboard	gamedirectors
+command	script	admin
+command	scriptevent	gamedirectors
+command	sendshowstoreoffer	owner
+command	serveridentity	owner
+command	setblock	gamedirectors
+command	setmaxplayers	host
+command	setworldspawn	gamedirectors
+command	spawnpoint	gamedirectors
+command	spreadplayers	gamedirectors
+command	stop	owner
+command	stopsound	gamedirectors
+command	structure	gamedirectors
+command	summon	gamedirectors
+command	tag	gamedirectors
+command	teleport	gamedirectors
+command	tell	any
+command	tellraw	gamedirectors
+command	testfor	gamedirectors
+command	testforblock	gamedirectors
+command	testforblocks	gamedirectors
+command	tickingarea	gamedirectors
+command	time	gamedirectors
+command	title	gamedirectors
+command	titleraw	gamedirectors
+command	toggledownfall	gamedirectors
+command	transfer	owner
+command	weather	gamedirectors
+command	wsserver	admin
+command	xp	gamedirectors
+featureRules	minecraft:warped_fungus_feature
+featureRules	minecraft:small_dripstone_feature
+featureRules	minecraft:sculk_vein_feature
+featureRules	minecraft:nether_cave_carver_feature
+featureRules	minecraft:crimson_roots_feature
+featureRules	minecraft:warped_roots_feature
+featureRules	minecraft:cold_taiga_first_sweet_berry_bush_feature
+featureRules	minecraft:plains_first_double_plant_sunflower_feature
+featureRules	minecraft:savanna_first_double_plant_grass_feature
+featureRules	minecraft:taiga_first_sweet_berry_bush_feature
+featureRules	minecraft:grove_spruce_tree_feature
+featureRules	minecraft:bamboo_jungle_surface_tall_grass_feature
+featureRules	minecraft:mangrove_swamp_mangrove_tree_feature
+featureRules	minecraft:cherry_biome_surface_tall_grass_feature_rules
+featureRules	minecraft:overworld_surface_extra_red_mushroom_feature
+featureRules	minecraft:flower_forest_surface_flowers_feature
+featureRules	minecraft:mangrove_swamp_surface_tall_grass_feature
+featureRules	minecraft:mangrove_swamp_tall_mangrove_tree_feature
+featureRules	minecraft:meadow_flowers_feature
+featureRules	minecraft:meadow_surface_double_plant_feature_rules
+featureRules	minecraft:scatter_tree_dappled_forest_feature_rules
+featureRules	minecraft:savanna_surface_tall_grass_feature
+featureRules	minecraft:pale_garden_surface_pale_moss_patch_feature_rules
+featureRules	minecraft:crimson_feature
+featureRules	minecraft:overworld_cave_carver_feature
+featureRules	minecraft:scatter_red_shrub_bush_feature_rules
+featureRules	minecraft:overworld_surface_flowers_feature
+featureRules	minecraft:mesa_after_surface_dry_grass_feature_rules
+featureRules	minecraft:pale_garden_surface_double_plant_feature_rules
+featureRules	minecraft:mangrove_swamp_after_surface_seagrass_feature_rules
+featureRules	minecraft:pale_garden_pale_oak_tree_feature_rules
+featureRules	minecraft:overworld_underwater_cave_carver_feature
+featureRules	minecraft:grove_pine_tree_feature
+featureRules	minecraft:cherry_grove_pink_petals_feature_rules
+featureRules	minecraft:mega_taiga_after_surface_tall_grass_feature_rules
+featureRules	minecraft:crimson_roots_soul_sand_valley_feature
+featureRules	minecraft:forest_surface_tall_grass_feature
+featureRules	minecraft:plains_surface_tall_grass_feature
+featureRules	minecraft:overworld_underground_iron_ore_feature
+featureRules	minecraft:swamp_surface_tall_grass_feature
+featureRules	minecraft:jungle_surface_tall_grass_feature
+featureRules	minecraft:sulfur_caves_surface_sulfur_pool_with_potent_sulfur_feature_rules
+featureRules	minecraft:cold_ocean_after_surface_seagrass_feature_rules
+featureRules	minecraft:roofed_forest_surface_roofed_tree_feature_rules
+featureRules	minecraft:nether_sprouts_feature_rules
+featureRules	minecraft:sulfur_caves_before_surface_sulfur_spring_trail_to_surface_feature_rules
+featureRules	minecraft:bamboo_jungle_before_surface_bamboo_feature_rules
+featureRules	minecraft:overworld_extra_cave_carver_feature
+featureRules	minecraft:plains_after_surface_flowers_feature_rules
+featureRules	minecraft:overworld_underground_iron_ore_upper_feature
+featureRules	minecraft:dripstone_caves_underground_copper_ore_feature
+featureRules	minecraft:birch_forest_before_surface_wildflowers_feature_rules
+featureRules	minecraft:mesa_underground_gold_ore_feature
+featureRules	minecraft:overworld_underground_emerald_ore_feature
+featureRules	minecraft:nether_soul_sand_underground_feature_rules
+featureRules	minecraft:mountains_underground_coal_ore_feature
+featureRules	minecraft:warm_ocean_after_surface_seagrass_feature_rules
+featureRules	minecraft:overworld_underground_andesite_upper_feature
+featureRules	minecraft:overworld_underground_coal_ore_feature
+featureRules	minecraft:overworld_underground_diorite_feature
+featureRules	minecraft:overworld_underground_gold_ore_feature
+featureRules	minecraft:swamp_after_surface_red_mushroom_feature_rules
+featureRules	minecraft:overworld_underground_diamond_ore_buried_feature
+featureRules	minecraft:river_after_surface_seagrass_feature_rules
+featureRules	minecraft:overworld_underground_copper_ore_feature
+featureRules	minecraft:overworld_underground_diamond_ore_large_feature
+featureRules	minecraft:overworld_underground_diorite_lower_feature
+featureRules	minecraft:overworld_underground_andesite_feature
+featureRules	minecraft:eyeblossom_feature_rules
+featureRules	minecraft:overworld_underground_diorite_upper_feature
+featureRules	minecraft:overworld_underground_andesite_lower_feature
+featureRules	minecraft:overworld_underground_dirt_feature
+featureRules	minecraft:overworld_underground_deepslate_feature
+featureRules	minecraft:overworld_underground_redstone_ore_feature
+featureRules	minecraft:overworld_underground_tuff_feature
+featureRules	minecraft:overworld_underground_granite_feature
+featureRules	minecraft:plains_surface_flowers_feature
+featureRules	minecraft:overworld_underground_gravel_ore_feature
+featureRules	minecraft:overworld_underground_iron_ore_small_feature
+featureRules	minecraft:overworld_underground_lapis_ore_feature
+featureRules	minecraft:bamboo_jungle_after_surface_bamboo_feature
+featureRules	minecraft:overworld_after_surface_bush_feature_rules
+featureRules	minecraft:swamp_after_surface_waterlily_feature_rules
+featureRules	minecraft:bamboo_jungle_after_surface_tall_grass_feature_rules
+featureRules	minecraft:swamp_surface_flowers_feature
+featureRules	minecraft:crimson_fungus_warped_feature
+featureRules	minecraft:meadow_surface_tall_grass_feature
+featureRules	minecraft:overworld_after_surface_extra_red_mushroom_feature_rules
+featureRules	minecraft:meadow_after_surface_flowers_feature_rules
+featureRules	minecraft:overworld_underground_granite_lower_feature
+featureRules	minecraft:minecraft:savanna_mutated_surface_tall_grass_feature
+featureRules	minecraft:lush_caves_after_surface_moss_ceiling_feature
+featureRules	minecraft:deep_ocean_after_surface_seagrass_feature_rules
+featureRules	minecraft:jungle_after_surface_vines_feature
+featureRules	minecraft:jungle_after_surface_tall_grass_feature_rules
+featureRules	minecraft:cherry_grove_surface_pink_petals_feature_rules
+featureRules	minecraft:overworld_underground_lapis_ore_buried_feature
+featureRules	minecraft:cherry_grove_after_surface_cherry_tree_feature_rules
+featureRules	minecraft:desert_or_swamp_after_surface_fossil_deepslate_feature
+featureRules	minecraft:overworld_underground_iron_ore_middle_feature
+featureRules	minecraft:overworld_underground_glow_lichen_feature
+featureRules	minecraft:swamp_after_surface_brown_mushroom_feature_rules
+featureRules	minecraft:overworld_underground_coal_ore_lower_feature
+featureRules	minecraft:overworld_underground_coal_ore_upper_feature
+featureRules	minecraft:jungle_after_surface_flowers_feature_rules
+featureRules	minecraft:overworld_after_surface_extra_brown_mushroom_feature_rules
+featureRules	minecraft:desert_after_surface_dry_grass_feature_rules
+featureRules	minecraft:flower_forest_after_surface_flowers_feature_rules
+featureRules	minecraft:taiga_surface_tall_grass_feature
+featureRules	minecraft:minecraft:savanna_mutated_after_surface_tall_grass_feature_rules
+featureRules	minecraft:mangrove_swamp_mangrove_tree_with_beenest_feature
+featureRules	minecraft:mega_taiga_after_surface_red_mushroom_feature_rules
+featureRules	minecraft:mesa_before_surface_gold_ore_feature
+featureRules	minecraft:warped_fungus_crimson_feature
+featureRules	minecraft:meadow_after_surface_double_plant_feature_rules
+featureRules	minecraft:lush_caves_after_surface_azalea_root_system_feature
+featureRules	minecraft:mega_taiga_after_surface_brown_mushroom_feature_rules
+featureRules	minecraft:forest_after_surface_tall_grass_feature_rules
+featureRules	minecraft:jungle_surface_flowers_feature
+featureRules	minecraft:overworld_after_surface_flowers_feature_rules
+featureRules	minecraft:cherry_grove_cherry_tree_feature_rules
+featureRules	minecraft:overworld_underground_granite_upper_feature
+featureRules	minecraft:meadow_after_surface_tall_grass_feature_rules
+featureRules	minecraft:dappled_forest_after_surface_brown_mushroom_feature_rules
+featureRules	minecraft:savanna_surface_flowers_feature
+featureRules	minecraft:overworld_surface_extra_brown_mushroom_feature
+featureRules	minecraft:mangrove_swamp_after_surface_tall_grass_feature_rules
+featureRules	minecraft:swamp_after_surface_flowers_feature_rules
+featureRules	minecraft:lush_caves_after_surface_leaf_clay_feature
+featureRules	minecraft:overworld_underground_diamond_ore_feature
+featureRules	minecraft:mushroom_island_after_surface_brown_mushroom_feature_rules
+featureRules	minecraft:overworld_underground_extra_gravel_ore_feature
+featureRules	minecraft:cherry_biome_surface_double_plant_feature_rules
+featureRules	minecraft:mushroom_island_after_surface_red_mushroom_feature_rules
+featureRules	minecraft:taiga_first_double_plant_fern_feature
+featureRules	minecraft:ocean_after_surface_seagrass_feature_rules
+featureRules	minecraft:overworld_underground_diamond_ore_feature_square
+featureRules	minecraft:swamp_surface_waterlily_feature
+featureRules	minecraft:plains_after_surface_double_plant_sunflower_feature_rules
+featureRules	minecraft:deep_cold_ocean_after_surface_seagrass_feature_rules
+featureRules	minecraft:swamp_after_surface_tall_grass_feature_rules
+featureRules	minecraft:lush_caves_underground_clay_ore_feature
+featureRules	minecraft:savanna_after_surface_flowers_feature_rules
+featureRules	minecraft:overworld_underground_gold_ore_lower_feature
+featureRules	minecraft:crimson_roots_warped_feature
+featureRules	minecraft:savanna_after_surface_tall_grass_feature_rules
+featureRules	minecraft:after_surface_silverfish_feature
+featureRules	minecraft:taiga_after_surface_brown_mushroom_feature_rules
+featureRules	minecraft:meadow_before_surface_wildflowers_feature_rules
+featureRules	minecraft:taiga_after_surface_red_mushroom_feature_rules
+featureRules	minecraft:lush_caves_after_surface_cave_vines_feature
+featureRules	minecraft:overworld_surface_tall_grass_feature
+featureRules	minecraft:taiga_after_surface_sweet_berry_bush_feature_rules
+featureRules	minecraft:overworld_underground_redstone_ore_lower_feature
+featureRules	minecraft:lush_caves_after_surface_vegetation_feature
+featureRules	minecraft:lush_caves_after_surface_spore_blossom_feature
+featureRules	minecraft:overworld_underwater_magma_feature
+featureRules	minecraft:cold_taiga_after_surface_sweet_berry_bush_feature_rules
+featureRules	minecraft:mega_taiga_surface_tall_grass_feature
+featureRules	minecraft:extreme_hills_after_surface_silverfish_feature
+featureRules	minecraft:plains_first_double_plant_grass_feature
+featureRules	minecraft:taiga_after_surface_tall_grass_feature_rules
+featureRules	minecraft:overworld_amethyst_geode_feature
+featureRules	minecraft:overworld_after_surface_tall_grass_feature_rules
+featureRules	minecraft:swamp_after_surface_seagrass_feature_rules
+featureRules	minecraft:deep_warm_ocean_after_surface_seagrass_feature_rules
+featureRules	minecraft:pale_garden_surface_tall_grass_feature_rules
+featureRules	minecraft:plains_after_surface_tall_grass_feature_rules
+featureRules	minecraft:mangrove_swamp_tall_mangrove_tree_with_beenest_feature
+featureRules	minecraft:desert_or_swamp_after_surface_fossil_feature
+features	minecraft:cocoa_age_0_feature
+features	minecraft:select_cocoa_feature
+features	minecraft:beehive_feature
+features	minecraft:roofed_tree_feature
+features	minecraft:sulfur_spring_tuff_feature
+features	minecraft:scatter_jungle_tree_upper_cocoa_feature
+features	minecraft:scatter_jungle_tree_lower_cocoa_feature
+features	minecraft:beehive_west_feature
+features	minecraft:select_log_mushroom_feature
+features	minecraft:fern_double_plant_upper_feature
+features	minecraft:pale_hanging_moss_snap_to_ceiling_feature
+features	minecraft:beehive_esw_order_feature
+features	minecraft:optional_log_mushrooms_feature
+features	minecraft:random_roofed_forest_feature
+features	minecraft:cave_vine_in_moss_feature
+features	minecraft:scatter_pale_hanging_moss_feature
+features	minecraft:fixup_sunflower_double_plant_upper_position_feature
+features	minecraft:sunflower_double_plant_lower_feature
+features	minecraft:fixup_grass_double_plant_upper_position_feature
+features	minecraft:grass_double_plant_lower_feature
+features	minecraft:short_dry_grass_feature
+features	minecraft:potent_sulfur_search_feature
+features	minecraft:select_dappled_forest_fallen_tree_decoration
+features	minecraft:sulfur_spring_large_2_feature
+features	minecraft:sulfur_spring_small_3_feature
+features	minecraft:sulfur_spring_small_scatter_tuff_feature
+features	minecraft:select_undecorated_jungle_tree_feature
+features	minecraft:optional_jungle_tree_cocoa_feature
+features	minecraft:fallen_jungle_tree_feature
+features	minecraft:optional_oak_tree_with_vines_feature
+features	minecraft:fallen_super_birch_tree_feature
+features	minecraft:select_beehive_feature
+features	minecraft:random_roofed_forest_feature_with_leaf_litter_feature
+features	minecraft:warped_fungus_feature
+features	minecraft:optional_roofed_tree_with_vines_feature
+features	minecraft:sulfur_spring_large_scatter_tuff_feature
+features	minecraft:underwater_magma_snap_to_surface_feature
+features	minecraft:small_dripstone_snap_to_surface_feature
+features	minecraft:moss_patch_feature
+features	minecraft:spore_blossom_feature
+features	minecraft:random_clay_with_dripleaves_feature
+features	minecraft:creaking_heart_feature
+features	minecraft:pale_oak_tree_with_decorations_and_creaking_heart_feature
+features	minecraft:pale_oak_tree_with_decorations_feature
+features	minecraft:fern_double_plant_feature
+features	minecraft:sunflower_double_plant_feature
+features	minecraft:optional_podzol_feature
+features	minecraft:crimson_fungus_feature
+features	minecraft:fallen_poplar_tree_feature
+features	minecraft:red_poplar_tree_with_leaf_litter_feature
+features	minecraft:optional_shelf_mushroom_feature
+features	minecraft:sulfur_spring_extra_large_1_with_tuff_feature
+features	minecraft:sulfur_spring_medium_1_with_tuff_feature
+features	minecraft:sulfur_spring_small_2_with_tuff_feature
+features	minecraft:undecorated_jungle_tree_with_vines_feature
+features	minecraft:sulfur_spring_small_1_with_tuff_feature
+features	minecraft:scatter_leaf_litter_feature
+features	minecraft:optional_beehive_feature
+features	minecraft:select_standing_spruce_tree_feature
+features	minecraft:optional_fallen_spruce_tree_feature
+features	minecraft:tall_dry_grass_feature
+features	minecraft:sulfur_spring_extra_large_1_feature
+features	minecraft:optional_fallen_super_birch_tree_feature
+features	minecraft:beehive_search_feature
+features	minecraft:roofed_tree_with_vines_feature
+features	minecraft:oak_tree_with_vines_feature
+features	minecraft:scatter_fern_feature
+features	minecraft:tall_grass_feature
+features	minecraft:nether_sprouts_scatter_feature
+features	minecraft:fallen_birch_tree_feature
+features	minecraft:select_taiga_plant_feature
+features	minecraft:fossil_feature
+features	minecraft:warped_roots_scatter_feature
+features	minecraft:optional_log_brown_mushroom_feature
+features	minecraft:nether_soul_sand_underground_feature
+features	minecraft:taiga_tall_grass_feature
+features	minecraft:select_roofed_tree_feature
+features	minecraft:warped_fungus_scatter_feature
+features	minecraft:glow_lichen_feature
+features	minecraft:tuff_feature
+features	minecraft:lapis_ore_buried_feature
+features	minecraft:iron_ore_small_feature
+features	minecraft:sulfur_pool_with_potent_sulfur
+features	minecraft:iron_ore_feature
+features	minecraft:granite_feature
+features	minecraft:gold_ore_feature
+features	minecraft:sulfur_spring_medium_1_feature
+features	minecraft:underground_glow_lichen_feature
+features	minecraft:gravel_ore_feature
+features	minecraft:jungle_fern_feature
+features	minecraft:emerald_ore_feature
+features	minecraft:optional_fallen_birch_tree_feature
+features	minecraft:diamond_ore_buried_feature
+features	minecraft:coal_ore_feature
+features	minecraft:fixup_mesa_gold_position_feature
+features	minecraft:vines_single_face_scatter_feature
+features	minecraft:silverfish_feature
+features	minecraft:clay_pool_with_dripleaves_feature
+features	minecraft:lapis_ore_feature
+features	minecraft:small_dripstone_feature
+features	minecraft:fixup_fern_double_plant_upper_position_feature
+features	minecraft:clay_ore_feature
+features	minecraft:moss_patch_snap_to_floor_feature
+features	minecraft:spore_blossom_snap_to_ceiling_feature
+features	minecraft:random_clay_with_dripleaves_snap_to_floor_feature
+features	minecraft:cave_vine_snap_to_ceiling_feature
+features	minecraft:copper_ore_feature
+features	minecraft:azalea_root_system_snap_to_ceiling_feature
+features	minecraft:sculk_vein_feature
+features	minecraft:mountain_pine_tree_feature
+features	minecraft:pale_moss_patch_feature
+features	minecraft:random_pale_oak_tree_feature
+features	minecraft:scatter_eyeblossom_feature
+features	minecraft:fern_double_plant_patch_feature
+features	minecraft:scatter_swamp_flower_feature
+features	minecraft:scatter_ocean_seagrass_feature
+features	minecraft:optional_fallen_jungle_tree_feature
+features	minecraft:scatter_meadow_flower_feature
+features	minecraft:scatter_tall_grass_around_forest_foliage_feature
+features	minecraft:random_mangrove_tree_feature
+features	minecraft:sulfur_spring_small_4_with_tuff_feature
+features	minecraft:scatter_deep_cold_ocean_seagrass_feature
+features	minecraft:sulfur_spring_tuff_snap_to_surface_feature
+features	minecraft:random_cherry_tree_feature
+features	minecraft:underground_underwater_cave_carver_feature
+features	minecraft:grass_double_plant_patch_feature
+features	minecraft:grass_double_plant_upper_feature
+features	minecraft:scatter_dry_grass_feature
+features	minecraft:sulfur_spring_medium_3_with_tuff_feature
+features	minecraft:diamond_ore_large_feature
+features	minecraft:select_super_birch_tree_feature
+features	minecraft:scatter_red_shrub_bush_feature
+features	minecraft:fallen_oak_tree_feature
+features	minecraft:deepslate_feature
+features	minecraft:scatter_bush_feature
+features	minecraft:scatter_brown_mushroom_feature
+features	minecraft:random_roofed_forest_feature_with_decoration_feature
+features	minecraft:tall_mangrove_tree_feature
+features	minecraft:spruce_tree_feature
+features	minecraft:super_birch_tree_with_optional_beehive_feature
+features	minecraft:pink_petals_scatter_feature
+features	minecraft:optional_fallen_oak_tree_feature
+features	minecraft:oak_tree_feature
+features	minecraft:jungle_tree_feature
+features	minecraft:underwater_magma_underground_feature
+features	minecraft:cherry_tree_with_beehive_feature
+features	minecraft:yellow_poplar_tree_with_leaf_litter_feature
+features	minecraft:cherry_tree_feature
+features	minecraft:birch_tree_feature
+features	minecraft:scatter_jungle_tree_cocoa_feature
+features	minecraft:scatter_meadow_wildflowers_feature
+features	minecraft:optional_mountain_spruce_tree_feature
+features	minecraft:sulfur_spring_large_2_with_tuff_feature
+features	minecraft:diamond_ore_feature
+features	minecraft:red_shrub_single_block_feature
+features	minecraft:select_poplar_tree_feature
+features	minecraft:potent_sulfur_feature
+features	minecraft:crimson_fungus_scatter_feature
+features	minecraft:amethyst_geode_feature
+features	minecraft:yellow_poplar_tree_feature
+features	minecraft:select_oak_tree_with_leaf_litter_feature
+features	minecraft:red_poplar_tree_feature
+features	minecraft:orange_poplar_tree_feature
+features	minecraft:beehive_wes_order_feature
+features	minecraft:undecorated_jungle_tree_feature
+features	minecraft:super_birch_tree_feature
+features	minecraft:pale_oak_tree_feature
+features	minecraft:redstone_ore_feature
+features	minecraft:pale_moss_patch_bonemeal_feature
+features	minecraft:beehive_south_feature
+features	minecraft:select_jungle_tree_feature
+features	minecraft:scatter_flower_forest_flower_feature
+features	minecraft:optional_upper_cocoa_feature
+features	minecraft:beehive_east_feature
+features	minecraft:moss_patch_bonemeal_feature
+features	minecraft:azalea_tree_feature
+features	minecraft:sulfur_spring_small_2_feature
+features	minecraft:big_dripleaf_north_feature
+features	minecraft:big_dripleaf_west_feature
+features	minecraft:birch_tree_with_optional_beehive_feature
+features	minecraft:sulfur_spring_medium_2_with_tuff_feature
+features	minecraft:random_oak_tree_from_sapling_feature
+features	minecraft:fern_double_plant_lower_feature
+features	minecraft:fixup_lapis_position_feature
+features	minecraft:scatter_overworld_flower_feature
+features	minecraft:scatter_plains_flower_feature
+features	minecraft:nether_cave_carver_feature
+features	minecraft:nether_sprouts_feature
+features	minecraft:spruce_tree_with_vines_feature
+features	minecraft:scatter_birch_forest_wildflowers_feature
+features	minecraft:mangrove_tree_feature
+features	minecraft:moss_ceiling_feature
+features	minecraft:sulfur_spring_small_3_with_tuff_feature
+features	minecraft:mountain_spruce_tree_feature
+features	minecraft:swamp_tree_feature
+features	minecraft:sunflower_double_plant_upper_feature
+features	minecraft:random_dry_grass_block_feature
+features	minecraft:sulfur_pool_with_potent_sulfur_snap_to_surface_feature
+features	minecraft:sulfur_spring_medium_3_feature
+features	minecraft:savanna_tree_feature
+features	minecraft:tall_mangrove_tree_with_beenest_feature
+features	minecraft:mega_spruce_tree_feature
+features	minecraft:fixup_waterlily_position_feature
+features	minecraft:fancy_oak_tree_with_leaf_litter_and_optional_beehive
+features	minecraft:orange_poplar_tree_with_leaf_litter_feature
+features	minecraft:oak_tree_with_beehive_feature
+features	minecraft:big_dripleaf_east_feature
+features	minecraft:scatter_meadow_tall_grass_feature
+features	minecraft:scatter_swamp_seagrass_feature
+features	minecraft:creaking_heart_search_feature
+features	minecraft:sulfur_spring_small_1_feature
+features	minecraft:oak_tree_with_optional_beehive_feature
+features	minecraft:jungle_tree_with_cocoa_feature
+features	minecraft:dripstone_caves_copper_ore_feature
+features	minecraft:select_oak_tree_feature
+features	minecraft:fancy_oak_tree_feature
+features	minecraft:select_spruce_tree_feature
+features	minecraft:dirt_feature
+features	minecraft:crimson_roots_feature
+features	minecraft:scatter_jungle_plant_feature
+features	minecraft:pale_hanging_moss_feature
+features	minecraft:sulfur_spring_extra_large_scatter_tuff_feature
+features	minecraft:jungle_bush_feature
+features	minecraft:pine_tree_feature
+features	minecraft:scatter_tall_grass_around_tree_feature
+features	minecraft:scatter_red_mushroom_feature
+features	minecraft:optional_lower_cocoa_feature
+features	minecraft:select_standing_oak_tree_feature
+features	minecraft:gold_ore_extra_feature
+features	minecraft:scatter_deep_ocean_seagrass_feature
+features	minecraft:andesite_feature
+features	minecraft:mega_jungle_tree_feature
+features	minecraft:scatter_river_seagrass_feature
+features	minecraft:moss_ceiling_snap_to_ceiling_feature
+features	minecraft:random_oak_tree_with_beehive_from_sapling_feature
+features	minecraft:cocoa_age_1_feature
+features	minecraft:sulfur_spring_medium_2_feature
+features	minecraft:fixup_vines_position_feature
+features	minecraft:select_birch_tree_with_leaf_litter_feature
+features	minecraft:fallen_spruce_tree_feature
+features	minecraft:grass_double_plant_feature
+features	minecraft:shelf_mushroom_feature
+features	minecraft:gold_ore_lower_feature
+features	minecraft:scatter_tall_grass_feature
+features	minecraft:mega_pine_tree_feature
+features	minecraft:big_dripleaf_south_feature
+features	minecraft:select_jungle_plant_feature
+features	minecraft:select_birch_tree_feature
+features	minecraft:optional_spruce_tree_with_vines_feature
+features	minecraft:fancy_oak_tree_with_optional_beehive_feature
+features	minecraft:clay_with_dripleaves_feature
+features	minecraft:sulfur_spring_large_1_feature
+features	minecraft:sulfur_spring_trail_to_surface_snap_to_ceiling_feature
+features	minecraft:optional_undecorated_jungle_tree_with_vines_feature
+features	minecraft:sulfur_spring_small_4_feature
+features	minecraft:noop_undecorated_jungle_tree_feature
+features	minecraft:crimson_roots_scatter_feature
+features	minecraft:coal_ore_upper_feature
+features	minecraft:random_sulfur_spring_with_tuff_feature
+features	minecraft:optional_tall_grass_feature
+features	minecraft:scatter_cold_ocean_seagrass_feature
+features	minecraft:bush_feature
+features	minecraft:mangrove_tree_with_beenest_feature
+features	minecraft:beehive_swe_order_feature
+features	minecraft:sulfur_spring_large_1_with_tuff_feature
+features	minecraft:underground_extra_cave_carver_feature
+features	minecraft:jungle_tall_grass_feature
+features	minecraft:super_birch_tree_with_beehive_feature
+features	minecraft:cave_vine_feature
+features	minecraft:underground_cave_carver_feature
+features	minecraft:scatter_deep_warm_ocean_seagrass_feature
+features	minecraft:scatter_warm_ocean_seagrass_feature
+features	minecraft:scatter_sweet_berry_bush_feature
+features	minecraft:fern_feature
+features	minecraft:sunflower_double_plant_patch_feature
+features	minecraft:cocoa_age_2_feature
+features	minecraft:underwater_magma_feature
+features	minecraft:diorite_feature
+features	minecraft:warped_roots_feature
+features	minecraft:scatter_taiga_plant_feature
+features	minecraft:bamboo_then_podzol_feature
+features	minecraft:birch_tree_with_beehive_feature
+features	minecraft:select_tree_dappled_forest_feature
+features	minecraft:fancy_oak_tree_with_beehive_feature
+features	minecraft:sulfur_spring_medium_scatter_tuff_feature
+features	minecraft:deepslate_diamond_fossil_feature
+JigsawStructure	minecraft:abandoned_camp_bamboo_jungle
+JigsawStructure	minecraft:abandoned_camp_birch_forest
+JigsawStructure	minecraft:abandoned_camp_birch_forest_mutated
+JigsawStructure	minecraft:abandoned_camp_cherry_grove
+JigsawStructure	minecraft:abandoned_camp_cold_taiga
+JigsawStructure	minecraft:abandoned_camp_dappled_forest
+JigsawStructure	minecraft:abandoned_camp_extreme_hills_plus_trees
+JigsawStructure	minecraft:abandoned_camp_flower_forest
+JigsawStructure	minecraft:abandoned_camp_forest
+JigsawStructure	minecraft:abandoned_camp_jungle_edge
+JigsawStructure	minecraft:abandoned_camp_meadow
+JigsawStructure	minecraft:abandoned_camp_mega_taiga
+JigsawStructure	minecraft:abandoned_camp_mesa_plateau_stone
+JigsawStructure	minecraft:abandoned_camp_pale_garden
+JigsawStructure	minecraft:abandoned_camp_redwood_taiga_mutated
+JigsawStructure	minecraft:abandoned_camp_savanna
+JigsawStructure	minecraft:abandoned_camp_swampland
+JigsawStructure	minecraft:abandoned_camp_taiga
+JigsawStructure	minecraft:trail_ruins
+JigsawStructure	minecraft:trial_chambers
+BoolGameRule	commandblockoutput
+BoolGameRule	dodaylightcycle
+BoolGameRule	doentitydrops
+BoolGameRule	dofiretick
+BoolGameRule	recipesunlock
+BoolGameRule	dolimitedcrafting
+BoolGameRule	domobloot
+BoolGameRule	domobspawning
+BoolGameRule	dotiledrops
+BoolGameRule	doweathercycle
+BoolGameRule	drowningdamage
+BoolGameRule	falldamage
+BoolGameRule	firedamage
+BoolGameRule	keepinventory
+BoolGameRule	mobgriefing
+BoolGameRule	pvp
+BoolGameRule	showcoordinates
+BoolGameRule	showdaysplayed
+BoolGameRule	naturalregeneration
+BoolGameRule	tntexplodes
+BoolGameRule	sendcommandfeedback
+BoolGameRule	doinsomnia
+BoolGameRule	commandblocksenabled
+BoolGameRule	doimmediaterespawn
+BoolGameRule	showdeathmessages
+BoolGameRule	showtags
+BoolGameRule	freezedamage
+BoolGameRule	respawnblocksexplode
+BoolGameRule	showbordereffect
+BoolGameRule	showrecipemessages
+BoolGameRule	projectilescanbreakblocks
+BoolGameRule	tntexplosiondropdecay
+IntGameRule	maxcommandchainlength
+IntGameRule	randomtickspeed
+IntGameRule	functioncommandlimit
+IntGameRule	spawnradius
+IntGameRule	playerssleepingpercentage
+playerwaypointsRule	playerwaypoints
+playerwaypointsValues	everyone
+playerwaypointsValues	off
+TimeSpec	day
+TimeSpec	sunrise
+TimeSpec	noon
+TimeSpec	sunset
+TimeSpec	night
+TimeSpec	midnight
+EntityEquipmentSlot	slot.weapon.mainhand
+EntityEquipmentSlot	slot.weapon.offhand
+EntityEquipmentSlot	slot.armor.head
+EntityEquipmentSlot	slot.armor.chest
+EntityEquipmentSlot	slot.armor.legs
+EntityEquipmentSlot	slot.armor.feet
+EntityEquipmentSlot	slot.armor.body
+EntityEquipmentSlot	slot.hotbar
+EntityEquipmentSlot	slot.inventory
+EntityEquipmentSlot	slot.enderchest
+EntityEquipmentSlot	slot.saddle
+EntityEquipmentSlot	slot.armor
+EntityEquipmentSlot	slot.chest
+EntityEquipmentSlot	slot.equippable
+probe exit 0
