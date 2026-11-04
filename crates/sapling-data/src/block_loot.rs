@@ -90,6 +90,8 @@ pub struct LootRow {
     /// Only when an entity broke the block, not when it lost its hold.
     pub by_entity: bool,
     pub pickaxe: bool,
+    /// Only when not broken by a pickaxe (`!tool=`).
+    pub no_pickaxe: bool,
     /// Only when the row before it left nothing.
     pub otherwise: bool,
     /// Namespaced, in Bedrock's name.
@@ -141,6 +143,7 @@ fn row(line: &'static str) -> Option<(&'static str, LootRow)> {
         states: Vec::new(),
         by_entity: false,
         pickaxe: false,
+        no_pickaxe: false,
         otherwise: notes.contains("else-branch"),
         item,
         min: min.parse().ok()?,
@@ -159,6 +162,7 @@ fn row(line: &'static str) -> Option<(&'static str, LootRow)> {
             (Some(tooling), _) => row.tooling = tooling,
             (None, _) if word == "entity_breaker" => row.by_entity = true,
             (None, Some((("tool", _), _))) => row.pickaxe = true,
+            (None, Some((("!tool", _), _))) => row.no_pickaxe = true,
             (None, Some(((key, values), negated))) => row.states.push(StateTest { key, values: values.split('|').collect(), negated }),
             (None, None) => return None,
         }

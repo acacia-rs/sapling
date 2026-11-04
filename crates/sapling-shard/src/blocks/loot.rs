@@ -72,6 +72,8 @@ impl Broken<'_> {
             "half" => Some("lower".to_owned()),
             "part" => Some("head".to_owned()),
             "unstable" => Some("false".to_owned()),
+            // A shot pot shatters (shot_blocks.rs); broken any other way it is whole.
+            "cracked" => Some("false".to_owned()),
             "berries" => Some(self.name.contains("with_berries").to_string()),
             "age" => match (self.number("growth"), self.number("age"), sapling_data::ripe_age(self.java)) {
                 (Some(growth), _, Some(ripe)) => Some(if growth >= RIPE { i32::from(ripe) } else { growth * i32::from(ripe) / RIPE }),
@@ -131,7 +133,7 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
     };
     let (mut left, mut last_left) = (Vec::new(), false);
     for row in rows {
-        let wanted = tool_fits(row.tooling, by) && (by.by_entity || !row.by_entity) && (by.pickaxe || !row.pickaxe) && row.states.iter().all(|test| broken.holds(test));
+        let wanted = tool_fits(row.tooling, by) && (by.by_entity || !row.by_entity) && (by.pickaxe || !row.pickaxe) && !(by.pickaxe && row.no_pickaxe) && row.states.iter().all(|test| broken.holds(test));
         let chance = row.chances[usize::from(by.fortune).min(row.chances.len() - 1)];
         // An "otherwise" row is the other side of the throw the row before it lost.
         last_left = wanted && if row.otherwise { !last_left } else { roll(CHANCE_SIDES) < (chance * CHANCE_SIDES as f32) as u32 };

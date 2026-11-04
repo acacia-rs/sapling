@@ -251,7 +251,19 @@ Particle (1411b5340)
 
 ## Left out
 
-- Warden summoning and warnings: `SculkShriekerBlockActor::tryRespond` 14487ca80, queued response, warden spawn.
+- Warden summoning and warnings were drilled (`bds_command_probe t2warden`, research/captures/bds-t2warden.txt,
+  Alex standing on a `can_summon` shrieker, Easy) and ported (`blocks/sculk/shrieks.rs`, test
+  tests/integration/shriekers.rs): a player standing on it shrieks it every tick it is idle, but a warning
+  needs 200 ticks since the last; each shriek is the particles (LevelEventGeneric 2035), a tick later
+  `block.sculk_shrieker.shriek` from the block's corner (`extra_data` -1), and 90 ticks active; as it
+  ends, Darkness 260 (no particles) to players within 40 and a tick later a warning sound
+  `nearby_close`, `nearby_closer`, `nearby_closest` at the shrieker plus a random whole offset up to 10;
+  the fourth summons a warden (spot 20 tries ±5 across, ±6 up, solid below and 3 free; `emerge`), heard
+  `agitated` at its feet of no entity and not `spawn`; its own Darkness came on the same tick. Sapling
+  sent `shriek` from the centre and the warning with the darkness (fixed with the port). Left: BDS's
+  warden came a tick after the darkness and was heard `listening` at once; sapling's comes with it. No warning with a warden within 48; on peaceful it shrieks but warns no one.
+  Left out: the warning level's decay (Java's one each 12000 ticks is kept), sharing levels with players
+  within 16 not drilled.
 - Entity listeners (warden 148f8bfd0 owner 2 range 16, allay owner 3), `VibrationListenerSystem` 1484556e0.
 - Amethyst resonance details, client particles (`animateTick` 148b44ff0), save/load tags
   (`VibrationListener`, `QueuedResponseThreatLevel`; 14487a960/14487ac80, 14487d3f0/14487d530).
@@ -321,4 +333,8 @@ A catalyst in a stone floor and deaths by `/kill` at midnight on easy:
 
 ## Not drilled
 
-- Two catalysts in range of one death (which takes it), and cursors that meet on one cell (the merge).
+- Nothing left here. Two catalysts and the merge were drilled in `t2catalysts` (2026-11-04,
+  research/captures/bds-t2catalysts.txt, sapling-t2catalysts.txt; catalysts at x 0 and 6): the nearest
+  centre takes a death, a tie the lower x; two cows dying on one cell made two blooms and two cursors
+  that spread apart, no merge. Sapling the same (its first cow had strolled to x 2.3 before the kill,
+  where BDS's stood, so catalyst 0 took it).

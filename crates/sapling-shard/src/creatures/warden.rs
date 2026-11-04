@@ -20,7 +20,7 @@ use bevy_ecs::prelude::*;
 
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{Position, Tick, in_world};
+use crate::components::{InLayer, Position, Tick, in_world};
 use crate::{entities, mobs};
 use super::{hunting, legs};
 
@@ -102,6 +102,16 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str, event: Option<&
     let now = world.resource::<Tick>().0;
     let stage = if event == Some(EMERGING_EVENT) { Stage::Emerging(now) } else { Stage::Idle };
     world.entity_mut(entity).insert(Warden { stage, calm_since: now, ..Warden::default() });
+}
+
+/// A shrieker's fourth warning calls one up emerging at `feet`.
+pub(crate) fn summon_emerging(world: &mut World, layer: Entity, feet: [f32; 3]) -> bool {
+    super::birth::spawn_as(world, layer, KIND, feet, sapling_api::SpawnReason::Summoned, 0.0, Some(EMERGING_EVENT)).is_some()
+}
+
+/// Whether one is within `reach` of `at` in `layer`.
+pub(crate) fn is_near(world: &mut World, layer: Entity, at: [f32; 3], reach: f32) -> bool {
+    world.query::<(&Warden, &InLayer, &Body)>().iter(world).any(|(_, on, body)| on.0 == layer && (0..3).map(|axis| (body.at[axis] - at[axis]).powi(2)).sum::<f32>() <= reach * reach)
 }
 
 /// Whether it does something of its own this tick that keeps it from a hunter's hit.

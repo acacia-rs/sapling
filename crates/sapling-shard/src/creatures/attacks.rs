@@ -137,10 +137,12 @@ pub(super) fn slay(world: &mut World, entity: Entity, kind: &str, looting: u8) {
     world.entity_mut(entity).insert(Slain(points, looting));
 }
 
-/// The experience the mob of `kind` is worth, rolled: none for a baby.
+/// The experience the mob of `kind` is worth, rolled: a baby's by its own reward, else none.
 pub(super) fn experience_reward(world: &mut World, entity: Entity, kind: &str) -> i32 {
     let is_baby = world.get::<super::Raised>(entity).is_some_and(super::Raised::is_baby);
-    super::slimes::experience(world, entity, kind).or(sapling_data::mob_traits(kind).experience).filter(|_| !is_baby).map_or(0, |(least, most)| {
+    let traits = sapling_data::mob_traits(kind);
+    let worth = if is_baby { traits.baby_experience } else { super::slimes::experience(world, entity, kind).or(traits.experience) };
+    worth.map_or(0, |(least, most)| {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         least + (dice.fraction() * (most - least) as f32) as i32
     })

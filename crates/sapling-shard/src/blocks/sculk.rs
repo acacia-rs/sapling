@@ -2,20 +2,20 @@
 //! game event within a listener's range reaches it as many ticks later as it is blocks away, and
 //! an idle sensor that hears it is active a while, powering what is around it the more the nearer
 //! the event, then cools down. A calibrated sensor powered from behind hears only the frequency
-//! of that power. A shrieker hears sensors going active, and shrieks when a player set one off.
-// TODO: nothing occludes or dampens (wool); no amethyst resonates; no vibration particle; a
-// shrieker warns no one and summons no warden; mobs, eating, damage and explosions are not heard.
+//! of that power. A shrieker hears sensors going active, and shrieks when a player set one off
+//! (shrieks.rs).
+// TODO: nothing occludes or dampens (wool); no amethyst resonates; no vibration particle; mobs,
+// eating, damage and explosions are not heard.
 
 mod catalyst;
 mod events;
+mod shrieks;
 
 pub(crate) use catalyst::mob_died;
 pub(crate) use events::GameEvent;
 
 use std::collections::{HashMap, HashSet};
 
-use acacia_proto::packets::{LevelEvent, LevelEventEvent};
-use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 use sapling_world::ChunkPos;
@@ -34,8 +34,6 @@ const CALIBRATED_RANGE: f32 = 16.0;
 const ACTIVE: u64 = 30;
 const CALIBRATED_ACTIVE: u64 = 10;
 const COOLDOWN: u64 = 10;
-/// Ticks a shrieker shrieks.
-const SHRIEK: u64 = 90;
 const IDLE: u8 = 0;
 const LISTENING: u8 = 1;
 const COOLING: u8 = 2;
@@ -214,13 +212,14 @@ pub(crate) fn walked(world: &mut World, player: Entity, layer: Entity, from: [f3
 /// Listeners that a vibration reached this tick act on it, and catalysts' charge moves.
 pub(crate) fn tick(world: &mut World) {
     catalyst::tick(world);
+    shrieks::stood_on(world);
     let now = world.resource::<Tick>().0;
     let Some(mut listeners) = world.get_resource_mut::<Listeners>().filter(|listeners| !listeners.coming.is_empty()) else { return };
     let (due, waiting): (Vec<Coming>, Vec<Coming>) = std::mem::take(&mut listeners.coming).into_iter().partition(|coming| coming.when <= now);
     listeners.coming = waiting;
     for coming in due {
         match name_at(world, coming.layer, coming.listener) {
-            Some((SHRIEKER, ..)) => shriek(world, coming.layer, coming.listener),
+            Some((SHRIEKER, ..)) => shrieks::shriek(world, coming.layer, coming.listener, None),
             Some((name, ..)) if is_sensor(name) => activate(world, coming),
             _ => {}
         }
@@ -255,19 +254,6 @@ fn activate(world: &mut World, Coming { layer, listener, frequency, strength, by
     vibrate_at(world, layer, listener, GameEvent::TendrilsClicking, by_player);
 }
 
-/// A shrieker that heard a sensor a player set off shrieks (S17-S19).
-fn shriek(world: &mut World, layer: Entity, pos: BlockPos) {
-    if !name_at(world, layer, pos).is_some_and(|(_, properties, _)| number(properties, "active") == Some(0)) {
-        return;
-    }
-    set_number(world, layer, pos, "active", 1);
-    queued::after(world, layer, pos, SHRIEK, Job::Sculk);
-    let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
-    let shrieked = LevelEvent { event: LevelEventEvent::ParticleSculkShriek, position, data: 0 };
-    send::to_viewers(world, layer, pos, &[sapling_net::encode(&shrieked)]);
-    play(world, layer, pos, "shriek");
-}
-
 /// A sensor's or shrieker's time in its phase is up: an active sensor cools down, a cooling one
 /// listens again, a shrieker falls quiet, a catalyst's bloom ends.
 pub(super) fn step(world: &mut World, layer: Entity, pos: BlockPos) {
@@ -276,8 +262,7 @@ pub(super) fn step(world: &mut World, layer: Entity, pos: BlockPos) {
         return catalyst::wilt(world, layer, pos);
     }
     if name == SHRIEKER {
-        set_number(world, layer, pos, "active", 0);
-        return;
+        return shrieks::ended(world, layer, pos);
     }
     match number(properties, PHASE) {
         Some(LISTENING) if is_sensor(name) => {

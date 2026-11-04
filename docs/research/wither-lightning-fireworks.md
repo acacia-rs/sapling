@@ -81,7 +81,10 @@ Code: `crates/sapling-shard/src/creatures/wither.rs`, `creatures/wither/{heads,s
 A T lying on the floor is found too (2026-11-04, `bds_command_probe n2wither`, research/captures/bds-n2wither.txt:
 stem west of its arms, the last skull put by the actor); sapling tries the T every way. The spawn was not the
 stem's foot: an upright T along z at x 3, foot (3,-26,0), gave the wither at (4.5,-25.95,0.5), and the lying
-T, foot (2,-26,0), at (6.5,-27.95,0.5), in the ground; sapling keeps the foot.
+T, foot (2,-26,0), at (6.5,-27.95,0.5), in the ground. BDS's matcher (0x1415f2940) spawns it from its
+match corner, the skull row's lowest cell on each axis, plus (1.5, -1.95, 1.5) in world axes whatever
+way the T stands; sapling does so since 2026-11-04 (`blocks/summoning.rs`). That fits the upright T; the
+lying one's wither was announced a block further east than the rule gives (left: pushed out of the floor?).
 Unverified: the bar's title (`entity.wither.name` here); the side heads' wait between idle looks (Java's 10 + rand 10); aiming at the target's eyes
 less 0.5; its flight (Java's way of keeping 5 over its prey at 0.3 a tick; BDS sets movement 0.6).
 Its 200-tick death is built as BDS's in `witherdeath` (research/captures/bds-witherdeath.txt,
@@ -94,7 +97,16 @@ Its armoured dash, two `witherdash` runs (research/captures/bds-witherdash.txt a
 two dashes; an earlier run at an iron golem, not kept, one; creatures/wither/dash.rs): first 197 ticks after the
 half-health blast in both, the next 320 later; straight across at where its prey stood, 2 a tick for 9
 ticks (told as 1.82, after drag), through it (the actor was thrown, the golem hurt) and on, then
-dead still. Left out: the 15 it costs whom it meets (not seen, the actor warded), fire rate halving each sixth of health lost, a blue skull's `max_resistance` 4, skulls meeting mobs,
+dead still. `t2wither` (2026-11-04, research/captures/bds-t2wither.txt; a wither on normal, a held cow,
+the actor warded): volleys of four skulls (three black, then a blue), 20 ticks apart, 140 to 180 ticks
+between volleys and no shorter as its health went 300, 252, 203, 155, 97, so no halving each sixth of
+health lost (sapling has none). The rest after a volley's blue skull was 60 to 140 ticks in steps of 20
+here and in bds-witherdash.txt (3 to 7 of its 20-tick fire rate); sapling's middle head shot every 20
+ticks without a rest, now in BDS's volleys (`wither/heads.rs` `RESTS`, test
+`its_middle_head_shoots_in_volleys_of_four_then_rests_60_to_140_ticks`). A skull flew at the cow, its prey, and burst on it (`bow.hit`, the
+blast, its death). Sapling's skulls met no mob; now they do and give a mob met Wither II as a player
+(`wither/skulls.rs`, test `a_skull_that_meets_a_mob_blows_up_on_it`). No dash was seen. Left out: the
+15 it costs whom it meets (not seen, the actor warded), a blue skull's `max_resistance` 4,
 `ShieldHealth`, `firerate` and `lastHealthInterval` (the charge, `Phase`, armour and `maxHealth` are
 kept: research/captures/bds-keepmobs.txt; a summoned wither charges as a built one, at its difficulty's
 share of the pack's 600), the soul particles of building.

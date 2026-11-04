@@ -35,6 +35,8 @@ pub enum DamageCause {
     /// A firework rocket's burst.
     Fireworks = 23,
     Lightning = 24,
+    /// Too warm a place: a snow golem melting.
+    Temperature = 26,
     Freezing = 27,
     Stalactite = 28,
     Stalagmite = 29,
@@ -47,7 +49,7 @@ pub enum DamageCause {
 
 impl DamageCause {
     /// Each cause under the name `/damage` knows it by.
-    const NAMED: [(&'static str, DamageCause); 30] = [
+    const NAMED: [(&'static str, DamageCause); 31] = [
         ("none", Self::Generic),
         ("contact", Self::Contact),
         ("entity_attack", Self::Attack),
@@ -71,6 +73,7 @@ impl DamageCause {
         ("magma", Self::Magma),
         ("fireworks", Self::Fireworks),
         ("lightning", Self::Lightning),
+        ("temperature", Self::Temperature),
         ("freezing", Self::Freezing),
         ("stalactite", Self::Stalactite),
         ("stalagmite", Self::Stalagmite),

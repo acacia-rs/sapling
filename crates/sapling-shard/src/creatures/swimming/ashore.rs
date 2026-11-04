@@ -4,7 +4,6 @@
 //! across. In water one of the kinds whose pack has them avoid players
 //! (`behavior.avoid_mob_type`, `max_dist` 6) swims off from a player within 6 to water further
 //! from it, twice as fast as it swims while within 7 of the player and 1.5 times beyond.
-// TODO: BDS's `flop` was heard for few of a cod's hops (a tropical fish's more); none is heard here.
 
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
@@ -12,7 +11,7 @@ use sapling_api::GameMode;
 use super::{GIVES_UP, REACHED, Swimmer, water_near};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{InLayer, Mode, Position, Tick, in_world};
+use crate::components::{InLayer, Mode, NetId, Position, Tick, in_world};
 
 const FISH: &[&str] = &["minecraft:cod", "minecraft:salmon", "minecraft:tropicalfish", "minecraft:pufferfish"];
 const HOP_UP: f32 = 0.5;
@@ -47,9 +46,17 @@ pub(super) fn flop(world: &mut World, entity: Entity, body: &Body) {
             if let Some(mut body) = world.get_mut::<Body>(entity) {
                 body.throw(hop);
             }
+            heard_flop(world, entity, body);
         }
         Some(_) => {}
     }
+}
+
+/// `flop` a tick after each hop, from where it hopped (bds-t2water.txt).
+fn heard_flop(world: &mut World, entity: Entity, body: &Body) {
+    let (Some(id), Some(kind), Some(layer)) = (world.get::<NetId>(entity).map(|id| id.0), world.get::<crate::entities::Kind>(entity).map(|kind| kind.0.clone()), world.get::<InLayer>(entity).map(|layer| layer.0)) else { return };
+    let sound = crate::creatures::hunting::sound("flop", id, &kind, body, 0.0);
+    crate::late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound);
 }
 
 /// The nearest player within `within` of `at` in `layer` that is no spectator, and how far.

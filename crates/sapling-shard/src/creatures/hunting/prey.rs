@@ -50,7 +50,7 @@ pub(super) fn nearest(world: &mut World, hunter: Entity, layer: Entity, body: &B
 
 /// The hunter's hit of `harm` on the mob `prey`, `away` from it: hurt and thrown as a hit throws,
 /// and startled. A mob's harm is not scaled by difficulty.
-pub(super) fn hit(world: &mut World, layer: Entity, prey: Entity, harm: f32, away: [f32; 2]) {
+pub(in crate::creatures) fn hit(world: &mut World, layer: Entity, prey: Entity, harm: f32, away: [f32; 2]) {
     let kept = 1.0 - world.get::<Kind>(prey).map_or(0.0, |kind| sapling_data::mob_traits(&kind.0).resists);
     if let Some(mut thrown) = world.get_mut::<Body>(prey).filter(|_| kept > 0.0) {
         thrown.throw([away[0] * THROW * kept, THROW * kept, away[1] * THROW * kept]);

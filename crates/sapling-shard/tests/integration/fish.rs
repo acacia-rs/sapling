@@ -45,6 +45,19 @@ fn a_cod_on_land_hops_half_a_block_up_and_falls_a_tenth_faster_a_tick() {
 }
 
 #[test]
+fn a_cod_on_land_is_heard_to_flop_a_tick_after_each_hop() {
+    // research/captures/bds-t2water.txt: `flop` from where it stood, the tick after the hop.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cod", [0.5, 65.0, 0.5]).is_some()));
+    let sent: Vec<Vec<acacia_proto::RawPacket>> = (0..60).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let cod = sent.iter().flat_map(|tick| common::all::<acacia_proto::packets::AddEntity>(tick)).find(|added| added.entity_type == "minecraft:cod").expect("shown").runtime_id;
+    let rises = |tick: usize| common::all::<acacia_proto::packets::MoveEntityDelta>(&sent[tick]).iter().any(|moved| moved.runtime_entity_id == cod && moved.y.is_some_and(|y| y > 65.3));
+    let flops: Vec<usize> = (0..sent.len()).filter(|tick| common::all::<acacia_proto::packets::LevelSoundEvent>(&sent[*tick]).iter().any(|sound| sound.sound_id == "flop" && sound.entity_type == "minecraft:cod" && sound.position.y == 65.0)).collect();
+    assert!(flops.len() >= 3 && flops.iter().all(|flop| rises(*flop)), "each a tick into a hop, from the ground: {flops:?}");
+}
+
+#[test]
 fn a_cod_flees_a_player_near_it_at_twice_its_pace_but_not_a_spectator() {
     let fastest = |mode| watched([0.5, 65.2, 0.5], [2.5, 67.0, 0.5], mode, true, 60).iter().map(|(_, speed)| speed[0].hypot(speed[2])).fold(0.0, f32::max);
     let (fled, swam) = (fastest(GameMode::Survival), fastest(GameMode::Spectator));

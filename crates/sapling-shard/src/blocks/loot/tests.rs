@@ -47,3 +47,11 @@ fn the_tables_states_are_read_off_bedrock_blocks() {
     assert_eq!([left_of("beetroot", "growth=7", HAND, u32::MAX), left_of("beetroot", "growth=4", HAND, 0)], [[named("beetroot", 1), named("beetroot_seeds", 1)].concat(), named("beetroot_seeds", 1)]);
     assert_eq!([left_of("snow_layer", "covered_bit=0,height=2", HAND, 0), left_of("snow_layer", "covered_bit=0,height=2", Breaker::UNAIDED, 0)], [named("snowball", 3), vec![]]);
 }
+
+/// research/captures/bds-n2pistons.txt: a piston broke a cluster into 2 shards and a pot into itself.
+#[test]
+fn a_cluster_leaves_two_shards_but_to_a_pickaxe_and_a_pot_leaves_itself() {
+    let pickaxe = Breaker { pickaxe: true, ..HAND };
+    assert_eq!([left("amethyst_cluster", Breaker::UNAIDED, 0), left("amethyst_cluster", HAND, 0), left("amethyst_cluster", pickaxe, 0)], [named("amethyst_shard", 2), named("amethyst_shard", 2), named("amethyst_shard", 4)]);
+    assert_eq!(left_of("decorated_pot", "direction=0", Breaker::UNAIDED, 0), named("decorated_pot", 1));
+}

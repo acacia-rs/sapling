@@ -54,6 +54,8 @@ fn a_guardian_takes_a_player_shows_its_laser_9_ticks_on_and_lands_it_80_after_fo
     assert_eq!((shown - took, landed - shown), (9, 80));
     // research/captures/bds-guardianhits.txt: 20 to 15; the magic is guarded by the hit.
     assert_eq!(health(&ticks[landed]).last(), Some(&15.0), "{:?}", health(&ticks[landed]));
+    let flashes: Vec<i32> = all::<EntityEvent>(&ticks[landed]).iter().filter(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation).map(|event| event.data).collect();
+    assert_eq!(flashes, [2, 14], "the guarded magic flashes too");
     assert_eq!(targets(&ticks[landed], guardian), [0], "it lets go as it lands");
 }
 
@@ -67,4 +69,20 @@ fn an_elder_guardian_curses_a_survival_player_near_it_with_six_minutes_of_mining
     assert!(all::<EntityEvent>(&ticks[at]).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::ElderGuardianCurse));
     let again = watch(&mut h, 101);
     assert!(again.iter().all(|sent| all::<MobEffect>(sent).iter().all(|effect| effect.effect_id != 4)), "not again while it has a minute or more of it");
+}
+
+#[test]
+fn a_guardian_takes_a_squid_and_lands_its_laser_on_it() {
+    // The pack's `nearest_attackable_target` (bds-t2water.txt: an axolotl taken unprovoked).
+    let (mut h, guardian) = by_a_pool("minecraft:guardian", Difficulty::Normal);
+    h.remote.run(|ctx| {
+        let _ = ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative);
+        assert!(ctx.spawn_entity("minecraft:squid", [3.5, 65.0, 2.5]).is_some());
+    });
+    let ticks = watch(&mut h, 120);
+    let squid = ticks.iter().flat_map(|sent| all::<AddEntity>(sent)).find(|added| added.entity_type == "minecraft:squid").expect("shown").runtime_id as i64;
+    let took = first(&ticks, |sent| targets(sent, guardian) == [squid]).expect("it takes the squid");
+    let squid_health = |sent: &[RawPacket]| all::<UpdateAttributes>(sent).into_iter().any(|update| update.runtime_entity_id == squid as u64);
+    // It lands 89 ticks on; a mob's health is shown the tick after its hit.
+    assert_eq!(first(&ticks[took..], squid_health), Some(90));
 }

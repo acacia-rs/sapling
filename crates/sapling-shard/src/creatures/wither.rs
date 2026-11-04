@@ -126,12 +126,13 @@ pub(super) fn begin(world: &mut World, wither: Entity, layer: Entity) {
     tell(world, wither, layer, vec![(Key::WitherInvulnerableTicks, Plain::Int(CHARGE as i32)), (Key::WitherAerialAttack, Plain::Short(1))]);
 }
 
-/// Whether a hit by `cause` leaves the mob whole: a charging wither takes nothing but the void,
-/// none takes a fall or drowning, an armoured one no arrow, and its own blasts spare it.
+/// Whether a hit by `cause` leaves the mob whole: a charging wither takes nothing but the void and
+/// the override `/kill` deals (BDS killed one 3 s into its charge, bds-n2wither.txt), none takes a
+/// fall or drowning, an armoured one no arrow, and its own blasts spare it.
 pub(crate) fn spares(world: &World, mob: Entity, cause: Cause) -> bool {
     let Some(wither) = world.get::<Wither>(mob) else { return false };
     let own = world.get::<Blasting>(mob).is_some() && matches!(cause, Cause::EntityExplosion | Cause::BlockExplosion);
-    (wither.charging > 0 && cause != Cause::Void) || matches!(cause, Cause::Fall | Cause::Drowning) || (wither.armoured && cause == Cause::Projectile) || own
+    (wither.charging > 0 && !matches!(cause, Cause::Void | Cause::Generic)) || matches!(cause, Cause::Fall | Cause::Drowning) || (wither.armoured && cause == Cause::Projectile) || own
 }
 
 /// Tells the wither's viewers its metadata `items`.

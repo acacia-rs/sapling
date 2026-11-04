@@ -141,6 +141,14 @@ fn flash(world: &mut World, player: Entity, cause: Cause) {
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::HurtAnimation, data: cause.id(), fire_at_position });
 }
 
+/// The flash of a hit of `cause` the player's guard took whole, as BDS shows a guardian's magic
+/// after its bite (research/captures/bds-guardianhits.txt).
+pub(crate) fn flash_guarded(world: &mut World, player: Entity, cause: Cause) {
+    if is_mortal(world, player) && !is_dead(world, player) {
+        flash(world, player, cause);
+    }
+}
+
 /// Tells the health and the burning where they changed, and lets a player with no health die of `cause`.
 fn settle(world: &mut World, player: Entity, cause: Cause) {
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };

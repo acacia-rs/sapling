@@ -8,7 +8,7 @@
 mod prey;
 mod strike;
 
-pub(super) use prey::feet_of;
+pub(super) use prey::{feet_of, hit as hit_mob};
 pub(super) use strike::{strike, swing};
 
 use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
