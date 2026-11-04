@@ -134,3 +134,24 @@ fn a_slowed_cow_turns_its_head_and_pitches_at_a_player_near_it() {
     let heads: Vec<u8> = turns.iter().filter_map(|delta| delta.rot_z).collect();
     assert!(heads.iter().any(|head| (60..=68).contains(head)), "towards the player at -x: {heads:?}");
 }
+
+#[test]
+fn a_slowed_cow_left_alone_glances_at_once_and_strolls_round_30_degrees_a_tick() {
+    let mut h = Harness::with(ShardConfig { mobs_stroll: true, ..config() }, platform());
+    h.enter(1, "Alex");
+    let cow = ask(&mut h, |ctx| {
+        let cow = ctx.spawn_entity("minecraft:cow", [9.5, 65.0, 0.5])?;
+        ctx.give_entity_effect(cow, Effect::Slowness, 2000, 255).then_some(cow)
+    })
+    .expect("a slowed cow");
+    let sent: Vec<_> = (0..1200).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let turns: Vec<_> = all::<MoveEntityDelta>(&sent).into_iter().filter(|delta| delta.runtime_entity_id == cow.0).collect();
+    let step = |a: u8, b: u8| a.wrapping_sub(b).min(b.wrapping_sub(a));
+    let steps = |values: Vec<u8>| values.windows(2).map(|pair| step(pair[0], pair[1])).collect::<Vec<_>>();
+    // bds-glance.txt: a glance puts the head on its side in a tick (up to 53 of 256), a stroll turns 21 a tick.
+    let heads = steps(turns.iter().filter_map(|delta| delta.rot_z).collect());
+    assert!(heads.iter().any(|step| *step > 14), "{heads:?}");
+    assert!(steps(turns.iter().filter_map(|delta| delta.rot_y).collect()).iter().all(|step| *step <= 22), "{turns:?}");
+    // BDS's three idle cows sent 66, 72 and 61 moves in 60 s.
+    assert!((20..=140).contains(&turns.len()), "{} moves", turns.len());
+}
