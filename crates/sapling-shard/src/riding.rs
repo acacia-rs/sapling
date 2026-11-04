@@ -10,6 +10,7 @@ mod carry;
 mod drive;
 mod evented;
 mod exit;
+mod inventory;
 mod mounts;
 mod mouth;
 mod packets;
@@ -30,6 +31,7 @@ use crate::sync::Told as Shown;
 use packets::LinkKind;
 
 pub(crate) use carry::carry;
+pub(crate) use inventory::{arrive as arrive_ungrouped, dress as dress_inventory, tamed_items as tamed_inventory, upgrade as upgrade_zombie_horses};
 pub(crate) use evented::{is_bare as saddled_bare, looted_saddle, saddle_by_event};
 pub(crate) use strength::{dress as dress_strength, give as give_strength, kept as kept_strength, of as strength_of, roll as roll_strength};
 pub(crate) use drive::{Leaving, Reins, drive, is_driven};

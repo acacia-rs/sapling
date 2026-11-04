@@ -72,15 +72,19 @@ fn a_move_told_to_no_one_is_compared_again_from_what_they_knew() {
 #[test]
 fn moving_is_flagged_a_tick_after_a_move_of_more_than_0_0316_as_on_bds() {
     let mut told = Told::new([0.0; 3]);
-    assert!(told.flags(1, [0.0; 3], false, false).is_none(), "only for kinds that asked");
+    assert!(flags(&mut told,[0.0; 3], false, false).is_none(), "only for kinds that asked");
     told.flag_moving(false);
     // BDS's item 18 rising in water: 0.000991 squared stays off, 0.001001 shows the next tick.
     let moves = [[0.0, 0.2, 0.0], [0.0107, 0.0011, 0.0], [0.00155, 0.03148, 0.0], [0.00155, 0.0316, 0.0], [0.0, 0.0316, 0.0]];
-    let sent: Vec<bool> = moves.into_iter().map(|gone| told.flags(1, gone, false, false).is_some()).collect();
+    let sent: Vec<bool> = moves.into_iter().map(|gone| flags(&mut told,gone, false, false).is_some()).collect();
     assert_eq!(sent, [false, true, true, false, true]);
     let mut fallen = Told::new([0.0; 3]);
     fallen.flag_moving(true);
-    assert!(fallen.flags(1, [0.0; 3], false, false).is_some(), "a falling block is flagged as it is shown");
+    assert!(fallen.flags_word([0.0; 3], false, false).is_some(), "a falling block is flagged as it is shown");
+}
+
+fn flags(told: &mut Told, gone: [f32; 3], lifted: bool, burning: bool) -> Option<Bytes> {
+    told.flags_word(gone, lifted, burning).map(|word| flags_packet(1, word))
 }
 
 fn sent_flags(packet: &Bytes) -> i64 {
@@ -97,11 +101,11 @@ fn a_mob_shows_moving_a_tick_after_it_walks_and_keeps_the_flags_set_meanwhile() 
     let mut told = Told::new([0.0; 3]);
     assert_eq!(told.set_flag(Flags::ONFIRE, true), None, "no mob yet");
     told.flag_mob(announced);
-    assert!(told.flags(1, [0.1, 0.0, 0.0], false, false).is_none(), "the tick it walks");
-    assert_eq!(sent_flags(&told.flags(1, [0.1, 0.0, 0.0], false, false).unwrap()), announced.0 | Flags::MOVING.0);
+    assert!(flags(&mut told,[0.1, 0.0, 0.0], false, false).is_none(), "the tick it walks");
+    assert_eq!(sent_flags(&flags(&mut told,[0.1, 0.0, 0.0], false, false).unwrap()), announced.0 | Flags::MOVING.0);
     assert_eq!(told.set_flag(Flags::ONFIRE, true), Some(Flags(announced.0 | Flags::MOVING.0 | Flags::ONFIRE.0)));
-    assert!(told.flags(1, [0.0; 3], false, false).is_none(), "still moving: it moved last tick");
-    assert_eq!(sent_flags(&told.flags(1, [0.0; 3], false, false).unwrap()), announced.0 | Flags::ONFIRE.0);
+    assert!(flags(&mut told,[0.0; 3], false, false).is_none(), "still moving: it moved last tick");
+    assert_eq!(sent_flags(&flags(&mut told,[0.0; 3], false, false).unwrap()), announced.0 | Flags::ONFIRE.0);
 }
 
 #[test]
@@ -109,7 +113,7 @@ fn a_lifted_item_loses_its_gravity_and_one_in_lava_burns_as_on_bds() {
     let mut told = Told::new([0.0; 3]);
     told.flag_moving(true);
     // BDS's item into water, then lava: 281492156579840 and 281492156579841.
-    assert_eq!(sent_flags(&told.flags(1, [0.0, -0.1, 0.0], true, false).unwrap()), 281_492_156_579_840);
-    assert_eq!(sent_flags(&told.flags(1, [0.0, -0.1, 0.0], true, true).unwrap()), 281_492_156_579_841);
-    assert!(told.flags(1, [0.0, -0.1, 0.0], true, true).is_none());
+    assert_eq!(sent_flags(&flags(&mut told,[0.0, -0.1, 0.0], true, false).unwrap()), 281_492_156_579_840);
+    assert_eq!(sent_flags(&flags(&mut told,[0.0, -0.1, 0.0], true, true).unwrap()), 281_492_156_579_841);
+    assert!(flags(&mut told,[0.0, -0.1, 0.0], true, true).is_none());
 }

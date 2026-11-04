@@ -224,13 +224,39 @@ and tnt.rs):
   saddle, which drops nothing, shows no flag change). A zombie horse by day opened it at its first burn
   and never shut it while burning (bds-saddlerule.txt), so its death showed nothing more.
   `riding/mouth.rs`. Re-drilled: sapling-firstdata.txt's mouths open and shut on the same ticks.
-- Not ported, seen in the drill: a mount tamed by its spawn event (`spawn_tame_adult`) is announced
-  with ContainerType 12 and ContainerBaseSize 2 (horse kinds) or 16 (donkey, llama), an untamed one 0
-  and 0 (a camel's `spawn_adult` 12 and 5); sapling's are 0. A skeleton horse by `spawn_adult` is
-  announced with a 0.6 x 1.8 box (by `entity_born` 1.96 wide, plain 1.4), sapling's always 1.4 x 1.6.
-  BDS's horse showed 32 in data 16 idle (rearing or eating; bds-harm.txt). The per-tick flag words of
-  TNT, arrows, snowballs and items (bit 34 toggling, bit 14 on a shot) and their move counts still
-  differ (drill_vs_bds.py on the two captures); sapling's zombie did not catch fire in the drill.
+- Mount inventories and boxes (2026-11-04, `s7mounts`, bds-s7mounts.txt against
+  sapling-s7mounts.txt). Fixed:
+  - A mount tamed by its spawn event (`spawn_tame_adult`, `on_tame`) is announced with ContainerType
+    12 and ContainerBaseSize 2 (horse, zombie horse) or 16 (donkey, mule, llama). An untamed one, a
+    foal and a skeleton horse show 0 and 0. A camel shows 12 and 5 once grown by its group
+    (`spawn_adult`, plain); `camel_saddled` adds no age group, so it shows 0 and 0.
+  - A trader llama has no `spawn_tame_adult`: it comes wild.
+  - A zombie or skeleton horse whose event adds no age group (`horse_saddled`, `spawn_adult` on a
+    skeleton horse) keeps the 0.6 x 1.8 box every actor is made with.
+  - Such a zombie horse is tamed the tick after by its pack's `upgrade_to_1_21_130`: one
+    SetEntityData of the word with TAMED, ContainerType 12 and ContainerBaseSize 2.
+  - Where: `riding/inventory.rs`, `Raised::ungrouped`, `owners::tame_by_upgrade`. Test
+    `a_summoned_mount_shows_the_inventory_and_box_its_event_gives`.
+  - Not drilled: a mount tamed by riding. It is now told the inventory with TAMED (a TODO).
+- Flag words and moves of shots, TNT and items (2026-11-04, `s7shots`, bds-s7shots.txt; TNT in
+  bds-firstdata.txt). Fixed:
+  - A summoned arrow, snowball, egg, splash potion or bottle stays put the tick it comes. It falls from
+    the next tick by its own weight and drag (arrow 0.05, thrown 0.03, both 0.99); sapling made it a mob
+    falling 0.08.
+  - The tick after any shot comes, BDS clears INVISIBLE and sets CAN_SHOW_NAMETAG. MOVING then follows
+    the moving rule and goes once the shot lies.
+  - `/summon ender_pearl` and `thrown_trident` are `commands.generic.syntax` on BDS.
+  - A TNT's fuse is told every tick, with the flag word only when it changed (lit, MOVING on through
+    its hop and off once it lies).
+  - Items: the moving rule and the move counts match. The arcs differed only by the random throw.
+    Drilled same.
+  - Where: `flight::summon`, `flight::flags`, `entities::step_flagged`, tnt.rs. Tests
+    `a_summoned_shot_falls_from_the_tick_after_and_is_shown_then`,
+    `tnt_by_a_block_of_redstone_hops_burns_eighty_ticks_and_bursts`,
+    `world_and_item_commands_answer_as_bds_answered`.
+  - Left: a mob's shot moves in the tick it is loosed on BDS, a tick later on sapling.
+- BDS's horse showed 32 in data 16 idle (rearing or eating; bds-harm.txt). Sapling's zombie did not
+  catch fire in the drill.
 
 ## Not drilled
 

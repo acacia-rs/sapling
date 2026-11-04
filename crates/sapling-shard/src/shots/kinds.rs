@@ -24,6 +24,12 @@ pub(super) const PEARL: Shot = Shot { kind: "minecraft:ender_pearl", weight: 0.0
 pub(super) const SPLASH: Shot = Shot { kind: "minecraft:splash_potion", lands: Lands::Splash(0), ..THROWN };
 pub(super) const LINGERING: Shot = Shot { kind: "minecraft:lingering_potion", lands: Lands::Lingers(0), ..THROWN };
 pub(super) const BOTTLE: Shot = Shot { kind: "minecraft:xp_bottle", lands: Lands::Experience, ..THROWN };
+/// What `/summon` makes a shot of, still (creatures/flight.rs `summon`); a lingering potion's was
+/// not drilled.
+pub(super) fn summoned(kind: &str) -> Option<Shot> {
+    [PLAYER_ARROW, SNOWBALL, EGG, SPLASH, LINGERING, BOTTLE].into_iter().find(|shot| shot.kind == kind)
+}
+
 /// What a world folder keeps lying of the kind `kind` (flight.rs `keep`).
 pub(super) fn kept(kind: &str) -> Option<Shot> {
     [PLAYER_ARROW, TRIDENT].into_iter().find(|shot| shot.kind == kind)

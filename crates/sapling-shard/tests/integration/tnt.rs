@@ -49,6 +49,10 @@ fn tnt_by_a_block_of_redstone_hops_burns_eighty_ticks_and_bursts() {
     assert_eq!((lit(&tnt.metadata), fuse(&tnt.metadata), lit(&first.metadata), fuse(&first.metadata)), (Some(false), Some(-1), Some(true), Some(79)));
     let fuses = fuses(&sent, tnt.runtime_id);
     assert_eq!((fuses.len(), fuses.first(), fuses.last()), (79, Some(&78), Some(&0)));
+    // The flag word only where it changed: `MOVING` on through its hop, off once it lies.
+    let words: Vec<i64> = all::<SetEntityData>(&sent).iter().filter(|data| data.runtime_entity_id == tnt.runtime_id).flat_map(|data| data.metadata.iter().find_map(|item| if let Value::Flags(flags) = item.value { Some(flags.0) } else { None })).collect();
+    let moving: Vec<bool> = words.iter().map(|word| word & MetadataFlags1::MOVING.0 != 0).collect();
+    assert!(words.windows(2).all(|pair| pair[0] != pair[1]) && moving.contains(&true) && moving.last() == Some(&false), "{moving:?}");
     let flash = burst(&sent).expect("found above");
     assert!(flash.data == 4 && (flash.position.y - 65.06125).abs() < 1e-3, "{flash:?}");
     sent.extend(h.tick_all().to(1).to_vec());

@@ -7,7 +7,7 @@ use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_data::AddEntityOptions;
-use sapling_world::{ItemStack, ShotRecord};
+use sapling_world::ItemStack;
 
 use super::arrows::{Lands, Shot};
 use super::hits::{self, After};
@@ -31,13 +31,15 @@ const TIP: Key = Key::MinecartHasDisplay;
 pub(crate) struct Arrow {
     /// Who shot it, named if it kills ("player:" and a name for a player), and the shooter itself,
     /// which it passes through.
-    archer: String,
-    by: Entity,
+    pub(super) archer: String,
+    pub(super) by: Entity,
     /// The effect it gives the player or mob it hits, and for how many ticks (a stray's, a bogged's).
-    gives: Option<(&'static str, u32)>,
-    shot: Shot,
-    born: u64,
-    stuck: Option<u64>,
+    pub(super) gives: Option<(&'static str, u32)>,
+    pub(super) shot: Shot,
+    pub(super) born: u64,
+    pub(super) stuck: Option<u64>,
+    /// By `/summon`: it stays put the tick it came.
+    pub(super) summoned: bool,
 }
 
 /// Who may pick a stuck shot up.
@@ -123,11 +125,20 @@ pub(crate) fn launch(world: &mut World, launch: Launch, loosed: Option<Loosed>) 
         Some(vec![sapling_net::encode(&shown)])
     };
     let born = world.resource::<Tick>().0;
-    let arrow = entities::spawn(world, layer, shot.kind, Body::new(from, motion, shot.size), from, announce)?;
-    world.entity_mut(arrow).insert(Arrow { archer, by, gives, shot, born, stuck: None });
+    let arrow = entities::spawn_mob(world, layer, shot.kind, Body::new(from, motion, shot.size), from, announce)?;
+    world.entity_mut(arrow).insert(Arrow { archer, by, gives, shot, born, stuck: None, summoned: false });
     if let Some(loosed) = loosed {
         world.entity_mut(arrow).insert(loosed);
     }
+    Some(arrow)
+}
+
+/// A shot `/summon` made at `feet`, still and no one's: it starts to fall the tick after
+/// (research/captures/bds-s7shots.txt).
+pub(crate) fn summon(world: &mut World, layer: Entity, shot: Shot, feet: [f32; 3]) -> Option<Entity> {
+    let arrow = launch(world, Launch { layer, by: Entity::PLACEHOLDER, archer: String::new(), from: feet, motion: [0.0; 3], shot, gives: None }, None)?;
+    let mut state = world.get_mut::<Arrow>(arrow)?;
+    (state.by, state.summoned) = (arrow, true);
     Some(arrow)
 }
 
@@ -164,6 +175,7 @@ fn first_met(world: &mut World, layer: Entity, by: Entity, at: [f32; 3], motion:
 /// A tick of one flying shot: whether it is still there.
 fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Option<()> {
     let mut body = *world.get::<Body>(arrow)?;
+    let start = body.at;
     let (shot, born, by) = world.get::<Arrow>(arrow).map(|arrow| (arrow.shot, arrow.born, arrow.by))?;
     if shot.lasts.is_some_and(|lasts| now >= born + lasts) {
         mobs::remove(world, arrow);
@@ -218,9 +230,12 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
         world.get_mut::<Arrow>(arrow)?.stuck = Some(now);
     }
     *world.get_mut::<Body>(arrow)? = body;
+    let gone: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - start[axis]);
+    let flags = flags(world, arrow, id, gone, born + 1 == now);
     let mut packets = world.get_mut::<Told>(arrow)?.update(id, body.at, body.motion, stopped);
+    packets.splice(0..0, flags);
     if stopped {
-        keep(world, arrow, layer, &body);
+        super::stuck::keep(world, arrow, layer, &body);
         if shot.kind == super::arrows::ARROW.kind {
             packets.push(sapling_net::encode(&EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArrowShake, data: SHAKES, fire_at_position: None }));
         }
@@ -230,64 +245,37 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     Some(())
 }
 
-/// Has the world folder keep a stuck shot a player may pick up, with its column.
-fn keep(world: &mut World, arrow: Entity, layer: Entity, body: &Body) -> Option<()> {
-    let loosed = world.get::<Loosed>(arrow).filter(|loosed| loosed.pickup != Pickup::Never)?.clone();
-    let kind = world.get::<Arrow>(arrow)?.shot.kind;
-    let unique_id = entities::new_unique_id(world, arrow)?;
-    let rotation = world.get::<Told>(arrow)?.facing();
-    let trident = loosed.item.filter(|item| item.name != super::arrows::ARROW.kind);
-    let record = ShotRecord { player: loosed.pickup == Pickup::Anyone, creative: loosed.pickup == Pickup::Creative, aux: loosed.tipped.map_or(0, |data| (data + 1) as i8), trident };
-    let compound = sapling_world::new_shot_actor(unique_id, kind, body.at, rotation, &record, world.get::<Layer>(layer)?.world.registry());
-    entities::keep(world, arrow, layer, unique_id, compound);
-    Some(())
-}
-
-/// A shot a world folder kept lies stuck in `layer` again; false for one no player may pick up.
-pub(crate) fn from_storage(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], [yaw, pitch]: [f32; 2], unique_id: i64, compound: Vec<u8>, shot: Shot) -> bool {
-    let Some(record) = sapling_world::shot_record(&compound) else { return false };
-    let pickup = match (record.player, record.creative) {
-        (true, _) => Pickup::Anyone,
-        (false, true) => Pickup::Creative,
-        _ => return false,
-    };
-    let tipped = (record.aux > 0).then(|| i16::from(record.aux) - 1);
-    let item = record.trident.or_else(|| Some(ItemStack { name: kind.to_owned(), count: 1, damage: tipped.map_or(0, |data| data + 1), block: None, tag: None }));
-    let Some(arrow) = entities::spawn(world, layer, kind, Body::new(at, [0.0; 3], shot.size), at, |id| {
-        let options = AddEntityOptions { id, identifier: kind, feet: at, yaw, pitch, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1(0), health: None, name: "" };
-        Some(vec![sapling_net::encode(&sapling_data::add_entity(&options))])
-    }) else { return false };
-    let now = world.resource::<Tick>().0;
-    world.entity_mut(arrow).insert((Arrow { archer: String::new(), by: arrow, gives: None, shot, born: now, stuck: Some(now) }, Loosed { player: None, pickup, item, tipped, ..Loosed::new(arrow, pickup, None) }));
-    entities::keep(world, arrow, layer, unique_id, compound);
-    true
-}
-
-/// The stuck shots a player may pick up: each, its world, where it is, its id and what it carries.
-pub(crate) fn lying(world: &mut World) -> Vec<(Entity, Entity, [f32; 3], u64, Loosed)> {
-    let mut shots = world.query::<(Entity, &InLayer, &Body, &NetId, &Loosed, &Arrow)>();
-    let lies = |loosed: &Loosed, arrow: &Arrow| loosed.pickup != Pickup::Never && !loosed.returning && arrow.stuck.is_some();
-    shots.iter(world).filter(|(.., loosed, arrow)| lies(loosed, arrow)).map(|(arrow, layer, body, id, loosed, _)| (arrow, layer.0, body.at, id.0, loosed.clone())).collect()
-}
-
-/// The shot frees itself from where it was stuck: it flies again (a trident coming back).
-pub(crate) fn unstick(world: &mut World, arrow: Entity) {
-    if let Some(mut arrow) = world.get_mut::<Arrow>(arrow) {
-        arrow.stuck = None;
-    }
+/// The shot's flag word where a tick that moved it by `gone` changed it: it is shown, and its
+/// name may be, the tick after it came (`first`), and `MOVING` goes as for any entity
+/// (research/captures/bds-s7shots.txt, bds-shoot.txt).
+fn flags(world: &mut World, arrow: Entity, id: u64, gone: [f32; 3], first: bool) -> Option<bytes::Bytes> {
+    let mut told = world.get_mut::<Told>(arrow)?;
+    let moved = told.flags_word(gone, false, false);
+    let seen = first.then(|| {
+        told.forget_announced(MetadataFlags1::INVISIBLE);
+        told.set_flag(MetadataFlags1::CAN_SHOW_NAMETAG, true)
+    });
+    seen.flatten().or(moved).map(|word| crate::sync::flags_packet(id, word))
 }
 
 /// Moves every flying shot a tick; one that lay long enough goes, but a trident a player may pick up.
 pub(super) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let arrows: Vec<(Entity, Entity, u64, Option<u64>, bool)> =
-        world.query::<(Entity, &InLayer, &NetId, &Arrow)>().iter(world).map(|(arrow, layer, id, state)| (arrow, layer.0, id.0, state.stuck, state.shot.kind != super::arrows::ARROW.kind)).collect();
-    for (arrow, layer, id, stuck, trident) in arrows {
+    let arrows: Vec<(Entity, Entity, u64, Option<u64>, bool, bool)> = world
+        .query::<(Entity, &InLayer, &NetId, &Arrow)>()
+        .iter(world)
+        .map(|(arrow, layer, id, state)| (arrow, layer.0, id.0, state.stuck, state.shot.kind != super::arrows::ARROW.kind, state.summoned && state.born == now))
+        .collect();
+    for (arrow, layer, id, stuck, trident, still) in arrows {
         let (kept, returning) = world.get::<Loosed>(arrow).map_or((false, false), |loosed| (trident && loosed.pickup != Pickup::Never, loosed.returning));
         match stuck {
-            _ if returning => {}
+            _ if returning || still => {}
             Some(since) if now >= since + LIES && !kept => mobs::remove(world, arrow),
-            Some(_) => {}
+            Some(_) => {
+                let at = world.get::<Body>(arrow).map_or([0; 3], |body| body.at.map(|c| c.floor() as i32));
+                let flags = flags(world, arrow, id, [0.0; 3], false);
+                entities::tell_viewers(world, arrow, layer, at, flags.into_iter().collect());
+            }
             None => drop(fly(world, arrow, layer, id, now)),
         }
     }

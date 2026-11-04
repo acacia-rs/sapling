@@ -115,6 +115,8 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     assert_eq!(answer(&mut alice, "summon zombie").await, "commands.summon.failed [] 0");
     let v2 = answer(&mut alice, "summon zombie_villager_v2 ~ ~ ~").await;
     assert!(v2.starts_with("commands.generic.syntax [") && v2.contains(r#""zombie_villager_v2""#), "{v2}");
+    let pearl = answer(&mut alice, "summon ender_pearl ~ ~ ~").await;
+    assert!(pearl.starts_with("commands.generic.syntax [") && pearl.contains(r#""ender_pearl""#), "bds-s7shots.txt: {pearl}");
     // bds-raidhero.txt: none matched answers noTargetMatch; each one hurt is counted.
     assert_eq!(answer(&mut alice, "damage @e[type=cow] 1").await, "commands.generic.noTargetMatch [] 0");
     for _ in 0..2 {
