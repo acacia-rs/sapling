@@ -117,18 +117,40 @@ fn a_creative_hit_knocks_it_over_leaving_nothing() {
     assert_eq!((all::<RemoveEntity>(&told).len(), all::<AddItemEntity>(&told).len()), (1, 0));
 }
 
-#[test]
-fn a_stand_in_lava_flinches_every_ten_ticks_alight_and_never_dies() {
+/// A stand put in lava for `inside` ticks, the lava then taken away; what Alex was told over
+/// `inside + after` ticks, and the stand's runtime id.
+fn in_lava(inside: usize, after: usize) -> (Vec<RawPacket>, u64) {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     ask(&mut h, |ctx| ctx.set_block([2, 65, 0], &sapling_api::Block::new("minecraft:lava")));
     h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:armor_stand", STAND).is_some()));
-    let told: Vec<RawPacket> = (0..25).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let mut told: Vec<RawPacket> = (0..inside).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    ask(&mut h, |ctx| ctx.set_block([2, 65, 0], &sapling_api::Block::new("minecraft:air")));
+    told.extend((0..after).flat_map(|_| h.tick_all().to(1).to_vec()));
     let stand = all::<AddEntity>(&told).into_iter().find(|added| added.entity_type == "minecraft:armor_stand").expect("shown").runtime_id;
-    // research/captures/bds-n3breath.txt: HurtAnimation -1 on its first tick and each 10th after.
+    (told, stand)
+}
+
+fn healths(told: &[RawPacket], stand: u64) -> Vec<f32> {
+    all::<acacia_proto::packets::UpdateAttributes>(told).into_iter().filter(|update| update.runtime_entity_id == stand).flat_map(|update| update.attributes).map(|health| (health.current * 100.0).round() / 100.0).collect()
+}
+
+#[test]
+fn a_stand_in_lava_flinches_and_scorches_every_ten_ticks_alight() {
+    let (told, stand) = in_lava(25, 0);
+    // research/captures/bds-n3breath.txt, bds-e1stand.txt: HurtAnimation -1 and 0.05 off on its first tick and each 10th after.
     let flinches = all::<acacia_proto::packets::EntityEvent>(&told).into_iter().filter(|event| event.runtime_entity_id == stand && event.data == -1).count();
     assert_eq!(flinches, 3);
+    assert_eq!(healths(&told, stand), [5.95, 5.9, 5.85]);
     let alight = all::<SetEntityData>(&told).into_iter().filter(|data| data.runtime_entity_id == stand).flat_map(|data| data.metadata).any(|item| matches!(item.value, Value::Flags(flags) if flags.0 & acacia_proto::types::MetadataFlags1::ONFIRE.0 != 0));
     assert!(alight, "shown alight");
-    assert!(all::<RemoveEntity>(&told).is_empty(), "never dies");
+}
+
+#[test]
+fn a_stand_taken_from_the_fire_burns_one_a_second_till_it_is_gone() {
+    let (told, stand) = in_lava(5, 125);
+    // research/captures/bds-e1stand.txt: 1 off each 20 ticks, told the tick after; gone at the sixth.
+    assert_eq!(healths(&told, stand), [5.95, 4.95, 3.95, 2.95, 1.95, 0.95]);
+    assert_eq!(all::<RemoveEntity>(&told).len(), 1);
+    assert!(all::<AddItemEntity>(&told).is_empty());
 }
