@@ -34,6 +34,18 @@ const IDS: &[(&str, u32)] = &[
     ("sulfur_caves", 194),
 ];
 
+/// The biomes whose climate's `snow_accumulation` starts above 0, from BDS's packs: what
+/// `is_snow_covered` asks (`FilterTestBiomeSnowCovered` 0x1430a80b0 reads the biome's
+/// `mMinSnowLevel`, +0x28, `> 0`), not the spot's snow.
+const SNOW_COVERED: &[&str] = &[
+    "cold_beach", "cold_taiga", "cold_taiga_hills", "deep_frozen_ocean", "frozen_ocean", "frozen_peaks", "frozen_river", "grove", "ice_mountains", "ice_plains",
+    "ice_plains_spikes", "jagged_peaks", "legacy_frozen_ocean", "snowy_slopes",
+];
+
+fn is_snow_covered(biome: u32) -> bool {
+    SNOW_COVERED.iter().any(|name| biome_id(name) == Some(biome))
+}
+
 /// What sapling reads of a vanilla biome's definition.
 struct Known {
     tags: Vec<String>,
@@ -108,10 +120,10 @@ impl Filter {
     }
 
     /// Whether the biome `biome` passes.
-    // TODO: `is_snow_covered` is BDS's test of the spot's snowfall; here it is the biome's `frozen` tag.
     pub(super) fn admits(&self, biome: u32) -> bool {
         match self {
-            Filter::Tag(tag, missing) => biome_has_tag(biome, if *tag == "snow" { "frozen" } else { tag }) != *missing,
+            Filter::Tag("snow", missing) => is_snow_covered(biome) != *missing,
+            Filter::Tag(tag, missing) => biome_has_tag(biome, tag) != *missing,
             Filter::All(members) => members.iter().all(|member| member.admits(biome)),
             Filter::Any(members) => members.iter().any(|member| member.admits(biome)),
             Filter::NoneOf(members) => !members.iter().any(|member| member.admits(biome)),
@@ -160,6 +172,8 @@ mod tests {
         assert!(!Filter::parse("&(ocean !frozen)").admits(FROZEN_OCEAN));
         assert!(Filter::parse("|(&(taiga !mega) snow desert)").admits(DESERT));
         assert!(Filter::parse("snow").admits(FROZEN_OCEAN) && !Filter::parse("snow").admits(PLAINS));
+        // A snowy taiga and a grove are snow covered with no `frozen` tag.
+        assert!(["cold_taiga", "grove"].iter().all(|name| Filter::parse("snow").admits(biome_id(name).unwrap()) && !biome_has_tag(biome_id(name).unwrap(), "frozen")));
         assert!(Filter::parse("&()").admits(PLAINS));
     }
 }

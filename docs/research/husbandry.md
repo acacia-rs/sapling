@@ -92,7 +92,8 @@ is now in spawn-rules.tsv's `herds=` field; `_spawnMobCluster` 1415ed230 picks o
 (`nextInt(herds)`) and fcn 1415ed0d0 fires `initial_event` on members below `initial_event_count`
 and `event` on those at or past `event_skip_count`. Sapling fires `minecraft:entity_born` that way
 (`spawning/herds.rs`), so a fox herd is two grown then babies; other herd events are a TODO there.
-Not drilled live: natural spawning takes a random spot and time.
+Not drillable live (eleventh wave, 2026-11-04): natural spawning takes a random spot and time, and
+the other events (horse coats, tropical fish looks, riders) need the event fired on a spawned mob.
 
 ## Left out
 
