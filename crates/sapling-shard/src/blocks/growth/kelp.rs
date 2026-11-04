@@ -9,10 +9,10 @@ use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
-use sapling_data::RuleValue;
 
 use super::super::{level, send};
-use super::{Picks, RULE};
+use super::Picks;
+use super::super::random_queue;
 use crate::ticking::Region;
 
 /// A plant that grows from its tip: its block, age property, the way it grows, whether it grows
@@ -34,10 +34,9 @@ const PLANTS: [Plant; 3] = [
 const DRAWN_SPEED: f64 = 3.0;
 const CELLS: f64 = 4096.0;
 
-/// Each world's random-tick queue: its clock and the plants due on it.
+/// The plants due on their world's random-tick queue (random_queue.rs), by its clock.
 #[derive(Resource, Default)]
 pub(crate) struct Kelp {
-    clock: HashMap<Entity, u64>,
     due: Vec<(u64, Entity, BlockPos)>,
     /// Plants written since the last tick, whose wait is drawn then.
     fresh: Vec<(Entity, BlockPos)>,
@@ -73,10 +72,9 @@ fn wait(picks: &mut Picks, odds: f64) -> u64 {
 }
 
 impl Kelp {
-    /// Queues the plant at `pos` to grow after `steps` of its world's queue, unless it waits already.
-    fn queue(&mut self, layer: Entity, pos: BlockPos, steps: u64) {
+    /// Queues the plant at `pos` to grow `steps` after `now` on its world's queue, unless it waits already.
+    fn queue(&mut self, layer: Entity, pos: BlockPos, now: u64, steps: u64) {
         if !self.due.iter().any(|(_, at_layer, at)| (*at_layer, *at) == (layer, pos)) {
-            let now = self.clock.get(&layer).copied().unwrap_or(0);
             self.due.push((now + steps, layer, pos));
         }
     }
@@ -104,8 +102,8 @@ pub(super) fn arrived(world: &mut World, layer: Entity, cells: &[BlockPos]) {
 pub(crate) fn meal(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     let Some(level) = level(world, layer) else { return false };
     let top = (0..).map(|up| [pos[0], pos[1] + up, pos[2]]).take_while(|at| aged_at(level, *at).is_some()).last().unwrap_or(pos);
+    let now = random_queue::peek(world, layer);
     let Some(mut kelp) = world.get_resource_mut::<Kelp>() else { return false };
-    let now = kelp.clock.get(&layer).copied().unwrap_or(0);
     let Some(entry) = kelp.due.iter_mut().find(|(_, at_layer, at)| (*at_layer, *at) == (layer, top)) else { return false };
     entry.0 = now;
     true
@@ -119,23 +117,14 @@ pub(super) fn tick(world: &mut World, region: &Region, picks: &mut Picks) {
     for (layer, pos) in std::mem::take(&mut kelp.fresh) {
         let Some((plant, _)) = level(world, layer).and_then(|level| aged_at(level, pos)) else { continue };
         let steps = wait(picks, plant.odds);
-        kelp.queue(layer, pos, steps);
+        kelp.queue(layer, pos, random_queue::now(world, layer), steps);
     }
     let mut layers: Vec<Entity> = kelp.due.iter().map(|(_, layer, _)| *layer).collect();
     layers.sort_unstable();
     layers.dedup();
-    let speeds: HashMap<Entity, u64> = layers
-        .into_iter()
-        .map(|layer| match level(world, layer).and_then(|level| level.level().rules.get(RULE)) {
-            Some((_, RuleValue::Int(speed))) => (layer, speed.max(0) as u64),
-            _ => (layer, 0),
-        })
-        .collect();
-    for (layer, speed) in &speeds {
-        *kelp.clock.entry(*layer).or_default() += speed;
-    }
-    region.hold(world, &mut kelp.due, |layer| speeds.get(&layer).copied().unwrap_or(0));
-    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut kelp.due).into_iter().partition(|(when, layer, _)| kelp.clock.get(layer).is_some_and(|now| when <= now));
+    let clocks: HashMap<Entity, u64> = layers.into_iter().map(|layer| (layer, random_queue::now(world, layer))).collect();
+    region.hold(world, &mut kelp.due, |layer| random_queue::speed(world, layer));
+    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut kelp.due).into_iter().partition(|(when, layer, _)| clocks.get(layer).is_some_and(|now| when <= now));
     kelp.due = waiting;
     world.insert_resource(kelp);
     for (_, layer, pos) in due {

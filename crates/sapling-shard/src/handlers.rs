@@ -86,7 +86,6 @@ pub(crate) fn dispatch(world: &mut World) {
     tnt::burn(world);
     blocks::burn_fires(world);
     blocks::melt_frost(world);
-    blocks::dim_ores(world);
     blocks::settle_brushing(world);
     blocks::sound_hits(world);
     blocks::settle_scaffolds(world);

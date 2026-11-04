@@ -3,8 +3,9 @@
 use crate::common;
 
 use acacia_proto::packets::LevelSoundEvent;
+use common::asking::ask;
 use common::{Harness, all, click};
-use sapling_api::{Block, Item, PlayerId, Slot, Weather};
+use sapling_api::{Block, Item, PlayerId, RuleValue, Slot, Weather};
 
 const ALEX: PlayerId = PlayerId(1);
 
@@ -96,4 +97,33 @@ fn fire_goes_out_with_the_block_under_it_and_in_rain_but_not_over_netherrack() {
     let rained = named(&h);
     h.tick_all();
     assert_eq!(rained.recv().expect("ran"), ["minecraft:air", "minecraft:air", "minecraft:fire"]);
+}
+
+#[test]
+fn fire_and_lit_ore_go_at_the_pace_of_the_random_tick_speed_as_on_bds() {
+    // research/captures/bds-firepace.txt: fire over stone and lit redstone ore, twelve of each.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let row = || (-6..6).map(|x| ([x, 65, 6], [x, 64, 3]));
+    let set = |h: &mut Harness, speed: i32| ask(h, move |ctx| assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(speed))));
+    ask(&mut h, move |ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(0)));
+        for (fire, ore) in row() {
+            assert!(ctx.set_block(fire, &Block::new("minecraft:fire")) && ctx.set_block(ore, &Block::new("minecraft:lit_redstone_ore")));
+        }
+    });
+    let left = |h: &mut Harness, ticks: usize| {
+        (0..ticks).for_each(|_| drop(h.tick_all()));
+        ask(h, move |ctx| {
+            let is = |pos, name: &str| ctx.block(pos).is_some_and(|block| block.name == name);
+            row().fold([0, 0], |[fires, ores], (fire, ore)| [fires + usize::from(is(fire, "minecraft:fire")), ores + usize::from(is(ore, "minecraft:lit_redstone_ore"))])
+        })
+    };
+    // At 0 the queue and the random ticks stand still; at 1 a fire over stone lasts some 16 s, at 20 a second.
+    assert_eq!(left(&mut h, 600), [12, 12]);
+    set(&mut h, 1);
+    let [fires, ores] = left(&mut h, 200);
+    assert!(fires >= 8 && ores >= 8, "{fires} fires and {ores} ores of 12 left after 10 s at 1");
+    set(&mut h, 20);
+    assert_eq!(left(&mut h, 900), [0, 0]);
 }
