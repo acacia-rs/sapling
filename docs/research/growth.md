@@ -55,8 +55,12 @@ torchflower crop say nothing.
 | cactus | grew as before; stone set beside it did not break it within a second |
 
 Sapling grows cocoa one random tick in five and wart one in ten, the Java game's odds, which
-these fit, and a pitcher crop by a crop's odds, two high from its third stage. Ice is left: it
-melts by light, which sapling does not reckon. Copper is left too: a stage every random tick or
+these fit, and a pitcher crop by a crop's odds, two high from its third stage. Ice melts by a lamp
+(`growth/cover.rs`, "Light" below). Frosted ice set by `/fill` ages a step at each look 20 to 40 ticks
+apart by day or under glowstone and melts in about 5 s, and never in 20 s at midnight unlit
+(bds-u1frost.txt, 2026-11-04); a corner two under glowstone, lit 9 itself and 12 over it, melted, so
+sapling ages it where the brightest of it and its neighbours is over 11 less its age (`blocks/frost.rs`,
+test `frosted_ice_melts_by_day_and_by_a_light_but_not_in_the_dark`). Copper is left: a stage every random tick or
 two would weather a block in minutes at the rule's 1, which is not what the game is known for.
 
 `bds_command_probe copper` (`bds-copper.txt`) bore that out: of 25 blocks of copper none
@@ -249,8 +253,13 @@ not ported [I].
     - Grass spread at light 9 over its dirt, but within 60 s not at 10; sapling's did the reverse. Read as chance.
     - BDS did not break a mushroom at light 13 when a light block was set beside it. Its light likely was not in yet
       at that update, and sapling, which relights first, breaks it.
-    - Freezing, snow lying and the sun need a cold biome or weather the flat drill world lacks, so they are undrillable
-      here.
+    - Freezing and snow lying, drilled in an ice plains flat world (`u1cold`, bds-u1cold.txt, 2026-11-04: two
+      5x5 pools, a torch at 14 -60 7 by the second, 70 s of snow at random tick speed 30). Both froze the open pool
+      whole. BDS's snow piled to 8 layers; sapling's lay one and stopped, its column top passing over a thin layer,
+      fixed (`growth/snowfall.rs`, test `water_freezes_and_snow_lies_where_it_is_cold_while_it_snows`). By the
+      torch BDS left 9 cells water, sapling 4: they fit a water cell lit one under the air above it on BDS and two
+      under on sapling (its water's light filter of 2), which is the light engine's, not freezing's, and left.
+      The sun melts nothing in ice plains; a warm biome's melt is above.
   - Sapling's drill world has ground at y 60 to 63 over the drills (`drill_server.rs`), so a scene that needs daylight
     at y -26 clears it first.
   - Daylight detectors read the sky light in their cell by the reckoning in redstone.md.

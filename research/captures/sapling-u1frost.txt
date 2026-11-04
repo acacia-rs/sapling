@@ -1,0 +1,332 @@
+## drill starts at 1793835319917
+## /kill @e[type=!player]
+     22 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1022 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1022 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+   1022 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather clear
+   2021 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+   2021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /difficulty easy
+   3021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"EASY\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3022 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["EASY"]
+## /gamemode creative @s
+   4023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4023 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4023 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /gamemode creative CmdWatcher
+   5023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.other\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"},{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5024 actor   CommandOutput success_count=1 data=None commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+## /effect @s clear
+   6020 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive.all success=false ["CmdActor"]
+   6421 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   6421 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /clear @s
+   7023 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /fill -8 -27 -8 16 -27 8 stone
+   8135 watcher UpdateSubchunkBlocks -8 -27 -8 stone[]; -8 -27 -7 stone[]; -8 -27 -6 stone[]; -8 -27 -5 stone[]; -8 -27 -4 stone[]; -8 -27 -3 stone[]; -8 -27 -2 stone[]; -8 -27 -1 stone[]; -7 -27 -8 stone[]; -7 -27 -7 stone[]; -7 -27 -6 stone[]; -7 -27 -5 stone[]; -7 -27 -4 stone[]; -7 -27 -3 stone[]; -7 -27 -2 stone[]; -7 -27 -1 stone[]; -6 -27 -8 stone[]; -6 -27 -7 stone[]; -6 -27 -6 stone[]; -6 -27 -5 stone[]; -6 -27 -4 stone[]; -6 -27 -3 stone[]; -6 -27 -2 stone[]; -6 -27 -1 stone[]; -5 -27 -8 stone[]; -5 -27 -7 stone[]; -5 -27 -6 stone[]; -5 -27 -5 stone[]; -5 -27 -4 stone[]; -5 -27 -3 stone[]; -5 -27 -2 stone[]; -5 -27 -1 stone[]; -4 -27 -8 stone[]; -4 -27 -7 stone[]; -4 -27 -6 stone[]; -4 -27 -5 stone[]; -4 -27 -4 stone[]; -4 -27 -3 stone[]; -4 -27 -2 stone[]; -4 -27 -1 stone[]; -3 -27 -8 stone[]; -3 -27 -7 stone[]; -3 -27 -6 stone[]; -3 -27 -5 stone[]; -3 -27 -4 stone[]; -3 -27 -3 stone[]; -3 -27 -2 stone[]; -3 -27 -1 stone[]; -2 -27 -8 stone[]; -2 -27 -7 stone[]; -2 -27 -6 stone[]; -2 -27 -5 stone[]; -2 -27 -4 stone[]; -2 -27 -3 stone[]; -2 -27 -2 stone[]; -2 -27 -1 stone[]; -1 -27 -8 stone[]; -1 -27 -7 stone[]; -1 -27 -6 stone[]; -1 -27 -5 stone[]; -1 -27 -4 stone[]; -1 -27 -3 stone[]; -1 -27 -2 stone[]; -1 -27 -1 stone[] | extra: 
+   8135 actor   UpdateSubchunkBlocks -8 -27 -8 stone[]; -8 -27 -7 stone[]; -8 -27 -6 stone[]; -8 -27 -5 stone[]; -8 -27 -4 stone[]; -8 -27 -3 stone[]; -8 -27 -2 stone[]; -8 -27 -1 stone[]; -7 -27 -8 stone[]; -7 -27 -7 stone[]; -7 -27 -6 stone[]; -7 -27 -5 stone[]; -7 -27 -4 stone[]; -7 -27 -3 stone[]; -7 -27 -2 stone[]; -7 -27 -1 stone[]; -6 -27 -8 stone[]; -6 -27 -7 stone[]; -6 -27 -6 stone[]; -6 -27 -5 stone[]; -6 -27 -4 stone[]; -6 -27 -3 stone[]; -6 -27 -2 stone[]; -6 -27 -1 stone[]; -5 -27 -8 stone[]; -5 -27 -7 stone[]; -5 -27 -6 stone[]; -5 -27 -5 stone[]; -5 -27 -4 stone[]; -5 -27 -3 stone[]; -5 -27 -2 stone[]; -5 -27 -1 stone[]; -4 -27 -8 stone[]; -4 -27 -7 stone[]; -4 -27 -6 stone[]; -4 -27 -5 stone[]; -4 -27 -4 stone[]; -4 -27 -3 stone[]; -4 -27 -2 stone[]; -4 -27 -1 stone[]; -3 -27 -8 stone[]; -3 -27 -7 stone[]; -3 -27 -6 stone[]; -3 -27 -5 stone[]; -3 -27 -4 stone[]; -3 -27 -3 stone[]; -3 -27 -2 stone[]; -3 -27 -1 stone[]; -2 -27 -8 stone[]; -2 -27 -7 stone[]; -2 -27 -6 stone[]; -2 -27 -5 stone[]; -2 -27 -4 stone[]; -2 -27 -3 stone[]; -2 -27 -2 stone[]; -2 -27 -1 stone[]; -1 -27 -8 stone[]; -1 -27 -7 stone[]; -1 -27 -6 stone[]; -1 -27 -5 stone[]; -1 -27 -4 stone[]; -1 -27 -3 stone[]; -1 -27 -2 stone[]; -1 -27 -1 stone[] | extra: 
+   8136 actor   UpdateSubchunkBlocks -8 -27 0 stone[]; -8 -27 1 stone[]; -8 -27 2 stone[]; -8 -27 3 stone[]; -8 -27 4 stone[]; -8 -27 5 stone[]; -8 -27 6 stone[]; -8 -27 7 stone[]; -8 -27 8 stone[]; -7 -27 0 stone[]; -7 -27 1 stone[]; -7 -27 2 stone[]; -7 -27 3 stone[]; -7 -27 4 stone[]; -7 -27 5 stone[]; -7 -27 6 stone[]; -7 -27 7 stone[]; -7 -27 8 stone[]; -6 -27 0 stone[]; -6 -27 1 stone[]; -6 -27 2 stone[]; -6 -27 3 stone[]; -6 -27 4 stone[]; -6 -27 5 stone[]; -6 -27 6 stone[]; -6 -27 7 stone[]; -6 -27 8 stone[]; -5 -27 0 stone[]; -5 -27 1 stone[]; -5 -27 2 stone[]; -5 -27 3 stone[]; -5 -27 4 stone[]; -5 -27 5 stone[]; -5 -27 6 stone[]; -5 -27 7 stone[]; -5 -27 8 stone[]; -4 -27 0 stone[]; -4 -27 1 stone[]; -4 -27 2 stone[]; -4 -27 3 stone[]; -4 -27 4 stone[]; -4 -27 5 stone[]; -4 -27 6 stone[]; -4 -27 7 stone[]; -4 -27 8 stone[]; -3 -27 0 stone[]; -3 -27 1 stone[]; -3 -27 2 stone[]; -3 -27 3 stone[]; -3 -27 4 stone[]; -3 -27 5 stone[]; -3 -27 6 stone[]; -3 -27 7 stone[]; -3 -27 8 stone[]; -2 -27 0 stone[]; -2 -27 1 stone[]; -2 -27 2 stone[]; -2 -27 3 stone[]; -2 -27 4 stone[]; -2 -27 5 stone[]; -2 -27 6 stone[]; -2 -27 7 stone[]; -2 -27 8 stone[]; -1 -27 0 stone[]; -1 -27 1 stone[]; -1 -27 2 stone[]; -1 -27 3 stone[]; -1 -27 4 stone[]; -1 -27 5 stone[]; -1 -27 6 stone[]; -1 -27 7 stone[]; -1 -27 8 stone[] | extra: 
+   8136 actor   UpdateSubchunkBlocks 0 -27 -8 stone[]; 0 -27 -7 stone[]; 0 -27 -6 stone[]; 0 -27 -5 stone[]; 0 -27 -4 stone[]; 0 -27 -3 stone[]; 0 -27 -2 stone[]; 0 -27 -1 stone[]; 1 -27 -8 stone[]; 1 -27 -7 stone[]; 1 -27 -6 stone[]; 1 -27 -5 stone[]; 1 -27 -4 stone[]; 1 -27 -3 stone[]; 1 -27 -2 stone[]; 1 -27 -1 stone[]; 2 -27 -8 stone[]; 2 -27 -7 stone[]; 2 -27 -6 stone[]; 2 -27 -5 stone[]; 2 -27 -4 stone[]; 2 -27 -3 stone[]; 2 -27 -2 stone[]; 2 -27 -1 stone[]; 3 -27 -8 stone[]; 3 -27 -7 stone[]; 3 -27 -6 stone[]; 3 -27 -5 stone[]; 3 -27 -4 stone[]; 3 -27 -3 stone[]; 3 -27 -2 stone[]; 3 -27 -1 stone[]; 4 -27 -8 stone[]; 4 -27 -7 stone[]; 4 -27 -6 stone[]; 4 -27 -5 stone[]; 4 -27 -4 stone[]; 4 -27 -3 stone[]; 4 -27 -2 stone[]; 4 -27 -1 stone[]; 5 -27 -8 stone[]; 5 -27 -7 stone[]; 5 -27 -6 stone[]; 5 -27 -5 stone[]; 5 -27 -4 stone[]; 5 -27 -3 stone[]; 5 -27 -2 stone[]; 5 -27 -1 stone[]; 6 -27 -8 stone[]; 6 -27 -7 stone[]; 6 -27 -6 stone[]; 6 -27 -5 stone[]; 6 -27 -4 stone[]; 6 -27 -3 stone[]; 6 -27 -2 stone[]; 6 -27 -1 stone[]; 7 -27 -8 stone[]; 7 -27 -7 stone[]; 7 -27 -6 stone[]; 7 -27 -5 stone[]; 7 -27 -4 stone[]; 7 -27 -3 stone[]; 7 -27 -2 stone[]; 7 -27 -1 stone[]; 8 -27 -8 stone[]; 8 -27 -7 stone[]; 8 -27 -6 stone[]; 8 -27 -5 stone[]; 8 -27 -4 stone[]; 8 -27 -3 stone[]; 8 -27 -2 stone[]; 8 -27 -1 stone[]; 9 -27 -8 stone[]; 9 -27 -7 stone[]; 9 -27 -6 stone[]; 9 -27 -5 stone[]; 9 -27 -4 stone[]; 9 -27 -3 stone[]; 9 -27 -2 stone[]; 9 -27 -1 stone[]; 10 -27 -8 stone[]; 10 -27 -7 stone[]; 10 -27 -6 stone[]; 10 -27 -5 stone[]; 10 -27 -4 stone[]; 10 -27 -3 stone[]; 10 -27 -2 stone[]; 10 -27 -1 stone[]; 11 -27 -8 stone[]; 11 -27 -7 stone[]; 11 -27 -6 stone[]; 11 -27 -5 stone[]; 11 -27 -4 stone[]; 11 -27 -3 stone[]; 11 -27 -2 stone[]; 11 -27 -1 stone[]; 12 -27 -8 stone[]; 12 -27 -7 stone[]; 12 -27 -6 stone[]; 12 -27 -5 stone[]; 12 -27 -4 stone[]; 12 -27 -3 stone[]; 12 -27 -2 stone[]; 12 -27 -1 stone[]; 13 -27 -8 stone[]; 13 -27 -7 stone[]; 13 -27 -6 stone[]; 13 -27 -5 stone[]; 13 -27 -4 stone[]; 13 -27 -3 stone[]; 13 -27 -2 stone[]; 13 -27 -1 stone[]; 14 -27 -8 stone[]; 14 -27 -7 stone[]; 14 -27 -6 stone[]; 14 -27 -5 stone[]; 14 -27 -4 stone[]; 14 -27 -3 stone[]; 14 -27 -2 stone[]; 14 -27 -1 stone[]; 15 -27 -8 stone[]; 15 -27 -7 stone[]; 15 -27 -6 stone[]; 15 -27 -5 stone[]; 15 -27 -4 stone[]; 15 -27 -3 stone[]; 15 -27 -2 stone[]; 15 -27 -1 stone[] | extra: 
+   8136 watcher UpdateSubchunkBlocks -8 -27 0 stone[]; -8 -27 1 stone[]; -8 -27 2 stone[]; -8 -27 3 stone[]; -8 -27 4 stone[]; -8 -27 5 stone[]; -8 -27 6 stone[]; -8 -27 7 stone[]; -8 -27 8 stone[]; -7 -27 0 stone[]; -7 -27 1 stone[]; -7 -27 2 stone[]; -7 -27 3 stone[]; -7 -27 4 stone[]; -7 -27 5 stone[]; -7 -27 6 stone[]; -7 -27 7 stone[]; -7 -27 8 stone[]; -6 -27 0 stone[]; -6 -27 1 stone[]; -6 -27 2 stone[]; -6 -27 3 stone[]; -6 -27 4 stone[]; -6 -27 5 stone[]; -6 -27 6 stone[]; -6 -27 7 stone[]; -6 -27 8 stone[]; -5 -27 0 stone[]; -5 -27 1 stone[]; -5 -27 2 stone[]; -5 -27 3 stone[]; -5 -27 4 stone[]; -5 -27 5 stone[]; -5 -27 6 stone[]; -5 -27 7 stone[]; -5 -27 8 stone[]; -4 -27 0 stone[]; -4 -27 1 stone[]; -4 -27 2 stone[]; -4 -27 3 stone[]; -4 -27 4 stone[]; -4 -27 5 stone[]; -4 -27 6 stone[]; -4 -27 7 stone[]; -4 -27 8 stone[]; -3 -27 0 stone[]; -3 -27 1 stone[]; -3 -27 2 stone[]; -3 -27 3 stone[]; -3 -27 4 stone[]; -3 -27 5 stone[]; -3 -27 6 stone[]; -3 -27 7 stone[]; -3 -27 8 stone[]; -2 -27 0 stone[]; -2 -27 1 stone[]; -2 -27 2 stone[]; -2 -27 3 stone[]; -2 -27 4 stone[]; -2 -27 5 stone[]; -2 -27 6 stone[]; -2 -27 7 stone[]; -2 -27 8 stone[]; -1 -27 0 stone[]; -1 -27 1 stone[]; -1 -27 2 stone[]; -1 -27 3 stone[]; -1 -27 4 stone[]; -1 -27 5 stone[]; -1 -27 6 stone[]; -1 -27 7 stone[]; -1 -27 8 stone[] | extra: 
+   8137 actor   UpdateSubchunkBlocks 0 -27 0 stone[]; 0 -27 1 stone[]; 0 -27 2 stone[]; 0 -27 3 stone[]; 0 -27 4 stone[]; 0 -27 5 stone[]; 0 -27 6 stone[]; 0 -27 7 stone[]; 0 -27 8 stone[]; 1 -27 0 stone[]; 1 -27 1 stone[]; 1 -27 2 stone[]; 1 -27 3 stone[]; 1 -27 4 stone[]; 1 -27 5 stone[]; 1 -27 6 stone[]; 1 -27 7 stone[]; 1 -27 8 stone[]; 2 -27 0 stone[]; 2 -27 1 stone[]; 2 -27 2 stone[]; 2 -27 3 stone[]; 2 -27 4 stone[]; 2 -27 5 stone[]; 2 -27 6 stone[]; 2 -27 7 stone[]; 2 -27 8 stone[]; 3 -27 0 stone[]; 3 -27 1 stone[]; 3 -27 2 stone[]; 3 -27 3 stone[]; 3 -27 4 stone[]; 3 -27 5 stone[]; 3 -27 6 stone[]; 3 -27 7 stone[]; 3 -27 8 stone[]; 4 -27 0 stone[]; 4 -27 1 stone[]; 4 -27 2 stone[]; 4 -27 3 stone[]; 4 -27 4 stone[]; 4 -27 5 stone[]; 4 -27 6 stone[]; 4 -27 7 stone[]; 4 -27 8 stone[]; 5 -27 0 stone[]; 5 -27 1 stone[]; 5 -27 2 stone[]; 5 -27 3 stone[]; 5 -27 4 stone[]; 5 -27 5 stone[]; 5 -27 6 stone[]; 5 -27 7 stone[]; 5 -27 8 stone[]; 6 -27 0 stone[]; 6 -27 1 stone[]; 6 -27 2 stone[]; 6 -27 3 stone[]; 6 -27 4 stone[]; 6 -27 5 stone[]; 6 -27 6 stone[]; 6 -27 7 stone[]; 6 -27 8 stone[]; 7 -27 0 stone[]; 7 -27 1 stone[]; 7 -27 2 stone[]; 7 -27 3 stone[]; 7 -27 4 stone[]; 7 -27 5 stone[]; 7 -27 6 stone[]; 7 -27 7 stone[]; 7 -27 8 stone[]; 8 -27 0 stone[]; 8 -27 1 stone[]; 8 -27 2 stone[]; 8 -27 3 stone[]; 8 -27 4 stone[]; 8 -27 5 stone[]; 8 -27 6 stone[]; 8 -27 7 stone[]; 8 -27 8 stone[]; 9 -27 0 stone[]; 9 -27 1 stone[]; 9 -27 2 stone[]; 9 -27 3 stone[]; 9 -27 4 stone[]; 9 -27 5 stone[]; 9 -27 6 stone[]; 9 -27 7 stone[]; 9 -27 8 stone[]; 10 -27 0 stone[]; 10 -27 1 stone[]; 10 -27 2 stone[]; 10 -27 3 stone[]; 10 -27 4 stone[]; 10 -27 5 stone[]; 10 -27 6 stone[]; 10 -27 7 stone[]; 10 -27 8 stone[]; 11 -27 0 stone[]; 11 -27 1 stone[]; 11 -27 2 stone[]; 11 -27 3 stone[]; 11 -27 4 stone[]; 11 -27 5 stone[]; 11 -27 6 stone[]; 11 -27 7 stone[]; 11 -27 8 stone[]; 12 -27 0 stone[]; 12 -27 1 stone[]; 12 -27 2 stone[]; 12 -27 3 stone[]; 12 -27 4 stone[]; 12 -27 5 stone[]; 12 -27 6 stone[]; 12 -27 7 stone[]; 12 -27 8 stone[]; 13 -27 0 stone[]; 13 -27 1 stone[]; 13 -27 2 stone[]; 13 -27 3 stone[]; 13 -27 4 stone[]; 13 -27 5 stone[]; 13 -27 6 stone[]; 13 -27 7 stone[]; 13 -27 8 stone[]; 14 -27 0 stone[]; 14 -27 1 stone[]; 14 -27 2 stone[]; 14 -27 3 stone[]; 14 -27 4 stone[]; 14 -27 5 stone[]; 14 -27 6 stone[]; 14 -27 7 stone[]; 14 -27 8 stone[]; 15 -27 0 stone[]; 15 -27 1 stone[]; 15 -27 2 stone[]; 15 -27 3 stone[]; 15 -27 4 stone[]; 15 -27 5 stone[]; 15 -27 6 stone[]; 15 -27 7 stone[]; 15 -27 8 stone[] | extra: 
+   8137 actor   UpdateSubchunkBlocks 16 -27 -8 stone[]; 16 -27 -7 stone[]; 16 -27 -6 stone[]; 16 -27 -5 stone[]; 16 -27 -4 stone[]; 16 -27 -3 stone[]; 16 -27 -2 stone[]; 16 -27 -1 stone[] | extra: 
+   8137 actor   UpdateSubchunkBlocks 16 -27 0 stone[]; 16 -27 1 stone[]; 16 -27 2 stone[]; 16 -27 3 stone[]; 16 -27 4 stone[]; 16 -27 5 stone[]; 16 -27 6 stone[]; 16 -27 7 stone[]; 16 -27 8 stone[] | extra: 
+   8137 watcher UpdateSubchunkBlocks 0 -27 -8 stone[]; 0 -27 -7 stone[]; 0 -27 -6 stone[]; 0 -27 -5 stone[]; 0 -27 -4 stone[]; 0 -27 -3 stone[]; 0 -27 -2 stone[]; 0 -27 -1 stone[]; 1 -27 -8 stone[]; 1 -27 -7 stone[]; 1 -27 -6 stone[]; 1 -27 -5 stone[]; 1 -27 -4 stone[]; 1 -27 -3 stone[]; 1 -27 -2 stone[]; 1 -27 -1 stone[]; 2 -27 -8 stone[]; 2 -27 -7 stone[]; 2 -27 -6 stone[]; 2 -27 -5 stone[]; 2 -27 -4 stone[]; 2 -27 -3 stone[]; 2 -27 -2 stone[]; 2 -27 -1 stone[]; 3 -27 -8 stone[]; 3 -27 -7 stone[]; 3 -27 -6 stone[]; 3 -27 -5 stone[]; 3 -27 -4 stone[]; 3 -27 -3 stone[]; 3 -27 -2 stone[]; 3 -27 -1 stone[]; 4 -27 -8 stone[]; 4 -27 -7 stone[]; 4 -27 -6 stone[]; 4 -27 -5 stone[]; 4 -27 -4 stone[]; 4 -27 -3 stone[]; 4 -27 -2 stone[]; 4 -27 -1 stone[]; 5 -27 -8 stone[]; 5 -27 -7 stone[]; 5 -27 -6 stone[]; 5 -27 -5 stone[]; 5 -27 -4 stone[]; 5 -27 -3 stone[]; 5 -27 -2 stone[]; 5 -27 -1 stone[]; 6 -27 -8 stone[]; 6 -27 -7 stone[]; 6 -27 -6 stone[]; 6 -27 -5 stone[]; 6 -27 -4 stone[]; 6 -27 -3 stone[]; 6 -27 -2 stone[]; 6 -27 -1 stone[]; 7 -27 -8 stone[]; 7 -27 -7 stone[]; 7 -27 -6 stone[]; 7 -27 -5 stone[]; 7 -27 -4 stone[]; 7 -27 -3 stone[]; 7 -27 -2 stone[]; 7 -27 -1 stone[]; 8 -27 -8 stone[]; 8 -27 -7 stone[]; 8 -27 -6 stone[]; 8 -27 -5 stone[]; 8 -27 -4 stone[]; 8 -27 -3 stone[]; 8 -27 -2 stone[]; 8 -27 -1 stone[]; 9 -27 -8 stone[]; 9 -27 -7 stone[]; 9 -27 -6 stone[]; 9 -27 -5 stone[]; 9 -27 -4 stone[]; 9 -27 -3 stone[]; 9 -27 -2 stone[]; 9 -27 -1 stone[]; 10 -27 -8 stone[]; 10 -27 -7 stone[]; 10 -27 -6 stone[]; 10 -27 -5 stone[]; 10 -27 -4 stone[]; 10 -27 -3 stone[]; 10 -27 -2 stone[]; 10 -27 -1 stone[]; 11 -27 -8 stone[]; 11 -27 -7 stone[]; 11 -27 -6 stone[]; 11 -27 -5 stone[]; 11 -27 -4 stone[]; 11 -27 -3 stone[]; 11 -27 -2 stone[]; 11 -27 -1 stone[]; 12 -27 -8 stone[]; 12 -27 -7 stone[]; 12 -27 -6 stone[]; 12 -27 -5 stone[]; 12 -27 -4 stone[]; 12 -27 -3 stone[]; 12 -27 -2 stone[]; 12 -27 -1 stone[]; 13 -27 -8 stone[]; 13 -27 -7 stone[]; 13 -27 -6 stone[]; 13 -27 -5 stone[]; 13 -27 -4 stone[]; 13 -27 -3 stone[]; 13 -27 -2 stone[]; 13 -27 -1 stone[]; 14 -27 -8 stone[]; 14 -27 -7 stone[]; 14 -27 -6 stone[]; 14 -27 -5 stone[]; 14 -27 -4 stone[]; 14 -27 -3 stone[]; 14 -27 -2 stone[]; 14 -27 -1 stone[]; 15 -27 -8 stone[]; 15 -27 -7 stone[]; 15 -27 -6 stone[]; 15 -27 -5 stone[]; 15 -27 -4 stone[]; 15 -27 -3 stone[]; 15 -27 -2 stone[]; 15 -27 -1 stone[] | extra: 
+   8138 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["425"]
+   8138 watcher UpdateSubchunkBlocks 0 -27 0 stone[]; 0 -27 1 stone[]; 0 -27 2 stone[]; 0 -27 3 stone[]; 0 -27 4 stone[]; 0 -27 5 stone[]; 0 -27 6 stone[]; 0 -27 7 stone[]; 0 -27 8 stone[]; 1 -27 0 stone[]; 1 -27 1 stone[]; 1 -27 2 stone[]; 1 -27 3 stone[]; 1 -27 4 stone[]; 1 -27 5 stone[]; 1 -27 6 stone[]; 1 -27 7 stone[]; 1 -27 8 stone[]; 2 -27 0 stone[]; 2 -27 1 stone[]; 2 -27 2 stone[]; 2 -27 3 stone[]; 2 -27 4 stone[]; 2 -27 5 stone[]; 2 -27 6 stone[]; 2 -27 7 stone[]; 2 -27 8 stone[]; 3 -27 0 stone[]; 3 -27 1 stone[]; 3 -27 2 stone[]; 3 -27 3 stone[]; 3 -27 4 stone[]; 3 -27 5 stone[]; 3 -27 6 stone[]; 3 -27 7 stone[]; 3 -27 8 stone[]; 4 -27 0 stone[]; 4 -27 1 stone[]; 4 -27 2 stone[]; 4 -27 3 stone[]; 4 -27 4 stone[]; 4 -27 5 stone[]; 4 -27 6 stone[]; 4 -27 7 stone[]; 4 -27 8 stone[]; 5 -27 0 stone[]; 5 -27 1 stone[]; 5 -27 2 stone[]; 5 -27 3 stone[]; 5 -27 4 stone[]; 5 -27 5 stone[]; 5 -27 6 stone[]; 5 -27 7 stone[]; 5 -27 8 stone[]; 6 -27 0 stone[]; 6 -27 1 stone[]; 6 -27 2 stone[]; 6 -27 3 stone[]; 6 -27 4 stone[]; 6 -27 5 stone[]; 6 -27 6 stone[]; 6 -27 7 stone[]; 6 -27 8 stone[]; 7 -27 0 stone[]; 7 -27 1 stone[]; 7 -27 2 stone[]; 7 -27 3 stone[]; 7 -27 4 stone[]; 7 -27 5 stone[]; 7 -27 6 stone[]; 7 -27 7 stone[]; 7 -27 8 stone[]; 8 -27 0 stone[]; 8 -27 1 stone[]; 8 -27 2 stone[]; 8 -27 3 stone[]; 8 -27 4 stone[]; 8 -27 5 stone[]; 8 -27 6 stone[]; 8 -27 7 stone[]; 8 -27 8 stone[]; 9 -27 0 stone[]; 9 -27 1 stone[]; 9 -27 2 stone[]; 9 -27 3 stone[]; 9 -27 4 stone[]; 9 -27 5 stone[]; 9 -27 6 stone[]; 9 -27 7 stone[]; 9 -27 8 stone[]; 10 -27 0 stone[]; 10 -27 1 stone[]; 10 -27 2 stone[]; 10 -27 3 stone[]; 10 -27 4 stone[]; 10 -27 5 stone[]; 10 -27 6 stone[]; 10 -27 7 stone[]; 10 -27 8 stone[]; 11 -27 0 stone[]; 11 -27 1 stone[]; 11 -27 2 stone[]; 11 -27 3 stone[]; 11 -27 4 stone[]; 11 -27 5 stone[]; 11 -27 6 stone[]; 11 -27 7 stone[]; 11 -27 8 stone[]; 12 -27 0 stone[]; 12 -27 1 stone[]; 12 -27 2 stone[]; 12 -27 3 stone[]; 12 -27 4 stone[]; 12 -27 5 stone[]; 12 -27 6 stone[]; 12 -27 7 stone[]; 12 -27 8 stone[]; 13 -27 0 stone[]; 13 -27 1 stone[]; 13 -27 2 stone[]; 13 -27 3 stone[]; 13 -27 4 stone[]; 13 -27 5 stone[]; 13 -27 6 stone[]; 13 -27 7 stone[]; 13 -27 8 stone[]; 14 -27 0 stone[]; 14 -27 1 stone[]; 14 -27 2 stone[]; 14 -27 3 stone[]; 14 -27 4 stone[]; 14 -27 5 stone[]; 14 -27 6 stone[]; 14 -27 7 stone[]; 14 -27 8 stone[]; 15 -27 0 stone[]; 15 -27 1 stone[]; 15 -27 2 stone[]; 15 -27 3 stone[]; 15 -27 4 stone[]; 15 -27 5 stone[]; 15 -27 6 stone[]; 15 -27 7 stone[]; 15 -27 8 stone[] | extra: 
+   8138 watcher UpdateSubchunkBlocks 16 -27 -8 stone[]; 16 -27 -7 stone[]; 16 -27 -6 stone[]; 16 -27 -5 stone[]; 16 -27 -4 stone[]; 16 -27 -3 stone[]; 16 -27 -2 stone[]; 16 -27 -1 stone[] | extra: 
+   8138 watcher UpdateSubchunkBlocks 16 -27 0 stone[]; 16 -27 1 stone[]; 16 -27 2 stone[]; 16 -27 3 stone[]; 16 -27 4 stone[]; 16 -27 5 stone[]; 16 -27 6 stone[]; 16 -27 7 stone[]; 16 -27 8 stone[] | extra: 
+   8138 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"425\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill -8 -26 -8 16 -16 8 air
+   9081 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s 0.5 -26 0.5 -90 0
+  10037 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10037 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10037 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+## /tp CmdWatcher 0.5 -26 0.5
+  11037 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+  11037 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11037 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /time set noon
+  13038 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 30000, paused: false }] }) }
+  13038 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 30000, paused: false }] }) }
+  13038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"30000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13038 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["30000"]
+## /fill 1 -26 1 7 -26 7 glass
+  14044 watcher UpdateSubchunkBlocks 1 -26 1 glass[]; 1 -26 2 glass[]; 1 -26 3 glass[]; 1 -26 4 glass[]; 1 -26 5 glass[]; 1 -26 6 glass[]; 1 -26 7 glass[]; 2 -26 1 glass[]; 2 -26 2 glass[]; 2 -26 3 glass[]; 2 -26 4 glass[]; 2 -26 5 glass[]; 2 -26 6 glass[]; 2 -26 7 glass[]; 3 -26 1 glass[]; 3 -26 2 glass[]; 3 -26 3 glass[]; 3 -26 4 glass[]; 3 -26 5 glass[]; 3 -26 6 glass[]; 3 -26 7 glass[]; 4 -26 1 glass[]; 4 -26 2 glass[]; 4 -26 3 glass[]; 4 -26 4 glass[]; 4 -26 5 glass[]; 4 -26 6 glass[]; 4 -26 7 glass[]; 5 -26 1 glass[]; 5 -26 2 glass[]; 5 -26 3 glass[]; 5 -26 4 glass[]; 5 -26 5 glass[]; 5 -26 6 glass[]; 5 -26 7 glass[]; 6 -26 1 glass[]; 6 -26 2 glass[]; 6 -26 3 glass[]; 6 -26 4 glass[]; 6 -26 5 glass[]; 6 -26 6 glass[]; 6 -26 7 glass[]; 7 -26 1 glass[]; 7 -26 2 glass[]; 7 -26 3 glass[]; 7 -26 4 glass[]; 7 -26 5 glass[]; 7 -26 6 glass[]; 7 -26 7 glass[] | extra: 
+  14044 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"49\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14044 actor   UpdateSubchunkBlocks 1 -26 1 glass[]; 1 -26 2 glass[]; 1 -26 3 glass[]; 1 -26 4 glass[]; 1 -26 5 glass[]; 1 -26 6 glass[]; 1 -26 7 glass[]; 2 -26 1 glass[]; 2 -26 2 glass[]; 2 -26 3 glass[]; 2 -26 4 glass[]; 2 -26 5 glass[]; 2 -26 6 glass[]; 2 -26 7 glass[]; 3 -26 1 glass[]; 3 -26 2 glass[]; 3 -26 3 glass[]; 3 -26 4 glass[]; 3 -26 5 glass[]; 3 -26 6 glass[]; 3 -26 7 glass[]; 4 -26 1 glass[]; 4 -26 2 glass[]; 4 -26 3 glass[]; 4 -26 4 glass[]; 4 -26 5 glass[]; 4 -26 6 glass[]; 4 -26 7 glass[]; 5 -26 1 glass[]; 5 -26 2 glass[]; 5 -26 3 glass[]; 5 -26 4 glass[]; 5 -26 5 glass[]; 5 -26 6 glass[]; 5 -26 7 glass[]; 6 -26 1 glass[]; 6 -26 2 glass[]; 6 -26 3 glass[]; 6 -26 4 glass[]; 6 -26 5 glass[]; 6 -26 6 glass[]; 6 -26 7 glass[]; 7 -26 1 glass[]; 7 -26 2 glass[]; 7 -26 3 glass[]; 7 -26 4 glass[]; 7 -26 5 glass[]; 7 -26 6 glass[]; 7 -26 7 glass[] | extra: 
+  14045 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["49"]
+## /fill 2 -26 2 6 -26 6 water
+  15042 actor   UpdateSubchunkBlocks 2 -26 2 water[liquid_depth=0]; 2 -26 3 water[liquid_depth=0]; 2 -26 4 water[liquid_depth=0]; 2 -26 5 water[liquid_depth=0]; 2 -26 6 water[liquid_depth=0]; 3 -26 2 water[liquid_depth=0]; 3 -26 3 water[liquid_depth=0]; 3 -26 4 water[liquid_depth=0]; 3 -26 5 water[liquid_depth=0]; 3 -26 6 water[liquid_depth=0]; 4 -26 2 water[liquid_depth=0]; 4 -26 3 water[liquid_depth=0]; 4 -26 4 water[liquid_depth=0]; 4 -26 5 water[liquid_depth=0]; 4 -26 6 water[liquid_depth=0]; 5 -26 2 water[liquid_depth=0]; 5 -26 3 water[liquid_depth=0]; 5 -26 4 water[liquid_depth=0]; 5 -26 5 water[liquid_depth=0]; 5 -26 6 water[liquid_depth=0]; 6 -26 2 water[liquid_depth=0]; 6 -26 3 water[liquid_depth=0]; 6 -26 4 water[liquid_depth=0]; 6 -26 5 water[liquid_depth=0]; 6 -26 6 water[liquid_depth=0] | extra: 
+  15073 watcher UpdateSubchunkBlocks 2 -26 2 water[liquid_depth=0]; 2 -26 3 water[liquid_depth=0]; 2 -26 4 water[liquid_depth=0]; 2 -26 5 water[liquid_depth=0]; 2 -26 6 water[liquid_depth=0]; 3 -26 2 water[liquid_depth=0]; 3 -26 3 water[liquid_depth=0]; 3 -26 4 water[liquid_depth=0]; 3 -26 5 water[liquid_depth=0]; 3 -26 6 water[liquid_depth=0]; 4 -26 2 water[liquid_depth=0]; 4 -26 3 water[liquid_depth=0]; 4 -26 4 water[liquid_depth=0]; 4 -26 5 water[liquid_depth=0]; 4 -26 6 water[liquid_depth=0]; 5 -26 2 water[liquid_depth=0]; 5 -26 3 water[liquid_depth=0]; 5 -26 4 water[liquid_depth=0]; 5 -26 5 water[liquid_depth=0]; 5 -26 6 water[liquid_depth=0]; 6 -26 2 water[liquid_depth=0]; 6 -26 3 water[liquid_depth=0]; 6 -26 4 water[liquid_depth=0]; 6 -26 5 water[liquid_depth=0]; 6 -26 6 water[liquid_depth=0] | extra: 
+  15073 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"25\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15073 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["25"]
+## /fill 3 -26 3 5 -26 5 frosted_ice
+  16091 watcher UpdateSubchunkBlocks 3 -26 3 frosted_ice[age=0]; 3 -26 4 frosted_ice[age=0]; 3 -26 5 frosted_ice[age=0]; 4 -26 3 frosted_ice[age=0]; 4 -26 4 frosted_ice[age=0]; 4 -26 5 frosted_ice[age=0]; 5 -26 3 frosted_ice[age=0]; 5 -26 4 frosted_ice[age=0]; 5 -26 5 frosted_ice[age=0] | extra: 
+  16091 actor   UpdateSubchunkBlocks 3 -26 3 frosted_ice[age=0]; 3 -26 4 frosted_ice[age=0]; 3 -26 5 frosted_ice[age=0]; 4 -26 3 frosted_ice[age=0]; 4 -26 4 frosted_ice[age=0]; 4 -26 5 frosted_ice[age=0]; 5 -26 3 frosted_ice[age=0]; 5 -26 4 frosted_ice[age=0]; 5 -26 5 frosted_ice[age=0] | extra: 
+  16091 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"9\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16091 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["9"]
+## /
+  17087 watcher UpdateBlock 3 -26 3 layer 0 frosted_ice[age=1]
+  17087 actor   UpdateBlock 3 -26 3 layer 0 frosted_ice[age=1]
+  17187 actor   UpdateBlock 5 -26 4 layer 0 frosted_ice[age=1]
+  17187 watcher UpdateBlock 5 -26 4 layer 0 frosted_ice[age=1]
+  17287 actor   UpdateBlock 4 -26 3 layer 0 frosted_ice[age=1]
+  17287 watcher UpdateBlock 4 -26 3 layer 0 frosted_ice[age=1]
+  17337 watcher UpdateBlock 5 -26 5 layer 0 frosted_ice[age=1]
+  17337 actor   UpdateBlock 5 -26 5 layer 0 frosted_ice[age=1]
+  17437 actor   UpdateBlock 3 -26 5 layer 0 frosted_ice[age=1]
+  17437 watcher UpdateBlock 3 -26 5 layer 0 frosted_ice[age=1]
+  17537 watcher UpdateBlock 5 -26 3 layer 0 frosted_ice[age=1]
+  17537 actor   UpdateBlock 5 -26 3 layer 0 frosted_ice[age=1]
+  17840 actor   UpdateBlock 4 -26 5 layer 0 frosted_ice[age=1]
+  17840 watcher UpdateBlock 4 -26 5 layer 0 frosted_ice[age=1]
+  17888 actor   UpdateBlock 3 -26 4 layer 0 frosted_ice[age=1]
+  17888 watcher UpdateBlock 3 -26 4 layer 0 frosted_ice[age=1]
+## /
+  18288 watcher UpdateBlock 4 -26 3 layer 0 frosted_ice[age=2]
+  18288 actor   UpdateBlock 4 -26 3 layer 0 frosted_ice[age=2]
+  18339 watcher UpdateBlock 3 -26 3 layer 0 frosted_ice[age=2]
+  18339 watcher UpdateBlock 5 -26 4 layer 0 frosted_ice[age=2]
+  18339 actor   UpdateBlock 3 -26 3 layer 0 frosted_ice[age=2]
+  18339 actor   UpdateBlock 5 -26 4 layer 0 frosted_ice[age=2]
+  18491 watcher UpdateBlock 5 -26 5 layer 0 frosted_ice[age=2]
+  18491 actor   UpdateBlock 5 -26 5 layer 0 frosted_ice[age=2]
+  18743 actor   UpdateBlock 3 -26 5 layer 0 frosted_ice[age=2]
+  18743 watcher UpdateBlock 3 -26 5 layer 0 frosted_ice[age=2]
+## /
+  19237 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 30124, paused: false }] }) }
+  19238 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 30124, paused: false }] }) }
+  19287 actor   UpdateBlock 4 -26 5 layer 0 frosted_ice[age=2]
+  19287 watcher UpdateBlock 4 -26 5 layer 0 frosted_ice[age=2]
+  19487 actor   UpdateBlock 5 -26 3 layer 0 frosted_ice[age=2]
+  19487 watcher UpdateBlock 5 -26 3 layer 0 frosted_ice[age=2]
+  19637 actor   UpdateBlock 3 -26 3 layer 0 frosted_ice[age=3]
+  19637 watcher UpdateBlock 3 -26 3 layer 0 frosted_ice[age=3]
+  19737 actor   UpdateBlock 3 -26 4 layer 0 frosted_ice[age=2]
+  19737 watcher UpdateBlock 3 -26 4 layer 0 frosted_ice[age=2]
+  19938 actor   UpdateBlock 4 -26 3 layer 0 frosted_ice[age=3]
+  19938 watcher UpdateBlock 4 -26 3 layer 0 frosted_ice[age=3]
+## /
+  20239 watcher UpdateBlock 3 -26 5 layer 0 frosted_ice[age=3]
+  20239 actor   UpdateBlock 3 -26 5 layer 0 frosted_ice[age=3]
+  20341 actor   UpdateBlock 5 -26 4 layer 0 frosted_ice[age=3]
+  20341 watcher UpdateBlock 5 -26 4 layer 0 frosted_ice[age=3]
+  20439 watcher UpdateBlock 5 -26 5 layer 0 frosted_ice[age=3]
+  20440 actor   UpdateBlock 5 -26 5 layer 0 frosted_ice[age=3]
+  20989 watcher UpdateBlock 5 -26 3 layer 0 frosted_ice[age=3]
+  20989 actor   UpdateBlock 5 -26 3 layer 0 frosted_ice[age=3]
+  21039 actor   UpdateBlock 4 -26 5 layer 0 frosted_ice[age=3]
+  21039 watcher UpdateBlock 4 -26 5 layer 0 frosted_ice[age=3]
+## /
+  21089 watcher UpdateBlock 3 -26 3 layer 0 water[liquid_depth=0]
+  21090 watcher UpdateBlock 3 -26 4 layer 0 frosted_ice[age=3]
+  21090 watcher UpdateBlock 4 -26 3 layer 0 water[liquid_depth=0]
+  21090 actor   UpdateBlock 3 -26 3 layer 0 water[liquid_depth=0]
+  21090 actor   UpdateBlock 3 -26 4 layer 0 frosted_ice[age=3]
+  21090 actor   UpdateBlock 4 -26 3 layer 0 water[liquid_depth=0]
+  21438 actor   UpdateBlock 5 -26 5 layer 0 water[liquid_depth=0]
+  21438 watcher UpdateBlock 5 -26 5 layer 0 water[liquid_depth=0]
+  21438 actor   UpdateBlock 5 -26 4 layer 0 water[liquid_depth=0]
+  21438 watcher UpdateBlock 5 -26 4 layer 0 water[liquid_depth=0]
+  21438 watcher UpdateBlock 4 -26 5 layer 0 water[liquid_depth=0]
+  21438 actor   UpdateBlock 4 -26 5 layer 0 water[liquid_depth=0]
+  21587 actor   UpdateBlock 4 -26 4 layer 0 frosted_ice[age=1]
+  21587 watcher UpdateBlock 4 -26 4 layer 0 frosted_ice[age=1]
+  21838 actor   UpdateBlock 3 -26 5 layer 0 water[liquid_depth=0]
+  21838 actor   UpdateBlock 3 -26 4 layer 0 water[liquid_depth=0]
+  21838 watcher UpdateBlock 3 -26 5 layer 0 water[liquid_depth=0]
+  21838 watcher UpdateBlock 3 -26 4 layer 0 water[liquid_depth=0]
+## /
+  22188 watcher UpdateBlock 5 -26 3 layer 0 water[liquid_depth=0]
+  22188 actor   UpdateBlock 5 -26 3 layer 0 water[liquid_depth=0]
+## /
+  23089 watcher UpdateBlock 4 -26 4 layer 0 frosted_ice[age=2]
+  23089 actor   UpdateBlock 4 -26 4 layer 0 frosted_ice[age=2]
+## /
+  24087 watcher UpdateBlock 4 -26 4 layer 0 frosted_ice[age=3]
+  24087 actor   UpdateBlock 4 -26 4 layer 0 frosted_ice[age=3]
+## /
+  25539 watcher UpdateBlock 4 -26 4 layer 0 water[liquid_depth=0]
+  25539 actor   UpdateBlock 4 -26 4 layer 0 water[liquid_depth=0]
+## /
+## /
+## /
+## /
+## /
+## /
+  32038 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 30380, paused: false }] }) }
+  32038 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 30380, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /time set midnight
+  37139 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 42000, paused: false }] }) }
+  37139 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"42000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37139 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 42000, paused: false }] }) }
+  37139 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["42000"]
+## /fill 1 -26 1 7 -26 7 air
+  38148 watcher UpdateSubchunkBlocks 1 -26 1 air[]; 1 -26 2 air[]; 1 -26 3 air[]; 1 -26 4 air[]; 1 -26 5 air[]; 1 -26 6 air[]; 1 -26 7 air[]; 2 -26 1 air[]; 2 -26 2 air[]; 2 -26 3 air[]; 2 -26 4 air[]; 2 -26 5 air[]; 2 -26 6 air[]; 2 -26 7 air[]; 3 -26 1 air[]; 3 -26 2 air[]; 3 -26 3 air[]; 3 -26 4 air[]; 3 -26 5 air[]; 3 -26 6 air[]; 3 -26 7 air[]; 4 -26 1 air[]; 4 -26 2 air[]; 4 -26 3 air[]; 4 -26 4 air[]; 4 -26 5 air[]; 4 -26 6 air[]; 4 -26 7 air[]; 5 -26 1 air[]; 5 -26 2 air[]; 5 -26 3 air[]; 5 -26 4 air[]; 5 -26 5 air[]; 5 -26 6 air[]; 5 -26 7 air[]; 6 -26 1 air[]; 6 -26 2 air[]; 6 -26 3 air[]; 6 -26 4 air[]; 6 -26 5 air[]; 6 -26 6 air[]; 6 -26 7 air[]; 7 -26 1 air[]; 7 -26 2 air[]; 7 -26 3 air[]; 7 -26 4 air[]; 7 -26 5 air[]; 7 -26 6 air[]; 7 -26 7 air[] | extra: 
+  38149 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"49\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  38149 actor   UpdateSubchunkBlocks 1 -26 1 air[]; 1 -26 2 air[]; 1 -26 3 air[]; 1 -26 4 air[]; 1 -26 5 air[]; 1 -26 6 air[]; 1 -26 7 air[]; 2 -26 1 air[]; 2 -26 2 air[]; 2 -26 3 air[]; 2 -26 4 air[]; 2 -26 5 air[]; 2 -26 6 air[]; 2 -26 7 air[]; 3 -26 1 air[]; 3 -26 2 air[]; 3 -26 3 air[]; 3 -26 4 air[]; 3 -26 5 air[]; 3 -26 6 air[]; 3 -26 7 air[]; 4 -26 1 air[]; 4 -26 2 air[]; 4 -26 3 air[]; 4 -26 4 air[]; 4 -26 5 air[]; 4 -26 6 air[]; 4 -26 7 air[]; 5 -26 1 air[]; 5 -26 2 air[]; 5 -26 3 air[]; 5 -26 4 air[]; 5 -26 5 air[]; 5 -26 6 air[]; 5 -26 7 air[]; 6 -26 1 air[]; 6 -26 2 air[]; 6 -26 3 air[]; 6 -26 4 air[]; 6 -26 5 air[]; 6 -26 6 air[]; 6 -26 7 air[]; 7 -26 1 air[]; 7 -26 2 air[]; 7 -26 3 air[]; 7 -26 4 air[]; 7 -26 5 air[]; 7 -26 6 air[]; 7 -26 7 air[] | extra: 
+  38149 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["49"]
+## /
+## /fill 1 -26 1 7 -26 7 glass
+  40148 watcher UpdateSubchunkBlocks 1 -26 1 glass[]; 1 -26 2 glass[]; 1 -26 3 glass[]; 1 -26 4 glass[]; 1 -26 5 glass[]; 1 -26 6 glass[]; 1 -26 7 glass[]; 2 -26 1 glass[]; 2 -26 2 glass[]; 2 -26 3 glass[]; 2 -26 4 glass[]; 2 -26 5 glass[]; 2 -26 6 glass[]; 2 -26 7 glass[]; 3 -26 1 glass[]; 3 -26 2 glass[]; 3 -26 3 glass[]; 3 -26 4 glass[]; 3 -26 5 glass[]; 3 -26 6 glass[]; 3 -26 7 glass[]; 4 -26 1 glass[]; 4 -26 2 glass[]; 4 -26 3 glass[]; 4 -26 4 glass[]; 4 -26 5 glass[]; 4 -26 6 glass[]; 4 -26 7 glass[]; 5 -26 1 glass[]; 5 -26 2 glass[]; 5 -26 3 glass[]; 5 -26 4 glass[]; 5 -26 5 glass[]; 5 -26 6 glass[]; 5 -26 7 glass[]; 6 -26 1 glass[]; 6 -26 2 glass[]; 6 -26 3 glass[]; 6 -26 4 glass[]; 6 -26 5 glass[]; 6 -26 6 glass[]; 6 -26 7 glass[]; 7 -26 1 glass[]; 7 -26 2 glass[]; 7 -26 3 glass[]; 7 -26 4 glass[]; 7 -26 5 glass[]; 7 -26 6 glass[]; 7 -26 7 glass[] | extra: 
+  40148 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"49\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  40148 actor   UpdateSubchunkBlocks 1 -26 1 glass[]; 1 -26 2 glass[]; 1 -26 3 glass[]; 1 -26 4 glass[]; 1 -26 5 glass[]; 1 -26 6 glass[]; 1 -26 7 glass[]; 2 -26 1 glass[]; 2 -26 2 glass[]; 2 -26 3 glass[]; 2 -26 4 glass[]; 2 -26 5 glass[]; 2 -26 6 glass[]; 2 -26 7 glass[]; 3 -26 1 glass[]; 3 -26 2 glass[]; 3 -26 3 glass[]; 3 -26 4 glass[]; 3 -26 5 glass[]; 3 -26 6 glass[]; 3 -26 7 glass[]; 4 -26 1 glass[]; 4 -26 2 glass[]; 4 -26 3 glass[]; 4 -26 4 glass[]; 4 -26 5 glass[]; 4 -26 6 glass[]; 4 -26 7 glass[]; 5 -26 1 glass[]; 5 -26 2 glass[]; 5 -26 3 glass[]; 5 -26 4 glass[]; 5 -26 5 glass[]; 5 -26 6 glass[]; 5 -26 7 glass[]; 6 -26 1 glass[]; 6 -26 2 glass[]; 6 -26 3 glass[]; 6 -26 4 glass[]; 6 -26 5 glass[]; 6 -26 6 glass[]; 6 -26 7 glass[]; 7 -26 1 glass[]; 7 -26 2 glass[]; 7 -26 3 glass[]; 7 -26 4 glass[]; 7 -26 5 glass[]; 7 -26 6 glass[]; 7 -26 7 glass[] | extra: 
+  40149 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["49"]
+## /fill 2 -26 2 6 -26 6 water
+  41144 watcher UpdateSubchunkBlocks 2 -26 2 water[liquid_depth=0]; 2 -26 3 water[liquid_depth=0]; 2 -26 4 water[liquid_depth=0]; 2 -26 5 water[liquid_depth=0]; 2 -26 6 water[liquid_depth=0]; 3 -26 2 water[liquid_depth=0]; 3 -26 3 water[liquid_depth=0]; 3 -26 4 water[liquid_depth=0]; 3 -26 5 water[liquid_depth=0]; 3 -26 6 water[liquid_depth=0]; 4 -26 2 water[liquid_depth=0]; 4 -26 3 water[liquid_depth=0]; 4 -26 4 water[liquid_depth=0]; 4 -26 5 water[liquid_depth=0]; 4 -26 6 water[liquid_depth=0]; 5 -26 2 water[liquid_depth=0]; 5 -26 3 water[liquid_depth=0]; 5 -26 4 water[liquid_depth=0]; 5 -26 5 water[liquid_depth=0]; 5 -26 6 water[liquid_depth=0]; 6 -26 2 water[liquid_depth=0]; 6 -26 3 water[liquid_depth=0]; 6 -26 4 water[liquid_depth=0]; 6 -26 5 water[liquid_depth=0]; 6 -26 6 water[liquid_depth=0] | extra: 
+  41144 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"25\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41145 actor   UpdateSubchunkBlocks 2 -26 2 water[liquid_depth=0]; 2 -26 3 water[liquid_depth=0]; 2 -26 4 water[liquid_depth=0]; 2 -26 5 water[liquid_depth=0]; 2 -26 6 water[liquid_depth=0]; 3 -26 2 water[liquid_depth=0]; 3 -26 3 water[liquid_depth=0]; 3 -26 4 water[liquid_depth=0]; 3 -26 5 water[liquid_depth=0]; 3 -26 6 water[liquid_depth=0]; 4 -26 2 water[liquid_depth=0]; 4 -26 3 water[liquid_depth=0]; 4 -26 4 water[liquid_depth=0]; 4 -26 5 water[liquid_depth=0]; 4 -26 6 water[liquid_depth=0]; 5 -26 2 water[liquid_depth=0]; 5 -26 3 water[liquid_depth=0]; 5 -26 4 water[liquid_depth=0]; 5 -26 5 water[liquid_depth=0]; 5 -26 6 water[liquid_depth=0]; 6 -26 2 water[liquid_depth=0]; 6 -26 3 water[liquid_depth=0]; 6 -26 4 water[liquid_depth=0]; 6 -26 5 water[liquid_depth=0]; 6 -26 6 water[liquid_depth=0] | extra: 
+  41145 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["25"]
+## /fill 3 -26 3 5 -26 5 frosted_ice
+  42141 watcher UpdateSubchunkBlocks 3 -26 3 frosted_ice[age=0]; 3 -26 4 frosted_ice[age=0]; 3 -26 5 frosted_ice[age=0]; 4 -26 3 frosted_ice[age=0]; 4 -26 4 frosted_ice[age=0]; 4 -26 5 frosted_ice[age=0]; 5 -26 3 frosted_ice[age=0]; 5 -26 4 frosted_ice[age=0]; 5 -26 5 frosted_ice[age=0] | extra: 
+  42141 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"9\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  42142 actor   UpdateSubchunkBlocks 3 -26 3 frosted_ice[age=0]; 3 -26 4 frosted_ice[age=0]; 3 -26 5 frosted_ice[age=0]; 4 -26 3 frosted_ice[age=0]; 4 -26 4 frosted_ice[age=0]; 4 -26 5 frosted_ice[age=0]; 5 -26 3 frosted_ice[age=0]; 5 -26 4 frosted_ice[age=0]; 5 -26 5 frosted_ice[age=0] | extra: 
+  42142 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["9"]
+## /fill 9 -26 1 15 -26 7 glass
+  43148 watcher UpdateSubchunkBlocks 9 -26 1 glass[]; 9 -26 2 glass[]; 9 -26 3 glass[]; 9 -26 4 glass[]; 9 -26 5 glass[]; 9 -26 6 glass[]; 9 -26 7 glass[]; 10 -26 1 glass[]; 10 -26 2 glass[]; 10 -26 3 glass[]; 10 -26 4 glass[]; 10 -26 5 glass[]; 10 -26 6 glass[]; 10 -26 7 glass[]; 11 -26 1 glass[]; 11 -26 2 glass[]; 11 -26 3 glass[]; 11 -26 4 glass[]; 11 -26 5 glass[]; 11 -26 6 glass[]; 11 -26 7 glass[]; 12 -26 1 glass[]; 12 -26 2 glass[]; 12 -26 3 glass[]; 12 -26 4 glass[]; 12 -26 5 glass[]; 12 -26 6 glass[]; 12 -26 7 glass[]; 13 -26 1 glass[]; 13 -26 2 glass[]; 13 -26 3 glass[]; 13 -26 4 glass[]; 13 -26 5 glass[]; 13 -26 6 glass[]; 13 -26 7 glass[]; 14 -26 1 glass[]; 14 -26 2 glass[]; 14 -26 3 glass[]; 14 -26 4 glass[]; 14 -26 5 glass[]; 14 -26 6 glass[]; 14 -26 7 glass[]; 15 -26 1 glass[]; 15 -26 2 glass[]; 15 -26 3 glass[]; 15 -26 4 glass[]; 15 -26 5 glass[]; 15 -26 6 glass[]; 15 -26 7 glass[] | extra: 
+  43149 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"49\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  43149 actor   UpdateSubchunkBlocks 9 -26 1 glass[]; 9 -26 2 glass[]; 9 -26 3 glass[]; 9 -26 4 glass[]; 9 -26 5 glass[]; 9 -26 6 glass[]; 9 -26 7 glass[]; 10 -26 1 glass[]; 10 -26 2 glass[]; 10 -26 3 glass[]; 10 -26 4 glass[]; 10 -26 5 glass[]; 10 -26 6 glass[]; 10 -26 7 glass[]; 11 -26 1 glass[]; 11 -26 2 glass[]; 11 -26 3 glass[]; 11 -26 4 glass[]; 11 -26 5 glass[]; 11 -26 6 glass[]; 11 -26 7 glass[]; 12 -26 1 glass[]; 12 -26 2 glass[]; 12 -26 3 glass[]; 12 -26 4 glass[]; 12 -26 5 glass[]; 12 -26 6 glass[]; 12 -26 7 glass[]; 13 -26 1 glass[]; 13 -26 2 glass[]; 13 -26 3 glass[]; 13 -26 4 glass[]; 13 -26 5 glass[]; 13 -26 6 glass[]; 13 -26 7 glass[]; 14 -26 1 glass[]; 14 -26 2 glass[]; 14 -26 3 glass[]; 14 -26 4 glass[]; 14 -26 5 glass[]; 14 -26 6 glass[]; 14 -26 7 glass[]; 15 -26 1 glass[]; 15 -26 2 glass[]; 15 -26 3 glass[]; 15 -26 4 glass[]; 15 -26 5 glass[]; 15 -26 6 glass[]; 15 -26 7 glass[] | extra: 
+  43149 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["49"]
+## /fill 10 -26 2 14 -26 6 water
+  44144 watcher UpdateSubchunkBlocks 10 -26 2 water[liquid_depth=0]; 10 -26 3 water[liquid_depth=0]; 10 -26 4 water[liquid_depth=0]; 10 -26 5 water[liquid_depth=0]; 10 -26 6 water[liquid_depth=0]; 11 -26 2 water[liquid_depth=0]; 11 -26 3 water[liquid_depth=0]; 11 -26 4 water[liquid_depth=0]; 11 -26 5 water[liquid_depth=0]; 11 -26 6 water[liquid_depth=0]; 12 -26 2 water[liquid_depth=0]; 12 -26 3 water[liquid_depth=0]; 12 -26 4 water[liquid_depth=0]; 12 -26 5 water[liquid_depth=0]; 12 -26 6 water[liquid_depth=0]; 13 -26 2 water[liquid_depth=0]; 13 -26 3 water[liquid_depth=0]; 13 -26 4 water[liquid_depth=0]; 13 -26 5 water[liquid_depth=0]; 13 -26 6 water[liquid_depth=0]; 14 -26 2 water[liquid_depth=0]; 14 -26 3 water[liquid_depth=0]; 14 -26 4 water[liquid_depth=0]; 14 -26 5 water[liquid_depth=0]; 14 -26 6 water[liquid_depth=0] | extra: 
+  44144 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"25\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  44144 actor   UpdateSubchunkBlocks 10 -26 2 water[liquid_depth=0]; 10 -26 3 water[liquid_depth=0]; 10 -26 4 water[liquid_depth=0]; 10 -26 5 water[liquid_depth=0]; 10 -26 6 water[liquid_depth=0]; 11 -26 2 water[liquid_depth=0]; 11 -26 3 water[liquid_depth=0]; 11 -26 4 water[liquid_depth=0]; 11 -26 5 water[liquid_depth=0]; 11 -26 6 water[liquid_depth=0]; 12 -26 2 water[liquid_depth=0]; 12 -26 3 water[liquid_depth=0]; 12 -26 4 water[liquid_depth=0]; 12 -26 5 water[liquid_depth=0]; 12 -26 6 water[liquid_depth=0]; 13 -26 2 water[liquid_depth=0]; 13 -26 3 water[liquid_depth=0]; 13 -26 4 water[liquid_depth=0]; 13 -26 5 water[liquid_depth=0]; 13 -26 6 water[liquid_depth=0]; 14 -26 2 water[liquid_depth=0]; 14 -26 3 water[liquid_depth=0]; 14 -26 4 water[liquid_depth=0]; 14 -26 5 water[liquid_depth=0]; 14 -26 6 water[liquid_depth=0] | extra: 
+  44144 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["25"]
+  44839 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 42154, paused: false }] }) }
+  44839 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 42154, paused: false }] }) }
+## /fill 11 -26 3 13 -26 5 frosted_ice
+  45142 watcher UpdateSubchunkBlocks 11 -26 3 frosted_ice[age=0]; 11 -26 4 frosted_ice[age=0]; 11 -26 5 frosted_ice[age=0]; 12 -26 3 frosted_ice[age=0]; 12 -26 4 frosted_ice[age=0]; 12 -26 5 frosted_ice[age=0]; 13 -26 3 frosted_ice[age=0]; 13 -26 4 frosted_ice[age=0]; 13 -26 5 frosted_ice[age=0] | extra: 
+  45142 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"9\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  45142 actor   UpdateSubchunkBlocks 11 -26 3 frosted_ice[age=0]; 11 -26 4 frosted_ice[age=0]; 11 -26 5 frosted_ice[age=0]; 12 -26 3 frosted_ice[age=0]; 12 -26 4 frosted_ice[age=0]; 12 -26 5 frosted_ice[age=0]; 13 -26 3 frosted_ice[age=0]; 13 -26 4 frosted_ice[age=0]; 13 -26 5 frosted_ice[age=0] | extra: 
+  45142 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["9"]
+## /setblock 12 -24 4 glowstone
+  46143 watcher UpdateBlock 12 -24 4 layer 0 glowstone[]
+  46143 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  46144 actor   UpdateBlock 12 -24 4 layer 0 glowstone[]
+  46144 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  46190 watcher UpdateBlock 11 -26 4 layer 0 frosted_ice[age=1]
+  46190 watcher UpdateBlock 11 -26 5 layer 0 frosted_ice[age=1]
+  46190 actor   UpdateBlock 11 -26 4 layer 0 frosted_ice[age=1]
+  46190 actor   UpdateBlock 11 -26 5 layer 0 frosted_ice[age=1]
+  46388 watcher UpdateBlock 13 -26 3 layer 0 frosted_ice[age=1]
+  46388 actor   UpdateBlock 13 -26 3 layer 0 frosted_ice[age=1]
+  46438 watcher UpdateBlock 12 -26 3 layer 0 frosted_ice[age=1]
+  46438 actor   UpdateBlock 12 -26 3 layer 0 frosted_ice[age=1]
+  46489 watcher UpdateBlock 12 -26 5 layer 0 frosted_ice[age=1]
+  46489 actor   UpdateBlock 12 -26 5 layer 0 frosted_ice[age=1]
+  46538 watcher UpdateBlock 13 -26 4 layer 0 frosted_ice[age=1]
+  46538 actor   UpdateBlock 13 -26 4 layer 0 frosted_ice[age=1]
+  46588 watcher UpdateBlock 11 -26 3 layer 0 frosted_ice[age=1]
+  46588 actor   UpdateBlock 11 -26 3 layer 0 frosted_ice[age=1]
+## /setblock 14 -24 4 glowstone
+  47142 watcher UpdateBlock 14 -24 4 layer 0 glowstone[]
+  47142 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47142 actor   UpdateBlock 14 -24 4 layer 0 glowstone[]
+  47142 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  47437 actor   UpdateBlock 11 -26 4 layer 0 frosted_ice[age=2]
+  47438 watcher UpdateBlock 11 -26 4 layer 0 frosted_ice[age=2]
+  47637 watcher UpdateBlock 12 -26 5 layer 0 frosted_ice[age=2]
+  47637 actor   UpdateBlock 12 -26 5 layer 0 frosted_ice[age=2]
+  47737 watcher UpdateBlock 13 -26 5 layer 0 frosted_ice[age=1]
+  47737 actor   UpdateBlock 13 -26 5 layer 0 frosted_ice[age=1]
+  47788 watcher UpdateBlock 12 -26 3 layer 0 frosted_ice[age=2]
+  47788 actor   UpdateBlock 12 -26 3 layer 0 frosted_ice[age=2]
+  47837 watcher UpdateBlock 11 -26 5 layer 0 frosted_ice[age=2]
+  47837 actor   UpdateBlock 11 -26 5 layer 0 frosted_ice[age=2]
+  47987 watcher UpdateBlock 13 -26 4 layer 0 frosted_ice[age=2]
+  47987 actor   UpdateBlock 13 -26 4 layer 0 frosted_ice[age=2]
+## /
+  48137 actor   UpdateBlock 13 -26 3 layer 0 frosted_ice[age=2]
+  48137 watcher UpdateBlock 13 -26 3 layer 0 frosted_ice[age=2]
+  48439 watcher UpdateBlock 12 -26 4 layer 0 frosted_ice[age=1]
+  48439 actor   UpdateBlock 12 -26 4 layer 0 frosted_ice[age=1]
+  48487 watcher UpdateBlock 11 -26 3 layer 0 frosted_ice[age=2]
+  48487 actor   UpdateBlock 11 -26 3 layer 0 frosted_ice[age=2]
+  48537 actor   UpdateBlock 11 -26 4 layer 0 frosted_ice[age=3]
+  48537 watcher UpdateBlock 11 -26 4 layer 0 frosted_ice[age=3]
+  48988 watcher UpdateBlock 11 -26 5 layer 0 frosted_ice[age=3]
+  48988 actor   UpdateBlock 11 -26 5 layer 0 frosted_ice[age=3]
+  49041 actor   UpdateBlock 12 -26 3 layer 0 frosted_ice[age=3]
+  49041 actor   UpdateBlock 13 -26 4 layer 0 frosted_ice[age=3]
+  49041 watcher UpdateBlock 12 -26 3 layer 0 frosted_ice[age=3]
+  49041 watcher UpdateBlock 13 -26 4 layer 0 frosted_ice[age=3]
+  49091 actor   UpdateBlock 12 -26 5 layer 0 frosted_ice[age=3]
+  49091 watcher UpdateBlock 12 -26 5 layer 0 frosted_ice[age=3]
+## /
+  49239 watcher UpdateBlock 13 -26 5 layer 0 frosted_ice[age=2]
+  49239 actor   UpdateBlock 13 -26 5 layer 0 frosted_ice[age=2]
+  49687 watcher UpdateBlock 11 -26 3 layer 0 frosted_ice[age=3]
+  49687 actor   UpdateBlock 11 -26 3 layer 0 frosted_ice[age=3]
+  49737 actor   UpdateBlock 13 -26 3 layer 0 frosted_ice[age=3]
+  49737 watcher UpdateBlock 13 -26 3 layer 0 frosted_ice[age=3]
+  49887 watcher UpdateBlock 11 -26 4 layer 0 water[liquid_depth=0]
+  49887 watcher UpdateBlock 11 -26 3 layer 0 water[liquid_depth=0]
+  49887 watcher UpdateBlock 11 -26 5 layer 0 water[liquid_depth=0]
+  49887 watcher UpdateBlock 12 -26 4 layer 0 frosted_ice[age=2]
+  49887 actor   UpdateBlock 11 -26 4 layer 0 water[liquid_depth=0]
+  49887 actor   UpdateBlock 11 -26 3 layer 0 water[liquid_depth=0]
+  49887 actor   UpdateBlock 11 -26 5 layer 0 water[liquid_depth=0]
+  49887 actor   UpdateBlock 12 -26 4 layer 0 frosted_ice[age=2]
+## /
+  50138 watcher UpdateBlock 13 -26 4 layer 0 water[liquid_depth=0]
+  50138 watcher UpdateBlock 13 -26 3 layer 0 water[liquid_depth=0]
+  50138 watcher UpdateBlock 13 -26 5 layer 0 frosted_ice[age=3]
+  50138 watcher UpdateBlock 12 -26 4 layer 0 frosted_ice[age=3]
+  50138 actor   UpdateBlock 13 -26 4 layer 0 water[liquid_depth=0]
+  50138 actor   UpdateBlock 13 -26 3 layer 0 water[liquid_depth=0]
+  50138 actor   UpdateBlock 13 -26 5 layer 0 frosted_ice[age=3]
+  50138 actor   UpdateBlock 12 -26 4 layer 0 frosted_ice[age=3]
+  50739 watcher UpdateBlock 12 -26 5 layer 0 water[liquid_depth=0]
+  50739 watcher UpdateBlock 12 -26 4 layer 0 water[liquid_depth=0]
+  50739 watcher UpdateBlock 13 -26 5 layer 0 water[liquid_depth=0]
+  50739 actor   UpdateBlock 12 -26 5 layer 0 water[liquid_depth=0]
+  50739 actor   UpdateBlock 12 -26 4 layer 0 water[liquid_depth=0]
+  50739 actor   UpdateBlock 13 -26 5 layer 0 water[liquid_depth=0]
+  50788 watcher UpdateBlock 12 -26 3 layer 0 water[liquid_depth=0]
+  50788 actor   UpdateBlock 12 -26 3 layer 0 water[liquid_depth=0]
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  57637 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 42410, paused: false }] }) }
+  57637 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 42410, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /fill -8 -26 -8 16 -16 8 air
+  68244 watcher UpdateSubchunkBlocks 1 -26 1 air[]; 1 -26 2 air[]; 1 -26 3 air[]; 1 -26 4 air[]; 1 -26 5 air[]; 1 -26 6 air[]; 1 -26 7 air[]; 2 -26 1 air[]; 2 -26 2 air[]; 2 -26 3 air[]; 2 -26 4 air[]; 2 -26 5 air[]; 2 -26 6 air[]; 2 -26 7 air[]; 3 -26 1 air[]; 3 -26 2 air[]; 3 -26 3 air[]; 3 -26 4 air[]; 3 -26 5 air[]; 3 -26 6 air[]; 3 -26 7 air[]; 4 -26 1 air[]; 4 -26 2 air[]; 4 -26 3 air[]; 4 -26 4 air[]; 4 -26 5 air[]; 4 -26 6 air[]; 4 -26 7 air[]; 5 -26 1 air[]; 5 -26 2 air[]; 5 -26 3 air[]; 5 -26 4 air[]; 5 -26 5 air[]; 5 -26 6 air[]; 5 -26 7 air[]; 6 -26 1 air[]; 6 -26 2 air[]; 6 -26 3 air[]; 6 -26 4 air[]; 6 -26 5 air[]; 6 -26 6 air[]; 6 -26 7 air[]; 7 -26 1 air[]; 7 -26 2 air[]; 7 -26 3 air[]; 7 -26 4 air[]; 7 -26 5 air[]; 7 -26 6 air[]; 7 -26 7 air[]; 9 -26 1 air[]; 9 -26 2 air[]; 9 -26 3 air[]; 9 -26 4 air[]; 9 -26 5 air[]; 9 -26 6 air[]; 9 -26 7 air[]; 10 -26 1 air[]; 10 -26 2 air[]; 10 -26 3 air[]; 10 -26 4 air[]; 10 -26 5 air[]; 10 -26 6 air[]; 10 -26 7 air[]; 11 -26 1 air[]; 11 -26 2 air[]; 11 -26 3 air[]; 11 -26 4 air[]; 11 -26 5 air[]; 11 -26 6 air[]; 11 -26 7 air[]; 12 -26 1 air[]; 12 -26 2 air[]; 12 -26 3 air[]; 12 -26 4 air[]; 12 -26 5 air[]; 12 -26 6 air[]; 12 -26 7 air[]; 12 -24 4 air[]; 13 -26 1 air[]; 13 -26 2 air[]; 13 -26 3 air[]; 13 -26 4 air[]; 13 -26 5 air[]; 13 -26 6 air[]; 13 -26 7 air[]; 14 -26 1 air[]; 14 -26 2 air[]; 14 -26 3 air[]; 14 -26 4 air[]; 14 -26 5 air[]; 14 -26 6 air[]; 14 -26 7 air[]; 14 -24 4 air[]; 15 -26 1 air[]; 15 -26 2 air[]; 15 -26 3 air[]; 15 -26 4 air[]; 15 -26 5 air[]; 15 -26 6 air[]; 15 -26 7 air[] | extra: 
+  68244 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"100\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  68245 actor   UpdateSubchunkBlocks 1 -26 1 air[]; 1 -26 2 air[]; 1 -26 3 air[]; 1 -26 4 air[]; 1 -26 5 air[]; 1 -26 6 air[]; 1 -26 7 air[]; 2 -26 1 air[]; 2 -26 2 air[]; 2 -26 3 air[]; 2 -26 4 air[]; 2 -26 5 air[]; 2 -26 6 air[]; 2 -26 7 air[]; 3 -26 1 air[]; 3 -26 2 air[]; 3 -26 3 air[]; 3 -26 4 air[]; 3 -26 5 air[]; 3 -26 6 air[]; 3 -26 7 air[]; 4 -26 1 air[]; 4 -26 2 air[]; 4 -26 3 air[]; 4 -26 4 air[]; 4 -26 5 air[]; 4 -26 6 air[]; 4 -26 7 air[]; 5 -26 1 air[]; 5 -26 2 air[]; 5 -26 3 air[]; 5 -26 4 air[]; 5 -26 5 air[]; 5 -26 6 air[]; 5 -26 7 air[]; 6 -26 1 air[]; 6 -26 2 air[]; 6 -26 3 air[]; 6 -26 4 air[]; 6 -26 5 air[]; 6 -26 6 air[]; 6 -26 7 air[]; 7 -26 1 air[]; 7 -26 2 air[]; 7 -26 3 air[]; 7 -26 4 air[]; 7 -26 5 air[]; 7 -26 6 air[]; 7 -26 7 air[]; 9 -26 1 air[]; 9 -26 2 air[]; 9 -26 3 air[]; 9 -26 4 air[]; 9 -26 5 air[]; 9 -26 6 air[]; 9 -26 7 air[]; 10 -26 1 air[]; 10 -26 2 air[]; 10 -26 3 air[]; 10 -26 4 air[]; 10 -26 5 air[]; 10 -26 6 air[]; 10 -26 7 air[]; 11 -26 1 air[]; 11 -26 2 air[]; 11 -26 3 air[]; 11 -26 4 air[]; 11 -26 5 air[]; 11 -26 6 air[]; 11 -26 7 air[]; 12 -26 1 air[]; 12 -26 2 air[]; 12 -26 3 air[]; 12 -26 4 air[]; 12 -26 5 air[]; 12 -26 6 air[]; 12 -26 7 air[]; 12 -24 4 air[]; 13 -26 1 air[]; 13 -26 2 air[]; 13 -26 3 air[]; 13 -26 4 air[]; 13 -26 5 air[]; 13 -26 6 air[]; 13 -26 7 air[]; 14 -26 1 air[]; 14 -26 2 air[]; 14 -26 3 air[]; 14 -26 4 air[]; 14 -26 5 air[]; 14 -26 6 air[]; 14 -26 7 air[]; 14 -24 4 air[]; 15 -26 1 air[]; 15 -26 2 air[]; 15 -26 3 air[]; 15 -26 4 air[]; 15 -26 5 air[]; 15 -26 6 air[]; 15 -26 7 air[] | extra: 
+  68245 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["100"]
+## /time set noon
+  69197 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 54000, paused: false }] }) }
+  69197 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["54000"]
+  69197 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 54000, paused: false }] }) }
+  69197 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"54000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+  70448 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 54025, paused: false }] }) }
+  70448 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 54025, paused: false }] }) }
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1
