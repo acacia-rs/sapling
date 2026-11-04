@@ -251,9 +251,12 @@ bed-goer not matched (strolls are random on both).
   `3 0 0 ...` (gone in a second), sapling `3 1 3 3 2 2 2 1 ...` (never shook it off). The avoid goal was
   decompiled (vtable 14a75d720: `canUse` 14190daa0, `findNearest` 14190d490 takes the first fitting
   mob in its box, not the nearest; `canUse` then needs sight, a `RandomPos::getPosAvoid` spot
-  (14597bd90, kept to the mob's home and leash restriction) farther from the threat, and a path). The
-  home restriction likely holds village villagers in; sapling flees straight away from the threat,
-  restriction-free. Not fixed: the flee spot search and its speed were not fitted.
+  (14597bd90, kept to the mob's home and leash restriction) farther from the threat, and a path).
+  `f3fear2` (bds-f3fear2.txt; the zombie summoned 60 off, then put 4 from the pair) undid any village
+  rule: in the village both fled from a still zombie and a hunting one within 1 to 2 s, while alone one
+  villager stayed within 8 of a still zombie for 8 s and of a hunting one for most of 15 s. BDS's
+  fleeing is as often late as not, which fits a random spot search that fails; sapling flees straight
+  away at once. Not fixed: one run per case does not fit the search.
 - The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick, which matched the
   drilled sleep and wake ticks.
 - Breeding, `f3breed` (2026-11-04, bds-f3breed.txt, sapling-f3breed.txt): two unskilled villagers in the
