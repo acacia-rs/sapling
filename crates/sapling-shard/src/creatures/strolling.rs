@@ -72,7 +72,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: O
     });
     let goes = goal.zip(ahead).filter(|((_, until), (far, ahead))| now < *until && *far > ARRIVED && (!body.on_ground || is_floor(world, layer, &body, *ahead)));
     match goes {
-        Some(((to, _), _)) => legs::walk(world, entity, layer, &body, to, speed, 0.0),
+        Some(((to, _), _)) => legs::walk_turning(world, entity, layer, &body, to, speed, 0.0, legs::STROLL_TURN),
         None => legs::rest(world, entity),
     }
     if let Some(mut stroll) = world.get_mut::<Stroll>(entity) {

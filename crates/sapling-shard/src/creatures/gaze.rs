@@ -1,8 +1,10 @@
-//! Where a mob left to itself looks, as BDS's slowed cows did (research/captures/bds-gaze.txt,
-//! bds-tickcircle4.txt): `look_at_player` turns its head 10 degrees a tick towards a player within
-//! its distance and pitches straight at the player's eyes, for its look time; then the pitch is 0
-//! again and the head stays. `random_look_around` turns the head alone to a random side. With
-//! neither, a head stays put until the body turns, then comes round to it at the same 10 degrees.
+//! Where a mob left to itself looks, and how its body comes round after its head, as BDS's slowed
+//! cows did (docs/research/mob-damage.md "Where a mob left to itself looks"; research/captures/
+//! bds-gaze.txt, bds-glance.txt). `look_at_player` turns the head 10 degrees a tick towards a player
+//! within its distance and pitches straight at the player's eyes; `random_look_around` puts the head
+//! at once on a random side. Either keeps the head within 75 degrees of the body, which holds still
+//! until the head has stayed put 10 ticks and then closes on it (BDS's body control, 0x142cc5810).
+//! With no look the head comes back to the body at 10 degrees a tick; a stroll's turn ends a look.
 
 use bevy_ecs::prelude::*;
 use sapling_data::Looks;
@@ -16,12 +18,21 @@ use crate::sync::Told;
 
 /// Degrees the head turns in a tick (7 of the wire's 256ths a tick).
 const HEAD_TURN: f32 = 10.0;
+/// How far the head may be from the body.
+const HEAD_LEASH: f32 = 75.0;
+/// A walking body comes round to where it walks this much a tick.
+const BODY_TURN: f32 = 25.0;
+/// The head is settled while it stays within this of where it settled; the body starts to close
+/// on it after this many settled ticks, and is on it this many later.
+const SETTLED: f32 = 15.0;
+const SETTLES: u32 = 10;
+/// A tick's move across, squared, past which the body walks.
+const WALKS: f32 = 2.5e-7;
 /// A mob's eyes are this share of its height up it, fitted to the cows' pitch.
 const EYES: f32 = 0.95;
-/// `random_look_around`: its chance a tick, its look's ticks, and how far from the body it looks.
+/// `random_look_around`: its chance a try and its look's ticks, fitted to bds-glance.txt's gaps.
 const GLANCE_CHANCE: f32 = 0.02;
-const GLANCE_TICKS: (u32, u32) = (20, 40);
-const GLANCE_SIDE: f32 = 90.0;
+const GLANCE_TICKS: (u32, u32) = (40, 80);
 
 #[derive(Clone, Copy)]
 enum Goal {
@@ -30,18 +41,26 @@ enum Goal {
     Side(f32, u64),
 }
 
-/// Its head's yaw, its goal, its body's yaw last tick, and whether the head comes round to a
-/// body that turned (a look's end leaves it where it was).
+/// Its head's and its body's yaw, its goal, where the head settled and for how many ticks, and its
+/// legs' yaw and feet last tick.
 #[derive(Component, Clone, Copy)]
 pub(super) struct Gaze {
     head: f32,
+    body: f32,
     goal: Goal,
-    body_yaw: f32,
-    follows: bool,
+    settled: f32,
+    still: u32,
+    yaw: f32,
+    at: [f32; 3],
 }
 
-fn turned(from: f32, to: f32) -> f32 {
-    from + ((to - from + 180.0).rem_euclid(360.0) - 180.0).clamp(-HEAD_TURN, HEAD_TURN)
+fn apart(from: f32, to: f32) -> f32 {
+    (to - from + 180.0).rem_euclid(360.0) - 180.0
+}
+
+/// From `from` towards `to` by at most `most` degrees.
+fn towards(from: f32, to: f32, most: f32) -> f32 {
+    from + apart(from, to).clamp(-most, most)
 }
 
 fn roll(world: &mut World) -> f32 {
@@ -70,6 +89,10 @@ fn goal(world: &mut World, layer: Entity, eyes: [f32; 3], kept: Goal, looks: Opt
         Goal::Side(_, until) if now < until => Some(kept),
         _ => None,
     };
+    // BDS's looks start half as often as their chance a tick says: as if tried every other tick (bds-glance.txt).
+    if now % 2 == 1 {
+        return kept.unwrap_or(Goal::Idle);
+    }
     if let Some(looks) = looks
         && roll(world) < looks.chance
         && let Some((player, _)) = player_near(world, layer, eyes, looks.distance)
@@ -80,18 +103,19 @@ fn goal(world: &mut World, layer: Entity, eyes: [f32; 3], kept: Goal, looks: Opt
         return kept;
     }
     if glances && roll(world) < GLANCE_CHANCE {
-        let side = (roll(world) * 2.0 - 1.0) * GLANCE_SIDE;
+        let side = roll(world) * 360.0 - 180.0;
         return Goal::Side(side, now + ticks(world, GLANCE_TICKS));
     }
     Goal::Idle
 }
 
-/// After its legs were steered: the mob of `kind`, left to itself, turns its head and pitches.
+/// After its legs were steered: the mob of `kind`, left to itself, turns its head and pitches, and
+/// its body comes round.
 pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
     let traits = sapling_data::mob_traits(kind);
     let Some(yaw) = world.get::<Legs>(entity).map(|legs| legs.yaw).filter(|_| traits.looks.is_some() || traits.glances) else { return };
-    let Some(&Gaze { head: was, goal: kept, body_yaw, follows }) = world.get::<Gaze>(entity) else {
-        world.entity_mut(entity).insert(Gaze { head: yaw, goal: Goal::Idle, body_yaw: yaw, follows: false });
+    let Some(&gaze) = world.get::<Gaze>(entity) else {
+        world.entity_mut(entity).insert(Gaze { head: yaw, body: yaw, goal: Goal::Idle, settled: yaw, still: 0, yaw, at: body.at });
         // The first pitch is the one viewers were told at its announcement.
         if let Some(mut told) = world.get_mut::<Told>(entity) {
             told.pitch(0.0);
@@ -99,28 +123,31 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, kind: &str,
         return;
     };
     let eyes = [body.at[0], body.at[1] + body.size[1] * EYES, body.at[2]];
+    let kept = if yaw != gaze.yaw { Goal::Idle } else { gaze.goal };
     let goal = goal(world, layer, eyes, kept, traits.looks, traits.glances);
     let (head, pitch) = match goal {
         Goal::Player(player, _) => {
             let at = world.get::<Position>(player).map_or(eyes, |position| [position.feet[0], position.feet[1] + sapling_data::EYE_HEIGHT, position.feet[2]]);
             let [dx, dy, dz] = [at[0] - eyes[0], at[1] - eyes[1], at[2] - eyes[2]];
-            (turned(was, (-dx).atan2(dz).to_degrees()), -dy.atan2(dx.hypot(dz)).to_degrees())
+            let wanted = towards(gaze.body, (-dx).atan2(dz).to_degrees(), HEAD_LEASH);
+            (towards(gaze.head, wanted, HEAD_TURN), -dy.atan2(dx.hypot(dz)).to_degrees())
         }
-        Goal::Side(side, _) => (turned(was, yaw + side), 0.0),
-        Goal::Idle if follows || yaw != body_yaw => (turned(was, yaw), 0.0),
-        Goal::Idle => (was, 0.0),
+        Goal::Side(side, _) => (towards(gaze.body, side, HEAD_LEASH), 0.0),
+        Goal::Idle => (towards(gaze.head, gaze.body, HEAD_TURN), 0.0),
     };
-    let follows = matches!(goal, Goal::Idle) && apart(head, yaw);
-    world.entity_mut(entity).insert(Gaze { head, goal, body_yaw: yaw, follows });
+    let walked = (body.at[0] - gaze.at[0]).powi(2) + (body.at[2] - gaze.at[2]).powi(2) > WALKS;
+    let (settled, still, turned) = if walked {
+        (head, 0, towards(gaze.body, yaw, BODY_TURN))
+    } else if (head - gaze.settled).abs() > SETTLED {
+        (head, 0, gaze.body)
+    } else {
+        let still = gaze.still + 1;
+        let leash = HEAD_LEASH * (1.0 - still.saturating_sub(SETTLES) as f32 / SETTLES as f32).max(0.0);
+        (gaze.settled, still, towards(head, gaze.body, leash))
+    };
+    world.entity_mut(entity).insert(Gaze { head, body: turned, goal, settled, still, yaw, at: body.at });
     if let Some(mut told) = world.get_mut::<Told>(entity) {
-        // Its legs face the head with the body where they walked; an unmoved head is left told.
-        if apart(head, yaw) || apart(head, was) {
-            told.face(yaw, head);
-        }
+        told.face(yaw, head);
         told.pitch(pitch);
     }
-}
-
-fn apart(a: f32, b: f32) -> bool {
-    ((a - b + 180.0).rem_euclid(360.0) - 180.0).abs() > 0.01
 }

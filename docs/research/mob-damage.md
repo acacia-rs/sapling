@@ -192,9 +192,42 @@ Sapling's run: sapling-burn2.txt.
   `looks=`/`glances` from the packs (mob-traits.tsv); off with `mobs_stroll` as strolling is; test
   `a_slowed_cow_turns_its_head_and_pitches_at_a_player_near_it`. Re-drilled on sapling
   (sapling-gaze.txt): the near cows' heads come round 7 a tick to 40 with pitch 251, as BDS's; pitch
-  changes 66 against BDS's 58, but 1846 moves against 592. Left: the random look's sides and length
+  changes 66 against BDS's 58, but 1846 moves against 592 (settled by the sixth wave, next). Left then: the random look's sides and length
   (Java's 20 to 40 ticks and a side within 90 degrees of the body are used, and look too often), and
   the body's turn rate (sapling's legs keep 60 a tick).
+- Head, body and pitch per tick (2026-11-04, `bds_command_probe glance`, research/captures/bds-glance.txt):
+  three slowed cows 3 blocks from the bots and three 9 off (outside `look_at_player`'s 6, inside the
+  10.7 under which `conditional_bandwidth_optimization` sends every tick), 60 s. What fits:
+  - A hidden body yaw (BDS's `MobBodyRotationComponent`, body control 0x142cc5810 per entity via
+    0x148385570) under the head, which stays within 75 degrees of it. Standing, the body holds still
+    while the head moves; once the head stays within 15 degrees of where it settled for 10 ticks the
+    body closes on it, the allowed gap shrinking 7.5 degrees a tick (75 x (1 - (t - 10)/10)); walking
+    (a tick's move across over 0.0005) it comes round to the legs' yaw 25 a tick. On the wire: a head
+    held at 75 off the body waits 11 ticks, then creeps 5 to 7 of 256 a tick for three ticks, then
+    waits again (cow 24 ticks 448-474, cow 20 ticks 519-540). The decompile has the head kept 85 off the
+    body (look control 0x142cc51e0) and the body dragged to 75 at each 15-degree reset; the capture's
+    stops are at 75 (53 of 256) and never drag, so sapling follows the capture.
+  - `look_at_player`: the head 10 a tick (7 of 256) towards the eyes, within the 75; the pitch at once.
+    `random_look_around`: the head put at once on a side, any of 360 degrees, held to the 75 (jumps of
+    up to 53 in a tick). Neither: the head back to the body 10 a tick, so after a long look it stays
+    (the body caught up) and after a cut-short one it comes back (cow 21 ticks 89-94).
+  - A stroll's turn (`rot_y` 21 of 256, 30 degrees, a tick; the slowed cows' strolls go nowhere) ends a
+    look in the tick it starts, pitch 0 with the first `rot_y`; the head is left where it was.
+  - Looks start about half as often as their chance a tick: near cows' looks 80 to 280 ticks apart
+    with 2 to 4 s looks, far cows' glances some 180 ticks apart. Fitted as a look tried every other tick
+    and glances of 40 to 80 ticks.
+  - A rotation of 2 of 256 summed over head, yaw and pitch is never sent alone, 3 is, on both servers
+    (BDS's 4-degree test, research/bds-actor-move-sync.md; sapling's `sync.rs` `TURNED`).
+  Fixed: `creatures/gaze.rs` keeps the head, the body and the settling count; strolls turn 30 a tick
+  (`legs::STROLL_TURN`; hunting keeps 60, mob-attacks.md "Walking"); test
+  `a_slowed_cow_left_alone_glances_at_once_and_strolls_round_30_degrees_a_tick`. Re-drilled on sapling
+  (sapling-glance.txt): 507 moves to each bot against BDS's 495 (near cows 120/95/149 against 71/95/130,
+  far 59/31/53 against 66/72/61), pitch changes 36 against 42. The fifth wave's `gaze` re-drilled
+  (sapling-gaze.txt): 1002 moves against BDS's 592 (was 1846), far cows 20/46/46 against 26/40/33;
+  the rest are the near cows walking in the seconds before `/effect` (208 moves with a position,
+  BDS's 41): sapling's strolls start more often than BDS's (strolling.rs's fitted-by-eye TODO). Not drilled: an
+  unslowed mob's head speed (BDS's look control turns at most 30 x an attribute's value over its
+  default a tick, 0x142cc5323; which attribute, and what gives the slowed cows' 10, not pinned).
 - The view circle against `tick-distance` (2026-11-04, `bds_command_probe tickcircle` on BDS set to
   4, 6, 8 and 10, research/captures/bds-tickcircle<N>.txt): 14 slowed mobs moved from beside the bots
   (chunk 3,0) to chunk offsets from 4,0 to 10,2, poisoned there and moved back 6 s later. At every
