@@ -3,7 +3,7 @@
 //! set so stays (research/captures/bds-unheld.txt).
 
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Face};
+use sapling_api::BlockPos;
 
 use super::super::queued::{self, Job};
 use super::super::{level, send};
@@ -29,15 +29,6 @@ pub(super) fn noticed(world: &mut World, layer: Entity, pos: BlockPos) {
         send::to_viewers(world, layer, pos, &[particles]);
     }
     queued::after(world, layer, pos, 1, Job::Unheld);
-}
-
-/// [`noticed`] for each block beside `cells`, which a piston just took away: BDS's torch beside a
-/// pushed block went a tick into the push, not at its end.
-pub(in crate::blocks) fn around(world: &mut World, layer: Entity, cells: &[BlockPos]) {
-    let mut beside: Vec<BlockPos> = cells.iter().flat_map(|cell| Face::ALL.map(|face| face.neighbour(*cell))).filter(|at| !cells.contains(at)).collect();
-    beside.sort_unstable();
-    beside.dedup();
-    beside.into_iter().for_each(|at| noticed(world, layer, at));
 }
 
 /// The block [`noticed`] at `pos` goes, unless something came to hold it.

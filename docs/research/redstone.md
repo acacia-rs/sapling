@@ -232,16 +232,18 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
 - C1, C2: done, see the end: 2–3 ticks on, 6–7 off for `/setblock` changes.
 - C3 Evaluation phase: two levers flipped in consecutive ticks should update lamps in the same tick sometimes.
 - C4 Chunk ticking before lambda_76 (R4): if lamps never update, the order is reversed; capture says they do.
-- C5: done, see the end and "Parity drill" (ice). Not drilled: TNT and pistons (the TNT went off and took the pistons).
+- C5: done, see the end and "Parity drill" (ice); TNT, stairs and pistons: see the end (`n2tnt`).
 - C6 Lamp's consumer component source (no setup callback found) and its flags (acceptHalfPulse?).
 - C7 Redstone block's producer component (none found in its vtable): confirm it powers dust, lamp, adjacent blocks
   (weakly or strongly?) — e.g. redstone block next to a solid block next to a lamp.
 - C8: done, see the end.
 - C9 `mPromotedToProducer` overwrite order (R11): block strongly powered by lever and also touched by dust.
-- C10: done, see the end. Not drilled: a torch clock seen through a lamp (half-pulse).
+- C10: done, see the end; a torch clock seen through a lamp: see the end (`n2tnt`).
 - C11 `redstone_signal` of dust after placement next to a lit source (setup writes current strength, R16).
 - C12: done, see "Parity drill".
-- C13 Wooden button with arrow (141a34cb0 not read). Undrillable here: `/summon arrow` is inert in sapling.
+- C13: done (2026-10-29 rsparts, research/captures/bds-rsparts.txt): an arrow summoned onto a wooden button pressed it
+  the tick after it landed; it stayed in while the arrow lay there and came out at the first 30-tick check after the
+  arrow was killed. A stone button under an arrow stayed out. Sapling: `blocks/shot_buttons.rs`.
 
 ## Checked on BDS (2026-10-08, `bds_command_probe redstone`, research/captures/bds-redstone.txt)
 
@@ -289,6 +291,15 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
     ticks after does nothing (R21: the count must first pass 32, 17 evaluations on).
   - The lamp past the dust stays lit through the flips. After the first burnout it went out 18 ticks after the
     dust lost its signal, not 4 as after the later ones; sapling puts it out after 4 every time.
+- `n2tnt` (2026-11-04, research/captures/bds-n2tnt.txt, `tntexplodes` off):
+  - Dust pointing into TNT and into a bottom stair, a lamp behind each: neither lamp lit, and the TNT was not
+    lit either: with `tntexplodes` off BDS's TNT stays a block under a signal, as its dispenser drops TNT then.
+    Sapling lit it (the entity went out at the end of its fuse); now it leaves it (`tnt.rs`).
+  - Dust put on TNT, a bottom stair, a piston and ice stayed on all four, on sapling too.
+  - A torch clock (torch on a stone's side, dust from it round to the stone) with a lamp on the torch: flips every
+    2 ticks, 16 flips and out, as C10. The lamp lit in the first evaluation (the torch as it was put) and stayed
+    lit through the flips, going out 8 ticks after the torch went out for good. Sapling's lit an evaluation later
+    (it reads the torch after its flip, where its dust reads it before) and went out 4 ticks after. Not fixed.
 
 ## Repeaters (2026-10-09, `bds_command_probe repeater-facing` and `repeaters`, research/captures/bds-redstone-repeaters.txt)
 
@@ -313,7 +324,9 @@ No decompile: all of this is from the captures. An evaluation is 2 ticks.
   from it again at the evaluation it flips, it flips back `delay + 1` evaluations later.
 - Lock: a lit repeater pointing into the side of another holds it as it is, lit or not, whatever is behind it.
   When the holding one goes out, the held one takes up its input one evaluation later.
-- A click's sound: none ("Parity drill"). Not drilled: a comparator as the one that holds, a pulse shorter than the delay from a
+- A comparator pointing into a repeater's side holds it as a lit repeater does (rsparts, bds-rsparts.txt): same on
+  sapling.
+- A click's sound: none ("Parity drill"). Not drilled: a pulse shorter than the delay from a
   steady state other than the 2-tick clock, a held repeater that was counting down.
 
 ## Comparators (2026-10-09, `bds_command_probe comparators`, research/captures/bds-redstone-comparators.txt)
@@ -340,8 +353,8 @@ No decompile: all of this is from the capture.
 - Holders (`bds_command_probe holders`, research/captures/bds-holders.txt, 2026-10-17): a decorated pot reads as a
   one-slot container, 1 at a stone, 2 at five, 3 at ten, 0 once broken. A frame or glow frame lying face up read 0
   with a diamond in it at every turn, also behind a comparator put down after the item was turned.
-- A block of redstone at a side and a click's sound: "Parity drill". Not drilled: equal strengths behind and
-  at a side (sapling passes it, as Java), a repeater at a side, lectern, a wall frame facing the comparator, a
+- A block of redstone at a side and a click's sound: "Parity drill". Equal strengths behind and at a side (11 and 11, rsparts):
+  BDS's comparator stayed lit, as sapling's. Not drilled: a repeater at a side, lectern, a wall frame facing the comparator, a
   cauldron of lava or powder snow, a chiseled bookshelf (the bot's click lands on a different slot each run).
 
 ## Observers (2026-10-09, `bds_command_probe observer-facing` and `observers`, research/captures/bds-redstone-observers.txt)
@@ -392,8 +405,22 @@ No decompile: all of this is from the captures.
   with what it holds. Dust on a pushed stone falls as an item a tick after the stone starts to move.
 - The block changes of (1) and (3) come in `UpdateSubchunkBlocks`, those of (3) with flags 19; sapling sends
   the same changes as `UpdateBlock`.
-- Not drilled: a mob or player in the way, which other blocks stay or break, a piston put
+- Which blocks stay or break (2026-11-04, `bds_command_probe n2pistons`, research/captures/bds-n2pistons.txt;
+  42 blocks before pistons): a bed, wooden door, standing sign and banner, skeleton skull, cake, campfire,
+  amethyst cluster, pointed dripstone, decorated pot, turtle egg, big dripleaf and azalea broke; a sculk sensor,
+  sculk shrieker and command block stayed; the rest moved (brewing stand, cauldron, lantern, bee nest, composter,
+  chiseled bookshelf, crafter, sniffer egg, bars, pane, fence, wall, gate, chain, smithing table, loom,
+  stonecutter, blast furnace, observer, daylight detector, target, lightning rod, sponge, copper bulb, trapped
+  chest, netherite block). Sapling moved the first group until 2026-11-04 (`pistons/plan.rs` `BREAKS`) and
+  now matches all 42. Left: BDS's broken amethyst cluster left 2 shards and the pot itself, sapling's neither.
+- Not drilled: a piston put
   beside power already on, power going while it moves, the place a real client's piston faces.
+- A mob in the way (2026-11-04, `bds_command_probe n2pistonmob`, research/captures/bds-n2pistonmob.txt; cows
+  with slowness, though two wandered before it took): a cow before a pushed stone went to 0.45 past the stone's
+  new cell in one move, in the tick the stone started (sapling: the same place a tick later); a cow on an up
+  piston rose 0.5 the tick before the arm showed and 0.5 with it (sapling: 0.75 with the arm, then 0.25); a cow
+  partly in a sticky arm's cell moved 0.14 out, not clear of the cell (sapling clears it, 0.5 a tick). Not fixed:
+  one cow a case, two of them wandered off their marks.
 
 ## Slime and honey (2026-10-10, `bds_command_probe slime`, research/captures/bds-slime.txt)
 
@@ -408,8 +435,9 @@ Built in `sapling-shard/src/blocks/pistons/plan.rs`.
 - A sticky piston drawing back brings slime with what it holds (the stone on it and the one beyond it); a
   stone it brings does not bring slime that is beyond the stone.
 - `AttachedBlocks` lists the cells farthest first in the way they go; cells equally far come in the order
-  they were found: the block, what is before it, then what it holds up, down and south of it.
-- Not drilled: the order north, west and east of a sticky block, what has no body beside slime (sapling
+  they were found: the block, what is before it, then what it holds up, down, south, north, east and west of it
+  (bds-rspistons.txt; sapling listed north before south and west before east until 2026-11-04).
+- Not drilled: what has no body beside slime (sapling
   leaves it), a sticky piston whose slime is held back (sapling brings nothing).
 
 ## Daylight detectors (2026-10-11, `bds_command_probe daylight`, research/captures/bds-daylight.txt)

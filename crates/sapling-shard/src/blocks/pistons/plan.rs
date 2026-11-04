@@ -1,6 +1,4 @@
 //! What a piston takes along and breaks (docs/research/redstone.md, "Slime and honey").
-// TODO: the blocks that stay are a list, of which BDS showed only obsidian; of the order slime's
-// neighbours are taken in, BDS showed up, down and south for a push east.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
@@ -13,14 +11,18 @@ const LIMIT: usize = 12;
 const STAYS: &[&str] = &[
     "obsidian", "bedrock", "barrier", "end_portal_frame", "end_portal", "portal", "end_gateway", "enchanting_table", "beacon", "mob_spawner", "respawn_anchor",
     "reinforced_deepslate", "moving_block", "piston_arm_collision", "command_block", "structure_block", "jigsaw",
-    // Seen staying on BDS (research/captures/bds-rspistons.txt).
-    "ender_chest", "jukebox", "lodestone", "grindstone", "vault", "trial_spawner",
+    // Seen staying on BDS (research/captures/bds-rspistons.txt, bds-n2pistons.txt).
+    "ender_chest", "jukebox", "lodestone", "grindstone", "vault", "trial_spawner", "sculk_sensor", "sculk_shrieker",
 ];
-/// Solid blocks a push breaks, seen on BDS (bds-rspistons.txt); and any of these name endings.
-const BREAKS: &[&str] = &["ladder", "scaffolding", "pumpkin", "melon_block", "flower_pot", "cactus", "dragon_egg"];
-const BREAKS_ENDING: &[&str] = &["_leaves", "shulker_box"];
+/// Solid blocks a push breaks, seen on BDS (bds-rspistons.txt, bds-n2pistons.txt); and any of these name endings.
+const BREAKS: &[&str] = &[
+    "ladder", "scaffolding", "pumpkin", "melon_block", "flower_pot", "cactus", "dragon_egg", "bed", "cake", "decorated_pot", "turtle_egg", "big_dripleaf",
+    "azalea", "flowering_azalea", "amethyst_cluster",
+];
+const BREAKS_ENDING: &[&str] = &["_leaves", "shulker_box", "_door", "_skull", "_head", "campfire", "_amethyst_bud"];
 const STICKY: [&str; 2] = ["slime", "honey_block"];
-const SIDES: [Face; 6] = [Face::Up, Face::Down, Face::North, Face::South, Face::West, Face::East];
+/// The order slime takes its neighbours in, as BDS lists them (bds-rspistons.txt: south, north, east, west).
+const SIDES: [Face; 6] = [Face::Up, Face::Down, Face::South, Face::North, Face::East, Face::West];
 
 #[derive(PartialEq)]
 enum Cell {

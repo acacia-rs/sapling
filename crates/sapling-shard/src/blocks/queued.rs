@@ -43,6 +43,8 @@ pub(crate) enum Job {
     Hatch,
     /// A torch, button or rail set with nothing holding it goes (updates/unheld.rs).
     Unheld,
+    /// What lost its hold when a block beside it changed goes (updates/loosened.rs).
+    Loosened,
 }
 
 #[derive(Resource, Default)]
@@ -58,6 +60,11 @@ pub(crate) fn after(world: &mut World, layer: Entity, pos: BlockPos, delay: u64,
 pub(crate) fn this_tick(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
     let now = world.resource::<Tick>().0;
     world.get_resource_or_insert_with(Queued::default).0.push((now, layer, pos, job));
+}
+
+/// Whether `job` waits for the block at `pos`.
+pub(crate) fn is_waiting(world: &World, layer: Entity, pos: BlockPos, job: Job) -> bool {
+    world.get_resource::<Queued>().is_some_and(|queued| queued.0.iter().any(|(_, at_layer, at, waiting)| (*at_layer, *at, *waiting) == (layer, pos, job)))
 }
 
 /// Drops what waits of `job` for the block at `pos`.
@@ -147,5 +154,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
         Job::Dripleaf => super::dripleaf::step(world, layer, pos),
         Job::Hatch => super::eggs::ticked(world, layer, pos),
         Job::Unheld => super::updates::unheld::popped(world, layer, pos),
+        Job::Loosened => super::updates::loosened::popped(world, layer, pos),
     }
 }

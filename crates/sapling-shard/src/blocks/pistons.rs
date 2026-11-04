@@ -194,7 +194,7 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
             }
             let step = if going.extends { piston.front } else { back(piston.front) };
             going.carried = going.taken.clone().into_iter().filter_map(|from| carry(world, layer, from, step.neighbour(from), pos, going.extends)).collect();
-            updates::unheld::around(world, layer, &going.taken);
+            updates::loosened::around(world, layer, &going.taken);
             if going.extends {
                 let name = if piston.is_sticky { "minecraft:sticky_piston_arm_collision" } else { "minecraft:piston_arm_collision" };
                 let head = level(world, layer)?.registry().find(name, &format!("facing_direction={}", piston.facing))?;

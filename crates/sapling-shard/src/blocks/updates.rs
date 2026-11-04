@@ -1,7 +1,6 @@
 //! What a changed block does to its neighbours: sand and gravel over a gap start to fall
-//! (falling.rs), and what stood on or hung off a block that is gone breaks and leaves its item.
-// TODO: the lists are name endings, not block data; what loses its hold goes at once, where BDS took a
-// tick (bds-holds.txt, bds-burnfloat.txt).
+//! (falling.rs), and what stood on or hung off a block that is gone breaks and leaves its item a
+//! tick later (updates/loosened.rs).
 
 use std::collections::VecDeque;
 
@@ -13,6 +12,7 @@ use super::falling::{self, Change};
 use super::growth::vines;
 use super::{doors, ground, level, liquid, loot, send, shapes, with_property};
 
+pub(super) mod loosened;
 pub(super) mod unheld;
 
 /// Cells looked at for one change: a tower of sand is one cell a step.
@@ -115,8 +115,8 @@ pub(crate) fn break_block(world: &mut World, layer: Entity, pos: BlockPos) -> bo
 }
 
 /// What the change at `changed` does to the block at `pos` that holds by more than a face: a bed
-/// whose other half was there goes with it and leaves nothing, a vine lets go of the faces it lost
-/// (bds-holds.txt); whether it changed.
+/// whose other half was there goes with it and leaves nothing, a vine lets go of the faces it lost,
+/// and goes a tick later with none (bds-holds.txt); whether it changed now.
 fn loosen(world: &mut World, layer: Entity, pos: BlockPos, changed: BlockPos) -> bool {
     let Some(level) = level(world, layer) else { return false };
     let is_bed = level.registry().get(level.block(pos[0], pos[1], pos[2])).is_some_and(|state| state.name == "minecraft:bed");
@@ -125,7 +125,10 @@ fn loosen(world: &mut World, layer: Entity, pos: BlockPos, changed: BlockPos) ->
         return send::set(world, layer, pos, air);
     }
     match vines::loosened(level, pos) {
-        Some(0) => pop(world, layer, pos),
+        Some(0) => {
+            loosened::noticed(world, layer, pos);
+            return false;
+        }
         Some(kept) => {
             let Some(id) = with_property(level.registry(), level.block(pos[0], pos[1], pos[2]), "vine_direction_bits", &kept.to_string()) else { return false };
             send::set(world, layer, pos, id);
@@ -158,8 +161,7 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
             // A tall plant's upper half stands on its own lower half, which is not solid.
             let is_own_half = doors::other_half(world, layer, beside) == Some(pos);
             if is_gone && depended(registry, id, face) && !is_own_half || !stands {
-                pop(world, layer, beside);
-                changed.push_back(beside);
+                loosened::noticed(world, layer, beside);
             } else if loosen(world, layer, beside, pos) {
                 changed.push_back(beside);
             }
@@ -169,8 +171,7 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
             let up_beside = Face::Up.neighbour(face.neighbour(pos));
             let Some((_, id)) = block(world, layer, up_beside) else { continue };
             if level(world, layer).is_some_and(|level| !ground::may_stand(level, up_beside, id)) {
-                pop(world, layer, up_beside);
-                changed.push_back(up_beside);
+                loosened::noticed(world, layer, up_beside);
             }
         }
     }

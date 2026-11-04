@@ -65,6 +65,7 @@ pub(crate) fn dispatch(world: &mut World) {
     blocks::dispatch_command_block_updates(world);
     blocks::dispatch_structure_block_updates(world);
     blocks::dispatch_structure_exports(world);
+    blocks::press_shot_buttons(world);
     blocks::release_buttons(world);
     blocks::press_plates(world);
     blocks::tilt_dripleaves(world);

@@ -75,10 +75,37 @@ pub(super) fn held(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     true
 }
 
+/// Cells seen breaking while a batch was open, and the block seen there.
+#[derive(Resource, Default)]
+pub(crate) struct HeldBreaks(Vec<(Entity, BlockPos, u32)>);
+
+/// Keeps the break of `id` at `pos` to show after the open batch's blocks, if one is open: a
+/// `/fill` that clears the cell too shows none, as BDS's (research/captures/bds-n2tnt.txt).
+pub(crate) fn hold_break(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
+    if world.get_resource::<Held>().is_none_or(|held| held.0.is_none()) {
+        return false;
+    }
+    world.get_resource_or_insert_with(HeldBreaks::default).0.push((layer, pos, id));
+    true
+}
+
 /// Closes the batch and shows what it changed as BDS showed a `/fill` (research/captures/bds-batch.txt):
 /// as [`set_sectioned`] does, but each cell as it is now and with the batch's flags (a plugin's: the
-/// network flag alone), and then their block entities, which an UpdateBlock would otherwise empty.
+/// network flag alone), and then their block entities, which an UpdateBlock would otherwise empty;
+/// then the breaks kept by [`hold_break`] of cells that still hold what broke.
 pub(crate) fn show_held(world: &mut World) {
+    show_held_blocks(world);
+    let breaks = world.get_resource_mut::<HeldBreaks>().map(|mut breaks| std::mem::take(&mut breaks.0)).unwrap_or_default();
+    for (layer, pos, id) in breaks {
+        let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
+        if level.block(pos[0], pos[1], pos[2]) == id {
+            let particles = super::destroy_particles(level.registry(), pos, id);
+            to_viewers(world, layer, pos, &[particles]);
+        }
+    }
+}
+
+fn show_held_blocks(world: &mut World) {
     let Some((flags, cells)) = world.get_resource_mut::<Held>().and_then(|mut held| held.0.take()) else { return };
     let mut layers: Vec<Entity> = cells.iter().map(|(layer, _)| *layer).collect();
     layers.dedup();

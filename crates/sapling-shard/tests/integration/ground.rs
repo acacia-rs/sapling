@@ -66,13 +66,17 @@ fn sugar_cane_needs_water_beside_its_ground() {
     assert_eq!(placed_on(&mut h, [2, 65, 0]), Some("minecraft:reeds"));
     assert_eq!(placed_on(&mut h, [2, 66, 0]), Some("minecraft:reeds"), "on cane");
 
-    // Stone where the water was: both canes break.
+    // Stone where the water was: both canes break, a tick apart from the bottom up (updates/loosened.rs).
     h.remote.run(|ctx| ctx.set_game_mode(ALEX, sapling_api::GameMode::Creative));
     h.tick_all();
     h.receive(1, &click([3, 64, 0], 1, Some("minecraft:stone")));
     let registry = sapling_world::BlockRegistry::vanilla();
     let air = registry.network_hash(registry.air_id());
-    let gone: Vec<_> = all::<UpdateBlock>(h.tick_all().to(2)).iter().filter(|update| update.block_runtime_id == air).map(|update| [update.position.x, update.position.y, update.position.z]).collect();
+    let gone: Vec<_> = (0..4)
+        .flat_map(|_| all::<UpdateBlock>(h.tick_all().to(2)))
+        .filter(|update| update.block_runtime_id == air)
+        .map(|update| [update.position.x, update.position.y, update.position.z])
+        .collect();
     assert_eq!(gone, [[2, 66, 0], [2, 67, 0]]);
 }
 
