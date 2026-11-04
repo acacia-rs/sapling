@@ -58,7 +58,9 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
     if super::prey::is_mob(world, prey) {
         swing(world, entity, layer, id, body);
-        super::prey::hit(world, layer, prey, harm, away);
+        if !super::super::villagers::infect(world, prey, layer, kind, harm) {
+            super::prey::hit(world, layer, prey, harm, away);
+        }
         late_sounds::play_later(world, 1, layer, cell, sound("attack", id, kind, body, MIDDLE));
         return Some(());
     }

@@ -142,7 +142,13 @@ test `a_natural_mob_a_player_names_stays_when_the_player_goes`. Picked-up items 
   spawns from the area's own list (fortress, monument, witch hut, pillager outpost), the same caps
   asked per member, the members persistent when the area's flag says. Sapling cannot: its worlds
   carry no spawn areas (BDS writes them per chunk with the structures; neither sapling-world reads
-  them nor sapling-worldgen writes them), so building it starts with that record.
+  them nor sapling-worldgen writes them), so building it starts with that record. Looked at
+  2026-11-04: the areas come from `StructureFeature::addHardcodedSpawnAreas` (its lambda 141f08120,
+  vtable 14a784210), kept per chunk as what is taken to be LevelDB tag 57 (a count, then per area six
+  ints, a box, and a type byte: 1 fortress, 2 witch hut, 3 monument, 5 outpost, read off the lambda,
+  not off a saved world). Not ported: it needs sapling-worldgen to emit each structure's box with its
+  start, sapling-leveldb to write and read the record, and the spawner to ask it; the tag and the type
+  numbers want a BDS world's chunk dump first.
 - Patrols: `pillager_patrol` needs the patrol spawner, world age and village checks; not read.
 - Herd events (spawner blocks: docs/research/spawners.md). Peaceful does not remove monsters already
   there [U]. Whether `doMobSpawning` stops spawners and eggs was not checked; sapling's eggs ignore it.

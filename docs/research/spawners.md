@@ -148,7 +148,12 @@ Left out:
 - The eject velocity's odd x/z term BDS's trial spawner adds (left out); the vault's per-axis spread. One BDS
   reward (bds-t3trial.txt): item at x+0.5, y+1.0, z+0.5, moving (0.028, 0.156, 0.010), `eject_item` there
   with extra data -718719502. Sapling's wave there never ended (its zombies did not burn by day, BDS's did)
-  and the vault click missed on both, twice; undrillable here.
+  and the vault click missed on both, twice; undrillable here. Re-drilled 2026-11-04 with
+  `SAPLING_DRILL_WORLD=open` (sapling-t3trial.txt): the first run was on the roofed default world. In
+  the open sapling's zombies burned, the wave ended and the reward came out, from y + 0.875 at
+  (−0.040, 0.257, 0.010) with extra data -1; now from y + 1.0 as BDS's, and `eject_item` carries the
+  block's hash (`trial.rs` `reward`). The velocity stays a 0.2 up throw with a 0.045 normal spread (one
+  BDS reward is too few to fit). The vault click still missed on both.
 - What a spawn egg does to a trial spawner's configs (`14488a3a0`; no packet shows them).
 - The vault's level events' positions (sent at the block's middle).
 

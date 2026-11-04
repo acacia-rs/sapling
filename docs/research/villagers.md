@@ -81,7 +81,7 @@ untraded villager's profession at its next look (the Java rule); it now keeps it
   `buyCountA = count − hero + trunc(pm × discount) + max(0, floor(demand × count × pm))`, from 1 to a
   stack; `hero = max(1, floor(count × (0.3 + 0.0625 × amplifier)))` with Hero of the Village (effect 29);
   `discount` the cured discounts (`economy_trade_table` `cured_discount` [-25,-20], `nearby_cured_discount`
-  -20, capped by their `max_*`), which sapling lacks (no curing).
+  -20, capped by their `max_*`), which sapling lacks (its cure, Zombie villagers below, gives none).
 - Restock (`resupplyTrades`, 0x141bb0e90, run as `minecraft:trade_resupply` is added): per offer
   `demand = max(0, demand + 2 × uses − maxUses)`, `uses = 0`. `behavior.work` (`active_time` 250,
   `goal_cooldown` 200, `can_work_in_rain` false; the farmer's `work_composter` too) fires
@@ -177,8 +177,37 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   claim reach); sapling's (sapling-n1golems20.txt) spawned none. A spawning village was not seen.
   Sapling's port (`golem_spawns.rs`) counts its own villages' villagers with a claimed bed and those
   that started work within a day, and draws 20 times every 20 ticks.
+- A spawning village, `f3golem` (2026-11-04, bds-f3golem.txt, sapling-f3golem.txt): 20 beds, each with
+  an armorer 2.5 off and its blast furnace 4 off, mob spawning on, golems counted every 6 s. BDS's first
+  came 109 s after the count began (at 18.5, -0.5), its second 6 s later, then none to the end (176 s): two, its
+  villagers / 10. Sapling's came 55 s and 85 s in, then none: the same cap, the waits within the
+  1-in-700 draw's spread (one run each).
 - A village golem is kept: its actor's `definitions` gain `+minecraft:village_created` (the pack's
   `from_village` group), which a load reads back (`golems.rs`).
+
+## Zombie villagers
+
+- `f3convert` (bds-f3convert.txt, sapling-f3convert.txt, 2026-11-04): `/damage` of 100 by a zombie on an
+  armorer at work, on hard, made it a `zombie_villager_v2` in the hit's tick, unheard, where it stood and
+  thrown as the hit threw it, with `Variant` 8, `MaxTradeTier` 4, its `TradeTier`, `SkinId` and
+  `MarkVariant` (`keep_level`), shown hurt (`HurtAnimation`, health 19 of 20). On normal 4 of 6 turned
+  (the pack's half; easy turns none, not drilled). Ported (`villagers/conversion.rs` `infect`, from a zombie's or husk's
+  killing hit, by command or in a fight; test
+  `a_villager_a_zombie_kills_on_hard_becomes_a_zombie_villager_keeping_its_profession`). Sapling's drill:
+  hard 1 of 1, normal 2 of 6. Residue: sapling's `AddEntity` carries the defaults and a `SetEntityData`
+  the same tick carries the villager's values, where BDS's `AddEntity` carries them.
+- A zombie villager keeps what it was (`Infected`) for its cure; `creatures/turning.rs` carries it back.
+- Curing (pack `villager_converted` → `to_villager`; BDS 1424459c0, 14194f610): a golden apple used on
+  one under weakness (used up out of creative) sets it shaking, takes the weakness, gives 300 s of
+  strength and plays `remedy`; it becomes a `villager_v2` heard `unfect` after `value` + `range_min` +
+  nextInt(`range_max` − `range_min`) seconds × 20 = 3600 to 5999 ticks, each tick one in 100 looking
+  within 4 for beds and iron bars (at most 4), each taking a tick more off three times in ten. Ported
+  (`villagers/conversion.rs` `cure`, `hasten_cures`; test
+  `a_weakened_zombie_villager_given_a_golden_apple_shakes_and_is_cured`). The pack's `heal` is left out.
+  `f3cure` (2026-11-04, bds-f3cure.txt): three held zombie villagers each given an apple shook, then a
+  tick later `remedy` from their middle (feet + 0.95, of no entity); they became villagers 181.9 s,
+  211.1 s and 178.4 s on, the last with a bed and iron bars beside it (under the 180 s floor: the
+  assist), each `unfect` at its middle in the `AddEntity` tick. Not drilled on sapling (300 s scene).
 
 ## Unverified (sapling's choice where BDS was not seen)
 
@@ -189,7 +218,9 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 - Job sites: looked for within 10 blocks across and 4 up or down, every 60 to 100 ticks (the dweller's
   `update_interval_base` 60 and `_variant` 40, the interval counter at `DwellerComponent`+0x40,
   148487bd0), with no village needed (BDS's dweller POI query range not decompiled; bds-job.txt: no
-  job without a bed or bell).
+  job without a bed or bell). `f3poi` (2026-11-04, bds-f3poi.txt): an unskilled villager by a bell, held
+  still with slowness 255, took no blast furnace 6, 10, 14, 18 or 26 off in 30 s, so the range was not
+  read; a held villager seems to need to reach the site.
 - The wandering trader leaves after 2400 or 3600 seconds (its `minecraft:timer`, taken as seconds) or
   once sold out, when no player is within 24 blocks; its timer is not kept by the actor compound.
 
@@ -214,8 +245,25 @@ bed-goer not matched (strolls are random on both).
   fled (0 or 1 within 8). Not fixed: as with the glass cage, BDS's `behavior.avoid_mob_type` did not
   fire for a still zombie; its `canUse` (`probability_per_strength`, the target's strength) was not
   found in the binary, and a hunting zombie was not drilled.
+  `f3fear` (2026-11-04, bds-f3fear.txt, sapling-f3fear.txt; villagers within 8 of the zombie each
+  second for 15 s): in the village by a hunting zombie BDS `2 2 1 0 ...`, sapling `1 2 2 1 1 1 0 0 1 ...`;
+  200 east with no beds or bell, still, BDS `1 0 0 ...`, sapling `0 0 ...` (both fled); there hunting, BDS
+  `3 0 0 ...` (gone in a second), sapling `3 1 3 3 2 2 2 1 ...` (never shook it off). The avoid goal was
+  decompiled (vtable 14a75d720: `canUse` 14190daa0, `findNearest` 14190d490 takes the first fitting
+  mob in its box, not the nearest; `canUse` then needs sight, a `RandomPos::getPosAvoid` spot
+  (14597bd90, kept to the mob's home and leash restriction) farther from the threat, and a path).
+  `f3fear2` (bds-f3fear2.txt; the zombie summoned 60 off, then put 4 from the pair) undid any village
+  rule: in the village both fled from a still zombie and a hunting one within 1 to 2 s, while alone one
+  villager stayed within 8 of a still zombie for 8 s and of a hunting one for most of 15 s. BDS's
+  fleeing is as often late as not, which fits a random spot search that fails; sapling flees straight
+  away at once. Not fixed: one run per case does not fit the search.
 - The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick, which matched the
   drilled sleep and wake ticks.
+- Breeding, `f3breed` (2026-11-04, bds-f3breed.txt, sapling-f3breed.txt): two unskilled villagers in the
+  three-bed village, 24 bread dropped at their feet: BDS had a baby 96 s after the drop (at 0.5, 1.5),
+  sapling none in the 104 s watched. Neither side showed the bread as an item entity to the actor, so
+  what set BDS's pair off is not known; not fixed.
+- Job-site range: `f3poi` above (a held villager took none).
 - A baby's hurt standing (-3) moved no BDS golem within 30 s, not explained.
 - Standing from ranged kills, the +5 of 0x142445c80 (curing) and the founding reward; the aggressor a
   golem defends against. Standing is kept as BDS's `VILLAGE_<id>_PLAYERS` (`Players`, each `ID` long and
@@ -224,8 +272,8 @@ bed-goer not matched (strolls are random on both).
 
 ## Left out
 
-Gossip (Bedrock has none: its discounts are the cured ones of `economy_trade_table`, and sapling has
-no curing), villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
-makes a baby's unskilled trader), zombie villagers and curing, explorer maps (their trades are never
+Gossip (Bedrock has none: its discounts are the cured ones of `economy_trade_table`, which sapling's
+cure does not give yet), villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
+makes a baby's unskilled trader), explorer maps (their trades are never
 offered), the llamas' leashes and their going with their trader, a villager picking up and sharing food,
 farmers farming, cats spawning, the old trading screen.

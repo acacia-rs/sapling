@@ -184,3 +184,70 @@ fn an_armorer_restocks_at_its_first_start_of_work_in_a_work_period() {
     h.remote.run(|ctx| ctx.set_time(10_000));
     assert_eq!(used_after(&mut h, 500), 0, "restocked on arriving in the next work period");
 }
+
+/// bds-f3convert.txt: on hard a zombie's killing hit turned an armorer into a zombie villager in
+/// the hit's tick, keeping its `Variant` 8 and its tiers; on easy it just dies.
+#[test]
+fn a_villager_a_zombie_kills_on_hard_becomes_a_zombie_villager_keeping_its_profession() {
+    for (difficulty, turns) in [(sapling_api::Difficulty::Hard, true), (sapling_api::Difficulty::Easy, false)] {
+        let storage = floor_holding(Vec::new(), &[]);
+        let mut h = Harness::with(config(), World::with_storage(storage));
+        enter_stored(&mut h, 1);
+        h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", [2.5, 64.0, 0.5], 0.0, Some("minecraft:become_armorer")).is_some()));
+        let sent: Vec<_> = (0..3).flat_map(|_| h.tick(1)).collect();
+        let id = all::<AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:villager_v2").expect("shown").runtime_id;
+        h.remote.run(move |ctx| {
+            ctx.set_difficulty(difficulty);
+            let zombie = sapling_api::Attacker::Mob { kind: "minecraft:zombie".into() };
+            assert!(ctx.hurt_entity_by(sapling_api::EntityId(id), 100.0, sapling_api::DamageCause::Attack, &zombie));
+        });
+        let sent = h.tick(1);
+        let added: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:zombie_villager_v2").collect();
+        assert_eq!(added.len(), usize::from(turns), "{difficulty:?}");
+        if let Some(zombie) = added.first() {
+            assert_eq!(metadata(&sent, zombie.runtime_id, Key::Variant).last(), Some(&8));
+            assert_eq!(metadata(&sent, zombie.runtime_id, Key::MaxTradeTier).last(), Some(&4));
+        }
+    }
+}
+
+/// bds-f3cure.txt: a weakened zombie villager given a golden apple shook, was heard `remedy` a tick
+/// later from its middle, and became a villager 178 to 211 s on, heard `unfect` (BDS 1424459c0: 180
+/// to 300 s less what beds and iron bars took off); the apple is used up.
+#[test]
+fn a_weakened_zombie_villager_given_a_golden_apple_shakes_and_is_cured() {
+    use acacia_proto::packets::LevelSoundEvent;
+    use acacia_proto::types::MetadataFlags1;
+    let storage = floor_holding(Vec::new(), &[]);
+    let mut h = Harness::with(config(), World::with_storage(storage));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(sapling_api::Difficulty::Easy);
+        ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Survival);
+        assert!(ctx.set_item(sapling_api::PlayerId(1), sapling_api::Slot::Main(0), Some(&sapling_api::Item::new("minecraft:golden_apple", 2))));
+        assert!(ctx.summon_as(None, "minecraft:zombie_villager_v2", [2.5, 64.0, 0.5], 0.0, None).is_some());
+    });
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick(1)).collect();
+    let zombie = all::<AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:zombie_villager_v2").expect("shown").runtime_id;
+    h.remote.run(move |ctx| {
+        for effect in [sapling_api::Effect::Weakness, sapling_api::Effect::FireResistance] {
+            assert!(ctx.give_entity_effect(sapling_api::EntityId(zombie), effect, 20_000, 0));
+        }
+    });
+    h.tick(1);
+    h.receive(1, &use_on(zombie));
+    let sent = h.tick(1);
+    assert_eq!(common::raising::has_flag(&sent, zombie, MetadataFlags1::VIBRATING), Some(true), "it shakes");
+    let remedy = all::<LevelSoundEvent>(&h.tick(1)).into_iter().find(|sound| sound.sound_id == "remedy").expect("remedy heard a tick on");
+    assert!((remedy.position.y - 64.95).abs() < 1e-4 && remedy.entity_unique_id == -1, "from its middle, of no entity");
+    let left = common::asking::ask(&mut h, |ctx| ctx.item(sapling_api::PlayerId(1), sapling_api::Slot::Main(0)).map(|item| item.count));
+    assert_eq!(left, Some(1), "the apple used up");
+    let cured = (1..=6000).find_map(|tick| {
+        let sent = h.tick(1);
+        let villager = all::<AddEntity>(&sent).iter().any(|added| added.entity_type == "minecraft:villager_v2");
+        villager.then(|| (tick, all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "unfect")))
+    });
+    let (tick, heard) = cured.expect("cured within 300 s");
+    assert!(tick >= 3600, "not before 180 s: {tick}");
+    assert!(heard, "unfect heard");
+}

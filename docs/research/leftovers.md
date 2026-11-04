@@ -298,6 +298,9 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
   (`go_home`'s interval 700), at about 0.37 blocks a second. Sapling's `nesting.rs` makes the
   first cell it is seen in its home, as BDS did, but its turtles (sapling-n3home.txt) strolled about
   and wandered back only slowly within the 100 s, where BDS's walked straight home once set off.
+  Fixed 2026-11-04 (`husbandry/nesting.rs`): a pregnant turtle away from home stands until it sets
+  off, then walks straight to 0.3 of its home's middle (BDS's ended about 0.3 off); test
+  `a_pregnant_turtle_taken_away_stands_then_walks_straight_home`. Stomping odds stay undrilled.
 - Frogs (n3frogs, eight on open stone for 90 s): BDS's waits from a landing to the next leap were
   7.3 to 9.2 s (a frog's first, 5.0 to 6.7); sapling's 7.1 to 9.0.
 

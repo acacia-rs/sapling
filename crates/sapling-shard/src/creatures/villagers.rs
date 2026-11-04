@@ -8,6 +8,7 @@
 // TODO: villager breeding (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
 
 mod beds;
+mod conversion;
 mod deals;
 mod fear;
 mod golem_spawns;
@@ -33,6 +34,7 @@ use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::{entities, mobs};
 use deals::Deal;
 
+pub(super) use conversion::{hasten_cures, infect, kept_through_turning, turned};
 pub(crate) use fear::alarm;
 pub(super) use golem_spawns::tick as spawn_golems;
 pub(super) use standing::{hit as hurt_standing, outlaw};

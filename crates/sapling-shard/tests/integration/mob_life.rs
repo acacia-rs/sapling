@@ -185,6 +185,34 @@ fn bred_turtles_have_no_baby_and_one_goes_home_and_lays_eggs_on_sand() {
     assert!(names(&mut h, around([2, 2], 65, 8)).iter().any(|name| name.starts_with("minecraft:turtle_egg[")), "eggs on the sand");
 }
 
+/// research/captures/bds-n3home.txt: taken 10 east, a pregnant turtle stood until it set off,
+/// then walked straight back to 0.3 of its home's middle.
+#[test]
+fn a_pregnant_turtle_taken_away_stands_then_walks_straight_home() {
+    let mut h = ready(GameMode::Survival, &[("minecraft:seagrass", 2, 0)], 0.0);
+    let turtles = [spawn(&mut h, "minecraft:turtle", [2.5, 65.0, 0.5]), spawn(&mut h, "minecraft:turtle", [2.5, 65.0, 3.5])];
+    let mut sent: Vec<_> = turtles.iter().flat_map(|turtle| click_on(&mut h, *turtle)).collect();
+    let pregnant = |sent: &[RawPacket]| turtles.iter().zip([0.5, 3.5]).find(|(turtle, _)| has_flag(sent, **turtle, MetadataFlags1::PREGNANT) == Some(true)).map(|(turtle, z)| (*turtle, z));
+    for _ in 0..60 {
+        if pregnant(&sent).is_some() {
+            break;
+        }
+        sent.extend(watch(&mut h, 20));
+    }
+    let (mother, home) = pregnant(&sent).expect("pregnant");
+    let feet = move |h: &mut Harness| common::asking::ask(h, move |ctx| ctx.entity(sapling_api::EntityId(mother)).expect("the mother").feet);
+    h.remote.run(move |ctx| assert!(ctx.move_entity(sapling_api::EntityId(mother), [12.5, 65.0, home])));
+    h.tick_all();
+    let mut last = feet(&mut h);
+    for _ in 0..300 {
+        (0..20).for_each(|_| _ = h.tick_all());
+        let now = feet(&mut h);
+        assert!(now[0] <= last[0] + 0.01 && (now[2] - home).abs() < 0.6, "only ever west, along its row: {last:?} to {now:?}");
+        last = now;
+    }
+    assert!((last[0] - 2.5).abs() <= 0.5, "home: {last:?}");
+}
+
 #[test]
 fn a_zombie_goes_for_turtle_eggs_and_stomps_them_out() {
     let mut h = Harness::new();

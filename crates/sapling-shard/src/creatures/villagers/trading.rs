@@ -51,9 +51,13 @@ fn say(world: &mut World, trader: Entity, sound: &str) {
     entities::tell_viewers(world, trader, layer, body.at.map(|c| c.floor() as i32), vec![said]);
 }
 
-/// A player's use of the mob `id`: a free trader with offers opens its screen. False for any other.
+/// A player's use of the mob `id`: a weakened zombie villager given a golden apple starts its cure
+/// (conversion.rs); a free trader with offers opens its screen. False for any other.
 pub(crate) fn interact(world: &mut World, player: Entity, id: u64) -> bool {
     let Some(trader) = entities::find(world, EntityId(id)) else { return false };
+    if super::conversion::cure(world, player, trader) {
+        return true;
+    }
     let free = world.get::<Trader>(trader).is_some_and(|t| !t.deals.is_empty() && t.customer.is_none_or(|customer| customer == player));
     let grown = world.get::<super::super::Creature>(trader).is_some() && !super::super::shown::is_baby(world, trader);
     if !free || !grown {

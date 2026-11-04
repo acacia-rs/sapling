@@ -69,12 +69,14 @@ mod summoned;
 mod swimming;
 mod teleports;
 mod ticked;
+mod turning;
 mod vexes;
 mod villagers;
 mod warden;
 mod wings;
 mod wither;
 mod worn;
+mod zombifying;
 
 use bevy_ecs::prelude::*;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
@@ -213,7 +215,8 @@ pub(crate) fn tick(world: &mut World) {
     raids::tick(world);
     villagers::spawn_golems(world);
     armour_stands::tick(world);
-    struck::tick(world);
+    zombifying::tick(world);
+    turning::tick(world);
     creaking::tick_hearts(world);
     death::leave_due(world);
     let now = world.resource::<Tick>().0;

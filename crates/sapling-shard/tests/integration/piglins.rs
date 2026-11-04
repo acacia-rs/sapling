@@ -4,8 +4,8 @@ use crate::common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, MobEquipment, TakeItemEntity};
-use acacia_proto::types::WindowID;
-use common::raising::click_on;
+use acacia_proto::types::{MetadataFlags1, WindowID};
+use common::raising::{click_on, has_flag};
 use common::stored::{enter_stored, floor_with};
 use common::{Harness, all, config};
 use sapling_api::{GameMode, Item, PlayerId, Slot};
@@ -61,8 +61,13 @@ fn piglin_by_alex(h: &mut Harness) -> u64 {
 /// Drops `item` at `at` and ticks until the piglin takes it: the ticks taken and all that was told.
 fn dropped_for(h: &mut Harness, piglin: u64, item: &'static str, at: [f32; 3]) -> (usize, Vec<Vec<RawPacket>>) {
     h.remote.run(move |ctx| assert!(ctx.drop_item(&Item::new(item, 1), at)));
-    let ticks: Vec<Vec<RawPacket>> = (0..80).map(|_| h.tick_all().to(1).to_vec()).collect();
-    let took = ticks.iter().position(|sent| all::<TakeItemEntity>(sent).iter().any(|taken| taken.target as u64 == piglin)).unwrap_or_else(|| panic!("{item} never taken"));
+    // Stops 3 ticks after it is taken: out of the Nether the piglin zombifies 303 ticks in.
+    let mut ticks: Vec<Vec<RawPacket>> = Vec::new();
+    let taken = |sent: &Vec<RawPacket>| all::<TakeItemEntity>(sent).iter().any(|taken| taken.target as u64 == piglin);
+    while ticks.len() < 80 && ticks.iter().position(taken).is_none_or(|took| ticks.len() < took + 3) {
+        ticks.push(h.tick_all().to(1).to_vec());
+    }
+    let took = ticks.iter().position(taken).unwrap_or_else(|| panic!("{item} never taken"));
     (took, ticks)
 }
 
@@ -124,4 +129,32 @@ fn what_a_piglin_holds_is_saved_and_shown_again() {
     let piglin = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:piglin").expect("shown again").runtime_id;
     let hands: Vec<WindowID> = all::<MobEquipment>(&sent).into_iter().filter(|held| held.runtime_entity_id == piglin && held.item.network_id != 0).map(|held| held.window_id).collect();
     assert_eq!(hands, [WindowID::Inventory, WindowID::Offhand]);
+}
+
+/// bds-t2barter.txt: out of the Nether a piglin shook a tick after it came and was a zombified
+/// piglin 303 ticks after, with its sword, heard `converted_to_zombified` from its middle.
+#[test]
+fn a_piglin_out_of_the_nether_shakes_and_turns_zombified_303_ticks_on_keeping_its_sword() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        // On peaceful the zombified piglin would be taken away as it came.
+        ctx.set_difficulty(sapling_api::Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:piglin", [3.5, 65.0, 0.5]).is_some());
+    });
+    let mut ticks: Vec<Vec<RawPacket>> = (0..2).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let came = ticks.iter().position(|sent| all::<AddEntity>(sent).iter().any(|added| added.entity_type == "minecraft:piglin")).expect("shown");
+    let piglin = all::<AddEntity>(&ticks[came]).into_iter().find(|added| added.entity_type == "minecraft:piglin").unwrap().runtime_id;
+    h.remote.run(move |ctx| assert!(ctx.set_mob_item(sapling_api::EntityId(piglin), sapling_api::MobSlot::MainHand, Some(&Item::new("minecraft:golden_sword", 1))).is_ok()));
+    ticks.extend((0..320).map(|_| h.tick_all().to(1).to_vec()));
+    let shook = ticks.iter().position(|sent| has_flag(sent, piglin, MetadataFlags1::VIBRATING) == Some(true)).expect("it shakes");
+    assert_eq!(shook, came + 1, "a tick after it came");
+    let turned = ticks.iter().position(|sent| all::<AddEntity>(sent).iter().any(|added| added.entity_type == "minecraft:zombie_pigman")).expect("it turns");
+    assert_eq!(turned, came + 303);
+    let sent = &ticks[turned];
+    let new = all::<AddEntity>(sent).into_iter().find(|added| added.entity_type == "minecraft:zombie_pigman").unwrap().runtime_id;
+    let sounds: Vec<String> = all::<LevelSoundEvent>(sent).into_iter().map(|sound| sound.sound_id).collect();
+    assert!(sounds.contains(&"converted_to_zombified".to_owned()) && !sounds.contains(&"spawn".to_owned()), "{sounds:?}");
+    assert!(all::<MobEquipment>(sent).iter().any(|held| held.runtime_entity_id == new && held.window_id == WindowID::Inventory && held.item.network_id != 0), "the sword kept");
 }
