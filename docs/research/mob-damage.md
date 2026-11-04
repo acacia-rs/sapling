@@ -279,9 +279,22 @@ target. Sapling: `weather/falling.rs` (`Falling`, both levels). What reads which
   snow layer (0x14119dec0, `doWeatherCycle` on) and the column top's block's precipitation (a
   cauldron's fill). So they fall from the rain's first tick until ~100 ticks after it clears; BDS's
   cauldron took its first fill 863 ms after `/weather rain` (bds-cauldronrain.txt), before rain
-  rains on mobs. Fixed: `blocks/growth/snowfall.rs` reads `weather::falls` (any rain). TODO: the
-  odds by level and downfall (sapling: a cauldron fills at every pick, snow 1 in 16, BDS's odds at
-  full rain over a biome of downfall 0.47 or more).
+  rains on mobs. Fixed: `blocks/growth/snowfall.rs` reads `weather::falls` (any rain). The odds
+  (2026-11-04, `bds_command_probe cauldronrate`, research/captures/bds-cauldronrate.txt): the
+  downfall the tick weighs is the rain's level times the biome's (`BiomeDefinitionList`'s, which
+  sapling-data now keeps: `biome_downfall`, plains 0.4); the tick calls the top block's
+  `handlePrecipitation` with it on every pick (BlockType vtable +0x170), and only the cauldron's
+  overrides it (141a46850): it fills unless the downfall is under `nextFloat() * 0.5`, so twice the
+  downfall, sure from 0.5. A chunk of 256 cauldrons on plains at `randomTickSpeed` 1 filled 16 a
+  second in full rain (0.8 a pick) and 34 more over the 5 s the rain cleared; sapling's 20 a second
+  and 99 (every pick). The tick loops `randomTickSpeed` times a chunk with no cap (bds-cauldronrain.txt
+  at 100: six fills in 3.1 s of rising rain, as 100 picks predict; sapling had capped at 16). Fixed:
+  snow lies at `nextInt(256 - min(512 x downfall, 240)) == 0` and a cauldron fills at twice the
+  downfall, `randomTickSpeed` picks a chunk (tests `snow_lies_one_pick_in_sixteen_from_downfall_047_and_more_rarely_under`,
+  `rain_fills_a_cauldron_at_twice_its_downfall`, `biomes_carry_bds_downfall`). Re-drilled
+  (sapling-cauldronrate.txt): 345 fills in 20 s of full rain (BDS 335) and 38 in the clearing (34).
+  Snow by downfall is undrillable here: the flat drill world is
+  plains (too warm to snow) and BDS has no command to set a biome.
 - The sky's darkening (`Dimension` tick 0x14187f9c0): `(1 - rain·5/16)·(1 - lightning·5/16)`, each
   level now, lightning not weighed by the rain. bds-daylight.txt's noon dust read 14 some 31 ticks
   into the rain and 13 some 61 in (this gives 15 up to rain 0.29, 14, 13 from 0.58), 12, 11, 10 at
@@ -293,10 +306,26 @@ target. Sapling: `weather/falling.rs` (`Falling`, both levels). What reads which
   read once and froze, as redstone.md says, so bds-rainramp.txt's two show nothing of the weather.
 - What players are told (`LevelEvent` StartRain/StopRain/StartThunder/StopThunder) follows the
   sky's state at once, no level on the way: bds-weather.txt, bds-rainramp.txt. Same on sapling.
-- Not drilled, from the Java game where bdsre was not read: bees stay home while rain is over 0.2
-  (`!weather::rains`), monster spawns reckon brightness at the storm's 10 once rain times lightning
-  is over 0.9 (`weather::storms`, `isThundering`), a night is skipped by the time window alone
-  (`rest::is_night`, the sky's state choosing the rainy window).
+- Bees (2026-11-04, `beerain`, research/captures/bds-beerain.txt against sapling-beerain.txt):
+  three bees by a hive at noon, no flower near. Rain sent them in 4.2, 4.6 and 5.2 s after
+  `/weather rain` on BDS, 3.2, 3.9 and 4.6 s on sapling (rain over 0.2 from 1 s, then the flight:
+  the same within the flights' spread). After 35 s of rain, `/weather clear` let them out 84, 85
+  and 96 ticks on (BDS), 81 for all three (sapling): rain under 0.2 at 81 ticks, the hive's check
+  a few ticks apart on BDS. Drilled the same. The pack's `is_daytime` filter (`FilterTestDaytime`
+  0x1411bbd80) is the dimension's day test and `skyDarken` under 4, which `may_fly` reads.
+- Sleep and the night's skip in rain (`rainnight`, bds-rainnight.txt against sapling-rainnight.txt):
+  at 12200 BDS refused a sleeper in clear sky and with rain begun 2 s before (level 0.4), took it in
+  full rain and skipped the night 100 ticks on (12390, short of the clear window's 12541), woke a
+  sleeper without a skip as a clearing rain fell under 0.52 (`skyDarken` 3 at 12318), and skipped
+  at 23937 in full rain and from 18000 clear, each with `StopRain` where it rained. Sapling took
+  the sleeper 2 s into the rain: `rest::is_resting_time` read the sky's state's window. Fixed: whether
+  one may sleep, and stay asleep, is `skyDarken >= 4` of the levels alone; the skip keeps the
+  state's window, which every skip above fits (test
+  `rain_lets_one_sleep_early_only_once_it_darkens_the_sky`). Re-drilled (sapling-rainnight.txt):
+  refused, refused, slept and skipped, woken in the clearing, skipped, skipped, as BDS. Sapling
+  sends `StopRain` after the clock, BDS before it.
+- Not drilled: monster spawns reckon brightness at the storm's 10 once rain times lightning is over
+  0.9 (`weather::storms`, `isThundering`, the Java game's).
 
 ## Hits (2026-10-29, `bds_command_probe hits2`, research/captures/bds-hits2.txt)
 

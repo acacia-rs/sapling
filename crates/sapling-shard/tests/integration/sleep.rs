@@ -113,6 +113,23 @@ fn a_monster_near_keeps_a_sleeper_up_and_a_storm_lets_it_sleep_by_day() {
     assert!(lies_down(&h.tick(1)), "in a storm, the zombie 9 off");
 }
 
+/// research/captures/bds-rainnight.txt: at 12200 a rain begun 2 s before refused the sleeper; the
+/// same rain 5 s on let it lie down.
+#[test]
+fn rain_lets_one_sleep_early_only_once_it_darkens_the_sky() {
+    let mut h = with_a_bed();
+    h.remote.run(|ctx| {
+        ctx.set_time(12_200);
+        ctx.set_weather(sapling_api::Weather::Rain, None);
+    });
+    (0..40).for_each(|_| drop(h.tick(1)));
+    h.receive(1, &click(HEAD, 1, None));
+    assert!(!lies_down(&h.tick(1)), "rain 0.4 leaves the sky too light");
+    (0..60).for_each(|_| drop(h.tick(1)));
+    h.receive(1, &click(HEAD, 1, None));
+    assert!(lies_down(&h.tick(1)), "full rain darkens 12300 to 4");
+}
+
 /// The night ends with `WeatherManager::stopWeather` (bdsre 0x1411a79e0): the rain stops too.
 #[test]
 fn a_night_slept_through_is_skipped() {

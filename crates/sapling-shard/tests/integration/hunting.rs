@@ -297,6 +297,26 @@ fn a_pillager_swaps_to_the_nearer_prey_the_tick_it_is_there() {
 }
 
 #[test]
+fn a_pillagers_bolt_throws_its_prey_away_from_the_pillager() {
+    // research/captures/bds-pillswitch2.txt: shot by pillagers 3 west and 1 north, the actor was
+    // thrown 0.4 along (3, 1) and 0.4 up, whatever line the bolt flew.
+    let (mut h, pillager) = hunted_by("minecraft:pillager", Difficulty::Easy);
+    h.remote.run(move |ctx| {
+        assert!(ctx.give_entity_effect(EntityId(pillager), sapling_api::Effect::Slowness, 1000, 255));
+        assert!(ctx.move_entity(EntityId(pillager), [2.5, 65.0, 4.5]));
+    });
+    let sent: Vec<RawPacket> = (0..160)
+        .flat_map(|_| {
+            h.receive(1, &common::input_at([0.5, 65.0, 0.5]));
+            h.tick_all().to(1).to_vec()
+        })
+        .collect();
+    let thrown: Vec<_> = all::<SetEntityMotion>(&sent).into_iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| motion.velocity).collect();
+    let along = [-2.0 / 20f32.sqrt() * 0.4, -4.0 / 20f32.sqrt() * 0.4];
+    assert!(!thrown.is_empty() && thrown.iter().all(|v| (v.x - along[0]).abs() < 1e-3 && (v.z - along[1]).abs() < 1e-3 && v.y == 0.4), "{thrown:?}");
+}
+
+#[test]
 fn a_held_pillager_loads_from_afar_and_shoots_only_from_8_off() {
     // research/captures/bds-pillrange.txt: held 12 to 9 off it loaded and never shot; 8 and 7 off it
     // shot every 46 ticks.

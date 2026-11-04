@@ -116,6 +116,19 @@ fn an_active_conduit_gives_conduit_power_to_a_player_in_its_water_and_bites_a_mo
     assert!(bitten >= 1 && heard == bitten, "4 damage every 40 ticks from the pulse after it was taken, each heard");
 }
 
+/// research/captures/bds-conduitreach.txt: a held zombie in water 6 north was never taken.
+#[test]
+fn a_whole_conduit_leaves_a_monster_in_water_past_its_hunting_box_alone() {
+    let mut h = ready();
+    conduit(&mut h, 42);
+    h.remote.run(|ctx| assert!(ctx.set_block([4, 65, -2], &Block::new("water"))));
+    let zombie = common::shooting::spawn(&mut h, "minecraft:zombie", [4.5, 65.0, -1.5]);
+    h.remote.run(move |ctx| assert!(ctx.give_entity_effect(sapling_api::EntityId(zombie), Effect::Slowness, 1000, 255)));
+    let sent: Vec<RawPacket> = (0..241).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(!all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == zombie && event.event_id == EntityEventEventId::HurtAnimation));
+    assert!(!all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "conduit.attack"));
+}
+
 #[test]
 fn a_conduit_short_of_its_whole_frame_gives_power_but_bites_nothing() {
     let mut h = ready();

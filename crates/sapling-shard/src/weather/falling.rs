@@ -59,12 +59,6 @@ pub(crate) fn rains(world: &World, layer: Entity) -> bool {
     falling(world, layer).rain > RAINS_OVER
 }
 
-/// Whether any rain or snow falls, however little: what fills cauldrons and lays snow
-/// (`LevelChunk::tick` weighs its odds by the level and draws from above 0).
-pub(crate) fn falls(world: &World, layer: Entity) -> bool {
-    falling(world, layer).rain > 0.0
-}
-
 /// Whether bolts come down: rain and lightning near their fullest together.
 pub(crate) fn storms(world: &World, layer: Entity) -> bool {
     falling(world, layer).thunder() > STORMS_OVER

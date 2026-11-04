@@ -1,9 +1,9 @@
 //! What an active conduit does every 40 ticks (docs/research/effects-raids.md "Conduit"): conduit
 //! power, not ambient, to each player in water or rain whose block is less than 16 for every 7
 //! frame blocks off along each axis (research/captures/bds-conduit2.txt); with all 42, one hostile
-//! mob in water or rain within 8 is kept as its `Target` until it dies or leaves, and bitten for 4
-//! from the pulse after it was taken, `conduit.attack` heard at the conduit.
-// TODO: BDS left a zombie in rain 7 off unbitten (bds-conduit2.txt); sapling bites it.
+//! mob in water or rain whose box meets the box 5 round the conduit is kept as its `Target` until
+//! it dies or leaves that box, and bitten for 4 from the pulse after it was taken,
+//! `conduit.attack` heard at the conduit (docs/research/effects-raids.md "Conduit" for the reach).
 
 use std::collections::HashMap;
 
@@ -24,7 +24,7 @@ const RANGE_PER: usize = 7;
 const RANGE_STEP: i32 = 16;
 const LASTS: u32 = 260;
 const HUNTS_WITH: usize = 42;
-const HUNTS: i32 = 8;
+const HUNTS: f32 = 5.0;
 const BITES: f32 = 4.0;
 const PLAYER_HEIGHT: f32 = 1.8;
 
@@ -36,10 +36,10 @@ fn is_wet(world: &World, layer: Entity, feet: [f32; 3], height: f32) -> bool {
     crate::creatures::in_rain(world, layer, feet, height) || world.get::<Layer>(layer).is_some_and(|level| crate::creatures::holds(&level.world, feet.map(|c| c.floor() as i32), WATER))
 }
 
-/// Whether the block `feet` stand in is nearer `pos` than `reach`, as Java's `closerThan`.
-fn is_near(pos: BlockPos, feet: [f32; 3], reach: i32) -> bool {
-    let cell = feet.map(|c| c.floor() as i32);
-    (0..3).map(|axis| i64::from(cell[axis] - pos[axis]).pow(2)).sum::<i64>() < i64::from(reach).pow(2)
+/// Whether `body`'s box meets the box [`HUNTS`] round the block at `pos`.
+fn is_hunted_near(pos: BlockPos, body: &Body) -> bool {
+    let (low, high) = body.bounds();
+    (0..3).all(|axis| high[axis] > pos[axis] as f32 - HUNTS && low[axis] < (pos[axis] + 1) as f32 + HUNTS)
 }
 
 /// Whether the block `feet` stand in is less than `reach` off `pos` along every axis.
@@ -60,21 +60,19 @@ pub(super) fn empower(world: &mut World, layer: Entity, pos: BlockPos, frame: us
     }
 }
 
-/// Live hostile mobs in water or rain whose box's foot is within the box 8 round `pos`.
+/// Live hostile mobs in water or rain within the hunting box round `pos`.
 fn hostiles(world: &mut World, layer: Entity, pos: BlockPos) -> Vec<(Entity, [f32; 3])> {
-    let within = |at: [f32; 3]| (0..3).all(|axis| at[axis] >= (pos[axis] - HUNTS) as f32 && at[axis] <= (pos[axis] + 1 + HUNTS) as f32);
     let found: Vec<(Entity, [f32; 3], f32)> = world
         .query_filtered::<(Entity, &InLayer, &Kind, &Body, &Health), With<Creature>>()
         .iter(world)
-        .filter(|(_, on, kind, body, health)| on.0 == layer && health.left() > 0.0 && within(body.at) && sapling_data::has_family(&kind.0, "monster"))
+        .filter(|(_, on, kind, body, health)| on.0 == layer && health.left() > 0.0 && is_hunted_near(pos, body) && sapling_data::has_family(&kind.0, "monster"))
         .map(|(mob, _, _, body, _)| (mob, body.at, body.size[1]))
         .collect();
     found.into_iter().filter(|(_, at, height)| is_wet(world, layer, *at, *height)).map(|(mob, at, _)| (mob, at)).collect()
 }
 
-fn alive_at(world: &World, mob: Entity, layer: Entity) -> Option<[f32; 3]> {
-    let on = world.get::<InLayer>(mob)?.0 == layer && world.get::<Health>(mob)?.left() > 0.0;
-    on.then(|| world.get::<Body>(mob).map(|body| body.at)).flatten()
+fn is_alive_near(world: &World, mob: Entity, layer: Entity, pos: BlockPos) -> bool {
+    world.get::<InLayer>(mob).is_some_and(|on| on.0 == layer) && world.get::<Health>(mob).is_some_and(|health| health.left() > 0.0) && world.get::<Body>(mob).is_some_and(|body| is_hunted_near(pos, body))
 }
 
 pub(super) fn hunt(world: &mut World, layer: Entity, pos: BlockPos, frame: usize) {
@@ -82,7 +80,7 @@ pub(super) fn hunt(world: &mut World, layer: Entity, pos: BlockPos, frame: usize
     let target = if frame < HUNTS_WITH {
         None
     } else if let Some(mob) = held {
-        alive_at(world, mob, layer).filter(|at| is_near(pos, *at, HUNTS)).map(|_| mob)
+        is_alive_near(world, mob, layer, pos).then_some(mob)
     } else {
         let found = hostiles(world, layer, pos);
         (!found.is_empty()).then(|| found[world.resource_mut::<Dice>().roll(found.len() as u32) as usize].0)

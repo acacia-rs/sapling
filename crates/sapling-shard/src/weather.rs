@@ -33,7 +33,7 @@ const COMMAND_SPELL: (u64, u64, u64) = (6_000, 600, 20);
 const TURNS_AT: i32 = 1;
 
 mod falling;
-pub(crate) use falling::{Falling, falling, falls, rains, storms};
+pub(crate) use falling::{Falling, falling, rains, storms};
 
 fn sky(record: &WeatherRecord) -> Weather {
     match (record.rain_level > 0.0, record.lightning_level > 0.0) {
