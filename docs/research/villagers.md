@@ -7,6 +7,8 @@ What sapling copies of BDS's villagers (`villager_v2`) and wandering traders, an
 
 - The vanilla behaviour packs (`entities/villager_v2.json`, `wandering_trader.json`, `trader_llama.json`,
   `trading/economy_trades/*.json`), read through `crates/sapling-data/data/generate/trades.py`.
+- `bds_command_probe n1restock|n1drop|n1recruit|n1golems|n1golems20|n1fear`
+  (`examples/shared/ninth1_drill.rs`, 2026-11-04), BDS and sapling captures in `research/captures/`.
 - Drills on BDS 26.x, `bds_command_probe trade` and `job` (`examples/shared/trade_drill.rs`):
   `research/captures/bds-trade.txt` and `bds-job.txt` (first form of the drills: 64 coal, no village),
   `bds-trade2.txt` and `bds-job2.txt` (the drills as committed: 128 coal, a bed and a bell first).
@@ -47,6 +49,9 @@ bds-job2.txt: with a bed and a bell placed first, an unskilled villager took a b
 blocks away 1.8 s later: `SetEntityData` of `Variant` 8, `TradingPlayerEid` 0, `MaxTradeTier` 4.
 bds-job.txt: without the bed and bell it took nothing in 90 s. Neither showed the villager dropping its
 profession in the 20 s after its furnace was broken, nor taking the lectern placed meanwhile.
+bds-n1drop.txt (`bds_command_probe n1drop`, 2026-11-04): two summoned armorers at their blast
+furnaces, one traded once; both furnaces broken; neither `Variant` changed in 90 s. Sapling dropped an
+untraded villager's profession at its next look (the Java rule); it now keeps it.
 
 ## Trading
 
@@ -66,6 +71,34 @@ profession in the 20 s after its furnace was broken, nor taking the lectern plac
   in a `SetEntityData` (with `TradeTier` at the threshold, 10 for apprentice: five coal trades),
   `haggle.yes`, one to three orbs at the trader. No second `UpdateTrade` while the screen stays open,
   a level-up included.
+- `notifyTrade` (0x141baa8a0): `uses` += 1; `TradeExperience` grows only below `MaxTradeTier`; the
+  orbs are 3 + nextInt(4) points a trade and 5 more on a level-up, at the trader, only for a
+  `rewardExp` offer. A level-up sets a 10-tick timer; the economy's `newServerAiStep` (0x141ba8d80)
+  counts it down only while no player trades, then gives the levelling player +1 standing and the
+  villager regeneration for 200 ticks (bds-trade2.txt: `VisibleMobEffects` ~4 ticks after the close,
+  10 s).
+- Prices (`MerchantRecipe::calculateDemandPrices`, 0x14163f4d0): only `buyA` moves.
+  `buyCountA = count − hero + trunc(pm × discount) + max(0, floor(demand × count × pm))`, from 1 to a
+  stack; `hero = max(1, floor(count × (0.3 + 0.0625 × amplifier)))` with Hero of the Village (effect 29);
+  `discount` the cured discounts (`economy_trade_table` `cured_discount` [-25,-20], `nearby_cured_discount`
+  -20, capped by their `max_*`), which sapling lacks (no curing).
+- Restock (`resupplyTrades`, 0x141bb0e90, run as `minecraft:trade_resupply` is added): per offer
+  `demand = max(0, demand + 2 × uses − maxUses)`, `uses = 0`. `behavior.work` (`active_time` 250,
+  `goal_cooldown` 200, `can_work_in_rain` false; the farmer's `work_composter` too) fires
+  `minecraft:resupply_trades` on each arrival, which adds `trade_resupply_component_group`; only the
+  schedule events (gather, home, bed, wander, play) remove it, so it restocks once a work period, at
+  the first arrival, used offers or not [pack]. bds-n1restock.txt: an armorer traded once after its
+  first arrival showed `uses` 1 at every reopening for 118 s. Sapling restocked at the first arrival
+  with a used offer; now at the first arrival.
+- The draw (`_generateTrades`, 0x141bac370): a group with `0 < num < size` draws `num` times; the n-th
+  draw rolls nextInt(sum of the weights from place n on), walks from place n, and swaps the trade it
+  lands on into place n; offers come in draw order. The biome filter applies after the draw, per
+  alternative: a drawn trade none of whose alternatives the type may offer makes no offer. Each item's
+  alternative is nextInt(alternatives); wants before gives.
+- `random_dye` (0x14752e880): `colour[perm[nextInt(16)]]`, perm
+  `[15,7,8,0,3,1,14,11,10,2,6,12,4,5,13,9]` over the dye colours black 0 to white 15 (white `F0F0F0`); a
+  second dye when nextFloat() < 0.3, a third when another < 0.2; channels averaged as f32 (c/255 summed,
+  × 1/n, clamped) and truncated back to bytes; `customColor` ARGB with alpha 255.
 - Wandering trader: its table's one tier; two `trader_llama` appear at its feet half a block up ~50 ms
   after it, with a `plop`.
 
@@ -115,7 +148,8 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 
 - Each village keeps a standing per player, clamped to [-30, 10] [BDS `Village::modifyStanding`
   0x142a31380].
-- A trade adds 1 [BDS TradeableSystem 14194d9b0]. A player's hit on a villager takes 1, or 3 from a baby
+- A trade adds none; a trade's level-up adds 1 as it ends (Trading above) [BDS 0x141ba8d80;
+  corrected 2026-11-04: 14194d9b0 is the legacy `villager` v1's `LegacyTradeableComponent`]. A player's hit on a villager takes 1, or 3 from a baby
   [BDS DwellerComponent hurt 141ba6be0]. A villager killed by a player takes 2 more; an iron golem 5
   [BDS DwellerComponent death 141ba6460].
 - Two village-wide timers step good standings down by one every 120000 ticks and bad ones up every
@@ -129,20 +163,33 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 - Prices take no standing: `economy_trade_table` reads only the cured, nearby-cured and hero discounts
   [BDS definition 141ba86e0].
 
+## Golems
+
+- `Village::tick` (0x142a23bc0) spawns an iron golem when the villagers holding a bed (the claimed
+  POI map's bed slot) number at least max(20, villagers), at least three in four villagers worked within
+  24000 ticks (`mVillagerWorkTimestamps`), the village's defenders number fewer than villagers / 10,
+  and nextInt(700) is 0; `iron_golem` with `minecraft:from_village`, 10 tries at the centre plus
+  nextInt(17) − 8 on x and z, y from +6 down to −6 (0x143905ed0), added as a defender. Cats: every 1200
+  ticks, fewer than 5 cats within 48 and fewer than villagers / 4 brings one (`spawn_from_village`, or
+  `spawn_midnight_cat` some nights); not built.
+- bds-n1golems.txt: 20 beds and 10 working armorers spawned no golem in 150 s, as the rule has it.
+  bds-n1golems20.txt: 20 armorers spawned none either (the beds 28 from the furnaces, likely past their
+  claim reach); sapling's (sapling-n1golems20.txt) spawned none. A spawning village was not seen.
+  Sapling's port (`golem_spawns.rs`) counts its own villages' villagers with a claimed bed and those
+  that started work within a day, and draws 20 times every 20 ticks.
+- A village golem is kept: its actor's `definitions` gain `+minecraft:village_created` (the pack's
+  `from_village` group), which a load reads back (`golems.rs`).
+
 ## Unverified (sapling's choice where BDS was not seen)
 
-- Prices: `buyCount = count + max(0, floor(count × demand × priceMultiplier))`, from 1 to a stack; demand
-  at a restock moves by `uses − (maxUses − uses)` (the Java game's rules).
-- The orbs' worth: 3 to 6 points a trade (Java); BDS showed one to three orbs.
-- The draw of a tier's offers: by weight without putting back, alternatives each as likely;
-  `enchant_with_levels` as the enchanting table's draw at that cost; a librarian's book any enchantment
+- `enchant_with_levels` as the enchanting table's draw at that cost; a librarian's book any enchantment
   but the curses, Soul Speed, Swift Sneak and Wind Burst, its price
   `base + rand(base_random + level × per_level_random) + level × per_level`, doubled for a treasure, at
-  most 64; `random_dye` one of the 16 dye colours.
+  most 64.
 - Job sites: looked for within 10 blocks across and 4 up or down, every 60 to 100 ticks (the dweller's
-  update interval), with no village needed; a villager loses its profession when its site goes and it
-  never traded (BDS was not seen doing so); restocking on reaching its site in working hours (0–8000 and
-  10000–11000), at most once each, so twice a day.
+  `update_interval_base` 60 and `_variant` 40, the interval counter at `DwellerComponent`+0x40,
+  148487bd0), with no village needed (BDS's dweller POI query range not decompiled; bds-job.txt: no
+  job without a bed or bell).
 - The wandering trader leaves after 2400 or 3600 seconds (its `minecraft:timer`, taken as seconds) or
   once sold out, when no player is within 24 blocks; its timer is not kept by the actor compound.
 
@@ -162,18 +209,23 @@ bed-goer not matched (strolls are random on both).
 
 - Gathering and the other schedule goals' walks beyond the home and bed counts above; standing's
   numbers (no packet shows them).
-- Fear in the open (a zombie seen within 8): only the shard test.
+- Fear in the open: `n1fear` (bds-n1fear.txt, sapling-n1fear.txt, 2026-11-04) held a zombie still in
+  the open by two villagers: BDS's both stayed within 8 of it for 15 s, one within 4 for 9 s; sapling's
+  fled (0 or 1 within 8). Not fixed: as with the glass cage, BDS's `behavior.avoid_mob_type` did not
+  fire for a still zombie; its `canUse` (`probability_per_strength`, the target's strength) was not
+  found in the binary, and a hunting zombie was not drilled.
 - The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick, which matched the
   drilled sleep and wake ticks.
-- Whether a golem is the village's is not kept with the world; a baby's hurt standing (-3) moved no
-  BDS golem within 30 s, not explained.
-- Standing from ranged kills, the +5 of 0x142445c80, the +1 of 0x141ba8d80 and the founding reward;
-  standing kept with the world (`VILLAGE_<id>_PLAYERS`); the aggressor a golem defends against.
+- A baby's hurt standing (-3) moved no BDS golem within 30 s, not explained.
+- Standing from ranged kills, the +5 of 0x142445c80 (curing) and the founding reward; the aggressor a
+  golem defends against. Standing is kept as BDS's `VILLAGE_<id>_PLAYERS` (`Players`, each `ID` long and
+  `S` int; 0x142a2c140), the id sapling's village uuid and `ID` the low half of the player's uuid (sapling
+  players keep no `ActorUniqueID`).
 
 ## Left out
 
-Gossip (and so discounts for curing and for Hero of the Village, whose effect the shard cannot give),
-villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
+Gossip (Bedrock has none: its discounts are the cured ones of `economy_trade_table`, and sapling has
+no curing), villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
 makes a baby's unskilled trader), zombie villagers and curing, explorer maps (their trades are never
 offered), the llamas' leashes and their going with their trader, a villager picking up and sharing food,
-farmers farming, iron golems spawning, the old trading screen.
+farmers farming, cats spawning, the old trading screen.

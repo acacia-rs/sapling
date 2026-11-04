@@ -83,6 +83,21 @@ fn golems(armorers: i32) -> Vec<String> {
     out
 }
 
+/// Two unskilled villagers, unhurt by anything, and a zombie held still in the open near where they
+/// were summoned: the villagers within 8 and within 4 of it counted every second for 15 s.
+fn fear() -> Vec<String> {
+    let mut out = village(&UNSKILLED);
+    out.extend(lines([
+        "effect @e[type=villager_v2] resistance 1000 4 true", "summon zombie 0.5 -60 4.5",
+        "effect @e[type=zombie] slowness 1000 255 true",
+    ]));
+    for _ in 0..15 {
+        out.extend(lines(["testfor @e[type=villager_v2,x=0,y=-60,z=4,r=8]", "testfor @e[type=villager_v2,x=0,y=-60,z=4,r=4]", ""]));
+    }
+    out.extend(lines(["kill @e[type=zombie]", "gamemode creative @s", ""]));
+    out
+}
+
 /// The lines and shown packets of the drill `name`, if it is one of these.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
@@ -91,6 +106,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "n1recruit" => (recruit(), VILLAGE_SHOWN),
         "n1golems" => (golems(10), VILLAGE_SHOWN),
         "n1golems20" => (golems(20), VILLAGE_SHOWN),
+        "n1fear" => (fear(), VILLAGE_SHOWN),
         _ => return None,
     })
 }
