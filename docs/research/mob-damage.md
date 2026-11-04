@@ -225,9 +225,17 @@ Sapling's run: sapling-burn2.txt.
   far 59/31/53 against 66/72/61), pitch changes 36 against 42. The fifth wave's `gaze` re-drilled
   (sapling-gaze.txt): 1002 moves against BDS's 592 (was 1846), far cows 20/46/46 against 26/40/33;
   the rest are the near cows walking in the seconds before `/effect` (208 moves with a position,
-  BDS's 41): sapling's strolls start more often than BDS's (strolling.rs's fitted-by-eye TODO). Not drilled: an
-  unslowed mob's head speed (BDS's look control turns at most 30 x an attribute's value over its
-  default a tick, 0x142cc5323; which attribute, and what gives the slowed cows' 10, not pinned).
+  BDS's 41): sapling's strolls start more often than BDS's (seventh wave: mob-attacks.md "Strolling").
+- Head speed of unslowed mobs (2026-11-04, `bds_command_probe headspeed`, research/captures/bds-headspeed.txt;
+  bds-strolls.txt): drilled same. The look control (0x142cc51e0) caps the head's turn a tick at 30 x
+  `+0x7c` / `+0x70` of the attribute 0x14cd006e8, which is movement (`Player::getSpeed` returns the
+  same instance's `+0x7c`, its current value). Live it never varies: penned cows plain, under speed 4,
+  slowness 2 and slowness 255, a wolf (movement 0.3), a chicken and a zombie (0.23) all turned 7 of 256
+  a tick with an 8 now and then (10 degrees: 7.11), as did the free cows, sheep, pigs and zombies of
+  `strolls` and bds-grazers.txt's horse family, whose movement is rolled from 0.1125 to 0.3375. So the
+  ratio is a fixed 1/3 in practice and sapling's single `HEAD_TURN` 10 (`creatures/gaze.rs`) stands;
+  what the two fields hold for it to be 1/3 is not read. (`summon villager_v2` is a syntax error on
+  BDS, so the drill has no villager.)
 - The view circle against `tick-distance` (2026-11-04, `bds_command_probe tickcircle` on BDS set to
   4, 6, 8 and 10, research/captures/bds-tickcircle<N>.txt): 14 slowed mobs moved from beside the bots
   (chunk 3,0) to chunk offsets from 4,0 to 10,2, poisoned there and moved back 6 s later. At every
