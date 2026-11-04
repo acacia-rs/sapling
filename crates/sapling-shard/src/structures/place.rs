@@ -10,6 +10,7 @@ use bevy_ecs::prelude::*;
 use bytes::BytesMut;
 use sapling_api::{Block, BlockPos, StructureLoad};
 use sapling_world::{ChunkPos, StructureTemplate, palette_block, placed_actor, stored_actors};
+use sapling_worldgen::random::Mt19937;
 
 use super::turn::Turn;
 use crate::components::{Layer, Players, Tick};
@@ -35,8 +36,8 @@ impl Placing {
             let properties = turn.states(&name, &properties);
             blocks::resolve(level.registry(), &Block { name, properties })
         }).collect();
-        let mut dice = Integrity::new(&how.seed, world.resource::<Tick>().0);
-        let kept = if how.include_blocks { (0..template.volume()).filter(|_| how.integrity >= 1.0 || dice.fraction() < how.integrity).collect() } else { Vec::new() };
+        let dice = Integrity::new(&how.seed, world.resource::<Tick>().0);
+        let kept = if how.include_blocks { (0..template.volume()).filter(|cell| dice.keeps(*cell, how.integrity)).collect() } else { Vec::new() };
         Some(Placing { template, at, turn, ids, kept, how: how.clone() })
     }
 
@@ -131,21 +132,33 @@ fn unpaired(entity: Value) -> Value {
     Value::Compound(fields)
 }
 
-/// Which cells a load of integrity below 1 places: the same ones for the same seed, as BDS
-/// placed the same half of a box twice under one seed.
-// TODO: BDS's own draw from a seed is not known; these are sapling's.
-struct Integrity(u64);
+/// Which cells a load of integrity below 1 places, as BDS draws them (141f4ae40, fitted cell for cell
+/// to bds-t3integ.txt): cell `i` of the template's order is kept when the first `nextFloat` of an
+/// MT19937 seeded with the seed's Java string hash plus `i`, times 100, is below the integrity.
+// TODO: a structure block's numeric `seed` is hashed as its digits here; BDS's use of it is not drilled.
+struct Integrity(u32);
 
 impl Integrity {
     fn new(seed: &str, tick: u64) -> Self {
-        let hashed = if seed.is_empty() { tick } else { seed.bytes().fold(0xcbf2_9ce4_8422_2325, |hash, byte| (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3)) };
-        Self(hashed | 1)
+        Self(if seed.is_empty() { tick as u32 } else { seed.encode_utf16().fold(0u32, |hash, unit| hash.wrapping_mul(31).wrapping_add(unit.into())) })
     }
 
-    fn fraction(&mut self) -> f32 {
-        self.0 ^= self.0 << 13;
-        self.0 ^= self.0 >> 7;
-        self.0 ^= self.0 << 17;
-        (self.0 >> 40) as f32 / (1u64 << 24) as f32
+    fn keeps(&self, cell: usize, integrity: f32) -> bool {
+        integrity >= 1.0 || Mt19937::new(self.0.wrapping_add(cell as u32)).next_float() * 100.0 < integrity * 100.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Integrity;
+
+    #[test]
+    fn half_an_eight_by_eight_row_by_seed_abc_is_bds_half() {
+        // research/captures/bds-t3integ.txt: `structure load ... 50 abc`, rows by z, x across.
+        let kept = "..#..#.. #####.## ..##.##. .####.## ..####.# .#..#### #####... .....##.";
+        let rows: Vec<&str> = kept.split(' ').collect();
+        let dice = Integrity::new("abc", 0);
+        let placed: String = (0..8).map(|z| (0..8).map(|x| if dice.keeps(x * 8 + z, 0.5) { '#' } else { '.' }).collect::<String>()).collect::<Vec<_>>().join(" ");
+        assert_eq!(placed, rows.join(" "));
     }
 }
