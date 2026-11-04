@@ -50,7 +50,7 @@ fn a_tamed_donkey_opens_to_its_rider_takes_a_chest_and_opens_to_a_sneaking_click
     let donkey = spawned(&mut h, &[("minecraft:donkey", [2.5, 65.0, 0.5])])[0];
     let tamed = (0..25).any(|_| {
         h.receive(1, &interact(donkey.0));
-        ticks(&mut h, 2);
+        ticks(&mut h, 62);
         riders(&mut h, donkey) == 1
     });
     assert!(tamed, "a ride tamed it");
@@ -96,7 +96,8 @@ fn sneaking_click(h: &mut Harness, mob: EntityId) -> Vec<RawPacket> {
 fn tame_by_riding(h: &mut Harness, mob: EntityId) {
     let tamed = (0..25).any(|_| {
         h.receive(1, &interact(mob.0));
-        ticks(h, 2);
+        // A wild mount decides on its 60th ridden tick (riding/breaking.rs).
+        ticks(h, 62);
         riders(h, mob) == 1
     });
     assert!(tamed, "a ride tamed it");
