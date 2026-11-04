@@ -78,6 +78,28 @@ fn on_peaceful_the_t_stays() {
     assert_eq!(ask(&mut h, |ctx| ctx.block([0, 65, 3]).map(|block| block.name)).as_deref(), Some("minecraft:soul_sand"));
 }
 
+/// BDS called a wither up from a T lying on the floor (research/captures/bds-n2wither.txt).
+#[test]
+fn a_t_lying_on_the_floor_calls_one_too() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(move |ctx| {
+        ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        for pos in [[0, 65, 5], [-1, 65, 4], [0, 65, 4], [1, 65, 4]] {
+            ctx.set_block(pos, &Block::new("minecraft:soul_sand"));
+        }
+        for pos in [[-1, 65, 3], [1, 65, 3]] {
+            ctx.set_block(pos, &Block::new(SKULL));
+        }
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new(SKULL, 1))));
+    });
+    h.tick_all();
+    h.receive(1, &click([0, 64, 3], 1, Some(SKULL)));
+    let sent = watch(&mut h, 3);
+    assert!(all::<AddEntity>(&sent).iter().any(|added| added.entity_type == WITHER));
+}
+
 /// Against research/captures/bds-witherdeath.txt.
 #[test]
 fn killed_it_counts_down_200_ticks_flashing_faster_then_bursts_and_leaves_a_nether_star() {
