@@ -72,3 +72,9 @@ of age 0 came up with an age BDS drew (20, 18, 24), which sapling keeps at 0.
 ## Left
 
 - Sea grass and kelp: the drill bot refused both clicks in water (`NotVisible`, bds-t3water.txt, twice).
+  A dispenser settled it (bds-u1meal.txt, 2026-11-04): short sea grass under still water grew tall,
+  top then bottom, with `ParticleCropGrowth` and the mouth's `block.click` (-1); tall sea grass took
+  none, `block.click.fail` 1000 at the mouth and the meal kept (D13). Kelp grew one a dispense on both
+  servers. Sapling does all this (`bonemeal.rs`, `dispensers/behaviours.rs` `meal`; test
+  `dispensers::bone_meal_from_a_dispenser_grows_sea_grass_tall_once`). A player's click in water is
+  still the bot's to make.
