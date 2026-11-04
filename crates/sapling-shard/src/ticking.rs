@@ -5,7 +5,7 @@
 //! more stop, their state kept in their block entities. A placed hopper, an opened furnace and a
 //! campfire given food start at once.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
@@ -36,14 +36,60 @@ pub(crate) fn in_tick_region(dx: i32, dz: i32, reach: i32) -> bool {
     dx.abs() <= reach && dz.abs() <= reach && dx.abs() + dz.abs() <= reach + 1
 }
 
-/// Whether `pos` of `layer` ticks: in a player's tick region ([`in_tick_region`]) or a kept column
-/// (kept.rs). A world nobody is in ticks everything (creatures/ticked.rs).
+/// The columns that tick this tick: each player's tick region ([`in_tick_region`]) and the kept
+/// columns (kept.rs), taken once a tick.
+pub(crate) struct Region {
+    centres: HashMap<Entity, Vec<ChunkPos>>,
+    reach: i32,
+}
+
+impl Region {
+    pub(crate) fn of(world: &mut World) -> Self {
+        let mut centres: HashMap<Entity, Vec<ChunkPos>> = HashMap::new();
+        for (in_layer, view) in world.query::<(&InLayer, &View)>().iter(world) {
+            centres.entry(in_layer.0).or_default().extend(view.center());
+        }
+        Self { centres, reach: tick_distance(world) }
+    }
+
+    /// Whether `column` of `layer` ticks. A world nobody is in ticks everything: BDS's ticks
+    /// nothing, but headless shards and their tests run without players.
+    pub(crate) fn ticks(&self, world: &World, layer: Entity, column: ChunkPos) -> bool {
+        let Some(centres) = self.centres.get(&layer) else { return true };
+        centres.iter().any(|centre| in_tick_region(column.x - centre.x, column.z - centre.z, self.reach)) || world.get::<crate::kept::Kept>(layer).is_some_and(|kept| kept.holds(column))
+    }
+
+    pub(crate) fn ticks_block(&self, world: &World, layer: Entity, pos: BlockPos) -> bool {
+        self.ticks(world, layer, ChunkPos::of_block(pos[0], pos[2]))
+    }
+
+    /// Puts back by `by(layer)` the time of each `(when, layer, pos)` of `queue` whose column does not
+    /// tick: a BDS chunk's random-tick queue runs on only while its chunk ticks (`LevelChunk::tick`
+    /// 0x1409f98a0 takes its `until` as the queue's own clock plus `randomTickSpeed`).
+    pub(crate) fn hold(&self, world: &World, queue: &mut [(u64, Entity, BlockPos)], by: impl Fn(Entity) -> u64) {
+        for (when, layer, pos) in queue {
+            if !self.ticks_block(world, *layer, *pos) {
+                *when += by(*layer);
+            }
+        }
+    }
+}
+
+/// Whether `pos` of `layer` ticks ([`Region::ticks`]).
 pub(crate) fn ticks_column(world: &mut World, layer: Entity, pos: ChunkPos) -> bool {
-    let reach = tick_distance(world);
-    let mut players = world.query::<(&InLayer, &View)>();
-    let centres: Vec<Option<ChunkPos>> = players.iter(world).filter(|(in_layer, _)| in_layer.0 == layer).map(|(_, view)| view.center()).collect();
-    let near = centres.iter().flatten().any(|centre| in_tick_region(pos.x - centre.x, pos.z - centre.z, reach));
-    centres.is_empty() || near || world.get::<crate::kept::Kept>(layer).is_some_and(|kept| kept.holds(pos))
+    Region::of(world).ticks(world, layer, pos)
+}
+
+/// The columns of [`near_players`] and the kept ones (kept.rs), each once, in an order that does
+/// not turn on the hash.
+pub(crate) fn ticked_columns(world: &mut World) -> Vec<(Entity, ChunkPos)> {
+    let mut columns = near_players(world);
+    for (layer, kept) in world.query::<(Entity, &crate::kept::Kept)>().iter(world) {
+        columns.extend(kept.columns().map(|pos| (layer, pos)));
+    }
+    columns.sort_by_key(|(layer, pos)| (*layer, pos.x, pos.z));
+    columns.dedup();
+    columns
 }
 
 /// The columns of each player's tick region ([`in_tick_region`]), each once, in an order that

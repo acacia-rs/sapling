@@ -26,6 +26,10 @@ impl Kept {
     pub(crate) fn holds(&self, pos: ChunkPos) -> bool {
         self.all.contains(&pos)
     }
+
+    pub(crate) fn columns(&self) -> impl Iterator<Item = ChunkPos> + '_ {
+        self.all.iter().copied()
+    }
 }
 
 fn area(record: &TickingAreaRecord) -> TickingArea {

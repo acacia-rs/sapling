@@ -1,12 +1,33 @@
-//! Which mobs a player is shown and which are ticked, as BDS's `tick-distance` drills found
-//! (research/captures/bds-farmobs.txt, bds-tickcircle*.txt; harness: common/mod.rs).
+//! Which mobs a player is shown and which are ticked, and where random ticks run, as BDS's
+//! `tick-distance` drills found (research/captures/bds-farmobs.txt, bds-tickcircle*.txt,
+//! bds-tickrandom.txt; harness: common/mod.rs).
 
 use crate::common;
 
 use acacia_proto::packets::{AddEntity, RemoveEntity, RequestChunkRadius};
 use common::asking::ask;
 use common::{Harness, all, config, platform};
+use sapling_api::{Block, RuleValue};
 use sapling_shard::ShardConfig;
+
+#[test]
+fn random_ticks_run_only_in_the_tick_region_and_kept_columns_as_on_bds() {
+    let mut h = Harness::with(ShardConfig { tick_distance: 4, max_view_radius: 8, ..config() }, platform());
+    h.enter(1, "Alex");
+    h.receive(1, &RequestChunkRadius { chunk_radius: 8, max_radius: 8 });
+    (0..20).for_each(|_| drop(h.tick(1)));
+    // bds-tickrandom.txt: bare farmland 4,1 chunks off (past the circle, in the diamond) dried, 4,2
+    // and 5,0 off did not, 6,0 off in a ticking area did.
+    let chunks = [([4, 1], true), ([4, 2], false), ([5, 0], false), ([6, 0], true)];
+    let cell = |[x, z]: [i32; 2]| [x * 16 + 8, 64, z * 16 + 8];
+    assert!(ask(&mut h, move |ctx| {
+        ctx.force_chunk([6, 0], true);
+        ctx.set_game_rule("randomTickSpeed", RuleValue::Int(200)) && chunks.iter().all(|(chunk, _)| ctx.set_block(cell(*chunk), &Block::new("minecraft:farmland")))
+    }));
+    (0..600).for_each(|_| drop(h.tick(1)));
+    let dried: Vec<bool> = ask(&mut h, move |ctx| chunks.iter().map(|(chunk, _)| ctx.block(cell(*chunk)).is_some_and(|block| block.name == "minecraft:dirt")).collect());
+    assert_eq!(dried, chunks.map(|(_, dries)| dries));
+}
 
 #[test]
 fn a_mob_is_shown_only_within_four_chunks_as_on_bds() {

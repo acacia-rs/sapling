@@ -140,7 +140,7 @@ night counts ("darkened"), or block light if brighter. [D] decompiled, [I] infer
 | mycelium (1465eb280) | light, night not counted: dies with < 4 over it under a solid block unless that has a tag (0x14cd22f48, unread); with >= 9 over it, 4 tries 1 across, 2 either way, at dirt with >= 4 over it and nothing solid or liquid [D]. Drilled: under stone in the dark it lived 60 s at 200 | spreads as BDS, the dirt open to the air; never dies (TODO in `growth/cover.rs`) |
 | ice (`IceBlock::randomTick` 142fd3470) | block light in its cell > 11 - its light block (0): water, air in an ultrawarm dimension [D] | block light in its cell, or one less beside it, >= 12: sapling's light table gives ice filter 2, where BDS's constructor gives none |
 | snow layer (`TopSnowBlock::randomTick` 1471fb850) | block light b >= 12 in its cell melts b - 11 layers, up to 8 [D]; also one layer now and then in a biome over 0.15 when not snowing: drilled at light 11 in plains, 8 layers in about 32 s at 200 | the light; in a warm biome one layer a random tick in 16 |
-| freezing (`LevelChunk::tick` 1409f98a0) | `randomTickSpeed` picks a chunk a tick at the rain top; one in 16 freezes still water that is not water on all four sides, biome <= 0.15, block light < 10 (`Weather::shouldFreeze` 14119e860), whatever the weather [D] | as BDS, chunks within 4 of a player (`growth/snowfall.rs`); no cap on the picks since 2026-11-04 (mob-damage.md "What the rain's level drives") |
+| freezing (`LevelChunk::tick` 1409f98a0) | `randomTickSpeed` picks a chunk a tick at the rain top; one in 16 freezes still water that is not water on all four sides, biome <= 0.15, block light < 10 (`Weather::shouldFreeze` 14119e860), whatever the weather [D] | as BDS, chunks that tick ("Where random ticks run"; `growth/snowfall.rs`); no cap on the picks since 2026-11-04 (mob-damage.md "What the rain's level drives") |
 | snow lying | while raining, `doWeatherCycle` on, one in 256 - min(512 x rain x downfall, 240); block light < 12, cold, ground that holds it; layers up to the biome's most (`Weather::canPlaceTopSnow` 14119d880) [D] | as BDS, the biome's downfall from `BiomeDefinitionList` (`sapling_data::biome_downfall`); a layer more on a snow layer under the biome's most ("Snow layers" below) |
 | mushrooms (1465ea600, `canSurvive` 1465eac10) | spread one tick in 25, at most 5 in 9x3x9; survive on mycelium and podzol [I], else light, night not counted, < 13 [D] | as BDS ("Wild plants" below) |
 | sun (`BurnsInDaylightSystem` 148485460, `Actor::isInDaylight` 140d38060) | `skyDarken` <= 3, sky over the head by the heightmap, brightness over 0.5; not in water, nor rain in a biome over 0.15 (snow does not save it), no item in the head slot, not in powder snow [I]; fire for 8 s, no random roll [D] | sky light 15 at the head; mobs wear nothing here, powder snow not asked |
@@ -166,6 +166,33 @@ Sapling keeps these, the stalactites and lava with air over them in a list per w
 `randomTickSpeed / 1800` of the list a tick at random (`growth/sampled.rs`), so a cave full of them
 costs a tick what it changes (`growth/wild.rs`, `vines.rs`, `kelp.rs`; `blocks/drips.rs`). Kelp in a
 column that comes in waits to grow from the top of each stalk; BDS keeps the wait with the column.
+
+## Where random ticks run
+
+Drilled 2026-11-04 with `bds_command_probe tickrandom` (`examples/shared/sixth2_drill.rs`;
+`research/captures/bds-tickrandom.txt`, `sapling-tickrandom.txt`) at `tick-distance` 4. Per chunk offset a wheat on
+dry farmland, bare dry farmland, a copper block and oak planks with fire on them were set with the rule at 0, the bots
+moved to chunk 0,0, the rule was 200 for 20 s, then every cell was read with `/testforblock`.
+
+- In the tick diamond (`ticking::in_tick_region`, mob-damage.md): offsets 0,0, 0,1, 4,0, 4,1 (past the circle
+  dx² + dz² <= 16), 3,2, 2,3 and 2,-3: farmland dry to dirt, copper weathered, the planks burnt away; the wheat grew
+  at all but 0,0 (dry farmland, one random tick in 26).
+- Outside it: 5,0, 5,1, 4,2 (inside the square), 3,3 and 3,-3: every cell as set, the fire still burning.
+- 6,0, in a ticking area: as in the diamond.
+
+So random ticks, and the random-tick queue fire and kelp wait on, run in a chunk only while it ticks: a player's
+diamond or a ticking area. The queue's clock is the chunk's own: `LevelChunk::tick` (0x1409f98a0) ticks
+`mRandomTickQueue` (+0x138) up to its own current tick (+8) plus `randomTickSpeed`, so a plant or fire out of range
+waits as long again; the block queue (+0x130) is ticked up to the level's tick instead. Sapling: `ticking::Region`
+gates the tracked cells (`blocks/growth.rs`), the drawn cells (`growth/sampled.rs`), snowfall's picks (kept columns
+now included, `ticking::ticked_columns`), and holds kelp, fire and lit ore out of range (`Region::hold`); test
+`random_ticks_run_only_in_the_tick_region_and_kept_columns_as_on_bds` (tick_circle.rs). A world nobody is in still
+ticks everywhere, for headless shards. Drilled on sapling after the fix (`sapling-tickrandom.txt`): every
+farmland, copper and fire answer as BDS's, in, out and kept. Two cells differ for other reasons: the wheat at 0,1, 4,0,
+4,1 and 3,2 did not grow, being under the drill world's ground at y 60 to 63 (the wheat past z ±48 grew), and the
+planks at 5,0 burnt 6 s after their fire was set, before the bots moved (fire's pace, the TODO in `blocks/fire.rs`).
+`tools/bench.sh` times worldgen (sapling-world's `fill_views`), which this does
+not touch; the gate costs a tracked cell a map lookup and skips the block read for cells out of range.
 
 ## Snow layers
 

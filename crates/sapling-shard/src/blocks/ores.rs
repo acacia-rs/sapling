@@ -59,12 +59,14 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
     }
 }
 
-/// Puts out the ores whose time is up.
+/// Puts out the ores whose time is up; one whose column does not tick lasts a tick more
+/// ([`crate::ticking::Region::hold`]).
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let Some(mut ores) = world.get_resource_mut::<LitOres>().filter(|ores| !ores.0.is_empty()) else { return };
-    let (due, lit): (Vec<_>, Vec<_>) = std::mem::take(&mut ores.0).into_iter().partition(|(when, ..)| *when <= now);
-    ores.0 = lit;
+    let Some(mut queue) = world.get_resource_mut::<LitOres>().filter(|ores| !ores.0.is_empty()).map(|mut ores| std::mem::take(&mut ores.0)) else { return };
+    crate::ticking::Region::of(world).hold(world, &mut queue, |_| 1);
+    let (due, lit): (Vec<_>, Vec<_>) = queue.into_iter().partition(|(when, ..)| *when <= now);
+    world.resource_mut::<LitOres>().0.extend(lit);
     for (_, layer, pos) in due {
         let unlit = lit_at(world, layer, pos).and_then(|(id, name)| {
             let registry = level(world, layer)?.registry();
