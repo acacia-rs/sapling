@@ -3,9 +3,9 @@
 //! screen (trading.rs), kept in its actor compound (storage.rs); the wandering trader's offers,
 //! llamas and the timer it leaves by (wandering.rs).
 //! A villager keeps its pack's day (schedule.rs), sleeps in a bed it claims (beds.rs), flees what
-//! it fears and hides at a bell (fear.rs); a player's standing with its village (standing.rs).
-// TODO: no gossip (Hero of the Village pays less, trading.rs); villager breeding
-// (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
+//! it fears and hides at a bell (fear.rs); a player's standing with its village (standing.rs); its
+//! village's iron golems (golems.rs, golem_spawns.rs).
+// TODO: villager breeding (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
 
 mod beds;
 mod deals;
@@ -162,7 +162,12 @@ pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     if kind == WANDERING_TRADER {
         wandering::arrive(world, layer, &mut trader, feet, kept.is_none());
     }
+    // A new trader's first data holds what it is, or it would undo the metadata told after it.
+    let first = world.get::<NetId>(entity).map(|id| shown(id.0, &trader).metadata);
     world.entity_mut(entity).insert(trader);
+    if let Some(first) = first {
+        entities::show_first(world, entity, first);
+    }
     storage::keep(world, entity);
     let shown = mobs::announced(world, entity).map(|announcement| dressed(world, entity, announcement));
     if let Some(shown) = shown {

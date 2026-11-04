@@ -133,6 +133,18 @@ fn an_armorer_trades_coal_for_emeralds_and_reaches_apprentice_at_ten_experience(
     assert_eq!(int(&recipes.items[0], "uses"), 5);
 }
 
+/// bds-n1drop.txt: a summoned armorer's first data says `Variant` 8; sapling's said 0 after it.
+#[test]
+fn a_new_armorer_is_last_told_as_an_armorer() {
+    let storage = floor_holding(Vec::new(), &[]);
+    let mut h = Harness::with(config(), World::with_storage(storage));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", [2.5, 64.0, 0.5], 0.0, Some("minecraft:become_armorer")).is_some()));
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick(1)).collect();
+    let id = all::<AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:villager_v2").expect("shown").runtime_id;
+    assert_eq!(metadata(&sent, id, Key::Variant).last(), Some(&8));
+}
+
 #[test]
 fn a_village_golem_is_kept_with_its_group_as_bds_keeps_it() {
     let (mut h, storage, _) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");
