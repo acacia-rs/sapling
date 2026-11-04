@@ -4,7 +4,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MobEffect, MobEffectEventId, SetEntityData, UpdateAttributes};
+use acacia_proto::packets::{BlockEntityData, DeathInfo, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MobEffect, MobEffectEventId, SetEntityData, UpdateAttributes};
 use acacia_proto::types::{Action, MetadataDictionaryItemKey as Key};
 use common::{Harness, all, block_actions};
 use sapling_api::{Block, DamageCause, Difficulty, Effect, PlayerId};
@@ -113,7 +113,23 @@ fn an_active_conduit_gives_conduit_power_to_a_player_in_its_water_and_bites_a_mo
     assert!(effects(&sent).contains(&(MobEffectEventId::Add, 26, true, 260, false)), "not ambient, as on BDS: {:?}", effects(&sent));
     let bitten = all::<EntityEvent>(&sent).into_iter().filter(|event| event.runtime_entity_id == zombie && event.event_id == EntityEventEventId::HurtAnimation).count();
     let heard = all::<LevelSoundEvent>(&sent).into_iter().filter(|sound| sound.sound_id == "conduit.attack").count();
-    assert!(bitten >= 1 && heard == bitten, "4 damage every 40 ticks from the pulse after it was taken, each heard");
+    assert!(bitten >= 1 && (heard == bitten || heard + 1 == bitten), "4 damage every 40 ticks from the pulse after it was taken, each heard a tick on");
+}
+
+/// research/captures/bds-e1conduit.txt: `conduit.attack` the tick after the bite, and no word of the
+/// `Target` after its prey died of it.
+#[test]
+fn a_conduits_bite_is_heard_a_tick_late_and_its_dead_preys_target_goes_untold() {
+    let mut h = ready();
+    conduit(&mut h, 42);
+    let zombie = common::shooting::spawn(&mut h, "minecraft:zombie", [3.5, 69.0, 5.5]);
+    h.remote.run(move |ctx| assert!(ctx.hurt_entity(sapling_api::EntityId(zombie), 17.0, DamageCause::Generic)));
+    let ticks: Vec<Vec<RawPacket>> = (0..121).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let at = |found: &dyn Fn(&[RawPacket]) -> bool| ticks.iter().rposition(|sent| found(sent));
+    let died = at(&|sent| all::<EntityEvent>(sent).iter().any(|event| event.runtime_entity_id == zombie && event.event_id == EntityEventEventId::DeathAnimation)).expect("bitten to death");
+    let heard = at(&|sent| all::<LevelSoundEvent>(sent).iter().any(|sound| sound.sound_id == "conduit.attack"));
+    assert_eq!(heard, Some(died + 1), "the killing bite's");
+    assert!(ticks[died..].iter().all(|sent| all::<BlockEntityData>(sent).is_empty()), "no Target -1");
 }
 
 /// research/captures/bds-conduitreach.txt: a held zombie in water 6 north was never taken.
