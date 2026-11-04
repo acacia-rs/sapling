@@ -4,12 +4,15 @@
 
 use super::creatures::{floor, waits, with};
 
-const SHOWN: &[&str] = &["UpdateBlock"];
+/// BDS sends several changes in a subchunk in one tick as one `UpdateSubchunkBlocks`.
+const SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks"];
+/// The sand's fall shows as its entity coming, going and landing.
+const QUEUE_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "AddEntity", "RemoveEntity"];
 
 /// The drill called `name` of this file.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
-        "tickqueue" => (tick_queue(), SHOWN),
+        "tickqueue" => (tick_queue(), QUEUE_SHOWN),
         "firepace" => (fire_pace(), SHOWN),
         "hivekept" => (hive_kept(), SHOWN),
         _ => return None,
