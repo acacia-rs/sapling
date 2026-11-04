@@ -1,10 +1,11 @@
 //! A turtle's nesting (ED `turtle.json`; docs/research/leftovers.md "Turtles"): bred, it becomes
 //! pregnant instead of having a baby (`causes_pregnancy`, group `minecraft:pregnant`, flag
-//! `PREGNANT`). `behavior.go_home` sets off one tick in 700 and walks it home until within 4; then
+//! `PREGNANT`). `behavior.go_home` sets off one tick in 700 and walks it home; then
 //! (`minecraft:wants_to_lay_egg`) `behavior.lay_egg` finds open sand within 16 across and 4 up or
 //! down, walks to within 1.5 of it, digs 10 s (`LAYING_EGG`) and lays 1 to 4 eggs there, heard as
 //! `lay_egg`. Its home is the cell it hatched in, or the one it was first seen in (`minecraft:home`).
-// TODO: BDS's pregnant turtles walked straight home once set off; sapling's stray (bds-n3home.txt, sapling-n3home.txt).
+//! BDS's pregnant turtles stood still until they set off, walked straight to 0.3 of their home's
+//! middle and stood there (research/captures/bds-n3home.txt).
 
 use acacia_proto::types::MetadataFlags1 as Flags;
 use bevy_ecs::prelude::*;
@@ -20,7 +21,9 @@ const TURTLE: &str = "minecraft:turtle";
 const PREGNANT: &str = "minecraft:pregnant";
 const WANTS_TO_LAY: &str = "minecraft:wants_to_lay_egg";
 const HOME_ODDS: u32 = 700;
-const HOME_NEAR: f32 = 4.0;
+/// It walks to this near its home's middle, though `go_home`'s `goal_radius` is 4, and is home a little further out.
+const HOME_STOPS: f32 = 0.3;
+const HOME_ARRIVED: f32 = 0.5;
 const ACROSS: i32 = 16;
 const UP: i32 = 4;
 const NEST_NEAR: f32 = 1.5;
@@ -110,7 +113,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
     let Some(nesting) = world.get::<Nesting>(entity).copied().filter(|_| world.get::<Raised>(entity).is_some_and(|raised| !raised.is_baby())) else { return };
     let next = match nesting {
         Nesting::Pregnant { homeward: false } if world.get_resource_or_insert_with(Dice::default).roll(HOME_ODDS) == 0 => Nesting::Pregnant { homeward: true },
-        Nesting::Pregnant { homeward: true } if across(body.at, middle(home)) <= HOME_NEAR => {
+        Nesting::Pregnant { homeward: true } if across(body.at, middle(home)) <= HOME_ARRIVED => {
             regroup(world, entity, &swap(&[PREGNANT], &[WANTS_TO_LAY]));
             Nesting::Laying { nest: None, until: None }
         }
@@ -148,15 +151,14 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     let Some(nesting) = world.get::<Nesting>(entity).copied() else { return false };
     let (Some(body), Some(Home(home))) = (world.get::<Body>(entity).copied(), world.get::<Home>(entity).copied()) else { return false };
     let to = match nesting {
-        Nesting::Pregnant { homeward: true } => (middle(home), HOME_NEAR),
-        Nesting::Laying { nest: Some(nest), until: None } => (middle(nest), NEST_NEAR),
-        Nesting::Laying { until: Some(_), .. } => {
+        Nesting::Pregnant { homeward: true } => (middle(home), HOME_STOPS),
+        Nesting::Laying { nest: Some(nest), until: None } => (middle(nest), NEST_NEAR / 2.0),
+        _ => {
             super::super::legs::rest(world, entity);
             return true;
         }
-        _ => return false,
     };
     let pace = sapling_data::husbandry(kind).map_or(0.1, |rules| rules.walks);
-    super::super::legs::walk(world, entity, layer, &body, [to.0[0], to.0[2]], pace, to.1 / 2.0);
+    super::super::legs::walk(world, entity, layer, &body, [to.0[0], to.0[2]], pace, to.1);
     true
 }
