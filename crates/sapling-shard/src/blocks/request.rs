@@ -191,7 +191,7 @@ impl Request<'_> {
         if site.mode != GameMode::Spectator && super::fire_punch::put_out(self.world, self.entity, site.layer, pos, face) {
             return;
         }
-        let knocked = site.mode != GameMode::Spectator && (super::holders::hit(self.world, site.layer, pos) || super::lectern::hit(self.world, site.layer, pos));
+        let knocked = site.mode != GameMode::Spectator && (super::holders::hit(self.world, site.layer, pos, site.mode != GameMode::Creative) || super::lectern::hit(self.world, site.layer, pos));
         if knocked && site.mode != GameMode::Survival {
             return;
         }
