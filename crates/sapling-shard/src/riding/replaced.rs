@@ -69,12 +69,17 @@ pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<It
             }
             put_tack(world, mob, &kind, Tacked::Body, item, true)
         }
+        // Goods over the saddle's slot unsaddle it and stay there, to spill at death (bds-t12goods.txt).
+        MobSlot::Inventory(0) if matches!(tack.first(), Some(Tacked::Saddle)) && item.as_ref().is_some_and(|item| item.name != packs::SADDLE) => {
+            put_tack(world, mob, &kind, Tacked::Saddle, item.clone(), false)?;
+            put_slot(world, mob, 0, item)
+        }
         MobSlot::Inventory(index) if index < tack.len() => put_tack(world, mob, &kind, tack.into_iter().nth(index).expect("in range"), item, false),
-        MobSlot::Inventory(index) if index - tack.len() < goods => put_goods(world, mob, index - tack.len(), item),
+        MobSlot::Inventory(index) if index - tack.len() < goods => put_slot(world, mob, packs::TACK + index - tack.len(), item),
         MobSlot::Inventory(_) => Err(MobSlotRefusal::BadSlot { size: tack.len() + goods }),
         // BDS refused the last goods slot by `slot.chest` (14 of a donkey's 15) and named it in its answer.
         MobSlot::Chest(index) if packs::carries_chest(&kind) => match index + 1 < goods {
-            true => put_goods(world, mob, index, item),
+            true => put_slot(world, mob, packs::TACK + index, item),
             false => Err(MobSlotRefusal::BadSlot { size: goods }),
         },
         _ => Err(MobSlotRefusal::NoSlot),
@@ -111,10 +116,9 @@ fn put_tack(world: &mut World, mob: Entity, kind: &str, tacked: Tacked, item: Op
     Ok(())
 }
 
-/// Writes one slot of the goods of the chest `mob` carries.
-fn put_goods(world: &mut World, mob: Entity, index: usize, item: Option<ItemStack>) -> Result<(), MobSlotRefusal> {
+/// Writes one slot of `mob`'s inventory, tack first.
+fn put_slot(world: &mut World, mob: Entity, slot: usize, item: Option<ItemStack>) -> Result<(), MobSlotRefusal> {
     let mut slots = packs::opened(world, mob).ok_or(MobSlotRefusal::NoSlot)?;
-    let slot = packs::TACK + index;
     let held = item.map(|stack| containers::new_held(world, stack));
     *slots.get_mut(slot).ok_or(MobSlotRefusal::NoSlot)? = held;
     packs::load(world, mob, slots);

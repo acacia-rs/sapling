@@ -181,7 +181,15 @@ and are not kept; tests in tests/integration/mounts_drilled.rs):
   rule off, and the saddle first with it on. Fixed: `creatures/death.rs` `die` (the tack tossed at
   once without loot, after the loot with it), test
   `a_tamed_horse_leaves_its_tack_after_its_loot_or_at_once_without_mob_loot`. A chested mount's goods
-  and chest go with the saddle either way, not drilled with the rule off.
+  and chest go with the saddle either way, not drilled with the rule off. Drilled 2026-11-04 (twelfth
+  wave, `t12goods`, bds-t12goods.txt): a tamed donkey chested by a click, saddled, then given
+  diamonds by `slot.inventory 0` (which took the saddle's slot: SADDLED went off) and emeralds in
+  slot 2, killed with `doMobLoot` off, left the diamonds, emeralds and chest at once and no saddle
+  (made in that order by their unique ids, sent newest first; sapling sends them oldest first).
+  Sapling's (sapling-t12goods.txt) left the emeralds and chest and lost the slot-0 diamonds. Fixed:
+  `riding/replaced.rs` keeps goods put by `slot.inventory 0` in the pack's slot 0 (unsaddling it,
+  flags as BDS's), and `riding/packs.rs` `spilled` lets go of them; test
+  `a_chested_donkey_without_mob_loot_spills_the_goods_put_over_its_saddle_then_the_rest_and_its_chest`.
 - Fixed: a summon's spawn event (tame, saddle, baby) shows in the AddEntity's own flag word, and the first
   word after it, with BREATHING, carries it too (`creatures/birth.rs` `arrive`): the words now match
   BDS's for every summon in mountflags and saddleevents. The SetEntityData after every AddEntity and the

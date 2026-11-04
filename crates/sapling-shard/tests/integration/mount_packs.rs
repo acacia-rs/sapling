@@ -12,7 +12,7 @@ use acacia_proto::types::{
     InputData, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, WindowType,
 };
 use common::{Harness, all, input_at};
-use sapling_api::{EntityId, Item, PlayerId, Slot};
+use sapling_api::{EntityId, Item, MobSlot, PlayerId, Slot};
 
 const ALEX: PlayerId = PlayerId(1);
 
@@ -146,6 +146,32 @@ fn a_llama_shows_its_strength_wears_a_carpet_and_spills_its_chest_but_not_its_ca
     left.sort_unstable();
     // BDS's dying llama kept its carpet (research/captures/bds-tack.txt).
     assert!(!left.contains(&"minecraft:red_carpet") && left.contains(&"minecraft:chest"), "{left:?}");
+}
+
+#[test]
+fn a_chested_donkey_without_mob_loot_spills_the_goods_put_over_its_saddle_then_the_rest_and_its_chest() {
+    // research/captures/bds-t12goods.txt: saddled, then diamonds put in slot 0 over the saddle and
+    // emeralds in slot 2; killed with doMobLoot off it left diamonds, emeralds and the chest at once.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let made = Arc::new(Mutex::new(None));
+    let slot = made.clone();
+    h.remote.run(move |ctx| {
+        assert!(ctx.set_game_rule("doMobLoot", sapling_api::RuleValue::Bool(false)));
+        *slot.lock().unwrap() = ctx.summon_as(None, "minecraft:donkey", [2.5, 65.0, 0.5], 0.0, Some("minecraft:spawn_tame_adult"));
+    });
+    ticks(&mut h, 2);
+    let donkey = made.lock().unwrap().expect("a donkey");
+    click_holding(&mut h, donkey, "minecraft:chest");
+    h.remote.run(move |ctx| {
+        for (slot, item) in [(MobSlot::Saddle, "minecraft:saddle"), (MobSlot::Inventory(0), "minecraft:diamond"), (MobSlot::Inventory(2), "minecraft:emerald")] {
+            assert_eq!(ctx.set_mob_item(donkey, slot, Some(&Item::new(item, 1))), Ok(()), "{item}");
+        }
+    });
+    ticks(&mut h, 1);
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(donkey)));
+    let left: Vec<&str> = all::<AddItemEntity>(&ticks(&mut h, 2)).iter().filter_map(|lying| sapling_data::item_name(lying.item.network_id.into())).collect();
+    assert_eq!(left, ["minecraft:diamond", "minecraft:emerald", "minecraft:chest"]);
 }
 
 #[test]
