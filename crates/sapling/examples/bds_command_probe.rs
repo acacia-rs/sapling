@@ -147,6 +147,8 @@ mod eighth2;
 mod ninth2;
 #[path = "shared/ninth3_drill.rs"]
 mod ninth3;
+#[path = "shared/tenth3_drill.rs"]
+mod tenth3;
 
 use std::time::{Duration, Instant};
 
@@ -219,6 +221,7 @@ const DRILLS: &[fn(&str) -> Named] = &[
     eighth2::drill,
     ninth2::drill,
     ninth3::drill,
+    tenth3::drill,
 ];
 
 fn owned(lines: &[&str]) -> Vec<String> {
@@ -256,7 +259,8 @@ async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str],
             || structblocks::act(actor, line).await
             || crafting::act(actor, line).await
             || block_ticks::act(actor, line).await
-            || tack::act(actor, line).await;
+            || tack::act(actor, line).await
+            || tenth3::act(actor, line).await;
         if !done {
             player::act(actor, line).await;
         }

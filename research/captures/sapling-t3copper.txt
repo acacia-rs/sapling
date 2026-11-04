@@ -1,0 +1,394 @@
+## drill starts at 1793826988189
+## /gamerule domobspawning false
+     18 watcher GameRulesChanged doMobSpawning=Bool(false)
+     18 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     18 actor   GameRulesChanged doMobSpawning=Bool(false)
+     18 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /kill @e[type=!player]
+   1021 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill 0 -61 0 30 -61 30 stone
+   2033 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 0 -60 0 30 -55 30 air
+   3068 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /gamemode creative @s
+   4024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4024 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4024 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /clear @s
+   5023 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5024 actor   InventoryContent InventoryContent { window_id: Inventory, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }], container: FullContainerName { container_id: AnvilInput, dynamic_container_id: None }, storage_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5024 actor   InventoryContent InventoryContent { window_id: Armor, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }], container: FullContainerName { container_id: AnvilInput, dynamic_container_id: None }, storage_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5024 actor   InventoryContent InventoryContent { window_id: Ui, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }, ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }], container: FullContainerName { container_id: AnvilInput, dynamic_container_id: None }, storage_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5024 actor   InventoryContent InventoryContent { window_id: Offhand, input: [ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) }], container: FullContainerName { container_id: AnvilInput, dynamic_container_id: None }, storage_item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5024 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /tp @s 10.5 -60 10.5
+   6023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"10.50\"},{\"text\":\"-60.00\"},{\"text\":\"10.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6023 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 10.5, y: -58.37999, z: 10.5 }, pitch: -0.0055777836, yaw: 0.027679443, head_yaw: 0.027679443, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 171 }
+   6023 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"10.50, -60.00, 10.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6023 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "10.50", "-60.00", "10.50"]
+   6023 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 10.5, y: -58.37999, z: 10.5 }, pitch: -0.0055777836, yaw: 0.027679443, head_yaw: 0.027679443, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 171 }
+   6072 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 10.5, y: -58.37999, z: 10.5 }, pitch: 0.00028146198, yaw: 0.043930054, head_yaw: 0.043930054, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 172 }
+## /
+## /gamerule randomtickspeed 100
+   8026 actor   GameRulesChanged randomTickSpeed=Int(100)
+   8027 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "100"]
+   8027 watcher GameRulesChanged randomTickSpeed=Int(100)
+   8027 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"100\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8426 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   8426 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /setblock 2 -60 2 copper_block
+   9079 actor   UpdateBlock 2 -60 2 layer 0 copper_block[]
+   9079 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9079 watcher UpdateBlock 2 -60 2 layer 0 copper_block[]
+   9079 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 2 -60 8 copper_block
+  10077 watcher UpdateBlock 2 -60 8 layer 0 copper_block[]
+  10077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10077 actor   UpdateBlock 2 -60 8 layer 0 copper_block[]
+  10077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 2 -60 14 copper_block
+  11075 watcher UpdateBlock 2 -60 14 layer 0 copper_block[]
+  11075 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11075 actor   UpdateBlock 2 -60 14 layer 0 copper_block[]
+  11076 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 2 -60 20 copper_block
+  12077 watcher UpdateBlock 2 -60 20 layer 0 copper_block[]
+  12077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12077 watcher UpdateBlock 2 -60 8 layer 0 exposed_copper[]
+  12077 actor   UpdateBlock 2 -60 20 layer 0 copper_block[]
+  12077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  12078 actor   UpdateBlock 2 -60 8 layer 0 exposed_copper[]
+## /setblock 2 -60 26 copper_block
+  13075 watcher UpdateBlock 2 -60 26 layer 0 copper_block[]
+  13075 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13076 actor   UpdateBlock 2 -60 26 layer 0 copper_block[]
+  13076 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 8 -60 2 copper_block
+  14077 actor   UpdateBlock 8 -60 2 layer 0 copper_block[]
+  14077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  14077 watcher UpdateBlock 8 -60 2 layer 0 copper_block[]
+  14077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 8 -60 8 copper_block
+  15076 actor   UpdateBlock 8 -60 8 layer 0 copper_block[]
+  15076 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  15076 watcher UpdateBlock 8 -60 8 layer 0 copper_block[]
+  15076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 8 -60 14 copper_block
+  16078 actor   UpdateBlock 8 -60 14 layer 0 copper_block[]
+  16078 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  16078 watcher UpdateBlock 8 -60 14 layer 0 copper_block[]
+  16078 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16827 watcher UpdateBlock 8 -60 8 layer 0 exposed_copper[]
+  16827 actor   UpdateBlock 8 -60 8 layer 0 exposed_copper[]
+## /setblock 8 -60 20 copper_block
+  17075 actor   UpdateBlock 8 -60 20 layer 0 copper_block[]
+  17075 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  17076 watcher UpdateBlock 8 -60 20 layer 0 copper_block[]
+  17076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 8 -60 26 copper_block
+  18077 actor   UpdateBlock 8 -60 26 layer 0 copper_block[]
+  18077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  18077 watcher UpdateBlock 8 -60 26 layer 0 copper_block[]
+  18077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 14 -60 2 copper_block
+  19077 actor   UpdateBlock 14 -60 2 layer 0 copper_block[]
+  19077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  19077 watcher UpdateBlock 14 -60 2 layer 0 copper_block[]
+  19077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 14 -60 8 copper_block
+  20077 actor   UpdateBlock 14 -60 8 layer 0 copper_block[]
+  20077 watcher UpdateBlock 14 -60 8 layer 0 copper_block[]
+  20077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  20077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21026 watcher UpdateBlock 2 -60 8 layer 0 weathered_copper[]
+  21027 actor   UpdateBlock 2 -60 8 layer 0 weathered_copper[]
+## /setblock 14 -60 14 copper_block
+  21076 watcher UpdateBlock 14 -60 14 layer 0 copper_block[]
+  21076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  21076 actor   UpdateBlock 14 -60 14 layer 0 copper_block[]
+  21076 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  21124 watcher UpdateBlock 2 -60 8 layer 0 oxidized_copper[]
+  21124 actor   UpdateBlock 2 -60 8 layer 0 oxidized_copper[]
+  21224 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  21224 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  21324 actor   UpdateBlock 2 -60 26 layer 0 exposed_copper[]
+  21324 watcher UpdateBlock 2 -60 26 layer 0 exposed_copper[]
+## /setblock 14 -60 20 copper_block
+  22077 actor   UpdateBlock 14 -60 20 layer 0 copper_block[]
+  22077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  22077 watcher UpdateBlock 14 -60 20 layer 0 copper_block[]
+  22077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22927 actor   UpdateBlock 8 -60 8 layer 0 weathered_copper[]
+  22927 watcher UpdateBlock 8 -60 8 layer 0 weathered_copper[]
+## /setblock 14 -60 26 copper_block
+  23077 watcher UpdateBlock 14 -60 26 layer 0 copper_block[]
+  23077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23077 actor   UpdateBlock 14 -60 26 layer 0 copper_block[]
+  23077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 20 -60 2 copper_block
+  24076 actor   UpdateBlock 20 -60 2 layer 0 copper_block[]
+  24076 watcher UpdateBlock 20 -60 2 layer 0 copper_block[]
+  24076 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  24076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 20 -60 8 copper_block
+  25077 actor   UpdateBlock 20 -60 8 layer 0 copper_block[]
+  25077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  25077 watcher UpdateBlock 20 -60 8 layer 0 copper_block[]
+  25077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 20 -60 14 copper_block
+  26077 watcher UpdateBlock 20 -60 14 layer 0 copper_block[]
+  26077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26077 actor   UpdateBlock 20 -60 14 layer 0 copper_block[]
+  26077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  26227 watcher UpdateBlock 8 -60 20 layer 0 exposed_copper[]
+  26227 actor   UpdateBlock 8 -60 20 layer 0 exposed_copper[]
+## /setblock 20 -60 20 copper_block
+  27077 actor   UpdateBlock 20 -60 20 layer 0 copper_block[]
+  27077 watcher UpdateBlock 20 -60 20 layer 0 copper_block[]
+  27077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  27077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 20 -60 26 copper_block
+  28075 actor   UpdateBlock 20 -60 26 layer 0 copper_block[]
+  28075 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  28075 watcher UpdateBlock 20 -60 26 layer 0 copper_block[]
+  28075 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 26 -60 2 copper_block
+  29077 actor   UpdateBlock 26 -60 2 layer 0 copper_block[]
+  29077 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  29078 watcher UpdateBlock 26 -60 2 layer 0 copper_block[]
+  29078 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  29676 watcher UpdateBlock 26 -60 2 layer 0 exposed_copper[]
+  29676 actor   UpdateBlock 26 -60 2 layer 0 exposed_copper[]
+## /setblock 26 -60 8 copper_block
+  30075 watcher UpdateBlock 26 -60 8 layer 0 copper_block[]
+  30076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30076 actor   UpdateBlock 26 -60 8 layer 0 copper_block[]
+  30076 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  30427 actor   UpdateBlock 8 -60 26 layer 0 exposed_copper[]
+  30427 watcher UpdateBlock 8 -60 26 layer 0 exposed_copper[]
+  30825 watcher UpdateBlock 20 -60 20 layer 0 exposed_copper[]
+  30825 actor   UpdateBlock 20 -60 20 layer 0 exposed_copper[]
+  30926 watcher UpdateBlock 2 -60 26 layer 0 weathered_copper[]
+  30927 watcher UpdateBlock 8 -60 8 layer 0 oxidized_copper[]
+  30927 actor   UpdateBlock 2 -60 26 layer 0 weathered_copper[]
+  30927 actor   UpdateBlock 8 -60 8 layer 0 oxidized_copper[]
+## /setblock 26 -60 14 copper_block
+  31076 actor   UpdateBlock 26 -60 14 layer 0 copper_block[]
+  31076 watcher UpdateBlock 26 -60 14 layer 0 copper_block[]
+  31076 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31076 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 26 -60 20 copper_block
+  32127 actor   UpdateBlock 26 -60 20 layer 0 copper_block[]
+  32127 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  32127 actor   UpdateBlock 26 -60 2 layer 0 weathered_copper[]
+  32127 watcher UpdateBlock 26 -60 20 layer 0 copper_block[]
+  32127 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32127 watcher UpdateBlock 26 -60 2 layer 0 weathered_copper[]
+## /setblock 26 -60 26 copper_block
+  33126 actor   UpdateBlock 26 -60 26 layer 0 copper_block[]
+  33126 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  33126 actor   UpdateBlock 26 -60 20 layer 0 exposed_copper[]
+  33126 watcher UpdateBlock 26 -60 26 layer 0 copper_block[]
+  33126 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  33126 watcher UpdateBlock 26 -60 20 layer 0 exposed_copper[]
+  33825 watcher UpdateBlock 14 -60 14 layer 0 exposed_copper[]
+  33825 actor   UpdateBlock 14 -60 14 layer 0 exposed_copper[]
+  34026 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  34026 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  34026 actor   UpdateBlock 14 -60 20 layer 0 exposed_copper[]
+  34026 watcher UpdateBlock 14 -60 20 layer 0 exposed_copper[]
+## /
+  34176 watcher UpdateBlock 26 -60 8 layer 0 exposed_copper[]
+  34176 actor   UpdateBlock 26 -60 8 layer 0 exposed_copper[]
+  34277 watcher UpdateBlock 8 -60 20 layer 0 weathered_copper[]
+  34277 watcher UpdateBlock 20 -60 26 layer 0 exposed_copper[]
+  34277 actor   UpdateBlock 8 -60 20 layer 0 weathered_copper[]
+  34277 actor   UpdateBlock 20 -60 26 layer 0 exposed_copper[]
+  34927 actor   UpdateBlock 2 -60 20 layer 0 exposed_copper[]
+  34927 watcher UpdateBlock 2 -60 20 layer 0 exposed_copper[]
+## /
+  35776 watcher UpdateBlock 14 -60 26 layer 0 exposed_copper[]
+  35776 actor   UpdateBlock 14 -60 26 layer 0 exposed_copper[]
+## /
+## /
+  37225 actor   UpdateBlock 8 -60 20 layer 0 oxidized_copper[]
+  37225 watcher UpdateBlock 8 -60 20 layer 0 oxidized_copper[]
+## /
+## /
+  39625 watcher UpdateBlock 8 -60 2 layer 0 exposed_copper[]
+  39625 actor   UpdateBlock 8 -60 2 layer 0 exposed_copper[]
+  39675 actor   UpdateBlock 14 -60 26 layer 0 weathered_copper[]
+  39675 watcher UpdateBlock 14 -60 26 layer 0 weathered_copper[]
+  40026 actor   UpdateBlock 14 -60 2 layer 0 exposed_copper[]
+  40027 watcher UpdateBlock 14 -60 2 layer 0 exposed_copper[]
+## /
+  40227 actor   UpdateBlock 20 -60 20 layer 0 weathered_copper[]
+  40227 watcher UpdateBlock 20 -60 20 layer 0 weathered_copper[]
+## /
+## /
+## /
+  43376 watcher UpdateBlock 2 -60 20 layer 0 weathered_copper[]
+  43377 actor   UpdateBlock 2 -60 20 layer 0 weathered_copper[]
+  43675 watcher UpdateBlock 14 -60 2 layer 0 weathered_copper[]
+  43675 actor   UpdateBlock 14 -60 2 layer 0 weathered_copper[]
+  43877 watcher UpdateBlock 26 -60 20 layer 0 weathered_copper[]
+  43877 actor   UpdateBlock 26 -60 20 layer 0 weathered_copper[]
+## /
+  44226 actor   UpdateBlock 26 -60 20 layer 0 oxidized_copper[]
+  44227 watcher UpdateBlock 26 -60 20 layer 0 oxidized_copper[]
+  44527 actor   UpdateBlock 2 -60 2 layer 0 exposed_copper[]
+  44527 watcher UpdateBlock 2 -60 2 layer 0 exposed_copper[]
+## /
+  45125 watcher UpdateBlock 20 -60 14 layer 0 exposed_copper[]
+  45125 actor   UpdateBlock 20 -60 14 layer 0 exposed_copper[]
+  45674 actor   UpdateBlock 2 -60 2 layer 0 weathered_copper[]
+  45675 watcher UpdateBlock 2 -60 2 layer 0 weathered_copper[]
+  45875 watcher UpdateSubchunkBlocks 8 -60 2 weathered_copper[]; 8 -60 14 exposed_copper[] | extra: 
+  45875 actor   UpdateSubchunkBlocks 8 -60 2 weathered_copper[]; 8 -60 14 exposed_copper[] | extra: 
+  45975 watcher UpdateBlock 8 -60 2 layer 0 oxidized_copper[]
+  45975 actor   UpdateBlock 8 -60 2 layer 0 oxidized_copper[]
+## /
+  46526 actor   UpdateBlock 20 -60 14 layer 0 weathered_copper[]
+  46527 watcher UpdateBlock 20 -60 14 layer 0 weathered_copper[]
+  46825 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  46825 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /
+  47425 watcher UpdateBlock 2 -60 2 layer 0 oxidized_copper[]
+  47425 actor   UpdateBlock 2 -60 2 layer 0 oxidized_copper[]
+  48026 actor   UpdateBlock 20 -60 2 layer 0 exposed_copper[]
+  48026 watcher UpdateBlock 20 -60 2 layer 0 exposed_copper[]
+## /
+  48526 watcher UpdateBlock 26 -60 2 layer 0 oxidized_copper[]
+  48526 actor   UpdateBlock 26 -60 2 layer 0 oxidized_copper[]
+## /
+  49425 actor   UpdateBlock 20 -60 26 layer 0 weathered_copper[]
+  49425 watcher UpdateBlock 20 -60 26 layer 0 weathered_copper[]
+  49876 actor   UpdateBlock 20 -60 8 layer 0 exposed_copper[]
+  49876 watcher UpdateBlock 20 -60 8 layer 0 exposed_copper[]
+  50077 watcher UpdateBlock 14 -60 20 layer 0 weathered_copper[]
+  50077 actor   UpdateBlock 14 -60 20 layer 0 weathered_copper[]
+## /
+  50677 actor   UpdateBlock 14 -60 20 layer 0 oxidized_copper[]
+  50677 watcher UpdateBlock 14 -60 20 layer 0 oxidized_copper[]
+  50725 watcher UpdateBlock 14 -60 8 layer 0 exposed_copper[]
+  50725 actor   UpdateBlock 14 -60 8 layer 0 exposed_copper[]
+  51075 actor   UpdateBlock 14 -60 2 layer 0 oxidized_copper[]
+  51075 watcher UpdateBlock 14 -60 2 layer 0 oxidized_copper[]
+## /
+  51177 watcher UpdateBlock 26 -60 26 layer 0 exposed_copper[]
+  51177 actor   UpdateBlock 26 -60 26 layer 0 exposed_copper[]
+## /
+## /
+  53726 actor   UpdateBlock 20 -60 26 layer 0 oxidized_copper[]
+  53726 watcher UpdateBlock 20 -60 26 layer 0 oxidized_copper[]
+  53826 actor   UpdateBlock 20 -60 14 layer 0 oxidized_copper[]
+  53827 watcher UpdateBlock 20 -60 14 layer 0 oxidized_copper[]
+## /
+  54425 actor   UpdateBlock 8 -60 14 layer 0 weathered_copper[]
+  54425 watcher UpdateBlock 8 -60 14 layer 0 weathered_copper[]
+  54777 actor   UpdateBlock 20 -60 8 layer 0 weathered_copper[]
+  54777 watcher UpdateBlock 20 -60 8 layer 0 weathered_copper[]
+## /
+  55226 actor   UpdateBlock 20 -60 20 layer 0 oxidized_copper[]
+  55226 watcher UpdateBlock 20 -60 20 layer 0 oxidized_copper[]
+## /
+  56175 actor   UpdateBlock 26 -60 8 layer 0 weathered_copper[]
+  56176 watcher UpdateBlock 26 -60 8 layer 0 weathered_copper[]
+## /
+## /
+  58724 watcher UpdateBlock 8 -60 14 layer 0 oxidized_copper[]
+  58724 actor   UpdateBlock 8 -60 14 layer 0 oxidized_copper[]
+## /
+  59626 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  59627 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /
+  61126 watcher UpdateBlock 14 -60 26 layer 0 oxidized_copper[]
+  61126 actor   UpdateBlock 14 -60 26 layer 0 oxidized_copper[]
+## /
+  61824 watcher UpdateBlock 2 -60 20 layer 0 oxidized_copper[]
+  61825 actor   UpdateBlock 2 -60 20 layer 0 oxidized_copper[]
+## /
+## /
+  64075 actor   UpdateBlock 14 -60 14 layer 0 weathered_copper[]
+  64075 watcher UpdateBlock 14 -60 14 layer 0 weathered_copper[]
+## /
+  64924 watcher UpdateBlock 14 -60 14 layer 0 oxidized_copper[]
+  64924 actor   UpdateBlock 14 -60 14 layer 0 oxidized_copper[]
+## /
+## /
+## /
+## /
+## /
+  69777 watcher UpdateBlock 2 -60 14 layer 0 exposed_copper[]
+  69777 actor   UpdateBlock 2 -60 14 layer 0 exposed_copper[]
+## /
+## /
+  71976 watcher UpdateBlock 2 -60 14 layer 0 weathered_copper[]
+  71976 actor   UpdateBlock 2 -60 14 layer 0 weathered_copper[]
+  72026 watcher UpdateBlock 26 -60 26 layer 0 weathered_copper[]
+  72026 actor   UpdateBlock 26 -60 26 layer 0 weathered_copper[]
+  72077 watcher UpdateBlock 26 -60 26 layer 0 oxidized_copper[]
+  72077 actor   UpdateBlock 26 -60 26 layer 0 oxidized_copper[]
+## /
+  72426 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  72426 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+## /
+## /
+  74476 actor   UpdateBlock 14 -60 8 layer 0 weathered_copper[]
+  74476 watcher UpdateBlock 14 -60 8 layer 0 weathered_copper[]
+  74826 actor   UpdateBlock 20 -60 2 layer 0 weathered_copper[]
+  74826 watcher UpdateBlock 20 -60 2 layer 0 weathered_copper[]
+## /
+## /
+## /
+## /
+  78626 actor   UpdateBlock 20 -60 2 layer 0 oxidized_copper[]
+  78626 watcher UpdateBlock 20 -60 2 layer 0 oxidized_copper[]
+## /
+  79326 actor   UpdateBlock 8 -60 26 layer 0 weathered_copper[]
+  79326 watcher UpdateBlock 8 -60 26 layer 0 weathered_copper[]
+## /
+  81126 watcher UpdateBlock 14 -60 8 layer 0 oxidized_copper[]
+  81126 actor   UpdateBlock 14 -60 8 layer 0 oxidized_copper[]
+## /
+## /
+  82725 watcher UpdateBlock 2 -60 14 layer 0 oxidized_copper[]
+  82725 actor   UpdateBlock 2 -60 14 layer 0 oxidized_copper[]
+## /
+## /
+## /
+  85224 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+  85224 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+  85926 actor   UpdateBlock 26 -60 14 layer 0 exposed_copper[]
+  85926 watcher UpdateBlock 26 -60 14 layer 0 exposed_copper[]
+## /
+## /
+## /
+## /
+  89676 watcher UpdateBlock 26 -60 8 layer 0 oxidized_copper[]
+  89676 actor   UpdateBlock 26 -60 8 layer 0 oxidized_copper[]
+## /
+## /
+## /
+  92726 watcher UpdateBlock 20 -60 8 layer 0 oxidized_copper[]
+  92726 actor   UpdateBlock 20 -60 8 layer 0 oxidized_copper[]
+## /
+## /gamerule randomtickspeed 1
+  94223 watcher GameRulesChanged randomTickSpeed=Int(1)
+  94223 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  94223 actor   GameRulesChanged randomTickSpeed=Int(1)
+  94223 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "1"]
+## /fill 0 -60 0 30 -60 30 air
+  95236 watcher UpdateSubchunkBlocks 2 -60 2 air[]; 2 -60 8 air[]; 2 -60 14 air[]; 8 -60 2 air[]; 8 -60 8 air[]; 8 -60 14 air[]; 14 -60 2 air[]; 14 -60 8 air[]; 14 -60 14 air[] | extra: 
+  95236 actor   UpdateSubchunkBlocks 2 -60 2 air[]; 2 -60 8 air[]; 2 -60 14 air[]; 8 -60 2 air[]; 8 -60 8 air[]; 8 -60 14 air[]; 14 -60 2 air[]; 14 -60 8 air[]; 14 -60 14 air[] | extra: 
+  95236 actor   UpdateSubchunkBlocks 2 -60 20 air[]; 2 -60 26 air[]; 8 -60 20 air[]; 8 -60 26 air[]; 14 -60 20 air[]; 14 -60 26 air[] | extra: 
+  95236 watcher UpdateSubchunkBlocks 2 -60 20 air[]; 2 -60 26 air[]; 8 -60 20 air[]; 8 -60 26 air[]; 14 -60 20 air[]; 14 -60 26 air[] | extra: 
+  95236 actor   UpdateSubchunkBlocks 20 -60 2 air[]; 20 -60 8 air[]; 20 -60 14 air[]; 26 -60 2 air[]; 26 -60 8 air[]; 26 -60 14 air[] | extra: 
+  95236 watcher UpdateSubchunkBlocks 20 -60 2 air[]; 20 -60 8 air[]; 20 -60 14 air[]; 26 -60 2 air[]; 26 -60 8 air[]; 26 -60 14 air[] | extra: 
+  95236 watcher UpdateSubchunkBlocks 20 -60 20 air[]; 20 -60 26 air[]; 26 -60 20 air[]; 26 -60 26 air[] | extra: 
+  95236 actor   UpdateSubchunkBlocks 20 -60 20 air[]; 20 -60 26 air[]; 26 -60 20 air[]; 26 -60 26 air[] | extra: 
+  95236 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["25"]
+  95236 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"25\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1
