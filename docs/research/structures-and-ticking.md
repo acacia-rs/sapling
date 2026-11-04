@@ -102,9 +102,6 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 - `commands.structure.error` for a save or load into unloaded columns (BDS queues a load,
   `load.queued`, which is not copied).
 - Animation modes place at once.
-- The biome search's reach (6400) and heights it tries; BDS's answers are only known to lie on a
-  32-block grid and to be nearer than or as near as sapling's.
-- Trial chambers and trail ruins: BDS named a place off their start chunk's middle (9 233, 610 30).
 - `/place`: no feature rule is known, so every `featurerule` is a syntax error; BDS's own list of
   `structure` names is not copied (sapling takes `/locate`'s names, `village` too, and BDS's
   `abandoned_camp_forest` is not one of them); a structure is drawn only over loaded columns

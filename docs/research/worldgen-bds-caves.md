@@ -318,7 +318,28 @@ mansion's -508,998 matches in all 997 calls although the oracle has 420 lush cel
 order again.
 
 ## Left
-- Sulfur springs (`random_sulfur_spring_with_tuff_feature`: structure templates) and the spring trail.
+- Sulfur springs and the spring trail: not ported (the before-surface rule draws its scatter and places
+  nothing). Read 2026-11-04 for the port:
+  - The rule places `sulfur_spring_trail_to_surface_snap_to_ceiling_feature` (snap to a ceiling within 64),
+    which places the hardcoded `sulfur_spring_trail_to_surface_feature`, registered in 1482f4580 (object
+    149d65f70, vtable 14a98ad70, place 149d660d0) with the spring feature's name, two block globals
+    (+0x40 = +0x48 = 0x14cce1a98), a block list 0x14ccd2788 (+0x50) and a predicate (+0x58). From the snapped
+    cell it climbs at most 184 cells, below the column's heightmap, to the first cell over a solid block (and
+    the predicate) whose cell and the cells above are air or water; sinks it one or two cells while the cells
+    under it are in the list; places `random_sulfur_spring_with_tuff_feature` there. On success, for each y
+    from the start to that cell, 20 tries at `nextInt(3) - nextInt(3)` in x and z set the +0x48 block where
+    the cell is in the list; then 20 tries round the start (y `nextInt(2) - nextInt(2)`) set the +0x40 block
+    in air over a solid block. The globals and the predicate are filled at startup: name them live.
+  - The ten springs are `minecraft:structure_template_feature`s (the only users of that type), each the
+    `.mcstructure` of the same name in `vanilla_1.26.30/structures/minecraft/`, then a tuff scatter.
+    `StructureTemplateFeature::place` (143bbc130): rotation drawn by the random when the feature has none,
+    offset -floor(size / 2) with `rotate_around_center`, a spiral over (2 * adjustment_radius + 1)^2 cells
+    (one here) until every constraint passes (`leveled`, `unburied`, `block_intersection`: their vt+8 still
+    to read), ground level clamped to the height (143bbc610 warns), the template placed with palette
+    `default`, integrity 100.
+  - Judge: no canon holds a spring (every region is 0 with the trail unported) and canons need the Win32
+    debugger, so a Linux stock world of a sulfur caves region with a spring has to be made first
+    (`/locate biome minecraft:sulfur_caves`).
 - Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
   states of either (worldgen-bds-features.md, "Feature residue"). Given a run's thread draws they are exact
   (every canon, 2026-11-04); without them BDS has no one answer to match (worldgen-bds-order.md, "One engine").
