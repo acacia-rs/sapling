@@ -106,6 +106,9 @@ fn flying_into_a_wall_costs_ten_for_each_block_a_tick_of_speed_lost_less_three()
     let told = all::<UpdateAttributes>(&own).into_iter().flat_map(|update| update.attributes);
     let health: Vec<f32> = told.filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
     assert_eq!(health, [8.0], "(1.5 - 0) * 10 - 3, once");
-    let heard: Vec<String> = all::<LevelSoundEvent>(&seen).into_iter().map(|sound| sound.sound_id).collect();
-    assert!(heard.iter().any(|sound| sound == "fall.big"), "{heard:?}");
+    // bds-u1fly.txt: the glider heard its wall too, unlike a landing.
+    for sent in [&own, &seen] {
+        let heard: Vec<String> = all::<LevelSoundEvent>(sent).into_iter().map(|sound| sound.sound_id).collect();
+        assert!(heard.iter().any(|sound| sound == "fall.big"), "{heard:?}");
+    }
 }
