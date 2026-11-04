@@ -59,7 +59,7 @@ minecraft:phantom	breathes_water burns_in_sun xp=5-5
 minecraft:pig	floats xp=1-3 strolls=0.25 panics=0.3125
 minecraft:piglin	xp=5-5 strolls=0.21 attack=9 speed=0.35 sees=16
 minecraft:piglin_brute	xp=20-20 strolls=0.21 attack=10 speed=0.35 sees=16
-minecraft:pillager	floats xp=5-5 strolls=0.35 attack=0 speed=0.35 sees=16 shoots=46 closes reselects preys=irongolem,wandering_trader,villager.grown
+minecraft:pillager	floats xp=5-5 strolls=0.35 attack=0 speed=0.35 sees=16 shoots=46 closes reselects fires=8 preys=irongolem,wandering_trader,villager.grown
 minecraft:player	unpushable
 minecraft:polar_bear	floats xp=1-3 strolls=0.25 panics=0.3125 attack=6 speed=0.25 sees=16 provoked every=39
 minecraft:pufferfish	breathes_water no_air xp=1-3 swims=0.13 roams=16x4

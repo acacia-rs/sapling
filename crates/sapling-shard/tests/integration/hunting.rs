@@ -295,3 +295,32 @@ fn a_pillager_swaps_to_the_nearer_prey_at_its_look() {
     h.remote.run(move |ctx| assert!(ctx.move_entity(EntityId(pillager), [0.5, 65.0, 2.5])));
     assert_eq!(took(&mut h), Some(1), "Alex 2 off, the villager 5");
 }
+
+#[test]
+fn a_held_pillager_loads_from_afar_and_shoots_only_from_8_off() {
+    // research/captures/bds-pillrange.txt: held 12 to 9 off it loaded and never shot; 8 and 7 off it
+    // shot every 46 ticks.
+    let (mut h, pillager) = hunted_by("minecraft:pillager", Difficulty::Easy);
+    // The platform ends at z 7.
+    h.remote.run(|ctx| (8..=10).for_each(|z| assert!(ctx.set_block([0, 64, z], &Block::new("stone")))));
+    let shots = |h: &mut Harness, z: f32| {
+        h.remote.run(move |ctx| {
+            assert!(ctx.give_entity_effect(EntityId(pillager), sapling_api::Effect::Slowness, 1000, 255));
+            assert!(ctx.move_entity(EntityId(pillager), [0.5, 65.0, z]));
+        });
+        // Alex is put back each tick against the arrows' knockback, as the drill's actor each second.
+        let sent: Vec<RawPacket> = (0..120)
+            .flat_map(|_| {
+                h.receive(1, &common::input_at([0.5, 65.0, 0.5]));
+                h.tick_all().to(2).to_vec()
+            })
+            .collect();
+        let loads = all::<LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "crossbow.loading.start").count();
+        (all::<AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:arrow").count(), loads)
+    };
+    let (far, loads) = shots(&mut h, 9.5);
+    assert_eq!((far, loads.min(1)), (0, 1), "9 off: loaded, no shot");
+    let near = shots(&mut h, 8.5);
+    let at = common::asking::ask(&mut h, move |ctx| ctx.entity(EntityId(pillager)).map(|found| found.feet));
+    assert!(near.0 >= 2, "8 off it shoots: {near:?} {at:?}");
+}
