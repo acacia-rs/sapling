@@ -19,6 +19,9 @@ pub struct Executed {
     pub dimension: i32,
     /// Whom `@initiator` names: the player who pressed the NPC dialogue button running it.
     pub initiator: Option<crate::Player>,
+    /// What a command calls its sender where no executor names one: a command block's `!§r` or
+    /// custom name, as BDS's `/say` from a block said `[!§r] hi`.
+    pub name: Option<String>,
 }
 
 // Positions are never NaN: they come from parsed finite numbers and the world.
@@ -26,7 +29,11 @@ impl Eq for Executed {}
 
 impl Executed {
     pub fn new(by: Sender, executor: Option<Selected>, position: [f32; 3], rotation: [f32; 2], dimension: i32) -> Self {
-        Self { by, executor, position, rotation, anchor: 0.0, dimension, initiator: None }
+        Self { by, executor, position, rotation, anchor: 0.0, dimension, initiator: None, name: None }
+    }
+
+    pub fn with_name(self, name: impl Into<String>) -> Self {
+        Self { name: Some(name.into()), ..self }
     }
 
     pub fn with_initiator(self, initiator: crate::Player) -> Self {

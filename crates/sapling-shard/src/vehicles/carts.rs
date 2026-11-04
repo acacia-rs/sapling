@@ -141,6 +141,10 @@ fn act(world: &mut World, cart: Entity, layer: Entity, kind: &str, rail: &Rail) 
             }
         }
         RailKind::Activator if rail.on && kind == MINECART => drop(crate::riding::evict(world, cart)),
+        RailKind::Activator if rail.on && kind == super::command_cart::COMMAND_MINECART => {
+            let at = world.get::<crate::body::Body>(cart).map_or([0.0; 3], |body| body.at);
+            super::command_cart::run(world, cart, at);
+        }
         RailKind::Activator if rail.on => drop(prime(world, cart, FUSE)),
         _ => {}
     }

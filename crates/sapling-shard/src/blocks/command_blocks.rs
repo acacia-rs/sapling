@@ -5,6 +5,8 @@
 
 mod run;
 
+pub(crate) use run::run_for_cart;
+
 use acacia_proto::nbt::{List, Str, Value};
 use acacia_proto::packets::{CommandBlockUpdate, CommandBlockUpdateContent, CommandBlockUpdateContentTrueMode as UpdateMode};
 use acacia_proto::types::{WindowID, WindowType};
@@ -188,7 +190,14 @@ pub(super) fn powered(world: &mut World, layer: Entity, pos: BlockPos, on: bool)
 /// as its output, as BDS compiled it on the update (bds-cmdblocks.txt).
 pub(crate) fn dispatch_updates(world: &mut World) {
     for (player, update) in world.resource_mut::<PacketQueues>().take::<CommandBlockUpdate>() {
-        let CommandBlockUpdateContent::True(at) = &update.content else { continue };
+        let at = match &update.content {
+            CommandBlockUpdateContent::True(at) => at,
+            CommandBlockUpdateContent::False(cart) if may_edit(world, player) => {
+                crate::vehicles::set_cart_command(world, cart.minecart_entity_runtime_id, &update.command);
+                continue;
+            }
+            _ => continue,
+        };
         let pos = [at.position.x, at.position.y, at.position.z];
         let Some(layer) = world.get::<InLayer>(player).map(|layer| layer.0).filter(|_| may_edit(world, player)) else { continue };
         let (Some(old), Some(mut fields)) = (shape(world, layer, pos), read(world, layer, pos)) else { continue };
@@ -227,7 +236,7 @@ pub(crate) fn dispatch_updates(world: &mut World) {
         let starts = (!was_auto || old.kind != Kind::Repeating && kind == Kind::Repeating) && !at.needs_redstone;
         if starts && kind != Kind::Chain && !powered {
             let shape = Shape { kind, facing: old.facing, conditional: at.conditional };
-            run::start(world, layer, pos, &shape);
+            run::start_edited(world, layer, pos, &shape);
         }
     }
 }

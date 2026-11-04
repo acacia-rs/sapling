@@ -9,13 +9,13 @@ use super::message::Message;
 use super::{display_name, no_target, players};
 
 /// Who a line is from: BDS's console is `Server`, a mob an `/execute as` names its kind's name
-/// (research/captures/bds-execute.txt: `[Cow] moo`).
+/// (research/captures/bds-execute.txt: `[Cow] moo`), a command block its own (`Executed::name`).
 pub(super) fn speaker(sender: &Sender) -> String {
     match sender {
         Sender::Executed(executed) => match &executed.executor {
             Some(Selected::Entity(entity)) => display_name(entity),
             Some(Selected::Player(player)) => player.name.clone(),
-            None => speaker(&executed.by),
+            None => executed.name.clone().unwrap_or_else(|| speaker(&executed.by)),
         },
         _ => sender.player().map_or_else(|| "Server".to_owned(), |player| player.name.clone()),
     }
@@ -54,5 +54,22 @@ impl Command for Tell {
         out.translate("commands.message.display.outgoing", vec![names, message], true);
         out.done_to(told.len() as u32);
         out.always_answer();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use sapling_api::command::Executed;
+
+    use super::*;
+
+    #[test]
+    fn a_command_blocks_line_is_said_under_its_name_and_the_consoles_as_server() {
+        let at = |named: bool| {
+            let executed = Executed::new(Sender::Console, None, [0.5; 3], [0.0; 2], 0);
+            Sender::Executed(Box::new(if named { executed.with_name("!§r") } else { executed }))
+        };
+        assert_eq!(speaker(&at(true)), "!§r");
+        assert_eq!(speaker(&at(false)), "Server");
     }
 }

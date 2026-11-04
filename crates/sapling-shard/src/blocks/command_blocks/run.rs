@@ -28,13 +28,23 @@ const REFUSED: &[&str] = &["op", "deop", "allowlist", "whitelist", "setmaxplayer
 /// an impulse block waiting 5 ran 6 ticks after the block that powered it was put, one waiting
 /// none 2 (bds-cmdchains.txt).
 pub(super) fn start(world: &mut World, layer: Entity, pos: BlockPos, shape: &Shape) {
+    start_ahead(world, layer, pos, shape, 1);
+}
+
+/// [`start`] for a block made always active by its editor: BDS's repeating block waiting 10 first
+/// ran 8 ticks after the edit was shown (research/captures/bds-t3cmd.txt).
+pub(super) fn start_edited(world: &mut World, layer: Entity, pos: BlockPos, shape: &Shape) {
+    start_ahead(world, layer, pos, shape, 2);
+}
+
+fn start_ahead(world: &mut World, layer: Entity, pos: BlockPos, shape: &Shape, ahead: u64) {
     let Some(mut fields) = super::read(world, layer, pos) else { return };
     mark_condition(world, layer, pos, shape, &mut fields);
     let delay = if fields.flag("ExecuteOnFirstTick") { 0 } else { fields.int("TickDelay").max(0) as u64 };
     fields.keep(world, layer, pos);
     match delay {
-        0 | 1 => queued::this_tick(world, layer, pos, Job::Command),
-        delay => queued::after(world, layer, pos, delay - 1, Job::Command),
+        delay if delay <= ahead => queued::this_tick(world, layer, pos, Job::Command),
+        delay => queued::after(world, layer, pos, delay - ahead, Job::Command),
     }
 }
 
@@ -146,8 +156,12 @@ fn perform(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
         container_changed(world, layer, pos);
         return enabled;
     }
+    let name = match fields.text("CustomName") {
+        named if !named.is_empty() => format!("{named}§r"),
+        _ => "!§r".to_owned(),
+    };
     fields.keep(world, layer, pos);
-    let out = run_line(world, layer, pos, &line);
+    let out = run_line(world, layer, pos.map(|c| c as f32 + 0.5), &line, &name);
     let Some(mut fields) = super::read(world, layer, pos) else { return true };
     let count = if out.messages().is_empty() { 1 } else { out.success_count() };
     fields.put("SuccessCount", Value::Int(i32::try_from(count).unwrap_or(i32::MAX)));
@@ -155,10 +169,6 @@ fn perform(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
         let (text, parameters) = out.messages().last().map_or((String::new(), Vec::new()), |last| (last.text.clone(), last.parameters.clone()));
         fields.set_output(&text, &parameters);
     }
-    let name = match fields.text("CustomName") {
-        named if !named.is_empty() => format!("{named}§r"),
-        _ => "!§r".to_owned(),
-    };
     fields.keep(world, layer, pos);
     container_changed(world, layer, pos);
     if rules::on(world, layer, OUTPUT) {
@@ -167,10 +177,22 @@ fn perform(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     true
 }
 
-/// Runs `line` for the block at `pos`: from its middle, as the console under `/execute` would.
-// TODO: BDS names the block `!` (or its name) where a command names its sender, as `/say` does;
-// sapling's `Sender` has no variant for a block, so it is named as the console is.
-fn run_line(world: &mut World, layer: Entity, pos: BlockPos, line: &str) -> Output {
+/// A command block minecart's run of `line` from `at`, under `!§r` as BDS said it
+/// (research/captures/bds-t3cmd.txt), echoed as a block's is; nothing while command blocks are off.
+pub(crate) fn run_for_cart(world: &mut World, layer: Entity, at: [f32; 3], line: &str) {
+    const NAME: &str = "!§r";
+    if !rules::on(world, layer, ENABLED) || line.trim().is_empty() {
+        return;
+    }
+    let out = run_line(world, layer, at, line, NAME);
+    if rules::on(world, layer, OUTPUT) {
+        crate::commands::echo_to_operators(world, None, NAME, &out);
+    }
+}
+
+/// Runs `line` for the block or cart called `name` at `at`, as the console under `/execute`
+/// would, under that name where a command names its sender.
+fn run_line(world: &mut World, layer: Entity, at: [f32; 3], line: &str, name: &str) -> Output {
     let line = line.trim();
     let line = line.strip_prefix('/').unwrap_or(line);
     let word = line.split_whitespace().next().unwrap_or("");
@@ -180,7 +202,7 @@ fn run_line(world: &mut World, layer: Entity, pos: BlockPos, line: &str) -> Outp
         return out;
     }
     let dimension = level(world, layer).map_or(0, |level| level.dimension());
-    let sender = Sender::Executed(Box::new(Executed::new(Sender::Console, None, pos.map(|c| c as f32 + 0.5), [0.0, 0.0], dimension)));
+    let sender = Sender::Executed(Box::new(Executed::new(Sender::Console, None, at, [0.0, 0.0], dimension).with_name(name)));
     let commands = world.resource::<CommandRegistry>().0.clone();
     let focused = worlds::focused(world);
     worlds::focus(world, Some(layer));
