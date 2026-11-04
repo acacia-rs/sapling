@@ -59,6 +59,13 @@ pub(crate) fn tame_by_upgrade(world: &mut World, entity: Entity, kind: &str) {
 }
 
 fn tame(world: &mut World, entity: Entity, kind: &str, owner: Option<i64>) {
+    settle_tamed(world, entity, kind, owner);
+    shown::flag_with(world, entity, Flags::TAMED, true, crate::riding::tamed_inventory(kind));
+    shown::links(world, entity);
+}
+
+/// The mob's tamed state, groups and health, nothing told.
+fn settle_tamed(world: &mut World, entity: Entity, kind: &str, owner: Option<i64>) {
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {
         (raised.kept.tamed, raised.kept.owner) = (true, owner);
     }
@@ -70,10 +77,6 @@ fn tame(world: &mut World, entity: Entity, kind: &str, owner: Option<i64>) {
     if let Some(swap) = rules.map(|rules| &rules.on_tame) {
         regroup(world, entity, swap);
     }
-    // TODO: the inventory a mount tamed by riding shows comes with the flag, as an `on_tame`
-    // summon's announcement holds both; no ride's taming was drilled.
-    shown::flag_with(world, entity, Flags::TAMED, true, crate::riding::tamed_inventory(kind));
-    shown::links(world, entity);
 }
 
 /// A wild mob is fed `item` by `player`: if it is a taming item it is tamed by its kind's chance,
@@ -114,7 +117,9 @@ pub(super) fn first_temper(world: &mut World, kind: &str) -> i32 {
 
 /// A rider tries to ride the wild mount `entity`: it is tamed if its kind's most temper, rolled,
 /// is below its temper; else it grows calmer and its viewers see it refuse. True when it is tamed
-/// now; for the riding code, which throws the rider off where it is not.
+/// now; for the riding code, which throws the rider off where it is not, and tells a tamed one's
+/// inventory the tick after. Its viewers see the hearts, then the flag with its owner in one
+/// packet (research/captures/bds-n3ride.txt).
 pub(crate) fn tame_by_riding(world: &mut World, entity: Entity, rider: Entity) -> bool {
     let Some(kind) = world.get::<crate::entities::Kind>(entity).map(|kind| kind.0.clone()) else { return false };
     let Some((_, most)) = sapling_data::husbandry(&kind).and_then(|rules| rules.temper) else { return false };
@@ -122,8 +127,10 @@ pub(crate) fn tame_by_riding(world: &mut World, entity: Entity, rider: Entity) -
     let rolled = world.get_resource_or_insert_with(Dice::default).roll(most.max(1) as u32) as i32;
     let owner = world.get::<Marks>(rider).map(|marks| marks.unique_id);
     if let Some(owner) = owner.filter(|_| rolled < temper) {
-        tame_to(world, entity, &kind, owner);
         shown::event(world, entity, EntityEventEventId::TameSuccess, 0);
+        settle_tamed(world, entity, &kind, Some(owner));
+        let owned = shown::owner_item(world, entity);
+        shown::flag_with(world, entity, Flags::TAMED, true, owned);
         return true;
     }
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {

@@ -9,16 +9,18 @@ use bevy_ecs::prelude::*;
 use sapling_data::AddEntityOptions;
 use sapling_world::ItemStack;
 
+mod in_way;
+
 use super::arrows::{Lands, Shot};
 use super::hits::{self, After};
-use super::{Creature, Dying, Health, landing};
+use super::landing;
 use crate::body::Body;
-use crate::components::{InLayer, Layer, NetId, Position, Tick, in_world};
+use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::dragon::cloud::item;
 use crate::sync::Told;
-use crate::{entities, mobs, vitals};
+use crate::{entities, mobs};
+use in_way::first_met;
 
-const PLAYER: [f32; 2] = [0.6, 1.8];
 /// Ticks one lies stuck before it goes, unless a player may pick it up.
 const LIES: u64 = 1200;
 const SHAKES: i32 = 7;
@@ -142,36 +144,6 @@ pub(crate) fn summon(world: &mut World, layer: Entity, shot: Shot, feet: [f32; 3
     Some(arrow)
 }
 
-/// The player in `layer` whose box the shot's, of `size` with its bottom middle at `at`, reaches
-/// into: BDS's arrow flew over a player 8 blocks off, a hand above its head. Not `by`, which shot it.
-fn met(world: &World, layer: Entity, by: Entity, at: [f32; 3], size: [f32; 2], passed: &[Entity]) -> Option<Entity> {
-    in_world(world).into_iter().filter(|player| *player != by && !passed.contains(player)).find(|player| {
-        let Some(feet) = world.get::<Position>(*player).map(|position| position.feet) else { return false };
-        let across = (PLAYER[0] + size[0]) / 2.0;
-        world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer) && vitals::is_mortal(world, *player) && (at[0] - feet[0]).abs() < across && (at[2] - feet[2]).abs() < across && at[1] + size[1] > feet[1] && at[1] < feet[1] + PLAYER[1]
-    })
-}
-
-/// The living mob of `layer` whose box the shot's reaches into.
-fn met_mob(world: &mut World, layer: Entity, by: Entity, at: [f32; 3], size: [f32; 2], passed: &[Entity]) -> Option<Entity> {
-    let mut mobs = world.query_filtered::<(Entity, &InLayer, &Body), (With<Creature>, With<Health>, Without<Dying>)>();
-    mobs.iter(world).filter(|(mob, ..)| *mob != by && !passed.contains(mob)).find(|(_, in_layer, body)| {
-        let across = (body.size[0] + size[0]) / 2.0;
-        in_layer.0 == layer && (at[0] - body.at[0]).abs() < across && (at[2] - body.at[2]).abs() < across && at[1] + size[1] > body.at[1] && at[1] < body.at[1] + body.size[1]
-    }).map(|(mob, ..)| mob)
-}
-
-/// The first player or mob on the shot's way from `at` by `motion`, where it met it, and whether a player.
-fn first_met(world: &mut World, layer: Entity, by: Entity, at: [f32; 3], motion: [f32; 3], size: [f32; 2], passed: &[Entity]) -> Option<([f32; 3], Entity, bool)> {
-    let speed = motion.iter().map(|c| c * c).sum::<f32>().sqrt();
-    let looks = (speed / 0.25).ceil().max(1.0) as usize;
-    let on_way = |look: usize| -> [f32; 3] { std::array::from_fn(|axis| at[axis] + motion[axis] * look as f32 / looks as f32) };
-    (1..=looks).find_map(|look| {
-        let point = on_way(look);
-        met(world, layer, by, point, size, passed).map(|player| (point, player, true)).or_else(|| met_mob(world, layer, by, point, size, passed).map(|mob| (point, mob, false)))
-    })
-}
-
 /// A tick of one flying shot: whether it is still there.
 fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Option<()> {
     let mut body = *world.get::<Body>(arrow)?;
@@ -231,8 +203,22 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     }
     *world.get_mut::<Body>(arrow)? = body;
     let gone: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - start[axis]);
-    let flags = flags(world, arrow, id, gone, born + 1 == now);
-    let mut packets = world.get_mut::<Told>(arrow)?.update(id, body.at, body.motion, stopped);
+    let first = born + 1 == now;
+    let flags = flags(world, arrow, id, gone, first);
+    let level = &world.get::<Layer>(layer)?.world;
+    let drag = if super::holds(level, body.at.map(|c| c.floor() as i32), WATER) { shot.wet_drag } else { shot.drag };
+    // BDS keeps a shot's motion as its next move's, drag and weight taken after the move
+    // (research/captures/bds-s7shots.txt, bds-shoot.txt): viewers are told that one.
+    let next = if stopped { [0.0; 3] } else { [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag] };
+    let summoned = world.get::<Arrow>(arrow).is_some_and(|arrow| arrow.summoned);
+    let mut told = world.get_mut::<Told>(arrow)?;
+    if summoned && first {
+        // TODO: BDS turns a loosed shot as it flies too (bds-shoot.txt: pitch bytes 2, 1, 0, 255, 252
+        // from its 4th move); that rule is not fitted.
+        told.pitch(0.0);
+        told.pitch(facing(body.motion)[1]);
+    }
+    let mut packets = told.update(id, body.at, next, stopped);
     packets.splice(0..0, flags);
     if stopped {
         super::stuck::keep(world, arrow, layer, &body);

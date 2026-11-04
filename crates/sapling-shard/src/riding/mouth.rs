@@ -8,7 +8,7 @@ use acacia_proto::packets::SetEntityData;
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use bevy_ecs::prelude::*;
 
-use super::grazing::{EATING, Grazing, graze};
+use super::grazing::{EATING, Grazing, graze, heal};
 use super::mounts::{TAMED_SADDLED, saddle_flags};
 use crate::body::Body;
 use crate::components::{InLayer, NetId, Tick};
@@ -58,6 +58,7 @@ pub(crate) fn open_mouths(world: &mut World) {
         } else if shuts.is_some_and(|shuts| shuts <= now) {
             shuts = None;
         }
+        heal(world, entity);
         let (eats, stirred) = graze(world, entity, layer, at);
         let flags = if shuts.is_some() { OPEN } else { 0 } | if eats { EATING } else { 0 };
         world.entity_mut(entity).insert(Mouth { seen: left, shuts, told: flags });
