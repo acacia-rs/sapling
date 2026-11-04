@@ -3,16 +3,16 @@
 //! fireballs ("The blaze"), which fly straight, burn whom they hit and are gone where they land. A
 //! llama's spit ("Hit back by day"), which falls and throws nobody, and a witch's potions ("The
 //! witch"), which break where they land (`splashes`). Their flight: flight.rs.
-// TODO: a mob's arrow is not picked up and goes after a minute; its aim and its spread are the
-// Java game's, fitted to no more than the speeds BDS showed (BDS's wider spread and lower aim:
-// docs/research/mob-attacks.md "In the way").
+// TODO: a mob's arrow is not picked up and goes after a minute.
 
 use bevy_ecs::prelude::*;
+use sapling_api::Difficulty;
 
 use super::flight::{self, Launch};
 pub(super) use super::flight::sound;
 use crate::blocks::Dice;
 use crate::body::Body;
+use crate::components::Settings;
 use crate::late_sounds;
 
 /// What a shot does where it lands, beyond meeting a block or a body.
@@ -55,8 +55,11 @@ pub(crate) struct Shot {
     pub sound: &'static str,
     /// Heard where it hits a body, and where it sticks.
     pub heard: [&'static str; 2],
-    /// Each part of a mob's aim is off by up to this.
+    /// Each part of a mob's aim is off by up to this, or, where the pack gives `uncertainty_base` and
+    /// `uncertainty_multiplier`, by a normal throw of 0.0075 x (the base less the multiplier a
+    /// difficulty level) of its aim made one long (ProjectileComponent::shoot 1424020c0).
     pub spread: f32,
+    pub uncertainty: Option<[f32; 2]>,
     /// Its rise is this much a block of the way to its prey, less this, where it is not aimed.
     pub arc: Option<[f32; 2]>,
     pub lands: Lands,
@@ -83,11 +86,16 @@ pub(crate) const ARROW: Shot = Shot {
     sound: "bow",
     heard: ["bow.hit", "bow.hit"],
     spread: SPREAD,
+    uncertainty: None,
     arc: None,
     lands: Lands::Hurts,
     lasts: None,
     size: [0.25, 0.25],
 };
+/// A mob's arrow goes the way it looks, at its prey's eyes, with no loft (fcn.142401750 turns the
+/// archer's pitch and yaw into the aim), off by the arrow pack's uncertainty 16 less 4 a level:
+/// bds-e1arrow.txt's seven on easy left level on the mean, about 0.14 off a part.
+pub(crate) const MOB_ARROW: Shot = Shot { aimed: sapling_data::EYE_HEIGHT, loft: 0.0, uncertainty: Some([16.0, 4.0]), ..ARROW };
 /// research/captures/bds-blaze.txt: from 1.4 up the blaze, 1.15 to 1.42 a tick and no slower
 /// after; bds-kinds2.txt: 5 off the player it hit, which burnt five seconds.
 pub(crate) const FIREBALL: Shot = Shot { kind: "minecraft:small_fireball", ahead: 0.0, held: 1.4, speed: 1.3, aimed: 0.9, loft: 0.0, drag: 1.0, wet_drag: 1.0, weight: 0.0, harm: Some(5.0), sticks: false, burns: 100, sound: "shoot", lasts: Some(FLIES), ..ARROW };
@@ -100,7 +108,7 @@ pub(crate) const POTION: Shot = Shot { kind: "minecraft:splash_potion", ahead: 1
 
 /// What a kind shoots, by the name of it in `mob-traits.tsv` (`shot=`); arrows where none is named.
 pub(super) fn shot_named(name: Option<&str>) -> Shot {
-    [FIREBALL, SPIT, POTION].into_iter().find(|shot| shot.kind.strip_prefix("minecraft:") == name).unwrap_or(ARROW)
+    [FIREBALL, SPIT, POTION].into_iter().find(|shot| shot.kind.strip_prefix("minecraft:") == name).unwrap_or(MOB_ARROW)
 }
 
 impl Shot {
@@ -129,8 +137,12 @@ pub(super) fn loose(world: &mut World, layer: Entity, by: Entity, kind: &str, ar
         None => [prey[0] - from[0], prey[1] + shot.aimed - from[1] + far * shot.loft, prey[2] - from[2]],
     };
     let long = aim.iter().map(|c| c * c).sum::<f32>().sqrt().max(1e-4);
+    let off = shot.uncertainty.map(|[base, per_level]| 0.0075 * (base - per_level * level(world)).max(0.0));
     let mut dice = world.get_resource_or_insert_with(Dice::default);
-    let motion = aim.map(|c| c / long * shot.speed + (dice.fraction() + dice.fraction() - 1.0) * shot.spread);
+    let motion = aim.map(|c| match off {
+        Some(off) => (c / long + dice.gaussian() * off) * shot.speed,
+        None => c / long * shot.speed + (dice.fraction() + dice.fraction() - 1.0) * shot.spread,
+    });
     // TODO: BDS's makes its first move, by its whole launch speed, in the tick it is loosed (bds-shoot.txt);
     // sapling's a tick on. A shot that met its prey in its first tick would be gone unannounced here.
     if flight::launch(world, Launch { layer, by, archer: kind.to_owned(), from, motion, shot, gives }, None).is_none() {
@@ -138,4 +150,14 @@ pub(super) fn loose(world: &mut World, layer: Entity, by: Entity, kind: &str, ar
     }
     let middle = [archer.at[0], archer.at[1] + archer.size[1] / 2.0, archer.at[2]];
     late_sounds::play_later(world, 0, layer, archer.at.map(|c| c.floor() as i32), flight::sound(shot.sound, middle, kind));
+}
+
+/// The world's difficulty as BDS counts it, peaceful 0 to hard 3.
+fn level(world: &World) -> f32 {
+    match world.resource::<Settings>().0.difficulty {
+        Difficulty::Peaceful => 0.0,
+        Difficulty::Easy => 1.0,
+        Difficulty::Normal => 2.0,
+        Difficulty::Hard => 3.0,
+    }
 }

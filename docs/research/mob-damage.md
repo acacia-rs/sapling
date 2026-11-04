@@ -112,6 +112,15 @@ Sapling's runs: sapling-bodies.txt, sapling-lifts.txt (after the fixes).
   `a_chicken_falls_as_slowly_as_bds_dropped_one`. One put on lava died on its 5th tick, a pig was in the
   lava (cause 8) on its 3rd. Left: sapling's chicken on lava now dies on its 6th, a tick late; a body
   under 0.802 high is judged in lava by its middle (`body/liquid.rs` `in_liquid`), which BDS seems not to.
+  Settled 2026-11-04 (twelfth wave): not the middle (the chicken is 0.8 high, whose middle is BDS's
+  0.4 in) but the place. BDS judges fire and lava where the tick's move left the body: both were
+  lit in the tick their first move dipped them 0.078 into the source, the chicken died in the tick
+  it reached 0.49 in and the pig was scalded at 0.46, 2 ticks after it was lit. Sapling judged both
+  from where the move began (`Body::liquid`, set before the move), a tick late. Fixed:
+  `creatures/harm.rs` reads fire and lava off the moved body; tests
+  `a_chicken_and_a_pig_over_lava_are_lit_and_scalded_where_their_move_left_them` (mob_heat.rs) and
+  `a_pig_in_lava_burns_is_hurt_and_dies_cooked_as_on_bds` (each event a tick sooner, now BDS's).
+  Re-drilled (sapling-bodies.txt): the chicken dies on its 5th tick, as BDS's.
 - Loot, a mount's chest and its saddle appear the tick after the death, at where the body is then: deaths
   by fire, lava, smothering and `/kill` (also bds-chestdie.txt, bds-harm.txt). Sapling tossed them with
   the death; now `creatures/death.rs` `Remains`.

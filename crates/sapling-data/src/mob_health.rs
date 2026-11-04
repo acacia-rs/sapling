@@ -71,8 +71,10 @@ pub struct Hunts {
     pub speed: f32,
     /// How far off it takes a player as its prey.
     pub sees: f32,
-    /// The effect its hit gives (`sapling_api::Effect::name`) and for how many ticks.
+    /// The effect its hit gives (`sapling_api::Effect::name`) and for how many ticks on normal;
+    /// `hits=<effect>:<normal>:<easy>:<hard>` gives other lengths on easy and hard.
     pub gives: Option<(&'static str, u32)>,
+    pub gives_easy_hard: Option<[u32; 2]>,
     /// The power it blows up with near its prey, where it hits nobody.
     pub explodes: Option<f32>,
     /// The ticks between two arrows it looses at its prey, where it hits nobody.
@@ -139,8 +141,10 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let value = |name: &str| row.and_then(|(_, traits)| traits.split(' ').find_map(|held| held.strip_prefix(name)));
     let baby_experience = value("baby_xp=").and_then(range);
     let number = |name: &str| value(name).and_then(|value| value.parse::<f32>().ok());
-    let gives = value("hits=").and_then(|given| given.split_once(':')).and_then(|(effect, ticks)| Some((effect, ticks.parse().ok()?)));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), varies: number("varies="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once"), preys: value("preys="), searches: number("searches=").map(|ticks| ticks as u32), stops: number("stops=").map(|ticks| ticks as u32), reselects: has("reselects"), fires: number("fires=") });
+    let hits: Option<Vec<&str>> = value("hits=").map(|given| given.split(':').collect());
+    let gives = hits.as_ref().and_then(|parts| Some((*parts.first()?, parts.get(1)?.parse().ok()?)));
+    let gives_easy_hard = hits.as_ref().and_then(|parts| Some([parts.get(2)?.parse().ok()?, parts.get(3)?.parse().ok()?]));
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, gives_easy_hard, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), varies: number("varies="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once"), preys: value("preys="), searches: number("searches=").map(|ticks| ticks as u32), stops: number("stops=").map(|ticks| ticks as u32), reselects: has("reselects"), fires: number("fires=") });
     let roams = value("roams=").and_then(|roams| roams.split_once('x')).and_then(|(across, up)| Some([across.parse().ok()?, up.parse().ok()?]));
     let swims = number("swims=").zip(roams);
     let looks = value("looks=").and_then(|looks| {

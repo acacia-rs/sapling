@@ -59,7 +59,9 @@ went on (research/captures/bds-t2edon.txt); sapling put them on and now leaves t
   `generation` 0, `pages`, `title`, `xuid`, keys sorted; windows resent, `select_slot true`.
 - **Lengths** (raw BookEdits past the client's limits, research/captures/bds-t2ebook.txt): pages of
   256, 257 and 512 letters and titles of 17 and 40 were kept whole, as sapling keeps them. A 1000-letter
-  page got its writer disconnected (bds-t2ebook1.txt); sapling keeps it (TODO in `books.rs`).
+  page got its writer disconnected (bds-t2ebook1.txt); sapling keeps it (TODO in `books.rs`). A
+  513-letter page was kept whole (2026-11-04, `t12book`, bds-t12book.txt), so the limit is past 513;
+  the next drill should halve the 514..999 range.
 - **Lectern**: a click with a book on an empty lectern: windows resent (`select_slot true`),
   `item.book.put` at the block's corner, then BlockEntityData `{book, hasBook 1, page 0, totalPages}`.
   A click with the book on it opens ContainerOpen `Lectern`. LecternUpdate sets `page`, resent as

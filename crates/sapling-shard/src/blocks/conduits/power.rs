@@ -91,7 +91,9 @@ pub(super) fn hunt(world: &mut World, layer: Entity, pos: BlockPos, frame: usize
             Some(mob) => prey.0.insert((layer, pos), mob),
             None => prey.0.remove(&(layer, pos)),
         };
-        show_target(world, layer, pos, target);
+        // BDS told nobody of the -1 after its prey died (bds-e1conduit.txt).
+        let died = held.is_some_and(|mob| world.get::<Health>(mob).is_none_or(|health| health.left() <= 0.0));
+        keep_target(world, layer, pos, target, !died);
     }
     if let Some(mob) = target.filter(|mob| held == Some(*mob)) {
         crate::creatures::wound(world, mob, layer, BITES, Cause::Magic);
@@ -99,14 +101,15 @@ pub(super) fn hunt(world: &mut World, layer: Entity, pos: BlockPos, frame: usize
     }
 }
 
+/// `conduit.attack` at the conduit, heard the tick after its bite as BDS's (bds-e1conduit.txt).
 fn bite_sound(world: &mut World, layer: Entity, pos: BlockPos) {
     let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
     let sound = LevelSoundEvent { sound_id: "conduit.attack".into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
-    send::to_viewers(world, layer, pos, &[sapling_net::encode(&sound)]);
+    crate::late_sounds::play_later(world, 1, layer, pos, sapling_net::encode(&sound));
 }
 
-/// Keeps the conduit's `Target`, the mob's unique id or -1, and shows it.
-fn show_target(world: &mut World, layer: Entity, pos: BlockPos, target: Option<Entity>) {
+/// Keeps the conduit's `Target`, the mob's unique id or -1, and shows it if `shown`.
+fn keep_target(world: &mut World, layer: Entity, pos: BlockPos, target: Option<Entity>, shown: bool) {
     let id = target.and_then(|mob| world.get::<crate::tags::UniqueId>(mob)).map_or(-1, |id| id.0);
     let Some(mut nbt) = world.get::<Layer>(layer).and_then(|level| level.world.block_entity(pos)).map(|entity| entity.nbt.clone()) else { return };
     if let Value::Compound(fields) = &mut nbt {
@@ -114,5 +117,9 @@ fn show_target(world: &mut World, layer: Entity, pos: BlockPos, target: Option<E
         fields.push(("Target".into(), Value::Long(id)));
         fields.sort_by(|a, b| a.0.cmp(&b.0));
     }
-    send::keep_entity(world, layer, pos, &nbt);
+    if shown {
+        send::keep_entity(world, layer, pos, &nbt);
+    } else if let Some(mut level) = world.get_mut::<Layer>(layer) {
+        level.world.set_block_entity(pos, &nbt);
+    }
 }

@@ -11,7 +11,7 @@ use acacia_proto::types::{MetadataFlags1, Vec3f};
 use sapling_world::World as Level;
 
 use super::health::{Cause, Health, WALLED};
-use crate::body::{Body, Liquid};
+use crate::body::{Body, InLiquid, Liquid, in_liquid};
 use crate::components::Layer;
 use crate::sync::Told;
 use crate::{entities, late_sounds, splash};
@@ -170,8 +170,12 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let (in_wall, under_water) = held_breath(world, entity, layer, kind, start);
         let (darken, rains) = (crate::light::darken(world, layer), crate::weather::rains(world, layer));
         let level = world.get::<Layer>(layer).map(|layer| &layer.world);
-        let touching = if burns { level.and_then(|level| super::heat::fire_harm(level, start)) } else { None };
+        // Fire and lava where the move left it, not where it began: BDS's chicken and pig over a
+        // source were lit in the tick they first dipped into it and scalded in the one they sank
+        // 0.4 in (bds-bodies.txt).
+        let touching = if burns { level.and_then(|level| super::heat::fire_harm(level, now)) } else { None };
         let scorched = burns && now.on_ground && level.is_some_and(|level| super::heat::on_magma(level, now));
+        let scalds = burns && level.is_some_and(|level| in_liquid(level, now, InLiquid::Sinks, Liquid::Lava));
         // Rain kept BDS's zombie from burning at noon (research/captures/bds-sun.txt) and put out a burning cow.
         let feet = start.at.map(|c| c.floor() as i32);
         let rained = level.is_some_and(|level| is_rained_on(level, feet, rains));
@@ -216,7 +220,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         }
         tell(world, entity, &mut health, id, kind, burns, &mut packets);
         let before = health;
-        if burns && now.liquid() == Some(Liquid::Lava) && health.scald() && weigh(world, &mut health, before, Cause::Lava) {
+        if scalds && health.scald() && weigh(world, &mut health, before, Cause::Lava) {
             packets.push(strike(id, &health, Cause::Lava, None));
         }
         let dry = traits.no_air && now.liquid() != Some(Liquid::Water);

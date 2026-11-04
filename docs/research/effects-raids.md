@@ -66,7 +66,10 @@ Bedrock was found.
   south, and one on glass over the frame, were each taken a second after they came and bitten 4 every
   2 s to death. Sapling's run on the open world (sapling-e1conduit.txt): the same, hit for hit. Left:
   sapling tells `Target` -1 after the kill (BDS sent nothing) and its `conduit.attack` comes in the
-  bite's tick (BDS's a tick after). Players still take its
+  bite's tick (BDS's a tick after). Fixed 2026-11-04 (twelfth wave): the -1 after a dead prey is
+  kept untold and the sound comes a tick after the bite (`blocks/conduits/power.rs`), test
+  `a_conduits_bite_is_heard_a_tick_late_and_its_dead_preys_target_goes_untold`; re-drilled
+  (sapling-e1conduit.txt): each death's sound a tick after it and no -1, as BDS's. Players still take its
   power in rain [cap bds-conduit2.txt]. Captures research/captures/bds-conduit{rain,water,depth,
   spill,reach}.txt and their sapling twins; scenes in examples/shared/fifth3_drill.rs.
 - `/setblock ... conduit` gives it its entity (`Active` 0, `Target` -1), shown as `BlockEntityData`

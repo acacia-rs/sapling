@@ -124,6 +124,21 @@ fn a_cod_on_dry_stone_holds_its_breath_15_s_then_smothers() {
 }
 
 #[test]
+fn a_chicken_and_a_pig_over_lava_are_lit_and_scalded_where_their_move_left_them() {
+    // research/captures/bds-bodies.txt: let go a block over a source, each was lit in the tick it
+    // first dipped in; the chicken died of the lava 4 ticks on, the pig was scalded 2 on.
+    for (kind, lava_after) in [("minecraft:chicken", 4), ("minecraft:pig", 2)] {
+        let mut h = ready();
+        penned(&mut h, 6, "lava", Block::air(), kind);
+        let sent = ticks(&mut h, 12);
+        let events: Vec<(usize, EntityEventEventId, i32)> = sent.iter().enumerate().flat_map(|(tick, sent)| all::<EntityEvent>(sent).into_iter().map(move |event| (tick, event.event_id, event.data))).collect();
+        let lit = events.iter().find(|(_, id, data)| *id == EntityEventEventId::HurtAnimation && *data == 6).map(|(tick, ..)| *tick);
+        let scalded = events.iter().find(|(_, id, data)| (*id == EntityEventEventId::HurtAnimation && *data == 8) || *id == EntityEventEventId::DeathAnimation).map(|(tick, ..)| *tick);
+        assert!(lit.zip(scalded).is_some_and(|(lit, scalded)| scalded == lit + lava_after), "{kind}: {events:?}");
+    }
+}
+
+#[test]
 fn a_creeper_summoned_with_its_forced_fuse_bursts_30_ticks_on_with_no_prey() {
     let mut h = ready();
     // Peaceful takes monsters away.

@@ -71,7 +71,8 @@ HUNTS = {
     "minecraft:blaze":"attack=0 speed=0.23 sees=48 shoots=173 aims=83 volley=3x6 shot=small_fireball",
     "minecraft:breeze": "attack=0 speed=0.48 sees=24 fights=leaps",
     "minecraft:bogged": "attack=0 speed=0.25 sees=16 shoots=71 hits=poison:112",
-    "minecraft:cave_spider": "attack=2 speed=0.3 sees=16 by_dark searches=100 stops=100",
+    # Its poison: 0 ticks on easy, 140 on normal, 300 on hard (bds-t12cave.txt, bds-t12bites.txt).
+    "minecraft:cave_spider": "attack=2 speed=0.3 sees=16 by_dark searches=100 stops=100 hits=poison:140:0:300",
     "minecraft:creaking": "attack=3 speed=0.4 sees=16 provoked every=40",
     "minecraft:creeper": "attack=0 speed=0.25 sees=16 explodes=3",
     "minecraft:dolphin": "attack=3 speed=0.11 sees=48 provoked fights=swims",

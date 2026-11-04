@@ -3,11 +3,12 @@
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
+use sapling_api::Difficulty;
 
 use super::super::{blast, shooting};
 use super::{COOLDOWN, FLINGS, GOES_OUT, Hunter, IGNITES, MIDDLE, REACH, THROW, distance, on_difficulty, sound, take};
 use crate::body::Body;
-use crate::components::Tick;
+use crate::components::{Settings, Tick};
 use crate::{entities, late_sounds, vitals};
 
 /// The kinds of fight whose hit is a bite within reach; the others hit their own way.
@@ -74,6 +75,11 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
     }
     let bitten = !blocked && vitals::bitten(world, prey, harm, kind, [away[0] * along, up, away[1] * along]);
     if let Some((effect, ticks)) = hunts.gives.filter(|_| bitten) {
+        let ticks = match (hunts.gives_easy_hard, world.resource::<Settings>().0.difficulty) {
+            (Some([easy, _]), Difficulty::Easy) => easy,
+            (Some([_, hard]), Difficulty::Hard) => hard,
+            _ => ticks,
+        };
         vitals::afflict(world, prey, effect, ticks);
     }
     if bitten {

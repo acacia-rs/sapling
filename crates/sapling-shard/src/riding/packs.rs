@@ -22,7 +22,7 @@ use crate::entities::{self, Kind, Stored};
 use crate::inventory::{Held, Inventory};
 use crate::{blocks, containers, creatures};
 
-const SADDLE: &str = "minecraft:saddle";
+pub(super) const SADDLE: &str = "minecraft:saddle";
 const CHEST: &str = "minecraft:chest";
 const CAMEL: &str = "minecraft:camel";
 /// Kinds whose inventory has a saddle slot, and those that take a chest.
@@ -136,7 +136,9 @@ fn goods(world: &World, mob: Entity) -> Vec<(u8, ItemStack)> {
 pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
     let mut spilled: Vec<ItemStack> = Vec::new();
     if world.get::<Kind>(mob).is_some_and(|kind| has_pack(&kind.0)) {
-        spilled.extend(goods(world, mob).into_iter().filter(|(slot, _)| usize::from(*slot) >= TACK).map(|(_, stack)| stack));
+        // `slot.inventory 0` over the saddle's slot puts goods there, which went first (bds-t12goods.txt).
+        let goods = goods(world, mob).into_iter().filter(|(slot, stack)| usize::from(*slot) >= TACK || (*slot == 0 && stack.name != SADDLE));
+        spilled.extend(goods.map(|(_, stack)| stack));
         spilled.extend(chested(world, mob).then(|| stack(CHEST)));
     }
     // A pig's or strider's saddle is loot (riding/evented.rs); a spawn event's holds none.
@@ -202,8 +204,9 @@ pub(crate) fn load(world: &mut World, mob: Entity, slots: Vec<Option<Held>>) {
     world.entity_mut(mob).insert(Pack(slots.clone()));
     let viewers = containers::carried_viewers(world, mob);
     containers::tell_changed(world, viewers, &changed, &slots);
-    if changed.iter().any(|slot| *slot < TACK) {
-        let saddled = slots[0].is_some();
+    let retacked = changed.contains(&1) || (changed.contains(&0) && is_saddle(&before[0]) != is_saddle(&slots[0]));
+    if retacked {
+        let saddled = is_saddle(&slots[0]);
         let armor = slots.get(1).cloned().flatten().map(|held| held.stack).filter(|stack| world.get::<Kind>(mob).is_some_and(|kind| takes(&kind.0, 1, &stack.name)));
         if let Some(mut raised) = world.get_mut::<Raised>(mob) {
             raised.saddled = saddled;
@@ -217,11 +220,15 @@ pub(crate) fn load(world: &mut World, mob: Entity, slots: Vec<Option<Held>>) {
 }
 
 /// The tack `mob` wears changed by hand: its inventory holds it, and those with it open see it.
+fn is_saddle(slot: &Option<Held>) -> bool {
+    slot.as_ref().is_some_and(|held| held.stack.name == SADDLE)
+}
+
 pub(super) fn tack_changed(world: &mut World, mob: Entity) {
     if let Some(Pack(mut slots)) = world.get::<Pack>(mob).cloned() {
         let saddled = world.get::<Raised>(mob).is_some_and(|raised| raised.saddled);
         let armor = world.get::<Tack>(mob).and_then(|tack| tack.armor.clone());
-        if saddled != slots[0].is_some() {
+        if saddled != is_saddle(&slots[0]) {
             slots[0] = saddled.then(|| containers::new_held(world, stack(SADDLE)));
         }
         if armor.as_ref() != slots[1].as_ref().map(|held| &held.stack) {
