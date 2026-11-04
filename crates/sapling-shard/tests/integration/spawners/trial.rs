@@ -79,4 +79,7 @@ fn bad_omen_turns_to_trial_omen_and_the_spawner_ominous() {
     let told: Vec<_> = common::all::<acacia_proto::packets::MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.duration)).collect();
     assert_eq!(told.iter().filter(|(id, _)| *id != 28).collect::<Vec<_>>(), [&(31, 36000)], "trial omen for 18000 a level: {told:?}");
     assert!(block(&mut h, SPAWNER).properties.contains("ominous=1"), "{:?}", block(&mut h, SPAWNER));
+    // bds-u1omen.txt: 3616 with 0, then the charged detection 3615 with the one player, both at the corner.
+    let events: Vec<_> = common::all::<acacia_proto::packets::LevelEvent>(&sent).into_iter().map(|event| (event.event.to_raw(), event.data, event.position.x)).filter(|(id, ..)| matches!(id, 3615 | 3616)).collect();
+    assert_eq!(events, [(3616, 0, 3.0), (3615, 1, 3.0)]);
 }
