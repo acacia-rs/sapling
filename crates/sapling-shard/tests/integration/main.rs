@@ -92,6 +92,7 @@ mod life_events;
 mod liquids;
 mod loosened_blocks;
 mod mechanisms;
+mod mob_aim;
 mod mob_commands;
 mod mob_heat;
 mod mob_life;

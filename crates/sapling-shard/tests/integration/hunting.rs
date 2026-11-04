@@ -142,13 +142,16 @@ fn each_kind_hunts_at_its_speed_with_its_hit_and_what_the_hit_gives() {
 }
 
 #[test]
-fn a_cave_spider_s_bite_poisons_for_seven_seconds() {
+fn a_cave_spider_s_bite_poisons_for_seven_seconds_none_on_easy_and_fifteen_on_hard() {
     use acacia_proto::packets::MobEffect;
-    // research/captures/bds-e1cave.txt, on normal: poison 140 at each bite.
-    let (mut h, _) = hunted_by("minecraft:cave_spider", Difficulty::Normal);
-    let (_, sent) = until_hit(&mut h, 600);
-    let effects: Vec<(i32, i32)> = all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.duration)).collect();
-    assert_eq!(effects, [(19, 140)]);
+    // research/captures/bds-e1cave.txt, on normal: poison 140 at each bite; bds-t12cave.txt and
+    // bds-t12bites.txt: 0 on easy, 300 on hard.
+    for (difficulty, ticks) in [(Difficulty::Normal, 140), (Difficulty::Easy, 0), (Difficulty::Hard, 300)] {
+        let (mut h, _) = hunted_by("minecraft:cave_spider", difficulty);
+        let (_, sent) = until_hit(&mut h, 600);
+        let effects: Vec<(i32, i32)> = all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.duration)).take(1).collect();
+        assert_eq!(effects, [(19, ticks)], "{difficulty:?}");
+    }
 }
 
 #[test]
@@ -256,7 +259,8 @@ fn a_creeper_lights_its_fuse_three_blocks_off_and_bursts_as_on_bds() {
 
 #[test]
 fn a_skeleton_stands_off_and_looses_an_arrow_every_three_seconds() {
-    // research/captures/bds-shoot.txt: an arrow a block before it and 1.61 up, at about 1.6 a tick.
+    // research/captures/bds-shoot.txt: an arrow a block before it and 1.61 up, at 1.39 to 1.79 a
+    // tick (the spread is thrown on the aim made one long).
     let (mut h, _) = hunted_by("minecraft:skeleton", Difficulty::Easy);
     let sent: Vec<RawPacket> = (0..140).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
     let arrows: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:arrow").collect();
@@ -264,7 +268,7 @@ fn a_skeleton_stands_off_and_looses_an_arrow_every_three_seconds() {
     let (at, speed) = (&arrows[0].position, &arrows[0].velocity);
     let fast = (speed.x * speed.x + speed.y * speed.y + speed.z * speed.z).sqrt();
     // It walked some 1.7 blocks nearer first, as BDS's did.
-    assert!((1.4..2.2).contains(&at.z) && (at.y - 66.61).abs() < 1e-3 && (1.45..1.75).contains(&fast) && speed.z < -1.3, "{at:?} {speed:?}");
+    assert!((1.4..2.2).contains(&at.z) && (at.y - 66.61).abs() < 1e-3 && (1.3..1.9).contains(&fast) && speed.z < -1.2, "{at:?} {speed:?}");
     assert_eq!(all::<LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "bow").count(), 2);
     let hurt: Vec<f32> = health(&sent).windows(2).map(|pair| pair[0] - pair[1]).collect();
     assert!(health(&sent).len() <= 2 && hurt.iter().all(|by| (3.0..=4.0).contains(by)), "an arrow costs its speed twice over, rounded up: {:?}", health(&sent));
@@ -272,12 +276,15 @@ fn a_skeleton_stands_off_and_looses_an_arrow_every_three_seconds() {
 
 #[test]
 fn an_arrow_hurts_a_mob_that_stands_in_its_way() {
-    // The skeleton shoots at Alex over a cow a block before it, beyond where Alex would push it.
-    let (mut h, _) = hunted_by("minecraft:skeleton", Difficulty::Easy);
-    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 1.5]).is_some()));
-    let sent: Vec<RawPacket> = (0..75).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
-    let cows: Vec<f32> = all::<UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id > 3).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
-    assert!(health(&sent).is_empty() && cows.last().is_some_and(|left| *left < 10.0), "the cow took it: {cows:?}");
+    // The skeleton shoots level at Alex's eyes through a llama a block before it, as BDS's hit a
+    // villager in the way (bds-e1arrow.txt); a cow is too low to meet the arrow.
+    for kind in ["minecraft:llama", "minecraft:villager_v2"] {
+        let (mut h, _) = hunted_by("minecraft:skeleton", Difficulty::Easy);
+        h.remote.run(move |ctx| assert!(ctx.spawn_entity(kind, [0.5, 65.0, 1.5]).is_some()));
+        let sent: Vec<RawPacket> = (0..75).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+        let struck: Vec<f32> = all::<UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id > 3).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).collect();
+        assert!(health(&sent).is_empty() && !struck.is_empty(), "the {kind} took it: {struck:?}");
+    }
 }
 
 #[test]

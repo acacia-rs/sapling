@@ -333,7 +333,16 @@ Sapling's run: sapling-fights.txt. The actor under resistance on a stone floor, 
   bit the survival actor about once a second for 10 s, each bite giving poison 140 (7 s), and never let
   go; at noon one took no target in 20 s. Sapling's (sapling-e1cave.txt) hunted and bit the same but
   gave no poison. Fixed: `mob-traits.tsv` `hits=poison:140`, test
-  `a_cave_spider_s_bite_poisons_for_seven_seconds`. Whether easy and hard change the 7 s is not drilled.
+  `a_cave_spider_s_bite_poisons_for_seven_seconds`. Easy and hard drilled 2026-11-04 (`t12cave`,
+  `t12bites`, bds-t12cave.txt, bds-t12bites.txt): on easy each bite sent poison `Add` with duration 0
+  and its `Remove` a tick later; on hard poison 300 (15 s), each later bite an `Update` to 300. A
+  wither skeleton's wither on easy was 200, as on normal. Fixed: `hits=poison:140:0:300` in
+  mob-traits.tsv (easy and hard after normal), `hunting/strike.rs`; test
+  `a_cave_spider_s_bite_poisons_for_seven_seconds_none_on_easy_and_fifteen_on_hard`. In t12cave the
+  hard spider took no target in 12 s and the easy one bit three times, so a bite is not certain.
+  Sapling's re-drill (sapling-t12bites.txt): poison 300 then `Update`s to 300 on hard, wither 200
+  on easy, as BDS's. Left: BDS sent each wither hit's effect twice in one tick (`Add` then `Update`,
+  later two `Update`s); sapling sends one.
 - A creeper with its prey 6 off was lit and went out; one with prey 3.5 off burst; one whose prey
   went creative went out. Sapling the same.
 - `/summon creeper ... minecraft:start_exploding_forced`: lit 3 ticks after, burst 30 after that with no
@@ -413,8 +422,21 @@ and never the actor; sapling's four (sapling-e1arrow.txt) all flew over the vill
 the actor. Not the in-the-way rule but the aim: BDS's arrows left at 1.5 to 1.7 across and -0.19 to
 0.29 up, mean 0.01 up, a spread of about 0.14 a part, which is the pack's `uncertainty_base` 16 less
 4 a difficulty level (12 on easy) x 0.0075 x 1.6; sapling's left at 0.18 to 0.21 up, its aim 0.6 up
-the prey with 0.2 a block of loft and its spread 0.075 (the TODO in arrows.rs, not changed: BDS's
-mean is level with the prey's eyes here, which the far skeleton above does not fit).
+the prey with 0.2 a block of loft and its spread 0.075.
+Fixed 2026-11-04 (twelfth wave), from the decompile: `ProjectileComponent::shoot` (0x142401f40) takes
+its aim from the shooter's pitch and yaw (0x142401750, a vehicle's when it rides), with no loft, and
+its uncertainty as `uncertainty_base - difficulty x uncertainty_multiplier`, floored at 0; 0x1424020c0
+makes the aim one long, adds a gaussian x 0.0075 x uncertainty to each part, then multiplies by the
+power and adds the shooter's motion. The mob looks at its prey's eyes, so its arrow leaves level with
+them (the far skeleton above, -0.15 to 0.28, fits that spread too). BDS's launch speeds ran 1.39 to
+1.79 (bds-shoot.txt, bds-e1arrow.txt, bds-fights.txt), as the spread's lengthening gives.
+`creatures/arrows.rs` `MOB_ARROW` (skeletons, strays, bogged, pillagers), tests
+`a_skeleton_aims_level_at_its_preys_eyes_and_spreads_less_on_harder_levels` (mob_aim.rs) and
+`an_arrow_hurts_a_mob_that_stands_in_its_way` (now a llama and a villager: a cow is lower than the
+level arrow). Re-drilled (sapling-e1arrow.txt): seven arrows at 1.29 to 1.82 a tick, -0.25 to 0.30 up,
+as BDS's; but they flew through the held villager 1.5 to 1.6 up its 1.9 and one hit the actor, where
+BDS's hit the villager three times. The shard test's villager a block before the skeleton is hit, so
+what lets the drill's farmer pass is left open.
 
 A stray and a bogged shoot as the skeleton with their effect on the arrow, and a pillager while
 it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.
