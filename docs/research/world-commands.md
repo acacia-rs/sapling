@@ -65,4 +65,4 @@ selecting,session,items,enchanting}.rs`.
 - `/spreadplayers` places at random tries within the range; BDS's own spreading was not drilled.
   `maxHeight` caps where it looks for ground. The failure's fourth parameter is always `0.00`.
 - `ParamKind::Value` is sent as type 4 (minecraft-data's number).
-- A cloned chest: BDS adds `forceunpair`; sapling copies the block entity as it is.
+- A cloned chest: see containers-crafting.md B, `/clone` (sapling copies BDS's since 2026-11-04).

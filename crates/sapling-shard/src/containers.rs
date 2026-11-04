@@ -16,7 +16,7 @@ mod shulker;
 mod slots;
 
 pub(crate) use access::close_where_gone;
-pub(crate) use pairs::halves as chest_halves;
+pub(crate) use pairs::{carried, halves as chest_halves, lost_partner, stand_alone};
 
 use std::collections::HashMap;
 

@@ -1,5 +1,5 @@
 //! `/clone` and `/testforblocks`, answered as BDS answers (research/captures/bds-worldcmds.txt).
-// TODO: BDS marks a cloned chest `forceunpair`; here a clone holds what its source held, as is.
+//! A cloned chest is marked `forceunpair` unless its other half came with it (containers/pairs.rs).
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, Parameter, ParameterSpec, ParseError, States};
 use sapling_api::{Block, BlockEntityData, BlockPos, Command, CommandEnum, Output, Permission, Sender, ShardCtx};
@@ -109,6 +109,8 @@ impl Command for CloneCommand {
         let copied: Vec<(BlockPos, Block, Option<BlockEntityData>)> = source
             .cells()
             .filter_map(|pos| Some((pos, ctx.block(pos)?, ctx.block_entity(pos))))
+            // A chest half goes only with its other half (bds-t3chests.txt: a half alone `failed`).
+            .filter(|(pos, ..)| ctx.paired_with(*pos).is_none_or(|other| source.contains(other)))
             .filter(|(_, there, _)| match &self.mask {
                 Mask::All => true,
                 Mask::NotAir => !there.is_air(),

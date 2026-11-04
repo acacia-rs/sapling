@@ -36,6 +36,10 @@ impl Region {
         Self { low, high: std::array::from_fn(|axis| low[axis] + self.high[axis] - self.low[axis]) }
     }
 
+    pub fn contains(&self, pos: BlockPos) -> bool {
+        (0..3).all(|axis| self.low[axis] <= pos[axis] && pos[axis] <= self.high[axis])
+    }
+
     pub fn overlaps(&self, other: &Self) -> bool {
         (0..3).all(|axis| self.low[axis] <= other.high[axis] && other.low[axis] <= self.high[axis])
     }

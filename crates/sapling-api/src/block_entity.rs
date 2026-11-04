@@ -37,12 +37,21 @@ impl ShardCtx<'_> {
     pub fn set_block_entity(&mut self, pos: BlockPos, data: &BlockEntityData) -> bool {
         self.backend.set_block_entity(pos, data)
     }
+
+    /// The other half of the double chest at `pos`, if it is one.
+    pub fn paired_with(&self, pos: BlockPos) -> Option<BlockPos> {
+        self.backend.paired_with(pos)
+    }
 }
 
 /// The block entities side of [`crate::Backend`].
 pub trait BlockEntityBackend {
     fn block_entity(&self, pos: BlockPos) -> Option<BlockEntityData>;
     fn set_block_entity(&mut self, pos: BlockPos, data: &BlockEntityData) -> bool;
+    /// The other half of the double chest at `pos`, if it is one.
+    fn paired_with(&self, _pos: BlockPos) -> Option<BlockPos> {
+        None
+    }
 }
 
 #[cfg(test)]

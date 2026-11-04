@@ -160,3 +160,27 @@ fn a_furnace_refuses_what_does_not_belong_and_pays_for_what_is_taken() {
     let progress = levels.last().and_then(|packet| packet.attributes.iter().find(|attribute| attribute.name == "minecraft:player.experience")).map(|attribute| attribute.current);
     assert!(progress.is_some_and(|progress| progress > 0.0), "{levels:?}");
 }
+
+fn chest_entity([x, y, z]: [i32; 3], partner: [i32; 3], leads: bool) -> Value {
+    let mut fields: Vec<(acacia_proto::nbt::Str, Value)> = vec![("id".into(), Value::String("Chest".into())), ("x".into(), Value::Int(x)), ("y".into(), Value::Int(y)), ("z".into(), Value::Int(z))];
+    fields.extend([("pairlead".into(), Value::Byte(i8::from(leads))), ("pairx".into(), Value::Int(partner[0])), ("pairz".into(), Value::Int(partner[2]))]);
+    Value::Compound(fields)
+}
+
+#[test]
+fn a_chest_whose_other_half_is_set_away_stands_alone_a_tick_later() {
+    // research/captures/bds-t3chests.txt: the half left shown again, without its pair, a tick on.
+    let chest = Block::new("minecraft:chest").with("minecraft:cardinal_direction=north");
+    let mut h = setup(false, Vec::new(), vec![(HERE, chest.clone()), (THERE, chest)]);
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block_entity(HERE, &sapling_api::BlockEntityData::new(chest_entity(HERE, THERE, true))));
+        assert!(ctx.set_block_entity(THERE, &sapling_api::BlockEntityData::new(chest_entity(THERE, HERE, false))));
+    });
+    h.tick_all();
+    let paired = |h: &mut Harness| common::asking::ask(h, |ctx| ctx.block_entity(HERE).and_then(|data| data.get::<Value>().map(|nbt| nbt.get("pairx").is_some())));
+    assert_eq!(paired(&mut h), Some(true));
+    h.remote.run(|ctx| assert!(ctx.update_block(THERE, &Block::air())));
+    let shown: Vec<acacia_proto::packets::BlockEntityData> = (0..2).flat_map(|_| all(h.tick_all().to(1))).collect();
+    assert!(shown.iter().any(|data| [data.position.x, data.position.y, data.position.z] == HERE), "the half left shown again");
+    assert_eq!(paired(&mut h), Some(false));
+}
