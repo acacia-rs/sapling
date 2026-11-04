@@ -2,7 +2,7 @@
 //! sheep's grazing), sounds, growing up, wool, name, and who owns it and holds its lead.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
-use acacia_proto::types::{MetadataFlags1 as Flags, Vec3f};
+use acacia_proto::types::{MetadataDictionaryItem, MetadataFlags1 as Flags, Vec3f};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 
@@ -43,9 +43,16 @@ pub(super) fn flags_with(world: &mut World, entity: Entity, flag: Flags, on: boo
 
 /// Sets or clears `flag` and tells the mob's viewers.
 pub(super) fn flag(world: &mut World, entity: Entity, flag: Flags, on: bool) {
+    flag_with(world, entity, flag, on, Vec::new());
+}
+
+/// [`flag`], told with `more` of its metadata in the same packet.
+pub(super) fn flag_with(world: &mut World, entity: Entity, flag: Flags, on: bool, more: Vec<MetadataDictionaryItem>) {
     let Some(id) = world.get::<NetId>(entity).map(|id| id.0) else { return };
     let now = flags_with(world, entity, flag, on);
-    tell_metadata(world, entity, sapling_net::encode(&sapling_data::mob_flags_set(id, now)));
+    let mut data = sapling_data::mob_flags_set(id, now);
+    data.metadata.extend(more);
+    tell_metadata(world, entity, sapling_net::encode(&data));
 }
 
 pub(super) fn event(world: &mut World, entity: Entity, event_id: EntityEventEventId, data: i32) {

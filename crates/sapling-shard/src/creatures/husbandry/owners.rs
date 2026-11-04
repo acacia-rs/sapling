@@ -21,6 +21,10 @@ use crate::tags::Marks;
 const TELEPORTS: f32 = 12.0;
 /// A failed ride makes a mount this much calmer.
 const RIDE_TEMPER: i32 = 5;
+/// Spawn events that tame a mount: they add its tamed group.
+const TAMING_EVENTS: [&str; 2] = ["spawn_tame_adult", "on_tame"];
+/// Its pack has neither event: BDS's summon with one came wild (bds-s7mounts.txt).
+const TRADER_LLAMA: &str = "minecraft:trader_llama";
 
 /// Whether `player` owns the mob.
 pub(crate) fn is_owner(world: &World, entity: Entity, player: Entity) -> bool {
@@ -34,14 +38,24 @@ pub(super) fn tame_to(world: &mut World, entity: Entity, kind: &str, owner: i64)
     tame(world, entity, kind, Some(owner));
 }
 
-/// A mob summoned with a `spawn_tame_adult` event (horses, donkeys, mules, llamas) comes tamed
-/// with no owner (research/captures/bds-tack.txt); false for any other event.
+/// A mob summoned with a `spawn_tame_adult` or `on_tame` event (horses, donkeys, mules, llamas)
+/// comes tamed with no owner (research/captures/bds-tack.txt, bds-s7mounts.txt); false for any
+/// other event.
 pub(crate) fn tame_by_event(world: &mut World, entity: Entity, kind: &str, event: &str) -> bool {
-    if event.trim_start_matches("minecraft:") != "spawn_tame_adult" || sapling_data::husbandry(kind).is_none_or(|rules| rules.temper.is_none()) {
+    if !TAMING_EVENTS.contains(&event.trim_start_matches("minecraft:")) || kind == TRADER_LLAMA || sapling_data::husbandry(kind).is_none_or(|rules| rules.temper.is_none()) {
         return false;
     }
     tame(world, entity, kind, None);
     true
+}
+
+/// A zombie horse's pack tames it with no owner, as riding/inventory.rs says when; its viewers
+/// are told the flag and the inventory alone.
+pub(crate) fn tame_by_upgrade(world: &mut World, entity: Entity, kind: &str) {
+    if let Some(mut raised) = world.get_mut::<Raised>(entity) {
+        raised.kept.tamed = true;
+    }
+    shown::flag_with(world, entity, Flags::TAMED, true, crate::riding::tamed_inventory(kind));
 }
 
 fn tame(world: &mut World, entity: Entity, kind: &str, owner: Option<i64>) {
@@ -56,7 +70,9 @@ fn tame(world: &mut World, entity: Entity, kind: &str, owner: Option<i64>) {
     if let Some(swap) = rules.map(|rules| &rules.on_tame) {
         regroup(world, entity, swap);
     }
-    shown::flag(world, entity, Flags::TAMED, true);
+    // TODO: the inventory a mount tamed by riding shows comes with the flag, as an `on_tame`
+    // summon's announcement holds both; no ride's taming was drilled.
+    shown::flag_with(world, entity, Flags::TAMED, true, crate::riding::tamed_inventory(kind));
     shown::links(world, entity);
 }
 

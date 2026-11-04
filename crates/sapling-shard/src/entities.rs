@@ -171,6 +171,16 @@ pub(crate) fn listed(world: &World, layer: Entity) -> Vec<EntityInfo> {
 /// Moves the entity a tick by `physics`; its body now, and what tells its viewers, whose wire
 /// puts it `lift` above the bottom of its box. An item lava burns, and an orb it throws out, fizz.
 pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, physics: &Physics, lift: f32) -> Option<(Body, Vec<Bytes>)> {
+    let (body, word, mut packets) = step_flagged(world, entity, layer, id, physics, lift)?;
+    if let Some(word) = word {
+        packets.insert(0, crate::sync::flags_packet(id, word));
+    }
+    Some((body, packets))
+}
+
+/// [`step`], with the flag word its move changed kept out of the packets, for one that tells it
+/// with more of its metadata (a TNT's fuse).
+pub(crate) fn step_flagged(world: &mut World, entity: Entity, layer: Entity, id: u64, physics: &Physics, lift: f32) -> Option<(Body, Option<MetadataFlags1>, Vec<Bytes>)> {
     let mut body = *world.get::<Body>(entity)?;
     let start = body;
     world.get_resource_or_insert_with(Dice::default);
@@ -187,15 +197,16 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     let [x, y, z] = body.at;
     let new = is_new(world, entity);
     let mut told = world.get_mut::<Told>(entity)?;
-    let flags = told.flags(id, std::array::from_fn(|axis| body.at[axis] - start.at[axis]), lifted, physics.burns && in_lava);
-    let packets: Vec<Bytes> = flags.into_iter().chain(told.update(id, [x, y + lift, z], body.held_motion(physics), body.on_ground)).chain(splash).collect();
+    let word = told.flags_word(std::array::from_fn(|axis| body.at[axis] - start.at[axis]), lifted, physics.burns && in_lava);
+    let packets: Vec<Bytes> = told.update(id, [x, y + lift, z], body.held_motion(physics), body.on_ground).into_iter().chain(splash).collect();
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
     if new {
         told.settle(false);
-        after_announcing_of(world, entity, layer, body.at.map(|c| c.floor() as i32), packets);
-        return Some((body, Vec::new()));
+        let flags = word.map(|word| crate::sync::flags_packet(id, word));
+        after_announcing_of(world, entity, layer, body.at.map(|c| c.floor() as i32), flags.into_iter().chain(packets).collect());
+        return Some((body, None, Vec::new()));
     }
-    Some((body, packets))
+    Some((body, word, packets))
 }
 
 pub(crate) fn is_new(world: &World, entity: Entity) -> bool {

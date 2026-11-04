@@ -104,7 +104,8 @@ impl Parameter for EntityName {
         let mark = args.mark();
         let name = String::parse(args)?;
         let plain = name.strip_prefix("minecraft:").unwrap_or(&name);
-        if matches!(plain, "villager_v2" | "zombie_villager_v2") {
+        // As the pearl and the trident a hand throws (research/captures/bds-s7shots.txt).
+        if matches!(plain, "villager_v2" | "zombie_villager_v2" | "ender_pearl" | "thrown_trident") {
             return Err(args.error_at(mark));
         }
         Ok(Self(name))

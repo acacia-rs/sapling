@@ -23,6 +23,16 @@ const NEW_MOTION: f32 = 0.2;
 /// A tick's move, squared, past which the next tick shows `MOVING` (docs/research/moving-flag.md).
 const MOVING: f32 = 0.001;
 
+/// The metadata item that tells a whole flag word.
+pub(crate) fn flags_item(word: Flags) -> MetadataDictionaryItem {
+    MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(word) }
+}
+
+/// What tells viewers the entity `id`'s whole flag word, and nothing else.
+pub(crate) fn flags_packet(id: u64, word: Flags) -> Bytes {
+    sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![flags_item(word)], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
+}
+
 fn length(v: [f32; 3]) -> f32 {
     v.iter().map(|axis| axis * axis).sum::<f32>().sqrt()
 }
@@ -184,11 +194,11 @@ impl Told {
         self.set_flag(flag, on)
     }
 
-    /// The flags of the entity `id` when they changed, after a tick that moved it by `gone`, a
-    /// liquid holding it up in place of gravity (`lifted`) and lava `burning` it. On BDS `MOVING`
-    /// shows whether the tick before moved it far (docs/research/moving-flag.md); the rest go with
-    /// the tick's move (research/captures/bds-water-flags.txt, bds-lava.txt).
-    pub fn flags(&mut self, id: u64, gone: [f32; 3], lifted: bool, burning: bool) -> Option<Bytes> {
+    /// The entity's flag word when it changed, after a tick that moved it by `gone`, a liquid
+    /// holding it up in place of gravity (`lifted`) and lava `burning` it. On BDS `MOVING` shows
+    /// whether the tick before moved it far (docs/research/moving-flag.md); the rest go with the
+    /// tick's move (research/captures/bds-water-flags.txt, bds-lava.txt).
+    pub fn flags_word(&mut self, gone: [f32; 3], lifted: bool, burning: bool) -> Option<Flags> {
         let shown = self.flags.as_mut()?;
         let moved_far = gone.iter().map(|axis| axis * axis).sum::<f32>() > MOVING;
         shown.moving = std::mem::replace(&mut shown.moved_far, Some(moved_far)).unwrap_or(shown.moving);
@@ -197,8 +207,7 @@ impl Told {
             return None;
         }
         shown.told = shown.word();
-        let item = MetadataDictionaryItem { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(Flags(shown.told)) };
-        Some(sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }))
+        Some(Flags(shown.told))
     }
 
     /// The entity's body and head now face `yaw` and `head`, in degrees; viewers are told with

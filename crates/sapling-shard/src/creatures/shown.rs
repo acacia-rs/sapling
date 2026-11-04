@@ -73,6 +73,7 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, prop
     if let Some(strength) = strength {
         crate::riding::dress_strength(&mut added, strength);
     }
+    crate::riding::dress_inventory(&mut added, kind, raised.is_some_and(Raised::is_tamed), raised.is_some_and(Raised::is_baby), raised.is_some_and(|raised| raised.ungrouped));
     super::slimes::sizes::dress(&mut added, kind, Some(super::genes::Gene(variant)));
     super::properties::dress(&mut added, properties);
     let mut shown = vec![sapling_net::encode(&added)];

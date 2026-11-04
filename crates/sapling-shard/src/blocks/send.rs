@@ -77,7 +77,7 @@ fn update_flagged(registry: &BlockRegistry, [x, y, z]: BlockPos, id: u32, layer:
 
 /// What a block holds, as clients are shown it.
 pub(crate) fn block_entity_data([x, y, z]: BlockPos, entity: &BlockEntity) -> Bytes {
-    sapling_net::encode(&BlockEntityData { position: BlockCoordinates { x, y, z }, nbt: Nbt { name: String::new(), value: entity.shown() }.into() })
+    sapling_net::encode(&BlockEntityData { position: BlockCoordinates { x, y, z }, nbt: Nbt { name: String::new(), value: entity.updated() }.into() })
 }
 
 /// The burst of fragments when a block of `id` breaks.
@@ -241,12 +241,12 @@ pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: 
         return None;
     }
     if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name) {
-        crate::containers::furnish(world, layer, pos, name, None, sapling_api::Face::Up);
+        crate::containers::furnish_set(world, layer, pos, name);
         super::pistons::furnish(world, layer, pos);
         super::conduits::furnish(world, layer, pos);
         super::command_blocks::furnish(world, layer, pos, before.as_ref());
         super::structure_blocks::furnish(world, layer, pos, before.as_ref());
-        super::entities::furnish(world, layer, pos, name);
+        super::set_entities::furnish(world, layer, pos, name);
     }
     Some(true)
 }

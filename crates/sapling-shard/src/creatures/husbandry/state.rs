@@ -24,6 +24,8 @@ pub(crate) struct Raised {
     pub lays_at: Option<u64>,
     /// It is on its way to its owner.
     pub following: bool,
+    /// Its spawn event added none of its kind's age groups (riding/inventory.rs).
+    pub ungrouped: bool,
 }
 
 impl Raised {

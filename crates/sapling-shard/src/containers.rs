@@ -96,6 +96,8 @@ impl Kind {
     }
 }
 
+const UNSHOWN_AT_SET: [&str; 7] = ["Furnace", "BlastFurnace", "Smoker", "Hopper", "BrewingStand", "Dispenser", "Dropper"];
+
 pub(crate) fn kind(block: &str) -> Option<Kind> {
     let smelter = |entity, window| Kind { entity, slots: SMELTER_SLOTS, window, has_lid: false, refuses: Some(crate::furnaces::refuses), is_per_player: false };
     Some(match block {
@@ -159,6 +161,18 @@ fn content(window: u8, slots: &[Option<Held>]) -> acacia_proto::packets::Invento
 /// gets its other half if one stands beside it; a block that has its entity keeps it, and other
 /// blocks are left alone. A hopper starts ticking.
 pub(crate) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &str, item_tag: Option<&Value>, face: Face) {
+    furnish_shown(world, layer, pos, block, item_tag, face, true);
+}
+
+/// [`furnish`] for a block a command or plugin set: a furnace's, hopper's, brewing stand's,
+/// dispenser's or dropper's entity is not shown, as BDS's `/setblock` showed none
+/// (research/captures/bds-s7ents.txt).
+pub(crate) fn furnish_set(world: &mut World, layer: Entity, pos: BlockPos, block: &str) {
+    let shown = kind(block).is_some_and(|kind| !UNSHOWN_AT_SET.contains(&kind.entity));
+    furnish_shown(world, layer, pos, block, None, Face::Up, shown);
+}
+
+fn furnish_shown(world: &mut World, layer: Entity, pos: BlockPos, block: &str, item_tag: Option<&Value>, face: Face, shown: bool) {
     let Some(kind) = kind(block) else { return };
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     if level.block_entity(pos).is_none() {
@@ -166,7 +180,11 @@ pub(crate) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &s
         if is_shulker_box(block) {
             entity = shulker::placed(entity, item_tag, face, level.registry());
         }
-        keep_entity(world, layer, pos, &entity);
+        if shown {
+            keep_entity(world, layer, pos, &entity);
+        } else if let Some(mut level) = world.get_mut::<Layer>(layer) {
+            _ = level.world.set_block_entity(pos, &entity);
+        }
         pairs::pair_placed(world, layer, pos);
     }
     if kind.is_hopper() {

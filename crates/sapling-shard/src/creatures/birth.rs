@@ -73,6 +73,7 @@ fn arrive(world: &mut World, entity: Entity, kind: &str, event: &str) {
     }
     husbandry::tame_by_event(world, entity, kind, event);
     crate::riding::saddle_by_event(world, entity, kind, event);
+    crate::riding::arrive_ungrouped(world, entity, kind, event);
     world.entity_mut(entity).remove::<Arriving>();
     reshow(world, entity);
 }

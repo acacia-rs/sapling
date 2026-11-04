@@ -39,7 +39,7 @@ pub(super) fn put_bed(world: &mut World, layer: Entity, pos: BlockPos, id: u32) 
     }
     send::show_together(world, layer, &[(pos, send::FLAGS), (foot_cell, send::FLAGS)]);
     for cell in [pos, foot_cell] {
-        super::entities::furnish(world, layer, cell, "minecraft:bed");
+        super::set_entities::furnish(world, layer, cell, "minecraft:bed");
     }
     Some(true)
 }

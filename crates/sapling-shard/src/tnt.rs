@@ -1,13 +1,14 @@
 //! Primed TNT, as BDS's burnt and burst (docs/research/block-uses.md, "TNT"): lit by flint and
 //! steel, a signal or a blast, the block becomes an entity that hops, burns its fuse and bursts.
-//! One is kept with its column, its fuse as BDS's `Fuse` byte (sapling_world::fused_actor).
-// TODO: the `MOVING` flag BDS turned on and off is not told; the fuse of one a blast lit is the
-// Java game's, not measured.
+//! One is kept with its column, its fuse as BDS's `Fuse` byte (sapling_world::fused_actor). Its
+//! fuse is told every tick, with the flag word only when that changed (lit, `MOVING`;
+//! research/captures/bds-firstdata.txt).
+// TODO: the fuse of one a blast lit is the Java game's, not measured.
 
 use std::f32::consts::TAU;
 
 use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent};
-use acacia_proto::types::{MetadataFlags1, Vec3f};
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::{Block, BlockPos};
@@ -17,6 +18,7 @@ use crate::blocks::{self, Dice};
 use crate::body::{Body, Physics};
 use crate::components::{InLayer, Layer, NetId};
 use crate::creatures::{self, Wreck};
+use crate::sync::Told;
 use crate::{entities, mobs};
 
 pub(crate) const KIND: &str = "minecraft:tnt";
@@ -56,7 +58,7 @@ fn announcement(id: u64, body: &Body, lit: bool) -> Vec<Bytes> {
 pub(crate) fn prime(world: &mut World, layer: Entity, feet: [f32; 3], fuse: i32) -> Option<Entity> {
     let angle = world.get_resource_or_insert_with(Dice::default).fraction() * TAU;
     let body = Body::new(feet, [-angle.sin() * DRIFT, HOP, -angle.cos() * DRIFT], [SIZE, SIZE]);
-    let entity = entities::spawn(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body, false)))?;
+    let entity = entities::spawn_mob(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body, false)))?;
     world.entity_mut(entity).insert(Primed(fuse));
     let unique_id = entities::new_unique_id(world, entity)?;
     let actor = sapling_world::new_actor(unique_id, KIND, feet, body.motion);
@@ -69,7 +71,7 @@ pub(crate) fn prime(world: &mut World, layer: Entity, feet: [f32; 3], fuse: i32)
 pub(crate) fn from_storage(world: &mut World, layer: Entity, feet: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
     let Some(fuse) = sapling_world::actor_fuse(&compound) else { return false };
     let body = Body::new(feet, [0.0; 3], [SIZE, SIZE]);
-    let Some(entity) = entities::spawn(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body, true))) else { return false };
+    let Some(entity) = entities::spawn_mob(world, layer, KIND, body, wire(feet), |id| Some(announcement(id, &body, true))) else { return false };
     world.entity_mut(entity).insert(Primed(fuse));
     entities::keep(world, entity, layer, unique_id, compound);
     true
@@ -127,7 +129,7 @@ pub(crate) fn wreck(world: &World, layer: Entity) -> Wreck {
 pub(crate) fn burn(world: &mut World) {
     let primed: Vec<(Entity, Entity, u64, i32)> = world.query::<(Entity, &InLayer, &NetId, &Primed)>().iter(world).map(|(entity, layer, id, primed)| (entity, layer.0, id.0, primed.0 - 1)).collect();
     for (entity, layer, id, left) in primed {
-        let Some((body, mut packets)) = entities::step(world, entity, layer, id, &Physics::TNT, WIRE_OFFSET) else { continue };
+        let Some((body, moving, mut packets)) = entities::step_flagged(world, entity, layer, id, &Physics::TNT, WIRE_OFFSET) else { continue };
         if left < 0 && !crate::rules::on(world, layer, EXPLODES) {
             mobs::remove(world, entity);
             continue;
@@ -142,7 +144,10 @@ pub(crate) fn burn(world: &mut World) {
         if !packets.is_empty() {
             mobs::reannounce(world, entity, announcement(id, &body, true));
         }
-        let fuse = sapling_data::mob_fuse(id, sapling_data::grown_flags(KIND, MetadataFlags1::IGNITED), left);
+        let lit = world.get_mut::<Told>(entity).and_then(|mut told| told.change_flag(MetadataFlags1::IGNITED, true));
+        let word = lit.or(moving);
+        let mut fuse = sapling_data::mob_fuse(id, word.unwrap_or(MetadataFlags1(0)), left);
+        fuse.metadata.retain(|item| item.key != Key::Flags || word.is_some());
         if !entities::show_first(world, entity, fuse.metadata.clone()) {
             packets.insert(0, sapling_net::encode(&fuse));
         }

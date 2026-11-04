@@ -68,6 +68,7 @@ mod sculk;
 mod redstone;
 mod request;
 mod send;
+mod set_entities;
 mod shapes;
 mod shot_blocks;
 mod shown_again;

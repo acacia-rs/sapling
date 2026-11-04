@@ -5,12 +5,12 @@ use acacia_proto::nbt::{List, Str, Value};
 use sapling_api::{BlockPos, Item};
 use sapling_world::{ItemStack, new_block_entity};
 
-const SKULLS: &[&str] = &[
+pub(super) const SKULLS: &[&str] = &[
     "minecraft:skeleton_skull", "minecraft:wither_skeleton_skull", "minecraft:zombie_head", "minecraft:player_head", "minecraft:creeper_head", "minecraft:dragon_head",
     "minecraft:piglin_head",
 ];
-const BANNERS: &[&str] = &["minecraft:standing_banner", "minecraft:wall_banner"];
-const CAMPFIRES: &[&str] = &["minecraft:campfire", "minecraft:soul_campfire"];
+pub(super) const BANNERS: &[&str] = &["minecraft:standing_banner", "minecraft:wall_banner"];
+pub(super) const CAMPFIRES: &[&str] = &["minecraft:campfire", "minecraft:soul_campfire"];
 /// The one block whose entity's stacks a creative break leaves.
 pub(super) const POT: &str = "minecraft:decorated_pot";
 /// Opaque black, ARGB.
@@ -64,30 +64,6 @@ fn sign_side() -> Value {
 fn skull_rotation(placing: &Placing) -> f32 {
     let on_floor = placing.properties.split(',').any(|pair| pair == "facing_direction=1");
     if on_floor && placing.yaw.is_finite() { (placing.yaw * 16.0 / 360.0 + 0.5).floor() * 22.5 } else { 0.0 }
-}
-
-/// Blocks a command or plugin sets that get their placed entity, shown to those who see them at
-/// every set, as BDS's `/setblock` did (research/captures/bds-setshown.txt); with the skulls. A
-/// raid's village is found by its bells and beds (creatures/raids/village.rs).
-const FURNISHED: [&str; 6] = ["minecraft:bell", "minecraft:bed", "minecraft:flower_pot", "minecraft:cauldron", "minecraft:chiseled_bookshelf", "minecraft:beacon"];
-/// A commanded bed's colour: BDS's is red (bds-setshown.txt).
-const RED: i16 = 14;
-
-/// Gives a block set at `pos` without an entity the one a player's placing gives it, where BDS's
-/// command makes one, and shows it.
-pub(super) fn furnish(world: &mut bevy_ecs::world::World, layer: bevy_ecs::entity::Entity, pos: BlockPos, block: &str) {
-    if !FURNISHED.contains(&block) && !SKULLS.contains(&block) {
-        return;
-    }
-    let Some(mut level) = world.get_mut::<crate::components::Layer>(layer) else { return };
-    let damage = if block == "minecraft:bed" { RED } else { 0 };
-    if level.world.block_entity(pos).is_none()
-        && let Some(entity) = placed(block, pos, &Placing { damage, tag: None, yaw: 0.0, properties: "" })
-    {
-        _ = level.world.set_block_entity(pos, &entity);
-    }
-    let Some(entity) = level.world.block_entity(pos).map(|entity| super::send::block_entity_data(pos, entity)) else { return };
-    super::send::to_viewers(world, layer, pos, &[entity]);
 }
 
 /// The entity the block `block` gets when placed at `pos`; `None` for a block without one.

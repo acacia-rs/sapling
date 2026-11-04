@@ -143,16 +143,21 @@ pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fiel
     }
     // A stored world's ticks are BDS's, not this shard's.
     let resumes = vault.data.int("state_updating_resumes_at", 0).min(now + STEP);
+    let mut kept = shown;
     if now >= resumes {
         let next = step(world, layer, pos, &mut vault, near);
         vault.data.set("state_updating_resumes_at", Value::Long(now + next.1));
         if let Some(to) = next.0 {
             enter(world, layer, pos, &mut vault, to);
+            shown = true;
         }
-        shown = true;
+        kept = true;
     }
+    // BDS showed an idle vault's entity once, at its set (research/captures/bds-s7ents.txt).
     if shown {
         crate::blocks::keep_entity(world, layer, pos, &vault.into_value());
+    } else if kept && let Some(mut level) = world.get_mut::<crate::components::Layer>(layer) {
+        _ = level.world.set_block_entity(pos, &vault.into_value());
     }
 }
 

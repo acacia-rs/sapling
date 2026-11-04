@@ -115,6 +115,7 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, p
     if let Some(strength) = strength {
         crate::riding::dress_strength(&mut added, strength);
     }
+    crate::riding::dress_inventory(&mut added, &actor.identifier, actor.states.contains(&ActorState::Tamed), actor.baby, false);
     let mut packets = vec![sapling_net::encode(&added)];
     if actor.armor.iter().any(Option::is_some) {
         let slots: Vec<_> = actor.armor.iter().map(|slot| slot.as_ref().map(stack)).collect();

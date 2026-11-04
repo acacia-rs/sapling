@@ -93,6 +93,11 @@ pub(crate) fn tick(world: &mut World) {
     tridents::tick(world);
 }
 
+/// `/summon`'s shot of `kind`, still at `feet`; `None` for a kind that is no shot it makes.
+pub(crate) fn summon(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option<Entity> {
+    crate::creatures::summon_shot(world, layer, kinds::summoned(kind)?, feet)
+}
+
 /// Whether a world folder's actor of `kind` is a shot that lay where it stuck.
 pub(crate) fn is_kept(kind: &str) -> bool {
     kinds::kept(kind).is_some()

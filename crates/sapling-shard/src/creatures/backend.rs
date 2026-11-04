@@ -25,7 +25,9 @@ impl EntityBackend for Ctx<'_> {
         if peaceful && crate::spawning::removed_in_peaceful(kind) {
             return None;
         }
+        let shot = crate::shots::summon(self.world, worlds::current(self.world), kind, feet).and_then(|shot| self.world.get::<NetId>(shot)).map(|id| EntityId(id.0));
         let summoned = match made_alone {
+            _ if shot.is_some() => shot?,
             _ if crate::vehicles::is_vehicle(kind) => crate::vehicles::summon(self.world, worlds::current(self.world), kind, feet, yaw)?,
             true => self.spawn_entity(kind, feet)?,
             false => super::spawn_as(self.world, worlds::current(self.world), kind, feet, sapling_api::SpawnReason::Command, yaw, event)?,

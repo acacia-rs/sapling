@@ -223,19 +223,20 @@ pub(crate) fn lie_down(world: &mut World, player: Entity, layer: Entity, pos: Bl
 /// middle of the cell stand.rs picks, a little above its floor, its prediction corrected as
 /// BDS's `Player::stopSleepInBed` puts it (research/captures/bds-wake.txt).
 fn wake(world: &mut World, player: Entity) {
-    get_up(world, player, None);
+    get_up(world, player, None, true);
 }
 
 /// Teleports a player's feet to `feet` as `/tp` does, waking it first if it sleeps: BDS's `/tp`
 /// got a sleeper up where it sent it (research/captures/bds-wake.txt).
 pub(crate) fn teleport_waking(world: &mut World, player: Entity, feet: [f32; 3]) {
-    if !get_up(world, player, Some(feet)) {
+    if !get_up(world, player, Some(feet), true) {
         movement::teleport(world, player, feet);
     }
 }
 
-/// [`wake`], or a wake by a teleport to `sent_to`; false for a player not asleep.
-fn get_up(world: &mut World, player: Entity, sent_to: Option<[f32; 3]>) -> bool {
+/// [`wake`], or a wake by a teleport to `sent_to`, telling who still sleeps if `tells`; false for
+/// a player not asleep.
+fn get_up(world: &mut World, player: Entity, sent_to: Option<[f32; 3]>, tells: bool) -> bool {
     let Some(sleeping) = world.entity_mut(player).take::<Sleeping>() else { return false };
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return true };
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
@@ -254,7 +255,9 @@ fn get_up(world: &mut World, player: Entity, sent_to: Option<[f32; 3]>) -> bool 
     show(world, player, None);
     set_occupied(world, sleeping.layer, sleeping.head, false);
     show_box(world, player, false);
-    tell_sleepers(world, sleeping.layer);
+    if tells {
+        tell_sleepers(world, sleeping.layer);
+    }
     true
 }
 
@@ -293,9 +296,10 @@ pub(crate) fn tick(world: &mut World, actions: &[(Entity, PlayerAction)]) {
         }
         let mut all = world.query::<(Entity, &Sleeping)>();
         let everyone: Vec<Entity> = all.iter(world).filter(|(_, sleeping)| sleeping.layer == layer).map(|(player, _)| player).collect();
-        everyone.into_iter().for_each(|player| wake(world, player));
+        // BDS's skip tells no sleeper count, and the weather's end before the clock (bds-rainnight.txt).
+        everyone.into_iter().for_each(|player| _ = get_up(world, player, None, false));
+        crate::weather::stop(world, layer);
         let time = world.get::<Layer>(layer).map_or(0, |layer| layer.world.level().time);
         crate::clock::set(world, layer, (time + DAY) / DAY * DAY);
-        crate::weather::stop(world, layer);
     }
 }
