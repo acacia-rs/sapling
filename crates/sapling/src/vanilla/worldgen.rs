@@ -1,13 +1,14 @@
 //! `/locate` and `/place`, over the world generator (sapling_api::GenerationBackend), answered as
 //! BDS answered (research/captures/bds-locate.txt, bds-place.txt): a place is named by its block
 //! and its distance, rounded down, from the sender.
-// TODO: `/place featurerule` (BDS's feature rules are not ported), BDS's names for `/place structure`, and the structure options
-// (`ignoreStartHeight`, `keepJigsaws`, `includeEntities`, `liquidSettings`) are taken and not followed.
+//! `/place` takes BDS's names and options (bds-t1dplace.txt); a player of BDS may not run it (admin).
+// TODO: a feature rule is not placed (`invalidfeaturerule`), and the structure options are taken,
+// not followed: BDS's console placed nothing, not even a feature (bds-t1dplacec.txt).
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, parse_choice};
 use sapling_api::{Command, Output, Permission, PlaceError, Sender, ShardCtx};
 
-use super::structure::{HEIGHT_END, LOWEST_Y};
+use super::structure::heights;
 
 fn namespaced(name: &str) -> String {
     if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") }
@@ -80,6 +81,9 @@ pub(crate) struct Place {
     at: Option<BlockCoords>,
 }
 
+/// `liquidSettings`' words: BDS took both and refused `banana` (bds-t1dplace.txt).
+const LIQUID_SETTINGS: [&str; 2] = ["apply_waterlogging", "ignore_waterlogging"];
+
 /// How deep `/place jigsaw` may go: BDS took 3 and refused 0 and 30.
 const MOST_DEPTH: u32 = 20;
 
@@ -87,7 +91,8 @@ impl CommandSyntax for Place {
     fn spec() -> CommandSpec {
         let name = |name: &str| ParameterSpec { name: name.into(), kind: ParamKind::String, optional: false };
         let at = || ParameterSpec::of::<Option<BlockCoords>>("position");
-        let flags = || ["ignoreStartHeight", "keepJigsaws", "includeEntities", "liquidSettings"].map(ParameterSpec::of::<Option<bool>>).to_vec();
+        let liquids = ParameterSpec { name: "liquidSettings".into(), kind: ParamKind::Enum { name: "LiquidSettings".into(), values: LIQUID_SETTINGS.map(str::to_owned).to_vec() }, optional: true };
+        let flags = || [["ignoreStartHeight", "keepJigsaws", "includeEntities"].map(ParameterSpec::of::<Option<bool>>).to_vec(), vec![liquids.clone()]].concat();
         let overload = |verb: &str, parameters: Vec<ParameterSpec>| Overload { parameters: [vec![ParameterSpec::literal("place", verb)], parameters].concat() };
         let overloads = vec![
             overload("feature", vec![name("feature"), at()]),
@@ -102,10 +107,10 @@ impl CommandSyntax for Place {
         let verb = parse_choice(args, &[("feature", 0), ("featurerule", 1), ("structure", 2), ("jigsaw", 3)])?;
         let mark = args.mark();
         let first = String::parse(args)?;
-        // BDS takes only the feature names it knows; sapling knows no feature rules.
+        // BDS takes only the feature and rule names it lists; any structure name (a soft enum).
         let known = match verb {
             0 => sapling_world::is_feature(&first),
-            1 => false,
+            1 => sapling_data::command_takes_feature_rule(&first),
             _ => true,
         };
         if !first.starts_with("minecraft:") || !known {
@@ -123,7 +128,18 @@ impl CommandSyntax for Place {
             }
         };
         let at = Option::<BlockCoords>::parse(args)?;
-        while Option::<bool>::parse(args)?.is_some() {}
+        if matches!(what, What::Structure(_) | What::Jigsaw { .. }) {
+            let flags = if matches!(what, What::Structure(_)) { 3 } else { 2 };
+            for _ in 0..flags {
+                if Option::<bool>::parse(args)?.is_none() {
+                    break;
+                }
+            }
+            let mark = args.mark();
+            if !args.is_empty() && !LIQUID_SETTINGS.contains(&args.word()?) {
+                return Err(args.error_at(mark));
+            }
+        }
         args.finish()?;
         Ok(Self { what, at })
     }
@@ -132,7 +148,8 @@ impl CommandSyntax for Place {
 impl Command for Place {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let at = self.at.map_or_else(|| ctx.origin(sender).map(|axis| axis.floor() as i32), |at| at.resolve(ctx, sender));
-        if !(LOWEST_Y..HEIGHT_END).contains(&at[1]) {
+        let [lowest, end] = heights(ctx, sender);
+        if !(lowest..end).contains(&at[1]) {
             return out.translate("commands.place.invalidposition.error", Vec::new(), false);
         }
         let (placed, unknown) = match &self.what {

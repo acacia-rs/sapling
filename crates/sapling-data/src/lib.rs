@@ -47,7 +47,7 @@ pub use command_texts::command_text;
 pub use custom_blocks::{block_states, custom_block, register_block};
 pub use custom_items::{register_block_item, register_item};
 pub use names::{entity_display_name, item_display_name};
-pub use command_names::{command_takes_block, command_takes_item};
+pub use command_names::{block_tile_key, command_takes_block, command_takes_feature_rule, command_takes_item};
 pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_block, add_painting, announced_flags, mob_health, mob_size};
 pub use entity_properties::{EntityProperty, PropertyShape, entity_properties, entity_property, property_registry_packets, property_values};
 pub use attack::item_attack;
@@ -62,7 +62,7 @@ pub use inventory::{block_screen,inventory_content, inventory_screen, player_hot
 pub use item_entity::{add_item_entity, mob_armor, mob_hand};
 pub use items::{CreativeItem, STORAGE_CONTENT, Stack, creative_item, is_item, item, item_name, max_stack, no_item, set_shield_item_id, static_item_name};
 pub use recipes::{
-    Grid, Ingredient, Recipe, Shape, Station, UnlockContext, brewed, has_tag, initial_recipes, is_brewing_bottle, is_brewing_ingredient, is_special as is_special_recipe, laid_out_in, multi_recipe, recipe, recipe_ids,
+    Grid, Ingredient, Recipe, Shape, Station, UnlockContext, brewed, given_recipe_ids, has_tag, initial_recipes, is_brewing_bottle, is_brewing_ingredient, is_special as is_special_recipe, laid_out_in, multi_recipe, recipe, recipe_ids,
     smelted, smithed, unlocked_by,
 };
 pub use gear::{Gear, Made, gear};

@@ -22,7 +22,7 @@ Mojang's data is not committed (`.gitignore`); build it before the first `cargo 
 | `data/mob-loot.json` | `py -3 data/generate/mob-loot.py` (BDS's behaviour packs, `PACKS` at the top) |
 | `data/block-loot.tsv` | `py -3 data/generate/block-loot.py` (the extracted Java 26.3 client jar, `JAVA` at the top) |
 | `data/names.tsv` | `cargo run -p sapling --example bds_name_probe -- <your BDS> > data/names.tsv`, on testbox `tools/remote-drill.sh bds bds_name_probe data/names.tsv` (BDS's own answers to `/give` and `/kill`); optional: without it names are made from identifiers |
-| `data/command-names.tsv` | `cargo run -p sapling --example bds_enum_probe -- <your BDS> > data/command-names.tsv` (drop a trailing `probe exit` line when made by `tools/remote-drill.sh bds bds_enum_probe`): the `Item` and `Block` enums of BDS's AvailableCommands; optional: without it commands take every name |
+| `data/command-names.tsv` | `cargo run -p sapling --example bds_enum_probe -- <your BDS> > data/command-names.tsv` (drop a trailing `probe exit` line when made by `tools/remote-drill.sh bds bds_enum_probe`): the `Item`, `Block` and `featureRules` enums of BDS's AvailableCommands, then each block's `tile.` key from `/testforblock` (slow: one command a block); optional: without it commands take every name and blocks are named `%tile.<name>.name` |
 | `data/command-texts.tsv` | `py -3 data/generate/command-texts.py` (your BDS's `resource_packs/vanilla/texts/en_US.lang`, `LANG` at the top; see "Command texts"); optional: without it the console prints translation keys |
 | `data/spawn-rules.tsv`, `data/despawns.tsv` | `py -3 data/generate/spawn-rules.py` (BDS's behaviour packs, as `mob-loot.py`) |
 | `data/husbandry.tsv` | `py -3 data/generate/husbandry.py` (BDS's behaviour packs, as `mob-loot.py`) |
@@ -105,9 +105,9 @@ loot table from the vanilla behaviour packs (their `.brarchive`s, the newest pac
 adult's in its default state, and every table those name, with old item names renamed (checked against
 `ItemRegistry.bin` by a test). Fox and piglin name tables no pack holds; slimes and magma cubes, whose
 loot goes by size, have none here. A death is no one's or a player's (`Killer`), with the Looting it
-held (`enchant.rs`); a pet's kill counts as no one's. The script also keeps the tables blocks eject,
-named in its `BLOCK_TABLES` (trial spawners' and vaults') and every chest, dispenser, pot and brushable
-table (`CONTAINER_TABLES`: what generated containers roll on first open), rolled by `table_loot`.
+held (`enchant.rs`); a pet's kill counts as no one's. The script also keeps every other table of the
+packs, as `/loot` takes each (blocks', containers', fishing's), rolled by `table_loot`; its
+`BLOCK_TABLES` only checks that those the shard names (trial spawners' and vaults') exist.
 
 ## Mob traits
 

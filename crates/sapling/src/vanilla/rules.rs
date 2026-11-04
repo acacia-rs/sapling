@@ -1,6 +1,5 @@
 //! `/gamerule`: lists, shows or sets the sender's world's game rules, answering as BDS does
 //! (research/captures/bds-gamerule.txt).
-// TODO: BDS completes the rule names (one overload per kind); here both arguments are plain words.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, ParameterSpec, ParseError};
 use sapling_api::{Command, Output, Permission, RuleValue, Sender, ShardCtx};
@@ -35,16 +34,31 @@ pub(crate) struct GameRule {
     missing: ParseError,
 }
 
+/// The rules BDS completes, by its enums' names and values (research/captures/bds-t1denums.txt).
+const BOOL_RULES: &[&str] = &[
+    "commandblockoutput", "dodaylightcycle", "doentitydrops", "dofiretick", "recipesunlock", "dolimitedcrafting", "domobloot", "domobspawning", "dotiledrops", "doweathercycle",
+    "drowningdamage", "falldamage", "firedamage", "keepinventory", "mobgriefing", "pvp", "showcoordinates", "showdaysplayed", "naturalregeneration", "tntexplodes",
+    "sendcommandfeedback", "doinsomnia", "commandblocksenabled", "doimmediaterespawn", "showdeathmessages", "showtags", "freezedamage", "respawnblocksexplode", "showbordereffect",
+    "showrecipemessages", "projectilescanbreakblocks", "tntexplosiondropdecay",
+];
+const INT_RULES: &[&str] = &["maxcommandchainlength", "randomtickspeed", "functioncommandlimit", "spawnradius", "playerssleepingpercentage"];
+
+fn words(name: &str, values: &[&str]) -> ParamKind {
+    ParamKind::Enum { name: name.into(), values: values.iter().map(|value| value.to_string()).collect() }
+}
+
 impl CommandSyntax for GameRule {
+    /// BDS's four overloads: none, the waypoint rule, the true-or-false rules, the number rules.
     fn spec() -> CommandSpec {
-        let optional = |name: &str| ParameterSpec { name: name.into(), kind: ParamKind::String, optional: true };
-        CommandSpec {
-            name: "gamerule".into(),
-            aliases: Vec::new(),
-            description: "Sets or queries a game rule value".into(),
-            permission: Permission::Operator,
-            overloads: vec![Overload { parameters: vec![optional("rule"), optional("value")] }],
-        }
+        let parameter = |name: &str, kind: ParamKind, optional: bool| ParameterSpec { name: name.into(), kind, optional };
+        let rule = |enum_name: &str, values: &[&str]| parameter("rule", words(enum_name, values), false);
+        let overloads = vec![
+            Overload { parameters: Vec::new() },
+            Overload { parameters: vec![rule("playerwaypointsRule", &["playerwaypoints"]), parameter("value", words("playerwaypointsValues", &["everyone", "off"]), false)] },
+            Overload { parameters: vec![rule("BoolGameRule", BOOL_RULES), parameter("value", words("Boolean", &["true", "false"]), true)] },
+            Overload { parameters: vec![rule("IntGameRule", INT_RULES), parameter("value", ParamKind::Int, true)] },
+        ];
+        CommandSpec { name: "gamerule".into(), aliases: Vec::new(), description: "Sets or queries a game rule value".into(), permission: Permission::Operator, overloads }
     }
 
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
