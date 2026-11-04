@@ -95,6 +95,9 @@ fn an_unemployed_villager_takes_the_job_site_beside_it() {
         professions.extend(metadata(&h.tick(1), id, Key::Variant));
     }
     assert_eq!(professions, [8], "an armorer");
+    h.remote.run(|ctx| assert!(ctx.set_block([6, 64, 3], &sapling_api::Block::new("air"))));
+    let after: Vec<i32> = (0..300).flat_map(|_| metadata(&h.tick(1), id, Key::Variant)).collect();
+    assert_eq!(after, [] as [i32; 0], "it keeps its profession without its site (bds-n1drop.txt)");
 }
 
 #[test]
@@ -131,6 +134,18 @@ fn an_armorer_trades_coal_for_emeralds_and_reaches_apprentice_at_ten_experience(
 }
 
 #[test]
+fn a_village_golem_is_kept_with_its_group_as_bds_keeps_it() {
+    let (mut h, storage, _) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", [4.5, 64.0, 4.5], 0.0, Some("minecraft:from_village")).is_some()));
+    (0..2).for_each(|_| drop(h.tick(1)));
+    h.shard.save_worlds();
+    let column = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
+    let kept = sapling_world::stored_actors(&column.actors).unwrap().into_iter().find(|(actor, ..)| actor.as_ref().is_some_and(|actor| actor.identifier == "minecraft:iron_golem"));
+    let groups = sapling_world::actor_groups(&kept.expect("the golem kept").2);
+    assert!(groups.iter().any(|group| group == "minecraft:village_created"), "{groups:?}");
+}
+
+#[test]
 fn a_hero_of_the_village_pays_less_by_its_level() {
     let (mut h, _, id) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");
     h.remote.run(|ctx| assert!(ctx.give_effect(sapling_api::PlayerId(1), sapling_api::Effect::HeroOfTheVillage, 48000, 1, false)));
@@ -140,7 +155,7 @@ fn a_hero_of_the_village_pays_less_by_its_level() {
 }
 
 #[test]
-fn an_armorer_restocks_each_time_it_starts_work_at_its_job_site() {
+fn an_armorer_restocks_at_its_first_start_of_work_in_a_work_period() {
     let (mut h, _, id) = villager(&[([4, 64, 0], FURNACE)], [2.5, 64.0, 2.5], "minecraft:become_armorer");
     (0..100).for_each(|_| drop(h.tick(1)));
     let used_after = |h: &mut Harness, ticks: usize| {
@@ -153,6 +168,7 @@ fn an_armorer_restocks_each_time_it_starts_work_at_its_job_site() {
         close(h, window);
         int(&offers[0], "uses")
     };
-    assert_eq!(used_after(&mut h, 60), 1, "not again while it works its 250 ticks");
-    assert_eq!(used_after(&mut h, 500), 0, "restocked on its next start of work, 450 ticks on");
+    assert_eq!(used_after(&mut h, 500), 1, "its first arrival came before the trade (bds-n1restock.txt)");
+    h.remote.run(|ctx| ctx.set_time(10_000));
+    assert_eq!(used_after(&mut h, 500), 0, "restocked on arriving in the next work period");
 }

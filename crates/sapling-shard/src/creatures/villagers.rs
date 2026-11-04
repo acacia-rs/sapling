@@ -10,6 +10,7 @@
 mod beds;
 mod deals;
 mod fear;
+mod golem_spawns;
 mod golems;
 mod jobs;
 mod schedule;
@@ -33,6 +34,7 @@ use crate::{entities, mobs};
 use deals::Deal;
 
 pub(crate) use fear::alarm;
+pub(super) use golem_spawns::tick as spawn_golems;
 pub(super) use standing::{hit as hurt_standing, outlaw};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};
 
@@ -66,6 +68,10 @@ pub(crate) struct Trader {
     bed: Option<[i32; 3]>,
     /// The ticks its work at its job site ends and it may next start work (jobs.rs).
     work: (u64, u64),
+    /// The work period (jobs.rs) it last restocked in.
+    restocked: Option<i64>,
+    /// The tick it last started work (golem_spawns.rs).
+    worked: Option<u64>,
     next_look: u64,
     /// A wandering trader's tick to leave at.
     leaves_at: Option<u64>,
