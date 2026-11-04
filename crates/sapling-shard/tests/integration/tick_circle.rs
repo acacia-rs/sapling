@@ -7,7 +7,7 @@ use crate::common;
 use acacia_proto::packets::{AddEntity, RemoveEntity, RequestChunkRadius};
 use common::asking::ask;
 use common::{Harness, all, config, platform};
-use sapling_api::{Block, RuleValue};
+use sapling_api::{Block, PlayerId, RuleValue};
 use sapling_shard::ShardConfig;
 
 #[test]
@@ -62,4 +62,44 @@ fn a_hidden_mob_ticks_within_the_tick_distance_and_waits_past_it_as_on_bds() {
         let feet = ask(&mut h, move |ctx| ctx.entity(cow)).expect("still there").feet;
         assert_eq!((feet[1] < 89.0, all::<AddEntity>(&sent).is_empty()), (ticked, true), "{chunk:?} {feet:?}");
     }
+}
+
+#[test]
+fn block_ticks_and_circuits_wait_out_of_the_tick_region_and_catch_up_as_on_bds() {
+    let mut h = Harness::with(ShardConfig { tick_distance: 4, max_view_radius: 8, ..config() }, platform());
+    h.enter(1, "Alex");
+    h.receive(1, &RequestChunkRadius { chunk_radius: 8, max_radius: 8 });
+    ask(&mut h, |ctx| ctx.teleport(PlayerId(1), [56.5, 65.0, 0.5]));
+    (0..20).for_each(|_| drop(h.tick(1)));
+    // bds-tickqueue.txt, the rigs set from chunk 3,0 and set off as the bots went to 0,0: at 4,1 off and at
+    // 6,0 (a ticking area) the lava ran and the lamps went out; at 4,2 and 5,0 off neither, until they came back.
+    let chunks = [([4, 1], true), ([4, 2], false), ([5, 0], false), ([6, 0], true)];
+    let at = |[cx, cz]: [i32; 2], [dx, dy, dz]: [i32; 3]| [cx * 16 + 4 + dx, 70 + dy, cz * 16 + 4 + dz];
+    ask(&mut h, move |ctx| {
+        ctx.force_chunk([6, 0], true);
+        for (chunk, _) in chunks {
+            let walls = [[0, -1, 0], [1, -1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map(|cell| (cell, "stone"));
+            for (cell, block) in walls.into_iter().chain([([0, 0, 0], "water"), ([0, 0, 4], "redstone_lamp"), ([0, 1, 4], "redstone_block")]) {
+                assert!(ctx.set_block(at(chunk, cell), &Block::new(&format!("minecraft:{block}"))));
+            }
+        }
+    });
+    (0..10).for_each(|_| drop(h.tick(1)));
+    ask(&mut h, move |ctx| {
+        for (chunk, _) in chunks {
+            assert!(ctx.update_block(at(chunk, [1, 0, 0]), &Block::air()) && ctx.update_block(at(chunk, [0, 1, 4]), &Block::air()));
+            assert!(ctx.update_block(at(chunk, [0, 6, 8]), &Block::new("minecraft:sand")));
+        }
+        ctx.teleport(PlayerId(1), [8.5, 65.0, 0.5]);
+    });
+    let looked = |h: &mut Harness| {
+        (0..60).for_each(|_| drop(h.tick(1)));
+        ask(h, move |ctx| {
+            let named = |pos| ctx.block(pos).map(|block| block.name).unwrap_or_default();
+            chunks.map(|(chunk, _)| [named(at(chunk, [1, 0, 0])).ends_with("water"), named(at(chunk, [0, 0, 4])) == "minecraft:redstone_lamp", named(at(chunk, [0, 6, 8])) == "minecraft:air"])
+        })
+    };
+    assert_eq!(looked(&mut h), chunks.map(|(_, ticks)| [ticks; 3]));
+    ask(&mut h, |ctx| ctx.teleport(PlayerId(1), [56.5, 65.0, 0.5]));
+    assert_eq!(looked(&mut h), [[true; 3]; 4]);
 }

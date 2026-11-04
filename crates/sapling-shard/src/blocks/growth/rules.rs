@@ -29,6 +29,8 @@ const COLUMNS: [&str; 2] = ["minecraft:reeds", "minecraft:cactus"];
 const COLUMN_HEIGHT: i32 = 3;
 const COLUMN_AGE: u8 = 15;
 const BAMBOO: &str = "minecraft:bamboo";
+/// Lit ore goes out on its random tick (`RedStoneOreBlock` subscribes to `BlockRandomTickEvent`).
+const LIT_ORES: [&str; 2] = ["minecraft:lit_redstone_ore", "minecraft:lit_deepslate_redstone_ore"];
 /// BDS's bamboo stood thirteen high and growing when the drill ended; the Java game stops by 16.
 const BAMBOO_HEIGHT: i32 = 14;
 /// One random tick in this many grows bamboo: BDS's put on a segment every 43 ticks, where a
@@ -84,6 +86,7 @@ pub(super) fn is_ticked(name: &str, properties: &str) -> bool {
     let growth = || number(properties, "growth");
     match name {
         FARMLAND | BAMBOO => true,
+        _ if LIT_ORES.contains(&name) => true,
         _ if cover::is_ticked(name) || super::copper::is_ticked(name) => true,
         BUSH => growth().is_some_and(|growth| growth < RIPE_BUSH),
         PITCHER => number(properties, UPPER) == Some(0) && growth().is_some_and(|growth| growth < RIPE_PITCHER),
@@ -158,7 +161,7 @@ fn bamboo(level: &Level, [x, top, z]: BlockPos, tall: i32) -> Vec<Change> {
 /// Whether what a random tick does to `name` is growth (offered to plugins): not farmland drying
 /// or wetting, leaves decaying, grass dying nor ice melting; grass spreading is.
 pub(super) fn grows(name: &str) -> bool {
-    name == cover::DIRT || name != FARMLAND && !name.ends_with("leaves") && !cover::is_ticked(name) && !super::copper::is_ticked(name)
+    name == cover::DIRT || name != FARMLAND && !name.ends_with("leaves") && !cover::is_ticked(name) && !super::copper::is_ticked(name) && !LIT_ORES.contains(&name)
 }
 
 /// What a random tick makes of the block at `pos`.
@@ -206,6 +209,7 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, darken: u8, picks: &mut Picks
             let tall = height(level, pos, name) + 1;
             if tall > BAMBOO_HEIGHT { Vec::new() } else { bamboo(level, above, tall) }
         }
+        _ if LIT_ORES.contains(&name) => registry.find(&name.replacen("lit_", "", 1), properties).map(|id| shown(pos, id)).into_iter().collect(),
         _ if cover::is_ticked(name) => cover::ticked(level, pos, name, darken, picks),
         _ if super::copper::is_ticked(name) => super::copper::ticked(level, pos, picks),
         // Marked leaves drop on their first tick with no wood near, as BDS's did; held, they rest.

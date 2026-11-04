@@ -228,8 +228,15 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     None
 }
 
-/// Moves every falling block a tick; the cells blocks were placed in.
+/// Moves every falling block whose cell ticks a tick; the cells blocks were placed in. BDS's sand out of
+/// the tick region hung where it was and fell on when the players came back (bds-tickqueue.txt at 116183).
 pub(super) fn fly(world: &mut World) -> Vec<(Entity, BlockPos)> {
-    let falling: Vec<(Entity, Entity, u64)> = world.query_filtered::<(Entity, &InLayer, &NetId), With<FallingBlock>>().iter(world).map(|(entity, layer, id)| (entity, layer.0, id.0)).collect();
+    let region = crate::ticking::Region::of(world);
+    let falling: Vec<(Entity, Entity, u64)> = world
+        .query_filtered::<(Entity, &InLayer, &NetId, &Body), With<FallingBlock>>()
+        .iter(world)
+        .filter(|(_, layer, _, body)| region.ticks_block(world, layer.0, cell_of(body.at)))
+        .map(|(entity, layer, id, _)| (entity, layer.0, id.0))
+        .collect();
     falling.into_iter().filter_map(|(entity, layer, id)| Some((layer, step(world, entity, layer, id)?))).collect()
 }

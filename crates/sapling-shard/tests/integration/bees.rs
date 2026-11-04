@@ -128,6 +128,26 @@ fn a_bee_hit_on_normal_stings_its_hitter_with_10_s_of_poison_and_dies_of_it() {
 }
 
 #[test]
+fn a_hive_out_of_the_tick_region_keeps_its_bees_and_one_in_a_ticking_area_lets_them_out() {
+    // bds-hivekept.txt: by day the bees of a hive 5 chunks off stayed in for 45 s, and some s after the
+    // bots came back; those of a hive in a ticking area 6 chunks off came out.
+    for kept in [false, true] {
+        let (mut h, _) = by_a_hive(18000, [0.5, 66.0, 0.5]);
+        until(&mut h, 200, |sent| !sounds(sent).is_empty());
+        h.remote.run(move |ctx| {
+            ctx.force_chunk([0, 0], kept);
+            ctx.set_time(6000);
+            for player in [PlayerId(1), PlayerId(2)] {
+                ctx.teleport(player, [96.5, 65.0, 0.5]);
+            }
+        });
+        (0..700).for_each(|_| drop(h.tick_all()));
+        let bees = read(&mut h, |ctx| ctx.entities().iter().filter(|entity| entity.kind == BEE).count());
+        assert_eq!(bees, usize::from(kept), "kept {kept}");
+    }
+}
+
+#[test]
 fn a_broken_hives_bees_come_out_and_go_for_the_nearest_survival_player() {
     let (mut h, _) = by_a_hive(18000, [0.5, 66.0, 0.5]);
     until(&mut h, 200, |sent| !sounds(sent).is_empty());

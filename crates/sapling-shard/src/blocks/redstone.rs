@@ -141,11 +141,13 @@ pub(crate) fn evaluate(world: &mut World) {
     let mut layers: Vec<Entity> = circuits.layers.iter().filter(|(_, circuit)| !circuit.changed.is_empty() || circuit.unsettled).map(|(layer, _)| *layer).collect();
     // `sapling:redstone` off pauses a world's circuits: what was written waits for it to be on.
     layers.retain(|layer| crate::rules::on(world, *layer, sapling_data::REDSTONE));
+    let region = crate::ticking::Region::of(world);
     for layer in layers {
         let Some(mut circuit) = world.resource_mut::<Circuits>().layers.remove(&layer) else { continue };
         let now = world.resource::<Tick>().0;
         let stored = read_containers(world, layer, &circuit);
-        let due = evaluate_circuit(world, layer, &mut circuit, now, &stored);
+        let ticks = |pos: BlockPos| region.ticks_block(world, layer, pos);
+        let due = evaluate_circuit(world, layer, &mut circuit, now, &stored, &ticks);
         let mut circuits = world.resource_mut::<Circuits>();
         circuits.layers.insert(layer, circuit);
         circuits.due.extend(due.into_iter().map(|(pos, due)| (layer, pos, due)));
@@ -163,8 +165,11 @@ fn reader(world: &World, layer: Entity) -> impl FnMut(BlockPos) -> Part + '_ {
 
 /// Searches from the sources as they are, which is what dust shows and what torches and repeaters
 /// flip by; what they give once flipped reaches lamps, doors and hoppers in the same evaluation,
-/// by a second search (research/captures/bds-redstone-repeaters.txt).
-fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u64, stored: &HashMap<BlockPos, u8>) -> Vec<(BlockPos, Due)> {
+/// by a second search (research/captures/bds-redstone-repeaters.txt). A torch, repeater or comparator
+/// whose column does not tick (`ticks`) holds as it is, and a cell there keeps its last signal, until
+/// the column ticks again: BDS's repeaters out of the diamond stopped mid-line and its lamps there went
+/// out as the bots came back (research/captures/bds-tickqueue.txt).
+fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u64, stored: &HashMap<BlockPos, u8>, ticks: &dyn Fn(BlockPos) -> bool) -> Vec<(BlockPos, Due)> {
     let mut part = reader(world, layer);
     let changed = std::mem::take(&mut circuit.changed);
     let mut fresh = HashSet::new();
@@ -198,8 +203,12 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
     let mut sources: Vec<(BlockPos, Part)> = circuit.sources.iter().map(|pos| (*pos, as_kept(pos, part(*pos)))).collect();
     let mut restrengthened = false;
     let shown = search::search(&sources, &mut part);
-    let mut due = Vec::new();
+    let (mut due, mut held) = (Vec::new(), false);
     for (pos, source) in &mut sources {
+        if matches!(source, Part::Torch { .. } | Part::Repeater { .. } | Part::Comparator { .. }) && !ticks(*pos) {
+            held = true;
+            continue;
+        }
         let (lit, next, fizz) = match *source {
             Part::Torch { lit, .. } => {
                 let (next, fizz) = circuit.torches.entry(*pos).or_default().next(*pos, lit, shown.inputs.get(pos).copied(), now);
@@ -237,7 +246,7 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
             };
         }
     }
-    circuit.unsettled = !due.is_empty() || restrengthened || circuit.repeaters.values().any(RepeaterState::is_waiting);
+    let looks_again = !due.is_empty() || restrengthened || circuit.repeaters.values().any(RepeaterState::is_waiting);
     let flipped = (!due.is_empty() || restrengthened).then(|| search::search(&sources, &mut part));
     let used = flipped.as_ref().unwrap_or(&shown);
 
@@ -256,6 +265,13 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
             Part::User(_) => new != old || (is_fresh && new > 0),
             _ => false,
         };
+        if write && !ticks(pos) {
+            held = true;
+            if old > 0 {
+                power.insert(pos, old);
+            }
+            continue;
+        }
         if write {
             due.push((pos, Due::Signal(new, old)));
         }
@@ -264,5 +280,6 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
         }
     }
     circuit.power = power;
+    circuit.unsettled = looks_again || held;
     due
 }

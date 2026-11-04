@@ -158,7 +158,10 @@ names tipped arrows.
 Measured with `bds_command_probe ores` (`bds-ores.txt`): of 25 lit redstone ores set at once, 16
 had gone out, to plain redstone ore, after 90 seconds, the first after 0.9 seconds and the rest
 spread evenly: each has the same chance every tick, which fits an average life of some 88
-seconds. Sapling gives each lit ore a life drawn that way (`blocks/ores.rs`).
+seconds. `RedStoneOreBlock` puts it out on a random tick [D], so the life scales with
+`randomTickSpeed`: `firepace` (fire.md "Pace and rule") had 6 of 12 out in 60 s at 1, 8 of 12 in
+25 s at 4 and 11 of 12 in 15 s at 20, as a life of 1800 / rule ticks. Sapling puts lit ore out as a
+random tick at that rate (`growth/rules.rs`), only where random ticks run.
 
 `bds_command_probe oresteps` (`bds-oresteps.txt`): ore set under a standing survival player
 was lit a tick later, both times, and an ore the player started to break by hand was lit with

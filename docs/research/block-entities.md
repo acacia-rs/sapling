@@ -151,6 +151,14 @@ and come out (2026-10-27, `keephive`, `bees`, `beesout`; creatures/bees.rs and b
 come and go only. A broken hive let its bee out at the block's middle (`bds-bees.txt` 110177), which took the
 breaker 4 ticks later with `mob.warning`. No `BlockEntityData` is sent for any of it.
 
+A hive ticks only while its chunk does (`hivekept`, `bds-hivekept.txt`, 2026-11-04, `tick-distance` 4): two bees went
+into each of a hive 5 chunks off (out of the diamond) and one 6 off in a ticking area by night; after 45 s of noon the
+ticking area's bees were out, the other hive's still in, and still in 5 s after the bots came back, so their stay
+counts down only by ticks the hive gets. Sapling: hives tick in `ticking::ticked_columns` and count their bees'
+stay by those ticks (bees/hives.rs `Written`); test `a_hive_out_of_the_tick_region_keeps_its_bees_and_one_in_a_ticking_area_lets_them_out`.
+Sapling's drill (`sapling-hivekept.txt`) counted as BDS's but for one bee by the far hive after the return, while the
+ticking area's two had left theirs: most likely one of those wandered within 8 of it (bees wander; the hives' answers agree).
+
 ## Open checks (one bot session on BDS)
 
 Placed skull's saved `SkullType` (-1 or kind); cauldron `PotionId`/`PotionType` defaults; sign text cap in the

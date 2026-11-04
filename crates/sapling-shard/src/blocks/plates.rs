@@ -177,8 +177,12 @@ pub(crate) fn press_plates(world: &mut World) {
             _ => {}
         }
     }
-    let Some(down) = world.get_resource::<DownPlates>() else { return };
-    let due: Vec<_> = down.0.iter().filter(|(_, when)| **when <= tick).map(|(at, _)| *at).collect();
+    if world.get_resource::<DownPlates>().is_none() {
+        return;
+    }
+    let region = crate::ticking::Region::of(world);
+    let down = world.resource::<DownPlates>();
+    let due: Vec<_> = down.0.iter().filter(|&(&(layer, pos), &when)| region.runs_due(world, when, tick, layer, pos)).map(|(at, _)| *at).collect();
     for (layer, pos) in due {
         match plate_at(world, layer, pos) {
             Some((plate, stored)) => check(world, layer, pos, plate, plate.signal_of(stored), plate.signal(&on(layer, pos))),

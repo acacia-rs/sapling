@@ -18,7 +18,7 @@ use sapling_world::Occupant;
 
 use super::super::Health;
 use crate::blocks::{self, Dice};
-use crate::components::{Layer, Tick};
+use crate::components::Layer;
 use crate::entities::Stored;
 
 const ENTITY: &str = "Beehive";
@@ -30,8 +30,8 @@ const HONEY_FULL: u8 = 5;
 /// The chance a tick of `block.beehive.work` from a hive with bees in.
 const WORKS: f32 = 0.005;
 
-/// The tick each hive's entity was last written in, by world and place: its bees' `TicksLeftToStay`
-/// count from then.
+/// The ticks each hive has been ticked since its entity was last written, by world and place: its
+/// bees' `TicksLeftToStay` count down by those, not while its column does not tick (bds-hivekept.txt).
 #[derive(Resource, Default)]
 struct Written(HashMap<(Entity, BlockPos), u64>);
 
@@ -51,8 +51,7 @@ fn held(world: &World, layer: Entity, pos: BlockPos) -> Option<(Value, Vec<Occup
         return None;
     }
     let entity = level.block_entity(pos).map_or_else(|| sapling_world::new_hive(pos), |entity| entity.nbt.clone());
-    let now = world.resource::<Tick>().0;
-    let since = world.get_resource::<Written>().and_then(|written| written.0.get(&(layer, pos)).copied()).map_or(0, |at| now.saturating_sub(at) as i32);
+    let since = world.get_resource::<Written>().and_then(|written| written.0.get(&(layer, pos)).copied()).map_or(0, |ticked| ticked as i32);
     let mut occupants = sapling_world::hive_occupants(&entity);
     for occupant in &mut occupants {
         occupant.ticks_left -= since;
@@ -61,12 +60,11 @@ fn held(world: &World, layer: Entity, pos: BlockPos) -> Option<(Value, Vec<Occup
 }
 
 fn write(world: &mut World, layer: Entity, pos: BlockPos, entity: &Value, occupants: &[Occupant]) {
-    let now = world.resource::<Tick>().0;
     let kept: Vec<Occupant> = occupants.iter().cloned().map(|occupant| Occupant { ticks_left: occupant.ticks_left.max(0), ..occupant }).collect();
     if let Some(mut level) = world.get_mut::<Layer>(layer) {
         level.world.set_block_entity(pos, &sapling_world::occupied_hive(entity, &kept));
     }
-    world.get_resource_or_insert_with(Written::default).0.insert((layer, pos), now);
+    world.get_resource_or_insert_with(Written::default).0.insert((layer, pos), 0);
 }
 
 fn heard(world: &mut World, layer: Entity, pos: BlockPos, name: &str, at: [f32; 3]) {
@@ -148,16 +146,17 @@ pub(crate) fn broken(world: &mut World, layer: Entity, pos: BlockPos, name: &str
     }
 }
 
-/// The hives of the columns about players: their bees count down and come out when due, and
-/// they are heard working.
+/// The hives of the columns that tick, ticking areas' too (`LevelChunk::tick` ticks a chunk's block
+/// actors): their bees count down and come out when due, and they are heard working.
 pub(crate) fn tick(world: &mut World) {
     let mut hives = Vec::new();
-    for (layer, column) in crate::ticking::near_players(world) {
+    for (layer, column) in crate::ticking::ticked_columns(world) {
         let Some(level) = level(world, layer) else { continue };
         let occupied = |entity: &&sapling_world::BlockEntity| matches!(entity.nbt.get("id"), Some(Value::String(id)) if id.as_str() == ENTITY) && matches!(entity.nbt.get("Occupants"), Some(Value::List(list)) if !list.items.is_empty());
         hives.extend(level.block_entities_in(column).into_iter().filter(occupied).map(|entity| (layer, entity.pos)));
     }
     for (layer, pos) in hives {
+        *world.get_resource_or_insert_with(Written::default).0.entry((layer, pos)).or_default() += 1;
         let Some((entity, occupants)) = held(world, layer, pos) else { continue };
         if world.get_resource_or_insert_with(Dice::default).fraction() < WORKS {
             heard(world, layer, pos, "block.beehive.work", pos.map(|c| c as f32 + 0.5));

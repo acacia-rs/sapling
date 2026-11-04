@@ -63,6 +63,13 @@ impl Region {
         self.ticks(world, layer, ChunkPos::of_block(pos[0], pos[2]))
     }
 
+    /// Whether a block tick due `when` at `pos` runs at `now`: a BDS chunk's block queue runs only while
+    /// the chunk ticks, and then up to the level's tick (`LevelChunk::tick` 0x1409f98a0), so a tick that
+    /// fell due out of range waits, its time kept, and runs as its column ticks again.
+    pub(crate) fn runs_due(&self, world: &World, when: u64, now: u64, layer: Entity, pos: BlockPos) -> bool {
+        when <= now && self.ticks_block(world, layer, pos)
+    }
+
     /// Puts back by `by(layer)` the time of each `(when, layer, pos)` of `queue` whose column does not
     /// tick: a BDS chunk's random-tick queue runs on only while its chunk ticks (`LevelChunk::tick`
     /// 0x1409f98a0 takes its `until` as the queue's own clock plus `randomTickSpeed`).
@@ -94,7 +101,7 @@ pub(crate) fn ticked_columns(world: &mut World) -> Vec<(Entity, ChunkPos)> {
 
 /// The columns of each player's tick region ([`in_tick_region`]), each once, in an order that
 /// does not turn on the hash.
-pub(crate) fn near_players(world: &mut World) -> Vec<(Entity, ChunkPos)> {
+fn near_players(world: &mut World) -> Vec<(Entity, ChunkPos)> {
     let reach = tick_distance(world);
     let mut near = Vec::new();
     for (in_layer, view) in world.query::<(&InLayer, &View)>().iter(world) {

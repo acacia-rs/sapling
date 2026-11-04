@@ -61,12 +61,17 @@ pub(super) fn written(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     }
 }
 
-/// Has the scaffolding that is due look at its hold.
+/// Has the scaffolding that is due look at its hold where the column ticks
+/// ([`crate::ticking::Region::runs_due`]).
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let Some(mut due) = world.get_resource_mut::<Scaffolds>().filter(|due| !due.0.is_empty()) else { return };
-    let (looking, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut due.0).into_iter().partition(|(when, ..)| *when <= now);
-    due.0 = waiting;
+    if !world.get_resource::<Scaffolds>().is_some_and(|due| !due.0.is_empty()) {
+        return;
+    }
+    let region = crate::ticking::Region::of(world);
+    let due = std::mem::take(&mut world.resource_mut::<Scaffolds>().0);
+    let (looking, waiting): (Vec<_>, Vec<_>) = due.into_iter().partition(|&(when, layer, pos)| region.runs_due(world, when, now, layer, pos));
+    world.resource_mut::<Scaffolds>().0 = waiting;
     for (_, layer, pos) in looking {
         let Some(level) = level(world, layer) else { continue };
         let Some((id, said, looked)) = scaffolding(level, pos) else { continue };
