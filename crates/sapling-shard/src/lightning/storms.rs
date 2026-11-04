@@ -1,9 +1,11 @@
 //! Where a thunderstorm strikes, as BDS's `LevelChunk::tick`: each column near a player has one
 //! chance in 100000 a tick of a bolt, at a block picked in it on the top of what stands there; a
 //! lightning rod near draws it (rods.rs), else an animal of the column under open sky at random,
-//! and it comes only where rain falls.
-// TODO: BDS's skeleton horse trap is not set; the animals are the kinds of its `Animal` type as
-// read from its actor type ids, not checked one by one.
+//! and it comes only where rain falls. A bolt not drawn to a rod leaves a skeleton horse trap
+//! where it struck one time in 134, 67 or 45 on easy, normal or hard while `doMobSpawning` is on
+//! (BDS fcn.142cb06f0 and its table at 0x14a7d4940, called from `LevelChunk::tick`).
+// TODO: the animals are the kinds of its `Animal` type as read from its actor type ids, not checked
+// one by one.
 
 use bevy_ecs::prelude::*;
 use sapling_world::{ChunkPos, FULL_LIGHT};
@@ -15,6 +17,8 @@ use crate::entities::Kind;
 use crate::view::View;
 
 const ONE_IN: u32 = 100_000;
+/// One bolt in this many leaves a trap, by difficulty from easy.
+const TRAP_ONE_IN: [u32; 3] = [134, 67, 45];
 /// Columns this many from a player's tick.
 const NEAR: i32 = 4;
 const ANIMALS: &[&str] = &[
@@ -61,6 +65,17 @@ fn animal(world: &mut World, layer: Entity, column: ChunkPos) -> Option<[f32; 3]
     (!found.is_empty()).then(|| found[world.get_resource_or_insert_with(Dice::default).roll(found.len() as u32) as usize])
 }
 
+/// Whether a bolt leaves a trap: its difficulty's chance, while `doMobSpawning` is on.
+fn traps(world: &mut World, layer: Entity) -> bool {
+    let one_in = match world.resource::<crate::components::Settings>().0.difficulty {
+        sapling_api::Difficulty::Peaceful => return false,
+        sapling_api::Difficulty::Easy => TRAP_ONE_IN[0],
+        sapling_api::Difficulty::Normal => TRAP_ONE_IN[1],
+        sapling_api::Difficulty::Hard => TRAP_ONE_IN[2],
+    };
+    crate::rules::on(world, layer, "doMobSpawning") && world.get_resource_or_insert_with(Dice::default).roll(one_in) == 0
+}
+
 /// Strikes where the dice say in each world that thunders.
 pub(super) fn tick(world: &mut World) {
     let layers: Vec<Entity> = world.query_filtered::<Entity, With<Layer>>().iter(world).collect();
@@ -74,9 +89,13 @@ pub(super) fn tick(world: &mut World) {
             let (x, z) = (column.x * 16 + dx, column.z * 16 + dz);
             let Some(y) = world.get::<Layer>(layer).map(|layer| top(&layer.world, x, z)).filter(|_| struck) else { continue };
             let picked = [x, y, z];
-            let at = super::rods::drawn_to(world, layer, picked).or_else(|| animal(world, layer, column)).unwrap_or(picked.map(|c| c as f32));
+            let rod = super::rods::drawn_to(world, layer, picked);
+            let at = rod.or_else(|| animal(world, layer, column)).unwrap_or(picked.map(|c| c as f32));
             if world.get::<Layer>(layer).is_some_and(|layer| rains_on(&layer.world, at.map(|c| c.floor() as i32))) {
                 super::strike(world, layer, at, true);
+                if rod.is_none() && traps(world, layer) {
+                    crate::creatures::set_trap(world, layer, at.map(f32::floor));
+                }
             }
         }
     }

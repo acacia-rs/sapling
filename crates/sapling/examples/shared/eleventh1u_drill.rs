@@ -75,7 +75,8 @@ fn traps() -> Vec<String> {
 fn flaming_arrows() -> Vec<String> {
     let post = ["setblock 8 -26 0 stone", "setblock 8 -25 0 tnt", ""];
     let shot = ["tp @s 0.5 -26 0.5 -90 0", "", "!look 8 1.4 0", "!use", "", "!release", "", "", "testforblock 8 -25 0 tnt"];
-    let mut lines = with(floor(), &["time set noon", "replaceitem entity @s slot.weapon.mainhand 0 bow"]);
+    // The watcher stands aside: in the actor it took the shot and threw it back (bds-u1fire.txt).
+    let mut lines = with(floor(), &["time set noon", "tp CmdWatcher 0.5 -26 5.5", "replaceitem entity @s slot.weapon.mainhand 0 bow"]);
     lines.extend(owned(post));
     lines.extend(owned(shot));
     lines.extend(owned(["kill @e[type=arrow]", "enchant @s flame 1", ""]));

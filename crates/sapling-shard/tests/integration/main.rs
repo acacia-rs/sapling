@@ -144,6 +144,7 @@ mod shot_buttons;
 mod shot_hits;
 mod shown_effects;
 mod shriekers;
+mod skeleton_traps;
 mod sleep;
 mod slimes;
 mod snow_golems;
