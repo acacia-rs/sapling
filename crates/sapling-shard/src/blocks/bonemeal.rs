@@ -41,6 +41,10 @@ fn is_air(level: &Level, [x, y, z]: BlockPos) -> bool {
     level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_air())
 }
 
+fn is_still_water(level: &Level, [x, y, z]: BlockPos) -> bool {
+    level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_water() && state.liquid_depth == 0)
+}
+
 fn state(level: &Level, name: &str, properties: &str) -> Option<u32> {
     send::resolve(level.registry(), &Block { name: format!("minecraft:{name}"), properties: properties.to_owned() })
 }
@@ -97,6 +101,10 @@ fn grown(level: &Level, pos: BlockPos, creative: bool, roll: &mut dyn FnMut() ->
             let around = scattered(level, above, 2, SPROUT_TRIES, roll, &mut sprout);
             sprouts.extend(around.into_iter().filter(|(cell, _)| *cell != above));
             Some(sprouts)
+        }
+        // A dispenser's grew short sea grass tall under still water, top first, and tall took none (bds-u1meal.txt).
+        "seagrass" if properties == "sea_grass_type=default" && is_still_water(level, above) => {
+            Some(vec![(above, state(level, name, "sea_grass_type=double_top")?), (pos, state(level, name, "sea_grass_type=double_bot")?)])
         }
         "reeds" if is_air(level, above) => Some((1..=CANE_STEP).map(|up| [x, y + up, z]).take_while(|cell| is_air(level, *cell)).map(|cell| (cell, id)).collect()),
         "bamboo_sapling" if is_air(level, above) => Some(vec![(pos, state(level, "bamboo", "bamboo_leaf_size=no_leaves")?), (above, state(level, "bamboo", "bamboo_leaf_size=small_leaves")?)]),

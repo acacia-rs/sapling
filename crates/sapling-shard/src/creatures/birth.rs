@@ -35,6 +35,7 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
     super::captains::arm(world, entity, kind, event);
+    super::skeleton_traps::arm(world, entity, kind, event);
     if event.is_some() {
         super::warden::arm(world, entity, kind, event);
     }

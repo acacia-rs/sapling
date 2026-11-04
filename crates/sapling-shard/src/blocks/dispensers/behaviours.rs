@@ -38,10 +38,7 @@ pub(super) fn dispense(world: &mut World, layer: Entity, pos: BlockPos, face: Fa
             true => Dispensed::Becomes(item(BUCKET)),
             false => Dispensed::Thrown,
         },
-        "minecraft:bone_meal" => {
-            let fed = bonemeal::feed(world, layer, front, false);
-            Dispensed::or_fails(world, layer, pos, fed, Dispensed::Spent)
-        }
+        "minecraft:bone_meal" => return meal(world, layer, pos, face),
         "minecraft:flint_and_steel" => {
             let lit = crate::tnt::light(world, layer, front) || fire::light(world, layer, front);
             Dispensed::or_fails(world, layer, pos, lit, Dispensed::Worn(FLINT_AND_STEEL_LASTS))
@@ -70,6 +67,16 @@ pub(super) fn dispense(world: &mut World, layer: Entity, pos: BlockPos, face: Fa
         click(world, layer, pos, face);
     }
     done
+}
+
+/// Bone meal on the block in front, which keeps the meal where it takes none: either way BDS's
+/// click came from the mouth, telling no block, its failing one 1000 (D13; bds-u1meal.txt).
+fn meal(world: &mut World, layer: Entity, pos: BlockPos, face: Face) -> Dispensed {
+    let fed = bonemeal::feed(world, layer, face.neighbour(pos), false);
+    let [x, y, z] = mouth(pos, face);
+    let (name, extra) = if fed { ("block.click", -1) } else { ("block.click.fail", 1000) };
+    send::to_viewers(world, layer, pos, &[send::noise(name, acacia_proto::types::Vec3f { x, y, z }, extra)]);
+    if fed { Dispensed::Spent } else { Dispensed::Stays }
 }
 
 /// Shoots one of `stack` if it is a shot, with its launch sound; arrows click as well (D9 table).

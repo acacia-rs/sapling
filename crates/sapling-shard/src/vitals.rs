@@ -169,7 +169,10 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
         tell(world, player, &effects::cushion(id, cushion, tick));
     }
     if changed {
-        tell(world, player, &sapling_data::mob_health_update(id, left, most));
+        // BDS kept the boost's modifier on every later health it told (bds-u1fly.txt).
+        let boosted = effects::level(world, player, sapling_api::Effect::HealthBoost);
+        let told = if boosted.is_some() { boost::boosted_health(id, left, MAX, boosted) } else { sapling_data::mob_health_update(id, left, most) };
+        tell(world, player, &told);
     }
     let lit = burning && world.get::<Motion>(player).is_some_and(|motion| !motion.pose.burning);
     let burning = burning && !(lit && !crate::hand_events::may_burn(world, player, ticks));

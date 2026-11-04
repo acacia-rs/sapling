@@ -60,9 +60,10 @@ fn block_light(level: &Level, [x, y, z]: BlockPos) -> u8 {
 /// What a pick of the block column `(x, z)` sets: ice on still water at its top that is not
 /// water on all four sides, or a layer of snow over the top if `snows`; both where it is cold.
 fn fallen(level: &Level, x: i32, z: i32, freezes: bool, snows: bool) -> Option<(BlockPos, u32)> {
-    let top = level.surface(x, z)?;
-    let (ground, over) = ([x, top, z], [x, top + 1, z]);
     let registry = level.registry();
+    // A thin layer of snow has no collision, so `surface` would look past it and never pile it.
+    let top = level.top_where(x, z, |id| registry.get(id).is_some_and(|state| state.is_solid() || state.is_liquid() || state.name == SNOW))?;
+    let (ground, over) = ([x, top, z], [x, top + 1, z]);
     let is_shore = || [Face::North, Face::South, Face::West, Face::East].iter().any(|face| !is_still_water(level, face.neighbour(ground)));
     if freezes && is_still_water(level, ground) && level.is_cold(x, top, z) && block_light(level, ground) < FREEZE_DIM && is_shore() {
         return send::resolve(registry, &Block::new(ICE)).map(|ice| (ground, ice));

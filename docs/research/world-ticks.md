@@ -141,4 +141,8 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
 - A dry coral fan placed by hand is dead at once on BDS, `coral_fan_direction=1` from four diagonal
   clicks (bds-e3coral.txt); sapling places it live with 0, its placement rule (fan slots 144/257,
   14713d2e0, 14713d500) not read. BDS also plays `place` with the dead block's id when coral dies.
-- Burning arrows lighting TNT; whether BDS also asks `mobGriefing` for a mob's shot.
+- Burning arrows lighting TNT, drilled since (bds-u1fire.txt, bds-u1blaze.txt, 2026-11-04): a player's
+  flame arrow primed TNT it struck on both servers (`SoundIgnite` at the block's middle, then the TNT);
+  a plain one did not. A blaze's fireballs set fire only under `mobGriefing`, as sapling's now do
+  (`blocks/target.rs` `shot_stopped`, test `blaze_griefing`). Sapling's arrow sticks 0.125 short of
+  the face it hit (7.875 against BDS's 8.0, its box against BDS's ray).

@@ -3,9 +3,9 @@
 //! 201 ticks, at once on starting and whenever the squid is above its band and the way rises, and
 //! each tick the squid's speed closes 0.22 of the gap to that way after water's 0.8 drag. It
 //! turns a tenth of the way to where it is going each tick.
-// TODO: BDS's spurts (a push of 0.0715 along -z every 8-15 ticks for a few seconds,
-// research/captures/bds-swimmers.txt) come from none of the squid goals or postAiStep; fleeing a
-// hit (`squid_flee`), ink, `squid_dive` and `squid_out_of_water` are not copied.
+// bds-swimmers.txt's spurts were its pool's flow: in still water (bds-u1squid.txt) BDS's squid and
+// glow squid swam a steady 0.017 a tick at most, as sapling's.
+// TODO: fleeing a hit (`squid_flee`), ink, `squid_dive` and `squid_out_of_water` are not copied.
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;

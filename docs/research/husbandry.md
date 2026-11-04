@@ -122,8 +122,12 @@ vehicles work) take no player as a vehicle.
 
 ## Not drilled
 
-- `property_inheritance` (which parent a baby's climate variant comes from): the drill world is
-  flat with one biome, so every parent is temperate; bdsre finds no `property_inheritance` string
-  or hash user to read instead. Sapling picks a parent at random.
+- `property_inheritance` (which parent a baby's climate variant comes from): bdsre finds no
+  `property_inheritance` string or hash user to read. `u1inherit` (bds-u1inherit.txt, 2026-11-04,
+  an ice plains world with cows summoned in the End and teleported over) gave no pair: the End's
+  cows came out cold too, as sapling's, and no calf came in 15 s (the pens' slowness 255 kept the
+  loving pairs apart). A rerun wants a Nether cow beside a cold one and no slowness; sapling's
+  `/execute ... in overworld run tp` of a mob answered success and left it in the End. Sapling
+  picks a parent at random.
 - Herds of babies from natural spawning (above); cats', parrots' and foxes' own goals (Left out).
 - The exact distance a lead snaps at, between 6.6 and 15.5.

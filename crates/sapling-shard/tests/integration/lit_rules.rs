@@ -185,9 +185,12 @@ fn water_freezes_and_snow_lies_where_it_is_cold_while_it_snows() {
     let (sent, got) = std::sync::mpsc::channel();
     h.remote.run(move |ctx| {
         let count = |y: i32, xs: std::ops::Range<i32>, name: &str| xs.flat_map(|x| (0..16).map(move |z| [x, y, z])).filter(|at| ctx.block(*at).is_some_and(|block| block.name == name)).count();
-        sent.send((count(63, 0..8, "minecraft:ice"), count(64, 8..16, "minecraft:snow_layer"))).expect("the test waits");
+        let piled = (8..16).flat_map(|x| (0..16).map(move |z| [x, 64, z])).filter(|at| ctx.block(*at).is_some_and(|block| block.properties.contains("height=") && !block.properties.contains("height=0"))).count();
+        sent.send((count(63, 0..8, "minecraft:ice"), count(64, 8..16, "minecraft:snow_layer"), piled)).expect("the test waits");
     });
     h.tick(1);
-    let (ice, snow) = got.recv().expect("ran");
+    let (ice, snow, piled) = got.recv().expect("ran");
     assert!(ice > 20 && snow > 20, "ice {ice}, snow {snow}");
+    // bds-u1cold.txt: ice plains' snow piled to 8 layers in 70 s at speed 30.
+    assert!(piled > 20, "piled {piled}");
 }

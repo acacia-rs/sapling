@@ -1,7 +1,8 @@
 //! Frost Walker: boots with it freeze still water around a player on the ground into frosted
-//! ice, which ages and melts back (docs/research/enchantments.md, section 6).
-// TODO: the melt is the Java game's (BDS's was not read) and asks for no light, where the game
-// wants more than 11 less the age.
+//! ice, which ages and melts back (docs/research/enchantments.md, section 6). Frosted ice written
+//! any other way (a command) is looked at 20 to 40 ticks on, and ages only where its brightness is
+//! over 11 less its age, as BDS's did (research/captures/bds-u1frost.txt: by day and by glowstone,
+//! never at midnight unlit).
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
@@ -20,6 +21,8 @@ const AGAIN: [u32; 2] = [20, 21];
 const HUDDLED: usize = 4;
 /// One in this many looks ages ice that has neighbours enough.
 const AGES_ONE_IN: u32 = 3;
+/// It ages only where the brightness is over this less its age (as Java's `FrostedIceBlock.tick`).
+const DIM: u8 = 11;
 
 type Level = sapling_world::World;
 
@@ -40,9 +43,26 @@ fn is_air(level: &Level, [x, y, z]: BlockPos) -> bool {
     level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_air())
 }
 
+/// Looks at the frosted ice at `pos` again `least` to `least + more - 1` ticks on, in place of any look queued.
 fn later(world: &mut World, layer: Entity, pos: BlockPos, [least, more]: [u32; 2]) {
     let when = world.resource::<Tick>().0 + u64::from(least + world.get_resource_or_insert_with(Dice::default).roll(more));
-    world.get_resource_or_insert_with(Frost::default).0.push((when, layer, pos));
+    let mut frost = world.get_resource_or_insert_with(Frost::default);
+    frost.0.retain(|(_, at_layer, at)| (*at_layer, *at) != (layer, pos));
+    frost.0.push((when, layer, pos));
+}
+
+/// Frosted ice newly written at `pos` waits for its first look.
+pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str, now: &str) {
+    if now == FROSTED_ICE && was != FROSTED_ICE {
+        later(world, layer, pos, AGAIN);
+    }
+}
+
+/// Whether the brightest of the cell and its neighbours is over [`DIM`] less `age`: BDS melted a
+/// corner of ice two under glowstone, lit 9 itself but 12 over it (bds-u1frost.txt).
+fn lit(world: &World, layer: Entity, pos: BlockPos, age: u32) -> bool {
+    let around = std::iter::once(pos).chain(Face::ALL.iter().map(|face| face.neighbour(pos)));
+    around.filter_map(|at| crate::light::brightness(world, layer, at)).max().is_some_and(|bright| u32::from(bright) + age > u32::from(DIM))
 }
 
 /// A player that moved across to `feet` with boots of Frost Walker at level `walker` (0: none)
@@ -92,9 +112,9 @@ pub(crate) fn tick(world: &mut World) {
     let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut frost.0).into_iter().partition(|(when, ..)| *when <= now);
     frost.0 = waiting;
     for (_, layer, pos) in due {
-        let Some(here) = level(world, layer).filter(|here| age(here, pos).is_some()) else { continue };
+        let Some((here, old)) = level(world, layer).and_then(|here| Some((here, age(here, pos)?))) else { continue };
         let huddled = Face::ALL.iter().filter(|face| age(here, face.neighbour(pos)).is_some()).count();
-        let ages = huddled < HUDDLED || world.get_resource_or_insert_with(Dice::default).roll(AGES_ONE_IN) == 0;
+        let ages = (huddled < HUDDLED || world.get_resource_or_insert_with(Dice::default).roll(AGES_ONE_IN) == 0) && lit(world, layer, pos, old);
         if !ages || !melt_a_little(world, layer, pos) {
             later(world, layer, pos, AGAIN);
             continue;

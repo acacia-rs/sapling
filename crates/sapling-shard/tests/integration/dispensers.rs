@@ -154,6 +154,21 @@ fn bone_meal_from_a_dispenser_grows_a_crop() {
 }
 
 #[test]
+fn bone_meal_from_a_dispenser_grows_sea_grass_tall_once() {
+    // bds-u1meal.txt: grown with a click from the mouth telling nothing; tall again, the failing click's 1000.
+    let water = |at: [i32; 3]| (at, Block::new("water").with("liquid_depth=0"));
+    let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:bone_meal", 4)], vec![water(FRONT), (FRONT, Block::new("seagrass")), water([4, 66, 3]), water([4, 67, 3])]);
+    let clicks = |sent: &[RawPacket]| all::<LevelSoundEvent>(sent).into_iter().map(|sound| (sound.sound_id.to_string(), sound.extra_data, (sound.position.x * 10.0).round() as i32)).collect::<Vec<_>>();
+    let grown = power(&mut h, true, 8);
+    assert_eq!(block(&mut h, FRONT).properties, "sea_grass_type=double_bot");
+    assert_eq!(block(&mut h, [4, 66, 3]).properties, "sea_grass_type=double_top");
+    assert_eq!(clicks(&grown), [("block.click".to_owned(), -1, 42)]);
+    power(&mut h, false, 4);
+    let failed = power(&mut h, true, 8);
+    assert_eq!(clicks(&failed), [("block.click.fail".to_owned(), 1000, 42)]);
+}
+
+#[test]
 fn a_hopper_fills_a_dispenser_and_a_player_moves_items_in_its_screen() {
     let hopper = Block::new("hopper").with("facing_direction=0,toggle_bit=0");
     let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![], vec![([3, 66, 3], hopper)]);

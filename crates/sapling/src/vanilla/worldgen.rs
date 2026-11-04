@@ -2,8 +2,9 @@
 //! BDS answered (research/captures/bds-locate.txt, bds-place.txt): a place is named by its block
 //! and its distance, rounded down, from the sender.
 //! `/place` takes BDS's names and options (bds-t1dplace.txt); a player of BDS may not run it (admin).
-// TODO: a feature rule is not placed (`invalidfeaturerule`), and the structure options are taken,
-// not followed: BDS's console placed nothing, not even a feature (bds-t1dplacec.txt).
+// TODO: a feature rule is not placed: BDS answered every rule it lists `invalidposition` on a flat
+// world, on stone and on grass (bds-t1dplace.txt, bds-u1place.txt), and so does sapling. The
+// structure options are taken, not followed: BDS's console placed nothing (bds-t1dplacec.txt).
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, parse_choice};
 use sapling_api::{Command, Output, Permission, PlaceError, Sender, ShardCtx};
@@ -154,7 +155,7 @@ impl Command for Place {
         }
         let (placed, unknown) = match &self.what {
             What::Feature(name) => (ctx.place_feature(name, at), "commands.place.invalidfeature.error"),
-            What::FeatureRule(_) => (Err(PlaceError::Unknown), "commands.place.invalidfeaturerule.error"),
+            What::FeatureRule(_) => (Err(PlaceError::Unknown), "commands.place.invalidposition.error"),
             What::Structure(name) => (ctx.place_structure(name, at), "commands.place.invalidstructure.error"),
             What::Jigsaw { max_depth, .. } if !(1..=MOST_DEPTH).contains(max_depth) => return out.translate("commands.place.maxdepth.error", Vec::new(), false),
             // BDS answered an unknown pool so, not as an unknown structure.

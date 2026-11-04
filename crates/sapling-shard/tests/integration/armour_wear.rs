@@ -58,6 +58,12 @@ fn slowness_slows_a_player_by_the_modifier_bds_wrote() {
     let own: Vec<RawPacket> = [1, 2].iter().flat_map(|conn| sent.to(*conn).to_vec()).collect();
     let most: Vec<(f32, f32, String)> = all::<UpdateAttributes>(&own).iter().flat_map(|told| told.attributes.clone()).filter(|told| told.name == "minecraft:health" && !told.modifiers.is_empty()).map(|told| (told.current, told.max, told.modifiers[0].name.clone())).collect();
     assert!(!most.is_empty() && most.iter().all(|told| *told == (20.0, 28.0, "HealthBoost".to_owned())), "{most:?}");
+    // bds-u1fly.txt: a hit under the boost was told with it too, its own most still 20.
+    (0..12).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert!(ctx.hurt_player(ALEX, 3.0, DamageCause::Magic)));
+    let sent = h.tick_all();
+    let hurt: Vec<(f32, f32, f32, usize)> = all::<UpdateAttributes>(sent.to(1)).iter().flat_map(|told| told.attributes.clone()).filter(|told| told.name == "minecraft:health").map(|told| (told.current, told.max, told.default_max, told.modifiers.len())).collect();
+    assert_eq!(hurt, [(17.0, 28.0, 20.0, 1)]);
 }
 
 #[test]

@@ -9,7 +9,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Effect};
 
 use super::{Trial, configs};
-use crate::spawners::{Near, centre, distance, set_state};
+use crate::spawners::{Near, distance, set_state};
 use crate::tags::UniqueId;
 use crate::vitals::{self, effects};
 
@@ -41,6 +41,7 @@ pub(super) fn awaken(world: &mut World, layer: Entity, pos: BlockPos, near: &[Ne
     trial.total_spawned = 0;
     trial.next_spawn = now + trial.config.ticks_between;
     set_state(world, layer, pos, "ominous", "1");
-    super::event(world, layer, pos, LevelEventEvent::OminousItemSpawner, centre(pos), 1);
+    // BDS's 3616 at the block's corner with 0, before the charged detection (bds-u1omen.txt).
+    super::event(world, layer, pos, LevelEventEvent::OminousItemSpawner, pos.map(|c| c as f32), 0);
     true
 }

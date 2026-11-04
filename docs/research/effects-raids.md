@@ -258,7 +258,17 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
 - Ominous item spawners from an active ominous trial spawner: a `/setblock` trial spawner has an empty
   block entity and never woke for an omened player 4.5 off in 30 s (bds-trialomen.txt); it needs a trial
   chamber's spawner. Tried again 2026-11-04 with an egg-woken spawner mid-wave (bds-t3trial.txt): Trial
-  Omen did not turn it ominous in 30 s on BDS either. Undrillable without a generated chamber.
+  Omen did not turn it ominous in 30 s on BDS either. Drilled 2026-11-04 (`u1omen`, bds-u1omen.txt) with
+  the omen given before the egg: a `/setblock` spawner waiting for its creative actor turned ominous the
+  tick the actor turned survival, showing 3616 with 0 then 3615 with 1 at its corner, and
+  `ominous=1,trial_spawner_state=1` then `=2` in one UpdateSubchunkBlocks. Sapling sent 3616 with 1 at the
+  middle; fixed (`spawners/trial/ominous.rs`, test `bad_omen_turns_to_trial_omen_and_the_spawner_ominous`).
+  A spawner set `["ominous"=true]` woke with 3615 alone. The active ominous spawners then made three
+  `minecraft:ominous_item_spawner`s, the first 5.5 over the actor's feet 4 ticks after it woke, the next
+  160 ticks on: `ominous_item_spawner.spawn_item_begin` as it came,
+  `about_to_spawn_item` 27 ticks on, and at 62 ticks its item (an arrow thrown down at 1.29, a lingering
+  potion dropped at 0.5) with `spawn_item` and the spawner gone. Not ported: sapling has no ominous item
+  spawner (`spawners/trial/ominous.rs` TODO).
 
 Drilled the same: a bell rung with a slowed pillager 4 off sent nothing for the pillager (bds-fx3.txt),
 as sapling (Bedrock has no glowing).

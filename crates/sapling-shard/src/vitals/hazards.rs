@@ -64,12 +64,13 @@ pub(super) fn into_wall(world: &mut World, player: Entity) -> Option<f32> {
     (harm > 0.0).then_some(harm)
 }
 
-/// What the player's viewers hear of it flying into a wall for `harm`, a tick later, as a landing's.
+/// What the player and its viewers hear of it flying into a wall for `harm`, a tick later; unlike a
+/// landing's, the glider hears it too (bds-u1fly.txt).
 pub(super) fn sound_wall(world: &mut World, player: Entity, layer: Entity, harm: f32) {
     let (Some(id), Some([x, y, z])) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return };
     let name = if harm > BIG_WALL { "fall.big" } else { "fall.small" };
     let sound = LevelSoundEvent { sound_id: name.into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
-    crate::late_sounds::play_later_but(world, 1, layer, [x, y, z].map(|c| c.floor() as i32), Some(player), sapling_net::encode(&sound));
+    crate::late_sounds::play_later(world, 1, layer, [x, y, z].map(|c| c.floor() as i32), sapling_net::encode(&sound));
 }
 
 /// Whether feet at height `y` are in the void.

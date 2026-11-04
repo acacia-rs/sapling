@@ -23,8 +23,14 @@ devbox's BDS; the captures are `research/captures/bds-<drill>.txt`, sapling's `s
   by the server as on landing (flag off, `BoundingboxHeight` 1.8); sapling did not, and now does
   (`gliding.rs` `in_water`). One that started riding was stopped too, as in sapling. Levitation did
   not stop it: BDS corrected the levitating glider each 300 ms and left the flag on, as sapling.
-- Not drilled: creative flight ending a glide (the drill bot cannot fly); the fly-into-wall damage
-  (combat's).
+- Flight and walls (`u1fly`, bds-u1fly.txt, 2026-11-04). Creative flight ended a glide on both
+  servers (flag off); BDS also sent a `CorrectPlayerMovePrediction`, and after the flight it took up
+  the glide again and corrected the glider every 300 ms, where sapling, which trusts the client's
+  move, did neither. Flying into a wall hurt (`HurtAnimation` 21) on both; BDS's glider heard its
+  own `fall.big`, and sapling's now does too (`vitals/hazards.rs` `sound_wall`). BDS took 7.62
+  where sapling took 5.49: the harm is the speed lost, and the bot flew BDS's corrected path, not
+  its own. A health boost's modifier and default of 20 stayed on every health BDS told afterwards;
+  sapling's now do (`vitals.rs` `settle`, test `slowness_slows_a_player_by_the_modifier_bds_wrote`).
 
 ## Armour from the hand (`fx3`; `inventory/donning.rs`)
 
