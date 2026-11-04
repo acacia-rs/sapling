@@ -146,8 +146,10 @@ fn a_stored_block_entity_comes_with_its_section_and_after_a_resync() {
 
     let mut h = Harness::with(config(), World::with_storage(storage));
     enter_stored(&mut h, 1);
+    // Shown as BDS shows it: versioned, keys sorted.
+    let expected = compound([("BlockEntityVersion", Value::Int(0)), ("CustomName", Value::String("Loot".into())), ("id", Value::String("Chest".into())), ("x", Value::Int(3)), ("y", Value::Int(67)), ("z", Value::Int(3))]);
     let mut wire = BytesMut::new();
-    nbt::write::<Network>(&mut wire, &Nbt { name: String::new(), value: chest.clone() });
+    nbt::write::<Network>(&mut wire, &Nbt { name: String::new(), value: expected.clone() });
     h.receive(1, &SubchunkRequest { dimension: 0, requests: vec![Vec3i8 { x: 0, y: 4, z: 0 }], origin: Vec3li { x: 0, y: 0, z: 0 } });
     let payload = all::<Subchunk>(&h.tick(1))[0].entries[0].payload.clone().expect("a payload");
     assert!(payload.ends_with(&wire) && payload.len() > wire.len(), "the chest's data follows its section");
@@ -162,7 +164,7 @@ fn a_stored_block_entity_comes_with_its_section_and_after_a_resync() {
     h.shard.add_handler(Box::new(Refuses));
     h.receive(1, &click([3, 67, 3], 1, None));
     let shown = all::<BlockEntityData>(&h.tick(1));
-    assert_eq!(shown.iter().map(|data| (data.position.y, data.nbt.decode().unwrap().value)).collect::<Vec<_>>(), [(67, chest)]);
+    assert_eq!(shown.iter().map(|data| (data.position.y, data.nbt.decode().unwrap().value)).collect::<Vec<_>>(), [(67, expected)]);
 }
 
 #[test]

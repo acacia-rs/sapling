@@ -1,6 +1,6 @@
 //! The BlockEntities record (records.rs): each compound names its block in `x`, `y`, `z`.
 
-use acacia_proto::nbt::{self, LittleEndian, Nbt, Network, Value};
+use acacia_proto::nbt::{self, List, LittleEndian, Nbt, Network, Value};
 use bytes::{Bytes, BytesMut};
 
 use crate::Error;
@@ -14,10 +14,20 @@ pub struct BlockEntity {
     pub nbt: Value,
 }
 
+/// Every block entity BDS sends carries it, 0 (each id in research/captures/bds-*.txt).
+const VERSION: &str = "BlockEntityVersion";
+
 impl BlockEntity {
-    /// What clients are sent of it, in a chunk or a `BlockEntityData` packet.
+    /// What clients are sent of it, in a chunk or a `BlockEntityData` packet: as BDS's, with
+    /// [`VERSION`] and every compound's keys in order.
     pub fn shown(&self) -> Value {
-        without_items(&self.nbt)
+        let mut shown = without_items(&self.nbt);
+        if let Value::Compound(fields) = &mut shown
+            && !fields.iter().any(|(key, _)| key == VERSION)
+        {
+            fields.push((VERSION.into(), Value::Int(0)));
+        }
+        sorted(shown)
     }
 
     /// [`BlockEntity::shown`] as a chunk carries it.
@@ -25,6 +35,19 @@ impl BlockEntity {
         let mut out = BytesMut::new();
         nbt::write::<Network>(&mut out, &Nbt { name: String::new(), value: self.shown() });
         out.freeze()
+    }
+}
+
+/// `value` with the keys of each compound in it sorted, as BDS's compounds (maps) keep them.
+fn sorted(value: Value) -> Value {
+    match value {
+        Value::Compound(fields) => {
+            let mut fields: Vec<_> = fields.into_iter().map(|(key, value)| (key, sorted(value))).collect();
+            fields.sort_by(|a, b| a.0.cmp(&b.0));
+            Value::Compound(fields)
+        }
+        Value::List(list) => Value::List(List { tag: list.tag, items: list.items.into_iter().map(sorted).collect() }),
+        other => other,
     }
 }
 
@@ -85,7 +108,20 @@ mod tests {
         assert_eq!(read.iter().map(|entity| entity.pos).collect::<Vec<_>>(), [[1, 65, -3], [2, 4, 0]]);
         let wire = read[0].network();
         let back = nbt::read::<Network>(&mut &wire[..]).unwrap();
-        assert_eq!(back.value, read[0].nbt);
         assert_eq!(back.value.get("id"), Some(&Value::String("Sign".into())));
+    }
+
+    #[test]
+    fn a_block_entity_is_shown_as_bds_shows_it_versioned_and_sorted() {
+        let plant = Value::Compound(vec![("version".into(), Value::Int(1)), ("name".into(), Value::String("minecraft:poppy".into()))]);
+        let mut pot = crate::new_block_entity("FlowerPot", [1, -26, -6]);
+        if let Value::Compound(fields) = &mut pot {
+            fields.push(("PlantBlock".into(), plant));
+        }
+        let shown = BlockEntity { pos: [1, -26, -6], nbt: pot }.shown();
+        let Value::Compound(fields) = &shown else { panic!("{shown:?}") };
+        assert_eq!(fields.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), ["BlockEntityVersion", "PlantBlock", "id", "x", "y", "z"]);
+        let Some(Value::Compound(plant)) = shown.get("PlantBlock") else { panic!("{shown:?}") };
+        assert_eq!(plant.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), ["name", "version"]);
     }
 }

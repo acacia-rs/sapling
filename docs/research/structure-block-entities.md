@@ -170,9 +170,27 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   propagule {`hanging` Byte 0, `propagule_stage` Int 0}, bamboo {`age_bit` Byte 0,
   `bamboo_leaf_size` "no_leaves", `bamboo_stalk_thickness` "thin"}, cactus {`age` Int 0}, poppy {}.
   Sapling's click (`pots.rs`) keeps the same, test `a_potted_plant_keeps_its_first_state_as_on_bds`;
-  sapling-potsapling.txt sent the same `UpdateBlock`s and `PlantBlock`s. Left (packet shape): BDS
-  also sends the empty pot's `BlockEntityData` at its `/setblock`, and starts each with
-  `BlockEntityVersion` 0; sapling sends only the potted one, without it.
+  sapling-potsapling.txt sent the same `UpdateBlock`s and `PlantBlock`s.
+- Block entities on the wire (2026-11-04, every `BlockEntityData` of research/captures/bds-*.txt,
+  and `bds_command_probe setshown`, bds-setshown.txt): every one BDS sends, of all 34 ids seen
+  (pots, banners, chests, pistons, moving blocks, command blocks, ...), carries `BlockEntityVersion`
+  Int 0, and every compound's keys are sorted (BDS's compounds are maps): `{BlockEntityVersion,
+  PlantBlock {name, states, version}, id, x, y, z}`. Sapling sent theirs in the order kept, the
+  version only where a module wrote it (structure blocks, gateways). `/setblock` of a pot, cauldron,
+  skull, beacon, chiseled bookshelf, bell, chest or bed sent the new entity at once (a bed both
+  halves, `color` 14: a command's bed is red); sapling made none for a pot, cauldron, skull, beacon
+  or bookshelf, and gave a command's bed no entity. Fixed: `BlockEntity::shown`
+  (sapling-leveldb) adds the version and sorts, for chunks and `BlockEntityData` alike; blocks/entities.rs
+  `furnish` makes and shows those entities (beds through `commanded::put_bed`); tests
+  `a_block_entity_is_shown_as_bds_shows_it_versioned_and_sorted`, set_shown.rs. Saved block
+  entities are unchanged (sapling's own lack the version on disk). Left: BDS's network-only sign
+  fields (`FilteredText`, `LockedForEditingBy` -1, bds-unheld.txt), a set frame's, lectern's,
+  jukebox's, lodestone's, ender chest's and spawners' entities (sapling makes them on use, BDS at
+  the set), BDS's second send a tick later of a set cauldron and skull (flags 19), a cauldron's
+  empty `Items` (tag 0) that BDS shows and sapling's `without_items` drops, and two block
+  differences sapling-setshown.txt showed: BDS's unsupported set frame was gone by its removal
+  (`noChange`), and its bed's `setblock … air` sent no UpdateBlock. Re-drilled: sapling-setshown.txt
+  sends the same entities otherwise.
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
   chambers' dead bush at (-446, -11, -425), is water in our blocks there (a block difference).
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
