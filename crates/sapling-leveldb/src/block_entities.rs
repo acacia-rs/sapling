@@ -56,12 +56,13 @@ impl BlockEntity {
 
     /// What a `BlockEntityData` packet carries of it: [`BlockEntity::shown`], but a trial
     /// spawner's, a vault's and a crafter's, which BDS writes as their own, without even an id
-    /// (research/captures/bds-s7ents.txt; one that held anything was not drilled).
+    /// (research/captures/bds-s7ents.txt): a trial spawner's only `spawn_data`, once it has one
+    /// (bds-t3trial.txt).
     pub fn updated(&self) -> Value {
         let field = |key: &str, value| (Str::from(key), value);
         let kept = |key: &str| self.nbt.get(key).cloned();
         match self.nbt.get("id") {
-            Some(Value::String(id)) if id == "TrialSpawner" => Value::Compound(Vec::new()),
+            Some(Value::String(id)) if id == "TrialSpawner" => Value::Compound(kept("spawn_data").map(|data| field("spawn_data", data)).into_iter().collect()),
             Some(Value::String(id)) if id == "Vault" => {
                 let range = self.nbt.get("config").and_then(|config| config.get("deactivation_range")).cloned().unwrap_or(Value::Float(4.5));
                 let nothing = ["Count", "Damage", "Name", "WasPickedUp"].into_iter().zip([Value::Byte(0), Value::Short(0), Value::String(Str::default()), Value::Byte(0)]);

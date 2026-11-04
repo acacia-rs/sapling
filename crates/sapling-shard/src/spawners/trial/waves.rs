@@ -49,7 +49,7 @@ pub(super) fn register(world: &mut World, layer: Entity, pos: BlockPos, near: &[
     trial.registered.extend(added);
     // BDS's charged detection, 3615, which the wire's names give to another event.
     let detected = if trial.ominous { LevelEventEvent::from_raw(3615) } else { LevelEventEvent::ParticleTrialSpawnerDetection };
-    event(world, layer, pos, detected, centre(pos), trial.registered.len() as i32);
+    event(world, layer, pos, detected, pos.map(|c| c as f32), trial.registered.len() as i32);
     trial.next_spawn = trial.next_spawn.max(now + AFTER_DETECTION);
     true
 }
@@ -79,11 +79,12 @@ pub(super) fn spawn(world: &mut World, layer: Entity, pos: BlockPos, kind: &str,
     if solid || off > range || !in_sight(world, layer, centre(pos), at) {
         return None;
     }
+    // BDS: both puffs (the spawner's at its corner), then the mob, then the sound (bds-t3trial.txt).
+    event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerSpawning, at, ominous.into());
+    event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerSpawning, pos.map(|c| c as f32), ominous.into());
     let id = crate::creatures::spawn(world, layer, kind, at, SpawnReason::Spawner)?;
     let unique_id = world.get::<UniqueId>(entities::find(world, id)?)?.0;
     sound(world, layer, pos, "trial_spawner.spawn_mob", at, -1);
-    event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerSpawning, at, ominous.into());
-    event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerSpawning, centre(pos), ominous.into());
     Some(unique_id)
 }
 
