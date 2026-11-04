@@ -47,3 +47,8 @@ fn the_tables_states_are_read_off_bedrock_blocks() {
     assert_eq!([left_of("beetroot", "growth=7", HAND, u32::MAX), left_of("beetroot", "growth=4", HAND, 0)], [[named("beetroot", 1), named("beetroot_seeds", 1)].concat(), named("beetroot_seeds", 1)]);
     assert_eq!([left_of("snow_layer", "covered_bit=0,height=2", HAND, 0), left_of("snow_layer", "covered_bit=0,height=2", Breaker::UNAIDED, 0)], [named("snowball", 3), vec![]]);
 }
+
+#[test]
+fn a_decorated_pot_broken_by_hand_leaves_itself() {
+    assert_eq!(left_of("decorated_pot", "direction=0", HAND, 0), named("decorated_pot", 1));
+}

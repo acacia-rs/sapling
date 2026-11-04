@@ -3,7 +3,7 @@
 
 use crate::common;
 
-use acacia_proto::packets::{AddItemEntity, LevelEvent, LevelSoundEvent, Text, TextType};
+use acacia_proto::packets::{AddItemEntity, LevelEvent, LevelEventGeneric, LevelSoundEvent, Text, TextType};
 use common::{Harness, all, click};
 use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
 
@@ -117,14 +117,22 @@ fn an_item_frame_takes_an_item_and_turns_it_and_a_decorated_pot_takes_a_stack() 
         h.receive(1, &click(at, 1, None));
         let sent = h.tick_all().to(1).to_vec();
         heard.extend(all::<LevelEvent>(&sent).into_iter().filter(|event| event.position.x == 2.0).map(|event| format!("{:?}", event.event)));
+        heard.extend(all::<LevelEventGeneric>(&sent).into_iter().map(|event| format!("generic {}", event.event_id)));
         heard.extend(all::<LevelSoundEvent>(&sent).into_iter().filter(|sound| sound.sound_id.contains("pot")).map(|sound| format!("{} {}", sound.sound_id, sound.extra_data)));
     }
-    assert_eq!(heard, ["SoundItemframeAddItem", "SoundItemframeRotateItem", "block.decorated_pot.insert 707", "block.decorated_pot.insert 715"]);
+    // research/captures/bds-t3uses.txt: event 4080 over the pot at each one put in.
+    assert_eq!(heard, ["SoundItemframeAddItem", "SoundItemframeRotateItem", "generic 4080", "block.decorated_pot.insert 707", "generic 4080", "block.decorated_pot.insert 715"]);
     h.remote.run(|ctx| {
         assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|held| held.count), Some(2), "one in the frame, two in the pot");
         assert!(ctx.block([2, 66, 0]).is_some_and(|over| over.name == "minecraft:air"), "no stone was put against the frame");
+        assert!(ctx.set_item(ALEX, Slot::Main(0), None));
     });
     h.tick_all();
+    // An empty hand takes nothing out: BDS wobbled the pot and told `insert_fail`.
+    h.receive(1, &click([2, 65, 2], 1, None));
+    let sent = h.tick_all().to(1).to_vec();
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "block.decorated_pot.insert_fail"));
+    assert_eq!(common::asking::ask(&mut h, |ctx| ctx.item(ALEX, Slot::Main(0)).map(|held| held.count)), None);
 }
 
 #[test]

@@ -72,6 +72,8 @@ impl Broken<'_> {
             "half" => Some("lower".to_owned()),
             "part" => Some("head".to_owned()),
             "unstable" => Some("false".to_owned()),
+            // A pot shot to pieces is shot_blocks.rs's; broken by hand BDS left the pot (bds-t3uses.txt).
+            "cracked" => Some("false".to_owned()),
             "berries" => Some(self.name.contains("with_berries").to_string()),
             "age" => match (self.number("growth"), self.number("age"), sapling_data::ripe_age(self.java)) {
                 (Some(growth), _, Some(ripe)) => Some(if growth >= RIPE { i32::from(ripe) } else { growth * i32::from(ripe) / RIPE }),

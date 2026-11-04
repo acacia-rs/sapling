@@ -1,10 +1,9 @@
 //! Blocks that hold one thing put into them by hand: an item frame takes an item and later
 //! clicks turn it, a decorated pot takes a stack one at a time (docs/research/block-uses.md, "A
 //! second round"). Each keeps it as BDS does, in its entity.
-// TODO: a pot gives nothing back but by being broken.
 
-use acacia_proto::nbt::Value;
-use acacia_proto::packets::{LevelEvent, LevelEventEvent};
+use acacia_proto::nbt::{Nbt, Value};
+use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelEventGeneric};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, GameMode};
@@ -21,6 +20,9 @@ pub(super) const POTTED: &str = "item";
 const TURN: &str = "ItemRotation";
 const EIGHTH: f32 = 45.0;
 const STACK: u8 = 64;
+const POT_INSERTED: u32 = 4080;
+const WOBBLE_FAILED: i8 = 1;
+const WOBBLE_INSERTED: i8 = 2;
 
 /// The entity of the block at `pos`, or a new one of `kind`.
 fn entity(world: &World, layer: Entity, pos: BlockPos, kind: &str) -> Value {
@@ -103,21 +105,45 @@ pub(super) fn use_holder(world: &mut World, player: Entity, layer: Entity, pos: 
     if name != POT {
         return false;
     }
-    let Some(stack) = held(world, player) else { return true };
+    fill_pot(world, player, layer, pos, corner);
+    true
+}
+
+/// A decorated pot clicked: one more of a stack like its own goes in, wobbling it (`animation` 2)
+/// with event 4080 over it; anything else, an empty hand too, wobbles it the other way
+/// (`animation` 1) with `insert_fail` (research/captures/bds-t3uses.txt).
+fn fill_pot(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, corner: Vec3f) {
     let mut fields = entity(world, layer, pos, "DecoratedPot");
     let inside = fields.get(POTTED).and_then(ItemStack::parse).filter(|inside| inside.count > 0);
-    let count = match inside {
-        Some(inside) if inside.name == stack.name && inside.count < STACK => inside.count + 1,
-        Some(_) => return true,
-        None => 1,
+    let held = held(world, player);
+    let count = held.as_ref().and_then(|stack| match &inside {
+        Some(inside) if inside.name == stack.name && inside.count < STACK => Some(inside.count + 1),
+        Some(_) => None,
+        None => Some(1),
+    });
+    let Some(item) = held.zip(count).and_then(|(stack, count)| kept(world, layer, ItemStack { count, ..stack })) else {
+        wobble(&mut fields, WOBBLE_FAILED);
+        send::keep_entity(world, layer, pos, &fields);
+        send::to_viewers(world, layer, pos, &[send::noise("block.decorated_pot.insert_fail", corner, -1)]);
+        return;
     };
-    let Some(item) = kept(world, layer, ItemStack { count, ..stack }) else { return true };
+    let over = [("x", 0.5), ("y", 1.25), ("z", 0.5)].into_iter().zip(pos).map(|((axis, by), at)| Nbt { name: axis.to_owned(), value: Value::Float(at as f32 + by) }).collect();
+    send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEventGeneric { event_id: POT_INSERTED, nbt: over })]);
     put(&mut fields, POTTED, item);
+    wobble(&mut fields, WOBBLE_INSERTED);
     send::keep_entity(world, layer, pos, &fields);
     super::container_changed(world, layer, pos);
     spend(world, player);
     // Higher the fuller it is: BDS's first stone told 707, its second 715.
-    let pitch = (700.0 + 500.0 * f32::from(count) / f32::from(STACK)) as i32;
+    let pitch = (700.0 + 500.0 * f32::from(count.unwrap_or(1)) / f32::from(STACK)) as i32;
     send::to_viewers(world, layer, pos, &[send::noise("block.decorated_pot.insert", corner, pitch)]);
-    true
+}
+
+/// Sets a pot's `animation` where it stands among the fields.
+fn wobble(entity: &mut Value, animation: i8) {
+    let Value::Compound(fields) = entity else { return };
+    match fields.iter_mut().find(|(key, _)| key == "animation") {
+        Some((_, value)) => *value = Value::Byte(animation),
+        None => fields.push(("animation".into(), Value::Byte(animation))),
+    }
 }
