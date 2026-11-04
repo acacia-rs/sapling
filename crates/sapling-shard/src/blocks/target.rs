@@ -9,6 +9,7 @@ use super::{level, redstone};
 
 const TARGET: &str = "minecraft:target";
 const FIREBALL: &str = "minecraft:small_fireball";
+const GRIEFING: &str = "mobGriefing";
 /// Ticks the signal lasts after an arrow or trident, and after anything else.
 const ARROW_TICKS: u64 = 20;
 const OTHER_TICKS: u64 = 8;
@@ -39,16 +40,20 @@ fn met(at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3]) -> Op
 /// breaks breaks (shot_blocks.rs), a small fireball lights the cell before the face it met (Java
 /// `SmallFireball.onHitBlock`; one dispensed at TNT lit no TNT on BDS, research/captures/bds-bkticks.txt),
 /// TNT another `burning` one met is lit (`TntBlock.onProjectileHit`). `sticks` for an arrow or trident.
+/// A mob's shot lights nothing while `mobGriefing` is off (a blaze's lit none on BDS, bds-u1blaze.txt).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3], sticks: bool, burning: bool) {
+pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3], sticks: bool, burning: bool, by_mob: bool) {
     let Some((pos, axis, point)) = met(at, motion, size, stopped) else { return };
     super::shot_blocks::shot(world, layer, pos, kind, motion);
     super::dripleaf::shot(world, layer, pos);
+    let lights = !by_mob || crate::rules::on(world, layer, GRIEFING);
     if kind == FIREBALL {
         let mut before = pos;
         before[axis] -= motion[axis].signum() as i32;
-        super::fire::light(world, layer, before);
-    } else if burning && crate::tnt::light(world, layer, pos) {
+        if lights {
+            super::fire::light(world, layer, before);
+        }
+    } else if burning && lights && crate::tnt::light(world, layer, pos) {
         return;
     }
     let is_target = level(world, layer).filter(|level| level.in_height(pos[1])).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).is_some_and(|state| state.name == TARGET);

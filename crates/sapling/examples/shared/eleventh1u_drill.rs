@@ -74,7 +74,7 @@ fn traps() -> Vec<String> {
 /// `mobGriefing` on and off.
 fn flaming_arrows() -> Vec<String> {
     let post = ["setblock 8 -26 0 stone", "setblock 8 -25 0 tnt", ""];
-    let shot = ["tp @s 0.5 -26 0.5 -90 0", "", "!look 1 0 0", "!use", "", "!release", "", "", "testforblock 8 -25 0 tnt"];
+    let shot = ["tp @s 0.5 -26 0.5 -90 0", "", "!look 8 1.4 0", "!use", "", "!release", "", "", "testforblock 8 -25 0 tnt"];
     let mut lines = with(floor(), &["time set noon", "replaceitem entity @s slot.weapon.mainhand 0 bow"]);
     lines.extend(owned(post));
     lines.extend(owned(shot));
@@ -126,9 +126,10 @@ fn frosted_ice() -> Vec<String> {
     with(lines, &["fill -8 -26 -8 16 -16 8 air", "time set noon", ""])
 }
 
-/// The survival actor (fire resistant) set alight in lava, stepped out and joined again while burning.
+/// The survival actor (resistant, as a fire resistant one was never shown alight) set alight in
+/// lava, stepped out and joined again while burning.
 fn burning_rejoin() -> Vec<String> {
-    let lines = with(floor(), &["fill 2 -26 -1 4 -26 1 glass", "setblock 3 -26 0 lava", "gamemode survival @s", "effect @s fire_resistance 60 0 true", "tp @s 3.5 -26 0.5", "", "tp @s 0.5 -26 0.5", "!rejoin", "", "", ""]);
+    let lines = with(floor(), &["fill 2 -26 -1 4 -26 1 glass", "setblock 3 -26 0 lava", "gamemode survival @s", "effect @s resistance 60 255 true", "tp @s 3.5 -26 0.5", "", "tp @s 0.5 -26 0.5", "!rejoin", "", "", ""]);
     with(lines, &["fill 2 -26 -1 4 -26 1 air", "gamemode creative @s", "effect @s clear", ""])
 }
 
