@@ -61,6 +61,7 @@ mod foes;
 mod forms;
 mod frogs;
 mod frost;
+mod frosted_ice;
 mod gates;
 mod generated_structures;
 mod ground;
