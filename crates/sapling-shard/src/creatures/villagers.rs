@@ -3,13 +3,14 @@
 //! screen (trading.rs), kept in its actor compound (storage.rs); the wandering trader's offers,
 //! llamas and the timer it leaves by (wandering.rs).
 //! A villager keeps its pack's day (schedule.rs), sleeps in a bed it claims (beds.rs), flees what
-//! it fears and hides at a bell (fear.rs); a player's standing with its village (standing.rs).
-// TODO: no gossip (Hero of the Village pays less, trading.rs); villager breeding
-// (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
+//! it fears and hides at a bell (fear.rs); a player's standing with its village (standing.rs); its
+//! village's iron golems (golems.rs, golem_spawns.rs).
+// TODO: villager breeding (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
 
 mod beds;
 mod deals;
 mod fear;
+mod golem_spawns;
 mod golems;
 mod jobs;
 mod schedule;
@@ -33,6 +34,7 @@ use crate::{entities, mobs};
 use deals::Deal;
 
 pub(crate) use fear::alarm;
+pub(super) use golem_spawns::tick as spawn_golems;
 pub(super) use standing::{hit as hurt_standing, outlaw};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};
 
@@ -64,12 +66,17 @@ pub(crate) struct Trader {
     job: Option<[i32; 3]>,
     /// The head of the bed it claimed (beds.rs).
     bed: Option<[i32; 3]>,
+    /// The ticks its work at its job site ends and it may next start work (jobs.rs).
+    work: (u64, u64),
     /// The work period (jobs.rs) it last restocked in.
     restocked: Option<i64>,
+    /// The tick it last started work (golem_spawns.rs).
+    worked: Option<u64>,
     next_look: u64,
     /// A wandering trader's tick to leave at.
     leaves_at: Option<u64>,
     customer: Option<Entity>,
+    level_up: Option<trading::LevelUp>,
 }
 
 impl Trader {
@@ -155,7 +162,12 @@ pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     if kind == WANDERING_TRADER {
         wandering::arrive(world, layer, &mut trader, feet, kept.is_none());
     }
+    // A new trader's first data holds what it is, or it would undo the metadata told after it.
+    let first = world.get::<NetId>(entity).map(|id| shown(id.0, &trader).metadata);
     world.entity_mut(entity).insert(trader);
+    if let Some(first) = first {
+        entities::show_first(world, entity, first);
+    }
     storage::keep(world, entity);
     let shown = mobs::announced(world, entity).map(|announcement| dressed(world, entity, announcement));
     if let Some(shown) = shown {
@@ -171,6 +183,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity) -> bool {
     if wanders {
         return wandering::tick(world, entity, layer, now);
     }
+    trading::level_up(world, entity);
     if now >= next_look {
         let baby = super::shown::is_baby(world, entity);
         jobs::look(world, entity, layer, now, baby);

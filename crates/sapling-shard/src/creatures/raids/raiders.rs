@@ -9,7 +9,8 @@ use bevy_ecs::prelude::*;
 use super::super::{hunting, legs};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{NetId, Tick};
+use crate::components::{InLayer, NetId, Tick};
+use crate::entities;
 use crate::late_sounds;
 
 /// The village's middle is reached this near.
@@ -84,6 +85,24 @@ fn party_on(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: 
     if let Some(id) = world.get::<NetId>(entity).map(|id| id.0).filter(|_| cries) {
         late_sounds::play_later(world, 0, layer, body.at.map(|c| c.floor() as i32), hunting::sound("celebrate", id, kind, body, hunting::HEAD));
     }
+}
+
+/// How far about a raider, on each axis, a raider of no raid is recruited to its raid.
+const RECRUITS: f32 = 16.0;
+
+/// The mobs of a raiding kind in no raid, alive, within [`RECRUITS`] of one of `raiders` in
+/// `layer`, and where each is: BDS's `RaidRecruitSystem` (0x141959650) queues these to join
+/// (`minecraft:spawn_for_raid`), and they join if they stand in the raid's village.
+pub(super) fn recruits(world: &mut World, layer: Entity, raiders: &[Entity]) -> Vec<(Entity, [f32; 3])> {
+    let near: Vec<[f32; 3]> = raiders.iter().filter_map(|raider| world.get::<Body>(*raider).map(|body| body.at)).collect();
+    let close = |at: [f32; 3]| near.iter().any(|by| (0..3).all(|axis| (at[axis] - by[axis]).abs() <= RECRUITS));
+    let mut mobs = world.query::<(Entity, &InLayer, &Body, &entities::Kind, Has<Raider>)>();
+    let found: Vec<(Entity, [f32; 3])> = mobs
+        .iter(world)
+        .filter(|(_, on, body, kind, raids)| on.0 == layer && !raids && SPEEDS.iter().any(|(raider, _)| *raider == kind.0) && close(body.at))
+        .map(|(mob, _, body, ..)| (mob, body.at))
+        .collect();
+    found.into_iter().filter(|(mob, _)| super::super::is_alive(world, *mob)).collect()
 }
 
 /// The raid is over and gone: its raiders are in none.

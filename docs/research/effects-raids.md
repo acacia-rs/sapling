@@ -104,6 +104,8 @@ Bedrock was found.
   (-28,-36), (-31,-30)]. Sapling had all on one cell's middle; fixed (`waves::scatter`), re-drilled
   (sapling-raidaim.txt: (24,-39), (26,-34), (26,-35), (28,-39)). Villagers ring the bell every ~3.5 s
   while a raid gathers [bds-raid.txt; not built].
+- With two raiders or fewer left the bar reads `%raid.name - %raid.progress <n>` (0x14116bbf0:
+  `NumRaiders <= 2`; bds-n1recruit.txt: `progress 1` at 0.2 with one recruit of 120 health left).
 - A cleared wave shows `%raid.name - %raid.progress 0` at progress 0 for ~2 s (40 ticks) before the next
   wait, or before victory [bds-raid.txt].
 - Won after the last wave: Hero of the Village (29) for 48000 ticks at amplifier 0 (raid level - 1),
@@ -161,8 +163,8 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
 
 ## Not drilled
 
-- Every [Java] rule above: village detection, hero discount (the trade after the win missed its
-  villager).
+- Every [Java] rule above: village detection (the trade after the win missed its villager; the hero
+  discount is decompiled, villagers.md "Trading").
 - Captains (BDS's drilled raids had none, no banners). The village uuid sapling keys a raid by is its own.
 - Re-run on sapling 2026-11-03 at TICK_SCALE 1 with `SAPLING_DRILL_WORLD=lowflat` (research/captures/
   sapling-raid.txt, sapling-raidlost.txt; the default drill world's raised ground at y 60-63 had put
@@ -233,7 +235,17 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
   read, ub precondition checks, memmove) and the pillagers' routing (`paths::route`, `holds`,
   `is_standable`, `landing`, each block read through `World::block`'s hashed chunk map). Not cut: no
   single sapling hot spot; a per-route chunk cache in `paths` is the lever if it matters.
-- Joining passing raiders (`RaidRecruitSystem` 0x141959650): not built.
+- Joining passing raiders: `RaidRecruitSystem` (0x141959650) runs for a hostile dweller (role 2 at
+  `DwellerComponent`+0x58) of a village with a raid, at its dweller update (+0x40 at 0); every living
+  mob with `minecraft:can_join_raid` (pillager, vindicator, evoker, ravager, witch) in its box grown 16
+  on each axis, not queued and not in the raid, gets `minecraft:spawn_for_raid` and is queued.
+  `CanJoinRaidQueueSystem` (0x148493280) adds a queued mob to the raid of the village it stands in
+  (`NumRaiders` + 1, `TotalMaxHealth` + its max health). Built (`raiders::recruits`, every 20 ticks
+  while a wave fights, the raid's 96 reach as its village); test `a_pillager_by_a_raider_joins_its_raid`.
+  Drilled 2026-11-04 (`n1recruit`, examples/shared/ninth1_drill.rs): a pillager summoned 2 from a wave
+  pillager, the wave then killed; BDS's bar stayed on `%raid.name - %raid.progress 1` at 0.2 (24 of 120)
+  and no wave came until the newcomer died; sapling's the same (sapling-n1recruit.txt).
+- Hero discount: decompiled, as sapling's (villagers.md "Trading").
 - Ominous item spawners from an active ominous trial spawner: a `/setblock` trial spawner has an empty
   block entity and never woke for an omened player 4.5 off in 30 s (bds-trialomen.txt); it needs a trial
   chamber's spawner.

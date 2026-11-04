@@ -95,6 +95,9 @@ fn an_unemployed_villager_takes_the_job_site_beside_it() {
         professions.extend(metadata(&h.tick(1), id, Key::Variant));
     }
     assert_eq!(professions, [8], "an armorer");
+    h.remote.run(|ctx| assert!(ctx.set_block([6, 64, 3], &sapling_api::Block::new("air"))));
+    let after: Vec<i32> = (0..300).flat_map(|_| metadata(&h.tick(1), id, Key::Variant)).collect();
+    assert_eq!(after, [] as [i32; 0], "it keeps its profession without its site (bds-n1drop.txt)");
 }
 
 #[test]
@@ -130,6 +133,30 @@ fn an_armorer_trades_coal_for_emeralds_and_reaches_apprentice_at_ten_experience(
     assert_eq!(int(&recipes.items[0], "uses"), 5);
 }
 
+/// bds-n1drop.txt: a summoned armorer's first data says `Variant` 8; sapling's said 0 after it.
+#[test]
+fn a_new_armorer_is_last_told_as_an_armorer() {
+    let storage = floor_holding(Vec::new(), &[]);
+    let mut h = Harness::with(config(), World::with_storage(storage));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", [2.5, 64.0, 0.5], 0.0, Some("minecraft:become_armorer")).is_some()));
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick(1)).collect();
+    let id = all::<AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:villager_v2").expect("shown").runtime_id;
+    assert_eq!(metadata(&sent, id, Key::Variant).last(), Some(&8));
+}
+
+#[test]
+fn a_village_golem_is_kept_with_its_group_as_bds_keeps_it() {
+    let (mut h, storage, _) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", [4.5, 64.0, 4.5], 0.0, Some("minecraft:from_village")).is_some()));
+    (0..2).for_each(|_| drop(h.tick(1)));
+    h.shard.save_worlds();
+    let column = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
+    let kept = sapling_world::stored_actors(&column.actors).unwrap().into_iter().find(|(actor, ..)| actor.as_ref().is_some_and(|actor| actor.identifier == "minecraft:iron_golem"));
+    let groups = sapling_world::actor_groups(&kept.expect("the golem kept").2);
+    assert!(groups.iter().any(|group| group == "minecraft:village_created"), "{groups:?}");
+}
+
 #[test]
 fn a_hero_of_the_village_pays_less_by_its_level() {
     let (mut h, _, id) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");
@@ -140,19 +167,20 @@ fn a_hero_of_the_village_pays_less_by_its_level() {
 }
 
 #[test]
-fn an_armorer_restocks_at_its_job_site_once_a_work_period() {
+fn an_armorer_restocks_at_its_first_start_of_work_in_a_work_period() {
     let (mut h, _, id) = villager(&[([4, 64, 0], FURNACE)], [2.5, 64.0, 2.5], "minecraft:become_armorer");
     (0..100).for_each(|_| drop(h.tick(1)));
-    let used_after = |h: &mut Harness| {
+    let used_after = |h: &mut Harness, ticks: usize| {
         let (window, offers) = open(h, id);
         pay(h, 0, 15);
         trade(h, int(&offers[0], "netId"));
         close(h, window);
-        (0..120).for_each(|_| drop(h.tick(1)));
+        (0..ticks).for_each(|_| drop(h.tick(1)));
         let (window, offers) = open(h, id);
         close(h, window);
         int(&offers[0], "uses")
     };
-    assert_eq!(used_after(&mut h), 0, "restocked on reaching its blast furnace");
-    assert_eq!(used_after(&mut h), 1, "not twice in one work period");
+    assert_eq!(used_after(&mut h, 500), 1, "its first arrival came before the trade (bds-n1restock.txt)");
+    h.remote.run(|ctx| ctx.set_time(10_000));
+    assert_eq!(used_after(&mut h, 500), 0, "restocked on arriving in the next work period");
 }

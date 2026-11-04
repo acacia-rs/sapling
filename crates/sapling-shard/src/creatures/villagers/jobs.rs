@@ -1,8 +1,8 @@
 //! Professions and job sites: each profession's block, table and screen title (BDS's
 //! `villager_v2` behaviour pack); a villager's type by the biome it was born in; a villager
-//! without a job taking the nearest free job site and the profession it stands for, and losing
-//! it with its site if it never traded; going to its site in working hours and restocking there,
-//! twice a day at most (docs/research/villagers.md, "Professions").
+//! without a job taking the nearest free job site and the profession it stands for, and keeping
+//! the profession when the site goes; going to its site in working hours and restocking at its
+//! first start of work in each work period (docs/research/villagers.md, "Professions").
 
 use std::collections::HashMap;
 
@@ -12,7 +12,7 @@ use sapling_world::World as Level;
 use super::{Trader, int, tell};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::Layer;
+use crate::components::{Layer, Tick};
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key};
 
 pub(super) struct Profession {
@@ -180,14 +180,9 @@ pub(super) fn look(world: &mut World, entity: Entity, layer: Entity, now: u64, b
 fn decide(level: &Level, claimed: &mut Claimed, trader: &mut Trader, (entity, layer, feet, now): (Entity, Entity, [i32; 3], u64), dice: &mut Dice) -> Vec<MetadataDictionaryItem> {
     match trader.job {
         Some(site) if block_at(level, site) != of(trader.profession).map(|p| p.site) => {
+            // It keeps its profession (bds-n1drop.txt: 90 s, traded or not; bds-job2.txt: 20 s).
             claimed.sites.remove(&(layer, site));
             trader.job = None;
-            // TODO: BDS was not seen dropping a profession within 20 s of its site going (bds-job2.txt).
-            if trader.experience == 0 && trader.tier == 0 {
-                trader.profession = UNSKILLED;
-                (trader.deals, trader.tiers) = (Vec::new(), Vec::new());
-                return vec![int(Key::Variant, UNSKILLED), int(Key::MaxTradeTier, 0)];
-            }
         }
         None if trader.profession != NITWIT && claimed.may_search(now, FOR_JOBS) => {
             let wanted = (trader.profession != UNSKILLED).then_some(trader.profession);
@@ -216,31 +211,47 @@ fn work_period(time: i64) -> Option<i64> {
     }
 }
 
-/// In working hours a villager goes to its job site, and restocks there once a work period.
-/// False when it does not work now.
+/// In working hours a villager keeps its pack's `behavior.work`: it goes to its job site and works
+/// there 250 ticks, then is free 200 (`active_time`, `goal_cooldown`). Its first arrival in a work
+/// period restocks: `on_arrival`'s `minecraft:resupply_trades` adds `trade_resupply_component_group`,
+/// which only the next schedule change takes off (bds-n1restock.txt: a trade after that arrival was
+/// not restocked in 118 s). False when it does not work now.
 pub(super) fn work(world: &mut World, entity: Entity, layer: Entity) -> bool {
+    let now = world.resource::<Tick>().0;
     let (Some(trader), Some(body)) = (world.get::<Trader>(entity), world.get::<Body>(entity).copied()) else { return false };
     let Some(site) = trader.job else { return false };
-    let due = |period: i64| trader.restocked != Some(period) && trader.deals.iter().any(|deal| deal.uses > 0);
     let Some(period) = world.get::<Layer>(layer).and_then(|layer| work_period(layer.world.level().time)) else { return false };
-    let restocks = due(period);
+    if now < trader.work.0 {
+        super::super::legs::rest(world, entity);
+        return true;
+    }
+    if now < trader.work.1 {
+        return false;
+    }
     let [x, z] = [site[0] as f32 + 0.5, site[2] as f32 + 0.5];
     if (x - body.at[0]).hypot(z - body.at[2]) > AT_WORK + 0.5 {
         super::super::legs::walk(world, entity, layer, &body, [x, z], WALK, AT_WORK);
         return true;
     }
     super::super::legs::rest(world, entity);
-    if restocks {
-        restock(world, entity, period);
-    }
+    start_work(world, entity, now, period);
     true
 }
 
-/// Every offer of the trader restocked (BDS's `minecraft:resupply_trades` on arriving at work).
-pub(super) fn restock(world: &mut World, entity: Entity, period: i64) {
+/// Ticks of `behavior.work`'s work at the site, and of its rest after.
+const WORKS_FOR: u64 = 250;
+const RESTS_FOR: u64 = 200;
+
+/// The trader starts work at `now`, restocking every offer if it is its first start in `period`.
+fn start_work(world: &mut World, entity: Entity, now: u64, period: i64) {
     let Some(mut trader) = world.get_mut::<Trader>(entity) else { return };
-    trader.deals.iter_mut().for_each(super::Deal::restock);
+    trader.work = (now + WORKS_FOR, now + WORKS_FOR + RESTS_FOR);
+    trader.worked = Some(now);
+    if trader.restocked == Some(period) {
+        return;
+    }
     trader.restocked = Some(period);
+    trader.deals.iter_mut().for_each(super::Deal::restock);
     super::storage::keep(world, entity);
 }
 

@@ -2,16 +2,18 @@
 //! `minecraft:from_village` (its pack's `village_created` group, `behavior.defend_village_target`)
 //! defends; a player's golem and a plainly summoned one never took the hitter. The first hit on a
 //! grown villager had the village golem take the hitter at once; ten hits on a baby had it take none.
-// TODO: whether a golem is the village's is not kept with the world (BDS keeps its component groups).
+//! A village golem is kept so: its actor's `definitions` gain the event's group, as BDS's do.
 
 use bevy_ecs::prelude::*;
 
 use crate::body::Body;
 use crate::components::{InLayer, NetId};
-use crate::entities::Kind;
+use crate::entities::{Kind, Stored};
 
 const GOLEM: &str = "minecraft:iron_golem";
 const FROM_VILLAGE: &str = "minecraft:from_village";
+/// The component group `minecraft:from_village` adds (the pack's iron golem).
+const VILLAGE_CREATED: &str = "minecraft:village_created";
 /// How far from the hurt villager a golem defends it: its pack's `follow_range`.
 const DEFENDS: f32 = 64.0;
 
@@ -19,9 +21,22 @@ const DEFENDS: f32 = 64.0;
 #[derive(Component)]
 pub(in crate::creatures) struct VillageGolem;
 
-/// Marks a golem spawned by `minecraft:from_village` as its village's.
+/// Marks a golem spawned by `minecraft:from_village`, or kept with that event's group, as its
+/// village's; a new one's kept compound gains the group.
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str, event: Option<&str>) {
-    if kind == GOLEM && event == Some(FROM_VILLAGE) {
+    if kind != GOLEM {
+        return;
+    }
+    let kept = world.get::<Stored>(entity).is_some_and(|stored| sapling_world::actor_groups(&stored.compound).iter().any(|group| group == VILLAGE_CREATED));
+    if event == Some(FROM_VILLAGE) && !kept {
+        if let Some(mut stored) = world.get_mut::<Stored>(entity) {
+            match sapling_world::regrouped_actor(&stored.compound, &[], &[VILLAGE_CREATED]) {
+                Ok(compound) => stored.compound = compound,
+                Err(error) => tracing::warn!(%error, "a golem's compound is unreadable: its village is not kept"),
+            }
+        }
+    }
+    if kept || event == Some(FROM_VILLAGE) {
         world.entity_mut(entity).insert(VillageGolem);
     }
 }

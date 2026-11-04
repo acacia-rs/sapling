@@ -115,32 +115,70 @@ pub(crate) fn bargains(world: &World, player: Entity) -> Option<Vec<Bargain>> {
     Some(state.deals.iter().enumerate().map(|(at, deal)| deal.bargain(at, hero, registry)).collect())
 }
 
-/// What a trade of the offer at `index` leaves: a use of it, the trader's experience (and the
-/// next tier at the experience it takes), the player's orbs.
+/// What a trade of the offer at `index` leaves, as BDS's `notifyTrade` (0x141baa8a0): a use of
+/// it; below its highest tier the trader's experience, and the next tier at the experience it
+/// takes, which also starts its level-up (`LevelUp`); the player's orbs, 3 to 6 points a trade
+/// and 5 more for a level-up, where the offer rewards them.
 pub(crate) fn traded(world: &mut World, player: Entity, index: usize) {
     let Some(trader) = world.get::<Trading>(player).map(|trading| trading.trader) else { return };
     let Some(mut state) = world.get_mut::<Trader>(trader) else { return };
     let Some(deal) = state.deals.get_mut(index) else { return };
     deal.uses += 1;
     let (exp, rewarded) = (deal.offer.trader_exp, deal.offer.reward_exp);
-    state.experience += exp;
     let before = state.tier;
-    while state.tier < state.max_tier() && state.tiers.get(state.tier as usize + 1).is_some_and(|needs| state.experience >= *needs) {
-        state.tier += 1;
+    let mut changed = Vec::new();
+    if state.tier < state.max_tier() {
+        state.experience += exp;
+        while state.tier < state.max_tier() && state.tiers.get(state.tier as usize + 1).is_some_and(|needs| state.experience >= *needs) {
+            state.tier += 1;
+        }
+        changed.push(int(Key::TradeExperience, state.experience));
     }
-    let mut changed = vec![int(Key::TradeExperience, state.experience)];
-    if state.tier != before {
+    let levelled = state.tier != before;
+    if levelled {
         changed.insert(0, int(Key::TradeTier, state.tier));
+        state.level_up = Some(LevelUp { left: LEVEL_UP_TICKS, player });
     }
-    tell(world, trader, changed);
+    if !changed.is_empty() {
+        tell(world, trader, changed);
+    }
     say(world, trader, "haggle.yes");
-    super::standing::traded(world, player, trader);
     if rewarded {
-        // TODO: BDS's reward was not decompiled; this is the Java game's 3 to 6 points.
-        let points = 3 + world.get_resource_or_insert_with(Dice::default).roll(4) as i32;
+        let points = 3 + world.get_resource_or_insert_with(Dice::default).roll(4) as i32 + if levelled { 5 } else { 0 };
         let (Some(layer), Some(body)) = (world.get::<InLayer>(trader).map(|layer| layer.0), world.get::<Body>(trader).copied()) else { return };
         orbs::spawn(world, layer, body.at, points);
     }
+}
+
+/// Ticks a villager without a customer waits after a level-up before it ends: BDS's
+/// `mUpdateMerchantTimer`.
+const LEVEL_UP_TICKS: u32 = 10;
+/// The regeneration a level-up ends with: ticks.
+const LEVEL_UP_REGENERATION: u32 = 200;
+
+/// A level-up under way: ticks left, and the player whose trade made it.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct LevelUp {
+    left: u32,
+    player: Entity,
+}
+
+/// A villager's level-up counts down while it has no customer and ends, as BDS's economy
+/// `newServerAiStep` (0x141ba8d80) ends it, with 1 more standing for the player whose trade made
+/// it and 10 s of regeneration.
+pub(super) fn level_up(world: &mut World, trader: Entity) {
+    let Some(mut state) = world.get_mut::<Trader>(trader) else { return };
+    if state.customer.is_some() {
+        return;
+    }
+    let Some(mut level_up) = state.level_up else { return };
+    level_up.left = level_up.left.saturating_sub(1);
+    state.level_up = (level_up.left > 0).then_some(level_up);
+    if level_up.left > 0 {
+        return;
+    }
+    super::standing::levelled(world, level_up.player, trader);
+    crate::vitals::effects::give(world, trader, sapling_api::Effect::Regeneration, LEVEL_UP_REGENERATION, 0, true);
 }
 
 /// Ends a player's trading at the window `window` its client closed, if that is the one.

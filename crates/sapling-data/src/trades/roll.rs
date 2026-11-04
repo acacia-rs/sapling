@@ -1,8 +1,8 @@
-//! The offers a trader draws from a tier of its table: of each group, `select` trades by weight
-//! (all of a group of -1), each item one of its alternatives for the trader's type, its count in
-//! its range, and what its functions make of it.
-// TODO: BDS's draw was not decompiled: trades are drawn without putting back, alternatives each as
-// likely, and the offers keep the table's order.
+//! The offers a trader draws from a tier of its table, as BDS's `_generateTrades` (0x141bac370)
+//! does: of each group, `select` trades by weight in the order drawn (all of a group whose
+//! `select` is not below its size), then each item one of its alternatives for the trader's type,
+//! its count in its range, and what its functions make of it. A drawn trade with an item no
+//! alternative of which the type offers makes no offer (docs/research/villagers.md "Offers").
 
 use acacia_proto::nbt::Value as Nbt;
 
@@ -15,11 +15,36 @@ const EMERALD: &str = "minecraft:emerald";
 pub const ANY_DAMAGE: i16 = i16::MAX;
 /// The most a librarian's book costs.
 const BOOK_PRICE_CAP: i32 = 64;
-/// The colours a dyed piece of leather is given (each dye's colour, white to black).
-// TODO: BDS's `random_dye` was not decompiled; one dye's colour, each as likely.
+/// Each dye colour's RGB by its colour index (black 0 to white 15), BDS's table at 0x14a7716e4.
 const DYES: [u32; 16] = [
-    0xF9FFFE, 0xF9801D, 0xC74EBD, 0x3AB3DA, 0xFED83D, 0x80C71F, 0xF38BAA, 0x474F52, 0x9D9D97, 0x169C9C, 0x8932B8, 0x3C44AA, 0x835432, 0x5E7C16, 0xB02E26, 0x1D1D21,
+    0x1D1D21, 0xB02E26, 0x5E7C16, 0x835432, 0x3C44AA, 0x8932B8, 0x169C9C, 0x9D9D97, 0x474F52, 0xF38BAA, 0x80C71F, 0xFED83D, 0x3AB3DA, 0xC74EBD, 0xF9801D, 0xF0F0F0,
 ];
+/// The colour index `random_dye`'s draw of 16 lands on (BDS's tables at 0x14a805bb8 and 0x14a805bf8).
+const DYE_DRAWS: [usize; 16] = [15, 7, 8, 0, 3, 1, 14, 11, 10, 2, 6, 12, 4, 5, 13, 9];
+
+/// `random_dye` (BDS's 0x14752e880): one dye, a second below 0.3 of a draw and a third below 0.2
+/// of another, their colours averaged as BDS's floats do; ARGB, opaque.
+pub(super) fn random_dye(draws: &mut dyn Draws) -> u32 {
+    let dye = |draws: &mut dyn Draws| {
+        let rgb = DYES[DYE_DRAWS[draws.int(16) as usize]];
+        [16, 8, 0].map(|shift| ((rgb >> shift) & 0xFF) as f32 / 255.0)
+    };
+    let mut sum = dye(draws);
+    let mut dyes = 1;
+    for odds in [0.3, 0.2] {
+        if draws.float() < odds {
+            let more = dye(draws);
+            (0..3).for_each(|channel| sum[channel] += more[channel]);
+            dyes += 1;
+        }
+    }
+    if dyes > 1 {
+        let share = 1.0 / dyes as f32;
+        sum = sum.map(|channel| (channel * share).clamp(0.0, 1.0));
+    }
+    let [r, g, b] = sum.map(|channel| (channel * 255.0) as u32);
+    0xFF00_0000 | r << 16 | g << 8 | b
+}
 
 /// One item of an offer.
 #[derive(Debug, Clone, PartialEq)]
@@ -82,10 +107,7 @@ fn ware(choice: &[Item], mark: i32, wanted: bool, draws: &mut dyn Draws) -> Opti
                 (ware.name, ware.tag) = (made.name, made.tag);
             }
             Function::RandomAux(values) => ware.damage = between(draws, values.map(i32::from)) as i16,
-            Function::RandomDye => {
-                let colour = DYES[draws.int(DYES.len() as i32) as usize] | 0xFF00_0000;
-                ware.tag = Some(Nbt::Compound(vec![("customColor".into(), Nbt::Int(colour as i32))]));
-            }
+            Function::RandomDye => ware.tag = Some(Nbt::Compound(vec![("customColor".into(), Nbt::Int(random_dye(draws) as i32))])),
             Function::ExplorationMap => return None,
         }
     }
@@ -112,23 +134,26 @@ fn make(trade: &Trade, mark: i32, draws: &mut dyn Draws) -> Option<Offer> {
     Some(Offer { buy_a: wants.next()?, buy_b: wants.next(), sell: gives.into_iter().next()?, trader_exp: trade.trader_exp, max_uses: trade.max_uses, reward_exp: trade.reward_exp })
 }
 
-/// Draws `select` of `trades` by weight, without putting one back; their places in the group.
-fn pick(trades: &[&Trade], select: i32, draws: &mut dyn Draws) -> Vec<usize> {
-    let mut left: Vec<usize> = (0..trades.len()).collect();
-    if select < 0 || select as usize >= trades.len() {
-        return left;
+/// Draws `select` of `trades` by weight, without putting one back, as BDS does: the `n`th draw
+/// rolls over the trades from place `n` on and swaps the one it lands on into place `n`. Their
+/// places in the group, in the order drawn; all for a `select` not between 0 and the group's size.
+pub(super) fn pick(trades: &[Trade], select: i32, draws: &mut dyn Draws) -> Vec<usize> {
+    let mut order: Vec<usize> = (0..trades.len()).collect();
+    if select <= 0 || select as usize >= trades.len() {
+        return order;
     }
-    let mut chosen = Vec::new();
-    for _ in 0..select {
-        let mut roll = draws.int(left.iter().map(|at| trades[*at].weight as i32).sum());
-        let at = left.iter().position(|at| {
+    for n in 0..select as usize {
+        let mut roll = draws.int(order[n..].iter().map(|at| trades[*at].weight as i32).sum());
+        let Some(landed) = order[n..].iter().position(|at| {
             roll -= trades[*at].weight as i32;
             roll < 0
-        });
-        chosen.push(left.remove(at.unwrap_or(left.len() - 1)));
+        }) else {
+            break;
+        };
+        order.swap(n, n + landed);
     }
-    chosen.sort_unstable();
-    chosen
+    order.truncate(select as usize);
+    order
 }
 
 /// The offers a trader of type `mark` (`MarkVariant`) makes at `tier` (0 the first) of `table`.
@@ -136,9 +161,11 @@ pub fn roll(table: &Table, tier: usize, mark: i32, draws: &mut dyn Draws) -> Vec
     let Some(tier) = table.tiers.get(tier) else { return Vec::new() };
     let mut offers = Vec::new();
     for group in &tier.groups {
-        let trades: Vec<&Trade> = group.trades.iter().filter(|trade| can_offer(trade, mark)).collect();
-        for at in pick(&trades, group.select, draws) {
-            offers.extend(make(trades[at], mark, draws));
+        for at in pick(&group.trades, group.select, draws) {
+            let trade = &group.trades[at];
+            if can_offer(trade, mark) {
+                offers.extend(make(trade, mark, draws));
+            }
         }
     }
     offers

@@ -211,6 +211,7 @@ pub(crate) fn tick(world: &mut World) {
     crowding::tick(world);
     warden::tick(world);
     raids::tick(world);
+    villagers::spawn_golems(world);
     armour_stands::tick(world);
     struck::tick(world);
     creaking::tick_hearts(world);

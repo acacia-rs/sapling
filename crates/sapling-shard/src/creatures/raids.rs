@@ -4,8 +4,8 @@
 //! who slew a raider take Hero of the Village (none for raiders `/kill`ed: bds-raid.txt, bds-raidhero.txt), and it is lost once no villager is left. Shown on a boss bar (bar.rs),
 //! which stays 30 s past the end. Its raiders make for the village and celebrate its fall
 //! (raiders.rs); they hunt villagers and golems as their kind does (hunting/prey.rs). Raids are
-//! kept with the world (kept.rs).
-// TODO: raiders do not join a raid they pass (BDS's `RaidRecruitSystem`, 0x141959650).
+//! kept with the world (kept.rs). Raiders of no raid that come near its raiders in its village
+//! join it (raiders.rs `recruits`).
 
 mod bar;
 mod kept;
@@ -15,6 +15,7 @@ mod village;
 mod waves;
 
 pub(super) use raiders::steer;
+pub(super) use kept::{village as village_uuid, village_middle};
 pub(super) use village::centre as village_centre;
 
 use bevy_ecs::prelude::*;
@@ -114,6 +115,17 @@ fn win(world: &mut World, raid: &mut Raid, now: u64) {
     }
 }
 
+/// Raiders of no raid near the raid's raiders and in its village join it, their health to its.
+fn recruit(world: &mut World, raid: &mut Raid) {
+    for (mob, at) in raiders::recruits(world, raid.layer, &raid.raiders) {
+        if raid.reaches(raid.layer, at) {
+            world.entity_mut(mob).insert(raiders::Raider { middle: raid.middle });
+            raid.raiders.push(mob);
+            raid.most += world.get::<Health>(mob).map_or(0.0, Health::max);
+        }
+    }
+}
+
 fn step(world: &mut World, raid: &mut Raid, now: u64) {
     match raid.stage {
         Stage::Gathering(until) if raid.spawned >= raid.waves && raid.spawned > 0 => {
@@ -133,6 +145,7 @@ fn step(world: &mut World, raid: &mut Raid, now: u64) {
         Stage::Fighting => {
             if now.is_multiple_of(LOOKS) {
                 kept::rejoin(world, raid);
+                recruit(world, raid);
             }
             raid.raiders.retain(|raider| is_alive(world, *raider));
             if raid.raiders.is_empty() && raid.unloaded.is_empty() {

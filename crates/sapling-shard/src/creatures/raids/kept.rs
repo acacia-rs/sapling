@@ -8,7 +8,7 @@
 
 use acacia_proto::nbt::{self, LittleEndian, List, Nbt, Value};
 use bevy_ecs::prelude::*;
-use sapling_world::RaidRecord;
+use sapling_world::{VillagePart, VillageRecord};
 
 use super::raiders::Raider;
 use super::{Raid, Stage};
@@ -25,9 +25,17 @@ const VICTORY: i32 = 1;
 const DEFEAT: i32 = 2;
 
 /// The village's uuid, made of its middle.
-fn village(middle: [f32; 3]) -> String {
+pub(in crate::creatures) fn village(middle: [f32; 3]) -> String {
     let [x, y, z] = middle.map(|c| c.floor() as i32);
     format!("{:08x}-{:04x}-4000-8000-{:012x}", x as u32, y as u16, z as u32)
+}
+
+/// The middle a village uuid of [`village`] was made of.
+pub(in crate::creatures) fn village_middle(uuid: &str) -> Option<[i32; 3]> {
+    let parts: Vec<&str> = uuid.split('-').collect();
+    let [x, y, _, _, z] = parts[..] else { return None };
+    let (x, y, z) = (u32::from_str_radix(x, 16).ok()?, u16::from_str_radix(y, 16).ok()?, u64::from_str_radix(z, 16).ok()?);
+    Some([x as i32, i32::from(y as i16), z as u32 as i32])
 }
 
 fn encode(world: &World, raid: &Raid, now: u64) -> Vec<u8> {
@@ -96,8 +104,8 @@ fn overworlds(world: &mut World) -> Vec<Entity> {
 pub(super) fn load(world: &mut World, now: u64) -> Vec<Raid> {
     let mut raids = Vec::new();
     for layer in overworlds(world) {
-        let records = world.get::<Layer>(layer).map(|kept| kept.world.level().raids.clone()).unwrap_or_default();
-        raids.extend(records.iter().filter_map(|record| decode(layer, &record.compound, now)));
+        let records = world.get::<Layer>(layer).map(|kept| kept.world.level().villages.clone()).unwrap_or_default();
+        raids.extend(records.iter().filter(|record| record.part == VillagePart::Raid).filter_map(|record| decode(layer, &record.compound, now)));
     }
     raids
 }
@@ -105,9 +113,12 @@ pub(super) fn load(world: &mut World, now: u64) -> Vec<Raid> {
 /// Writes the raids into their world folders' level, for its next save.
 pub(super) fn keep(world: &mut World, raids: &[Raid], now: u64) {
     for layer in overworlds(world) {
-        let records: Vec<RaidRecord> = raids.iter().filter(|raid| raid.layer == layer).map(|raid| RaidRecord { village: village(raid.middle), compound: encode(world, raid, now) }).collect();
+        let records: Vec<VillageRecord> =
+            raids.iter().filter(|raid| raid.layer == layer).map(|raid| VillageRecord { village: village(raid.middle), part: VillagePart::Raid, compound: encode(world, raid, now) }).collect();
         if let Some(mut kept) = world.get_mut::<Layer>(layer) {
-            kept.world.level_mut().raids = records;
+            let villages = &mut kept.world.level_mut().villages;
+            villages.retain(|record| record.part != VillagePart::Raid);
+            villages.extend(records);
         }
     }
 }
@@ -137,5 +148,6 @@ mod tests {
         let read = decode(layer, &encode(&world, &raid, 100), 1000).expect("readable");
         assert_eq!((read.middle, read.level, read.waves, read.spawned, read.stage, read.unloaded, read.most), (raid.middle, 2, 5, 2, Stage::Gathering(1050), vec![7, 9], 40.0));
         assert_eq!(village([3.5, 65.0, -3.5]), "00000003-0041-4000-8000-0000fffffffc");
+        assert_eq!(village_middle(&village([-3.5, -60.0, -3.5])), Some([-4, -60, -4]));
     }
 }

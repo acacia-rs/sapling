@@ -49,8 +49,8 @@ impl Deal {
         self.offer.max_uses >= 0 && self.uses >= self.offer.max_uses
     }
 
-    /// What `ware` costs now: its count raised by demand, less `off` of it, from one to a stack.
-    // TODO: BDS's pricing was not decompiled; this is the Java game's `getModifiedCostCount`.
+    /// What `ware` costs now: its count raised by demand, less `off` of it, from one to a stack, as
+    /// BDS's `MerchantRecipe::calculateDemandPrices` (0x14163f4d0) has it without cured discounts.
     fn price(&self, ware: &Ware, off: f32) -> u8 {
         let base = i32::from(ware.count);
         let raised = ((base * self.demand) as f32 * ware.price_multiplier).floor().max(0.0) as i32;
@@ -58,14 +58,15 @@ impl Deal {
         (base + raised - cut).clamp(1, i32::from(sapling_data::max_stack(&ware.name))) as u8
     }
 
+    /// Demand and discounts move only the first ware's price.
     fn prices(&self, hero: Option<u8>) -> [u8; 2] {
-        [self.price(&self.offer.buy_a, hero_cut(hero)), self.offer.buy_b.as_ref().map_or(0, |ware| self.price(ware, 0.0))]
+        [self.price(&self.offer.buy_a, hero_cut(hero)), self.offer.buy_b.as_ref().map_or(0, |ware| ware.count)]
     }
 
-    /// Restocked: none used, and demand moved by how much of it sold.
-    // TODO: BDS's demand rule was not decompiled; this is the Java game's `updateDemand`.
+    /// Restocked as BDS's `resupplyTrades` (0x141bb0e90) does: none used, and demand moved by how
+    /// much of it sold, never below 0.
     pub fn restock(&mut self) {
-        self.demand += self.uses - (self.offer.max_uses - self.uses);
+        self.demand = (self.demand + 2 * self.uses - self.offer.max_uses).max(0);
         self.uses = 0;
     }
 
@@ -147,8 +148,8 @@ pub(super) fn offers_compound(deals: &[Deal], tiers: &[i32], on_screen: bool, he
     ])
 }
 
-/// What Hero of the Village takes off the first ware: 30% and 6.25% a level more (the Java game's
-/// `Villager.updateSpecialPrices`; not drilled, docs/research/effects-raids.md).
+/// What Hero of the Village takes off the first ware: 30% and 6.25% a level more, at least one
+/// (BDS's `calculateDemandPrices`, 0x14163f4d0).
 fn hero_cut(hero: Option<u8>) -> f32 {
     hero.map_or(0.0, |amplifier| 0.3 + 0.0625 * f32::from(amplifier))
 }

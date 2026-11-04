@@ -258,19 +258,19 @@ impl LevelDbWorld {
         self.db.write(batch)
     }
 
-    /// The raids kept under `VILLAGE_<uuid>_RAID` (raids.rs).
-    pub fn load_raids(&self) -> Result<Vec<crate::RaidRecord>, Error> {
-        Ok(self.db.prefixed(crate::raids::VILLAGE_PREFIX)?.into_iter().filter_map(|(key, value)| crate::RaidRecord::decode(&key, &value)).collect())
+    /// The village records kept under `VILLAGE_<uuid>_<part>` (raids.rs).
+    pub fn load_villages(&self) -> Result<Vec<crate::VillageRecord>, Error> {
+        Ok(self.db.prefixed(crate::raids::VILLAGE_PREFIX)?.into_iter().filter_map(|(key, value)| crate::VillageRecord::decode(&key, &value)).collect())
     }
 
-    /// Saves `raids`, and drops the raids kept before that are not among them.
-    pub fn store_raids(&self, raids: &[crate::RaidRecord]) -> Result<(), Error> {
+    /// Saves `villages`, and drops the records kept before that are not among them.
+    pub fn store_villages(&self, villages: &[crate::VillageRecord]) -> Result<(), Error> {
         let mut batch = Batch::default();
-        let kept: std::collections::HashSet<Vec<u8>> = raids.iter().map(crate::RaidRecord::key).collect();
-        for old in self.load_raids()?.iter().map(crate::RaidRecord::key).filter(|key| !kept.contains(key)) {
+        let kept: std::collections::HashSet<Vec<u8>> = villages.iter().map(crate::VillageRecord::key).collect();
+        for old in self.load_villages()?.iter().map(crate::VillageRecord::key).filter(|key| !kept.contains(key)) {
             batch.delete(&old);
         }
-        raids.iter().for_each(|raid| batch.put(&raid.key(), &raid.compound));
+        villages.iter().for_each(|record| batch.put(&record.key(), &record.compound));
         self.db.write(batch)
     }
 
