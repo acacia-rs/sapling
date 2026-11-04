@@ -20,9 +20,11 @@ if [ "$linked" != "$mine" ]; then
   if [ -L "$remote/target" ]; then
     # An old tmpfs target moves to disk once idle, its build kept; a job running in it keeps it until then.
     case $linked in /dev/shm/*) busy "$linked" && { echo "testbox-target: $linked busy, kept for now" >&2; exit 0; }
-      [ -d "$mine/debug" ] || { rm -rf "$mine" && mv "$linked" "$mine" && echo "testbox-target: moved $linked to $mine"; }
+      # A reboot empties /dev/shm, leaving the link dangling: nothing to move then.
+      [ -d "$linked/debug" ] && [ ! -d "$mine/debug" ] && rm -rf "$mine" && mv "$linked" "$mine" && echo "testbox-target: moved $linked to $mine"
       rm -rf "$linked" ;; esac
     rm "$remote/target"
+    mkdir -p "$mine/testbox"
   elif [ -e "$remote/target" ]; then
     # An old disk target is moved aside, not deleted: rm of ~100 GB would load the disk for everyone.
     stale=$HOME/stale-targets/$(basename "$mine")
