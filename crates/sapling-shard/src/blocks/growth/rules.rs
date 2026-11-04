@@ -212,9 +212,10 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, darken: u8, picks: &mut Picks
         _ if LIT_ORES.contains(&name) => registry.find(&name.replacen("lit_", "", 1), properties).map(|id| shown(pos, id)).into_iter().collect(),
         _ if cover::is_ticked(name) => cover::ticked(level, pos, name, darken, picks),
         _ if super::copper::is_ticked(name) => super::copper::ticked(level, pos, picks),
-        // Marked leaves drop on their first tick with no wood near, as BDS's did; held, they rest.
+        // Marked leaves drop on their first tick with no wood near, as BDS's did; held, they lose
+        // the mark unseen: BDS kept showing it, its `/testforblock` found it cleared (bds-n2leafmark.txt).
         _ if leaves::is_marked(name, properties) => match leaves::hangs(level, pos) {
-            true => with_property(registry, id, "update_bit", "0").map(|id| shown(pos, id)).into_iter().collect(),
+            true => with_property(registry, id, "update_bit", "0").map(|id| Change { pos, id, how: How::Quiet }).into_iter().collect(),
             false => vec![Change { pos, id, how: How::Breaks }],
         },
         FARMLAND => {

@@ -85,7 +85,12 @@ pub(crate) fn keep_fuses(world: &mut World) {
     }
 }
 
+/// Whether the block at `pos` is TNT that may be lit: with `tntExplodes` off BDS's stayed a block
+/// under a signal (research/captures/bds-n2tnt.txt), as its dispenser drops TNT then (dispensers.md D19).
 fn is_tnt(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
+    if !crate::rules::on(world, layer, EXPLODES) {
+        return false;
+    }
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
     level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.name == KIND)
 }

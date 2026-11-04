@@ -15,6 +15,21 @@ fn fuses(sent: &[RawPacket], id: u64) -> Vec<i32> {
     common::data::changes(sent).iter().filter(|data| data.runtime_entity_id == id).flat_map(|data| &data.metadata).filter(|item| item.key == Key::FuseLength).map(|item| if let Value::Default(Plain::Int(left)) = item.value { left } else { -1 }).collect()
 }
 
+/// research/captures/bds-n2tnt.txt.
+#[test]
+fn with_tnt_explodes_off_a_signal_leaves_tnt_a_block() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("tntExplodes", sapling_api::RuleValue::Bool(false)));
+        ctx.set_block([3, 65, 0], &Block::new("minecraft:tnt"));
+        ctx.set_block([3, 65, 1], &Block::new("minecraft:redstone_block"));
+    });
+    let sent: Vec<RawPacket> = (0..10).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(all::<AddEntity>(&sent).is_empty(), "not lit");
+    assert_eq!(common::asking::ask(&mut h, |ctx| ctx.block([3, 65, 0]).map(|block| block.name)).as_deref(), Some("minecraft:tnt"));
+}
+
 #[test]
 fn tnt_by_a_block_of_redstone_hops_burns_eighty_ticks_and_bursts() {
     let mut h = Harness::new();

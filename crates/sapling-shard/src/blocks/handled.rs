@@ -2,7 +2,6 @@
 //! lights, a berry bush and cave vines are picked, a note block plays, a full composter empties,
 //! a dragon egg is gone elsewhere, a charged respawn anchor bursts outside the nether and is made
 //! the clicker's spawn in it (docs/research/block-uses.md, sleep/spawn.rs).
-// TODO: where a dragon egg goes is the Java game's reach; BDS's one jump was 15 east and 9 north.
 
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
@@ -22,7 +21,9 @@ const RIPE: u8 = 2;
 const PICKED: &str = "1";
 /// Below the eyes, where BDS put the burp.
 const MOUTH: f32 = sapling_data::EYE_HEIGHT - 0.1;
-/// A dragon egg jumps up to this far across and up or down, and tries this often for a free cell.
+/// A dragon egg jumps up to this far across and up or down, each step the difference of two rolls
+/// (BDS's 27 jumps: 8 of 54 lengths across were 10 or more, as two rolls give), and tries this
+/// often for a free cell.
 const EGG_REACH: [i32; 2] = [15, 7];
 const EGG_TRIES: usize = 64;
 /// A charged respawn anchor clicked outside the nether bursts with this power.
@@ -30,9 +31,10 @@ const ANCHOR_POWER: f32 = 5.0;
 const ANCHORS_EXPLODE: &str = "respawnBlocksExplode";
 const NETHER: i32 = 1;
 
-/// What tells of an egg's jump by `by`: each length in a byte, and a bit for each that is negative.
+/// What tells of an egg's jump by `by`: each length in a byte, and a bit for each that is positive
+/// (research/captures/bds-n2egg.txt, against where the egg was put).
 fn egg_jump([dx, dy, dz]: [i32; 3]) -> i32 {
-    let sign = |by: i32, bit: i32| i32::from(by < 0) << bit;
+    let sign = |by: i32, bit: i32| i32::from(by > 0) << bit;
     dx.abs() << 16 | dy.abs() << 8 | dz.abs() | sign(dx, 24) | sign(dy, 25) | sign(dz, 26)
 }
 
@@ -108,8 +110,9 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
             let air = registry.air_id();
             let rolls: Vec<[i32; 3]> = {
                 let mut dice = world.get_resource_or_insert_with(Dice::default);
-                let [across, up] = EGG_REACH.map(|reach| reach as u32);
-                (0..EGG_TRIES).map(|_| [dice.roll(2 * across + 1) as i32 - across as i32, dice.roll(2 * up + 1) as i32 - up as i32, dice.roll(2 * across + 1) as i32 - across as i32]).collect()
+                let mut step = |reach: i32| dice.roll(reach as u32 + 1) as i32 - dice.roll(reach as u32 + 1) as i32;
+                let [across, up] = EGG_REACH;
+                (0..EGG_TRIES).map(|_| [step(across), step(up), step(across)]).collect()
             };
             let Some(level) = super::level(world, layer) else { return false };
             let is_free = |[dx, dy, dz]: &[i32; 3]| level.in_height(y + dy) && level.is_loaded(send::column([x + dx, y + dy, z + dz])) && level.block(x + dx, y + dy, z + dz) == air;
@@ -129,7 +132,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn an_eggs_jump_is_told_as_bds_told_fifteen_east_and_nine_north() {
-        assert_eq!(egg_jump([15, 0, -9]), 68_091_913);
+    fn an_eggs_jump_is_told_as_bds_told_fifteen_west_and_nine_south() {
+        assert_eq!(egg_jump([-15, 0, 9]), 68_091_913);
+        assert_eq!(egg_jump([2, 4, -1]), 50_463_745);
     }
 }

@@ -1,8 +1,6 @@
 //! Blocks a hand moves (doors, trapdoors, fence gates and levers open and shut, buttons go in
 //! for a second) and the second cell of doors and beds, which is placed, opened and broken with
-//! the first.
-// TODO: a gate does not swing away from its user, and `door.open`/`door.close` were heard on BDS (`sounds` drill), as were the other
-// sounds: the server's binary holds those as plain strings, but not these two.
+//! the first. A gate turns away from its user as it opens (gates.rs).
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
@@ -180,13 +178,17 @@ fn set_pressed(world: &mut World, layer: Entity, [x, y, z]: BlockPos, pressed: b
     set
 }
 
-/// Pushes the button `name` at `pos` in until [`release_buttons`] lets it out; a button that
-/// is in stays in no longer for it.
-fn press(world: &mut World, layer: Entity, pos: BlockPos, name: &str) {
-    let is_out = level(world, layer).is_some_and(|level| property(level.registry(), level.block(pos[0], pos[1], pos[2]), PRESSED) == Some("0"));
+pub(super) fn is_stone_button(name: &str) -> bool {
+    STONE_BUTTONS.iter().any(|stone| name.ends_with(stone))
+}
+
+/// Pushes the button at `pos` in until [`release_buttons`] lets it out; a button that is in
+/// stays in no longer for it.
+pub(super) fn press(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(state) = level(world, layer).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))) else { return };
+    let (is_out, is_stone) = (state.properties.split(',').any(|pair| pair == "button_pressed_bit=0"), is_stone_button(state.name));
     if is_out && set_pressed(world, layer, pos, true) {
-        let ticks = if STONE_BUTTONS.iter().any(|stone| name.ends_with(stone)) { STONE_PRESS_TICKS } else { WOODEN_PRESS_TICKS };
-        let until = world.resource::<Tick>().0 + ticks;
+        let until = world.resource::<Tick>().0 + if is_stone { STONE_PRESS_TICKS } else { WOODEN_PRESS_TICKS };
         world.get_resource_or_insert_with(Pressed::default).0.push((until, layer, pos));
     }
 }
@@ -202,7 +204,11 @@ pub(crate) fn release_buttons(world: &mut World) {
     let (due, held): (Vec<_>, Vec<_>) = pressed.into_iter().partition(|&(until, layer, pos)| region.runs_due(world, until, tick, layer, pos));
     world.resource_mut::<Pressed>().0 = held;
     for (_, layer, pos) in due {
-        set_pressed(world, layer, pos, false);
+        if super::shot_buttons::holds(world, layer, pos) {
+            world.resource_mut::<Pressed>().0.push((tick + WOODEN_PRESS_TICKS, layer, pos));
+        } else {
+            set_pressed(world, layer, pos, false);
+        }
     }
 }
 
@@ -234,13 +240,13 @@ fn turn_comparator(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
 /// What a hand does to the block `name` at `pos`: a door, trapdoor, fence gate or lever opens
 /// or shuts, a button goes in, a repeater takes its next delay, a comparator its other way. Iron
 /// does not move by hand. False for a block a hand does not move.
-pub(super) fn use_by_hand(world: &mut World, layer: Entity, pos: BlockPos, name: &str) -> bool {
+pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
     if name.contains("iron_") {
         return false;
     }
     // What it sounds like to open and to shut; a lever clicks like a button (BDS `LeverBlock::toggle`).
     let sounds = match name {
-        _ if name.ends_with("button") => return { press(world, layer, pos, name); true },
+        _ if name.ends_with("button") => return { press(world, layer, pos); true },
         _ if name.ends_with("_repeater") => return { turn_repeater(world, layer, pos); true },
         _ if name.ends_with("_comparator") => return { turn_comparator(world, layer, pos); true },
         _ if name.contains("daylight_detector") => return { super::daylight::turn(world, layer, pos); true },
@@ -253,6 +259,9 @@ pub(super) fn use_by_hand(world: &mut World, layer: Entity, pos: BlockPos, name:
     // A door's sound names the state it had, a trapdoor's and a gate's the one they have now
     // (research/captures/bds-sounds.txt).
     let before = level(world, layer).map(|level| level.block(pos[0], pos[1], pos[2])).filter(|_| sounds[0] == "door.open");
+    if sounds[0] == "fence_gate.open" {
+        super::gates::turn_to_user(world, player, layer, pos);
+    }
     let Some(now_open) = toggle(world, layer, pos) else { return false };
     let event = if now_open { super::GameEvent::BlockOpen } else { super::GameEvent::BlockClose };
     super::vibrate_at(world, layer, pos, event, true);

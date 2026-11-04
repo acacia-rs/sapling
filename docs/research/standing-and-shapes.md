@@ -97,7 +97,10 @@ Each support was `/setblock`ed to air. A lever on a stone's side and a wall bann
 item. A vine on a stone's side went a tick later with no item and the vine hanging under it the tick after: a vine
 keeps the faces with a solid block beside or that the vine over it has (JAVA 1.12 `BlockVine.recheckGrownSides`), and
 goes with none. A vine under a stone, its only face on air, went with the stone. A bed's half set to air took the
-other half in the same packet, with that half's break particles and no item. Sapling does all of this in the change's own tick (`blocks/updates.rs`).
+other half in the same packet, with that half's break particles and no item. The lever's and banner's break particles
+came in the change's own tick. Sapling did all of this in the change's own tick until 2026-11-04; now what loses its
+hold shows its particles at once and goes a tick later, and what that loosens is shown as it goes and goes a tick
+after (`blocks/updates/loosened.rs`; BDS showed the lower vine breaking in the tick the upper went); a bed's other half still goes at once.
 
 `/setblock bed` put the head on the named cell and the foot behind it, both with `Bed` entities (color 14), and
 refused a second `/setblock` on the head; sapling's `/setblock` puts the one half.
@@ -136,6 +139,14 @@ the default rule to ordinary blocks was not found: use the Java lists.
 | fence | same family (any wooden fence with any wooden fence; nether brick only with nether brick), a fence gate whose axis is across the line, or a block with a sturdy face toward it that is not an exception | `FenceBlock.connectsTo`/`isSameFence` (`FENCES`, `WOODEN_FENCES`), `FenceGateBlock.connectsToDirection`, `Block.isExceptionForConnection` (leaves, barrier, carved pumpkin, jack o'lantern, melon, pumpkin, shulker boxes) |
 | pane, iron bars | another pane/bars, a wall, or a sturdy face (not an exception) | `IronBarsBlock.attachsTo` (`WALLS`) |
 | wall | wall, pane/bars, a gate across the line, or a sturdy face (not an exception) | `WallBlock.connectsTo` |
+
+Joins drilled (2026-11-04, `bds_command_probe n2joins`, research/captures/bds-n2joins.txt): an oak fence, a nether
+brick fence, a glass pane and a cobblestone wall, each beside 24 blocks. All four joined stone, glass, glowstone,
+slime, honey, TNT and soul sand, and none joined leaves, barrier, the three pumpkins, melon, a shulker box, a
+bottom stair's side, a bottom slab or a chest. Fences joined their own family and a gate across the line; panes
+joined panes, bars and walls but no gate; walls joined walls, panes, bars and a gate across the line, no fence:
+the table above. Sapling differed only on honey and soul sand, short of a full cube: joined since
+(`blocks/shapes.rs` `JOINED`).
 
 ### B3. Walls (BDS, exact)
 

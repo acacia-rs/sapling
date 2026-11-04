@@ -1,0 +1,111 @@
+## drill starts at 1793822117419
+## /fill ~-1 ~-1 ~7 ~14 ~-1 ~11 stone
+     27 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s ~ ~ ~9 -90 0
+   1022 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 9.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 72 }
+   1022 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 64.00, 9.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"64.00\"},{\"text\":\"9.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1022 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "64.00", "9.50"]
+   1022 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 9.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 72 }
+   1072 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 9.5 }, pitch: 0.015766326, yaw: -90.02187, head_yaw: -90.02187, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 73 }
+   1121 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 9.5 }, pitch: 0.015766326, yaw: -90.02187, head_yaw: -90.02187, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 74 }
+   1170 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: 65.62001, z: 9.5 }, pitch: 0.015766326, yaw: -90.02187, head_yaw: -90.02187, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 75 }
+## /fill ~1 ~ ~-1 ~14 ~4 ~1 air
+   2025 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /setblock ~2 ~1 ~ oak_log
+   3033 actor   UpdateBlock 2 65 9 layer 0 oak_log[pillar_axis=y]
+   3033 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   3033 watcher UpdateBlock 2 65 9 layer 0 oak_log[pillar_axis=y]
+   3033 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3323 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   3324 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /fill ~3 ~1 ~ ~12 ~1 ~ oak_leaves ["persistent_bit"=false]
+   4023 watcher UpdateSubchunkBlocks 3 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 4 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 5 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 6 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 7 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 8 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 9 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 10 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 11 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 12 65 9 oak_leaves[persistent_bit=0,update_bit=0] | extra: 
+   4023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"10\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4024 actor   UpdateSubchunkBlocks 3 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 4 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 5 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 6 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 7 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 8 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 9 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 10 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 11 65 9 oak_leaves[persistent_bit=0,update_bit=0]; 12 65 9 oak_leaves[persistent_bit=0,update_bit=0] | extra: 
+   4024 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["10"]
+## /gamerule randomtickspeed 200
+   5025 actor   GameRulesChanged randomTickSpeed=Int(200)
+   5025 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "200"]
+   5025 watcher GameRulesChanged randomTickSpeed=Int(200)
+   5025 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"200\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /setblock ~13 ~1 ~ oak_leaves ["persistent_bit"=false]
+   8074 watcher UpdateBlock 13 65 9 layer 0 oak_leaves[persistent_bit=0,update_bit=0]
+   8074 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8074 actor   UpdateBlock 13 65 9 layer 0 oak_leaves[persistent_bit=0,update_bit=0]
+   8074 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock ~13 ~1 ~ air
+   9074 watcher UpdateBlock 12 65 9 layer 0 oak_leaves[persistent_bit=0,update_bit=1]
+   9074 watcher UpdateBlock 13 65 9 layer 0 air[]
+   9074 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   9074 actor   UpdateBlock 12 65 9 layer 0 oak_leaves[persistent_bit=0,update_bit=1]
+   9074 actor   UpdateBlock 13 65 9 layer 0 air[]
+   9074 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   9629 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 12.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+   9630 actor   UpdateSubchunkBlocks 11 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 12 65 9 air[] | extra: 
+   9630 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 12.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+   9630 watcher UpdateSubchunkBlocks 11 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 12 65 9 air[] | extra: 
+   9825 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 11.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+   9825 actor   UpdateSubchunkBlocks 10 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 11 65 9 air[] | extra: 
+   9825 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 11.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+   9825 watcher UpdateSubchunkBlocks 10 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 11 65 9 air[] | extra: 
+## /
+  10126 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 10.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+  10126 actor   UpdateSubchunkBlocks 9 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 10 65 9 air[] | extra: 
+  10126 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 10.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+  10126 watcher UpdateSubchunkBlocks 9 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 10 65 9 air[] | extra: 
+  10326 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 9.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+  10326 watcher UpdateSubchunkBlocks 8 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 9 65 9 air[] | extra: 
+  10326 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 9.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+  10326 actor   UpdateSubchunkBlocks 8 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 9 65 9 air[] | extra: 
+## /
+  11075 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 8.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+  11076 watcher UpdateSubchunkBlocks 7 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 8 65 9 air[] | extra: 
+  11076 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 8.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+  11076 actor   UpdateSubchunkBlocks 7 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 8 65 9 air[] | extra: 
+  11274 actor   LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 7.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+  11274 actor   UpdateSubchunkBlocks 6 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 7 65 9 air[] | extra: 
+  11274 watcher LevelEvent LevelEvent { event: ParticleDestroy, position: Vec3f { x: 7.5, y: 65.5, z: 9.5 }, data: 1055407794 }
+  11274 watcher UpdateSubchunkBlocks 6 65 9 oak_leaves[persistent_bit=0,update_bit=1]; 7 65 9 air[] | extra: 
+## /
+## /
+## /
+## /
+## /
+  16124 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  16125 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  28923 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  28923 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /gamerule randomtickspeed 1
+  35121 actor   GameRulesChanged randomTickSpeed=Int(1)
+  35121 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "1"]
+  35121 watcher GameRulesChanged randomTickSpeed=Int(1)
+  35121 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill ~1 ~ ~-1 ~14 ~4 ~1 air
+  36123 actor   UpdateSubchunkBlocks 3 65 9 air[]; 2 65 9 air[]; 4 65 9 air[]; 5 65 9 air[]; 6 65 9 air[] | extra: 
+  36123 watcher UpdateSubchunkBlocks 3 65 9 air[]; 2 65 9 air[]; 4 65 9 air[]; 5 65 9 air[]; 6 65 9 air[] | extra: 
+  36123 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"5\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  36123 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["5"]
+## /kill @e[type=item]
+  37120 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+probe exit 0

@@ -70,8 +70,11 @@ Code: `crates/sapling-shard/src/creatures/wither.rs`, `creatures/wither/{heads,s
 - **Bar** (`minecraft:boss`): range 55; colour byte 6 (`RebeccaPurple`). **Regen**: 1 every 20 ticks
   only with no player within ±50. Immune to falls, drowning, and its own blasts.
 
-Unverified: the bar's title (`entity.wither.name` here); which cell is the spawn origin (the stem's
-foot here); the side heads' wait between idle looks (Java's 10 + rand 10); aiming at the target's eyes
+A T lying on the floor is found too (2026-11-04, `bds_command_probe n2wither`, research/captures/bds-n2wither.txt:
+stem west of its arms, the last skull put by the actor); sapling tries the T every way. The spawn was not the
+stem's foot: an upright T along z at x 3, foot (3,-26,0), gave the wither at (4.5,-25.95,0.5), and the lying
+T, foot (2,-26,0), at (6.5,-27.95,0.5), in the ground; sapling keeps the foot.
+Unverified: the bar's title (`entity.wither.name` here); the side heads' wait between idle looks (Java's 10 + rand 10); aiming at the target's eyes
 less 0.5; its flight (Java's way of keeping 5 over its prey at 0.3 a tick; BDS sets movement 0.6).
 Its 200-tick death is built as BDS's in `witherdeath` (research/captures/bds-witherdeath.txt,
 creatures/wither/dying.rs): `WitherInvulnerableTicks` 199 down to 1; `WitherAerialAttack` (a Short)
@@ -86,7 +89,7 @@ ticks (told as 1.82, after drag), through it (the actor was thrown, the golem hu
 dead still. Left out: the 15 it costs whom it meets (not seen, the actor warded), fire rate halving each sixth of health lost, a blue skull's `max_resistance` 4, skulls meeting mobs,
 `ShieldHealth`, `firerate` and `lastHealthInterval` (the charge, `Phase`, armour and `maxHealth` are
 kept: research/captures/bds-keepmobs.txt; a summoned wither charges as a built one, at its difficulty's
-share of the pack's 600), the soul particles of building, a lying T.
+share of the pack's 600), the soul particles of building.
 
 ## Fireworks
 

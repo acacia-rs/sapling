@@ -1,8 +1,8 @@
 //! Blocks whose state follows their neighbours: fences, panes and bars join what is beside them,
 //! walls also rise where something stands on them, stairs turn corners, and a gate sinks into a
-//! wall (docs/research/standing-and-shapes.md, part B: walls are BDS's rule, the rest Java's).
-// TODO: who joins whom is Java's lists (BDS's default connection rules were not found); a
-// block's outline is taken to be its collision boxes.
+//! wall (docs/research/standing-and-shapes.md, part B: walls are BDS's rule, the rest Java's; who
+//! joins whom was drilled against BDS, "Joins drilled").
+// TODO: a block's outline is taken to be its collision boxes.
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -14,6 +14,8 @@ use super::{level, send};
 const SIDES: [(&str, [i32; 2]); 4] = [("north", [0, -1]), ("east", [1, 0]), ("south", [0, 1]), ("west", [-1, 0])];
 /// Blocks with a full side that nothing joins (Java `Block.isExceptionForConnection`).
 const ALOOF: &[&str] = &["leaves", "barrier", "pumpkin", "melon_block", "shulker_box"];
+/// Blocks short of a full cube that fences, panes and walls join all the same, as on BDS.
+const JOINED: &[&str] = &["minecraft:honey_block", "minecraft:soul_sand"];
 /// A wall's arm towards each side, and its middle, in its cell (x and z, from and to).
 const ARMS: [[f32; 4]; 4] = [[0.3125, 0.6875, 0.0, 0.25], [0.75, 1.0, 0.3125, 0.6875], [0.3125, 0.6875, 0.75, 1.0], [0.0, 0.25, 0.3125, 0.6875]];
 const POST: [f32; 4] = [0.25, 0.75, 0.25, 0.75];
@@ -70,7 +72,7 @@ fn joins(family: Family, beside: &Cell, step: [i32; 2]) -> bool {
         fence => theirs == Some(fence),
     };
     let gate = family != Family::Pane && gate_lies_along(beside, step);
-    kin || gate || beside.is_full && !ALOOF.iter().any(|name| beside.name.contains(name))
+    kin || gate || JOINED.contains(&beside.name) || beside.is_full && !ALOOF.iter().any(|name| beside.name.contains(name))
 }
 
 /// Whether one of `boxes`, of the block above, reaches down into the square `[x0, x1, z0, z1]`.

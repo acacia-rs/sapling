@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::LevelSoundEvent;
+use acacia_proto::packets::{BlockEntityData, LevelSoundEvent};
 use common::{Harness, all, block_changes, hash};
 use sapling_api::Block;
 
@@ -181,6 +181,20 @@ fn slime_counts_what_it_holds_to_the_12_and_a_sticky_piston_draws_it_back_with_t
     let came = |pos: [i32; 3], name: &str| back.contains(&(pos, hash(&format!("minecraft:{name}"))));
     assert!(came([1, 68, 6], "slime") && came([2, 68, 6], "stone") && came([1, 69, 6], "stone"), "slime comes back with what it holds");
     assert!(came([1, 68, 9], "stone") && !back.iter().any(|(pos, _)| pos[0] == 3 && pos[2] == 9), "a stone does not bring the slime behind it");
+}
+
+#[test]
+fn slime_pushed_up_lists_its_neighbours_south_north_east_west_as_bds_did() {
+    let mut h = ready();
+    let around = [[0, 5], [0, 3], [1, 4], [-1, 4]].map(|[x, z]| ([x, 66, z], "stone", ""));
+    put(&mut h, &[[([0, 65, 4], "sticky_piston", "facing_direction=1"), ([0, 66, 4], "slime", "")].as_slice(), &around].concat());
+    watch(&mut h, 4);
+    put(&mut h, &[([1, 65, 4], "redstone_block", "")]);
+    let sent = watch(&mut h, 4).concat();
+    let listed = all::<BlockEntityData>(&sent).iter().find_map(|data| data.nbt.decode().ok()?.value.get("AttachedBlocks").map(|cells| format!("{cells:?}")).filter(|cells| cells.contains("Int("))).expect("a piston entity");
+    let items = listed.split_once("items").map_or("", |(_, items)| items);
+    let numbers: Vec<i32> = items.split(|c: char| !(c.is_ascii_digit() || c == '-')).filter_map(|word| word.parse().ok()).collect();
+    assert_eq!(numbers, [0, 66, 4, 0, 66, 5, 0, 66, 3, 1, 66, 4, -1, 66, 4], "{listed}");
 }
 
 #[test]

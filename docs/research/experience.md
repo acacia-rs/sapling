@@ -140,3 +140,10 @@ Tags as in `containers-crafting.md` (REC, DATA, BDSRE, BDSRE-old, mem, inf). Not
 4. Player StateVector pos = eye height (feet+1.62) and the Body attach-pos offset: mem, not read.
 5. Exact `AddEntity` identifier string and orb collision size (0.25? mem).
 6. Whether `UpdateAttributes` for xp goes only to the player itself.
+
+## Ores (2026-11-04, `bds_command_probe n2orexp`, research/captures/bds-n2orexp.txt)
+
+Twelve of each ore broken by `/fill ... air destroy` (which leaves orbs as a player's break does) and three coal
+ores broken by a survival player, orbs summed per ore. All fell in the Java ranges sapling uses
+(`blocks/after_break.rs`): coal 0-2 (15 ores), deepslate coal 0-2, diamond 3-7, emerald 3-7, lapis 2-5, nether
+quartz 2-5, nether gold 0-1, redstone 1-4 seen of 1-5 (no 5 in 12 has odds 0.07; left at 1-5).

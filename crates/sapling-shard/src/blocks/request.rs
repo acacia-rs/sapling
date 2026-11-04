@@ -322,7 +322,7 @@ impl Request<'_> {
     fn interact(&mut self, site: &Site, pos: BlockPos, face: Face, block: Block) {
         let name = block.name.clone();
         let event = plugins::offer(self.world,InteractEvent::new(self.player.clone(), pos, face, block, site.mode != GameMode::Spectator));
-        let used = !event.is_cancelled() && (super::bells::ring_by_hand(self.world, self.entity, site.layer, pos, face, &name) || use_block(self.world, self.entity, site.layer, pos, &name) || doors::use_by_hand(self.world, site.layer, pos, &name));
+        let used = !event.is_cancelled() && (super::bells::ring_by_hand(self.world, self.entity, site.layer, pos, face, &name) || use_block(self.world, self.entity, site.layer, pos, &name) || doors::use_by_hand(self.world, self.entity, site.layer, pos, &name));
         if !used {
             self.resync(&[pos, face.neighbour(pos), Face::Up.neighbour(pos), Face::Down.neighbour(pos)]);
         }
