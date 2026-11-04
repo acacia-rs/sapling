@@ -2,10 +2,12 @@
 //! (docs/research/hoppers.md). A ticking hopper (ticking.rs) whose cooldown is over and that is
 //! not powered pushes one item into the container it faces, then pulls one from the container
 //! above or, when there is none, takes an item lying on it, whole if it fits. A move sets the
-//! cooldown; a hopper that moved nothing tries again the next tick. Their slots are a
-//! container's (containers.rs).
-// TODO: BDS first ticks the hoppers below a hopper, so a chain moves an item along in one tick;
-// composters are not fed or emptied.
+//! cooldown; a hopper that moved nothing tries again the next tick. They move in BDS's order
+//! (order.rs). Their slots are a container's (containers.rs); a jukebox takes a disc from one
+//! and gives it to the one under it once its song is over (blocks/jukebox.rs).
+// TODO: composters are not fed or emptied.
+
+mod order;
 
 use std::collections::HashMap;
 
@@ -55,6 +57,10 @@ pub(crate) fn watch(world: &mut World, layer: Entity, pos: BlockPos) {
     }
 }
 
+fn is_watched(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    world.get_resource::<Hoppers>().is_some_and(|hoppers| hoppers.0.contains_key(&(layer, pos)))
+}
+
 pub(crate) fn watched(world: &World) -> Vec<(Entity, BlockPos)> {
     world.get_resource::<Hoppers>().map(|hoppers| hoppers.0.keys().copied().collect()).unwrap_or_default()
 }
@@ -79,6 +85,10 @@ fn state(world: &World, layer: Entity, pos: BlockPos) -> Option<(Face, bool)> {
     let state = level.registry().get(level.block(pos[0], pos[1], pos[2]))?;
     let number = |key: &str| state.properties.split(',').filter_map(|pair| pair.split_once('=')).find(|(name, _)| *name == key)?.1.parse::<u32>().ok();
     Some((Face::from_index(number(FACING)?)?, number(POWERED) == Some(1)))
+}
+
+fn facing(world: &World, layer: Entity, pos: BlockPos) -> Option<Face> {
+    state(world, layer, pos).map(|(facing, _)| facing)
 }
 
 /// Puts as many of `item` as fit into the first slot of `slots` that `accepts` it, empty or
@@ -145,6 +155,13 @@ pub(crate) fn put_one(world: &mut World, layer: Entity, target: BlockPos, face: 
 /// Moves one item from the first slot that can give one into the container the hopper faces.
 fn push(world: &mut World, layer: Entity, pos: BlockPos, slots: &mut [Option<Held>], facing: Face) -> bool {
     let target = facing.neighbour(pos);
+    if crate::blocks::is_jukebox(world, layer, target) {
+        let Some(slot) = slots.iter().position(|slot| slot.as_ref().is_some_and(|held| crate::blocks::takes_disc(world, layer, target, &held.stack))) else { return false };
+        let Some(disc) = slots[slot].as_ref().map(one) else { return false };
+        crate::blocks::put_disc(world, layer, target, &disc);
+        take_one(&mut slots[slot]);
+        return true;
+    }
     if !takes_items(world, layer, target) {
         return false;
     }
@@ -201,13 +218,24 @@ fn pull_lying(world: &mut World, layer: Entity, [x, y, z]: BlockPos, slots: &mut
     false
 }
 
+/// Takes the disc of the jukebox at `jukebox` whose song is over into the hopper's slots.
+fn pull_disc(world: &mut World, layer: Entity, jukebox: BlockPos, slots: &mut [Option<Held>]) -> bool {
+    let Some(disc) = crate::blocks::finished_disc(world, layer, jukebox) else { return false };
+    insert(world, slots, &disc, |_| true) > 0 && {
+        crate::blocks::take_disc(world, layer, jukebox);
+        true
+    }
+}
+
 /// One move of the hopper at `pos`: a push, then a pull; true if either moved an item.
 fn step(world: &mut World, layer: Entity, pos: BlockPos, facing: Face) -> bool {
     let Some(mut slots) = containers::slots_at(world, layer, pos) else { return false };
     let pushed = slots.iter().any(Option::is_some) && push(world, layer, pos, &mut slots, facing);
-    let pulled = match containers::kind_at(world, layer, Face::Up.neighbour(pos)) {
-        Some(above) if above.holds_items() => pull_from_above(world, layer, pos, &mut slots, above),
+    let above = Face::Up.neighbour(pos);
+    let pulled = match containers::kind_at(world, layer, above) {
+        Some(kind) if kind.holds_items() => pull_from_above(world, layer, pos, &mut slots, kind),
         Some(_) => false,
+        None if crate::blocks::is_jukebox(world, layer, above) => pull_disc(world, layer, above, &mut slots),
         None => pull_lying(world, layer, pos, &mut slots),
     };
     containers::set_slots(world, layer, pos, slots);
@@ -227,7 +255,7 @@ pub(crate) fn tick(world: &mut World) {
         }
     }
     due.sort_unstable_by_key(|(_, pos)| *pos);
-    for (layer, pos) in due {
+    for (layer, pos) in order::ordered(world, &due) {
         let Some((facing, false)) = state(world, layer, pos) else { continue };
         if step(world, layer, pos, facing) {
             if let Some(hopper) = hoppers(world).0.get_mut(&(layer, pos)) {

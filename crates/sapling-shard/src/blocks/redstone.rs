@@ -11,6 +11,7 @@
 
 mod apply;
 mod capacitors;
+mod kept;
 mod observers;
 mod parts;
 mod rail_line;
@@ -25,7 +26,7 @@ use sapling_world::ChunkPos;
 
 use super::level;
 use crate::components::Tick;
-use capacitors::{RepeaterState, TorchState, compared};
+use capacitors::{RepeaterState, TorchState};
 use parts::{Part, User};
 use reads::read_containers;
 
@@ -49,6 +50,7 @@ struct Circuit {
     repeaters: HashMap<BlockPos, RepeaterState>,
     /// What each comparator gives out: its block says only whether it is lit.
     comparators: HashMap<BlockPos, u8>,
+    kept: kept::Kept,
     /// Whether each observer was lit at the last evaluation: dust shows that, an evaluation late.
     observers: HashMap<BlockPos, bool>,
     /// The strength of each producer whose block does not store it ([`emit`]).
@@ -86,11 +88,19 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     }
     // A jukebox keeps its disc in its entity, which the block's state does not tell.
     let playing: Vec<(BlockPos, u8)> = found.iter().map(|pos| (*pos, super::jukebox::power(world, layer, *pos))).filter(|(_, power)| *power > 0).collect();
+    super::jukebox::arrived(world, layer, &playing.iter().map(|(pos, _)| *pos).collect::<Vec<_>>());
     super::sculk::found(world, layer, &found);
     let mut circuits = world.get_resource_or_insert_with(Circuits::default);
     let circuit = circuits.layers.entry(layer).or_default();
     circuit.held.extend(playing);
     circuit.changed.extend(found);
+}
+
+/// Keeps what the comparator at `pos`, just set again in its own block type, gives out (kept.rs).
+pub(super) fn hold_comparator(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some(circuit) = world.get_resource_mut::<Circuits>().and_then(|circuits| circuits.into_inner().layers.get_mut(&layer)) {
+        circuit.kept.hold(pos);
+    }
 }
 
 /// Notes a container whose slots changed, where a comparator may read it.
@@ -191,6 +201,7 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
     circuit.torches.retain(|pos, _| circuit.sources.contains(pos));
     circuit.repeaters.retain(|pos, _| circuit.sources.contains(pos));
     circuit.comparators.retain(|pos, _| circuit.sources.contains(pos));
+    circuit.kept.retain(|pos| circuit.sources.contains(pos));
     circuit.observers.retain(|pos, _| circuit.sources.contains(pos));
     circuit.held.retain(|pos, _| circuit.sources.contains(pos));
 
@@ -228,7 +239,7 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
             }
             Part::Comparator { lit, input, subtracts, output } => {
                 let behind = shown.inputs.get(pos).map_or(0, |(input, _)| *input).max(stored.get(pos).copied().unwrap_or(0));
-                let next = compared(behind, shown.sides.get(pos).copied().unwrap_or(0), subtracts);
+                let next = circuit.kept.next(*pos, behind, shown.sides.get(pos).copied().unwrap_or(0), subtracts, output);
                 circuit.comparators.insert(*pos, next);
                 restrengthened |= next != output;
                 *source = Part::Comparator { lit, input, subtracts, output: next };

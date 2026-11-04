@@ -102,6 +102,7 @@ pub(crate) use bed_burst::bursts as bed_bursts;
 pub(crate) use lodestone::answer as answer_lodestone_queries;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};
 pub(crate) use holders::spend as spend_held;
+pub(crate) use jukebox::{finished_disc, is_jukebox, play_jukeboxes, put_disc, take_disc, takes_disc};
 pub(crate) use pistons::{at_place as block_entity_at, tick as move_pistons};
 pub(crate) use plates::press_plates;
 pub(crate) use dripleaf::tilt_under as tilt_dripleaves;

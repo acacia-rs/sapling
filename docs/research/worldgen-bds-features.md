@@ -164,6 +164,22 @@ A rule-placed fossil is never turned: the rule's chance (1 in 64) passes when th
 position generator is a multiple of 64, and the placing generator, seeded alike, gives `nextInt(4)` that same
 draw. The turned cases are read off the code and cannot occur in vanilla worlds.
 
+## Desert well (2026-11-04, parity/eighth3; feature/desert_well.rs)
+`minecraft:desert_well_feature` (`DesertWellFeature::place` 148295a70, vtable 14a928ad0; registered with no
+parameters in 1482f4580). Block globals named off the initialiser 1425f41e0 (14ccdb108 sand, 14cce3a90 sandstone,
+14ccdaf88 water, 14cce3640 sandstone_slab, 14ccda378 suspicious_sand).
+- Goes down while the cell is air and y > the bottom + 2 (Java steps up first; BDS does not). The cell must be
+  sand, red sand or suspicious sand (list 14ccd9470). Fails when any column of the 5x5 has air both 1 and 2 below.
+- Sandstone over the 5x5 from y-2 to y; water at the centre then west, east, north, south, sand under each; a
+  sandstone ring at y+1 with slabs at its four edge middles; sandstone pillars at the inner corners, y+1..3; a
+  slab roof at y+4 with sandstone in its middle.
+- Then (behind a version gate, taken as on) two `nextInt(5)` picks from [centre, west, east, north, south]:
+  suspicious sand 1 under the first pick's water and 2 under the second's. Each one holding a brushable block
+  takes `desert_well_brushable_block.json` with seed `nextInt()` (vtable +0x10, `u32 >> 1`; 148299240).
+Oracle: the structures world's well at -6136,-3561 (chunk -384,-223, beside the desert pyramid region) is
+block-exact (`compare`: only an unrelated lichen differs in the chunk) and both suspicious sands' seeds match
+(`block_entity_diff`, 2 missing -> 2 same).
+
 ## Oracle (2026-10-07, 20261003 near origin unless named)
 Precision/recall near origin: stone blobs 99.93/99.98, coal 99.79/99.90, seagrass 99.95/99.93, kelp 99.89/99.88,
 diamond 97.0/97.2, redstone 98.6/98.5, geode shells 98.0/100 and buds 99.0/100 (BDS skips geodes inside

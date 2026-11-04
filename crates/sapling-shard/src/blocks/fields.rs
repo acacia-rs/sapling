@@ -24,10 +24,17 @@ pub(crate) fn byte(world: &World, layer: Entity, pos: BlockPos, key: &str) -> Op
 /// Sets `key` of the entity of the block at `pos` (`None` takes it out), making an entity with the
 /// `id` if it has none, and shows it to those who see the block.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: &str, key: &str, value: Option<Value>) {
+    set_many(world, layer, pos, id, &[(key, value)]);
+}
+
+/// [`set`] for several fields at once, shown together.
+pub(crate) fn set_many(world: &mut World, layer: Entity, pos: BlockPos, id: &str, values: &[(&str, Option<Value>)]) {
     let Some(level) = level(world, layer) else { return };
     let entity = level.block_entity(pos).map_or_else(|| new_block_entity(id, pos), |entity| entity.nbt.clone());
     let Value::Compound(mut fields) = entity else { return };
-    fields.retain(|(name, _)| name != key);
-    fields.extend(value.map(|value| (key.into(), value)));
+    for (key, value) in values {
+        fields.retain(|(name, _)| name != key);
+        fields.extend(value.clone().map(|value| ((*key).into(), value)));
+    }
     keep_entity(world, layer, pos, &Value::Compound(fields));
 }

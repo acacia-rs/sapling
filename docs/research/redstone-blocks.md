@@ -220,7 +220,8 @@ direction 14cd24f50, facing_direction 14cd26368, lit 14cd25b50, sculk_sensor_pha
 - notes.rs sends BlockEvent type 1 (ChangeState) always; Bedrock sends type = instrument (B6).
 - notes.rs picks the instrument by block-name heuristic; use B8/B9.
 - Notes are not stored in a block actor; Bedrock saves byte `note` only (B5).
-- jukebox.rs has no bounce (8, 234 s) and needs the redstone signal 15 while playing (B13).
+- jukebox.rs has no bounce (8, 234 s). The signal 15 lasts the song (B13): disc 11's power went 72.0 s after
+  it went in on BDS, 72.1 s on sapling (bds-e8juke.txt, `blocks/jukebox/songs.rs`).
 
 ## Parity drill (2026-10-29, research/captures/bds-rsdevices.txt)
 

@@ -57,6 +57,8 @@ pub enum Legacy {
     TwistingVines,
     /// `NetherFossilFeature` (nether_fossil.rs).
     NetherFossil,
+    /// `DesertWellFeature` (desert_well.rs).
+    DesertWell,
 }
 
 /// The block of a village pile feature (`hay_pile_feature` and the others, vtable 14a9258d0).

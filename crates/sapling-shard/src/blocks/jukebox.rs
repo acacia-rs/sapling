@@ -1,9 +1,14 @@
 //! Jukeboxes: a click puts the disc in the hand in, with its title told, and the next gives it
-//! back (docs/research/block-uses.md, "Jukebox"). The disc is kept in the block's entity
-//! (`RecordItem`), so it outlasts a restart and a broken jukebox leaves it; while one is in, the
-//! jukebox powers what is around it (docs/research/redstone-blocks.md, "Jukebox").
-// TODO: no music is told, as BDS told none; hoppers neither fill nor empty one; the signal lasts
-// as long as the disc is in, not as long as its song.
+//! back (docs/research/block-uses.md, "Jukebox"); a hopper puts a disc into an empty one, and the
+//! hopper under one takes the disc once its song is over (research/captures/bds-e8juke.txt). The
+//! disc is kept in the block's entity (`RecordItem`), so it outlasts a restart and a broken jukebox
+//! leaves it; while its song plays (songs.rs), the jukebox powers what is around it
+//! (docs/research/redstone-blocks.md, "Jukebox").
+// TODO: no music is told, as BDS told none.
+
+mod songs;
+
+pub(crate) use songs::tick as play_jukeboxes;
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{Text, TextCategory, TextContent, TextContentJukeboxPopup, TextType};
@@ -18,29 +23,33 @@ use crate::{drops, inventory};
 const JUKEBOX: &str = "minecraft:jukebox";
 const ENTITY: &str = "Jukebox";
 pub(super) const RECORD: &str = "RecordItem";
+pub(super) const FINISHED: &str = "FinishedRecording";
+const TICKS: &str = "TicksPlaying";
 const DISC: &str = "minecraft:music_disc_";
 /// Above the jukebox's floor, where BDS let the disc go.
 const OUT: f32 = 1.71;
 /// What a jukebox playing gives the blocks around it.
 const PLAYING: u8 = 15;
 
-/// A disc's title, as BDS told it of `13`, and what a comparator reads of a jukebox playing it:
-/// measured for thirteen (research/captures/bds-discs.txt), the Java game's for the rest.
-const DISCS: &[(&str, &str, u8)] = &[
-    ("13", "C418 - 13", 1), ("cat", "C418 - cat", 2), ("blocks", "C418 - blocks", 3), ("chirp", "C418 - chirp", 4), ("far", "C418 - far", 5), ("mall", "C418 - mall", 6),
-    ("mellohi", "C418 - mellohi", 7), ("stal", "C418 - stal", 8), ("strad", "C418 - strad", 9), ("ward", "C418 - ward", 10), ("11", "C418 - 11", 11), ("wait", "C418 - wait", 12),
-    ("otherside", "Lena Raine - otherside", 14), ("5", "Samuel Åberg - 5", 15), ("pigstep", "Lena Raine - Pigstep", 13), ("relic", "Aaron Cherof - Relic", 14),
-    ("creator", "Lena Raine - Creator", 12), ("creator_music_box", "Lena Raine - Creator (Music Box)", 11), ("precipice", "Aaron Cherof - Precipice", 13),
-    ("tears", "Amos Roddy - Tears", 10), ("lava_chicken", "Hyper Potions - Lava Chicken", 9),
+/// A disc's title, as BDS told it of `13`, what a comparator reads of a jukebox holding it, and its
+/// song's length in seconds: signals and lengths of BDS's RecordItem switch 142ef08b0
+/// (redstone-blocks.md B14), thirteen's signal measured too (research/captures/bds-discs.txt).
+const DISCS: &[(&str, &str, u8, f32)] = &[
+    ("13", "C418 - 13", 1, 178.0), ("cat", "C418 - cat", 2, 185.0), ("blocks", "C418 - blocks", 3, 345.0), ("chirp", "C418 - chirp", 4, 185.0),
+    ("far", "C418 - far", 5, 174.0), ("mall", "C418 - mall", 6, 197.0), ("mellohi", "C418 - mellohi", 7, 96.0), ("stal", "C418 - stal", 8, 150.0),
+    ("strad", "C418 - strad", 9, 188.0), ("ward", "C418 - ward", 10, 251.0), ("11", "C418 - 11", 11, 71.0), ("wait", "C418 - wait", 12, 238.0),
+    ("otherside", "Lena Raine - otherside", 14, 195.0), ("5", "Samuel Åberg - 5", 15, 178.0), ("pigstep", "Lena Raine - Pigstep", 13, 149.0),
+    ("relic", "Aaron Cherof - Relic", 14, 218.0), ("creator", "Lena Raine - Creator", 12, 176.0), ("creator_music_box", "Lena Raine - Creator (Music Box)", 11, 73.0),
+    ("precipice", "Aaron Cherof - Precipice", 13, 299.0), ("tears", "Amos Roddy - Tears", 10, 175.0), ("lava_chicken", "Hyper Potions - Lava Chicken", 9, 134.0),
 ];
 
-fn disc(item: &str) -> Option<(&'static str, u8)> {
+fn disc(item: &str) -> Option<(&'static str, u8, f32)> {
     let short = item.strip_prefix(DISC)?;
-    DISCS.iter().find(|(name, ..)| *name == short).map(|(_, title, signal)| (*title, *signal))
+    DISCS.iter().find(|(name, ..)| *name == short).map(|(_, title, signal, seconds)| (*title, *signal, *seconds))
 }
 
 fn title(item: &str) -> Option<&'static str> {
-    disc(item).map(|(title, _)| title)
+    disc(item).map(|(title, ..)| title)
 }
 
 /// The disc in the jukebox at `pos`.
@@ -48,16 +57,41 @@ fn held(world: &World, layer: Entity, pos: BlockPos) -> Option<ItemStack> {
     ItemStack::parse(&fields::get(world, layer, pos, RECORD)?)
 }
 
-/// What a comparator reads of the block at `pos`: `None` for what is no jukebox.
-pub(super) fn signal(world: &World, layer: Entity, pos: BlockPos) -> Option<u8> {
-    let level = level(world, layer).filter(|level| level.in_height(pos[1]))?;
-    level.registry().get(level.block(pos[0], pos[1], pos[2])).filter(|state| state.name == JUKEBOX)?;
-    Some(held(world, layer, pos).and_then(|held| disc(&held.name)).map_or(0, |(_, signal)| signal))
+fn is_finished(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    fields::byte(world, layer, pos, FINISHED) == Some(1)
 }
 
-/// What the jukebox at `pos` gives the blocks around it: `PLAYING` while a disc is in.
+pub(crate) fn is_jukebox(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    level(world, layer).filter(|level| level.in_height(pos[1])).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).is_some_and(|state| state.name == JUKEBOX)
+}
+
+/// What a comparator reads of the block at `pos`: `None` for what is no jukebox.
+pub(super) fn signal(world: &World, layer: Entity, pos: BlockPos) -> Option<u8> {
+    is_jukebox(world, layer, pos).then(|| held(world, layer, pos).and_then(|held| disc(&held.name)).map_or(0, |(_, signal, _)| signal))
+}
+
+/// What the jukebox at `pos` gives the blocks around it: `PLAYING` while its song plays.
 pub(super) fn power(world: &World, layer: Entity, pos: BlockPos) -> u8 {
-    if signal(world, layer, pos).is_some_and(|signal| signal > 0) { PLAYING } else { 0 }
+    if signal(world, layer, pos).is_some_and(|signal| signal > 0) && !is_finished(world, layer, pos) { PLAYING } else { 0 }
+}
+
+/// Whether a hopper may put `item` into the jukebox at `pos`: a disc, into an empty one.
+pub(crate) fn takes_disc(world: &World, layer: Entity, pos: BlockPos, item: &ItemStack) -> bool {
+    disc(&item.name).is_some() && held(world, layer, pos).is_none()
+}
+
+/// Puts a hopper's `disc` in the jukebox at `pos`, its song started; nobody is told its title.
+pub(crate) fn put_disc(world: &mut World, layer: Entity, pos: BlockPos, disc: &ItemStack) {
+    keep(world, layer, pos, Some(disc));
+}
+
+/// The disc of the jukebox at `pos` once its song is over, which a hopper under it may take.
+pub(crate) fn finished_disc(world: &World, layer: Entity, pos: BlockPos) -> Option<ItemStack> {
+    is_finished(world, layer, pos).then(|| held(world, layer, pos)).flatten()
+}
+
+pub(crate) fn take_disc(world: &mut World, layer: Entity, pos: BlockPos) {
+    keep(world, layer, pos, None);
 }
 
 fn now_playing(title: &str) -> Text {
@@ -65,12 +99,21 @@ fn now_playing(title: &str) -> Text {
     Text { needs_translation: true, category: TextCategory::Parameters, r#type: TextType::JukeboxPopup, content, xuid: String::new(), platform_chat_id: String::new(), has_filtered_message: false, filtered_message: None }
 }
 
-/// Puts `disc` in the jukebox at `pos`, or takes what it holds out (`None`).
+/// Puts `disc` in the jukebox at `pos`, its song started, or takes what it holds out (`None`).
 fn keep(world: &mut World, layer: Entity, pos: BlockPos, disc: Option<&ItemStack>) {
-    let fields = disc.zip(level(world, layer)).map(|(disc, level)| Value::Compound(disc.fields(level.registry())));
-    fields::set(world, layer, pos, ENTITY, RECORD, fields);
+    let record = disc.zip(level(world, layer)).map(|(disc, level)| Value::Compound(disc.fields(level.registry())));
+    let finished = disc.is_some().then_some(Value::Byte(0)).or_else(|| fields::get(world, layer, pos, FINISHED));
+    fields::set_many(world, layer, pos, ENTITY, &[(FINISHED, finished), (RECORD, record), (TICKS, Some(Value::Long(0)))]);
     redstone::emit(world, layer, pos, if disc.is_some() { PLAYING } else { 0 });
+    songs::playing(world, layer, pos, disc.is_some());
     super::container_changed(world, layer, pos);
+}
+
+/// The jukeboxes of a column that came from storage, playing: their songs go on.
+pub(super) fn arrived(world: &mut World, layer: Entity, playing: &[BlockPos]) {
+    for pos in playing {
+        songs::resume(world, layer, *pos);
+    }
 }
 
 /// A click on the block `name` at `pos`: false when it is no jukebox.
@@ -103,6 +146,6 @@ mod tests {
     #[test]
     fn a_disc_has_its_title_and_nothing_else_has_one() {
         assert_eq!([title("minecraft:music_disc_13"), title("minecraft:music_disc_pigstep"), title("minecraft:stone")], [Some("C418 - 13"), Some("Lena Raine - Pigstep"), None]);
-        assert_eq!([disc("minecraft:music_disc_5"), disc("minecraft:music_disc_lava_chicken")].map(|disc| disc.map(|(_, signal)| signal)), [Some(15), Some(9)]);
+        assert_eq!([disc("minecraft:music_disc_5"), disc("minecraft:music_disc_lava_chicken")].map(|disc| disc.map(|(_, signal, _)| signal)), [Some(15), Some(9)]);
     }
 }
