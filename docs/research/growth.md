@@ -204,6 +204,7 @@ become falling blocks before the bots left; those out of range hung at y -35.9 f
 scaffolding and lamps (`blocks/queued.rs`, `liquid.rs`, `falling.rs`, `doors.rs`, `plates.rs`, `scaffolds.rs`,
 `redstone/apply.rs`), `redstone.rs` holds a circuit's sources and writes out of range, and `falling/flight.rs` moves only
 falling blocks whose cell ticks; test `block_ticks_and_circuits_wait_out_of_the_tick_region_and_catch_up_as_on_bds`.
+Sapling's drill (`sapling-tickqueue.txt`) answered every one of the 36 reads before and after as BDS's.
 `tools/bench.sh` times worldgen (sapling-world's `fill_views`), which this does
 not touch; the gate costs a tracked cell a map lookup and skips the block read for cells out of range.
 
