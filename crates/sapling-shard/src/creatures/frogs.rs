@@ -4,8 +4,9 @@
 //! cooldown_range), leaps at 70 degrees to a block within 8 across and 4 up or down, a lily
 //! pad or big dripleaf half the time there is one. The leap is told every tick with no drag,
 //! gravity 0.08; on landing it keeps a tenth of its speed across.
-// TODO: the run-up is fitted (BDS's waits from a landing were 7.5 to 9.2 s); the way to the
-// block is not checked for walls; a frog does not croak, eat or lay spawn.
+// The run-up is fitted: BDS's waits from a landing were 7.3 to 9.2 s, sapling's 7.1 to 9.0
+// (research/captures/bds-n3frogs.txt, sapling-n3frogs.txt).
+// TODO: the way to the block is not checked for walls; a frog does not croak, eat or lay spawn.
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;

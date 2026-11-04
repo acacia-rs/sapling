@@ -289,6 +289,17 @@ Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
   (sapling-horseeat.txt): the same kinds eat 50-tick meals or shorter ones, the llama and the stone
   horses never, a mule killed eating showed 160.
 
+Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
+
+- Standing on a turtle egg (n3eggs, griefing off): a cow, a pig, a zombie and a chicken summoned
+  over single eggs landed at y -25.55, the egg's top, on BDS and on sapling alike.
+- Home for a turtle never hatched (n3home, four pregnant turtles summoned on sand and teleported
+  10 blocks east): each walked back west to where it was summoned, setting off 12 to 70 s later
+  (`go_home`'s interval 700), at about 0.37 blocks a second. Sapling's `nesting.rs` makes the
+  first cell it is seen in its home, as BDS did.
+- Frogs (n3frogs, eight on open stone for 90 s): BDS's waits from a landing to the next leap were
+  7.3 to 9.2 s (a frog's first, 5.0 to 6.7); sapling's 7.1 to 9.0.
+
 ## Not drilled
 
 - Repair through `minecraft:repairable` (data-driven items naming themselves) is not ported.
@@ -302,10 +313,11 @@ Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
   - `slot.inventory 0` is the first tack slot (a horse's saddle, a llama's carpet), so an item there
     unsaddles; the flags are sent only when they change.
   - The flags, the summon's sound and a chested mount's slots past the tack: drilled 2026-11-03, below.
-- Turtles:
-  - The 1 to 4 egg count (two clutches seen), the nearest-sand pick and the nest search's 20-tick look.
-  - Home for a turtle never hatched.
-- Stomping: the 1 in 20 start, the 1200-tick give-up, and the walking speed.
+- Turtles: the 1 to 4 egg count (two clutches seen), the nearest-sand pick and the nest search's
+  20-tick look. Two runs (n3eggs) failed to show a clutch: eight turtles summoned with `go_lay_egg`
+  on sand pens held up by stone, and one in a lane with sand 2 west and 3 east, laid nothing in 50 s;
+  four pregnant turtles taken home (n3home) walked back but laid nothing in the 60 s after.
+- Stomping: the 1 in 20 start, the 1200-tick give-up, and the walking speed (not tried again).
 
 Drilled since (2026-10-30): a chested mount's chest drops after its goods (mob-life.md, `bds-chestdie.txt`), as
 sapling's did. The `lay_egg` sound's 0.34 over a turtle's feet is fixed: 0.85 of its height, from the
