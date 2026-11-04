@@ -83,6 +83,11 @@ pub trait WorldStorage: Send + Sync + 'static {
     fn generated_biome(&self, _x: i32, _y: i32, _z: i32) -> Option<u32> {
         None
     }
+    /// One above the highest block the generator's noise shape puts in column (x, z); `None` where storage
+    /// generates nothing.
+    fn generated_height(&self, _x: i32, _z: i32) -> Option<i32> {
+        None
+    }
     /// The blocks the generator's structure `name` places when it starts in chunk `start`, over
     /// the shapes `load` gives; `None` where storage generates no structures.
     fn structure_writes(&self, _name: &str, _start: ChunkPos, _load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
@@ -134,6 +139,9 @@ impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
     }
     fn generated_biome(&self, x: i32, y: i32, z: i32) -> Option<u32> {
         (**self).generated_biome(x, y, z)
+    }
+    fn generated_height(&self, x: i32, z: i32) -> Option<i32> {
+        (**self).generated_height(x, z)
     }
     fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         (**self).structure_writes(name, start, load)

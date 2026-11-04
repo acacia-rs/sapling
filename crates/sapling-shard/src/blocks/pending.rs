@@ -89,8 +89,8 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
             fire::again(world, layer, pos, delay);
         } else if falling::falls(&name) {
             falling::queue(world, layer, pos, delay);
-        } else if name == "minecraft:magma" {
-            // A generated blob's tick (sapling-world generated/ticks.rs): the column over it forms.
+        } else if name == "minecraft:magma" || name == super::bubbles::COLUMN {
+            // A generated blob's or column cell's tick (sapling-world generated/ticks.rs): the column over it forms.
             super::bubbles::written(world, layer, pos);
         } else if let Some(job) = queued::job_of(&name, &properties) {
             queued::again(world, layer, pos, delay, job);

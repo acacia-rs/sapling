@@ -99,6 +99,14 @@ impl Structures {
         }
     }
 
+    /// The middle (x, z) of `kind`'s start piece in `chunk`, which `/locate` names; None when its biome test fails.
+    pub(super) fn v2_start_middle(&self, density: &Density, kind: StructureKind, chunk: (i32, i32)) -> Option<(i32, i32)> {
+        let start = self.v2_start(density, kind, chunk)?;
+        let raw = RawHeights::new(density);
+        let (_, (x, _, z)) = start.start_piece(&mut JavaRandom::large_feature(self.seed, chunk.0, chunk.1), chunk, &|x, z| raw.at(x, z));
+        Some((x, z))
+    }
+
     /// Whether a v2 structure starts in `chunk`, its grid candidate already checked.
     pub(super) fn v2_starts(&self, density: &Density, kind: StructureKind, chunk: (i32, i32)) -> bool {
         self.v2_start(density, kind, chunk).is_some()

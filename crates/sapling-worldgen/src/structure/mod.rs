@@ -57,6 +57,7 @@ pub use kind::StructureKind;
 pub use mineshaft::probe as mineshaft_probe;
 use kind::*;
 use probe::Probe;
+pub(crate) use probe::RawHeights;
 pub use on_demand::PlaceFailure;
 pub(crate) use on_demand::Forced;
 pub use canvas::{Neighbours, Past, Settled, Spawners};
