@@ -296,7 +296,8 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
 - Home for a turtle never hatched (n3home, four pregnant turtles summoned on sand and teleported
   10 blocks east): each walked back west to where it was summoned, setting off 12 to 70 s later
   (`go_home`'s interval 700), at about 0.37 blocks a second. Sapling's `nesting.rs` makes the
-  first cell it is seen in its home, as BDS did.
+  first cell it is seen in its home, as BDS did, but its turtles (sapling-n3home.txt) strolled about
+  and wandered back only slowly within the 100 s, where BDS's walked straight home once set off.
 - Frogs (n3frogs, eight on open stone for 90 s): BDS's waits from a landing to the next leap were
   7.3 to 9.2 s (a frog's first, 5.0 to 6.7); sapling's 7.1 to 9.0.
 
