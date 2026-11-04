@@ -26,6 +26,7 @@ use sapling_data::RuleValue;
 use sapling_world::ChunkPos;
 
 use super::{level, send};
+use crate::ticking::Region;
 
 pub(super) use kelp::meal as meal_kelp;
 pub(crate) use snowfall::holds_snow;
@@ -127,12 +128,15 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     kelp::arrived(world, layer, &kelp);
 }
 
-/// The random ticks of the cells drawn rather than rolled (sampled.rs).
-fn draw_ticks(world: &mut World, picks: &mut Picks) {
+/// The random ticks of the cells drawn rather than rolled (sampled.rs) whose column ticks.
+fn draw_ticks(world: &mut World, region: &Region, picks: &mut Picks) {
     for layer in sampled::layers(world) {
         let Some((_, RuleValue::Int(rule))) = level(world, layer).and_then(|level| level.level().rules.get(RULE)) else { continue };
         let chance = rule.max(0) as f32 / EVERY;
         for pos in sampled::picked(world, layer, chance, picks) {
+            if !region.ticks_block(world, layer, pos) {
+                continue;
+            }
             let Some(name) = level(world, layer).and_then(|level| sampled_at(level, pos)) else {
                 sampled::forget(world, layer, pos);
                 continue;
@@ -163,12 +167,13 @@ pub(crate) fn trample(world: &mut World, layer: Entity, feet: [f32; 3], dropped:
     }
 }
 
-/// A tick's random ticks of everything kept track of.
+/// A tick's random ticks of everything kept track of in a column that ticks (`ticking::Region`).
 pub(crate) fn tick(world: &mut World) {
     let mut picks = world.remove_resource::<Picks>().unwrap_or_default();
+    let region = Region::of(world);
     snowfall::tick(world, &mut picks);
-    draw_ticks(world, &mut picks);
-    kelp::tick(world, &mut picks);
+    draw_ticks(world, &region, &mut picks);
+    kelp::tick(world, &region, &mut picks);
     let Some(growing) = world.get_resource::<Growing>().filter(|growing| !growing.0.is_empty()).map(|growing| growing.0.iter().copied().collect::<Vec<_>>()) else {
         world.insert_resource(picks);
         return;
@@ -176,6 +181,9 @@ pub(crate) fn tick(world: &mut World) {
     let (mut changed, mut done): (Vec<(Entity, BlockPos, bool, Vec<rules::Change>)>, Vec<(Entity, BlockPos)>) = (Vec::new(), Vec::new());
     let mut saplings = Vec::new();
     for (layer, pos) in growing {
+        if !region.ticks_block(world, layer, pos) {
+            continue;
+        }
         let Some(name) = ticked_at(world, layer, pos) else {
             done.push((layer, pos));
             continue;

@@ -13,6 +13,7 @@ use sapling_data::RuleValue;
 
 use super::super::{level, send};
 use super::{Picks, RULE};
+use crate::ticking::Region;
 
 /// A plant that grows from its tip: its block, age property, the way it grows, whether it grows
 /// into a water source (else air), the Java game's chance a random tick, and the age it stops at.
@@ -111,8 +112,9 @@ pub(crate) fn meal(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
 }
 
 /// Runs each world's queue on by its `randomTickSpeed` and grows the plants due: a cell on into
-/// what it takes, a year older, which waits in turn.
-pub(super) fn tick(world: &mut World, picks: &mut Picks) {
+/// what it takes, a year older, which waits in turn. A plant whose column does not tick waits as
+/// long again ([`Region::hold`]).
+pub(super) fn tick(world: &mut World, region: &Region, picks: &mut Picks) {
     let Some(mut kelp) = world.remove_resource::<Kelp>() else { return };
     for (layer, pos) in std::mem::take(&mut kelp.fresh) {
         let Some((plant, _)) = level(world, layer).and_then(|level| aged_at(level, pos)) else { continue };
@@ -122,13 +124,17 @@ pub(super) fn tick(world: &mut World, picks: &mut Picks) {
     let mut layers: Vec<Entity> = kelp.due.iter().map(|(_, layer, _)| *layer).collect();
     layers.sort_unstable();
     layers.dedup();
-    for layer in layers {
-        let speed = match level(world, layer).and_then(|level| level.level().rules.get(RULE)) {
-            Some((_, RuleValue::Int(speed))) => speed.max(0) as u64,
-            _ => 0,
-        };
-        *kelp.clock.entry(layer).or_default() += speed;
+    let speeds: HashMap<Entity, u64> = layers
+        .into_iter()
+        .map(|layer| match level(world, layer).and_then(|level| level.level().rules.get(RULE)) {
+            Some((_, RuleValue::Int(speed))) => (layer, speed.max(0) as u64),
+            _ => (layer, 0),
+        })
+        .collect();
+    for (layer, speed) in &speeds {
+        *kelp.clock.entry(*layer).or_default() += speed;
     }
+    region.hold(world, &mut kelp.due, |layer| speeds.get(&layer).copied().unwrap_or(0));
     let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut kelp.due).into_iter().partition(|(when, layer, _)| kelp.clock.get(layer).is_some_and(|now| when <= now));
     kelp.due = waiting;
     world.insert_resource(kelp);

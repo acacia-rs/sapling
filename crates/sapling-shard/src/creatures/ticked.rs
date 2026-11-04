@@ -1,37 +1,24 @@
-//! Which mobs BDS ticks: those whose column is in the tick region of a player in their world
-//! (`crate::ticking::in_tick_region`), or that the world keeps (kept.rs); the others neither move, think nor feel their
-//! effects until a player comes near (research/captures/bds-tickcircle*.txt, docs/research/mob-damage.md).
-
-use std::collections::HashMap;
+//! Which mobs BDS ticks: those whose column ticks (`crate::ticking::Region`: a player's tick region in
+//! their world, or a kept column); the others neither move, think nor feel their effects until a player
+//! comes near (research/captures/bds-tickcircle*.txt, docs/research/mob-damage.md).
 
 use bevy_ecs::prelude::*;
 use sapling_world::ChunkPos;
 
 use crate::body::Body;
-use crate::components::InLayer;
-use crate::kept::Kept;
-use crate::view::View;
+use crate::ticking::Region;
 
-/// The players' chunks by world, taken once a tick.
-pub(super) struct Ticked {
-    centres: HashMap<Entity, Vec<ChunkPos>>,
-    reach: i32,
-}
+/// The tick's region, taken once a tick.
+pub(super) struct Ticked(Region);
 
 impl Ticked {
     pub(super) fn of(world: &mut World) -> Self {
-        let mut centres: HashMap<Entity, Vec<ChunkPos>> = HashMap::new();
-        for (in_layer, view) in world.query::<(&InLayer, &View)>().iter(world) {
-            centres.entry(in_layer.0).or_default().extend(view.center());
-        }
-        Self { centres, reach: crate::ticking::tick_distance(world) }
+        Self(Region::of(world))
     }
 
-    /// Whether `mob` in `layer` is ticked. A world nobody is in ticks everything: BDS's ticks
-    /// nothing, but headless shards and their tests run without players.
+    /// Whether `mob` in `layer` is ticked ([`Region::ticks`]).
     pub(super) fn ticks(&self, world: &World, mob: Entity, layer: Entity) -> bool {
-        let Some(centres) = self.centres.get(&layer) else { return true };
         let Some(at) = world.get::<Body>(mob).map(|body| ChunkPos::of_block(body.at[0].floor() as i32, body.at[2].floor() as i32)) else { return true };
-        centres.iter().any(|centre| crate::ticking::in_tick_region(at.x - centre.x, at.z - centre.z, self.reach)) || world.get::<Kept>(layer).is_some_and(|kept| kept.holds(at))
+        self.0.ticks(world, layer, at)
     }
 }

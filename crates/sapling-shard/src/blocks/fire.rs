@@ -232,12 +232,14 @@ fn burnt(level: &Level, pos: BlockPos, hardship: u32, rains: bool, roll: &mut dy
     done
 }
 
-/// Ticks the fires that are due.
+/// Ticks the fires that are due; one whose column does not tick waits a tick more
+/// ([`crate::ticking::Region::hold`]).
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let Some(mut fires) = world.get_resource_mut::<Fires>().filter(|fires| !fires.0.is_empty()) else { return };
-    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut fires.0).into_iter().partition(|(when, ..)| *when <= now);
-    fires.0 = waiting;
+    let Some(mut queue) = world.get_resource_mut::<Fires>().filter(|fires| !fires.0.is_empty()).map(|mut fires| std::mem::take(&mut fires.0)) else { return };
+    crate::ticking::Region::of(world).hold(world, &mut queue, |_| 1);
+    let (due, waiting): (Vec<_>, Vec<_>) = queue.into_iter().partition(|(when, ..)| *when <= now);
+    world.resource_mut::<Fires>().0.extend(waiting);
     let hardship = match world.resource::<Settings>().0.difficulty {
         Difficulty::Peaceful => 0,
         Difficulty::Easy => 1,

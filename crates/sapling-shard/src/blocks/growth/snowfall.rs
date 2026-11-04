@@ -1,6 +1,6 @@
 //! Water freezing, snow lying where it is cold and rain filling cauldrons, as BDS's
 //! `LevelChunk::tick` does it: a column
-//! of each chunk around a player is picked `randomTickSpeed` times a tick and its top looked at
+//! of each chunk that ticks (a player's tick region or a kept column) is picked `randomTickSpeed` times a tick and its top looked at
 //! (docs/research/growth.md "Light").
 
 use bevy_ecs::prelude::*;
@@ -9,7 +9,7 @@ use sapling_data::RuleValue;
 
 use super::super::{level, send};
 use super::Picks;
-use crate::ticking::near_players;
+use crate::ticking::ticked_columns;
 
 /// One pick in this many freezes.
 const ODDS: u32 = 16;
@@ -106,11 +106,11 @@ fn fills(downfall: f32, picks: &mut Picks) -> bool {
     downfall >= picks.below(1 << 24) as f32 / (1 << 24) as f32 * 0.5
 }
 
-/// A tick's picks around every player: `randomTickSpeed` columns a chunk, as `LevelChunk::tick`
+/// A tick's picks in every ticked column (`ticked_columns`): `randomTickSpeed` columns a chunk, as `LevelChunk::tick`
 /// (1409f98a0) loops.
 pub(super) fn tick(world: &mut World, picks: &mut Picks) {
     let mut fell = Vec::new();
-    for (layer, column) in near_players(world) {
+    for (layer, column) in ticked_columns(world) {
         let Some(level) = level(world, layer).filter(|level| level.is_loaded(column)) else { continue };
         let rules = &level.level().rules;
         let Some((_, RuleValue::Int(speed))) = rules.get("randomTickSpeed") else { continue };
