@@ -423,7 +423,31 @@ Sapling's run: sapling-hits2.txt. Each mob held by slowness 255, the actor put b
 - The actor's `!hit` fell 8.5 blocks short (the held cow and zombie had been pushed); the sword's
   5.824 stands from bds-hits2.txt.
 
+## Shots, breath, armour stands, floating (2026-11-04, `bds_command_probe n3knock`, `n3breath`, `n3float`)
+
+Captures research/captures/bds-n3*.txt and sapling-n3*.txt (examples/shared/ninth3_drill.rs).
+
+- **A shot's throw** (n3knock: dispensers shooting an arrow and a snowball at slowed cows, and an
+  arrow at the actor): the cow showed `HurtAnimation` 3 (the snowball's too, costing nothing) and a
+  `SetEntityMotion` of 0.4 along the shot's way across and 0.4 up in the hit's own tick, then the
+  usual moved speed (0.2184, 0.3136) the tick after. The actor got (0.366, 0.4, -0.161). Fixed:
+  `creatures/hits.rs` `throw_at_once` tells the throw at once, and a snowball or egg that costs
+  nothing makes its mob flinch (`harm::flinch`); test
+  `a_snowball_costs_a_blaze_three_and_an_egg_harms_a_cow_nothing`. Re-drilled: sapling's cows the
+  same, but sapling sends the moved speed in the hit's tick, BDS the tick after.
+- **Breath** (n3breath, a cow 8 s under a stone lid, then let out): its `Air` counted down 1 a tick
+  from 300 and went straight back to 300 the tick the water was gone. Same as sapling. Drowning
+  hurt every 10 ticks from 15 s on both.
+- **Armour stands in lava and in fire**: `HurtAnimation` -1 on their first tick there and every 10
+  ticks after, `ONFIRE` from the tick after, health 6 throughout, never dying. Sapling showed
+  nothing; fixed in `creatures/armour_stands/burning.rs`, test
+  `a_stand_in_lava_flinches_every_ten_ticks_alight_and_never_dies`.
+- **Floating** (n3float, cows and chickens slowed in water lanes of levels 1 to 6 from a source):
+  no cow swam up on BDS; chickens did only once their box reached the source's cell. Sapling's
+  the same where the mobs stayed; its cows drifted into the source faster and swam up there.
+  Sapling's 0.4 depth (Java's) is kept.
+
 ## Not drilled
 
-How breath comes back out of water; players' burns beyond fire; a baby's experience counted; the
+Players' burns beyond fire; when a stand taken out of fire stops burning; a baby's experience counted; the
 hitter's hunger; an item's wear (the cow fled); what a mob does once hit beyond running.

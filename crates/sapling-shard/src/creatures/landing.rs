@@ -107,11 +107,13 @@ fn knock(world: &mut World, struck: Entity, is_player: bool, layer: Entity, from
     }
     if harm > 0.0 {
         harm::wound_by(world, struck, layer, harm, Cause::Projectile, thrower);
+    } else {
+        harm::flinch(world, struck, layer, Cause::Projectile);
     }
-    let Some(mut body) = world.get_mut::<Body>(struck) else { return };
-    let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
+    let Some(at) = world.get::<Body>(struck).map(|body| body.at) else { return };
+    let (dx, dz) = (at[0] - from[0], at[2] - from[2]);
     let far = dx.hypot(dz).max(1e-4);
-    body.throw([dx / far * shots::KNOCK, shots::KNOCK, dz / far * shots::KNOCK]);
+    super::hits::throw_at_once(world, struck, layer, [dx / far * shots::KNOCK, shots::KNOCK, dz / far * shots::KNOCK]);
 }
 
 /// A baby chicken hatches at `at`, shown as one.

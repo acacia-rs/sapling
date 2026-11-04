@@ -125,6 +125,11 @@ fn a_snowball_costs_a_blaze_three_and_an_egg_harms_a_cow_nothing() {
     let sent = throw(&mut h, 10);
     assert!(healths(&sent).iter().all(|left| *left == 10.0), "{:?}", healths(&sent));
     assert!(thrown(&sent, cow) > 0.0, "thrown back");
+    // Told at once as thrown, and flinching (research/captures/bds-n3knock.txt: a snowball's cow).
+    let first = all::<SetEntityMotion>(&sent).into_iter().find(|motion| motion.runtime_entity_id == cow).expect("thrown");
+    assert_eq!(first.velocity.y, 0.4);
+    let flinched = all::<acacia_proto::packets::EntityEvent>(&sent).into_iter().any(|event| event.runtime_entity_id == cow && event.data == 3);
+    assert!(flinched, "HurtAnimation 3");
     assert!(gone(&sent, "minecraft:egg"));
 }
 
