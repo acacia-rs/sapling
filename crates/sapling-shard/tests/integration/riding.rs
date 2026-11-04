@@ -122,12 +122,14 @@ fn a_wild_horse_throws_its_rider_off_until_its_temper_lets_a_ride_tame_it() {
     h.enter(1, "Alex");
     let horse = spawned(&mut h, &[("minecraft:horse", [2.5, 65.0, 0.5])])[0];
     h.receive(1, &interact(horse.0));
-    ticks(&mut h, 2);
-    assert_eq!(riders(&mut h, horse), 0, "a new horse's temper is 0: the first ride fails");
-    // Each failed ride adds 5 to its temper, of 100: by the 20th the roll cannot fail.
-    let tamed = (0..20).any(|_| {
+    // It lets its rider stay 60 ticks before it rolls (research/captures/bds-n3ride.txt).
+    ticks(&mut h, 57);
+    assert_eq!(riders(&mut h, horse), 1, "still on before its 60th ridden tick");
+    ticks(&mut h, 3);
+    // Its first temper is rolled; each failed ride adds 5, of 100: by the 20th the roll cannot fail.
+    let tamed = riders(&mut h, horse) == 1 || (0..20).any(|_| {
         h.receive(1, &interact(horse.0));
-        ticks(&mut h, 2);
+        ticks(&mut h, 62);
         riders(&mut h, horse) == 1
     });
     assert!(tamed, "a ride tamed it and its rider stays on");

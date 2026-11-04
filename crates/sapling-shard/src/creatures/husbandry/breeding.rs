@@ -135,6 +135,7 @@ fn breed(world: &mut World, parent: Entity, mate: Entity, layer: Entity, kind: &
     if let Some(baby) = super::super::spawn_entity(world, layer, &baby_kind, body.at, sapling_api::SpawnReason::Bred) {
         ageing::be_born(world, baby, &baby_kind);
         super::super::properties::inherit(world, baby, [parent, mate], &baby_kind);
+        super::super::strides::blend(world, baby, [parent, mate], &baby_kind);
         if let Some(owner) = owner {
             super::owners::tame_to(world, baby, &baby_kind, owner);
         }

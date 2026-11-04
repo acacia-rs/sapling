@@ -1,8 +1,8 @@
 //! What each horse, donkey, mule, skeleton horse and zombie horse is born with: its health,
 //! walking speed and jump strength, each rolled in its pack's range (`minecraft:health`,
 //! `minecraft:movement`, `minecraft:horse.jump_strength`) and announced in its `AddEntity`, as
-//! BDS's eight summoned horses each were (research/captures/bds-horse-jump.txt).
-// TODO: a foal's are its parents' mixed, as BDS breeds them; it is rolled afresh here.
+//! BDS's eight summoned horses each were (research/captures/bds-horse-jump.txt). A foal's are
+//! its parents' blended ([`blend_strides`]).
 
 use acacia_proto::packets::AddEntity;
 
@@ -40,6 +40,21 @@ pub fn roll_strides(kind: &str, [health, movement, jump]: [f32; 3]) -> Option<St
     Some(Strides { health: whole, movement: within(*movements, movement), jump: within(*jumps, jump) })
 }
 
+/// A foal's strides from its parents' `a` and `b` (its pack's `blend_attributes`): each about the
+/// parents' mean, spread by their gap plus 0.3 of the kind's range times a draw `g` (three
+/// fractions' mean less a half), mirrored back in at the range's ends. Java's
+/// `createOffspringAttribute`; BDS's six foals all fell in it (research/captures/bds-n3foals.txt).
+pub fn blend_strides(kind: &str, a: &Strides, b: &Strides, draws: [[f32; 3]; 3]) -> Option<Strides> {
+    let (_, healths, movements, jumps) = RANGES.iter().find(|(known, ..)| *known == kind)?;
+    let blend = |[low, high]: [f32; 2], a: f32, b: f32, [x, y, z]: [f32; 3]| {
+        let (a, b) = (a.clamp(low, high), b.clamp(low, high));
+        let spread = (a - b).abs() + 0.3 * (high - low);
+        let mixed = (a + b) / 2.0 + spread * ((x + y + z) / 3.0 - 0.5);
+        if mixed > high { 2.0 * high - mixed } else if mixed < low { 2.0 * low - mixed } else { mixed }
+    };
+    Some(Strides { health: blend(*healths, a.health, b.health, draws[0]), movement: blend(*movements, a.movement, b.movement, draws[1]), jump: blend(*jumps, a.jump, b.jump, draws[2]) })
+}
+
 /// Announces `strides` in `added`, with `left` of its health (all of it for none).
 pub fn dress_strides(added: &mut AddEntity, strides: &Strides, left: Option<f32>) {
     for attribute in &mut added.attributes {
@@ -73,6 +88,15 @@ mod tests {
         assert_eq!(roll_strides("minecraft:horse", [0.9999; 3]).map(|strides| strides.health), Some(30.0));
         assert_eq!(roll_strides("minecraft:donkey", [0.5; 3]).map(|strides| strides.jump), Some(0.5));
         assert_eq!(roll_strides("minecraft:cow", [0.5; 3]), None);
+    }
+
+    #[test]
+    fn a_foal_is_its_parents_blended_mirrored_inside_the_range() {
+        let parent = |health, movement, jump| Strides { health, movement, jump };
+        let foal = blend_strides("minecraft:horse", &parent(24.0, 0.14, 0.4), &parent(16.0, 0.14, 0.4), [[0.5; 3]; 3]).unwrap();
+        assert_eq!((foal.health, foal.movement), (20.0, 0.14));
+        let high = blend_strides("minecraft:horse", &parent(30.0, 0.3375, 1.0), &parent(30.0, 0.3375, 1.0), [[1.0; 3]; 3]).unwrap();
+        assert!((high.jump - (1.0 - 0.09)).abs() < 1e-5, "{}", high.jump);
     }
 
     #[test]

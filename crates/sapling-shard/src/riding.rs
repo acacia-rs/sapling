@@ -6,6 +6,7 @@
 
 mod backend;
 mod body;
+mod breaking;
 mod carry;
 mod drive;
 mod evented;
@@ -31,6 +32,7 @@ use crate::mobs;
 use crate::sync::Told as Shown;
 use packets::LinkKind;
 
+pub(crate) use breaking::tick as break_in;
 pub(crate) use carry::carry;
 pub(crate) use inventory::{arrive as arrive_ungrouped, dress as dress_inventory, tamed_items as tamed_inventory, upgrade as upgrade_zombie_horses};
 pub(crate) use evented::{is_bare as saddled_bare, looted_saddle, saddle_by_event};

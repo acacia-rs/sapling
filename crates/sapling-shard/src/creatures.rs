@@ -83,11 +83,11 @@ use sapling_api::EntityId;
 use sapling_world::Actor;
 
 use crate::body::Body;
-use birth::{Birth, born, spawn_as, spawn_entity};
+use birth::{Birth, born, spawn_entity};
 use death::{die, leaves_loot};
 use shown::{head, physics_of, reshow};
-pub(crate) use birth::{from_storage, is_arriving, spawn};
-pub(crate) use shown::is_baby;
+pub(crate) use birth::{from_storage, is_arriving, spawn, spawn_as};
+pub(crate) use shown::{head as head_of, is_baby};
 pub(crate) use afflictions::{clouded, takes_potion};
 pub(crate) use armour_stands::use_on as dress_stand;
 pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot};
@@ -212,6 +212,7 @@ pub(crate) fn tick(world: &mut World) {
     warden::tick(world);
     raids::tick(world);
     armour_stands::tick(world);
+    struck::tick(world);
     creaking::tick_hearts(world);
     death::leave_due(world);
     let now = world.resource::<Tick>().0;

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Difficulty, SpawnReason};
-use sapling_data::{SpawnRule, spawn_category, spawn_rules};
+use sapling_data::{HerdEvents, SpawnRule, spawn_category, spawn_rules};
 use sapling_world::ChunkPos;
 
 use super::{gates, phantoms};
@@ -25,6 +25,11 @@ const ALL: usize = 200;
 /// A category's caps of mobs about a cluster on the surface and underground: the base `Dimension`
 /// constructor's (141878200, +0x104 and +0x120), so every dimension's (mob-spawning.md "Caps").
 const CAPS: &[(&str, usize, usize)] = &[("animal", 4, 4), ("monster", 8, 16), ("water_animal", 36, 36), ("ambient", 0, 2)];
+/// The herd events a natural mob is made by here (sapling_data::HerdEvents): babies of fox, axolotl
+/// and polar bear herds.
+// TODO: the other herd events (horse coats, tropical fish looks, drowned and husk riders) need the
+// event fired on a spawned mob; a summon's event replaces `entity_spawned` instead.
+const FIRED: [&str; 1] = ["minecraft:entity_born"];
 
 fn difficulty(world: &World) -> u8 {
     match world.resource::<Settings>().0.difficulty {
@@ -88,7 +93,9 @@ fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]
     let mut held = counts.categories.get(rule.category).map_or(0, |held| held[place]);
     let of_kind = counts.kinds.get(rule.kind).map_or(0, |held| held[place]) as u32;
     let room = rule.density_at(found.surface).map_or(u32::MAX, |density| density.saturating_sub(of_kind)).min(ALL.saturating_sub(counts.all) as u32);
+    let herd = if rule.herds.is_empty() { None } else { pick_herd(&rule.herds, fraction(world)) };
     let size = herd_size(rule.herd, fraction(world)).min(room);
+    let mut member = 0;
     // BDS asks the cap before each member, `held <= cap`, so a category ends one over it (1415ef8b2 on).
     for _ in 0..size {
         if held > cap {
@@ -96,8 +103,10 @@ fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]
         }
         let kind = rule.permuted(fraction(world));
         let place = if kind == phantoms::PHANTOM { phantoms::place(world, layer, found) } else { Some(*found) };
-        if place.is_some_and(|place| spawn(world, layer, kind, &place)) {
+        let event = herd.and_then(|herd| herd.events_of(member).find(|event| FIRED.contains(event)));
+        if place.is_some_and(|place| spawn(world, layer, kind, &place, event)) {
             held += 1;
+            member += 1;
         }
     }
     Some(())
@@ -122,13 +131,18 @@ fn pick<'a>(admitted: &[&'a SpawnRule], roll: f32) -> Option<&'a SpawnRule> {
     None
 }
 
-/// A mob of `kind` at `place`, where it fits, that despawns; whether one came.
-fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found) -> bool {
+/// One of a rule's herds by `roll` from 0 to 1, as BDS's `nextInt(herds)`.
+fn pick_herd(herds: &[HerdEvents], roll: f32) -> Option<&HerdEvents> {
+    herds.get(((roll * herds.len() as f32) as usize).min(herds.len().saturating_sub(1)))
+}
+
+/// A mob of `kind` at `place`, where it fits, that despawns, as `event` makes it; whether one came.
+fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found, event: Option<&str>) -> bool {
     let Some([_, height]) = sapling_data::mob_size(kind) else { return false };
     if !world.get::<Layer>(layer).is_some_and(|level| spots::has_room(&level.world, place.cell, height)) {
         return false;
     }
-    let Some(id) = crate::creatures::spawn(world, layer, kind, place.feet(), SpawnReason::Natural) else { return false };
+    let Some(id) = crate::creatures::spawn_as(world, layer, kind, place.feet(), SpawnReason::Natural, 0.0, event) else { return false };
     if let Some(entity) = entities::find(world, id) {
         world.entity_mut(entity).insert(Natural);
     }
@@ -138,6 +152,15 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_fox_herd_is_two_grown_then_babies() {
+        let Some(fox) = spawn_rules().iter().find(|rule| rule.kind == "minecraft:fox") else { return };
+        let herd = pick_herd(&fox.herds, 0.99).expect("spawn-rules.tsv from the current spawn-rules.py");
+        let fired: Vec<Option<&str>> = (0..4).map(|member| herd.events_of(member).find(|event| FIRED.contains(event))).collect();
+        assert_eq!(fired, [None, None, Some("minecraft:entity_born"), Some("minecraft:entity_born")]);
+        assert!(pick_herd(&[], 0.5).is_none());
+    }
 
     #[test]
     fn rules_are_picked_by_weight() {

@@ -44,6 +44,7 @@ pub(super) fn adopt(world: &mut World, entity: Entity, kind: &str, stored: Optio
     };
     if stored.is_none() {
         tadpoles::newcomer(&mut raised, kind, grows);
+        raised.kept.temper = owners::first_temper(world, kind);
     }
     let baby = raised.is_baby();
     world.entity_mut(entity).insert(raised);
