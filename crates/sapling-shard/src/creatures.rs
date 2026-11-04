@@ -213,6 +213,7 @@ pub(crate) fn tick(world: &mut World) {
     raids::tick(world);
     armour_stands::tick(world);
     creaking::tick_hearts(world);
+    death::leave_due(world);
     let now = world.resource::<Tick>().0;
     let dead: Vec<Entity> = world.query::<(Entity, &Dying)>().iter(world).filter(|(_, dying)| now >= dying.0).map(|(entity, _)| entity).collect();
     for entity in dead {
@@ -226,6 +227,9 @@ pub(crate) fn tick(world: &mut World) {
         // The fight moves its dragon (dragon.rs); a mob far from every player waits (ticked.rs).
         if kind == crate::dragon::DRAGON && world.get::<crate::dragon::Dragon>(entity).is_some() || !ticked.ticks(world, entity, layer) {
             continue;
+        }
+        if world.get::<Dying>(entity).is_none() {
+            crate::spawning::count_idle(world, entity, layer, &kind);
         }
         // A rider is carried to its seat, a vehicle its driver's client moves put where it says (riding.rs).
         // TODO: a riding mob neither thinks nor is harmed.

@@ -152,3 +152,17 @@ fn a_spared_hit_gives_back_its_cost_and_guard_and_keeps_its_timers() {
     cow.reweigh(&before, Some(5.0));
     assert_eq!((cow.left(), cow.guarded), (5.0, GUARD));
 }
+
+#[test]
+fn a_hit_that_lands_ends_idleness_as_mob_hurt_does() {
+    // BDS's `Mob::_hurt` zeroes `NoActionTimeComponent` (spawning/despawn.rs).
+    let mut cow = Health::new(10.0, None, 0);
+    cow.idle_for(700);
+    cow.idle_for(3);
+    assert_eq!(cow.idle(), 703);
+    assert!(cow.hurt(1.0));
+    assert_eq!(cow.idle(), 0);
+    cow.idle_for(5);
+    assert!(!cow.hurt(0.5), "inside the guard");
+    assert_eq!(cow.idle(), 5);
+}

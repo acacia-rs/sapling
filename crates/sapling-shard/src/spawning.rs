@@ -21,7 +21,7 @@ use crate::blocks::Dice;
 use crate::components::{InLayer, Mode, Position, Stage};
 use crate::view::View;
 
-pub(crate) use despawn::tick as despawn;
+pub(crate) use despawn::{count_idle, tick as despawn};
 pub(crate) use eggs::{hatch, kind_of as egg_kind};
 pub(crate) use peaceful::{removed_in_peaceful, tick as remove_in_peaceful};
 pub(crate) use phantoms::Rested;
@@ -31,12 +31,10 @@ const MOB_SPAWNING: &str = "doMobSpawning";
 const CHANCE: u32 = 11;
 const ODDS: u32 = 2000;
 
-/// A mob that appeared by itself, at the tick it holds: it despawns (despawn.rs). Spawned by a
-/// command, an egg or a plugin, or loaded with its column, a mob stays.
+/// A mob that appeared by itself: it despawns (despawn.rs). Spawned by a command, an egg or a
+/// plugin, or loaded with its column, a mob stays.
 #[derive(Component)]
-pub(crate) struct Natural {
-    pub born: u64,
-}
+pub(crate) struct Natural;
 
 /// Natural spawning's own dice, so that it leaves the rolls of the rest of the shard as they were.
 #[derive(Resource, Default)]

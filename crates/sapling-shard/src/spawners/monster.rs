@@ -13,7 +13,7 @@ use sapling_world::{World as Level, new_block_entity};
 use super::fields::Fields;
 use super::{MOB_SPAWNER, Near, centre, dice};
 use crate::body::Body;
-use crate::components::{InLayer, Layer, Settings, Tick};
+use crate::components::{InLayer, Layer, Settings};
 use crate::entities::{self, Kind};
 use crate::spawning::Natural;
 
@@ -140,10 +140,9 @@ fn spawn_all(world: &mut World, layer: Entity, pos: BlockPos, kind: &str, fields
 
 fn spawn(world: &mut World, layer: Entity, [x, y, z]: BlockPos, kind: &str, at: [f32; 3]) {
     let Some(id) = crate::creatures::spawn(world, layer, kind, at, SpawnReason::Spawner) else { return };
-    let now = world.resource::<Tick>().0;
     if let Some(entity) = entities::find(world, id) {
         // BDS spawns it as a natural spawn, which despawns as one.
-        world.entity_mut(entity).insert(Natural { born: now });
+        world.entity_mut(entity).insert(Natural);
     }
     let [width, height] = sapling_data::mob_size(kind).unwrap_or([1.0; 2]);
     let data = width.ceil() as i32 + ((height.ceil() as i32) << 8);

@@ -129,14 +129,16 @@ fn a_killed_mob_dies_leaves_its_loot_and_goes_a_second_later_as_on_bds() {
     let died = h.tick_all();
     let events: Vec<_> = all::<EntityEvent>(died.to(2)).iter().map(|event| (event.runtime_entity_id, event.event_id.clone())).collect();
     assert_eq!(events, [(pig.0, EntityEventEventId::DeathAnimation)]);
-    let loot = all::<AddItemEntity>(died.to(2));
+    assert!(all::<AddItemEntity>(died.to(2)).is_empty(), "the loot comes a tick after the death (research/captures/bds-bodies.txt)");
+    let looted = h.tick_all();
+    let loot = all::<AddItemEntity>(looted.to(2));
     assert!(!loot.is_empty() && loot.iter().all(|item| (item.position.y - 65.075).abs() < 1e-4 && item.velocity.y == 0.2), "porkchops at the pig: {loot:?}");
     // 0.05 into the floor, each is lifted onto it and stays, as BDS's did.
     let porkchop = loot[0].runtime_entity_id;
-    let ticks: Vec<_> = (1..=25).map(|_| h.tick_all().to(2).to_vec()).collect();
-    let moves: Vec<_> = std::iter::once(died.to(2)).chain(ticks.iter().map(Vec::as_slice)).flat_map(all::<MoveEntityDelta>).filter(|moved| moved.runtime_entity_id == porkchop).map(|moved| (moved.x, moved.y, moved.on_ground)).collect();
+    let ticks: Vec<_> = (2..=25).map(|_| h.tick_all().to(2).to_vec()).collect();
+    let moves: Vec<_> = std::iter::once(looted.to(2)).chain(ticks.iter().map(Vec::as_slice)).flat_map(all::<MoveEntityDelta>).filter(|moved| moved.runtime_entity_id == porkchop).map(|moved| (moved.x, moved.y, moved.on_ground)).collect();
     assert_eq!(moves, [(None, Some(65.125), true)]);
-    let gone: Vec<usize> = (1..=25).filter(|tick| all::<RemoveEntity>(&ticks[tick - 1]).iter().any(|remove| remove.entity_id_self == pig.0 as i64)).collect();
+    let gone: Vec<usize> = (2..=25).filter(|tick| all::<RemoveEntity>(&ticks[tick - 2]).iter().any(|remove| remove.entity_id_self == pig.0 as i64)).collect();
     assert_eq!(gone, [21], "gone 21 ticks after it died");
 
     let calf = ask(&mut h, |ctx| {
@@ -145,7 +147,8 @@ fn a_killed_mob_dies_leaves_its_loot_and_goes_a_second_later_as_on_bds() {
     })
     .expect("another pig");
     h.remote.run(move |ctx| assert!(ctx.kill_entity(calf)));
-    assert!(all::<AddItemEntity>(h.tick_all().to(2)).is_empty(), "no loot without doMobLoot");
+    let both: Vec<_> = (0..2).flat_map(|_| all::<AddItemEntity>(h.tick_all().to(2))).collect();
+    assert!(both.is_empty(), "no loot without doMobLoot");
 }
 
 #[test]

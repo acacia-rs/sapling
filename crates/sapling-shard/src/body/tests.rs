@@ -93,3 +93,34 @@ fn a_mobs_jump_is_told_after_its_ticks_drag_and_gravity_as_on_bds() {
     (0..15).for_each(|_| _ = landed.step(&level, &Physics::MOB, &mut || 0.5));
     assert!(landed.on_ground && (landed.held_motion(&Physics::MOB)[1] + 0.0784).abs() < 1e-6);
 }
+
+#[test]
+fn a_chicken_falls_as_slowly_as_bds_dropped_one() {
+    // research/captures/bds-bodies.txt: a chicken let go 10 up in the open.
+    let level = level();
+    let mut body = Body::new([0.5, 75.0, 0.5], [0.0; 3], [0.4, 0.7]);
+    let moved: Vec<f32> = (0..5).map(|_| body.step(&level, &Physics::CHICKEN, &mut || 0.5)[1]).collect();
+    let bds = [-0.078419, -0.093145, -0.101809, -0.106903, -0.109899];
+    assert!(moved.iter().zip(bds).all(|(a, b)| (a - b).abs() < 1e-4), "{moved:?}");
+}
+
+#[test]
+fn a_mob_in_a_block_lower_than_a_full_one_rises_onto_it_and_stays_in_a_full_one() {
+    // research/captures/bds-lifts.txt: a cow stood on as a slab was set rose to its top the tick after; in stone it stayed.
+    let mut level = level();
+    let stone = level.block_id("minecraft:stone").unwrap();
+    level.set_block(0, 65, 2, stone);
+    let mut cow = Body::new([2.5, 65.0, 0.5], [0.0; 3], [0.9, 1.3]);
+    cow.step(&level, &Physics::MOB, &mut || 0.5);
+    assert_eq!((cow.at[1], cow.on_ground), (65.5, true));
+    let mut walled = Body::new([0.5, 65.0, 2.5], [0.0; 3], [0.9, 1.3]);
+    walled.step(&level, &Physics::MOB, &mut || 0.5);
+    assert_eq!(walled.at[1], 65.0);
+    for (name, top) in [("minecraft:soul_sand", 65.875), ("minecraft:stonecutter_block", 65.5625), ("minecraft:enchanting_table", 65.75)] {
+        let block = level.block_id(name).unwrap();
+        level.set_block(-2, 65, 0, block);
+        let mut cow = Body::new([-1.5, 65.0, 0.5], [0.0; 3], [0.9, 1.3]);
+        cow.step(&level, &Physics::MOB, &mut || 0.5);
+        assert_eq!(cow.at[1], top, "{name}");
+    }
+}

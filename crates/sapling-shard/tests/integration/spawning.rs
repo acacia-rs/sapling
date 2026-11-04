@@ -23,7 +23,11 @@ fn floored(floor: &str) -> World {
 
 /// Alex in creative, so nothing hunts it, at midnight on normal difficulty over `floor`.
 fn at_midnight(floor: &str) -> Harness {
-    let mut h = Harness::with(common::config(), floored(floor));
+    at_midnight_with(common::config(), floor)
+}
+
+fn at_midnight_with(config: sapling_shard::ShardConfig, floor: &str) -> Harness {
+    let mut h = Harness::with(config, floored(floor));
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
         ctx.set_game_mode(ALEX, GameMode::Creative);
@@ -96,6 +100,23 @@ fn natural_mobs_go_when_the_player_is_far_and_summoned_ones_stay() {
     run(&mut h, 3);
     let left: Vec<_> = monsters(&mut h).into_iter().map(|monster| monster.id).collect();
     assert_eq!(left, [summoned]);
+}
+
+/// BDS caps the far distance at 44 only where the chunk tick range is 4 or less (`_canDespawn`,
+/// docs/research/mob-spawning.md "Despawning"): 70 blocks over them, its monsters go at 4 and stay at 6.
+#[test]
+fn natural_mobs_70_off_go_at_tick_distance_4_and_stay_at_6() {
+    for (tick_distance, stay) in [(4, false), (6, true)] {
+        let mut h = at_midnight_with(sapling_shard::ShardConfig { tick_distance, ..common::config() }, "minecraft:stone");
+        run(&mut h, 400);
+        let before: Vec<_> = monsters(&mut h).into_iter().filter(|monster| monster.feet[0].hypot(monster.feet[2]) < 46.0).map(|monster| monster.id).collect();
+        assert!(!before.is_empty());
+        h.remote.run(|ctx| ctx.teleport(ALEX, [0.5, 135.0, 0.5]));
+        run(&mut h, 3);
+        let after: Vec<_> = monsters(&mut h).into_iter().map(|monster| monster.id).collect();
+        assert_eq!(before.iter().all(|id| after.contains(id)), stay, "tick distance {tick_distance}: {before:?} then {after:?}");
+        assert!(stay || before.iter().all(|id| !after.contains(id)), "tick distance {tick_distance}");
+    }
 }
 
 #[test]

@@ -12,8 +12,6 @@ const BURNS: u16 = 160;
 const BURN_EVERY: u16 = 20;
 const FIRE_HARM: f32 = 1.0;
 const LAVA_HARM: f32 = 4.0;
-/// A fall this far does not hurt; each block more, begun, costs 1.
-const SAFE_FALL: f32 = 3.0;
 /// Ticks of breath; out of it under water, each tick hurts.
 pub(super) const AIR: i16 = 300;
 /// Ticks a mob's head is in a block before the block hurts it.
@@ -49,6 +47,8 @@ pub(crate) struct Health {
     fireproof: bool,
     /// Blocks of a fall forgiven on top of the three anyone is (jump boost, slow falling).
     springs: f32,
+    /// Ticks since it was last hurt or near a player (BDS's `NoActionTimeComponent`, spawning/despawn.rs).
+    idle: u32,
     /// What viewers know: its health, and whether it is on fire.
     pub(super) told: f32,
     pub(super) lit: bool,
@@ -58,7 +58,7 @@ impl Health {
     /// A mob of `max` health with `left` of it, `burning` ticks more.
     pub(crate) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
-        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], warding: Warding::default(), cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, told: left, lit: false }
+        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], warding: Warding::default(), cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, idle: 0, told: left, lit: false }
     }
 
     pub(crate) fn left(&self) -> f32 {
@@ -148,7 +148,7 @@ impl Health {
         if self.left <= 0.0 || (taken <= 0.0 && !whole) {
             return false;
         }
-        (self.last, self.guarded) = (amount, GUARD);
+        (self.last, self.guarded, self.idle) = (amount, GUARD, 0);
         let soaked = taken.min(self.cushion);
         self.cushion -= soaked;
         self.left = (self.left - (taken - soaked)).max(0.0);
@@ -191,50 +191,22 @@ impl Health {
         self.guarded > 0
     }
 
+    pub(crate) fn idle(&self) -> u32 {
+        self.idle
+    }
+
+    /// Counts `ticks` more of its idleness; [`Health::stir`] ends it.
+    pub(crate) fn idle_for(&mut self, ticks: u32) {
+        self.idle = self.idle.saturating_add(ticks);
+    }
+
+    pub(crate) fn stir(&mut self) {
+        self.idle = 0;
+    }
+
     /// Starts a tick: a tick of the last hit's guard is over.
     pub(crate) fn begin(&mut self) {
         self.guarded = self.guarded.saturating_sub(1);
-    }
-
-    /// A tick's move from `from` to the height `to`, landing `on_ground` or `in_liquid`: the
-    /// last tick's landing if it hurt, as what it cost and where that tick began. BDS hurts a
-    /// tick after the move that lands.
-    pub(crate) fn fall(&mut self, from: [f32; 3], to: f32, on_ground: bool, in_liquid: bool) -> Option<(f32, [f32; 3])> {
-        self.fall_onto(from, to, on_ground, in_liquid, 1.0)
-    }
-
-    /// [`Health::fall`] onto a block that counts the fall's height times `soften` (heat.rs).
-    pub(crate) fn fall_onto(&mut self, from: [f32; 3], to: f32, on_ground: bool, in_liquid: bool, soften: f32) -> Option<(f32, [f32; 3])> {
-        let due = self.landed.take().filter(|(harm, _)| self.hurt(self.warded(*harm, Cause::Fall)));
-        let peak = self.peak.map_or(from[1], |peak| peak.max(from[1])).max(to);
-        self.peak = (!on_ground && !in_liquid).then_some(peak);
-        let harm = ((peak - to) * soften - SAFE_FALL - self.springs).ceil();
-        if on_ground && !in_liquid && harm > 0.0 {
-            self.landed = Some((harm, from));
-        }
-        due
-    }
-
-    /// Whether it was off the ground when its last tick ended.
-    pub(crate) fn is_airborne(&self) -> bool {
-        self.peak.is_some()
-    }
-
-    /// What the landing of this tick will cost, the next.
-    pub(crate) fn landing(&self) -> Option<f32> {
-        self.landed.map(|(harm, _)| harm)
-    }
-
-    /// How far it has fallen when it comes from `from` to `to`.
-    pub(crate) fn dropped(&self, from: f32, to: f32) -> f32 {
-        self.peak.map_or(from, |peak| peak.max(from)).max(to) - to
-    }
-
-    /// Forgets how far it has fallen: a fall from `at` starts anew.
-    pub(crate) fn break_fall(&mut self, at: f32) {
-        if self.peak.is_some() {
-            self.peak = Some(at);
-        }
     }
 
     /// Sets it on fire for `ticks` more, less what Fire Protection spares it, if it would not burn
@@ -309,5 +281,6 @@ impl Health {
     }
 }
 
+mod falls;
 #[cfg(test)]
 mod tests;
