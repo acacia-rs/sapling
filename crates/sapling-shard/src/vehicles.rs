@@ -31,8 +31,7 @@ pub(crate) use cargo::{Cargo, cargo, load_cargo};
 pub(crate) use command_cart::set_command as set_cart_command;
 
 /// Riders who asked for their inventory while riding a vehicle with goods: that opens instead
-/// (inventory/equipment.rs takes the asks in).
-// TODO: unverified that BDS opens a chest boat's goods to its rider's inventory key.
+/// (inventory/equipment.rs takes the asks in; BDS opened a chest boat's, bds-t2eboats.txt).
 #[derive(Resource, Default)]
 pub(crate) struct CargoAsked(pub Vec<(Entity, Entity)>);
 
@@ -102,7 +101,7 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], yaw: f32,
         Some(kept) => kept,
         None => {
             let unique_id = entities::new_unique_id(world, entity)?;
-            let compound = sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]);
+            let compound = sapling_world::new_actor(unique_id, kind, wire, [0.0; 3]);
             (unique_id, sapling_world::varied_actor(&compound, variant, yaw).ok()?)
         }
     };
@@ -147,17 +146,19 @@ fn is_crowded(world: &mut World, layer: Entity, (low, high): ([f32; 3], [f32; 3]
     })
 }
 
-/// Makes the stored vehicle `actor` an entity; false for a kind that is no vehicle.
-// TODO: unverified whether BDS keeps a boat's `Pos` at its feet or where the wire puts it; feet here.
+/// Makes the stored vehicle `actor` an entity; false for a kind that is no vehicle. Its `Pos` is
+/// where the wire puts it (see `actors::compound_now`).
 pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: &Actor, unique_id: i64, compound: Vec<u8>) -> bool {
-    is_vehicle(&actor.identifier) && spawn(world, layer, &actor.identifier, actor.position, actor.yaw, actor.variant, Some((unique_id, compound))).is_some()
+    let [x, y, z] = actor.position;
+    let feet = [x, y - crate::riding::wire_lift(&actor.identifier), z];
+    is_vehicle(&actor.identifier) && spawn(world, layer, &actor.identifier, feet, actor.yaw, actor.variant, Some((unique_id, compound))).is_some()
 }
 
 /// A tick of every vehicle: boats float and drift, minecarts roll, both mend, and they pull in
 /// mobs.
 pub(crate) fn tick(world: &mut World) {
     for (player, vehicle) in std::mem::take(&mut world.get_resource_or_insert_with(CargoAsked::default).0) {
-        if !cargo::open(world, player, vehicle) && !crate::riding::open_pack(world, player, vehicle) {
+        if !cargo::open_seated(world, player, vehicle) && !crate::riding::open_pack(world, player, vehicle) {
             crate::inventory::open_own(world, player);
         }
     }

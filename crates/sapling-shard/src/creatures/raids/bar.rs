@@ -38,13 +38,22 @@ fn bar(world: &World, raid: &Raid, now: u64) -> BossBar {
     BossBar { text, progress, colour: BossBarColour::Red }
 }
 
+/// On a player last shown a raid's victory or defeat: BDS never hid that bar, 62 s on in
+/// bds-raid.txt (and 19 s in bds-raidlost.txt).
+#[derive(Component)]
+struct Ended;
+
 /// Shows each player the bar of the raid it is in, if any; extra_bars sends only what changed.
 pub(super) fn show(world: &mut World, raids: &[Raid], now: u64) {
     for player in in_world(world) {
         let (Some(layer), Some(feet)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).map(|at| at.feet)) else { continue };
         let want = raids.iter().find(|raid| raid.reaches(layer, feet)).map(|raid| bar(world, raid, now));
-        if want.is_none() && world.get::<ExtraBars>(player).is_none() {
+        if want.is_none() && (world.get::<ExtraBars>(player).is_none() || world.get::<Ended>(player).is_some()) {
             continue;
+        }
+        match want.as_ref().is_some_and(|bar| bar.text == VICTORY || bar.text == DEFEAT) {
+            true => drop(world.entity_mut(player).insert(Ended)),
+            false => drop(world.entity_mut(player).remove::<Ended>()),
         }
         extra_bars::set(world, player, BarKey::Raid, want.as_ref());
     }

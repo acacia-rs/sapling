@@ -55,10 +55,10 @@ pub(crate) fn capture(world: &mut World, layer: Entity, low: BlockPos, size: [i3
 fn entities_in(world: &mut World, layer: Entity, low: BlockPos, size: [i32; 3]) -> Vec<Value> {
     let inside = |at: [f32; 3]| (0..3).all(|axis| at[axis] >= low[axis] as f32 && at[axis] < (low[axis] + size[axis]) as f32);
     world
-        .query::<(&InLayer, &Body, &Stored, Option<&Health>, Option<&Raised>)>()
+        .query::<(&InLayer, &Body, &Stored, Option<&crate::entities::Kind>, Option<&Health>, Option<&Raised>)>()
         .iter(world)
         .filter(|(in_layer, body, ..)| in_layer.0 == layer && inside(body.at))
-        .filter_map(|(_, body, stored, health, raised)| compound_now(body, stored, health, raised))
+        .filter_map(|(_, body, stored, kind, health, raised)| compound_now(kind, body, stored, health, raised))
         .filter_map(|compound| nbt::read::<LittleEndian>(&mut &compound[..]).ok().map(|read| read.value))
         .collect()
 }

@@ -47,6 +47,13 @@ fn pace(id: u64, quick: Option<u8>, slow: Option<u8>, paced: Paced, tick: u64) -
     (UpdateAttributes { runtime_entity_id: id, attributes: vec![movement], tick }, unfrozen)
 }
 
+/// A player's walking speed now, as it is told.
+pub(crate) fn walking(world: &World, player: Entity, id: u64) -> PlayerAttributesItem {
+    let (quick, slow) = (level(world, player, Effect::Speed), level(world, player, Effect::Slowness));
+    let paced = world.get::<Paced>(player).copied().unwrap_or_default();
+    pace(id, quick, slow, paced, 0).0.attributes.remove(0)
+}
+
 /// Tells a player its walking speed now, and has the server's step take it.
 pub(crate) fn tell_pace(world: &mut World, player: Entity, id: u64) {
     let tick = world.resource::<Tick>().0;

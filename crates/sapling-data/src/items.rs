@@ -58,7 +58,8 @@ pub struct Stack<'a> {
     /// The network hash of the block the item places, when it is one.
     pub block: Option<u32>,
     /// The stack's own NBT.
-    // TODO: BDS adds `Damage` to the tag of an item that wears; a stored stack without a tag goes without.
+    /// A wearing item made by a command or plugin has `Damage` here even at 0 (sapling-shard
+    /// inventory/plugin.rs), as BDS's `/replaceitem` did.
     pub tag: Option<&'a nbt::Value>,
 }
 

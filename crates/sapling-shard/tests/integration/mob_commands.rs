@@ -138,7 +138,12 @@ fn lying_items_of_a_kind_join_up_on_the_25th_tick() {
             assert!(ctx.move_entity(entity.id, [2.2 + dx, 65.0, 0.5]) && ctx.set_velocity(entity.id, [0.0; 3]));
         }
     });
-    let sent: Vec<_> = (0..30).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let by_tick: Vec<Vec<_>> = (0..30).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let tick_of = |seen: &dyn Fn(&[acacia_proto::RawPacket]) -> bool| by_tick.iter().position(|sent| seen(sent));
+    let merged = tick_of(&|sent| all::<EntityEvent>(sent).iter().any(|event| event.event_id == EntityEventEventId::ItemEntityMerge));
+    let removed = tick_of(&|sent| !all::<acacia_proto::packets::RemoveEntity>(sent).is_empty());
+    assert_eq!(removed, merged.map(|tick| tick + 1), "the one taken in goes a tick later (bds-t2epack.txt)");
+    let sent: Vec<_> = by_tick.concat();
     let merges: Vec<i32> = all::<EntityEvent>(&sent).iter().filter(|event| event.event_id == EntityEventEventId::ItemEntityMerge).map(|event| event.data).collect();
     let (held, _) = ask(&mut h, |ctx| ctx.entities().into_iter().filter_map(|entity| entity.item.map(|item| item.count)).collect::<Vec<_>>());
     assert_eq!((merges, held), (vec![2], vec![2]));

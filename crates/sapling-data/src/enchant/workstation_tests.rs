@@ -126,3 +126,29 @@ fn a_grindstone_keeps_curses_and_gives_back_their_power() {
     assert_eq!(joined.made.tag.as_ref().and_then(|tag| tag.get("Damage")), Some(&Value::Int(361)));
     assert!(grind(Some(stack("minecraft:diamond_sword", None)), Some(stack("minecraft:iron_sword", None))).is_none());
 }
+
+/// A small generator, for draws that wander.
+struct Lcg(u64);
+
+impl Draws for Lcg {
+    fn int(&mut self, bound: i32) -> i32 {
+        self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        if bound < 1 { 0 } else { ((self.0 >> 33) % bound as u64) as i32 }
+    }
+
+    fn float(&mut self) -> f32 {
+        self.int(1 << 24) as f32 / (1 << 24) as f32
+    }
+}
+
+#[test]
+fn enchant_with_levels_draws_treasures_only_when_allowed_and_never_the_unfound_ones() {
+    let seen = |treasure: bool| {
+        let mut draws = Lcg(7);
+        let made = (0..3000).filter_map(|_| table::with_levels(&stack("minecraft:book", None), 30, treasure, &mut draws));
+        made.flat_map(|made| list::all(made.tag.as_ref())).map(|(id, _)| id).collect::<std::collections::BTreeSet<i16>>()
+    };
+    let (plain, treasured) = (seen(false), seen(true));
+    assert!(!plain.contains(&26) && treasured.contains(&26) && treasured.contains(&28), "mending and vanishing only with treasure: {treasured:?}");
+    assert!([36, 37, 38].iter().all(|id| !treasured.contains(id)), "no soul speed, swift sneak or wind burst");
+}

@@ -1,6 +1,6 @@
 //! Maps, as BDS made and kept them (docs/research/maps.md; research/captures/bds-maps.txt). Using an
 //! empty map makes a filled one centred on the 128-block square the user stands in, under a fresh id
-//! that reserves the next four for its zoom levels and a level-wide `map_name_index`; a locator map
+//! that reserves the next four for its zoom levels and the user's own [`MapIndex`]; a locator map
 //! (damage 2) also gets `map_display_players`. The map in a player's hand ticks: every 15 to 20 ticks
 //! it redraws the circle around its holder; a tick with changed pixels sends them, and every fifth
 //! tick without sends the players on it, both to everyone in its world. A `MapInfoRequest` is
@@ -84,8 +84,18 @@ impl MapData {
 pub(crate) struct Maps {
     pub maps: HashMap<i64, MapData>,
     made: i64,
-    names: i32,
     colours: Colours,
+}
+
+/// The `map_name_index` a player's next new map takes: its own count, kept as `MapIndex`, from 1
+/// (research/captures/bds-maps.txt; BDSRE 1436f5c30).
+#[derive(Component, Clone, Copy)]
+pub(crate) struct MapIndex(pub i32);
+
+impl Default for MapIndex {
+    fn default() -> Self {
+        Self(1)
+    }
 }
 
 impl Maps {
@@ -110,13 +120,12 @@ pub(crate) fn map_id(stack: &ItemStack) -> Option<i64> {
     }
 }
 
-/// A new blank map's data under a fresh id; returns the id and the next `map_name_index`.
-pub(crate) fn make(world: &mut World, layer: Entity, dimension: i32, centre: [i32; 2], scale: u8, locked: bool) -> (i64, i32) {
+/// A new blank map's data under a fresh id; returns the id.
+pub(crate) fn make(world: &mut World, layer: Entity, dimension: i32, centre: [i32; 2], scale: u8, locked: bool) -> i64 {
     let born = world.resource::<Tick>().0;
     let mut maps = kept::maps_mut(world, layer);
     let id = maps.next_id();
     maps.made += 1;
-    maps.names += 1;
     let size = render::SIZE as usize;
     let data = MapData {
         id, scale, centre, dimension, layer, locked,
@@ -129,7 +138,14 @@ pub(crate) fn make(world: &mut World, layer: Entity, dimension: i32, centre: [i3
         born,
     };
     maps.maps.insert(id, data);
-    (id, maps.names)
+    id
+}
+
+/// The `map_name_index` a player's new map takes, counted on.
+fn next_name(world: &mut World, player: Entity) -> i32 {
+    let index = world.get::<MapIndex>(player).copied().unwrap_or_default();
+    world.entity_mut(player).insert(MapIndex(index.0 + 1));
+    index.0
 }
 
 /// Sends `packet` to every player in `layer`.
@@ -148,7 +164,7 @@ pub(crate) fn fill(world: &mut World, player: Entity) -> bool {
     let (Some(layer), Some(position)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).copied()) else { return false };
     let Some(dimension) = world.get::<Layer>(layer).map(|level| level.world.dimension()) else { return false };
     let centre = [centre(position.feet[0], 0), centre(position.feet[2], 0)];
-    let (id, name) = make(world, layer, dimension, centre, 0, false);
+    let (id, name) = (make(world, layer, dimension, centre, 0, false), next_name(world, player));
     let mut fields = vec![("map_name_index".into(), Value::Int(name)), ("map_uuid".into(), Value::Long(id))];
     if held.stack.damage == LOCATOR {
         fields.insert(0, ("map_display_players".into(), Value::Byte(1)));

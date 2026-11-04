@@ -59,6 +59,9 @@ pub struct PlayerData {
     pub unique_id: Option<i64>,
     /// Ticks since it last slept, which phantoms come by (`TimeSinceRest`, an int: BDSRE 141bf7240).
     pub rested: Option<i32>,
+    /// The `map_name_index` its next new map takes (`MapIndex`: BDSRE Player load 1402af220; a
+    /// map made takes it and counts it on, 1436f5c30).
+    pub map_index: Option<i32>,
     /// Its recipe book; `None` in a record without one.
     pub recipes: Option<RecipeRecord>,
 }
@@ -80,6 +83,7 @@ const GAME_MODE: &str = "PlayerGameMode";
 const ENCHANT_SEED: &str = "EnchantmentSeed";
 const UNIQUE_ID: &str = "UniqueID";
 const RESTED: &str = "TimeSinceRest";
+const MAP_INDEX: &str = "MapIndex";
 const AIR: &str = "Air";
 const FIRE: &str = "Fire";
 const RECIPES: [&str; 3] = ["recipe_unlocking", "used_contexts", "unlocked_recipes"];
@@ -165,6 +169,7 @@ impl PlayerData {
             tags: crate::actor_tags::read_tags(&player),
             unique_id: if let Some(Value::Long(id)) = player.get(UNIQUE_ID) { Some(*id) } else { None },
             rested: int(RESTED),
+            map_index: int(MAP_INDEX),
             recipes: player.get(RECIPES[0]).map(recipe_book),
         })
     }
@@ -208,6 +213,9 @@ impl PlayerData {
         }
         if let Some(rested) = self.rested {
             set(&mut fields, RESTED, Value::Int(rested));
+        }
+        if let Some(index) = self.map_index {
+            set(&mut fields, MAP_INDEX, Value::Int(index));
         }
         for (key, value) in [(AIR, self.air), (FIRE, self.fire)] {
             if let Some(value) = value {

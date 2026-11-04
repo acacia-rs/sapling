@@ -1,7 +1,8 @@
 //! Where a player's shot leaves from and how fast it goes: from 0.1 under its eyes (the packs'
 //! `anchor: eye_height`, `offset: [0, -0.1, 0]`) along its look, turned up by an `angle_offset`.
-// TODO: the spread is the Java game's 0.0075 a part, and BDS's adding of the player's own motion
-// was not looked at.
+//! Each part of the look is moved by a Gaussian draw times 0.0075 times the uncertainty before
+//! the power multiplies it; the player's own motion is not added (BDS 1424020c0; bds-t2ebow.txt:
+//! arrows loosed walking east left at 2.99 and 3.02, as standing).
 
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
@@ -28,7 +29,7 @@ pub(super) fn from_eyes(world: &mut World, position: &Position, power: f32, tilt
     let from = [feet[0], feet[1] + EYE_HEIGHT - BELOW_EYES, feet[2]];
     let along = look(position, tilt);
     let mut dice = world.get_resource_or_insert_with(Dice::default);
-    let motion = along.map(|c| (c + (dice.fraction() + dice.fraction() - 1.0) * SPREAD * uncertainty) * power);
+    let motion = along.map(|c| (c + dice.gaussian() * SPREAD * uncertainty) * power);
     (from, motion)
 }
 

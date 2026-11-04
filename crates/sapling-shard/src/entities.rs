@@ -100,7 +100,8 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, body: Body, wi
 
 /// The entity a world folder kept as `unique_id`, just [`spawn`]ed, came from the folder, not
 /// into the world: no first data follows its announcement.
-// TODO: whether BDS sends one for an actor it loads was not drilled.
+/// A cow left 2000 off for 30 s and come back to was announced again with no first data on BDS
+/// (research/captures/bds-t2ereload.txt).
 pub(crate) fn loaded(world: &mut World, unique_id: i64) {
     let found = world.query_filtered::<(Entity, &crate::tags::UniqueId), With<first_data::Due>>().iter(world).find(|(_, id)| id.0 == unique_id).map(|(entity, _)| entity);
     if let Some(entity) = found {

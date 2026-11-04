@@ -26,10 +26,11 @@ pub fn lying_stack(compound: &[u8], stack: &ItemStack, registry: &BlockRegistry)
     with_fields(compound, [("Item", Value::Compound(stack.fields(registry)))])
 }
 
-// TODO: the name BDS keeps an orb's worth under, as remembered: no BDS record was read.
+/// As BDS kept an orb: `experience value` Int 1, `Age` Short 141 (research/captures/bds-t2ekeep-dump.txt).
 const WORTH: &str = "experience value";
 
-/// A new orb actor worth `value`; its age is not kept either.
+/// A new orb actor worth `value`.
+// TODO: its `Age` (ticks lived, a Short on BDS) is not kept.
 pub fn new_orb_actor(unique_id: i64, value: i32, position: [f32; 3], motion: [f32; 3]) -> Vec<u8> {
     let fields = [
         ("UniqueID", Value::Long(unique_id)),

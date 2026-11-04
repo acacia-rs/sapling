@@ -13,6 +13,8 @@ use std::sync::{Arc, Mutex};
 
 use sapling_api::{Handler, Output, Permission, Sender, ShardCtx};
 
+const STOP: &str = "stop";
+
 /// Command names for completion, filled at the first tick.
 type Names = Arc<Mutex<Vec<String>>>;
 
@@ -43,7 +45,11 @@ impl Handler for Console {
             let line = line.trim();
             if !line.is_empty() {
                 let out = help::answer(&commands, line).unwrap_or_else(|| commands.run(ctx, &Sender::Console, Permission::Operator, line));
-                log(&out);
+                // BDS's console takes a bare `stop` itself (research/captures/bds-console-cmds.txt).
+                match line == STOP && out.messages().iter().all(|message| message.success) {
+                    true => tracing::info!("Server stop requested."),
+                    false => log(&out),
+                }
             }
         }
     }

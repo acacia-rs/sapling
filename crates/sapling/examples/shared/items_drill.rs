@@ -67,6 +67,15 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         "!boost" => println!("## boost: {:?}", actor.boost_with_firework().await),
         "!write" => println!("## wrote: {:?}", actor.write_book(&rest.split('|').collect::<Vec<_>>()).await),
         "!sign" => println!("## signed: {:?}", actor.sign_book(rest).await),
+        // The bot keeps to the client's lengths; these send hotbar 0's BookEdit as given.
+        "!rawpage" | "!rawsign" => {
+            use acacia_bot::proto::packets::{BookEdit, BookEditContent, BookEditContentReplacePage, BookEditContentSign, BookEditType};
+            let (r#type, content) = match word {
+                "!rawpage" => (BookEditType::ReplacePage, BookEditContent::ReplacePage(BookEditContentReplacePage { page_number: 0, text: rest.into(), photo_name: String::new() })),
+                _ => (BookEditType::Sign, BookEditContent::Sign(BookEditContentSign { title: rest.into(), author: "CmdActor".into(), xuid: String::new() })),
+            };
+            actor.client().send(&BookEdit { inventory_slot: 0, r#type, content });
+        }
         "!map" => println!("## map: {:?}", actor.make_map().await),
         "!release" => actor.release_item(),
         "!lectern" | "!loom" | "!beacon" | "!carto" => {

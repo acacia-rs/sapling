@@ -91,6 +91,9 @@ pub(crate) fn load(mut commands: Commands, mut layers: Query<(Entity, &mut Layer
                 if let Some(rested) = data.rested {
                     commands.entity(player).insert(Rested(rested));
                 }
+                if let Some(index) = data.map_index {
+                    commands.entity(player).insert(crate::maps::MapIndex(index));
+                }
                 if let Some(mode) = data.game_mode.and_then(game_mode) {
                     commands.entity(player).insert(Mode(mode));
                 }
@@ -163,7 +166,8 @@ pub(crate) fn save(world: &mut World, player: Entity) {
     let (bed, spawn_dimension) = world.get::<BedSpawn>(player).and_then(|bed| bed.kept(world, &dimensions::members(world, first))).map_or((None, 0), |(bed, dimension)| (Some(bed), dimension));
     let last_death = world.get::<LastDeath>(player).map(|death| (death.at, death.dimension));
     let rested = world.get::<Rested>(player).map(|rested| rested.0);
-    let data = PlayerData { bed, spawn_dimension, last_death, tags: marks.tags, unique_id: Some(marks.unique_id), rested, recipes: recipes.map(|(kept, _)| kept), ..data };
+    let map_index = world.get::<crate::maps::MapIndex>(player).map(|index| index.0);
+    let data = PlayerData { bed, spawn_dimension, last_death, tags: marks.tags, unique_id: Some(marks.unique_id), rested, map_index, recipes: recipes.map(|(kept, _)| kept), ..data };
     world.entity_mut(player).insert(now);
     if let Some(mut book) = world.get_mut::<RecipeBook>(player) {
         book.unsaved = false;

@@ -3,7 +3,8 @@
 //! credits are shown and the trip waits for the client to say they are over; then, as BDS's
 //! respawn, its health told, the place it will rise searched for, and a dimension change to the
 //! overworld naming none; once the client is there, the place found, and the player put on it.
-// TODO: whether BDS keeps a player's seen credits with it was not read; here they last its stay.
+//! The seen credits last the player's stay: BDS showed them on the first exit, not the second, and
+//! again after a rejoin (research/captures/bds-t2ecredits.txt).
 
 use acacia_proto::packets::{Respawn, SetHealth, ShowCredits};
 use acacia_proto::types::Vec3f;

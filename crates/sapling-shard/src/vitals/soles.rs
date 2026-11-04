@@ -1,9 +1,8 @@
 //! Soul Speed: boots with it quicken a player on soul sand and soul soil. BDS adds `0.03 · (1 +
 //! 0.35 · level)` to its walking speed as a "Sprinting speed boost" modifier, retold every tick it
 //! stands there, and tells the plain speed once it steps off (research/captures/bds-soles.txt,
-//! `bds_command_probe soles`: 0.1615 in Soul Speed III).
-// TODO: the boots wear as BDS's do on soul sand, and the soul particles, were not seen in the
-// capture and are not done.
+//! `bds_command_probe soles`: 0.1615 in Soul Speed III). A survival player's boots wear there
+//! (`inventory::wear_soles`); BDS sent no soul particles (bds-t2esoles.txt), its client makes them.
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
@@ -30,6 +29,10 @@ pub(super) fn on_soul(level: &Level, position: Position) -> bool {
 /// A tick of a player's walk, on soul sand in boots with Soul Speed at `level` or off it (`None`).
 pub(super) fn tread(world: &mut World, player: Entity, level: Option<u8>) {
     let soles = level.map_or(0.0, quickens);
+    let survives = world.get::<crate::components::Mode>(player).is_some_and(|mode| matches!(mode.0, sapling_api::GameMode::Survival | sapling_api::GameMode::Adventure));
+    if soles != 0.0 && survives {
+        crate::inventory::wear_soles(world, player);
+    }
     let was = world.get::<Paced>(player).map_or(0.0, |paced| paced.soles);
     let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| soles != 0.0 || was != 0.0) else { return };
     world.entity_mut(player).insert_if_new(Paced::default());

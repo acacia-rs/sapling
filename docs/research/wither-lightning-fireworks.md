@@ -139,10 +139,16 @@ Code: `crates/sapling-shard/src/fireworks.rs`, `fireworks/{item,recipes,burst}.r
 
 Unverified: a rocket with no tag (BDS seems to skip `init` and burst at once; sapling gives it life
 10–21); the metadata a rocket is announced with (sapling sends its compound as key 16 only, not the
-way or the attached id); the crossbow's turn angle (Java's 10°); a rocket loaded from the offhand
+way or the attached id); a rocket loaded from the offhand
 only; duplicate diamonds or glowstone in a star (sapling refuses them, BDS may not); what a rocket
 does when it meets a block or an entity (BDS's hit system notifies the block; sapling stops it at
 the block).
 Left out: the elytra boost (`FireworksItem::use` 0x1436fdbd0: rocket attached to the gliding player,
 a `MovementEffect` glide boost for its life, `v += (look*1.5 - v)*0.5 + look*0.1`) — sapling has
-no elytra flight to boost; the dispenser's own call.
+no elytra flight to boost, and the drill bot cannot glide; the dispenser's own call.
+
+Drilled 2026-11-04 (research/captures/bds-t2efire.txt, sapling-t2efire.txt, open ground): a rocket
+shot from a crossbow left at (0.5, -58.38, 0.5) at 0.03 east on both; a Channeling trident thrown in
+thunder at a cow 6 east put a `lightning_bolt` at (6.0, -60, 0.0) on both. Multishot arrows are
+turned 10° (z ±0.545 of 3.1 on BDS) and added left, straight, right (bds-t2emulti.txt); sapling added
+the straight one first. Fixed (`enchant/archery.rs` `multishot`).

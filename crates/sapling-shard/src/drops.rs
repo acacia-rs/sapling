@@ -200,6 +200,7 @@ pub(crate) fn take(world: &mut World, item: Entity, count: u8) {
 
 /// Moves every item a tick and lets go of those whose time is up, or that lava burnt.
 pub(crate) fn fly(world: &mut World) {
+    merge::remove_taken_in(world);
     let items: Vec<(Entity, Entity, u64)> = world.query::<(Entity, &Dropped, &InLayer, &NetId)>().iter(world).map(|(entity, _, layer, id)| (entity, layer.0, id.0)).collect();
     for (entity, layer, id) in items {
         let Some(mut item) = world.get_mut::<Dropped>(entity) else { continue };

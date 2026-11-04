@@ -79,7 +79,7 @@ pub(super) fn enter(world: &mut World, bee: Entity, layer: Entity, pos: BlockPos
         return false;
     }
     let mut kept = world.query::<(&crate::body::Body, &Stored, Option<&Health>)>();
-    let Some(actor) = kept.get(world, bee).ok().and_then(|(body, stored, health)| crate::actors::compound_now(body, stored, health, None)) else { return false };
+    let Some(actor) = kept.get(world, bee).ok().and_then(|(body, stored, health)| crate::actors::compound_now(None, body, stored, health, None)) else { return false };
     occupants.push(Occupant { actor, ticks_left: STAYS[usize::from(nectar)], nectar });
     write(world, layer, pos, &entity, &occupants);
     crate::mobs::remove(world, bee);

@@ -87,6 +87,10 @@ pub fn with_damage(tag: Option<acacia_proto::nbt::Value>, damage: i32) -> Option
 pub const BOOK: &str = "minecraft:book";
 pub const ENCHANTED_BOOK: &str = "minecraft:enchanted_book";
 
+/// The uses a spear of each material lasts: its `minecraft:durability` in BDS's ItemRegistry
+/// (data/ItemRegistry.bin), not the sword's (an iron spear went 247 to 248 a hit, bds-t2ewear.txt).
+const SPEARS: [(&str, u16); 7] = [("wooden", 60), ("stone", 130), ("copper", 190), ("iron", 250), ("golden", 30), ("diamond", 1560), ("netherite", 2030)];
+
 /// Tools and armour by material: the tools' and the armour's enchantability, what repairs them.
 const MATERIALS: &[(&str, u8, u8, &[&str])] = &[
     ("wooden", 15, 0, &["#minecraft:planks"]),
@@ -153,9 +157,8 @@ pub fn gear(name: &str) -> Option<Gear> {
         return Some(Gear { slots: tool_slot(tool), enchantability: *tools, lasts: tool.max_durability(), repair });
     }
     if piece == "spear" {
-        // TODO: a spear's uses are not drilled; the sword of its material's are taken.
-        let lasts = Tool::from_identifier(&format!("minecraft:{material}_sword"))?.max_durability();
-        return Some(Gear { slots: slot::SPEAR, enchantability: *tools, lasts, repair });
+        let (_, lasts) = SPEARS.iter().find(|(known, _)| *known == material)?;
+        return Some(Gear { slots: slot::SPEAR, enchantability: *tools, lasts: *lasts, repair });
     }
     let (_, slots) = PIECES.iter().find(|(known, _)| *known == piece)?;
     Some(Gear { slots: *slots, enchantability: *armour, lasts: crate::armour_lasts(name)?, repair })
@@ -181,7 +184,8 @@ mod tests {
         assert_eq!((helmet.slots, helmet.enchantability, helmet.lasts), (slot::HEAD, 25, 77));
         assert!(gear("minecraft:wooden_pickaxe").unwrap().is_repaired_by("minecraft:birch_planks"));
         assert_eq!(gear("minecraft:book").map(|book| book.enchantability), Some(1));
-        assert_eq!(gear("minecraft:wooden_spear").map(|spear| (spear.slots, spear.enchantability)), Some((slot::SPEAR, 15)));
+        assert_eq!(gear("minecraft:wooden_spear").map(|spear| (spear.slots, spear.enchantability, spear.lasts)), Some((slot::SPEAR, 15, 60)));
+        assert_eq!(gear("minecraft:diamond_spear").map(|spear| spear.lasts), Some(1560));
         assert_eq!([gear("minecraft:stone"), gear("minecraft:iron_ingot"), gear("minecraft:leather_sword")], [None; 3]);
     }
 }

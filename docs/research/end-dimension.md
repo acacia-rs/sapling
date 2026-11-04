@@ -193,7 +193,8 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   within half a tick), pillars rebuilt one per 40 ticks, the new dragon at tick 604.7 vs 604.8, the four
   crystals blown up, another gateway on its kill.
 - **Home** (home): ShowCredits once per player; ChangeDimension respawn, Respawn searching then ready, SetHealth,
-  MovePlayer Reset; the second time no credits.
+  MovePlayer Reset; the second time no credits. After a rejoin the credits came again, so they are
+  kept for the stay only, as in sapling (research/captures/bds-t2ecredits.txt).
 - **Kept** (resume): `TheEnd` encoded as BDS's bytes; a kept killed fight makes no dragon (shard test).
 - **API**: `ShardCtx::dragon_fight`, `DragonKilledEvent`, `DragonRespawnEvent`; the dragon is an entity.
 

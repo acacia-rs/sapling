@@ -52,3 +52,8 @@ with ActorEvent 12 while the fish's spot is water, ActorEvent 13 at the bite, th
   `fish` drill (2026-10-28), so it was not kept. Untried: BDS's wet test (`containsMaterial` per slice,
   1429c8770) and its skipping of the speed draws during a nibble.
 - A hooked mob or player: from BDSRE only; the drill's pig walked off its platform.
+- Walking cast and a wall (research/captures/bds-t2efish.txt, 2026-11-04): a fisher walking east cast
+  at 1.2999998 as one standing (no walking motion added; its start was 0.12 further on than sapling's,
+  within a tick's walk). A hook cast into glass 2.5 off slid down it 0.04, then 0.1098, then at 0.92's
+  friction: two ticks of `STOPPED` friction after the wall, which sapling did not have. Fitted
+  (`fishing/bob.rs` `WALLED`, test `a_hook_cast_into_a_wall_slides_down_it_slowed_two_ticks`).

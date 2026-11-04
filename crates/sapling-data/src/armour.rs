@@ -10,8 +10,9 @@ const MATERIALS: &[(&str, [f32; 4], f32)] = &[
     ("diamond", [3.0, 8.0, 6.0, 3.0], 2.0),
     ("netherite", [3.0, 8.0, 6.0, 3.0], 3.0),
 ];
-/// The uses a helmet of each material lasts, and what the pieces last for each 11 of a helmet's.
-// TODO: the Java game's numbers, of which BDS showed none: no piece was worn out in a drill.
+/// The uses a helmet of each material lasts, and what the pieces last for each 11 of a helmet's:
+/// the Java game's numbers, which BDS's pieces kept to (each stayed on at its last, went the next
+/// hit; research/captures/bds-t2ewear.txt).
 const LASTS: &[(&str, u16)] = &[("leather", 55), ("chainmail", 165), ("iron", 165), ("golden", 77), ("diamond", 363), ("netherite", 407)];
 const LASTS_BY_PIECE: [u16; 4] = [11, 16, 15, 13];
 const TURTLE_HELMET_LASTS: u16 = 275;

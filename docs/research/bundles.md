@@ -42,6 +42,12 @@ ItemStackRequests from `crates/sapling/examples/shared/bundle_drill.rs`). saplin
   every 15 s (two runs: 15.05 s apart, phase unrelated to the drill). It lists every shown bundle no
   longer anywhere: cleared, replaced by air, or thrown and then killed as an item; one lying as an item
   stayed. Two at once came newest first. sapling: `inventory/bundle_cleanup.rs`.
+- A bundle put in a chest stayed registered over 34 s (research/captures/bds-t2ebundle.txt);
+  sapling swept it as gone and now keeps bundles in loaded block entities. The fox never took the
+  second bundle up, so one held by a mob was not judged; sapling takes it as gone.
+- A bundle dropped from the hotbar showed on BDS without `bundle_id`, with its contents
+  (`bundle_weight`, `storage_item_component_content`), and its id came in the next cleanup; sapling
+  shows the id and keeps it registered while it lies (research/captures/bds-t2ebundle.txt). Not fixed.
 
 ## Shulker boxes (drilled 2026-10-29)
 

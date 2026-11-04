@@ -52,7 +52,7 @@ prev pos 3..5, velocity (`mPosDelta`) 6..8.
 | lava (box touches Lava, not falling lava) | same vy rule; `vx, vz *= 0.95`; gravity off; Fizz sound (LevelSoundEvent 27) unless fire-resistant | |
 | resting skip | on ground, `|v|^2 <= 1e-4`, no WasInWater: physics only when `age % 4 == 0` | 145989c60 |
 | push out of blocks | velocity := direction * (0.25, or 0.1 for blocks with `BlockType+0x130 & 1`) | 140d51370, tables 14a72ca40, 14a682180 |
-| merge | every 25 ticks (`age % 25 == 0`, age > 0), box grown 0.5 | |
+| merge | every 25 ticks (`age % 25 == 0`, age > 0), box grown 0.5; the one taken in leaves viewers a tick later (research/captures/bds-t2epack.txt; `drops/merge.rs` `TakenIn`) | |
 | pickup | needs `mPickupDelay == 0` **and** `mThrowTime == 0`, for every player (no owner test) | 14598a912 |
 | pickup delay "infinite" | `mPickupDelay == 0xffff`: never decremented, never merged | |
 

@@ -68,6 +68,20 @@ fn a_saturation_stew_feeds_hunger_each_of_its_six_ticks_and_leaves_saturation_be
     assert_eq!(given, [6, 6, 0], "added, updated, removed");
 }
 
+#[test]
+fn eating_starts_with_every_attribute_told_to_the_eater_and_its_viewers() {
+    // research/captures/bds-t2eitems.txt: fourteen in one packet as the stew went up.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    let (alex, steve) = swallow(&mut h, Item::new("minecraft:bread", 1));
+    for sent in [alex, steve] {
+        let whole = all::<UpdateAttributes>(&sent).into_iter().find(|update| update.attributes.len() == 14).expect("every attribute");
+        let names: Vec<&str> = whole.attributes.iter().map(|attribute| attribute.name.as_str()).collect();
+        assert_eq!((names[0], names[4], names[6], names[13]), ("minecraft:health", "minecraft:absorption", "minecraft:friction_modifier", "minecraft:player.experience"));
+    }
+}
+
 /// Alex's health after 3 left and 30 seconds of a strong hunger on `difficulty`.
 fn starved_to(difficulty: Difficulty) -> Option<f32> {
     let mut h = Harness::new();

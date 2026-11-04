@@ -90,3 +90,15 @@ fn bds_watchers_got_their_share_of_900_ticks() {
         assert_eq!((900.0 * share_of(bounds, at) + 0.5) as u32, ticks, "{feet:?}");
     }
 }
+
+#[cfg(test)]
+#[test]
+fn bds_watchers_were_harmed_and_healed_by_their_share() {
+    // research/captures/bds-t2esplash.txt: harming and healing broken on Steve, the watcher off at each spot.
+    let at = [3.15, -25.7998, 4.5];
+    for (feet, harmed, healed) in [([3.5, -26.0, 6.6], 3.0, 2.0), ([5.6, -26.0, 4.5], 3.0, 2.0), ([3.5, -26.0, 3.5], 5.0, 3.0)] {
+        let share = share_of(Body::new(feet, [0.0; 3], vitals::SIZE).bounds(), at);
+        let strength = |base| vitals::shared_strength(base, 0, share);
+        assert_eq!((strength(vitals::effects::HARMS), strength(vitals::effects::HEALS)), (harmed, healed), "{feet:?}");
+    }
+}

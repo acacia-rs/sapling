@@ -32,6 +32,9 @@ A click in the air with a chestplate or boots in the hand put it on (research/ca
 `InventorySlot` of the armour slot, the inventory sent, `armor.equip_iron` a tick on. Sapling did
 nothing; fixed, swapping with what was worn (only an empty slot drilled). An elytra put on by
 `/replaceitem` is heard as `armor.equip_elytra` (bds-glide2.txt; sapling was silent; fixed).
+A carved pumpkin, a skull and a head clicked in the air stayed in the hand while an iron helmet
+went on (research/captures/bds-t2edon.txt); sapling put them on and now leaves them
+(`donning.rs` `is_head_block`).
 
 ## Buckets (`buckets`; `blocks/buckets.rs`, `creatures/scooping.rs`)
 
@@ -54,6 +57,9 @@ nothing; fixed, swapping with what was worn (only an empty slot drilled). An ely
   viewers in MobEquipment.
 - **Signing**: the stack becomes `written_book` with `author` (the client's, "Author Unknown"),
   `generation` 0, `pages`, `title`, `xuid`, keys sorted; windows resent, `select_slot true`.
+- **Lengths** (raw BookEdits past the client's limits, research/captures/bds-t2ebook.txt): pages of
+  256, 257 and 512 letters and titles of 17 and 40 were kept whole, as sapling keeps them. A 1000-letter
+  page got its writer disconnected (bds-t2ebook1.txt); sapling keeps it (TODO in `books.rs`).
 - **Lectern**: a click with a book on an empty lectern: windows resent (`select_slot true`),
   `item.book.put` at the block's corner, then BlockEntityData `{book, hasBook 1, page 0, totalPages}`.
   A click with the book on it opens ContainerOpen `Lectern`. LecternUpdate sets `page`, resent as

@@ -71,6 +71,16 @@ pub(crate) fn load_cargo(world: &mut World, vehicle: Entity, slots: Vec<Option<H
 /// Opens the screen of what `vehicle` carries for a player; false for one that carries nothing.
 pub(crate) fn open(world: &mut World, player: Entity, vehicle: Entity) -> bool {
     let Some((_, window)) = world.get::<Kind>(vehicle).and_then(|kind| hold(&kind.0)) else { return false };
+    show(world, player, vehicle, window)
+}
+
+/// Opens it for its rider's inventory key: a plain `Container` screen (bds-t2eboats.txt: a chest
+/// boat's, at the boat's cell).
+pub(crate) fn open_seated(world: &mut World, player: Entity, vehicle: Entity) -> bool {
+    world.get::<Kind>(vehicle).and_then(|kind| hold(&kind.0)).is_some() && show(world, player, vehicle, WindowType::Container)
+}
+
+fn show(world: &mut World, player: Entity, vehicle: Entity, window: WindowType) -> bool {
     let (Some(slots), Some(id), Some(layer), Some(body)) = (cargo(world, vehicle), world.get::<NetId>(vehicle).map(|id| id.0), world.get::<InLayer>(vehicle).map(|layer| layer.0), world.get::<Body>(vehicle)) else { return false };
     let pos = body.at.map(|c| c.floor() as i32);
     containers::show_carried(world, player, layer, pos, (vehicle, id), window, &slots, None)

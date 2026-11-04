@@ -19,8 +19,9 @@ use crate::entities;
 const EVENTS: [&str; 4] = ["minecraft:spawn_as_illager_captain", "minecraft:promote_to_illager_captain", "minecraft:promote_to_patrol_captain", "minecraft:spawn_as_patrol_captain"];
 const KINDS: [&str; 2] = ["minecraft:pillager", "minecraft:vindicator"];
 const BANNER: &str = "minecraft:banner";
-/// The ominous banner's data value, and its `Type`.
-const OMINOUS_DATA: i16 = 15;
+/// The ominous banner's data value, and its `Type` (a captain's dropped `banner` aux 0 `{Type: 1}`;
+/// research/captures/bds-t2ebanner.txt).
+const OMINOUS_DATA: i16 = 0;
 const OMINOUS: i32 = 1;
 const BOTTLE: &str = "minecraft:ominous_bottle";
 const AMPLIFIERS: u32 = 5;

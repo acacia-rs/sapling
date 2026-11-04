@@ -154,7 +154,7 @@ impl BlockStates {
     }
 }
 
-fn compound_of(states: &States) -> Value {
+pub(crate) fn compound_of(states: &States) -> Value {
     Value::Compound(states.iter().map(|(key, value)| (Str::from(key.as_str()), value.clone())).collect())
 }
 

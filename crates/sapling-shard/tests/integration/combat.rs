@@ -121,6 +121,27 @@ fn a_raised_shield_turns_away_a_hit_from_in_front_wearing_by_one_more_than_the_h
 }
 
 #[test]
+fn a_shield_is_shown_anew_with_the_tick_it_went_up_and_with_none_as_it_goes_down() {
+    // bds-shield.txt: the off hand's window, `blocking_tick` the raising tick, then 0.
+    let mut h = ready();
+    hold(&mut h, Slot::Offhand, "minecraft:shield");
+    h.tick_all();
+    let ticks_of =|sent: &[RawPacket]| -> Vec<i64> {
+        let shown = all::<InventoryContent>(sent).into_iter().filter(|window| window.window_id == WindowIDVarint::Offhand);
+        shown.filter_map(|window| match &window.input[0].extra { ItemV4Extra::ShieldItemID(Some(extra)) => Some(extra.blocking_tick), _ => None }).collect()
+    };
+    let sneak = |h: &mut Harness, data: InputData| {
+        let mut input = input_at([0.5, 65.0, 0.5]);
+        input.input_data = vec![data];
+        h.receive(1, &input);
+        (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect::<Vec<_>>()
+    };
+    let up = ticks_of(&sneak(&mut h, InputData::StartSneaking));
+    assert!(up.len() == 1 && up[0] > 0, "{up:?}");
+    assert_eq!(ticks_of(&sneak(&mut h, InputData::StopSneaking)), [0]);
+}
+
+#[test]
 fn a_shield_does_not_turn_away_a_hit_from_behind() {
     let (mut h, _) = guarded(Slot::Offhand, -2.0);
     let mut sent = Vec::new();

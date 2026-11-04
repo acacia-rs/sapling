@@ -38,8 +38,8 @@ it was recorded; the packs and the binary are the evidence, and the rest is list
 ## What sapling keeps
 
 `sapling_leveldb::Raising` reads and writes the fields above; a baby's ticks left to grow are kept as
-a negative `Age` (only BDS's legacy upgraders read `Age`; where today's BDS keeps a baby's progress was
-not found). A kept `definitions` list is edited as each event's groups say. A name tag, a lead or an
+a negative `Age`, as BDS keeps them (a calf born just before was kept as Int -23879;
+research/captures/bds-t2ekeep-dump.txt). A kept `definitions` list is edited as each event's groups say. A name tag, a lead or an
 owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give no `minecraft:ageable`
 (a baby zombie) stay babies.
 

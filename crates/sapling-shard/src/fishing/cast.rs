@@ -3,7 +3,8 @@
 //! look with no spread. The throw is heard from the drop point. The hook comes invisible, with its
 //! `disappeared` sound 0.9 above it; the next tick it shows, moving, and the one after it is heard
 //! `reappeared` from its middle and stops showing it moves.
-// TODO: only a standing fisher was captured; its motion is BDS's resting fall.
+// A walking fisher's hook left at 1.3 too (bds-t2efish.txt), so no walking motion is added to it.
+// TODO: its start was 0.12 further along than sapling's, within a tick's walk; which tick's place BDS takes was not pinned.
 
 use acacia_proto::packets::SetEntityData;
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1 as Flags};
@@ -48,7 +49,7 @@ pub(super) fn cast(world: &mut World, player: Entity) {
     };
     let Some(hook) = entities::spawn(world, layer, HOOK, Body::new(from, motion, SIZE), from, announce) else { return };
     let cast = world.resource::<Tick>().0;
-    world.entity_mut(hook).insert(Hook { fisher: player, cast, bob: 0.0, angle: 0.0, lured: 0, hooked: 0, nibble: 0, in_ground: false, target: None, jungle });
+    world.entity_mut(hook).insert(Hook { fisher: player, cast, bob: 0.0, angle: 0.0, lured: 0, hooked: 0, nibble: 0, in_ground: false, walled: 0, target: None, jungle });
     world.entity_mut(player).insert(Line(hook));
     let id = world.get::<NetId>(hook).map_or(0, |id| id.0);
     let vanished = sound("disappeared", [from[0], from[1] + VANISHED_ABOVE, from[2]], id);

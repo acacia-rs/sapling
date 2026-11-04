@@ -29,8 +29,11 @@ A lingering potion leaves a cloud with `duration` 30, `radius` 3, `radius_on_use
 - The draw is `t / 20` seconds of use, turned into `(s² + 2s) / 3` and capped at 1. A draw under 0.1
   shoots nothing. This is the Java game's curve.
 - The arrow leaves at `power` (3.0) times the draw. Each axis of its aim is off by a gaussian
-  × 0.0075 × uncertainty, and the shooter's own motion is added (`ProjectileComponent::shoot`
-  0x1424020c0).
+  × 0.0075 × uncertainty (1 for a player) before the power multiplies it (`ProjectileComponent::shoot`
+  0x1424020c0). The shooter's own motion is not added: arrows loosed walking east left at 2.99 and
+  3.02, as standing (research/captures/bds-t2ebow.txt). Sapling draws the gaussian (`shots/aim.rs`).
+- A tipped arrow shows its item data (potion + 1) as a Byte under metadata key 18: an `arrow` of
+  data 26 showed 26 (bds-t2epack.txt), as sapling's does.
 - Only a full draw (exactly 1) sets the arrow's CRITICAL flag (flag 13).
 - Power stores its level and multiplies the hit by `1.25 + 0.25 × level`. This is not the Java
   game's `+ 0.5 × level + 0.5`.
@@ -103,7 +106,6 @@ shot goes after 1200 ticks.
 
 These are the Java game's, a guess, or not found in the decompile:
 
-- the spread, as uniform rather than gaussian, and the shooter's motion, which is not added;
 - the Multishot spread of 10 degrees;
 - where a shot leaves from: 0.1 under the eyes;
 - the 1200-tick despawn of a stuck arrow;
@@ -114,12 +116,11 @@ These are the Java game's, a guess, or not found in the decompile:
 - a player's arrow throwing a mob 0.4, as a melee hit does;
 - Loyalty's return pull (0.05 a level) and Riptide's launch (`3 × (1 + level) / 4`);
 - the `chargedItem` tag of a loaded crossbow;
-- metadata key 18 as a tipped arrow's potion;
 - the sound names `crossbow.loading.end`, `crossbow.shoot`, `item.trident.throw` and
   `item.trident.riptide_1`;
 - most effect colours, which are Java's (sapling-data `shots.rs`);
 - the five chick-hatching numbers, the snowball's 3 against a blaze and the bottle's 3 to 10 are the
   pack's, but were not seen in play.
 
-Left out: firework rockets as crossbow ammunition, and Channeling. Sapling has neither fireworks
-nor lightning.
+Firework rockets as crossbow ammunition and Channeling are in wither-lightning-fireworks.md; both
+drilled the same (research/captures/bds-t2efire.txt).

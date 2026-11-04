@@ -84,7 +84,8 @@ fn bad_omen_in_a_village_brings_a_raid_whose_three_waves_on_easy_won_make_a_hero
     assert_eq!(waves, [named("pillager", 4), [named("pillager", 3), named("vindicator", 2)].concat(), [named("pillager", 3), named("ravager", 1)].concat()]);
     assert!(effects(&after).contains(&(MobEffectEventId::Add, 29, 0, 48000)), "the slayer is a hero at amplifier 0 (bds-raidhero.txt): {:?}", effects(&after));
     assert!(bars(&after).contains(&(BossEventType::SetBarTitle, "%raid.name - %raid.victory".to_owned())), "{:?}", bars(&after));
-    assert_eq!(bars(&ticks(&mut h, 600)), [(BossEventType::HideBar, String::new())], "30 s on");
+    let shown = bars(&ticks(&mut h, 1200));
+    assert!(!shown.iter().any(|(kind, _)| *kind == BossEventType::HideBar), "BDS never hid it (bds-raid.txt): {shown:?}");
 }
 
 /// bds-raidhero.txt: raiders killed by `/damage … entity <player>` left experience and won the
@@ -199,7 +200,8 @@ fn a_captain_wears_the_ominous_banner_and_drops_it() {
     h.remote.run(move |ctx| assert!(ctx.kill_entity(sapling_api::EntityId(captain))));
     ticks(&mut h, 30);
     let dropped: Vec<(String, i16)> = common::asking::ask(&mut h, |ctx| ctx.entities().into_iter().filter_map(|entity| entity.item).map(|item| (item.name, item.damage)).collect());
-    assert!(dropped.contains(&("minecraft:banner".to_owned(), 15)), "{dropped:?}");
+    // bds-t2ebanner.txt: aux 0, `{Type: 1}`.
+    assert!(dropped.contains(&("minecraft:banner".to_owned(), 0)), "{dropped:?}");
     assert!(!dropped.iter().any(|(name, _)| name == "minecraft:ominous_bottle"), "no player killed it: no bottle");
 }
 

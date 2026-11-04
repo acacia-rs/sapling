@@ -21,6 +21,9 @@ use crate::sync::Told;
 
 const FRICTION: f32 = 0.92;
 const STOPPED: f32 = 0.5;
+/// A hook stopped by a wall keeps `STOPPED` friction this many ticks, as BDS's horizontal-collision
+/// flag did: fitted to bds-t2efish.txt (its falls 0.04 and 0.1098 down the glass, then 0.92's).
+const WALLED: u8 = 2;
 const WET: f32 = 0.9;
 const BOB_STEP: f32 = 0.1;
 const BOB: f32 = 0.035;
@@ -112,12 +115,17 @@ pub(super) fn tick(world: &mut World, hook: Entity, layer: Entity) {
         }
         return;
     }
+    let walled = world.get_mut::<Hook>(hook).is_some_and(|mut state| {
+        let was = state.walled > 0;
+        state.walled = state.walled.saturating_sub(1);
+        was
+    });
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let cell = body.at.map(|c| c.floor() as i32);
     if liquid_in(level, cell, Liquid::Lava).is_some() {
         return reel::retrieve(world, fisher, hook);
     }
-    let mut friction = if body.on_ground || touches_wall(&body) { STOPPED } else { FRICTION };
+    let mut friction = if body.on_ground || walled { STOPPED } else { FRICTION };
     let water = liquid_in(level, cell, Liquid::Water).map(|_| liquid_in(level, [cell[0], cell[1] + 1, cell[2]], Liquid::Water).is_some());
     let wet = wet_part(level, &body);
     let bob = {
@@ -146,13 +154,18 @@ pub(super) fn tick(world: &mut World, hook: Entity, layer: Entity) {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     // BDS moves a hook twice a tick: its own tick, then the projectile's, which drags and drops it;
     // a block in the way of the first stops it dead, with no second.
+    let mut sideways = false;
     let stopped = (0..2).any(|_| {
         let before = body.at;
         body.shove(level, motion);
-        let short = (0..3).any(|axis| (body.at[axis] - before[axis] - motion[axis]).abs() > 1e-4);
-        body.on_ground = short && motion[1] < 0.0 && body.at[1] - before[1] > motion[1] + 1e-4;
-        short
+        let short = |axis: usize| (body.at[axis] - before[axis] - motion[axis]).abs() > 1e-4;
+        sideways = short(0) || short(2);
+        body.on_ground = short(1) && motion[1] < 0.0 && body.at[1] - before[1] > motion[1] + 1e-4;
+        sideways || short(1)
     });
+    if sideways {
+        world.get_mut::<Hook>(hook).expect("read above").walled = WALLED;
+    }
     body.motion = if stopped { [0.0; 3] } else { [motion[0] * DRAG, motion[1] * DRAG - GRAVITY, motion[2] * DRAG] };
     // BDS's next tick does not count the landing as ground: it keeps 0.92 (bds-fish.txt).
     body.on_ground &= !stopped;
@@ -160,11 +173,6 @@ pub(super) fn tick(world: &mut World, hook: Entity, layer: Entity) {
     *world.get_mut::<Body>(hook).expect("read above") = body;
     let packets = world.get_mut::<Told>(hook).map(|mut told| told.update(id, body.at, body.motion, body.on_ground)).unwrap_or_default();
     entities::tell_viewers(world, hook, layer, body.at.map(|c| c.floor() as i32), packets);
-}
-
-// TODO: BDS reads the hook's horizontal-collision flag; a body keeps none, so a wall slows it only once on the ground.
-fn touches_wall(_body: &Body) -> bool {
-    false
 }
 
 /// The hook catches `caught`: its viewers are told whom it holds.
