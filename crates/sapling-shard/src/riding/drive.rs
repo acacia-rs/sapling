@@ -86,7 +86,9 @@ fn follow(world: &mut World, driver: Entity, vehicle: Entity, [x, y, z]: [f32; 3
     let (motion, on_ground) = (body.motion, body.on_ground);
     let tick = world.resource::<Tick>().0;
     world.entity_mut(vehicle).insert(Driven(tick));
-    if let Some(reared) = (!BOATS.contains(&kind.as_str())).then(|| super::rearing::rear(world, vehicle, id, &kind, motion[1])).flatten() {
+    let width = world.get::<Body>(vehicle).map_or(0.0, |body| body.size[0]);
+    let landed = motion[1] < 0.0 && world.get::<crate::components::Layer>(layer).is_some_and(|level| super::rearing::grounded(&level.world, feet, width));
+    if let Some(reared) = (!BOATS.contains(&kind.as_str())).then(|| super::rearing::rear(world, vehicle, id, &kind, motion[1], landed)).flatten() {
         crate::blocks::to_viewers(world, layer, feet.map(|c| c.floor() as i32), &[reared]);
     }
     let Some(mut told) = world.get_mut::<Told>(vehicle) else { return };

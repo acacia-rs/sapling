@@ -142,6 +142,48 @@ fn a_llama_is_announced_with_its_own_strength_and_three_slots_a_point() {
     assert_eq!(int(&data, Key::ContainerExtraSlotsPerStrength), Some(3));
 }
 
+/// The health, movement and jump strength `added` announced.
+fn strides(added: &AddEntity) -> [f32; 3] {
+    ["minecraft:health", "minecraft:movement", "minecraft:horse.jump_strength"].map(|name| added.attributes.iter().find(|attribute| attribute.name == name).map(|attribute| attribute.value).expect(name))
+}
+
+#[test]
+fn a_foal_is_announced_with_its_parents_strides_blended() {
+    let mut h = alex();
+    let (_, mother) = summoned(&mut h, "minecraft:horse", Some("minecraft:spawn_tame_adult"), 0.5);
+    let (_, father) = summoned(&mut h, "minecraft:horse", Some("minecraft:spawn_tame_adult"), 2.5);
+    let parents = [&mother, &father].map(|sent| strides(&all::<AddEntity>(sent)[0]));
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:golden_carrot", 2)))));
+    h.tick(1);
+    for added in [&mother, &father].map(|sent| all::<AddEntity>(sent)[0].runtime_id) {
+        h.receive(1, &interact(added));
+        h.tick(1);
+    }
+    let sent: Vec<RawPacket> = (0..200).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let foal = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:horse").expect("a foal");
+    // Each within the mean of its parents' spread by their gap and 0.3 of the range (research/captures/bds-n3foals.txt).
+    for (axis, range) in [15.0, 0.225, 0.6].into_iter().enumerate() {
+        let (a, b, got) = (parents[0][axis], parents[1][axis], strides(&foal)[axis]);
+        assert!((got - (a + b) / 2.0).abs() <= ((a - b).abs() + 0.3 * range) / 2.0 + 1e-4, "{axis}: {got} from {a} and {b}");
+    }
+}
+
+#[test]
+fn a_worn_out_carrot_on_a_stick_boosts_once_more_and_leaves_a_fishing_rod() {
+    let mut h = alex();
+    let (pig, _) = summoned(&mut h, "minecraft:pig", Some("minecraft:on_saddled"), 0.5);
+    ask(&mut h, |ctx| ctx.set_game_mode(ALEX, sapling_api::GameMode::Survival));
+    let stick = Item { damage: 25, ..Item::new("minecraft:carrot_on_a_stick", 1) };
+    h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&stick))));
+    h.receive(1, &interact(pig.0));
+    (0..2).for_each(|_| drop(h.tick(1)));
+    h.receive(1, &common::shooting::click_air());
+    let sent: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|heard| heard.sound_id == "boost"), "the pig is heard boosted");
+    // research/captures/bds-n3stick.txt: 25 of 25 worn, the third boost broke it into a rod.
+    assert_eq!(common::shooting::held(&mut h, Slot::Main(0)).map(|held| held.name), Some("minecraft:fishing_rod".into()));
+}
+
 fn left_on_death(h: &mut Harness, mob: EntityId) -> Vec<&'static str> {
     let (_, sent) = told(h, move |ctx| ctx.kill_entity(mob));
     all::<AddItemEntity>(&sent).iter().filter_map(|lying| sapling_data::item_name(lying.item.network_id.into())).collect()

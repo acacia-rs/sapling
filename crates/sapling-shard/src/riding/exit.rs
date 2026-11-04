@@ -1,7 +1,8 @@
 //! Where a rider steps off to, as BDS puts a passenger leaving a vehicle with the default
 //! `dismount_mode` (matched live for a pig and a boat: acacia's docs/research/riding-fishing-elytra.md):
 //! the first free spot of 24 around the vehicle's cell, by the way it moves, at the seat's x and z.
-// TODO: `on_top_center` vehicles and the blocks BDS ignores for an exit are not modelled.
+// TODO: BDS corrected no exit next to lava or a campfire, put the rider 0.16-0.23 above the floor
+// and off a ladder's side oddly (docs/research/vehicles.md "Exit spots"); `on_top_center` is not modelled.
 
 use acacia_physics::{Aabb, WorldView};
 use bevy_ecs::prelude::*;
