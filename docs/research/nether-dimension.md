@@ -125,11 +125,18 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
 - Seen only on sapling: after a flint and steel click sapling resends the clicked cells (UpdateBlock layers 0
   and 1), as it does for every block use.
 
+- `execute in <dimension>` into a dimension nobody is in (bds-t1dexec.txt): BDS answered `setblock`,
+  `testforblock` and `fill` with `outOfWorld`, a `structure load` with `load.queued` and a save with
+  `outOfWorld`. Sapling's world there ticked every column (a headless shard runs without players), so
+  they ran at once. Fixed 2026-11-04: ticking.rs `Region::ticks` ticks an empty world's kept columns
+  alone while another world is peopled, and a column not yet loaded does not tick;
+  `vanilla/structure.rs` queues a load and refuses a save there. Test
+  `a_bot_goes_to_the_nether_by_command_and_back`; sapling-t1dexec.txt now answers as BDS's but for one
+  `setblock` 3 s after the tp, `outOfWorld` on a Nether column the lagged debug drill server had not
+  loaded yet (BDS: success), and the `testforblock` after it.
+
 ## Left
 
-- `execute in <dimension>` into a dimension nobody is in: sapling's world there reads and ticks every
-  column (headless shards run without players, ticking.rs `Region::ticks`), so `setblock` runs and a
-  structure loads at once where BDS answered `outOfWorld` and `load.queued` (sapling-t1dexec.txt).
 - Spectators in portals (the End: end-dimension.md), and BDS's
   per-tick UpdateSubchunkBlocks batching of other block changes.
 - Section order where it is not last-touched-first (-collide.txt x 1935): what puts the second section

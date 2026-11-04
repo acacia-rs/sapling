@@ -24,12 +24,14 @@ pub(super) fn heights(ctx: &ShardCtx<'_>, sender: &Sender) -> [i32; 2] {
     }
 }
 
-/// Whether every column of the box `size` (turned by `rotation`) from `at` is loaded.
-fn loaded(ctx: &ShardCtx<'_>, at: BlockPos, size: [i32; 3], rotation: Rotation) -> bool {
+/// Whether every column of the box `size` (turned by `rotation`) from `at` is loaded and ticks: BDS
+/// queued a load into an empty dimension and 5000 blocks off (bds-t1dexec.txt), as `/setblock`'s
+/// `outOfWorld` there.
+fn loaded(ctx: &mut ShardCtx<'_>, at: BlockPos, size: [i32; 3], rotation: Rotation) -> bool {
     let [sx, _, sz] = size;
     let [sx, sz] = if matches!(rotation, Rotation::Clockwise90 | Rotation::Clockwise270) { [sz, sx] } else { [sx, sz] };
     let columns = |from: i32, length: i32| (from >> 4)..=((from + length - 1) >> 4);
-    columns(at[0], sx).all(|cx| columns(at[2], sz).all(|cz| ctx.block([cx * 16, at[1], cz * 16]).is_some()))
+    columns(at[0], sx).all(|cx| columns(at[2], sz).all(|cz| ctx.block([cx * 16, at[1], cz * 16]).is_some() && ctx.ticks_chunk([cx, cz])))
 }
 
 #[derive(CommandEnum, Clone, Copy, PartialEq, Debug)]
@@ -149,6 +151,9 @@ impl Command for StructureCommand {
                 }
                 if !include_entities && !include_blocks {
                     return out.translate("commands.structure.empty.save", Vec::new(), false);
+                }
+                if !super::regions::Region::between(from, to).ticks(ctx) {
+                    return out.translate("commands.generic.outOfWorld", Vec::new(), false);
                 }
                 match ctx.save_structure(&self.name, from, to, include_entities, include_blocks, to_disk) {
                     Ok(()) => out.translate("commands.structure.save.success", vec![full], true),
