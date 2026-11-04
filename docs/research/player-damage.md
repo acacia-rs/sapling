@@ -177,8 +177,13 @@ research/captures/bds-hurt2.txt, bds-deaths.txt, bds-fx3.txt, bds-void.txt:
 
 ## Not drilled
 
-A piece of armour worn out (one at 165 of 165 took a hit and stayed), whether a player out of breath in
-a block is hurt as one under water, a bed in another world.
+Drilled 2026-11-04 (research/captures/bds-t2ewear.txt, bds-t2ebreath.txt):
+- Armour worn out: each piece of four sets at the edge of its uses broke under `/damage 4 entity_attack`
+  on both, after the same wear (53/78/73/63, 163/238/223/193, ...) and health.
+- Head in stone for 15 s: `Air` went 299 and back to 300 on BDS, with no hurt; sapling sent no `Air`
+  change and no hurt either (the one-tick dip is not copied).
+- A bed used in the Nether blew up on both; BDS's player was also burning in that scene, so the
+  amounts were not compared.
 
 ## Another player's hit (`pvp`)
 

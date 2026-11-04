@@ -114,8 +114,8 @@ Bedrock was found.
   within 64 [Java].
 - Boss bar to players within 96: `raid.name` (no `%`), red, re-sent about every second, filling over the
   wait and emptying with the wave's health, then `%raid.name - %raid.victory` at progress 0 or
-  `%raid.name - %raid.defeat` at the health left, for ~30 s; BDS sent no HideBar, sapling hides it after
-  600 ticks [bds-raid.txt, bds-raidlost.txt; strings at 14116bbf0]. It is a BossEvent on the player's
+  `%raid.name - %raid.defeat` at the health left, for ~30 s; BDS sent no HideBar in the 62 s that
+  followed, and sapling no longer hides it (`creatures/raids/bar.rs` `Ended`) [bds-raid.txt, bds-raidlost.txt; strings at 14116bbf0]. It is a BossEvent on the player's
   own id.
 - A second omen in a running raid raises its level, at most 5 [Java].
 - Raiders walk to the village's middle until within 2 when they have no prey [pack `spawn_for_raid`

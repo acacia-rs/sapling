@@ -242,7 +242,8 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     (0..22).for_each(|_| drop(h.tick_all()));
     assert_eq!(shown(&swallow(&mut h, "minecraft:spider_eye")), [(MobEffectEventId::Add, 19, 100)]);
     let sent = swallow(&mut h, "minecraft:golden_apple");
-    assert_eq!((shown(&sent), cushion(&sent)), (vec![(MobEffectEventId::Add, 10, 100), (MobEffectEventId::Add, 22, 2400)], vec![4.0]));
+    // The first is the meal's every attribute as it started (bds-t2eitems.txt).
+    assert_eq!((shown(&sent), cushion(&sent)), (vec![(MobEffectEventId::Add, 10, 100), (MobEffectEventId::Add, 22, 2400)], vec![0.0, 4.0]));
     // Out of the poison's guard, so that the whole hit counts.
     h.remote.run(|ctx| assert!(ctx.remove_effect(ALEX, Effect::Poison)));
     (0..12).for_each(|_| drop(h.tick_all()));
@@ -250,7 +251,7 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     assert_eq!(cushion(h.tick_all().to(2)), [1.0], "the cushion takes the hit");
     let sent = swallow(&mut h, "minecraft:milk_bucket");
     let gone: Vec<i32> = all::<MobEffect>(&sent).into_iter().filter(|effect| effect.event_id == MobEffectEventId::Remove).map(|effect| effect.effect_id).collect();
-    assert!(gone.contains(&10) && gone.contains(&22) && cushion(&sent) == [0.0], "{gone:?}");
+    assert!(gone.contains(&10) && gone.contains(&22) && cushion(&sent) == [1.0, 0.0], "{gone:?}");
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:bucket".to_owned())));
     assert!(all::<CompletedUsingItem>(h.tick_all().to(1)).is_empty());
     // A potion of strong regeneration (data 30), research/captures/bds-drink.txt.
@@ -263,6 +264,25 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     assert_eq!(all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.amplifier, effect.duration, effect.particles)).collect::<Vec<_>>(), [(28, 2, 120000, false)]);
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)), None));
     h.tick_all();
+}
+
+#[test]
+fn absorption_hit_down_to_nothing_ends() {
+    use acacia_proto::packets::{MobEffect, MobEffectEventId};
+    use sapling_api::Effect;
+    // research/captures/bds-t2eitems.txt: 8 of cushion, hits of 3, 3 and 4; the last ends the effect.
+    let mut h = ready();
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::Absorption, 600, 1, false)));
+    h.tick_all();
+    let mut told = Vec::new();
+    for amount in [3.0, 3.0, 4.0] {
+        (0..12).for_each(|_| drop(h.tick_all()));
+        h.remote.run(move |ctx| assert!(ctx.hurt_player(ALEX, amount, DamageCause::Generic)));
+        told.extend(h.tick_all().to(1).to_vec());
+    }
+    let cushion: Vec<f32> = all::<UpdateAttributes>(&told).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:absorption").map(|attribute| attribute.current).collect();
+    let ended: Vec<_> = all::<MobEffect>(&told).into_iter().map(|effect| (effect.event_id, effect.effect_id)).collect();
+    assert_eq!((cushion, ended, health(&told)), (vec![5.0, 2.0, 0.0], vec![(MobEffectEventId::Remove, 22)], vec![18.0]));
 }
 
 #[test]

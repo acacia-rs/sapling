@@ -1,7 +1,7 @@
 //! Eating and drinking: use held on a food until the shard takes it, as BDS does
 //! (docs/research/player-damage.md, "Eating"; food-effects.md).
-// TODO: BDS also sends every attribute as the use starts; only survival and adventure players
-// eat here.
+//! Every attribute is told as the use starts (told_all.rs).
+// TODO: only survival and adventure players eat here.
 
 use acacia_proto::packets::{CompletedUsingItem, CompletedUsingItemUseMethod, EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
@@ -60,6 +60,9 @@ pub(crate) fn start(world: &mut World, player: Entity) {
     vitals.meal = Some(Meal { id, food, done: now + u64::from(food.ticks) });
     if chorus {
         crate::cooldowns::tell(world, player, CHORUS, CHORUS_COOLDOWN, false);
+    }
+    if let Some(all) = super::told_all::all_attributes(world, player) {
+        tell(world, player, &all);
     }
     show(world, player, true);
 }

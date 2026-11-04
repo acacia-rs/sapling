@@ -25,9 +25,12 @@ mod stand;
 mod shield;
 mod soles;
 mod struck;
+mod told_all;
 mod totem;
 pub(crate) use shield::{blocks, thrown_back, wields_axe};
 pub(crate) use stand::{break_fall, fallen, falls_freely};
+#[cfg(test)]
+pub(crate) use splashed::shared_strength;
 pub(crate) use splashed::{clouded, health_left, is_under, splashed};
 
 use acacia_proto::Packet;
@@ -158,6 +161,10 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     let padded = std::mem::replace(&mut vitals.padded, cushion) != cushion;
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
     let tick = world.resource::<Tick>().0;
+    // bds-t2eitems.txt: absorption hit down to nothing ends, told before the cushion.
+    if padded && cushion == 0.0 {
+        effects::end(world, player, sapling_api::Effect::Absorption);
+    }
     if padded {
         tell(world, player, &effects::cushion(id, cushion, tick));
     }

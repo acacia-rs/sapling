@@ -322,6 +322,12 @@ Sapling's run: sapling-kinds3.txt.
   plain box gap gives 495, 416, 742). Fixed (`creatures/splashes.rs` `share_of`, its unit test). The
   potion's flight differs (sapling's broke at y -26.07, BDS's -25.80), so the run's shares still
   differ by a few ticks. A splashed instant damage sent no `MobEffect` on BDS; sapling sends an add of 1 tick.
+- Splash instants by share (research/captures/bds-t2esplash.txt; `thrown_potion_effect` vtable
+  0x14240ede0): the struck actor gets share 1, others `1 - d/4` as above. An instant's amount is
+  `(int)(share × base × 2^amplifier + 0.5)` (harm 3, 3, 5 and heal 2, 2, 3 for watchers 6.6, 5.6
+  and 3.5 off), and no MobEffect is sent; a lasting effect is given only if
+  `(int)(share × ticks + 0.5)` is over 20. Fixed (`vitals/splashed.rs`, test
+  `bds_watchers_were_harmed_and_healed_by_their_share`).
 - An enderman stared at from 6 off, with and without a carved pumpkin, took no target in either
   run, so the pumpkin was not judged. BDS flipped its `MOVING` flag throughout.
 - Endermen in the rain were hurt 1 every 10 ticks, cause 9, and teleported often. Sapling's took

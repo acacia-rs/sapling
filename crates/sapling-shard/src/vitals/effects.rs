@@ -8,7 +8,7 @@
 mod attributes;
 
 use acacia_proto::packets::{MobEffect, MobEffectEventId};
-pub(crate) use attributes::{Paced, cushion, tell_pace};
+pub(crate) use attributes::{Paced, cushion, tell_pace, walking};
 use bevy_ecs::prelude::*;
 use sapling_api::{Effect, EffectBackend, PlayerId};
 

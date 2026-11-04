@@ -2,12 +2,13 @@
 //! bds-shield.txt; BDS `Player::_hurt` 1402b5fe0, `isBlocking` 1402ab9e0): five ticks after it
 //! goes up it turns away a hit, a shot or a blast from an entity in front, wearing by one more
 //! than the hit; a mob whose hit it turned is thrown back, and an axe's hit puts it down.
-// TODO: BDS writes the tick the shield went up into the item (its `blocking_tick`) and shows the
-// item anew as it goes up and down; a riding player's is up too; a blocked mob's hit or shot also
-// stood the blocker up from its sneak on BDS; Thorns and fireworks are turned away there too.
+//! The shield is shown anew as it goes up, its `blocking_tick` the tick it went up, and as it goes
+//! down with 0 (bds-shield.txt); BDS's tick is its world's, sapling's the shard's.
+// TODO: a riding player's is up too; a blocked mob's hit or shot also stood the blocker up from
+// its sneak on BDS; Thorns and fireworks are turned away there too.
 
-use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
-use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2, Vec3f, WindowIDVarint};
+use acacia_proto::packets::{InventorySlot, LevelSoundEvent, SetEntityData};
+use acacia_proto::types::{EntityProperties, ItemV4Extra, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2, Vec3f, WindowIDVarint};
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
@@ -82,8 +83,27 @@ pub(super) fn tick(world: &mut World) {
         };
         let raised_bit = if raised { RAISED } else { 0 };
         if let Some(moving) = told {
+            if moving == MOVING {
+                show_shield(world, player, if raised { now as i64 } else { 0 });
+            }
             tell(world, player, &extended(id, raised_bit | moving, now));
         }
+    }
+}
+
+/// Sends the player its shield's slot with `blocking_tick`: the off hand's window, or the main
+/// hand's slot.
+fn show_shield(world: &mut World, player: Entity, blocking_tick: i64) {
+    let mut query = world.query::<(&Inventory, &mut Outgoing)>();
+    let Ok((inventory, mut out)) = query.get_mut(world, player) else { return };
+    let Some(place) = shield_at(inventory) else { return };
+    let mut item = crate::inventory::wire(inventory.slot(place).expect("a shield there"), true);
+    if let ItemV4Extra::ShieldItemID(Some(extra)) = &mut item.extra {
+        extra.blocking_tick = blocking_tick;
+    }
+    match place {
+        Place::Main(slot) => out.push(&InventorySlot { window_id: WindowIDVarint::Inventory, slot: slot as u32, container: None, storage_item: None, item }),
+        _ => out.push(&sapling_data::inventory_content(WindowIDVarint::Offhand, vec![item])),
     }
 }
 
@@ -101,10 +121,8 @@ pub(crate) fn blocks(world: &mut World, player: Entity, from: [f32; 3], amount: 
     let broke = crate::inventory::wear_at(world, player, place, 1 + amount as i32);
     // A shield in the main hand was shown worn only as it went down.
     if place == Place::Offhand {
-        let mut query = world.query::<(&Inventory, &mut Outgoing)>();
-        if let Ok((inventory, mut out)) = query.get_mut(world, player) {
-            inventory.send_window(&mut out, WindowIDVarint::Offhand);
-        }
+        let since = world.get::<Guard>(player).and_then(|guard| guard.raised).unwrap_or(0);
+        show_shield(world, player, since as i64);
     }
     let [x, y, z] = position.feet;
     tell(world, player, &sound("item.shield.block", [x, y + EYE_HEIGHT, z], "", -1));
