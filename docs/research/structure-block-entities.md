@@ -207,6 +207,11 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
     halves' entities again without their block.
   - Tests `a_set_block_shows_its_entity_as_bds_s_did_and_some_again`,
     `a_cauldron_shows_its_empty_items_and_a_sign_its_wire_fields`.
+  - An idle vault is not shown again: sapling's showed its entity at each state update
+    (spawners/vault.rs now shows it on a new state or display item alone).
+  - Re-drilled (sapling-s7ents.txt): every entity, its fields and its second send as BDS's. Left,
+    not block entities: BDS's set daylight detector read 10 some 30 ticks on (sapling's stays 0,
+    redstone.md), and its sculk sensor heard the bed's set (phases 1 and 2), sapling's did not.
   - Not drilled: a shulker box holding stacks (its `Items` are shown as kept), a sign with text, a
     vault or trial spawner that ran.
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
