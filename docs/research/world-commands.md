@@ -86,5 +86,10 @@ selecting,session,items,enchanting}.rs`.
 - The enchantment table (max levels, what goes on what, exclusive groups) beyond the cases above
   is the game's as players know it (`sapling-data/src/enchant/table.rs`), as is the order of
   `/enchant`'s checks (id, targets, level, item).
+- BDS lists commands sapling has not (bds-t1denums.txt `command` rows, sapling-t1denums.txt):
+  `aimassist controlscheme dialogue event gametest packstack script` (Script API, NPCs, game
+  tests, client settings) and the host's `changesetting editor-allowlist permission reload
+  reloadconfig reloadpacketlimitconfig sendshowstoreoffer serveridentity wsserver`; an `/execute`
+  of the latter is refused as BDS refuses it. `/teleport` is `/tp`'s alias.
 - `/spreadplayers` draws from its own random, not BDS's: the same rule, other places.
 - A cloned chest: BDS adds `forceunpair`; sapling copies the block entity as it is.
