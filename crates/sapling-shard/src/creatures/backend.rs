@@ -70,7 +70,7 @@ impl EntityBackend for Ctx<'_> {
     }
 
     fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool {
-        entities::change(self.world, id, |body| body.at = feet)
+        entities::teleport(self.world, id, feet)
     }
 
     fn set_velocity(&mut self, id: EntityId, velocity: [f32; 3]) -> bool {

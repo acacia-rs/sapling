@@ -92,6 +92,7 @@ mod mechanisms;
 mod mob_commands;
 mod mob_heat;
 mod mob_life;
+mod mob_packets;
 mod eggs_drilled;
 mod growth_drilled;
 mod mount_packs;

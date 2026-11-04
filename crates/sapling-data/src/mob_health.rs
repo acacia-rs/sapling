@@ -46,6 +46,18 @@ pub struct MobTraits {
     /// The speed a kind that swims about swims at: its `underwater_movement` times its
     /// `random_swim`'s `speed_multiplier`, and how far across and up or down a swim goes.
     pub swims: Option<(f32, [u32; 2])>,
+    /// Its `look_at_player`.
+    pub looks: Option<Looks>,
+    /// It has `random_look_around`.
+    pub glances: bool,
+}
+
+/// A kind's `look_at_player`: a chance a tick of looking at a player this near, for some ticks.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Looks {
+    pub distance: f32,
+    pub chance: f32,
+    pub ticks: (u32, u32),
 }
 
 /// A kind that hunts players (README "Mob traits").
@@ -128,7 +140,13 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), varies: number("varies="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once"), preys: value("preys="), searches: number("searches=").map(|ticks| ticks as u32), stops: number("stops=").map(|ticks| ticks as u32), reselects: has("reselects"), fires: number("fires=") });
     let roams = value("roams=").and_then(|roams| roams.split_once('x')).and_then(|(across, up)| Some([across.parse().ok()?, up.parse().ok()?]));
     let swims = number("swims=").zip(roams);
-    MobTraits { fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), no_air: has("no_air"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
+    let looks = value("looks=").and_then(|looks| {
+        let mut parts = looks.split(':');
+        let (distance, chance) = (parts.next()?.parse().ok()?, parts.next()?.parse().ok()?);
+        let (least, most) = range(parts.next()?)?;
+        Some(Looks { distance, chance, ticks: (least as u32, most as u32) })
+    });
+    MobTraits { looks, glances: has("glances"), fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), no_air: has("no_air"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
 }
 
 /// The mob `id` has `left` of `max` health.
@@ -210,7 +228,8 @@ mod tests {
 
     #[test]
     fn fire_spares_a_strider_a_fall_a_chicken_and_water_a_cod() {
-        assert_eq!(mob_traits("minecraft:pig"), MobTraits { experience: Some((1, 3)), strolls: Some(0.25), panics: Some(0.3125), floats: true, ..MobTraits::default() });
+        let looks = Some(Looks { distance: 6.0, chance: 0.02, ticks: (40, 80) });
+        assert_eq!(mob_traits("minecraft:pig"), MobTraits { experience: Some((1, 3)), strolls: Some(0.25), panics: Some(0.3125), floats: true, looks, glances: true, ..MobTraits::default() });
         assert_eq!((mob_traits("minecraft:creeper").experience, mob_traits("minecraft:armor_stand").experience), (Some((5, 5)), None));
         assert!(mob_traits("minecraft:strider").fire_immune && mob_traits("minecraft:chicken").no_fall && mob_traits("minecraft:cod").breathes_water);
         assert!(!mob_traits("minecraft:chicken").fire_immune);

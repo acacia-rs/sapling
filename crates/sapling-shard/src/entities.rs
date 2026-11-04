@@ -5,7 +5,7 @@
 // TODO: the mobs a world folder stores are still statues (mobs.rs), outside this.
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, MoveEntityDelta};
+use acacia_proto::packets::AddEntity;
 use acacia_proto::types::{MetadataDictionaryItemValue, MetadataFlags1};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -13,11 +13,16 @@ use sapling_api::{EntityId, EntityInfo};
 
 use crate::blocks::Dice;
 use crate::body::{Body, InLiquid, Liquid, Physics};
-use crate::components::{InLayer, Layer, NetId, Outgoing, Position, Tick};
+use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::drops::Dropped;
 use crate::inventory::described;
-use crate::sync::{Told, pace};
-use crate::{mobs, splash, view};
+use crate::sync::Told;
+use crate::{mobs, splash};
+
+mod first_data;
+mod tell;
+
+pub(crate) use tell::{after_announcing, after_announcing_of, send_held_moves, tell_viewers};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.
 #[derive(Component, Clone, Debug)]
@@ -63,10 +68,6 @@ pub(crate) fn restore(world: &mut World, entity: Entity, change: impl FnOnce(&[u
 #[derive(Component)]
 struct Born(u64);
 
-/// Moves of entities that appeared this tick, for their viewers once they are told of them.
-#[derive(Resource, Default)]
-pub(crate) struct AfterAnnouncing(Vec<(Entity, [i32; 3], Vec<Bytes>)>);
-
 /// An entity taken by a player: it goes from screens the tick after, as BDS sends an item's or
 /// an orb's RemoveEntity (research/captures/containers-findings.md D3, D6).
 #[derive(Component)]
@@ -87,26 +88,23 @@ pub(crate) fn remove_left(world: &mut World) {
     }
 }
 
-/// Has `packets` sent to the viewers of `cell` once this tick's new entities are announced to them.
-pub(crate) fn after_announcing(world: &mut World, layer: Entity, cell: [i32; 3], packets: Vec<Bytes>) {
-    world.get_resource_or_insert_with(AfterAnnouncing::default).0.push((layer, cell, packets));
-}
-
-/// Sends the moves held back by [`step`]; runs after the tick's announcements (mobs.rs).
-pub(crate) fn send_held_moves(world: &mut World) {
-    let Some(held) = world.get_resource_mut::<AfterAnnouncing>().map(|mut held| std::mem::take(&mut held.0)) else { return };
-    for (layer, cell, packets) in held {
-        view::to_viewers(world, layer, cell, &packets);
-    }
-}
-
 /// Puts an entity of `kind` with `body` into the world, shown by what `announce` makes of its
 /// id; viewers start out knowing it at `wire`, where the wire puts it.
 pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, body: Body, wire: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
     let entity = mobs::spawn_shown(world, layer, body.at, announce)?;
     let tick = world.resource::<Tick>().0;
-    world.entity_mut(entity).insert((Kind(kind.to_owned()), body, Told::new(wire), Born(tick)));
+    world.entity_mut(entity).insert((Kind(kind.to_owned()), body, Told::new(wire), Born(tick), first_data::Due));
     Some(entity)
+}
+
+/// The entity a world folder kept as `unique_id`, just [`spawn`]ed, came from the folder, not
+/// into the world: no first data follows its announcement.
+// TODO: whether BDS sends one for an actor it loads was not drilled.
+pub(crate) fn loaded(world: &mut World, unique_id: i64) {
+    let found = world.query_filtered::<(Entity, &crate::tags::UniqueId), With<first_data::Due>>().iter(world).find(|(_, id)| id.0 == unique_id).map(|(entity, _)| entity);
+    if let Some(entity) = found {
+        world.entity_mut(entity).remove::<first_data::Due>();
+    }
 }
 
 /// Has the entity's viewers told when it is moving (sync.rs [`Told::flag_moving`]).
@@ -193,7 +191,7 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
     // Not yet announced: this move follows the announcement, in the same batch, as on BDS.
     if new {
         told.settle(false);
-        after_announcing(world, layer, body.at.map(|c| c.floor() as i32), packets);
+        after_announcing_of(world, entity, layer, body.at.map(|c| c.floor() as i32), packets);
         return Some((body, Vec::new()));
     }
     Some((body, packets))
@@ -201,57 +199,6 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
 
 pub(crate) fn is_new(world: &World, entity: Entity) -> bool {
     world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0)
-}
-
-/// Sends `packets` about the entity to the viewers of `cell`, after its announcement when it
-/// appeared this tick.
-pub(crate) fn tell_viewers(world: &mut World, entity: Entity, layer: Entity, cell: [i32; 3], packets: Vec<Bytes>) {
-    if packets.is_empty() {
-        return;
-    }
-    if is_new(world, entity) {
-        if let Some(mut told) = world.get_mut::<Told>(entity) {
-            told.settle(false);
-        }
-        after_announcing(world, layer, cell, packets);
-    } else {
-        to_viewers_paced(world, entity, layer, cell, &packets);
-    }
-}
-
-/// A player's eyes above its feet, whence its distance to a move is measured.
-const EYES: f32 = 1.62;
-
-/// Hands `packets` to the viewers of `cell`, each told of the entity's move as often as its kind
-/// lets one so far away (sync/pace.rs), with that in the move's `ticks`.
-fn to_viewers_paced(world: &mut World, entity: Entity, layer: Entity, cell: [i32; 3], packets: &[Bytes]) {
-    let Some(pending) = world.get::<Told>(entity).and_then(|told| told.pending().cloned()) else {
-        return view::to_viewers(world, layer, cell, packets);
-    };
-    let limits = world.get::<Kind>(entity).and_then(|kind| pace::limits(&kind.0));
-    let now = world.resource::<Tick>().0;
-    let mut versions: Vec<(u64, Bytes)> = vec![(0, pending.bytes.clone())];
-    let mut none = true;
-    for viewer in view::viewers(world, layer, cell) {
-        let eye = world.get::<Position>(viewer).map_or([f32::MAX; 3], |position| [position.feet[0], position.feet[1] + EYES, position.feet[2]]);
-        let ticks = world.get_mut::<Told>(entity).and_then(|mut told| told.told_to(viewer, eye, now, limits));
-        let delta = ticks.map(|ticks| match versions.iter().find(|(known, _)| *known == ticks) {
-            Some((_, bytes)) => bytes.clone(),
-            None => {
-                let bytes = sapling_net::encode(&MoveEntityDelta { ticks, ..pending.delta.clone() });
-                versions.push((ticks, bytes.clone()));
-                bytes
-            }
-        });
-        none &= delta.is_none();
-        let told: Vec<Bytes> = packets.iter().filter_map(|packet| if *packet == pending.bytes { delta.clone() } else { Some(packet.clone()) }).collect();
-        if let Some(mut out) = world.get_mut::<Outgoing>(viewer) {
-            out.0.extend(told);
-        }
-    }
-    if let Some(mut told) = world.get_mut::<Told>(entity) {
-        told.settle(none);
-    }
 }
 
 /// The world, kind and body of every entity that has had a tick of its own: on BDS one appearing
@@ -266,6 +213,27 @@ pub(crate) fn bodies(world: &World) -> Vec<(Entity, String, Body)> {
 pub(crate) fn change(world: &mut World, id: EntityId, change: impl FnOnce(&mut Body)) -> bool {
     let Some(entity) = find(world, id) else { return false };
     world.get_mut::<Body>(entity).map(|mut body| change(&mut body)).is_some()
+}
+
+/// Puts the entity `id` at `feet`, its viewers told with a forced move as BDS's `/tp` tells them
+/// (research/captures/bds-farmobs.txt); false when it is gone.
+pub(crate) fn teleport(world: &mut World, id: EntityId, feet: [f32; 3]) -> bool {
+    let Some(entity) = find(world, id) else { return false };
+    let Some(body) = world.get_mut::<Body>(entity).map(|mut body| {
+        body.at = feet;
+        *body
+    }) else {
+        return false;
+    };
+    // Told now: a mob outside every tick circle takes no step to tell it (creatures/ticked.rs).
+    let packets = world.get_mut::<Told>(entity).map(|mut told| {
+        told.jump();
+        told.update(id.0, feet, body.motion, body.on_ground)
+    });
+    if let (Some(packets), Some(layer)) = (packets, world.get::<InLayer>(entity).map(|layer| layer.0)) {
+        tell_viewers(world, entity, layer, feet.map(|c| c.floor() as i32), packets);
+    }
+    true
 }
 
 pub(crate) fn remove(world: &mut World, id: EntityId) -> bool {

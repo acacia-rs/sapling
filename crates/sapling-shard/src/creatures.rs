@@ -31,6 +31,7 @@ mod fireballs;
 mod flight;
 mod floating;
 mod frogs;
+mod gaze;
 mod genes;
 mod ghasts;
 mod guardians;
@@ -124,6 +125,14 @@ impl Creature {
     /// One dressed as BDS announces its kind.
     pub(crate) fn plain() -> Self {
         Self { look: None }
+    }
+
+    /// Its stored look, where it has one, wears `body` in its body slot (`Armor`'s fifth entry).
+    pub(crate) fn show_body(&mut self, body: Option<sapling_world::ItemStack>) {
+        if let Some(look) = self.look.as_mut() {
+            look.armor.resize(5, None);
+            look.armor[4] = body;
+        }
     }
 }
 
@@ -238,6 +247,7 @@ pub(crate) fn tick(world: &mut World) {
             let strolls = world.resource::<crate::components::Settings>().0.mobs_stroll;
             if strolls {
                 strolling::steer(world, entity, layer, traits.strolls.or(traits.hunts.map(|hunts| hunts.speed)), traits.panics, traits.burns_in_sun);
+                gaze::tick(world, entity, layer, &kind, &start);
             }
         }
         if thinks {

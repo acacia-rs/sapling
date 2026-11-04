@@ -130,6 +130,19 @@ PREYS = {
     "minecraft:zombie_villager_v2": ZOMBIE_PREY,
 }
 
+def looks(components):
+    """`looks=<distance>:<chance>:<least>-<most ticks>` for its own `look_at_player`, and `glances`
+    for `random_look_around`, with BDS's defaults (8 blocks, 0.02 a tick, 2 to 4 seconds)."""
+    held = []
+    goal = components.get("minecraft:behavior.look_at_player")
+    if goal is not None:
+        time = goal.get("look_time", {"min": 2, "max": 4})
+        held.append(f"looks={goal.get('look_distance', 8):g}:{goal.get('probability', 0.02):g}:{round(time['min'] * 20)}-{round(time['max'] * 20)}")
+    if "minecraft:behavior.random_look_around" in components:
+        held.append("glances")
+    return held
+
+
 rows = []
 for document in packs.entities().values():
     entity = document.get("minecraft:entity")
@@ -162,6 +175,8 @@ for document in packs.entities().values():
     swim = components.get("minecraft:behavior.random_swim")
     if swim and any(name.startswith("swims=") for name in held):
         held.append(f"roams={swim.get('xz_dist', 10)}x{swim.get('y_dist', 7)}")
+    if entity["description"]["identifier"] != "minecraft:player":
+        held.extend(looks(components))
     held.extend(filter(None, [HUNTS.get(entity["description"]["identifier"]), PREYS.get(entity["description"]["identifier"])]))
     if held:
         rows.append((entity["description"]["identifier"], " ".join(held)))

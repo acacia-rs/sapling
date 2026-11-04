@@ -119,6 +119,8 @@ mod rain;
 mod last3;
 #[path = "shared/last_drill.rs"]
 mod last;
+#[path = "shared/fifth1_drill.rs"]
+mod fifth1;
 
 use std::time::{Duration, Instant};
 
@@ -177,6 +179,7 @@ const DRILLS: &[fn(&str) -> Named] = &[
     rain::drill,
     last3::drill,
     last::drill,
+    fifth1::drill,
 ];
 
 fn owned(lines: &[&str]) -> Vec<String> {
