@@ -89,7 +89,12 @@ Sapling marks the leaves in the 26 cells around a log or a leaf that goes, and a
 random tick drops it, with what a leaf leaves, unless wood is within four of it through leaves,
 which clears the mark (`blocks/leaves.rs`). Its capture has the same 26 marked in the tick and
 all of them gone 1.2 seconds on. BDS's four saplings of 26 are more than sapling's table gives
-on average, which was not looked into, and BDS's held leaf stayed marked where sapling clears it.
+on average, which was not looked into.
+
+The held leaf's mark (2026-11-04, `bds_command_probe n2leafmark`, research/captures/bds-n2leafmark.txt: the
+same row, then `/testforblock` on leaves one to five): the client was never sent the mark cleared, yet the
+four held leaves, the fourth sent marked, tested `update_bit` false and none true (the fifth was gone). BDS clears it unseen; so does sapling now (it sent the cleared
+leaf until then, `blocks/growth/rules.rs`).
 
 ## Farmland trodden down
 

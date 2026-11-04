@@ -1,7 +1,6 @@
 //! Leaves decay once the wood that held them is gone (docs/research/growth.md, "Leaves"): the
 //! leaves around a log or a leaf that went are marked, and a marked leaf's random tick drops it
-//! if no wood is near (growth/rules.rs).
-// TODO: a leaf that holds is shown with its mark cleared, where BDS's stayed marked.
+//! if no wood is near, or clears the mark unseen if wood holds it (growth/rules.rs).
 
 use std::collections::HashSet;
 
