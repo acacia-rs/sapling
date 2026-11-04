@@ -1,0 +1,1364 @@
+## drill starts at 1793833002821
+## /gamerule domobspawning false
+     17 watcher GameRulesChanged doMobSpawning=Bool(false)
+     17 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     17 actor   GameRulesChanged doMobSpawning=Bool(false)
+     17 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /kill @e[type=!player]
+   1017 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /fill 0 -61 0 44 -61 44 stone
+   2040 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /fill 0 -60 0 44 -55 44 air
+   3121 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /gamemode creative @s
+   4027 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4027 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4027 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /clear @s
+   5026 actor   InventorySlot InventorySlot { window_id: Ui, slot: 0, container: None, storage_item: None, item: ItemV4 { network_id: 0, count: 0, metadata: 0, has_stack_id: false, stack_id: None, block_runtime_id: 0, extra: Default(None) } }
+   5026 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /tp @s 10.5 -60 10.5
+   6026 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"10.50, -60.00, 10.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   6026 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "10.50", "-60.00", "10.50"]
+   6026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"10.50\"},{\"text\":\"-60.00\"},{\"text\":\"10.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+   7275 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   7275 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /gamerule randomtickspeed 0
+   8028 actor   GameRulesChanged randomTickSpeed=Int(0)
+   8028 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+   8028 watcher GameRulesChanged randomTickSpeed=Int(0)
+   8028 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill 2 -60 40 41 -60 44 lit_redstone_ore
+   9051 actor   UpdateSubchunkBlocks 2 -60 40 lit_redstone_ore[]; 2 -60 41 lit_redstone_ore[]; 2 -60 42 lit_redstone_ore[]; 2 -60 43 lit_redstone_ore[]; 2 -60 44 lit_redstone_ore[]; 3 -60 40 lit_redstone_ore[]; 3 -60 41 lit_redstone_ore[]; 3 -60 42 lit_redstone_ore[]; 3 -60 43 lit_redstone_ore[]; 3 -60 44 lit_redstone_ore[]; 4 -60 40 lit_redstone_ore[]; 4 -60 41 lit_redstone_ore[]; 4 -60 42 lit_redstone_ore[]; 4 -60 43 lit_redstone_ore[]; 4 -60 44 lit_redstone_ore[]; 5 -60 40 lit_redstone_ore[]; 5 -60 41 lit_redstone_ore[]; 5 -60 42 lit_redstone_ore[]; 5 -60 43 lit_redstone_ore[]; 5 -60 44 lit_redstone_ore[]; 6 -60 40 lit_redstone_ore[]; 6 -60 41 lit_redstone_ore[]; 6 -60 42 lit_redstone_ore[]; 6 -60 43 lit_redstone_ore[]; 6 -60 44 lit_redstone_ore[]; 7 -60 40 lit_redstone_ore[]; 7 -60 41 lit_redstone_ore[]; 7 -60 42 lit_redstone_ore[]; 7 -60 43 lit_redstone_ore[]; 7 -60 44 lit_redstone_ore[]; 8 -60 40 lit_redstone_ore[]; 8 -60 41 lit_redstone_ore[]; 8 -60 42 lit_redstone_ore[]; 8 -60 43 lit_redstone_ore[]; 8 -60 44 lit_redstone_ore[]; 9 -60 40 lit_redstone_ore[]; 9 -60 41 lit_redstone_ore[]; 9 -60 42 lit_redstone_ore[]; 9 -60 43 lit_redstone_ore[]; 9 -60 44 lit_redstone_ore[]; 10 -60 40 lit_redstone_ore[]; 10 -60 41 lit_redstone_ore[]; 10 -60 42 lit_redstone_ore[]; 10 -60 43 lit_redstone_ore[]; 10 -60 44 lit_redstone_ore[]; 11 -60 40 lit_redstone_ore[]; 11 -60 41 lit_redstone_ore[]; 11 -60 42 lit_redstone_ore[]; 11 -60 43 lit_redstone_ore[]; 11 -60 44 lit_redstone_ore[]; 12 -60 40 lit_redstone_ore[]; 12 -60 41 lit_redstone_ore[]; 12 -60 42 lit_redstone_ore[]; 12 -60 43 lit_redstone_ore[]; 12 -60 44 lit_redstone_ore[]; 13 -60 40 lit_redstone_ore[]; 13 -60 41 lit_redstone_ore[]; 13 -60 42 lit_redstone_ore[]; 13 -60 43 lit_redstone_ore[]; 13 -60 44 lit_redstone_ore[]; 14 -60 40 lit_redstone_ore[]; 14 -60 41 lit_redstone_ore[]; 14 -60 42 lit_redstone_ore[]; 14 -60 43 lit_redstone_ore[]; 14 -60 44 lit_redstone_ore[]; 15 -60 40 lit_redstone_ore[]; 15 -60 41 lit_redstone_ore[]; 15 -60 42 lit_redstone_ore[]; 15 -60 43 lit_redstone_ore[]; 15 -60 44 lit_redstone_ore[] | extra: 
+   9052 actor   UpdateSubchunkBlocks 16 -60 40 lit_redstone_ore[]; 16 -60 41 lit_redstone_ore[]; 16 -60 42 lit_redstone_ore[]; 16 -60 43 lit_redstone_ore[]; 16 -60 44 lit_redstone_ore[]; 17 -60 40 lit_redstone_ore[]; 17 -60 41 lit_redstone_ore[]; 17 -60 42 lit_redstone_ore[]; 17 -60 43 lit_redstone_ore[]; 17 -60 44 lit_redstone_ore[]; 18 -60 40 lit_redstone_ore[]; 18 -60 41 lit_redstone_ore[]; 18 -60 42 lit_redstone_ore[]; 18 -60 43 lit_redstone_ore[]; 18 -60 44 lit_redstone_ore[]; 19 -60 40 lit_redstone_ore[]; 19 -60 41 lit_redstone_ore[]; 19 -60 42 lit_redstone_ore[]; 19 -60 43 lit_redstone_ore[]; 19 -60 44 lit_redstone_ore[]; 20 -60 40 lit_redstone_ore[]; 20 -60 41 lit_redstone_ore[]; 20 -60 42 lit_redstone_ore[]; 20 -60 43 lit_redstone_ore[]; 20 -60 44 lit_redstone_ore[]; 21 -60 40 lit_redstone_ore[]; 21 -60 41 lit_redstone_ore[]; 21 -60 42 lit_redstone_ore[]; 21 -60 43 lit_redstone_ore[]; 21 -60 44 lit_redstone_ore[]; 22 -60 40 lit_redstone_ore[]; 22 -60 41 lit_redstone_ore[]; 22 -60 42 lit_redstone_ore[]; 22 -60 43 lit_redstone_ore[]; 22 -60 44 lit_redstone_ore[]; 23 -60 40 lit_redstone_ore[]; 23 -60 41 lit_redstone_ore[]; 23 -60 42 lit_redstone_ore[]; 23 -60 43 lit_redstone_ore[]; 23 -60 44 lit_redstone_ore[]; 24 -60 40 lit_redstone_ore[]; 24 -60 41 lit_redstone_ore[]; 24 -60 42 lit_redstone_ore[]; 24 -60 43 lit_redstone_ore[]; 24 -60 44 lit_redstone_ore[]; 25 -60 40 lit_redstone_ore[]; 25 -60 41 lit_redstone_ore[]; 25 -60 42 lit_redstone_ore[]; 25 -60 43 lit_redstone_ore[]; 25 -60 44 lit_redstone_ore[]; 26 -60 40 lit_redstone_ore[]; 26 -60 41 lit_redstone_ore[]; 26 -60 42 lit_redstone_ore[]; 26 -60 43 lit_redstone_ore[]; 26 -60 44 lit_redstone_ore[]; 27 -60 40 lit_redstone_ore[]; 27 -60 41 lit_redstone_ore[]; 27 -60 42 lit_redstone_ore[]; 27 -60 43 lit_redstone_ore[]; 27 -60 44 lit_redstone_ore[]; 28 -60 40 lit_redstone_ore[]; 28 -60 41 lit_redstone_ore[]; 28 -60 42 lit_redstone_ore[]; 28 -60 43 lit_redstone_ore[]; 28 -60 44 lit_redstone_ore[]; 29 -60 40 lit_redstone_ore[]; 29 -60 41 lit_redstone_ore[]; 29 -60 42 lit_redstone_ore[]; 29 -60 43 lit_redstone_ore[]; 29 -60 44 lit_redstone_ore[]; 30 -60 40 lit_redstone_ore[]; 30 -60 41 lit_redstone_ore[]; 30 -60 42 lit_redstone_ore[]; 30 -60 43 lit_redstone_ore[]; 30 -60 44 lit_redstone_ore[]; 31 -60 40 lit_redstone_ore[]; 31 -60 41 lit_redstone_ore[]; 31 -60 42 lit_redstone_ore[]; 31 -60 43 lit_redstone_ore[]; 31 -60 44 lit_redstone_ore[] | extra: 
+   9052 watcher UpdateSubchunkBlocks 2 -60 40 lit_redstone_ore[]; 2 -60 41 lit_redstone_ore[]; 2 -60 42 lit_redstone_ore[]; 2 -60 43 lit_redstone_ore[]; 2 -60 44 lit_redstone_ore[]; 3 -60 40 lit_redstone_ore[]; 3 -60 41 lit_redstone_ore[]; 3 -60 42 lit_redstone_ore[]; 3 -60 43 lit_redstone_ore[]; 3 -60 44 lit_redstone_ore[]; 4 -60 40 lit_redstone_ore[]; 4 -60 41 lit_redstone_ore[]; 4 -60 42 lit_redstone_ore[]; 4 -60 43 lit_redstone_ore[]; 4 -60 44 lit_redstone_ore[]; 5 -60 40 lit_redstone_ore[]; 5 -60 41 lit_redstone_ore[]; 5 -60 42 lit_redstone_ore[]; 5 -60 43 lit_redstone_ore[]; 5 -60 44 lit_redstone_ore[]; 6 -60 40 lit_redstone_ore[]; 6 -60 41 lit_redstone_ore[]; 6 -60 42 lit_redstone_ore[]; 6 -60 43 lit_redstone_ore[]; 6 -60 44 lit_redstone_ore[]; 7 -60 40 lit_redstone_ore[]; 7 -60 41 lit_redstone_ore[]; 7 -60 42 lit_redstone_ore[]; 7 -60 43 lit_redstone_ore[]; 7 -60 44 lit_redstone_ore[]; 8 -60 40 lit_redstone_ore[]; 8 -60 41 lit_redstone_ore[]; 8 -60 42 lit_redstone_ore[]; 8 -60 43 lit_redstone_ore[]; 8 -60 44 lit_redstone_ore[]; 9 -60 40 lit_redstone_ore[]; 9 -60 41 lit_redstone_ore[]; 9 -60 42 lit_redstone_ore[]; 9 -60 43 lit_redstone_ore[]; 9 -60 44 lit_redstone_ore[]; 10 -60 40 lit_redstone_ore[]; 10 -60 41 lit_redstone_ore[]; 10 -60 42 lit_redstone_ore[]; 10 -60 43 lit_redstone_ore[]; 10 -60 44 lit_redstone_ore[]; 11 -60 40 lit_redstone_ore[]; 11 -60 41 lit_redstone_ore[]; 11 -60 42 lit_redstone_ore[]; 11 -60 43 lit_redstone_ore[]; 11 -60 44 lit_redstone_ore[]; 12 -60 40 lit_redstone_ore[]; 12 -60 41 lit_redstone_ore[]; 12 -60 42 lit_redstone_ore[]; 12 -60 43 lit_redstone_ore[]; 12 -60 44 lit_redstone_ore[]; 13 -60 40 lit_redstone_ore[]; 13 -60 41 lit_redstone_ore[]; 13 -60 42 lit_redstone_ore[]; 13 -60 43 lit_redstone_ore[]; 13 -60 44 lit_redstone_ore[]; 14 -60 40 lit_redstone_ore[]; 14 -60 41 lit_redstone_ore[]; 14 -60 42 lit_redstone_ore[]; 14 -60 43 lit_redstone_ore[]; 14 -60 44 lit_redstone_ore[]; 15 -60 40 lit_redstone_ore[]; 15 -60 41 lit_redstone_ore[]; 15 -60 42 lit_redstone_ore[]; 15 -60 43 lit_redstone_ore[]; 15 -60 44 lit_redstone_ore[] | extra: 
+   9053 actor   UpdateSubchunkBlocks 32 -60 40 lit_redstone_ore[]; 32 -60 41 lit_redstone_ore[]; 32 -60 42 lit_redstone_ore[]; 32 -60 43 lit_redstone_ore[]; 32 -60 44 lit_redstone_ore[]; 33 -60 40 lit_redstone_ore[]; 33 -60 41 lit_redstone_ore[]; 33 -60 42 lit_redstone_ore[]; 33 -60 43 lit_redstone_ore[]; 33 -60 44 lit_redstone_ore[]; 34 -60 40 lit_redstone_ore[]; 34 -60 41 lit_redstone_ore[]; 34 -60 42 lit_redstone_ore[]; 34 -60 43 lit_redstone_ore[]; 34 -60 44 lit_redstone_ore[]; 35 -60 40 lit_redstone_ore[]; 35 -60 41 lit_redstone_ore[]; 35 -60 42 lit_redstone_ore[]; 35 -60 43 lit_redstone_ore[]; 35 -60 44 lit_redstone_ore[]; 36 -60 40 lit_redstone_ore[]; 36 -60 41 lit_redstone_ore[]; 36 -60 42 lit_redstone_ore[]; 36 -60 43 lit_redstone_ore[]; 36 -60 44 lit_redstone_ore[]; 37 -60 40 lit_redstone_ore[]; 37 -60 41 lit_redstone_ore[]; 37 -60 42 lit_redstone_ore[]; 37 -60 43 lit_redstone_ore[]; 37 -60 44 lit_redstone_ore[]; 38 -60 40 lit_redstone_ore[]; 38 -60 41 lit_redstone_ore[]; 38 -60 42 lit_redstone_ore[]; 38 -60 43 lit_redstone_ore[]; 38 -60 44 lit_redstone_ore[]; 39 -60 40 lit_redstone_ore[]; 39 -60 41 lit_redstone_ore[]; 39 -60 42 lit_redstone_ore[]; 39 -60 43 lit_redstone_ore[]; 39 -60 44 lit_redstone_ore[]; 40 -60 40 lit_redstone_ore[]; 40 -60 41 lit_redstone_ore[]; 40 -60 42 lit_redstone_ore[]; 40 -60 43 lit_redstone_ore[]; 40 -60 44 lit_redstone_ore[]; 41 -60 40 lit_redstone_ore[]; 41 -60 41 lit_redstone_ore[]; 41 -60 42 lit_redstone_ore[]; 41 -60 43 lit_redstone_ore[]; 41 -60 44 lit_redstone_ore[] | extra: 
+   9053 watcher UpdateSubchunkBlocks 16 -60 40 lit_redstone_ore[]; 16 -60 41 lit_redstone_ore[]; 16 -60 42 lit_redstone_ore[]; 16 -60 43 lit_redstone_ore[]; 16 -60 44 lit_redstone_ore[]; 17 -60 40 lit_redstone_ore[]; 17 -60 41 lit_redstone_ore[]; 17 -60 42 lit_redstone_ore[]; 17 -60 43 lit_redstone_ore[]; 17 -60 44 lit_redstone_ore[]; 18 -60 40 lit_redstone_ore[]; 18 -60 41 lit_redstone_ore[]; 18 -60 42 lit_redstone_ore[]; 18 -60 43 lit_redstone_ore[]; 18 -60 44 lit_redstone_ore[]; 19 -60 40 lit_redstone_ore[]; 19 -60 41 lit_redstone_ore[]; 19 -60 42 lit_redstone_ore[]; 19 -60 43 lit_redstone_ore[]; 19 -60 44 lit_redstone_ore[]; 20 -60 40 lit_redstone_ore[]; 20 -60 41 lit_redstone_ore[]; 20 -60 42 lit_redstone_ore[]; 20 -60 43 lit_redstone_ore[]; 20 -60 44 lit_redstone_ore[]; 21 -60 40 lit_redstone_ore[]; 21 -60 41 lit_redstone_ore[]; 21 -60 42 lit_redstone_ore[]; 21 -60 43 lit_redstone_ore[]; 21 -60 44 lit_redstone_ore[]; 22 -60 40 lit_redstone_ore[]; 22 -60 41 lit_redstone_ore[]; 22 -60 42 lit_redstone_ore[]; 22 -60 43 lit_redstone_ore[]; 22 -60 44 lit_redstone_ore[]; 23 -60 40 lit_redstone_ore[]; 23 -60 41 lit_redstone_ore[]; 23 -60 42 lit_redstone_ore[]; 23 -60 43 lit_redstone_ore[]; 23 -60 44 lit_redstone_ore[]; 24 -60 40 lit_redstone_ore[]; 24 -60 41 lit_redstone_ore[]; 24 -60 42 lit_redstone_ore[]; 24 -60 43 lit_redstone_ore[]; 24 -60 44 lit_redstone_ore[]; 25 -60 40 lit_redstone_ore[]; 25 -60 41 lit_redstone_ore[]; 25 -60 42 lit_redstone_ore[]; 25 -60 43 lit_redstone_ore[]; 25 -60 44 lit_redstone_ore[]; 26 -60 40 lit_redstone_ore[]; 26 -60 41 lit_redstone_ore[]; 26 -60 42 lit_redstone_ore[]; 26 -60 43 lit_redstone_ore[]; 26 -60 44 lit_redstone_ore[]; 27 -60 40 lit_redstone_ore[]; 27 -60 41 lit_redstone_ore[]; 27 -60 42 lit_redstone_ore[]; 27 -60 43 lit_redstone_ore[]; 27 -60 44 lit_redstone_ore[]; 28 -60 40 lit_redstone_ore[]; 28 -60 41 lit_redstone_ore[]; 28 -60 42 lit_redstone_ore[]; 28 -60 43 lit_redstone_ore[]; 28 -60 44 lit_redstone_ore[]; 29 -60 40 lit_redstone_ore[]; 29 -60 41 lit_redstone_ore[]; 29 -60 42 lit_redstone_ore[]; 29 -60 43 lit_redstone_ore[]; 29 -60 44 lit_redstone_ore[]; 30 -60 40 lit_redstone_ore[]; 30 -60 41 lit_redstone_ore[]; 30 -60 42 lit_redstone_ore[]; 30 -60 43 lit_redstone_ore[]; 30 -60 44 lit_redstone_ore[]; 31 -60 40 lit_redstone_ore[]; 31 -60 41 lit_redstone_ore[]; 31 -60 42 lit_redstone_ore[]; 31 -60 43 lit_redstone_ore[]; 31 -60 44 lit_redstone_ore[] | extra: 
+   9053 watcher UpdateSubchunkBlocks 32 -60 40 lit_redstone_ore[]; 32 -60 41 lit_redstone_ore[]; 32 -60 42 lit_redstone_ore[]; 32 -60 43 lit_redstone_ore[]; 32 -60 44 lit_redstone_ore[]; 33 -60 40 lit_redstone_ore[]; 33 -60 41 lit_redstone_ore[]; 33 -60 42 lit_redstone_ore[]; 33 -60 43 lit_redstone_ore[]; 33 -60 44 lit_redstone_ore[]; 34 -60 40 lit_redstone_ore[]; 34 -60 41 lit_redstone_ore[]; 34 -60 42 lit_redstone_ore[]; 34 -60 43 lit_redstone_ore[]; 34 -60 44 lit_redstone_ore[]; 35 -60 40 lit_redstone_ore[]; 35 -60 41 lit_redstone_ore[]; 35 -60 42 lit_redstone_ore[]; 35 -60 43 lit_redstone_ore[]; 35 -60 44 lit_redstone_ore[]; 36 -60 40 lit_redstone_ore[]; 36 -60 41 lit_redstone_ore[]; 36 -60 42 lit_redstone_ore[]; 36 -60 43 lit_redstone_ore[]; 36 -60 44 lit_redstone_ore[]; 37 -60 40 lit_redstone_ore[]; 37 -60 41 lit_redstone_ore[]; 37 -60 42 lit_redstone_ore[]; 37 -60 43 lit_redstone_ore[]; 37 -60 44 lit_redstone_ore[]; 38 -60 40 lit_redstone_ore[]; 38 -60 41 lit_redstone_ore[]; 38 -60 42 lit_redstone_ore[]; 38 -60 43 lit_redstone_ore[]; 38 -60 44 lit_redstone_ore[]; 39 -60 40 lit_redstone_ore[]; 39 -60 41 lit_redstone_ore[]; 39 -60 42 lit_redstone_ore[]; 39 -60 43 lit_redstone_ore[]; 39 -60 44 lit_redstone_ore[]; 40 -60 40 lit_redstone_ore[]; 40 -60 41 lit_redstone_ore[]; 40 -60 42 lit_redstone_ore[]; 40 -60 43 lit_redstone_ore[]; 40 -60 44 lit_redstone_ore[]; 41 -60 40 lit_redstone_ore[]; 41 -60 41 lit_redstone_ore[]; 41 -60 42 lit_redstone_ore[]; 41 -60 43 lit_redstone_ore[]; 41 -60 44 lit_redstone_ore[] | extra: 
+   9053 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["200"]
+   9053 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"200\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed 1
+  10026 actor   GameRulesChanged randomTickSpeed=Int(1)
+  10026 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "1"]
+  10026 watcher GameRulesChanged randomTickSpeed=Int(1)
+  10027 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10426 actor   UpdateBlock 12 -60 43 layer 0 redstone_ore[]
+  10426 watcher UpdateBlock 12 -60 43 layer 0 redstone_ore[]
+## /
+  11126 actor   UpdateBlock 20 -60 40 layer 0 redstone_ore[]
+  11126 watcher UpdateBlock 20 -60 40 layer 0 redstone_ore[]
+  11176 actor   UpdateBlock 40 -60 43 layer 0 redstone_ore[]
+  11176 watcher UpdateBlock 40 -60 43 layer 0 redstone_ore[]
+  11576 actor   UpdateBlock 21 -60 44 layer 0 redstone_ore[]
+  11576 watcher UpdateBlock 21 -60 44 layer 0 redstone_ore[]
+  11777 actor   UpdateBlock 8 -60 42 layer 0 redstone_ore[]
+  11777 watcher UpdateBlock 8 -60 42 layer 0 redstone_ore[]
+## /
+  12078 actor   UpdateBlock 13 -60 41 layer 0 redstone_ore[]
+  12078 watcher UpdateBlock 13 -60 41 layer 0 redstone_ore[]
+## /
+  13827 actor   UpdateBlock 36 -60 44 layer 0 redstone_ore[]
+  13827 watcher UpdateBlock 36 -60 44 layer 0 redstone_ore[]
+## /
+  14376 watcher UpdateBlock 33 -60 42 layer 0 redstone_ore[]
+  14376 actor   UpdateBlock 33 -60 42 layer 0 redstone_ore[]
+  14876 watcher UpdateBlock 30 -60 41 layer 0 redstone_ore[]
+  14876 actor   UpdateBlock 30 -60 41 layer 0 redstone_ore[]
+## /
+  15177 watcher UpdateBlock 8 -60 44 layer 0 redstone_ore[]
+  15177 actor   UpdateBlock 8 -60 44 layer 0 redstone_ore[]
+  15327 watcher UpdateBlock 39 -60 40 layer 0 redstone_ore[]
+  15328 actor   UpdateBlock 39 -60 40 layer 0 redstone_ore[]
+## /
+  16225 watcher UpdateBlock 15 -60 40 layer 0 redstone_ore[]
+  16225 actor   UpdateBlock 15 -60 40 layer 0 redstone_ore[]
+  16376 actor   UpdateBlock 24 -60 43 layer 0 redstone_ore[]
+  16376 watcher UpdateBlock 24 -60 43 layer 0 redstone_ore[]
+  16426 watcher UpdateBlock 38 -60 40 layer 0 redstone_ore[]
+  16426 actor   UpdateBlock 38 -60 40 layer 0 redstone_ore[]
+  17028 watcher UpdateBlock 9 -60 43 layer 0 redstone_ore[]
+  17028 actor   UpdateBlock 9 -60 43 layer 0 redstone_ore[]
+## /
+  17477 watcher UpdateBlock 24 -60 42 layer 0 redstone_ore[]
+  17478 actor   UpdateBlock 24 -60 42 layer 0 redstone_ore[]
+## /
+  18128 actor   UpdateBlock 37 -60 43 layer 0 redstone_ore[]
+  18128 watcher UpdateBlock 37 -60 43 layer 0 redstone_ore[]
+  18277 watcher UpdateBlock 20 -60 41 layer 0 redstone_ore[]
+  18277 actor   UpdateBlock 20 -60 41 layer 0 redstone_ore[]
+  18728 watcher UpdateBlock 6 -60 41 layer 0 redstone_ore[]
+  18728 actor   UpdateBlock 6 -60 41 layer 0 redstone_ore[]
+  18978 watcher UpdateBlock 9 -60 44 layer 0 redstone_ore[]
+  18978 actor   UpdateBlock 9 -60 44 layer 0 redstone_ore[]
+## /
+## /
+  20078 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  20078 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  20128 actor   UpdateBlock 15 -60 41 layer 0 redstone_ore[]
+  20128 watcher UpdateBlock 15 -60 41 layer 0 redstone_ore[]
+## /
+  21076 watcher UpdateBlock 16 -60 44 layer 0 redstone_ore[]
+  21076 actor   UpdateBlock 16 -60 44 layer 0 redstone_ore[]
+  21375 actor   UpdateBlock 23 -60 40 layer 0 redstone_ore[]
+  21375 watcher UpdateBlock 23 -60 40 layer 0 redstone_ore[]
+  21577 watcher UpdateBlock 26 -60 43 layer 0 redstone_ore[]
+  21577 actor   UpdateBlock 26 -60 43 layer 0 redstone_ore[]
+## /
+## /
+  23176 watcher UpdateBlock 34 -60 40 layer 0 redstone_ore[]
+  23176 actor   UpdateBlock 34 -60 40 layer 0 redstone_ore[]
+  23625 watcher UpdateBlock 19 -60 41 layer 0 redstone_ore[]
+  23626 actor   UpdateBlock 19 -60 41 layer 0 redstone_ore[]
+## /
+  24375 watcher UpdateBlock 15 -60 43 layer 0 redstone_ore[]
+  24375 actor   UpdateBlock 15 -60 43 layer 0 redstone_ore[]
+  25026 watcher UpdateBlock 39 -60 42 layer 0 redstone_ore[]
+  25026 actor   UpdateBlock 39 -60 42 layer 0 redstone_ore[]
+## /
+  25126 watcher UpdateBlock 25 -60 41 layer 0 redstone_ore[]
+  25126 actor   UpdateBlock 25 -60 41 layer 0 redstone_ore[]
+  25175 watcher UpdateBlock 15 -60 42 layer 0 redstone_ore[]
+  25176 actor   UpdateBlock 15 -60 42 layer 0 redstone_ore[]
+  25879 watcher UpdateBlock 18 -60 44 layer 0 redstone_ore[]
+  25879 actor   UpdateBlock 18 -60 44 layer 0 redstone_ore[]
+## /
+  26525 actor   UpdateBlock 14 -60 44 layer 0 redstone_ore[]
+  26526 watcher UpdateBlock 14 -60 44 layer 0 redstone_ore[]
+## /
+  27876 watcher UpdateBlock 38 -60 44 layer 0 redstone_ore[]
+  27876 actor   UpdateBlock 38 -60 44 layer 0 redstone_ore[]
+## /
+  28775 actor   UpdateBlock 20 -60 42 layer 0 redstone_ore[]
+  28775 watcher UpdateBlock 20 -60 42 layer 0 redstone_ore[]
+## /
+  29725 actor   UpdateBlock 35 -60 43 layer 0 redstone_ore[]
+  29725 watcher UpdateBlock 35 -60 43 layer 0 redstone_ore[]
+  29975 actor   UpdateBlock 26 -60 42 layer 0 redstone_ore[]
+  29975 watcher UpdateBlock 26 -60 42 layer 0 redstone_ore[]
+## /
+  30876 watcher UpdateBlock 35 -60 41 layer 0 redstone_ore[]
+  30876 actor   UpdateBlock 35 -60 41 layer 0 redstone_ore[]
+## /
+  31828 watcher UpdateBlock 26 -60 44 layer 0 redstone_ore[]
+  31828 actor   UpdateBlock 26 -60 44 layer 0 redstone_ore[]
+## /
+  32875 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  32876 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+  33076 actor   UpdateBlock 10 -60 41 layer 0 redstone_ore[]
+  33076 watcher UpdateBlock 10 -60 41 layer 0 redstone_ore[]
+  33427 watcher UpdateBlock 4 -60 42 layer 0 redstone_ore[]
+  33427 actor   UpdateBlock 4 -60 42 layer 0 redstone_ore[]
+  33978 watcher UpdateBlock 26 -60 41 layer 0 redstone_ore[]
+  33978 actor   UpdateBlock 26 -60 41 layer 0 redstone_ore[]
+## /
+## /
+## /
+  36276 actor   UpdateBlock 41 -60 44 layer 0 redstone_ore[]
+  36276 watcher UpdateBlock 41 -60 44 layer 0 redstone_ore[]
+## /
+  37226 actor   UpdateBlock 14 -60 41 layer 0 redstone_ore[]
+  37226 watcher UpdateBlock 14 -60 41 layer 0 redstone_ore[]
+  37726 actor   UpdateBlock 27 -60 41 layer 0 redstone_ore[]
+  37726 watcher UpdateBlock 27 -60 41 layer 0 redstone_ore[]
+## /
+  38325 watcher UpdateBlock 32 -60 43 layer 0 redstone_ore[]
+  38325 actor   UpdateBlock 32 -60 43 layer 0 redstone_ore[]
+## /
+  39278 watcher UpdateBlock 32 -60 42 layer 0 redstone_ore[]
+  39278 actor   UpdateBlock 32 -60 42 layer 0 redstone_ore[]
+  40075 actor   UpdateBlock 13 -60 42 layer 0 redstone_ore[]
+  40075 watcher UpdateBlock 13 -60 42 layer 0 redstone_ore[]
+## /
+## /
+  41125 actor   UpdateBlock 11 -60 41 layer 0 redstone_ore[]
+  41125 watcher UpdateBlock 11 -60 41 layer 0 redstone_ore[]
+  41225 actor   UpdateBlock 24 -60 44 layer 0 redstone_ore[]
+  41225 watcher UpdateBlock 24 -60 44 layer 0 redstone_ore[]
+  41726 watcher UpdateBlock 34 -60 43 layer 0 redstone_ore[]
+  41726 actor   UpdateBlock 34 -60 43 layer 0 redstone_ore[]
+  42025 watcher UpdateBlock 39 -60 43 layer 0 redstone_ore[]
+  42025 actor   UpdateBlock 39 -60 43 layer 0 redstone_ore[]
+  42075 actor   UpdateBlock 9 -60 41 layer 0 redstone_ore[]
+  42075 watcher UpdateBlock 9 -60 41 layer 0 redstone_ore[]
+## /
+  42376 actor   UpdateBlock 3 -60 42 layer 0 redstone_ore[]
+  42376 watcher UpdateBlock 3 -60 42 layer 0 redstone_ore[]
+## /
+## /
+  44176 actor   UpdateBlock 4 -60 40 layer 0 redstone_ore[]
+  44176 watcher UpdateBlock 4 -60 40 layer 0 redstone_ore[]
+  44475 actor   UpdateBlock 40 -60 44 layer 0 redstone_ore[]
+  44475 watcher UpdateBlock 40 -60 44 layer 0 redstone_ore[]
+  44826 actor   UpdateSubchunkBlocks 2 -60 43 redstone_ore[]; 11 -60 40 redstone_ore[] | extra: 
+  44826 watcher UpdateSubchunkBlocks 2 -60 43 redstone_ore[]; 11 -60 40 redstone_ore[] | extra: 
+## /
+  45425 actor   UpdateBlock 5 -60 40 layer 0 redstone_ore[]
+  45426 watcher UpdateBlock 5 -60 40 layer 0 redstone_ore[]
+  45676 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  45676 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  46076 actor   UpdateBlock 35 -60 44 layer 0 redstone_ore[]
+  46076 watcher UpdateBlock 35 -60 44 layer 0 redstone_ore[]
+## /
+  46726 actor   UpdateSubchunkBlocks 31 -60 43 redstone_ore[]; 28 -60 42 redstone_ore[] | extra: 
+  46726 watcher UpdateSubchunkBlocks 31 -60 43 redstone_ore[]; 28 -60 42 redstone_ore[] | extra: 
+## /
+## /
+## /
+  49127 watcher UpdateBlock 3 -60 40 layer 0 redstone_ore[]
+  49127 actor   UpdateBlock 3 -60 40 layer 0 redstone_ore[]
+  49226 watcher UpdateBlock 19 -60 44 layer 0 redstone_ore[]
+  49226 actor   UpdateBlock 19 -60 44 layer 0 redstone_ore[]
+## /
+  50926 watcher UpdateBlock 29 -60 42 layer 0 redstone_ore[]
+  50926 actor   UpdateBlock 29 -60 42 layer 0 redstone_ore[]
+## /
+  51425 watcher UpdateBlock 24 -60 41 layer 0 redstone_ore[]
+  51425 actor   UpdateBlock 24 -60 41 layer 0 redstone_ore[]
+  51575 actor   UpdateBlock 28 -60 43 layer 0 redstone_ore[]
+  51575 watcher UpdateBlock 28 -60 43 layer 0 redstone_ore[]
+  51625 actor   UpdateBlock 32 -60 41 layer 0 redstone_ore[]
+  51625 watcher UpdateBlock 32 -60 41 layer 0 redstone_ore[]
+## /
+## /
+  53525 actor   UpdateBlock 20 -60 43 layer 0 redstone_ore[]
+  53525 watcher UpdateBlock 20 -60 43 layer 0 redstone_ore[]
+  53976 actor   UpdateBlock 9 -60 40 layer 0 redstone_ore[]
+  53976 watcher UpdateBlock 9 -60 40 layer 0 redstone_ore[]
+## /
+  54127 watcher UpdateBlock 24 -60 40 layer 0 redstone_ore[]
+  54127 actor   UpdateBlock 24 -60 40 layer 0 redstone_ore[]
+  54426 actor   UpdateBlock 17 -60 44 layer 0 redstone_ore[]
+  54426 watcher UpdateBlock 17 -60 44 layer 0 redstone_ore[]
+  54775 watcher UpdateBlock 3 -60 43 layer 0 redstone_ore[]
+  54775 actor   UpdateBlock 3 -60 43 layer 0 redstone_ore[]
+  54826 actor   UpdateBlock 16 -60 40 layer 0 redstone_ore[]
+  54827 watcher UpdateBlock 16 -60 40 layer 0 redstone_ore[]
+## /
+## /
+  56925 actor   UpdateBlock 17 -60 40 layer 0 redstone_ore[]
+  56926 watcher UpdateBlock 17 -60 40 layer 0 redstone_ore[]
+## /
+  57376 actor   UpdateBlock 4 -60 41 layer 0 redstone_ore[]
+  57376 watcher UpdateBlock 4 -60 41 layer 0 redstone_ore[]
+  58026 actor   UpdateBlock 10 -60 44 layer 0 redstone_ore[]
+  58026 watcher UpdateBlock 10 -60 44 layer 0 redstone_ore[]
+## /
+  58475 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  58476 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  58677 watcher UpdateBlock 13 -60 44 layer 0 redstone_ore[]
+  58677 actor   UpdateBlock 13 -60 44 layer 0 redstone_ore[]
+  59025 watcher UpdateBlock 11 -60 44 layer 0 redstone_ore[]
+  59026 actor   UpdateBlock 11 -60 44 layer 0 redstone_ore[]
+## /
+  59376 watcher UpdateBlock 17 -60 42 layer 0 redstone_ore[]
+  59376 actor   UpdateBlock 17 -60 42 layer 0 redstone_ore[]
+## /
+## /
+## /
+  62328 watcher UpdateBlock 29 -60 43 layer 0 redstone_ore[]
+  62328 actor   UpdateBlock 29 -60 43 layer 0 redstone_ore[]
+  62877 actor   UpdateBlock 37 -60 41 layer 0 redstone_ore[]
+  62877 watcher UpdateBlock 37 -60 41 layer 0 redstone_ore[]
+  63129 actor   UpdateBlock 40 -60 42 layer 0 redstone_ore[]
+  63129 watcher UpdateBlock 40 -60 42 layer 0 redstone_ore[]
+## /
+  63378 watcher UpdateSubchunkBlocks 35 -60 42 redstone_ore[]; 39 -60 41 redstone_ore[] | extra: 
+  63378 actor   UpdateSubchunkBlocks 35 -60 42 redstone_ore[]; 39 -60 41 redstone_ore[] | extra: 
+## /
+  64327 watcher UpdateBlock 8 -60 41 layer 0 redstone_ore[]
+  64327 actor   UpdateBlock 8 -60 41 layer 0 redstone_ore[]
+## /
+  65428 watcher UpdateBlock 16 -60 43 layer 0 redstone_ore[]
+  65428 actor   UpdateBlock 16 -60 43 layer 0 redstone_ore[]
+  66077 actor   UpdateBlock 13 -60 40 layer 0 redstone_ore[]
+  66078 watcher UpdateBlock 13 -60 40 layer 0 redstone_ore[]
+## /
+## /
+## /
+## /
+  69526 watcher UpdateBlock 10 -60 40 layer 0 redstone_ore[]
+  69526 actor   UpdateBlock 10 -60 40 layer 0 redstone_ore[]
+## /
+  70375 watcher UpdateBlock 2 -60 44 layer 0 redstone_ore[]
+  70375 actor   UpdateBlock 2 -60 44 layer 0 redstone_ore[]
+  70425 watcher UpdateBlock 30 -60 44 layer 0 redstone_ore[]
+  70425 actor   UpdateBlock 30 -60 44 layer 0 redstone_ore[]
+  70876 actor   UpdateBlock 6 -60 44 layer 0 redstone_ore[]
+  70876 watcher UpdateBlock 6 -60 44 layer 0 redstone_ore[]
+  70926 actor   UpdateBlock 21 -60 41 layer 0 redstone_ore[]
+  70926 watcher UpdateBlock 21 -60 41 layer 0 redstone_ore[]
+## /
+  71275 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  71275 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  71876 actor   UpdateBlock 16 -60 41 layer 0 redstone_ore[]
+  71876 watcher UpdateBlock 16 -60 41 layer 0 redstone_ore[]
+## /
+  72876 actor   UpdateBlock 4 -60 43 layer 0 redstone_ore[]
+  72876 watcher UpdateBlock 4 -60 43 layer 0 redstone_ore[]
+## /
+  73725 watcher UpdateBlock 10 -60 42 layer 0 redstone_ore[]
+  73725 actor   UpdateBlock 10 -60 42 layer 0 redstone_ore[]
+  73926 watcher UpdateBlock 5 -60 42 layer 0 redstone_ore[]
+  73926 actor   UpdateBlock 5 -60 42 layer 0 redstone_ore[]
+  74025 actor   UpdateBlock 17 -60 41 layer 0 redstone_ore[]
+  74026 watcher UpdateBlock 17 -60 41 layer 0 redstone_ore[]
+## /
+  74275 watcher UpdateBlock 25 -60 44 layer 0 redstone_ore[]
+  74275 actor   UpdateBlock 25 -60 44 layer 0 redstone_ore[]
+  74425 watcher UpdateBlock 21 -60 43 layer 0 redstone_ore[]
+  74426 actor   UpdateBlock 21 -60 43 layer 0 redstone_ore[]
+  75078 actor   UpdateBlock 25 -60 42 layer 0 redstone_ore[]
+  75078 watcher UpdateBlock 25 -60 42 layer 0 redstone_ore[]
+## /
+  75576 watcher UpdateBlock 6 -60 42 layer 0 redstone_ore[]
+  75576 actor   UpdateBlock 6 -60 42 layer 0 redstone_ore[]
+## /
+## /
+## /
+  79027 watcher UpdateBlock 15 -60 44 layer 0 redstone_ore[]
+  79027 actor   UpdateBlock 15 -60 44 layer 0 redstone_ore[]
+## /
+## /
+  80578 actor   UpdateBlock 36 -60 41 layer 0 redstone_ore[]
+  80578 watcher UpdateBlock 36 -60 41 layer 0 redstone_ore[]
+  80627 watcher UpdateBlock 14 -60 42 layer 0 redstone_ore[]
+  80627 actor   UpdateBlock 14 -60 42 layer 0 redstone_ore[]
+  80775 actor   UpdateBlock 31 -60 41 layer 0 redstone_ore[]
+  80775 watcher UpdateBlock 31 -60 41 layer 0 redstone_ore[]
+  80976 actor   UpdateBlock 7 -60 42 layer 0 redstone_ore[]
+  80976 watcher UpdateBlock 7 -60 42 layer 0 redstone_ore[]
+## /
+  81526 watcher UpdateBlock 19 -60 40 layer 0 redstone_ore[]
+  81526 actor   UpdateBlock 19 -60 40 layer 0 redstone_ore[]
+  82025 actor   UpdateBlock 16 -60 42 layer 0 redstone_ore[]
+  82026 watcher UpdateBlock 16 -60 42 layer 0 redstone_ore[]
+## /
+## /
+  84075 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+  84075 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8049, paused: false }] }) }
+## /
+  84227 watcher UpdateBlock 31 -60 44 layer 0 redstone_ore[]
+  84228 actor   UpdateBlock 31 -60 44 layer 0 redstone_ore[]
+  84977 actor   UpdateBlock 19 -60 42 layer 0 redstone_ore[]
+  84977 watcher UpdateBlock 19 -60 42 layer 0 redstone_ore[]
+## /
+  86077 watcher UpdateBlock 2 -60 40 layer 0 redstone_ore[]
+  86077 actor   UpdateBlock 2 -60 40 layer 0 redstone_ore[]
+## /
+## /
+  88076 actor   UpdateBlock 41 -60 43 layer 0 redstone_ore[]
+  88076 watcher UpdateBlock 41 -60 43 layer 0 redstone_ore[]
+## /
+  88276 actor   UpdateBlock 28 -60 44 layer 0 redstone_ore[]
+  88276 watcher UpdateBlock 28 -60 44 layer 0 redstone_ore[]
+## /
+  89375 watcher UpdateBlock 38 -60 42 layer 0 redstone_ore[]
+  89376 actor   UpdateBlock 38 -60 42 layer 0 redstone_ore[]
+  89525 watcher UpdateBlock 29 -60 40 layer 0 redstone_ore[]
+  89526 actor   UpdateBlock 29 -60 40 layer 0 redstone_ore[]
+  90175 watcher UpdateBlock 18 -60 43 layer 0 redstone_ore[]
+  90175 actor   UpdateBlock 18 -60 43 layer 0 redstone_ore[]
+## /
+## /
+  91278 watcher UpdateBlock 33 -60 43 layer 0 redstone_ore[]
+  91279 actor   UpdateBlock 33 -60 43 layer 0 redstone_ore[]
+  91977 watcher UpdateBlock 33 -60 40 layer 0 redstone_ore[]
+  91977 actor   UpdateBlock 33 -60 40 layer 0 redstone_ore[]
+## /
+  93177 watcher UpdateBlock 28 -60 41 layer 0 redstone_ore[]
+  93177 actor   UpdateBlock 28 -60 41 layer 0 redstone_ore[]
+## /
+## /
+  94326 watcher UpdateBlock 37 -60 42 layer 0 redstone_ore[]
+  94326 actor   UpdateBlock 37 -60 42 layer 0 redstone_ore[]
+## /
+  95476 watcher UpdateBlock 27 -60 43 layer 0 redstone_ore[]
+  95476 actor   UpdateBlock 27 -60 43 layer 0 redstone_ore[]
+## /
+  96878 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8305, paused: false }] }) }
+  96878 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8305, paused: false }] }) }
+  96928 actor   UpdateBlock 30 -60 40 layer 0 redstone_ore[]
+  96928 watcher UpdateBlock 30 -60 40 layer 0 redstone_ore[]
+## /
+## /
+## /
+ 100176 watcher UpdateBlock 20 -60 44 layer 0 redstone_ore[]
+ 100176 actor   UpdateBlock 20 -60 44 layer 0 redstone_ore[]
+## /
+ 100525 actor   UpdateBlock 3 -60 41 layer 0 redstone_ore[]
+ 100526 watcher UpdateBlock 3 -60 41 layer 0 redstone_ore[]
+## /
+ 101930 watcher UpdateBlock 4 -60 44 layer 0 redstone_ore[]
+ 101930 actor   UpdateBlock 4 -60 44 layer 0 redstone_ore[]
+ 102077 actor   UpdateBlock 27 -60 42 layer 0 redstone_ore[]
+ 102077 watcher UpdateBlock 27 -60 42 layer 0 redstone_ore[]
+## /gamerule randomtickspeed 0
+ 102279 watcher GameRulesChanged randomTickSpeed=Int(0)
+ 102279 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 102279 actor   GameRulesChanged randomTickSpeed=Int(0)
+ 102279 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+## /fill 2 -60 14 41 -60 44 air
+ 103334 watcher UpdateSubchunkBlocks 2 -60 40 air[]; 2 -60 41 air[]; 2 -60 42 air[]; 2 -60 43 air[]; 2 -60 44 air[]; 3 -60 40 air[]; 3 -60 41 air[]; 3 -60 42 air[]; 3 -60 43 air[]; 3 -60 44 air[]; 4 -60 40 air[]; 4 -60 41 air[]; 4 -60 42 air[]; 4 -60 43 air[]; 4 -60 44 air[]; 5 -60 40 air[]; 5 -60 41 air[]; 5 -60 42 air[]; 5 -60 43 air[]; 5 -60 44 air[]; 6 -60 40 air[]; 6 -60 41 air[]; 6 -60 42 air[]; 6 -60 43 air[]; 6 -60 44 air[]; 7 -60 40 air[]; 7 -60 41 air[]; 7 -60 42 air[]; 7 -60 43 air[]; 7 -60 44 air[]; 8 -60 40 air[]; 8 -60 41 air[]; 8 -60 42 air[]; 8 -60 43 air[]; 8 -60 44 air[]; 9 -60 40 air[]; 9 -60 41 air[]; 9 -60 42 air[]; 9 -60 43 air[]; 9 -60 44 air[]; 10 -60 40 air[]; 10 -60 41 air[]; 10 -60 42 air[]; 10 -60 43 air[]; 10 -60 44 air[]; 11 -60 40 air[]; 11 -60 41 air[]; 11 -60 42 air[]; 11 -60 43 air[]; 11 -60 44 air[]; 12 -60 40 air[]; 12 -60 41 air[]; 12 -60 42 air[]; 12 -60 43 air[]; 12 -60 44 air[]; 13 -60 40 air[]; 13 -60 41 air[]; 13 -60 42 air[]; 13 -60 43 air[]; 13 -60 44 air[]; 14 -60 40 air[]; 14 -60 41 air[]; 14 -60 42 air[]; 14 -60 43 air[]; 14 -60 44 air[]; 15 -60 40 air[]; 15 -60 41 air[]; 15 -60 42 air[]; 15 -60 43 air[]; 15 -60 44 air[] | extra: 
+ 103335 actor   UpdateSubchunkBlocks 2 -60 40 air[]; 2 -60 41 air[]; 2 -60 42 air[]; 2 -60 43 air[]; 2 -60 44 air[]; 3 -60 40 air[]; 3 -60 41 air[]; 3 -60 42 air[]; 3 -60 43 air[]; 3 -60 44 air[]; 4 -60 40 air[]; 4 -60 41 air[]; 4 -60 42 air[]; 4 -60 43 air[]; 4 -60 44 air[]; 5 -60 40 air[]; 5 -60 41 air[]; 5 -60 42 air[]; 5 -60 43 air[]; 5 -60 44 air[]; 6 -60 40 air[]; 6 -60 41 air[]; 6 -60 42 air[]; 6 -60 43 air[]; 6 -60 44 air[]; 7 -60 40 air[]; 7 -60 41 air[]; 7 -60 42 air[]; 7 -60 43 air[]; 7 -60 44 air[]; 8 -60 40 air[]; 8 -60 41 air[]; 8 -60 42 air[]; 8 -60 43 air[]; 8 -60 44 air[]; 9 -60 40 air[]; 9 -60 41 air[]; 9 -60 42 air[]; 9 -60 43 air[]; 9 -60 44 air[]; 10 -60 40 air[]; 10 -60 41 air[]; 10 -60 42 air[]; 10 -60 43 air[]; 10 -60 44 air[]; 11 -60 40 air[]; 11 -60 41 air[]; 11 -60 42 air[]; 11 -60 43 air[]; 11 -60 44 air[]; 12 -60 40 air[]; 12 -60 41 air[]; 12 -60 42 air[]; 12 -60 43 air[]; 12 -60 44 air[]; 13 -60 40 air[]; 13 -60 41 air[]; 13 -60 42 air[]; 13 -60 43 air[]; 13 -60 44 air[]; 14 -60 40 air[]; 14 -60 41 air[]; 14 -60 42 air[]; 14 -60 43 air[]; 14 -60 44 air[]; 15 -60 40 air[]; 15 -60 41 air[]; 15 -60 42 air[]; 15 -60 43 air[]; 15 -60 44 air[] | extra: 
+ 103335 watcher UpdateSubchunkBlocks 16 -60 40 air[]; 16 -60 41 air[]; 16 -60 42 air[]; 16 -60 43 air[]; 16 -60 44 air[]; 17 -60 40 air[]; 17 -60 41 air[]; 17 -60 42 air[]; 17 -60 43 air[]; 17 -60 44 air[]; 18 -60 40 air[]; 18 -60 41 air[]; 18 -60 42 air[]; 18 -60 43 air[]; 18 -60 44 air[]; 19 -60 40 air[]; 19 -60 41 air[]; 19 -60 42 air[]; 19 -60 43 air[]; 19 -60 44 air[]; 20 -60 40 air[]; 20 -60 41 air[]; 20 -60 42 air[]; 20 -60 43 air[]; 20 -60 44 air[]; 21 -60 40 air[]; 21 -60 41 air[]; 21 -60 42 air[]; 21 -60 43 air[]; 21 -60 44 air[]; 22 -60 40 air[]; 22 -60 41 air[]; 22 -60 42 air[]; 22 -60 43 air[]; 22 -60 44 air[]; 23 -60 40 air[]; 23 -60 41 air[]; 23 -60 42 air[]; 23 -60 43 air[]; 23 -60 44 air[]; 24 -60 40 air[]; 24 -60 41 air[]; 24 -60 42 air[]; 24 -60 43 air[]; 24 -60 44 air[]; 25 -60 40 air[]; 25 -60 41 air[]; 25 -60 42 air[]; 25 -60 43 air[]; 25 -60 44 air[]; 26 -60 40 air[]; 26 -60 41 air[]; 26 -60 42 air[]; 26 -60 43 air[]; 26 -60 44 air[]; 27 -60 40 air[]; 27 -60 41 air[]; 27 -60 42 air[]; 27 -60 43 air[]; 27 -60 44 air[]; 28 -60 40 air[]; 28 -60 41 air[]; 28 -60 42 air[]; 28 -60 43 air[]; 28 -60 44 air[]; 29 -60 40 air[]; 29 -60 41 air[]; 29 -60 42 air[]; 29 -60 43 air[]; 29 -60 44 air[]; 30 -60 40 air[]; 30 -60 41 air[]; 30 -60 42 air[]; 30 -60 43 air[]; 30 -60 44 air[]; 31 -60 40 air[]; 31 -60 41 air[]; 31 -60 42 air[]; 31 -60 43 air[]; 31 -60 44 air[] | extra: 
+ 103336 actor   UpdateSubchunkBlocks 16 -60 40 air[]; 16 -60 41 air[]; 16 -60 42 air[]; 16 -60 43 air[]; 16 -60 44 air[]; 17 -60 40 air[]; 17 -60 41 air[]; 17 -60 42 air[]; 17 -60 43 air[]; 17 -60 44 air[]; 18 -60 40 air[]; 18 -60 41 air[]; 18 -60 42 air[]; 18 -60 43 air[]; 18 -60 44 air[]; 19 -60 40 air[]; 19 -60 41 air[]; 19 -60 42 air[]; 19 -60 43 air[]; 19 -60 44 air[]; 20 -60 40 air[]; 20 -60 41 air[]; 20 -60 42 air[]; 20 -60 43 air[]; 20 -60 44 air[]; 21 -60 40 air[]; 21 -60 41 air[]; 21 -60 42 air[]; 21 -60 43 air[]; 21 -60 44 air[]; 22 -60 40 air[]; 22 -60 41 air[]; 22 -60 42 air[]; 22 -60 43 air[]; 22 -60 44 air[]; 23 -60 40 air[]; 23 -60 41 air[]; 23 -60 42 air[]; 23 -60 43 air[]; 23 -60 44 air[]; 24 -60 40 air[]; 24 -60 41 air[]; 24 -60 42 air[]; 24 -60 43 air[]; 24 -60 44 air[]; 25 -60 40 air[]; 25 -60 41 air[]; 25 -60 42 air[]; 25 -60 43 air[]; 25 -60 44 air[]; 26 -60 40 air[]; 26 -60 41 air[]; 26 -60 42 air[]; 26 -60 43 air[]; 26 -60 44 air[]; 27 -60 40 air[]; 27 -60 41 air[]; 27 -60 42 air[]; 27 -60 43 air[]; 27 -60 44 air[]; 28 -60 40 air[]; 28 -60 41 air[]; 28 -60 42 air[]; 28 -60 43 air[]; 28 -60 44 air[]; 29 -60 40 air[]; 29 -60 41 air[]; 29 -60 42 air[]; 29 -60 43 air[]; 29 -60 44 air[]; 30 -60 40 air[]; 30 -60 41 air[]; 30 -60 42 air[]; 30 -60 43 air[]; 30 -60 44 air[]; 31 -60 40 air[]; 31 -60 41 air[]; 31 -60 42 air[]; 31 -60 43 air[]; 31 -60 44 air[] | extra: 
+ 103336 actor   UpdateSubchunkBlocks 32 -60 40 air[]; 32 -60 41 air[]; 32 -60 42 air[]; 32 -60 43 air[]; 32 -60 44 air[]; 33 -60 40 air[]; 33 -60 41 air[]; 33 -60 42 air[]; 33 -60 43 air[]; 33 -60 44 air[]; 34 -60 40 air[]; 34 -60 41 air[]; 34 -60 42 air[]; 34 -60 43 air[]; 34 -60 44 air[]; 35 -60 40 air[]; 35 -60 41 air[]; 35 -60 42 air[]; 35 -60 43 air[]; 35 -60 44 air[]; 36 -60 40 air[]; 36 -60 41 air[]; 36 -60 42 air[]; 36 -60 43 air[]; 36 -60 44 air[]; 37 -60 40 air[]; 37 -60 41 air[]; 37 -60 42 air[]; 37 -60 43 air[]; 37 -60 44 air[]; 38 -60 40 air[]; 38 -60 41 air[]; 38 -60 42 air[]; 38 -60 43 air[]; 38 -60 44 air[]; 39 -60 40 air[]; 39 -60 41 air[]; 39 -60 42 air[]; 39 -60 43 air[]; 39 -60 44 air[]; 40 -60 40 air[]; 40 -60 41 air[]; 40 -60 42 air[]; 40 -60 43 air[]; 40 -60 44 air[]; 41 -60 40 air[]; 41 -60 41 air[]; 41 -60 42 air[]; 41 -60 43 air[]; 41 -60 44 air[] | extra: 
+ 103337 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["200"]
+ 103337 watcher UpdateSubchunkBlocks 32 -60 40 air[]; 32 -60 41 air[]; 32 -60 42 air[]; 32 -60 43 air[]; 32 -60 44 air[]; 33 -60 40 air[]; 33 -60 41 air[]; 33 -60 42 air[]; 33 -60 43 air[]; 33 -60 44 air[]; 34 -60 40 air[]; 34 -60 41 air[]; 34 -60 42 air[]; 34 -60 43 air[]; 34 -60 44 air[]; 35 -60 40 air[]; 35 -60 41 air[]; 35 -60 42 air[]; 35 -60 43 air[]; 35 -60 44 air[]; 36 -60 40 air[]; 36 -60 41 air[]; 36 -60 42 air[]; 36 -60 43 air[]; 36 -60 44 air[]; 37 -60 40 air[]; 37 -60 41 air[]; 37 -60 42 air[]; 37 -60 43 air[]; 37 -60 44 air[]; 38 -60 40 air[]; 38 -60 41 air[]; 38 -60 42 air[]; 38 -60 43 air[]; 38 -60 44 air[]; 39 -60 40 air[]; 39 -60 41 air[]; 39 -60 42 air[]; 39 -60 43 air[]; 39 -60 44 air[]; 40 -60 40 air[]; 40 -60 41 air[]; 40 -60 42 air[]; 40 -60 43 air[]; 40 -60 44 air[]; 41 -60 40 air[]; 41 -60 41 air[]; 41 -60 42 air[]; 41 -60 43 air[]; 41 -60 44 air[] | extra: 
+ 103337 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"200\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /fill 2 -60 40 41 -60 44 lit_redstone_ore
+ 105344 actor   UpdateSubchunkBlocks 2 -60 40 lit_redstone_ore[]; 2 -60 41 lit_redstone_ore[]; 2 -60 42 lit_redstone_ore[]; 2 -60 43 lit_redstone_ore[]; 2 -60 44 lit_redstone_ore[]; 3 -60 40 lit_redstone_ore[]; 3 -60 41 lit_redstone_ore[]; 3 -60 42 lit_redstone_ore[]; 3 -60 43 lit_redstone_ore[]; 3 -60 44 lit_redstone_ore[]; 4 -60 40 lit_redstone_ore[]; 4 -60 41 lit_redstone_ore[]; 4 -60 42 lit_redstone_ore[]; 4 -60 43 lit_redstone_ore[]; 4 -60 44 lit_redstone_ore[]; 5 -60 40 lit_redstone_ore[]; 5 -60 41 lit_redstone_ore[]; 5 -60 42 lit_redstone_ore[]; 5 -60 43 lit_redstone_ore[]; 5 -60 44 lit_redstone_ore[]; 6 -60 40 lit_redstone_ore[]; 6 -60 41 lit_redstone_ore[]; 6 -60 42 lit_redstone_ore[]; 6 -60 43 lit_redstone_ore[]; 6 -60 44 lit_redstone_ore[]; 7 -60 40 lit_redstone_ore[]; 7 -60 41 lit_redstone_ore[]; 7 -60 42 lit_redstone_ore[]; 7 -60 43 lit_redstone_ore[]; 7 -60 44 lit_redstone_ore[]; 8 -60 40 lit_redstone_ore[]; 8 -60 41 lit_redstone_ore[]; 8 -60 42 lit_redstone_ore[]; 8 -60 43 lit_redstone_ore[]; 8 -60 44 lit_redstone_ore[]; 9 -60 40 lit_redstone_ore[]; 9 -60 41 lit_redstone_ore[]; 9 -60 42 lit_redstone_ore[]; 9 -60 43 lit_redstone_ore[]; 9 -60 44 lit_redstone_ore[]; 10 -60 40 lit_redstone_ore[]; 10 -60 41 lit_redstone_ore[]; 10 -60 42 lit_redstone_ore[]; 10 -60 43 lit_redstone_ore[]; 10 -60 44 lit_redstone_ore[]; 11 -60 40 lit_redstone_ore[]; 11 -60 41 lit_redstone_ore[]; 11 -60 42 lit_redstone_ore[]; 11 -60 43 lit_redstone_ore[]; 11 -60 44 lit_redstone_ore[]; 12 -60 40 lit_redstone_ore[]; 12 -60 41 lit_redstone_ore[]; 12 -60 42 lit_redstone_ore[]; 12 -60 43 lit_redstone_ore[]; 12 -60 44 lit_redstone_ore[]; 13 -60 40 lit_redstone_ore[]; 13 -60 41 lit_redstone_ore[]; 13 -60 42 lit_redstone_ore[]; 13 -60 43 lit_redstone_ore[]; 13 -60 44 lit_redstone_ore[]; 14 -60 40 lit_redstone_ore[]; 14 -60 41 lit_redstone_ore[]; 14 -60 42 lit_redstone_ore[]; 14 -60 43 lit_redstone_ore[]; 14 -60 44 lit_redstone_ore[]; 15 -60 40 lit_redstone_ore[]; 15 -60 41 lit_redstone_ore[]; 15 -60 42 lit_redstone_ore[]; 15 -60 43 lit_redstone_ore[]; 15 -60 44 lit_redstone_ore[] | extra: 
+ 105345 actor   UpdateSubchunkBlocks 16 -60 40 lit_redstone_ore[]; 16 -60 41 lit_redstone_ore[]; 16 -60 42 lit_redstone_ore[]; 16 -60 43 lit_redstone_ore[]; 16 -60 44 lit_redstone_ore[]; 17 -60 40 lit_redstone_ore[]; 17 -60 41 lit_redstone_ore[]; 17 -60 42 lit_redstone_ore[]; 17 -60 43 lit_redstone_ore[]; 17 -60 44 lit_redstone_ore[]; 18 -60 40 lit_redstone_ore[]; 18 -60 41 lit_redstone_ore[]; 18 -60 42 lit_redstone_ore[]; 18 -60 43 lit_redstone_ore[]; 18 -60 44 lit_redstone_ore[]; 19 -60 40 lit_redstone_ore[]; 19 -60 41 lit_redstone_ore[]; 19 -60 42 lit_redstone_ore[]; 19 -60 43 lit_redstone_ore[]; 19 -60 44 lit_redstone_ore[]; 20 -60 40 lit_redstone_ore[]; 20 -60 41 lit_redstone_ore[]; 20 -60 42 lit_redstone_ore[]; 20 -60 43 lit_redstone_ore[]; 20 -60 44 lit_redstone_ore[]; 21 -60 40 lit_redstone_ore[]; 21 -60 41 lit_redstone_ore[]; 21 -60 42 lit_redstone_ore[]; 21 -60 43 lit_redstone_ore[]; 21 -60 44 lit_redstone_ore[]; 22 -60 40 lit_redstone_ore[]; 22 -60 41 lit_redstone_ore[]; 22 -60 42 lit_redstone_ore[]; 22 -60 43 lit_redstone_ore[]; 22 -60 44 lit_redstone_ore[]; 23 -60 40 lit_redstone_ore[]; 23 -60 41 lit_redstone_ore[]; 23 -60 42 lit_redstone_ore[]; 23 -60 43 lit_redstone_ore[]; 23 -60 44 lit_redstone_ore[]; 24 -60 40 lit_redstone_ore[]; 24 -60 41 lit_redstone_ore[]; 24 -60 42 lit_redstone_ore[]; 24 -60 43 lit_redstone_ore[]; 24 -60 44 lit_redstone_ore[]; 25 -60 40 lit_redstone_ore[]; 25 -60 41 lit_redstone_ore[]; 25 -60 42 lit_redstone_ore[]; 25 -60 43 lit_redstone_ore[]; 25 -60 44 lit_redstone_ore[]; 26 -60 40 lit_redstone_ore[]; 26 -60 41 lit_redstone_ore[]; 26 -60 42 lit_redstone_ore[]; 26 -60 43 lit_redstone_ore[]; 26 -60 44 lit_redstone_ore[]; 27 -60 40 lit_redstone_ore[]; 27 -60 41 lit_redstone_ore[]; 27 -60 42 lit_redstone_ore[]; 27 -60 43 lit_redstone_ore[]; 27 -60 44 lit_redstone_ore[]; 28 -60 40 lit_redstone_ore[]; 28 -60 41 lit_redstone_ore[]; 28 -60 42 lit_redstone_ore[]; 28 -60 43 lit_redstone_ore[]; 28 -60 44 lit_redstone_ore[]; 29 -60 40 lit_redstone_ore[]; 29 -60 41 lit_redstone_ore[]; 29 -60 42 lit_redstone_ore[]; 29 -60 43 lit_redstone_ore[]; 29 -60 44 lit_redstone_ore[]; 30 -60 40 lit_redstone_ore[]; 30 -60 41 lit_redstone_ore[]; 30 -60 42 lit_redstone_ore[]; 30 -60 43 lit_redstone_ore[]; 30 -60 44 lit_redstone_ore[]; 31 -60 40 lit_redstone_ore[]; 31 -60 41 lit_redstone_ore[]; 31 -60 42 lit_redstone_ore[]; 31 -60 43 lit_redstone_ore[]; 31 -60 44 lit_redstone_ore[] | extra: 
+ 105346 actor   UpdateSubchunkBlocks 32 -60 40 lit_redstone_ore[]; 32 -60 41 lit_redstone_ore[]; 32 -60 42 lit_redstone_ore[]; 32 -60 43 lit_redstone_ore[]; 32 -60 44 lit_redstone_ore[]; 33 -60 40 lit_redstone_ore[]; 33 -60 41 lit_redstone_ore[]; 33 -60 42 lit_redstone_ore[]; 33 -60 43 lit_redstone_ore[]; 33 -60 44 lit_redstone_ore[]; 34 -60 40 lit_redstone_ore[]; 34 -60 41 lit_redstone_ore[]; 34 -60 42 lit_redstone_ore[]; 34 -60 43 lit_redstone_ore[]; 34 -60 44 lit_redstone_ore[]; 35 -60 40 lit_redstone_ore[]; 35 -60 41 lit_redstone_ore[]; 35 -60 42 lit_redstone_ore[]; 35 -60 43 lit_redstone_ore[]; 35 -60 44 lit_redstone_ore[]; 36 -60 40 lit_redstone_ore[]; 36 -60 41 lit_redstone_ore[]; 36 -60 42 lit_redstone_ore[]; 36 -60 43 lit_redstone_ore[]; 36 -60 44 lit_redstone_ore[]; 37 -60 40 lit_redstone_ore[]; 37 -60 41 lit_redstone_ore[]; 37 -60 42 lit_redstone_ore[]; 37 -60 43 lit_redstone_ore[]; 37 -60 44 lit_redstone_ore[]; 38 -60 40 lit_redstone_ore[]; 38 -60 41 lit_redstone_ore[]; 38 -60 42 lit_redstone_ore[]; 38 -60 43 lit_redstone_ore[]; 38 -60 44 lit_redstone_ore[]; 39 -60 40 lit_redstone_ore[]; 39 -60 41 lit_redstone_ore[]; 39 -60 42 lit_redstone_ore[]; 39 -60 43 lit_redstone_ore[]; 39 -60 44 lit_redstone_ore[]; 40 -60 40 lit_redstone_ore[]; 40 -60 41 lit_redstone_ore[]; 40 -60 42 lit_redstone_ore[]; 40 -60 43 lit_redstone_ore[]; 40 -60 44 lit_redstone_ore[]; 41 -60 40 lit_redstone_ore[]; 41 -60 41 lit_redstone_ore[]; 41 -60 42 lit_redstone_ore[]; 41 -60 43 lit_redstone_ore[]; 41 -60 44 lit_redstone_ore[] | extra: 
+ 105346 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["200"]
+ 105346 watcher UpdateSubchunkBlocks 2 -60 40 lit_redstone_ore[]; 2 -60 41 lit_redstone_ore[]; 2 -60 42 lit_redstone_ore[]; 2 -60 43 lit_redstone_ore[]; 2 -60 44 lit_redstone_ore[]; 3 -60 40 lit_redstone_ore[]; 3 -60 41 lit_redstone_ore[]; 3 -60 42 lit_redstone_ore[]; 3 -60 43 lit_redstone_ore[]; 3 -60 44 lit_redstone_ore[]; 4 -60 40 lit_redstone_ore[]; 4 -60 41 lit_redstone_ore[]; 4 -60 42 lit_redstone_ore[]; 4 -60 43 lit_redstone_ore[]; 4 -60 44 lit_redstone_ore[]; 5 -60 40 lit_redstone_ore[]; 5 -60 41 lit_redstone_ore[]; 5 -60 42 lit_redstone_ore[]; 5 -60 43 lit_redstone_ore[]; 5 -60 44 lit_redstone_ore[]; 6 -60 40 lit_redstone_ore[]; 6 -60 41 lit_redstone_ore[]; 6 -60 42 lit_redstone_ore[]; 6 -60 43 lit_redstone_ore[]; 6 -60 44 lit_redstone_ore[]; 7 -60 40 lit_redstone_ore[]; 7 -60 41 lit_redstone_ore[]; 7 -60 42 lit_redstone_ore[]; 7 -60 43 lit_redstone_ore[]; 7 -60 44 lit_redstone_ore[]; 8 -60 40 lit_redstone_ore[]; 8 -60 41 lit_redstone_ore[]; 8 -60 42 lit_redstone_ore[]; 8 -60 43 lit_redstone_ore[]; 8 -60 44 lit_redstone_ore[]; 9 -60 40 lit_redstone_ore[]; 9 -60 41 lit_redstone_ore[]; 9 -60 42 lit_redstone_ore[]; 9 -60 43 lit_redstone_ore[]; 9 -60 44 lit_redstone_ore[]; 10 -60 40 lit_redstone_ore[]; 10 -60 41 lit_redstone_ore[]; 10 -60 42 lit_redstone_ore[]; 10 -60 43 lit_redstone_ore[]; 10 -60 44 lit_redstone_ore[]; 11 -60 40 lit_redstone_ore[]; 11 -60 41 lit_redstone_ore[]; 11 -60 42 lit_redstone_ore[]; 11 -60 43 lit_redstone_ore[]; 11 -60 44 lit_redstone_ore[]; 12 -60 40 lit_redstone_ore[]; 12 -60 41 lit_redstone_ore[]; 12 -60 42 lit_redstone_ore[]; 12 -60 43 lit_redstone_ore[]; 12 -60 44 lit_redstone_ore[]; 13 -60 40 lit_redstone_ore[]; 13 -60 41 lit_redstone_ore[]; 13 -60 42 lit_redstone_ore[]; 13 -60 43 lit_redstone_ore[]; 13 -60 44 lit_redstone_ore[]; 14 -60 40 lit_redstone_ore[]; 14 -60 41 lit_redstone_ore[]; 14 -60 42 lit_redstone_ore[]; 14 -60 43 lit_redstone_ore[]; 14 -60 44 lit_redstone_ore[]; 15 -60 40 lit_redstone_ore[]; 15 -60 41 lit_redstone_ore[]; 15 -60 42 lit_redstone_ore[]; 15 -60 43 lit_redstone_ore[]; 15 -60 44 lit_redstone_ore[] | extra: 
+ 105347 watcher UpdateSubchunkBlocks 16 -60 40 lit_redstone_ore[]; 16 -60 41 lit_redstone_ore[]; 16 -60 42 lit_redstone_ore[]; 16 -60 43 lit_redstone_ore[]; 16 -60 44 lit_redstone_ore[]; 17 -60 40 lit_redstone_ore[]; 17 -60 41 lit_redstone_ore[]; 17 -60 42 lit_redstone_ore[]; 17 -60 43 lit_redstone_ore[]; 17 -60 44 lit_redstone_ore[]; 18 -60 40 lit_redstone_ore[]; 18 -60 41 lit_redstone_ore[]; 18 -60 42 lit_redstone_ore[]; 18 -60 43 lit_redstone_ore[]; 18 -60 44 lit_redstone_ore[]; 19 -60 40 lit_redstone_ore[]; 19 -60 41 lit_redstone_ore[]; 19 -60 42 lit_redstone_ore[]; 19 -60 43 lit_redstone_ore[]; 19 -60 44 lit_redstone_ore[]; 20 -60 40 lit_redstone_ore[]; 20 -60 41 lit_redstone_ore[]; 20 -60 42 lit_redstone_ore[]; 20 -60 43 lit_redstone_ore[]; 20 -60 44 lit_redstone_ore[]; 21 -60 40 lit_redstone_ore[]; 21 -60 41 lit_redstone_ore[]; 21 -60 42 lit_redstone_ore[]; 21 -60 43 lit_redstone_ore[]; 21 -60 44 lit_redstone_ore[]; 22 -60 40 lit_redstone_ore[]; 22 -60 41 lit_redstone_ore[]; 22 -60 42 lit_redstone_ore[]; 22 -60 43 lit_redstone_ore[]; 22 -60 44 lit_redstone_ore[]; 23 -60 40 lit_redstone_ore[]; 23 -60 41 lit_redstone_ore[]; 23 -60 42 lit_redstone_ore[]; 23 -60 43 lit_redstone_ore[]; 23 -60 44 lit_redstone_ore[]; 24 -60 40 lit_redstone_ore[]; 24 -60 41 lit_redstone_ore[]; 24 -60 42 lit_redstone_ore[]; 24 -60 43 lit_redstone_ore[]; 24 -60 44 lit_redstone_ore[]; 25 -60 40 lit_redstone_ore[]; 25 -60 41 lit_redstone_ore[]; 25 -60 42 lit_redstone_ore[]; 25 -60 43 lit_redstone_ore[]; 25 -60 44 lit_redstone_ore[]; 26 -60 40 lit_redstone_ore[]; 26 -60 41 lit_redstone_ore[]; 26 -60 42 lit_redstone_ore[]; 26 -60 43 lit_redstone_ore[]; 26 -60 44 lit_redstone_ore[]; 27 -60 40 lit_redstone_ore[]; 27 -60 41 lit_redstone_ore[]; 27 -60 42 lit_redstone_ore[]; 27 -60 43 lit_redstone_ore[]; 27 -60 44 lit_redstone_ore[]; 28 -60 40 lit_redstone_ore[]; 28 -60 41 lit_redstone_ore[]; 28 -60 42 lit_redstone_ore[]; 28 -60 43 lit_redstone_ore[]; 28 -60 44 lit_redstone_ore[]; 29 -60 40 lit_redstone_ore[]; 29 -60 41 lit_redstone_ore[]; 29 -60 42 lit_redstone_ore[]; 29 -60 43 lit_redstone_ore[]; 29 -60 44 lit_redstone_ore[]; 30 -60 40 lit_redstone_ore[]; 30 -60 41 lit_redstone_ore[]; 30 -60 42 lit_redstone_ore[]; 30 -60 43 lit_redstone_ore[]; 30 -60 44 lit_redstone_ore[]; 31 -60 40 lit_redstone_ore[]; 31 -60 41 lit_redstone_ore[]; 31 -60 42 lit_redstone_ore[]; 31 -60 43 lit_redstone_ore[]; 31 -60 44 lit_redstone_ore[] | extra: 
+ 105347 watcher UpdateSubchunkBlocks 32 -60 40 lit_redstone_ore[]; 32 -60 41 lit_redstone_ore[]; 32 -60 42 lit_redstone_ore[]; 32 -60 43 lit_redstone_ore[]; 32 -60 44 lit_redstone_ore[]; 33 -60 40 lit_redstone_ore[]; 33 -60 41 lit_redstone_ore[]; 33 -60 42 lit_redstone_ore[]; 33 -60 43 lit_redstone_ore[]; 33 -60 44 lit_redstone_ore[]; 34 -60 40 lit_redstone_ore[]; 34 -60 41 lit_redstone_ore[]; 34 -60 42 lit_redstone_ore[]; 34 -60 43 lit_redstone_ore[]; 34 -60 44 lit_redstone_ore[]; 35 -60 40 lit_redstone_ore[]; 35 -60 41 lit_redstone_ore[]; 35 -60 42 lit_redstone_ore[]; 35 -60 43 lit_redstone_ore[]; 35 -60 44 lit_redstone_ore[]; 36 -60 40 lit_redstone_ore[]; 36 -60 41 lit_redstone_ore[]; 36 -60 42 lit_redstone_ore[]; 36 -60 43 lit_redstone_ore[]; 36 -60 44 lit_redstone_ore[]; 37 -60 40 lit_redstone_ore[]; 37 -60 41 lit_redstone_ore[]; 37 -60 42 lit_redstone_ore[]; 37 -60 43 lit_redstone_ore[]; 37 -60 44 lit_redstone_ore[]; 38 -60 40 lit_redstone_ore[]; 38 -60 41 lit_redstone_ore[]; 38 -60 42 lit_redstone_ore[]; 38 -60 43 lit_redstone_ore[]; 38 -60 44 lit_redstone_ore[]; 39 -60 40 lit_redstone_ore[]; 39 -60 41 lit_redstone_ore[]; 39 -60 42 lit_redstone_ore[]; 39 -60 43 lit_redstone_ore[]; 39 -60 44 lit_redstone_ore[]; 40 -60 40 lit_redstone_ore[]; 40 -60 41 lit_redstone_ore[]; 40 -60 42 lit_redstone_ore[]; 40 -60 43 lit_redstone_ore[]; 40 -60 44 lit_redstone_ore[]; 41 -60 40 lit_redstone_ore[]; 41 -60 41 lit_redstone_ore[]; 41 -60 42 lit_redstone_ore[]; 41 -60 43 lit_redstone_ore[]; 41 -60 44 lit_redstone_ore[] | extra: 
+ 105348 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"200\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule randomtickspeed 20
+ 106257 actor   GameRulesChanged randomTickSpeed=Int(20)
+ 106257 watcher GameRulesChanged randomTickSpeed=Int(20)
+ 106257 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "20"]
+ 106257 actor   UpdateBlock 41 -60 44 layer 0 redstone_ore[]
+ 106257 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"20\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 106258 actor   UpdateBlock 11 -60 40 layer 0 redstone_ore[]
+ 106258 watcher UpdateBlock 41 -60 44 layer 0 redstone_ore[]
+ 106258 actor   UpdateBlock 28 -60 41 layer 0 redstone_ore[]
+ 106258 watcher UpdateBlock 11 -60 40 layer 0 redstone_ore[]
+ 106258 watcher UpdateBlock 28 -60 41 layer 0 redstone_ore[]
+ 106303 watcher UpdateBlock 2 -60 40 layer 0 redstone_ore[]
+ 106303 watcher UpdateSubchunkBlocks 21 -60 44 redstone_ore[]; 27 -60 40 redstone_ore[] | extra: 
+ 106303 actor   UpdateBlock 2 -60 40 layer 0 redstone_ore[]
+ 106303 actor   UpdateSubchunkBlocks 21 -60 44 redstone_ore[]; 27 -60 40 redstone_ore[] | extra: 
+ 106354 watcher UpdateBlock 31 -60 44 layer 0 redstone_ore[]
+ 106354 watcher UpdateSubchunkBlocks 10 -60 41 redstone_ore[]; 8 -60 42 redstone_ore[]; 5 -60 42 redstone_ore[] | extra: 
+ 106354 actor   UpdateBlock 31 -60 44 layer 0 redstone_ore[]
+ 106354 actor   UpdateSubchunkBlocks 10 -60 41 redstone_ore[]; 8 -60 42 redstone_ore[]; 5 -60 42 redstone_ore[] | extra: 
+ 106403 actor   UpdateBlock 26 -60 42 layer 0 redstone_ore[]
+ 106403 watcher UpdateBlock 26 -60 42 layer 0 redstone_ore[]
+ 106461 actor   UpdateBlock 3 -60 40 layer 0 redstone_ore[]
+ 106461 watcher UpdateBlock 3 -60 40 layer 0 redstone_ore[]
+ 106503 actor   UpdateBlock 34 -60 40 layer 0 redstone_ore[]
+ 106503 watcher UpdateBlock 34 -60 40 layer 0 redstone_ore[]
+ 106553 actor   UpdateSubchunkBlocks 38 -60 40 redstone_ore[]; 38 -60 44 redstone_ore[] | extra: 
+ 106553 actor   UpdateSubchunkBlocks 12 -60 42 redstone_ore[]; 15 -60 44 redstone_ore[] | extra: 
+ 106553 actor   UpdateSubchunkBlocks 25 -60 42 redstone_ore[]; 25 -60 44 redstone_ore[] | extra: 
+ 106553 watcher UpdateSubchunkBlocks 38 -60 40 redstone_ore[]; 38 -60 44 redstone_ore[] | extra: 
+ 106553 watcher UpdateSubchunkBlocks 12 -60 42 redstone_ore[]; 15 -60 44 redstone_ore[] | extra: 
+ 106553 watcher UpdateSubchunkBlocks 25 -60 42 redstone_ore[]; 25 -60 44 redstone_ore[] | extra: 
+ 106604 actor   UpdateBlock 16 -60 43 layer 0 redstone_ore[]
+ 106604 actor   UpdateBlock 40 -60 40 layer 0 redstone_ore[]
+ 106604 watcher UpdateBlock 16 -60 43 layer 0 redstone_ore[]
+ 106604 watcher UpdateBlock 40 -60 40 layer 0 redstone_ore[]
+ 106657 actor   UpdateBlock 10 -60 42 layer 0 redstone_ore[]
+ 106657 watcher UpdateBlock 10 -60 42 layer 0 redstone_ore[]
+ 106704 watcher UpdateSubchunkBlocks 2 -60 41 redstone_ore[]; 10 -60 44 redstone_ore[]; 15 -60 40 redstone_ore[] | extra: 
+ 106705 actor   UpdateSubchunkBlocks 2 -60 41 redstone_ore[]; 10 -60 44 redstone_ore[]; 15 -60 40 redstone_ore[] | extra: 
+ 106753 watcher UpdateBlock 6 -60 41 layer 0 redstone_ore[]
+ 106754 actor   UpdateBlock 6 -60 41 layer 0 redstone_ore[]
+ 106852 actor   UpdateSubchunkBlocks 12 -60 40 redstone_ore[]; 3 -60 42 redstone_ore[] | extra: 
+ 106852 watcher UpdateSubchunkBlocks 12 -60 40 redstone_ore[]; 3 -60 42 redstone_ore[] | extra: 
+ 106902 watcher UpdateBlock 13 -60 43 layer 0 redstone_ore[]
+ 106902 watcher UpdateSubchunkBlocks 16 -60 40 redstone_ore[]; 23 -60 42 redstone_ore[] | extra: 
+ 106902 watcher UpdateSubchunkBlocks 41 -60 40 redstone_ore[]; 35 -60 40 redstone_ore[] | extra: 
+ 106902 actor   UpdateBlock 13 -60 43 layer 0 redstone_ore[]
+ 106902 actor   UpdateSubchunkBlocks 16 -60 40 redstone_ore[]; 23 -60 42 redstone_ore[] | extra: 
+ 106902 actor   UpdateSubchunkBlocks 41 -60 40 redstone_ore[]; 35 -60 40 redstone_ore[] | extra: 
+ 107000 watcher UpdateSubchunkBlocks 29 -60 40 redstone_ore[]; 28 -60 40 redstone_ore[] | extra: 
+ 107000 watcher UpdateSubchunkBlocks 5 -60 44 redstone_ore[]; 12 -60 43 redstone_ore[] | extra: 
+ 107001 actor   UpdateSubchunkBlocks 29 -60 40 redstone_ore[]; 28 -60 40 redstone_ore[] | extra: 
+ 107001 actor   UpdateSubchunkBlocks 5 -60 44 redstone_ore[]; 12 -60 43 redstone_ore[] | extra: 
+ 107050 watcher UpdateBlock 38 -60 43 layer 0 redstone_ore[]
+ 107050 actor   UpdateBlock 38 -60 43 layer 0 redstone_ore[]
+ 107104 watcher UpdateBlock 30 -60 41 layer 0 redstone_ore[]
+ 107104 watcher UpdateBlock 14 -60 40 layer 0 redstone_ore[]
+ 107104 actor   UpdateBlock 30 -60 41 layer 0 redstone_ore[]
+ 107104 actor   UpdateBlock 14 -60 40 layer 0 redstone_ore[]
+ 107152 actor   UpdateBlock 29 -60 41 layer 0 redstone_ore[]
+ 107152 actor   UpdateSubchunkBlocks 3 -60 43 redstone_ore[]; 7 -60 42 redstone_ore[] | extra: 
+ 107152 watcher UpdateBlock 29 -60 41 layer 0 redstone_ore[]
+ 107152 watcher UpdateSubchunkBlocks 3 -60 43 redstone_ore[]; 7 -60 42 redstone_ore[] | extra: 
+ 107201 actor   UpdateBlock 20 -60 40 layer 0 redstone_ore[]
+ 107202 watcher UpdateBlock 20 -60 40 layer 0 redstone_ore[]
+ 107202 actor   UpdateBlock 39 -60 41 layer 0 redstone_ore[]
+ 107202 watcher UpdateBlock 39 -60 41 layer 0 redstone_ore[]
+## /
+ 107251 watcher UpdateBlock 39 -60 44 layer 0 redstone_ore[]
+ 107251 watcher UpdateBlock 17 -60 43 layer 0 redstone_ore[]
+ 107251 watcher UpdateSubchunkBlocks 10 -60 43 redstone_ore[]; 6 -60 40 redstone_ore[]; 12 -60 44 redstone_ore[] | extra: 
+ 107251 actor   UpdateBlock 39 -60 44 layer 0 redstone_ore[]
+ 107251 actor   UpdateBlock 17 -60 43 layer 0 redstone_ore[]
+ 107251 actor   UpdateSubchunkBlocks 10 -60 43 redstone_ore[]; 6 -60 40 redstone_ore[]; 12 -60 44 redstone_ore[] | extra: 
+ 107301 watcher UpdateBlock 4 -60 44 layer 0 redstone_ore[]
+ 107301 watcher UpdateBlock 39 -60 43 layer 0 redstone_ore[]
+ 107302 watcher UpdateSubchunkBlocks 24 -60 41 redstone_ore[]; 30 -60 43 redstone_ore[] | extra: 
+ 107302 actor   UpdateBlock 4 -60 44 layer 0 redstone_ore[]
+ 107302 actor   UpdateBlock 39 -60 43 layer 0 redstone_ore[]
+ 107302 actor   UpdateSubchunkBlocks 24 -60 41 redstone_ore[]; 30 -60 43 redstone_ore[] | extra: 
+ 107349 watcher UpdateBlock 15 -60 43 layer 0 redstone_ore[]
+ 107349 watcher UpdateBlock 21 -60 41 layer 0 redstone_ore[]
+ 107349 actor   UpdateBlock 15 -60 43 layer 0 redstone_ore[]
+ 107349 actor   UpdateBlock 21 -60 41 layer 0 redstone_ore[]
+ 107407 watcher UpdateBlock 26 -60 43 layer 0 redstone_ore[]
+ 107407 actor   UpdateBlock 26 -60 43 layer 0 redstone_ore[]
+ 107449 watcher UpdateBlock 2 -60 42 layer 0 redstone_ore[]
+ 107449 watcher UpdateSubchunkBlocks 30 -60 44 redstone_ore[]; 31 -60 41 redstone_ore[]; 25 -60 40 redstone_ore[] | extra: 
+ 107450 actor   UpdateBlock 2 -60 42 layer 0 redstone_ore[]
+ 107450 actor   UpdateSubchunkBlocks 30 -60 44 redstone_ore[]; 31 -60 41 redstone_ore[]; 25 -60 40 redstone_ore[] | extra: 
+ 107499 watcher UpdateBlock 36 -60 41 layer 0 redstone_ore[]
+ 107500 actor   UpdateBlock 36 -60 41 layer 0 redstone_ore[]
+ 107549 watcher UpdateBlock 13 -60 40 layer 0 redstone_ore[]
+ 107549 watcher UpdateBlock 33 -60 41 layer 0 redstone_ore[]
+ 107549 watcher UpdateBlock 27 -60 41 layer 0 redstone_ore[]
+ 107549 actor   UpdateBlock 13 -60 40 layer 0 redstone_ore[]
+ 107549 actor   UpdateBlock 33 -60 41 layer 0 redstone_ore[]
+ 107549 actor   UpdateBlock 27 -60 41 layer 0 redstone_ore[]
+ 107600 watcher UpdateBlock 9 -60 43 layer 0 redstone_ore[]
+ 107600 watcher UpdateSubchunkBlocks 41 -60 43 redstone_ore[]; 32 -60 44 redstone_ore[] | extra: 
+ 107600 actor   UpdateBlock 9 -60 43 layer 0 redstone_ore[]
+ 107600 actor   UpdateSubchunkBlocks 41 -60 43 redstone_ore[]; 32 -60 44 redstone_ore[] | extra: 
+ 107650 watcher UpdateBlock 28 -60 43 layer 0 redstone_ore[]
+ 107650 actor   UpdateBlock 28 -60 43 layer 0 redstone_ore[]
+ 107700 watcher UpdateBlock 39 -60 40 layer 0 redstone_ore[]
+ 107700 watcher UpdateBlock 3 -60 44 layer 0 redstone_ore[]
+ 107700 watcher UpdateSubchunkBlocks 25 -60 41 redstone_ore[]; 17 -60 41 redstone_ore[] | extra: 
+ 107700 actor   UpdateBlock 39 -60 40 layer 0 redstone_ore[]
+ 107700 actor   UpdateBlock 3 -60 44 layer 0 redstone_ore[]
+ 107700 actor   UpdateSubchunkBlocks 25 -60 41 redstone_ore[]; 17 -60 41 redstone_ore[] | extra: 
+ 107752 watcher UpdateBlock 34 -60 42 layer 0 redstone_ore[]
+ 107752 watcher UpdateSubchunkBlocks 22 -60 44 redstone_ore[]; 21 -60 40 redstone_ore[] | extra: 
+ 107752 actor   UpdateBlock 34 -60 42 layer 0 redstone_ore[]
+ 107752 actor   UpdateSubchunkBlocks 22 -60 44 redstone_ore[]; 21 -60 40 redstone_ore[] | extra: 
+ 107800 watcher UpdateBlock 9 -60 44 layer 0 redstone_ore[]
+ 107800 watcher UpdateSubchunkBlocks 38 -60 42 redstone_ore[]; 41 -60 42 redstone_ore[] | extra: 
+ 107800 actor   UpdateBlock 9 -60 44 layer 0 redstone_ore[]
+ 107800 actor   UpdateSubchunkBlocks 38 -60 42 redstone_ore[]; 41 -60 42 redstone_ore[] | extra: 
+ 107850 watcher UpdateSubchunkBlocks 22 -60 42 redstone_ore[]; 29 -60 43 redstone_ore[] | extra: 
+ 107851 actor   UpdateSubchunkBlocks 22 -60 42 redstone_ore[]; 29 -60 43 redstone_ore[] | extra: 
+ 107951 watcher UpdateBlock 7 -60 43 layer 0 redstone_ore[]
+ 107951 watcher UpdateBlock 29 -60 42 layer 0 redstone_ore[]
+ 107951 actor   UpdateBlock 7 -60 43 layer 0 redstone_ore[]
+ 107951 actor   UpdateBlock 29 -60 42 layer 0 redstone_ore[]
+ 107999 watcher UpdateBlock 15 -60 42 layer 0 redstone_ore[]
+ 107999 actor   UpdateBlock 15 -60 42 layer 0 redstone_ore[]
+ 108051 watcher UpdateBlock 33 -60 44 layer 0 redstone_ore[]
+ 108051 watcher UpdateBlock 9 -60 41 layer 0 redstone_ore[]
+ 108051 actor   UpdateBlock 33 -60 44 layer 0 redstone_ore[]
+ 108051 actor   UpdateBlock 9 -60 41 layer 0 redstone_ore[]
+ 108150 watcher UpdateBlock 4 -60 43 layer 0 redstone_ore[]
+ 108150 actor   UpdateBlock 4 -60 43 layer 0 redstone_ore[]
+ 108200 watcher UpdateBlock 26 -60 41 layer 0 redstone_ore[]
+ 108200 watcher UpdateBlock 6 -60 42 layer 0 redstone_ore[]
+ 108200 actor   UpdateBlock 26 -60 41 layer 0 redstone_ore[]
+ 108200 actor   UpdateBlock 6 -60 42 layer 0 redstone_ore[]
+## /
+ 108249 watcher UpdateBlock 20 -60 42 layer 0 redstone_ore[]
+ 108249 actor   UpdateBlock 20 -60 42 layer 0 redstone_ore[]
+ 108299 watcher UpdateBlock 37 -60 42 layer 0 redstone_ore[]
+ 108300 actor   UpdateBlock 37 -60 42 layer 0 redstone_ore[]
+ 108450 watcher UpdateBlock 17 -60 40 layer 0 redstone_ore[]
+ 108450 watcher UpdateBlock 36 -60 42 layer 0 redstone_ore[]
+ 108450 watcher UpdateBlock 3 -60 41 layer 0 redstone_ore[]
+ 108450 actor   UpdateBlock 17 -60 40 layer 0 redstone_ore[]
+ 108450 actor   UpdateBlock 36 -60 42 layer 0 redstone_ore[]
+ 108450 actor   UpdateBlock 3 -60 41 layer 0 redstone_ore[]
+ 108501 watcher UpdateBlock 30 -60 40 layer 0 redstone_ore[]
+ 108501 actor   UpdateBlock 30 -60 40 layer 0 redstone_ore[]
+ 108550 watcher UpdateSubchunkBlocks 26 -60 44 redstone_ore[]; 16 -60 42 redstone_ore[]; 27 -60 43 redstone_ore[] | extra: 
+ 108550 actor   UpdateSubchunkBlocks 26 -60 44 redstone_ore[]; 16 -60 42 redstone_ore[]; 27 -60 43 redstone_ore[] | extra: 
+ 108600 watcher UpdateSubchunkBlocks 29 -60 44 redstone_ore[]; 17 -60 44 redstone_ore[] | extra: 
+ 108600 actor   UpdateSubchunkBlocks 29 -60 44 redstone_ore[]; 17 -60 44 redstone_ore[] | extra: 
+ 108650 watcher UpdateBlock 20 -60 41 layer 0 redstone_ore[]
+ 108650 actor   UpdateBlock 20 -60 41 layer 0 redstone_ore[]
+ 108700 watcher UpdateBlock 11 -60 41 layer 0 redstone_ore[]
+ 108700 actor   UpdateBlock 11 -60 41 layer 0 redstone_ore[]
+ 108700 watcher UpdateBlock 23 -60 40 layer 0 redstone_ore[]
+ 108700 actor   UpdateBlock 23 -60 40 layer 0 redstone_ore[]
+ 108749 watcher UpdateBlock 28 -60 42 layer 0 redstone_ore[]
+ 108749 actor   UpdateBlock 28 -60 42 layer 0 redstone_ore[]
+ 108800 actor   UpdateBlock 19 -60 43 layer 0 redstone_ore[]
+ 108800 watcher UpdateBlock 19 -60 43 layer 0 redstone_ore[]
+ 108849 actor   UpdateBlock 24 -60 43 layer 0 redstone_ore[]
+ 108849 watcher UpdateBlock 24 -60 43 layer 0 redstone_ore[]
+ 108899 watcher UpdateSubchunkBlocks 4 -60 42 redstone_ore[]; 15 -60 41 redstone_ore[] | extra: 
+ 108899 actor   UpdateSubchunkBlocks 4 -60 42 redstone_ore[]; 15 -60 41 redstone_ore[] | extra: 
+ 108999 watcher UpdateBlock 13 -60 42 layer 0 redstone_ore[]
+ 108999 actor   UpdateBlock 13 -60 42 layer 0 redstone_ore[]
+ 109049 watcher UpdateBlock 28 -60 44 layer 0 redstone_ore[]
+ 109050 actor   UpdateBlock 28 -60 44 layer 0 redstone_ore[]
+ 109101 watcher UpdateSubchunkBlocks 24 -60 44 redstone_ore[]; 22 -60 40 redstone_ore[]; 31 -60 43 redstone_ore[] | extra: 
+ 109101 actor   UpdateSubchunkBlocks 24 -60 44 redstone_ore[]; 22 -60 40 redstone_ore[]; 31 -60 43 redstone_ore[] | extra: 
+ 109151 watcher UpdateSubchunkBlocks 25 -60 43 redstone_ore[]; 31 -60 40 redstone_ore[] | extra: 
+ 109151 actor   UpdateSubchunkBlocks 25 -60 43 redstone_ore[]; 31 -60 40 redstone_ore[] | extra: 
+ 109200 watcher UpdateBlock 37 -60 40 layer 0 redstone_ore[]
+ 109200 actor   UpdateBlock 37 -60 40 layer 0 redstone_ore[]
+## /
+ 109400 watcher UpdateBlock 27 -60 42 layer 0 redstone_ore[]
+ 109400 actor   UpdateBlock 27 -60 42 layer 0 redstone_ore[]
+ 109499 watcher UpdateBlock 37 -60 43 layer 0 redstone_ore[]
+ 109499 actor   UpdateBlock 37 -60 43 layer 0 redstone_ore[]
+ 109549 actor   UpdateBlock 32 -60 40 layer 0 redstone_ore[]
+ 109549 watcher UpdateBlock 32 -60 40 layer 0 redstone_ore[]
+ 109599 watcher UpdateBlock 6 -60 43 layer 0 redstone_ore[]
+ 109599 actor   UpdateBlock 6 -60 43 layer 0 redstone_ore[]
+ 109649 watcher UpdateBlock 8 -60 40 layer 0 redstone_ore[]
+ 109649 actor   UpdateBlock 8 -60 40 layer 0 redstone_ore[]
+ 109700 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8561, paused: false }] }) }
+ 109700 watcher UpdateBlock 35 -60 44 layer 0 redstone_ore[]
+ 109700 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8561, paused: false }] }) }
+ 109701 actor   UpdateBlock 35 -60 44 layer 0 redstone_ore[]
+ 109750 watcher UpdateBlock 9 -60 40 layer 0 redstone_ore[]
+ 109750 actor   UpdateBlock 9 -60 40 layer 0 redstone_ore[]
+ 109849 watcher UpdateBlock 19 -60 41 layer 0 redstone_ore[]
+ 109850 watcher UpdateBlock 34 -60 43 layer 0 redstone_ore[]
+ 109850 actor   UpdateBlock 19 -60 41 layer 0 redstone_ore[]
+ 109850 actor   UpdateBlock 34 -60 43 layer 0 redstone_ore[]
+ 109949 watcher UpdateBlock 40 -60 43 layer 0 redstone_ore[]
+ 109949 actor   UpdateBlock 40 -60 43 layer 0 redstone_ore[]
+ 109999 watcher UpdateSubchunkBlocks 21 -60 42 redstone_ore[]; 18 -60 42 redstone_ore[] | extra: 
+ 109999 actor   UpdateSubchunkBlocks 21 -60 42 redstone_ore[]; 18 -60 42 redstone_ore[] | extra: 
+ 110099 watcher UpdateBlock 23 -60 41 layer 0 redstone_ore[]
+ 110099 actor   UpdateBlock 23 -60 41 layer 0 redstone_ore[]
+ 110148 watcher UpdateBlock 7 -60 40 layer 0 redstone_ore[]
+ 110149 actor   UpdateBlock 7 -60 40 layer 0 redstone_ore[]
+ 110198 watcher UpdateBlock 4 -60 40 layer 0 redstone_ore[]
+ 110199 actor   UpdateBlock 4 -60 40 layer 0 redstone_ore[]
+## /
+ 110298 watcher UpdateBlock 8 -60 44 layer 0 redstone_ore[]
+ 110298 actor   UpdateBlock 8 -60 44 layer 0 redstone_ore[]
+ 110349 watcher UpdateSubchunkBlocks 35 -60 41 redstone_ore[]; 33 -60 42 redstone_ore[] | extra: 
+ 110349 actor   UpdateSubchunkBlocks 35 -60 41 redstone_ore[]; 33 -60 42 redstone_ore[] | extra: 
+ 110548 watcher UpdateBlock 33 -60 43 layer 0 redstone_ore[]
+ 110548 actor   UpdateBlock 33 -60 43 layer 0 redstone_ore[]
+ 110599 watcher UpdateBlock 11 -60 43 layer 0 redstone_ore[]
+ 110599 watcher UpdateBlock 21 -60 43 layer 0 redstone_ore[]
+ 110599 actor   UpdateBlock 11 -60 43 layer 0 redstone_ore[]
+ 110599 actor   UpdateBlock 21 -60 43 layer 0 redstone_ore[]
+ 110748 watcher UpdateBlock 19 -60 42 layer 0 redstone_ore[]
+ 110748 watcher UpdateBlock 35 -60 42 layer 0 redstone_ore[]
+ 110748 actor   UpdateBlock 19 -60 42 layer 0 redstone_ore[]
+ 110749 actor   UpdateBlock 35 -60 42 layer 0 redstone_ore[]
+ 110798 watcher UpdateBlock 23 -60 44 layer 0 redstone_ore[]
+ 110799 actor   UpdateBlock 23 -60 44 layer 0 redstone_ore[]
+ 110899 watcher UpdateBlock 37 -60 41 layer 0 redstone_ore[]
+ 110899 watcher UpdateBlock 18 -60 43 layer 0 redstone_ore[]
+ 110900 actor   UpdateBlock 37 -60 41 layer 0 redstone_ore[]
+ 110900 actor   UpdateBlock 18 -60 43 layer 0 redstone_ore[]
+ 110999 watcher UpdateBlock 32 -60 42 layer 0 redstone_ore[]
+ 110999 watcher UpdateSubchunkBlocks 8 -60 43 redstone_ore[]; 6 -60 44 redstone_ore[] | extra: 
+ 110999 actor   UpdateBlock 32 -60 42 layer 0 redstone_ore[]
+ 110999 actor   UpdateSubchunkBlocks 8 -60 43 redstone_ore[]; 6 -60 44 redstone_ore[] | extra: 
+ 111199 watcher UpdateBlock 10 -60 40 layer 0 redstone_ore[]
+ 111199 watcher UpdateBlock 31 -60 42 layer 0 redstone_ore[]
+ 111200 actor   UpdateBlock 10 -60 40 layer 0 redstone_ore[]
+ 111200 actor   UpdateBlock 31 -60 42 layer 0 redstone_ore[]
+## /
+ 111249 watcher UpdateBlock 26 -60 40 layer 0 redstone_ore[]
+ 111249 actor   UpdateBlock 26 -60 40 layer 0 redstone_ore[]
+ 111299 watcher UpdateBlock 36 -60 40 layer 0 redstone_ore[]
+ 111299 watcher UpdateBlock 11 -60 42 layer 0 redstone_ore[]
+ 111299 watcher UpdateBlock 22 -60 41 layer 0 redstone_ore[]
+ 111299 actor   UpdateBlock 36 -60 40 layer 0 redstone_ore[]
+ 111299 actor   UpdateBlock 11 -60 42 layer 0 redstone_ore[]
+ 111299 actor   UpdateBlock 22 -60 41 layer 0 redstone_ore[]
+ 111498 watcher UpdateBlock 36 -60 44 layer 0 redstone_ore[]
+ 111498 actor   UpdateBlock 36 -60 44 layer 0 redstone_ore[]
+ 111548 watcher UpdateBlock 18 -60 41 layer 0 redstone_ore[]
+ 111548 actor   UpdateBlock 18 -60 41 layer 0 redstone_ore[]
+ 111599 watcher UpdateBlock 16 -60 44 layer 0 redstone_ore[]
+ 111599 watcher UpdateBlock 13 -60 41 layer 0 redstone_ore[]
+ 111599 actor   UpdateBlock 16 -60 44 layer 0 redstone_ore[]
+ 111599 actor   UpdateBlock 13 -60 41 layer 0 redstone_ore[]
+ 111648 watcher UpdateBlock 16 -60 41 layer 0 redstone_ore[]
+ 111648 watcher UpdateBlock 32 -60 43 layer 0 redstone_ore[]
+ 111649 actor   UpdateBlock 16 -60 41 layer 0 redstone_ore[]
+ 111649 actor   UpdateBlock 32 -60 43 layer 0 redstone_ore[]
+ 111799 watcher UpdateBlock 27 -60 44 layer 0 redstone_ore[]
+ 111799 watcher UpdateBlock 35 -60 43 layer 0 redstone_ore[]
+ 111800 actor   UpdateBlock 27 -60 44 layer 0 redstone_ore[]
+ 111800 actor   UpdateBlock 35 -60 43 layer 0 redstone_ore[]
+ 111948 watcher UpdateBlock 5 -60 43 layer 0 redstone_ore[]
+ 111949 actor   UpdateBlock 5 -60 43 layer 0 redstone_ore[]
+ 111998 watcher UpdateBlock 13 -60 44 layer 0 redstone_ore[]
+ 111998 actor   UpdateBlock 13 -60 44 layer 0 redstone_ore[]
+ 112048 watcher UpdateBlock 2 -60 43 layer 0 redstone_ore[]
+ 112048 actor   UpdateBlock 2 -60 43 layer 0 redstone_ore[]
+## /
+ 112249 watcher UpdateBlock 18 -60 44 layer 0 redstone_ore[]
+ 112249 watcher UpdateBlock 33 -60 40 layer 0 redstone_ore[]
+ 112249 watcher UpdateBlock 4 -60 41 layer 0 redstone_ore[]
+ 112249 actor   UpdateBlock 18 -60 44 layer 0 redstone_ore[]
+ 112249 actor   UpdateBlock 33 -60 40 layer 0 redstone_ore[]
+ 112249 actor   UpdateBlock 4 -60 41 layer 0 redstone_ore[]
+ 112399 watcher UpdateBlock 14 -60 44 layer 0 redstone_ore[]
+ 112400 actor   UpdateBlock 14 -60 44 layer 0 redstone_ore[]
+ 112598 watcher UpdateBlock 24 -60 42 layer 0 redstone_ore[]
+ 112599 actor   UpdateBlock 24 -60 42 layer 0 redstone_ore[]
+ 112948 watcher UpdateBlock 14 -60 43 layer 0 redstone_ore[]
+ 112948 watcher UpdateBlock 20 -60 43 layer 0 redstone_ore[]
+ 112949 actor   UpdateBlock 14 -60 43 layer 0 redstone_ore[]
+ 112949 actor   UpdateBlock 20 -60 43 layer 0 redstone_ore[]
+ 113098 watcher UpdateBlock 9 -60 42 layer 0 redstone_ore[]
+ 113099 actor   UpdateBlock 9 -60 42 layer 0 redstone_ore[]
+ 113200 watcher UpdateBlock 17 -60 42 layer 0 redstone_ore[]
+ 113200 actor   UpdateBlock 17 -60 42 layer 0 redstone_ore[]
+## /
+ 113299 watcher UpdateBlock 22 -60 43 layer 0 redstone_ore[]
+ 113299 actor   UpdateBlock 22 -60 43 layer 0 redstone_ore[]
+ 113498 watcher UpdateBlock 37 -60 44 layer 0 redstone_ore[]
+ 113498 actor   UpdateBlock 37 -60 44 layer 0 redstone_ore[]
+ 113948 watcher UpdateSubchunkBlocks 8 -60 41 redstone_ore[]; 2 -60 44 redstone_ore[] | extra: 
+ 113948 actor   UpdateSubchunkBlocks 8 -60 41 redstone_ore[]; 2 -60 44 redstone_ore[] | extra: 
+ 114098 watcher UpdateBlock 41 -60 41 layer 0 redstone_ore[]
+ 114099 actor   UpdateBlock 41 -60 41 layer 0 redstone_ore[]
+## /
+ 114848 watcher UpdateBlock 36 -60 43 layer 0 redstone_ore[]
+ 114848 actor   UpdateBlock 36 -60 43 layer 0 redstone_ore[]
+ 115048 watcher UpdateBlock 39 -60 42 layer 0 redstone_ore[]
+ 115048 actor   UpdateBlock 39 -60 42 layer 0 redstone_ore[]
+## /
+ 115549 watcher UpdateBlock 23 -60 43 layer 0 redstone_ore[]
+ 115549 watcher UpdateBlock 40 -60 42 layer 0 redstone_ore[]
+ 115549 actor   UpdateBlock 23 -60 43 layer 0 redstone_ore[]
+ 115549 actor   UpdateBlock 40 -60 42 layer 0 redstone_ore[]
+ 115599 watcher UpdateBlock 30 -60 42 layer 0 redstone_ore[]
+ 115599 actor   UpdateBlock 30 -60 42 layer 0 redstone_ore[]
+ 115648 watcher UpdateBlock 14 -60 42 layer 0 redstone_ore[]
+ 115648 actor   UpdateBlock 14 -60 42 layer 0 redstone_ore[]
+## /
+ 116400 watcher UpdateBlock 18 -60 40 layer 0 redstone_ore[]
+ 116400 watcher UpdateBlock 7 -60 41 layer 0 redstone_ore[]
+ 116400 actor   UpdateBlock 18 -60 40 layer 0 redstone_ore[]
+ 116400 actor   UpdateBlock 7 -60 41 layer 0 redstone_ore[]
+ 116504 actor   UpdateBlock 40 -60 41 layer 0 redstone_ore[]
+ 116504 watcher UpdateBlock 40 -60 41 layer 0 redstone_ore[]
+ 117000 watcher UpdateBlock 19 -60 40 layer 0 redstone_ore[]
+ 117001 actor   UpdateBlock 19 -60 40 layer 0 redstone_ore[]
+ 117100 actor   UpdateBlock 5 -60 41 layer 0 redstone_ore[]
+ 117100 watcher UpdateBlock 5 -60 41 layer 0 redstone_ore[]
+ 117201 actor   UpdateBlock 11 -60 44 layer 0 redstone_ore[]
+ 117202 watcher UpdateBlock 11 -60 44 layer 0 redstone_ore[]
+## /
+## /gamerule randomtickspeed 0
+ 118299 watcher GameRulesChanged randomTickSpeed=Int(0)
+ 118300 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 118300 actor   GameRulesChanged randomTickSpeed=Int(0)
+ 118300 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+## /fill 2 -60 14 41 -60 44 air
+ 119341 watcher UpdateSubchunkBlocks 2 -60 40 air[]; 2 -60 41 air[]; 2 -60 42 air[]; 2 -60 43 air[]; 2 -60 44 air[]; 3 -60 40 air[]; 3 -60 41 air[]; 3 -60 42 air[]; 3 -60 43 air[]; 3 -60 44 air[]; 4 -60 40 air[]; 4 -60 41 air[]; 4 -60 42 air[]; 4 -60 43 air[]; 4 -60 44 air[]; 5 -60 40 air[]; 5 -60 41 air[]; 5 -60 42 air[]; 5 -60 43 air[]; 5 -60 44 air[]; 6 -60 40 air[]; 6 -60 41 air[]; 6 -60 42 air[]; 6 -60 43 air[]; 6 -60 44 air[]; 7 -60 40 air[]; 7 -60 41 air[]; 7 -60 42 air[]; 7 -60 43 air[]; 7 -60 44 air[]; 8 -60 40 air[]; 8 -60 41 air[]; 8 -60 42 air[]; 8 -60 43 air[]; 8 -60 44 air[]; 9 -60 40 air[]; 9 -60 41 air[]; 9 -60 42 air[]; 9 -60 43 air[]; 9 -60 44 air[]; 10 -60 40 air[]; 10 -60 41 air[]; 10 -60 42 air[]; 10 -60 43 air[]; 10 -60 44 air[]; 11 -60 40 air[]; 11 -60 41 air[]; 11 -60 42 air[]; 11 -60 43 air[]; 11 -60 44 air[]; 12 -60 40 air[]; 12 -60 41 air[]; 12 -60 42 air[]; 12 -60 43 air[]; 12 -60 44 air[]; 13 -60 40 air[]; 13 -60 41 air[]; 13 -60 42 air[]; 13 -60 43 air[]; 13 -60 44 air[]; 14 -60 40 air[]; 14 -60 41 air[]; 14 -60 42 air[]; 14 -60 43 air[]; 14 -60 44 air[]; 15 -60 40 air[]; 15 -60 41 air[]; 15 -60 42 air[]; 15 -60 43 air[]; 15 -60 44 air[] | extra: 
+ 119341 watcher UpdateSubchunkBlocks 16 -60 40 air[]; 16 -60 41 air[]; 16 -60 42 air[]; 16 -60 43 air[]; 16 -60 44 air[]; 17 -60 40 air[]; 17 -60 41 air[]; 17 -60 42 air[]; 17 -60 43 air[]; 17 -60 44 air[]; 18 -60 40 air[]; 18 -60 41 air[]; 18 -60 42 air[]; 18 -60 43 air[]; 18 -60 44 air[]; 19 -60 40 air[]; 19 -60 41 air[]; 19 -60 42 air[]; 19 -60 43 air[]; 19 -60 44 air[]; 20 -60 40 air[]; 20 -60 41 air[]; 20 -60 42 air[]; 20 -60 43 air[]; 20 -60 44 air[]; 21 -60 40 air[]; 21 -60 41 air[]; 21 -60 42 air[]; 21 -60 43 air[]; 21 -60 44 air[]; 22 -60 40 air[]; 22 -60 41 air[]; 22 -60 42 air[]; 22 -60 43 air[]; 22 -60 44 air[]; 23 -60 40 air[]; 23 -60 41 air[]; 23 -60 42 air[]; 23 -60 43 air[]; 23 -60 44 air[]; 24 -60 40 air[]; 24 -60 41 air[]; 24 -60 42 air[]; 24 -60 43 air[]; 24 -60 44 air[]; 25 -60 40 air[]; 25 -60 41 air[]; 25 -60 42 air[]; 25 -60 43 air[]; 25 -60 44 air[]; 26 -60 40 air[]; 26 -60 41 air[]; 26 -60 42 air[]; 26 -60 43 air[]; 26 -60 44 air[]; 27 -60 40 air[]; 27 -60 41 air[]; 27 -60 42 air[]; 27 -60 43 air[]; 27 -60 44 air[]; 28 -60 40 air[]; 28 -60 41 air[]; 28 -60 42 air[]; 28 -60 43 air[]; 28 -60 44 air[]; 29 -60 40 air[]; 29 -60 41 air[]; 29 -60 42 air[]; 29 -60 43 air[]; 29 -60 44 air[]; 30 -60 40 air[]; 30 -60 41 air[]; 30 -60 42 air[]; 30 -60 43 air[]; 30 -60 44 air[]; 31 -60 40 air[]; 31 -60 41 air[]; 31 -60 42 air[]; 31 -60 43 air[]; 31 -60 44 air[] | extra: 
+ 119342 watcher UpdateSubchunkBlocks 32 -60 40 air[]; 32 -60 41 air[]; 32 -60 42 air[]; 32 -60 43 air[]; 32 -60 44 air[]; 33 -60 40 air[]; 33 -60 41 air[]; 33 -60 42 air[]; 33 -60 43 air[]; 33 -60 44 air[]; 34 -60 40 air[]; 34 -60 41 air[]; 34 -60 42 air[]; 34 -60 43 air[]; 34 -60 44 air[]; 35 -60 40 air[]; 35 -60 41 air[]; 35 -60 42 air[]; 35 -60 43 air[]; 35 -60 44 air[]; 36 -60 40 air[]; 36 -60 41 air[]; 36 -60 42 air[]; 36 -60 43 air[]; 36 -60 44 air[]; 37 -60 40 air[]; 37 -60 41 air[]; 37 -60 42 air[]; 37 -60 43 air[]; 37 -60 44 air[]; 38 -60 40 air[]; 38 -60 41 air[]; 38 -60 42 air[]; 38 -60 43 air[]; 38 -60 44 air[]; 39 -60 40 air[]; 39 -60 41 air[]; 39 -60 42 air[]; 39 -60 43 air[]; 39 -60 44 air[]; 40 -60 40 air[]; 40 -60 41 air[]; 40 -60 42 air[]; 40 -60 43 air[]; 40 -60 44 air[]; 41 -60 40 air[]; 41 -60 41 air[]; 41 -60 42 air[]; 41 -60 43 air[]; 41 -60 44 air[] | extra: 
+ 119342 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"200\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 119343 actor   UpdateSubchunkBlocks 2 -60 40 air[]; 2 -60 41 air[]; 2 -60 42 air[]; 2 -60 43 air[]; 2 -60 44 air[]; 3 -60 40 air[]; 3 -60 41 air[]; 3 -60 42 air[]; 3 -60 43 air[]; 3 -60 44 air[]; 4 -60 40 air[]; 4 -60 41 air[]; 4 -60 42 air[]; 4 -60 43 air[]; 4 -60 44 air[]; 5 -60 40 air[]; 5 -60 41 air[]; 5 -60 42 air[]; 5 -60 43 air[]; 5 -60 44 air[]; 6 -60 40 air[]; 6 -60 41 air[]; 6 -60 42 air[]; 6 -60 43 air[]; 6 -60 44 air[]; 7 -60 40 air[]; 7 -60 41 air[]; 7 -60 42 air[]; 7 -60 43 air[]; 7 -60 44 air[]; 8 -60 40 air[]; 8 -60 41 air[]; 8 -60 42 air[]; 8 -60 43 air[]; 8 -60 44 air[]; 9 -60 40 air[]; 9 -60 41 air[]; 9 -60 42 air[]; 9 -60 43 air[]; 9 -60 44 air[]; 10 -60 40 air[]; 10 -60 41 air[]; 10 -60 42 air[]; 10 -60 43 air[]; 10 -60 44 air[]; 11 -60 40 air[]; 11 -60 41 air[]; 11 -60 42 air[]; 11 -60 43 air[]; 11 -60 44 air[]; 12 -60 40 air[]; 12 -60 41 air[]; 12 -60 42 air[]; 12 -60 43 air[]; 12 -60 44 air[]; 13 -60 40 air[]; 13 -60 41 air[]; 13 -60 42 air[]; 13 -60 43 air[]; 13 -60 44 air[]; 14 -60 40 air[]; 14 -60 41 air[]; 14 -60 42 air[]; 14 -60 43 air[]; 14 -60 44 air[]; 15 -60 40 air[]; 15 -60 41 air[]; 15 -60 42 air[]; 15 -60 43 air[]; 15 -60 44 air[] | extra: 
+ 119343 actor   UpdateSubchunkBlocks 16 -60 40 air[]; 16 -60 41 air[]; 16 -60 42 air[]; 16 -60 43 air[]; 16 -60 44 air[]; 17 -60 40 air[]; 17 -60 41 air[]; 17 -60 42 air[]; 17 -60 43 air[]; 17 -60 44 air[]; 18 -60 40 air[]; 18 -60 41 air[]; 18 -60 42 air[]; 18 -60 43 air[]; 18 -60 44 air[]; 19 -60 40 air[]; 19 -60 41 air[]; 19 -60 42 air[]; 19 -60 43 air[]; 19 -60 44 air[]; 20 -60 40 air[]; 20 -60 41 air[]; 20 -60 42 air[]; 20 -60 43 air[]; 20 -60 44 air[]; 21 -60 40 air[]; 21 -60 41 air[]; 21 -60 42 air[]; 21 -60 43 air[]; 21 -60 44 air[]; 22 -60 40 air[]; 22 -60 41 air[]; 22 -60 42 air[]; 22 -60 43 air[]; 22 -60 44 air[]; 23 -60 40 air[]; 23 -60 41 air[]; 23 -60 42 air[]; 23 -60 43 air[]; 23 -60 44 air[]; 24 -60 40 air[]; 24 -60 41 air[]; 24 -60 42 air[]; 24 -60 43 air[]; 24 -60 44 air[]; 25 -60 40 air[]; 25 -60 41 air[]; 25 -60 42 air[]; 25 -60 43 air[]; 25 -60 44 air[]; 26 -60 40 air[]; 26 -60 41 air[]; 26 -60 42 air[]; 26 -60 43 air[]; 26 -60 44 air[]; 27 -60 40 air[]; 27 -60 41 air[]; 27 -60 42 air[]; 27 -60 43 air[]; 27 -60 44 air[]; 28 -60 40 air[]; 28 -60 41 air[]; 28 -60 42 air[]; 28 -60 43 air[]; 28 -60 44 air[]; 29 -60 40 air[]; 29 -60 41 air[]; 29 -60 42 air[]; 29 -60 43 air[]; 29 -60 44 air[]; 30 -60 40 air[]; 30 -60 41 air[]; 30 -60 42 air[]; 30 -60 43 air[]; 30 -60 44 air[]; 31 -60 40 air[]; 31 -60 41 air[]; 31 -60 42 air[]; 31 -60 43 air[]; 31 -60 44 air[] | extra: 
+ 119344 actor   UpdateSubchunkBlocks 32 -60 40 air[]; 32 -60 41 air[]; 32 -60 42 air[]; 32 -60 43 air[]; 32 -60 44 air[]; 33 -60 40 air[]; 33 -60 41 air[]; 33 -60 42 air[]; 33 -60 43 air[]; 33 -60 44 air[]; 34 -60 40 air[]; 34 -60 41 air[]; 34 -60 42 air[]; 34 -60 43 air[]; 34 -60 44 air[]; 35 -60 40 air[]; 35 -60 41 air[]; 35 -60 42 air[]; 35 -60 43 air[]; 35 -60 44 air[]; 36 -60 40 air[]; 36 -60 41 air[]; 36 -60 42 air[]; 36 -60 43 air[]; 36 -60 44 air[]; 37 -60 40 air[]; 37 -60 41 air[]; 37 -60 42 air[]; 37 -60 43 air[]; 37 -60 44 air[]; 38 -60 40 air[]; 38 -60 41 air[]; 38 -60 42 air[]; 38 -60 43 air[]; 38 -60 44 air[]; 39 -60 40 air[]; 39 -60 41 air[]; 39 -60 42 air[]; 39 -60 43 air[]; 39 -60 44 air[]; 40 -60 40 air[]; 40 -60 41 air[]; 40 -60 42 air[]; 40 -60 43 air[]; 40 -60 44 air[]; 41 -60 40 air[]; 41 -60 41 air[]; 41 -60 42 air[]; 41 -60 43 air[]; 41 -60 44 air[] | extra: 
+ 119344 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["200"]
+## /
+## /fill 2 -60 40 41 -60 44 lit_redstone_ore
+ 121328 watcher UpdateSubchunkBlocks 2 -60 40 lit_redstone_ore[]; 2 -60 41 lit_redstone_ore[]; 2 -60 42 lit_redstone_ore[]; 2 -60 43 lit_redstone_ore[]; 2 -60 44 lit_redstone_ore[]; 3 -60 40 lit_redstone_ore[]; 3 -60 41 lit_redstone_ore[]; 3 -60 42 lit_redstone_ore[]; 3 -60 43 lit_redstone_ore[]; 3 -60 44 lit_redstone_ore[]; 4 -60 40 lit_redstone_ore[]; 4 -60 41 lit_redstone_ore[]; 4 -60 42 lit_redstone_ore[]; 4 -60 43 lit_redstone_ore[]; 4 -60 44 lit_redstone_ore[]; 5 -60 40 lit_redstone_ore[]; 5 -60 41 lit_redstone_ore[]; 5 -60 42 lit_redstone_ore[]; 5 -60 43 lit_redstone_ore[]; 5 -60 44 lit_redstone_ore[]; 6 -60 40 lit_redstone_ore[]; 6 -60 41 lit_redstone_ore[]; 6 -60 42 lit_redstone_ore[]; 6 -60 43 lit_redstone_ore[]; 6 -60 44 lit_redstone_ore[]; 7 -60 40 lit_redstone_ore[]; 7 -60 41 lit_redstone_ore[]; 7 -60 42 lit_redstone_ore[]; 7 -60 43 lit_redstone_ore[]; 7 -60 44 lit_redstone_ore[]; 8 -60 40 lit_redstone_ore[]; 8 -60 41 lit_redstone_ore[]; 8 -60 42 lit_redstone_ore[]; 8 -60 43 lit_redstone_ore[]; 8 -60 44 lit_redstone_ore[]; 9 -60 40 lit_redstone_ore[]; 9 -60 41 lit_redstone_ore[]; 9 -60 42 lit_redstone_ore[]; 9 -60 43 lit_redstone_ore[]; 9 -60 44 lit_redstone_ore[]; 10 -60 40 lit_redstone_ore[]; 10 -60 41 lit_redstone_ore[]; 10 -60 42 lit_redstone_ore[]; 10 -60 43 lit_redstone_ore[]; 10 -60 44 lit_redstone_ore[]; 11 -60 40 lit_redstone_ore[]; 11 -60 41 lit_redstone_ore[]; 11 -60 42 lit_redstone_ore[]; 11 -60 43 lit_redstone_ore[]; 11 -60 44 lit_redstone_ore[]; 12 -60 40 lit_redstone_ore[]; 12 -60 41 lit_redstone_ore[]; 12 -60 42 lit_redstone_ore[]; 12 -60 43 lit_redstone_ore[]; 12 -60 44 lit_redstone_ore[]; 13 -60 40 lit_redstone_ore[]; 13 -60 41 lit_redstone_ore[]; 13 -60 42 lit_redstone_ore[]; 13 -60 43 lit_redstone_ore[]; 13 -60 44 lit_redstone_ore[]; 14 -60 40 lit_redstone_ore[]; 14 -60 41 lit_redstone_ore[]; 14 -60 42 lit_redstone_ore[]; 14 -60 43 lit_redstone_ore[]; 14 -60 44 lit_redstone_ore[]; 15 -60 40 lit_redstone_ore[]; 15 -60 41 lit_redstone_ore[]; 15 -60 42 lit_redstone_ore[]; 15 -60 43 lit_redstone_ore[]; 15 -60 44 lit_redstone_ore[] | extra: 
+ 121329 watcher UpdateSubchunkBlocks 16 -60 40 lit_redstone_ore[]; 16 -60 41 lit_redstone_ore[]; 16 -60 42 lit_redstone_ore[]; 16 -60 43 lit_redstone_ore[]; 16 -60 44 lit_redstone_ore[]; 17 -60 40 lit_redstone_ore[]; 17 -60 41 lit_redstone_ore[]; 17 -60 42 lit_redstone_ore[]; 17 -60 43 lit_redstone_ore[]; 17 -60 44 lit_redstone_ore[]; 18 -60 40 lit_redstone_ore[]; 18 -60 41 lit_redstone_ore[]; 18 -60 42 lit_redstone_ore[]; 18 -60 43 lit_redstone_ore[]; 18 -60 44 lit_redstone_ore[]; 19 -60 40 lit_redstone_ore[]; 19 -60 41 lit_redstone_ore[]; 19 -60 42 lit_redstone_ore[]; 19 -60 43 lit_redstone_ore[]; 19 -60 44 lit_redstone_ore[]; 20 -60 40 lit_redstone_ore[]; 20 -60 41 lit_redstone_ore[]; 20 -60 42 lit_redstone_ore[]; 20 -60 43 lit_redstone_ore[]; 20 -60 44 lit_redstone_ore[]; 21 -60 40 lit_redstone_ore[]; 21 -60 41 lit_redstone_ore[]; 21 -60 42 lit_redstone_ore[]; 21 -60 43 lit_redstone_ore[]; 21 -60 44 lit_redstone_ore[]; 22 -60 40 lit_redstone_ore[]; 22 -60 41 lit_redstone_ore[]; 22 -60 42 lit_redstone_ore[]; 22 -60 43 lit_redstone_ore[]; 22 -60 44 lit_redstone_ore[]; 23 -60 40 lit_redstone_ore[]; 23 -60 41 lit_redstone_ore[]; 23 -60 42 lit_redstone_ore[]; 23 -60 43 lit_redstone_ore[]; 23 -60 44 lit_redstone_ore[]; 24 -60 40 lit_redstone_ore[]; 24 -60 41 lit_redstone_ore[]; 24 -60 42 lit_redstone_ore[]; 24 -60 43 lit_redstone_ore[]; 24 -60 44 lit_redstone_ore[]; 25 -60 40 lit_redstone_ore[]; 25 -60 41 lit_redstone_ore[]; 25 -60 42 lit_redstone_ore[]; 25 -60 43 lit_redstone_ore[]; 25 -60 44 lit_redstone_ore[]; 26 -60 40 lit_redstone_ore[]; 26 -60 41 lit_redstone_ore[]; 26 -60 42 lit_redstone_ore[]; 26 -60 43 lit_redstone_ore[]; 26 -60 44 lit_redstone_ore[]; 27 -60 40 lit_redstone_ore[]; 27 -60 41 lit_redstone_ore[]; 27 -60 42 lit_redstone_ore[]; 27 -60 43 lit_redstone_ore[]; 27 -60 44 lit_redstone_ore[]; 28 -60 40 lit_redstone_ore[]; 28 -60 41 lit_redstone_ore[]; 28 -60 42 lit_redstone_ore[]; 28 -60 43 lit_redstone_ore[]; 28 -60 44 lit_redstone_ore[]; 29 -60 40 lit_redstone_ore[]; 29 -60 41 lit_redstone_ore[]; 29 -60 42 lit_redstone_ore[]; 29 -60 43 lit_redstone_ore[]; 29 -60 44 lit_redstone_ore[]; 30 -60 40 lit_redstone_ore[]; 30 -60 41 lit_redstone_ore[]; 30 -60 42 lit_redstone_ore[]; 30 -60 43 lit_redstone_ore[]; 30 -60 44 lit_redstone_ore[]; 31 -60 40 lit_redstone_ore[]; 31 -60 41 lit_redstone_ore[]; 31 -60 42 lit_redstone_ore[]; 31 -60 43 lit_redstone_ore[]; 31 -60 44 lit_redstone_ore[] | extra: 
+ 121329 watcher UpdateSubchunkBlocks 32 -60 40 lit_redstone_ore[]; 32 -60 41 lit_redstone_ore[]; 32 -60 42 lit_redstone_ore[]; 32 -60 43 lit_redstone_ore[]; 32 -60 44 lit_redstone_ore[]; 33 -60 40 lit_redstone_ore[]; 33 -60 41 lit_redstone_ore[]; 33 -60 42 lit_redstone_ore[]; 33 -60 43 lit_redstone_ore[]; 33 -60 44 lit_redstone_ore[]; 34 -60 40 lit_redstone_ore[]; 34 -60 41 lit_redstone_ore[]; 34 -60 42 lit_redstone_ore[]; 34 -60 43 lit_redstone_ore[]; 34 -60 44 lit_redstone_ore[]; 35 -60 40 lit_redstone_ore[]; 35 -60 41 lit_redstone_ore[]; 35 -60 42 lit_redstone_ore[]; 35 -60 43 lit_redstone_ore[]; 35 -60 44 lit_redstone_ore[]; 36 -60 40 lit_redstone_ore[]; 36 -60 41 lit_redstone_ore[]; 36 -60 42 lit_redstone_ore[]; 36 -60 43 lit_redstone_ore[]; 36 -60 44 lit_redstone_ore[]; 37 -60 40 lit_redstone_ore[]; 37 -60 41 lit_redstone_ore[]; 37 -60 42 lit_redstone_ore[]; 37 -60 43 lit_redstone_ore[]; 37 -60 44 lit_redstone_ore[]; 38 -60 40 lit_redstone_ore[]; 38 -60 41 lit_redstone_ore[]; 38 -60 42 lit_redstone_ore[]; 38 -60 43 lit_redstone_ore[]; 38 -60 44 lit_redstone_ore[]; 39 -60 40 lit_redstone_ore[]; 39 -60 41 lit_redstone_ore[]; 39 -60 42 lit_redstone_ore[]; 39 -60 43 lit_redstone_ore[]; 39 -60 44 lit_redstone_ore[]; 40 -60 40 lit_redstone_ore[]; 40 -60 41 lit_redstone_ore[]; 40 -60 42 lit_redstone_ore[]; 40 -60 43 lit_redstone_ore[]; 40 -60 44 lit_redstone_ore[]; 41 -60 40 lit_redstone_ore[]; 41 -60 41 lit_redstone_ore[]; 41 -60 42 lit_redstone_ore[]; 41 -60 43 lit_redstone_ore[]; 41 -60 44 lit_redstone_ore[] | extra: 
+ 121330 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"200\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 121330 actor   UpdateSubchunkBlocks 2 -60 40 lit_redstone_ore[]; 2 -60 41 lit_redstone_ore[]; 2 -60 42 lit_redstone_ore[]; 2 -60 43 lit_redstone_ore[]; 2 -60 44 lit_redstone_ore[]; 3 -60 40 lit_redstone_ore[]; 3 -60 41 lit_redstone_ore[]; 3 -60 42 lit_redstone_ore[]; 3 -60 43 lit_redstone_ore[]; 3 -60 44 lit_redstone_ore[]; 4 -60 40 lit_redstone_ore[]; 4 -60 41 lit_redstone_ore[]; 4 -60 42 lit_redstone_ore[]; 4 -60 43 lit_redstone_ore[]; 4 -60 44 lit_redstone_ore[]; 5 -60 40 lit_redstone_ore[]; 5 -60 41 lit_redstone_ore[]; 5 -60 42 lit_redstone_ore[]; 5 -60 43 lit_redstone_ore[]; 5 -60 44 lit_redstone_ore[]; 6 -60 40 lit_redstone_ore[]; 6 -60 41 lit_redstone_ore[]; 6 -60 42 lit_redstone_ore[]; 6 -60 43 lit_redstone_ore[]; 6 -60 44 lit_redstone_ore[]; 7 -60 40 lit_redstone_ore[]; 7 -60 41 lit_redstone_ore[]; 7 -60 42 lit_redstone_ore[]; 7 -60 43 lit_redstone_ore[]; 7 -60 44 lit_redstone_ore[]; 8 -60 40 lit_redstone_ore[]; 8 -60 41 lit_redstone_ore[]; 8 -60 42 lit_redstone_ore[]; 8 -60 43 lit_redstone_ore[]; 8 -60 44 lit_redstone_ore[]; 9 -60 40 lit_redstone_ore[]; 9 -60 41 lit_redstone_ore[]; 9 -60 42 lit_redstone_ore[]; 9 -60 43 lit_redstone_ore[]; 9 -60 44 lit_redstone_ore[]; 10 -60 40 lit_redstone_ore[]; 10 -60 41 lit_redstone_ore[]; 10 -60 42 lit_redstone_ore[]; 10 -60 43 lit_redstone_ore[]; 10 -60 44 lit_redstone_ore[]; 11 -60 40 lit_redstone_ore[]; 11 -60 41 lit_redstone_ore[]; 11 -60 42 lit_redstone_ore[]; 11 -60 43 lit_redstone_ore[]; 11 -60 44 lit_redstone_ore[]; 12 -60 40 lit_redstone_ore[]; 12 -60 41 lit_redstone_ore[]; 12 -60 42 lit_redstone_ore[]; 12 -60 43 lit_redstone_ore[]; 12 -60 44 lit_redstone_ore[]; 13 -60 40 lit_redstone_ore[]; 13 -60 41 lit_redstone_ore[]; 13 -60 42 lit_redstone_ore[]; 13 -60 43 lit_redstone_ore[]; 13 -60 44 lit_redstone_ore[]; 14 -60 40 lit_redstone_ore[]; 14 -60 41 lit_redstone_ore[]; 14 -60 42 lit_redstone_ore[]; 14 -60 43 lit_redstone_ore[]; 14 -60 44 lit_redstone_ore[]; 15 -60 40 lit_redstone_ore[]; 15 -60 41 lit_redstone_ore[]; 15 -60 42 lit_redstone_ore[]; 15 -60 43 lit_redstone_ore[]; 15 -60 44 lit_redstone_ore[] | extra: 
+ 121331 actor   UpdateSubchunkBlocks 16 -60 40 lit_redstone_ore[]; 16 -60 41 lit_redstone_ore[]; 16 -60 42 lit_redstone_ore[]; 16 -60 43 lit_redstone_ore[]; 16 -60 44 lit_redstone_ore[]; 17 -60 40 lit_redstone_ore[]; 17 -60 41 lit_redstone_ore[]; 17 -60 42 lit_redstone_ore[]; 17 -60 43 lit_redstone_ore[]; 17 -60 44 lit_redstone_ore[]; 18 -60 40 lit_redstone_ore[]; 18 -60 41 lit_redstone_ore[]; 18 -60 42 lit_redstone_ore[]; 18 -60 43 lit_redstone_ore[]; 18 -60 44 lit_redstone_ore[]; 19 -60 40 lit_redstone_ore[]; 19 -60 41 lit_redstone_ore[]; 19 -60 42 lit_redstone_ore[]; 19 -60 43 lit_redstone_ore[]; 19 -60 44 lit_redstone_ore[]; 20 -60 40 lit_redstone_ore[]; 20 -60 41 lit_redstone_ore[]; 20 -60 42 lit_redstone_ore[]; 20 -60 43 lit_redstone_ore[]; 20 -60 44 lit_redstone_ore[]; 21 -60 40 lit_redstone_ore[]; 21 -60 41 lit_redstone_ore[]; 21 -60 42 lit_redstone_ore[]; 21 -60 43 lit_redstone_ore[]; 21 -60 44 lit_redstone_ore[]; 22 -60 40 lit_redstone_ore[]; 22 -60 41 lit_redstone_ore[]; 22 -60 42 lit_redstone_ore[]; 22 -60 43 lit_redstone_ore[]; 22 -60 44 lit_redstone_ore[]; 23 -60 40 lit_redstone_ore[]; 23 -60 41 lit_redstone_ore[]; 23 -60 42 lit_redstone_ore[]; 23 -60 43 lit_redstone_ore[]; 23 -60 44 lit_redstone_ore[]; 24 -60 40 lit_redstone_ore[]; 24 -60 41 lit_redstone_ore[]; 24 -60 42 lit_redstone_ore[]; 24 -60 43 lit_redstone_ore[]; 24 -60 44 lit_redstone_ore[]; 25 -60 40 lit_redstone_ore[]; 25 -60 41 lit_redstone_ore[]; 25 -60 42 lit_redstone_ore[]; 25 -60 43 lit_redstone_ore[]; 25 -60 44 lit_redstone_ore[]; 26 -60 40 lit_redstone_ore[]; 26 -60 41 lit_redstone_ore[]; 26 -60 42 lit_redstone_ore[]; 26 -60 43 lit_redstone_ore[]; 26 -60 44 lit_redstone_ore[]; 27 -60 40 lit_redstone_ore[]; 27 -60 41 lit_redstone_ore[]; 27 -60 42 lit_redstone_ore[]; 27 -60 43 lit_redstone_ore[]; 27 -60 44 lit_redstone_ore[]; 28 -60 40 lit_redstone_ore[]; 28 -60 41 lit_redstone_ore[]; 28 -60 42 lit_redstone_ore[]; 28 -60 43 lit_redstone_ore[]; 28 -60 44 lit_redstone_ore[]; 29 -60 40 lit_redstone_ore[]; 29 -60 41 lit_redstone_ore[]; 29 -60 42 lit_redstone_ore[]; 29 -60 43 lit_redstone_ore[]; 29 -60 44 lit_redstone_ore[]; 30 -60 40 lit_redstone_ore[]; 30 -60 41 lit_redstone_ore[]; 30 -60 42 lit_redstone_ore[]; 30 -60 43 lit_redstone_ore[]; 30 -60 44 lit_redstone_ore[]; 31 -60 40 lit_redstone_ore[]; 31 -60 41 lit_redstone_ore[]; 31 -60 42 lit_redstone_ore[]; 31 -60 43 lit_redstone_ore[]; 31 -60 44 lit_redstone_ore[] | extra: 
+ 121331 actor   UpdateSubchunkBlocks 32 -60 40 lit_redstone_ore[]; 32 -60 41 lit_redstone_ore[]; 32 -60 42 lit_redstone_ore[]; 32 -60 43 lit_redstone_ore[]; 32 -60 44 lit_redstone_ore[]; 33 -60 40 lit_redstone_ore[]; 33 -60 41 lit_redstone_ore[]; 33 -60 42 lit_redstone_ore[]; 33 -60 43 lit_redstone_ore[]; 33 -60 44 lit_redstone_ore[]; 34 -60 40 lit_redstone_ore[]; 34 -60 41 lit_redstone_ore[]; 34 -60 42 lit_redstone_ore[]; 34 -60 43 lit_redstone_ore[]; 34 -60 44 lit_redstone_ore[]; 35 -60 40 lit_redstone_ore[]; 35 -60 41 lit_redstone_ore[]; 35 -60 42 lit_redstone_ore[]; 35 -60 43 lit_redstone_ore[]; 35 -60 44 lit_redstone_ore[]; 36 -60 40 lit_redstone_ore[]; 36 -60 41 lit_redstone_ore[]; 36 -60 42 lit_redstone_ore[]; 36 -60 43 lit_redstone_ore[]; 36 -60 44 lit_redstone_ore[]; 37 -60 40 lit_redstone_ore[]; 37 -60 41 lit_redstone_ore[]; 37 -60 42 lit_redstone_ore[]; 37 -60 43 lit_redstone_ore[]; 37 -60 44 lit_redstone_ore[]; 38 -60 40 lit_redstone_ore[]; 38 -60 41 lit_redstone_ore[]; 38 -60 42 lit_redstone_ore[]; 38 -60 43 lit_redstone_ore[]; 38 -60 44 lit_redstone_ore[]; 39 -60 40 lit_redstone_ore[]; 39 -60 41 lit_redstone_ore[]; 39 -60 42 lit_redstone_ore[]; 39 -60 43 lit_redstone_ore[]; 39 -60 44 lit_redstone_ore[]; 40 -60 40 lit_redstone_ore[]; 40 -60 41 lit_redstone_ore[]; 40 -60 42 lit_redstone_ore[]; 40 -60 43 lit_redstone_ore[]; 40 -60 44 lit_redstone_ore[]; 41 -60 40 lit_redstone_ore[]; 41 -60 41 lit_redstone_ore[]; 41 -60 42 lit_redstone_ore[]; 41 -60 43 lit_redstone_ore[]; 41 -60 44 lit_redstone_ore[] | extra: 
+ 121332 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["200"]
+## /setblock 2 -60 14 copper_block
+ 122299 actor   UpdateBlock 2 -60 14 layer 0 copper_block[]
+ 122299 watcher UpdateBlock 2 -60 14 layer 0 copper_block[]
+ 122299 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 122299 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 122496 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8817, paused: false }] }) }
+ 122496 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 8817, paused: false }] }) }
+## /setblock 2 -60 20 copper_block
+ 123298 watcher UpdateBlock 2 -60 20 layer 0 copper_block[]
+ 123298 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 123298 actor   UpdateBlock 2 -60 20 layer 0 copper_block[]
+ 123298 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 2 -60 26 copper_block
+ 124297 watcher UpdateBlock 2 -60 26 layer 0 copper_block[]
+ 124297 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 124297 actor   UpdateBlock 2 -60 26 layer 0 copper_block[]
+ 124297 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 2 -60 32 copper_block
+ 125299 watcher UpdateBlock 2 -60 32 layer 0 copper_block[]
+ 125299 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 125299 actor   UpdateBlock 2 -60 32 layer 0 copper_block[]
+ 125299 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 8 -60 14 copper_block
+ 126299 actor   UpdateBlock 8 -60 14 layer 0 copper_block[]
+ 126299 watcher UpdateBlock 8 -60 14 layer 0 copper_block[]
+ 126299 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 126299 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 8 -60 20 copper_block
+ 127299 watcher UpdateBlock 8 -60 20 layer 0 copper_block[]
+ 127299 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 127299 actor   UpdateBlock 8 -60 20 layer 0 copper_block[]
+ 127299 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 8 -60 26 copper_block
+ 128299 watcher UpdateBlock 8 -60 26 layer 0 copper_block[]
+ 128299 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 128299 actor   UpdateBlock 8 -60 26 layer 0 copper_block[]
+ 128299 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 8 -60 32 copper_block
+ 129298 actor   UpdateBlock 8 -60 32 layer 0 copper_block[]
+ 129298 watcher UpdateBlock 8 -60 32 layer 0 copper_block[]
+ 129298 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 129298 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 14 -60 14 copper_block
+ 130300 actor   UpdateBlock 14 -60 14 layer 0 copper_block[]
+ 130300 watcher UpdateBlock 14 -60 14 layer 0 copper_block[]
+ 130300 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 130300 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 14 -60 20 copper_block
+ 131300 watcher UpdateBlock 14 -60 20 layer 0 copper_block[]
+ 131301 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 131301 actor   UpdateBlock 14 -60 20 layer 0 copper_block[]
+ 131301 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 14 -60 26 copper_block
+ 132298 actor   UpdateBlock 14 -60 26 layer 0 copper_block[]
+ 132298 watcher UpdateBlock 14 -60 26 layer 0 copper_block[]
+ 132298 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 132299 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 14 -60 32 copper_block
+ 133349 watcher UpdateBlock 14 -60 32 layer 0 copper_block[]
+ 133349 actor   UpdateBlock 14 -60 32 layer 0 copper_block[]
+ 133349 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 133349 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 20 -60 14 copper_block
+ 134350 actor   UpdateBlock 20 -60 14 layer 0 copper_block[]
+ 134350 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 134350 watcher UpdateBlock 20 -60 14 layer 0 copper_block[]
+ 134350 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 20 -60 20 copper_block
+ 135298 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9073, paused: false }] }) }
+ 135298 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9073, paused: false }] }) }
+ 135349 actor   UpdateBlock 20 -60 20 layer 0 copper_block[]
+ 135349 watcher UpdateBlock 20 -60 20 layer 0 copper_block[]
+ 135349 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 135349 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 20 -60 26 copper_block
+ 136346 watcher UpdateBlock 20 -60 26 layer 0 copper_block[]
+ 136347 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 136347 actor   UpdateBlock 20 -60 26 layer 0 copper_block[]
+ 136347 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 20 -60 32 copper_block
+ 137350 watcher UpdateBlock 20 -60 32 layer 0 copper_block[]
+ 137350 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 137350 actor   UpdateBlock 20 -60 32 layer 0 copper_block[]
+ 137350 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 26 -60 14 copper_block
+ 138347 watcher UpdateBlock 26 -60 14 layer 0 copper_block[]
+ 138347 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 138347 actor   UpdateBlock 26 -60 14 layer 0 copper_block[]
+ 138347 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 26 -60 20 copper_block
+ 139349 actor   UpdateBlock 26 -60 20 layer 0 copper_block[]
+ 139349 watcher UpdateBlock 26 -60 20 layer 0 copper_block[]
+ 139349 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 139349 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 26 -60 26 copper_block
+ 140348 actor   UpdateBlock 26 -60 26 layer 0 copper_block[]
+ 140348 watcher UpdateBlock 26 -60 26 layer 0 copper_block[]
+ 140348 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 140348 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 26 -60 32 copper_block
+ 141349 actor   UpdateBlock 26 -60 32 layer 0 copper_block[]
+ 141349 watcher UpdateBlock 26 -60 32 layer 0 copper_block[]
+ 141349 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 141349 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 32 -60 14 copper_block
+ 142348 watcher UpdateBlock 32 -60 14 layer 0 copper_block[]
+ 142349 actor   UpdateBlock 32 -60 14 layer 0 copper_block[]
+ 142349 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 142349 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /setblock 32 -60 20 copper_block
+ 143347 watcher UpdateBlock 32 -60 20 layer 0 copper_block[]
+ 143347 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 143348 actor   UpdateBlock 32 -60 20 layer 0 copper_block[]
+ 143348 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 32 -60 26 copper_block
+ 144347 watcher UpdateBlock 32 -60 26 layer 0 copper_block[]
+ 144347 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 144348 actor   UpdateBlock 32 -60 26 layer 0 copper_block[]
+ 144348 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 32 -60 32 copper_block
+ 145348 watcher UpdateBlock 32 -60 32 layer 0 copper_block[]
+ 145348 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 145348 actor   UpdateBlock 32 -60 32 layer 0 copper_block[]
+ 145348 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 38 -60 14 copper_block
+ 146350 watcher UpdateBlock 38 -60 14 layer 0 copper_block[]
+ 146350 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 146350 actor   UpdateBlock 38 -60 14 layer 0 copper_block[]
+ 146350 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 38 -60 20 copper_block
+ 147349 watcher UpdateBlock 38 -60 20 layer 0 copper_block[]
+ 147349 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 147349 actor   UpdateBlock 38 -60 20 layer 0 copper_block[]
+ 147349 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+ 148098 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9329, paused: false }] }) }
+ 148098 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9329, paused: false }] }) }
+## /setblock 38 -60 26 copper_block
+ 148350 watcher UpdateBlock 38 -60 26 layer 0 copper_block[]
+ 148350 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 148350 actor   UpdateBlock 38 -60 26 layer 0 copper_block[]
+ 148350 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 38 -60 32 copper_block
+ 149347 watcher UpdateBlock 38 -60 32 layer 0 copper_block[]
+ 149347 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 149347 actor   UpdateBlock 38 -60 32 layer 0 copper_block[]
+ 149347 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /gamerule randomtickspeed 100
+ 150349 watcher GameRulesChanged randomTickSpeed=Int(100)
+ 150349 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"100\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 150349 watcher UpdateSubchunkBlocks 21 -60 40 redstone_ore[]; 26 -60 42 redstone_ore[]; 19 -60 43 redstone_ore[]; 31 -60 40 redstone_ore[]; 23 -60 42 redstone_ore[] | extra: 
+ 150349 watcher UpdateSubchunkBlocks 5 -60 40 redstone_ore[]; 13 -60 40 redstone_ore[]; 8 -60 42 redstone_ore[]; 5 -60 43 redstone_ore[] | extra: 
+ 150349 watcher UpdateSubchunkBlocks 33 -60 40 redstone_ore[]; 33 -60 44 redstone_ore[]; 41 -60 44 redstone_ore[]; 36 -60 44 redstone_ore[] | extra: 
+ 150349 actor   GameRulesChanged randomTickSpeed=Int(100)
+ 150349 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "100"]
+ 150349 actor   UpdateSubchunkBlocks 21 -60 40 redstone_ore[]; 26 -60 42 redstone_ore[]; 19 -60 43 redstone_ore[]; 31 -60 40 redstone_ore[]; 23 -60 42 redstone_ore[] | extra: 
+ 150349 actor   UpdateSubchunkBlocks 5 -60 40 redstone_ore[]; 13 -60 40 redstone_ore[]; 8 -60 42 redstone_ore[]; 5 -60 43 redstone_ore[] | extra: 
+ 150349 actor   UpdateSubchunkBlocks 33 -60 40 redstone_ore[]; 33 -60 44 redstone_ore[]; 41 -60 44 redstone_ore[]; 36 -60 44 redstone_ore[] | extra: 
+ 150399 actor   UpdateBlock 2 -60 42 layer 0 redstone_ore[]
+ 150399 actor   UpdateSubchunkBlocks 36 -60 41 redstone_ore[]; 38 -60 40 redstone_ore[]; 33 -60 43 redstone_ore[]; 35 -60 43 redstone_ore[] | extra: 
+ 150399 actor   UpdateSubchunkBlocks 24 -60 42 redstone_ore[]; 29 -60 44 redstone_ore[]; 19 -60 40 redstone_ore[] | extra: 
+ 150399 watcher UpdateBlock 2 -60 42 layer 0 redstone_ore[]
+ 150399 watcher UpdateSubchunkBlocks 36 -60 41 redstone_ore[]; 38 -60 40 redstone_ore[]; 33 -60 43 redstone_ore[]; 35 -60 43 redstone_ore[] | extra: 
+ 150399 watcher UpdateSubchunkBlocks 24 -60 42 redstone_ore[]; 29 -60 44 redstone_ore[]; 19 -60 40 redstone_ore[] | extra: 
+ 150447 watcher UpdateSubchunkBlocks 9 -60 43 redstone_ore[]; 15 -60 41 redstone_ore[]; 10 -60 43 redstone_ore[]; 6 -60 40 redstone_ore[] | extra: 
+ 150447 watcher UpdateSubchunkBlocks 25 -60 40 redstone_ore[]; 27 -60 41 redstone_ore[] | extra: 
+ 150447 actor   UpdateSubchunkBlocks 9 -60 43 redstone_ore[]; 15 -60 41 redstone_ore[]; 10 -60 43 redstone_ore[]; 6 -60 40 redstone_ore[] | extra: 
+ 150447 actor   UpdateSubchunkBlocks 25 -60 40 redstone_ore[]; 27 -60 41 redstone_ore[] | extra: 
+ 150499 watcher UpdateSubchunkBlocks 21 -60 44 redstone_ore[]; 24 -60 43 redstone_ore[]; 17 -60 42 redstone_ore[]; 27 -60 42 redstone_ore[] | extra: 
+ 150499 watcher UpdateSubchunkBlocks 37 -60 44 redstone_ore[]; 37 -60 41 redstone_ore[]; 37 -60 42 redstone_ore[]; 39 -60 41 redstone_ore[]; 40 -60 41 redstone_ore[]; 39 -60 43 redstone_ore[]; 35 -60 44 redstone_ore[] | extra: 
+ 150499 actor   UpdateSubchunkBlocks 21 -60 44 redstone_ore[]; 24 -60 43 redstone_ore[]; 17 -60 42 redstone_ore[]; 27 -60 42 redstone_ore[] | extra: 
+ 150499 actor   UpdateSubchunkBlocks 37 -60 44 redstone_ore[]; 37 -60 41 redstone_ore[]; 37 -60 42 redstone_ore[]; 39 -60 41 redstone_ore[]; 40 -60 41 redstone_ore[]; 39 -60 43 redstone_ore[]; 35 -60 44 redstone_ore[] | extra: 
+ 150499 actor   UpdateSubchunkBlocks 11 -60 44 redstone_ore[]; 7 -60 41 redstone_ore[] | extra: 
+ 150499 watcher UpdateSubchunkBlocks 11 -60 44 redstone_ore[]; 7 -60 41 redstone_ore[] | extra: 
+ 150548 actor   UpdateBlock 40 -60 40 layer 0 redstone_ore[]
+ 150548 watcher UpdateBlock 40 -60 40 layer 0 redstone_ore[]
+ 150548 watcher UpdateSubchunkBlocks 4 -60 40 redstone_ore[]; 5 -60 42 redstone_ore[]; 8 -60 40 redstone_ore[] | extra: 
+ 150548 watcher UpdateSubchunkBlocks 25 -60 43 redstone_ore[]; 30 -60 44 redstone_ore[]; 28 -60 42 redstone_ore[]; 27 -60 43 redstone_ore[]; 20 -60 44 redstone_ore[] | extra: 
+ 150548 actor   UpdateSubchunkBlocks 4 -60 40 redstone_ore[]; 5 -60 42 redstone_ore[]; 8 -60 40 redstone_ore[] | extra: 
+ 150548 actor   UpdateSubchunkBlocks 25 -60 43 redstone_ore[]; 30 -60 44 redstone_ore[]; 28 -60 42 redstone_ore[]; 27 -60 43 redstone_ore[]; 20 -60 44 redstone_ore[] | extra: 
+ 150598 actor   UpdateBlock 20 -60 14 layer 0 exposed_copper[]
+ 150598 watcher UpdateBlock 20 -60 14 layer 0 exposed_copper[]
+ 150599 actor   UpdateBlock 34 -60 43 layer 0 redstone_ore[]
+ 150599 watcher UpdateBlock 34 -60 43 layer 0 redstone_ore[]
+ 150599 watcher UpdateSubchunkBlocks 4 -60 42 redstone_ore[]; 10 -60 40 redstone_ore[]; 2 -60 40 redstone_ore[]; 2 -60 43 redstone_ore[]; 2 -60 44 redstone_ore[]; 3 -60 42 redstone_ore[]; 15 -60 40 redstone_ore[]; 3 -60 44 redstone_ore[] | extra: 
+ 150599 watcher UpdateSubchunkBlocks 18 -60 43 redstone_ore[]; 29 -60 42 redstone_ore[]; 17 -60 40 redstone_ore[]; 22 -60 44 redstone_ore[]; 20 -60 42 redstone_ore[] | extra: 
+ 150599 actor   UpdateSubchunkBlocks 4 -60 42 redstone_ore[]; 10 -60 40 redstone_ore[]; 2 -60 40 redstone_ore[]; 2 -60 43 redstone_ore[]; 2 -60 44 redstone_ore[]; 3 -60 42 redstone_ore[]; 15 -60 40 redstone_ore[]; 3 -60 44 redstone_ore[] | extra: 
+ 150599 actor   UpdateSubchunkBlocks 18 -60 43 redstone_ore[]; 29 -60 42 redstone_ore[]; 17 -60 40 redstone_ore[]; 22 -60 44 redstone_ore[]; 20 -60 42 redstone_ore[] | extra: 
+ 150648 watcher UpdateSubchunkBlocks 12 -60 42 redstone_ore[]; 5 -60 41 redstone_ore[]; 7 -60 43 redstone_ore[] | extra: 
+ 150648 actor   UpdateSubchunkBlocks 12 -60 42 redstone_ore[]; 5 -60 41 redstone_ore[]; 7 -60 43 redstone_ore[] | extra: 
+ 150648 actor   UpdateSubchunkBlocks 21 -60 42 redstone_ore[]; 29 -60 43 redstone_ore[]; 30 -60 41 redstone_ore[]; 20 -60 41 redstone_ore[]; 28 -60 40 redstone_ore[] | extra: 
+ 150648 actor   UpdateSubchunkBlocks 37 -60 43 redstone_ore[]; 32 -60 42 redstone_ore[]; 39 -60 44 redstone_ore[] | extra: 
+ 150648 watcher UpdateSubchunkBlocks 21 -60 42 redstone_ore[]; 29 -60 43 redstone_ore[]; 30 -60 41 redstone_ore[]; 20 -60 41 redstone_ore[]; 28 -60 40 redstone_ore[] | extra: 
+ 150648 watcher UpdateSubchunkBlocks 37 -60 43 redstone_ore[]; 32 -60 42 redstone_ore[]; 39 -60 44 redstone_ore[] | extra: 
+ 150698 actor   UpdateBlock 13 -60 41 layer 0 redstone_ore[]
+ 150698 actor   UpdateSubchunkBlocks 36 -60 40 redstone_ore[]; 32 -60 44 redstone_ore[] | extra: 
+ 150698 actor   UpdateSubchunkBlocks 31 -60 41 redstone_ore[]; 16 -60 41 redstone_ore[]; 27 -60 40 redstone_ore[] | extra: 
+ 150698 watcher UpdateBlock 13 -60 41 layer 0 redstone_ore[]
+ 150698 watcher UpdateSubchunkBlocks 36 -60 40 redstone_ore[]; 32 -60 44 redstone_ore[] | extra: 
+ 150698 watcher UpdateSubchunkBlocks 31 -60 41 redstone_ore[]; 16 -60 41 redstone_ore[]; 27 -60 40 redstone_ore[] | extra: 
+ 150748 actor   UpdateBlock 24 -60 40 layer 0 redstone_ore[]
+ 150748 watcher UpdateBlock 24 -60 40 layer 0 redstone_ore[]
+ 150748 watcher UpdateBlock 40 -60 44 layer 0 redstone_ore[]
+ 150748 actor   UpdateBlock 40 -60 44 layer 0 redstone_ore[]
+ 150748 actor   UpdateSubchunkBlocks 14 -60 42 redstone_ore[]; 10 -60 42 redstone_ore[]; 9 -60 44 redstone_ore[]; 4 -60 44 redstone_ore[] | extra: 
+ 150748 watcher UpdateSubchunkBlocks 14 -60 42 redstone_ore[]; 10 -60 42 redstone_ore[]; 9 -60 44 redstone_ore[]; 4 -60 44 redstone_ore[] | extra: 
+ 150798 watcher UpdateSubchunkBlocks 5 -60 44 redstone_ore[]; 14 -60 43 redstone_ore[] | extra: 
+ 150798 actor   UpdateSubchunkBlocks 5 -60 44 redstone_ore[]; 14 -60 43 redstone_ore[] | extra: 
+ 150847 watcher UpdateBlock 26 -60 43 layer 0 redstone_ore[]
+ 150847 watcher UpdateBlock 20 -60 14 layer 0 weathered_copper[]
+ 150847 watcher UpdateSubchunkBlocks 34 -60 41 redstone_ore[]; 32 -60 41 redstone_ore[] | extra: 
+ 150847 watcher UpdateSubchunkBlocks 2 -60 41 redstone_ore[]; 8 -60 43 redstone_ore[] | extra: 
+ 150847 actor   UpdateBlock 26 -60 43 layer 0 redstone_ore[]
+ 150848 actor   UpdateBlock 20 -60 14 layer 0 weathered_copper[]
+ 150848 actor   UpdateSubchunkBlocks 34 -60 41 redstone_ore[]; 32 -60 41 redstone_ore[] | extra: 
+ 150848 actor   UpdateSubchunkBlocks 2 -60 41 redstone_ore[]; 8 -60 43 redstone_ore[] | extra: 
+ 150898 watcher UpdateBlock 34 -60 40 layer 0 redstone_ore[]
+ 150898 watcher UpdateSubchunkBlocks 19 -60 41 redstone_ore[]; 23 -60 43 redstone_ore[]; 17 -60 41 redstone_ore[]; 22 -60 43 redstone_ore[]; 19 -60 42 redstone_ore[]; 22 -60 41 redstone_ore[] | extra: 
+ 150898 watcher UpdateSubchunkBlocks 13 -60 44 redstone_ore[]; 3 -60 41 redstone_ore[]; 8 -60 44 redstone_ore[] | extra: 
+ 150898 actor   UpdateBlock 34 -60 40 layer 0 redstone_ore[]
+ 150898 actor   UpdateSubchunkBlocks 19 -60 41 redstone_ore[]; 23 -60 43 redstone_ore[]; 17 -60 41 redstone_ore[]; 22 -60 43 redstone_ore[]; 19 -60 42 redstone_ore[]; 22 -60 41 redstone_ore[] | extra: 
+ 150898 actor   UpdateSubchunkBlocks 13 -60 44 redstone_ore[]; 3 -60 41 redstone_ore[]; 8 -60 44 redstone_ore[] | extra: 
+ 150947 watcher UpdateBlock 12 -60 44 layer 0 redstone_ore[]
+ 150948 watcher UpdateSubchunkBlocks 29 -60 40 redstone_ore[]; 16 -60 42 redstone_ore[] | extra: 
+ 150948 watcher UpdateSubchunkBlocks 34 -60 42 redstone_ore[]; 40 -60 43 redstone_ore[] | extra: 
+ 150948 actor   UpdateBlock 12 -60 44 layer 0 redstone_ore[]
+ 150948 actor   UpdateSubchunkBlocks 29 -60 40 redstone_ore[]; 16 -60 42 redstone_ore[] | extra: 
+ 150948 actor   UpdateSubchunkBlocks 34 -60 42 redstone_ore[]; 40 -60 43 redstone_ore[] | extra: 
+ 150998 watcher UpdateBlock 32 -60 40 layer 0 redstone_ore[]
+ 150998 watcher UpdateSubchunkBlocks 14 -60 40 redstone_ore[]; 3 -60 40 redstone_ore[]; 12 -60 41 redstone_ore[] | extra: 
+ 150998 actor   UpdateBlock 32 -60 40 layer 0 redstone_ore[]
+ 150998 actor   UpdateSubchunkBlocks 14 -60 40 redstone_ore[]; 3 -60 40 redstone_ore[]; 12 -60 41 redstone_ore[] | extra: 
+ 151047 actor   UpdateSubchunkBlocks 10 -60 44 redstone_ore[]; 3 -60 43 redstone_ore[]; 9 -60 40 redstone_ore[]; 7 -60 42 redstone_ore[]; 6 -60 42 redstone_ore[] | extra: 
+ 151048 watcher UpdateSubchunkBlocks 10 -60 44 redstone_ore[]; 3 -60 43 redstone_ore[]; 9 -60 40 redstone_ore[]; 7 -60 42 redstone_ore[]; 6 -60 42 redstone_ore[] | extra: 
+ 151098 watcher UpdateBlock 15 -60 44 layer 0 redstone_ore[]
+ 151098 watcher UpdateBlock 40 -60 42 layer 0 redstone_ore[]
+ 151098 actor   UpdateBlock 15 -60 44 layer 0 redstone_ore[]
+ 151098 actor   UpdateBlock 40 -60 42 layer 0 redstone_ore[]
+ 151098 actor   UpdateSubchunkBlocks 18 -60 41 redstone_ore[]; 28 -60 41 redstone_ore[] | extra: 
+ 151098 watcher UpdateSubchunkBlocks 18 -60 41 redstone_ore[]; 28 -60 41 redstone_ore[] | extra: 
+ 151147 actor   UpdateBlock 2 -60 14 layer 0 exposed_copper[]
+ 151147 actor   UpdateBlock 13 -60 42 layer 0 redstone_ore[]
+ 151147 watcher UpdateBlock 2 -60 14 layer 0 exposed_copper[]
+ 151147 actor   UpdateBlock 38 -60 44 layer 0 redstone_ore[]
+ 151147 watcher UpdateBlock 13 -60 42 layer 0 redstone_ore[]
+ 151147 actor   UpdateSubchunkBlocks 18 -60 42 redstone_ore[]; 22 -60 42 redstone_ore[]; 28 -60 44 redstone_ore[]; 31 -60 42 redstone_ore[]; 30 -60 43 redstone_ore[] | extra: 
+ 151148 watcher UpdateBlock 38 -60 44 layer 0 redstone_ore[]
+ 151148 watcher UpdateSubchunkBlocks 18 -60 42 redstone_ore[]; 22 -60 42 redstone_ore[]; 28 -60 44 redstone_ore[]; 31 -60 42 redstone_ore[]; 30 -60 43 redstone_ore[] | extra: 
+ 151198 watcher UpdateBlock 8 -60 41 layer 0 redstone_ore[]
+ 151198 watcher UpdateSubchunkBlocks 37 -60 40 redstone_ore[]; 33 -60 41 redstone_ore[] | extra: 
+ 151198 actor   UpdateBlock 8 -60 41 layer 0 redstone_ore[]
+ 151198 actor   UpdateSubchunkBlocks 37 -60 40 redstone_ore[]; 33 -60 41 redstone_ore[] | extra: 
+ 151247 actor   UpdateBlock 31 -60 43 layer 0 redstone_ore[]
+ 151247 actor   UpdateBlock 8 -60 26 layer 0 exposed_copper[]
+ 151248 watcher UpdateBlock 31 -60 43 layer 0 redstone_ore[]
+ 151248 watcher UpdateBlock 8 -60 26 layer 0 exposed_copper[]
+ 151248 actor   UpdateSubchunkBlocks 35 -60 41 redstone_ore[]; 33 -60 42 redstone_ore[]; 38 -60 43 redstone_ore[] | extra: 
+ 151248 watcher UpdateSubchunkBlocks 35 -60 41 redstone_ore[]; 33 -60 42 redstone_ore[]; 38 -60 43 redstone_ore[] | extra: 
+ 151297 actor   UpdateSubchunkBlocks 12 -60 43 redstone_ore[]; 14 -60 44 redstone_ore[]; 7 -60 40 redstone_ore[]; 15 -60 42 redstone_ore[] | extra: 
+ 151297 watcher UpdateSubchunkBlocks 12 -60 43 redstone_ore[]; 14 -60 44 redstone_ore[]; 7 -60 40 redstone_ore[]; 15 -60 42 redstone_ore[] | extra: 
+## /
+ 151348 actor   UpdateBlock 14 -60 41 layer 0 redstone_ore[]
+ 151348 actor   UpdateSubchunkBlocks 26 -60 32 exposed_copper[]; 26 -60 40 redstone_ore[] | extra: 
+ 151349 watcher UpdateBlock 14 -60 41 layer 0 redstone_ore[]
+ 151349 watcher UpdateSubchunkBlocks 26 -60 32 exposed_copper[]; 26 -60 40 redstone_ore[] | extra: 
+ 151397 actor   UpdateBlock 18 -60 40 layer 0 redstone_ore[]
+ 151398 watcher UpdateBlock 18 -60 40 layer 0 redstone_ore[]
+ 151447 watcher UpdateBlock 41 -60 40 layer 0 redstone_ore[]
+ 151447 actor   UpdateBlock 41 -60 40 layer 0 redstone_ore[]
+ 151497 actor   UpdateBlock 4 -60 43 layer 0 redstone_ore[]
+ 151497 actor   UpdateSubchunkBlocks 25 -60 41 redstone_ore[]; 26 -60 44 redstone_ore[]; 24 -60 44 redstone_ore[]; 27 -60 44 redstone_ore[] | extra: 
+ 151498 watcher UpdateBlock 4 -60 43 layer 0 redstone_ore[]
+ 151498 watcher UpdateSubchunkBlocks 25 -60 41 redstone_ore[]; 26 -60 44 redstone_ore[]; 24 -60 44 redstone_ore[]; 27 -60 44 redstone_ore[] | extra: 
+ 151548 watcher UpdateBlock 34 -60 44 layer 0 redstone_ore[]
+ 151548 actor   UpdateBlock 34 -60 44 layer 0 redstone_ore[]
+ 151548 actor   UpdateBlock 21 -60 41 layer 0 redstone_ore[]
+ 151548 watcher UpdateBlock 21 -60 41 layer 0 redstone_ore[]
+ 151548 actor   UpdateSubchunkBlocks 10 -60 41 redstone_ore[]; 12 -60 40 redstone_ore[]; 9 -60 42 redstone_ore[] | extra: 
+ 151548 watcher UpdateSubchunkBlocks 10 -60 41 redstone_ore[]; 12 -60 40 redstone_ore[]; 9 -60 42 redstone_ore[] | extra: 
+ 151597 actor   UpdateSubchunkBlocks 4 -60 41 redstone_ore[]; 11 -60 41 redstone_ore[] | extra: 
+ 151597 watcher UpdateSubchunkBlocks 4 -60 41 redstone_ore[]; 11 -60 41 redstone_ore[] | extra: 
+ 151647 actor   UpdateBlock 23 -60 40 layer 0 redstone_ore[]
+ 151647 actor   UpdateBlock 41 -60 42 layer 0 redstone_ore[]
+ 151647 watcher UpdateBlock 23 -60 40 layer 0 redstone_ore[]
+ 151647 watcher UpdateBlock 41 -60 42 layer 0 redstone_ore[]
+ 151698 actor   UpdateBlock 9 -60 41 layer 0 redstone_ore[]
+ 151698 actor   UpdateSubchunkBlocks 16 -60 40 redstone_ore[]; 25 -60 44 redstone_ore[]; 20 -60 43 redstone_ore[] | extra: 
+ 151698 watcher UpdateBlock 9 -60 41 layer 0 redstone_ore[]
+ 151698 watcher UpdateSubchunkBlocks 16 -60 40 redstone_ore[]; 25 -60 44 redstone_ore[]; 20 -60 43 redstone_ore[] | extra: 
+ 151747 actor   UpdateBlock 35 -60 40 layer 0 redstone_ore[]
+ 151747 actor   UpdateBlock 18 -60 44 layer 0 redstone_ore[]
+ 151747 watcher UpdateBlock 35 -60 40 layer 0 redstone_ore[]
+ 151747 actor   UpdateSubchunkBlocks 6 -60 41 redstone_ore[]; 11 -60 40 redstone_ore[] | extra: 
+ 151747 watcher UpdateBlock 18 -60 44 layer 0 redstone_ore[]
+ 151747 watcher UpdateSubchunkBlocks 6 -60 41 redstone_ore[]; 11 -60 40 redstone_ore[] | extra: 
+ 151847 actor   UpdateBlock 23 -60 41 layer 0 redstone_ore[]
+ 151847 actor   UpdateSubchunkBlocks 39 -60 42 redstone_ore[]; 38 -60 42 redstone_ore[]; 41 -60 41 redstone_ore[] | extra: 
+ 151847 watcher UpdateBlock 23 -60 41 layer 0 redstone_ore[]
+ 151847 watcher UpdateSubchunkBlocks 39 -60 42 redstone_ore[]; 38 -60 42 redstone_ore[]; 41 -60 41 redstone_ore[] | extra: 
+ 151897 actor   UpdateBlock 35 -60 42 layer 0 redstone_ore[]
+ 151897 watcher UpdateBlock 35 -60 42 layer 0 redstone_ore[]
+ 151947 watcher UpdateBlock 24 -60 41 layer 0 redstone_ore[]
+ 151947 watcher UpdateBlock 36 -60 43 layer 0 redstone_ore[]
+ 151947 actor   UpdateBlock 24 -60 41 layer 0 redstone_ore[]
+ 151947 actor   UpdateBlock 36 -60 43 layer 0 redstone_ore[]
+ 151997 actor   UpdateBlock 11 -60 43 layer 0 redstone_ore[]
+ 151997 watcher UpdateBlock 11 -60 43 layer 0 redstone_ore[]
+ 152046 watcher UpdateBlock 6 -60 43 layer 0 redstone_ore[]
+ 152047 actor   UpdateBlock 6 -60 43 layer 0 redstone_ore[]
+ 152149 watcher UpdateBlock 15 -60 43 layer 0 redstone_ore[]
+ 152150 actor   UpdateBlock 15 -60 43 layer 0 redstone_ore[]
+ 152247 watcher UpdateBlock 26 -60 41 layer 0 redstone_ore[]
+ 152247 actor   UpdateBlock 26 -60 41 layer 0 redstone_ore[]
+ 152297 watcher UpdateBlock 38 -60 41 layer 0 redstone_ore[]
+ 152297 watcher UpdateBlock 30 -60 42 layer 0 redstone_ore[]
+ 152297 actor   UpdateBlock 38 -60 41 layer 0 redstone_ore[]
+ 152297 actor   UpdateBlock 30 -60 42 layer 0 redstone_ore[]
+## /
+ 152349 watcher UpdateBlock 21 -60 43 layer 0 redstone_ore[]
+ 152349 actor   UpdateBlock 21 -60 43 layer 0 redstone_ore[]
+ 152400 watcher UpdateBlock 39 -60 40 layer 0 redstone_ore[]
+ 152400 actor   UpdateBlock 39 -60 40 layer 0 redstone_ore[]
+ 152448 watcher UpdateBlock 7 -60 44 layer 0 redstone_ore[]
+ 152448 actor   UpdateBlock 7 -60 44 layer 0 redstone_ore[]
+ 152548 watcher UpdateSubchunkBlocks 22 -60 40 redstone_ore[]; 19 -60 44 redstone_ore[]; 16 -60 44 redstone_ore[]; 17 -60 44 redstone_ore[] | extra: 
+ 152549 actor   UpdateSubchunkBlocks 22 -60 40 redstone_ore[]; 19 -60 44 redstone_ore[]; 16 -60 44 redstone_ore[]; 17 -60 44 redstone_ore[] | extra: 
+ 152601 watcher UpdateBlock 6 -60 44 layer 0 redstone_ore[]
+ 152601 actor   UpdateBlock 6 -60 44 layer 0 redstone_ore[]
+ 152649 watcher UpdateBlock 2 -60 20 layer 0 exposed_copper[]
+ 152650 watcher UpdateBlock 32 -60 26 layer 0 exposed_copper[]
+ 152650 actor   UpdateBlock 2 -60 20 layer 0 exposed_copper[]
+ 152650 actor   UpdateBlock 32 -60 26 layer 0 exposed_copper[]
+ 152747 actor   UpdateBlock 29 -60 41 layer 0 redstone_ore[]
+ 152747 watcher UpdateBlock 29 -60 41 layer 0 redstone_ore[]
+ 152797 actor   UpdateBlock 38 -60 26 layer 0 exposed_copper[]
+ 152798 actor   UpdateSubchunkBlocks 20 -60 40 redstone_ore[]; 16 -60 43 redstone_ore[] | extra: 
+ 152798 watcher UpdateBlock 38 -60 26 layer 0 exposed_copper[]
+ 152798 watcher UpdateSubchunkBlocks 20 -60 40 redstone_ore[]; 16 -60 43 redstone_ore[] | extra: 
+ 152848 actor   UpdateBlock 41 -60 43 layer 0 redstone_ore[]
+ 152848 watcher UpdateBlock 41 -60 43 layer 0 redstone_ore[]
+ 152897 watcher UpdateSubchunkBlocks 31 -60 44 redstone_ore[]; 17 -60 43 redstone_ore[] | extra: 
+ 152897 actor   UpdateSubchunkBlocks 31 -60 44 redstone_ore[]; 17 -60 43 redstone_ore[] | extra: 
+ 152948 actor   UpdateBlock 30 -60 40 layer 0 redstone_ore[]
+ 152948 watcher UpdateBlock 30 -60 40 layer 0 redstone_ore[]
+ 152997 watcher UpdateBlock 11 -60 42 layer 0 redstone_ore[]
+ 152997 actor   UpdateBlock 11 -60 42 layer 0 redstone_ore[]
+## /
+ 153497 watcher UpdateSubchunkBlocks 38 -60 32 exposed_copper[]; 32 -60 43 redstone_ore[] | extra: 
+ 153497 actor   UpdateSubchunkBlocks 38 -60 32 exposed_copper[]; 32 -60 43 redstone_ore[] | extra: 
+ 153597 watcher UpdateBlock 28 -60 43 layer 0 redstone_ore[]
+ 153597 actor   UpdateBlock 28 -60 43 layer 0 redstone_ore[]
+ 153897 actor   UpdateBlock 38 -60 32 layer 0 weathered_copper[]
+ 153897 watcher UpdateBlock 38 -60 32 layer 0 weathered_copper[]
+ 153997 actor   UpdateBlock 25 -60 42 layer 0 redstone_ore[]
+ 153997 watcher UpdateBlock 25 -60 42 layer 0 redstone_ore[]
+ 154248 watcher UpdateBlock 38 -60 20 layer 0 exposed_copper[]
+ 154248 actor   UpdateBlock 38 -60 20 layer 0 exposed_copper[]
+## /
+ 154347 watcher UpdateBlock 26 -60 32 layer 0 weathered_copper[]
+ 154347 actor   UpdateBlock 26 -60 32 layer 0 weathered_copper[]
+ 154547 actor   UpdateBlock 13 -60 43 layer 0 redstone_ore[]
+ 154548 actor   UpdateBlock 36 -60 42 layer 0 redstone_ore[]
+ 154548 watcher UpdateBlock 13 -60 43 layer 0 redstone_ore[]
+ 154548 watcher UpdateBlock 36 -60 42 layer 0 redstone_ore[]
+ 154697 actor   UpdateBlock 20 -60 32 layer 0 exposed_copper[]
+ 154697 actor   UpdateBlock 20 -60 20 layer 0 exposed_copper[]
+ 154697 watcher UpdateBlock 20 -60 32 layer 0 exposed_copper[]
+ 154697 watcher UpdateBlock 20 -60 20 layer 0 exposed_copper[]
+ 155197 watcher UpdateBlock 2 -60 26 layer 0 exposed_copper[]
+ 155197 actor   UpdateBlock 2 -60 26 layer 0 exposed_copper[]
+## /
+ 155397 actor   UpdateBlock 23 -60 44 layer 0 redstone_ore[]
+ 155397 watcher UpdateBlock 23 -60 44 layer 0 redstone_ore[]
+## /
+ 156347 watcher UpdateBlock 8 -60 14 layer 0 exposed_copper[]
+ 156347 actor   UpdateBlock 8 -60 14 layer 0 exposed_copper[]
+ 157047 watcher UpdateBlock 26 -60 20 layer 0 exposed_copper[]
+ 157047 actor   UpdateBlock 26 -60 20 layer 0 exposed_copper[]
+ 157097 watcher UpdateBlock 32 -60 26 layer 0 weathered_copper[]
+ 157097 actor   UpdateBlock 32 -60 26 layer 0 weathered_copper[]
+## /
+ 157799 watcher UpdateBlock 26 -60 14 layer 0 exposed_copper[]
+ 157799 actor   UpdateBlock 26 -60 14 layer 0 exposed_copper[]
+ 157850 watcher UpdateBlock 38 -60 20 layer 0 weathered_copper[]
+ 157850 actor   UpdateBlock 38 -60 20 layer 0 weathered_copper[]
+## /
+ 158797 watcher UpdateBlock 26 -60 14 layer 0 weathered_copper[]
+ 158797 actor   UpdateBlock 26 -60 14 layer 0 weathered_copper[]
+## /
+ 159647 actor   UpdateBlock 2 -60 26 layer 0 weathered_copper[]
+ 159647 watcher UpdateBlock 2 -60 26 layer 0 weathered_copper[]
+ 159697 actor   UpdateBlock 14 -60 14 layer 0 exposed_copper[]
+ 159697 watcher UpdateBlock 14 -60 14 layer 0 exposed_copper[]
+ 159848 actor   UpdateBlock 20 -60 32 layer 0 weathered_copper[]
+ 159848 watcher UpdateBlock 20 -60 32 layer 0 weathered_copper[]
+## /
+ 160447 watcher UpdateBlock 38 -60 14 layer 0 exposed_copper[]
+ 160447 actor   UpdateBlock 38 -60 14 layer 0 exposed_copper[]
+ 160898 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9585, paused: false }] }) }
+ 160898 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9585, paused: false }] }) }
+ 160898 actor   UpdateBlock 38 -60 14 layer 0 weathered_copper[]
+ 160898 watcher UpdateBlock 38 -60 14 layer 0 weathered_copper[]
+ 161253 actor   UpdateBlock 2 -60 26 layer 0 oxidized_copper[]
+ 161253 watcher UpdateBlock 2 -60 26 layer 0 oxidized_copper[]
+## /
+ 161998 actor   UpdateBlock 14 -60 26 layer 0 exposed_copper[]
+ 161998 watcher UpdateBlock 14 -60 26 layer 0 exposed_copper[]
+ 162297 actor   UpdateBlock 20 -60 26 layer 0 exposed_copper[]
+ 162297 watcher UpdateBlock 20 -60 26 layer 0 exposed_copper[]
+## /
+## /
+ 163398 watcher UpdateBlock 32 -60 32 layer 0 exposed_copper[]
+ 163398 actor   UpdateBlock 32 -60 32 layer 0 exposed_copper[]
+ 163697 actor   UpdateBlock 32 -60 14 layer 0 exposed_copper[]
+ 163697 watcher UpdateBlock 32 -60 14 layer 0 exposed_copper[]
+## /
+ 164547 watcher UpdateBlock 26 -60 14 layer 0 oxidized_copper[]
+ 164547 actor   UpdateBlock 26 -60 14 layer 0 oxidized_copper[]
+ 164697 actor   UpdateBlock 38 -60 14 layer 0 oxidized_copper[]
+ 164697 watcher UpdateBlock 38 -60 14 layer 0 oxidized_copper[]
+ 164796 watcher UpdateBlock 8 -60 32 layer 0 exposed_copper[]
+ 164796 actor   UpdateBlock 8 -60 32 layer 0 exposed_copper[]
+ 164847 watcher UpdateBlock 14 -60 14 layer 0 weathered_copper[]
+ 164847 actor   UpdateBlock 14 -60 14 layer 0 weathered_copper[]
+## /
+ 165499 watcher UpdateBlock 14 -60 14 layer 0 oxidized_copper[]
+ 165499 actor   UpdateBlock 14 -60 14 layer 0 oxidized_copper[]
+## /
+## /
+ 167799 watcher UpdateBlock 26 -60 26 layer 0 exposed_copper[]
+ 167799 actor   UpdateBlock 26 -60 26 layer 0 exposed_copper[]
+ 167949 watcher UpdateBlock 38 -60 32 layer 0 oxidized_copper[]
+ 167949 actor   UpdateBlock 38 -60 32 layer 0 oxidized_copper[]
+## /
+ 168549 watcher UpdateBlock 20 -60 32 layer 0 oxidized_copper[]
+ 168549 actor   UpdateBlock 20 -60 32 layer 0 oxidized_copper[]
+ 168997 watcher UpdateBlock 8 -60 32 layer 0 weathered_copper[]
+ 168997 actor   UpdateBlock 8 -60 32 layer 0 weathered_copper[]
+## /
+ 169497 watcher UpdateBlock 14 -60 26 layer 0 weathered_copper[]
+ 169497 actor   UpdateBlock 14 -60 26 layer 0 weathered_copper[]
+ 170347 actor   UpdateBlock 2 -60 14 layer 0 weathered_copper[]
+ 170348 watcher UpdateBlock 2 -60 14 layer 0 weathered_copper[]
+## /
+## /
+## /
+ 172697 actor   UpdateBlock 2 -60 14 layer 0 oxidized_copper[]
+ 172697 watcher UpdateBlock 2 -60 14 layer 0 oxidized_copper[]
+ 172900 actor   UpdateBlock 20 -60 26 layer 0 weathered_copper[]
+ 172900 watcher UpdateBlock 20 -60 26 layer 0 weathered_copper[]
+## /
+ 173597 watcher UpdateBlock 32 -60 14 layer 0 weathered_copper[]
+ 173597 actor   UpdateBlock 32 -60 14 layer 0 weathered_copper[]
+ 173699 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9841, paused: false }] }) }
+ 173699 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 9841, paused: false }] }) }
+ 173950 actor   UpdateBlock 20 -60 14 layer 0 oxidized_copper[]
+ 173950 watcher UpdateBlock 20 -60 14 layer 0 oxidized_copper[]
+## /
+ 174450 actor   UpdateBlock 26 -60 20 layer 0 weathered_copper[]
+ 174450 watcher UpdateBlock 26 -60 20 layer 0 weathered_copper[]
+ 174747 watcher UpdateBlock 14 -60 32 layer 0 exposed_copper[]
+ 174747 actor   UpdateBlock 14 -60 32 layer 0 exposed_copper[]
+ 174998 watcher UpdateBlock 14 -60 26 layer 0 oxidized_copper[]
+ 174998 actor   UpdateBlock 14 -60 26 layer 0 oxidized_copper[]
+## /
+ 175498 actor   UpdateBlock 2 -60 32 layer 0 exposed_copper[]
+ 175498 watcher UpdateBlock 2 -60 32 layer 0 exposed_copper[]
+## /
+ 176449 watcher UpdateBlock 14 -60 32 layer 0 weathered_copper[]
+ 176449 actor   UpdateBlock 14 -60 32 layer 0 weathered_copper[]
+ 177198 watcher UpdateBlock 14 -60 32 layer 0 oxidized_copper[]
+ 177198 actor   UpdateBlock 14 -60 32 layer 0 oxidized_copper[]
+ 177300 actor   UpdateBlock 8 -60 20 layer 0 exposed_copper[]
+ 177300 watcher UpdateBlock 8 -60 20 layer 0 exposed_copper[]
+## /
+## /
+ 178902 watcher UpdateBlock 32 -60 20 layer 0 exposed_copper[]
+ 178902 actor   UpdateBlock 32 -60 20 layer 0 exposed_copper[]
+## /
+## /
+ 180499 watcher UpdateBlock 8 -60 14 layer 0 weathered_copper[]
+ 180499 watcher UpdateBlock 32 -60 26 layer 0 oxidized_copper[]
+ 180499 actor   UpdateBlock 8 -60 14 layer 0 weathered_copper[]
+ 180499 actor   UpdateBlock 32 -60 26 layer 0 oxidized_copper[]
+ 181298 watcher UpdateBlock 38 -60 26 layer 0 weathered_copper[]
+ 181298 actor   UpdateBlock 38 -60 26 layer 0 weathered_copper[]
+## /
+## /
+ 182547 watcher UpdateBlock 32 -60 20 layer 0 weathered_copper[]
+ 182547 actor   UpdateBlock 32 -60 20 layer 0 weathered_copper[]
+ 182998 actor   UpdateBlock 38 -60 26 layer 0 oxidized_copper[]
+ 182998 watcher UpdateBlock 38 -60 26 layer 0 oxidized_copper[]
+ 183149 actor   UpdateBlock 32 -60 20 layer 0 oxidized_copper[]
+ 183149 watcher UpdateBlock 32 -60 20 layer 0 oxidized_copper[]
+## /
+ 183905 watcher UpdateBlock 32 -60 14 layer 0 oxidized_copper[]
+ 183905 actor   UpdateBlock 32 -60 14 layer 0 oxidized_copper[]
+## /
+ 185249 watcher UpdateBlock 38 -60 20 layer 0 oxidized_copper[]
+ 185249 actor   UpdateBlock 38 -60 20 layer 0 oxidized_copper[]
+## /
+ 185548 watcher UpdateBlock 8 -60 26 layer 0 weathered_copper[]
+ 185548 actor   UpdateBlock 8 -60 26 layer 0 weathered_copper[]
+## /
+ 186500 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10097, paused: false }] }) }
+ 186500 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10097, paused: false }] }) }
+## /
+ 187452 watcher UpdateBlock 14 -60 20 layer 0 exposed_copper[]
+ 187452 actor   UpdateBlock 14 -60 20 layer 0 exposed_copper[]
+## /
+ 189049 watcher UpdateBlock 8 -60 20 layer 0 weathered_copper[]
+ 189049 actor   UpdateBlock 8 -60 20 layer 0 weathered_copper[]
+## /
+## /
+ 190998 watcher UpdateBlock 14 -60 20 layer 0 weathered_copper[]
+ 190998 actor   UpdateBlock 14 -60 20 layer 0 weathered_copper[]
+## /
+## /
+ 192699 watcher UpdateBlock 8 -60 14 layer 0 oxidized_copper[]
+ 192699 actor   UpdateBlock 8 -60 14 layer 0 oxidized_copper[]
+## /
+## /
+ 194749 watcher UpdateBlock 14 -60 20 layer 0 oxidized_copper[]
+ 194750 actor   UpdateBlock 14 -60 20 layer 0 oxidized_copper[]
+## /
+ 196100 watcher UpdateBlock 2 -60 20 layer 0 weathered_copper[]
+ 196100 actor   UpdateBlock 2 -60 20 layer 0 weathered_copper[]
+## /
+## /
+## /
+ 198449 watcher UpdateBlock 2 -60 32 layer 0 weathered_copper[]
+ 198449 actor   UpdateBlock 2 -60 32 layer 0 weathered_copper[]
+ 199299 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10353, paused: false }] }) }
+ 199299 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10353, paused: false }] }) }
+## /
+ 200049 actor   UpdateBlock 26 -60 32 layer 0 oxidized_copper[]
+ 200049 watcher UpdateBlock 26 -60 32 layer 0 oxidized_copper[]
+## /
+## /
+ 201701 watcher UpdateBlock 26 -60 26 layer 0 weathered_copper[]
+ 201701 actor   UpdateBlock 26 -60 26 layer 0 weathered_copper[]
+ 202149 actor   UpdateBlock 8 -60 32 layer 0 oxidized_copper[]
+ 202149 watcher UpdateBlock 8 -60 32 layer 0 oxidized_copper[]
+## /
+ 202449 actor   UpdateBlock 20 -60 26 layer 0 oxidized_copper[]
+ 202449 watcher UpdateBlock 20 -60 26 layer 0 oxidized_copper[]
+## /
+ 204299 watcher UpdateBlock 32 -60 32 layer 0 weathered_copper[]
+ 204300 actor   UpdateBlock 32 -60 32 layer 0 weathered_copper[]
+## /
+ 205199 watcher UpdateBlock 2 -60 20 layer 0 oxidized_copper[]
+ 205199 actor   UpdateBlock 2 -60 20 layer 0 oxidized_copper[]
+## /
+## /
+## /
+ 207497 actor   UpdateBlock 26 -60 20 layer 0 oxidized_copper[]
+ 207497 watcher UpdateBlock 26 -60 20 layer 0 oxidized_copper[]
+## /
+## /
+## /
+## /
+ 212098 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10609, paused: false }] }) }
+ 212098 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 10609, paused: false }] }) }
+## /gamerule randomtickspeed 0
+ 212496 actor   GameRulesChanged randomTickSpeed=Int(0)
+ 212496 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "0"]
+ 212497 watcher GameRulesChanged randomTickSpeed=Int(0)
+ 212497 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"0\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill 2 -60 14 41 -60 44 air
+ 213529 watcher UpdateSubchunkBlocks 2 -60 14 air[]; 8 -60 14 air[]; 14 -60 14 air[] | extra: 
+ 213529 watcher UpdateSubchunkBlocks 2 -60 20 air[]; 2 -60 26 air[]; 8 -60 20 air[]; 8 -60 26 air[]; 14 -60 20 air[]; 14 -60 26 air[] | extra: 
+ 213530 watcher UpdateSubchunkBlocks 2 -60 32 air[]; 2 -60 40 air[]; 2 -60 41 air[]; 2 -60 42 air[]; 2 -60 43 air[]; 2 -60 44 air[]; 3 -60 40 air[]; 3 -60 41 air[]; 3 -60 42 air[]; 3 -60 43 air[]; 3 -60 44 air[]; 4 -60 40 air[]; 4 -60 41 air[]; 4 -60 42 air[]; 4 -60 43 air[]; 4 -60 44 air[]; 5 -60 40 air[]; 5 -60 41 air[]; 5 -60 42 air[]; 5 -60 43 air[]; 5 -60 44 air[]; 6 -60 40 air[]; 6 -60 41 air[]; 6 -60 42 air[]; 6 -60 43 air[]; 6 -60 44 air[]; 7 -60 40 air[]; 7 -60 41 air[]; 7 -60 42 air[]; 7 -60 43 air[]; 7 -60 44 air[]; 8 -60 32 air[]; 8 -60 40 air[]; 8 -60 41 air[]; 8 -60 42 air[]; 8 -60 43 air[]; 8 -60 44 air[]; 9 -60 40 air[]; 9 -60 41 air[]; 9 -60 42 air[]; 9 -60 43 air[]; 9 -60 44 air[]; 10 -60 40 air[]; 10 -60 41 air[]; 10 -60 42 air[]; 10 -60 43 air[]; 10 -60 44 air[]; 11 -60 40 air[]; 11 -60 41 air[]; 11 -60 42 air[]; 11 -60 43 air[]; 11 -60 44 air[]; 12 -60 40 air[]; 12 -60 41 air[]; 12 -60 42 air[]; 12 -60 43 air[]; 12 -60 44 air[]; 13 -60 40 air[]; 13 -60 41 air[]; 13 -60 42 air[]; 13 -60 43 air[]; 13 -60 44 air[]; 14 -60 32 air[]; 14 -60 40 air[]; 14 -60 41 air[]; 14 -60 42 air[]; 14 -60 43 air[]; 14 -60 44 air[]; 15 -60 40 air[]; 15 -60 41 air[]; 15 -60 42 air[]; 15 -60 43 air[]; 15 -60 44 air[] | extra: 
+ 213530 watcher UpdateSubchunkBlocks 16 -60 40 air[]; 16 -60 41 air[]; 16 -60 42 air[]; 16 -60 43 air[]; 16 -60 44 air[]; 17 -60 40 air[]; 17 -60 41 air[]; 17 -60 42 air[]; 17 -60 43 air[]; 17 -60 44 air[]; 18 -60 40 air[]; 18 -60 41 air[]; 18 -60 42 air[]; 18 -60 43 air[]; 18 -60 44 air[]; 19 -60 40 air[]; 19 -60 41 air[]; 19 -60 42 air[]; 19 -60 43 air[]; 19 -60 44 air[]; 20 -60 32 air[]; 20 -60 40 air[]; 20 -60 41 air[]; 20 -60 42 air[]; 20 -60 43 air[]; 20 -60 44 air[]; 21 -60 40 air[]; 21 -60 41 air[]; 21 -60 42 air[]; 21 -60 43 air[]; 21 -60 44 air[]; 22 -60 40 air[]; 22 -60 41 air[]; 22 -60 42 air[]; 22 -60 43 air[]; 22 -60 44 air[]; 23 -60 40 air[]; 23 -60 41 air[]; 23 -60 42 air[]; 23 -60 43 air[]; 23 -60 44 air[]; 24 -60 40 air[]; 24 -60 41 air[]; 24 -60 42 air[]; 24 -60 43 air[]; 24 -60 44 air[]; 25 -60 40 air[]; 25 -60 41 air[]; 25 -60 42 air[]; 25 -60 43 air[]; 25 -60 44 air[]; 26 -60 32 air[]; 26 -60 40 air[]; 26 -60 41 air[]; 26 -60 42 air[]; 26 -60 43 air[]; 26 -60 44 air[]; 27 -60 40 air[]; 27 -60 41 air[]; 27 -60 42 air[]; 27 -60 43 air[]; 27 -60 44 air[]; 28 -60 40 air[]; 28 -60 41 air[]; 28 -60 42 air[]; 28 -60 43 air[]; 28 -60 44 air[]; 29 -60 40 air[]; 29 -60 41 air[]; 29 -60 42 air[]; 29 -60 43 air[]; 29 -60 44 air[]; 30 -60 40 air[]; 30 -60 41 air[]; 30 -60 42 air[]; 30 -60 43 air[]; 30 -60 44 air[]; 31 -60 40 air[]; 31 -60 41 air[]; 31 -60 42 air[]; 31 -60 43 air[]; 31 -60 44 air[] | extra: 
+ 213530 watcher UpdateSubchunkBlocks 20 -60 14 air[]; 26 -60 14 air[] | extra: 
+ 213530 watcher UpdateSubchunkBlocks 20 -60 20 air[]; 20 -60 26 air[]; 26 -60 20 air[]; 26 -60 26 air[] | extra: 
+ 213530 watcher UpdateSubchunkBlocks 32 -60 14 air[]; 38 -60 14 air[] | extra: 
+ 213530 watcher UpdateSubchunkBlocks 32 -60 20 air[]; 32 -60 26 air[]; 38 -60 20 air[]; 38 -60 26 air[] | extra: 
+ 213530 watcher UpdateSubchunkBlocks 32 -60 32 air[]; 32 -60 40 air[]; 32 -60 41 air[]; 32 -60 42 air[]; 32 -60 43 air[]; 32 -60 44 air[]; 33 -60 40 air[]; 33 -60 41 air[]; 33 -60 42 air[]; 33 -60 43 air[]; 33 -60 44 air[]; 34 -60 40 air[]; 34 -60 41 air[]; 34 -60 42 air[]; 34 -60 43 air[]; 34 -60 44 air[]; 35 -60 40 air[]; 35 -60 41 air[]; 35 -60 42 air[]; 35 -60 43 air[]; 35 -60 44 air[]; 36 -60 40 air[]; 36 -60 41 air[]; 36 -60 42 air[]; 36 -60 43 air[]; 36 -60 44 air[]; 37 -60 40 air[]; 37 -60 41 air[]; 37 -60 42 air[]; 37 -60 43 air[]; 37 -60 44 air[]; 38 -60 32 air[]; 38 -60 40 air[]; 38 -60 41 air[]; 38 -60 42 air[]; 38 -60 43 air[]; 38 -60 44 air[]; 39 -60 40 air[]; 39 -60 41 air[]; 39 -60 42 air[]; 39 -60 43 air[]; 39 -60 44 air[]; 40 -60 40 air[]; 40 -60 41 air[]; 40 -60 42 air[]; 40 -60 43 air[]; 40 -60 44 air[]; 41 -60 40 air[]; 41 -60 41 air[]; 41 -60 42 air[]; 41 -60 43 air[]; 41 -60 44 air[] | extra: 
+ 213530 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"228\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 213531 actor   UpdateSubchunkBlocks 2 -60 14 air[]; 8 -60 14 air[]; 14 -60 14 air[] | extra: 
+ 213531 actor   UpdateSubchunkBlocks 2 -60 20 air[]; 2 -60 26 air[]; 8 -60 20 air[]; 8 -60 26 air[]; 14 -60 20 air[]; 14 -60 26 air[] | extra: 
+ 213531 actor   UpdateSubchunkBlocks 2 -60 32 air[]; 2 -60 40 air[]; 2 -60 41 air[]; 2 -60 42 air[]; 2 -60 43 air[]; 2 -60 44 air[]; 3 -60 40 air[]; 3 -60 41 air[]; 3 -60 42 air[]; 3 -60 43 air[]; 3 -60 44 air[]; 4 -60 40 air[]; 4 -60 41 air[]; 4 -60 42 air[]; 4 -60 43 air[]; 4 -60 44 air[]; 5 -60 40 air[]; 5 -60 41 air[]; 5 -60 42 air[]; 5 -60 43 air[]; 5 -60 44 air[]; 6 -60 40 air[]; 6 -60 41 air[]; 6 -60 42 air[]; 6 -60 43 air[]; 6 -60 44 air[]; 7 -60 40 air[]; 7 -60 41 air[]; 7 -60 42 air[]; 7 -60 43 air[]; 7 -60 44 air[]; 8 -60 32 air[]; 8 -60 40 air[]; 8 -60 41 air[]; 8 -60 42 air[]; 8 -60 43 air[]; 8 -60 44 air[]; 9 -60 40 air[]; 9 -60 41 air[]; 9 -60 42 air[]; 9 -60 43 air[]; 9 -60 44 air[]; 10 -60 40 air[]; 10 -60 41 air[]; 10 -60 42 air[]; 10 -60 43 air[]; 10 -60 44 air[]; 11 -60 40 air[]; 11 -60 41 air[]; 11 -60 42 air[]; 11 -60 43 air[]; 11 -60 44 air[]; 12 -60 40 air[]; 12 -60 41 air[]; 12 -60 42 air[]; 12 -60 43 air[]; 12 -60 44 air[]; 13 -60 40 air[]; 13 -60 41 air[]; 13 -60 42 air[]; 13 -60 43 air[]; 13 -60 44 air[]; 14 -60 32 air[]; 14 -60 40 air[]; 14 -60 41 air[]; 14 -60 42 air[]; 14 -60 43 air[]; 14 -60 44 air[]; 15 -60 40 air[]; 15 -60 41 air[]; 15 -60 42 air[]; 15 -60 43 air[]; 15 -60 44 air[] | extra: 
+ 213531 actor   UpdateSubchunkBlocks 16 -60 40 air[]; 16 -60 41 air[]; 16 -60 42 air[]; 16 -60 43 air[]; 16 -60 44 air[]; 17 -60 40 air[]; 17 -60 41 air[]; 17 -60 42 air[]; 17 -60 43 air[]; 17 -60 44 air[]; 18 -60 40 air[]; 18 -60 41 air[]; 18 -60 42 air[]; 18 -60 43 air[]; 18 -60 44 air[]; 19 -60 40 air[]; 19 -60 41 air[]; 19 -60 42 air[]; 19 -60 43 air[]; 19 -60 44 air[]; 20 -60 32 air[]; 20 -60 40 air[]; 20 -60 41 air[]; 20 -60 42 air[]; 20 -60 43 air[]; 20 -60 44 air[]; 21 -60 40 air[]; 21 -60 41 air[]; 21 -60 42 air[]; 21 -60 43 air[]; 21 -60 44 air[]; 22 -60 40 air[]; 22 -60 41 air[]; 22 -60 42 air[]; 22 -60 43 air[]; 22 -60 44 air[]; 23 -60 40 air[]; 23 -60 41 air[]; 23 -60 42 air[]; 23 -60 43 air[]; 23 -60 44 air[]; 24 -60 40 air[]; 24 -60 41 air[]; 24 -60 42 air[]; 24 -60 43 air[]; 24 -60 44 air[]; 25 -60 40 air[]; 25 -60 41 air[]; 25 -60 42 air[]; 25 -60 43 air[]; 25 -60 44 air[]; 26 -60 32 air[]; 26 -60 40 air[]; 26 -60 41 air[]; 26 -60 42 air[]; 26 -60 43 air[]; 26 -60 44 air[]; 27 -60 40 air[]; 27 -60 41 air[]; 27 -60 42 air[]; 27 -60 43 air[]; 27 -60 44 air[]; 28 -60 40 air[]; 28 -60 41 air[]; 28 -60 42 air[]; 28 -60 43 air[]; 28 -60 44 air[]; 29 -60 40 air[]; 29 -60 41 air[]; 29 -60 42 air[]; 29 -60 43 air[]; 29 -60 44 air[]; 30 -60 40 air[]; 30 -60 41 air[]; 30 -60 42 air[]; 30 -60 43 air[]; 30 -60 44 air[]; 31 -60 40 air[]; 31 -60 41 air[]; 31 -60 42 air[]; 31 -60 43 air[]; 31 -60 44 air[] | extra: 
+ 213531 actor   UpdateSubchunkBlocks 20 -60 14 air[]; 26 -60 14 air[] | extra: 
+ 213531 actor   UpdateSubchunkBlocks 20 -60 20 air[]; 20 -60 26 air[]; 26 -60 20 air[]; 26 -60 26 air[] | extra: 
+ 213531 actor   UpdateSubchunkBlocks 32 -60 14 air[]; 38 -60 14 air[] | extra: 
+ 213531 actor   UpdateSubchunkBlocks 32 -60 20 air[]; 32 -60 26 air[]; 38 -60 20 air[]; 38 -60 26 air[] | extra: 
+ 213532 actor   UpdateSubchunkBlocks 32 -60 32 air[]; 32 -60 40 air[]; 32 -60 41 air[]; 32 -60 42 air[]; 32 -60 43 air[]; 32 -60 44 air[]; 33 -60 40 air[]; 33 -60 41 air[]; 33 -60 42 air[]; 33 -60 43 air[]; 33 -60 44 air[]; 34 -60 40 air[]; 34 -60 41 air[]; 34 -60 42 air[]; 34 -60 43 air[]; 34 -60 44 air[]; 35 -60 40 air[]; 35 -60 41 air[]; 35 -60 42 air[]; 35 -60 43 air[]; 35 -60 44 air[]; 36 -60 40 air[]; 36 -60 41 air[]; 36 -60 42 air[]; 36 -60 43 air[]; 36 -60 44 air[]; 37 -60 40 air[]; 37 -60 41 air[]; 37 -60 42 air[]; 37 -60 43 air[]; 37 -60 44 air[]; 38 -60 32 air[]; 38 -60 40 air[]; 38 -60 41 air[]; 38 -60 42 air[]; 38 -60 43 air[]; 38 -60 44 air[]; 39 -60 40 air[]; 39 -60 41 air[]; 39 -60 42 air[]; 39 -60 43 air[]; 39 -60 44 air[]; 40 -60 40 air[]; 40 -60 41 air[]; 40 -60 42 air[]; 40 -60 43 air[]; 40 -60 44 air[]; 41 -60 40 air[]; 41 -60 41 air[]; 41 -60 42 air[]; 41 -60 43 air[]; 41 -60 44 air[] | extra: 
+ 213532 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["228"]
+## /
+## /gamerule randomtickspeed 1
+ 215497 actor   GameRulesChanged randomTickSpeed=Int(1)
+ 215497 watcher GameRulesChanged randomTickSpeed=Int(1)
+ 215497 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["randomtickspeed", "1"]
+ 215497 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"randomtickspeed\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1
