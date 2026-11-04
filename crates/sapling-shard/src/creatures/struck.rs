@@ -1,10 +1,11 @@
 //! What lightning does to a mob, as BDS's packs and `Actor::onLightningHit` have it: a pig becomes
 //! a zombified piglin and a villager a witch, a mooshroom turns red or brown, a creeper is charged
 //! (its blast twice as strong, blast.rs), all four unhurt; a turtle dies; anything else takes 5
-//! and, unless fire cannot hurt it, burns 8 seconds.
-// TODO: BDS turns a pig or a villager half a second after the bolt, not at once.
+//! and, unless fire cannot hurt it, burns 8 seconds. A pig or a villager turns 10 ticks after the
+//! strike (its pack's `transformation` delay 0.5), the pig with `mob.pig.death` at its middle
+//! (research/captures/bds-n3struck.txt).
 
-use acacia_proto::packets::SetEntityData;
+use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};
 use bevy_ecs::prelude::*;
 use sapling_api::SpawnReason;
@@ -21,18 +22,50 @@ const TURTLE: &str = "minecraft:turtle";
 /// A turtle takes lightning this many times over.
 const TURTLE_TAKES: f32 = 2000.0;
 const BROWN: i32 = 1;
-const TURNS: &[(&str, &str)] = &[("minecraft:pig", "minecraft:zombie_pigman"), ("minecraft:villager_v2", "minecraft:witch"), ("minecraft:villager", "minecraft:witch")];
+/// What each kind turns into, and the sound of its turning.
+const TURNS: &[(&str, &str, Option<&str>)] = &[
+    ("minecraft:pig", "minecraft:zombie_pigman", Some("mob.pig.death")),
+    ("minecraft:villager_v2", "minecraft:witch", None),
+    ("minecraft:villager", "minecraft:witch", None),
+];
+const TURN_DELAY: u64 = 10;
 
 /// A creeper lightning struck.
 #[derive(Component)]
 pub(super) struct Charged;
 
-/// The mob takes the place of one of `kind` facing the same way, where it stood.
-fn turn_into(world: &mut World, mob: Entity, layer: Entity, kind: &str) -> Option<()> {
+/// A mob lightning struck, turning into another at the tick `at`.
+#[derive(Component)]
+pub(super) struct Turning {
+    into: &'static str,
+    sound: Option<&'static str>,
+    at: u64,
+}
+
+/// The mob takes the place of one of `kind` facing the same way, where it stood, heard as `sound`.
+fn turn_into(world: &mut World, mob: Entity, layer: Entity, kind: &str, sound: Option<&str>) -> Option<()> {
     let body = *world.get::<Body>(mob)?;
     let yaw = world.get::<legs::Legs>(mob).map_or(0.0, |legs| legs.yaw);
+    let turned = super::spawn_as(world, layer, kind, body.at, SpawnReason::Lightning, yaw, None).and_then(|id| entities::find(world, id));
     mobs::remove(world, mob);
-    super::spawn_as(world, layer, kind, body.at, SpawnReason::Lightning, yaw, None).map(drop)
+    let (Some(turned), Some(sound)) = (turned, sound) else { return Some(()) };
+    let position = acacia_proto::types::Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] };
+    let heard = LevelSoundEvent { sound_id: sound.into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
+    tell(world, turned, layer, vec![sapling_net::encode(&heard)])
+}
+
+/// A tick: struck mobs whose time came turn.
+pub(super) fn tick(world: &mut World) {
+    let now = world.resource::<crate::components::Tick>().0;
+    let due: Vec<(Entity, Entity, &'static str, Option<&'static str>)> = world
+        .query::<(Entity, &Turning, &crate::components::InLayer)>()
+        .iter(world)
+        .filter(|(_, turning, _)| turning.at <= now)
+        .map(|(mob, turning, layer)| (mob, layer.0, turning.into, turning.sound))
+        .collect();
+    for (mob, layer, into, sound) in due {
+        turn_into(world, mob, layer, into, sound);
+    }
 }
 
 fn tell(world: &mut World, mob: Entity, layer: Entity, packets: Vec<bytes::Bytes>) -> Option<()> {
@@ -62,8 +95,11 @@ fn charge(world: &mut World, mob: Entity, layer: Entity) -> Option<()> {
 /// Lightning struck the mob.
 pub(crate) fn struck_by_lightning(world: &mut World, mob: Entity, layer: Entity) {
     let Some(kind) = world.get::<entities::Kind>(mob).map(|kind| kind.0.clone()) else { return };
-    if let Some((_, into)) = TURNS.iter().find(|(from, _)| *from == kind) {
-        turn_into(world, mob, layer, into);
+    if let Some(&(_, into, sound)) = TURNS.iter().find(|(from, ..)| *from == kind) {
+        if world.get::<Turning>(mob).is_none() {
+            let at = world.resource::<crate::components::Tick>().0 + TURN_DELAY;
+            world.entity_mut(mob).insert(Turning { into, sound, at });
+        }
         return;
     }
     match kind.as_str() {

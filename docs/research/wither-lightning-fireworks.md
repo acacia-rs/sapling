@@ -37,8 +37,16 @@ Code: `crates/sapling-shard/src/lightning.rs`, `lightning/{storms,rods}.rs`, `cr
   184 `item.trident.thunder`.
 
 Unverified: an unwaxed rod that is oxidised seems to be scraped instead of powered (its vtable's
-slot 16 jumps to the copper routine; not tried live); the `Animal` kinds sapling lists; BDS turns a
-pig or villager 0.5 s after the bolt, sapling at once; the sky flash (Weather +0x50) is not sent.
+slot 16 jumps to the copper routine; not tried live); the `Animal` kinds sapling lists; the sky
+flash (Weather +0x50) is not sent.
+
+Drilled (2026-11-04, `bds_command_probe n3struck`, research/captures/bds-n3struck.txt): a struck
+pig turns 10 ticks after the bolt's strike: `AddEntity` of the zombie pigman, its `MobEquipment`,
+`RemoveEntity` of the pig, then `mob.pig.death` heard at the pig's mid height (entity type "", unique
+id -1); the new mob makes no `spawn` sound. Sapling now does the same (`creatures/struck.rs`
+`Turning`; test `a_pig_becomes_a_zombified_piglin_and_a_creeper_is_charged_unhurt`). A villager 3 blocks off the pig's bolt
+turned into a witch in the same tick as the pig, with no sound. `/summon villager_v2` is a syntax
+error on BDS; `villager` summons one.
 Left out: the skeleton horse trap (1 in {134, 67, 45} by difficulty, 0x142cb06f0), a trident
 hitting a rod, items struck, a charged creeper kept in the world folder.
 
