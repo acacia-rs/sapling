@@ -33,7 +33,7 @@ const HORSE: &str = "minecraft:horse";
 pub(super) const TACK: usize = 2;
 const DONKEY_CHEST: usize = 15;
 pub(super) const PER_STRENGTH: usize = 3;
-const HORSE_ARMOR: [&str; 6] = ["leather", "copper", "iron", "golden", "diamond", "netherite"];
+pub(super) const HORSE_ARMOR: [&str; 6] = ["leather", "copper", "iron", "golden", "diamond", "netherite"];
 const CARPETS: [&str; 18] = [
     "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black", "moss", "pale_moss",
 ];
@@ -105,16 +105,17 @@ pub(crate) fn slots(world: &World, mob: Entity) -> Option<Vec<Option<Held>>> {
     world.get::<Pack>(mob).map(|pack| pack.0.clone())
 }
 
-/// Puts `armor` on `mob`, or takes it off.
+/// Puts `armor` in `mob`'s slot 1 and its body slot, or takes it off.
 pub(super) fn wear(world: &mut World, mob: Entity, armor: Option<ItemStack>) {
-    match world.get_mut::<Tack>(mob) {
-        Some(mut tack) => tack.armor = armor,
-        None => {
-            let mut tack = Tack::default();
-            tack.armor = armor;
-            world.entity_mut(mob).insert(tack);
-        }
-    }
+    let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
+    (tack.armor, tack.body) = (armor.clone(), armor);
+    world.entity_mut(mob).insert(tack);
+}
+
+/// The armour or carpet in a dying mount's slot 1, which it leaves as loot after its own
+/// (research/captures/bds-bodyslot.txt; with `doMobLoot` off a llama's carpet stayed, bds-tack.txt).
+pub(crate) fn looted_armor(world: &World, mob: Entity) -> Option<ItemStack> {
+    world.get::<Tack>(mob).and_then(|tack| tack.armor.clone())
 }
 
 /// What `mob`'s goods are kept as: its pack's slots once opened, else its tack and the chest's
@@ -130,8 +131,7 @@ fn goods(world: &World, mob: Entity) -> Vec<(u8, ItemStack)> {
 }
 
 /// What a dying mount lets go of, `doMobLoot` or not: its goods, the chest they were in
-/// (bds-chestdie.txt), then its saddle, a camel's too; its armour and carpet stay with it
-/// (research/captures/bds-tack.txt, bds-mountdeath.txt).
+/// (bds-chestdie.txt), then its saddle, a camel's too; its armour is loot ([`looted_armor`]).
 pub(crate) fn spilled(world: &World, mob: Entity) -> Vec<ItemStack> {
     let mut spilled: Vec<ItemStack> = Vec::new();
     if world.get::<Kind>(mob).is_some_and(|kind| has_pack(&kind.0)) {

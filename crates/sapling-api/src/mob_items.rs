@@ -12,7 +12,9 @@ pub enum MobSlot {
     OffHand,
     /// A horse's, donkey's or mule's saddle.
     Saddle,
-    /// A horse's armour or a llama's carpet (`slot.armor`).
+    /// A horse's armour or a llama's carpet in its inventory (`slot.armor`).
+    MountArmor,
+    /// The body slot any mob has (`slot.armor.body`): horse armour on every mount.
     Body,
     /// A slot of the chest a donkey, mule or llama carries.
     Chest(usize),

@@ -83,7 +83,7 @@ use crate::body::Body;
 use birth::{Birth, born, spawn_as, spawn_entity};
 use death::{die, leaves_loot};
 use shown::{head, physics_of, reshow};
-pub(crate) use birth::{from_storage, spawn};
+pub(crate) use birth::{from_storage, is_arriving, spawn};
 pub(crate) use shown::is_baby;
 pub(crate) use afflictions::{clouded, takes_potion};
 pub(crate) use armour_stands::use_on as dress_stand;

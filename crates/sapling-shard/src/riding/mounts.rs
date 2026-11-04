@@ -48,10 +48,12 @@ const STEERED: [Steered; 2] = [
 const CAMEL: &str = "minecraft:camel";
 const CAMEL_SPEED: f32 = 0.09;
 
-/// A mob's armour once a player put it on, and the tick its boost ends.
+/// A mob's armour or carpet in its inventory's slot 1, what its body slot shows, and the tick its
+/// boost ends. Putting on armour fills both; `slot.armor.body` the body alone (riding/body.rs).
 #[derive(Component, Default, Clone)]
 pub(crate) struct Tack {
     pub armor: Option<ItemStack>,
+    pub body: Option<ItemStack>,
     boosted_until: u64,
 }
 
@@ -132,6 +134,7 @@ fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
         "saddle"
     } else if super::packs::takes(kind, 1, &stack.name) && grown && tamed(world, mob) && tack.armor.is_none() {
         tack.armor = Some(ItemStack { count: 1, ..stack });
+        tack.body = tack.armor.clone();
         "armor.equip_generic"
     } else {
         return false;
@@ -151,17 +154,20 @@ fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
     true
 }
 
-/// What shows a mob's tack: its flags, with `SADDLED`, and the armour or carpet on its body.
+/// What shows a mob's tack: its flags, with `SADDLED`, and what its body slot shows.
 pub(super) fn worn(world: &mut World, mob: Entity) -> Vec<Bytes> {
     let Some(tack) = world.get::<Tack>(mob).cloned() else { return Vec::new() };
     let (Some(id), Some(kind)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Kind>(mob).map(|kind| kind.0.clone())) else { return Vec::new() };
     let word = entities::mob_flags(world, mob, &kind, saddle_flags(&kind), saddled(world, mob));
     let mut shown = vec![packets::flags(id, word)];
-    if let Some(armor) = &tack.armor {
-        let slots = [None, None, None, None, Some(crate::inventory::stack(armor))];
-        shown.push(sapling_net::encode(&sapling_data::mob_armor(id, &slots)));
-    }
+    shown.extend(tack.body.as_ref().map(|body| body_shown(id, Some(body))));
     shown
+}
+
+/// The `MobArmorEquipment` showing `body` in the mob `id`'s body slot.
+pub(super) fn body_shown(id: u64, body: Option<&ItemStack>) -> Bytes {
+    let slots = [None, None, None, None, body.map(crate::inventory::stack)];
+    sapling_net::encode(&sapling_data::mob_armor(id, &slots))
 }
 
 /// How a ridden mob moves this tick.

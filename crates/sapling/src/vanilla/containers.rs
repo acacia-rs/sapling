@@ -53,7 +53,8 @@ fn mob_slot(kind: &str, slot: usize) -> Option<MobSlot> {
         OFFHAND => MobSlot::OffHand,
         "slot.saddle" => MobSlot::Saddle,
         // BDS took both for a horse's armour and a llama's carpet (bds-mountdeath.txt).
-        "slot.armor" | "slot.armor.body" => MobSlot::Body,
+        "slot.armor" => MobSlot::MountArmor,
+        "slot.armor.body" => MobSlot::Body,
         "slot.chest" => MobSlot::Chest(slot),
         "slot.inventory" => MobSlot::Inventory(slot),
         _ => MobSlot::Armor(ARMOUR_SLOTS.iter().position(|known| *known == kind)? as u8),
@@ -198,8 +199,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn slot_armor_body_is_a_mob_s_body_as_slot_armor_is() {
+    fn slot_armor_body_is_the_body_and_slot_armor_a_mount_s_armour() {
         assert!(is_slot_type("slot.armor.body"));
-        assert_eq!([mob_slot("slot.armor.body", 0), mob_slot("slot.armor", 0)], [Some(MobSlot::Body); 2]);
+        assert_eq!([mob_slot("slot.armor.body", 0), mob_slot("slot.armor", 0)], [Some(MobSlot::Body), Some(MobSlot::MountArmor)]);
     }
 }

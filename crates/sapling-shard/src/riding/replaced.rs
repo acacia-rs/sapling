@@ -1,5 +1,6 @@
 //! A mount's tack and goods put by `/replaceitem entity` (research/captures/bds-fixreplace.txt):
-//! `slot.saddle` on the horse family and a camel, heard as `saddle` at its feet; `slot.armor` on a horse
+//! `slot.saddle` on the horse family and a camel, heard as `saddle` at its feet; `slot.armor` (the
+//! inventory's slot 1, which the body slot shows; `slot.armor.body` is riding/body.rs) on a horse
 //! (horse armour or a carpet) or a llama (a carpet; anything else taken unseen), heard as `armor`
 //! mid-body; `slot.chest` into a carried chest's goods; `slot.inventory` over the slots the mob has,
 //! tack first: a horse's saddle and armour, a donkey's saddle, a llama's carpet, then the chest.
@@ -56,7 +57,11 @@ pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<It
         // Air named for the saddle answered success and left it on (bds-mountflags.txt).
         MobSlot::Saddle if item.is_none() && (SADDLED.contains(&kind.as_str()) || kind == CAMEL) => Ok(()),
         MobSlot::Saddle if takes_saddle(world, mob, &kind) => put_tack(world, mob, &kind, Tacked::Saddle, item, true),
-        MobSlot::Body if kind == HORSE || LLAMAS.contains(&kind.as_str()) => {
+        // Air answered success and left the armour on, to drop at death (bds-bodyslot.txt).
+        MobSlot::MountArmor if item.is_none() && (kind == HORSE || LLAMAS.contains(&kind.as_str())) => Ok(()),
+        // An untamed horse has no inventory to hold it (bds-bodyslot.txt).
+        MobSlot::MountArmor if kind == HORSE && !world.get::<Raised>(mob).is_some_and(Raised::is_tamed) => Err(MobSlotRefusal::NoSlot),
+        MobSlot::MountArmor if kind == HORSE || LLAMAS.contains(&kind.as_str()) => {
             let is_carpet = item.as_ref().is_some_and(|item| item.name.ends_with("_carpet"));
             // A llama took horse armour and showed nothing (bds-fixreplace.txt).
             if LLAMAS.contains(&kind.as_str()) && item.is_some() && !is_carpet {
@@ -92,8 +97,7 @@ fn put_tack(world: &mut World, mob: Entity, kind: &str, tacked: Tacked, item: Op
         }
         Tacked::Body => {
             let worn = item.map(|item| ItemStack { count: 1, ..item });
-            let slots = [None, None, None, None, worn.as_ref().map(crate::inventory::stack)];
-            let mut told = vec![sapling_net::encode(&sapling_data::mob_armor(id, &slots))];
+            let mut told = vec![super::mounts::body_shown(id, worn.as_ref())];
             packs::wear(world, mob, worn);
             told.push(super::packets::sound("armor", id, kind, [body.at[0], body.at[1] + body.size[1] * 0.5, body.at[2]]));
             (told, true)

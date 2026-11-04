@@ -43,7 +43,8 @@ pub(crate) fn saddle_by_event(world: &mut World, mob: Entity, kind: &str, event:
         world.entity_mut(mob).insert(Bare);
     }
     let word = crate::entities::mob_flags(world, mob, kind, super::saddle_flags(kind), true);
-    let mut told = vec![super::packets::flags(id, word)];
+    let shown_later = (!crate::creatures::is_arriving(world, mob)).then(|| super::packets::flags(id, word));
+    let mut told: Vec<_> = shown_later.into_iter().collect();
     told.extend((!looted).then(|| super::packets::sound("saddle", id, kind, body.at)));
     crate::entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), told);
     super::retell(world, mob);

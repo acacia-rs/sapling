@@ -8,7 +8,7 @@ use crate::common;
 use crate::riding::interact;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, SetEntityData};
+use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, MobArmorEquipment, SetEntityData};
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1 as Flags};
 use common::asking::ask;
 use common::stored::{enter_stored, floor_with};
@@ -116,7 +116,7 @@ fn hands_given_by_command_are_saved_with_the_mob() {
 }
 
 #[test]
-fn a_dying_mount_lets_go_of_its_saddle_but_not_its_armour() {
+fn a_dying_mount_lets_go_of_its_saddle_but_not_its_body_armour() {
     let mut h = alex();
     let (horse, _) = summoned(&mut h, "minecraft:horse", Some("minecraft:spawn_tame_adult"), 0.5);
     let (camel, _) = summoned(&mut h, "minecraft:camel", Some("minecraft:spawn_adult"), 6.5);
@@ -165,6 +165,55 @@ fn a_saddling_spawn_event_shows_the_saddle_and_only_a_pig_s_drops() {
     assert!(flags(&sent, pig).last().is_some_and(|word| word & Flags::SADDLED.0 != 0), "{:?}", flags(&sent, pig));
     assert!(!saddle(&sent), "a pig's event is unheard");
     assert_eq!(left_on_death(&mut h, pig).first(), Some(&"minecraft:saddle"), "BDS's saddle came first");
+}
+
+fn bodies(sent: &[RawPacket], id: EntityId) -> Vec<Option<&'static str>> {
+    all::<MobArmorEquipment>(sent).into_iter().filter(|shown| shown.runtime_entity_id == id.0).map(|shown| sapling_data::item_name(shown.body.network_id.into()).filter(|_| shown.body.network_id != 0)).collect()
+}
+
+#[test]
+fn slot_armor_body_shows_body_armour_on_any_mob_and_keeps_it_at_death() {
+    let mut h = alex();
+    let armor = Some("minecraft:iron_horse_armor");
+    // research/captures/bds-bodyslot.txt
+    for (index, (kind, event)) in [("minecraft:horse", Some("minecraft:spawn_tame_adult")), ("minecraft:donkey", Some("minecraft:spawn_adult")), ("minecraft:pig", None), ("minecraft:wolf", None), ("minecraft:llama", Some("minecraft:spawn_adult"))].into_iter().enumerate() {
+        let (mob, _) = summoned(&mut h, kind, event, index as f32 * 3.0 + 0.5);
+        let (put_on, sent) = put(&mut h, mob, MobSlot::Body, armor);
+        assert_eq!((put_on, bodies(&sent, mob)), (Ok(()), vec![armor]), "{kind}");
+        assert!(all::<LevelSoundEvent>(&sent).is_empty(), "{kind}: unheard");
+        assert_eq!(left_on_death(&mut h, mob).iter().filter(|name| Some(**name) == armor).count(), 0, "{kind}");
+    }
+    let (horse, _) = summoned(&mut h, "minecraft:horse", Some("minecraft:spawn_adult"), 16.5);
+    for item in ["minecraft:stone", "minecraft:diamond_helmet", "minecraft:white_carpet"] {
+        let (put_on, sent) = put(&mut h, horse, MobSlot::Body, Some(item));
+        assert_eq!((put_on, bodies(&sent, horse)), (Ok(()), vec![]), "{item} shown to no one");
+    }
+    assert_eq!(bodies(&put(&mut h, horse, MobSlot::Body, None).1, horse), vec![None], "air told even over nothing");
+    assert_eq!(put(&mut h, horse, MobSlot::MountArmor, Some("minecraft:golden_horse_armor")).0, Err(MobSlotRefusal::NoSlot), "an untamed horse has no slot 1");
+
+    let (tamed, _) = summoned(&mut h, "minecraft:horse", Some("minecraft:spawn_tame_adult"), 20.5);
+    let gold = Some("minecraft:golden_horse_armor");
+    assert_eq!(bodies(&put(&mut h, tamed, MobSlot::MountArmor, gold).1, tamed), vec![gold]);
+    assert_eq!(bodies(&put(&mut h, tamed, MobSlot::Body, armor).1, tamed), vec![armor]);
+    let (air, sent) = put(&mut h, tamed, MobSlot::MountArmor, None);
+    assert_eq!((air, bodies(&sent, tamed)), (Ok(()), vec![]), "air leaves slot 1's armour on");
+    assert!(left_on_death(&mut h, tamed).contains(&"minecraft:golden_horse_armor"), "slot 1's armour is loot, the body's stays");
+}
+
+#[test]
+fn a_summon_s_event_shows_in_its_announcement_and_every_word_after() {
+    let mut h = alex();
+    let controls = Flags::SADDLED.0 | Flags::WASD_CONTROLLED.0 | Flags::CAN_POWER_JUMP.0;
+    // research/captures/bds-mountflags.txt, bds-saddlerule.txt: AddEntity, then the word with BREATHING.
+    let cases = [("minecraft:horse", Some("minecraft:spawn_tame_adult"), Flags::TAMED.0), ("minecraft:horse", Some("minecraft:horse_saddled"), controls), ("minecraft:horse", Some("minecraft:entity_born"), Flags::BABY.0), ("minecraft:pig", Some("minecraft:on_saddled"), Flags::SADDLED.0)];
+    for (index, (kind, event, shown)) in cases.into_iter().enumerate() {
+        let (mob, sent) = summoned(&mut h, kind, event, index as f32 * 3.0 + 0.5);
+        let added = all::<AddEntity>(&sent).into_iter().find(|added| added.runtime_id == mob.0).expect("announced");
+        let announced = added.metadata.iter().find_map(|item| if let Value::Flags(flags) = item.value { Some(flags.0) } else { None }).expect("a flag word");
+        assert_eq!((announced & shown, announced & Flags::BREATHING.0), (shown, 0), "{kind} {event:?}");
+        let after = flags(&sent, mob);
+        assert!(!after.is_empty() && after.iter().all(|word| word & shown == shown), "{kind} {event:?}: {after:?}");
+    }
 }
 
 #[test]

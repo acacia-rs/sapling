@@ -25,17 +25,10 @@ pub(super) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
     // BDS played no `spawn` at any of 112 summons naming an event (research/captures/bds-*.txt).
     let sound = (reason != SpawnReason::Command || event.is_none()).then_some("spawn");
-    let id = born(world, layer, kind, feet, Birth { reason, yaw, gene, sound })?;
+    let id = born_by(world, layer, kind, feet, Birth { reason, yaw, gene, sound }, event)?;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {
         entities::restore(world, entity, |compound, _| sapling_world::varied_actor(compound, gene.0, yaw).ok());
-    }
-    if event.is_some_and(|event| BABY_EVENTS.contains(&event.trim_start_matches("minecraft:"))) {
-        husbandry::be_born(world, entity, kind);
-    }
-    if let Some(event) = event {
-        husbandry::tame_by_event(world, entity, kind, event);
-        crate::riding::saddle_by_event(world, entity, kind, event);
     }
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
@@ -57,8 +50,35 @@ pub(super) struct Birth {
     pub sound: Option<&'static str>,
 }
 
+/// A mob its spawn event is being applied to: what the event changes goes into its announcement,
+/// not into packets after it, as BDS's `AddEntity` carries a summon's TAMED, SADDLED and BABY
+/// (research/captures/bds-mountflags.txt).
+#[derive(Component)]
+pub(crate) struct Arriving;
+
+pub(crate) fn is_arriving(world: &World, entity: Entity) -> bool {
+    world.get::<Arriving>(entity).is_some()
+}
+
 /// [`spawn`] as `birth` has it.
 pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: Birth) -> Option<EntityId> {
+    born_by(world, layer, kind, feet, birth, None)
+}
+
+/// Makes the mob what its spawn `event` makes it (a baby, tamed, saddled), shown in its announcement.
+fn arrive(world: &mut World, entity: Entity, kind: &str, event: &str) {
+    world.entity_mut(entity).insert(Arriving);
+    if BABY_EVENTS.contains(&event.trim_start_matches("minecraft:")) {
+        husbandry::be_born(world, entity, kind);
+    }
+    husbandry::tame_by_event(world, entity, kind, event);
+    crate::riding::saddle_by_event(world, entity, kind, event);
+    world.entity_mut(entity).remove::<Arriving>();
+    reshow(world, entity);
+}
+
+/// [`born`] by the spawn `event`, if any; its first breath, which tells the whole flag word, comes after.
+fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: Birth, event: Option<&str>) -> Option<EntityId> {
     let Birth { reason, yaw, gene, sound } = birth;
     let size = sapling_data::mob_size(kind)?;
     let level = &world.get::<Layer>(layer)?.world;
@@ -89,7 +109,6 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
     give_health(world, entity, kind, None, 0);
     wither::begin(world, entity, layer);
     let id = world.get::<NetId>(entity)?.0;
-    harm::first_breath(world, entity, layer, id, kind, &body);
     // A hatched mob comes unheard (research/captures/bds-eggs.txt); its egg's sound is enough.
     let heard = sound.filter(|_| reason != SpawnReason::Hatched).map(|sound| spawn_sound(sound, id, kind, &body));
     entities::after_announcing(world, layer, [x, y, z], heard.into_iter().collect());
@@ -98,6 +117,11 @@ pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3],
     if crate::riding::give_strength(world, entity, kind, strength) {
         reshow(world, entity);
     }
+    if let Some(event) = event {
+        arrive(world, entity, kind, event);
+    }
+    let body = world.get::<Body>(entity).copied().unwrap_or(body);
+    harm::first_breath(world, entity, layer, id, kind, &body);
     Some(EntityId(id))
 }
 
