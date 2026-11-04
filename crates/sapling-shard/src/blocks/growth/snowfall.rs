@@ -11,10 +11,7 @@ use super::super::{level, send};
 use super::Picks;
 use crate::ticking::near_players;
 
-/// At most this many picks a column a tick, whatever the rule: a column's top is looked for
-/// after every sixteenth.
-const MOST_PICKS: i32 = 16;
-/// One pick in this many freezes, and one in this many snows while it snows hard enough.
+/// One pick in this many freezes.
 const ODDS: u32 = 16;
 /// Block light under these lets water freeze (`Weather::shouldFreeze`) and snow lie
 /// (`Weather::canPlaceTopSnow`).
@@ -97,29 +94,63 @@ fn most_layers(level: &Level, [x, y, z]: BlockPos) -> u8 {
     PILES.iter().find(|(name, _)| sapling_data::biome_id(name) == biome && biome.is_some()).map_or(1, |(_, layers)| *layers)
 }
 
-/// A tick's picks around every player.
+/// The sides of the die whose 0 lays snow where `downfall` (the rain's level times the biome's
+/// downfall) falls: `256 - min(512 x downfall, 240)` in `LevelChunk::tick`, 16 from 0.47 up.
+fn snow_sides(downfall: f32) -> u32 {
+    (256 - ((downfall * 512.0) as i32).min(240)) as u32
+}
+
+/// Whether rain or snow falling at `downfall` fills a cauldron it falls on:
+/// `CauldronBlock::handlePrecipitation` (141a46850) leaves it while `downfall < nextFloat() * 0.5`.
+fn fills(downfall: f32, picks: &mut Picks) -> bool {
+    downfall >= picks.below(1 << 24) as f32 / (1 << 24) as f32 * 0.5
+}
+
+/// A tick's picks around every player: `randomTickSpeed` columns a chunk, as `LevelChunk::tick`
+/// (1409f98a0) loops.
 pub(super) fn tick(world: &mut World, picks: &mut Picks) {
     let mut fell = Vec::new();
     for (layer, column) in near_players(world) {
         let Some(level) = level(world, layer).filter(|level| level.is_loaded(column)) else { continue };
         let rules = &level.level().rules;
         let Some((_, RuleValue::Int(speed))) = rules.get("randomTickSpeed") else { continue };
-        // From the rain's first tick to its last, however little falls (`weather::falls`).
-        let raining = crate::weather::falls(world, layer);
-        let snowing = rules.on("doWeatherCycle") && raining;
-        for _ in 0..speed.clamp(0, MOST_PICKS) {
+        let rain = crate::weather::falling(world, layer).rain;
+        let lays = rules.on("doWeatherCycle");
+        for _ in 0..speed.max(0) {
             let [x, z] = [column.x * 16 + picks.below(16) as i32, column.z * 16 + picks.below(16) as i32];
-            // TODO: how often BDS's picks fill a cauldron is not measured; here every pick on one does.
-            if let Some(filled) = level.surface(x, z).filter(|_| raining).and_then(|top| Some((top, super::super::cauldrons::fallen_in(level, [x, top, z])?))) {
-                fell.push((layer, [x, filled.0, z], filled.1));
-            }
-            let (freezes, snows) = (picks.below(ODDS) == 0, snowing && picks.below(ODDS) == 0);
+            let freezes = picks.below(ODDS) == 0;
+            let top = level.surface(x, z);
+            let downfall = top.and_then(|top| level.biome(x, top + 1, z)).map_or(0.0, |biome| rain * sapling_data::biome_downfall(biome));
+            let snows = downfall > 0.0 && picks.below(snow_sides(downfall)) == 0 && lays;
             if freezes || snows {
                 fell.extend(fallen(level, x, z, freezes, snows).map(|(pos, id)| (layer, pos, id)));
+            }
+            if let Some((top, filled)) = top.filter(|_| downfall > 0.0).and_then(|top| Some((top, super::super::cauldrons::fallen_in(level, [x, top, z])?))) {
+                if fills(downfall, picks) {
+                    fell.push((layer, [x, top, z], filled));
+                }
             }
         }
     }
     for (layer, pos, id) in fell {
         send::set(world, layer, pos, id);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn snow_lies_one_pick_in_sixteen_from_downfall_047_and_more_rarely_under() {
+        assert_eq!([snow_sides(1.0), snow_sides(0.47), snow_sides(0.4), snow_sides(0.01)], [16, 16, 52, 251]);
+    }
+
+    #[test]
+    fn rain_fills_a_cauldron_at_twice_its_downfall() {
+        let mut picks = Picks::default();
+        let share = |downfall: f32, picks: &mut Picks| (0..10_000).filter(|_| fills(downfall, picks)).count();
+        let [plains, light, full] = [share(0.4, &mut picks), share(0.1, &mut picks), share(0.5, &mut picks)];
+        assert!((7_700..8_300).contains(&plains) && (1_800..2_200).contains(&light) && full == 10_000, "{plains} {light} {full}");
     }
 }

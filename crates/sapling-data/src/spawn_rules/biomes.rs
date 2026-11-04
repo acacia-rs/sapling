@@ -34,16 +34,22 @@ const IDS: &[(&str, u32)] = &[
     ("sulfur_caves", 194),
 ];
 
-static TAGS: LazyLock<HashMap<u32, Vec<String>>> = LazyLock::new(|| {
+/// What sapling reads of a vanilla biome's definition.
+struct Known {
+    tags: Vec<String>,
+    downfall: f32,
+}
+
+static BIOMES: LazyLock<HashMap<u32, Known>> = LazyLock::new(|| {
     let list: BiomeDefinitionList = decode(include_bytes!("../../data/BiomeDefinitionList.bin"));
     let string = |index: usize| list.string_list.get(index).cloned().unwrap_or_default();
-    let mut tags = HashMap::new();
+    let mut biomes = HashMap::new();
     for biome in &list.biome_definitions {
         let name = string(biome.name_index as usize);
         let Some(&(_, id)) = IDS.iter().find(|(known, _)| Some(*known) == name.strip_prefix("minecraft:")) else { continue };
-        tags.insert(id, biome.tags.iter().flatten().map(|&tag| string(tag.into())).collect());
+        biomes.insert(id, Known { tags: biome.tags.iter().flatten().map(|&tag| string(tag.into())).collect(), downfall: biome.downfall });
     }
-    tags
+    biomes
 });
 
 /// The id chunks store for the biome `name` (`minecraft:desert` or `desert`).
@@ -54,7 +60,13 @@ pub fn biome_id(name: &str) -> Option<u32> {
 
 /// Whether the biome chunks store as `biome` has the tag `tag` (`monster`, `ocean`, ..).
 pub fn biome_has_tag(biome: u32, tag: &str) -> bool {
-    TAGS.get(&biome).is_some_and(|tags| tags.iter().any(|own| own == tag))
+    BIOMES.get(&biome).is_some_and(|known| known.tags.iter().any(|own| own == tag))
+}
+
+/// The downfall of the biome chunks store as `biome`, 0 for one sapling does not know: what
+/// weighs how often rain fills a cauldron and snow lies (`LevelChunk::tick` reads the biome's +0xc).
+pub fn biome_downfall(biome: u32) -> f32 {
+    BIOMES.get(&biome).map_or(0.0, |known| known.downfall)
 }
 
 /// A spawn rule's `minecraft:biome_filter`, from the prefix form `data/spawn-rules.tsv` writes it in.
@@ -122,6 +134,14 @@ mod tests {
         assert!(biome_has_tag(HELL, "nether") && !biome_has_tag(HELL, "overworld"));
         assert!(biome_has_tag(FROZEN_OCEAN, "ocean") && biome_has_tag(FROZEN_OCEAN, "frozen"));
         assert!(!biome_has_tag(9999, "monster"));
+    }
+
+    #[test]
+    fn biomes_carry_bds_downfall() {
+        assert_eq!(biome_downfall(PLAINS), 0.4);
+        assert_eq!(biome_downfall(DESERT), 0.0);
+        assert!(biome_downfall(biome_id("jungle").unwrap()) > biome_downfall(PLAINS));
+        assert_eq!(biome_downfall(9999), 0.0);
     }
 
     #[test]
