@@ -3,12 +3,10 @@
 //! water or lava), and what the spawn rules test of each (`sapling_data::Spot`).
 
 use bevy_ecs::prelude::*;
-use sapling_api::Weather;
 use sapling_data::Medium;
 use sapling_world::World as Level;
 
 use crate::components::Layer;
-use crate::light::sky_darken;
 
 /// The sky's dimming BDS reckons brightness by for `adjust_for_weather` in a thunderstorm.
 const STORM_DARKEN: u8 = 10;
@@ -53,23 +51,22 @@ pub(super) fn levels(world: &World, layer: Entity, x: i32, z: i32) -> Vec<Found>
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return Vec::new() };
     let Some(top) = level.top_solid(x, z) else { return Vec::new() };
     let heights = level.heights();
-    let weather = crate::weather::of(world, layer);
-    let darken = sky_darken(level.level().time, weather);
+    let (darken, storms) = (crate::light::darken(world, layer), crate::weather::storms(world, layer));
     let mut found = Vec::new();
     let mut above = None;
     for y in (heights.start + 1..heights.end).rev() {
         let here = medium(level, [x, y, z]);
         if let Some(medium) = here.filter(|medium| above != Some(*medium)) {
-            found.extend(describe(level, [x, y, z], medium, top, darken, weather));
+            found.extend(describe(level, [x, y, z], medium, top, darken, storms));
         }
         above = here;
     }
     found
 }
 
-fn describe(level: &Level, [x, y, z]: [i32; 3], medium: Medium, top: i32, darken: u8, weather: Weather) -> Option<Found> {
+fn describe(level: &Level, [x, y, z]: [i32; 3], medium: Medium, top: i32, darken: u8, storms: bool) -> Option<Found> {
     let brightness = level.brightness_at(x, y, z, darken)?;
-    let weathered = if weather == Weather::Thunder { level.brightness_at(x, y, z, STORM_DARKEN)? } else { brightness };
+    let weathered = if storms { level.brightness_at(x, y, z, STORM_DARKEN)? } else { brightness };
     let below = level.registry().get(level.block(x, y - 1, z))?.name;
     Some(Found { cell: [x, y, z], biome: level.biome(x, y, z)?, surface: y > top, medium, brightness, weathered, below })
 }

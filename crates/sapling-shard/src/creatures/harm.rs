@@ -97,6 +97,14 @@ pub(super) fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], rains: bool) -> b
     rains && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT) && !level.is_cold(x, y, z)
 }
 
+/// Whether rain falls on the feet or the head of a body standing at `feet`, `height` tall
+/// (`Actor::isInRain`, the rain's level as `weather::rains`).
+pub(crate) fn in_rain(world: &World, layer: Entity, feet: [f32; 3], height: f32) -> bool {
+    let rains = crate::weather::rains(world, layer);
+    let cells = [feet, [feet[0], feet[1] + height, feet[2]]].map(|at| at.map(|c| c.floor() as i32));
+    world.get::<Layer>(layer).is_some_and(|layer| cells.iter().any(|cell| is_rained_on(&layer.world, *cell, rains)))
+}
+
 pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     let smothers = |name: &str| !name.ends_with("glass") && !name.ends_with("leaves");
     is_within(level, [x, y, z]) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube() && smothers(state.name))

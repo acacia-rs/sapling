@@ -17,7 +17,7 @@ use acacia_proto::types::{
     MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain,
 };
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Difficulty, Weather};
+use sapling_api::{BlockPos, Difficulty};
 
 use super::{hunting, wings};
 use crate::blocks::Dice;
@@ -97,7 +97,7 @@ fn came_home(world: &mut World, bee: Entity, pos: BlockPos) {
 
 /// Whether bees fly out in `layer` now: by day and dry (`shelter_detection`).
 fn may_fly(world: &World, layer: Entity) -> bool {
-    crate::weather::of(world, layer) == Weather::Clear && crate::light::darken(world, layer) < NIGHT
+    !crate::weather::rains(world, layer) && crate::light::darken(world, layer) < NIGHT
 }
 
 fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {

@@ -32,7 +32,7 @@ fn speed(world: &mut World, layer: Entity, at: [f32; 3], dice: &mut Dice) -> i32
     if dice.fraction() < 0.25 && level.biome(x, y, z).is_some_and(|biome| sapling_data::biome_has_tag(biome, "fast_fishing")) {
         speed += 1;
     }
-    let rains = weather::of(world, layer) != sapling_api::Weather::Clear && level.light_at(x, y + 1, z).is_some_and(|(sky, _)| sky == 15) && !level.is_cold(x, y + 1, z);
+    let rains = weather::rains(world, layer) && level.light_at(x, y + 1, z).is_some_and(|(sky, _)| sky == 15) && !level.is_cold(x, y + 1, z);
     if dice.fraction() < 0.25 && rains {
         speed = 2;
     }

@@ -163,9 +163,8 @@ Sapling's run: sapling-burn2.txt.
   hurt, 1005 ms after. Fixed: `weather::rains` follows the
   level (`Falling`), which mob harm, the enderman's teleports and snow golems read; tests
   `rain_sets_in_over_20_ticks_and_clears_over_81`, `an_enderman_in_rain_teleports_on_and_on`.
-  `/weather` still answers and tells clients at once, as BDS's did. TODO, by the same rule but not
-  drilled: fire, fishing, tridents, cauldrons and the sky's darkening still read the sky's state;
-  lightning's level ramps too (0.01 a tick, +0x44 to +0x48) and is on or off here.
+  `/weather` still answers and tells clients at once, as BDS's did. The other rules of the sky:
+  "What the rain's level drives" below.
 - The enderman leaving sight (2026-11-03, `bds_command_probe farmobs`, bds-farmobs.txt): not its
   teleports, which are the same ±16 cube on both (mean step 8-10 blocks). BDS shows a mob only
   within a circle of `tick-distance` (4) chunks about the player: slowed mobs moved 3,2 and 4,0
@@ -178,6 +177,56 @@ Sapling's run: sapling-burn2.txt.
   circle is `tick-distance` or a fixed 4 (the BDS copy runs 4), whether BDS ticks a hidden mob, and
   whether players and their packets about hidden mobs follow the same circle (sapling still sends
   a mob's moves to every view covering it).
+
+## What the rain's level drives (2026-11-04, `bds_command_probe rainramp`, research/captures/bds-rainramp.txt)
+
+`Weather` (BDS's, per dimension at +0x1e8) holds rain at +0x34 (last tick), +0x38 (now), +0x3c (the
+sky's 0 or 1) and lightning at +0x40/+0x44/+0x48; 0x14119d160 moves each 0.01 a tick towards its
+target. Sapling: `weather/falling.rs` (`Falling`, both levels). What reads which:
+
+- Rain on a block, `isPrecipitatingAt` (0x14119d6b0): rain now over 0.2, the biome precipitates, the
+  cell at or over its column's rain height; rain rather than snow wants the temperature over 0.15
+  (0x14119d830). Its callers: mobs in rain (`Actor::isInRain` 0x140d61650..0x140d61a90, `Mob` tick
+  0x142a47470, `ActorInWaterOrRainTest`), fire (`FireBlock` tick 0x147157ed0, also its own 0.2 test),
+  the fishing hook (`FishingHook::normalTick` 0x1429ca86f, at the cell over the hook), lightning's
+  target (0x1409fdbc0). The drill: 49 fires laid on open stone one second after `/weather clear`
+  (rain still 0.8) were all out within 5 s (`fill … air` answered 0), as 49 laid in dry weather all
+  still burnt after 4 s (49); a riptide trident used and let go 2-3 s after clear threw the actor
+  (`item.trident.riptide_1`), one 9 s after did nothing. Fixed: fire (`blocks/fire.rs`), fishing
+  (`fishing/bite.rs`) read `weather::rains`; tridents' riptide, Impaling's wet target and conduits
+  read `creatures::in_rain` (the feet's or head's cell rained on), where they had read the sky's
+  state anywhere, roofed or not. Re-drilled (sapling-rainramp.txt, `SAPLING_DRILL_WORLD=open`):
+  49 fires dry, 0 after the clear, one riptide throw 2-3 s after it and none later, as BDS. Its
+  `/setblock` detectors read the ramp (15, 14, 13, 12 a second apart) where BDS's froze. Tests `a_riptide_throws_only_in_the_rain_still_falling` (shots),
+  `fire_goes_out_with_the_block_under_it_and_in_rain_but_not_over_netherrack` (now 65 ticks).
+- Bolts (`LevelChunk::tick` 0x1409f98a0, 0x1409fb2xx): rain now times lightning now over 0.9, then
+  `nextInt(100000)` a chunk; the skeleton trap after. A storm from clear strikes from its 95th
+  tick. Fixed: `lightning::thunders` (natural bolts, Channeling) reads `weather::storms`; test
+  `bolts_wait_for_rain_and_lightning_both_near_full`. Undrillable here: one bolt in 100000 a chunk
+  a tick shows none in seconds.
+- Snow and cauldrons (`LevelChunk::tick`, after the freeze test): the rain's last-tick level times
+  the biome's downfall (+0xc); over 0 it draws `nextInt(256 - min(512·that, 240))` and on 0 tries a
+  snow layer (0x14119dec0, `doWeatherCycle` on) and the column top's block's precipitation (a
+  cauldron's fill). So they fall from the rain's first tick until ~100 ticks after it clears; BDS's
+  cauldron took its first fill 863 ms after `/weather rain` (bds-cauldronrain.txt), before rain
+  rains on mobs. Fixed: `blocks/growth/snowfall.rs` reads `weather::falls` (any rain). TODO: the
+  odds by level and downfall (sapling: a cauldron fills at every pick, snow 1 in 16, BDS's odds at
+  full rain over a biome of downfall 0.47 or more).
+- The sky's darkening (`Dimension` tick 0x14187f9c0): `(1 - rain·5/16)·(1 - lightning·5/16)`, each
+  level now, lightning not weighed by the rain. bds-daylight.txt's noon dust read 14 some 31 ticks
+  into the rain and 13 some 61 in (this gives 15 up to rain 0.29, 14, 13 from 0.58), 12, 11, 10 at
+  7, 27 and 69 ticks into the thunder that followed, then 11 and 12 as it cleared. Fixed:
+  `light::sky_darken` takes `Falling`: daylight detectors, monster light, bees' night, a bed's
+  `skyDarken >= 4` (`sleep/rest.rs`: sleep by day only once a storm darkens noon to 4, ~65 ticks
+  in; test `a_monster_near_keeps_a_sleeper_up_and_a_storm_lets_it_sleep_by_day`). Tests
+  `the_sky_darkens_as_the_rain_and_lightning_fall_harder`. Detectors set by `/setblock` in the drill
+  read once and froze, as redstone.md says, so bds-rainramp.txt's two show nothing of the weather.
+- What players are told (`LevelEvent` StartRain/StopRain/StartThunder/StopThunder) follows the
+  sky's state at once, no level on the way: bds-weather.txt, bds-rainramp.txt. Same on sapling.
+- Not drilled, from the Java game where bdsre was not read: bees stay home while rain is over 0.2
+  (`!weather::rains`), monster spawns reckon brightness at the storm's 10 once rain times lightning
+  is over 0.9 (`weather::storms`, `isThundering`), a night is skipped by the time window alone
+  (`rest::is_night`, the sky's state choosing the rainy window).
 
 ## Hits (2026-10-29, `bds_command_probe hits2`, research/captures/bds-hits2.txt)
 

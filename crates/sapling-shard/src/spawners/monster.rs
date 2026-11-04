@@ -7,7 +7,7 @@ use acacia_proto::nbt::Value;
 use acacia_proto::packets::{BlockEvent, BlockEventType, LevelEvent, LevelEventEvent};
 use acacia_proto::types::{BlockCoordinates, Vec3f};
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Difficulty, SpawnReason, Weather};
+use sapling_api::{BlockPos, Difficulty, SpawnReason};
 use sapling_world::{World as Level, new_block_entity};
 
 use super::fields::Fields;
@@ -190,8 +190,7 @@ fn may_spawn(world: &World, layer: Entity, kind: &str, at: [f32; 3]) -> bool {
 /// `Monster::isDarkEnoughToSpawn` for mobs of today's versions: raw brightness under [`DARK`],
 /// reckoned in a storm as the storm darkens, and outside the nether no block light at all.
 fn is_dark(world: &World, layer: Entity, level: &Level, [x, y, z]: [i32; 3]) -> bool {
-    let weather = crate::weather::of(world, layer);
-    let darken = if weather == Weather::Thunder { STORM_DARKEN } else { crate::light::sky_darken(level.level().time, weather) };
+    let darken = if crate::weather::storms(world, layer) { STORM_DARKEN } else { crate::light::darken(world, layer) };
     let lit = level.brightness_at(x, y, z, darken).is_none_or(|raw| raw >= DARK);
     let block_lit = level.dimension() != NETHER && level.light_at(x, y, z).is_none_or(|(_, block)| block != 0);
     !lit && !block_lit

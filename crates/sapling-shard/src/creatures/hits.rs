@@ -12,12 +12,13 @@ use super::health::{Cause, Health};
 use super::{afflictions, harm, hunting};
 use crate::blocks::Dice;
 use crate::body::{Body, Liquid};
-use crate::components::NetId;
+use crate::components::{NetId, Position};
 use crate::{entities, late_sounds, vitals};
 
 /// A player's shot throws the mob it hits as a hit does: this fast away and up.
 // TODO: the melee throw (attacks.rs); BDS's for a projectile was not measured.
 const THROW: f32 = 0.4;
+const PLAYER_HEIGHT: f32 = 1.8;
 
 /// What becomes of a shot that hit.
 pub(super) enum After {
@@ -81,7 +82,10 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
 fn harm(world: &mut World, layer: Entity, own: Option<f32>, loosed: Option<&Loosed>, speed: f32, struck: Entity, is_player: bool) -> f32 {
     let Some(loosed) = loosed else { return own.unwrap_or_else(|| shots::arrow_harm(speed, 0, false, 0.0)) };
     if let Some(own) = own {
-        let wet = !is_player && world.get::<Body>(struck).is_some_and(|body| body.liquid() == Some(Liquid::Water)) || crate::weather::of(world, layer) != sapling_api::Weather::Clear;
+        let body = world.get::<Body>(struck).copied();
+        let soaked = !is_player && body.is_some_and(|body| body.liquid() == Some(Liquid::Water));
+        let stands = body.map(|body| (body.at, body.size[1])).or_else(|| world.get::<Position>(struck).map(|at| (at.feet, PLAYER_HEIGHT)));
+        let wet = soaked || stands.is_some_and(|(feet, height)| harm::in_rain(world, layer, feet, height));
         return own + if wet { enchant::impaling(loosed.impaling) } else { 0.0 };
     }
     let roll = world.get_resource_or_insert_with(Dice::default).fraction();

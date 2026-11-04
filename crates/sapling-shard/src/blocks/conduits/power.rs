@@ -11,7 +11,7 @@ use acacia_proto::nbt::Value;
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Effect, Weather};
+use sapling_api::{BlockPos, Effect};
 
 use super::super::{Dice, send};
 use crate::body::Body;
@@ -26,14 +26,14 @@ const LASTS: u32 = 260;
 const HUNTS_WITH: usize = 42;
 const HUNTS: i32 = 8;
 const BITES: f32 = 4.0;
+const PLAYER_HEIGHT: f32 = 1.8;
 
 /// The mob each hunting conduit has in its sights.
 #[derive(Resource, Default)]
 struct Prey(HashMap<(Entity, BlockPos), Entity>);
 
-fn is_wet(world: &World, layer: Entity, feet: [f32; 3]) -> bool {
-    let raining = crate::weather::of(world, layer) != Weather::Clear;
-    raining || world.get::<Layer>(layer).is_some_and(|level| crate::creatures::holds(&level.world, feet.map(|c| c.floor() as i32), WATER))
+fn is_wet(world: &World, layer: Entity, feet: [f32; 3], height: f32) -> bool {
+    crate::creatures::in_rain(world, layer, feet, height) || world.get::<Layer>(layer).is_some_and(|level| crate::creatures::holds(&level.world, feet.map(|c| c.floor() as i32), WATER))
 }
 
 /// Whether the block `feet` stand in is nearer `pos` than `reach`, as Java's `closerThan`.
@@ -53,7 +53,7 @@ pub(super) fn empower(world: &mut World, layer: Entity, pos: BlockPos, frame: us
     let players: Vec<Entity> = in_world(world)
         .into_iter()
         .filter(|player| world.get::<InLayer>(*player).is_some_and(|on| on.0 == layer))
-        .filter(|player| world.get::<Position>(*player).is_some_and(|at| is_within(pos, at.feet, reach) && is_wet(world, layer, at.feet)))
+        .filter(|player| world.get::<Position>(*player).is_some_and(|at| is_within(pos, at.feet, reach) && is_wet(world, layer, at.feet, PLAYER_HEIGHT)))
         .collect();
     for player in players {
         crate::vitals::give_effect(world, player, Effect::ConduitPower, LASTS, 0, true);
@@ -63,13 +63,13 @@ pub(super) fn empower(world: &mut World, layer: Entity, pos: BlockPos, frame: us
 /// Live hostile mobs in water or rain whose box's foot is within the box 8 round `pos`.
 fn hostiles(world: &mut World, layer: Entity, pos: BlockPos) -> Vec<(Entity, [f32; 3])> {
     let within = |at: [f32; 3]| (0..3).all(|axis| at[axis] >= (pos[axis] - HUNTS) as f32 && at[axis] <= (pos[axis] + 1 + HUNTS) as f32);
-    let found: Vec<(Entity, [f32; 3])> = world
+    let found: Vec<(Entity, [f32; 3], f32)> = world
         .query_filtered::<(Entity, &InLayer, &Kind, &Body, &Health), With<Creature>>()
         .iter(world)
         .filter(|(_, on, kind, body, health)| on.0 == layer && health.left() > 0.0 && within(body.at) && sapling_data::has_family(&kind.0, "monster"))
-        .map(|(mob, _, _, body, _)| (mob, body.at))
+        .map(|(mob, _, _, body, _)| (mob, body.at, body.size[1]))
         .collect();
-    found.into_iter().filter(|(_, at)| is_wet(world, layer, *at)).collect()
+    found.into_iter().filter(|(_, at, height)| is_wet(world, layer, *at, *height)).map(|(mob, at, _)| (mob, at)).collect()
 }
 
 fn alive_at(world: &World, mob: Entity, layer: Entity) -> Option<[f32; 3]> {

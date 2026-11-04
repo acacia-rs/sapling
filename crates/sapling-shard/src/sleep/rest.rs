@@ -16,16 +16,19 @@ const MONSTER_REACH: [f32; 3] = [8.0, 5.0, 8.0];
 
 /// The same in rain (docs/research/beds-and-containers.md, "Night window").
 const RAINY_NIGHT: std::ops::RangeInclusive<i64> = 12_009..=23_991;
+const RESTING_DARKEN: u8 = 4;
 
 pub(crate) fn is_night(world: &World, layer: Entity) -> bool {
     let night = if crate::weather::of(world, layer) == Weather::Rain { RAINY_NIGHT } else { NIGHT };
     world.get::<Layer>(layer).is_some_and(|layer| night.contains(&layer.world.level().time.rem_euclid(super::DAY)))
 }
 
-/// Whether the sky of `layer` lets anyone sleep: night, or a storm. A storm's sleep by day
-/// skips nothing: BDS left a sleeper 8 s in bed at noon.
+/// Whether the sky of `layer` lets anyone sleep: BDS's `skyDarken` at least 4, which is
+/// [`NIGHT`] when clear, [`RAINY_NIGHT`] in full rain and always in a full storm, and follows the
+/// rain and lightning as they set in. A storm's sleep by day skips nothing: BDS left a sleeper 8 s
+/// in bed at noon.
 pub(super) fn is_resting_time(world: &World, layer: Entity) -> bool {
-    is_night(world, layer) || crate::weather::of(world, layer) == Weather::Thunder
+    is_night(world, layer) || crate::light::darken(world, layer) >= RESTING_DARKEN
 }
 
 /// Whether a monster of `layer` is within [`MONSTER_REACH`] of the bed whose head is at `head`:

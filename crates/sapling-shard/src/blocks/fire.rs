@@ -6,7 +6,7 @@
 // only loosely; BDS times fire on its random-tick queue, which runs faster with `randomtickspeed`.
 
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, BlockPos, Difficulty, Face, Weather};
+use sapling_api::{Block, BlockPos, Difficulty, Face};
 
 use super::{Dice, level, send, with_property};
 use crate::components::{Settings, Tick};
@@ -250,7 +250,7 @@ pub(crate) fn tick(world: &mut World) {
             (0..ROLLS).map(|_| dice.roll(1 << 20)).collect()
         };
         let mut rolls = rolls.into_iter();
-        let rains = crate::weather::of(world, layer) != Weather::Clear;
+        let rains = crate::weather::rains(world, layer);
         let Some(level) = level(world, layer).filter(|level| level.level().rules.on(RULE)) else { continue };
         let burnt = burnt(level, pos, hardship, rains, &mut |sides| rolls.next().unwrap_or(0) % sides.max(1));
         let wait = wait(world);

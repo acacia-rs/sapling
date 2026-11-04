@@ -31,16 +31,9 @@ const THUNDER_SPELL: [u64; 2] = [3_600, 12_000];
 const COMMAND_SPELL: (u64, u64, u64) = (6_000, 600, 20);
 /// Counts at or below this turn the weather (`Weather::tick` compares with 2).
 const TURNS_AT: i32 = 1;
-/// The rain falling follows its level by this much a tick (`Weather::tick`'s 0x14119d160), and
-/// rains on blocks once over the least (`isRainingAt` 0x14119d6b0): 20 ticks after `/weather rain`,
-/// as BDS's enderman was first hurt (research/captures/bds-enderrain.txt).
-const RAMP: f32 = 0.01;
-const RAINS_OVER: f32 = 0.2;
-// TODO: lightning's level ramps the same way (+0x44 to +0x48); thunder here is on or off.
 
-/// How hard it rains now in an overworld.
-#[derive(Component, Clone, Copy)]
-struct Falling(f32);
+mod falling;
+pub(crate) use falling::{Falling, falling, falls, rains, storms};
 
 fn sky(record: &WeatherRecord) -> Weather {
     match (record.rain_level > 0.0, record.lightning_level > 0.0) {
@@ -59,18 +52,10 @@ pub(crate) fn of(world: &World, layer: Entity) -> Weather {
     home_record(world, layer).map_or(Weather::Clear, |record| sky(&record))
 }
 
-/// Whether rain falls on a world's open blocks (its overworld's): the level the rain has reached,
-/// which the sky's turn sets out for.
-pub(crate) fn rains(world: &World, layer: Entity) -> bool {
-    let home = dimensions::home(world, layer);
-    let falling = world.get::<Falling>(home).map(|falling| falling.0).or_else(|| home_record(world, layer).map(|record| record.rain_level));
-    falling.is_some_and(|level| level > RAINS_OVER)
-}
-
 fn put(world: &mut World, layer: Entity, record: WeatherRecord) {
     let home = dimensions::home(world, layer);
     if let Some(was) = home_record(world, layer).filter(|_| world.get::<Falling>(home).is_none()) {
-        world.entity_mut(home).insert(Falling(was.rain_level));
+        world.entity_mut(home).insert(Falling::of(&was));
     }
     if let Some(mut home) = world.get_mut::<Layer>(home) {
         home.world.level_mut().weather = record;
@@ -151,13 +136,8 @@ fn turned(record: WeatherRecord, now: u64, layer: Entity) -> WeatherRecord {
     next
 }
 
-/// [`RAMP`] from `level` towards `towards`.
-fn ramped(level: f32, towards: f32) -> f32 {
-    (level + (towards - level).clamp(-RAMP, RAMP)).clamp(0.0, 1.0)
-}
-
-/// Each overworld's rain falls harder or eases towards its level, then its weather turns where
-/// `doWeatherCycle` is on; players are told of any change.
+/// Each overworld's rain and lightning fall harder or ease towards their levels, then its weather
+/// turns where `doWeatherCycle` is on; players are told of any change.
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let layers: Vec<Entity> = world.query_filtered::<Entity, With<Layer>>().iter(world).collect();
@@ -165,12 +145,12 @@ pub(crate) fn tick(world: &mut World) {
     for layer in homes {
         let Some(mut home) = world.get_mut::<Layer>(layer) else { continue };
         let level = home.world.level_mut();
-        let towards = level.weather.rain_level;
+        let towards = level.weather;
         if level.rules.on(CYCLE) {
             level.weather = turned(level.weather, now, layer);
         }
-        let falling = world.get::<Falling>(layer).map_or(towards, |falling| ramped(falling.0, towards));
-        world.entity_mut(layer).insert(Falling(falling));
+        let falling = world.get::<Falling>(layer).map_or(Falling::of(&towards), |falling| falling.towards(&towards));
+        world.entity_mut(layer).insert(falling);
     }
     tell(world);
 }
@@ -216,14 +196,6 @@ mod tests {
         assert_eq!(names(Weather::Rain, Weather::Thunder), [(LevelEventEvent::StartThunder, FULL)]);
         assert_eq!(names(Weather::Thunder, Weather::Clear), [(LevelEventEvent::StopRain, 0), (LevelEventEvent::StopThunder, 0)]);
         assert_eq!(names(Weather::Rain, Weather::Rain), []);
-    }
-
-    #[test]
-    fn rain_sets_in_over_20_ticks_and_clears_over_81() {
-        let after = |from: f32, towards: f32, ticks: usize| (0..ticks).fold(from, |level, _| ramped(level, towards));
-        assert!(after(0.0, 1.0, 19) <= RAINS_OVER && after(0.0, 1.0, 20) > RAINS_OVER);
-        assert!(after(1.0, 0.0, 80) > RAINS_OVER && after(1.0, 0.0, 81) <= RAINS_OVER);
-        assert_eq!(after(0.0, 1.0, 200), 1.0);
     }
 
     #[test]

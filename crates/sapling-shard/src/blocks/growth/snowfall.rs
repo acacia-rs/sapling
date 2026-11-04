@@ -4,7 +4,7 @@
 //! (docs/research/growth.md "Light").
 
 use bevy_ecs::prelude::*;
-use sapling_api::{Block, BlockPos, Face, Weather};
+use sapling_api::{Block, BlockPos, Face};
 use sapling_data::RuleValue;
 
 use super::super::{level, send};
@@ -104,7 +104,8 @@ pub(super) fn tick(world: &mut World, picks: &mut Picks) {
         let Some(level) = level(world, layer).filter(|level| level.is_loaded(column)) else { continue };
         let rules = &level.level().rules;
         let Some((_, RuleValue::Int(speed))) = rules.get("randomTickSpeed") else { continue };
-        let raining = crate::weather::of(world, layer) != Weather::Clear;
+        // From the rain's first tick to its last, however little falls (`weather::falls`).
+        let raining = crate::weather::falls(world, layer);
         let snowing = rules.on("doWeatherCycle") && raining;
         for _ in 0..speed.clamp(0, MOST_PICKS) {
             let [x, z] = [column.x * 16 + picks.below(16) as i32, column.z * 16 + picks.below(16) as i32];

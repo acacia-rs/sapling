@@ -23,16 +23,18 @@ const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
 /// A returning trident is caught this near its thrower's eyes, and slows by this a tick.
 const CAUGHT: f32 = 1.5;
 const SLOWS: f32 = 0.95;
+const PLAYER_HEIGHT: f32 = 1.8;
 
 pub(super) fn may_ready(_world: &World, _player: Entity, stack: &ItemStack) -> bool {
     stack.name == TRIDENT
 }
 
-/// Whether the player stands in water or rain.
+/// Whether the player stands in water or rain: BDS's threw in the rain still falling 3 s after
+/// `/weather clear` (research/captures/bds-rainramp.txt).
 fn is_wet(world: &World, player: Entity) -> bool {
     let (Some(layer), Some(position)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player)) else { return false };
-    let raining = crate::weather::of(world, layer) != sapling_api::Weather::Clear;
-    raining || world.get::<Layer>(layer).is_some_and(|level| crate::creatures::holds(&level.world, position.feet.map(|c| c.floor() as i32), WATER))
+    crate::creatures::in_rain(world, layer, position.feet, PLAYER_HEIGHT)
+        || world.get::<Layer>(layer).is_some_and(|level| crate::creatures::holds(&level.world, position.feet.map(|c| c.floor() as i32), WATER))
 }
 
 /// The trident `stack` let go after `ticks` held.
