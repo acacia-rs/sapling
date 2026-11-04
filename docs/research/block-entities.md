@@ -156,6 +156,8 @@ into each of a hive 5 chunks off (out of the diamond) and one 6 off in a ticking
 ticking area's bees were out, the other hive's still in, and still in 5 s after the bots came back, so their stay
 counts down only by ticks the hive gets. Sapling: hives tick in `ticking::ticked_columns` and count their bees'
 stay by those ticks (bees/hives.rs `Written`); test `a_hive_out_of_the_tick_region_keeps_its_bees_and_one_in_a_ticking_area_lets_them_out`.
+Sapling's drill (`sapling-hivekept.txt`) counted as BDS's but for one bee by the far hive after the return, while the
+ticking area's two had left theirs: most likely one of those wandered within 8 of it (bees wander; the hives' answers agree).
 
 ## Open checks (one bot session on BDS)
 
