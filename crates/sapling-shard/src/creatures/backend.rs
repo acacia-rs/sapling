@@ -126,6 +126,11 @@ impl EntityBackend for Ctx<'_> {
         let before = health.left();
         // BDS's `/damage` of 8 cost a zombie in a diamond chestplate 5.824 (research/captures/bds-boosts.txt).
         let amount = if cause.is_stopped_by_armour() { health.shielded(amount) } else { amount };
+        if let Some(sapling_api::Attacker::Mob { kind }) = by
+            && super::villagers::infect(self.world, mob, layer, kind, amount)
+        {
+            return true;
+        }
         super::harm::wound_by(self.world, mob, layer, amount, cause, player);
         self.world.get::<super::Dying>(mob).is_some() || self.world.get::<Health>(mob).is_some_and(|health| health.left() < before)
     }

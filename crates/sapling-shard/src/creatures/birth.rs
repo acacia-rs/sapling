@@ -24,8 +24,9 @@ const BABY_EVENTS: [&str; 3] = ["entity_born", "as_baby", "spawn_baby"];
 pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
     let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
     // BDS played no `spawn` at any of 112 summons naming an event (research/captures/bds-*.txt), nor
-    // for a struck pig's turning (bds-n3struck.txt) or a shrieker's emerging warden (bds-t2warden.txt).
-    let sound = (reason != SpawnReason::Lightning && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned) || event.is_none())).then_some("spawn");
+    // for a struck pig's or a piglin's turning (bds-n3struck.txt, bds-t2barter.txt) or a shrieker's
+    // emerging warden (bds-t2warden.txt).
+    let sound = (reason != SpawnReason::Lightning && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn");
     let id = born_by(world, layer, kind, feet, Birth { reason, yaw, gene, sound }, event)?;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {

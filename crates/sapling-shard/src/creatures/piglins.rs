@@ -81,6 +81,11 @@ pub(super) fn held(world: &World, piglin: Entity, id: u64) -> Vec<Bytes> {
     hands.main.as_ref().and_then(|item| main_hand(id, item)).into_iter().chain(off).collect()
 }
 
+/// What a piglin holds in its main hand and offhand, if it keeps its own hands.
+pub(super) fn hands(world: &World, piglin: Entity) -> Option<[Option<ItemStack>; 2]> {
+    world.get::<Hands>(piglin).map(|hands| [hands.main.clone(), hands.off.clone()])
+}
+
 /// A stored piglin's hands become its own, no longer shown from its stored look.
 pub(super) fn adopt(world: &mut World, piglin: Entity) {
     if world.get::<Kind>(piglin).is_none_or(|kind| kind.0 != PIGLIN) {

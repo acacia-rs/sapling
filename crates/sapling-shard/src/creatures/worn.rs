@@ -56,6 +56,11 @@ pub(super) fn shown(world: &World, entity: Entity, id: u64) -> Option<Bytes> {
     world.get::<Worn>(entity).filter(|worn| !looks && worn.0.iter().any(Option::is_some)).map(|worn| shown_as(id, worn))
 }
 
+/// The pieces the mob wears, helmet first.
+pub(super) fn pieces(world: &World, mob: Entity) -> [Option<ItemStack>; PIECES] {
+    world.get::<Worn>(mob).map(|worn| worn.0.clone()).unwrap_or_default()
+}
+
 /// Has the mob's health wear its skin and its armour.
 fn dress(world: &mut World, mob: Entity) {
     let kind = world.get::<Kind>(mob).map(|kind| kind.0.clone()).unwrap_or_default();

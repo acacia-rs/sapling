@@ -306,9 +306,12 @@ does not resume admiring after a load.
 ingot by a click emptied its offhand 161 ticks on and threw its roll the tick after, from its feet plus
 1.125, at 0.3 up and 0.2 along the way to the nearest player's eyes within 10 (BDS 0x14190f060; none
 near: ±0.2 at random). Sapling threw it as the hand emptied, from where it stood; fixed
-(`piglins.rs` `hand_back`, test in tests/integration/piglins.rs), the same in the re-drill. Not
-ported: BDS's piglins in the overworld became zombified piglins 303 ticks after they came, hands kept
-(the pack's `zombification_sensor`, `start_zombification` 15 s, `become_zombie`).
+(`piglins.rs` `hand_back`, test in tests/integration/piglins.rs), the same in the re-drill. BDS's piglins
+in the overworld shook (`VIBRATING`) a tick after they came and became zombified piglins 303 ticks after,
+hands kept: `AddEntity` of the `zombie_pigman`, its `MobEquipment`, the piglin's `RemoveEntity`, then
+`converted_to_zombified` at its middle, no `spawn` (the pack's `zombification_sensor`, `start_zombification`
+15 s, `become_zombie`). Ported 2026-11-04 (`creatures/zombifying.rs` on the shared `creatures/turning.rs`;
+test `a_piglin_out_of_the_nether_shakes_and_turns_zombified_303_ticks_on_keeping_its_sword`).
 
 ## Witches and endermen again (2026-10-29, `bds_command_probe kinds3`, research/captures/bds-kinds3.txt)
 
@@ -332,8 +335,13 @@ Sapling's run: sapling-kinds3.txt.
   bds-evoker.txt, bds-vex.txt): an evoker's vex now tells its prey again every tick with `mob.warning`
   (test `an_evokers_vex_tells_its_prey_every_tick`), and is not heard to `spawn` (BDS's three were
   not; `vexes.rs` `summon`). Left: sapling's evoker summoned on its first cast where BDS's cast its
-  line, let its prey go 18 s in where BDS's held it, and so cast no fangs before the second came; a
-  vex spawned by command still charges here.
+  line (sapling draws a summoning one cast in four; one BDS cast is too few to judge), let its prey go
+  18 s in where BDS's held it, and so cast no fangs before the second came; a vex spawned by command
+  still charges here. Checked 2026-11-04: the drop is distance, not time. Sapling's evoker strolled
+  south after its summoning until the player (6.5, 20.5) was past its pack's `max_dist` 20, which sapling
+  keeps prey within; BDS's strolled east and stayed within about 15. Whether BDS keeps a target out to
+  `follow_range` (64) was not seen, so the keep range was left as it is (sapling-evoker.txt,
+  bds-evoker.txt, `TargetEid` and `MoveEntityDelta` over time).
 
 ## Sapling
 

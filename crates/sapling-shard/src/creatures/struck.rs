@@ -5,16 +5,17 @@
 //! strike (its pack's `transformation` delay 0.5), the pig with `mob.pig.death` at its middle
 //! (research/captures/bds-n3struck.txt).
 
-use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
+use acacia_proto::packets::SetEntityData;
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};
 use bevy_ecs::prelude::*;
 use sapling_api::SpawnReason;
 
 use super::health::{Cause, Health};
-use super::{genes, harm, legs};
+use super::turning::Turning;
+use super::{genes, harm};
 use crate::body::Body;
 use crate::components::NetId;
-use crate::{entities, mobs};
+use crate::entities;
 
 const CREEPER: &str = "minecraft:creeper";
 const MOOSHROOM: &str = "minecraft:mooshroom";
@@ -33,40 +34,6 @@ const TURN_DELAY: u64 = 10;
 /// A creeper lightning struck.
 #[derive(Component)]
 pub(super) struct Charged;
-
-/// A mob lightning struck, turning into another at the tick `at`.
-#[derive(Component)]
-pub(super) struct Turning {
-    into: &'static str,
-    sound: Option<&'static str>,
-    at: u64,
-}
-
-/// The mob takes the place of one of `kind` facing the same way, where it stood, heard as `sound`.
-fn turn_into(world: &mut World, mob: Entity, layer: Entity, kind: &str, sound: Option<&str>) -> Option<()> {
-    let body = *world.get::<Body>(mob)?;
-    let yaw = world.get::<legs::Legs>(mob).map_or(0.0, |legs| legs.yaw);
-    let turned = super::spawn_as(world, layer, kind, body.at, SpawnReason::Lightning, yaw, None).and_then(|id| entities::find(world, id));
-    mobs::remove(world, mob);
-    let (Some(turned), Some(sound)) = (turned, sound) else { return Some(()) };
-    let position = acacia_proto::types::Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] };
-    let heard = LevelSoundEvent { sound_id: sound.into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
-    tell(world, turned, layer, vec![sapling_net::encode(&heard)])
-}
-
-/// A tick: struck mobs whose time came turn.
-pub(super) fn tick(world: &mut World) {
-    let now = world.resource::<crate::components::Tick>().0;
-    let due: Vec<(Entity, Entity, &'static str, Option<&'static str>)> = world
-        .query::<(Entity, &Turning, &crate::components::InLayer)>()
-        .iter(world)
-        .filter(|(_, turning, _)| turning.at <= now)
-        .map(|(mob, turning, layer)| (mob, layer.0, turning.into, turning.sound))
-        .collect();
-    for (mob, layer, into, sound) in due {
-        turn_into(world, mob, layer, into, sound);
-    }
-}
 
 fn tell(world: &mut World, mob: Entity, layer: Entity, packets: Vec<bytes::Bytes>) -> Option<()> {
     let at = world.get::<Body>(mob)?.at;
@@ -98,7 +65,7 @@ pub(crate) fn struck_by_lightning(world: &mut World, mob: Entity, layer: Entity)
     if let Some(&(_, into, sound)) = TURNS.iter().find(|(from, ..)| *from == kind) {
         if world.get::<Turning>(mob).is_none() {
             let at = world.resource::<crate::components::Tick>().0 + TURN_DELAY;
-            world.entity_mut(mob).insert(Turning { into, sound, at });
+            world.entity_mut(mob).insert(Turning { into, sound, at, keeps_gear: false, reason: SpawnReason::Lightning });
         }
         return;
     }

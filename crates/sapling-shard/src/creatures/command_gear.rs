@@ -32,6 +32,22 @@ fn hand_packet(id: u64, item: Option<&ItemStack>, offhand: bool) -> Bytes {
     sapling_net::encode(&held.unwrap_or(empty))
 }
 
+/// What the mob holds and wears, by [`super::turning::GEAR`]'s slots: its piglin hands, else
+/// what commands or its stored look gave it.
+pub(super) fn gear_of(world: &World, mob: Entity) -> Vec<(MobSlot, Option<ItemStack>)> {
+    let stored = world.get::<Creature>(mob).and_then(|creature| creature.look.as_ref()).map(|look| Gear { main: look.mainhand.clone(), off: look.offhand.clone() });
+    let gear = world.get::<Gear>(mob).cloned().or(stored).unwrap_or_default();
+    let [main, off] = super::piglins::hands(world, mob).unwrap_or([gear.main, gear.off]);
+    let worn = super::worn::pieces(world, mob);
+    super::turning::GEAR.into_iter().zip([main, off].into_iter().chain(worn)).filter(|(_, item)| item.is_some()).collect()
+}
+
+/// [`set`] shown with no sound: a hand in `MobEquipment`, armour in `MobArmorEquipment`.
+pub(super) fn set_quietly(world: &mut World, mob: Entity, slot: MobSlot, item: Option<ItemStack>) -> Option<()> {
+    let MobSlot::Armor(piece) = slot else { return set(world, mob, slot, item).ok() };
+    super::worn::put_on(world, mob, usize::from(piece), item).then_some(())
+}
+
 /// Puts `item` in a mob's armour or hand slot; [`MobSlotRefusal::NoSlot`] for any other slot.
 pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<ItemStack>) -> Result<(), MobSlotRefusal> {
     if world.get::<Creature>(mob).is_none() {
