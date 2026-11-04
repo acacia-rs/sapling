@@ -12,7 +12,7 @@ use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
 mod sections;
 
-pub(crate) use sections::{batched, hold, hold_break, set_many, set_sectioned, show_held, show_states, show_together};
+pub(crate) use sections::{batched, hold, hold_break, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
 
 use crate::components::{InLayer, Layer, Outgoing};
 
@@ -124,12 +124,19 @@ pub(crate) use crate::view::to_viewers;
 
 /// Makes `entity` what the block at `pos` holds and shows it to those who see the block.
 pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entity: &Value) {
-    let Some(mut level) = world.get_mut::<Layer>(layer) else { return };
-    if !level.world.set_block_entity(pos, entity) {
-        return tracing::warn!(?pos, "a block's entity could not be kept");
+    if keep_entity_quietly(world, layer, pos, entity) {
+        let shown: Vec<_> = world.get::<Layer>(layer).and_then(|level| level.world.block_entity(pos).map(|entity| block_entity_data(pos, entity))).into_iter().collect();
+        to_viewers(world, layer, pos, &shown);
     }
-    let shown: Vec<_> = level.world.block_entity(pos).map(|entity| block_entity_data(pos, entity)).into_iter().collect();
-    to_viewers(world, layer, pos, &shown);
+}
+
+/// [`keep_entity`] without showing it; false where it could not be kept.
+pub(crate) fn keep_entity_quietly(world: &mut World, layer: Entity, pos: BlockPos, entity: &Value) -> bool {
+    let kept = world.get_mut::<Layer>(layer).is_some_and(|mut level| level.world.set_block_entity(pos, entity));
+    if !kept {
+        tracing::warn!(?pos, "a block's entity could not be kept");
+    }
+    kept
 }
 
 /// Writes a layer-0 block, and layer 1 as the block decides (waterlog.rs), and shows the layer-0

@@ -403,8 +403,12 @@ No decompile: all of this is from the captures.
   arm's cell and air where it was, a block again at (3).
 - 12 stones go, 13 do not (nothing is sent at all), obsidian does not. A torch in front is broken. A chest goes,
   with what it holds. Dust on a pushed stone falls as an item a tick after the stone starts to move.
-- The block changes of (1) and (3) come in `UpdateSubchunkBlocks`, those of (3) with flags 19; sapling sends
-  the same changes as `UpdateBlock`.
+- The block changes of (1) and (3) come in `UpdateSubchunkBlocks`, a sub-chunk each, the last written
+  first. (1) lists every write, a cell twice: per block, farthest first, `moving_block` where it goes then
+  air where it was, then the arm, flags 3, each listed cell's entity after its packet (a lone cell is an
+  `UpdateBlock`); (3) lists the blocks with flags 19 and their liquid layer, also flags 19, as `extra`.
+  Sapling sent final states as `UpdateBlock`s; fixed 2026-11-04 (`send::show_moved`, test
+  `a_piston_shows_its_moves_as_bds_lists_them`); bds-e3pmob.txt and sapling-e3pmob.txt now list the same.
 - Which blocks stay or break (2026-11-04, `bds_command_probe n2pistons`, research/captures/bds-n2pistons.txt;
   42 blocks before pistons): a bed, wooden door, standing sign and banner, skeleton skull, cake, campfire,
   amethyst cluster, pointed dripstone, decorated pot, turtle egg, big dripleaf and azalea broke; a sculk sensor,
@@ -423,6 +427,13 @@ No decompile: all of this is from the captures.
   piston rose 0.5 the tick before the arm showed and 0.5 with it (sapling: 0.75 with the arm, then 0.25); a cow
   partly in a sticky arm's cell moved 0.14 out, not clear of the cell (sapling clears it, 0.5 a tick). Not fixed:
   one cow a case, two of them wandered off their marks.
+- Armour stands instead (2026-11-04, `bds_command_probe e3pmob`, bds-e3pmob.txt, two rounds alike): the arm's
+  halfway push (+0.25) comes in the tick the piston starts, a tick before the arm shows, the rest with the
+  arm; a stand before a pushed stone goes once, with the stone's first move; one on an up piston is shown at
+  +0.5, then on the arm; the sticky one's went as the plain one's (the cow's 0.14 was its own walk). Sapling
+  pushed a tick late and let the lifted stand fall in the push's tick. Fixed: the halfway push is in
+  `pistons::power`, the full one at stage 1, and a body pushed up or down skips that tick's own step
+  (`Body::step`); test `a_piston_pushes_what_stands_before_its_arm_and_its_blocks_as_on_bds`.
 
 ## Slime and honey (2026-10-10, `bds_command_probe slime`, research/captures/bds-slime.txt)
 

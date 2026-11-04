@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{BlockEntityData, LevelSoundEvent};
+use acacia_proto::packets::{BlockEntityData, LevelSoundEvent, UpdateSubchunkBlocks};
 use common::{Harness, all, block_changes, hash};
 use sapling_api::Block;
 
@@ -71,6 +71,27 @@ fn a_powered_piston_pushes_a_block_over_4_ticks_and_draws_back_without_it() {
     let gone = when(&back, [1, 65, 2], hash("minecraft:air")).expect("the arm goes");
     assert_eq!(sounds(&back, "piston.in"), [gone + 1]);
     assert_eq!(when(&back, [2, 65, 2], hash("minecraft:air")), None, "the stone stays where it was pushed");
+}
+
+/// Each block of an UpdateSubchunkBlocks as (x, block, flags), and of its `extra` layer.
+fn listed(sent: &[RawPacket]) -> Vec<(Vec<(i32, u32, u32)>, Vec<(i32, u32, u32)>)> {
+    let cells = |blocks: &[acacia_proto::types::BlockUpdate]| blocks.iter().map(|block| (block.position.x, block.runtime_id, block.flags)).collect();
+    all::<UpdateSubchunkBlocks>(sent).iter().map(|packet| (cells(&packet.blocks), cells(&packet.extra))).collect()
+}
+
+#[test]
+fn a_piston_shows_its_moves_as_bds_lists_them() {
+    let mut h = ready();
+    put(&mut h, &[([0, 65, 2], "piston", EAST), ([1, 65, 2], "stone", ""), ([2, 65, 2], "stone", "")]);
+    watch(&mut h, 4);
+    put(&mut h, &[([0, 66, 2], "redstone_block", "")]);
+    let out = watch(&mut h, 10);
+    let moved = when(&out, [3, 65, 2], hash("minecraft:moving_block")).expect("the stones go");
+    let (moving, air, stone) = (hash("minecraft:moving_block"), hash("minecraft:air"), hash("minecraft:stone"));
+    assert_eq!(listed(&out[moved]), [(vec![(3, moving, 3), (2, air, 3), (2, moving, 3), (1, air, 3), (1, arm(false), 3)], vec![])]);
+    let entities: Vec<i32> = all::<BlockEntityData>(&out[moved]).iter().map(|data| data.position.x).collect();
+    assert_eq!(entities, [3, 2, 2], "each listed cell's moving block, after the list");
+    assert_eq!(listed(&out[moved + 2]), [(vec![(3, stone, 19), (2, stone, 19)], vec![(3, air, 19), (2, air, 19)])]);
 }
 
 #[test]
@@ -211,10 +232,11 @@ fn a_piston_pushes_what_stands_before_its_arm_and_its_blocks_as_on_bds() {
     watch(&mut h, 4);
     put(&mut h, &[([0, 66, 2], "redstone_block", ""), ([0, 66, 4], "redstone_block", ""), ([0, 66, 6], "redstone_block", ""), ([-5, 65, 2], "redstone_block", "")]);
     let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let mut ticks = Vec::new();
     for _ in 0..10 {
         let seen = seen.clone();
         h.remote.run(move |ctx| seen.lock().unwrap().push(ctx.entities().iter().map(|stand| if stand.feet[0] < 0.0 { stand.feet[1] } else { stand.feet[0] }).collect::<Vec<f32>>()));
-        h.tick_all();
+        ticks.push(h.tick_all().to(2).to_vec());
     }
     let seen = seen.lock().unwrap().clone();
     let steps = |stand: usize| {
@@ -223,7 +245,12 @@ fn a_piston_pushes_what_stands_before_its_arm_and_its_blocks_as_on_bds() {
         places
     };
     assert_eq!([steps(0), steps(1), steps(2)], [vec![1.5, 1.75, 2.25], vec![2.5, 3.25], vec![1.5, 1.75]]);
-    assert_eq!(steps(3).last(), Some(&67.0), "the one on a piston that pushes up stands on its arm: {:?}", steps(3));
+    // The one on a piston pushing up is shown halfway, then on its arm, as BDS's.
+    let risen: Vec<f32> = ticks.iter().flat_map(|sent| all::<acacia_proto::packets::MoveEntityDelta>(sent)).filter_map(|moved| moved.y.filter(|y| *y > 65.5)).collect();
+    assert_eq!(risen, [66.5, 67.0]);
+    // bds-e3pmob.txt: the arm's first push is a tick before the arm shows; the block's with it.
+    let first_move = |stand: usize| seen.iter().position(|feet| feet[stand] != seen[0][stand]);
+    assert_eq!([first_move(0), first_move(1)], [when(&ticks, [1, 65, 2], arm(false)).map(|tick| tick - 1), when(&ticks, [2, 65, 4], hash("minecraft:moving_block"))]);
 }
 
 #[test]
