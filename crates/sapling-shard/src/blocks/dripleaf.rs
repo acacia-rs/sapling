@@ -34,16 +34,18 @@ fn wait(tilt: &str) -> u64 {
 }
 
 /// Sets the leaf at `pos` to `tilt`, heard as BDS names it, and queues its next step. A leaf on
-/// ground it may not stand on breaks instead, as BDS's did on stone (research/captures/bds-bkblocks.txt).
+/// ground it may not stand on shows the tilt and then breaks, as BDS's did on stone
+/// (research/captures/bds-t3uses.txt: `unstable` when stood on, `full_tilt` when shot).
 fn set(world: &mut World, layer: Entity, pos: BlockPos, tilt: &str) {
     let Some(level) = level(world, layer) else { return };
     let id = level.block(pos[0], pos[1], pos[2]);
-    if !super::ground::may_stand(level, pos, id) {
+    let stands = super::ground::may_stand(level, pos, id);
+    let Some(tilted) = with_property(level.registry(), id, TILT, tilt) else { return };
+    send::set(world, layer, pos, tilted);
+    if !stands {
         super::updates::pop(world, layer, pos);
         return;
     }
-    let Some(tilted) = with_property(level.registry(), id, TILT, tilt) else { return };
-    send::set(world, layer, pos, tilted);
     let heard = match tilt {
         PARTIAL | FULL => Some("tilt_down.big_dripleaf"),
         NONE => Some("tilt_up.big_dripleaf"),

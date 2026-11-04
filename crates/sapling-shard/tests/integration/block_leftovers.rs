@@ -56,6 +56,9 @@ fn a_bed_bursts_in_the_nether_at_its_head() {
     let sent: Vec<RawPacket> = h.tick_all().to(1).to_vec();
     let flash = all::<LevelEvent>(&sent).into_iter().find(|event| event.event == LevelEventEvent::ParticleExplosion).expect("a blast");
     assert_eq!((flash.data, flash.position.x, flash.position.y, flash.position.z), (5, 2.5, 70.5, 1.5));
+    // bds-t3nether.txt: the clicked foot's dust at its corner, before the blast.
+    let dust = all::<LevelEvent>(&sent).into_iter().position(|event| event.event == LevelEventEvent::ParticleDestroyBlockNoSound && [event.position.x, event.position.y, event.position.z] == FOOT.map(|c| c as f32));
+    assert!(dust.is_some_and(|dust| dust < all::<LevelEvent>(&sent).iter().position(|event| event.event == LevelEventEvent::ParticleExplosion).unwrap()));
     for half in [FOOT, HEAD] {
         let left = block_in_nether(&mut h, half);
         assert!(left == "minecraft:air" || left == "minecraft:fire", "{half:?}: {left}");
@@ -147,15 +150,22 @@ fn a_compass_clicked_on_a_lodestone_points_at_it_until_it_goes() {
     });
     h.tick_all();
     h.receive(1, &click([2, 65, 0], 1, None));
-    h.tick_all();
+    // research/captures/bds-t3uses.txt: the record told unasked at the binding and at the going.
+    let told: Vec<_> = all::<PositionTrackingDbBroadcast>(h.tick_all().to(1)).into_iter().map(|told| told.broadcast_action).collect();
+    assert_eq!(told, [PositionTrackingDbBroadcastBroadcastAction::Update]);
     let held = ask(&mut h, |ctx| [Slot::Main(0), Slot::Main(1)].map(|slot| ctx.item(ALEX, slot).map(|item| (item.name, item.count))));
     assert_eq!(held, [Some(("minecraft:compass".into(), 1)), Some(("minecraft:lodestone_compass".into(), 1))]);
+    // A second binding to the same lodestone told nothing on BDS.
+    h.receive(1, &click([2, 65, 0], 1, None));
+    assert!(all::<PositionTrackingDbBroadcast>(h.tick_all().to(1)).is_empty());
     let (told, record) = tracked(&mut h, 1);
     assert!(told == PositionTrackingDbBroadcastBroadcastAction::Update && record.contains("Int(2), Int(65), Int(0)") && record.contains("0x00000001"), "{told:?} {record}");
     assert_eq!(tracked(&mut h, 7).0, PositionTrackingDbBroadcastBroadcastAction::NotFound);
-    h.remote.run(|ctx| assert!(ctx.set_block([2, 65, 0], &Block::air())));
-    h.tick_all();
-    assert_eq!(tracked(&mut h, 1).0, PositionTrackingDbBroadcastBroadcastAction::Destory);
+    h.remote.run(|ctx| assert!(ctx.update_block([2, 65, 0], &Block::air())));
+    let told = all::<PositionTrackingDbBroadcast>(h.tick_all().to(1));
+    assert!(told.len() == 1 && told[0].broadcast_action == PositionTrackingDbBroadcastBroadcastAction::Destory);
+    let (told, record) = tracked(&mut h, 1);
+    assert!(told == PositionTrackingDbBroadcastBroadcastAction::Destory && record.contains("(\"status\", Byte(2))"), "{record}");
 }
 
 fn tilt_at(h: &mut Harness, pos: [i32; 3]) -> String {
@@ -183,6 +193,22 @@ fn a_big_dripleaf_tilts_under_a_player_and_comes_back_up() {
     (0..100).for_each(|_| drop(h.tick_all()));
     seen.push(tilt_at(&mut h, LEAF));
     assert_eq!(seen, ["unstable", "partial_tilt", "full_tilt", "none"]);
+}
+
+#[test]
+fn a_big_dripleaf_on_stone_shows_its_tilt_and_then_breaks() {
+    // research/captures/bds-t3uses.txt: `unstable` shown, then the leaf gone.
+    const LEAF: [i32; 3] = [2, 65, 0];
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 64, 0], &Block::new("minecraft:stone")) && ctx.set_block(LEAF, &Block::new("minecraft:big_dripleaf").with("big_dripleaf_head=1,big_dripleaf_tilt=none,minecraft:cardinal_direction=south"))));
+    h.tick_all();
+    let mut sent = shooting::face(&mut h, 1, ALEX, [2.5, 65.9375, 0.5], 0.0);
+    sent.extend((0..3).flat_map(|_| h.tick_all().to(1).to_vec()));
+    let shown: Vec<u32> = all::<acacia_proto::packets::UpdateBlock>(&sent).into_iter().filter(|update| [update.position.x, update.position.y, update.position.z] == LEAF).map(|update| update.block_runtime_id).collect();
+    let registry = sapling_world::BlockRegistry::vanilla();
+    let unstable = registry.find("minecraft:big_dripleaf", "big_dripleaf_head=1,big_dripleaf_tilt=unstable,minecraft:cardinal_direction=south").map(|id| registry.network_hash(id));
+    assert_eq!(shown, [unstable.expect("a vanilla state"), common::hash("minecraft:air")]);
 }
 
 #[test]

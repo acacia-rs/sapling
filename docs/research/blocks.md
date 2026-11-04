@@ -131,11 +131,20 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
   one entry a write; not matched, for world-ticks.md "Packet shape"'s reason.
 - Left: lodestones (not in the scenes).
 
+## Parity drill (2026-11-04, `bds_command_probe t3uses`, `t3frame`, `t3nether`)
+
+- A comparator reading a wall frame through stone gives the item's rotation + 1, 1 to 8 and back to
+  1, on both (bds-t3frame.txt). BDS shows the frame and its entity a tick after the sound, sapling the
+  entity before it; not matched.
+- Lodestone records and broadcasts: block-uses.md "Parity drill (2026-11-04)". Fixed.
+- A bed clicked at its foot in the Nether (bds-t3nether.txt): `ParticleDestroyBlockNoSound` at the foot's
+  corner with the foot's hash, then the blast at the head's middle. Sapling sent no dust, then (first
+  fix) the head's; fixed (`blocks/bed_burst.rs` gets the clicked cell, `sleep.rs`).
+- A big dripleaf on stone, stood on: BDS showed `big_dripleaf_tilt=unstable` and then broke it;
+  sapling broke it untilted. Fixed (`blocks/dripleaf.rs`).
+
 ## Not drilled
 
-- A bed's burst clicked at its foot; fire from a bed's blast cell by cell (BDS's fire pass not read).
-- A comparator reading a wall frame past a block, by turn.
-- Lodestone: the record's fields, the broadcast's actions, a compass in creative being swapped,
-  status 1 for a gone lodestone, and whether BDS tells clients unasked when one breaks.
+- Fire from a bed's blast cell by cell (BDS's fire pass not read).
 - Big dripleaf: the 0.6875 height and the shot (arrows are inert in sapling's drill); a stem's leaf
   under a player (BDS's did not re-tilt; sapling's player fell through it, its head breaking).
