@@ -90,6 +90,9 @@ pub(crate) struct SetBlock {
 impl Command for SetBlock {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let pos = self.position.resolve(ctx, sender);
+        if !ctx.ticks_chunk([pos[0] >> 4, pos[2] >> 4]) {
+            return out.translate("commands.setblock.outOfWorld", Vec::new(), false);
+        }
         let mode = self.mode.unwrap_or(SetMode::Replace);
         let kept = mode == SetMode::Keep && ctx.block(pos).is_some_and(|there| !there.is_air());
         let broke = mode == SetMode::Destroy && ctx.break_block(pos);
@@ -115,6 +118,10 @@ impl Command for TestForBlock {
     // `tile.stone.stone.name`); here the key is made of the name.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let pos = self.position.resolve(ctx, sender);
+        // research/captures/bds-tickedge.txt: past the tick region, as `/setblock` and `/fill` there.
+        if !ctx.ticks_chunk([pos[0] >> 4, pos[2] >> 4]) {
+            return out.translate("commands.testforblock.outOfWorld", Vec::new(), false);
+        }
         let place = || pos.map(|c| c.to_string()).to_vec();
         let wanted = block(&self.block.0, self.states.as_ref());
         let there = ctx.block(pos).unwrap_or_else(|| Block::new(Block::AIR));

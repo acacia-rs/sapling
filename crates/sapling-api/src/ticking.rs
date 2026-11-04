@@ -71,6 +71,12 @@ impl ShardCtx<'_> {
     pub fn forced_chunks(&self) -> Vec<[i32; 2]> {
         self.backend.forced_chunks()
     }
+
+    /// Whether the chunk (x, z) of the world in scope ticks: near enough a player in it, or kept.
+    /// Vanilla's commands change blocks only there.
+    pub fn ticks_chunk(&mut self, chunk: [i32; 2]) -> bool {
+        self.backend.ticks_chunk(chunk)
+    }
 }
 
 /// The ticking side of [`crate::Backend`].
@@ -81,6 +87,9 @@ pub trait TickingBackend {
     fn set_ticking_preload(&mut self, pick: &dyn Fn(&TickingArea) -> bool, preload: bool) -> usize;
     fn force_chunk(&mut self, chunk: [i32; 2], forced: bool);
     fn forced_chunks(&self) -> Vec<[i32; 2]>;
+    fn ticks_chunk(&mut self, _chunk: [i32; 2]) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]

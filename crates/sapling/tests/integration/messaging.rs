@@ -95,7 +95,7 @@ async fn messages_titles_sounds_and_particles_go_out_as_bds_sent_them() {
     let steps: [(&str, &[&str]); 18] = [
         ("me waves", &[r#"chat "" * Alice waves"#]),
         ("me", &["answer commands.generic.invalidMessage [] 0"]),
-        (r#"tellraw @a {"rawtext":[{"text":"hi "},{"selector":"@a"},{"selector":"@e[type=cow]"},{"score":{"name":"@s","objective":"o"}},{"translate":"%%s","with":["x"]}]}"#, &[hi]),
+        (r#"tellraw @a {"rawtext":[{"text":"hi "},{"selector":"@a"},{"selector":"@e[type=ender_dragon]"},{"score":{"name":"@s","objective":"o"}},{"translate":"%%s","with":["x"]}]}"#, &[hi]),
         (r#"tellraw @a {"rawtext":[{"text":5}]}"#, &["answer commands.tellraw.error.textNotString [] 0"]),
         ("tellraw @a not json", &[r#"answer commands.generic.syntax ["ellraw @a ", "not", " json"] 0"#]),
         (r#"tellraw nobody {"rawtext":[]}"#, &["answer commands.generic.noTargetMatch [] 0"]),

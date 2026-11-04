@@ -32,8 +32,9 @@ fn a_hidden_mob_ticks_within_the_tick_distance_and_waits_past_it_as_on_bds() {
     (0..20).for_each(|_| drop(h.tick(1)));
     let cow = ask(&mut h, |ctx| ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 0.5])).expect("a cow");
     (0..3).for_each(|_| drop(h.tick(1)));
-    // bds-tickcircle6.txt: 3,3, 5,0 and 6,0 chunks off hidden but ticked, 7,0 off neither shown nor ticked.
-    for (chunk, ticked) in [([5, 0], true), ([3, 3], true), ([6, 0], true), ([7, 0], false)] {
+    // bds-tickcircle6.txt: 3,3, 5,0 and 6,0 chunks off hidden but ticked; 5,3 (inside a circle of 6,
+    // outside BDS's tick region) and 7,0 off neither shown nor ticked.
+    for (chunk, ticked) in [([5, 0], true), ([3, 3], true), ([6, 0], true), ([5, 3], false), ([7, 0], false)] {
         let at = [chunk[0] as f32 * 16.0 + 8.5, 90.0, chunk[1] as f32 * 16.0 + 8.5];
         assert!(ask(&mut h, move |ctx| ctx.move_entity(cow, at)));
         let sent: Vec<_> = (0..5).flat_map(|_| h.tick(1)).collect();

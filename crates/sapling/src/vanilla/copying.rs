@@ -83,11 +83,11 @@ impl CommandSyntax for CloneCommand {
 }
 
 /// The answer for a source or destination too big or not all in the world.
-fn refused(ctx: &ShardCtx<'_>, regions: [Region; 2], out: &mut Output, too_many: &str) -> bool {
+fn refused(ctx: &mut ShardCtx<'_>, regions: [Region; 2], out: &mut Output, too_many: &str) -> bool {
     let count = regions[0].count();
     if count > MOST_BLOCKS {
         out.translate(too_many, vec![count.to_string(), MOST_BLOCKS.to_string()], false);
-    } else if !regions.iter().all(|region| region.is_loaded(ctx)) {
+    } else if !regions.iter().all(|region| region.is_loaded(ctx) && region.ticks(ctx)) {
         out.translate("commands.generic.outOfWorld", Vec::new(), false);
     } else {
         return false;

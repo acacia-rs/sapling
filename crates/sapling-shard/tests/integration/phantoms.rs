@@ -32,11 +32,11 @@ fn sleepless(rested: Option<i32>) -> Harness {
     h
 }
 
-/// The phantoms there once `ticks` have passed, looked for every 100 ticks; the other monsters are
-/// taken away each time, so that their cap leaves room.
+/// The phantoms there once `ticks` have passed, looked for every tick, before one has sunk from
+/// where it came; the other monsters are taken away each time, so that their cap leaves room.
 fn phantoms_within(h: &mut Harness, ticks: usize) -> Vec<EntityInfo> {
-    for _ in 0..ticks / 100 {
-        (0..100).for_each(|_| drop(h.tick_all()));
+    for _ in 0..ticks {
+        drop(h.tick_all());
         let found = common::asking::ask(h, |ctx| {
             let (phantoms, others): (Vec<EntityInfo>, Vec<EntityInfo>) = ctx.entities().into_iter().partition(|entity| entity.kind == "minecraft:phantom");
             for other in others {
@@ -57,7 +57,8 @@ fn a_phantom_comes_20_to_34_over_a_player_awake_three_days() {
     let found = phantoms_within(&mut h, 3000);
     let phantom = found.first().expect("a phantom");
     let [x, y, z] = phantom.feet;
-    assert!((84.0..99.0).contains(&y) && (x - 0.5).abs() <= 11.0 && (z - 0.5).abs() <= 11.0, "{phantom:?}");
+    // Seen a tick after it came, so up to a tick's sink under 84.
+    assert!((83.5..99.0).contains(&y) && (x - 0.5).abs() <= 11.0 && (z - 0.5).abs() <= 11.0, "{phantom:?}");
 }
 
 #[test]
