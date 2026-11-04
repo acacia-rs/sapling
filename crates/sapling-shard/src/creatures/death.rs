@@ -45,11 +45,22 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     }
     omens::died(world, entity, layer, body);
     feed_catalyst(world, entity, layer, kind, body);
-    let mut stacks = crate::riding::spilled(world, entity);
-    let unsaddled = stacks.iter().any(|stack| stack.name == SADDLE);
+    let spilled = crate::riding::spilled(world, entity);
+    let unsaddled = spilled.iter().any(|stack| stack.name == SADDLE);
     crate::riding::mouth_at_death(world, entity, layer, kind, body, unsaddled);
-    if lasts.is_none() {
-        stacks.extend(remains(world, entity, layer, kind));
+    // research/captures/bds-e1loot.txt: a tamed horse left its leather, armour, then saddle the tick
+    // after; with doMobLoot off its saddle, then armour, in the tick it died.
+    let mut stacks = Vec::new();
+    if !leaves_loot(world, layer) {
+        let [x, y, z] = body.at;
+        for stack in spilled.into_iter().chain(crate::riding::looted_armor(world, entity)) {
+            drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
+        }
+    } else {
+        if lasts.is_none() {
+            stacks.extend(remains(world, entity, layer, kind));
+        }
+        stacks.extend(spilled);
     }
     world.entity_mut(entity).insert((Dying(now + lasts.unwrap_or(DYING)), Remains { due: now + 1, stacks })).remove::<entities::Stored>();
     if let Some(mut health) = world.get_mut::<Health>(entity) {

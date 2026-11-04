@@ -142,6 +142,16 @@ fn each_kind_hunts_at_its_speed_with_its_hit_and_what_the_hit_gives() {
 }
 
 #[test]
+fn a_cave_spider_s_bite_poisons_for_seven_seconds() {
+    use acacia_proto::packets::MobEffect;
+    // research/captures/bds-e1cave.txt, on normal: poison 140 at each bite.
+    let (mut h, _) = hunted_by("minecraft:cave_spider", Difficulty::Normal);
+    let (_, sent) = until_hit(&mut h, 600);
+    let effects: Vec<(i32, i32)> = all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.duration)).collect();
+    assert_eq!(effects, [(19, 140)]);
+}
+
+#[test]
 fn a_cow_left_alone_strolls_at_its_pace_and_stays_on_the_floor() {
     // research/captures/bds-stroll.txt: a cow went 0.08634 a tick, up to ten blocks at a time.
     let mut h = Harness::with(sapling_shard::ShardConfig { mobs_stroll: true, ..common::config() }, common::platform());

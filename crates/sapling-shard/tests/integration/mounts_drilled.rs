@@ -184,6 +184,21 @@ fn a_worn_out_carrot_on_a_stick_boosts_once_more_and_leaves_a_fishing_rod() {
     assert_eq!(common::shooting::held(&mut h, Slot::Main(0)).map(|held| held.name), Some("minecraft:fishing_rod".into()));
 }
 
+#[test]
+fn a_carrot_on_a_stick_a_boost_wore_is_shown_to_the_rider_s_watchers() {
+    let mut h = alex();
+    let (pig, _) = summoned(&mut h, "minecraft:pig", Some("minecraft:on_saddled"), 0.5);
+    ask(&mut h, |ctx| ctx.set_game_mode(ALEX, sapling_api::GameMode::Survival));
+    h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:carrot_on_a_stick", 1)))));
+    h.enter(2, "Steve");
+    h.receive(1, &interact(pig.0));
+    (0..2).for_each(|_| drop(h.tick_all()));
+    h.receive(1, &common::shooting::click_air());
+    let watched: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    // research/captures/bds-n3stick.txt: a MobEquipment with each new wear.
+    assert_eq!(all::<acacia_proto::packets::MobEquipment>(&watched).iter().filter(|shown| shown.runtime_entity_id == 1).count(), 1);
+}
+
 fn left_on_death(h: &mut Harness, mob: EntityId) -> Vec<&'static str> {
     let (_, sent) = told(h, move |ctx| ctx.kill_entity(mob));
     all::<AddItemEntity>(&sent).iter().filter_map(|lying| sapling_data::item_name(lying.item.network_id.into())).collect()

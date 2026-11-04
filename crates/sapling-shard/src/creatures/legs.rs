@@ -52,7 +52,9 @@ pub(super) fn walk_turning(world: &mut World, entity: Entity, layer: Entity, bod
     let turn = ((-dx).atan2(dz).to_degrees() - legs.yaw + 180.0).rem_euclid(360.0) - 180.0;
     legs.yaw += turn.clamp(-most, most);
     legs.pace = (legs.pace + PACE).min(1.0);
-    let stride = if body.on_ground { STRIDE * (speed * legs.pace).powi(2) } else { AIRBORNE * STRIDE * speed * legs.pace };
+    // In a liquid its legs push as in the air, on the bottom too: BDS's zombie crossed a pool's
+    // floor at 0.45 blocks a second (research/captures/bds-e1path.txt), 0.02 x 0.98 x 0.23 over water's 0.2 drag.
+    let stride = if body.on_ground && body.liquid().is_none() { STRIDE * (speed * legs.pace).powi(2) } else { AIRBORNE * STRIDE * speed * legs.pace };
     let (yaw, push) = (legs.yaw, if dx.hypot(dz) < near { 0.0 } else { stride });
     let facing = yaw.to_radians();
     let leap = body.on_ground && push > 0.0 && at_step(world, layer, body, facing);

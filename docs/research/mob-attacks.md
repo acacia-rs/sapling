@@ -329,7 +329,11 @@ Sapling's run: sapling-fights.txt. The actor under resistance on a stone floor, 
 - A spider at noon and at midnight under the open sky took no target in either run; sapling the same.
 - A cave spider took the actor 3 s after it came, dropped it 1.6 s later and never hit, so its poison
   was not seen. Sapling's hunted at once and hit 2 a second (differs, not followed: what made BDS's
-  let go is not known).
+  let go is not known). Re-drilled 2026-11-04 (`e1cave`, bds-e1cave.txt, on normal): by midnight one
+  bit the survival actor about once a second for 10 s, each bite giving poison 140 (7 s), and never let
+  go; at noon one took no target in 20 s. Sapling's (sapling-e1cave.txt) hunted and bit the same but
+  gave no poison. Fixed: `mob-traits.tsv` `hits=poison:140`, test
+  `a_cave_spider_s_bite_poisons_for_seven_seconds`. Whether easy and hard change the 7 s is not drilled.
 - A creeper with its prey 6 off was lit and went out; one with prey 3.5 off burst; one whose prey
   went creative went out. Sapling the same.
 - `/summon creeper ... minecraft:start_exploding_forced`: lit 3 ticks after, burst 30 after that with no
@@ -363,10 +367,23 @@ The actor in survival at midnight on a walled stone floor, healed and put back b
   not followed); the cave spiders took and let go over and over as BDS's, but one held 5 off bit
   (BDS's held ones never did; not followed).
 
+## Ways (2026-11-04, `e1path`, research/captures/bds-e1path.txt)
+
+A zombie 12 north of the survival actor by night, 15 s for each way (sapling-e1path.txt for sapling's):
+
+- A trench two wide and three deep across the way: it walked in and stayed in it. Sapling the same.
+- A shelf three up: it took the actor at 1.6 s, having strolled a quarter block on, dropped the three
+  and hit at 6 s. Sapling's stood where it came and never saw the actor: its eyes' line to the
+  actor's passed 0.007 into the shelf's edge, which the quarter block BDS's had walked cleared. A
+  drop of three is taken (test `a_zombie_on_a_ledge_three_up_takes_its_prey_below_and_drops_to_it`).
+- A one-deep pool three wide: BDS's crossed its floor at 0.45 blocks a second and climbed out; sapling's
+  walked across at its land pace. Fixed: legs in a liquid push as in the air (`legs.rs`, 0.02 x 0.98 x
+  its speed against water's drag of 0.8).
+- A cobblestone wall with a wooden door: it never came through and strolled off; sapling the same.
+
 ## Not drilled
 
-A way with drops, water or doors in it, a hole in the way, whether prey that goes behind a wall is
-kept, a cave spider's poison, the kinds not named here, what a blast
+A hole in the way, whether prey that goes behind a wall is kept, the kinds not named here, what a blast
 leaves of the blocks it breaks and of softer ground, and what `within_radius` 25 does: a zombie on
 open grass 30 off took and dropped its target every 10 ticks, one on the stone floor kept it.
 
@@ -386,9 +403,18 @@ is 6 off or gone, as the pack says, which was not drilled.
 A skeleton stands within 10 blocks of its prey and looses an arrow every 61 ticks
 (`creatures/arrows.rs`): aimed and spread as the Java game's, flying by the two numbers above,
 sticking in blocks and hurting players whose box its own meets. It walks at its prey for its
-first 19 ticks, which takes it BDS's 1.7 blocks; an arrow hurts a mob in its way too (not drilled) and cannot be
+first 19 ticks, which takes it BDS's 1.7 blocks; an arrow hurts a mob in its way too and cannot be
 picked up. Run against sapling the drill's far skeleton still hits more often than BDS's, whose
 arrows passed a hand over the player's head.
+
+In the way (2026-11-04, `e1arrow`, bds-e1arrow.txt): a held skeleton 12 east of the actor, a held
+villager halfway. BDS's seven arrows hit the villager three times (`HurtAnimation`, gone, `bow.hit`)
+and never the actor; sapling's four (sapling-e1arrow.txt) all flew over the villager's head and hit
+the actor. Not the in-the-way rule but the aim: BDS's arrows left at 1.5 to 1.7 across and -0.19 to
+0.29 up, mean 0.01 up, a spread of about 0.14 a part, which is the pack's `uncertainty_base` 16 less
+4 a difficulty level (12 on easy) x 0.0075 x 1.6; sapling's left at 0.18 to 0.21 up, its aim 0.6 up
+the prey with 0.2 a block of loft and its spread 0.075 (the TODO in arrows.rs, not changed: BDS's
+mean is level with the prey's eyes here, which the far skeleton above does not fit).
 
 A stray and a bogged shoot as the skeleton with their effect on the arrow, and a pillager while
 it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.

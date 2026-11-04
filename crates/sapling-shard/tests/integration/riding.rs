@@ -7,8 +7,8 @@ use crate::common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::{List, Value};
-use acacia_proto::packets::{Interact, InteractActionId, InventoryTransaction, SetEntityLink};
-use acacia_proto::types::{TransactionTransactionData, TransactionTransactionDataItemUseOnEntityActionType as OnEntity};
+use acacia_proto::packets::{EntityEvent, EntityEventEventId as Event, Interact, InteractActionId, InventoryTransaction, SetEntityData, SetEntityLink};
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, TransactionTransactionData, TransactionTransactionDataItemUseOnEntityActionType as OnEntity};
 use common::stored::{actor, compound, enter_stored, floor_with};
 use common::{Harness, all, attack, config};
 use sapling_api::{EntityId, Item, Mount, PlayerId, Slot, Target};
@@ -133,6 +133,32 @@ fn a_wild_horse_throws_its_rider_off_until_its_temper_lets_a_ride_tame_it() {
         riders(&mut h, horse) == 1
     });
     assert!(tamed, "a ride tamed it and its rider stays on");
+}
+
+/// The keys of each `SetEntityData` about `id`.
+fn data_keys(sent: &[RawPacket], id: u64) -> Vec<Vec<Key>> {
+    all::<SetEntityData>(sent).into_iter().filter(|data| data.runtime_entity_id == id).map(|data| data.metadata.iter().map(|item| item.key).collect()).collect()
+}
+
+#[test]
+fn a_horse_tamed_by_a_ride_shows_its_owner_with_the_flag_and_its_inventory_the_tick_after() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let horse = spawned(&mut h, &[("minecraft:horse", [2.5, 65.0, 0.5])])[0];
+    for _ in 0..21 {
+        h.receive(1, &interact(horse.0));
+        for _ in 0..62 {
+            let sent = h.tick(1);
+            if !all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == horse.0 && event.event_id == Event::TameSuccess) {
+                continue;
+            }
+            // research/captures/bds-n3ride.txt: the word and OwnerEid, then the inventory alone.
+            assert_eq!(data_keys(&sent, horse.0), [vec![Key::Flags, Key::OwnerEid]]);
+            assert_eq!(data_keys(&h.tick(1), horse.0), [vec![Key::ContainerType, Key::ContainerBaseSize]]);
+            return;
+        }
+    }
+    panic!("no ride tamed the horse");
 }
 
 #[test]

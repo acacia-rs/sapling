@@ -121,9 +121,10 @@ fn scatter(world: &mut World, layer: Entity, feet: [f32; 3]) -> [f32; 3] {
 }
 
 /// Spawns wave `wave` (from 0) of a raid on the village about `middle`: its raiders, each on its
-/// own spot about the wave's ([`scatter`]), a rider on its mount.
-pub(super) fn spawn(world: &mut World, layer: Entity, middle: [f32; 3], wave: u8) -> Vec<Entity> {
-    let Some(feet) = spot(world, layer, middle) else { return Vec::new() };
+/// own spot about the wave's ([`scatter`]), a rider on its mount; with the wave's spot. `None`
+/// where no spot was found.
+pub(super) fn spawn(world: &mut World, layer: Entity, middle: [f32; 3], wave: u8) -> Option<(Vec<Entity>, [f32; 3])> {
+    let feet = spot(world, layer, middle)?;
     let mut raiders = Vec::new();
     let mut born = |world: &mut World, kind: &str, event: &str| {
         let at = scatter(world, layer, feet);
@@ -144,7 +145,7 @@ pub(super) fn spawn(world: &mut World, layer: Entity, middle: [f32; 3], wave: u8
             }
         }
     }
-    raiders
+    Some((raiders, feet))
 }
 
 #[cfg(test)]

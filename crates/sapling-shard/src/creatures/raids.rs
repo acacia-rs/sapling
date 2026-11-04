@@ -61,6 +61,8 @@ struct Raid {
     /// The wave's health when it came.
     most: f32,
     heroes: Vec<Entity>,
+    /// Where the last wave was spawned about (BDS's `SpawnX/Y/Z`, 0 before the first).
+    spawn_at: [f32; 3],
 }
 
 impl Raid {
@@ -91,7 +93,7 @@ fn start(world: &mut World, raids: &mut Vec<Raid>, trigger: omens::Trigger, now:
     let waves = waves::count(world.resource::<Settings>().0.difficulty);
     if waves > 0 {
         let level = trigger.level.min(MOST);
-        raids.push(Raid { layer: trigger.layer, middle, level, waves, spawned: 0, stage: Stage::Gathering(now + GATHERS), raiders: Vec::new(), unloaded: Vec::new(), most: 1.0, heroes: Vec::new() });
+        raids.push(Raid { layer: trigger.layer, middle, level, waves, spawned: 0, stage: Stage::Gathering(now + GATHERS), raiders: Vec::new(), unloaded: Vec::new(), most: 1.0, heroes: Vec::new(), spawn_at: [0.0; 3] });
     }
 }
 
@@ -134,7 +136,7 @@ fn step(world: &mut World, raid: &mut Raid, now: u64) {
             }
         }
         Stage::Gathering(until) if now >= until => {
-            raid.raiders = waves::spawn(world, raid.layer, raid.middle, raid.spawned);
+            (raid.raiders, raid.spawn_at) = waves::spawn(world, raid.layer, raid.middle, raid.spawned).unwrap_or((Vec::new(), raid.spawn_at));
             for &raider in &raid.raiders {
                 world.entity_mut(raider).insert(raiders::Raider { middle: raid.middle });
             }

@@ -23,8 +23,8 @@ Rule components and how they are read:
 - `difficulty_filter`, `height_filter`, `distance_filter` (to the nearest player), `spawns_on_block_filter`,
   `spawns_on_block_prevented_filter` (the block under the feet), `weight`, `herd` (size only),
   `permute_type`, `density_limit` (mobs of the kind near the player, surface or underground).
-- Biome filters: a list is `all_of`; `has_biome_tag` with `==`/`!=`/`not`; `is_snow_covered` is taken as
-  the biome's `frozen` tag. [U]
+- Biome filters: a list is `all_of`; `has_biome_tag` with `==`/`!=`/`not`; `is_snow_covered` is the
+  biome's minimum snow level above 0 ("Snow cover" below).
 
 Left out: `pillager_patrol` (needs patrol events, world age, villages) and the guardian (ocean
 monuments, BDS's structure spawns); the slime and the phantom have their code gates (below); herd events (babies,
@@ -150,8 +150,16 @@ test `a_natural_mob_a_player_names_stays_when_the_player_goes`. Picked-up items 
   start, sapling-leveldb to write and read the record, and the spawner to ask it; the tag and the type
   numbers want a BDS world's chunk dump first.
 - Patrols: `pillager_patrol` needs the patrol spawner, world age and village checks; not read.
-- Herd events (spawner blocks: docs/research/spawners.md). Peaceful does not remove monsters already
-  there [U]. Whether `doMobSpawning` stops spawners and eggs was not checked; sapling's eggs ignore it.
+- Herd events (spawner blocks: docs/research/spawners.md): undrillable live, natural spawning takes a
+  random spot and time (husbandry.md "Herds of babies").
+- `doMobSpawning` and peaceful (2026-11-04, `e1spawn`, bds-e1spawn.txt): with the rule off a monster
+  spawner made a pig by its egg still spawned pigs, and a cow egg hatched; `/difficulty peaceful`
+  removed a zombie in its own tick and left a pig, and `/summon zombie` then answered
+  `commands.summon.failed`. Sapling's run (sapling-e1spawn.txt): the same, answer for answer.
+- Snow cover (`is_snow_covered`): `FilterTestBiomeSnowCovered` (0x1430a80b0) reads the biome's
+  `mMinSnowLevel` (+0x28) `> 0`, the pack climates whose `snow_accumulation` starts above 0; sapling
+  read the `frozen` tag, which misses the snowy taiga and the grove. Fixed: `spawn_rules/biomes.rs`
+  `SNOW_COVERED`, test `filters_test_the_biome_tags`.
 
 ## Spawn eggs [U]
 

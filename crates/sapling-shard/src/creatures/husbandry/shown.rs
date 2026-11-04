@@ -109,6 +109,13 @@ pub(crate) fn links_packet(world: &World, entity: Entity, id: u64, flags: Flags)
     (owner != -1 || holder != -1).then(|| sapling_net::encode(&sapling_data::mob_links_set(id, flags, owner, holder)))
 }
 
+/// The mob's `OwnerEid` item: its owner's runtime id, -1 for none in the world.
+pub(super) fn owner_item(world: &World, entity: Entity) -> Vec<MetadataDictionaryItem> {
+    use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
+    let owner = world.get::<Raised>(entity).and_then(|raised| raised.kept.owner).and_then(|owner| player_of(world, owner)).and_then(|owner| world.get::<NetId>(owner)).map_or(-1, |id| id.0 as i64);
+    vec![MetadataDictionaryItem { key: Key::OwnerEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(owner)) }]
+}
+
 /// Tells the mob's viewers who owns it and holds its lead now, with its `LEASHED` flag.
 pub(super) fn links(world: &mut World, entity: Entity) {
     let Some(id) = world.get::<NetId>(entity).map(|id| id.0) else { return };

@@ -121,7 +121,8 @@ pub(crate) fn wear_hand_by(world: &mut World, player: Entity, uses: i32, lasts: 
 }
 
 /// [`wear_hand_by`], with a stack of `left` put in the hand when it breaks: a worn-out carrot on a
-/// stick leaves its fishing rod (research/captures/bds-n3stick.txt).
+/// stick leaves its fishing rod (research/captures/bds-n3stick.txt); one still whole is shown to
+/// the player's watchers again.
 pub(crate) fn wear_hand_leaving(world: &mut World, player: Entity, uses: i32, lasts: u16, left: &str) {
     let held = |world: &World| world.get::<Inventory>(player).is_some_and(|inventory| inventory.in_hand().is_some());
     let had = held(world);
@@ -129,6 +130,9 @@ pub(crate) fn wear_hand_leaving(world: &mut World, player: Entity, uses: i32, la
     if had && !held(world) {
         let stack = sapling_world::ItemStack { name: left.into(), count: 1, damage: 0, block: None, tag: None };
         change(world, player, |inventory| inventory.put(Place::Main(usize::from(inventory.selected) % HOTBAR), Some(stack)));
+    } else if had {
+        // BDS's came 1 to 4 ticks after the boost; sapling's in its tick.
+        super::equipment::show_hand(world, player);
     }
 }
 

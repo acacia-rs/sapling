@@ -97,7 +97,10 @@ have, and one in powder snow, which sapling does not ask.
 
 ## Where sapling differs
 
-- BDS also flips `MOVING` (bit 34) and another flag (bit 35) on mobs; sapling sends their recorded flags.
+- Settled (2026-11-04, eleventh wave): `MOVING` (bit 34) on mobs follows the moving rule since
+  ef0b0124 (sync.rs `flags_word`), and bit 35 is `BREATHING`, set in the first data after the
+  AddEntity on both: bds-horseeat.txt and sapling-horseeat.txt flip 34 on and off on every walking
+  horse and set 35 once a mob.
 
 ## Bodies (2026-11-04, `bds_command_probe bodies` and `lifts`, research/captures/bds-bodies.txt, bds-lifts.txt)
 
@@ -158,7 +161,8 @@ Sapling's run: sapling-burn2.txt.
   for a worn piece, MobEquipment alone for the main hand, `armor.equip_generic` for an offhand
   shield, stone on the feet taken unseen, saddle and inventory slots an exception. The armour is
   `creatures/worn.rs`'s, so it counts against damage.
-- An armour stand in lava had 6 health and lost 0.05 every 10 ticks (cause -1); sapling's has none.
+- An armour stand in lava had 6 health and lost 0.05 every 10 ticks (cause -1); sapling's too since
+  2026-11-04 ("Armour stands in lava and in fire" below).
 - A burning cow in rain went out 20 ticks after its last burn, the rain begun between: at the turn
   of its next burn. Sapling's burnt on; now `Health::rained_on` (tests/integration/mob_heat.rs). In
   sapling's drill_server rerun the cow still burnt on, as kinds3's endermen took no rain there.
@@ -445,9 +449,15 @@ Captures research/captures/bds-n3*.txt and sapling-n3*.txt (examples/shared/nint
   from 300 and went straight back to 300 the tick the water was gone. Same as sapling. Drowning
   hurt every 10 ticks from 15 s on both.
 - **Armour stands in lava and in fire**: `HurtAnimation` -1 on their first tick there and every 10
-  ticks after, `ONFIRE` from the tick after, health 6 throughout, never dying. Sapling showed
-  nothing; fixed in `creatures/armour_stands/burning.rs`, test
-  `a_stand_in_lava_flinches_every_ten_ticks_alight_and_never_dies`.
+  ticks after, `ONFIRE` from the tick after. Sapling showed nothing; fixed in
+  `creatures/armour_stands/burning.rs`. Corrected 2026-11-04 (`e1stand`, bds-e1stand.txt; the
+  n3breath stand's `UpdateAttributes` say the same): each flinch takes 0.05 of its 6 health. A stand
+  taken out of the fire after 5 s burnt on: every 20 ticks a flinch and 1 off, the health told a
+  tick after, and at the sixth, with none left, it was removed unflinched that tick after, dropping
+  nothing; `ONFIRE` never cleared first. Sapling put it out at once; now burns on (160 ticks, the
+  fire block's 8 s, as BDS's outlasted 6), tests
+  `a_stand_in_lava_flinches_and_scorches_every_ten_ticks_alight`,
+  `a_stand_taken_from_the_fire_burns_one_a_second_till_it_is_gone`.
 - **Floating** (n3float, cows and chickens slowed in water lanes of levels 1 to 6 from a source):
   no cow swam up on BDS; chickens did only once their box reached the source's cell. Sapling's
   the same where the mobs stayed; its cows drifted into the source faster and swam up there.
@@ -463,4 +473,5 @@ cow cost the actor 0.1 exhaustion, as `HIT_TIRES`; the hit zombie fought back as
 
 ## Not drilled
 
-Players' burns beyond fire; when a stand taken out of fire stops burning; an item's wear (the cow fled).
+Players' burns beyond fire; when a stand taken out of fire stops burning (BDS's died first); an
+item's wear (the cow fled).

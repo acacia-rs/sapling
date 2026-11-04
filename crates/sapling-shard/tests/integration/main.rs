@@ -165,6 +165,7 @@ mod vehicles;
 mod villager_days;
 mod villagers;
 mod wardens;
+mod ways;
 mod wild_plants;
 mod world_ticks;
 mod veto_events;

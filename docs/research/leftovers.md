@@ -173,8 +173,15 @@ and are not kept; tests in tests/integration/mounts_drilled.rs):
   `slot.armor.body` after it changes only what shows. An untamed horse's `slot.armor` is
   `commands.generic.exception` (no inventory); `slot.armor air` answers success and leaves the armour on.
 - Fixed, correcting the death entries above: the armour in a tamed horse's slot 1 drops as loot after the
-  leather, with `doMobLoot` on (`riding::looted_armor`; off not drilled); a clicked llama carpet stayed
+  leather, with `doMobLoot` on (`riding::looted_armor`); a clicked llama carpet stayed
   in `bds-tack.txt` with `doMobLoot` on, so a carpet is not loot.
+- Drilled 2026-11-04 (`e1loot`, bds-e1loot.txt): a tamed horse with saddle and iron armour killed with
+  `doMobLoot` off dropped its saddle, then its armour, in the tick it died, and no leather; with it on,
+  leather, armour, then saddle the tick after. Sapling dropped the saddle alone a tick late with the
+  rule off, and the saddle first with it on. Fixed: `creatures/death.rs` `die` (the tack tossed at
+  once without loot, after the loot with it), test
+  `a_tamed_horse_leaves_its_tack_after_its_loot_or_at_once_without_mob_loot`. A chested mount's goods
+  and chest go with the saddle either way, not drilled with the rule off.
 - Fixed: a summon's spawn event (tame, saddle, baby) shows in the AddEntity's own flag word, and the first
   word after it, with BREATHING, carries it too (`creatures/birth.rs` `arrive`): the words now match
   BDS's for every summon in mountflags and saddleevents. The SetEntityData after every AddEntity and the
@@ -237,7 +244,11 @@ and tnt.rs):
     SetEntityData of the word with TAMED, ContainerType 12 and ContainerBaseSize 2.
   - Where: `riding/inventory.rs`, `Raised::ungrouped`, `owners::tame_by_upgrade`. Test
     `a_summoned_mount_shows_the_inventory_and_box_its_event_gives`.
-  - Not drilled: a mount tamed by riding. It is now told the inventory with TAMED (a TODO).
+  - A mount tamed by riding (bds-n3ride.txt, read 2026-11-04): `TameSuccess`, then one SetEntityData
+    of the word with TAMED and `OwnerEid`, then the tick after ContainerType and ContainerBaseSize
+    alone. Sapling told the inventory with TAMED; fixed (`owners::tame_by_riding`,
+    `riding/breaking.rs` `furnish`), test
+    `a_horse_tamed_by_a_ride_shows_its_owner_with_the_flag_and_its_inventory_the_tick_after`.
   - Re-drilled (sapling-s7mounts.txt): every announcement's and data's container and box as BDS's.
 - Flag words and moves of shots, TNT and items (2026-11-04, `s7shots`, bds-s7shots.txt; TNT in
   bds-firstdata.txt). Fixed:
@@ -260,6 +271,12 @@ and tnt.rs):
   - Left: a mob's shot moves in the tick it is loosed on BDS, a tick later on sapling. BDS turns a
     summoned shot to its fall at its first move (pitch byte 192); sapling's stays at 0. BDS sends a
     shot's SetEntityMotion one move sooner than sapling (sync.rs's motion rule, all entities).
+  - Fixed 2026-11-04 (eleventh wave): a shot tells the motion of its next move, drag and weight
+    taken (BDS keeps it so after the move), so its SetEntityMotion comes a move sooner as BDS's; a
+    summoned shot turns to its fall at its first move (byte 192). `creatures/flight.rs` `fly`; the
+    hit test moved to `flight/in_way.rs`. Still left: the loosed tick's move (moving it there made
+    a shot that met its prey at once go unannounced; the TODO in arrows.rs `loose`), and BDS turning
+    a loosed shot in flight (bytes 2, 1, 0, 255, 252 from the fourth move; not fitted).
 
 Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
 
@@ -271,7 +288,8 @@ Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
   sapling need `open`. Still different, Group 3's: sapling
   announces the zombie already burning (its summon tick runs before `mobs::update` and `reshow`
   rebuilds the AddEntity) and then tells BREATHING and the fire in two packets; BDS announces it
-  unlit and tells both in one SetEntityData after the first data.
+  unlit and tells both in one SetEntityData after the first data. Re-drilled 2026-11-04 on `open`
+  (sapling-firstdata.txt): still so (AddEntity word ...561 lit, then ...928, ...929), not fixed.
 - Fixed: data 16's 32 is `HorseFlags::Eating` (LeviLamina `HorseFlags.h`: Saddle 4, Eating 32,
   Standing 64, OpenMouth 128), not rearing. Read in `Horse::postAiStep` (0x142a49530; the Horse
   vtable 0x14a7c72f0 is the one family vtable overriding `Actor::setStanding`, slot 0x1d0;
@@ -279,7 +297,9 @@ Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
   draws 1 in 300 a tick, and eats if the block under its feet is `minecraft:grass_block` (global
   0x14ccdfc38); it stops when its count passes 50, or in the first tick its navigation has a path,
   so a horse that draws while walking sets and clears it in one tick, which still sends data 16 (an
-  unchanged 0). It also heals 1 a tick in 900 (not ported: sapling's mobs do not heal). Drilled
+  unchanged 0). It also heals 1 a tick in 900: drilled 2026-11-04 (`e1heal`, bds-e1heal.txt), six
+  held horses hurt 6 healed 11 times in 100 s, 1 at a time, two cows never; ported
+  (`riding/grazing.rs` `heal`, its own draws; test `a_hurt_horse_heals_one_now_and_then_and_a_cow_never`). Drilled
   (`horseeat`, bds-horseeat.txt): eleven horse-family mobs on grass and three horses on stone, 180 s
   by night: every horse kind but the llama ate, meals of 50 ticks or cut short by a stroll (2 to 43),
   unchanged 0s sent 2 to 11 times a mob, a zombie horse killed while eating showed 160, the stone

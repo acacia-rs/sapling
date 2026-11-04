@@ -118,6 +118,27 @@ fn a_zombie_wears_and_holds_what_replaceitem_gives_it_as_bds_showed() {
 }
 
 #[test]
+fn a_tamed_horse_leaves_its_tack_after_its_loot_or_at_once_without_mob_loot() {
+    use acacia_proto::packets::AddItemEntity;
+    // research/captures/bds-e1loot.txt.
+    for loot in [true, false] {
+        let mut h = alex();
+        ask(&mut h, move |ctx| assert!(ctx.set_game_rule("doMobLoot", sapling_api::RuleValue::Bool(loot))));
+        let horse = summoned(&mut h, "minecraft:horse");
+        put(&mut h, horse, MobSlot::Saddle, "minecraft:saddle");
+        put(&mut h, horse, MobSlot::MountArmor, "minecraft:iron_horse_armor");
+        let (_, at_death) = told(&mut h, move |ctx| assert!(ctx.kill_entity(horse)));
+        let after = h.tick_all().to(1).to_vec();
+        let names = |sent: &[RawPacket]| -> Vec<String> { all::<AddItemEntity>(sent).into_iter().filter_map(|item| sapling_data::item_name(item.item.network_id.into())).map(|name| name.trim_start_matches("minecraft:").to_owned()).filter(|name| name != "leather").collect() };
+        let (now, then) = (names(&at_death), names(&after));
+        match loot {
+            true => assert_eq!((now, then), (vec![], vec!["iron_horse_armor".to_owned(), "saddle".to_owned()])),
+            false => assert_eq!((now, then), (vec!["saddle".to_owned(), "iron_horse_armor".to_owned()], vec![])),
+        }
+    }
+}
+
+#[test]
 fn mounts_take_tack_by_slot_as_bds_s_did() {
     let mut h = alex();
     let horse = summoned(&mut h, "minecraft:horse");

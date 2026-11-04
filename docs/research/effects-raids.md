@@ -61,8 +61,12 @@ Bedrock was found.
   5.2: 5 is the round number between; Java's 8 from the block's cell). Sapling took them all within
   8; fixed (`conduits/power.rs` `is_hunted_near`), test
   `a_whole_conduit_leaves_a_monster_in_water_past_its_hunting_box_alone`; re-drilled
-  (sapling-conduitrain.txt, sapling-conduitreach.txt): as BDS, zombie for zombie. Whether rain alone wets a
-  mob for the hunt is not drilled: every rain zombie stood out of reach. Players still take its
+  (sapling-conduitrain.txt, sapling-conduitreach.txt): as BDS, zombie for zombie. Rain alone wets a
+  mob for the hunt (2026-11-04, `e1conduit`, bds-e1conduit.txt): a held zombie in rain on glass 4.5
+  south, and one on glass over the frame, were each taken a second after they came and bitten 4 every
+  2 s to death. Sapling's run on the open world (sapling-e1conduit.txt): the same, hit for hit. Left:
+  sapling tells `Target` -1 after the kill (BDS sent nothing) and its `conduit.attack` comes in the
+  bite's tick (BDS's a tick after). Players still take its
   power in rain [cap bds-conduit2.txt]. Captures research/captures/bds-conduit{rain,water,depth,
   spill,reach}.txt and their sapling twins; scenes in examples/shared/fifth3_drill.rs.
 - `/setblock ... conduit` gives it its entity (`Active` 0, `Target` -1), shown as `BlockEntityData`
@@ -133,7 +137,9 @@ Bedrock was found.
 - A raid is kept as `VILLAGE_<uuid>_RAID`: `State`, `Status`, `GroupNum`, `NumGroups`, `GameTick`, `Ticks`,
   `SpawnX/Y/Z`, `Raiders` (unique ids), `NumRaiders`, `TotalMaxHealth`, `SpawnFails` [BDS
   `VillageManager::loadAllVillages` lambda 0x142a52630]; sapling adds `CenterX/Y/Z` and `OmenLevel`, as
-  it has no `VILLAGE_<uuid>_INFO`. A kept raid's raiders rejoin it as they load; it is not judged lost
+  it has no `VILLAGE_<uuid>_INFO`. `SpawnX/Y/Z` are floats (`getFloat` 0x14284fcc0 into raid+0x38..0x40),
+  the last wave's spot, 0 before the first; sapling keeps them since 2026-11-04 (`raids/kept.rs`,
+  `Raid::spawn_at`, test `a_kept_raid_reads_back`). A kept raid's raiders rejoin it as they load; it is not judged lost
   while its middle is unloaded. BDS's kept raid showed its bar 129 ms after a rejoin, its raiders still
   there, and went on to defeat [bds-raidkeep.txt, bds-raidkeep2.txt; sapling's drill server keeps no
   world, so BDS only].

@@ -37,3 +37,20 @@ fn a_horse_on_grass_grazes_for_50_ticks_now_and_then_and_one_on_stone_never() {
     }
     assert_eq!(told(&each, on_stone), [], "stone is not grass");
 }
+
+#[test]
+fn a_hurt_horse_heals_one_now_and_then_and_a_cow_never() {
+    use acacia_proto::packets::UpdateAttributes;
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let horse = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:horse", [2.5, 65.0, 2.5], 0.0, None)).expect("a horse");
+    let cow = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:cow", [-3.5, 65.0, -3.5], 0.0, None)).expect("a cow");
+    (0..2).for_each(|_| drop(h.tick_all()));
+    h.remote.run(move |ctx| assert!(ctx.hurt_entity(horse, 6.0, sapling_api::DamageCause::Generic) && ctx.hurt_entity(cow, 6.0, sapling_api::DamageCause::Generic)));
+    // One tick in 900 (research/captures/bds-e1heal.txt): none in 4000 ticks is a chance of e^-4.4.
+    let sent: Vec<RawPacket> = (0..4000).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let healths = |id: EntityId| -> Vec<f32> { all::<UpdateAttributes>(&sent).into_iter().filter(|told| told.runtime_entity_id == id.0).flat_map(|told| told.attributes).filter(|item| item.name == "minecraft:health").map(|item| item.current).collect() };
+    let horse = healths(horse);
+    assert!(horse.len() > 1 && horse.windows(2).all(|pair| pair[1] == pair[0] + 1.0), "{horse:?}");
+    assert_eq!(healths(cow).len(), 1, "the cow's hurt alone");
+}
