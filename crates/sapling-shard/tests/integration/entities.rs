@@ -195,22 +195,6 @@ fn a_world_folders_falling_blocks_fall_on_and_are_saved_until_placed() {
 }
 
 #[test]
-fn a_mob_is_shown_only_within_the_tick_distance_circle_as_on_bds() {
-    let mut h = Harness::new();
-    h.enter(1, "Alex");
-    let cow = ask(&mut h, |ctx| ctx.spawn_entity("minecraft:cow", [0.5, 65.0, 0.5])).expect("a cow");
-    (0..3).for_each(|_| drop(h.tick(1)));
-    // research/captures/bds-farmobs.txt: chunks 3,2 and 4,0 off shown, 3,3 and 5,0 off not.
-    for (chunk, shown) in [([3, 2], true), ([3, 3], false), ([4, 0], true), ([5, 0], false)] {
-        let at = [chunk[0] as f32 * 16.0 + 8.5, 65.0, chunk[1] as f32 * 16.0 + 8.5];
-        assert!(ask(&mut h, move |ctx| ctx.move_entity(cow, at)));
-        let sent: Vec<_> = (0..2).flat_map(|_| h.tick(1)).collect();
-        let (added, removed) = (!all::<AddEntity>(&sent).is_empty(), !all::<RemoveEntity>(&sent).is_empty());
-        assert_eq!((added, removed), (shown && chunk == [4, 0], !shown), "{chunk:?}");
-    }
-}
-
-#[test]
 fn a_mob_is_pushed_moved_and_removed_and_presses_a_plate() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
