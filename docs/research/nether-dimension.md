@@ -93,6 +93,19 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
   for first touches (120,4), (121,4), (120,5). The map's list order with the decompiled hash fits neither,
   for any bucket count. sapling sends Nether portal sections last touched first.
 
+## `/execute in` (bds-t1dexec.txt)
+
+- From the overworld, `execute in nether|the_end run setblock|testforblock|fill` answers
+  `<command>.outOfWorld` (`generic.outOfWorld` for `fill`), then `execute.failed`: the other
+  dimension's columns there are not loaded. `summon` answers `summon.failed`, `testfor`
+  `noTargetMatch`. After `execute in nether run tp`, the same commands work in the Nether.
+- `/structure` takes the dimension's heights: a 3-tall load at y 126 in the Nether is
+  `structure.y.tooHigh ["125"]`, at -2 `tooLow ["0"]`; the End is 0..256. A save over columns not
+  loaded is `generic.outOfWorld`; a load into them succeeds with `structure.load.queued` and is put
+  once they load (sapling-shard structures/animate.rs).
+- Commands above `gamedirectors` (`place`, `reload`, `permission`, ..., bds-t1denums.txt) answer
+  `generic.error.permissions [name]`, then `execute.failed [name, sender]` (execute.rs).
+
 ## sapling against the same drills
 
 - `travel` (sapling-dims-travel.txt): the same packets in the same order and values; the ready
@@ -114,7 +127,7 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
 
 ## Left
 
-- Spectators in portals (the End: end-dimension.md), `/execute` beyond `in <dimension> run tp`, and BDS's
+- Spectators in portals (the End: end-dimension.md), and BDS's
   per-tick UpdateSubchunkBlocks batching of other block changes.
 - Section order where it is not last-touched-first (-collide.txt x 1935): what puts the second section
   ahead. A breakpoint on `onBlockChanged` would show the real touch order. A lit 21x21 frame is written

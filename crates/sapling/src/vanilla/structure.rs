@@ -1,16 +1,36 @@
 //! `/structure save|load|delete`, answered as BDS answered (research/captures/bds-structures.txt):
 //! a name without a namespace is `mystructure:`'s, the box is at most 64x384x64, and a load stays
-//! within the world's height. Animated loads go in over their seconds (`ShardCtx::load_structure_animated`).
-// TODO: heights are the overworld's in every dimension; BDS's answer for an unloaded box is not known.
+//! within the height of the sender's dimension. A save reaching past what is loaded is
+//! `generic.outOfWorld`; a load into columns not loaded waits for them and answers `load.queued`
+//! (research/captures/bds-t1dexec.txt). Animated loads go in over their seconds
+//! (`ShardCtx::load_structure_animated`).
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, parse_choice};
-use sapling_api::{Command, CommandEnum, Mirror, Output, Permission, Rotation, Sender, ShardCtx, StructureAnimation, StructureError, StructureLoad};
+use sapling_api::{BlockPos, Command, CommandEnum, Mirror, Output, Permission, Rotation, Sender, ShardCtx, StructureAnimation, StructureError, StructureLoad};
 
 /// The largest box a structure holds.
 const MOST: [i32; 3] = [64, 384, 64];
-/// The overworld's heights, which a structure or a placed feature must be within.
-pub(super) const LOWEST_Y: i32 = -64;
-pub(super) const HEIGHT_END: i32 = 320;
+/// The heights of the sender's dimension, which a structure or a placed feature must be within:
+/// BDS's Nether load of a 3-tall structure was `tooHigh ["125"]`, `tooLow ["0"]`.
+pub(super) fn heights(ctx: &ShardCtx<'_>, sender: &Sender) -> [i32; 2] {
+    let dimension = match sender {
+        Sender::Executed(executed) => executed.dimension,
+        _ => sender.player().and_then(|player| ctx.dimension_of(player.id)).unwrap_or(0),
+    };
+    match dimension {
+        1 => [0, 128],
+        2 => [0, 256],
+        _ => [-64, 320],
+    }
+}
+
+/// Whether every column of the box `size` (turned by `rotation`) from `at` is loaded.
+fn loaded(ctx: &ShardCtx<'_>, at: BlockPos, size: [i32; 3], rotation: Rotation) -> bool {
+    let [sx, _, sz] = size;
+    let [sx, sz] = if matches!(rotation, Rotation::Clockwise90 | Rotation::Clockwise270) { [sz, sx] } else { [sx, sz] };
+    let columns = |from: i32, length: i32| (from >> 4)..=((from + length - 1) >> 4);
+    columns(at[0], sx).all(|cx| columns(at[2], sz).all(|cz| ctx.block([cx * 16, at[1], cz * 16]).is_some()))
+}
 
 #[derive(CommandEnum, Clone, Copy, PartialEq, Debug)]
 #[command(crate = "crate")]
@@ -128,6 +148,7 @@ impl Command for StructureCommand {
                 }
                 match ctx.save_structure(&self.name, from, to, include_entities, include_blocks, to_disk) {
                     Ok(()) => out.translate("commands.structure.save.success", vec![full], true),
+                    Err(StructureError::Unloaded) => out.translate("commands.generic.outOfWorld", Vec::new(), false),
                     Err(_) => out.translate("commands.structure.error", Vec::new(), false),
                 }
             }
@@ -138,12 +159,14 @@ impl Command for StructureCommand {
                 how.integrity = integrity / 100.0;
                 let Some(size) = ctx.structure_size(&self.name) else { return out.translate("commands.structure.notFound", vec![full], false) };
                 let at = to.resolve(ctx, sender);
-                if at[1] > HEIGHT_END - size[1] {
-                    return out.translate("commands.structure.y.tooHigh", vec![(HEIGHT_END - size[1]).to_string()], false);
+                let [lowest, end] = heights(ctx, sender);
+                if at[1] > end - size[1] {
+                    return out.translate("commands.structure.y.tooHigh", vec![(end - size[1]).to_string()], false);
                 }
-                if at[1] < LOWEST_Y {
-                    return out.translate("commands.structure.y.tooLow", vec![LOWEST_Y.to_string()], false);
+                if at[1] < lowest {
+                    return out.translate("commands.structure.y.tooLow", vec![lowest.to_string()], false);
                 }
+                let queued = !loaded(ctx, at, size, how.rotation);
                 if !how.include_entities && !how.include_blocks {
                     return out.translate("commands.structure.empty.load", Vec::new(), false);
                 }
@@ -152,6 +175,7 @@ impl Command for StructureCommand {
                     None => ctx.load_structure(&self.name, at, &how),
                 };
                 match loaded {
+                    Ok(()) if queued => out.translate("commands.structure.load.queued", Vec::new(), true),
                     Ok(()) => out.translate("commands.structure.load.success", vec![self.name], true),
                     Err(StructureError::NotFound) => out.translate("commands.structure.notFound", vec![full], false),
                     Err(_) => out.translate("commands.structure.error", Vec::new(), false),

@@ -17,10 +17,13 @@ use super::no_target;
 use frames::Frame;
 use parse::{Condition, Step, DIMENSIONS};
 
-/// Commands an `/execute` may not run: BDS runs its commands below the level that may change who
-/// is an operator (bds-execute-run.txt `execute run op`).
-// TODO: only `op` was drilled; BDS's other commands of that level are not known here.
-const ABOVE_EXECUTE: [&str; 2] = ["op", "deop"];
+/// Commands an `/execute` may not run: BDS runs its commands at `gamedirectors`, and these, with
+/// their aliases, need `admin`, `host` or `owner` (bds-ui-operator.txt; each refused in
+/// bds-t1dexec.txt but `wsserver`, which takes no line the drill could give).
+const ABOVE_EXECUTE: [&str; 20] = [
+    "allowlist", "whitelist", "changesetting", "deop", "editor-allowlist", "op", "permission", "ops", "place", "reload", "reloadconfig", "reloadpacketlimitconfig", "save", "script",
+    "sendshowstoreoffer", "serveridentity", "setmaxplayers", "stop", "transfer", "wsserver",
+];
 
 pub(crate) struct Execute {
     steps: Vec<Step>,
@@ -126,6 +129,11 @@ impl Execute {
     /// The syntax error of the command after `run`, placed in the whole line as BDS places it.
     fn refused(&self, ctx: &ShardCtx<'_>, sender: &Sender) -> Option<ParseError> {
         let (command, at) = self.run.as_ref()?;
+        // BDS knows these, most of which sapling has not, and refuses them when run; `wsserver`
+        // without its url broke at the line's end (bds-t1dexec.txt).
+        if command.split_whitespace().next().is_some_and(|name| ABOVE_EXECUTE.contains(&name.to_ascii_lowercase().as_str())) {
+            return command.trim().eq_ignore_ascii_case("wsserver").then(|| Args::new(&self.line, 0, sender, &[]).error_span(self.line.len(), self.line.len()));
+        }
         let error = match ctx.commands().check(command, Permission::Operator) {
             Ok(()) => self.nested_refusal(ctx, sender)?,
             Err(ParseError::NoTarget) => return None,

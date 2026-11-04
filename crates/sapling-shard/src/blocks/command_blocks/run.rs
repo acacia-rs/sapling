@@ -3,7 +3,7 @@
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
-use sapling_api::command::{Executed, ParseError};
+use sapling_api::command::{Args, Executed, ParseError};
 use sapling_api::{BlockPos, Output, Permission, Sender, ShardCtx};
 
 use super::{Fields, Kind, Shape, shape};
@@ -21,6 +21,17 @@ const MAX_CHAIN: &str = "maxCommandChainLength";
 /// `commands.generic.error.permissions` (research/captures/bds-cmdlinks.txt, bds-cmdlinks2.txt;
 /// `kick` ran). sapling's ban commands, which BDS has not, are refused with them.
 const REFUSED: &[&str] = &["op", "deop", "allowlist", "whitelist", "setmaxplayers", "transfer", "place", "ban", "ban-ip", "pardon", "pardon-ip"];
+/// sapling's commands BDS has not, which a block takes as no command: BDS kept
+/// `commands.generic.syntax ["", "seed", ""]` (research/captures/bds-t1dtile.txt).
+const UNKNOWN: &[&str] = &["seed", "version"];
+
+/// The syntax error of a line naming one of [`UNKNOWN`].
+fn unknown(line: &str) -> Option<ParseError> {
+    let line = line.trim();
+    let line = line.strip_prefix('/').unwrap_or(line);
+    let word = line.split_whitespace().next().unwrap_or("");
+    UNKNOWN.iter().any(|unknown| unknown.eq_ignore_ascii_case(word)).then(|| Args::new(line, 0, &Sender::Console, &[]).error_at(0))
+}
 
 /// Marks the block's condition and queues its run: at once for one that runs on its first tick
 /// or waits no ticks, else after its delay. BDS queued it as its circuit was evaluated, a tick
@@ -179,6 +190,11 @@ fn run_line(world: &mut World, layer: Entity, pos: BlockPos, line: &str) -> Outp
         out.translate("commands.generic.error.permissions", vec![word.to_owned()], false);
         return out;
     }
+    if let Some(error) = unknown(line) {
+        let mut out = Output::default();
+        out.refuse(error);
+        return out;
+    }
     let dimension = level(world, layer).map_or(0, |level| level.dimension());
     let sender = Sender::Executed(Box::new(Executed::new(Sender::Console, None, pos.map(|c| c as f32 + 0.5), [0.0, 0.0], dimension)));
     let commands = world.resource::<CommandRegistry>().0.clone();
@@ -197,7 +213,7 @@ pub(super) fn syntax_error(world: &World, line: &str) -> Option<(String, Vec<Str
     if line.trim().is_empty() {
         return None;
     }
-    match world.resource::<CommandRegistry>().0.check(line, Permission::Operator) {
+    match unknown(line).map_or_else(|| world.resource::<CommandRegistry>().0.check(line, Permission::Operator), Err) {
         Ok(()) | Err(ParseError::NoTarget) => None,
         Err(error) => {
             let mut out = Output::default();
