@@ -133,7 +133,12 @@ were not found in any of these; sapling does what is listed there.
   `a_worn_out_carrot_on_a_stick_boosts_once_more_and_leaves_a_fishing_rod`. Re-drilled
   (sapling-n3stick.txt): the three boosts heard at the pig's head as BDS's, the rod left, the
   falling pig boosted. Left: BDS showed the watcher a `MobEquipment` with each new wear, sapling
-  does not; BDS heard the `break` 0.5 higher (the seated rider's eyes).
+  does not; BDS heard the `break` 0.5 higher (the seated rider's eyes). Fixed 2026-11-04: a wear
+  that leaves the stick in hand shows the rider's watchers its hand (`inventory/wear.rs`
+  `wear_hand_leaving`; BDS's came 1 to 4 ticks after the boost, sapling's in its tick), test
+  `a_carrot_on_a_stick_a_boost_wore_is_shown_to_the_rider_s_watchers`. The `break` height is BDS
+  hearing it at a rider position older than the pig's bob (-23.65 against the MovePlayer's
+  -24.15 at that tick in bds-n3stick.txt), not a rule: left.
 - **Rearing** is cleared the tick the ridden horse lands (riding/rearing.rs `grounded`, test
   `a_ridden_horse_rears_from_its_jump_until_it_lands`), as research/captures/bds-horse-jump.txt had it.
 - **Exit spots** (bds-n3exit.txt, a saddled pig with a block of twelve kinds on its north side, the
