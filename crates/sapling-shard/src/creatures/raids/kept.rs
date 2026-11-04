@@ -1,10 +1,10 @@
 //! Raids kept with the world, as BDS keeps them under `VILLAGE_<uuid>_RAID` (sapling-leveldb
 //! raids.rs) with the keys its loader reads (0x142a52630): `State`, `Status`, `GroupNum`,
-//! `NumGroups`, `GameTick`, `Ticks`, `Raiders` (their `UniqueID`s), `NumRaiders`,
-//! `TotalMaxHealth`, `SpawnFails`. sapling keeps its own village beside them: `CenterX/Y/Z` and the
-//! omen's `OmenLevel`. A kept raid's raiders rejoin as their columns load.
-// TODO: BDS's `SpawnX/Y/Z` is its wave's spawn point, which sapling does not keep; the heroes are
-// not kept either: a raid won after a load rewards the players in it then.
+//! `NumGroups`, `GameTick`, `Ticks`, `SpawnX/Y/Z` (floats, the last wave's spot), `Raiders`
+//! (their `UniqueID`s), `NumRaiders`, `TotalMaxHealth`, `SpawnFails`. sapling keeps its own
+//! village beside them: `CenterX/Y/Z` and the omen's `OmenLevel`. A kept raid's raiders rejoin as
+//! their columns load.
+// TODO: the heroes are not kept: a raid won after a load rewards the players in it then.
 
 use acacia_proto::nbt::{self, LittleEndian, List, Nbt, Value};
 use bevy_ecs::prelude::*;
@@ -55,6 +55,9 @@ fn encode(world: &World, raid: &Raid, now: u64) -> Vec<u8> {
         ("NumGroups".into(), Value::Byte(raid.waves as i8)),
         ("GameTick".into(), Value::Long(now as i64)),
         ("Ticks".into(), Value::Long(ticks as i64)),
+        ("SpawnX".into(), Value::Float(raid.spawn_at[0])),
+        ("SpawnY".into(), Value::Float(raid.spawn_at[1])),
+        ("SpawnZ".into(), Value::Float(raid.spawn_at[2])),
         ("NumRaiders".into(), Value::Byte(ids.len() as i8)),
         ("Raiders".into(), Value::List(List { tag: LONG, items: ids.into_iter().map(Value::Long).collect() })),
         ("TotalMaxHealth".into(), Value::Float(raid.most)),
@@ -92,7 +95,8 @@ fn decode(layer: Entity, compound: &[u8], now: u64) -> Option<Raid> {
     let middle = [float("CenterX")?, float("CenterY")?, float("CenterZ")?];
     let level = int("OmenLevel").unwrap_or(1).clamp(1, i64::from(super::MOST)) as u8;
     let (spawned, waves, most) = (int("GroupNum")? as u8, int("NumGroups")? as u8, float("TotalMaxHealth").unwrap_or(1.0));
-    Some(Raid { layer, middle, level, waves, spawned, stage, raiders: Vec::new(), unloaded, most, heroes: Vec::new() })
+    let spawn_at = ["SpawnX", "SpawnY", "SpawnZ"].map(|key| float(key).unwrap_or(0.0));
+    Some(Raid { layer, middle, level, waves, spawned, stage, raiders: Vec::new(), unloaded, most, heroes: Vec::new(), spawn_at })
 }
 
 /// The overworld layers, where villages are.
@@ -144,9 +148,9 @@ mod tests {
     fn a_kept_raid_reads_back() {
         let mut world = World::new();
         let layer = world.spawn_empty().id();
-        let raid = Raid { layer, middle: [3.5, 65.0, -3.5], level: 2, waves: 5, spawned: 2, stage: Stage::Gathering(150), raiders: Vec::new(), unloaded: vec![7, 9], most: 40.0, heroes: Vec::new() };
+        let raid = Raid { layer, middle: [3.5, 65.0, -3.5], level: 2, waves: 5, spawned: 2, stage: Stage::Gathering(150), raiders: Vec::new(), unloaded: vec![7, 9], most: 40.0, heroes: Vec::new(), spawn_at: [40.5, 64.0, -2.5] };
         let read = decode(layer, &encode(&world, &raid, 100), 1000).expect("readable");
-        assert_eq!((read.middle, read.level, read.waves, read.spawned, read.stage, read.unloaded, read.most), (raid.middle, 2, 5, 2, Stage::Gathering(1050), vec![7, 9], 40.0));
+        assert_eq!((read.middle, read.level, read.waves, read.spawned, read.stage, read.unloaded, read.most, read.spawn_at), (raid.middle, 2, 5, 2, Stage::Gathering(1050), vec![7, 9], 40.0, raid.spawn_at));
         assert_eq!(village([3.5, 65.0, -3.5]), "00000003-0041-4000-8000-0000fffffffc");
         assert_eq!(village_middle(&village([-3.5, -60.0, -3.5])), Some([-4, -60, -4]));
     }
