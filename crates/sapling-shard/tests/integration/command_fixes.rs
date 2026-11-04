@@ -124,7 +124,7 @@ fn mounts_take_tack_by_slot_as_bds_s_did() {
     let (saddled, sent) = put(&mut h, horse, MobSlot::Saddle, "minecraft:saddle");
     assert_eq!((saddled, sounds(&sent)), (Ok(()), vec!["saddle".to_owned()]));
     assert_eq!((all::<SetEntityData>(&sent).len(), all::<MobArmorEquipment>(&sent).len()), (1, 0), "a saddle shows in the flags alone");
-    let (armoured, sent) = put(&mut h, horse, MobSlot::Body, "minecraft:iron_horse_armor");
+    let (armoured, sent) = put(&mut h, horse, MobSlot::MountArmor, "minecraft:iron_horse_armor");
     assert_eq!((armoured, sounds(&sent), all::<MobArmorEquipment>(&sent).len()), (Ok(()), vec!["armor".to_owned()], 1));
     assert!(all::<SetEntityData>(&sent).is_empty(), "armour leaves the flags be");
     let (_, sent) = put(&mut h, horse, MobSlot::Inventory(0), "minecraft:diamond");
@@ -133,11 +133,11 @@ fn mounts_take_tack_by_slot_as_bds_s_did() {
     assert!(all::<SetEntityData>(&sent).is_empty(), "flags unchanged are not retold");
     assert_eq!(put(&mut h, horse, MobSlot::Chest(0), "minecraft:chest").0, Err(MobSlotRefusal::NoSlot));
     let donkey = summoned(&mut h, "minecraft:donkey");
-    assert_eq!(put(&mut h, donkey, MobSlot::Body, "minecraft:iron_horse_armor").0, Err(MobSlotRefusal::NoSlot));
+    assert_eq!(put(&mut h, donkey, MobSlot::MountArmor, "minecraft:iron_horse_armor").0, Err(MobSlotRefusal::NoSlot));
     assert_eq!(put(&mut h, donkey, MobSlot::Chest(0), "minecraft:chest").0, Err(MobSlotRefusal::BadSlot { size: 0 }), "no chest carried");
     let llama = summoned(&mut h, "minecraft:llama");
     assert_eq!(put(&mut h, llama, MobSlot::Saddle, "minecraft:saddle").0, Err(MobSlotRefusal::NoSlot));
-    let (_, sent) = put(&mut h, llama, MobSlot::Body, "minecraft:iron_horse_armor");
+    let (_, sent) = put(&mut h, llama, MobSlot::MountArmor, "minecraft:iron_horse_armor");
     assert!(sent.is_empty() || all::<MobArmorEquipment>(&sent).is_empty(), "horse armour on a llama is taken unseen");
     let (_, sent) = put(&mut h, llama, MobSlot::Inventory(0), "minecraft:white_carpet");
     assert_eq!(sounds(&sent), ["armor"], "a llama's first slot is its carpet");

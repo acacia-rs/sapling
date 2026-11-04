@@ -279,9 +279,9 @@ fn a_strays_arrow_slows_a_boggeds_poisons_and_a_pillager_shoots_on_the_walk() {
 }
 
 #[test]
-fn a_pillager_swaps_to_the_nearer_prey_at_its_look() {
-    // research/captures/bds-raidaim.txt: held 10 from a villager it took the villager, moved 12 from
-    // the actor (15.5 from the villager) all four took the actor in the same tick.
+fn a_pillager_swaps_to_the_nearer_prey_the_tick_it_is_there() {
+    // research/captures/bds-raidaim.txt, bds-pillswitch.txt: held 10 from a villager it took the
+    // villager, moved 12 from the actor (15.5 from the villager) all four took the actor in the same tick.
     let (mut h, pillager) = hunted_by("minecraft:pillager", Difficulty::Easy);
     let villager = common::asking::ask(&mut h, move |ctx| {
         let villager = ctx.spawn_entity("minecraft:villager_v2", [0.5, 65.0, 7.5]).expect("spawned");
@@ -290,10 +290,10 @@ fn a_pillager_swaps_to_the_nearer_prey_at_its_look() {
         }
         villager.0 as i64
     });
-    let took = |h: &mut Harness| targets(&(0..25).flat_map(|_| h.tick_all().to(2).to_vec()).collect::<Vec<_>>()).last().copied();
-    assert_eq!(took(&mut h), Some(villager), "3 off, nearer than Alex's 4");
+    let took = |h: &mut Harness, ticks| targets(&(0..ticks).flat_map(|_| h.tick_all().to(2).to_vec()).collect::<Vec<_>>()).last().copied();
+    assert_eq!(took(&mut h, 25), Some(villager), "3 off, nearer than Alex's 4");
     h.remote.run(move |ctx| assert!(ctx.move_entity(EntityId(pillager), [0.5, 65.0, 2.5])));
-    assert_eq!(took(&mut h), Some(1), "Alex 2 off, the villager 5");
+    assert_eq!(took(&mut h, 2), Some(1), "Alex 2 off, the villager 5: not waiting for a look");
 }
 
 #[test]

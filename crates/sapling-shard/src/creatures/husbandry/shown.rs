@@ -24,6 +24,14 @@ pub(super) fn tell(world: &mut World, entity: Entity, packets: Vec<Bytes>) {
     entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets);
 }
 
+/// Tells the mob's viewers a change of its metadata; nothing while it arrives, as its
+/// announcement will show it.
+fn tell_metadata(world: &mut World, entity: Entity, packet: Bytes) {
+    if !crate::creatures::is_arriving(world, entity) {
+        tell(world, entity, vec![packet]);
+    }
+}
+
 /// The whole word of the mob's flags with `flag` set or cleared.
 pub(super) fn flags_with(world: &mut World, entity: Entity, flag: Flags, on: bool) -> Flags {
     let kind = world.get::<Kind>(entity).map(|kind| kind.0.clone()).unwrap_or_default();
@@ -37,7 +45,7 @@ pub(super) fn flags_with(world: &mut World, entity: Entity, flag: Flags, on: boo
 pub(super) fn flag(world: &mut World, entity: Entity, flag: Flags, on: bool) {
     let Some(id) = world.get::<NetId>(entity).map(|id| id.0) else { return };
     let now = flags_with(world, entity, flag, on);
-    tell(world, entity, vec![sapling_net::encode(&sapling_data::mob_flags_set(id, now))]);
+    tell_metadata(world, entity, sapling_net::encode(&sapling_data::mob_flags_set(id, now)));
 }
 
 pub(super) fn event(world: &mut World, entity: Entity, event_id: EntityEventEventId, data: i32) {
@@ -65,7 +73,7 @@ pub(super) fn age(world: &mut World, entity: Entity) {
     let baby = world.get::<Raised>(entity).is_some_and(Raised::is_baby);
     let Some((size, scale)) = sapling_data::mob_look(&kind, baby) else { return };
     let now = flags_with(world, entity, Flags::BABY, baby);
-    tell(world, entity, vec![sapling_net::encode(&sapling_data::mob_age_set(id, now, scale, size))]);
+    tell_metadata(world, entity, sapling_net::encode(&sapling_data::mob_age_set(id, now, scale, size)));
 }
 
 /// The mob's wool changed colour, or came off or back.
@@ -100,5 +108,5 @@ pub(super) fn links(world: &mut World, entity: Entity) {
     let leashed = world.get::<Raised>(entity).is_some_and(|raised| raised.kept.leasher.is_some());
     let now = flags_with(world, entity, Flags::LEASHED, leashed);
     let packet = links_packet(world, entity, id, now).unwrap_or_else(|| sapling_net::encode(&sapling_data::mob_links_set(id, now, -1, -1)));
-    tell(world, entity, vec![packet]);
+    tell_metadata(world, entity, packet);
 }

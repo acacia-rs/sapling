@@ -143,6 +143,7 @@ impl EntityBackend for Ctx<'_> {
         };
         match slot {
             MobSlot::Armor(_) | MobSlot::MainHand | MobSlot::OffHand => super::command_gear::set(self.world, mob, slot, stack),
+            MobSlot::Body => crate::riding::put_body(self.world, mob, stack).then_some(()).ok_or(MobSlotRefusal::NoSlot),
             _ if crate::riding::is_mount(self.world, mob) => crate::riding::set_mount_item(self.world, mob, slot, stack),
             _ => Err(MobSlotRefusal::NoSlot),
         }

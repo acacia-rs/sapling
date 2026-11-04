@@ -5,6 +5,7 @@
 //! inputs move what they drive (drive.rs) and the riders are carried to their seats (carry.rs).
 
 mod backend;
+mod body;
 mod carry;
 mod drive;
 mod evented;
@@ -34,7 +35,8 @@ pub(crate) use drive::{Leaving, Reins, drive, is_driven};
 pub(crate) use mounts::{Rein, boost, reaches, saddle_flags, steers, used_on};
 use mounts::predicted;
 pub(crate) use packets::sound as sound_packet;
-pub(crate) use packs::{load as load_pack, open as open_pack, refusal as pack_refusal, slots as pack_slots, spilled};
+pub(crate) use body::put as put_body;
+pub(crate) use packs::{load as load_pack, looted_armor, open as open_pack, refusal as pack_refusal, slots as pack_slots, spilled};
 pub(crate) use seats::layout;
 pub(crate) use replaced::{is_mount, set as set_mount_item};
 use seats::PLAYER;
