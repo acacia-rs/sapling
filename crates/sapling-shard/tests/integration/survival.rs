@@ -51,6 +51,9 @@ fn a_break_takes_the_time_the_block_and_the_tool_need() {
     let sent = h.tick_all();
     let cracks: Vec<LevelEvent> = all::<LevelEvent>(sent.to(2)).into_iter().filter(|event| event.event == LevelEventEvent::BlockStartBreak).collect();
     assert_eq!((cracks.len(), cracks[0].data, [cracks[0].position.x, cracks[0].position.y, cracks[0].position.z]), (1, 65535 / 23, [1.0, 64.0, 0.0]), "the watcher sees it crack");
+    // bds-bkblocks.txt: the crack, the punch's particles, then the speed.
+    let events: Vec<(LevelEventEvent, i32)> = all::<LevelEvent>(sent.to(2)).into_iter().map(|event| (event.event, event.data)).collect();
+    assert_eq!((events.len(), events[0], events[2]), (3, (LevelEventEvent::BlockStartBreak, 65535 / 23), (LevelEventEvent::BlockBreakSpeed, 65535 / 23)), "{events:?}");
 
     // Finished after five ticks: refused, and the breaker is shown the block.
     (0..5).for_each(|_| drop(h.tick_all()));

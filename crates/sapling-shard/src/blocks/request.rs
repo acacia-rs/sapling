@@ -184,10 +184,15 @@ impl Request<'_> {
         level(self.world, site.layer).map(|level| (level.registry(), level.block(x, y, z)))
     }
 
-    /// A hit that starts a break: viewers see fragments fly off the face, as from BDS.
+    /// A hit that starts a break: viewers see fragments fly off the face, as from BDS. A frame's
+    /// item or a lectern's book knocked out still starts the break (research/captures/bds-t3uses.txt).
     fn punch(&mut self, pos: BlockPos, face: Option<Face>) {
         let (Some(site), Some(face)) = (site(self.world, self.entity, pos), face) else { return };
-        if site.mode != GameMode::Spectator && (super::fire_punch::put_out(self.world, self.entity, site.layer, pos, face) || super::holders::hit(self.world, site.layer, pos) || super::lectern::hit(self.world, site.layer, pos)) {
+        if site.mode != GameMode::Spectator && super::fire_punch::put_out(self.world, self.entity, site.layer, pos, face) {
+            return;
+        }
+        let knocked = site.mode != GameMode::Spectator && (super::holders::hit(self.world, site.layer, pos) || super::lectern::hit(self.world, site.layer, pos));
+        if knocked && site.mode != GameMode::Survival {
             return;
         }
         let Some((registry, id)) = self.block(&site, pos) else { return };
@@ -196,9 +201,9 @@ impl Request<'_> {
         if !crate::hand_events::may_start_break(self.world, self.entity, pos, block) {
             return;
         }
-        send::to_viewers(self.world, site.layer, pos, &[packet]);
-        if site.mode == GameMode::Survival {
-            mining::start(self.world, self.entity, site.layer, pos, &hardness);
+        match site.mode {
+            GameMode::Survival => mining::start(self.world, self.entity, site.layer, pos, &hardness, packet),
+            _ => send::to_viewers(self.world, site.layer, pos, &[packet]),
         }
     }
 

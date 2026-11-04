@@ -119,7 +119,11 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
   buds small 37/30, medium 12/19, large 4/2 from 9. Within one sample of each other; Java's odds kept.
 - Sponge: BDS soaked a channel 7 long (above). Count (64) not reached.
 - A punch on a lectern with a book drops the book and keeps the lectern on both (bds-t3uses.txt).
-  Sapling does not send the BlockStartBreak LevelEvents back to the actor, as for any block.
+  "Sapling does not send BlockStartBreak to the actor" was wrong: it does (sapling-bkblocks.txt).
+  What differed: BDS's survival punch that knocks the book out still starts the break, with
+  `BlockStartBreak`, the punch particles, then `BlockBreakSpeed` of the same speed, in that order
+  (bds-bkblocks.txt, bds-t3uses.txt); sapling stopped at the book and sent the particles first.
+  Fixed 2026-11-04 (`request.rs` `punch`, `mining::start`); test in survival.rs (the cracks).
 
 ## Not drilled
 
