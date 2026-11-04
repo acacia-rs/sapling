@@ -9,14 +9,17 @@ use acacia_proto::types::RecipeUnlockingRequirement;
 use crate::templates::{CRAFTING_DATA, UNLOCKED_RECIPES, decode};
 
 /// Every recipe's id, and whether `/recipe give *` gives it: BDS's 4092 left out the 540 that
-/// unlock by an empty list of ingredients (research/captures/bds-t1drecipe.txt).
+/// unlock by an empty list of ingredients (research/captures/bds-t1drecipe.txt). In network id
+/// order, the order BDS registered them in and lists them by.
 static IDS: LazyLock<Vec<(String, bool)>> = LazyLock::new(|| {
     crate::set_shield_item_id();
     let data = decode::<CraftingData>(CRAFTING_DATA);
     let given = |requirement: &Option<RecipeUnlockingRequirement>| !requirement.as_ref().is_some_and(|requirement| requirement.ingredients.as_ref().is_some_and(Vec::is_empty));
-    let shaped = data.shaped_recipes.into_iter().chain(data.shaped_chemistry_recipes).map(|recipe| (recipe.recipe_id, given(&recipe.unlocking_requirement)));
-    let shapeless = data.shapeless_recipes.into_iter().chain(data.shulker_box_recipes).chain(data.shapeless_chemistry_recipes).map(|recipe| (recipe.recipe_id, given(&recipe.unlocking_requirement)));
-    let mut ids: Vec<(String, bool)> = shaped.chain(shapeless).filter(|(id, _)| !id.is_empty()).collect();
+    let shaped = data.shaped_recipes.into_iter().chain(data.shaped_chemistry_recipes).map(|recipe| (recipe.network_id, recipe.recipe_id, given(&recipe.unlocking_requirement)));
+    let shapeless = data.shapeless_recipes.into_iter().chain(data.shulker_box_recipes).chain(data.shapeless_chemistry_recipes).map(|recipe| (recipe.network_id, recipe.recipe_id, given(&recipe.unlocking_requirement)));
+    let mut ids: Vec<(u32, String, bool)> = shaped.chain(shapeless).filter(|(_, id, _)| !id.is_empty()).collect();
+    ids.sort_by_key(|(network_id, ..)| *network_id);
+    let mut ids: Vec<(String, bool)> = ids.into_iter().map(|(_, id, given)| (id, given)).collect();
     ids.dedup_by(|a, b| a.0 == b.0);
     ids
 });
@@ -65,6 +68,16 @@ mod tests {
         let new = given_recipe_ids().iter().filter(|id| !initial_recipes().contains(id)).count();
         assert_eq!(new, 4092, "bds-t1drecipe.txt");
         assert!(recipe_ids().iter().any(|id| id == "minecraft:barrel") && !given_recipe_ids().iter().any(|id| id == "minecraft:barrel"));
+    }
+
+    /// bds-t1drecipe.txt's NewlyUnlocked list: its first five, every thousandth and last three.
+    #[test]
+    fn give_all_lists_them_in_bds_order() {
+        let new: Vec<&str> = given_recipe_ids().iter().filter(|id| !initial_recipes().contains(id)).map(String::as_str).collect();
+        let first = ["minecraft:black_concrete_slab", "minecraft:black_concrete_stairs", "minecraft:black_cushion", "minecraft:black_wool_slab", "minecraft:black_wool_stairs"];
+        assert_eq!(&new[..5], first, "then {:?}", &new[5..40]);
+        assert_eq!([1000, 2000, 3000, 4000].map(|at| new[at]), ["minecraft:blue_candle", "shulkerBox_shulker_box_color_block_12_3_0", "cushion_dye_18_16", "PressurePlateSpruce_recipeId"]);
+        assert_eq!(&new[new.len() - 3..], ["weapon_arrow_recipe_45", "weapon_arrow_recipe_46", "decorated_pot_base_recipeId"]);
     }
 
     #[test]
