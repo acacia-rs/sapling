@@ -106,6 +106,10 @@ fn a_monster_near_keeps_a_sleeper_up_and_a_storm_lets_it_sleep_by_day() {
     });
     h.tick(1);
     h.receive(1, &click(HEAD, 1, None));
+    assert!(!lies_down(&h.tick(1)), "the storm just begun: noon's sky not yet dark enough");
+    // The rain and lightning darken the sky to 4 on their 65th tick.
+    (0..65).for_each(|_| drop(h.tick(1)));
+    h.receive(1, &click(HEAD, 1, None));
     assert!(lies_down(&h.tick(1)), "in a storm, the zombie 9 off");
 }
 

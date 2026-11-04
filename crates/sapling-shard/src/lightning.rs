@@ -11,7 +11,7 @@ mod storms;
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Difficulty, Weather};
+use sapling_api::{BlockPos, Difficulty};
 use sapling_data::AddEntityOptions;
 
 use crate::blocks::Dice;
@@ -47,9 +47,10 @@ fn sound(name: &str, [x, y, z]: [f32; 3]) -> bytes::Bytes {
     sapling_net::encode(&sound)
 }
 
-/// Whether it thunders on `layer`.
+/// Whether bolts come down on `layer`: some 95 ticks into a storm, as its rain and lightning near
+/// their fullest (`weather::storms`).
 pub(crate) fn thunders(world: &World, layer: Entity) -> bool {
-    crate::weather::of(world, layer) == Weather::Thunder
+    crate::weather::storms(world, layer)
 }
 
 /// A bolt comes down on `at` in `layer`, hurting where it reaches if it `harms`; the bolt.

@@ -5,10 +5,11 @@ use crate::common;
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelSoundEvent, TakeItemEntity};
 use acacia_proto::types::{MetadataDictionaryItemValue, MetadataFlags1};
+use acacia_proto::RawPacket;
 use common::shooting::{ALEX, added, draw, face, healths, held, ready, spawn, throw, watch};
 use common::stored::{actor, enchanted, enter_stored, floor_with, plain};
 use common::{Harness, all, config};
-use sapling_api::{GameMode, Item, PlayerId, Slot};
+use sapling_api::{GameMode, Item, PlayerId, Slot, Weather};
 use sapling_world::{ChunkPos, ItemStack, PlayerData, World, WorldStorage};
 
 const BOW: (&str, u8, i16) = ("minecraft:bow", 1, 0);
@@ -121,6 +122,24 @@ fn a_thrown_trident_costs_a_cow_eight_and_leaves_the_hand() {
     assert_eq!(added(&sent, "minecraft:thrown_trident").len(), 1);
     assert_eq!(healths(&sent), [2.0]);
     assert_eq!(held(&mut h, Slot::Main(0)), None);
+}
+
+/// research/captures/bds-rainramp.txt: a riptide trident threw BDS's actor 2-3 s after `/weather
+/// clear`, the rain still falling, and did nothing once it had stopped.
+#[test]
+fn a_riptide_throws_only_in_the_rain_still_falling() {
+    let mut h = ready(GameMode::Creative, &[], 0.0);
+    let trident = Item { enchantments: vec![(30, 1)], ..Item::new("minecraft:trident", 1) };
+    h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&trident))));
+    let thrown = |sent: Vec<RawPacket>| all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "item.trident.riptide_1");
+    assert!(!thrown(draw(&mut h, 10, 2)), "dry");
+    h.remote.run(|ctx| ctx.set_weather(Weather::Rain, None));
+    watch(&mut h, 100);
+    h.remote.run(|ctx| ctx.set_weather(Weather::Clear, None));
+    watch(&mut h, 40);
+    assert!(thrown(draw(&mut h, 10, 2)), "the rain still falling 50 ticks after it cleared");
+    watch(&mut h, 60);
+    assert!(!thrown(draw(&mut h, 10, 2)), "the rain gone");
 }
 
 #[test]

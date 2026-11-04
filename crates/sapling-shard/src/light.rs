@@ -5,9 +5,10 @@
 use std::f32::consts::PI;
 
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Light, LightBackend, Weather};
+use sapling_api::{BlockPos, Light, LightBackend};
 
 use crate::components::Layer;
+use crate::weather::Falling;
 use crate::handlers::Ctx;
 use crate::worlds;
 
@@ -29,19 +30,20 @@ pub(crate) fn sun_turn(time: i64) -> f32 {
     day + (0.5 - (day * PI).cos() / 2.0 - day) / 3.0
 }
 
-/// What the night and the weather take from sky light (BDS's `skyDarken`), 0 by a clear day to
-/// 11 at midnight: the Java game's reckoning, by which daylight detectors gave all but one of the
-/// twenty readings BDS showed (research/captures/bds-daylight.txt).
-pub(crate) fn sky_darken(time: i64, weather: Weather) -> u8 {
-    let (rain, thunder) = (f32::from(u8::from(weather != Weather::Clear)), f32::from(u8::from(weather == Weather::Thunder)));
-    let light = (1.0 - (1.0 - ((sun_turn(time) * 2.0 * PI).cos() * 2.0 + 0.5)).clamp(0.0, 1.0)) * (1.0 - rain * CLOUDED) * (1.0 - thunder * CLOUDED);
+/// What the night and the weather take from sky light (BDS's `skyDarken`, `Dimension` tick
+/// 14187f9c0), 0 by a clear day to 11 at midnight, rain and lightning each by how hard they fall
+/// now: the Java game's reckoning, by which daylight detectors gave all but one of the twenty
+/// readings BDS showed (research/captures/bds-daylight.txt), and 14 then 13 a second and a half
+/// apart as rain set in.
+pub(crate) fn sky_darken(time: i64, falling: Falling) -> u8 {
+    let light = (1.0 - (1.0 - ((sun_turn(time) * 2.0 * PI).cos() * 2.0 + 0.5)).clamp(0.0, 1.0)) * (1.0 - falling.rain * CLOUDED) * (1.0 - falling.lightning * CLOUDED);
     ((1.0 - light) * DARKEST) as u8
 }
 
 /// What the night and the weather take from a world's sky light now ([`sky_darken`]).
 pub(crate) fn darken(world: &World, layer: Entity) -> u8 {
-    let weather = crate::weather::of(world, layer);
-    world.get::<Layer>(layer).map_or(0, |level| sky_darken(level.world.level().time, weather))
+    let falling = crate::weather::falling(world, layer);
+    world.get::<Layer>(layer).map_or(0, |level| sky_darken(level.world.level().time, falling))
 }
 
 /// The raw brightness of a cell of a world (`World::brightness_at`) at its time and weather now.
@@ -65,8 +67,22 @@ impl LightBackend for Ctx<'_> {
 mod tests {
     use super::*;
 
+    fn falling(rain: f32, lightning: f32) -> Falling {
+        Falling { rain, lightning }
+    }
+
     #[test]
     fn the_sky_darkens_by_night_and_under_rain() {
-        assert_eq!((sky_darken(6000, Weather::Clear), sky_darken(18000, Weather::Clear), sky_darken(6000, Weather::Rain), sky_darken(6000, Weather::Thunder)), (0, 11, 3, 5));
+        let (clear, rain, thunder) = (falling(0.0, 0.0), falling(1.0, 0.0), falling(1.0, 1.0));
+        assert_eq!((sky_darken(6000, clear), sky_darken(18000, clear), sky_darken(6000, rain), sky_darken(6000, thunder)), (0, 11, 3, 5));
+    }
+
+    /// bds-daylight.txt: noon's 15 fell to 14 some 30 ticks into the rain and 13 some 60 in; 4 s
+    /// into the thunder that followed, 10; 2 s after `/weather clear`, back to 12.
+    #[test]
+    fn the_sky_darkens_as_the_rain_and_lightning_fall_harder() {
+        let shown = |rain: f32, lightning: f32| 15 - sky_darken(6000, falling(rain, lightning));
+        assert_eq!([0.29, 0.31, 0.61].map(|rain| shown(rain, 0.0)), [15, 14, 13]);
+        assert_eq!((shown(1.0, 0.67), shown(0.59, 0.39)), (10, 12));
     }
 }

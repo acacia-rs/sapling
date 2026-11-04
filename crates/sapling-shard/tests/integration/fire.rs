@@ -89,7 +89,8 @@ fn fire_goes_out_with_the_block_under_it_and_in_rain_but_not_over_netherrack() {
     h.tick_all();
     assert_eq!(unheld.recv().expect("ran"), ["minecraft:air", "minecraft:fire", "minecraft:fire"]);
     h.remote.run(|ctx| ctx.set_weather(Weather::Rain, None));
-    for _ in 0..45 {
+    // The rain falls on blocks from its 20th tick; a fire ticks every 30 to 40.
+    for _ in 0..65 {
         h.tick_all();
     }
     let rained = named(&h);
