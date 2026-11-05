@@ -14,8 +14,22 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "r1ench" => (enchants(), ENCH_SHOWN),
         "r1swim" => (swim(), ENCH_SHOWN),
         "r1water" => (water(), WATER_SHOWN),
+        "r1locate" => (locate(), &["CommandOutput"]),
         _ => return items::drill(name),
     })
+}
+
+/// On a generated world of seed 12345 (BDS level-type DEFAULT; sapling `generated`): `/locate biome`
+/// from over the origin, where the nearer hits are in loaded columns.
+fn locate() -> Vec<String> {
+    const BIOMES: [&str; 24] = [
+        "plains", "sunflower_plains", "forest", "flower_forest", "birch_forest", "dark_forest", "river", "ocean", "deep_ocean", "lukewarm_ocean", "cold_ocean", "taiga", "savanna", "jungle", "swamp", "beach",
+        "stony_shore", "meadow", "windswept_hills", "snowy_plains", "lush_caves", "dripstone_caves", "deep_dark", "cherry_grove",
+    ];
+    let mut lines = vec!["gamemode spectator @s".to_owned(), "tp @s 0 120 0".to_owned()];
+    waits(&mut lines, 5);
+    lines.extend(BIOMES.map(|biome| format!("locate biome {biome}")));
+    lines
 }
 
 fn hold(item: &str) -> String {
