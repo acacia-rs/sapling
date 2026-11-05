@@ -38,6 +38,24 @@ formula, in opposite directions, and both following its shape. Sapling (`blocks/
 each chunk its own odds from `World::filled_sections`; test
 `a_chunk_with_blocks_above_its_lowest_section_ticks_a_cell_a_quarter_more_often_as_on_bds`.
 
+The picks are drawn with replacement (no check in the loop at 1409fbfef), so past a rule of about 1600 a
+cell comes up more than once a tick: `n` = 3 at 4096 is 2.33 random ticks a tick, Poisson. Sapling ticked
+a cell at most once a tick (one roll a cell, and the drawn cells deduplicated), so dripstone grew some
+four times slower than BDS's at 4096 (bubbles-and-dripstone.md, i2grow); no later merge had touched the
+pace. `l2pace` (thirteenth2l_drill.rs; 91 stalactites under a pool in an `n` = 3 chunk, three rounds of
+6 s at 4096 and one of 20 s at 256, each root's first growth at 0.0114 of its random ticks, censored
+exponential fit): BDS 2.23 random ticks a tick at 4096 and 0.170 at 256 (bds-l2pace.txt), against
+2.33 and 0.146; sapling before 1.01 and 0.172 (sapling-l2pace-before.txt), and at `TICK_SCALE` 2
+only 0.27, the 4096 snowfall picks a column putting the server behind. Fixed: a rolled cell takes a
+Poisson count of ticks by one roll (`pace::count`), the drawn cells keep their repeats
+(`growth/sampled.rs`), and snowfall skips a dry pick that does not freeze before reading the column.
+Sapling after: 2.36 and 0.132 (sapling-l2pace.txt); test
+`a_cell_takes_its_chance_in_ticks_on_average_more_than_one_a_tick_past_one`. Re-run on the fix at
+`TICK_SCALE` 1: `g3rate` 1672, 1553, 2013, 1659 (sapling-g3rate2.txt; timed from 0.6 s into each
+round, so the lag between the rule's answer and its first tick drops out: BDS's capture so gives 1773,
+1714, 2049 and 1727), `firepace` fire out after 20.6, 5.6 and 1.0 s, 7, 7 and 9 ores of 12
+(sapling-firepace2.txt; BDS 20.0, 5.9, 1.0 s and 6, 8, 8).
+
 ## The rest of what random ticks do
 
 Measured with `bds_command_probe grows` (`bds-grows.txt`, `sapling-grows.txt`), again at

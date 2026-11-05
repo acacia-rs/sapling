@@ -180,7 +180,7 @@ pub(crate) fn tick(world: &mut World) {
         world.insert_resource(picks);
         return;
     };
-    let (mut changed, mut done): (Vec<(Entity, BlockPos, bool, Vec<rules::Change>)>, Vec<(Entity, BlockPos)>) = (Vec::new(), Vec::new());
+    let (mut changed, mut done): (Vec<(Entity, BlockPos, bool, Vec<rules::Change>, u32)>, Vec<(Entity, BlockPos)>) = (Vec::new(), Vec::new());
     let (mut saplings, mut heights) = (Vec::new(), pace::Heights::default());
     for (layer, pos) in growing {
         if !region.ticks_block(world, layer, pos) {
@@ -193,15 +193,16 @@ pub(crate) fn tick(world: &mut World) {
         let Some(level) = level(world, layer) else { continue };
         let Some((_, RuleValue::Int(rule))) = level.level().rules.get(RULE) else { continue };
         let chance = heights.chance(layer, level, pos, rule) * rules::haste(name);
-        if (picks.below(CHANCES) as f32) >= chance * CHANCES as f32 {
+        let ticks = pace::count(chance, picks.below(CHANCES) as f32 / CHANCES as f32);
+        if ticks == 0 {
             continue;
         }
         if super::saplings::is_ticked(name.strip_prefix("minecraft:").unwrap_or(name), "") {
-            if picks.below(super::saplings::TICK_ODDS) == 0 {
+            if (0..ticks).any(|_| picks.below(super::saplings::TICK_ODDS) == 0) {
                 saplings.push((layer, pos));
             }
         } else {
-            changed.push((layer, pos, rules::grows(name), rules::ticked(level, pos, crate::light::darken(world, layer), &mut picks)));
+            changed.push((layer, pos, rules::grows(name), rules::ticked(level, pos, crate::light::darken(world, layer), &mut picks), ticks - 1));
         }
     }
     world.insert_resource(picks);
@@ -209,22 +210,35 @@ pub(crate) fn tick(world: &mut World) {
     for cell in done {
         growing.0.remove(&cell);
     }
-    for (layer, ticked, grows, changes) in changed {
-        if changes.is_empty() || grows && !may_grow(world, layer, ticked) || !crate::world_events::may_decay(world, layer, ticked) {
-            continue;
-        }
-        for rules::Change { pos, id, how } in changes {
-            match how {
-                rules::How::Breaks => super::updates::pop(world, layer, pos),
-                rules::How::Quiet => _ = send::set_quietly(world, layer, pos, id),
-                rules::How::Shown => _ = send::set(world, layer, pos, id),
-                rules::How::Melts => _ = super::liquid::pour(world, layer, pos, super::liquid::Liquid::Water, false),
-            }
+    for (layer, ticked, grows, changes, again) in changed {
+        apply(world, layer, ticked, grows, changes);
+        // A cell that came up more than once this tick is ticked again on what its last tick left.
+        for _ in 0..again {
+            let mut picks = world.remove_resource::<Picks>().unwrap_or_default();
+            let changes = ticked_at(world, layer, ticked).is_some().then(|| level(world, layer).map(|level| rules::ticked(level, ticked, crate::light::darken(world, layer), &mut picks))).flatten();
+            world.insert_resource(picks);
+            let Some(changes) = changes else { break };
+            apply(world, layer, ticked, grows, changes);
         }
     }
     for (layer, pos) in saplings {
         if may_grow(world, layer, pos) {
             super::saplings::ticked(world, layer, pos);
+        }
+    }
+}
+
+/// What a random tick of the cell `ticked` changes, unless plugins stop it.
+fn apply(world: &mut World, layer: Entity, ticked: BlockPos, grows: bool, changes: Vec<rules::Change>) {
+    if changes.is_empty() || grows && !may_grow(world, layer, ticked) || !crate::world_events::may_decay(world, layer, ticked) {
+        return;
+    }
+    for rules::Change { pos, id, how } in changes {
+        match how {
+            rules::How::Breaks => super::updates::pop(world, layer, pos),
+            rules::How::Quiet => _ = send::set_quietly(world, layer, pos, id),
+            rules::How::Shown => _ = send::set(world, layer, pos, id),
+            rules::How::Melts => _ = super::liquid::pour(world, layer, pos, super::liquid::Liquid::Water, false),
         }
     }
 }

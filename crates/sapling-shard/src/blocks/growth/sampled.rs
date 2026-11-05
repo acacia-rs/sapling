@@ -8,14 +8,12 @@ use std::collections::{HashMap, HashSet};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::Picks;
+use super::{CHANCES, Picks};
 
 #[derive(Default)]
 struct Cells {
     list: Vec<BlockPos>,
     known: HashSet<BlockPos>,
-    /// The part of a pick the last ticks' chances left over.
-    owed: f32,
 }
 
 #[derive(Resource, Default)]
@@ -32,19 +30,17 @@ pub(super) fn keep(world: &mut World, layer: Entity, cells: impl IntoIterator<It
     }
 }
 
-/// The cells of `layer` whose random tick comes up this tick, each having `chance`; a cell is
-/// picked at most once a tick.
+/// The cells of `layer` whose random tick comes up this tick, each having `chance` on average; drawn with
+/// replacement as BDS's picks are, so a cell may come up more than once.
 pub(super) fn picked(world: &mut World, layer: Entity, chance: f32, picks: &mut Picks) -> Vec<BlockPos> {
     let Some(kept) = world.get_resource_mut::<Sampled>().map(|sampled| sampled.into_inner()).and_then(|sampled| sampled.0.get_mut(&layer)) else { return Vec::new() };
     if kept.list.is_empty() {
         return Vec::new();
     }
-    let due = kept.list.len() as f32 * chance + kept.owed;
-    let count = due.floor();
-    kept.owed = due - count;
-    let mut chosen: Vec<BlockPos> = (0..count as usize).map(|_| kept.list[picks.below(kept.list.len() as u32) as usize]).collect();
+    let due = kept.list.len() as f32 * chance;
+    let count = due.floor() as usize + usize::from((picks.below(CHANCES) as f32) < due.fract() * CHANCES as f32);
+    let mut chosen: Vec<BlockPos> = (0..count).map(|_| kept.list[picks.below(kept.list.len() as u32) as usize]).collect();
     chosen.sort_unstable();
-    chosen.dedup();
     chosen
 }
 

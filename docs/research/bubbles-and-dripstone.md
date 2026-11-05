@@ -88,5 +88,7 @@ survival player the tip lands on is hurt.
   stalagmite's tip two below merged with it; the one under stone never grew. Sapling grew nothing;
   fixed (`blocks/drips/growth.rs`, thickness in `blocks/shapes.rs`), re-drilled: the same shapes
   and merges, in one packet each as BDS's, test `a_stalactite_under_a_dripstone_block_under_water_grows`.
-  Left: sapling's growths came some four times slower than BDS's at the same rule (the random tick
-  pace), and BDS drew the stalactite's own tip 5 times of 7, sapling 2 (too few to tell the coin).
+  Sapling's growths came some four times slower than BDS's at the same rule: it ticked a cell at most
+  once a tick, where BDS's picks repeat past a rule of about 1600, and it fell behind at 4096; fixed
+  (growth.md "The random tick's pace", `l2pace`). Left: BDS drew the stalactite's own tip 5 times of 7,
+  sapling 2 (too few to tell the coin).

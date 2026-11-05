@@ -76,7 +76,8 @@ BDS's `ores` (16 of 25 in 90 s), `firepace` and `g3rate` fit it. Left open: no r
 faster at rule 1 on BDS; the next step is a lit ore's life read off a patched BDS's random-tick picks.
 Decompiled 2026-11-05 (twelfth7): a lit ore's `randomTick` (144bc1f20) puts it out at its first random
 tick, with no other path; the picks come from `LevelChunk::tickImpl` (1409f98a0): `floor(2.5 n) x rule`
-a subchunk, layer 1 only under a flag, no cell ticked twice. That gives 50% a round (36 of 72) against
+a subchunk, layer 1 only under a flag (not "no cell ticked twice": the picks repeat, growth.md "The random
+tick's pace", l2pace). That gives 50% a round (36 of 72) against
 BDS's 48, the excess front-loaded (9 out in the first 2 s against 1.6 expected), as if the rule's 0 to 1
 step gave more picks. Left open: reading the picks live needs a Linux ptrace port of the
 `scripts/bds_dbg*` debugger (Windows only); the probe is a breakpoint after the cell decode in 1409f98a0

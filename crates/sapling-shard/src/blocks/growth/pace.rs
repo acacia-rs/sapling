@@ -19,6 +19,20 @@ pub(super) fn chance(sections: usize, rule: i32) -> f32 {
     (sections as f32 * 2.5).floor() * rule.max(0) as f32 / (sections as f32 * CELLS_A_SECTION)
 }
 
+/// How many random ticks a cell with `chance` a tick takes this tick, `roll` in [0, 1): BDS's picks are drawn
+/// with replacement, so past a rule of about 1600 a cell comes up more than once a tick (Poisson, by its
+/// inverse from the top, so that a roll under `1 - e^-chance` ticks it at all).
+pub(super) fn count(chance: f32, roll: f32) -> u32 {
+    let (chance, roll) = (chance.max(0.0) as f64, roll as f64);
+    let (mut one, mut tail, mut ticks) = ((-chance).exp(), -(-chance).exp_m1(), 0);
+    while roll < tail && ticks < 64 {
+        ticks += 1;
+        one *= chance / ticks as f64;
+        tail -= one;
+    }
+    ticks
+}
+
 /// The most [`chance`] gives at `rule`: a chunk of two sections, five picks in 8192 cells.
 pub(super) fn most(rule: i32) -> f32 {
     chance(2, rule)
@@ -48,5 +62,14 @@ mod tests {
         assert_eq!(chance(24, 1), 60.0 / 98304.0);
         assert_eq!(chance(0, 200), 0.0);
         assert!((1..=24).all(|sections| chance(sections, 7) <= most(7)));
+    }
+
+    #[test]
+    fn a_cell_takes_its_chance_in_ticks_on_average_more_than_one_a_tick_past_one() {
+        let mean = |chance: f32| (0..100_000).map(|i| count(chance, (i as f32 + 0.5) / 100_000.0)).sum::<u32>() as f32 / 100_000.0;
+        for chance in [0.001, 0.3, 2.333, 2.5] {
+            assert!((mean(chance) - chance).abs() < chance * 0.01, "{chance}: {}", mean(chance));
+        }
+        assert_eq!((count(2.5, 0.99), count(2.5, 0.9), count(0.0, 0.0)), (0, 1, 0));
     }
 }

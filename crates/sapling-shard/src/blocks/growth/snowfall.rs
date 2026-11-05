@@ -120,6 +120,10 @@ pub(super) fn tick(world: &mut World, picks: &mut Picks) {
         for _ in 0..speed.max(0) {
             let [x, z] = [column.x * 16 + picks.below(16) as i32, column.z * 16 + picks.below(16) as i32];
             let freezes = picks.below(ODDS) == 0;
+            // Nothing else is drawn on a dry pick that does not freeze: skipping it keeps high rules cheap.
+            if !freezes && rain <= 0.0 {
+                continue;
+            }
             let top = level.surface(x, z);
             let downfall = top.and_then(|top| level.biome(x, top + 1, z)).map_or(0.0, |biome| rain * sapling_data::biome_downfall(biome));
             let snows = downfall > 0.0 && picks.below(snow_sides(downfall)) == 0 && lays;
