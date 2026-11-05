@@ -134,12 +134,13 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let fell = health.fall_onto(from, fallen_to, position.on_ground, water || lava || carried, soften).map(|_| Cause::Fall);
     let landing = landed.then(|| (health.landing(), crate::rules::spares_player(&rules, Cause::Fall)));
     take(health, before, fell);
+    // In lava BDS tells its catching fire (6), then from the next tick the lava's hit (8) before the fire's own (bds-g7lava.txt).
     let (lit, before) = (health.is_burning(), *health);
+    let scalded = (lava && lit && health.scald()).then_some(Cause::Lava);
+    take(health, before, scalded);
+    let before = *health;
     let burnt = health.burn(fire.then_some((1.0, true)), water).map(|cause| if lit { Cause::FireTick } else { cause });
     take(health, before, burnt);
-    let before = *health;
-    let scalded = (lava && health.scald()).then_some(Cause::Lava);
-    take(health, before, scalded);
     let before = *health;
     let walled = health.smother(in_wall, WALLED).then_some(Cause::Suffocation);
     take(health, before, walled);
