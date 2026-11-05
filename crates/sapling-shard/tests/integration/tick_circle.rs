@@ -177,6 +177,8 @@ fn a_chunk_with_blocks_above_its_lowest_section_ticks_a_cell_a_quarter_more_ofte
     let (low, high) = ([16, 0], [0, 16]);
     ask(&mut h, move |ctx| {
         assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(100)) && ctx.set_block([8, -40, 24], &Block::new("minecraft:stone")));
+        // Spawned mobs throw the shard's dice too, which moved this one draw across the bound.
+        assert!(ctx.set_game_rule("doMobSpawning", RuleValue::Bool(false)));
         assert!(layers(low).chain(layers(high)).all(|pos| ctx.set_block(pos, &Block::new("minecraft:lit_redstone_ore"))));
     });
     (0..10).for_each(|_| drop(h.tick(1)));
