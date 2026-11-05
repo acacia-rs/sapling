@@ -458,10 +458,18 @@ A wolf and a zombified piglin hunt none but a survival player that hit them, fro
 bear, every 39 ticks without its rearing; a spider dazzled by the sun takes its hitter too. A
 piglin hunts any survival player, gold worn or not; out of the Nether it turns into a zombified
 one 303 ticks on (mob-kinds.md, `t2barter`). A
-piglin's fellows do not join in, and a golem guards no villager. A llama hit spits once, 41 ticks
-after, for 1 and no throw (`arrows::SPIT`, aimed as the Java game's), and lets go 79 ticks after;
-it shows no charge. A panda and a bee hit take their hitter, hit it once and let go (`once`); a
-panda's other genes: `mob-kinds.md`, "Pandas' genes". A panda does not stand before it walks up.
+piglin's fellows did not join in on BDS either (bds-gxfellows.txt: of a piglin 9.5 off in the open
+and one shut in stone 12 off, neither took a target when the third was hit, the pack's
+`broadcast_anger` notwithstanding), and a golem guards no villager. A hit piglin refuses gold for
+the pack's `cooldown_after_being_attacked` 20 s (bds-gxbarter.txt: an ingot 2 s after the hit was
+refused; `piglins::Wary`), and one admiring gold is heard `admire` again the tick its hand
+empties while a player within 8 holds gold (none when nobody does, bds-goldpickup.txt). A llama
+hit spits once, 41 ticks after, for 1 and no throw (`arrows::SPIT`, aimed as the Java game's), and
+lets go 79 ticks after; 21 ticks before the spit it is heard `warn` (0.64 of the way toward its
+prey) with `CHARGED` and `ChargeAmount` 1, cleared 2 ticks before the spit (bds-provoke2.txt;
+`shooting::charge`). A panda and a bee hit take their hitter, hit it once and let go (`once`); a
+panda's other genes: `mob-kinds.md`, "Pandas' genes". A panda stands 48 ticks after taking its
+hitter before it walks up (bds-provoke3-findings.md; `genes::stands`).
 A bee flies at its hitter (`fights=flies`, creatures/bees.rs), angers the bees within 20, poisons on
 normal and hard, and dies 10 to 60 s after its sting (2026-10-27).
 
@@ -470,7 +478,12 @@ zoglin's hits). The warden (`creatures/warden.rs`, research/captures/bds-warden-
 looks at what disturbs it, grows angry at the player behind a step or a touch, roars, then hunts;
 it booms through armour at prey it cannot walk to, and climbs out and digs down (2026-10-28).
 A creaking (`creatures/creaking.rs`) freezes under a look within 60 degrees of its middle from 16
-blocks, the Java game's rule; it has no heart.
+blocks, the Java game's rule; its heart: `creaking/heart.rs`. Drilled (bds-gxcreak.txt): taking
+prey, `TargetEid` at T, then at T+1 `mob.warning`, `activate`, `CALM|OBSERVED` and state 1; prey
+lost (the actor turned creative), `TargetEid` 0 at T, then at T+1 `deactivate` from its feet, `CALM`
+only if it was frozen, its ambient sound `ambient` and state 0, staying frozen; looked away from
+while hunting, it unfreezes with `CALM` and state 2. Sapling does the same (test
+`a_creaking_whose_prey_turns_creative_deactivates`).
 
 `creatures/hunting.rs`, for kinds with `attack=`, `speed=` and `sees=` in `mob-traits.tsv`: the
 zombie and the seven kinds above, each with its numbers and what its hit gives (not the cave

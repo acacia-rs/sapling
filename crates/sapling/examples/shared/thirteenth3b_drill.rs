@@ -1,10 +1,11 @@
 //! The thirteenth wave's group G drills (research/parity/THIRTEENTH-BRIEF.md). `gxbarter`: a piglin
 //! handed an ingot (its `admire` again as its hand empties), then one hit and handed ingots 2, 12
 //! and 22 s on (`cooldown_after_being_attacked` 20). `gxfellows`: a piglin in sight of the survival
-//! actor and another shut in stone 12 off, then the first hit (`broadcast_anger`). `gxcreak`: a
-//! creaking frozen by the survival actor's look, the actor turned creative, survival, looking away,
-//! creative again (`deactivate`). `gxspit`: a llama and a panda hit (the llama's charge, the panda's
-//! stand before it walks up).
+//! actor, one about 9.5 off in the open and another shut in stone 12 off, then the first hit
+//! (`broadcast_anger`). `gxcreak`: a creaking frozen by the survival actor's look, the actor turned
+//! creative, survival, looking away, creative again (`deactivate`). `gxspit`: a llama and a panda
+//! hit (the llama's charge, the panda's stand before it walks up). `gxwither`: a wither built from
+//! soul sand and skulls (its build particles).
 
 use super::creatures::{floor, waits, with};
 
