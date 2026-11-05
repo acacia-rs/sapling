@@ -4,6 +4,8 @@
 //! fields. `m3wither0`: a wither on normal left unhurt 20 s (its first saved fields). `m3struck`: items
 //! and an orb struck by a summoned bolt with fire ticks off. `m3reflect`: an arrow shot at a summoned
 //! dragon fireball. `m3rod`: a Channeling trident thrown at a lightning rod in thunder (open sky).
+//! `m3inblock`: stone set at slowed cows' feet, some walled in. `m3rideview`: a watcher comes back to
+//! the actor riding a boat, then a saddled pig.
 
 use super::creatures::{waits, with};
 use super::warden::{healed, start};
