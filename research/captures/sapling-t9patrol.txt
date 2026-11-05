@@ -1,0 +1,93 @@
+## drill starts at 1793845139929
+## /
+## /
+## /
+## /
+## /
+## /difficulty normal
+   5034 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["NORMAL"]
+## /gamerule domobspawning false
+   6022 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /gamemode creative @s
+   7073 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /gamemode creative CmdWatcher
+   8074 actor   CommandOutput success_count=1 data=None commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+## /time set 6000
+   9073 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["6000"]
+## /summon pillager 60.5 -60 0.5 0 0 minecraft:promote_to_patrol_captain
+  10108 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  10109 actor   AddEntity AddEntity { unique_id: 3, runtime_id: 3, entity_type: "minecraft:pillager", position: Vec3f { x: 60.5, y: -60.0, z: 0.5 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [EntityAttributesItem { name: "minecraft:he
+  10110 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: None, y: None, z: None, rot_x: None, rot_y: Some(213), rot_z: Some(213), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 0 }
+  10140 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: None, y: None, z: None, rot_x: None, rot_y: Some(170), rot_z: Some(170), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  10492 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(60.57552), y: None, z: Some(0.35265818), rot_x: None, rot_y: Some(146), rot_z: Some(146), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  10842 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(60.806892), y: None, z: Some(-0.118883505), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+## /summon pillager 66.5 -60 0.5 0 0 minecraft:spawn_as_patrol_follower
+  11096 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  11096 actor   AddEntity AddEntity { unique_id: 4, runtime_id: 4, entity_type: "minecraft:pillager", position: Vec3f { x: 66.5, y: -60.0, z: 0.5 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [EntityAttributesItem { name: "minecraft:he
+  11097 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 4, x: None, y: None, z: None, rot_x: None, rot_y: Some(42), rot_z: Some(42), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 0 }
+  11145 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 4, x: None, y: None, z: None, rot_x: None, rot_y: Some(71), rot_z: Some(71), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 8 }
+  11193 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(61.0533), y: None, z: Some(-0.62111706), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  11546 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(61.299927), y: None, z: Some(-1.1237946), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  11546 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 4, x: Some(66.02907), y: None, z: Some(0.37242395), rot_x: None, rot_y: Some(76), rot_z: Some(76), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 8 }
+  11892 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(61.546555), y: None, z: Some(-1.6264787), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  11946 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 4, x: Some(65.87446), y: None, z: Some(0.32547605), rot_x: None, rot_y: None, rot_z: Some(129), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 8 }
+## /summon pillager 60.5 -60 6.5 0 0 minecraft:spawn_as_patrol_follower
+  12094 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  12095 actor   AddEntity AddEntity { unique_id: 5, runtime_id: 5, entity_type: "minecraft:pillager", position: Vec3f { x: 60.5, y: -60.0, z: 6.5 }, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, pitch: 0.0, yaw: 0.0, head_yaw: 0.0, body_yaw: 0.0, attributes: [EntityAttributesItem { name: "minecraft:he
+  12095 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: None, y: None, z: None, rot_x: None, rot_y: Some(213), rot_z: Some(213), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 0 }
+  12140 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: None, y: None, z: None, rot_x: None, rot_y: Some(170), rot_z: Some(170), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  12243 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(61.793182), y: None, z: Some(-2.1291628), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  12493 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(60.56068), y: None, z: Some(6.156815), rot_x: None, rot_y: Some(134), rot_z: Some(134), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  12592 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(62.03981), y: None, z: Some(-2.6318462), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  12640 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 4, x: None, y: None, z: None, rot_x: None, rot_y: None, rot_z: Some(135), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 8 }
+  12848 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(60.74852), y: None, z: Some(5.061574), rot_x: None, rot_y: Some(135), rot_z: Some(135), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  12946 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(62.286438), y: None, z: Some(-3.1345296), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+## /
+  13045 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 4, x: None, y: None, z: None, rot_x: None, rot_y: Some(95), rot_z: Some(95), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 8 }
+  13194 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(60.9695), y: None, z: Some(3.8988419), rot_x: None, rot_y: Some(136), rot_z: Some(136), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  13295 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(62.533066), y: None, z: Some(-3.637213), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  13446 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 4, x: Some(65.64453), y: None, z: Some(0.056090675), rot_x: None, rot_y: Some(100), rot_z: Some(100), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 8 }
+  13548 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(61.21287), y: None, z: Some(2.7395213), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  13548 actor   RemoveEntity RemoveEntity { entity_id_self: 4 }
+  13646 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(62.779694), y: None, z: Some(-4.139897), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  13900 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(61.47869), y: None, z: Some(1.5851278), rot_x: None, rot_y: Some(137), rot_z: Some(137), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  14000 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(63.02632), y: None, z: Some(-4.642582), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+## /
+  14249 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(61.767193), y: None, z: Some(0.43619227), rot_x: None, rot_y: Some(138), rot_z: Some(138), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  14342 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(63.27295), y: None, z: Some(-5.145267), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  14598 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(62.0786), y: None, z: Some(-0.70674616), rot_x: None, rot_y: Some(139), rot_z: Some(139), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  14693 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(63.519577), y: None, z: Some(-5.647952), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  14940 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(62.1805), y: None, z: Some(-1.0641289), rot_x: None, rot_y: Some(140), rot_z: Some(140), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+## /
+  15040 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(63.766205), y: None, z: Some(-6.150637), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  15294 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(62.287113), y: None, z: Some(-1.4019718), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  15395 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 3, x: Some(64.01283), y: None, z: Some(-6.653322), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  15395 actor   RemoveEntity RemoveEntity { entity_id_self: 3 }
+  15649 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(62.572132), y: None, z: Some(-2.2722242), rot_x: None, rot_y: Some(141), rot_z: Some(141), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  15996 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(62.644566), y: None, z: Some(-2.4820564), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+## /
+  16348 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(62.972397), y: None, z: Some(-3.3908963), rot_x: None, rot_y: Some(142), rot_z: Some(142), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  16698 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(63.050724), y: None, z: Some(-3.6041973), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+## /
+  17045 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(63.271626), y: None, z: Some(-4.1750436), rot_x: None, rot_y: Some(143), rot_z: Some(143), on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  17399 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(63.51749), y: None, z: Some(-4.8005366), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  17752 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(63.61652), y: None, z: Some(-5.043763), rot_x: None, rot_y: None, rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+## /
+  18100 actor   MoveEntityDelta MoveEntityDelta { runtime_entity_id: 5, x: Some(63.989002), y: None, z: Some(-5.9434104), rot_x: None, rot_y: Some(144), rot_z: None, on_ground: true, force_move: false, force_move_local_entity: false, force_completion: false, ticks: 7 }
+  18150 actor   RemoveEntity RemoveEntity { entity_id_self: 5 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /kill @e[type=pillager]
+  33160 actor   CommandOutput success_count=3 data=None commands.kill.successful success=true ["Pillager, Pillager, Pillager"]

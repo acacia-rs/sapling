@@ -26,7 +26,8 @@ Rule components and how they are read:
 - Biome filters: a list is `all_of`; `has_biome_tag` with `==`/`!=`/`not`; `is_snow_covered` is the
   biome's minimum snow level above 0 ("Snow cover" below).
 
-Left out: `pillager_patrol` (needs patrol events, world age, villages) and the guardian (ocean
+`pillager_patrol`'s world age, delay, mob event and village filters are `sapling_data::Gates`
+(structure-spawns.md "Patrols"). Left out: the guardian (ocean
 monuments: structure spawns, docs/research/structure-spawns.md); the slime and the phantom have their code gates (below); herd events (babies,
 horse and fish variants, riders), `disallow_spawns_in_bubble`; blazes, wither skeletons, cats and
 pillagers have no natural conditions (structures spawn them).
@@ -138,7 +139,10 @@ test `a_natural_mob_a_player_names_stays_when_the_player_goes`. Picked-up items 
 ## Left
 
 - Structure spawns and patrols: docs/research/structure-spawns.md (built 2026-11-05: the saved
-  record is chunk tag 0x77 with structure names, not tag 57 with type bytes; patrols not built).
+  record is chunk tag 0x77 with structure names, not tag 57 with type bytes; patrols built
+  2026-11-05, not drilled spawning naturally).
+- Overworld monsters: `Monster::isDarkEnoughToSpawn` (14298f930) also wants block light 0 in the
+  overworld (fcn.1415f7530) [D]; sapling's natural rules ask the brightness filter alone. Not ported.
 - Herd events (spawner blocks: docs/research/spawners.md): undrillable live, natural spawning takes a
   random spot and time (husbandry.md "Herds of babies").
 - `doMobSpawning` and peaceful (2026-11-04, `e1spawn`, bds-e1spawn.txt): with the rule off a monster
