@@ -30,11 +30,12 @@ fn ids(registry: &BlockRegistry) -> &'static Ids {
 }
 
 /// What a structure drawn over the loaded columns writes: the cells it changed with their new
-/// runtime ids, and the block entities of what it placed as BDS saves them.
+/// runtime ids, the block entities of what it placed as BDS saves them, and the mobs its templates name.
 #[derive(Debug, Default)]
 pub struct PlacedStructure {
     pub blocks: Vec<([i32; 3], u32)>,
     pub entities: Vec<([i32; 3], Value)>,
+    pub actors: Vec<sapling_worldgen::TemplateActor>,
 }
 
 impl PlacedStructure {
@@ -42,7 +43,7 @@ impl PlacedStructure {
         let blocks: HashMap<[i32; 3], Block> = writes.blocks.iter().copied().collect();
         let block = |at: [i32; 3]| blocks.get(&at).map_or("", |b| b.name());
         let entities = writes.entities.iter().filter_map(|&(at, entity)| Some((at, block_entity_nbt(at, block(at), entity)?))).collect();
-        Self { blocks: writes.blocks.iter().map(|&(pos, block)| (pos, ids.forward.id(block))).collect(), entities }
+        Self { blocks: writes.blocks.iter().map(|&(pos, block)| (pos, ids.forward.id(block))).collect(), entities, actors: writes.actors }
     }
 }
 

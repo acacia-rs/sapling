@@ -74,6 +74,16 @@ fn placed_structures_carry_their_loot() {
 }
 
 #[test]
+fn a_placed_village_names_its_marker_mobs() {
+    let generator = OverworldGenerator::new(SEED);
+    let carved = |x: i32, z: i32| generator.carved(x, z);
+    let writes = generator.place_structure(StructureKind::Village, (-62, 8), &carved).unwrap();
+    let kinds: Vec<&str> = writes.actors.iter().map(|actor| actor.kind).collect();
+    // bds-k1jig.txt: BDS's `/place jigsaw` of a town centre made its golem.
+    assert!(kinds.contains(&"minecraft:iron_golem") && kinds.contains(&"minecraft:villager_v2"), "{kinds:?}");
+}
+
+#[test]
 fn place_structure_fails_a_temple_in_the_ocean() {
     // The monument BDS located (structure/tests.rs): deep ocean, no temple kind there.
     let generator = OverworldGenerator::new(SEED);
