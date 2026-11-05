@@ -164,6 +164,29 @@ fn concrete_powder_sets_where_water_touches_it_as_on_bds() {
     assert_eq!(synced, [-2], "only a landing names the falling block");
 }
 
+/// bds-s3misc.txt: suspicious sand lands as dust at its cell's corner, named by the hanging state
+/// whatever its own; the next tick it is put and broken in one UpdateSubchunkBlocks; no item.
+#[test]
+fn suspicious_sand_breaks_where_it_lands_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([3, 67, 0], &Block::new("stone")) && ctx.set_block([3, 68, 0], &Block::new("suspicious_sand").with("hanging=0")));
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+    });
+    h.tick_all();
+    h.receive(1, &block_actions(&[(Action::PredictBreak, [3, 67, 0])]));
+    let ticks: Vec<Vec<RawPacket>> = (0..30).map(|_| h.tick_all().to(2).to_vec()).collect();
+    let (lying, hanging) = (1_099_051_358u32, -2_140_609_367i32);
+    let dust = ticks.iter().position(|sent| all::<acacia_proto::packets::LevelEvent>(sent).iter().any(|event| (event.data, [event.position.x, event.position.y, event.position.z]) == (hanging, [3.0, 65.0, 0.0])));
+    let put = ticks.iter().position(|sent| column_changes(sent, 3) == [(65, lying), (65, hash("minecraft:air"))]);
+    assert_eq!((dust.map(|tick| tick + 1), dust.is_some()), (put, true), "dust on landing, put and broken the tick after");
+    let sent = ticks.concat();
+    assert!(all::<AddItemEntity>(&sent).is_empty() && all::<UpdateBlockSynced>(&sent).iter().all(|u| u.position.y != 65), "nothing left");
+    assert_eq!(all::<RemoveEntity>(&sent).len(), 1);
+}
+
 /// The layer-0 changes among `packets` at `x`, as (y, block).
 fn column_changes(packets: &[RawPacket], x: i32) -> Vec<(i32, u32)> {
     block_changes(packets).into_iter().filter(|([at_x, _, z], _)| (*at_x, *z) == (x, 0)).map(|([_, y, _], block)| (y, block)).collect()
