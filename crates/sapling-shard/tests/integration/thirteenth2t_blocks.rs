@@ -6,7 +6,7 @@ use crate::common;
 use std::sync::mpsc;
 
 use acacia_proto::nbt::Value as NbtValue;
-use acacia_proto::packets::{AddItemEntity, BlockEntityData, LevelSoundEvent, UpdateSubchunkBlocks};
+use acacia_proto::packets::{AddItemEntity, BlockEntityData, LevelEventGeneric, LevelSoundEvent, UpdateSubchunkBlocks};
 use acacia_proto::{Packet, RawPacket};
 use common::{Harness, all, block_changes, click};
 use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
@@ -96,6 +96,51 @@ fn a_furnace_put_by_hand_shows_no_entity_and_a_jukebox_shows_its_own_then_again_
 }
 
 #[test]
+fn a_hanging_sign_put_under_a_block_hangs_and_is_shown_again_a_tick_on() {
+    // research/captures/bds-z2hand.txt: hanging=1 under a block, its entity shown when put and a tick later.
+    let mut h = holding("minecraft:oak_hanging_sign");
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 67, 3], &Block::new("minecraft:stone"))));
+    h.tick_all();
+    h.receive(1, &click([2, 67, 3], 0, Some("minecraft:oak_hanging_sign")));
+    let shown: Vec<usize> = (0..3).map(|_| entities_shown(h.tick_all().to(1)).len()).collect();
+    assert_eq!(shown, [1, 1, 0]);
+    assert!(has(&block(&mut h, [2, 66, 3]), &["hanging=1", "ground_sign_direction=0"]));
+}
+
+#[test]
+fn a_disc_put_in_shows_the_jukebox_a_tick_on_and_one_taken_out_shows_it_finished_at_once() {
+    // research/captures/bds-z2open.txt: no entity at once for a disc going in; one coming out showed FinishedRecording 1.
+    let mut h = holding("minecraft:music_disc_13");
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 65, 3], &Block::new("minecraft:jukebox"))));
+    (0..2).for_each(|_| _ = h.tick_all());
+    h.receive(1, &click([2, 65, 3], UP, None));
+    let put: Vec<usize> = (0..2).map(|_| entities_shown(h.tick_all().to(1)).len()).collect();
+    assert_eq!(put, [0, 1]);
+    h.receive(1, &click([2, 65, 3], UP, None));
+    let out = h.tick_all().to(1).to_vec();
+    let finished: Vec<_> = all::<BlockEntityData>(&out).into_iter().map(|data| data.nbt.decode().unwrap().value.get("FinishedRecording").cloned()).collect();
+    assert_eq!(finished, [Some(NbtValue::Byte(1))]);
+}
+
+#[test]
+fn a_crafter_crafting_shows_five_ticks_left_and_sounds_from_its_corner_as_it_was_fired() {
+    // research/captures/bds-z2open.txt: crafting_ticks_remaining 5 with crafting=1; crafter.craft at 5.0 -26.0 4.0
+    // naming crafter[crafting=0,orientation=east_up,triggered_bit=1].
+    let mut h = holding("minecraft:stone");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([5, 65, 4], &Block::new("minecraft:crafter").with("orientation=east_up")));
+        assert!(ctx.set_container_item([5, 65, 4], 0, Some(&Item::new("minecraft:oak_log", 1))));
+    });
+    (0..2).for_each(|_| _ = h.tick_all());
+    h.remote.run(|ctx| assert!(ctx.set_block([5, 65, 5], &Block::new("minecraft:redstone_block"))));
+    let sent: Vec<RawPacket> = (0..8).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let crafted: Vec<([f32; 3], i32)> = all::<LevelSoundEvent>(&sent).into_iter().filter(|sound| sound.sound_id == "crafter.craft").map(|sound| ([sound.position.x, sound.position.y, sound.position.z], sound.extra_data)).collect();
+    assert_eq!(crafted, [([5.0, 65.0, 4.0], 1228006179)]);
+    let remaining: Vec<_> = all::<BlockEntityData>(&sent).into_iter().filter_map(|data| data.nbt.decode().unwrap().value.get("crafting_ticks_remaining").cloned()).collect();
+    assert!(remaining.contains(&NbtValue::Int(5)), "{remaining:?}");
+}
+
+#[test]
 fn a_broken_campfire_throws_its_two_charcoal_one_at_a_time() {
     // research/captures/bds-z2hand.txt: two AddItemEntity of one charcoal each, for each `setblock ... destroy`.
     let mut h = holding("minecraft:stone");
@@ -132,6 +177,17 @@ fn a_wool_wall_stops_a_vibration_and_carpet_put_is_not_heard() {
     assert_eq!(sensor_phase(&mut h), "sculk_sensor_phase=0", "carpet");
     put(&mut h, "minecraft:stone", [2, 64, -2]);
     assert_eq!(sensor_phase(&mut h), "sculk_sensor_phase=1", "heard");
+}
+
+#[test]
+fn a_block_put_near_a_sensor_is_heard_after_its_place_sound() {
+    // research/captures/bds-z2sculk.txt: the place sound, then the vibration particle (LevelEventGeneric).
+    let mut h = holding("minecraft:stone");
+    h.remote.run(|ctx| assert!(ctx.set_block([6, 65, -4], &Block::new("minecraft:sculk_sensor"))));
+    h.tick_all();
+    h.receive(1, &click([2, 64, -2], UP, Some("minecraft:stone")));
+    let order: Vec<u32> = h.tick_all().to(1).iter().map(|packet| packet.id).filter(|id| [LevelSoundEvent::ID, LevelEventGeneric::ID].contains(id)).collect();
+    assert_eq!(order, [LevelSoundEvent::ID, LevelEventGeneric::ID]);
 }
 
 #[test]

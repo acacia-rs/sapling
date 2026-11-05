@@ -44,7 +44,7 @@ pub(super) fn placed_too(block: &str, pos: BlockPos) -> Option<Value> {
 
 /// Whether a block put by hand is shown whole again a tick later, as BDS did (bds-z2hand.txt).
 pub(super) fn again_by_hand(block: &str) -> bool {
-    matches!(block, "minecraft:cauldron" | "minecraft:lectern" | "minecraft:jukebox") || SKULLS.contains(&block) || CAMPFIRES.contains(&block)
+    matches!(block, "minecraft:cauldron" | "minecraft:lectern" | "minecraft:jukebox") || SKULLS.contains(&block) || CAMPFIRES.contains(&block) || block.ends_with("_hanging_sign")
 }
 
 fn empty_stack() -> Value {

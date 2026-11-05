@@ -36,7 +36,12 @@ pub(crate) fn set_many(world: &mut World, layer: Entity, pos: BlockPos, id: &str
 
 /// [`set`] without showing it.
 pub(crate) fn set_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: &str, key: &str, value: Option<Value>) {
-    if let Some(entity) = with_fields(world, layer, pos, id, &[(key, value)]) {
+    set_many_quietly(world, layer, pos, id, &[(key, value)]);
+}
+
+/// [`set_many`] without showing it.
+pub(crate) fn set_many_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: &str, values: &[(&str, Option<Value>)]) {
+    if let Some(entity) = with_fields(world, layer, pos, id, values) {
         _ = super::send::keep_entity_quietly(world, layer, pos, &entity);
     }
 }

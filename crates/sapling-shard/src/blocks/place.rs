@@ -172,7 +172,6 @@ impl Request<'_> {
             None => send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id)),
         };
         if placed {
-            super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
             let second = door.map(|(above, _)| above).or_else(|| doors::place_second_cell(self.world, site.layer, pos, whole));
             // A bed's colour and a banner's are the item's, which the block cannot say.
             let (damage, tag) = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or((0, None), |held| (held.stack.damage, held.stack.tag.clone()));
@@ -189,8 +188,9 @@ impl Request<'_> {
                 super::shown_again::next_tick(self.world, site.layer, pos);
             }
             crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
-            // BDS shows a block's entity before its place sound (bds-z2hand.txt).
+            // BDS shows a block's entity, its place sound, then its vibration (bds-z2hand.txt, bds-z2sculk.txt).
             send::to_viewers(self.world, site.layer, pos, &[sound]);
+            super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
             signs::open_editor(self.world, self.entity, site.layer, pos, &block.name);
             rails::join_placed(self.world, site.layer, pos);
             super::pistons::furnish(self.world, site.layer, pos);
