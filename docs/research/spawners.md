@@ -155,7 +155,7 @@ Left out:
   block's hash (`trial.rs` `reward`). The velocity stays a 0.2 up throw with a 0.045 normal spread (one
   BDS reward is too few to fit). The vault click still missed on both.
 - What a spawn egg does to a trial spawner's configs (`14488a3a0`; no packet shows them).
-- The vault's level events' positions (sent at the block's middle).
+- The vault's level events' positions (sent at the block's middle). Settled by x2ran below: its corner.
 
 ## Parity drill (2026-11-04, `bds_command_probe t3trial`, bds-t3trial.txt)
 
@@ -166,6 +166,22 @@ Left out:
   middle), and a spawn is told as both puffs, then the mob, then `trial_spawner.spawn_mob`. Fixed
   (`spawners/trial/waves.rs`, `trial.rs`).
 - `/effect @s trial_omen 120 0` by an active spawner turned it ominous on neither in 30 s.
+
+## Parity drill (2026-11-05, `bds_command_probe x2ran`, bds-x2ran.txt)
+
+A vault opened with a trial key and a trial spawner's whole wave (mob spawning on: a trial spawner off it clears
+its wave), each cloned after. Matched: the spawner's states 0 to 5, its puffs and `spawn_mob`, its `eject_item`
+at `+0.5 +1 +0.5`; the cloned spawner's entity (`spawn_data` alone, shown twice). Fixed (thirteenth2x):
+- A vault's sounds and animations are at its corner (`vault.eject_item` at `+0.5 +1.2 +0.5`), and a trial
+  spawner's shutters; a state's sound comes after its block and entity (`spawners/vault.rs` `enter`,
+  `trial.rs`).
+- An active or ejecting vault shows its block and entity again each second, the entity with
+  `connected_players` and the shown `display_item` from its `shared_data` (sapling showed `[]` and an empty
+  item always: `sapling-leveldb` `BlockEntity::updated`). Test in spawners/vault.rs.
+Left: BDS activated the vault the tick after its set with the creative actor and watcher near (sapling a second
+on); its unlocking shows the block at the click and again with the entity two ticks on; the ejected count
+(4 against 3) is the loot roll's; a cloned vault shows `connected_players` `[]` on BDS (sapling copies the
+source's) and goes inactive a second on.
 
 ## Ominous item spawners
 
