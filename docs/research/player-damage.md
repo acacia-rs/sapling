@@ -239,7 +239,7 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
   its `Damage` tag (`inventory/plugin.rs`); armour in the hand goes on by a click in the air
   (`inventory/donning.rs`). `/damage` deaths are said as above (`vitals/death.rs` `told_words`);
   the `entity` form is parsed too (67e84e06). A rise at the world's spawn is searched for at y 32767 first,
-  but found at the spawn itself, not a spot in its radius.
+  then found at a column within `spawnRadius` ("Rise spot" below).
 - Armour stops what it stopped on BDS, by the same rule (`creatures/health.rs` `shielded`,
   `sapling-data/src/armour.rs`, `sapling_api::DamageCause::is_stopped_by_armour`); a helmet takes
   its quarter. What it stops wears it as measured (`inventory/armour_wear.rs`); how long a piece
@@ -257,3 +257,16 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
   1.8 and the bit cleared; the eyes told stayed at 1.62. Built 2026-11-05 (`movement/crawl.rs`).
   A player rises by the bed or Nether anchor it
   last clicked while it stands (`sleep/spawn.rs` `spawn_of`), and either waits in storage with the player's items, as does its last death (`vitals/last_death.rs`). Health, hunger, breath (`Air`) and burning (`Fire`) wait in storage with a player's items (`vitals/kept.rs`), as do effects (`vitals/effects.rs`); one who left dead comes back whole.
+
+## Rise spot (decompiled 2026-11-05, Player::tickWorld 1402beeb0, check 1402b9f50)
+
+- r = gamerule `spawnRadius` (default 10; clamped to 256 only under a level flag that defaults off).
+  Inner grid reach `A = min(r, 8)`; outer grid reach `ceil((r - 8) / (2A))` past 8, cells 32 apart.
+  Each grid: `n = (2R+1)²`, stride the largest prime ≤ 2R (2 below 3), start `nextInt(n)`, cell
+  `(start + i * stride) % n`, x its remainder and z its quotient by the side, less R. Each outer cell
+  walks the whole inner grid; an offset is kept if `x² + z² ≤ r²`; feet at the cell + 0.5.
+- A candidate must be loaded and pass the safe-position check; none fits → the spawn block. Radius 0 →
+  the spawn. bds-deaths.txt's rises (+2,+6), (-3,0), (-6,-2), (-3,-2), (-3,-3) fit the r 10 disc.
+- BDS seeds a fresh xoroshiro128++ from the clock, so no pick is predictable; sapling throws its dice.
+- sapling (`vitals/rise_spot.rs`): stands on the column's top block if solid and not lava, fire or
+  magma. BDS's check (box nudges, headroom, which materials refuse) was not decoded.

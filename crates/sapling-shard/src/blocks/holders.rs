@@ -100,9 +100,11 @@ pub(super) fn use_holder(world: &mut World, player: Entity, layer: Entity, pos: 
                 LevelEventEvent::SoundItemframeAddItem
             }
         };
-        send::keep_entity(world, layer, pos, &fields);
+        send::keep_entity_quietly(world, layer, pos, &fields);
         super::frames::show_map(world, layer, pos, fields.get(FRAMED));
         send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEvent { event, position: corner, data: 0 })]);
+        // BDS showed the frame and what it holds the tick after the sound (bds-t3frame.txt).
+        super::shown_again::next_tick(world, layer, pos);
         return true;
     }
     if name != POT {

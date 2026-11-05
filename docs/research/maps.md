@@ -97,9 +97,10 @@ code), whether `1/(n*255)` is f32, and which biome components the overrides are.
 
 ## Open
 
-- Tints: BDS blends biome tints across neighbours ("Tints" above); `map-tints.tsv` holds one probed spot
-  per biome, and sapling takes the drawn column's biome's alone. Porting needs each biome's temperature,
-  downfall, water colour and overrides, and the method of each tinted block.
+- Tints: sapling averages the biomes at each method's offsets as BDS does (`maps/render.rs` `tinted`),
+  but each biome's colour is `map-tints.tsv`'s one probed spot, so swamp grass noise is not followed;
+  exact needs each biome's temperature, downfall, water colour and overrides, and the method of each
+  tinted block (sapling's are `map-colours.tsv`'s).
 - Only default block states were drawn; state-dependent colours (log axis, beds) use the default's.
 - Saving (sapling-leveldb `maps.rs`, from a BDS world's `map_<id>` records): BDS saved all five scales of a
   filled map at once, each `parentMapId` the id one up (-1 at scale 4); sapling saves the maps it made.

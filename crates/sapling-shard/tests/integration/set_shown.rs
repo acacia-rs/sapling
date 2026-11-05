@@ -90,3 +90,27 @@ fn a_set_frame_with_nothing_to_hang_on_breaks_a_tick_later() {
     assert_eq!(common::block_changes(&later), [([2, 65, 3], common::hash("minecraft:air"))]);
     assert_eq!(all::<acacia_proto::packets::AddItemEntity>(&later).len(), 1, "its item");
 }
+
+/// research/captures/bds-t3frame.txt: a frame given an item, then turned, is heard at once and
+/// shown, block and entity, a tick later.
+#[test]
+fn a_clicked_frame_is_heard_at_once_and_shown_a_tick_later() {
+    const FRAME: [i32; 3] = [1, 65, 0];
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative);
+        assert!(ctx.set_item(sapling_api::PlayerId(1), sapling_api::Slot::Main(0), Some(&sapling_api::Item::new("minecraft:diamond", 1))));
+        assert!(ctx.update_block([2, 65, 0], &Block::new("minecraft:stone")));
+        assert!(ctx.update_block(FRAME, &Block::new("minecraft:frame").with("facing_direction=4,item_frame_map_bit=0,item_frame_photo_bit=0")));
+    });
+    (0..2).for_each(|_| drop(h.tick_all()));
+    for _ in 0..2 {
+        h.receive(1, &common::click(FRAME, 4, None));
+        let heard = h.tick_all().to(1).to_vec();
+        assert_eq!((all::<acacia_proto::packets::LevelEvent>(&heard).len(), all::<BlockEntityData>(&heard).len()), (1, 0));
+        let shown = h.tick_all().to(1).to_vec();
+        let block = common::block_changes(&shown).into_iter().filter(|(pos, _)| *pos == FRAME).count();
+        assert_eq!((block, all::<BlockEntityData>(&shown).len()), (1, 1));
+    }
+}

@@ -286,7 +286,6 @@ impl Request<'_> {
         let Some(site) = site(self.world, self.entity, pos) else { return self.resync(&[pos, target]) };
         let Some((registry, clicked)) = self.block(&site, pos) else { return };
         let Some(name) = super::custom::clicked_name(registry, clicked) else { return self.resync(&[pos, target]) };
-        let may_build = site.mode != GameMode::Adventure || crate::inventory::hand_allows(self.world, self.entity, false, name);
         // The clicked block's own use comes first, unless the player sneaks or works copper.
         let held = self.held_item(site.mode, click);
         let used = is_used(name) || super::handled::takes_click(registry, clicked, held.as_deref());
@@ -311,7 +310,6 @@ impl Request<'_> {
         let is_near = (feet[0] - target[0] as f32 - 0.5).abs() < 2.0 && (feet[2] - target[2] as f32 - 0.5).abs() < 2.0;
         let eyes_over = is_near.then(|| feet[1] + facing::EYES - target[1] as f32);
         match in_hand.or_else(|| place::claimed_block(registry, &click.held_item, face)).filter(|_| builds) {
-            Some(_) if !may_build => self.resync(&[pos, target]),
             Some(id) => self.place(&site, pos, &Click { face, height: click.click_pos.y, yaw, eyes_over }, id, in_hand.is_some()),
             None => self.interact(&site, pos, face, send::describe(registry, clicked)),
         }

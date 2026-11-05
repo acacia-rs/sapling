@@ -134,8 +134,8 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
 ## Parity drill (2026-11-04, `bds_command_probe t3uses`, `t3frame`, `t3nether`)
 
 - A comparator reading a wall frame through stone gives the item's rotation + 1, 1 to 8 and back to
-  1, on both (bds-t3frame.txt). BDS shows the frame and its entity a tick after the sound, sapling the
-  entity before it; not matched.
+  1, on both (bds-t3frame.txt). BDS shows the frame and its entity a tick after the sound (an item put in
+  or turned); so does sapling since 2026-11-05 (`blocks/holders.rs`, test `set_shown`).
 - Lodestone records and broadcasts: block-uses.md "Parity drill (2026-11-04)". Fixed.
 - A bed clicked at its foot in the Nether (bds-t3nether.txt): `ParticleDestroyBlockNoSound` at the foot's
   corner with the foot's hash, then the blast at the head's middle. Sapling sent no dust, then (first

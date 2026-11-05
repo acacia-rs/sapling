@@ -115,6 +115,21 @@ fn a_death_9_9_off_blooms_one_10_4_off_does_not_and_the_charge_moves_a_tick_late
 }
 
 #[test]
+fn the_spreads_sounds_are_heard_a_tick_after_the_charge_that_made_them_moves() {
+    // research/captures/bds-catalyst.txt: blocks and sounds the tick after their 2037 or 2038.
+    let mut h = ready();
+    let mut sent = kill_cow(&mut h, [4.5, 65.0, 4.5]);
+    sent.extend((0..100).map(|_| ticks(&mut h, 1)));
+    let moved = |tick: &[RawPacket]| events(tick, CHARGE) + events(tick, 2038 << 1) > 0;
+    let spread = |tick: &[RawPacket]| all::<LevelSoundEvent>(tick).iter().any(|sound| sound.sound_id == "block.sculk.spread");
+    let heard: Vec<usize> = (1..sent.len()).filter(|at| spread(&sent[*at])).collect();
+    assert!(!heard.is_empty(), "the charge spread");
+    assert!(heard.iter().all(|at| moved(&sent[at - 1])), "each spread heard a tick after a move: {heard:?}");
+    let first = sent.iter().position(|tick| moved(tick)).expect("moved");
+    assert!(!spread(&sent[first]), "nothing heard with the first move");
+}
+
+#[test]
 fn a_death_out_of_range_does_nothing() {
     let mut h = ready();
     let (tx, rx) = mpsc::channel();

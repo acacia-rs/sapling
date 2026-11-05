@@ -1,7 +1,8 @@
 //! The thirteenth wave's group H drills (research/parity/THIRTEENTH-BRIEF.md): a summon's pitch and
 //! summoned riders' name tags (`h1summon`), ticking areas in the Nether and the `/camera` forms
 //! (`h1cmds`), `can_place_on` / `can_destroy` stacks in adventure mode (`h1lock`), and `/schedule`
-//! against the probe pack of tools/bds-packs-setup.sh (`h1sched`, its BDS copy with KEEP_WORLD=1).
+//! against the probe pack of tools/bds-packs-setup.sh (`h1sched`, its BDS copy with KEEP_WORLD=1), and an
+//! End gateway's SetEntityMotion (`h1gate`).
 
 use super::creatures::{floor, waits, with};
 
@@ -9,6 +10,7 @@ const SUMMON_SHOWN: &[&str] = &["AddEntity", "RemoveEntity", "MoveEntityDelta", 
 const CMDS_SHOWN: &[&str] = &["CameraInstruction", "CameraPresets", "CommandOutput"];
 const LOCK_SHOWN: &[&str] = &["InventorySlot", "InventoryContent", "UpdateBlock", "LevelEvent", "CommandOutput"];
 const SCHED_SHOWN: &[&str] = &["CommandOutput", "Text"];
+const GATE_SHOWN: &[&str] = &["MovePlayer", "SetEntityMotion", "ChangeDimension", "CommandOutput"];
 
 /// The drill called `name` of this file.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
@@ -18,6 +20,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "h1lock" => (lock(), LOCK_SHOWN),
         "h1sched" => (schedule(), SCHED_SHOWN),
         "h1camera" => (camera(), CMDS_SHOWN),
+        "h1gate" => (gateway(), GATE_SHOWN),
         _ => return None,
     })
 }
@@ -139,4 +142,12 @@ fn schedule() -> Vec<String> {
         "scoreboard players list @s",
         "scoreboard objectives remove fn",
     ])
+}
+
+/// The worldgen End gateway at (1953, 66, 181) stepped into, its SetEntityMotion shown.
+fn gateway() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "execute in the_end run tp @s 1956.5 66 181.5"].map(String::from).into();
+    waits(&mut lines, 6);
+    lines.extend(["tp @s 1953.5 66 181.5", "", "", "", "execute in overworld run tp @s 0.5 -26 0.5", "", ""].map(String::from));
+    lines
 }

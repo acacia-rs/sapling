@@ -46,6 +46,16 @@ fn an_adventurer_breaks_only_what_its_hand_may_destroy() {
 }
 
 #[test]
+fn an_adventurer_places_only_on_what_its_stack_may_go_on() {
+    for (on, placed) in [("minecraft:stone", "minecraft:stone"), ("minecraft:dirt", "minecraft:air")] {
+        let mut h = adventurer(Item { can_place_on: vec![on.to_owned()], ..Item::new("minecraft:stone", 4) });
+        h.receive(1, &common::click([3, 64, 0], 1, Some("minecraft:stone")));
+        h.tick_all();
+        assert_eq!(ask(&mut h, |ctx| ctx.block([3, 65, 0]).map(|block| block.name)).as_deref(), Some(placed), "can_place_on {on}");
+    }
+}
+
+#[test]
 fn the_lists_stay_on_the_stack_and_go_on_the_wire_apart_from_its_nbt() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

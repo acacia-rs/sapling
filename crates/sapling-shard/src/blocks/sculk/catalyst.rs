@@ -40,12 +40,20 @@ pub(crate) struct Catalysts {
     fresh: Vec<((Entity, BlockPos), [i32; 3], i32)>,
     /// The level's generator, which BDS's spreader draws from.
     random: Mt19937,
+    /// The spread's blocks and sounds, shown the tick after the charge's move that made them, as
+    /// BDS's were (research/captures/bds-catalyst.txt).
+    later: Vec<(Entity, Later)>,
+}
+
+enum Later {
+    Block(BlockPos),
+    Packet(BlockPos, bytes::Bytes),
 }
 
 fn catalysts(world: &mut World) -> Mut<'_, Catalysts> {
     if !world.contains_resource::<Catalysts>() {
         let seed = world.get_resource_or_insert_with(Dice::default).roll(u32::MAX);
-        world.insert_resource(Catalysts { cursors: BTreeMap::new(), fresh: Vec::new(), random: Mt19937::new(seed) });
+        world.insert_resource(Catalysts { cursors: BTreeMap::new(), fresh: Vec::new(), random: Mt19937::new(seed), later: Vec::new() });
     }
     world.resource_mut::<Catalysts>()
 }
@@ -109,6 +117,12 @@ pub(super) fn wilt(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
 /// block actor. A catalyst gone from a loaded column takes its cursors with it.
 pub(super) fn tick(world: &mut World) {
     let Some(mut catalysts) = world.remove_resource::<Catalysts>() else { return };
+    for (layer, later) in std::mem::take(&mut catalysts.later) {
+        match later {
+            Later::Block(pos) => send::show(world, layer, pos),
+            Later::Packet(pos, packet) => send::to_viewers(world, layer, pos, &[packet]),
+        }
+    }
     let mut spent = Vec::new();
     for (&(layer, pos), cursors) in catalysts.cursors.iter_mut() {
         let loaded = level(world, layer).is_some_and(|level| level.is_loaded(send::column(pos)));
@@ -117,7 +131,7 @@ pub(super) fn tick(world: &mut World) {
             cursors.clear();
         }
         if here && !cursors.is_empty() {
-            sculk::update_cursors(&mut Live { world: &mut *world, layer }, &Spreader::LEVEL, cursors, pos, &mut catalysts.random, true);
+            sculk::update_cursors(&mut Live { world: &mut *world, layer, later: &mut catalysts.later }, &Spreader::LEVEL, cursors, pos, &mut catalysts.random, true);
         }
         if here {
             saved::keep(world, layer, pos, cursors);
@@ -139,6 +153,7 @@ pub(super) fn tick(world: &mut World) {
 struct Live<'w> {
     world: &'w mut World,
     layer: Entity,
+    later: &'w mut Vec<(Entity, Later)>,
 }
 
 impl Live<'_> {
@@ -158,7 +173,11 @@ impl Cells for Live<'_> {
         let id = level.generator_id(block);
         // The generator's shrieker can summon; a catalyst's cannot (148b41ca1).
         let id = if level.registry().get(id).is_some_and(|state| state.name == SHRIEKER) { with_property(level.registry(), id, "can_summon", "0").unwrap_or(id) } else { id };
-        send::set(self.world, self.layer, [x, y, z], id)
+        let set = send::set_quietly(self.world, self.layer, [x, y, z], id);
+        if set {
+            self.later.push((self.layer, Later::Block([x, y, z])));
+        }
+        set
     }
 }
 
@@ -170,7 +189,7 @@ impl SculkWorld for Live<'_> {
             Sound::ShriekerPlaced => "block.sculk_shrieker.place",
         };
         let [x, y, z] = at.map(|c| c as f32);
-        self.tell(at, send::noise(name, Vec3f { x, y, z }, -1));
+        self.later.push((self.layer, Later::Packet(at, send::noise(name, Vec3f { x, y, z }, -1))));
     }
 
     fn charge(&mut self, at: [i32; 3], charge: i32, facings: i32) {
