@@ -8,7 +8,7 @@ use acacia_proto::nbt::Value;
 use acacia_proto::packets::{AddEntity, AddItemEntity, EntityEvent, EntityEventEventId as Event};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1 as Flags};
 use common::raising::{click_on, feet_of, has_flag, plain_in, set_in, showed};
-use common::shooting::{ALEX, added, held, ready, spawn, watch};
+use common::shooting::{ALEX, FEET, added, held, ready, spawn, watch};
 use common::stored::{actor_with, enter_stored, floor_holding};
 use common::{Harness, all, attack, click, orbs};
 use sapling_api::{Block, GameMode, Slot};
@@ -48,6 +48,18 @@ fn cows_fed_wheat_have_a_calf_with_experience_that_feeding_grows_up_sooner() {
     assert_eq!(has_flag(&fed, calf, Flags::BABY), Some(false), "ten wheat grow a calf up");
     assert_eq!(set_in(&fed, calf, Key::Scale), Some(Plain::Float(1.0)));
     assert!(held(&mut h, Slot::Main(0)).is_none(), "every wheat was eaten");
+}
+
+#[test]
+fn a_cow_10_6_off_follows_wheat_and_stops_about_2_off() {
+    // bds-ah3tempt.txt: cows 5 to 14 off came at 0.2108 a tick and came to rest 1.81 to 1.97 off.
+    let mut h = ready(GameMode::Survival, &[("minecraft:wheat", 1, 0)], 0.0);
+    // The far corner of the harness's floor.
+    let cow = spawn(&mut h, COW, [FEET[0] - 8.0, 65.0, FEET[2] + 7.0]);
+    watch(&mut h, 200);
+    let at = feet_of(&mut h, cow);
+    let off = (at[0] - FEET[0]).hypot(at[2] - FEET[2]);
+    assert!((1.7..2.02).contains(&off), "{off}");
 }
 
 /// A wolf at `feet` tamed by Alex with bones: its runtime id, and what Alex was told as it was tamed.

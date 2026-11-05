@@ -3,7 +3,7 @@
 //! boxes meet push each other apart across by the Java game's rule, from where they stand, and the
 //! push joins their next move after the drag (`Body::jostle`). Two within 0.01 of one spot push
 //! not at all, so mobs summoned onto one spot stay together until one walks. A player pushes mobs
-//! as a mob does and is not pushed (its client moves it), and kinds the packs make unpushable
+//! as a mob does, but not a slime or magma cube, and is not pushed (its client moves it), and kinds the packs make unpushable
 //! neither push nor are pushed: BDS's cow beside an armour stand or a shulker stood still
 //! (research/captures/bds-jostle.txt).
 
@@ -22,12 +22,10 @@ use crate::entities;
 /// BDS's cows were moved by twice over.
 const SHOVE: f32 = 0.1;
 const TOGETHER: f32 = 0.01;
-/// Two mobs' boxes this much wider meet: BDS's cows 0.995 apart pushed, 0.9 wide, and 1.561 apart
-/// did not. A player's box and a mob's must overlap, the Java game's `pushEntities` rule.
-// TODO: the player's gap is not drilled; any wider than a slime's touch (0.15, slimes.rs) and a
-// slime could never reach a player who stands still.
+/// Two boxes, a player's too, this much wider meet (`Mob::pushActors` grows the pusher's box 0.2
+/// across): BDS's cows 0.15 apart pushed and 0.25 did not, and a cow 0 to 0.13 off the still actor
+/// was pushed (research/captures/bds-ah3crowd.txt).
 const GRACE: f32 = 0.2;
-const PLAYER_GRACE: f32 = 0.0;
 /// Mobs are sorted into squares this wide, as wide as the widest mob that walks.
 const SQUARE: f32 = 4.0;
 const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
@@ -57,6 +55,8 @@ pub(super) fn tick(world: &mut World) {
         .collect();
     let mut bodies: Vec<_> = bodies.into_iter().filter(|(entity, ..)| !crate::riding::is_driven(world, *entity)).collect();
     let mobs = bodies.len();
+    // bds-ah3slime.txt: a medium slime 0.08 and 0.14 off the still actor's box stood until it hopped.
+    let hoppers: Vec<Entity> = bodies.iter().map(|(entity, ..)| *entity).filter(|entity| world.get::<entities::Kind>(*entity).is_some_and(|kind| sapling_data::mob_traits(&kind.0).hunts.and_then(|hunts| hunts.fights) == Some("hops"))).collect();
     bodies.extend(in_world(world).into_iter().filter_map(|player| {
         if world.get::<Mode>(player)?.0 == GameMode::Spectator || world.get::<crate::riding::Riding>(player).is_some() {
             return None;
@@ -74,8 +74,10 @@ pub(super) fn tick(world: &mut World) {
         let near = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| [x + dx, z + dz])).filter_map(|at| squares.get(&(*layer, at))).flatten();
         for &other in near.filter(|other| **other > index) {
             let (other_entity, _, other_body) = &bodies[other];
-            let grace = if other >= mobs { PLAYER_GRACE } else { GRACE };
-            if let Some([px, pz]) = push(body, other_body, grace) {
+            if other >= mobs && hoppers.contains(entity) {
+                continue;
+            }
+            if let Some([px, pz]) = push(body, other_body, GRACE) {
                 pushes.extend([(*entity, [px, pz]), (*other_entity, [-px, -pz])]);
             }
         }

@@ -456,7 +456,8 @@ By night on the stone floor, the survival actor held in place:
   (thirteenth3ad): in bds-y3hunt.txt's held phase (the zombie 28 off, past `within_radius`, so it took
   and dropped its target and never walked) BDS told the zombie's head 7 times and its body never; the
   body following 5 to 10 ticks later is not in that capture, so it needs a drill of its own.
-- A spider at midnight took no target in 4 s, so whether one keeps its prey by day was not seen.
+- A spider at midnight took no target in 4 s, so whether one keeps its prey by day was not seen
+  (seen since: "Head, box, spider, nuggets").
 - `y3gear` (bds-y3gear.txt): BDS sends `MobEquipment` for the skeleton, stray, bogged, wither
   skeleton, zombified piglin, piglin, brute, pillager, vindicator, drowned and vex as each is
   summoned; none for the zombie, husk or evoker. Sapling sent none but the piglin's (twice) and the
@@ -497,6 +498,33 @@ By night on the stone floor, the survival actor held in place:
   the zombie pigman's gold nuggets lying there into its main hand (`piglins/pickup.rs`); BDS's held
   its crossbow (its pack keeps nuggets `stored_in_inventory`; the drill shows no item packets, so
   whether BDS's took them is not known). Left: that, and the other functions' item data.
+
+## Head, box, spider, nuggets (2026-11-05, thirteenth3ah, `ah3*` captures)
+
+- Head lag (`ah3lag`, `ah3lag2`): a zombie in a one-cell box at midnight, the actor 5 off each side in
+  turn. Behind glass it took no target. Behind iron bars it took one at once, never walked, and only its
+  head was told, 7 byte units (9.8 deg) a tick; its body yaw was never sent. So the body's 5-10 tick
+  follow can't be seen on the wire for a mob that stands. Sapling's (sapling-ah3lag2.txt) walked into
+  the bars and turned body and head together about 30 a tick. Not followed.
+- The stop at the player's box (`ah3stop2`, glass behind the actor so it is not thrown clear): BDS's
+  husk and sapling's walked the same xs to the first hit. BDS's then eased in from 0.90 off: its walk
+  went 0.0967, 0.0746, 0.0556 and then about 0.013 a tick over the drag, and it came to rest 0.523 off,
+  boxes overlapping by 0.077. Sapling's walked at full pace to 0.56 off and then jostled between 0.53 and
+  0.66. Not followed: the ease is not the 0.546 drag and its rule is not found.
+- Spider by day (`ah3spider`): BDS's took the actor at midnight 7.5 s after it came. After `/time set
+  noon` it kept the target and bit every second for 10 s. One summoned at noon under the sky took nothing
+  in 8 s. Sapling's model is the same (no new prey in the sun, prey kept). Its run (open world,
+  sapling-ah3spider.txt) let go 1.5 s after taking, at night (`stops` 100, one tick in 100), so the
+  daytime keep could not be compared. Run in the roofed drill world, it took the actor again at noon,
+  as BDS's spiders did under a roof (`spiders`).
+- Nuggets (`ah3nugget`, item packets shown): BDS's armed piglin (a crossbow) took 4 nuggets and its
+  hands were shown unchanged. At death it dropped the 4 and re-sent the crossbow for slot 0. A bare
+  one (`minecraft:spawn_adult`) showed the nuggets in its main hand a tick after taking them and dropped
+  the 4 at death. Fixed: a piglin holding anything else keeps nuggets unseen (`piglins/pickup.rs`
+  `Pocket`), and both kinds drop them in the death's tick (`death.rs` `let_gear_go`). Test
+  `a_piglin_holding_a_sword_keeps_nuggets_unseen_and_drops_them_at_death`. Different, not followed:
+  sapling's piglin took the thrown nuggets in the tick they were thrown, before they were shown; BDS's
+  took them 9 ticks on. Sapling's death shows both hands emptied where BDS re-sent the held weapon.
 
 ## Not drilled
 
@@ -605,6 +633,7 @@ mobs do not look for a way.
 
 Its told speed is BDS's, after the tick's drag (3bae7356; re-drilled 2026-11-05, sapling-chase.txt:
 the jump told 0.3332 up, 0.0623 across, as bds-chase.txt).
-Different: its head does not lag its body (both turn 30 a tick: "Reach, holes and walls"), it stops when its box touches the
-player's since players and mobs do not push each other, lets a spider hunt by day, hunts nobody on peaceful
+Different: its head does not lag its body (both turn 30 a tick: "Reach, holes and walls"; a standing
+BDS hunter turns only its head, 9.8 a tick), it walks into the player's box at full pace where BDS's eases
+to rest overlapping it by 0.077 ("Head, box, spider, nuggets"), hunts nobody on peaceful
 (where BDS has no monsters), and tells every viewer every move.

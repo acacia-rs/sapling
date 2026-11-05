@@ -3,10 +3,11 @@
 //! research/captures/bds-goldpickup.txt showed: an adult not admiring walks to gold lying within
 //! 10 and takes it once within a block of its box (`TakeItemEntity`), shows it a tick later and
 //! is heard to `admire` a tick after that. An ingot it admires in its offhand and barters; another
-//! `admire` item (a golden sword in the drill) it admires as long and then holds; nuggets it keeps
-//! in its main hand.
-// TODO: what it holds is lost on death; its other shareables (armour, food, crossbows) are not
-// picked up; it is not shown admiring (`FlagsExtended` bit 30).
+//! `admire` item (a golden sword in the drill) it admires as long and then holds; nuggets it holds
+//! in an empty main hand, or keeps unseen while it holds a weapon, and drops all at death
+//! (bds-ah3nugget.txt).
+// TODO: what else it holds is lost on death and its kept nuggets with the world; its other
+// shareables (armour, food, crossbows) are not picked up; it is not shown admiring (`FlagsExtended` bit 30).
 
 use acacia_proto::packets::TakeItemEntity;
 use bevy_ecs::prelude::*;
@@ -34,6 +35,18 @@ const ADMIRED: &[&str] = &[
     "minecraft:golden_nautilus_armor", "minecraft:bell", "minecraft:clock", "minecraft:speckled_melon", "minecraft:glistering_melon_slice",
     "minecraft:light_weighted_pressure_plate",
 ];
+
+/// Nuggets a piglin holding something else took up: kept out of sight, its hand unchanged.
+#[derive(Component)]
+pub(super) struct Pocket(u8);
+
+/// The nuggets the dying piglin took up, in its hand or kept: BDS's dropped them all
+/// (research/captures/bds-ah3nugget.txt).
+pub(in crate::creatures) fn picked_gold(world: &mut World, piglin: Entity) -> Vec<sapling_world::ItemStack> {
+    let kept = world.entity_mut(piglin).take::<Pocket>().map_or(0, |pocket| pocket.0);
+    let held = world.get_mut::<Hands>(piglin).and_then(|mut hands| hands.main.take_if(|held| held.name == NUGGET)).map_or(0, |held| held.count);
+    [kept, held].into_iter().filter(|count| *count > 0).map(|count| stack(NUGGET, count)).collect()
+}
 
 fn wanted(name: &str) -> bool {
     name == GOLD || name == NUGGET || ADMIRED.contains(&name)
@@ -64,6 +77,12 @@ pub(in crate::creatures) fn steer(world: &mut World, piglin: Entity, layer: Enti
     crate::blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[told]);
     let nuggets = taken.name == NUGGET;
     drops::take(world, item, if nuggets { taken.count } else { 1 });
+    let armed = world.get::<Hands>(piglin).and_then(|hands| hands.main.as_ref()).is_some_and(|held| held.name != NUGGET);
+    if nuggets && armed {
+        let kept = world.get::<Pocket>(piglin).map_or(0, |pocket| pocket.0);
+        world.entity_mut(piglin).insert(Pocket(kept.saturating_add(taken.count)));
+        return true;
+    }
     if nuggets {
         let kept = world.get::<Hands>(piglin).and_then(|hands| hands.main.as_ref()).filter(|held| held.name == NUGGET).map_or(0, |held| held.count);
         let held = stack(NUGGET, kept.saturating_add(taken.count));

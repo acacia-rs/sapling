@@ -71,6 +71,11 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
   for cows); sapling sends `InLoveParticles` (26) once. BDS sent no `OwnerEid` with the lead;
   sapling sends -1. BDS's `lead.leash` came a tick after the metadata.
 - A stored mob in love does not show its hearts until fed again.
+- Tempt (`ah3tempt`, bds-ah3tempt.txt): cows 5, 9, 11 and 14 off the actor holding wheat all came at
+  once at 0.2108 a tick. Each kept walking 2.27 off and stopped walking 2.22 off, coming to rest 1.81
+  to 1.97 off. Sapling followed only within 10 and stopped walking under 2.5. Fixed: within 16 (the far
+  bound not reached), stopping under 2.25 (`husbandry/breeding.rs`). Re-drilled, sapling's cows came to
+  rest within 0.001 of BDS's. Test `a_cow_10_6_off_follows_wheat_and_stops_about_2_off`.
 
 ## Drilled (2026-11-04, `bds_command_probe n3ride`, `n3foals`)
 

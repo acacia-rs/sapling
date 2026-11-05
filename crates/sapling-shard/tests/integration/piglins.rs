@@ -67,12 +67,13 @@ fn a_piglin_hit_refuses_gold_handed_to_it() {
     assert!(offhand(&offered, piglin).iter().all(|item| *item == 0), "refused");
 }
 
-/// A piglin by Alex in creative, and what Alex was told of it; its id.
+/// A piglin holding nothing by Alex in creative (bds-ah3nugget.txt: one holding a weapon keeps nuggets out of
+/// sight); its id.
 fn piglin_by_alex(h: &mut Harness) -> u64 {
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
         ctx.set_game_mode(ALEX, GameMode::Creative);
-        assert!(ctx.spawn_entity("minecraft:piglin", [3.5, 65.0, 0.5]).is_some());
+        assert!(ctx.summon_as(None, "minecraft:piglin", [3.5, 65.0, 0.5], 0.0, 0.0, Some("minecraft:spawn_adult")).is_some());
     });
     let shown: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     all::<AddEntity>(&shown).into_iter().find(|added| added.entity_type == "minecraft:piglin").expect("shown").runtime_id
@@ -120,6 +121,35 @@ fn a_piglin_admires_a_golden_sword_it_picks_up_and_keeps_it_but_leaves_cobblesto
     let hands: Vec<WindowID> = all::<MobEquipment>(emptied).into_iter().filter(|held| held.runtime_entity_id == piglin).map(|held| held.window_id).collect();
     assert_eq!(hands, [WindowID::Inventory, WindowID::Offhand], "the sword to its main hand as the offhand empties (bds-piglinkeep.txt)");
     assert!(after.iter().all(|sent| all::<AddItemEntity>(sent).is_empty()), "and nothing is handed back");
+}
+
+/// bds-ah3nugget.txt: the crossbow piglin took 4 nuggets with its hands shown unchanged and left
+/// the 4 when it died.
+#[test]
+fn a_piglin_holding_a_sword_keeps_nuggets_unseen_and_drops_them_at_death() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let spawned = std::sync::Arc::new(std::sync::Mutex::new(None));
+    let found = spawned.clone();
+    h.remote.run(move |ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        *found.lock().unwrap() = ctx.spawn_entity("minecraft:piglin", [3.5, 65.0, 0.5]);
+    });
+    let shown: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let piglin = all::<AddEntity>(&shown).into_iter().find(|added| added.entity_type == "minecraft:piglin").expect("shown").runtime_id;
+    let id = spawned.lock().unwrap().expect("spawned");
+    dropped_for(&mut h, piglin, "minecraft:golden_sword", [6.5, 65.5, 0.5]);
+    (0..170).for_each(|_| drop(h.tick_all()));
+    h.remote.run(|ctx| assert!(ctx.drop_item(&Item::new("minecraft:gold_nugget", 3), [6.5, 65.5, -1.5])));
+    // Killed before 303 ticks, when out of the Nether it turns zombified.
+    let ticks: Vec<RawPacket> = (0..40).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(all::<TakeItemEntity>(&ticks).iter().any(|taken| taken.target as u64 == piglin), "the nuggets taken");
+    assert!(all::<MobEquipment>(&ticks).iter().all(|held| held.runtime_entity_id != piglin), "its sword still shown");
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(id)));
+    let left: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let nuggets: Vec<u16> =
+        all::<AddItemEntity>(&left).into_iter().filter(|item| sapling_data::item_name(item.item.network_id.into()) == Some("minecraft:gold_nugget")).map(|item| item.item.count).collect();
+    assert_eq!(nuggets, [3]);
 }
 
 /// bds-piglinkeep.txt, bds-piglinkeep2.txt: the sword it kept and the ingot it was admiring come
