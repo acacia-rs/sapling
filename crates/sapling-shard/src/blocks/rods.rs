@@ -27,15 +27,20 @@ fn power(world: &mut World, layer: Entity, pos: BlockPos, on: bool) -> bool {
     true
 }
 
-/// The hook for lightning striking the cell `pos` (the block under the bolt): a rod there is
-/// powered, and copper there and from the block below or the rod's own block on is cleaned
-/// (docs/research/copper.md, L3-L4). Whether it was a rod.
-pub(crate) fn struck(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+/// The sparks of a bolt coming down on the rod at `pos`, as the bolt appears (a summoned one's
+/// strike is a tick later, bds-rsdevices.txt).
+pub(crate) fn sparks(world: &mut World, layer: Entity, pos: BlockPos) {
     if is_rod(world, layer, pos).is_some() {
         let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
         let spark = sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleElectricSpark, position, data: 0 });
         send::to_viewers(world, layer, pos, &vec![spark; SPARKS]);
     }
+}
+
+/// The hook for lightning striking the cell `pos` (the block under the bolt): a rod there is
+/// powered, and copper there and from the block below or the rod's own block on is cleaned
+/// (docs/research/copper.md, L3-L4). Whether it was a rod.
+pub(crate) fn struck(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     let is_rod = power(world, layer, pos, true);
     let start = match is_rod.then(|| facing(world, layer, pos)).flatten() {
         Some(face) => super::opposite(face).neighbour(pos),

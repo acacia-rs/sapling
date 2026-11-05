@@ -105,6 +105,8 @@ fn a_struck_rod_is_powered_eight_ticks_and_scrapes_the_copper_it_stands_on() {
     });
     let sparks = all::<LevelEvent>(&watch(&mut h, 1)).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [3.0, 65.0, 3.0]).count();
     assert_eq!(sparks, 6, "BDS's sparks at the rod's corner");
+    // The rod powered a tick after the sparks, as the bolt landed (bds-rsdevices.txt 69133, 69180).
+    watch(&mut h, 1);
     let rod = ask(&mut h, |ctx| ctx.block([3, 65, 3]).unwrap());
     assert!(rod.name == "minecraft:lightning_rod" && rod.properties.contains("powered_bit=1"), "{rod:?}");
     let copper = ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name);
