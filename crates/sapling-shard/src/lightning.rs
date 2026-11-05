@@ -104,6 +104,12 @@ fn hurt(world: &mut World, layer: Entity, at: [f32; 3]) {
     for mob in mobs {
         crate::creatures::struck_by_lightning(world, mob, layer);
     }
+    // Every orb and item in reach goes, netherite too (research/captures/bds-m3struck.txt).
+    let mut lying = world.query_filtered::<(Entity, &InLayer, &Body), Or<(With<crate::drops::Dropped>, With<crate::orbs::Orb>)>>();
+    let gone: Vec<Entity> = lying.iter(world).filter(|(_, on, body)| on.0 == layer && reaches(body.at)).map(|(item, ..)| item).collect();
+    for item in gone {
+        mobs::remove(world, item);
+    }
 }
 
 /// A tick of a bolt: its life runs down, it flashes again while it has flashes, and goes.
