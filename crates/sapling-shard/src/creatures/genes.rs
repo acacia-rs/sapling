@@ -26,8 +26,18 @@ const AGGRESSIVE_ATTACK: f32 = 6.0;
 #[derive(Component, Clone, Copy)]
 pub(super) struct Gene(pub(super) i32);
 
+/// Kinds whose `Variant` never changes: husk's pack sets 2, parched's BDS shows 4 (bds-h3herds.txt).
+const FIXED: [(&str, i32); 2] = [("minecraft:husk", 2), ("minecraft:parched", 4)];
+
+fn fixed(kind: &str) -> Option<Gene> {
+    FIXED.iter().find(|(fixed, _)| *fixed == kind).map(|&(_, variant)| Gene(variant))
+}
+
 /// A new mob of `kind`'s gene, if its kind has one, or its size (slimes/sizes.rs).
 pub(super) fn roll(world: &mut World, kind: &str) -> Option<Gene> {
+    if let Some(gene) = fixed(kind) {
+        return Some(gene);
+    }
     if kind != KIND {
         return super::slimes::sizes::roll(world, kind);
     }
@@ -59,7 +69,7 @@ pub(super) fn of_event(kind: &str, event: &str) -> Option<Gene> {
 /// A stored mob of `kind`'s gene, by the `Variant` it was stored with.
 pub(super) fn stored(kind: &str, variant: i32) -> Option<Gene> {
     if kind != KIND {
-        return super::slimes::sizes::stored(kind, variant);
+        return fixed(kind).or_else(|| super::slimes::sizes::stored(kind, variant));
     }
     Some(Gene(variant))
 }
@@ -104,5 +114,11 @@ mod tests {
         let genes = ["lazy", "worried", "playful", "aggressive", "weak"].map(|gene| of_event(KIND, &format!("minecraft:panda_{gene}")).map(|gene| gene.0));
         assert_eq!(genes, [1, 2, 3, 6, 5].map(Some));
         assert!(of_event("minecraft:cow", "minecraft:panda_lazy").is_none() && of_event(KIND, "minecraft:entity_born").is_none());
+    }
+
+    #[test]
+    fn a_husk_and_a_parched_keep_bds_s_variant_stored_or_not() {
+        assert_eq!(["minecraft:husk", "minecraft:parched"].map(|kind| stored(kind, 0).map(|gene| gene.0)), [Some(2), Some(4)]);
+        assert!(stored("minecraft:zombie", 0).is_none());
     }
 }
