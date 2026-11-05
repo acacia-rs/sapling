@@ -438,6 +438,17 @@ level arrow). Re-drilled (sapling-e1arrow.txt): seven arrows at 1.29 to 1.82 a t
 as BDS's; but they flew through the held villager 1.5 to 1.6 up its 1.9 and one hit the actor, where
 BDS's hit the villager three times. The shard test's villager a block before the skeleton is hit, so
 what lets the drill's farmer pass is left open.
+Settled 2026-11-05 (twelfth7): the farmer was not there. `effect @e[type=villager] slowness` answered
+`noTargetMatch` on sapling, as its villager is a `villager_v2`, and it strolled off; BDS's
+`type=villager` takes `villager_v2` (as `type=zombie_villager` takes `zombie_villager_v2`). Fixed in
+`command/selector/matching.rs` `is_kind`, test `the_older_villager_names_take_the_newer_villagers`.
+Held then, sapling's farmer still strolled in its first second (a fixed dice draw, 5 ticks after the
+summon) to (4.6, 1.4), off the arrows' line; the scene now puts it back once held (`eleventh1_drill.rs`).
+Sapling's arrows also moved first by the launch speed less drag, where BDS's move by it
+(9.902 - 1.5046 = 8.397, bds-e1arrow.txt): `creatures/flight.rs` `Unflown`. Re-drilled with the
+farmer put back: BDS's six arrows (bds-e1arrow2.txt) all missed it, passing x 6.5 at z 0.13, -0.06, 1.05
+or over its head, and missed the actor; sapling's (sapling-e1arrow.txt) hit it three times and the actor
+once, as BDS's first run. Which is hit is the spread's draw on both.
 
 A stray and a bogged shoot as the skeleton with their effect on the arrow, and a pillager while
 it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.

@@ -122,3 +122,4 @@ player coming back short of breath its `Air` metadata in the join greeting.
   bds-u1rejoin.txt, 2026-11-04: lava, resistance 255, out and rejoined in 5 s) came back unlit on
   both servers, in its own first metadata and in its watcher's `AddPlayer`. In the lava BDS told every
   hit as lava's (8); sapling's, all of 0 under the resistance, as fire's (6) and then its tick's (7).
+  Fixed 2026-11-05: the lava's hit now comes before the fire's own once lit (player-damage.md, "Sapling").

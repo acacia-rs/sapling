@@ -413,8 +413,16 @@ A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creat
 no mob and cannot be shot down, and a shulker neither peeks idly nor teleports.
 
 A breeze faces, shoots, leaps and walks as above (`creatures/breezes.rs`, `creatures/charges.rs`,
-`Physics::BREEZE`); its leap aims to land on its prey, it leaps over nothing in its way, and its
-bursts push no mob, toggle no block and do not push the breeze. A charge that meets nothing flies on.
+`Physics::BREEZE`); it leaps over nothing in its way, and its
+bursts push no mob, toggle no block and do not push the breeze. Its leap (2026-11-05, bdsre 149fb7240,
+14890ff00, 149fb78e0, 14890f450; `creatures/breezes/leap.rs`): only with prey 4 to 20 off and 4 air
+cells over it; a spot 2 to 2.83 off the prey along its head yaw + 180 + 45 x a normal draw degrees,
+snapped to a floor within 10, not lava, seen from its eyes; the aim that cell's middle pulled 0.5
+towards the breeze by its x for both axes (BDS's slip), one above the floor; the first of 40, 55, 60,
+75 and 80 degrees shuffled whose parabola, v² = |h² 0.08 / (2 sin cos h - 2 dy cos²)|, needs 1.4 or
+less. All five bds-breeze.txt launches fit to 1e-4. [U] the pack's 4-8 landing distance against the
+2 to 2.83 the capture fits; the solid flag read as `is_solid`. Jump boost adds nothing. The breeze drill
+cannot judge the landings: its capture lacks the actor, whom each burst pushes. A charge that meets nothing flies on.
 
 A ghast floats and shoots as above (`creatures/ghasts.rs`, `creatures/fireballs.rs`,
 `Physics::FLYER`, `blast::explode_fireball`); a spot is not checked to hold it, slowness does not

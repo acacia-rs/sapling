@@ -140,9 +140,13 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   `resend_windows`).
 - The mansion template chests' own `Items` and the other non-loot entities (flower pots: below). The
   oracle world 20261003-structures holds a mansion (2026-11-04, `block_entity_dump`): of its template
-  chests two keep 8 allium in `Items` and 47 are empty with `Findable` 0. Left: templates.bin has no
-  kind for a chest's own items, so the port is a new kind in `templates_to_rust.py` and a regenerated
-  templates.bin (append-only, templates-bin append families), then `block_entity_diff`.
+  chests two keep 8 allium in `Items` and 47 are empty with `Findable` 0. Ported 2026-11-05: templates.bin
+  kind `chest` for a mansion `Chest` without `LootTable` (`templates_to_rust.py` `chest_item`; the bin's
+  states and palette unchanged, only the mansion specials), `BlockEntity::Chest`, written as BDS saved
+  them (`sapling-leveldb` `generated_chest`: `Findable` 0, each item `Block` if a block, `Count`, `Damage`
+  0, `Name`, `Slot`, `WasPickedUp` 0, `tag` 0 when empty). The templates hold 69 empty chests and four
+  with items: 1x1_b5's eight allium (the oracle's), 1x2_a4's dark oak saplings, 1x2_a6's iron axe (Java
+  efficiency, Bedrock ench 15) and 1x2_s2's trapped chest of two ender pearls; [U] the last three's forms.
   Beds, bells and cauldrons are written since 2026-11-03 (templates.bin kinds `bed`, `bell`, `cauldron`;
   the witch hut's cauldron in `scattered/hut.rs`). `block_entity_diff 20261003 20261003-structures`:
   every bed (0, 4, 10, 11, 13, 14), bell and cauldron same. BDS saved the trial chambers' magenta and

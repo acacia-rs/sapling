@@ -154,8 +154,13 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
 - Burning arrows lighting TNT, drilled since (bds-u1fire.txt, bds-u1blaze.txt, 2026-11-04): a player's
   flame arrow primed TNT it struck on both servers (`SoundIgnite` at the block's middle, then the TNT);
   a plain one did not. A blaze's fireballs set fire only under `mobGriefing`, as sapling's now do
-  (`blocks/target.rs` `shot_stopped`, test `blaze_griefing`). Sapling's arrow sticks 0.125 short of
-  the face it hit (7.875 against BDS's 8.0, its box against BDS's ray).
+  (`blocks/target.rs` `shot_stopped`, test `blaze_griefing`). Sapling's arrow stuck 0.125 short of
+  the face it hit (7.875 against BDS's 8.0, its box against BDS's ray). Fixed 2026-11-05: a shot stops
+  where the ray from its position along its move enters a block's collision box (`creatures/flight/ray.rs`),
+  the hit point and the face's axis going to `shot_stopped`; re-drilled, sapling's stuck at 8.0
+  (sapling-u1fire.txt). Sapling's panes collide as their posts only, so a ray passes between them
+  (the blaze test's wall is a slab row now). Left: on BDS the flame arrow that primed the TNT bounced back at
+  about -0.1 of its motion and fell to the floor (x 6.05), where sapling's stays stuck in the air.
 
 ## Coral fan by hand
 

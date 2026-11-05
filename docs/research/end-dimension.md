@@ -71,6 +71,18 @@ ints), `EndGatewayBadPosChecked`; no `ExactTeleport`. sapling: a gateway's `Exit
 generated columns keep no block entity), the same two MovePlayer, the update the tick after (to the traveller too,
 whose client still holds the column), the cooldown (sapling-end-gateway.txt); no SetEntityMotion and no periodic beam.
 
+The gateway's block actor, decompiled 2026-11-05 (twelfth7; tick 1487fcae0, load 1487fc680, save 1487fc8d0):
+`Age` goes up by one each tick it ticks, uncapped; it is sent (block and block entity) at the end of a tick in
+which Age crossed 200, the cooldown went from 0 to more or back, or its dirty bit was already set, so Age 200 is
+sent once (bds-u1gate.txt: 9947 ms between the sends). [U] the Age 1 send: a fresh worldgen gateway taken as
+marked changed. Saved: `Age`, `ExitPortal`, `EndGatewayBadPosChecked` (always 1); the cooldown is not. A load
+with no or a zero exit spawns a new gateway job (`EndDragonFight::_spawnNewGateway`); a set exit is relinked
+(`queueGatewayRelink` 1482743c0, done in `TheEndDimension::tick` once both areas load: the nearest gateway
+actor within 32); no `BadPosChecked`, an exit within 100 and the gateway within 300 (sums of the axes) recompute
+the exit first (`findExitPosition` 1487fd350). A trip sets the cooldown 20 and a block event (1, 0), the beam;
+there is no 2400-tick beam. Not ported: sapling's generated gateways keep no block entity (worldgen-bds-end.md),
+so nothing ages or is resent (`portals/gateway.rs` TODO).
+
 ## Dying in the End (bds-end-death-none.txt)
 
 The respawn state machine (1402beeb0) moves a player whose respawn dimension differs: ChangeDimension (0, (0,
