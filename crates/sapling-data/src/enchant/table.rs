@@ -153,10 +153,10 @@ pub fn with_levels(item: &Stack<'_>, cost: u8, treasure: bool, draws: &mut dyn D
 /// vtables' slot 0x80 answers false, 141b5be40).
 const UNFOUND: [i16; 3] = [36, 37, 38];
 
-/// A librarian's book: an enchantment other than a curse at any of its levels, and whether it is a
-/// treasure, which doubles its price.
+/// A librarian's book: any enchantment but the unfound, curses included (bds-s3books.txt: curse of
+/// vanishing for 24), at any of its levels, and whether it is a treasure, which doubles its price.
 pub fn for_trade(draws: &mut dyn Draws) -> (i16, u8, bool) {
-    let sold: Vec<(i16, &kinds::Kind)> = KINDS.iter().enumerate().map(|(id, kind)| (id as i16, kind)).filter(|(id, kind)| !kind.curse && !UNFOUND.contains(id)).collect();
+    let sold: Vec<(i16, &kinds::Kind)> = KINDS.iter().enumerate().map(|(id, kind)| (id as i16, kind)).filter(|(id, _)| !UNFOUND.contains(id)).collect();
     let (id, kind) = sold[draws.int(sold.len() as i32) as usize];
     (id, draws.int(i32::from(kind.max)) as u8 + 1, kind.treasure)
 }

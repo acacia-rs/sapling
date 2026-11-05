@@ -35,7 +35,9 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "s3stare3" => (stare(3), SHOWN),
         "s3far" => (far(), SHOWN),
         "s3wither" => (wither(), SHOWN),
-        "s3poi" => (poi(), &["CommandOutput", "AddEntity", "SetEntityData"]),
+        "s3poi" => (poi([7, 9, 11, 13]), &["CommandOutput", "AddEntity", "SetEntityData"]),
+        "s3poi2" => (poi([16, 20, 26, 32]), &["CommandOutput", "AddEntity", "SetEntityData"]),
+        "s3poi3" => (poi([14, 15, 14, 15]), &["CommandOutput", "AddEntity", "SetEntityData"]),
         "s3books" =>(books(), &["UpdateTrade", "CommandOutput", "AddEntity"]),
         "s3melt" => (world::melt(), SHOWN),
         "s3despawn" => (world::despawn(), &["CommandOutput", "AddEntity", "RemoveEntity"]),
@@ -150,11 +152,11 @@ fn books() -> Vec<String> {
 
 /// tenth3f_drill.rs's `f3poi` with the villager free to walk and a bed by the bell (a lone bell
 /// made no BDS armorer 7 off in 30 s): a blast furnace 7 to 13 off the bell.
-fn poi() -> Vec<String> {
+fn poi(offsets: [i32; 4]) -> Vec<String> {
     let mut lines = super::villages::village(&[]);
-    for (index, d) in [7, 9, 11, 13].into_iter().enumerate() {
+    for (index, d) in offsets.into_iter().enumerate() {
         let x = 400 + 200 * index as i32;
-        lines.extend([format!("tp @a {x}.5 -60 -6.5"), format!("fill {} -61 -32 {} -61 32 grass_block", x - 32, x + 32), String::new()]);
+        lines.extend([format!("tp @a {x}.5 -60 -6.5"), format!("fill {} -61 -40 {} -61 40 grass_block", x - 40, x + 40), String::new()]);
         lines.extend([format!("setblock {x} -60 0 bell"), format!("setblock {} -60 3 bed [\"direction\"=0]", x - 3), format!("setblock {} -60 0 blast_furnace", x + d), format!("summon villager {}.5 -60 1.5 0 0 minecraft:become_unskilled", x - 1)]);
         for _ in 0..12 {
             lines.extend([format!("testfor @e[type=villager_v2,family=armorer,x={x},y=-60,z=0,r=40]"), String::new(), String::new(), String::new(), String::new()]);

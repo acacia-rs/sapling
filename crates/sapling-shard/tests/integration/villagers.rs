@@ -100,6 +100,18 @@ fn an_unemployed_villager_takes_the_job_site_beside_it() {
     assert_eq!(after, [] as [i32; 0], "it keeps its profession without its site (bds-n1drop.txt)");
 }
 
+/// bds-s3poi3.txt: BDS's villagers took a blast furnace 14 off, 15 off once of twice, never 16 or more.
+#[test]
+fn a_villager_takes_a_job_site_14_off_but_not_40() {
+    for (off, taken) in [(14, [8].as_slice()), (40, [].as_slice())] {
+        let (mut h, _, id) = villager(&[], [3.5, 64.0, 3.5], "minecraft:become_unskilled");
+        // floor_holding's blocks are one chunk's, so a site past it is set in the running world.
+        h.remote.run(move |ctx| assert!(ctx.set_block([3 + off, 64, 3], &sapling_api::Block::new("blast_furnace"))));
+        let professions: Vec<i32> = (0..150).flat_map(|_| metadata(&h.tick(1), id, Key::Variant)).collect();
+        assert_eq!(professions, taken, "{off} off");
+    }
+}
+
 #[test]
 fn an_armorer_trades_coal_for_emeralds_and_reaches_apprentice_at_ten_experience() {
     let (mut h, storage, id) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");

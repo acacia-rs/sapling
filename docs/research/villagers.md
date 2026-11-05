@@ -226,15 +226,20 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
 ## Unverified (sapling's choice where BDS was not seen)
 
 - `enchant_with_levels` as the enchanting table's draw at that cost; a librarian's book any enchantment
-  but the curses, Soul Speed, Swift Sneak and Wind Burst, its price
+  but Soul Speed, Swift Sneak and Wind Burst, curses included (bds-s3books.txt, twelve librarians'
+  sixteen books: curse of vanishing I for 24; every other price in the formula's range), its price
   `base + rand(base_random + level × per_level_random) + level × per_level`, doubled for a treasure, at
   most 64.
-- Job sites: looked for within 10 blocks across and 4 up or down, every 60 to 100 ticks (the dweller's
+- Job sites: looked for within 16 blocks across and 4 up or down, every 60 to 100 ticks (the dweller's
   `update_interval_base` 60 and `_variant` 40, the interval counter at `DwellerComponent`+0x40,
   148487bd0), with no village needed (BDS's dweller POI query range not decompiled; bds-job.txt: no
   job without a bed or bell). `f3poi` (2026-11-04, bds-f3poi.txt): an unskilled villager by a bell, held
   still with slowness 255, took no blast furnace 6, 10, 14, 18 or 26 off in 30 s, so the range was not
-  read; a held villager seems to need to reach the site.
+  read; a held villager seems to need to reach the site. `s3poi`, `s3poi2`, `s3poi3` (2026-11-05,
+  bds-s3poi*.txt): a free unskilled villager 1 off a bell with a bed 3 off took a blast furnace 7, 9,
+  11, 13 and 14 off the bell (twice) within 15 s, 15 off once of twice, and none 16, 20, 26 or 32 off
+  in 60 s, so 16 across is a fit; the up and down reach stays a guess. BDS's `family=armorer`
+  matched the armorer; sapling's families are by kind only (open).
 - The wandering trader leaves after 2400 or 3600 seconds (its `minecraft:timer`, taken as seconds) or
   once sold out, when no player is within 24 blocks; its timer is not kept by the actor compound.
 
