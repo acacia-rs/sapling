@@ -146,7 +146,7 @@ pub(crate) fn tick(world: &mut World) {
 fn end(world: &mut World, eye: Entity, layer: Entity, at: [f32; 3], survives: bool) {
     world.entity_mut(eye).remove::<Eye>();
     if survives {
-        mobs::remove(world, eye);
+        mobs::gone::remove_told(world, eye);
         let Some(stack) = world.get::<Layer>(layer).and_then(|layer| inventory::stored(&Item::new(ITEM, 1), layer.world.registry())) else { return };
         return drops::let_go(world, layer, stack, at);
     }

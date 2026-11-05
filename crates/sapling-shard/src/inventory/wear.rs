@@ -57,9 +57,12 @@ pub(super) fn wear_chance(held: &Held, armour: bool) -> u32 {
 impl Inventory {
     /// One of the stack in the hand is gone: eaten (vitals/eating.rs).
     pub fn take_one_in_hand(&mut self) {
-        let Some(slot) = self.slot_mut(Place::Main(usize::from(self.selected) % HOTBAR)) else { return };
+        // What is left goes under a new stack id, as BDS's after a throw or a meal (bds-small.txt, bds-eye-throw.txt).
+        let place = Place::Main(usize::from(self.selected) % HOTBAR);
+        let id = if self.slot(place).and_then(Option::as_ref).is_some_and(|held| held.stack.count > 1) { self.new_id() } else { 0 };
+        let Some(slot) = self.slot_mut(place) else { return };
         match slot.as_mut() {
-            Some(held) if held.stack.count > 1 => held.stack.count -= 1,
+            Some(held) if held.stack.count > 1 => (held.stack.count, held.id) = (held.stack.count - 1, id),
             _ => *slot = None,
         }
         self.unsaved = true;
