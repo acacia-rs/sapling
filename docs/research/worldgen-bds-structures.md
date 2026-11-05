@@ -65,7 +65,7 @@ region (100 rings), each ring's boundary x-major; the first start found wins, no
 3772 locates for seed 20261003 (grid every 1024/2048 blocks over +-8192, and 1.6M out). `examples/locate_check`:
 every legacy answer is one of our starts (2712/2712 + 314 mineshafts + 106 strongholds); our ported search gives
 BDS's answer in 2706/2712; the six misses are villages on plains near rivers that BDS rejects and our point
-biomes accept (cause not found: same surface, same lattice biomes). v2: answers are the start piece position, a
+biomes accept (cause: a dappled forest sample sapling does not generate, "Plains villages near rivers" below). v2: answers are the start piece position, a
 chunk off; trial chambers 310/314 near a start of ours (296/314 searches agree), trail ruins 271/314 (212/314):
 their biome test needs the jigsaw start piece. Unit tests: `structure::tests`.
 
@@ -253,6 +253,18 @@ and (flag at +0x30 of its settings, +0x5c7..+0x686) a biome test at (x*16+8, pre
 z*16+8) through the biome source (vt+0x50) and 143914da0. Testing that point's biome against the village
 list changed none of the six: our six answers are plains at the centre with surface 56, like one BDS
 answer. These filters are /locate's only; generation is unaffected.
+
+Cause (2026-11-05, live Linux BDS 1.26.52.3 under gdb, scripts/bds_gdb.py, seed 20261003): neither filter runs.
+A 1024-block grid of 289 village locates over +-8192 gave 285 of BDS's answers; at all four misses BDS's
+isFeatureChunk returns 0 for our start. Linux addresses (image base 0x555555554000 off): VillageFeature vtable
+0xee9c880, isFeatureChunk 0x4fbb850 (slot 6), locate 0xd251a10 (Windows 141efb740; per-chunk filter 0xd251e78,
+biome test 0xd251f9b, never reached), containsOnly called at 0x4fbbaa4 (0x493b030, getBiome vt+0x58 at
+0x493b131, biome id u16 at +0x168 of the biome). At our start (-54, 193) the spacing chunk and the surface (56)
+match; containsOnly(-856, 56, 3096, r 2)'s first sample (-858, 54, 3094) is biome 195, `minecraft:dappled_forest`,
+where ours is plains; the first sample of the other three misses ((-270, -390), (-95, -227), (459, -528)) is 195
+too.
+The biome comes from `MIDDLE_VARIANT[1][0]` (worldgen-bds-surface.md), which sapling resolves to nothing; the
+village rejection follows from porting the biome (surface, feature rules, abandoned camps), not from /locate.
 
 ## Structure post-process order (2026-10-09, live)
 `structurePostProcessChunk` takes the same `PostprocessingManager::tryLock` on its 3x3 as decoration does

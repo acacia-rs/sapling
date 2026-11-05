@@ -148,6 +148,10 @@ joined panes, bars and walls but no gate; walls joined walls, panes, bars and a 
 the table above. Sapling differed only on honey and soul sand, short of a full cube: joined since
 (`blocks/shapes.rs` `JOINED`).
 
+A fence set by command where it joins something goes out in one UpdateSubchunkBlocks listing the cell twice, joined
+both times (research/captures/bds-x2clone.txt; over water); one that joins nothing goes out once in an UpdateBlock
+(bds-p2place.txt). Sapling works the joined state out before the write (`blocks/commanded.rs` `joined`).
+
 ### B3. Walls (BDS, exact)
 
 When: `WallBlock::onPlaceBase` (place event) and the queued tick (`tick` -> `tryFixWallStates(region,pos,3)`), which
