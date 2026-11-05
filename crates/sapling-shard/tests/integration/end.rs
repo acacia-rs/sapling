@@ -92,6 +92,45 @@ fn a_generated_gateway_sends_a_player_over_its_exit_at_once() {
     assert_eq!(shown.iter().map(|update| ([update.position.x, update.position.y, update.position.z], update.flags.0)).collect::<Vec<_>>(), [([96, 49, 8], 19)]);
 }
 
+/// [`end`] with a generated gateway at (96, 49, 8): its block entity as BDS's generation leaves it.
+fn gated() -> World {
+    use acacia_proto::nbt::{List, Value};
+    let mut end = end();
+    let gateway = end.block_id("minecraft:end_gateway").unwrap();
+    assert!(end.set_block(96, 49, 8, gateway));
+    let exit = Value::List(List { tag: 3, items: vec![Value::Int(100), Value::Int(50), Value::Int(0)] });
+    let fields = [("Age", Value::Int(0)), ("BlockEntityVersion", Value::Int(0)), ("EndGatewayBadPosChecked", Value::Byte(1)), ("ExitPortal", exit), ("id", Value::String("EndGateway".into())), ("x", Value::Int(96)), ("y", Value::Int(49)), ("z", Value::Int(8))];
+    assert!(end.set_block_entity([96, 49, 8], &Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect())));
+    end
+}
+
+#[test]
+fn a_gateway_ages_and_is_shown_at_one_and_two_hundred_and_after_a_trip() {
+    use acacia_proto::packets::{BlockEntityData, BlockEvent};
+    let age = |data: &BlockEntityData| match data.nbt.decode().unwrap().value.get("Age") {
+        Some(acacia_proto::nbt::Value::Int(age)) => *age,
+        _ => -1,
+    };
+    let mut h = Harness::new();
+    assert!(h.shard.add_dimension("default", gated()));
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.travel(ALEX, END, [96.5, 49.0, 4.5])));
+    let mut ages = Vec::new();
+    for tick in 0..230 {
+        if tick == 5 {
+            h.receive(1, &dimension_ack());
+        }
+        ages.extend(all::<BlockEntityData>(&h.tick(1)).iter().map(age));
+    }
+    assert_eq!(ages, [1, 200], "research/captures/bds-u1gate.txt");
+    h.remote.run(|ctx| ctx.teleport(ALEX, [96.5, 49.0, 8.5]));
+    let mut sent = Vec::new();
+    (0..3).for_each(|_| sent.extend(h.tick(1)));
+    assert_eq!(all::<BlockEvent>(&sent).len(), 1, "the trip's block event (bds-end-gateway.txt)");
+    let shown: Vec<i32> = all::<BlockEntityData>(&sent).iter().map(age).collect();
+    assert!(matches!(shown[..], [age] if age > 200), "the gateway and its entity the tick after: {shown:?}");
+}
+
 fn dimension_ack() -> PlayerAction {
     let origin = acacia_proto::types::BlockCoordinates { x: 0, y: 0, z: 0 };
     PlayerAction { runtime_entity_id: 1, action: acacia_proto::types::Action::DimensionChangeAck, position: origin.clone(), result_position: origin, face: 0 }

@@ -80,8 +80,12 @@ with no or a zero exit spawns a new gateway job (`EndDragonFight::_spawnNewGatew
 (`queueGatewayRelink` 1482743c0, done in `TheEndDimension::tick` once both areas load: the nearest gateway
 actor within 32); no `BadPosChecked`, an exit within 100 and the gateway within 300 (sums of the axes) recompute
 the exit first (`findExitPosition` 1487fd350). A trip sets the cooldown 20 and a block event (1, 0), the beam;
-there is no 2400-tick beam. Not ported: sapling's generated gateways keep no block entity (worldgen-bds-end.md),
-so nothing ages or is resent (`portals/gateway.rs` TODO).
+there is no 2400-tick beam. Ported 2026-11-05 (twelfth10): a generated gateway gets BDS's entity (oracle
+20261003-end's gateway at (1188, 65, -97): Age, BlockEntityVersion 0, EndGatewayBadPosChecked 1, ExitPortal
+[100, 50, 0]; `feature/end.rs`, sapling-leveldb `generated_end_gateway`), ages in ticked End columns, and is shown
+(UpdateBlock 19 and its entity) at Age 1 and 200 and the ticks after a trip and its cooldown, with the trip's
+BlockEvent (`portals/gateway.rs`). Re-drilled, sapling-u1gate.txt sends Age 1 then 200 as bds-u1gate.txt does.
+Left (gateway.rs TODO): finding an exit for a gateway with none, and relinks.
 
 ## Dying in the End (bds-end-death-none.txt)
 
