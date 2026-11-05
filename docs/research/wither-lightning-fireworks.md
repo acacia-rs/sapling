@@ -54,8 +54,15 @@ makes one too. It sprang the tick a creative or a survival actor came within 10 
 60 s): four new skeleton horses where it stood, each pushed off within ±1.15 on x and z, each ridden by a
 skeleton in an iron helmet holding a bow BDS enchants at random (unbreaking 1, power 1), a bolt there,
 the trap taken away. Sapling does the same (`creatures/skeleton_traps.rs`, `lightning/storms.rs`; test
-`a_trap_springs_four_riders_for_a_creative_player_within_ten`), less the enchanting.
-Left out: a trident hitting a rod, items struck, a charged creeper kept in the world folder.
+`a_trap_springs_four_riders_for_a_creative_player_within_ten`). The gear, decompiled
+(`SkeletonHorseTrapGoal` 0x149fee7b0): a cost of the regional difficulty's special value plus 5, plus
+`nextInt(18 - cost)` below 18, enchants the helmet and the bow at random (`randomlyEnchant`
+0x141b62a20); BDS's eight helmets came `ench: []`, its bows unbreaking or power 1 or 2. Sapling rolls
+the bow with the enchanting table's draw at that cost and shows the helmet's empty list; each rider is
+told in its `AddEntity`, helmet then bow, then the link, as BDS. A stored trap keeps its
+`minecraft:skeleton_trap` group and is a trap again when loaded, and a charged creeper its
+`minecraft:charged_creeper` group, shown charged again (tests in `kept_groups.rs`).
+Left out: a trident hitting a rod, items struck.
 
 ## The wither
 
@@ -126,8 +133,13 @@ blast, its death). Sapling's skulls met no mob; now they do and give a mob met W
 (`wither/skulls.rs`, test `a_skull_that_meets_a_mob_blows_up_on_it`). Its prey and middle head's
 target took players only; now the pack's `nearest_attackable_target` (players, and mobs neither
 undead nor inanimate, within 70, seen) picks the nearest (`wither/heads.rs` `prey`, test
-`its_middle_head_takes_a_living_mob_but_no_undead_one`; 2026-11-05, twelfth wave). No dash was seen. Left out: the
-15 it costs whom it meets (not seen, the actor warded), a blue skull's `max_resistance` 4,
+`its_middle_head_takes_a_living_mob_but_no_undead_one`; 2026-11-05, twelfth wave). No dash was seen. A blue
+skull's blast counts no block's resistance above its pack's `max_resistance` 4, 0.8 in sapling's
+units (`blast::rays::Capped`; not drilled). Built, BDS showed 120 `ParticleProjectileHit` events
+(data 15) the tick the T went, before its blocks' updates and the wither's `AddEntity`, each at the
+wither's spot plus a fraction across x and z and 2 below to 1.9 above (bds-gxwither.txt; the Java
+skull block's numbers); sapling sends them so (`blocks/summoning.rs` `souls`). Left out: the
+15 it costs whom it meets (not seen, the actor warded),
 `ShieldHealth`, `firerate` and `lastHealthInterval` (the charge, `Phase`, armour and `maxHealth` are
 kept: research/captures/bds-keepmobs.txt; a summoned wither charges as a built one, at its difficulty's
 share of the pack's 600), the soul particles of building.

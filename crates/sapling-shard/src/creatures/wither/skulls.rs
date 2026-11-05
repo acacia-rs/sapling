@@ -1,8 +1,9 @@
 //! Wither skulls, as BDS's pack has them (`wither_skull`, `wither_skull_dangerous`): straight, at
 //! 1.2 a tick, a blue one at 0.6; one that meets a player, a mob or a block blows up there with
-//! power 1, and gives one it met Wither II for 10 seconds on normal, 40 on hard.
-// TODO: a blue one breaks no stronger block than a black one does (`max_resistance` 4), and is
-// not struck back.
+//! power 1, and gives one it met Wither II for 10 seconds on normal, 40 on hard. A blue one's blast
+//! counts no block stronger than its pack's `max_resistance` 4, 0.8 in sapling's resistances (BDS's
+//! are five times the Java game's, whose dangerous skull caps at 0.8 too); not drilled.
+// TODO: a blue one is not struck back.
 
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
@@ -23,6 +24,7 @@ const PLAYER: [f32; 2] = [0.6, 1.8];
 const SPEED: f32 = 1.2;
 const BLUE_SPEED: f32 = 0.6;
 const POWER: f32 = 1.0;
+const BLUE_RESISTS: f32 = 0.8;
 /// Wither II, for this many ticks on normal and on hard.
 const WITHERS: [u32; 2] = [200, 800];
 const LEVEL: u8 = 1;
@@ -55,6 +57,9 @@ pub(super) fn fire(world: &mut World, layer: Entity, wither: Entity, from: [f32;
     let Some(skull) = entities::spawn(world, layer, kind, Body::new(from, motion, SIZE), from, announce) else { return };
     let born = world.resource::<Tick>().0;
     world.entity_mut(skull).insert(Skull { born, wither });
+    if blue {
+        world.entity_mut(skull).insert(blast::rays::Capped(BLUE_RESISTS));
+    }
     entities::after_announcing(world, layer, from.map(|c| c.floor() as i32), vec![super::heads::sound("shoot", from)]);
 }
 

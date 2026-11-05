@@ -110,12 +110,22 @@ sapling-h3herds.txt):
   layouts in `riding/seats.rs`: camel husk as the camel, the nautilus (0, 0.925, -0.2) for the
   drowned family). Each rider is announced already in its seat, as BDS's were. Riders of a natural
   mount despawn as it does.
-- Left: the riders' equipment (BDS's zombie and husk held an item, the parched a bow and helmet,
-  the drowned a trident); a horse summoned with no event rolls no baby (BDS: 2 of 4 plain summons
-  babies); BDS announced each rider before its mount, with the links in the mount's `AddEntity` and
-  `immediate` off, where sapling sends the mount first and the links after with `immediate` on (see
-  vehicles.md "Unverified", the send order line of leftovers.md); the husk's `Variant` 2 and the parched's
-  4 (every BDS husk is announced 2; sapling sends 0 for a kind without genes).
+- Riders' equipment: each rider rolls its rider group's `minecraft:equipment` table
+  (`riders::GEAR`): the zombie and the husk `zombie_rider_equipment` (an iron spear), the parched
+  `skeleton_gear` (a bow), the drowned rider `drowned_rider_equipment` (a trident, no shell;
+  drowned.rs), as BDS's held them. The tables' `enchant_random_gear` (BDS's zombie's spear came
+  enchanted) and armour pools (BDS's parched wore a helmet) are not rolled.
+- A horse, donkey, mule, zombie horse or skeleton horse summoned with no event rolls its pack's
+  `entity_spawned` foal weight (9 of 45, 20 of 100) and comes a foal by `entity_born` (BDS: 2 of 4
+  plain horse summons; `birth::summoned`). The other kinds' foal weights (cows 5 of 100 and the like,
+  zombies' babies) are not rolled.
+- The husk's `Variant` 2 and the parched's 4, as BDS announces every one (`genes::FIXED`).
+- Links: BDS sent no seating link (`type` 1 or 2) `immediate` in any capture; sapling's links told
+  to later viewers were, and are not now. Left: BDS announced each rider before its mount, with the
+  links in the mount's `AddEntity`, where sapling sends the mount first and the links after (see
+  vehicles.md "Unverified", the send order line of leftovers.md).
+- Members a herd always includes: BDS parses `permute_type` `guaranteed_count` (0x141d3f910), but no
+  vanilla spawn rule sets it, so there is nothing to build.
 
 ## Left out
 

@@ -6,20 +6,46 @@ use sapling_data::Hunts;
 use super::hunting::Hunter;
 use super::{arrows, bullets, splashes};
 use crate::body::Body;
-use crate::components::Tick;
-use crate::late_sounds;
+use crate::components::{NetId, Tick};
+use crate::{entities, late_sounds};
+use acacia_proto::types::MetadataFlags1;
 
 /// The ticks after a shot at which a crossbow's loading is heard, and what of it.
 // TODO: heard where the archer stood at the shot, not where it has walked to since.
 const LOADS: [(u64, &str); 3] = [(3, "start"), (13, "middle"), (23, "end")];
 /// Its crossbow is heard this much of its height up.
 const MIDDLE: f32 = 0.5;
+const SPIT: &str = "llama_spit";
+/// A llama charges this many ticks before its spit and stops this many before it, heard `warn`
+/// from this high and this far toward its prey (research/captures/bds-provoke2.txt).
+const CHARGES: [u64; 2] = [21, 2];
+const WARNS: [f32; 2] = [0.85, 0.64];
+
+/// A llama `due` ticks from its spit shows its charge (`CHARGED`, `ChargeAmount`) or its end.
+fn charge(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body, prey: [f32; 3], due: u64) {
+    let Some(on) = [true, false].into_iter().find(|on| due == CHARGES[usize::from(!on)]) else { return };
+    let Some(id) = world.get::<NetId>(entity).map(|id| id.0) else { return };
+    let flags = entities::mob_flags(world, entity, kind, MetadataFlags1::CHARGED, on);
+    let mut told = Vec::new();
+    if on {
+        let (dx, dz) = (prey[0] - body.at[0], prey[2] - body.at[2]);
+        let across = dx.hypot(dz).max(1e-4);
+        let mut ahead = *body;
+        ahead.at = [body.at[0] + dx / across * WARNS[1], body.at[1], body.at[2] + dz / across * WARNS[1]];
+        told.push(super::hunting::sound("warn", id, kind, &ahead, WARNS[0]));
+    }
+    told.push(sapling_net::encode(&sapling_data::mob_charge(id, flags, on)));
+    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), told);
+}
 
 /// After its move: a hunter that shoots, `every` ticks, at its `prey` looses what is due.
 pub(super) fn shoot(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body, hunts: Hunts, every: u32, prey: Entity) -> Option<()> {
     let now = world.resource::<Tick>().0;
     let feet = super::hunting::feet_of(world, prey)?;
     let ready = world.get::<Hunter>(entity)?.ready;
+    if hunts.shot == Some(SPIT) && ready > now {
+        charge(world, entity, layer, kind, body, feet, ready - now);
+    }
     let fire = |world: &mut World| match hunts.shot {
         Some(bullets::NAME) => bullets::fire(world, layer, entity, kind, body, prey),
         _ => {

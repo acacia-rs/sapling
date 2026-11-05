@@ -11,7 +11,7 @@
 use acacia_proto::packets::TakeItemEntity;
 use bevy_ecs::prelude::*;
 
-use super::{Admiring, GOLD, Hands, PIGLIN, admire, main_hand, stack};
+use super::{Admiring, GOLD, Hands, PIGLIN, admire, is_wary, main_hand, stack};
 use crate::body::Body;
 use crate::components::NetId;
 use crate::creatures::{Dying, is_baby, legs};
@@ -41,7 +41,7 @@ fn wanted(name: &str) -> bool {
 
 /// Before its move: a piglin free to do so goes for gold lying near or takes it up. False where none is near.
 pub(in crate::creatures) fn steer(world: &mut World, piglin: Entity, layer: Entity, id: u64, kind: &str) -> bool {
-    let busy = world.get::<Dying>(piglin).is_some() || world.get::<Admiring>(piglin).is_some() || is_baby(world, piglin);
+    let busy = world.get::<Dying>(piglin).is_some() || world.get::<Admiring>(piglin).is_some() || is_baby(world, piglin) || is_wary(world, piglin);
     let Some(body) = world.get::<Body>(piglin).copied().filter(|_| kind == PIGLIN && !busy) else { return false };
     let [across, up] = SIGHT;
     let lying = drops::lying_in(world, layer, [body.at[0] - across, body.at[1] - up, body.at[2] - across], [body.at[0] + across, body.at[1] + up, body.at[2] + across]);

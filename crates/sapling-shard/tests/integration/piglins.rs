@@ -35,6 +35,7 @@ fn a_piglin_given_gold_admires_it_8_seconds_in_its_offhand_then_hands_back_its_b
     let admiring: Vec<Vec<RawPacket>> = (0..161).map(|_| h.tick_all().to(1).to_vec()).collect();
     let emptied = admiring.iter().position(|sent| offhand(sent, piglin) == [0]).expect("its hand empties");
     assert_eq!(emptied, 159, "161 ticks after it took the ingot");
+    assert!(all::<LevelSoundEvent>(&admiring[emptied]).iter().any(|sound| sound.sound_id == "admire"), "admire again as it empties, Alex holding gold (bds-gxbarter.txt)");
     // An older mob-loot.json lacks the table (sapling-data README); the drop needs it.
     if sapling_data::has_loot_table("loot_tables/entities/piglin_barter.json") {
         // bds-t2barter.txt: a tick on, from a metre up, 0.3 up and 0.2 of the way to Alex's eyes.
@@ -45,6 +46,25 @@ fn a_piglin_given_gold_admires_it_8_seconds_in_its_offhand_then_hands_back_its_b
         let far = to.iter().map(|c| c * c).sum::<f32>().sqrt();
         assert!((at.y - 66.125).abs() < 1e-4 && (thrown.x - to[0] / far * 0.2).abs() < 1e-4 && (thrown.y - 0.3).abs() < 1e-6 && (thrown.z - to[2] / far * 0.2).abs() < 1e-4, "{handed:?}");
     }
+}
+
+/// bds-gxbarter.txt: a piglin hit 2 s before refused an ingot (`cooldown_after_being_attacked` 20).
+#[test]
+fn a_piglin_hit_refuses_gold_handed_to_it() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:gold_ingot", 4))));
+        assert!(ctx.spawn_entity("minecraft:piglin", [0.5, 65.0, 2.5]).is_some());
+    });
+    let shown: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let piglin = all::<AddEntity>(&shown).into_iter().find(|added| added.entity_type == "minecraft:piglin").expect("shown").runtime_id;
+    h.receive(1, &common::attack_from(piglin, [0.5, 65.0, 0.5]));
+    let after: Vec<RawPacket> = (0..40).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(offhand(&after, piglin).is_empty());
+    let offered = click_on(&mut h, piglin);
+    assert!(offhand(&offered, piglin).iter().all(|item| *item == 0), "refused");
 }
 
 /// A piglin by Alex in creative, and what Alex was told of it; its id.

@@ -30,3 +30,13 @@ impl Dice {
         (-2.0 * u.ln()).sqrt() * (std::f32::consts::TAU * v).cos()
     }
 }
+
+impl sapling_data::enchant::Draws for Dice {
+    fn int(&mut self, bound: i32) -> i32 {
+        if bound < 1 { 0 } else { self.roll(bound as u32) as i32 }
+    }
+
+    fn float(&mut self) -> f32 {
+        self.fraction()
+    }
+}

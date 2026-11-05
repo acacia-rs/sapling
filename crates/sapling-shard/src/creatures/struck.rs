@@ -18,6 +18,7 @@ use crate::components::NetId;
 use crate::entities;
 
 const CREEPER: &str = "minecraft:creeper";
+const CHARGED_GROUP: &str = "minecraft:charged_creeper";
 const MOOSHROOM: &str = "minecraft:mooshroom";
 const TURTLE: &str = "minecraft:turtle";
 /// A turtle takes lightning this many times over.
@@ -52,11 +53,37 @@ fn recolour(world: &mut World, mob: Entity, layer: Entity) -> Option<()> {
     tell(world, mob, layer, vec![sapling_net::encode(&told), super::hunting::sound("convert_mooshroom", id, MOOSHROOM, &body, 0.5)])
 }
 
-fn charge(world: &mut World, mob: Entity, layer: Entity) -> Option<()> {
+/// Charges the creeper, shown so to those who come to see it later; the packet that tells its viewers now.
+fn charged(world: &mut World, mob: Entity) -> Option<SetEntityData> {
     let id = world.get::<NetId>(mob)?.0;
     world.entity_mut(mob).insert(Charged);
     let flags = entities::mob_flags(world, mob, CREEPER, MetadataFlags1::POWERED, true);
-    tell(world, mob, layer, vec![sapling_net::encode(&sapling_data::mob_flags_set(id, flags))])
+    let told = sapling_data::mob_flags_set(id, flags);
+    crate::mobs::reannounce_item(world, mob, told.metadata[0].clone());
+    Some(told)
+}
+
+fn charge(world: &mut World, mob: Entity, layer: Entity) -> Option<()> {
+    let told = charged(world, mob)?;
+    entities::restore(world, mob, |compound, _| sapling_world::regrouped_actor(compound, &[], &[CHARGED_GROUP]).ok());
+    tell(world, mob, layer, vec![sapling_net::encode(&told)])
+}
+
+/// A charged creeper's flags, which its announcement shows once rebuilt.
+pub(super) fn shown_flags(world: &World, mob: Entity) -> Option<MetadataDictionaryItem> {
+    world.get::<Charged>(mob)?;
+    let flags = world.get::<crate::sync::Told>(mob).and_then(crate::sync::Told::mob_flags).unwrap_or_else(|| sapling_data::grown_flags(CREEPER, MetadataFlags1::POWERED));
+    let id = world.get::<NetId>(mob)?.0;
+    sapling_data::mob_flags_set(id, flags).metadata.pop()
+}
+
+/// A creeper kept charged (BDS's `minecraft:charged_creeper` group) is charged again when loaded.
+pub(super) fn adopt(world: &mut World, mob: Entity) {
+    let creeper = world.get::<entities::Kind>(mob).is_some_and(|kind| kind.0 == CREEPER);
+    let kept = world.get::<entities::Stored>(mob).is_some_and(|stored| sapling_world::actor_groups(&stored.compound).iter().any(|group| group == CHARGED_GROUP));
+    if creeper && kept {
+        charged(world, mob);
+    }
 }
 
 /// Lightning struck the mob.

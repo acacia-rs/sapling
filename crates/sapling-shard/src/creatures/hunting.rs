@@ -193,6 +193,7 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 /// (research/captures/bds-provoke.txt, bds-provoke2.txt), takes it for its prey at once, if it may be hunted.
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
     super::warden::provoked(world, entity, player);
+    super::piglins::attacked(world, entity);
     let fights = super::genes::fights(world, entity) && !super::bees::is_spent(world, entity);
     let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && fights) else { return };
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some() && !super::husbandry::is_owner(world, entity, player);
@@ -257,7 +258,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     // A lit creeper stands where it is, and an archer within its range.
     let now = world.resource::<Tick>().0;
     let aims = sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.shoots.is_some() && !hunts.closes) && world.get::<Hunter>(entity).is_some_and(|hunter| now >= hunter.since + NEARS);
-    let stands = blast::is_lit(world, entity) || (aims && distance(feet, body.at) < SHOOTS_FROM);
+    let stands = blast::is_lit(world, entity) || (aims && distance(feet, body.at) < SHOOTS_FROM) || super::genes::stands(world, entity, now);
     match stands {
         true => legs::rest(world, entity),
         false => {

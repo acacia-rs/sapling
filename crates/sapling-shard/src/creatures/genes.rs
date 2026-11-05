@@ -21,13 +21,24 @@ const MAIN: [i32; 4] = [1, 2, 3, AGGRESSIVE];
 /// A weak one's health, and an aggressive one's hit.
 const WEAK_HEALTH: f32 = 10.0;
 const AGGRESSIVE_ATTACK: f32 = 6.0;
+const STANDS: u64 = 48;
 
 /// The gene a mob shows as its `Variant`.
 #[derive(Component, Clone, Copy)]
 pub(super) struct Gene(pub(super) i32);
 
+/// Kinds whose `Variant` never changes: husk's pack sets 2, parched's BDS shows 4 (bds-h3herds.txt).
+const FIXED: [(&str, i32); 2] = [("minecraft:husk", 2), ("minecraft:parched", 4)];
+
+fn fixed(kind: &str) -> Option<Gene> {
+    FIXED.iter().find(|(fixed, _)| *fixed == kind).map(|&(_, variant)| Gene(variant))
+}
+
 /// A new mob of `kind`'s gene, if its kind has one, or its size (slimes/sizes.rs).
 pub(super) fn roll(world: &mut World, kind: &str) -> Option<Gene> {
+    if let Some(gene) = fixed(kind) {
+        return Some(gene);
+    }
     if kind != KIND {
         return super::slimes::sizes::roll(world, kind);
     }
@@ -59,7 +70,7 @@ pub(super) fn of_event(kind: &str, event: &str) -> Option<Gene> {
 /// A stored mob of `kind`'s gene, by the `Variant` it was stored with.
 pub(super) fn stored(kind: &str, variant: i32) -> Option<Gene> {
     if kind != KIND {
-        return super::slimes::sizes::stored(kind, variant);
+        return fixed(kind).or_else(|| super::slimes::sizes::stored(kind, variant));
     }
     Some(Gene(variant))
 }
@@ -79,6 +90,12 @@ pub(super) fn hunts(world: &World, entity: Entity, hunts: Hunts) -> Hunts {
         Some(Gene(AGGRESSIVE)) => Hunts { attack: AGGRESSIVE_ATTACK, once: false, ..hunts },
         _ => hunts,
     }
+}
+
+/// Whether a panda that took its prey stands yet: BDS's stood about 48 ticks before walking up
+/// (research/captures/bds-provoke3-findings.md).
+pub(super) fn stands(world: &World, entity: Entity, now: u64) -> bool {
+    is_panda(world, entity) && super::hunting::quarry(world, entity).is_some_and(|(_, since)| now < since + STANDS)
 }
 
 /// The full health of a mob of `kind` and `gene`, its kind's being `max`.
@@ -104,5 +121,11 @@ mod tests {
         let genes = ["lazy", "worried", "playful", "aggressive", "weak"].map(|gene| of_event(KIND, &format!("minecraft:panda_{gene}")).map(|gene| gene.0));
         assert_eq!(genes, [1, 2, 3, 6, 5].map(Some));
         assert!(of_event("minecraft:cow", "minecraft:panda_lazy").is_none() && of_event(KIND, "minecraft:entity_born").is_none());
+    }
+
+    #[test]
+    fn a_husk_and_a_parched_keep_bds_s_variant_stored_or_not() {
+        assert_eq!(["minecraft:husk", "minecraft:parched"].map(|kind| stored(kind, 0).map(|gene| gene.0)), [Some(2), Some(4)]);
+        assert!(stored("minecraft:zombie", 0).is_none());
     }
 }

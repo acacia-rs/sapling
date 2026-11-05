@@ -7,8 +7,10 @@
 //! What it holds is kept with the world (research/captures/bds-piglinkeep.txt, bds-piglinkeep2.txt):
 //! a golden sword it admired went to its main hand as the offhand emptied, and after a restart it
 //! came back holding the sword and the ingot it was admiring, shown as stored, and did not barter.
-// TODO: one that was hit still barters (`cooldown_after_being_attacked` 20); BDS's was heard
-// `admire` again as its hand emptied with the player still holding gold (bds-t2barter.txt), not here.
+//! As its hand empties it is heard `admire` again where a player near holds gold, as BDS's was with
+//! the actor holding ingots (bds-t2barter.txt, bds-gxbarter.txt) and not after a pickup with none
+//! held (bds-goldpickup.txt); one hit takes no gold for 20 s (`cooldown_after_being_attacked`;
+//! BDS's refused an ingot 2 s after its hit, bds-gxbarter.txt).
 
 mod pickup;
 
@@ -41,6 +43,25 @@ const LIFT: f32 = 1.125;
 const THROW: f32 = 0.2;
 const THROW_UP: f32 = 0.3;
 const NEAR: f32 = 10.0;
+/// A player holding gold this near is admired (the pack's `look_at_player` distance; not measured).
+const LOOKS: f32 = 8.0;
+const WARY: u64 = 20 * 20;
+
+/// The tick a piglin hurt by an attacker takes gold again.
+#[derive(Component)]
+pub(super) struct Wary(u64);
+
+/// An attacker hurt the mob: a piglin takes no gold for a while.
+pub(super) fn attacked(world: &mut World, mob: Entity) {
+    if world.get::<Kind>(mob).is_some_and(|kind| kind.0 == PIGLIN) {
+        let until = world.resource::<Tick>().0 + WARY;
+        world.entity_mut(mob).insert(Wary(until));
+    }
+}
+
+pub(super) fn is_wary(world: &World, piglin: Entity) -> bool {
+    world.get::<Wary>(piglin).is_some_and(|wary| world.resource::<Tick>().0 < wary.0)
+}
 
 /// The tick a piglin's admiring ends, or with `bartered` the tick its roll is handed back.
 #[derive(Component)]
@@ -130,7 +151,7 @@ fn admire(world: &mut World, piglin: Entity, layer: Entity, item: ItemStack, del
 pub(crate) fn barter(world: &mut World, player: Entity, piglin: Entity) -> bool {
     let is_piglin = world.get::<Kind>(piglin).is_some_and(|kind| kind.0 == PIGLIN) && world.get::<Dying>(piglin).is_none();
     let holds_gold = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name == GOLD)).unwrap_or(false);
-    if !is_piglin || !holds_gold || super::is_baby(world, piglin) || world.get::<Admiring>(piglin).is_some() {
+    if !is_piglin || !holds_gold || super::is_baby(world, piglin) || world.get::<Admiring>(piglin).is_some() || is_wary(world, piglin) {
         return false;
     }
     let Some(layer) = world.get::<InLayer>(piglin).map(|layer| layer.0) else { return false };
@@ -157,10 +178,14 @@ pub(super) fn tick(world: &mut World) {
             hand_back(world, layer, &body);
             continue;
         }
+        let looks = gold_held_near(world, layer, body.at);
         let Some(mut hands) = world.get_mut::<Hands>(piglin) else { continue };
         let Some(admired) = hands.off.take() else { continue };
         let barters = admired.name == GOLD;
         let mut told: Vec<Bytes> = Vec::new();
+        if looks {
+            told.push(super::hunting::sound("admire", id, PIGLIN, &body, HEAD));
+        }
         if !barters {
             told.extend(main_hand(id, &admired));
             hands.main = Some(admired);
@@ -197,6 +222,14 @@ fn hand_back(world: &mut World, layer: Entity, body: &Body) {
     for stack in stacks {
         drops::eject(world, layer, stack, [body.at[0], body.at[1] + LIFT, body.at[2]], [across[0], THROW_UP, across[1]]);
     }
+}
+
+fn gold_held_near(world: &World, layer: Entity, at: [f32; 3]) -> bool {
+    crate::components::in_world(world).into_iter().any(|player| {
+        let holds = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name == GOLD)).unwrap_or(false);
+        let near = world.get::<crate::components::Position>(player).is_some_and(|position| super::hunting::distance(position.feet, at) <= LOOKS);
+        holds && near && world.get::<InLayer>(player).map(|layer| layer.0) == Some(layer)
+    })
 }
 
 fn player_near(world: &World, layer: Entity, at: [f32; 3]) -> Option<[f32; 3]> {

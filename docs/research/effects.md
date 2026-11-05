@@ -113,7 +113,9 @@ sapling as burning (cause 7), seven times (mob fire harm, mob-attacks.md; not fi
 
 The four omen effects on mobs (research/captures/sapling-effects3.txt against bds-effects3.txt):
 the same keys, `VisibleMobEffects` 576-582, wind burst, cobwebs, slimes and silverfish (their
-counts are random); sapling also tells each new mob `VisibleMobEffects` 0, which BDS did not.
+counts are random). Both tell each new mob `VisibleMobEffects` 0 in its `AddEntity`: the earlier
+"BDS did not" read bds-effects3.txt's cut-off lines; whole lines (bds-t2storm.txt, bds-h3keep.txt,
+bds-h3herds.txt) hold it on BDS too.
 
 A player dying under an omen effect (research/captures/sapling-player-omens.txt against
 bds-player-omens.txt): the same wind burst, cobwebs and slimes, at the drill world's own floor;

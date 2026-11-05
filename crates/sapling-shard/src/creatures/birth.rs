@@ -7,6 +7,7 @@ use sapling_world::Actor;
 
 use super::shown::{announcement, reshow, spawn_sound};
 use super::{Creature, Health, NO_DEATH, afflictions, bees, breezes, creaking, dolphins, drinks, frogs, genes, ghasts, harm, hunting, husbandry, legs, looks, rams, riders, slimes, spells, squids, stares, strides, strolling, swimming, teleports, vexes, villagers, wings, wither};
+use crate::blocks::Dice;
 use crate::body::Body;
 use crate::components::{Layer, NetId};
 use crate::entities;
@@ -20,8 +21,24 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]
 /// Spawn events that make a baby (`summon cow ~ ~ ~ 0 0 minecraft:entity_born`).
 const BABY_EVENTS: [&str; 3] = ["entity_born", "as_baby", "spawn_baby"];
 
+/// Of these many of a kind's summons with no event, the pack's `entity_spawned` makes a foal of
+/// this many (BDS: 2 of 4 plain horse summons, bds-h3herds.txt).
+const FOALS: [(&str, u32, u32); 5] = [("minecraft:horse", 9, 45), ("minecraft:donkey", 20, 100), ("minecraft:mule", 20, 100), ("minecraft:zombie_horse", 9, 45), ("minecraft:skeleton_horse", 9, 45)];
+const BORN: &str = "minecraft:entity_born";
+
+/// A `/summon` of `kind`: [`spawn_as`], a horse of no event rolling for a foal as its pack does.
+pub(super) fn summoned(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], yaw: f32, event: Option<&str>) -> Option<EntityId> {
+    let foal = event.is_none() && FOALS.iter().find(|(of, ..)| *of == kind).is_some_and(|&(_, foals, of)| world.get_resource_or_insert_with(Dice::default).roll(of) < foals);
+    spawn_with(world, layer, kind, feet, SpawnReason::Command, yaw, event, foal)
+}
+
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
 pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
+    spawn_with(world, layer, kind, feet, reason, yaw, event, false)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn spawn_with(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>, foal: bool) -> Option<EntityId> {
     let look = looks::of(world, kind, event);
     let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| look.map(looks::Look::gene)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
     // BDS played no `spawn` at any of 112 summons naming an event (research/captures/bds-*.txt), nor
@@ -32,6 +49,7 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
         SpawnReason::Bred => Some("born"),
         _ => (!matches!(reason, SpawnReason::Lightning | SpawnReason::Structure) && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn"),
     };
+    let event = event.or(foal.then_some(BORN));
     let id = born_by(world, layer, kind, feet, Birth { reason, yaw, gene, sound }, event)?;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {
@@ -192,8 +210,10 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     }
     entities::keep(world, entity, layer, unique_id, compound);
     villagers::arm(world, entity, layer, &kind, true, None);
+    super::skeleton_traps::arm(world, entity, &kind, None);
     crate::riding::give_strength(world, entity, &kind, None);
     reshow(world, entity);
+    super::struck::adopt(world, entity);
     crate::riding::adopt(world, entity);
     true
 }

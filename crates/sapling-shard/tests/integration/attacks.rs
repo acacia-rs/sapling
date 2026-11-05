@@ -124,12 +124,15 @@ fn a_panda_and_a_bee_hit_their_hitter_back_once_and_no_more() {
         });
         let mob = (0..5).flat_map(|_| all::<AddEntity>(h.tick_all().to(1))).collect::<Vec<_>>().remove(0).runtime_id;
         h.receive(1, &attack(mob));
-        let mut hurt = Vec::new();
-        for _ in 0..240 {
+        let (mut hurt, mut first) = (Vec::new(), None);
+        for tick in 0..240 {
             let own = all::<UpdateAttributes>(h.tick_all().to(1)).into_iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| update.attributes);
             hurt.extend(own.filter(|attribute| attribute.name == "minecraft:health" && attribute.current < 20.0).map(|attribute| attribute.current));
+            first = first.or((!hurt.is_empty()).then_some(tick));
         }
         assert_eq!(hurt.first(), Some(&18.0), "{kind}");
+        // bds-provoke3-findings.md: a panda stood some 48 ticks, then walked up; its hits came 74 and 75 ticks on.
+        assert!(kind != "minecraft:panda" || first.is_some_and(|tick| tick > 48), "{kind} stands first: {first:?}");
         assert!(hurt.iter().all(|left| *left >= 18.0), "{kind} hits once: {hurt:?}");
     }
 }
@@ -179,14 +182,17 @@ fn a_llama_hit_spits_once_for_1_and_throws_nobody() {
     });
     let llama = (0..5).flat_map(|_| all::<AddEntity>(h.tick_all().to(1))).collect::<Vec<_>>().remove(0).runtime_id;
     h.receive(1, &attack(llama));
-    let (mut spat, mut hurt, mut thrown) = (Vec::new(), Vec::new(), 0);
+    let (mut spat, mut warned, mut hurt, mut thrown) = (Vec::new(), Vec::new(), Vec::new(), 0);
     for tick in 0..160 {
         let sent = h.tick_all().to(1).to_vec();
         spat.extend(all::<AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:llama_spit").map(|_| tick));
+        warned.extend(all::<acacia_proto::packets::LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "warn").map(|_| tick));
         hurt.extend(all::<UpdateAttributes>(&sent).into_iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current));
         thrown += all::<acacia_proto::packets::SetEntityMotion>(&sent).iter().filter(|motion| motion.runtime_entity_id == 1).count();
     }
     assert!(spat.len() == 1 && (38..=44).contains(&spat[0]), "{spat:?}");
+    // bds-provoke2.txt: `warn` and its charge 21 ticks before the spit.
+    assert_eq!(warned.iter().map(|tick| spat[0] - tick).collect::<Vec<_>>(), [21], "{warned:?}");
     assert_eq!((hurt.first(), thrown), (Some(&19.0), 0), "{hurt:?}");
 }
 

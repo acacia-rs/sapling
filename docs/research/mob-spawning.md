@@ -65,7 +65,7 @@ Decompiled from the bds-blocks build (`BDS_EXE=acacia/.testserver/bds-blocks/bed
 - Herd: one of the rule's herds by `nextInt(count)` (default 1 to 1), size
   `min + roundf(f² (max - min))` with `f` a `nextFloat` (`_spawnMobCluster` 1415ed230, `roundf` import
   14a5bd080), so small herds are likelier; every member on the same cell, at (x + 0.49, y, z + 0.49) in
-  worlds of 1.21 on. Herd events: husbandry.md "Herds"; guaranteed members are not built.
+  worlds of 1.21 on. Herd events: husbandry.md "Herds"; no vanilla rule sets `guaranteed_count`.
 - Caps: counts over the 9×9 chunks round the cluster's chunk, split surface/underground: per category
   and per kind (`density_limit`, clipping the herd to what is left). The category cap is asked before
   each member, `0 < cap && count < cap`, so a category ends at it (the structure pass's own reading

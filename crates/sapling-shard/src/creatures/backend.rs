@@ -30,7 +30,7 @@ impl EntityBackend for Ctx<'_> {
             _ if shot.is_some() => shot?,
             _ if crate::vehicles::is_vehicle(kind) => crate::vehicles::summon(self.world, worlds::current(self.world), kind, feet, yaw)?,
             true => self.spawn_entity(kind, feet)?,
-            false => super::spawn_as(self.world, worlds::current(self.world), kind, feet, sapling_api::SpawnReason::Command, yaw, event)?,
+            false => super::birth::summoned(self.world, worlds::current(self.world), kind, feet, yaw, event)?,
         };
         if let Some(player) = by.and_then(|by| self.entity(by)) {
             super::summoned::show(self.world, player, kind);
