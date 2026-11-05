@@ -120,7 +120,7 @@ fn anvil() -> Vec<String> {
     with(lines, &["setblock 2 -26 0 air", "gamemode creative @s", "clear @s", ""])
 }
 
-const WEAR_SHOWN: &[&str] = &["InventorySlot", "InventoryContent", "MobArmorEquipment", "EntityEvent"];
+const WEAR_SHOWN: &[&str] = &["InventorySlot", "InventoryContent", "MobArmorEquipment", "EntityEvent", "AddItemEntity"];
 
 /// Four iron pieces with Unbreaking III worn through a minute of six zombies' hits at night
 /// (BDS's `/damage` wore no armour), the player kept alive by resistance and regeneration.
@@ -129,9 +129,12 @@ fn wear() -> Vec<String> {
     for piece in ["helmet", "chestplate", "leggings", "boots"] {
         lines.extend([hold(&format!("iron_{piece}")), "enchant @s unbreaking 3".into(), "!use".into(), String::new()]);
     }
+    // In a pit a block deep, so that the hits do not throw the player off the floor.
+    lines.extend(owned(["setblock 0 -28 0 stone", "setblock 0 -27 0 air", "tp @s 0.5 -27 0.5"]));
     lines.extend(["2.5 -26 0.5", "-1.5 -26 0.5", "0.5 -26 2.5", "0.5 -26 -1.5", "2.5 -26 2.5", "-1.5 -26 -1.5"].map(|at| format!("summon zombie {at}")));
     waits(&mut lines, 60);
-    with(lines, &["kill @e[type=zombie]", "", "gamemode creative @s", "effect @s clear", "clear @s", "time set 6000", ""])
+    // The worn pieces dropped at a death, for their tags.
+    with(lines, &["kill @e[type=zombie]", "", "effect @s clear", "kill @s", "", "", "", "", "kill @e[type=item]", "gamemode creative @s", "clear @s", "time set 6000", "setblock 0 -27 0 stone", "tp @s 0.5 -26 0.5", ""])
 }
 
 const BUCKETS_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubchunkBlocks", "InventorySlot", "LevelSoundEvent", "LevelEvent", "AddEntity", "RemoveEntity", "MobEffect", "CompletedUsingItem", "ItemStackResponse"];
