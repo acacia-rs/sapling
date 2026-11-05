@@ -82,7 +82,7 @@ pub(crate) fn takes_disc(world: &World, layer: Entity, pos: BlockPos, item: &Ite
 
 /// Puts a hopper's `disc` in the jukebox at `pos`, its song started; nobody is told its title.
 pub(crate) fn put_disc(world: &mut World, layer: Entity, pos: BlockPos, disc: &ItemStack) {
-    keep(world, layer, pos, Some(disc));
+    keep(world, layer, pos, Some(disc), fields::set_many);
 }
 
 /// The disc of the jukebox at `pos` once its song is over, which a hopper under it may take.
@@ -91,7 +91,7 @@ pub(crate) fn finished_disc(world: &World, layer: Entity, pos: BlockPos) -> Opti
 }
 
 pub(crate) fn take_disc(world: &mut World, layer: Entity, pos: BlockPos) {
-    keep(world, layer, pos, None);
+    keep(world, layer, pos, None, fields::set_many);
 }
 
 fn now_playing(title: &str) -> Text {
@@ -99,11 +99,14 @@ fn now_playing(title: &str) -> Text {
     Text { needs_translation: true, category: TextCategory::Parameters, r#type: TextType::JukeboxPopup, content, xuid: String::new(), platform_chat_id: String::new(), has_filtered_message: false, filtered_message: None }
 }
 
-/// Puts `disc` in the jukebox at `pos`, its song started, or takes what it holds out (`None`).
-fn keep(world: &mut World, layer: Entity, pos: BlockPos, disc: Option<&ItemStack>) {
+type SetFields = fn(&mut World, Entity, BlockPos, &str, &[(&str, Option<Value>)]);
+
+/// Puts `disc` in the jukebox at `pos`, its song started, or takes what it holds out (`None`),
+/// its entity kept by `set` (shown or not). One emptied has finished (bds-z2open.txt).
+fn keep(world: &mut World, layer: Entity, pos: BlockPos, disc: Option<&ItemStack>, set: SetFields) {
     let record = disc.zip(level(world, layer)).map(|(disc, level)| Value::Compound(disc.fields(level.registry())));
-    let finished = disc.is_some().then_some(Value::Byte(0)).or_else(|| fields::get(world, layer, pos, FINISHED));
-    fields::set_many(world, layer, pos, ENTITY, &[(FINISHED, finished), (RECORD, record), (TICKS, Some(Value::Long(0)))]);
+    let finished = Value::Byte(if disc.is_some() { 0 } else { 1 });
+    set(world, layer, pos, ENTITY, &[(FINISHED, Some(finished)), (RECORD, record), (TICKS, Some(Value::Long(0)))]);
     redstone::emit(world, layer, pos, if disc.is_some() { PLAYING } else { 0 });
     songs::playing(world, layer, pos, disc.is_some());
     super::container_changed(world, layer, pos);
@@ -121,10 +124,10 @@ pub(super) fn use_jukebox(world: &mut World, player: Entity, layer: Entity, pos:
     if name != JUKEBOX {
         return false;
     }
-    // BDS showed the jukebox again a tick after a disc went in, and both at once and a tick after one came out (bds-p2copper.txt).
+    // BDS showed the jukebox whole only a tick after a disc went in, and at once and a tick after one came out (bds-z2open.txt).
     if let Some(disc) = held(world, layer, pos) {
-        keep(world, layer, pos, None);
-        super::send::show(world, layer, pos);
+        keep(world, layer, pos, None, fields::set_many_quietly);
+        super::send::show_whole(world, layer, pos);
         super::shown_again::next_tick(world, layer, pos);
         let [x, y, z] = pos.map(|c| c as f32);
         drops::toss(world, layer, disc, [x + 0.5, y + OUT, z + 0.5]);
@@ -135,7 +138,7 @@ pub(super) fn use_jukebox(world: &mut World, player: Entity, layer: Entity, pos:
     if world.get::<Mode>(player).is_some_and(|mode| mode.0 != GameMode::Creative) {
         inventory::change(world, player, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
     }
-    keep(world, layer, pos, Some(&ItemStack { count: 1, ..disc }));
+    keep(world, layer, pos, Some(&ItemStack { count: 1, ..disc }), fields::set_many_quietly);
     super::shown_again::next_tick(world, layer, pos);
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.0.push(sapling_net::encode(&now_playing(title)));

@@ -141,5 +141,9 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
             left.extend(some(row.item, count(row, by.fortune, roll)));
         }
     }
+    // BDS threw a campfire's two charcoal one at a time (bds-z2hand.txt).
+    if name == "campfire" {
+        return left.into_iter().flat_map(|item| (0..item.count).map(move |_| Item { count: 1, ..item.clone() })).collect();
+    }
     left
 }

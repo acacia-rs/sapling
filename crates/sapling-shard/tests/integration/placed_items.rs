@@ -119,19 +119,21 @@ fn a_dye_colours_a_written_sign_and_a_waxed_one_only_sounds() {
 }
 
 #[test]
-fn pots_cauldrons_campfires_brewing_stands_and_skulls_get_their_entities() {
+fn pots_cauldrons_campfires_and_skulls_show_their_entities_and_a_brewing_stand_none() {
+    // research/captures/bds-z2hand.txt: a brewing stand put by hand showed the watcher no BlockEntityData.
     let kinds = [
-        ("minecraft:flower_pot", "FlowerPot"),
-        ("minecraft:cauldron", "Cauldron"),
-        ("minecraft:campfire", "Campfire"),
-        ("minecraft:brewing_stand", "BrewingStand"),
-        ("minecraft:skeleton_skull", "Skull"),
+        ("minecraft:flower_pot", Some("FlowerPot")),
+        ("minecraft:cauldron", Some("Cauldron")),
+        ("minecraft:campfire", Some("Campfire")),
+        ("minecraft:brewing_stand", None),
+        ("minecraft:skeleton_skull", Some("Skull")),
     ];
     for (item, id) in kinds {
         let mut h = with_in_hand(Item::new(item, 1));
         h.receive(1, &click(NEAR, 1, Some(item).filter(|item| item.ends_with("skull"))));
         let shown = entities(h.tick_all().to(2));
-        assert_eq!(shown.iter().map(|(pos, entity)| (*pos, entity.get("id").cloned())).collect::<Vec<_>>(), [(ABOVE, Some(Value::String(id.into())))], "{item}");
+        let expected: Vec<_> = id.map(|id| (ABOVE, Some(Value::String(id.into())))).into_iter().collect();
+        assert_eq!(shown.iter().map(|(pos, entity)| (*pos, entity.get("id").cloned())).collect::<Vec<_>>(), expected, "{item}");
     }
 }
 

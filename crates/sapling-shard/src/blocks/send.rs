@@ -14,7 +14,7 @@ mod effects;
 mod sections;
 
 pub(crate) use effects::{destroy_particles, noise, place_sound, punch_particles, sound, sound_at};
-pub(crate) use sections::{after_blocks, batched, hold, hold_break, log_again, log_flowing, logged, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
+pub(crate) use sections::{after_blocks, batched, hold, hold_break, log_again, log_flowing, log_liquid, logged, logged_apart, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
 
 use crate::components::{InLayer, Layer, Outgoing};
 
@@ -114,7 +114,7 @@ pub(crate) fn set_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: u
     write(world, layer, pos, id).is_some()
 }
 
-/// Writes layer 0 as [`set`] does: the state written, or `None` when nothing changed.
+/// Writes layer 0 as [`set`] does: the state the cell then holds, or `None` when nothing changed.
 fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32> {
     let mut level = world.get_mut::<Layer>(layer)?;
     let [x, y, z] = pos;
@@ -145,7 +145,8 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     super::leaves::written(world, layer, pos, old);
     super::scaffolds::written(world, layer, pos);
     super::portals::written(world, layer, pos);
-    Some(id)
+    // A hook above may have written the cell again (a wire's shape): the cell as it now stands is shown.
+    world.get::<Layer>(layer).map(|level| level.world.block(x, y, z))
 }
 
 /// Shows everyone who sees `pos` its layer-0 block again, unchanged.
@@ -195,7 +196,7 @@ pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: 
         return None;
     }
     if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name) {
-        crate::containers::furnish_set(world, layer, pos, name);
+        crate::containers::furnish(world, layer, pos, name, None, sapling_api::Face::Up);
         super::pistons::furnish(world, layer, pos);
         super::conduits::furnish(world, layer, pos);
         super::command_blocks::furnish(world, layer, pos, before.as_ref());

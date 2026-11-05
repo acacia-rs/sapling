@@ -22,6 +22,8 @@ const SHOWN: [&str; 18] = [
 ];
 /// Of those, the blocks shown whole again a tick later, with skulls, signs and campfires.
 const AGAIN: [&str; 5] = ["minecraft:cauldron", "minecraft:frame", "minecraft:glow_frame", "minecraft:lectern", "minecraft:jukebox"];
+/// Of the blocks only a set gives an entity here, those BDS gave one put by hand too (bds-z2hand.txt).
+const PLACED_TOO: [&str; 4] = ["minecraft:lectern", "minecraft:jukebox", "minecraft:enchanting_table", "minecraft:decorated_pot"];
 /// A commanded bed's colour: BDS's is red (bds-setshown.txt).
 const RED: i16 = 14;
 const JUKEBOX: &str = "Jukebox";
@@ -32,6 +34,17 @@ fn is_shown(block: &str) -> bool {
 
 fn is_shown_again(block: &str) -> bool {
     AGAIN.contains(&block) || SKULLS.contains(&block) || CAMPFIRES.contains(&block) || block.ends_with("_sign")
+}
+
+/// The entity a block put by hand gets that [`placed`] does not make: as BDS's set made it
+/// (research/captures/bds-z2hand.txt).
+pub(super) fn placed_too(block: &str, pos: BlockPos) -> Option<Value> {
+    PLACED_TOO.contains(&block).then(|| set_only(block, pos)).flatten()
+}
+
+/// Whether a block put by hand is shown whole again a tick later, as BDS did (bds-z2hand.txt).
+pub(super) fn again_by_hand(block: &str) -> bool {
+    matches!(block, "minecraft:cauldron" | "minecraft:lectern" | "minecraft:jukebox") || SKULLS.contains(&block) || CAMPFIRES.contains(&block) || block.ends_with("_hanging_sign")
 }
 
 fn empty_stack() -> Value {

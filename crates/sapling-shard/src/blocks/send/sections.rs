@@ -84,8 +84,18 @@ pub(crate) struct Logged(Option<Vec<(Entity, BlockPos, u32, u32)>>);
 /// listed in the order made, layer 1's as `extra`, in one UpdateSubchunkBlocks, or an UpdateBlock
 /// for a write alone. Inside an open batch or log, that takes the writes instead.
 pub(crate) fn logged<R>(world: &mut World, writes: impl FnOnce(&mut World) -> R) -> R {
-    let is_open = |world: &World| world.get_resource::<Held>().is_some_and(|held| held.0.is_some()) || world.get_resource::<Logged>().is_some_and(|log| log.0.is_some());
-    let opens = !is_open(world);
+    let held = world.get_resource::<Held>().is_some_and(|held| held.0.is_some());
+    log_writes(world, held, writes)
+}
+
+/// [`logged`] in a packet of its own even inside an open batch, for writes with a layer-1 entry a
+/// batch cannot show (a bubble column's water).
+pub(crate) fn logged_apart<R>(world: &mut World, writes: impl FnOnce(&mut World) -> R) -> R {
+    log_writes(world, false, writes)
+}
+
+fn log_writes<R>(world: &mut World, held: bool, writes: impl FnOnce(&mut World) -> R) -> R {
+    let opens = !held && !world.get_resource::<Logged>().is_some_and(|log| log.0.is_some());
     if opens {
         world.get_resource_or_insert_with(Logged::default).0 = Some(Vec::new());
     }
@@ -107,6 +117,12 @@ pub(super) fn log(world: &mut World, layer: Entity, pos: BlockPos, layer_index: 
 pub(crate) fn log_again(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(id) = world.get::<Layer>(layer).map(|level| level.world.block(pos[0], pos[1], pos[2])) else { return };
     log(world, layer, pos, 0, id);
+}
+
+/// Lists the layer-1 block at `pos` where a log is open, for water a block took into that layer.
+pub(crate) fn log_liquid(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(id) = world.get::<Layer>(layer).map(|level| level.world.liquid(pos[0], pos[1], pos[2])) else { return };
+    log(world, layer, pos, 1, id);
 }
 
 /// Lists the `flowing_` block of the liquid `id` in layer 1 at `pos` where a log is open, shown but not
@@ -203,7 +219,10 @@ fn show_held_blocks(world: &mut World) {
         for &(_, pos) in cells.iter().filter(|(at, _)| *at == layer) {
             if seen.insert(pos) {
                 shown.push(pos);
-                entities.extend(level.block_entity(pos).map(|entity| (pos, block_entity_data(pos, entity))));
+                // BDS showed no entity with a dispenser or dropper its circuit triggered (bds-z2hand.txt).
+                let unshown = ["Dispenser", "Dropper"].map(|id| acacia_proto::nbt::Value::String(id.into()));
+                let entity = level.block_entity(pos).filter(|entity| !entity.nbt.get("id").is_some_and(|id| unshown.contains(id)));
+                entities.extend(entity.map(|entity| (pos, block_entity_data(pos, entity))));
             }
         }
         let mut sections = by_section(shown.iter().map(|&pos| (pos, level.block(pos[0], pos[1], pos[2]), flags.0)));

@@ -16,11 +16,21 @@ const GROUP: usize = 5;
 /// A stack a blast leaves: the item, its tag (a banner's patterns) and the cell it falls out of.
 type Left = (Item, Option<Value>, BlockPos);
 
+/// What a blast's broken blocks leave, to fall out once the blocks are shown ([`spill_blown`]).
+#[derive(Default)]
+pub(crate) struct Blown(Vec<Left>);
+
+/// [`break_blown`] with its blocks shown together, then [`spill_blown`].
+pub(crate) fn blow_out(world: &mut World, layer: Entity, cells: &[BlockPos], leaves: f32) {
+    let left = super::send::logged(world, |world| break_blown(world, layer, cells, leaves));
+    spill_blown(world, layer, left);
+}
+
 /// Breaks `cells` for a blast: TNT among them is lit, and the rest, each by the chance `leaves`,
 /// leave what they would to a bare hand that could mine them. Like items, tags and all (BDS merged
 /// two patterned banners, research/captures/bds-banners.txt), are merged into stacks that each
 /// fall out of the cell whose block started them.
-pub(crate) fn blow_out(world: &mut World, layer: Entity, cells: &[BlockPos], leaves: f32) {
+pub(crate) fn break_blown(world: &mut World, layer: Entity, cells: &[BlockPos], leaves: f32) -> Blown {
     let mut left: Vec<Left> = Vec::new();
     for &cell in cells {
         if crate::tnt::catch(world, layer, cell) {
@@ -40,6 +50,11 @@ pub(crate) fn blow_out(world: &mut World, layer: Entity, cells: &[BlockPos], lea
         }
         super::update_block(world, layer, cell, &Block::new("minecraft:air"));
     }
+    Blown(left)
+}
+
+/// Drops what [`break_blown`] left, each stack out of its cell.
+pub(crate) fn spill_blown(world: &mut World, layer: Entity, Blown(left): Blown) {
     for (item, tag, cell) in left {
         let mut tags = Tags::one(&item.name, tag);
         loot::spill_tagged(world, layer, cell, &[item], &mut tags);

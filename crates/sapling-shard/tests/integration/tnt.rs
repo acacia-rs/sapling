@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, CommandRequest, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityData, SetEntityMotion};
+use acacia_proto::packets::{AddEntity, AddItemEntity, CommandRequest, LevelEvent, LevelEventEvent, RemoveEntity, SetEntityData, SetEntityMotion, UpdateBlock, UpdateSubchunkBlocks};
 use acacia_proto::manual::Uuid;
 use acacia_proto::types::CommandOrigin;
 use acacia_proto::types::{MetadataDictionaryItem, MetadataFlags1, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
@@ -177,6 +177,10 @@ fn anchor_bursts(survival: bool) {
     let sent = h.tick_all().to(1).to_vec();
     let flash = all::<LevelEvent>(&sent).into_iter().find(|event| event.event == LevelEventEvent::ParticleExplosion).expect("a blast");
     assert_eq!((flash.data, flash.position.x, flash.position.y, flash.position.z), (5, 3.5, 65.5, 0.5));
+    // bds-p2last.txt: the anchor's air with the blast's cells, a sub-chunk at a time.
+    let alone = all::<UpdateBlock>(&sent).into_iter().filter(|update| update.layer == 0 && update.position.y >= 60).count();
+    let anchor_batched = all::<UpdateSubchunkBlocks>(&sent).iter().flat_map(|batch| &batch.blocks).any(|cell| [cell.position.x, cell.position.y, cell.position.z] == [3, 65, 0]);
+    assert!(alone == 0 && anchor_batched, "{alone} cells alone");
     h.remote.run(|ctx| assert!(ctx.block([3, 65, 0]).is_some_and(|block| block.name == "minecraft:air") && ctx.block([3, 64, 0]).is_some_and(|block| block.name == "minecraft:air")));
     h.tick_all();
 }

@@ -200,7 +200,9 @@ Block behaviours (BlockType vt+0x190):
 - D26 Consume: for every non-empty slot `removeItem(slot, 1)`; block actor changed; `setCrafting`: if
   `crafting` is 0 set it to 1 (flags 2); `crafting_ticks_remaining = 6`.
 - D27 Tick component (1457e9cf0): `if ticks >= 1: ticks -= 1; if it was 1 and crafting: crafting = 0 (flags 2)`.
-  So `crafting` shows for 6 ticks after a craft.
+  So `crafting` shows for 6 ticks after a craft. Drilled (bds-z2open.txt, bds-rsdevices.txt): the lit block's
+  update packet showed `crafting_ticks_remaining` 5, the light went out 5 ticks on, and `CrafterCraft` came at the
+  cell's corner naming the crafter unlit (`crafting=0,triggered_bit=1`).
 - D28 `canPushInItem(slot, face, item)` (any face): disabled → false; slot empty → true; same item below max
   stack → false if any later enabled slot is empty or holds the same item with fewer; else true (different item
   or full also returns true; the add itself then fails). With hoppers scanning slots 0..8 this puts the item in

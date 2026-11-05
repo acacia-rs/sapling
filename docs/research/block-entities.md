@@ -163,3 +163,29 @@ ticking area's two had left theirs: most likely one of those wandered within 8 o
 
 Placed skull's saved `SkullType` (-1 or kind); cauldron `PotionId`/`PotionType` defaults; sign text cap in the
 `BlockActorData` handler; hanging-sign states for a side click; Bedrock campfire charcoal count.
+
+Drilled 2026-11-05 (`bds_command_probe z2hand`, bds-z2hand.txt): 28 blocks put by hand, the place sound after the
+entity each time.
+- No BlockEntityData: dispenser, dropper, hopper, furnace, smoker, blast furnace, brewing stand, note block, beehive,
+  daylight detector, comparator, sculk sensor. A dispenser beside power then triggered with no entity either.
+- Shown once: barrel, bell, chest, trapped chest, ender chest, crafter, chiseled bookshelf, decorated pot,
+  enchanting table, flower pot, beacon. Shown again whole a tick later: jukebox (`FinishedRecording` 1 the
+  second time), lectern, campfire, skull (`SkullType` -1, as sapling's), cauldron (`PotionId`/`PotionType` -1,
+  as sapling's), and a hanging sign.
+- A hanging sign put on a block's side: `hanging` 0, `attached_bit` 0, `facing_direction` off the face; under a
+  block: `hanging` 1, `facing_direction` the player's facing.
+- A campfire broken by `setblock ... destroy` threw two charcoal entities of one each.
+Sapling showed the entity of the no-entity blocks, none for jukebox, lectern, pot and enchanting table, none of
+the second shows, the sound before the entity, and one stack of two charcoal. Fixed (`containers::furnish`,
+`set_entities::placed_too`/`again_by_hand`, `blocks/place.rs`, `blocks/loot.rs`). Not drilled: the sign text cap
+(no client sends one past it).
+
+Drilled 2026-11-05 (`z2open`, bds-z2open.txt), clicks on set blocks:
+- Frame: an apple put in and turned twice, the comparator behind read 1, 2, 3; sapling the same.
+- Jukebox: a disc going in showed the block and its entity once, a tick on, nothing at once; one coming out
+  showed both at once with `FinishedRecording` 1, and again a tick later. Sapling showed the entity at once on
+  both and kept `FinishedRecording` 0 (fixed, `blocks/jukebox.rs`).
+- Chiseled bookshelf: the comparator read the slot plus one (2, then 6). The bot's click point varies, so the
+  slots differ run to run; sapling's comparator matched its own slot.
+- Copper golem statue: set, it has an entity (`Actor` compound) shown twice; a click shows the block and entity
+  again. Sapling makes no entity for it (open).

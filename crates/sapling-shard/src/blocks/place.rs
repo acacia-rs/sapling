@@ -164,31 +164,35 @@ impl Request<'_> {
         };
         let placed = match door {
             Some(upper) => doors::place_by_hand(self.world, site.layer, pos, id, upper),
-            // BDS lists an aged vine twice in one UpdateSubchunkBlocks, as its command does (bds-p2place.txt).
-            None if aged.is_some() => send::logged(self.world, |world| send::set(world, site.layer, pos, id) && {
+            // BDS lists an aged vine or a shulker box twice in one UpdateSubchunkBlocks (bds-p2place.txt).
+            None if aged.is_some() || crate::containers::is_shulker_box(&block.name) => send::logged(self.world, |world| send::set(world, site.layer, pos, id) && {
                 send::log_again(world, site.layer, pos);
                 true
             }),
             None => send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id)),
         };
         if placed {
-            send::to_viewers(self.world, site.layer, pos, &[sound]);
-            super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
             let second = door.map(|(above, _)| above).or_else(|| doors::place_second_cell(self.world, site.layer, pos, whole));
             // A bed's colour and a banner's are the item's, which the block cannot say.
             let (damage, tag) = self.world.get::<Inventory>(self.entity).and_then(|inventory| inventory.in_hand().as_ref()).map_or((0, None), |held| (held.stack.damage, held.stack.tag.clone()));
             let placing = entities::Placing { damage, tag: tag.as_ref(), yaw: click.yaw, properties: &block.properties };
             for cell in [Some(pos), second].into_iter().flatten() {
-                if let Some(entity) = entities::placed(&block.name, cell, &placing) {
+                if let Some(entity) = entities::placed(&block.name, cell, &placing).or_else(|| super::set_entities::placed_too(&block.name, cell)) {
                     send::keep_entity(self.world, site.layer, cell, &entity);
                     if crate::spawners::is_spawner(&entity) {
                         crate::spawners::watch(self.world, site.layer, cell);
                     }
                 }
             }
+            if super::set_entities::again_by_hand(&block.name) {
+                super::shown_again::next_tick(self.world, site.layer, pos);
+            }
+            crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
+            // BDS shows a block's entity, its place sound, then its vibration (bds-z2hand.txt, bds-z2sculk.txt).
+            send::to_viewers(self.world, site.layer, pos, &[sound]);
+            super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
             signs::open_editor(self.world, self.entity, site.layer, pos, &block.name);
             rails::join_placed(self.world, site.layer, pos);
-            crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
             super::pistons::furnish(self.world, site.layer, pos);
             super::command_blocks::furnish(self.world, site.layer, pos, None);
             super::structure_blocks::furnish(self.world, site.layer, pos, None);

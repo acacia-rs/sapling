@@ -98,8 +98,10 @@ fn cell(at: [f32; 3]) -> BlockPos {
 
 fn land(world: &mut World, layer: Entity, bolt: Entity, at: [f32; 3], strike: &LightningStrike, harms: bool) {
     let cell = cell(at);
-    entities::tell_viewers(world, bolt, layer, cell, vec![sound("thunder", at), sound("explode", at)]);
+    // BDS shows the struck blocks, then the thunder, then the vibration (bds-o3rod.txt, bds-z2bolt.txt).
     crate::blocks::lightning_struck(world, layer, strike);
+    entities::tell_viewers(world, bolt, layer, cell, vec![sound("thunder", at), sound("explode", at)]);
+    crate::blocks::lightning_felt(world, layer, strike);
     kindle(world, layer, cell, harms, MORE_FIRES);
     if harms {
         hurt(world, layer, at);

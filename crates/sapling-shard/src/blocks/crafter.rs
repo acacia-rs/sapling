@@ -5,6 +5,7 @@
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEventEvent, ToggleCrafterSlotRequest};
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 use sapling_world::ItemStack;
@@ -20,6 +21,9 @@ const DISABLED: &str = "disabled_slots";
 const SLOTS: usize = 9;
 /// How long the `crafting` light stays on after a craft.
 const LIT: u64 = 6;
+const REMAINING: &str = "crafting_ticks_remaining";
+/// What BDS's entity showed of [`REMAINING`] as the light came on (bds-z2open.txt, bds-rsdevices.txt).
+const SHOWN_REMAINING: i32 = 5;
 
 /// The state of the block at `pos` if it is a crafter, with its id.
 fn crafter(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(u32, &'static str)> {
@@ -96,19 +100,21 @@ pub(super) fn craft(world: &mut World, layer: Entity, pos: BlockPos, face: Face)
         }
     });
     super::container_changed(world, layer, pos);
-    if let Some((id, _)) = crafter(world, layer, pos) {
-        let lit = level(world, layer).and_then(|level| with_property(level.registry(), id, "crafting", "1"));
-        if let Some(lit) = lit {
-            send::set(world, layer, pos, lit);
-        }
+    let fired = crafter(world, layer, pos).map(|(id, _)| id);
+    if let Some(lit) = fired.and_then(|id| with_property(level(world, layer)?.registry(), id, "crafting", "1")) {
+        fields::set_quietly(world, layer, pos, ENTITY, REMAINING, Some(Value::Int(SHOWN_REMAINING)));
+        send::set(world, layer, pos, lit);
     }
     queued::after(world, layer, pos, LIT, Job::Crafted);
     let mut thrown = false;
     for result in results {
         thrown |= eject(world, layer, pos, face, result);
     }
-    if thrown {
-        play(world, layer, pos, "crafter.craft");
+    if let (true, Some(id), Some(level)) = (thrown, fired, level(world, layer)) {
+        // BDS's craft sound is at the cell's corner and names the crafter as it was fired, unlit (bds-z2open.txt, bds-rsdevices.txt).
+        let [x, y, z] = pos.map(|c| c as f32);
+        let sound = send::sound_at("crafter.craft", level.registry(), Vec3f { x, y, z }, id);
+        send::to_viewers(world, layer, pos, &[sound]);
     }
 }
 
@@ -133,6 +139,7 @@ fn eject(world: &mut World, layer: Entity, pos: BlockPos, face: Face, mut result
 pub(super) fn crafted(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some((id, _)) = crafter(world, layer, pos) else { return };
     let Some(out) = level(world, layer).and_then(|level| with_property(level.registry(), id, "crafting", "0")) else { return };
+    fields::set_quietly(world, layer, pos, ENTITY, REMAINING, Some(Value::Int(0)));
     send::set(world, layer, pos, out);
 }
 

@@ -101,7 +101,7 @@ impl Kind {
     }
 }
 
-const UNSHOWN_AT_SET: [&str; 7] = ["Furnace", "BlastFurnace", "Smoker", "Hopper", "BrewingStand", "Dispenser", "Dropper"];
+const UNSHOWN: [&str; 7] = ["Furnace", "BlastFurnace", "Smoker", "Hopper", "BrewingStand", "Dispenser", "Dropper"];
 
 pub(crate) fn kind(block: &str) -> Option<Kind> {
     let smelter = |entity, window| Kind { entity, slots: SMELTER_SLOTS, window, has_lid: false, refuses: Some(crate::furnaces::refuses), is_per_player: false };
@@ -165,21 +165,12 @@ fn content(window: u8, slots: &[Option<Held>]) -> acacia_proto::packets::Invento
 /// Gives a container block that was just placed at `pos` its block entity: empty, or for a
 /// shulker box what the placed item held (`item_tag`) and the face it was put against. A chest
 /// gets its other half if one stands beside it; a block that has its entity keeps it, and other
-/// blocks are left alone. A hopper starts ticking.
+/// blocks are left alone. A hopper starts ticking. A furnace's, hopper's, brewing stand's,
+/// dispenser's or dropper's entity is not shown, as BDS showed none set by `/setblock` or put by
+/// hand (research/captures/bds-s7ents.txt, bds-z2hand.txt).
 pub(crate) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &str, item_tag: Option<&Value>, face: Face) {
-    furnish_shown(world, layer, pos, block, item_tag, face, true);
-}
-
-/// [`furnish`] for a block a command or plugin set: a furnace's, hopper's, brewing stand's,
-/// dispenser's or dropper's entity is not shown, as BDS's `/setblock` showed none
-/// (research/captures/bds-s7ents.txt).
-pub(crate) fn furnish_set(world: &mut World, layer: Entity, pos: BlockPos, block: &str) {
-    let shown = kind(block).is_some_and(|kind| !UNSHOWN_AT_SET.contains(&kind.entity));
-    furnish_shown(world, layer, pos, block, None, Face::Up, shown);
-}
-
-fn furnish_shown(world: &mut World, layer: Entity, pos: BlockPos, block: &str, item_tag: Option<&Value>, face: Face, shown: bool) {
     let Some(kind) = kind(block) else { return };
+    let shown = !UNSHOWN.contains(&kind.entity);
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     if level.block_entity(pos).is_none() {
         let mut entity = new_block_entity(kind.entity, pos);

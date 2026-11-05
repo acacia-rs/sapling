@@ -88,7 +88,11 @@ pub(crate) fn store(world: &mut World, player: Entity, slots: Vec<Option<Held>>)
         Screen::Container => {
             let before = slots_at(world, viewing.layer, viewing.pos).unwrap_or_default();
             let changed: Vec<usize> = (0..slots.len().min(before.len())).filter(|slot| before[*slot] != slots[*slot]).collect();
-            super::again::next_tick(world, player, viewing.window, Some(changed));
+            // BDS showed a furnace's changed slot once, a chest's again a tick on (bds-p2furnace.txt, NEXT.md chest-moves).
+            let smelts = super::block_name(world, viewing.layer, viewing.pos).is_some_and(|name| name.ends_with("furnace") || name.ends_with("smoker"));
+            if !smelts {
+                super::again::next_tick(world, player, viewing.window, Some(changed));
+            }
             set_slots(world, viewing.layer, viewing.pos, slots.clone());
             crate::furnaces::taken_by_player(world, player, viewing.layer, viewing.pos, &before, &slots);
         }

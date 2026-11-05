@@ -217,17 +217,20 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
         }
     }
     crate::dragon::blasted(world, layer, at, power);
-    if wreck != Wreck::Nothing {
-        let leaves = match wreck {
-            Wreck::Leaves => 1.0,
-            Wreck::Decays => 1.0 / power,
-            Wreck::Nothing | Wreck::Breaks => 0.0,
-        };
-        blocks::blow_out(world, layer, &cells, leaves);
-    }
-    if rule == Rule::Burning {
-        set_fires(world, layer, &[cells, free].concat());
-    }
+    let leaves = match wreck {
+        Wreck::Leaves => 1.0,
+        Wreck::Decays => 1.0 / power,
+        Wreck::Nothing | Wreck::Breaks => 0.0,
+    };
+    // BDS shows a blast's broken cells and fires a sub-chunk at a time, then its drops (bds-p2last.txt, bds-blasts.txt).
+    let left = blocks::logged(world, |world| {
+        let left = if wreck != Wreck::Nothing { blocks::break_blown(world, layer, &cells, leaves) } else { Default::default() };
+        if rule == Rule::Burning {
+            set_fires(world, layer, &[cells, free].concat());
+        }
+        left
+    });
+    blocks::spill_blown(world, layer, left);
 }
 
 /// A tick of a lit fuse; whether the mob burst, and is gone.

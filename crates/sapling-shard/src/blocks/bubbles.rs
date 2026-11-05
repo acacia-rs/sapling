@@ -63,11 +63,21 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
 pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(wanted) = due(world, layer, pos) else { return };
     let Some(registry) = level(world, layer).map(|level| level.registry()) else { return };
-    let id = match wanted {
-        Some(drags_down) => registry.find(COLUMN, if drags_down { "drag_down=1" } else { "drag_down=0" }),
-        None => registry.find(WATER, "liquid_depth=0"),
-    };
-    if let Some(id) = id {
-        send::set(world, layer, pos, id);
+    let water = registry.find(WATER, "liquid_depth=0");
+    match (wanted, water) {
+        (Some(drags_down), Some(water)) => {
+            let Some(id) = registry.find(COLUMN, if drags_down { "drag_down=1" } else { "drag_down=0" }) else { return };
+            // BDS shows a cell becoming a column with its water as kept and as flowing (bds-p2more.txt).
+            send::logged_apart(world, |world| {
+                if send::set(world, layer, pos, id) {
+                    send::log_liquid(world, layer, pos);
+                    send::log_flowing(world, layer, pos, water);
+                }
+            });
+        }
+        (None, Some(water)) => {
+            send::set(world, layer, pos, water);
+        }
+        _ => {}
     }
 }

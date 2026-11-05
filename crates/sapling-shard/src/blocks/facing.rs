@@ -120,6 +120,9 @@ impl Click {
                 (Face::West, _) => "west",
                 (Face::East, _) => "east",
             },
+            // A hanging sign hangs only put under a block, and keeps no sixteenth either way (bds-z2hand.txt).
+            "hanging" if block.ends_with("_hanging_sign") => if self.face == Face::Down { "1" } else { "0" },
+            "ground_sign_direction" if block.ends_with("_hanging_sign") => "0",
             "ground_sign_direction" => self.sixteenth(),
             // Named for the side the torch leans away from: the block it hangs on.
             "torch_facing_direction" => ["top", "top", "south", "north", "east", "west"][self.face as usize],
@@ -189,6 +192,9 @@ mod tests {
         assert!(placed("minecraft:crafter", Face::Up, 1.0, -90.0).contains("orientation=west_up") && placed("minecraft:decorated_pot", Face::Up, 1.0, -90.0).contains("direction=1"));
         assert!(placed("minecraft:chiseled_bookshelf", Face::Up, 1.0, -90.0).contains("direction=1") && placed("minecraft:calibrated_sculk_sensor", Face::Up, 1.0, -90.0).contains("cardinal_direction=east"));
         assert_eq!([placed("minecraft:glow_lichen", Face::Up, 1.0, -90.0), placed("minecraft:sculk_vein", Face::North, 0.5, 0.0)], ["multi_face_direction_bits=1", "multi_face_direction_bits=4"]);
+        // research/captures/bds-z2hand.txt, a placer looking east.
+        let hanging = |face| placed("minecraft:oak_hanging_sign", face, 0.5, -90.0);
+        assert_eq!([hanging(Face::West), hanging(Face::Down)], ["attached_bit=0,facing_direction=3,ground_sign_direction=0,hanging=0", "attached_bit=0,facing_direction=4,ground_sign_direction=0,hanging=1"]);
         let registry = BlockRegistry::vanilla();
         let piston = registry.states_of("minecraft:piston").next().unwrap().0;
         let facing = |eyes_over| registry.get(oriented(&registry, piston, &Click { face: Face::Up, height: 1.0, yaw: -90.0, eyes_over })).unwrap().properties.to_owned();
