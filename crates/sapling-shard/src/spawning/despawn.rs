@@ -20,11 +20,11 @@ const CHANCE: u32 = 800;
 /// `min_range_inactivity_timer`'s default 30 s.
 const INACTIVE: u32 = 600;
 /// BDS caps the far distance so where `getChunkTickRange()` is 4 or less, and not past it.
-const TICK_RANGE_FAR: f32 = 44.0;
-const CAPPED_TICK_RANGE: i32 = 4;
+pub(super) const TICK_RANGE_FAR: f32 = 44.0;
+pub(super) const CAPPED_TICK_RANGE: i32 = 4;
 /// A monster idles 2 ticks more a tick where it is brighter than 0.5 (`MonsterAiStepSystem`): raw
 /// brightness 13 by the Java game's light ramp, which BDS's overworld shares [U].
-const MONSTER_BRIGHT: u8 = 13;
+pub(super) const MONSTER_BRIGHT: u8 = 13;
 /// Its brightness is read this far up its box (`Actor::getBrightness`, 0x141c652d0).
 const BRIGHTNESS_UP: f32 = 0.66;
 /// Read as always bright.

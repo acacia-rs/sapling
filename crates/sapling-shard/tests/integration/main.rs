@@ -124,6 +124,7 @@ mod players;
 mod raids;
 mod plugin_damage;
 mod paintings;
+mod patrols;
 mod peaceful;
 mod phantoms;
 mod piglins;

@@ -3,12 +3,14 @@
 //! README.md "Spawn rules".
 
 mod biomes;
+mod gates;
 mod herds;
 
 use std::sync::LazyLock;
 
 use biomes::Filter;
 pub use biomes::{biome_downfall, biome_has_tag, biome_id};
+pub use gates::{Delay, Gates, Village, kind_and_event};
 pub use herds::HerdEvents;
 
 /// Where a spot is: under open sky or below something, and in what.
@@ -67,6 +69,7 @@ pub struct SpawnRule {
     pub permute: Vec<(u32, &'static str)>,
     /// The herds it picks one of at random, where they fire events.
     pub herds: Vec<HerdEvents>,
+    pub gates: Gates,
     biomes: Filter,
 }
 
@@ -103,6 +106,7 @@ fn parse(row: &'static str) -> Option<SpawnRule> {
         not_on: Vec::new(),
         permute: Vec::new(),
         herds: Vec::new(),
+        gates: Gates::default(),
         biomes: Filter::parse(biomes),
     };
     for field in fields.split(' ').filter(|field| !field.is_empty()) {
@@ -124,7 +128,7 @@ fn parse(row: &'static str) -> Option<SpawnRule> {
             "not_on" => rule.not_on = value.split(',').collect(),
             "permute" => rule.permute = value.split(',').filter_map(|entry| entry.split_once(':')).filter_map(|(weight, kind)| Some((weight.parse().ok()?, kind))).collect(),
             "herds" => rule.herds = HerdEvents::parse_all(value),
-            _ => {}
+            _ => _ = rule.gates.read(key, value),
         }
     }
     Some(rule)

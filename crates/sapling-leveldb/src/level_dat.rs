@@ -118,6 +118,15 @@ impl LevelDat {
         self.set("Time", Value::Long(time));
     }
 
+    /// The world's age in ticks, which runs whatever the daylight cycle does.
+    pub fn age(&self) -> Option<i64> {
+        self.long("currentTick")
+    }
+
+    pub fn set_age(&mut self, age: i64) {
+        self.set("currentTick", Value::Long(age));
+    }
+
     /// Whether the time of day advances (the `dodaylightcycle` game rule; on when absent).
     pub fn daylight_cycle(&self) -> bool {
         !matches!(self.root.get("dodaylightcycle"), Some(Value::Byte(0)))

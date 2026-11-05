@@ -20,6 +20,8 @@ pub struct Level {
     /// The time of day counter: a day is 24000 long and the count runs on past it, while the
     /// `doDayLightCycle` rule is on.
     pub time: i64,
+    /// Ticks the world has run (`currentTick`), whatever the daylight cycle does.
+    pub age: i64,
     pub rules: GameRules,
     /// The lit Nether portals of every dimension, by which a portal finds the one it leads to.
     pub portals: Vec<PortalRecord>,
@@ -61,6 +63,7 @@ impl Default for Level {
         Self {
             spawn: None,
             time: 6000,
+            age: 0,
             rules: GameRules::default(),
             portals: Vec::new(),
             seed: 0,
