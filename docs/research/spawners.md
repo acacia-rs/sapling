@@ -170,7 +170,11 @@ Left out:
 ## Ominous item spawners
 
 Decompiled 2026-11-05 (twelfth7; TrialSpawner tick 1411923a0, spawn 141197c30, spot 141199cf0, item roll
-1411990f0, entity tick 1429fa630); captures bds-u1omen.txt. Not ported (`spawners/trial/ominous.rs` TODO).
+1411990f0, entity tick 1429fa630); captures bds-u1omen.txt. Ported 2026-11-05 (twelfth10,
+`spawners/trial/ominous_items.rs`; test `spawners::trial`); re-drilled, sapling-u1omen.txt drops its spawners
+with the same packets, a lingering potion shot at (0, -0.5, 0) and an arrow with spread. Not ported: the coin
+for the wave's mobs (players only), the kept per-position MT19937 roll (each drop rolls the table's two pools
+anew), and the spawn box check.
 
 - When: an active spawner with `ominous` set, at `level.currentTick % 160 == 0` (the world's tick, not the
   spawner's), one at most; it needs a detected player alive, not creative, within `required_player_range`.
@@ -188,5 +192,10 @@ Decompiled 2026-11-05 (twelfth7; TrialSpawner tick 1411923a0, spawn 141197c30, s
   compound, `MinecartDisplayOffset` its delay, `nextInt(61) + 60`; `spawn_item_begin` there and LevelEvent 3612
   at the trial spawner with 1. At 35 ticks left `about_to_spawn_item`; at 0 the item's projectile shot down
   (0, -1, 0) (an arrow at about 1.29 with spread, a lingering potion at (0, -0.5, 0)), else a one-count item
-  dropped, then `spawn_item` and the entity gone in that tick. [U] each item's dispense power and spread, and
-  whether a stack of charges throws one.
+  dropped, then `spawn_item` and the entity gone in that tick. The throw (twelfth10): the item's
+  `createProjectileActor` (an arrow's 142a7cf70) calls `Spawner::spawnProjectile` (14118d160) with no owner,
+  which shoots (`ProjectileComponent::shoot` 1424020c0) at the entity JSON's `power` and `uncertainty_base`:
+  motion = power (way + 0.0075 uncertainty g) per axis, g normal, not renormalised: arrow 1.1 and 16 (both
+  bds-u1omen.txt arrows within 2.5 sigma), lingering potion 0.5 and none (its `angle_offset` unused),
+  fire charge 1.3 and 10, wind charge 1.5 and 1 (`shots/dispensed.rs` `shoot_unowned`). [U] whether a stack of
+  charges throws one.

@@ -52,8 +52,8 @@ struct Rocket {
     glider: Option<Entity>,
 }
 
-/// The item a rocket is shown carrying: its stack's compound, as the network writes NBT.
-fn display_item(world: &World, layer: Entity, stack: &ItemStack) -> Option<MetadataDictionaryItem> {
+/// The item a rocket (or an ominous item spawner) is shown carrying: its stack's compound, as the network writes NBT.
+pub(crate) fn display_item(world: &World, layer: Entity, stack: &ItemStack) -> Option<MetadataDictionaryItem> {
     let registry = world.get::<Layer>(layer)?.world.registry();
     let mut out = BytesMut::new();
     nbt::write::<Network>(&mut out, &Nbt { name: String::new(), value: Value::Compound(stack.fields(registry)) });

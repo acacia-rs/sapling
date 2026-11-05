@@ -1,8 +1,8 @@
 //! A trial spawner turning ominous (docs/research/spawners.md "Ominous", the Java game's
 //! `TrialSpawner.tryDetectPlayers`): a player it may take on with trial omen, else with bad omen,
 //! makes it so. Bad omen turns to trial omen for 18000 ticks a level; the spawner shows LevelEvent
-//! 3616, loses its wave's mobs and starts over on its ominous config.
-// TODO: the ominous item spawners an active one drops over its players (docs/research/spawners.md, "Ominous item spawners").
+//! 3616, loses its wave's mobs and starts over on its ominous config. The items it then drops
+//! over its players: ominous_items.rs.
 
 use acacia_proto::packets::LevelEventEvent;
 use bevy_ecs::prelude::*;
