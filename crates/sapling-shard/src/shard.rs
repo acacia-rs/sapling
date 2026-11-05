@@ -75,6 +75,7 @@ impl Shard {
         let chunks = (
             chunks::poll_and_relight_worlds,
             actors::arrive,
+            actors::make_template_mobs,
             movement::player_input,
             movement::crawl,
             border::keep_inside,

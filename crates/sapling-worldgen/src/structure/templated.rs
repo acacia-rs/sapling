@@ -96,11 +96,11 @@ impl Structures {
         }
     }
 
-    /// The outposts with a piece meeting `chunk`.
+    /// The outposts whose whole box meets `chunk`: a column no piece meets still files the whole box.
     pub(super) fn outposts_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<outpost::Outpost>> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
         let starts = self.starts_near(density, StructureKind::Outpost, chunk, OUTPOST_REACH);
-        starts.into_iter().map(|start| self.outpost(start)).filter(|o| o.pieces.iter().any(|p| p.bb.intersects(&column))).collect()
+        starts.into_iter().map(|start| self.outpost(start)).filter(|o| o.whole_box().intersects(&column)).collect()
     }
 
     /// The outpost starting in `start`, whatever its start check.

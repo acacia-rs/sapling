@@ -169,7 +169,9 @@ fn a_boat_kept_with_its_rider_takes_it_back_when_loaded() {
     let mut h = Harness::with(config(), World::with_storage(floor_with([boat, pig].concat())));
     let sent = enter_stored(&mut h, 1);
     let sent = [sent, ticks(&mut h, 5)].concat();
-    assert_eq!(links(&sent).len(), 1, "the pig rides the boat: {:?}", links(&sent));
+    // Told after the pig's announcement and again after the boat's, as BDS's riders (bds-h3herds.txt).
+    let told = links(&sent);
+    assert!(!told.is_empty() && told.iter().all(|link| *link == told[0] && link.2 == 1), "the pig rides the boat: {told:?}");
     h.remote.run(|ctx| {
         let all = ctx.entities();
         let kind_of = |name: &str| all.iter().find(|entity| entity.kind == name).map(|entity| entity.id).expect(name);

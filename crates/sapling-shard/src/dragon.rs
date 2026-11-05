@@ -40,6 +40,7 @@ pub(crate) use relinks::{exit_of as gateway_exit, shown as gateway_shown};
 pub(crate) use crystals::{Crystal, KIND as CRYSTAL, blast_particles, burst, from_storage as crystal_from_storage, place as place_crystal};
 pub(crate) use hooks::{blasted, body_harm, describe, dies, hurt, is_dying, part_reach, takes_blast};
 pub(crate) use spawn::{Dragon, KIND as DRAGON, adopt};
+pub(crate) use fireball::{Fireball, reflect as reflect_fireball};
 
 /// A fight runs while a player is in this cube round the island's middle (`-200..201`).
 const NEAR: f32 = 200.0;

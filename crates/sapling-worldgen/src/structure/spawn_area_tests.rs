@@ -35,6 +35,14 @@ fn outpost_pieces_stand_at_their_heights() {
     assert_eq!(areas(&generator.chunk_blocks(116, -72), "minecraft:pillager_outpost", -3), [[1865, 63, -1152, 1871, 319, -1137], [1866, 134, -1147, 1871, 139, -1141]]);
 }
 
+/// research/captures/bds-jxoutpost.txt's world: columns only the whole box meets keep it alone.
+#[test]
+fn outpost_columns_no_piece_meets_keep_the_whole_box() {
+    let generator = OverworldGenerator::new(SEED);
+    assert_eq!(areas(&generator.chunk_blocks(116, -73), "minecraft:pillager_outpost", -3), [[1865, 63, -1153, 1871, 319, -1153]]);
+    assert_eq!(areas(&generator.chunk_blocks(117, -73), "minecraft:pillager_outpost", -3), [[1872, 63, -1153, 1887, 319, -1153]]);
+}
+
 #[test]
 fn fortress_files_the_pieces_meeting_the_chunk() {
     let generator = NetherGenerator::new(SEED);

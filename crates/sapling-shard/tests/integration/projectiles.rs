@@ -156,6 +156,25 @@ fn a_riptide_throws_only_in_the_rain_still_falling() {
     assert!(!thrown(draw(&mut h, 10, 2)), "the rain gone");
 }
 
+/// `LightningRodBlock`'s projectile hit (Linux 0xc538e10): in a thunderstorm a Channeling trident
+/// on a rod calls a bolt to the middle of the cell above it; not drilled.
+#[test]
+fn a_channeling_trident_on_a_rod_calls_a_bolt_over_it_in_a_storm() {
+    let mut h = ready(GameMode::Creative, &[], 0.0);
+    let trident = Item { enchantments: vec![(32, 1)], ..Item::new("minecraft:trident", 1) };
+    h.remote.run(move |ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&trident)));
+        // At the height a level throw meets it; one above would shut out the sky.
+        ctx.set_block([0, 66, 4], &sapling_api::Block::new("minecraft:lightning_rod").with("facing_direction=1,powered_bit=0"));
+        ctx.set_weather(Weather::Thunder, None);
+    });
+    watch(&mut h, 200);
+    let sent = draw(&mut h, 10, 10);
+    let bolts: Vec<[f32; 3]> = added(&sent, "minecraft:lightning_bolt").iter().map(|bolt| [bolt.position.x, bolt.position.y, bolt.position.z]).collect();
+    assert!(bolts.len() == 1 && bolts[0][0] == 0.5 && bolts[0][2] == 4.5, "{bolts:?}");
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "item.trident.thunder"));
+}
+
 #[test]
 fn a_trident_with_loyalty_comes_back_to_the_hand() {
     let (mut h, _) = stored(vec![enchanted("minecraft:trident", &[(31, 3)], 0)], Vec::new());

@@ -4,6 +4,7 @@
 //! those who see the vehicle as BDS does (research/captures/bds-ride.txt); every tick the drivers'
 //! inputs move what they drive (drive.rs) and the riders are carried to their seats (carry.rs).
 
+mod announced;
 mod backend;
 mod body;
 mod breaking;
@@ -150,6 +151,11 @@ pub(crate) fn seat(world: &mut World, rider: Entity, vehicle: Entity) -> Result<
 /// Takes `rider` off what it rides; with `step_off` it is put where vanilla's riders step off to
 /// (exit.rs). False for one that rides nothing.
 pub(crate) fn unseat(world: &mut World, rider: Entity, step_off: bool) -> bool {
+    unseat_told(world, rider, step_off, false)
+}
+
+/// [`unseat`], its link told `immediate` when the rider is going (BDS 1457bd1f0, vehicles.md).
+fn unseat_told(world: &mut World, rider: Entity, step_off: bool, immediate: bool) -> bool {
     let Some(Riding { vehicle, id: vehicle_id }) = world.get::<Riding>(rider).copied() else { return false };
     world.entity_mut(rider).remove::<(Riding, Reins)>();
     let rider_id = world.get::<NetId>(rider).map_or(0, |id| id.0);
@@ -160,9 +166,10 @@ pub(crate) fn unseat(world: &mut World, rider: Entity, step_off: bool) -> bool {
     if left == Some(true) {
         world.entity_mut(vehicle).remove::<Seats>();
     }
-    let mut told = vec![packets::link(vehicle_id, rider_id, LinkKind::Off, false)];
+    let mut told = vec![packets::link(vehicle_id, rider_id, LinkKind::Off, immediate)];
     told.extend(seat_packets(world, vehicle, Told::Moved));
     tell(world, vehicle, rider, told);
+    announced::unfile(world, rider);
     retell(world, vehicle);
     if step_off {
         exit::step_off(world, rider, vehicle);
@@ -178,7 +185,7 @@ pub(crate) fn evict(world: &mut World, vehicle: Entity) -> usize {
 
 /// Lets an entity or player that is going leave its seat and lets its riders off.
 pub(crate) fn forget(world: &mut World, entity: Entity) {
-    unseat(world, entity, false);
+    unseat_told(world, entity, false, true);
     evict(world, entity);
 }
 
@@ -189,8 +196,6 @@ enum Told {
     Newcomer(Entity),
     /// Each one's seat moved: positions alone.
     Moved,
-    /// Each one's whole seat, for a viewer who did not know of them.
-    Whole,
 }
 
 /// The seats of `vehicle`'s riders (their wire positions in the vehicle's frame).
@@ -201,7 +206,7 @@ fn seat_packets(world: &World, vehicle: Entity, told: Told) -> Vec<Bytes> {
     let mut packets = Vec::new();
     for (index, rider) in riders.0.iter().enumerate() {
         let (Some(seat), Some(id), Some(rider_kind)) = (layout.seat(count, index), world.get::<NetId>(*rider), kind_of(world, *rider)) else { continue };
-        let whole = told == Told::Whole || told == Told::Newcomer(*rider);
+        let whole = told == Told::Newcomer(*rider);
         if whole || count > 1 || told == Told::Moved {
             packets.push(packets::seat(id.0, &seat, seats::offset(&seat, &rider_kind, 0.0), whole));
         }
@@ -221,13 +226,14 @@ fn tell(world: &mut World, vehicle: Entity, rider: Entity, packets: Vec<Bytes>) 
     crate::entities::tell_viewers(world, rider, layer, cell, packets);
 }
 
-/// What players who come to see `vehicle` later are told after it: its tack, its riders' seats
-/// and links; and its stored compound names its riders that a world folder keeps.
+/// What players who come to see `vehicle` later are told after it: its tack, its player riders'
+/// seats and every rider's link (mob riders' seats ride in their announcements, announced.rs);
+/// and its stored compound names its riders that a world folder keeps.
 fn retell(world: &mut World, vehicle: Entity) {
     let riders = world.get::<Seats>(vehicle).map(|seats| seats.0.clone()).unwrap_or_default();
     let vehicle_id = world.get::<NetId>(vehicle).map_or(0, |id| id.0);
     let mut after = mounts::worn(world, vehicle);
-    after.extend(seat_packets(world, vehicle, Told::Whole));
+    after.extend(announced::file(world, vehicle));
     for (index, rider) in riders.iter().enumerate() {
         let Some(id) = world.get::<NetId>(*rider) else { continue };
         // BDS sent no seating link `immediate` in any capture (118 of type 1, 6 of type 2).

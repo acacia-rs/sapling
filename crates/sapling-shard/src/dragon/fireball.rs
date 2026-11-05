@@ -3,8 +3,9 @@
 //! towards its prey, at the middle of the prey's box, at 1.3 with BDS's spread; the dragon's box
 //! pushes it off for its first ticks, then it flies straight, and where its point meets a block or
 //! the box of a player or mob other than a dragon, grown by 0.3, it splashes, and the tick after
-//! leaves a breath cloud (cloud.rs) and is gone. A player's hit does nothing to it (extras 5.1).
-// TODO: a projectile that hits it sends it off along its shooter's look (extras 5.1), once players shoot.
+//! leaves a breath cloud (cloud.rs) and is gone. A player's hit does nothing to it, but a shot that
+//! meets it sends it off along its shooter's look at 1, the shooter its owner, and then it may meet
+//! the dragon too (extras 5.1 `reflect` 142400b00; not drilled).
 
 use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
@@ -37,11 +38,39 @@ const FLIES: u32 = 600;
 const STEP: f32 = 360.0 / 256.0;
 
 #[derive(Component)]
-struct Fireball {
+pub(crate) struct Fireball {
     age: u32,
     pitch: f32,
     yaw: f32,
     met: Option<[f32; 3]>,
+    reflected: bool,
+}
+
+/// A shot by `shooter`, flying at `motion`, met `fireball`: false when it is no dragon fireball.
+/// A shooter without a player's look (a mob) sends it along the shot's way [U].
+pub(crate) fn reflect(world: &mut World, fireball: Entity, shooter: Entity, motion: [f32; 3]) -> bool {
+    if world.get::<Fireball>(fireball).is_none() {
+        return false;
+    }
+    let along = match world.get::<Position>(shooter) {
+        Some(position) => {
+            let (yaw, pitch) = (position.yaw.to_radians(), position.pitch.to_radians());
+            [-yaw.sin() * pitch.cos(), -pitch.sin(), yaw.cos() * pitch.cos()]
+        }
+        None => motion,
+    };
+    let long = along.iter().map(|c| c * c).sum::<f32>().sqrt();
+    let way = if long < 1e-4 { [0.0; 3] } else { along.map(|c| c / long) };
+    if let Some(mut body) = world.get_mut::<Body>(fireball) {
+        body.motion = way;
+    }
+    world.get_mut::<Fireball>(fireball).expect("checked").reflected = true;
+    let (Some(id), Some(owner)) = (world.get::<NetId>(fireball).map(|id| id.0), world.get::<NetId>(shooter).map(|id| id.0 as i64)) else { return true };
+    let told = SetEntityData { runtime_entity_id: id, metadata: vec![item(Key::OwnerEid, Plain::Long(owner))], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
+    if let (Some(layer), Some(body)) = (world.get::<InLayer>(fireball).map(|in_layer| in_layer.0), world.get::<Body>(fireball).copied()) {
+        entities::tell_viewers(world, fireball, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&told)]);
+    }
+    true
 }
 
 /// The pitch and yaw of a motion, as BDS turns a projectile (`shoot` 1424020c0).
@@ -99,7 +128,7 @@ pub(super) fn shoot(world: &mut World, layer: Entity, dragon: Entity, from: [f32
     let turn = [turned(motion[1].atan2(motion[0].hypot(motion[2])).to_degrees()), turned(motion[0].atan2(motion[2]).to_degrees())];
     let Some(owner) = world.get::<NetId>(dragon).map(|id| id.0) else { return };
     let Some(fireball) = entities::spawn(world, layer, KIND, Body::new(at, motion, SIZE), at, |id| Some(announcement(id, owner as i64, at, motion, turn))) else { return };
-    world.entity_mut(fireball).insert(Fireball { age: 0, pitch: turn[0], yaw: turn[1], met: None });
+    world.entity_mut(fireball).insert(Fireball { age: 0, pitch: turn[0], yaw: turn[1], met: None, reflected: false });
     if let Some(mut told) = world.get_mut::<Told>(fireball) {
         told.pitch(turn[0]);
         told.face(turn[1], 0.0);
@@ -148,8 +177,8 @@ pub(super) fn meets_block(level: &sapling_world::World, from: [f32; 3], by: [f32
 }
 
 /// Where along the move the point enters a player's or a mob's box grown by 0.3 (the slab test);
-/// the dragons are passed.
-fn meets_body(world: &mut World, layer: Entity, from: [f32; 3], by: [f32; 3]) -> Option<f32> {
+/// the dragons are passed unless it was sent back (`dragons`).
+fn meets_body(world: &mut World, layer: Entity, from: [f32; 3], by: [f32; 3], dragons: bool) -> Option<f32> {
     let enters = |(low, high): ([f32; 3], [f32; 3])| {
         let (low, high) = (low.map(|c| c - GROWN), high.map(|c| c + GROWN));
         let (mut first, mut last) = (0.0f32, 1.0f32);
@@ -169,14 +198,14 @@ fn meets_body(world: &mut World, layer: Entity, from: [f32; 3], by: [f32; 3]) ->
     let spectating = |player: Entity| world.get::<crate::components::Mode>(player).is_some_and(|mode| mode.0 == sapling_api::GameMode::Spectator);
     let players = in_world(world).into_iter().filter(|player| world.get::<InLayer>(*player).is_some_and(|in_layer| in_layer.0 == layer) && !spectating(*player));
     let mut boxes: Vec<_> = players.filter_map(|player| Some(player_box(world.get::<Position>(player)?.feet))).collect();
-    let mut mobs = world.query_filtered::<(&InLayer, &Body), (With<crate::creatures::Creature>, Without<super::Dragon>)>();
-    boxes.extend(mobs.iter(world).filter(|(in_layer, _)| in_layer.0 == layer).map(|(_, body)| body.bounds()));
+    let mut mobs = world.query_filtered::<(&InLayer, &Body, Has<super::Dragon>), With<crate::creatures::Creature>>();
+    boxes.extend(mobs.iter(world).filter(|(in_layer, _, dragon)| in_layer.0 == layer && (dragons || !dragon)).map(|(_, body, _)| body.bounds()));
     boxes.into_iter().filter_map(enters).min_by(f32::total_cmp)
 }
 
 fn fly(world: &mut World, fireball: Entity, layer: Entity, id: u64) -> Option<()> {
     let mut body = *world.get::<Body>(fireball)?;
-    let (age, yaw, met) = world.get::<Fireball>(fireball).map(|ball| (ball.age, ball.yaw, ball.met))?;
+    let (age, yaw, met, reflected) = world.get::<Fireball>(fireball).map(|ball| (ball.age, ball.yaw, ball.met, ball.reflected))?;
     world.get_mut::<Fireball>(fireball)?.age += 1;
     let cell = body.at.map(|c| c.floor() as i32);
     if let Some(at) = met {
@@ -200,7 +229,7 @@ fn fly(world: &mut World, fireball: Entity, layer: Entity, id: u64) -> Option<()
         _ => {}
     }
     let block = meets_block(&world.get::<Layer>(layer)?.world, body.at, body.motion);
-    let hit = [block, meets_body(world, layer, body.at, body.motion)].into_iter().flatten().min_by(f32::total_cmp);
+    let hit = [block, meets_body(world, layer, body.at, body.motion, reflected)].into_iter().flatten().min_by(f32::total_cmp);
     let to = hit.map_or(1.0, |t| t);
     // A face it meets is a whole block's: the search's last bits are dropped.
     let snapped = |c: f32| if (c - c.round()).abs() < 1e-4 && hit == block && hit.is_some() { c.round() } else { c };
@@ -232,5 +261,23 @@ pub(super) fn tick(world: &mut World) {
     let fireballs: Vec<(Entity, Entity, u64)> = world.query_filtered::<(Entity, &InLayer, &NetId), With<Fireball>>().iter(world).map(|(ball, layer, id)| (ball, layer.0, id.0)).collect();
     for (fireball, layer, id) in fireballs {
         fly(world, fireball, layer, id);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_shot_sends_a_fireball_along_its_shooters_look_at_one_a_tick() {
+        let mut world = World::new();
+        let ball = world.spawn((Body::new([0.0; 3], [0.0, 0.0, -1.3], SIZE), Fireball { age: 3, pitch: 0.0, yaw: 0.0, met: None, reflected: false })).id();
+        let player = world.spawn(Position { feet: [0.0; 3], yaw: 90.0, pitch: 0.0, head_yaw: 90.0, on_ground: true }).id();
+        let other = world.spawn(Body::new([0.0; 3], [0.0; 3], SIZE)).id();
+        assert!(!reflect(&mut world, other, player, [1.0, 0.0, 0.0]), "not a fireball");
+        assert!(reflect(&mut world, ball, player, [1.0, 0.0, 0.0]));
+        let motion = world.get::<Body>(ball).unwrap().motion;
+        assert!((motion[0] + 1.0).abs() < 1e-6 && motion[1].abs() < 1e-6 && motion[2].abs() < 1e-6, "{motion:?}");
+        assert!(world.get::<Fireball>(ball).unwrap().reflected, "it may meet the dragon now");
     }
 }

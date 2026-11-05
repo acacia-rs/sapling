@@ -251,8 +251,10 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
 
 ## Not done, and why
 
-- **Dragon:** another projectile does not send its fireball back (BDS: along the shooter's look at speed 1,
-  extras 5.1); sapling's players do not shoot yet, and no mob that does comes near the fight.
+- **Dragon:** a shot that meets its fireball now sends it off along the shooter's look at 1, the shooter its
+  owner (told as `OwnerEid`), able to meet the dragon then (extras 5.1; `dragon/fireball.rs` `reflect`, test
+  `a_shot_sends_a_fireball_along_its_shooters_look_at_one_a_tick`); the shot is refused (an arrow bounces).
+  Not drilled: the owner's `SetEntityData`, the shot's own fate, a mob shooter's look (taken as the shot's way).
 - **The second kill's orbs**: sapling's did not join up (77 entities against BDS's 24); with merging built they
   list as BDS's (26, 26, 43 against 24, 24, 46; docs/research/experience.md "Drilled").
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,
