@@ -2,7 +2,7 @@
 //! sent a mob hidden past 4 chunks nothing but a teleport's move (research/captures/bds-farmobs.txt,
 //! bds-tickcircle*.txt), and what it does in the tick it appeared waits for its announcement.
 
-use acacia_proto::packets::MoveEntityDelta;
+use acacia_proto::packets::{MoveEntityDelta, SetEntityData};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 
@@ -31,7 +31,8 @@ pub(crate) fn after_announcing_of(world: &mut World, entity: Entity, layer: Enti
 /// after them (mobs.rs).
 pub(crate) fn send_held_moves(world: &mut World) {
     super::first_data::send(world);
-    let Some(held) = world.get_resource_mut::<AfterAnnouncing>().map(|mut held| std::mem::take(&mut held.0)) else { return };
+    let Some(mut held) = world.get_resource_mut::<AfterAnnouncing>().map(|mut held| std::mem::take(&mut held.0)) else { return };
+    keep_last_flags(&mut held);
     for (layer, cell, about, packets) in held {
         match about {
             None => view::to_viewers(world, layer, cell, &packets),
@@ -45,6 +46,23 @@ pub(crate) fn send_held_moves(world: &mut World) {
             }
         }
     }
+}
+
+/// Leaves each new entity's last flag word of the tick and drops the ones before it: BDS told a
+/// zombie's first BREATHING and fire in one SetEntityData (bds-firstdata.txt). Each word is whole.
+fn keep_last_flags(held: &mut [(Entity, [i32; 3], Option<Entity>, Vec<Bytes>)]) {
+    let mut told = std::collections::HashSet::new();
+    for (_, _, about, packets) in held.iter_mut().rev() {
+        let Some(entity) = *about else { continue };
+        let mut kept: Vec<Bytes> = packets.drain(..).rev().filter(|packet| !is_flags_only(packet) || told.insert(entity)).collect();
+        kept.reverse();
+        *packets = kept;
+    }
+}
+
+fn is_flags_only(packet: &Bytes) -> bool {
+    let data = acacia_proto::RawPacket::parse(packet.clone()).ok().and_then(|raw| raw.decode::<SetEntityData>().ok());
+    data.is_some_and(|data| matches!(&data.metadata[..], [item] if item.key == acacia_proto::types::MetadataDictionaryItemKey::Flags))
 }
 
 /// Hands `packets` to every player whose client has `entity`.

@@ -290,8 +290,11 @@ pub(crate) fn tick(world: &mut World) {
         if harm::tick(world, entity, layer, id, &kind, &start, &body, world.get::<Dying>(entity).is_some()) {
             die(world, entity, layer, &kind, &body);
         }
+        // A new mob is announced as it was made, its first tick told after (bds-firstdata.txt: a
+        // zombie summoned in the sun shown unlit, then lit); later viewers get it from its second.
         let health = world.get::<Health>(entity);
-        if !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before {
+        let changed = !packets.is_empty() || health.map(|health| (health.left(), health.is_burning())) != before;
+        if !entities::is_new(world, entity) && (changed || entities::was_new(world, entity)) {
             reshow(world, entity);
         }
     }

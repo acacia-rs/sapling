@@ -214,6 +214,11 @@ pub(crate) fn is_new(world: &World, entity: Entity) -> bool {
     world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0)
 }
 
+/// Whether the entity appeared in the tick before this one.
+pub(crate) fn was_new(world: &World, entity: Entity) -> bool {
+    world.get::<Born>(entity).is_some_and(|born| born.0 + 1 == world.resource::<Tick>().0)
+}
+
 /// The world, kind and body of every entity that has had a tick of its own: on BDS one appearing
 /// on a plate presses it the tick after (research/captures/bds-plates.txt).
 pub(crate) fn bodies(world: &World) -> Vec<(Entity, String, Body)> {

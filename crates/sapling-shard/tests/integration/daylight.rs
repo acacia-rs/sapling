@@ -30,6 +30,30 @@ fn the_sun_burns_a_zombie_under_the_sky_and_not_a_creeper_or_one_under_a_roof() 
 }
 
 #[test]
+fn a_zombie_summoned_in_the_sun_is_announced_unlit_and_lit_after() {
+    use acacia_proto::packets::{AddEntity, SetEntityData};
+    use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemValue, MetadataFlags1};
+    // research/captures/bds-firstdata.txt: AddEntity and the first data unlit, then one word with
+    // BREATHING and the fire. The remote's summon comes after the creatures' tick, so here the
+    // words fall in two ticks; a command's makes one (sapling-firstdata.txt).
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        ctx.set_time(6000);
+        assert!(ctx.spawn_entity("minecraft:zombie", [4.5, 65.0, 0.5]).is_some());
+    });
+    let sent: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let flags = |metadata: &[MetadataDictionaryItem]| metadata.iter().find_map(|item| if let MetadataDictionaryItemValue::Flags(flags) = &item.value { Some(flags.0) } else { None });
+    let added = all::<AddEntity>(&sent).remove(0);
+    let (fire, breathing) = (MetadataFlags1::ONFIRE.0, MetadataFlags1::BREATHING.0);
+    assert_eq!(flags(&added.metadata).map(|word| word & fire), Some(0), "announced unlit");
+    let words: Vec<_> = all::<SetEntityData>(&sent).iter().filter(|data| data.runtime_entity_id == added.runtime_id).filter_map(|data| flags(&data.metadata)).collect();
+    assert_eq!(words.first().map(|word| word & fire), Some(0), "first data unlit: {words:?}");
+    assert_eq!(words.last().map(|word| (word & fire != 0, word & breathing != 0)), Some((true, true)), "{words:?}");
+}
+
+#[test]
 fn a_spider_in_the_sun_leaves_a_player_be_and_one_under_a_roof_does_not() {
     // research/captures/bds-spiders.txt.
     let bitten = |roofed: bool| {
