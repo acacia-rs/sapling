@@ -267,8 +267,11 @@ Particle (1411b5340)
   the tick after (`darkened`), the warden's sounds held for its announcement (`warden::summon_emerging`),
   test `a_shrieker_stood_on_warns_three_times_200_ticks_apart_then_a_warden_emerges`; re-drilled
   (sapling-t2warden.txt): the five ends and the warden's arrival in BDS's order. Its own first
-  darkness pulse comes with it now, a tick after BDS's (BDS made it at the darkness and showed it a
-  tick later). No warning with a warden within 48; on peaceful it shrieks but warns no one.
+  darkness pulse came with it, a tick after BDS's: BDS makes the warden at the shrieker's darkness,
+  so its pulse is the second Darkness of that tick (bds-t2warden.txt 52780), and shows it a tick later.
+  Fixed 2026-11-05 (twelfth wave): the spot is picked and the warden's darkness cast with the
+  shrieker's (`warden::darken_ahead`), its next pulse 121 ticks from then; test asserts both in one
+  tick. No warning with a warden within 48; on peaceful it shrieks but warns no one.
   Left out: the warning level's decay (Java's one each 12000 ticks is kept), sharing levels with players
   within 16 not drilled.
 - Entity listeners (warden 148f8bfd0 owner 2 range 16, allay owner 3), `VibrationListenerSystem` 1484556e0.

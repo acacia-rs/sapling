@@ -121,13 +121,21 @@ and a flat world locates no stronghold); sapling's side on `drill_server` with `
   eye (y + 0.125, 0.2 up); broken, LevelEvent 2003 (data 10) and 1041 at the eye, RemoveEntity the tick after.
 - Turning (fixed 2026-11-05, twelfth wave): each tick, before the motion turns, pitch and yaw go a fifth
   of the way (wrapped to +-180) to atan2(motion y, motion z) and atan2(motion x, motion z), x 57.295776
-  (14469ee30; the pitch over z, not the horizontal length, is BDS's). Told as bytes cut toward zero
-  (-29.5 degrees is 235), unlike `Told`'s cut after wrapping to 0..360. Against bds-eye-throw.txt's 78
-  moves: yaw within a byte in 71, pitch in 70, the misses in the last ticks' small erratic motions.
-  `eyes::turn`, test `the_eye_turns_as_bds_tells_it`.
-- Left different: BDS pushes the eye out of its thrower's box (bds-eye-near.txt's fall through the player left
-  the fit in x/z); sapling's item comes before the RemoveEntity, its
-  stack ids do not count up, its item's toss is the shard's dice.
+  (14469ee30; the pitch over z, not the horizontal length, is BDS's). Told as every entity's turn is
+  (`sync::angle_byte`, research/bds-actor-move-sync.md "Turn bytes"); re-drilled 2026-11-05
+  (sapling-eye-throw.txt): all 79 told pitches and yaws equal bds-eye-throw.txt's, where the eye's own
+  rounding had 71 and 70. `eyes::turn`, test `the_eye_turns_as_bds_tells_it`.
+- Pushed by its thrower (bds-eye-near.txt, checked 2026-11-05, twelfth wave): with no push the model
+  fits the capture to 1e-4 until the eye's box comes within the player's, then the eye is shoved away
+  across (about 0.06 then 0.12 off in x and z within two ticks). BDS's push (`Mob::pushActors` 1429f2250,
+  the pusher's box grown 0.2 across; `push` 142fa1d50 and its first mode 142fa30c0: Java's larger-axis
+  rule times the preset's strength at +0x44, less the push-through, then the pusher's share +0x54 and the
+  pushed one's +0x58; 142fa31d0 adds it to the motion) comes from the 1.26 `pushable_by_entity` presets,
+  whose numbers for a legacy `minecraft:pushable` were not read. Fits of that rule to the capture
+  (strength 0.005 to 0.3, the box grown 0 to 0.3, before or after the flight's turn, into the motion or
+  the position) left 0.06 off at best, so it is not ported; sapling's eye passes through the player.
+- Left different: sapling's item comes before the RemoveEntity, its stack ids do not count up, its item's
+  toss is the shard's dice.
 
 ## The dragon fight (bds-dragon-*.txt)
 

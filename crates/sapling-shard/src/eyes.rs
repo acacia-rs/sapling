@@ -46,11 +46,6 @@ fn turn(turned: [f32; 2], [x, y, z]: [f32; 3]) -> [f32; 2] {
     std::array::from_fn(|side| (((toward[side] - turned[side]) + 180.0).rem_euclid(360.0) - 180.0) * 0.2 + turned[side])
 }
 
-/// `degrees` cut to the byte BDS tells, toward zero (a yaw of -29.5 is 235, not `Told`'s 234).
-fn on_wire(degrees: f32) -> f32 {
-    (degrees * 256.0 / 360.0).trunc() * 360.0 / 256.0
-}
-
 /// Where an eye at `from` flies for the stronghold block `stronghold`.
 fn aim(from: [f32; 3], stronghold: [i32; 3]) -> [f32; 3] {
     let [sx, sy, sz] = stronghold.map(|c| c as f32);
@@ -137,7 +132,7 @@ pub(crate) fn tick(world: &mut World) {
         let packets = world
             .get_mut::<Told>(eye)
             .map(|mut told| {
-                let [pitch, yaw] = turned.map(on_wire);
+                let [pitch, yaw] = turned;
                 told.pitch(pitch);
                 told.face(yaw, 0.0);
                 told.update(id, at, motion, true)
@@ -190,7 +185,7 @@ mod tests {
         for _ in 0..6 {
             turned = super::turn(turned, flight.1);
             flight = super::step(flight.0, flight.1, target);
-            told.push(turned.map(|degrees| (super::on_wire(degrees).rem_euclid(360.0) * 256.0 / 360.0) as u8));
+            told.push(turned.map(crate::sync::angle_byte));
         }
         assert_eq!(told[1..], [[21, 235], [38, 218], [52, 204], [63, 193], [71, 185]]);
     }

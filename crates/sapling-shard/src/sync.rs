@@ -33,6 +33,12 @@ pub(crate) fn flags_packet(id: u64, word: Flags) -> Bytes {
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![flags_item(word)], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
 }
 
+/// The byte BDS tells a turn of `degrees` in: wrapped to -180..180, then cut toward zero
+/// (research/captures/bds-g8rot.txt: -29.5 and 330.5 are 236, -0.7 is 0, 200 is 143).
+pub(crate) fn angle_byte(degrees: f32) -> u8 {
+    (((degrees + 180.0).rem_euclid(360.0) - 180.0) / 1.40625) as i32 as u8
+}
+
 fn length(v: [f32; 3]) -> f32 {
     v.iter().map(|axis| axis * axis).sum::<f32>().sqrt()
 }
@@ -133,7 +139,7 @@ impl Told {
     /// The entity now pitches `pitch` degrees, told with its next [`Told::update`] (a projectile's);
     /// the first call is the pitch it was announced with.
     pub fn pitch(&mut self, pitch: f32) {
-        let byte = (pitch.rem_euclid(360.0) * 256.0 / 360.0) as u8;
+        let byte = angle_byte(pitch);
         self.pitched = Some([self.pitched.map_or(byte, |[told, _]| told), byte]);
     }
 
@@ -213,7 +219,7 @@ impl Told {
     /// The entity's body and head now face `yaw` and `head`, in degrees; viewers are told with
     /// its next [`Told::update`].
     pub fn face(&mut self, yaw: f32, head: f32) {
-        self.turn = [yaw, head].map(|degrees| (degrees.rem_euclid(360.0) * 256.0 / 360.0) as u8);
+        self.turn = [yaw, head].map(angle_byte);
     }
 
     /// Its body's yaw and its pitch as they are now, in degrees from -180 to 180, to the

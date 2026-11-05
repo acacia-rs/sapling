@@ -115,7 +115,7 @@ pub(crate) use strolling::is_under_way;
 pub(crate) use struck::struck_by_lightning;
 pub(crate) use teleports::landing as teleport_landing;
 pub(crate) use villagers::{alarm as hear_bell, bargains, interact as trade_with, stop_trading, traded};
-pub(crate) use warden::{hear as warden_hears, is_near as warden_near, summon_emerging as summon_warden};
+pub(crate) use warden::{darken_ahead as warden_darkens, hear as warden_hears, is_near as warden_near, summon_emerging as summon_warden};
 pub(crate) use wither::{build as build_wither, hurt as wither_hurt, spares};
 use crate::components::{InLayer, NetId, Tick};
 use crate::{entities, mobs};

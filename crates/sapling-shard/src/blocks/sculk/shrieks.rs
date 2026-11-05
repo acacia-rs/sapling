@@ -57,8 +57,8 @@ impl Tracker {
 struct Warnings {
     trackers: HashMap<Entity, Tracker>,
     answers: HashMap<(Entity, BlockPos), u8>,
-    /// Those whose darkness came, answering the tick after.
-    darkened: HashMap<(Entity, BlockPos), u8>,
+    /// Those whose darkness came, answering the tick after, with the spot of a warden called up.
+    darkened: HashMap<(Entity, BlockPos), (u8, Option<[f32; 3]>)>,
 }
 
 fn feet(world: &World, player: Entity) -> Option<[f32; 3]> {
@@ -132,15 +132,12 @@ pub(super) fn ended(world: &mut World, layer: Entity, pos: BlockPos) {
         let mut warnings = world.get_resource_or_insert_with(Warnings::default);
         let darkened = warnings.darkened.remove(&(layer, pos));
         let answering = darkened.is_none().then(|| warnings.answers.remove(&(layer, pos))).flatten();
-        if let Some(warning) = answering {
-            warnings.darkened.insert((layer, pos), warning);
-        }
         (darkened, answering)
     };
-    if answering.is_none() {
+    let Some(warning) = answering else {
         set_number(world, layer, pos, "active", 0);
-        return darkened.into_iter().for_each(|warning| answer(world, layer, pos, warning));
-    }
+        return darkened.into_iter().for_each(|(warning, spot)| answer(world, layer, pos, warning, spot));
+    };
     queued::after(world, layer, pos, 1, Job::Sculk);
     let centre = pos.map(|c| c as f32 + 0.5);
     for player in players_near(world, layer, centre, DARKNESS_REACH) {
@@ -148,11 +145,17 @@ pub(super) fn ended(world: &mut World, layer: Entity, pos: BlockPos) {
             vitals::give_effect(world, player, Effect::Darkness, DARKNESS, 0, false);
         }
     }
+    // BDS's warden comes at the darkness, casting its own, and is shown the tick after.
+    let spot = (warning >= TOP).then(|| warden_spot(world, layer, pos)).flatten();
+    if let Some(spot) = spot {
+        crate::creatures::warden_darkens(world, layer, spot);
+    }
+    world.get_resource_or_insert_with(Warnings::default).darkened.insert((layer, pos), (warning, spot));
 }
 
-fn answer(world: &mut World, layer: Entity, pos: BlockPos, warning: u8) {
+fn answer(world: &mut World, layer: Entity, pos: BlockPos, warning: u8, spot: Option<[f32; 3]>) {
     if warning >= TOP {
-        if let Some(spot) = warden_spot(world, layer, pos) {
+        if let Some(spot) = spot {
             crate::creatures::summon_warden(world, layer, spot);
         }
         return;

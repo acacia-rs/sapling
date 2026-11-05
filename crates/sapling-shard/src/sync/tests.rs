@@ -11,6 +11,14 @@ fn axes(packet: &Bytes) -> [bool; 3] {
     [delta.x.is_some(), delta.y.is_some(), delta.z.is_some()]
 }
 
+/// research/captures/bds-g8rot.txt: armour stands teleported to these yaws, and BDS's bytes.
+#[test]
+fn turns_are_told_wrapped_and_cut_toward_zero_as_on_bds() {
+    let yaws = [-29.5, -31.0, 330.5, 329.0, -200.0, 200.0, 29.5, -0.7, -359.3, 539.3, -180.5, -60.0];
+    let bds = [236, 234, 236, 234, 113, 143, 20, 0, 0, 127, 127, 214];
+    assert_eq!(yaws.map(angle_byte), bds);
+}
+
 #[test]
 fn a_move_counts_all_axes_together_and_sends_each_that_changed() {
     // BDS's orb: no axis past 0.01, together past it, all three sent.

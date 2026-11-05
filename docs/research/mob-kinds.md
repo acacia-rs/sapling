@@ -353,6 +353,10 @@ Sapling's run: sapling-kinds3.txt.
   evoker's vex, so the difference is in the goal's code, likely an owner test. The goal has no RTTI
   or label (`bdsre find ChargeAttack` finds only its definition's JSON glue, 148958560), and the
   string's seven users are pack readers; the canUse was not reached. Left.
+  Rechecked 2026-11-05 (group 8) against bds-vex.txt: BDS's summoned vex took the actor as `TargetEid`
+  0.3 s after it came and let it go at 18.8 s, never hit it, and in that time flew straight off
+  south-west away from it at a rising 0.4 a tick, so it had a target but no charge; the charge goal's
+  code (no RTTI) still was not found. Left as it was.
 
 ## Sapling
 

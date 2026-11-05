@@ -106,15 +106,22 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str, event: Option<&
 
 /// A shrieker's fourth warning calls one up emerging at `feet`, told after it is shown: `agitated`
 /// at its feet of no entity, then `listening` at its head (research/captures/bds-t2warden.txt).
+/// Its first darkness was cast the tick before, by [`darken_ahead`].
 pub(crate) fn summon_emerging(world: &mut World, layer: Entity, feet: [f32; 3]) -> bool {
     let Some(id) = super::birth::spawn_as(world, layer, KIND, feet, sapling_api::SpawnReason::Summoned, 0.0, Some(EMERGING_EVENT)) else { return false };
     let Some((warden, body)) = entities::find(world, id).and_then(|warden| Some((warden, *world.get::<Body>(warden)?))) else { return true };
+    darkness::cast_before(world, warden);
     let id = id.0;
     let [x, y, z] = feet;
     let agitated = crate::blocks::noise("agitated", acacia_proto::types::Vec3f { x, y, z }, -1);
     let listening = hunting::sound("listening", id, KIND, &body, HEAD);
     entities::tell_viewers(world, warden, layer, feet.map(|c| c.floor() as i32), vec![agitated, listening]);
     true
+}
+
+/// The darkness of a warden about to be summoned at `feet`, cast with the shrieker's.
+pub(crate) fn darken_ahead(world: &mut World, layer: Entity, feet: [f32; 3]) {
+    darkness::cast(world, layer, feet);
 }
 
 /// Whether one is within `reach` of `at` in `layer`.

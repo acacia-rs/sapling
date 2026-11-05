@@ -4,8 +4,8 @@
 //! (0x1415f2940) puts it: its match corner, the skull row's lowest end, plus 1 east, 2 down and 1
 //! south in world axes whatever way the T stands, then (0.5, 0.05, 0.5). The T may stand or lie any
 //! way, as BDS's matcher found one lying on the floor (bds-n2wither.txt).
-// TODO: BDS's lying T's wither was announced one further east than its particles' centre (pushed out
-// of the floor?); 120 soul particles are not shown.
+// TODO: a T lying with its skulls along x, or standing along x (wither-lightning-fireworks.md); 120
+// soul particles are not shown.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Difficulty};
@@ -48,15 +48,23 @@ pub(super) fn placed(world: &mut World, layer: Entity, pos: BlockPos, name: &str
         return;
     }
     let found = ways().flat_map(|(along, down)| (0..3).map(move |step| (along, down, step))).find_map(|(along, down, step)| {
-        built(world, layer, [0, 1, 2].map(|axis| pos[axis] - along[axis] * step), along, down)
+        built(world, layer, [0, 1, 2].map(|axis| pos[axis] - along[axis] * step), along, down).map(|cells| (cells, along, down))
     });
-    let Some(cells) = found else { return };
+    let Some((cells, along, down)) = found else { return };
     let air = Block::new("minecraft:air");
     for cell in &cells {
         send::put_block(world, layer, *cell, &air);
     }
     let corner = [0, 1, 2].map(|axis| cells[..3].iter().map(|cell| cell[axis]).min().unwrap_or(0));
-    crate::creatures::build_wither(world, layer, [0, 1, 2].map(|axis| corner[axis] as f32 + FROM_CORNER[axis]));
+    let mut spot = [0, 1, 2].map(|axis| corner[axis] as f32 + FROM_CORNER[axis]);
+    spot[0] += lying_east(along, down);
+    crate::creatures::build_wither(world, layer, spot);
+}
+
+/// BDS's wither from a T lying with its skulls along z stands a block further east than the
+/// corner rule, whichever way its stem lies (bds-g8wither.txt); the other lying ways were not seen.
+fn lying_east(along: [i32; 3], down: [i32; 3]) -> f32 {
+    if along == [0, 0, 1] && down[0] != 0 { 1.0 } else { 0.0 }
 }
 
 #[cfg(test)]
