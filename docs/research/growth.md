@@ -337,10 +337,10 @@ world is plains, too warm for snow.
   - Sapling's drill world has ground at y 60 to 63 over the drills (`drill_server.rs`), so a scene that needs daylight
     at y -26 clears it first.
   - Daylight detectors read the sky light in their cell by the reckoning in redstone.md.
-- Trees from saplings: built from the decompile (saplings.md), not checked against the timing
-  measured above.
-- Farmland getting wet was not measured; a pumpkin's facing, and what ground a fruit takes, are
-  the Java game's.
+- Trees from saplings: built from the decompile (saplings.md); drilled 2026-11-05 (bds-p2grow.txt):
+  seven of twelve grew on both sides, the aged sapling unshown on BDS (now on sapling too).
+- Farmland getting wet, a pumpkin's facing and the ground its fruit takes: the same on both sides
+  (bds-p2grow.txt).
 - Copper is not in step with the rule; fire and lit ore sapling times by themselves
   (`blocks/fire.rs`, `blocks/ores.rs`). Sapling's wild plants were not drilled against BDS's
   timing; a vine's sideways growth onto the top of a block (Java's last case) has no Bedrock state

@@ -77,7 +77,9 @@ went on (research/captures/bds-t2edon.txt); sapling put them on and now leaves t
   Re-drilled (sapling-w1pages.txt): the same pages kept, 769 put out, but with a Disconnect
   (`UnexpectedPacket`), since sapling-net has no close without one.
 - **Lectern**: a click with a book on an empty lectern: windows resent (`select_slot true`),
-  `item.book.put` at the block's corner, then BlockEntityData `{book, hasBook 1, page 0, totalPages}`.
+  `item.book.put` at the block's corner, then, a tick later, the block and BlockEntityData `{book, hasBook 1,
+  page 0, totalPages}`, the book with `WasPickedUp` 0; a comparator read it from then (bds-books.txt,
+  bds-p2last.txt; `blocks/lectern.rs`; was: the entity at once and the comparator a tick early).
   A click with the book on it opens ContainerOpen `Lectern`. LecternUpdate sets `page`, resent as
   BlockEntityData. The comparator read 15 with a book at page 0 and at page 1 of 3 (the comparator set
   again, so read afresh): no page dependence, unlike the Java game. A turn to page 0 pulsed

@@ -108,8 +108,9 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
             if level.dimension() == NETHER {
                 return crate::sleep::set_anchor_spawn(world, player, layer, pos);
             }
+            // Still a use: BDS resent nothing for the click (bds-p2last.txt).
             if !level.level().rules.on(ANCHORS_EXPLODE) {
-                return false;
+                return true;
             }
             let air = registry.air_id();
             send::set(world, layer, pos, air);

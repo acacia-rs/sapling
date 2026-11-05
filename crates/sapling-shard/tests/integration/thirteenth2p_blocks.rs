@@ -1,12 +1,13 @@
 //! Blocks and redstone against the p2 drills: an observer clock, a tripwire hook's facing, a tool's
-//! use resending nothing, a hand-placed vine's age and bone meal's scatter in one UpdateSubchunkBlocks.
+//! use resending nothing, a hand-placed vine's age, bone meal's scatter in one UpdateSubchunkBlocks, note
+//! blocks under heads, jukebox resends, a set torch, a bucket on a cauldron and an anchor that may not burst.
 
 use crate::common;
 
 use std::sync::mpsc;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{UpdateBlock, UpdateSubchunkBlocks};
+use acacia_proto::packets::{BlockEntityData, BlockEvent, LevelSoundEvent, UpdateBlock, UpdateSubchunkBlocks};
 use common::{Harness, block_changes, click};
 use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
 
@@ -124,4 +125,88 @@ fn bone_meal_on_grass_sends_what_comes_up_in_one_update_a_sub_chunk() {
     let listed: usize = common::all::<UpdateSubchunkBlocks>(&sent).iter().map(|update| update.blocks.iter().filter(|cell| cell.position.y == 65).count()).sum();
     assert!(listed > 1, "the scatter in one: {listed}");
     assert!(common::all::<UpdateBlock>(&sent).iter().all(|update| update.position.y != 65), "not one block at a time");
+}
+
+/// research/captures/bds-p2more.txt: under a head the event still carries the note, the sound the head's
+/// one pitch; the new note's entity is not sent.
+#[test]
+fn a_note_block_under_a_head_tells_its_note_and_sends_no_entity() {
+    let mut h = holding("minecraft:stick");
+    set(&mut h, &[([2, 64, 0], "minecraft:stone"), ([2, 65, 0], "minecraft:noteblock"), ([2, 66, 0], "minecraft:zombie_head")]);
+    let mut sent = Vec::new();
+    for _ in 0..2 {
+        h.receive(1, &click([2, 65, 0], WEST, None));
+        sent.extend(h.tick(1));
+    }
+    assert_eq!(common::all::<BlockEvent>(&sent).iter().map(|event| event.data).collect::<Vec<_>>(), [1, 2]);
+    assert!(common::all::<LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "note").all(|sound| sound.extra_data == 20 << 8 | 9));
+    assert!(common::all::<BlockEntityData>(&sent).iter().all(|data| [data.position.x, data.position.y, data.position.z] != [2, 65, 0]));
+}
+
+/// research/captures/bds-p2copper.txt: a disc going in showed the jukebox again a tick later; one coming
+/// out showed it at once, before the disc, and a tick later.
+#[test]
+fn a_jukebox_is_shown_again_after_a_disc_goes_in_and_comes_out() {
+    let mut h = holding("minecraft:music_disc_cat");
+    set(&mut h, &[([2, 65, 0], "minecraft:jukebox")]);
+    h.tick_all(); // a set jukebox is shown again a tick on
+    let mut shown = Vec::new();
+    for _ in 0..2 {
+        h.receive(1, &click([2, 65, 0], WEST, None));
+        for _ in 0..2 {
+            shown.push(block_changes(&h.tick(1)).iter().filter(|(at, _)| *at == [2, 65, 0]).count());
+        }
+    }
+    assert_eq!(shown, [0, 1, 1, 1]);
+}
+
+/// research/captures/bds-p2last.txt: an empty bucket on a full cauldron showed its user the cells about
+/// the click, layer 0, then the cauldron and its entity on each of the next two ticks.
+#[test]
+fn a_bucket_on_a_full_cauldron_shows_the_cells_about_it_and_the_cauldron_twice() {
+    let mut h = holding("minecraft:bucket");
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 65, 0], &Block::new("minecraft:cauldron").with("cauldron_liquid=water,fill_level=6"))));
+    (0..2).for_each(|_| drop(h.tick_all()));
+    h.receive(1, &click([2, 65, 0], WEST, None));
+    let cells = |sent: &[RawPacket]| common::all::<UpdateBlock>(sent).iter().map(|u| ([u.position.x, u.position.y, u.position.z], u.layer)).collect::<Vec<_>>();
+    let clicked = cells(&h.tick(1));
+    assert_eq!(clicked, [[2, 65, 0], [2, 65, 0], [2, 66, 0], [2, 64, 0], [1, 65, 0], [1, 66, 0], [1, 64, 0]].map(|pos| (pos, 0)), "set, then the cells about the click");
+    let again: Vec<(usize, usize)> = (0..3).map(|_| h.tick(1)).map(|sent| (cells(&sent).len(), common::all::<BlockEntityData>(&sent).len())).collect();
+    assert_eq!(again, [(1, 1), (1, 1), (0, 0)]);
+    assert!(block(&mut h, [2, 65, 0]).properties.contains("fill_level=0"));
+}
+
+/// research/captures/bds-p2last.txt: with `respawnBlocksExplode` off a charged anchor clicked outside the
+/// Nether did nothing and BDS sent nothing back.
+#[test]
+fn a_charged_anchor_clicked_with_respawn_blocks_explode_off_sends_nothing() {
+    let mut h = holding("minecraft:stick");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(PlayerId(1), Slot::Main(0), None));
+        assert!(ctx.set_game_rule("respawnBlocksExplode", sapling_api::RuleValue::Bool(false)));
+        assert!(ctx.set_block([2, 65, 0], &Block::new("minecraft:respawn_anchor").with("respawn_anchor_charge=1")));
+    });
+    h.tick_all();
+    h.receive(1, &click([2, 65, 0], WEST, None));
+    assert!(common::all::<UpdateBlock>(&h.tick(1)).is_empty());
+    assert!(block(&mut h, [2, 65, 0]).properties.contains("respawn_anchor_charge=1"));
+}
+
+/// research/captures/bds-p2rs.txt: a bare torch set on slime stood on top, listed twice; pushed off by
+/// the slime it stood on, it broke over the piston's arm.
+#[test]
+fn a_set_torch_stands_on_its_floor_and_breaks_over_a_piston_arm() {
+    let mut h = holding("minecraft:stick");
+    h.remote.run(|ctx| {
+        assert!(ctx.update_block([2, 65, 0], &Block::new("minecraft:piston").with("facing_direction=2")));
+        assert!(ctx.update_block([2, 65, 1], &Block::new("minecraft:slime")));
+    });
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.update_block([2, 66, 1], &Block::new("minecraft:torch"))));
+    let sent = h.tick(1);
+    let top = state("minecraft:torch", "torch_facing_direction=top");
+    assert_eq!(block_changes(&sent).iter().filter(|change| **change == ([2, 66, 1], top)).count(), 2, "set and set again");
+    h.remote.run(|ctx| assert!(ctx.update_block([2, 65, -1], &Block::new("minecraft:redstone_block"))));
+    (0..6).for_each(|_| drop(h.tick_all()));
+    assert_eq!((block(&mut h, [2, 66, 1]).name, block(&mut h, [2, 65, 2]).name), ("minecraft:air".to_owned(), "minecraft:slime".to_owned()));
 }

@@ -140,7 +140,9 @@ clear-to-air step is absent. Flowering azalea uses the same class [I].
 
 ## Answers
 1. Random tick: raw brightness at pos+1 >= 9, then nextInt(7)==0, then age_bit two-step: first
-   success sets age_bit=1 (setBlock flags 1), next success grows. [D]
+   success sets age_bit=1 (setBlock flags 1), next success grows. [D] Drilled (bds-p2grow.txt,
+   randomtickspeed raised): seven of twelve saplings grew on both sides, and BDS never sent an aged
+   sapling, so sapling's random tick ages it unshown (`blocks/saplings.rs`); bone meal's age is shown.
 2. Bone meal: survival 0.45 per click (level random), then the same age_bit step, so ~2 successes.
    Creative (or FertilizerType::Rapid) grows at once, skipping chance and age_bit. Always returns
    true except quad-only species without a 2x2. [D]

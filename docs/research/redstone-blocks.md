@@ -233,6 +233,10 @@ direction 14cd24f50, facing_direction 14cd26368, lit 14cd25b50, sculk_sensor_pha
 - A copper bulb toggling plays `block.copper_bulb.turn_on`/`turn_off` at the cell's corner after the block
   (B34). Fixed in `blocks/bulbs.rs`.
 - Same: note blocks, jukebox, target, crafter and dispenser power as written above.
+- A note block under a head (bds-p2more.txt): the BlockEvent's data is still the note, the `note` sound the
+  head's pitch 9; a click sends no BlockEntityData for the new note. Fixed in `blocks/notes.rs`.
+- A jukebox (bds-p2copper.txt) is shown again a tick after a disc goes in; a disc coming out shows it at once,
+  before the disc, and again a tick later. Fixed in `blocks/jukebox.rs`. The bounce LSE was not captured.
 
 ## Unverified
 

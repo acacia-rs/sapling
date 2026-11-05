@@ -15,7 +15,7 @@ use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
-use sapling_api::BlockPos;
+use sapling_api::{BlockPos, Face};
 use sapling_world::{BlockRegistry, ItemStack, new_block_entity};
 
 use super::send::keep_entity;
@@ -241,8 +241,17 @@ fn change(hand: &ItemStack, held: Held) -> Option<Outcome> {
     }
 }
 
-/// A click with what the player holds on the cauldron at `pos`: false when it does nothing here.
-pub(super) fn use_on(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, creative: bool) -> bool {
+/// After a use of the cauldron at `pos` clicked on `face`: its user is shown layer 0 about the click
+/// as a placer is, and all see it again, entity too, on each of the next two ticks (bds-cauldrons.txt,
+/// bds-p2last.txt).
+pub(super) fn shown_after_use(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, face: Face) {
+    let target = face.neighbour(pos);
+    send::show_to(world, player, &[pos, Face::Up.neighbour(pos), Face::Down.neighbour(pos), target, Face::Up.neighbour(target), Face::Down.neighbour(target)]);
+    super::shown_again::each_tick(world, layer, pos, 2);
+}
+
+/// A click on `face` with what the player holds on the cauldron at `pos`: false when it does nothing here.
+pub(super) fn use_on(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, face: Face, creative: bool) -> bool {
     let Some(held) = held_at(world, layer, pos) else { return false };
     let Some(hand) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).map(|held| held.stack.clone()) else { return false };
     // BDS answered a bucket on a potion with nothing at all (bds-cauldrons2.txt).
@@ -251,6 +260,7 @@ pub(super) fn use_on(world: &mut World, player: Entity, layer: Entity, pos: Bloc
     }
     let Some(outcome) = change(&hand, held) else { return false };
     write(world, layer, pos, &outcome);
+    shown_after_use(world, player, layer, pos, face);
     if creative {
         return true;
     }

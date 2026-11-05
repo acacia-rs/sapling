@@ -3,7 +3,7 @@
 
 use crate::common;
 
-use acacia_proto::packets::UpdateSubchunkBlocks;
+use acacia_proto::packets::{UpdateBlock, UpdateSubchunkBlocks};
 use common::{Harness, all, click};
 use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
 
@@ -60,14 +60,18 @@ fn a_dark_oak_needs_four_saplings_and_grows_from_their_corner() {
 }
 
 #[test]
-fn an_oak_sapling_ages_and_then_grows_by_random_ticks() {
+fn an_oak_sapling_ages_unseen_and_then_grows_by_random_ticks() {
     let mut h = planted(&[([2, 65, 0], "minecraft:oak_sapling")]);
     h.remote.run(|ctx| assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(1000))));
+    let mut shown = 0;
     let grown = (0..60).any(|_| {
-        (0..50).for_each(|_| drop(h.tick_all()));
+        for _ in 0..50 {
+            shown += all::<UpdateBlock>(h.tick_all().to(1)).iter().filter(|update| [update.position.x, update.position.y, update.position.z] == [2, 65, 0]).count();
+        }
         names(&mut h, vec![[2, 65, 0]])[0] == "minecraft:oak_log"
     });
     assert!(grown, "a tree within 3000 ticks at a thousand times the speed");
+    assert_eq!(shown, 0, "BDS sent no aged sapling (bds-p2grow.txt), the tree a sub-chunk at a time");
 }
 
 #[test]

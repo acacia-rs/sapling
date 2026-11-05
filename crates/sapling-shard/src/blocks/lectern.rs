@@ -50,18 +50,31 @@ pub(super) fn signal(world: &World, layer: Entity, pos: BlockPos) -> Option<u8> 
     Some(if opened_at(world, layer, pos).is_some() { 15 } else { 0 })
 }
 
-/// Sets the lectern's entity fields `set` at once and shows it.
-fn keep(world: &mut World, layer: Entity, pos: BlockPos, set: Vec<(&str, Value)>) {
-    let Some(level) = level(world, layer) else { return };
+/// The lectern's entity with the fields `set`.
+fn with_fields(world: &World, layer: Entity, pos: BlockPos, set: Vec<(&str, Value)>) -> Option<Value> {
+    let level = level(world, layer)?;
     let entity = level.block_entity(pos).map_or_else(|| sapling_world::new_block_entity(ENTITY, pos), |entity| entity.nbt.clone());
-    let Value::Compound(mut fields) = entity else { return };
+    let Value::Compound(mut fields) = entity else { return None };
     for (key, value) in set {
         fields.retain(|(name, _)| name != key);
         fields.push((key.into(), value));
     }
     fields.sort_by(|a, b| a.0.cmp(&b.0));
-    keep_entity(world, layer, pos, &Value::Compound(fields));
+    Some(Value::Compound(fields))
+}
+
+/// Sets the lectern's entity fields `set` at once and shows it.
+fn keep(world: &mut World, layer: Entity, pos: BlockPos, set: Vec<(&str, Value)>) {
+    let Some(entity) = with_fields(world, layer, pos, set) else { return };
+    keep_entity(world, layer, pos, &entity);
     super::container_changed(world, layer, pos);
+}
+
+/// Sets the lectern's entity fields `set`, unshown and unread by comparators.
+fn keep_quietly(world: &mut World, layer: Entity, pos: BlockPos, set: Vec<(&str, Value)>) {
+    if let Some(entity) = with_fields(world, layer, pos, set) {
+        send::keep_entity_quietly(world, layer, pos, &entity);
+    }
 }
 
 /// A click on the block `name` at `pos`: true when it put a book on a lectern or there was
@@ -76,7 +89,8 @@ pub(super) fn use_lectern(world: &mut World, player: Entity, layer: Entity, pos:
         Some(Value::List(list)) => list.items.len() as i32,
         _ => 0,
     };
-    let Some(kept) = level(world, layer).map(|level| Value::Compound(ItemStack { count: 1, ..book }.fields(level.registry()))) else { return true };
+    let Some(mut kept) = level(world, layer).map(|level| ItemStack { count: 1, ..book }.fields(level.registry())) else { return true };
+    kept.push(("WasPickedUp".into(), Value::Byte(0)));
     let creative = world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative);
     if let Some(mut inventory) = world.get_mut::<Inventory>(player).filter(|_| !creative) {
         let slot = Place::Main(inventory.selected.into());
@@ -85,7 +99,9 @@ pub(super) fn use_lectern(world: &mut World, player: Entity, layer: Entity, pos:
     inventory::show_windows(world, player, true);
     let [x, y, z] = pos.map(|c| c as f32);
     send::to_viewers(world, layer, pos, &[send::noise("item.book.put", acacia_proto::types::Vec3f { x, y, z }, -1)]);
-    keep(world, layer, pos, vec![(BOOK, kept), ("hasBook", Value::Byte(1)), ("page", Value::Int(0)), ("totalPages", Value::Int(pages))]);
+    // BDS showed the lectern, block and entity, a tick after the put, and its comparator read it then (bds-books.txt, bds-p2last.txt).
+    keep_quietly(world, layer, pos, vec![(BOOK, Value::Compound(kept)), ("hasBook", Value::Byte(1)), ("page", Value::Int(0)), ("totalPages", Value::Int(pages))]);
+    queued::after(world, layer, pos, 1, Job::LecternShown);
     true
 }
 
@@ -140,10 +156,12 @@ fn show_entity(world: &mut World, layer: Entity, pos: BlockPos) {
     send::to_viewers(world, layer, pos, &[shown]);
 }
 
-/// A lectern whose page turned to one past 0 is shown again, block and entity.
-pub(super) fn reshow(world: &mut World, layer: Entity, pos: BlockPos) {
+/// A lectern given a book or turned to a page past 0 is shown again, block and entity, and read
+/// again by comparators (no change for a turned page).
+pub(super) fn reshow_and_reread(world: &mut World, layer: Entity, pos: BlockPos) {
     if is_lectern(world, layer, pos) {
         send::show_whole(world, layer, pos);
+        super::container_changed(world, layer, pos);
     }
 }
 

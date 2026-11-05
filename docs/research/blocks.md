@@ -110,7 +110,10 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
   went at once); a charged anchor's blast lighting fire (cells differ, random).
 - A bed's burst is at the head's middle, not between the halves (`blocks/bed_burst.rs`; the foot then
   pops). Fixed. Which middle a click on the foot gives was not drilled.
-- With `respawnBlocksExplode` off BDS did nothing; sapling's bot could not reach the second bed.
+- With `respawnBlocksExplode` off BDS did nothing; sapling's bot could not reach the second bed. A charged
+  anchor clicked outside the Nether with it off: BDS sent nothing back (bds-p2last.txt), sapling resent the
+  cells as for a click that does nothing. Fixed: a use (`blocks/handled.rs`). With it on, BDS sent the blast's
+  cells in UpdateSubchunkBlocks, sapling (every blast) one UpdateBlock a cell; left open.
 - TNT summoned under water makes no splash (`splash.rs`: the first check only notes the water). Fixed.
 - A big dripleaf on stone breaks when it would tilt (`blocks/dripleaf.rs`). Fixed. On dirt BDS tilts
   as below: `unstable`, 10 ticks `partial_tilt`, 10 `full_tilt`, 100 back to `none`, power setting it

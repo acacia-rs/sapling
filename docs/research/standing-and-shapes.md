@@ -267,7 +267,8 @@ powered order, as JAVA `RailBlock.updateState` (rail_line.rs, rails.rs `switch`)
 
 ## Open checks (one bot session on BDS: place, read back)
 
-1. Which blocks carry tags `dirt`/`sand` (sugar cane on podzol, mycelium, moss, mud, suspicious sand?).
+1. Which blocks carry tags `dirt`/`sand`. Drilled (bds-p2last.txt): sugar cane put by hand beside water took
+   on podzol, mycelium, moss, mud, suspicious sand, sand and dirt, the same on both sides.
 2. Default connection rules: pane beside wall. Drilled (bds-p2place.txt): a fence joins glass and a stairs' back,
    not leaves, a bottom slab, a chest or a stairs' side; a wall does not join a fence (`blocks/shapes.rs`).
 3. Drilled (bds-p2place.txt): rails, wire and a repeater go on glass, a top slab and a hopper, not a fence top

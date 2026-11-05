@@ -21,6 +21,7 @@ const AGED: [(&str, &str); 4] = [
 /// The ages drawn, 0 to 25: BDS's commanded ones were 2 to 17, its hand-placed glow berries 0 to 25
 /// (research/captures/bds-p2place.txt).
 const AGES: u32 = 26;
+const TORCH_FACING: &str = "torch_facing_direction";
 
 /// A bed `id` laid with its head at `pos` and its foot behind it, where that cell is air, both
 /// shown in one UpdateSubchunkBlocks. `None` for any other block or a bed with no room.
@@ -52,7 +53,10 @@ pub(super) fn put_bed(world: &mut World, layer: Entity, pos: BlockPos, id: u32) 
 /// aged or wetted block is shown with its water as BDS shows the writes, each listed
 /// ([`send::logged`]): BDS writes an aged one twice (bds-fixset.txt, bds-bkticks.txt).
 pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
-    let (block, is_aged) = aged(world, layer, pos, block);
+    let (block, is_aged) = match standing_torch(world, layer, pos, block) {
+        Some(torch) => (torch, true),
+        None => aged(world, layer, pos, block),
+    };
     // Kelp set in air got a source beside itself too (research/captures/bds-plantpop.txt).
     let wets = is_live_fan(&block.name) || block.name == "minecraft:kelp";
     if is_aged || wets {
@@ -133,6 +137,16 @@ fn aged(world: &mut World, layer: Entity, [x, y, z]: BlockPos, block: &Block) ->
         return (block.clone(), false);
     }
     (with_age(world, name, key, &block.properties), true)
+}
+
+/// A torch named bare, set over a solid block, stands on it, written twice as an aged block is: BDS's
+/// went in `top` there (bds-p2rs.txt), `unknown` with nothing round it (block-defaults.tsv).
+// TODO: which side a bare torch takes with no floor but a wall beside it.
+fn standing_torch(world: &World, layer: Entity, [x, y, z]: BlockPos, block: &Block) -> Option<Block> {
+    let bare = block.properties.is_empty() || block.properties == format!("{TORCH_FACING}=unknown");
+    let level = level(world, layer).filter(|level| block.name == "minecraft:torch" && bare && level.in_height(y - 1))?;
+    level.registry().get(level.block(x, y - 1, z)).filter(|under| under.is_solid())?;
+    Some(Block::new(block.name.as_str()).with(format!("{TORCH_FACING}=top")))
 }
 
 fn with_age(world: &mut World, name: &str, key: &str, properties: &str) -> Block {

@@ -64,11 +64,11 @@ fn play(world: &mut World, layer: Entity, pos: BlockPos, note: u8) {
         return;
     }
     let instrument = head.unwrap_or_else(|| registry.get(level.block(x, y - 1, z)).map_or(0, |under| instrument(under.name, under.is_solid())));
-    let note = if head.is_some() { HEAD_NOTE } else { i32::from(note) };
-    // The sound comes from the cell's corner, as BDS sent it; the event's type is the instrument.
+    let pitch = if head.is_some() { HEAD_NOTE } else { i32::from(note) };
+    // The sound comes from the cell's corner, as BDS sent it; the event's type is the instrument, its data the note under a head too (bds-p2more.txt).
     let told = [
-        sapling_net::encode(&BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::from_raw(instrument.into()), data: note }),
-        send::noise("note", Vec3f { x: x as f32, y: y as f32, z: z as f32 }, instrument << 8 | note),
+        sapling_net::encode(&BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::from_raw(instrument.into()), data: i32::from(note) }),
+        send::noise("note", Vec3f { x: x as f32, y: y as f32, z: z as f32 }, instrument << 8 | pitch),
     ];
     send::to_viewers(world, layer, pos, &told);
     super::vibrate_at(world, layer, pos, super::GameEvent::NotePlay, false);
@@ -77,7 +77,8 @@ fn play(world: &mut World, layer: Entity, pos: BlockPos, note: u8) {
 /// A click on the note block at `pos`: silent, and still a use, with a block over it.
 pub(super) fn tuned(world: &mut World, layer: Entity, pos: BlockPos) {
     let next = (note(world, layer, pos) + 1) % NOTES;
-    fields::set(world, layer, pos, ENTITY, NOTE, Some(Value::Byte(next as i8)));
+    // BDS sent no entity for the new note (bds-bkuses.txt, bds-p2more.txt).
+    fields::set_quietly(world, layer, pos, ENTITY, NOTE, Some(Value::Byte(next as i8)));
     play(world, layer, pos, next);
 }
 

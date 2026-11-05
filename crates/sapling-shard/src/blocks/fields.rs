@@ -29,12 +29,25 @@ pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: &str, key
 
 /// [`set`] for several fields at once, shown together.
 pub(crate) fn set_many(world: &mut World, layer: Entity, pos: BlockPos, id: &str, values: &[(&str, Option<Value>)]) {
-    let Some(level) = level(world, layer) else { return };
+    if let Some(entity) = with_fields(world, layer, pos, id, values) {
+        keep_entity(world, layer, pos, &entity);
+    }
+}
+
+/// [`set`] without showing it.
+pub(crate) fn set_quietly(world: &mut World, layer: Entity, pos: BlockPos, id: &str, key: &str, value: Option<Value>) {
+    if let Some(entity) = with_fields(world, layer, pos, id, &[(key, value)]) {
+        _ = super::send::keep_entity_quietly(world, layer, pos, &entity);
+    }
+}
+
+fn with_fields(world: &World, layer: Entity, pos: BlockPos, id: &str, values: &[(&str, Option<Value>)]) -> Option<Value> {
+    let level = level(world, layer)?;
     let entity = level.block_entity(pos).map_or_else(|| new_block_entity(id, pos), |entity| entity.nbt.clone());
-    let Value::Compound(mut fields) = entity else { return };
+    let Value::Compound(mut fields) = entity else { return None };
     for (key, value) in values {
         fields.retain(|(name, _)| name != key);
         fields.extend(value.clone().map(|value| ((*key).into(), value)));
     }
-    keep_entity(world, layer, pos, &Value::Compound(fields));
+    Some(Value::Compound(fields))
 }

@@ -467,8 +467,9 @@ Built in `sapling-shard/src/blocks/pistons/plan.rs`.
 - `AttachedBlocks` lists the cells farthest first in the way they go; cells equally far come in the order
   they were found: the block, what is before it, then what it holds up, down, south, north, east and west of it
   (bds-rspistons.txt; sapling listed north before south and west before east until 2026-11-04).
-- Not drilled: what has no body beside slime (sapling
-  leaves it), a sticky piston whose slime is held back (sapling brings nothing).
+- A bare torch set on slime stood on its top (bds-p2rs.txt); pushed with the slime, it popped a tick after
+  the move began, over the arm (`piston_arm_collision` not facing up holds nothing on its top). Fixed in
+  `blocks/updates.rs` `holds`. A sticky piston whose slime is held back brought nothing on both sides.
 
 ## Daylight detectors (2026-10-11, `bds_command_probe daylight`, research/captures/bds-daylight.txt)
 
