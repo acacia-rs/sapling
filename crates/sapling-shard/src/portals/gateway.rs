@@ -33,15 +33,31 @@ const COOLDOWN: u64 = 20;
 #[derive(Resource, Default)]
 pub(crate) struct Used(Vec<(Entity, BlockPos, Entity, u64)>);
 
+/// The gateway cell a body of `size` with its feet at `feet` in `layer` is in.
+fn gateway_in(world: &World, layer: Entity, [x, y, z]: [f32; 3], [width, height]: [f32; 2]) -> Option<(Entity, BlockPos)> {
+    let level = &world.get::<Layer>(layer)?.world;
+    let range = |low: f32, high: f32| (low.floor() as i32)..=(high.floor() as i32);
+    let half = width / 2.0;
+    let cells = range(x - half, x + half).flat_map(|cx| range(z - half, z + half).flat_map(move |cz| range(y, y + height - 0.01).map(move |cy| [cx, cy, cz])));
+    let found = cells.into_iter().find(|&[cx, cy, cz]| level.in_height(cy) && level.registry().get(level.block(cx, cy, cz)).is_some_and(|state| state.name == GATEWAY));
+    found.map(|pos| (layer, pos))
+}
+
+/// Whether `entity` rides or is ridden: BDS left a ridden horse and its rider in a gateway (bds-k1gate.txt).
+fn mounted(world: &World, entity: Entity) -> bool {
+    world.get::<crate::riding::Riding>(entity).is_some() || world.get::<crate::riding::Seats>(entity).is_some_and(|seats| !seats.0.is_empty())
+}
+
 /// The gateway cell a player's body is in.
 fn gateway_at(world: &World, player: Entity) -> Option<(Entity, BlockPos)> {
     let layer = world.get::<InLayer>(player)?.0;
-    let (feet, level) = (world.get::<Position>(player)?.feet, &world.get::<Layer>(layer)?.world);
-    let range = |low: f32, high: f32| (low.floor() as i32)..=(high.floor() as i32);
-    let [x, y, z] = feet;
-    let cells = range(x - super::HALF_WIDTH, x + super::HALF_WIDTH).flat_map(|cx| range(z - super::HALF_WIDTH, z + super::HALF_WIDTH).flat_map(move |cz| range(y, y + super::HEIGHT - 0.01).map(move |cy| [cx, cy, cz])));
-    let found = cells.into_iter().find(|&[cx, cy, cz]| level.in_height(cy) && level.registry().get(level.block(cx, cy, cz)).is_some_and(|state| state.name == GATEWAY));
-    found.map(|pos| (layer, pos))
+    gateway_in(world, layer, world.get::<Position>(player)?.feet, [super::HALF_WIDTH * 2.0, super::HEIGHT]).filter(|_| !mounted(world, player))
+}
+
+/// The mobs in a gateway cell, each with the mob's id: BDS sent a summoned pig through at once (bds-k1gate.txt).
+fn mobs_in_gateways(world: &mut World) -> Vec<(Entity, u64, Entity, BlockPos)> {
+    let mut mobs = world.query_filtered::<(Entity, &NetId, &InLayer, &crate::body::Body), With<crate::creatures::Creature>>();
+    let bodies: Vec<_> = mobs.iter(world).map(|(entity, id, layer, body)| (entity, id.0, layer.0, body.at, body.size)).collect();    bodies.into_iter().filter(|&(entity, ..)| !mounted(world, entity)).filter_map(|(entity, id, layer, at, size)| gateway_in(world, layer, at, size).map(|(layer, pos)| (entity, id, layer, pos))).collect()
 }
 
 /// Where a gateway sends: its block entity's `ExitPortal` ((0, 0, 0) without one, as BDS's), else
@@ -116,7 +132,7 @@ fn stop(world: &mut World, player: Entity) {
 }
 
 /// Ages the gateways, shows last tick's again and those whose cooldown ends, then sends the
-/// players in a gateway through it.
+/// players and mobs in a gateway through it, none riding or ridden.
 pub(crate) fn tick(world: &mut World, players: &[Entity]) {
     super::gateway_load::forget_gone(world);
     age(world);
@@ -129,15 +145,26 @@ pub(crate) fn tick(world: &mut World, players: &[Entity]) {
         }
     }
     let mut cooling: Vec<_> = used.into_iter().filter(|(.., since)| now < since + COOLDOWN).collect();
-    for &player in players {
-        let Some((layer, pos)) = gateway_at(world, player).filter(|(layer, pos)| !cooling.iter().any(|(l, p, ..)| l == layer && p == pos)) else { continue };
+    let in_players = players.iter().filter_map(|&player| gateway_at(world, player).map(|(layer, pos)| (player, None, layer, pos))).collect::<Vec<_>>();
+    let in_mobs = mobs_in_gateways(world).into_iter().map(|(mob, id, layer, pos)| (mob, Some(id), layer, pos));
+    for (traveller, mob, layer, pos) in in_players.into_iter().chain(in_mobs) {
+        if cooling.iter().any(|(l, p, ..)| *l == layer && *p == pos) {
+            continue;
+        }
         let Some([x, y, z]) = world.get::<Layer>(layer).filter(|level| level.world.dimension() == END).map(|level| exit(&level.world, pos)) else { continue };
-        stop(world, player);
-        movement::teleport_as(world, player, [x as f32 + 0.5, (y + 1) as f32, z as f32 + 0.5], MovePlayerTeleportCause::UnknownValue, &TOLD_AS);
+        let to = [x as f32 + 0.5, (y + 1) as f32, z as f32 + 0.5];
+        match mob {
+            // [U] a mob's trip told as /tp tells it: its viewers out of the drill's sight.
+            Some(id) => drop(crate::entities::teleport(world, sapling_api::EntityId(id), to)),
+            None => {
+                stop(world, traveller);
+                movement::teleport_as(world, traveller, to, MovePlayerTeleportCause::UnknownValue, &TOLD_AS);
+            }
+        }
         let [bx, by, bz] = pos;
         let event = sapling_net::encode(&BlockEvent { position: BlockCoordinates { x: bx, y: by, z: bz }, r#type: BlockEventType::ChangeState, data: 0 });
-        tell(world, layer, pos, Some(player), &[event]);
-        cooling.push((layer, pos, player, now));
+        tell(world, layer, pos, Some(traveller), &[event]);
+        cooling.push((layer, pos, traveller, now));
     }
     world.get_resource_or_insert_with(Used::default).0 = cooling;
 }
