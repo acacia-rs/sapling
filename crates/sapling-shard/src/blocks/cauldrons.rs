@@ -245,8 +245,7 @@ fn change(hand: &ItemStack, held: Held) -> Option<Outcome> {
 /// as a placer is, and all see it again, entity too, on each of the next two ticks (bds-cauldrons.txt,
 /// bds-p2last.txt).
 pub(super) fn shown_after_use(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, face: Face) {
-    let target = face.neighbour(pos);
-    send::show_to(world, player, &[pos, Face::Up.neighbour(pos), Face::Down.neighbour(pos), target, Face::Up.neighbour(target), Face::Down.neighbour(target)]);
+    send::show_about_click(world, player, pos, face.neighbour(pos));
     super::shown_again::each_tick(world, layer, pos, 2);
 }
 

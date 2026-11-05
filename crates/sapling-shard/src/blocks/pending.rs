@@ -2,7 +2,9 @@
 //! (`sapling_leveldb::decode_pending_ticks` has the layout): before columns are saved, what waits
 //! in the liquid, falling-block, fire and job queues is written into each loaded column, and what
 //! waits in a column that is gone is dropped from the queues; a column that comes in has what it
-//! kept queued again, as many ticks off as it was.
+//! kept queued again. Times are on the level's clock (`currentTick`, `Level::age`), as BDS keeps them: a
+//! tick whose time has passed runs at once, as BDS ran a generated spring's three (dated 85 to 369 from 0)
+//! on loading the ac2 canon at tick 192 (docs/research/world-ticks.md "Potent sulfur").
 // What waits elsewhere (a repeater's delay, a pressed button, lit ore) is not kept.
 
 use std::collections::{HashMap, HashSet};
@@ -40,12 +42,14 @@ pub(crate) fn write_back(world: &mut World) {
     let layers: Vec<Entity> = world.query_filtered::<Entity, With<Layer>>().iter(world).collect();
     for layer in layers {
         let Some(level) = level(world, layer) else { continue };
+        let age = level.level().age;
+        let on_level_clock = |due: u64| age + (due as i64 - now as i64);
         let records: Vec<(ChunkPos, Vec<u8>)> = level
             .loaded_positions()
             .into_iter()
             .map(|column| {
-                let ticks: Vec<([i32; 3], u32, i64)> = by_column.get(&(layer, column)).into_iter().flatten().map(|&(pos, due)| (pos, waiting_state(level, pos), due as i64)).collect();
-                (column, sapling_world::encode_pending_ticks(level.registry(), now as i64, &ticks))
+                let ticks: Vec<([i32; 3], u32, i64)> = by_column.get(&(layer, column)).into_iter().flatten().map(|&(pos, due)| (pos, waiting_state(level, pos), on_level_clock(due))).collect();
+                (column, sapling_world::encode_pending_ticks(level.registry(), age, &ticks))
             })
             .collect();
         let Some(mut level) = world.get_mut::<Layer>(layer) else { continue };
@@ -79,8 +83,10 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
             return;
         }
     };
+    // A record dated past the level's clock (a world whose level.dat is older) counts from its own date.
+    let since = level(world, layer).map_or(saved_at, |level| level.level().age.max(saved_at));
     for PendingTick { name, properties, pos, time } in ticks {
-        let delay = (time - saved_at).max(1) as u64;
+        let delay = (time - since).max(1) as u64;
         if let Some(kind) = liquid::Liquid::of(&name) {
             liquid::again(world, layer, pos, kind, delay);
         } else if matches!(name.as_str(), "minecraft:fire" | "minecraft:soul_fire") {

@@ -201,8 +201,11 @@ at `+0.5 +1 +0.5`; the cloned spawner's entity (`spawn_data` alone, shown twice)
   shown at the click (block, entity, `vault.insert_item`) and its block and entity again the next tick. Tests
   in spawners/vault.rs.
 - The ejected count (4 against 3) is the reward table's roll (1 + 1..3 + 1 items), not a rule difference.
-Left: BDS also resent the clicker six cells at the click (the vault, the cells above and below it, the clicked
-face's neighbour and the cells above and below that); sapling does not.
+- Fixed (thirteenth2af, bds-af2vault.txt): at a key that unlocks, BDS first resends the clicker alone six layer-0
+  cells (the vault, already unlocking, the cells above and below it, the clicked face's neighbour and the cells
+  above and below that), then the block, entity and `vault.insert_item`. A refusal sends only its sound
+  (`blocks::about_click_first`, shared with cauldrons and creative placing; test
+  `a_key_shows_its_user_the_cells_about_the_click_first_and_a_refusal_shows_none`).
 
 ## Ominous item spawners
 

@@ -49,7 +49,7 @@ springs on the surface above sulfur caves.
   on the cell's chunk for the game: the ac2 canon saved sulfur_spring_medium_2's three (85, 309, 369, with
   `currentTick` 0) in chunk -751,-752's `PendingTicks`, none run. `View::keep_tick` → `chunk_kept_ticks` →
   sapling-world generated/ticks.rs writes them (test `a_generated_sulfur_spring_keeps_its_potent_sulfur_ticks`).
-  The shard does not run potent sulfur ticks yet.
+  The shard runs them (docs/research/world-ticks.md "Potent sulfur").
 - Unreachable in the 1.26.52 pack: a spring over water (every `sulfur_spring_*` feature's `block_intersection`
   allowlist lacks water, and a refused spring only climbs on), `adjustment_radius` other than 0 and the
   motion-blocking-only intersection (no vanilla `structure_template_feature` sets either).
