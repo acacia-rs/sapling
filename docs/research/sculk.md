@@ -260,8 +260,15 @@ Particle (1411b5340)
   `nearby_close`, `nearby_closer`, `nearby_closest` at the shrieker plus a random whole offset up to 10;
   the fourth summons a warden (spot 20 tries ±5 across, ±6 up, solid below and 3 free; `emerge`), heard
   `agitated` at its feet of no entity and not `spawn`; its own Darkness came on the same tick. Sapling
-  sent `shriek` from the centre and the warning with the darkness (fixed with the port). Left: BDS's
-  warden came a tick after the darkness and was heard `listening` at once; sapling's comes with it. No warning with a warden within 48; on peaceful it shrieks but warns no one.
+  sent `shriek` from the centre and the warning with the darkness (fixed with the port). BDS's
+  shrieker falls quiet (UpdateBlock `active=0`) a tick after the darkness in all five ends, and the
+  fourth's warden comes with that, AddEntity, `agitated`, then `listening` at its head (2.465 up,
+  its unique id). Fixed 2026-11-05 (twelfth wave): `shrieks::ended` gives the darkness and answers
+  the tick after (`darkened`), the warden's sounds held for its announcement (`warden::summon_emerging`),
+  test `a_shrieker_stood_on_warns_three_times_200_ticks_apart_then_a_warden_emerges`; re-drilled
+  (sapling-t2warden.txt): the five ends and the warden's arrival in BDS's order. Its own first
+  darkness pulse comes with it now, a tick after BDS's (BDS made it at the darkness and showed it a
+  tick later). No warning with a warden within 48; on peaceful it shrieks but warns no one.
   Left out: the warning level's decay (Java's one each 12000 ticks is kept), sharing levels with players
   within 16 not drilled.
 - Entity listeners (warden 148f8bfd0 owner 2 range 16, allay owner 3), `VibrationListenerSystem` 1484556e0.

@@ -348,6 +348,11 @@ Sapling's run: sapling-kinds3.txt.
   keeps prey within; BDS's strolled east and stayed within about 15. Whether BDS keeps a target out to
   `follow_range` (64) was not seen, so the keep range was left as it is (sapling-evoker.txt,
   bds-evoker.txt, `TargetEid` and `MoveEntityDelta` over time).
+  The commanded vex (checked 2026-11-05, twelfth wave): this BDS's vex pack has `charge_attack`
+  (priority 4) and no `vex_random_move` or `vex_copy_owner_target`, the same for a summoned and an
+  evoker's vex, so the difference is in the goal's code, likely an owner test. The goal has no RTTI
+  or label (`bdsre find ChargeAttack` finds only its definition's JSON glue, 148958560), and the
+  string's seven users are pack readers; the canUse was not reached. Left.
 
 ## Sapling
 
