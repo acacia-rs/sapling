@@ -80,6 +80,15 @@ pub struct SpawnArea {
     pub y_offset: i32,
 }
 
+/// A mob a structure's template placed in the chunk (docs/research/structure-spawns.md "Template actors").
+#[derive(Debug, Clone, PartialEq)]
+pub struct TemplateActor {
+    pub kind: &'static str,
+    /// The spawn event it is made with.
+    pub event: &'static str,
+    pub feet: [f32; 3],
+}
+
 /// One chunk column: `block(x, y, z)` with y from -64 to 319.
 pub struct ChunkShape {
     /// `pack`ed blocks by section, bottom up.
@@ -93,6 +102,8 @@ pub struct ChunkShape {
     entities: Vec<(u32, BlockEntity)>,
     /// What its own post-process filed for structure spawning (structure/spawn_areas.rs).
     spawn_areas: Vec<SpawnArea>,
+    /// The mobs its own post-process placed, in placing order.
+    actors: Vec<TemplateActor>,
 }
 
 // SAFETY: `data` points into the sections' own heap blocks, which never move and are written only
@@ -104,6 +115,7 @@ impl Clone for ChunkShape {
     fn clone(&self) -> Self {
         let mut copy = Self::from_sections(self.sections.clone(), self.fluid_ticks.clone(), self.entities.clone());
         copy.spawn_areas = self.spawn_areas.clone();
+        copy.actors = self.actors.clone();
         copy
     }
 }
@@ -111,7 +123,7 @@ impl Clone for ChunkShape {
 impl ChunkShape {
     fn from_sections(sections: [Section; SECTIONS], fluid_ticks: Vec<(u32, bool)>, entities: Vec<(u32, BlockEntity)>) -> Self {
         let data = std::array::from_fn(|s| sections[s].blocks().as_ptr());
-        Self { sections, data, fluid_ticks, entities, spawn_areas: Vec::new() }
+        Self { sections, data, fluid_ticks, entities, spawn_areas: Vec::new(), actors: Vec::new() }
     }
 
     /// All air.
@@ -131,6 +143,15 @@ impl ChunkShape {
     /// The structure spawn areas its post-process filed, in filing order.
     pub fn spawn_areas(&self) -> &[SpawnArea] {
         &self.spawn_areas
+    }
+
+    pub(crate) fn add_actor(&mut self, actor: TemplateActor) {
+        self.actors.push(actor);
+    }
+
+    /// The mobs structure templates placed in it.
+    pub fn actors(&self) -> &[TemplateActor] {
+        &self.actors
     }
 
     /// The block entities of cells that hold a block of their kind, the last filed for a cell that

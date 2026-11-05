@@ -43,23 +43,31 @@ fn fill_down(canvas: &mut Canvas, (x, mut y, z): Pos) {
 impl Piece {
     /// The template, its chests drawing loot seeds from `random` (the chunk's structure generator),
     /// then its markers (1480b2360): an allay group draws `nextInt(3)` wherever it is, a chest marker
-    /// inside the chunk makes a chest and draws its seed, unless a chest already stands there.
+    /// inside the chunk makes a chest and draws its seed, unless a chest already stands there; then
+    /// the mobs of its "Mage", "Warrior" and allay markers inside the chunk.
     fn place(&self, canvas: &mut Canvas, random: &mut Mt19937) {
         let (rotation, flip) = settings(self.rotation, self.mirror);
         let mut placement = Placement::new(rotation, canvas.bb);
         placement.mirror = flip;
         placement.place(canvas, self.template, self.origin).draw_seeds(canvas, random);
         trace::label(|| format!("{} markers", self.template.name));
+        let (mut evokers, mut vindicators, mut allays) = (Vec::new(), Vec::new(), Vec::new());
         for (index, name) in &self.template.markers {
             let (dx, dy, dz) = transform(self.template.blocks[*index].pos, self.rotation, self.mirror);
             let (x, y, z) = (self.origin.0 + dx, self.origin.1 + dy, self.origin.2 + dz);
             let inside = canvas.bb.contains(x, y, z);
             if name == "Group of Allays" {
-                random.next_int(3);
+                let count = random.next_int(3) + 1;
                 if inside {
                     canvas.set(x, y, z, Block::Air);
                 }
+                allays.extend(std::iter::repeat_n((x, y, z), count as usize));
                 continue;
+            }
+            match name.as_str() {
+                "Mage" => evokers.push((x, y, z)),
+                "Warrior" => vindicators.push((x, y, z)),
+                _ => {}
             }
             if !inside {
                 continue;
@@ -76,6 +84,11 @@ impl Piece {
                 canvas.set(x, y, z, facing);
                 canvas.set_entity(x, y, z, BlockEntity::Loot { table: "loot_tables/chests/woodland_mansion.json", seed: random.next_int_unbounded() });
             }
+        }
+        // postProcessMobsAt (1480b2a00): evokers, then vindicators, then allays.
+        let made = [("minecraft:evocation_illager", evokers), ("minecraft:vindicator", vindicators), ("minecraft:allay", allays)];
+        for (kind, cells) in made {
+            cells.into_iter().for_each(|cell| canvas.add_actor(kind, "minecraft:entity_spawned", cell));
         }
     }
 }

@@ -162,6 +162,7 @@ mod structure_blocks;
 mod structures;
 mod summoned_shots;
 mod survival;
+mod template_actors;
 mod throws;
 mod tick_circle;
 mod tnt;
