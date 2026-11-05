@@ -226,16 +226,16 @@ fn tell(world: &mut World, vehicle: Entity, rider: Entity, packets: Vec<Bytes>) 
     crate::entities::tell_viewers(world, rider, layer, cell, packets);
 }
 
-/// What players who come to see `vehicle` later are told after it: its tack, its player riders'
-/// seats and every rider's link (mob riders' seats ride in their announcements, announced.rs);
-/// and its stored compound names its riders that a world folder keeps.
+/// What players who come to see `vehicle` later are told after it: its tack and its mob riders'
+/// links (seats, and player riders' links, ride in the riders' announcements, announced.rs); and its
+/// stored compound names its riders that a world folder keeps.
 fn retell(world: &mut World, vehicle: Entity) {
     let riders = world.get::<Seats>(vehicle).map(|seats| seats.0.clone()).unwrap_or_default();
     let vehicle_id = world.get::<NetId>(vehicle).map_or(0, |id| id.0);
     let mut after = mounts::worn(world, vehicle);
-    after.extend(announced::file(world, vehicle));
+    announced::file(world, vehicle);
     for (index, rider) in riders.iter().enumerate() {
-        let Some(id) = world.get::<NetId>(*rider) else { continue };
+        let Some(id) = world.get::<NetId>(*rider).filter(|_| world.get::<mobs::Mob>(*rider).is_some()) else { continue };
         // BDS sent no seating link `immediate` in any capture (118 of type 1, 6 of type 2).
         after.push(packets::link(vehicle_id, id.0, if index == 0 { LinkKind::Driver } else { LinkKind::Passenger }, false));
     }
