@@ -258,8 +258,17 @@ What is missing or wrong:
 `FallingBlockActor::readAdditionalSaveData` (145985b20, vtable slot 14a887b10; the slot before, 145986750, is
 presumably the write) reads legacy `Tile` and `Data` bytes into `mFallingBlockId` when both are present, otherwise
 the `FallingBlock` compound (`{name, states, version}`) into `mFallingBlockSerId`, then `Time` as an unsigned byte
-(`movzx`) into the int `mTime`. The write was not decompiled; sapling writes a byte, so a fall past 255 ticks
-would wrap if BDS's does too.
+(`movzx`) into the int `mTime`. The write, `addAdditionalSaveData` 145985a00, takes the low byte of `mTime`
+(`movzx byte [rdi+0x3bc]`) into `putByte` (14284e950): a fall past 255 ticks is saved wrapped. Sapling saves the
+ticks fallen so far, wrapped the same (`sapling_world::timed_falling_block`, written back on save by
+`blocks::keep_fall_times`); it used to save 1 always.
+
+## Dripstone on a player (drilled 2026-11-05, research/captures/bds-v2drip.txt)
+
+- A hanging tip let go 10 and 20 blocks over a survival player cost it 9 and 19 (20 to 11, 20 to 1) on both, with
+  the same dust and `PointedDripstoneLand` at the cell's corner. Not matched: in BDS's tick the health update comes
+  after the landing's two LevelEvents (after the hurt animation), in sapling's before them; BDS's anvil
+  (bds-anvil.txt) orders it the same way, the health told at the tick's end.
 
 ## On the wire (drilled 2026-11-05, research/captures/bds-n13net.txt)
 

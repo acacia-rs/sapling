@@ -195,6 +195,10 @@ fn a_world_folders_falling_blocks_fall_on_and_are_saved_until_placed() {
     let (falling, placed) = kept(&storage);
     assert!(placed, "the low one landed on the floor");
     assert!(matches!(falling[..], [(-3, y)] if y < 300.0 && y > 64.0), "only the high one is kept, lower than it was: {falling:?}");
+    // BDS saves `Time` as the fall stands (145985a00); it was kept at 1, as it began.
+    let stored = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
+    let times: Vec<u8> = sapling_world::stored_actors(&stored.actors).unwrap().into_iter().filter_map(|(_, _, raw)| sapling_world::falling_block(&raw).map(|(_, time)| time)).collect();
+    assert!(matches!(times[..], [time] if time > 50), "{times:?}");
 }
 
 #[test]

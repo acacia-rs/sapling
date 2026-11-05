@@ -248,8 +248,17 @@ Particle (1411b5340)
   both players as the vibration sets off (bds-z2bolt.txt; also 0.8, 0.55 in older captures). Sapling sent none;
   added (`sculk/events.rs` `signal`).
 - A sensor on a stone block lit a lamp beside that block (the strong power below; settles the arg-order question
-  below). BDS's `/tp` was heard (teleport, frequency 14) at the arrival cell; sapling posts no teleport event
-  (found, not followed).
+  below). BDS's `/tp` was heard (teleport, frequency 14) at the arrival cell; sapling posted no teleport event.
+
+## Drilled 2026-11-05 (`bds_command_probe v2tp`, research/captures/bds-v2tp.txt)
+
+- `/tp` of the player to 1.2 -26 3.8 and of an armour stand were heard from the arrival cell's middle; `tp @s ~ ~ ~`
+  and a `/summon` were not. Sapling now posts `Teleport` where a player's or an entity's teleport ends somewhere
+  else (`sculk::teleported`, from `Backend::teleport` and `EntityBackend::move_entity`).
+- Chorus fruit eaten with hunger full: BDS ate it (sapling refused, its `always` was unset; fixed in
+  `sapling_data::food`) and was heard from the eyes' cell it ate at (`eat`, frequency 8), sent as the teleport and
+  the burp were. Sapling posts `Eat` there as the food is eaten (`vitals/eating.rs`). Whether the chorus teleport's
+  arrival is heard is not known: BDS's landed out of the sensor's range.
 
 ## Unverified
 

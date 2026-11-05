@@ -9,7 +9,7 @@ mod stuck;
 
 use std::collections::{HashMap, HashSet};
 
-pub use falling::{falling_block, new_falling_block_actor};
+pub use falling::{falling_block, new_falling_block_actor, timed_falling_block};
 pub use lying::{aged_orb, lying_stack, new_item_actor, new_orb_actor, orb_age, orb_value, orb_worth};
 pub use stuck::{ShotRecord, new_shot_actor, shot_record};
 

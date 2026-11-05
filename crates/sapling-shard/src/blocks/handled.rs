@@ -1,6 +1,6 @@
 //! What a click does to a block that needs nothing in the hand: a cake is bitten, redstone ore
 //! lights, a berry bush and cave vines are picked, a note block plays, a full composter empties,
-//! a dragon egg is gone elsewhere, a charged respawn anchor bursts outside the nether and is made
+//! a dragon egg is gone elsewhere, a copper golem statue turns its pose, a charged respawn anchor bursts outside the nether and is made
 //! the clicker's spawn in it (docs/research/block-uses.md, sleep/spawn.rs).
 
 use acacia_proto::types::Vec3f;
@@ -137,6 +137,7 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
             send::set(world, layer, [x + by[0], y + by[1], z + by[2]], id);
             true
         }
+        _ if super::statues::is_statue(name) => super::statues::turn(world, layer, pos),
         _ => false,
     }
 }

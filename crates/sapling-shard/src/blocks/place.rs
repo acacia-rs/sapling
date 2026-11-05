@@ -188,8 +188,15 @@ impl Request<'_> {
                 super::shown_again::next_tick(self.world, site.layer, pos);
             }
             crate::containers::furnish(self.world, site.layer, pos, &block.name, tag.as_ref(), click.face);
-            // BDS shows a block's entity, its place sound, then its vibration (bds-z2hand.txt, bds-z2sculk.txt).
-            send::to_viewers(self.world, site.layer, pos, &[sound]);
+            // BDS shows a block's entity, its place sound, then its vibration (bds-z2hand.txt, bds-z2sculk.txt);
+            // a shulker box's entity once more before the sound and once after (bds-v2ents.txt).
+            let again: Vec<_> = level(self.world, site.layer)
+                .filter(|_| crate::containers::is_shulker_box(&block.name))
+                .and_then(|level| level.block_entity(pos))
+                .map(|entity| send::block_entity_data(pos, entity))
+                .into_iter()
+                .collect();
+            send::to_viewers(self.world, site.layer, pos, &[&again[..], &[sound], &again[..]].concat());
             super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
             signs::open_editor(self.world, self.entity, site.layer, pos, &block.name);
             rails::join_placed(self.world, site.layer, pos);

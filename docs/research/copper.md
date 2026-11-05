@@ -162,7 +162,8 @@ The table was read from the strings (`str copper`, `str lightning_rod`); all 128
 - U3 141a56c80 is `hurtAndBreak` (Unbreaking applies?); 142535e40 tests the SNEAKING flag.
 - U4 Whether the generic `BlockPlayerInteractEvent` reaches copper when the player sneaks with an item.
 - U5 GameEvent ids 14cc8a9e4 / 14cc89898 not named (likely `block_change` / `lightning_strike`).
-- U6 Golem statue interact (W8) and the statue's `ActorInternalEvent` (turning into a golem) not read.
+- U6 The statue's `ActorInternalEvent` (turning into a golem) not read. W8's turn was drilled and ported
+  (block-entities.md, "Copper golem statue").
 - U7 The rod type list 14ccd8468 contents and the state id 14cd26368 = `facing_direction` are inferred.
 - U8 None of this was drilled on BDS; first drill: oxidation rate of an isolated copper block at
   `randomtickspeed` high, and lightning on a copper rod.

@@ -7,7 +7,7 @@
 mod dripstone;
 mod flight;
 
-pub(crate) use flight::from_storage;
+pub(crate) use flight::{from_storage, keep_times};
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};

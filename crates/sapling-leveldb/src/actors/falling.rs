@@ -5,7 +5,8 @@
 use acacia_proto::nbt::{self, LittleEndian, Value};
 use acacia_world::BlockRegistry;
 
-use super::{floats, written};
+use super::{floats, with_fields, written};
+use crate::Error;
 use crate::states::{block_of_hash, compound_of, network_hash};
 use crate::upgrade;
 
@@ -27,6 +28,12 @@ pub fn new_falling_block_actor(unique_id: i64, hash: u32, registry: &BlockRegist
         (TIME, Value::Byte(time as i8)),
     ];
     Some(written(Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect())))
+}
+
+/// `compound`, a falling block's, `time` ticks into its fall: its low byte, as BDS writes `mTime`
+/// (`addAdditionalSaveData` 145985a00: `movzx` of the int's first byte, `putByte`).
+pub fn timed_falling_block(compound: &[u8], time: u32) -> Result<Vec<u8>, Error> {
+    with_fields(compound, [(TIME, Value::Byte(time as u8 as i8))])
 }
 
 /// The network hash of the block the falling block kept as `compound` is, and how long it has
@@ -59,6 +66,15 @@ mod tests {
         let kept = new_falling_block_actor(5, sand, &registry, [0.5, 70.0, 0.5], [0.0, -0.4, 0.0], 12).unwrap();
         let read = actors(&kept).unwrap().remove(0);
         assert_eq!((read.identifier.as_str(), read.position, falling_block(&kept)), ("minecraft:falling_block", [0.5, 70.0, 0.5], Some((sand, 12))));
+    }
+
+    #[test]
+    fn a_fall_past_255_ticks_is_kept_as_its_low_byte() {
+        let registry = BlockRegistry::vanilla();
+        let sand = (0..registry.len() as u32).filter_map(|id| registry.get(id)).find(|state| state.name == "minecraft:sand").unwrap().network_hash;
+        let kept = new_falling_block_actor(5, sand, &registry, [0.5, 70.0, 0.5], [0.0; 3], 1).unwrap();
+        let times = [200, 255, 256, 300].map(|time| falling_block(&timed_falling_block(&kept, time).unwrap()).map(|(_, time)| time));
+        assert_eq!(times, [Some(200), Some(255), Some(0), Some(44)]);
     }
 
     #[test]

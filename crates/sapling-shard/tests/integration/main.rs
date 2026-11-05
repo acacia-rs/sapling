@@ -182,6 +182,7 @@ mod survival;
 mod template_actors;
 mod thirteenth2p_blocks;
 mod thirteenth2t_blocks;
+mod thirteenth2v_blocks;
 mod throws;
 mod tick_circle;
 mod tnt;

@@ -244,8 +244,9 @@ nextFloat,consumeCount}`.
    never-compatible (the same gate as 1482f4580 and `CaveFeature::place`), so no new world uses it. NoiseGradient runs
    both as the subsurface pass and as a column's surface builder (worldgen-bds-caves.md). Capped is the
    Nether's; TheEnd finds no stone to change.
-5. Who calls slot 54; which rule places `underground_cave_carver_feature`; structure post-process a/b pairing
-   (assumed as the large-feature seed's).
+5. Who calls slot 54; structure post-process a/b pairing (assumed as the large-feature seed's). No
+   `underground_cave_carver_feature` exists in this BDS: `bdsre str` finds only `cave_carver`,
+   `nether_cave_carver` and `underwater_cave_carver`, all registered by 14829eeb0 (2026-11-05).
 6. Structures: mapped in [worldgen-bds-structures.md](worldgen-bds-structures.md); templates, jigsaw and the
    terrain adjustments (beards, buries, shavers) are ported there and replay-exact.
 7. Lighting/heightmap stage and `OverworldGenerator2d` selection rule (legacy worlds, `no_legacy_worldgen` 14393d890).

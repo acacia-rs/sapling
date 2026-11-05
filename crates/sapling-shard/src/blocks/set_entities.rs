@@ -10,6 +10,7 @@ use sapling_world::new_block_entity;
 
 use super::entities::{BANNERS, CAMPFIRES, Placing, SKULLS, placed};
 use super::jukebox::FINISHED;
+use super::statues::is_statue;
 use crate::components::Layer;
 
 /// Blocks a set gives an entity and shows it, beyond those [`placed`] makes (signs, skulls,
@@ -33,18 +34,18 @@ fn is_shown(block: &str) -> bool {
 }
 
 fn is_shown_again(block: &str) -> bool {
-    AGAIN.contains(&block) || SKULLS.contains(&block) || CAMPFIRES.contains(&block) || block.ends_with("_sign")
+    AGAIN.contains(&block) || SKULLS.contains(&block) || CAMPFIRES.contains(&block) || block.ends_with("_sign") || is_statue(block)
 }
 
 /// The entity a block put by hand gets that [`placed`] does not make: as BDS's set made it
-/// (research/captures/bds-z2hand.txt).
+/// (research/captures/bds-z2hand.txt, bds-v2statue.txt).
 pub(super) fn placed_too(block: &str, pos: BlockPos) -> Option<Value> {
-    PLACED_TOO.contains(&block).then(|| set_only(block, pos)).flatten()
+    (PLACED_TOO.contains(&block) || is_statue(block)).then(|| set_only(block, pos)).flatten()
 }
 
-/// Whether a block put by hand is shown whole again a tick later, as BDS did (bds-z2hand.txt).
+/// Whether a block put by hand is shown whole again a tick later, as BDS did (bds-z2hand.txt, bds-v2statue.txt).
 pub(super) fn again_by_hand(block: &str) -> bool {
-    matches!(block, "minecraft:cauldron" | "minecraft:lectern" | "minecraft:jukebox") || SKULLS.contains(&block) || CAMPFIRES.contains(&block) || block.ends_with("_hanging_sign")
+    matches!(block, "minecraft:cauldron" | "minecraft:lectern" | "minecraft:jukebox") || SKULLS.contains(&block) || CAMPFIRES.contains(&block) || block.ends_with("_hanging_sign") || is_statue(block)
 }
 
 fn empty_stack() -> Value {
@@ -73,6 +74,7 @@ fn set_only(block: &str, pos: BlockPos) -> Option<Value> {
             let fields = vec![("LootTable", table), ("LootTableSeed", Value::Int(0)), ("brush_count", Value::Int(0)), ("brush_direction", Value::Byte(6)), ("type", Value::String(block.into()))];
             ("BrushableBlock", fields)
         }
+        _ if is_statue(block) => return Some(super::statues::entity(pos)),
         _ => return None,
     };
     let mut entity = new_block_entity(id, pos);
@@ -103,7 +105,9 @@ pub(super) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &s
         _ = level.world.set_block_entity(pos, &made);
     }
     let Some(entity) = level.world.block_entity(pos).map(|entity| super::send::block_entity_data(pos, entity)) else { return };
-    super::send::to_viewers(world, layer, pos, &[entity]);
+    if !super::send::batch_holds(world, layer, pos) {
+        super::send::to_viewers(world, layer, pos, &[entity]);
+    }
     if SKULLS.contains(&block) {
         head_placed(world, layer, pos);
     }

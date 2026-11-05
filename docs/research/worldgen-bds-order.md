@@ -708,7 +708,12 @@ scattered start (14a927910) does for a swamp hut and a jungle temple and not for
 starts do not. `dbg_canon.json`'s `upgrades` line (rax, the start's vtable) repeats the answer in every canon.
 The igloo's cell bars then need another reason to stay apart from the two cell markers north of them (the
 cellar is dug into stone): sapling clears the markers before the template's pass, which fits the igloo run
-(structure stage 1 -> 0); what BDS holds in those cells during its pass was not read.
+(structure stage 1 -> 0). Read 2026-11-05 (bdsre): BDS's pass cannot see those cells either way.
+`placeInWorld` (141eeb8d0) skips the template's structure blocks (the settings ctor 141ef1240 sets +0xb and
++0xc to 1; the igloo keeps them) and ends (141eed4d4) in the shape pass 141f5c5d0, which builds each cell's
+neighbour mask from the template's own grid (dims +0/+4/+8, origin +0xc..+0x14), a cell outside it reading the
+empty entry at 0x14ccbc108; it never reads the world. The markers are handled after `placeInWorld`. So the bars
+connect by the template alone, as sapling's do: same.
 
 Stock oracle, all 59 regions (logs `base`, `s2`, `-still`): ticked 25104 -> 24881, still 25552 -> 25329;
 structure stage 780 -> 767 and 903 -> 890; no region rose. By region: stronghold -89, mansion -76, shipwreck -19, swamp hut -11, far out -11, near

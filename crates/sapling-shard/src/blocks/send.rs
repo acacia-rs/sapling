@@ -14,7 +14,7 @@ mod effects;
 mod sections;
 
 pub(crate) use effects::{destroy_particles, noise, place_sound, punch_particles, sound, sound_at};
-pub(crate) use sections::{after_blocks, batched, hold, hold_break, log_again, log_flowing, log_liquid, logged, logged_apart, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
+pub(crate) use sections::{after_blocks, batched, hold, hold_break, holds as batch_holds, log_again, log_flowing, log_liquid, logged, logged_apart, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
 
 use crate::components::{InLayer, Layer, Outgoing};
 
@@ -69,9 +69,10 @@ pub(crate) fn block_entity_data([x, y, z]: BlockPos, entity: &BlockEntity) -> By
 
 pub(crate) use crate::view::to_viewers;
 
-/// Makes `entity` what the block at `pos` holds and shows it to those who see the block.
+/// Makes `entity` what the block at `pos` holds and shows it to those who see the block, after its
+/// block where an open batch holds it ([`show_held`]).
 pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entity: &Value) {
-    if keep_entity_quietly(world, layer, pos, entity) {
+    if keep_entity_quietly(world, layer, pos, entity) && !sections::holds(world, layer, pos) {
         let shown: Vec<_> = world.get::<Layer>(layer).and_then(|level| level.world.block_entity(pos).map(|entity| block_entity_data(pos, entity))).into_iter().collect();
         to_viewers(world, layer, pos, &shown);
     }
