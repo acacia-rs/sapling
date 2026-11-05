@@ -44,6 +44,37 @@ pub(crate) fn centre(world: &mut World, layer: Entity, feet: [f32; 3]) -> Option
     holds(world, layer, middle).then_some(middle)
 }
 
+/// How far BDS's village bounds reach past its first claimed point (142a28650), across and up.
+const BOUNDS: [f32; 3] = [32.0, 12.0, 32.0];
+
+/// Whether `feet` is within `tolerance` of a village's bounds on every axis, as the patrol rules'
+/// village filter asks (`VillageManager` 142a3c120). Sapling's bounds are those of every bell and bed
+/// within [`FINDS`] of the village's middle grown by [`BOUNDS`], where BDS's are its first claimed
+/// point's box widened to take in each later claimed point [U].
+pub(crate) fn within_bounds(world: &mut World, layer: Entity, feet: [f32; 3], tolerance: f32) -> bool {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
+    let reach = BOUNDS[0] + tolerance + FINDS;
+    let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
+    let chunks = (reach / 16.0).ceil() as i32;
+    let mut points: Vec<[f32; 3]> = Vec::new();
+    for column in (-chunks..=chunks).flat_map(|dx| (-chunks..=chunks).map(move |dz| ChunkPos::new(home.x + dx, home.z + dz))) {
+        let homes = level.block_entities_in(column).into_iter().filter(|entity| matches!(entity.nbt.get("id"), Some(Value::String(id)) if id == "Bell" || id == "Bed"));
+        points.extend(homes.map(|entity| entity.pos.map(|c| c as f32 + 0.5)));
+    }
+    let middles: Vec<[f32; 3]> = points.iter().filter(|at| distance(**at, feet) <= reach).copied().collect();
+    for middle in middles {
+        let near: Vec<&[f32; 3]> = points.iter().filter(|at| distance(**at, middle) <= FINDS).collect();
+        let within = (0..3).all(|axis| {
+            let (low, high) = near.iter().fold((f32::MAX, f32::MIN), |(low, high), at| (low.min(at[axis]), high.max(at[axis])));
+            feet[axis] >= low - BOUNDS[axis] - tolerance && feet[axis] <= high + BOUNDS[axis] + tolerance
+        });
+        if within && holds(world, layer, middle) {
+            return true;
+        }
+    }
+    false
+}
+
 /// Whether a villager lives within reach of the village's middle; true while that middle is not
 /// loaded, as a kept raid waits for its village.
 pub(super) fn holds(world: &mut World, layer: Entity, middle: [f32; 3]) -> bool {

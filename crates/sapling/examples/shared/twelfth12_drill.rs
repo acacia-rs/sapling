@@ -31,10 +31,14 @@ fn locate() -> Vec<String> {
     lines
 }
 
-/// Both bots over `[x, y, z]` for `secs` seconds, in creative so nothing hunts them.
+/// Both bots over `[x, y, z]` for `secs` seconds, in creative so nothing hunts them; a barrier pad
+/// under them is asked for once a second first, as sapling generates the columns slower than BDS.
 fn visit(lines: &mut Vec<String>, [x, y, z]: [i32; 3], secs: usize) {
     for bot in ["@s", "CmdWatcher"] {
         lines.push(format!("tp {bot} {x}.5 {y} {z}.5"));
+    }
+    for _ in 0..15 {
+        lines.push(format!("fill {} {} {} {} {} {} barrier", x - 1, y - 1, z - 1, x + 1, y - 1, z + 1));
     }
     waits(lines, secs);
 }
@@ -44,10 +48,10 @@ fn actors(rule: bool) -> Vec<String> {
     let mut lines = Vec::new();
     waits(&mut lines, 5);
     lines.extend(["difficulty normal".to_string(), format!("gamerule domobspawning {rule}"), "gamemode creative @s".into(), "gamemode creative CmdWatcher".into(), "time set 6000".into()]);
-    visit(&mut lines, [1880, 160, -1125], 20);
-    visit(&mut lines, [1752, 140, -1016], 25);
+    visit(&mut lines, [1880, 160, -1125], 60);
+    visit(&mut lines, [1752, 140, -1016], 45);
     visit(&mut lines, [-984, 140, 993], 25);
-    visit(&mut lines, [-8184, 140, 15944], 40);
+    visit(&mut lines, [-8184, 140, 15944], 60);
     for bot in ["@s", "CmdWatcher"] {
         lines.push(format!("execute in nether run tp {bot} -328 100 248"));
     }

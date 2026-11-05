@@ -26,7 +26,7 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     // BDS played no `spawn` at any of 112 summons naming an event (research/captures/bds-*.txt), nor
     // for a struck pig's or a piglin's turning (bds-n3struck.txt, bds-t2barter.txt) or a shrieker's
     // emerging warden (bds-t2warden.txt).
-    let sound = (reason != SpawnReason::Lightning && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn");
+    let sound = (!matches!(reason, SpawnReason::Lightning | SpawnReason::Structure) && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn");
     let id = born_by(world, layer, kind, feet, Birth { reason, yaw, gene, sound }, event)?;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {
@@ -160,6 +160,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     super::piglins::adopt(world, entity);
     super::captains::adopt(world, entity);
+    super::raids::adopt_patrol(world, entity, &compound);
     if kind == crate::dragon::DRAGON {
         crate::dragon::adopt(world, entity);
     }
