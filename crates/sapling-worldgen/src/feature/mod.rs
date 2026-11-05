@@ -15,7 +15,7 @@ mod desert_well;
 mod disk;
 mod element;
 pub mod end;
-mod flowers;
+pub(crate) mod flowers;
 mod fossil;
 mod freeze;
 mod fungus;

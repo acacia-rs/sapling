@@ -27,7 +27,8 @@ const MOVE_TICKS: u32 = 8;
 const FACING: &str = "facing_direction";
 const POWERED: &str = "toggle_bit";
 const COOLDOWN: &str = "TransferCooldown";
-/// Lying items are taken from this high above the hopper's cell, to this high.
+/// Lying items whose box reaches into this high above the hopper's cell, to this high, are taken: BDS's took
+/// one lying on the cell's edge (research/captures/bds-p2hopper.txt).
 const PICKUP: [f32; 2] = [0.625, 2.0];
 
 struct Hopper {
@@ -212,7 +213,7 @@ fn pull_from_above(world: &mut World, layer: Entity, pos: BlockPos, slots: &mut 
 /// Takes the first item lying on the hopper that fits, as much of it as fits in two slots.
 fn pull_lying(world: &mut World, layer: Entity, [x, y, z]: BlockPos, slots: &mut [Option<Held>]) -> bool {
     let (min, max) = ([x as f32, y as f32 + PICKUP[0], z as f32], [x as f32 + 1.0, y as f32 + PICKUP[1], z as f32 + 1.0]);
-    for (item, stack) in drops::lying_in(world, layer, min, max) {
+    for (item, stack) in drops::lying_touching(world, layer, min, max) {
         let first = insert(world, slots, &stack, |_| true);
         let rest = ItemStack { count: stack.count - first, ..stack.clone() };
         let taken = first + if rest.count > 0 && first > 0 { insert(world, slots, &rest, |_| true) } else { 0 };

@@ -1,6 +1,8 @@
 //! Bone meal, against research/captures/bds-bonemeal.txt, and crops growing by themselves,
 //! against bds-crops.txt.
 
+use std::sync::{Arc, Mutex};
+
 use crate::common;
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -51,15 +53,75 @@ fn grass_grows_tall_grass_sprouts_and_stone_takes_none() {
         ([2, 64, -1], "minecraft:grass_block"), ([3, 64, -1], "minecraft:grass_block"), ([2, 64, 4], "minecraft:grass_block"), ([2, 65, 4], "minecraft:short_grass"),
     ];
     let mut h = fed(false, field);
-    let shown = [meal(&mut h, [2, 64, 0]), meal(&mut h, [2, 64, 0]), meal(&mut h, [2, 65, 4]), meal(&mut h, [5, 64, 5])];
-    assert_eq!(shown, [1, 0, 1, 0], "grass with a plant on it, and stone, take none");
-    h.remote.run(|ctx| {
+    let first = meal(&mut h, [2, 64, 0]);
+    // BDS's walks may leave the cell over the clicked grass free; then a second click takes again.
+    let covered = Arc::new(Mutex::new(false));
+    let seen = covered.clone();
+    h.remote.run(move |ctx| *seen.lock().unwrap() = ctx.block([2, 65, 0]).is_some_and(|block| block.name != "minecraft:air"));
+    h.tick_all();
+    let covered = *covered.lock().unwrap();
+    let shown = [first, meal(&mut h, [2, 64, 0]), meal(&mut h, [2, 65, 4]), meal(&mut h, [5, 64, 5])];
+    assert_eq!(shown, [1, usize::from(!covered), 1, 0], "grass with a plant on it, and stone, take none");
+    h.remote.run(move |ctx| {
         let named = |at: [i32; 3]| ctx.block(at).map(|block| block.name);
-        assert_ne!(named([2, 65, 0]).as_deref(), Some("minecraft:air"));
         assert_eq!([named([2, 65, 4]), named([2, 66, 4])].map(|name| name.unwrap_or_default()), ["minecraft:tall_grass", "minecraft:tall_grass"]);
-        assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|held| held.count), Some(6), "two taken, two refused");
+        let taken = 2 + u8::from(!covered);
+        assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|held| held.count), Some(8 - taken), "stone and covered grass refused");
     });
     h.tick_all();
+}
+
+/// The plants of one click on grass or a flower: (cell, name) of each block around `at` that is not air or stone.
+fn plants_around(h: &mut Harness, at: [i32; 3]) -> Vec<([i32; 3], String)> {
+    let found = Arc::new(Mutex::new(Vec::new()));
+    let seen = found.clone();
+    h.remote.run(move |ctx| {
+        for (x, y, z) in (-4..=4).flat_map(|x| (65..=67).flat_map(move |y| (-4..=4).map(move |z| (x, y, z)))) {
+            let cell = [at[0] + x, y, at[2] + z];
+            if let Some(block) = ctx.block(cell).filter(|block| block.name != "minecraft:air") {
+                seen.lock().unwrap().push((cell, block.name));
+            }
+        }
+    });
+    h.tick_all();
+    let found = found.lock().unwrap().clone();
+    found
+}
+
+/// GrassBlockBase::onFertilized (147165f00): each of BDS's walks steps over grass only, so grass a ring of
+/// stone away from the clicked block gets nothing.
+#[test]
+fn grass_plants_only_where_its_walks_reach_over_grass() {
+    const RING: &[([i32; 3], &str)] = &[
+        ([0, 64, 3], "minecraft:grass_block"), ([-2, 64, 1], "minecraft:grass_block"), ([-1, 64, 1], "minecraft:grass_block"), ([0, 64, 1], "minecraft:grass_block"),
+        ([1, 64, 1], "minecraft:grass_block"), ([2, 64, 1], "minecraft:grass_block"), ([-2, 64, 5], "minecraft:grass_block"), ([-1, 64, 5], "minecraft:grass_block"),
+        ([0, 64, 5], "minecraft:grass_block"), ([1, 64, 5], "minecraft:grass_block"), ([2, 64, 5], "minecraft:grass_block"), ([-2, 64, 2], "minecraft:grass_block"),
+        ([-2, 64, 3], "minecraft:grass_block"), ([-2, 64, 4], "minecraft:grass_block"), ([2, 64, 2], "minecraft:grass_block"), ([2, 64, 3], "minecraft:grass_block"),
+        ([2, 64, 4], "minecraft:grass_block"),
+    ];
+    let mut h = fed(true, RING);
+    for _ in 0..4 {
+        meal(&mut h, [0, 64, 3]);
+    }
+    let plants = plants_around(&mut h, [0, 64, 3]);
+    assert!(!plants.is_empty(), "the cell over the clicked grass");
+    assert!(plants.iter().all(|(cell, _)| [cell[0], cell[2]] == [0, 3]), "nothing past the stone: {plants:?}");
+}
+
+/// FlowerBlock::onFertilized (14715ca10): a flower's walks start a block over it and step down onto the grass
+/// around, up to three cells away; a poppy brings up poppies and now and then a dandelion.
+#[test]
+fn a_flower_spreads_its_kind_up_to_three_cells_over_grass() {
+    let mut field: Vec<([i32; 3], &'static str)> = (-3..=3).flat_map(|x| (0..=6).map(move |z| ([x, 64, z], "minecraft:grass_block"))).collect();
+    field.push(([0, 65, 3], "minecraft:poppy"));
+    let mut h = fed(true, Box::leak(field.into_boxed_slice()));
+    for _ in 0..6 {
+        meal(&mut h, [0, 65, 3]);
+    }
+    let plants = plants_around(&mut h, [0, 64, 3]);
+    assert!(plants.iter().all(|(cell, name)| cell[1] == 65 && (name == "minecraft:poppy" || name == "minecraft:dandelion")), "{plants:?}");
+    assert!(plants.iter().all(|(cell, _)| cell[0].abs() <= 3 && (cell[2] - 3).abs() <= 3), "{plants:?}");
+    assert!(plants.iter().any(|(cell, _)| cell[0].abs() >= 2 || (cell[2] - 3).abs() >= 2), "two or more away: {plants:?}");
 }
 
 #[test]

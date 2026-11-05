@@ -59,6 +59,22 @@ fn pick(kind: FlowerKind, [x, _, z]: [i32; 3], random: &mut Mt19937) -> Block {
     }
 }
 
+/// The flower bone meal brings up around grass in a biome with tags `has_tag` (1438ee940): the
+/// legacy features' tables, picked by VanillaBiomeTags 9 (flower forest), 1 (plains) and 8 (swamp).
+// TODO: tags 10, 11, 22, 23 and 24 pick other flowers there (unnamed); those biomes get the overworld table.
+pub fn meal_flower(has_tag: &dyn Fn(&str) -> bool, at: [i32; 3], random: &mut Mt19937) -> &'static str {
+    let kind = if has_tag("flower_forest") {
+        FlowerKind::FlowerForest
+    } else if has_tag("plains") {
+        FlowerKind::Plains
+    } else if has_tag("swamp") {
+        FlowerKind::Swamp
+    } else {
+        FlowerKind::Overworld
+    };
+    pick(kind, at, random).name()
+}
+
 /// `MeadowFlowerFeature::place` (149e9d1d0, list from its constructor 149e9d080).
 const MEADOW: [Block; 8] = [
     Block::Allium,

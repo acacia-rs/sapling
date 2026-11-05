@@ -137,3 +137,16 @@ fn a_bolt_over_a_rod_powers_it_with_a_spark_for_each_of_its_walks_calls() {
     watch(&mut h, 1);
     assert!(!powered(&mut h));
 }
+
+#[test]
+fn a_bolt_over_copper_walks_it_clean_a_stage_a_walk_sparking_as_it_appears() {
+    // research/captures/bds-p2copper.txt: the bolt's cell is air, the copper under it took a stage a walk.
+    let mut h = ready(Difficulty::Normal);
+    h.remote.run(|ctx| {
+        ctx.set_block([3, 64, 3], &Block::new("minecraft:oxidized_copper"));
+        ctx.spawn_entity(BOLT, [3.5, 65.0, 3.5]);
+    });
+    let sparks = all::<LevelEvent>(&watch(&mut h, 1)).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [3.0, 64.0, 3.0]).count();
+    assert_eq!(sparks, 3, "one a stage, on the tick the bolt shows");
+    assert_eq!(ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name), "minecraft:copper_block");
+}

@@ -151,6 +151,8 @@ impl Request<'_> {
 
     /// Puts what a place event ended with into the world; false for a block the game lacks.
     fn put(&mut self, site: &Site, pos: BlockPos, click: &Click, block: &Block) -> bool {
+        let aged = super::commanded::aged_by_hand(self.world, block);
+        let block = aged.as_ref().unwrap_or(block);
         let Some(registry) = level(self.world, site.layer).map(|level| level.registry()) else { return false };
         let Some(whole) = send::resolve(registry, block).filter(|_| !block.is_air()) else { return false };
         let id = doors::lower_half(registry, whole);
@@ -162,6 +164,11 @@ impl Request<'_> {
         };
         let placed = match door {
             Some(upper) => doors::place_by_hand(self.world, site.layer, pos, id, upper),
+            // BDS lists an aged vine twice in one UpdateSubchunkBlocks, as its command does (bds-p2place.txt).
+            None if aged.is_some() => send::logged(self.world, |world| send::set(world, site.layer, pos, id) && {
+                send::log_again(world, site.layer, pos);
+                true
+            }),
             None => send::set(self.world, site.layer, pos, falling::as_put(self.world, site.layer, pos, id)),
         };
         if placed {

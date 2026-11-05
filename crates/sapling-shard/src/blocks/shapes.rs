@@ -73,7 +73,9 @@ fn joins(family: Family, beside: &Cell, step: [i32; 2]) -> bool {
         fence => theirs == Some(fence),
     };
     let gate = family != Family::Pane && gate_lies_along(beside, step);
-    kin || gate || JOINED.contains(&beside.name) || beside.is_full && !ALOOF.iter().any(|name| beside.name.contains(name))
+    // A stair's back is a whole face: a fence joined one turned to it, not one turned away (bds-p2place.txt).
+    let back = stair(beside).is_some_and(|(facing, _)| facing == [-step[0], -step[1]]);
+    kin || gate || back || JOINED.contains(&beside.name) || beside.is_full && !ALOOF.iter().any(|name| beside.name.contains(name))
 }
 
 /// Whether one of `boxes`, of the block above, reaches down into the square `[x0, x1, z0, z1]`.
@@ -202,5 +204,25 @@ pub(super) fn reshape_around(world: &mut World, layer: Entity, pos: BlockPos) {
             runs += 1;
             cells.push([cell[0], cell[1] - 1, cell[2]]);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// research/captures/bds-p2place.txt: a fence joined stairs east of it whose back faced it (weirdo 1),
+    /// not stairs turned the other way (weirdo 0).
+    #[test]
+    fn a_fence_joins_the_back_of_stairs_beside_it() {
+        let joined = ["0", "1"].map(|weirdo| {
+            let mut level = Level::void();
+            let fence = level.block_id("minecraft:oak_fence").unwrap();
+            let stairs = super::super::with_property(level.registry(), level.block_id("minecraft:oak_stairs").unwrap(), "weirdo_direction", weirdo).unwrap();
+            level.set_block(0, 64, 0, fence);
+            level.set_block(1, 64, 0, stairs);
+            decided(&level, [0, 64, 0]).iter().any(|(side, joined)| side == "minecraft:connection_east" && *joined == "1")
+        });
+        assert_eq!(joined, [false, true]);
     }
 }

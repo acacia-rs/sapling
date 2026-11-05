@@ -307,5 +307,11 @@ behind a jukebox gives a signal by the disc in it, and none once the disc is out
 11, precipice 13, tears 10 and lava chicken 9: the Java game's numbers, which sapling uses for
 the eight discs not drilled too. Sapling's capture agrees with BDS's for all thirteen.
 - A primed note block's instruments past the first four, and a note kept across a restart.
-- An empty bucket on a full cauldron, a hoe on rooted dirt, an axe or a shovel on anything not
-  listed above: not measured.
+- An empty bucket on a full cauldron (bds-p2last.txt): emptied, `CauldronTakeWater` at the full surface, as
+  sapling. After it, as after each cauldron use in bds-cauldrons.txt, BDS showed its user layer 0 of the
+  cauldron, the cells over and under it, the cell clicked into and those over and under that, then the
+  cauldron and its entity on each of the next two ticks. Fixed (`blocks/cauldrons.rs` `shown_after_use`).
+- Drilled (bds-p2tools.txt): a shovel on rooted dirt, coarse
+  dirt, podzol, mycelium, dirt, farmland and a path, an axe on crimson stem, warped hyphae, a bamboo block,
+  oxidized and waxed copper, cherry wood and a pumpkin did as sapling does; after a use that took, BDS resent
+  nothing, so sapling no longer resends the cell and the one beside it in both layers (`blocks/request.rs`).

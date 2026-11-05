@@ -223,7 +223,7 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, ticked: Ticked) {
         Job::Bubbles => super::bubbles::settle(world, layer, pos),
         Job::Drip => super::drips::fill(world, layer, pos),
         Job::Lectern => super::lectern::pulse(world, layer, pos),
-        Job::LecternShown => super::lectern::reshow(world, layer, pos),
+        Job::LecternShown => super::lectern::reshow_and_reread(world, layer, pos),
         Job::Command => super::command_blocks::tick(world, layer, pos),
         Job::Coral => super::coral::die(world, layer, pos),
         Job::Sponge => super::sponge::ticked(world, layer, pos),

@@ -121,8 +121,11 @@ pub(super) fn use_jukebox(world: &mut World, player: Entity, layer: Entity, pos:
     if name != JUKEBOX {
         return false;
     }
+    // BDS showed the jukebox again a tick after a disc went in, and both at once and a tick after one came out (bds-p2copper.txt).
     if let Some(disc) = held(world, layer, pos) {
         keep(world, layer, pos, None);
+        super::send::show(world, layer, pos);
+        super::shown_again::next_tick(world, layer, pos);
         let [x, y, z] = pos.map(|c| c as f32);
         drops::toss(world, layer, disc, [x + 0.5, y + OUT, z + 0.5]);
         return true;
@@ -133,6 +136,7 @@ pub(super) fn use_jukebox(world: &mut World, player: Entity, layer: Entity, pos:
         inventory::change(world, player, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
     }
     keep(world, layer, pos, Some(&ItemStack { count: 1, ..disc }));
+    super::shown_again::next_tick(world, layer, pos);
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.0.push(sapling_net::encode(&now_playing(title)));
     }

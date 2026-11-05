@@ -26,9 +26,28 @@ cell, before the blocks change.
 
 ## Sapling
 
-The same, for all but the tree: a sapling takes the bone meal and stays a sapling. Where grass
-and flowers come up around a grass block or a flower, and which, is sapling's own scatter: tries
-at random cells within two (one for a flower), a sprout in eight a flower.
+The same, for all but the tree: a sapling takes the bone meal and stays a sapling.
+
+## Grass and flowers (decompiled 2026-11-05, thirteenth2p)
+
+`GrassBlockBase::onFertilized` (147165f00; GrassBlock vtable 14a8e9550, slots 61, 132, 133): 48 random
+walks from the cell over the grass, walk j (16 to 63) taking j / 16 steps, each step x and z by
+nextInt(3) - 1 and y down one in nine, else up one in eight (`oneIn`, the level's random). A walk ends
+where the cell under it is no grass block or the cell is solid (`_shouldStopRandomWalk` 147164d70).
+At a free end `_plantGrass` (147164e10) plants short grass, a flower one in eight, else a fern one in
+seven; on short grass with air over it, it grows it tall one in ten. Planting nothing takes no meal.
+The flower (1438ee940) is the legacy flower features' by VanillaBiomeTags: 9 flower forest (noise
+x/48 into the list at 14ccdae18), 1 plains (noise x/200 under -0.8 a tulip, else a dandelion one in
+four or poppy, azure bluet, oxeye daisy, cornflower), 8 swamp (blue orchid), and for most others a
+dandelion one in three, else a poppy; tags 10, 11, 22, 23 and 24 pick flowers not named here.
+`FlowerBlock::onFertilized` (14715ca10): the same 48 walks from the cell over the flower, y by
+(nextInt(3) - 1) x nextInt(3) / 2, a walk dropped where the cell under it is no grass block; each free
+end gets the flower's own kind, a poppy and a dandelion turning into each other one in eight. Sapling
+(`blocks/bonemeal/scatter.rs`, the flower from `sapling_worldgen::meal_flower`), tests
+`bonemeal::grass_plants_only_where_its_walks_reach_over_grass`,
+`a_flower_spreads_its_kind_up_to_three_cells_over_grass`. Sapling's scatter was tries within two
+(one for a flower). BDS sent what came up in one UpdateSubchunkBlocks a sub-chunk (bds-p2meal.txt), as sapling
+now does (`send::set_sectioned`).
 
 ## In survival
 

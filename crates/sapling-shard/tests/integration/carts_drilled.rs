@@ -95,10 +95,26 @@ fn two_carts_summoned_overlapping_push_each_other_apart() {
             [after[0][0] - before[0][0], after[1][0] - before[1][0]]
         })
         .collect();
-    assert!(start[1][0] - start[0][0] > 0.4, "apart from the first tick: {start:?}");
+    assert!((start[1][0] - start[0][0] - 0.4).abs() < 1e-5, "not pushed in their first tick: {start:?}");
     for [west, east] in moved {
         assert!((west + 0.0599).abs() < 0.002 && (east - 0.0599).abs() < 0.002, "{west} {east}");
     }
+}
+
+/// bds-l2carts.txt: a cart summoned 0.4 from one at rest snapped onto its rail in its first tick, and both
+/// were first pushed in the tick after, 0.0576 each.
+#[test]
+fn a_new_cart_is_pushed_only_from_the_tick_after_its_first() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    rail_line(&mut h);
+    let first = spawned(&mut h, &[("minecraft:minecart", [4.5, 65.0, 0.5])])[0];
+    (0..20).for_each(|_| _ = h.tick(1));
+    let second = spawned(&mut h, &[("minecraft:minecart", [4.9, 65.0, 0.5])])[0];
+    let first_tick = feet(&mut h, vec![first, second]);
+    let next = feet(&mut h, vec![first, second]);
+    assert!((first_tick[0][0] - 4.5).abs() < 1e-5 && (first_tick[1][0] - 4.9).abs() < 1e-5 && (first_tick[1][1] - 65.15).abs() < 1e-4, "{first_tick:?}");
+    assert!((first_tick[0][0] - next[0][0] - 0.0576).abs() < 1e-4 && (next[1][0] - first_tick[1][0] - 0.0576).abs() < 1e-4, "{next:?}");
 }
 
 /// bds-l2carts.txt: a cart summoned 0.4 from one at rest pushed it exactly as hard as it was pushed, the
@@ -124,7 +140,9 @@ fn a_rolling_cart_stops_at_the_side_of_one_at_rest_and_both_bounce_apart() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     rail_line(&mut h);
-    let carts = spawned(&mut h, &[("minecraft:minecart", [3.5, 65.0, 0.5]), ("minecraft:minecart", [9.5, 65.0, 0.5])]);
+    // As BDS's, the rolling cart goes from 1.228 apart, out of push reach, straight to touching; at 9.5 it
+    // came 1.004 apart, in reach (bds-p2carts.txt), and was pushed back before it touched.
+    let carts = spawned(&mut h, &[("minecraft:minecart", [3.5, 65.0, 0.5]), ("minecraft:minecart", [6.5, 65.0, 0.5])]);
     let rolling = carts[0];
     h.remote.run(move |ctx| assert!(ctx.set_velocity(rolling, [0.4, 0.0, 0.0])));
     let mut met = None;
@@ -189,4 +207,54 @@ fn a_killed_minecart_leaves_its_item() {
     h.remote.run(move |ctx| assert!(ctx.kill_entity(cart)));
     let sent: Vec<_> = (0..2).flat_map(|_| h.tick(1)).collect();
     assert_eq!(all::<AddItemEntity>(&sent).len(), 1, "the minecart item");
+}
+
+/// The x each tick of two carts summoned on the rail line `apart` east of 4.5, from their first tick.
+fn parting(apart: f32, ticks: usize) -> Vec<[f32; 2]> {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    rail_line(&mut h);
+    let pair = [("minecraft:minecart", [4.5, 65.0, 0.5]), ("minecraft:minecart", [4.5 + apart, 65.0, 0.5])];
+    let carts = spawned(&mut h, Box::leak(Box::new(pair)));
+    (0..ticks).map(|_| feet(&mut h, carts.clone())).map(|at| [at[0][0], at[1][0]]).collect()
+}
+
+/// bds-p2carts.txt: carts a block apart, their boxes 0.02 short of touching, pushed each other 0.0576,
+/// then 0.05386 and 0.05171 as they drew apart.
+#[test]
+fn carts_a_block_apart_push_each_other_from_a_fifth_of_a_block_off() {
+    let at = parting(1.0, 4);
+    let steps: Vec<f32> = at.windows(2).map(|pair| pair[1][1] - pair[0][1]).collect();
+    for (step, bds) in steps.iter().zip([0.0576, 0.05386, 0.05171]) {
+        assert!((step - bds).abs() < 1e-4, "{steps:?}");
+    }
+}
+
+/// bds-p2carts.txt: carts summoned 0.2 apart drew apart 0.0599 a tick until their boxes overlapped by 0.066,
+/// were parted by that whole overlap each in one tick (0.12588) and stopped, then pushed on 0.04941.
+#[test]
+fn carts_overlapping_a_little_are_parted_at_once_and_stop() {
+    let at = parting(0.2, 10);
+    let steps: Vec<f32> = at.windows(2).map(|pair| pair[1][1] - pair[0][1]).collect();
+    let jump = steps.iter().position(|step| *step > 0.1).expect("a parting tick");
+    assert!((steps[jump] - 0.12588).abs() < 2e-4 && (steps[jump + 1] - 0.04941).abs() < 2e-4, "{steps:?}");
+    assert!(at.iter().all(|[west, east]| (4.5 - west - (east - 4.7)).abs() < 1e-4), "evenly: {at:?}");
+}
+
+/// bds-p2carts.txt: a cart running up a slope against a stone set where the slope's next rail was stopped
+/// at 12.51 against it, its box clear of the slope's own block, then rolled back down.
+#[test]
+fn a_cart_running_up_a_slope_into_a_block_stops_against_it_and_rolls_back() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    rail_line(&mut h);
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([12, 65, 0], &Block::new("rail").with("rail_direction=2")));
+        assert!(ctx.set_block([13, 65, 0], &Block::new("stone")) && ctx.set_block([13, 66, 0], &Block::new("stone")));
+    });
+    let cart = spawned(&mut h, &[("minecraft:minecart", [8.5, 65.0, 0.5])])[0];
+    h.remote.run(move |ctx| assert!(ctx.set_velocity(cart, [0.4, 0.0, 0.0])));
+    let at: Vec<[f32; 3]> = (0..30).map(|_| feet(&mut h, vec![cart])[0]).collect();
+    let top = at.iter().map(|at| at[0]).fold(f32::MIN, f32::max);
+    assert!((top - 12.51).abs() < 1e-3 && at[29][0] < top - 0.05 && at.iter().all(|at| at[1] < 66.0), "{at:?}");
 }

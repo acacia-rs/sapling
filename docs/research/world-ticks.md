@@ -41,6 +41,10 @@ decides. Decompiled 2026-11-04 (bdsre, pseudo-C not kept):
 Drilled (bds-e3coralmany.txt): four plants set alone died after 87, 141, 58 and 89 ticks; forty filled
 in a block died 5 to 6 ticks on, nudged by their neighbours' writes. A fan or plant losing its ground
 (the tick's `canSurvive`) is left to sapling's support rules.
+Drilled again (bds-p2last.txt): a block set dry died 45 ticks on, a plant 5 ticks after air was set beside
+it, on both sides; BDS's two fell in one tick only by the drill's timing. A `/setblock` live fan floods
+(set waterlogged, its water runs), as sapling's (bds-p2more.txt). Kelp on magma pops into a bubble column on
+both sides (BDS shows it in UpdateSubchunkBlocks with the water, sapling in UpdateBlock).
 
 Sounds (bds-e3coral.txt, bds-e3coralmany.txt, bds-bkticks.txt, bds-t3turn.txt, bds-t5holds.txt): a coral
 plant or fan, live or dead, plays `place` naming its own state at its middle when it is set or filled by

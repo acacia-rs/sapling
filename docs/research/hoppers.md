@@ -149,10 +149,12 @@ through the shared slot-31 entry (BDSRE):
 ## Not settled
 
 - **Real move rate.** The code gives 4 ticks between moves, which is 5 items/s at 20 Hz block-actor ticking.
-  Folk knowledge says 2.5 items/s (8 ticks). Confirm with a REC (a timed hopper -> chest) before trusting 4.
+  Folk knowledge says 2.5 items/s (8 ticks). Drilled (bds-p2hopper.txt): 8 game ticks a move on BDS and sapling.
 - The meaning of the dimension check `[+0x20c] < [+0x208]` in the tick entry 1457f81e0.
 - Composter, bucket and shulker-list identities are inferred from context, not from a string.
-- Item pickup delay: no check is visible in 1429cdfe0 besides the removed flag. A freshly dropped item may be
-  pulled at once.
+- Item pickup delay: no check is visible in 1429cdfe0 besides the removed flag. Drilled (bds-p2hopper.txt): fresh
+  loot on a hopper's corner, its middle drifting off the cell, went in within 2 ticks, so the item's box, not its
+  middle, has to reach the pickup space (`drops::lying_touching`). A chest under a hopper opens (`containers/
+  access.rs`: the hopper's `chest_obstruction` is `never`).
 - Whether the blast furnace and smoker really share furnace vtable 14a785ec0 (one container vtable found).
 - BDSRE-old cross-check was impossible (no 1.21.3.01 exe or pdb on disk).

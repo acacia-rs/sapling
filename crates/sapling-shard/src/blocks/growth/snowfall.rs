@@ -81,8 +81,8 @@ fn fallen(level: &Level, x: i32, z: i32, freezes: bool, snows: bool) -> Option<(
 }
 
 /// The layers the cell at `pos` would hold with one more fallen into it, or `None` where none can lie
-/// (`Weather::canPlaceTopSnow` 14119d880): cold, dim, a snow layer under the biome's most, or air over
-/// ground that holds snow or over a whole layer.
+/// (`Weather::canPlaceTopSnow` 14119d880): cold, dim, a snow layer under the biome's most, or air or a
+/// small plant (kept under the snow, waterlog.rs) over ground that holds snow or over a whole layer.
 fn room(level: &Level, [x, y, z]: BlockPos) -> Option<u8> {
     if !level.in_height(y) || !level.in_height(y - 1) || !level.is_cold(x, y, z) || block_light(level, [x, y, z]) >= SNOW_DIM {
         return None;
@@ -92,7 +92,8 @@ fn room(level: &Level, [x, y, z]: BlockPos) -> Option<u8> {
         let depth = height + 1 + if snow_height(level, [x, y - 1, z]) == Some(FULL) { LAYERS } else { 0 };
         return (height < FULL && depth < most).then_some(height + 2);
     }
-    if level.block(x, y, z) != level.registry().air_id() {
+    let here = level.block(x, y, z);
+    if here != level.registry().air_id() && !super::super::waterlog::snow_keeps(level.registry(), here) {
         return None;
     }
     match snow_height(level, [x, y - 1, z]) {

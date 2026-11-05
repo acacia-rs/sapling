@@ -35,10 +35,10 @@ fn is_loose(world: &World, layer: Entity, pos: BlockPos) -> bool {
         return false;
     }
     let own_half = doors::other_half(world, layer, pos);
-    let solid = |[x, y, z]: BlockPos| level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| state.is_solid());
+    let holds = |[x, y, z]: BlockPos, face| level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| super::holds(state, face));
     let unheld = Face::ALL.into_iter().any(|face| {
         let support = [0, 1, 2].map(|axis| pos[axis] - face.offset()[axis]);
-        super::depended(registry, id, face) && own_half != Some(support) && !solid(support)
+        super::depended(registry, id, face) && own_half != Some(support) && !holds(support, face)
     });
     unheld || !ground::may_stand(level, pos, id) || ground::is_wrongly_lit(level, pos, id) || vines::loosened(level, pos) == Some(0)
 }

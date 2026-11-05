@@ -78,11 +78,12 @@ fn near_flower(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
     (-2..=2).any(|dx| (-2..=2).any(|dz| name_at(world, layer, [x + dx, y, z + dz]).is_some_and(|name| FLOWERS.contains(&name))))
 }
 
-/// Sets `age_bit` on a sapling that has none: true where it did.
-fn aged(world: &mut World, layer: Entity, [x, y, z]: BlockPos) -> bool {
+/// Sets `age_bit` on a sapling that has none, `shown` or not: true where it did. A random tick's went
+/// unshown (bds-p2grow.txt: seven trees grew, no aged sapling was sent).
+fn aged(world: &mut World, layer: Entity, [x, y, z]: BlockPos, shown: bool) -> bool {
     let Some(id) = level(world, layer).map(|level| level.block(x, y, z)) else { return false };
     let Some(older) = level(world, layer).and_then(|level| with_property(level.registry(), id, AGE, "1")).filter(|older| *older != id) else { return false };
-    send::set(world, layer, [x, y, z], older)
+    if shown { send::set(world, layer, [x, y, z], older) } else { send::set_quietly(world, layer, [x, y, z], older) }
 }
 
 /// Places `feature` at `origin` over `cleared` (set to air first; all given back the first one's
@@ -139,7 +140,7 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
         Some(PROPAGULE) => _ = grow_mangrove(world, layer, pos),
         Some(name) => {
             let lit = crate::light::brightness(world, layer, [x, y + 1, z]).is_some_and(|light| light >= GROWING_LIGHT);
-            if let Some(species) = of(name).filter(|_| lit && !aged(world, layer, pos)) {
+            if let Some(species) = of(name).filter(|_| lit && !aged(world, layer, pos, false)) {
                 grow(world, layer, pos, species);
             }
         }
@@ -174,7 +175,7 @@ pub(super) fn fertilized(world: &mut World, layer: Entity, pos: BlockPos, creati
     }
     if creative {
         grow(world, layer, pos, species);
-    } else if lucky && !aged(world, layer, pos) {
+    } else if lucky && !aged(world, layer, pos, true) {
         grow(world, layer, pos, species);
     }
     Some(true)

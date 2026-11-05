@@ -184,8 +184,7 @@ were not found in any of these; sapling does what is listed there.
   joins (Java `RailState`); sapling kept the set shape. Fixed: a commanded rail joins its neighbours
   (`blocks/commanded.rs`, `blocks/rails.rs` `join_placed`); the cart stays.
 - **Against a block**: a cart at 0.4 a tick along a flat rail stopped at 12.51 against a stone at 13,
-  motion zeroed; sapling's rolled through and climbed it. Fixed (`vehicles/bumps.rs` `walled`); slopes
-  are left unchecked.
+  motion zeroed; sapling's rolled through and climbed it. Fixed (`vehicles/bumps.rs` `walled`).
 - **Cart into cart**: one rolling at 0.4 into one at rest stopped at its side (centres 0.98 apart),
   motion zeroed; touching carts then push apart as Java's `applyEntityCollision` for two minecarts,
   each pair twice a tick: each keeps 0.2 of its motion, takes their mean and ±0.05·min(1, 1/d) along
@@ -194,9 +193,21 @@ were not found in any of these; sapling does what is listed there.
   tick while they touch, so any unevenness shows: sapling's summoned cart lost 0.0075 to its snap up
   onto the rail (the downhill rule read the raw old y); now measured from the old spot on the rail's
   line, as Java's `getPos` (`vehicles/rails.rs` `roll`).
-- Left: two carts summoned 0.4 apart on BDS moved 0.1056 each the tick they parted (0.0599 on
-  sapling) and slowed as if a tick of drag more; they ended 0.065 short of sapling's. A new cart is
-  first pushed the tick after its AddEntity on BDS, in that tick on sapling.
+- **Parting** (bds-p2carts.txt, carts 0.2, 0.5, 0.7 and 0.9 apart): carts reach a fifth of a block across
+  for others to push (Java's `grow(0.2, 0, 0.2)`): 1.0 apart, 0.02 short of touching, they pushed 0.0576,
+  0.05386, 0.05171. Overlapping by 0.125 or less (0.045 to 0.1056 parted, 0.165 did not), a settled cart is
+  moved out of the other by the whole overlap after its move and stops: the 0.4-apart pair's 0.1056 step
+  (0.98 - 0.8744) and the 0.2-apart pair's 0.12588 then 0.04941. A fresh cart is not moved but is in the
+  way (`vehicles/bumps.rs` `Parting`, tests `carts_a_block_apart_push_each_other_from_a_fifth_of_a_block_off`,
+  `carts_overlapping_a_little_are_parted_at_once_and_stop`). A cart rolling into one at rest stops at its side
+  only when it goes from out of reach straight to touching (BDS's from 1.223 apart); in reach first, it is
+  pushed.
+- A new cart is first pushed the tick after its AddEntity on BDS (both carts held that tick), in that
+  tick on sapling; fixed 2026-11-05 (`vehicles/bumps.rs` push skips carts not yet `Settled`, test
+  `a_new_cart_is_pushed_only_from_the_tick_after_its_first`).
+- **Up a slope into a block** (bds-p2carts.txt): stopped at 12.51 against stone at 13 and rolled back; the box
+  is shoved as if on the slope's top, its bottom at the rail's y + 1, then its y read off the rail (Java
+  `moveAlongTrack`; `vehicles/carts.rs`, test `a_cart_running_up_a_slope_into_a_block_stops_against_it_and_rolls_back`).
 - **Stored `Pos`**: BDS kept a minecart on a rail at y -26 at -25.5, where it was shown
   (bds-l2carts-dump.txt), as sapling does (`actors.rs` `compound_now`, the wire's lift 0.35).
 

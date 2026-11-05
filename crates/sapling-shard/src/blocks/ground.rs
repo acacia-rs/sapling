@@ -17,6 +17,12 @@ const VEGETATION: &[&str] = &[
     "minecraft:dirt", "minecraft:grass_block", "minecraft:podzol", "minecraft:coarse_dirt", "minecraft:mycelium", "minecraft:dirt_with_roots", "minecraft:moss_block",
     "minecraft:pale_moss_block", "minecraft:mud", "minecraft:muddy_mangrove_roots", "minecraft:farmland",
 ];
+/// Flowers and grass that keep to [`VEGETATION`]: a poppy and short grass on stone broke at a neighbour's
+/// change (research/captures/bds-p2fall.txt); the rest are the Java game's same `BushBlock`s.
+const BUSHES: &[&str] = &[
+    "minecraft:poppy", "minecraft:dandelion", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip",
+    "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:short_grass", "minecraft:fern",
+];
 /// The `dirt` and `sand` tags sugar cane asks for, less farmland: Java's lists.
 const CANE_GROUND: &[&str] = &[
     "minecraft:dirt", "minecraft:grass_block", "minecraft:podzol", "minecraft:coarse_dirt", "minecraft:mycelium", "minecraft:dirt_with_roots", "minecraft:moss_block",
@@ -75,8 +81,9 @@ fn is_water(level: &World, [x, y, z]: BlockPos) -> bool {
 /// Blocks whose box covers the middle of their top but which hold no dust on BDS
 /// (research/captures/bds-conductors.txt), by name ending.
 const NO_CENTRE: &[&str] = &["leaves", "shulker_box", "anvil", "_wall", "_fence", "glass_pane", "iron_bars", "grindstone"];
-/// Lower blocks that hold dust on BDS.
-const LOW_CENTRE: &[&str] = &["minecraft:soul_sand", "minecraft:mud"];
+/// Blocks whose top is low or open in the middle but holds dust, rails and diodes on BDS (a hopper's,
+/// research/captures/bds-p2place.txt).
+const LOW_CENTRE: &[&str] = &["minecraft:soul_sand", "minecraft:mud", "minecraft:hopper"];
 
 /// Whether the top of the block at `pos` holds something up: under the middle of the face
 /// (BDS support "centre"), or across all of it ("edge").
@@ -112,6 +119,7 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
         "minecraft:frog_spawn" => is_water(level, below(pos)),
         "minecraft:fire" | "minecraft:soul_fire" => super::fire::stands(level, pos),
         "minecraft:sweet_berry_bush" => under.is_some_and(|under| VEGETATION.contains(&under)) && !is_wet(level, pos),
+        _ if BUSHES.contains(&block) => under.is_some_and(|under| VEGETATION.contains(&under)),
         REEDS => cane_may_stand(level, pos),
         "minecraft:redstone_wire" => !is_wet(level, pos) && (has_top(level, below(pos), false) || under.is_some_and(|under| LIT_FROM_BELOW.contains(&under))),
         _ if DIODES.contains(&block) => has_top(level, below(pos), false),
@@ -180,7 +188,7 @@ pub(super) fn is_wrongly_lit(level: &World, [x, y, z]: BlockPos, id: u32) -> boo
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {
     const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire", "minecraft:frog_spawn", KELP, TWISTING, WEEPING, SMALL_DRIPLEAF];
-    [CROPS, DIODES, RAILS, VINES, OTHERS].iter().any(|list| list.contains(&name))
+    [CROPS, DIODES, RAILS, VINES, BUSHES, OTHERS].iter().any(|list| list.contains(&name))
 }
 
 /// Whether the bottom of the block at `pos` holds something hanging under its middle.
@@ -196,9 +204,24 @@ mod tests {
     #[test]
     fn every_block_named_is_in_the_registry() {
         let registry = BlockRegistry::vanilla();
-        let lists = [CROPS, VEGETATION, CANE_GROUND, LIT_FROM_BELOW, DIODES, RAILS, VINES, BAMBOO_GROUND, &[REEDS, "minecraft:farmland", "minecraft:soul_sand", "minecraft:frosted_ice"]];
+        let lists = [CROPS, VEGETATION, BUSHES, CANE_GROUND, LIT_FROM_BELOW, DIODES, RAILS, VINES, BAMBOO_GROUND, LOW_CENTRE, &[REEDS, "minecraft:farmland", "minecraft:soul_sand", "minecraft:frosted_ice"]];
         for block in lists.concat() {
             assert!(registry.states_of(block).next().is_some(), "{block}");
         }
+    }
+
+    fn on(under: &str, block: &str) -> bool {
+        let mut level = World::void();
+        let (under, block) = (level.block_id(under).unwrap(), level.block_id(block).unwrap());
+        level.set_block(0, 64, 0, under);
+        may_stand(&level, [0, 65, 0], block)
+    }
+
+    /// research/captures/bds-p2place.txt, bds-p2fall.txt.
+    #[test]
+    fn a_hopper_holds_rails_dust_and_repeaters_and_flowers_keep_to_soil() {
+        let held = ["minecraft:rail", "minecraft:redstone_wire", "minecraft:unpowered_repeater"].map(|block| on("minecraft:hopper", block));
+        assert_eq!(held, [true; 3]);
+        assert_eq!([on("minecraft:stone", "minecraft:poppy"), on("minecraft:stone", "minecraft:short_grass"), on("minecraft:grass_block", "minecraft:poppy")], [false, false, true]);
     }
 }

@@ -74,8 +74,15 @@ pub(super) fn lacks_support(world: &World, layer: Entity, pos: BlockPos, id: u32
     let own_half = doors::second_cell(registry, id, pos).map(|(cell, _)| cell);
     !ground::may_stand(level, pos, id) || Face::ALL.iter().filter(|face| depended(registry, id, **face)).any(|face| {
         let [x, y, z] = [0, 1, 2].map(|axis| pos[axis] - face.offset()[axis]);
-        own_half != Some([x, y, z]) && !(level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| state.is_solid()))
+        own_half != Some([x, y, z]) && !(level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| holds(state, *face)))
     })
+}
+
+/// Whether the block `state` holds what depends on it from `face` of it: a solid block does, but
+/// for the top of a piston's arm not pointing up, which held no torch on BDS (bds-p2rs.txt).
+pub(super) fn holds(state: &acacia_world::BlockState, face: Face) -> bool {
+    let is_bare_arm = state.name.ends_with("piston_arm_collision") && state.property("facing_direction") != Some("1");
+    state.is_solid() && !(face == Face::Up && is_bare_arm)
 }
 
 fn block(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(&BlockRegistry, u32)> {
@@ -166,8 +173,9 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
             falling::unsettled(world, layer, face.neighbour(pos), if face == Face::Up { Change::Below } else { Change::Beside });
         }
         let Some((registry, id)) = block(world, layer, pos) else { continue };
-        let is_gone = !registry.get(id).is_some_and(|state| state.is_solid());
-        for face in Face::ALL {
+        let state = registry.get(id);
+        let gone = Face::ALL.map(|face| !state.is_some_and(|state| holds(state, face)));
+        for (face, is_gone) in Face::ALL.into_iter().zip(gone) {
             let beside = face.neighbour(pos);
             if crate::containers::lost_partner(world, layer, beside, pos) {
                 super::queued::after(world, layer, beside, 1, super::queued::Job::Unpaired);

@@ -13,7 +13,27 @@ pub(super) fn first_block(level: &Level, at: [f32; 3], motion: [f32; 3]) -> Opti
     let swept = Aabb { min: at, max: at }.extend(motion).grow(1e-3);
     let mut boxes = Vec::new();
     physics_view(level, |view| view.collisions(&swept, &mut boxes));
+    boxes.extend(dripleaf_heads(level, &swept));
     boxes.iter().filter_map(|block| entered(block, at, motion)).min_by(|a, b| a.0.total_cmp(&b.0))
+}
+
+/// The whole cells of the big dripleaf heads in `swept` that are not tipped right over: BDS's arrow
+/// struck one on its side under the leaf (research/captures/bds-p2shoot.txt).
+fn dripleaf_heads(level: &Level, swept: &Aabb) -> Vec<Aabb> {
+    let [low, high] = [swept.min, swept.max].map(|corner| corner.map(|c| c.floor() as i32));
+    let cells = (low[0]..=high[0]).flat_map(|x| (low[1]..=high[1]).flat_map(move |y| (low[2]..=high[2]).map(move |z| [x, y, z])));
+    cells
+        .filter(|&[x, y, z]| {
+            level.in_height(y)
+                && level.registry().get(level.block(x, y, z)).is_some_and(|block| {
+                    block.name == "minecraft:big_dripleaf" && block.property("big_dripleaf_head").is_some_and(|head| head != "0") && block.property("big_dripleaf_tilt") != Some("full_tilt")
+                })
+        })
+        .map(|[x, y, z]| {
+            let min = [x as f32, y as f32, z as f32];
+            Aabb { min, max: min.map(|c| c + 1.0) }
+        })
+        .collect()
 }
 
 /// The slab test: where in 0..=1 of `motion` the ray from `at` enters `block`, and across which axis.

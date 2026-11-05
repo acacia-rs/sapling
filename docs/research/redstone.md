@@ -391,7 +391,10 @@ No decompile: all of this is from the captures.
   change in one evaluation, a tick or two after the click. Off, the dust goes out at the next
   evaluation and both lamps four ticks after it, as lamps do; the button lets go 22 ticks after the click.
   Sapling gives them no lag either.
-- A piston moving one and a plate stepped on: "Parity drill". Not drilled: a change while it is on.
+- A piston moving one and a plate stepped on: "Parity drill".
+- A change while it is on or about to turn on is not noticed (bds-p2rs.txt): two observers watching each other
+  pulse every 6 ticks, as in Java's order (an observer turning on tells its neighbours first, then sets its own
+  turn off; one with a turn to come takes no notice). Sapling was 4 (`redstone/observers.rs`, fixed).
 
 ## Pistons (2026-10-09, `bds_command_probe piston-facing` and `pistons`, research/captures/bds-redstone-pistons.txt)
 
@@ -464,8 +467,9 @@ Built in `sapling-shard/src/blocks/pistons/plan.rs`.
 - `AttachedBlocks` lists the cells farthest first in the way they go; cells equally far come in the order
   they were found: the block, what is before it, then what it holds up, down, south, north, east and west of it
   (bds-rspistons.txt; sapling listed north before south and west before east until 2026-11-04).
-- Not drilled: what has no body beside slime (sapling
-  leaves it), a sticky piston whose slime is held back (sapling brings nothing).
+- A bare torch set on slime stood on its top (bds-p2rs.txt); pushed with the slime, it popped a tick after
+  the move began, over the arm (`piston_arm_collision` not facing up holds nothing on its top). Fixed in
+  `blocks/updates.rs` `holds`. A sticky piston whose slime is held back brought nothing on both sides.
 
 ## Daylight detectors (2026-10-11, `bds_command_probe daylight`, research/captures/bds-daylight.txt)
 

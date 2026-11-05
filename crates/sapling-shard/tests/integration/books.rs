@@ -46,12 +46,16 @@ fn a_book_is_written_signed_and_put_on_a_lectern_whose_page_turns() {
     assert_eq!(book.name, "minecraft:written_book");
 
     h.remote.run(|ctx| assert!(ctx.set_block([0, 65, 2], &Block::new("minecraft:lectern"))));
-    h.tick_all();
+    (0..2).for_each(|_| drop(h.tick_all())); // a set lectern is shown again a tick on
     h.receive(1, &click([0, 65, 2], 1, None));
     let put = h.tick_all().to(1).to_vec();
     assert_eq!(all::<LevelSoundEvent>(&put).iter().map(|sound| sound.sound_id.as_str()).collect::<Vec<_>>(), ["item.book.put"]);
-    let kept = all::<BlockEntityData>(&put).pop().expect("the lectern's entity");
-    assert_eq!(kept.nbt.decode().unwrap().value.get("totalPages"), Some(&Value::Int(2)));
+    // bds-books.txt: the block and its entity a tick after the put, the book's `WasPickedUp` kept.
+    let shown = h.tick_all().to(1).to_vec();
+    assert_eq!([all::<BlockEntityData>(&put).len(), all::<UpdateBlock>(&shown).len()], [0, 1]);
+    let kept = all::<BlockEntityData>(&shown).pop().expect("the lectern's entity").nbt.decode().unwrap().value;
+    assert_eq!(kept.get("totalPages"), Some(&Value::Int(2)));
+    assert_eq!(kept.get("book").and_then(|book| book.get("WasPickedUp")), Some(&Value::Byte(0)));
     assert!(held(&mut h, Slot::Main(0)).is_none(), "the book left the hand");
 
     // To page 1: the entity twice, then block and entity two ticks later, as BDS (bds-books.txt).

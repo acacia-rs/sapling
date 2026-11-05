@@ -170,7 +170,7 @@ impl Request<'_> {
     /// A click with `held` in the hand on the block at `pos`: false when it does nothing to it.
     /// A hoe and a shovel want air over the ground they work.
     pub(super) fn use_tool(&mut self, site: &Site, pos: BlockPos, face: Face, held: &str) -> bool {
-        if super::cauldrons::use_on(self.world, self.entity, site.layer, pos, site.mode == GameMode::Creative) {
+        if super::cauldrons::use_on(self.world, self.entity, site.layer, pos, face, site.mode == GameMode::Creative) {
             return true;
         }
         if let Some(spent) = super::composter::fill(self.world, site.layer, pos, held) {
@@ -231,6 +231,7 @@ impl Request<'_> {
         let (told, is_event) = (telling(registry, pos, &change), matches!(change.told, Told::Event(..)));
         let left = inventory::stored(&Item::new(change.leaves.0.to_owned(), 1), registry);
         let copper = registry.get(change.id).and_then(|state| Copper::of(state.name)).filter(|copper| copper.is_door());
+        let is_cauldron = registry.get(change.id).is_some_and(|state| state.name == "minecraft:cauldron");
         // BDS tells an event before the block and a sound after it.
         if is_event {
             send::to_viewers(self.world, site.layer, pos, std::slice::from_ref(&told));
@@ -241,6 +242,9 @@ impl Request<'_> {
             super::copper::turn(self.world, site.layer, pos, copper);
         } else {
             send::set(self.world, site.layer, pos, change.id);
+        }
+        if is_cauldron {
+            super::cauldrons::shown_after_use(self.world, self.entity, site.layer, pos, face);
         }
         for stack in left.iter().flat_map(|stack| std::iter::repeat_n(stack, change.leaves.1.into())) {
             drops::spill(self.world, site.layer, stack.clone(), pos);

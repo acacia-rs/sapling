@@ -118,7 +118,7 @@ fn a_placed_block_turns_to_its_placer_and_takes_the_place_of_grass() {
     let registry = sapling_world::BlockRegistry::vanilla();
     let state = |name: &str, properties: &str| registry.network_hash(registry.find(name, properties).expect("a vanilla state"));
     let mut h = with_in_hand(Some(Item::new("minecraft:oak_stairs", 2)));
-    h.remote.run(|ctx| assert!(ctx.set_block([2, 65, 0], &sapling_api::Block::new("short_grass"))));
+    h.remote.run(|ctx| assert!(ctx.set_block([2, 64, 0], &sapling_api::Block::new("grass_block")) && ctx.set_block([2, 65, 0], &sapling_api::Block::new("short_grass"))));
     h.tick_all();
     // Alex looks south (yaw 0) and clicks the top of a block: the stairs rise to the south.
     h.receive(1, &click(NEAR, 1, None));

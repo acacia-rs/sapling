@@ -95,6 +95,11 @@ fn rise(shape: u8, [fx, fz]: [f32; 2]) -> f32 {
     .clamp(0.0, 1.0)
 }
 
+/// The height of the box's bottom of a cart on `rail` at `[x, z]`.
+pub(super) fn height(rail: &Rail, [x, z]: [f32; 2]) -> f32 {
+    rail.pos[1] as f32 + RIDE + rise(rail.shape, [x - rail.pos[0] as f32, z - rail.pos[2] as f32])
+}
+
 /// What a cart has that changes its roll.
 pub(super) struct Roll {
     /// Its motion kept a tick on a rail: 0.997 ridden, 0.96 empty, more for a full one.
@@ -109,7 +114,7 @@ pub(super) struct Roll {
 /// A tick of a cart with its box's bottom at `feet` moving at `motion` on `rail`: where its
 /// box's bottom ends up and its motion.
 pub(super) fn roll(rail: &Rail, feet: [f32; 3], motion: [f32; 3], how: &Roll) -> ([f32; 3], [f32; 3]) {
-    let [bx, by, bz] = rail.pos.map(|c| c as f32);
+    let [bx, _, bz] = rail.pos.map(|c| c as f32);
     let (mut vx, mut vz) = (motion[0] * how.drag, motion[2] * how.drag);
     match rail.shape {
         2 => vx -= SLOPE,
@@ -147,9 +152,9 @@ pub(super) fn roll(rail: &Rail, feet: [f32; 3], motion: [f32; 3], how: &Roll) ->
     let share = if how.ridden { RIDDEN_MOVE } else { 1.0 };
     let x = x0 + lx * along + (vx * share).clamp(-MOVE_CAP, MOVE_CAP);
     let z = z0 + lz * along + (vz * share).clamp(-MOVE_CAP, MOVE_CAP);
-    let y = by + RIDE + rise(rail.shape, [x - bx, z - bz]);
+    let y = height(rail, [x, z]);
     // Measured from the old spot put on the rail's line (Java `getPos`): a summoned cart's snap up gains nothing.
-    let dropped = by + RIDE + rise(rail.shape, [x0 + lx * along - bx, z0 + lz * along - bz]) - y;
+    let dropped = height(rail, [x0 + lx * along, z0 + lz * along]) - y;
     if dropped != 0.0 && speed > 0.0 {
         let gained = (vx.hypot(vz) + dropped * DOWNHILL).max(0.0) / vx.hypot(vz).max(f32::EPSILON);
         (vx, vz) = (vx * gained, vz * gained);

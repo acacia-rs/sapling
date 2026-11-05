@@ -421,7 +421,8 @@ kind with `panics=`, runs for 70 ticks from place to place within 5 blocks at th
 
 A creeper is lit, burns and bursts so (`creatures/blast.rs`): its blast hurts and throws players
 by the rule above, hurts mobs, and breaks blocks along the Java game's rays, which break that one
-stone. What a block withstands is guessed from its hardness; the fuse goes out when its prey
+stone. What a block withstands is BDS's own resistance (`block-resistance.tsv`, read off a live BDS,
+and its drops as `Explosion::explode`'s, d719a4e7); the fuse goes out when its prey
 is 6 off or gone, as the pack says: drilled 2026-11-05 (`q3creeper`, bds-q3creeper.txt against
 sapling-q3creeper.txt), prey stepped 5.5 off a lit fuse let it burn on, 6.5 and 7.5 off put it out until
 the creeper walked back, on both alike.

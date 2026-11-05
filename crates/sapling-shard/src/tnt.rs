@@ -3,7 +3,6 @@
 //! One is kept with its column, its fuse as BDS's `Fuse` byte (sapling_world::fused_actor). Its
 //! fuse is told every tick, with the flag word only when that changed (lit, `MOVING`;
 //! research/captures/bds-firstdata.txt).
-// TODO: the fuse of one a blast lit is the Java game's, not measured.
 
 use std::f32::consts::TAU;
 
@@ -29,8 +28,9 @@ const DROP_DECAY: &str = "tntExplosionDropDecay";
 /// The wire position is this far above the bottom of its box.
 const WIRE_OFFSET: f32 = 0.49;
 pub(crate) const FUSE: i32 = 80;
-/// The fuse of one a blast lit: from this many ticks, to this many more.
-const SHORT_FUSE: [u32; 2] = [10, 20];
+/// The fuse of one a blast lit, from this many ticks with this many outcomes: the pack's `from_explosion`
+/// `fuse_length` 0.5 to 2 s; BDS's ran 16 to 37 (research/captures/bds-p2tnt.txt).
+const SHORT_FUSE: [u32; 2] = [10, 31];
 const POWER: f32 = 4.0;
 /// It starts upwards at this speed, and across at this one, any way.
 const HOP: f32 = 0.2;

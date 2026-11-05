@@ -12,19 +12,24 @@ use crate::components::{Layer, Tick};
 #[derive(Resource, Default)]
 pub(crate) struct ShownAgain(Vec<(u64, Entity, BlockPos, bool)>);
 
-fn queue(world: &mut World, layer: Entity, pos: BlockPos, whole: bool) {
-    let due = world.resource::<Tick>().0 + 1;
+fn queue(world: &mut World, layer: Entity, pos: BlockPos, whole: bool, ticks: u64) {
+    let due = world.resource::<Tick>().0 + ticks;
     world.get_resource_or_insert_with(ShownAgain::default).0.push((due, layer, pos, whole));
 }
 
 /// Shows the block at `pos` and its entity again on the next tick.
 pub(super) fn next_tick(world: &mut World, layer: Entity, pos: BlockPos) {
-    queue(world, layer, pos, true);
+    queue(world, layer, pos, true, 1);
+}
+
+/// Shows the block at `pos` and its entity again on each of the next `ticks` ticks.
+pub(super) fn each_tick(world: &mut World, layer: Entity, pos: BlockPos, ticks: u64) {
+    (1..=ticks).for_each(|after| queue(world, layer, pos, true, after));
 }
 
 /// Shows the bed half at `pos` again on the next tick, with the other halves due then.
 pub(super) fn bed_next_tick(world: &mut World, layer: Entity, pos: BlockPos) {
-    queue(world, layer, pos, false);
+    queue(world, layer, pos, false, 1);
 }
 
 /// Shows again what is due, a structure block first put in its entity's mode.
