@@ -103,6 +103,7 @@ fn lay(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion:
 
 /// [`lay`], shown as a hook's catch when `fished`.
 fn lay_as(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3], pickup_from: u64, fished: bool) -> Option<Entity> {
+    let stack = crate::inventory::unnumbered(stack);
     let item = lay_unkept(world, layer, stack.clone(), at, motion, pickup_from, fished)?;
     let unique_id = entities::new_unique_id(world, item)?;
     let compound = sapling_world::new_item_actor(unique_id, &stack, world.get::<Layer>(layer)?.world.registry(), at, motion);

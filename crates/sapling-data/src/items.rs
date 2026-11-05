@@ -134,10 +134,11 @@ fn extra(name: &str, tag: Option<&nbt::Value>) -> ItemV4Extra {
 }
 
 /// A tag as clients see it: a bundle's contents stay on the server, which shows them as a
-/// container of their own (research/captures/bds-bundles.txt).
+/// container of their own (research/captures/bds-bundles.txt). A lying bundle's tag, made to be
+/// shown with its [`BUNDLE_WEIGHT`] and empty slots (bds-t2ebundle.txt), goes as it is.
 fn shown_tag(tag: &nbt::Value) -> std::borrow::Cow<'_, nbt::Value> {
     match tag {
-        nbt::Value::Compound(fields) if fields.iter().any(|(key, _)| key == STORAGE_CONTENT) => {
+        nbt::Value::Compound(fields) if fields.iter().any(|(key, _)| key == STORAGE_CONTENT) && !fields.iter().any(|(key, _)| key == BUNDLE_WEIGHT) => {
             std::borrow::Cow::Owned(nbt::Value::Compound(fields.iter().filter(|(key, _)| key != STORAGE_CONTENT).cloned().collect()))
         }
         other => std::borrow::Cow::Borrowed(other),
@@ -146,6 +147,9 @@ fn shown_tag(tag: &nbt::Value) -> std::borrow::Cow<'_, nbt::Value> {
 
 /// Where a bundle's tag keeps what it holds, as BDS saves it.
 pub const STORAGE_CONTENT: &str = "storage_item_component_content";
+
+/// What a lying bundle shows it weighs.
+pub const BUNDLE_WEIGHT: &str = "bundle_weight";
 
 /// An empty slot.
 pub fn no_item() -> ItemV4 {

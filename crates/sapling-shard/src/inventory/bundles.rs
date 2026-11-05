@@ -68,6 +68,28 @@ fn holding(bundle: &ItemStack, held: &[Option<Held>]) -> ItemStack {
     ItemStack { tag: sapling_data::gear::with_field(bundle.tag.clone(), STORAGE_CONTENT, list), ..bundle.clone() }
 }
 
+/// `stack` let go of: a bundle loses its number, which the next sweep lets go of, and is
+/// numbered anew when taken up (bds-t2ebundle.txt).
+pub(crate) fn unnumbered(stack: ItemStack) -> ItemStack {
+    match bundle_id(&stack) {
+        Some(_) => ItemStack { tag: sapling_data::gear::with_field(stack.tag.clone(), BUNDLE_ID, None), ..stack },
+        None => stack,
+    }
+}
+
+/// How a lying `stack` is shown: a bundle as BDS showed one, its weight and every slot empty
+/// (bds-t2ebundle.txt); anything else as it is.
+pub(crate) fn lying_shown(stack: &ItemStack) -> std::borrow::Cow<'_, ItemStack> {
+    if !is_bundle(&stack.name) {
+        return std::borrow::Cow::Borrowed(stack);
+    }
+    let weight: u32 = contents(stack).iter().flatten().filter_map(weight).sum();
+    let empty = |slot: usize| Value::Compound(vec![("Count".into(), Value::Byte(0)), ("Damage".into(), Value::Short(0)), ("Name".into(), Value::String("".into())), ("Slot".into(), Value::Byte(slot as i8)), ("WasPickedUp".into(), Value::Byte(0))]);
+    let slots = Value::List(List { tag: COMPOUND, items: (0..SLOTS).map(empty).collect() });
+    let tag = Value::Compound(vec![(sapling_data::BUNDLE_WEIGHT.into(), Value::Int(weight as i32)), (STORAGE_CONTENT.into(), slots)]);
+    std::borrow::Cow::Owned(ItemStack { tag: Some(tag), ..stack.clone() })
+}
+
 /// What a stack weighs in a bundle; `None` for what never goes in.
 fn weight(stack: &ItemStack) -> Option<u32> {
     let banned = is_bundle(&stack.name) || stack.name.ends_with("shulker_box");

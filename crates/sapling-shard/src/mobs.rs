@@ -130,7 +130,7 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, p
 /// What shows a stack as an item at `position` moving at `velocity`; `None` for an item no
 /// client knows.
 pub(crate) fn item_announcement(id: u64, item: &ItemStack, position: [f32; 3], velocity: [f32; 3], fished: bool) -> Option<Vec<Bytes>> {
-    let shown = sapling_data::add_item_entity(id, &stack(item), position, velocity)?;
+    let shown = sapling_data::add_item_entity(id, &stack(&crate::inventory::lying_shown(item)), position, velocity)?;
     Some(item_shown(AddItemEntity { is_from_fishing: fished, ..shown }))
 }
 

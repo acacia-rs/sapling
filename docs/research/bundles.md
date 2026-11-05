@@ -47,7 +47,10 @@ ItemStackRequests from `crates/sapling/examples/shared/bundle_drill.rs`). saplin
   second bundle up, so one held by a mob was not judged; sapling takes it as gone.
 - A bundle dropped from the hotbar showed on BDS without `bundle_id`, with its contents
   (`bundle_weight`, `storage_item_component_content`), and its id came in the next cleanup; sapling
-  shows the id and keeps it registered while it lies (research/captures/bds-t2ebundle.txt). Not fixed.
+  shows the id and keeps it registered while it lies (research/captures/bds-t2ebundle.txt). Fixed
+  (twelfth wave): `drops.rs` lays it unnumbered (`inventory::unnumbered`), its lying look is the
+  weight and 64 empty slots (`inventory::lying_shown`, as bds-t2ebundle.txt), and the next sweep
+  sends its old id; test `a_dropped_bundle_lies_unnumbered_and_its_number_goes_at_the_next_sweep`.
 
 ## Shulker boxes (drilled 2026-10-29)
 

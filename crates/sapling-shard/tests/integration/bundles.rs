@@ -3,8 +3,11 @@
 
 use crate::common;
 
-use acacia_proto::packets::{ContainerRegistryCleanup, InventoryContent, InventorySlot};
-use acacia_proto::types::{ContainerSlotType as Container, FullContainerName, ItemStackResponsesItemStatus as Status, ItemV4Extra, StackRequestSlotInfo};
+use acacia_proto::packets::{AddItemEntity, ContainerRegistryCleanup, InventoryContent, InventorySlot};
+use acacia_proto::types::{
+    ContainerSlotType as Container, FullContainerName, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentDrop as Throw, ItemStackResponsesItemStatus as Status, ItemV4Extra,
+    StackRequestSlotInfo,
+};
 use common::requests::{answer, place, request, slot, take};
 use common::stored::{enter_stored, floor_holding};
 use common::{Harness, all, config};
@@ -109,4 +112,25 @@ fn a_kept_bundle_shows_what_it_holds_after_a_rejoin_and_an_empty_slot_answers_49
     let refused = h.tick(1);
     assert_eq!(answer(&refused), (Status::Unknown(49), Vec::new()));
     assert!(all::<InventoryContent>(&refused).is_empty(), "nothing resent");
+}
+
+/// BDS's `t2ebundle` (research/captures/bds-t2ebundle.txt): a dropped bundle lay with no number,
+/// showing its weight and 64 empty slots, and its number went at the next sweep.
+#[test]
+fn a_dropped_bundle_lies_unnumbered_and_its_number_goes_at_the_next_sweep() {
+    let storage = floor_holding(Vec::new(), &[]);
+    storage.store_player(&acacia_auth::login::offline_identity("Steve"), &PlayerData { main: vec![stack("minecraft:bundle", 1), stack("minecraft:cobblestone", 41)], ..PlayerData::default() }).unwrap();
+    let mut h = Harness::with(config(), World::with_storage(storage));
+    enter_stored(&mut h, 1);
+    (0..12).for_each(|_| drop(h.tick(1)));
+    h.receive(1, &request(-1, vec![place(4, slot(Container::Hotbar, 1, 0), in_bundle(0, 0, 0))]));
+    assert_eq!(answer(&h.tick(1)).0, Status::Ok);
+    h.receive(1, &request(-3, vec![Action::Drop(Throw { count: 1, source: slot(Container::Hotbar, 0, 0), randomly: false })]));
+    let sent: Vec<_> = (0..320).flat_map(|_| h.tick(1)).collect();
+    let lying = all::<AddItemEntity>(&sent).into_iter().find(|item| item.item.count == 1).expect("the bundle lying");
+    let ItemV4Extra::Default(Some(extra)) = &lying.item.extra else { panic!() };
+    let tag = format!("{:?}", extra.nbt);
+    assert!(tag.contains("(\"bundle_weight\", Int(4))") && !tag.contains("bundle_id") && tag.matches("WasPickedUp").count() == 64 && !tag.contains("cobblestone"), "{tag}");
+    let removed: Vec<FullContainerName> = all::<ContainerRegistryCleanup>(&sent).into_iter().flat_map(|cleanup| cleanup.removed_containers).collect();
+    assert_eq!(removed, [FullContainerName { container_id: Container::Dynamic, dynamic_container_id: Some(0) }]);
 }
