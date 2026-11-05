@@ -22,7 +22,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{Difficulty, SpawnReason};
 
 use super::health::{Cause, Health};
-use super::{Birth, blast, hunting};
+use super::{Birth, blast};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::entities;
@@ -55,7 +55,6 @@ const TITLE: &str = "entity.wither.name";
 const SPEED: f32 = 0.3;
 const KEEPS_OFF: f32 = 3.0;
 const KEEPS_OVER: f32 = 5.0;
-const SIGHT: f32 = 70.0;
 
 /// A wither's own state.
 #[derive(Component, Default)]
@@ -233,7 +232,7 @@ pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
         }
         return true;
     }
-    let prey = hunting::nearest(world, layer, &body, SIGHT).map(|(_, feet)| feet);
+    let prey = heads::prey(world, wither, layer, &body).map(|(_, feet)| feet);
     let mut dash = world.get_mut::<Wither>(wither).map(|mut kept| std::mem::take(&mut kept.dash)).unwrap_or_default();
     let dashing = dash::steer(world, wither, layer, &mut dash, &body, prey);
     if let Some(mut kept) = world.get_mut::<Wither>(wither) {

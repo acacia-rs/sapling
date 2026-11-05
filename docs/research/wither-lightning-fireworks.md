@@ -112,7 +112,10 @@ here and in bds-witherdash.txt (3 to 7 of its 20-tick fire rate); sapling's midd
 ticks without a rest, now in BDS's volleys (`wither/heads.rs` `RESTS`, test
 `its_middle_head_shoots_in_volleys_of_four_then_rests_60_to_140_ticks`). A skull flew at the cow, its prey, and burst on it (`bow.hit`, the
 blast, its death). Sapling's skulls met no mob; now they do and give a mob met Wither II as a player
-(`wither/skulls.rs`, test `a_skull_that_meets_a_mob_blows_up_on_it`). No dash was seen. Left out: the
+(`wither/skulls.rs`, test `a_skull_that_meets_a_mob_blows_up_on_it`). Its prey and middle head's
+target took players only; now the pack's `nearest_attackable_target` (players, and mobs neither
+undead nor inanimate, within 70, seen) picks the nearest (`wither/heads.rs` `prey`, test
+`its_middle_head_takes_a_living_mob_but_no_undead_one`; 2026-11-05, twelfth wave). No dash was seen. Left out: the
 15 it costs whom it meets (not seen, the actor warded), a blue skull's `max_resistance` 4,
 `ShieldHealth`, `firerate` and `lastHealthInterval` (the charge, `Phase`, armour and `maxHealth` are
 kept: research/captures/bds-keepmobs.txt; a summoned wither charges as a built one, at its difficulty's
