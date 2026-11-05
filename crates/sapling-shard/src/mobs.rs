@@ -32,6 +32,11 @@ use rehomed::placed;
 
 const ITEM: &str = "minecraft:item";
 
+/// An entity a world folder kept: BDS shows such ones to a player newest first, where it shows
+/// those made in the world oldest first (research/captures/bds-s3far.txt, bds-ad3reload.txt).
+#[derive(Component)]
+pub(crate) struct FromFolder;
+
 /// A stored actor, in the column it was stored with.
 #[derive(Component)]
 pub(crate) struct Mob {
@@ -251,14 +256,14 @@ const SHOWN_WITHIN: i32 = 4;
 /// Adds the mobs whose column came within each player's [`SHOWN_WITHIN`] circle and removes those
 /// that left it or are gone. A player whose view stayed where it was while no mob came or went is
 /// skipped.
-pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query<(&Mob, &NetId, Option<&Labels>, Option<&Linked>)>) {
+pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query<(&Mob, &NetId, Option<&Labels>, Option<&Linked>)>, kept: Query<(), With<FromFolder>>) {
     for (stage, in_layer, view, mut sees, mut out, hidden) in &mut viewers {
         let made_for = Some((view.moves(), grid.changes));
         if *stage != Stage::InWorld || sees.made_for == made_for {
             continue;
         }
         let mut covered: Vec<(Entity, u64)> = grid.grid.within(in_layer.0, view, SHOWN_WITHIN).copied().filter(|(entity, _)| !Hidden::hides(hidden, *entity)).collect();
-        covered.sort_unstable_by_key(|(_, id)| *id);
+        covered.sort_unstable_by_key(|(entity, id)| if kept.contains(*entity) { (false, u64::MAX - id) } else { (true, *id) });
         let new: Vec<Entity> = covered.iter().map(|(entity, _)| *entity).filter(|entity| !sees.mobs.contains_key(entity) && mobs.contains(*entity)).collect();
         let rides = |mob: Entity| mobs.get(mob).ok()?.3?.rides.as_ref().map(|(mount, drives, _)| (*mount, *drives));
         let new: Vec<_> = linked::order(&new, rides).into_iter().filter_map(|entity| mobs.get(entity).ok()).collect();
