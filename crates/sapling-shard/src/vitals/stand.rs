@@ -140,7 +140,7 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let dropped = if position.on_ground && !(water || lava || carried) { health.dropped(from[1], fallen_to) } else { 0.0 };
     let landed = position.on_ground && health.is_airborne() && !(water || lava || carried);
     let before = *health;
-    let fell = health.fall_onto(from, fallen_to, position.on_ground, water || lava || carried, soften).map(|_| Cause::Fall);
+    let fell = health.fall_onto(from, fallen_to, position.on_ground, water || lava || carried, soften).map(|(.., cause)| cause);
     let landing = landed.then(|| (health.landing(), crate::rules::spares_player(&rules, Cause::Fall)));
     take(health, before, fell);
     // In lava BDS tells its catching fire (6), then from the next tick the lava's hit (8) before the fire's own (bds-g7lava.txt).

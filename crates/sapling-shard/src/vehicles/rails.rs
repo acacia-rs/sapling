@@ -2,12 +2,15 @@
 //! (docs/research/vehicles.md "Rail physics"): slopes pull, the motion is turned along the rail
 //! and capped, a powered rail speeds a cart up and an unpowered one brakes it, the move is capped
 //! a tick, and a cart gains speed going down.
-// TODO: the cart's height above its rail is unverified (its box's bottom on the rail block's
-// floor here), and two carts do not push each other.
+// TODO: two carts do not push each other, and a cart at rest on a slope rolls (one on BDS stayed:
+// research/captures/bds-i2rails.txt).
 
 use sapling_api::BlockPos;
 use sapling_world::World as Level;
 
+/// How far a cart's box's bottom rides over its rail's floor: BDS showed one at the rail's y + 0.5
+/// (bds-i2rails.txt), its middle, which is where a hopper minecart reaches from (bds-i2reach2.txt).
+const RIDE: f32 = 0.15;
 /// What slopes add to the motion, a tick.
 const SLOPE: f32 = 0.0078125;
 const TOP_SPEED: f32 = 2.0;
@@ -146,7 +149,7 @@ pub(super) fn roll(rail: &Rail, feet: [f32; 3], motion: [f32; 3], how: &Roll) ->
     let share = if how.ridden { RIDDEN_MOVE } else { 1.0 };
     let x = x0 + lx * along + (vx * share).clamp(-MOVE_CAP, MOVE_CAP);
     let z = z0 + lz * along + (vz * share).clamp(-MOVE_CAP, MOVE_CAP);
-    let y = by + rise(rail.shape, [x - bx, z - bz]);
+    let y = by + RIDE + rise(rail.shape, [x - bx, z - bz]);
     let dropped = feet[1] - y;
     if dropped != 0.0 && speed > 0.0 {
         let gained = (vx.hypot(vz) + dropped * DOWNHILL).max(0.0) / vx.hypot(vz).max(f32::EPSILON);
@@ -177,23 +180,24 @@ mod tests {
 
     #[test]
     fn a_cart_rolls_along_its_rail_capped_a_tick_and_brakes_on_an_unpowered_rail() {
-        let (at, motion) = roll(&flat(RailKind::Plain, false), [0.7, 64.0, 0.5], [0.3, 0.0, 1.0], &EMPTY);
+        let (at, motion) = roll(&flat(RailKind::Plain, false), [0.7, 64.0 + RIDE, 0.5], [0.3, 0.0, 1.0], &EMPTY);
         assert_eq!(at[0], 0.5, "put on the rail's line");
         assert!((at[2] - 0.9).abs() < 1e-6, "moved at most {MOVE_CAP}: {at:?}");
         assert!((motion[2] - 0.3f32.hypot(1.0) * 0.96).abs() < 1e-5 && motion[0] == 0.0, "turned along the rail: {motion:?}");
-        let (_, braked) = roll(&flat(RailKind::Powered, false), [0.5, 64.0, 0.5], [0.0, 0.0, 0.5], &EMPTY);
+        let on = 64.0 + RIDE;
+        let (_, braked) = roll(&flat(RailKind::Powered, false), [0.5, on, 0.5], [0.0, 0.0, 0.5], &EMPTY);
         assert!((braked[2] - 0.24).abs() < 1e-6);
-        let (_, boosted) = roll(&flat(RailKind::Powered, true), [0.5, 64.0, 0.5], [0.0, 0.0, 0.5], &EMPTY);
+        let (_, boosted) = roll(&flat(RailKind::Powered, true), [0.5, on, 0.5], [0.0, 0.0, 0.5], &EMPTY);
         assert!((boosted[2] - 0.54).abs() < 1e-6);
-        let (_, kicked) = roll(&flat(RailKind::Powered, true), [0.5, 64.0, 0.5], [0.0; 3], &Roll { walls: [true, false, false, false], ..EMPTY });
+        let (_, kicked) = roll(&flat(RailKind::Powered, true), [0.5, on, 0.5], [0.0; 3], &Roll { walls: [true, false, false, false], ..EMPTY });
         assert_eq!(kicked[2], KICK);
     }
 
     #[test]
     fn a_cart_runs_down_a_slope_and_round_a_curve() {
         let slope = Rail { pos: [0, 64, 0], shape: 3, kind: RailKind::Plain, on: false };
-        let (at, motion) = roll(&slope, [0.5, 64.5, 0.5], [0.0; 3], &EMPTY);
-        assert!(motion[0] > 0.0 && at[1] < 64.5, "rolls down east, the low end: {at:?} {motion:?}");
+        let (at, motion) = roll(&slope, [0.5, 64.5 + RIDE, 0.5], [0.0; 3], &EMPTY);
+        assert!(motion[0] > 0.0 && at[1] < 64.5 + RIDE, "rolls down east, the low end: {at:?} {motion:?}");
         let curve = Rail { pos: [0, 64, 0], shape: 6, kind: RailKind::Plain, on: false };
         let (_, turned) = roll(&curve, [0.5, 64.0, 0.9], [0.0, 0.0, -0.2], &EMPTY);
         assert!(turned[0] > 0.0 && turned[2] < 0.0, "in from the south end, out towards the east: {turned:?}");

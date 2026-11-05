@@ -1,5 +1,5 @@
 //! A stalactite under water or lava drips, and fills the cauldron under its tip: water a third at a
-//! time, lava all at once (`PointedDripstoneBlock` random tick 1465fe4b0 as decompiled;
+//! time, lava all at once; under water it grows (drips/growth.rs) (`PointedDripstoneBlock` random tick 1465fe4b0 as decompiled;
 //! research/captures/bds-dripstone.txt for the timing and what viewers are told).
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
@@ -11,13 +11,13 @@ use super::queued::{self, Job};
 use super::{level, send};
 use crate::body::Liquid;
 
+mod growth;
+
 const DRIPSTONE: &str = "minecraft:pointed_dripstone";
 const CAULDRON: &str = "minecraft:cauldron";
 /// The odds a root's random tick drips water or lava: not the Java game's.
 const WATER_ODDS: f32 = 0.42;
 const LAVA_ODDS: f32 = 0.07;
-/// A dripstone grows on this much of its random ticks, drawn before the drip; sapling grows none.
-const GROWTH_ODDS: f32 = 0.011_377_778;
 /// How far a tip is looked for under its root, and a cauldron under its tip.
 const REACH: i32 = 10;
 /// Ticks from a drip to the cauldron filling, and one more for each block it falls.
@@ -74,14 +74,16 @@ fn filled(level: &Level, pos: BlockPos, liquid: Liquid) -> Option<(u32, u8)> {
     Some((id, fill))
 }
 
-/// The random tick of the hanging dripstone at `pos`: a root under a source drips by the odds,
-/// and a cauldron under its tip is due to fill.
+/// The random tick of the hanging dripstone at `pos`: a root may grow (drips/growth.rs), then
+/// under a source drips by the odds, and a cauldron under its tip is due to fill.
 pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos, roll: &mut impl FnMut() -> f32) {
-    let Some(level) = level(world, layer) else { return };
-    if !hangs(level, pos) || hangs(level, Face::Up.neighbour(pos)) {
+    if !super::level(world, layer).is_some_and(|level| hangs(level, pos) && !hangs(level, Face::Up.neighbour(pos))) {
         return;
     }
-    let _grows = roll() < GROWTH_ODDS;
+    if roll() < growth::ODDS {
+        growth::grow_from(world, layer, pos, roll() < 0.5);
+    }
+    let Some(level) = level(world, layer) else { return };
     let Some(liquid) = source_over(level, pos) else { return };
     if roll() > if liquid == Liquid::Water { WATER_ODDS } else { LAVA_ODDS } {
         return;

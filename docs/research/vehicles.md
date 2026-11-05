@@ -105,7 +105,7 @@ were not found in any of these; sapling does what is listed there.
 
 - Pushing (ED `legacy_minecart`): strength 0.1·min(1, 1/d); the cart takes half, the pusher a quarter.
 - Activator rail powered: a minecart throws out its riders, a TNT minecart primes, a hopper minecart locks.
-- Detector rail: on while a cart is on it, released 20 ticks after.
+- Detector rail: pressed by a cart in its middle, checked again every 20 ticks from the press (group I below).
 - TNT minecart: power 3, fuse 80; flint and steel primes; a fall > 3.5 bursts it at once; a blast primes it on
   10 + rand(20).
 - Any other vehicle in a blast is hurt by the mob rule (drilled 2026-11-05, research/captures/bds-c1blast.txt,
@@ -129,13 +129,37 @@ were not found in any of these; sapling does what is listed there.
 - The add link's order against `SetEntityData` for later viewers: sapling sends seats and links after AddEntity.
 - A minecart's stored `Pos`: kept where the wire puts it, as a boat's (a boat on y -26 was kept at
   -25.625, as shown; research/captures/bds-t2ekeep-dump.txt; `actors.rs` `compound_now`).
-- A placed minecart's height on its rail (box bottom on the rail block's floor here; BDS spawns at y + 0.5 then snaps).
-- Detector rail timing, hopper minecart pick-up range: drilled 2026-11-05 (`bds_command_probe e2rails`,
-  thirteenth2e_drill.rs). BDS pressed the rail a tick after the summon (sapling in the summon's tick) and let
-  go some 100 ticks after on both, which does not tell "recheck every 20" from "20 after last seen". The
-  range was not measured: `/loot spawn` drops at its cell's corner an eighth up (fixed in `loot/placed.rs`),
-  so every item lay at x 1.0. The activator lock is real: a hopper minecart on a powered activator rail
-  took nothing, and its item some 3 ticks after the power went (fixed, `vehicles/cargo.rs` `take_up`).
+- A cart at rest on a slope: BDS's (bds-i2rails.txt, summoned mid-slope) stayed at the rail's y + 0.5
+  and never rolled; sapling's rolls down (the slope pull of step 2 from rest). Left open.
+- Detector rail timing, hopper minecart pick-up range: first drilled 2026-11-05 (`e2rails`,
+  thirteenth2e_drill.rs); the activator lock is real: a hopper minecart on a powered activator rail took
+  nothing, and its item some 3 ticks after the power went (fixed, `vehicles/cargo.rs` `take_up`). The
+  rest is settled below ("Drilled 2026-11-05, group I").
+
+## Drilled 2026-11-05, group I (`bds_command_probe i2rails`, `i2reach`, `i2reach2`; thirteenth2i_drill.rs)
+
+- **Detector rail** (bds-i2rails.txt; `DetectorRailBlock` vtable 14A93CB20): `entityInside` of an
+  unpressed rail runs `checkPressed` (148a1e7b0), which looks for minecarts in the cell's box x and z
+  0.2 to 0.8, y 0 to 0.8; it presses (15) or lets go, and while pressed queues a tick 20 on whose
+  `tick` (148a1ee00) checks again. A summoned cart pressed its rail a tick after its AddEntity; one
+  standing 26 s and killed let go 520 ticks after the press, the 26th check; one rolled over the rail
+  let go 20 ticks after its press. Sapling pressed at once and let go 20 ticks after it last saw a
+  cart; fixed (`vehicles/detectors.rs`, tests `carts_drilled.rs`); re-drilled the same to a tick.
+- **Killed carts drop their item**: `/kill` of a minecart left a minecart item on BDS, none on
+  sapling; fixed (`creatures/killing.rs`).
+- **Cart height**: summoned at y -26 a cart was shown at -25.65 (its box's bottom on the rail's
+  floor) and from its first tick at -25.5, its box's middle at the rail's y + 0.5. Sapling kept it at
+  -25.65; fixed (`vehicles/rails.rs` `RIDE`, test
+  `a_minecart_rides_its_rail_with_its_middle_half_a_block_up`).
+- **Hopper minecart reach** (`HopperSystem` 148489a30, `Hopper::_tryAddItemsFromPos` 1429cdfe0): a
+  cart that took an item waits 4 ticks, a wait the cart's cell changing ends; it pulls from a box a
+  block wide around its box's middle, from the middle up a block, then the block above that, then
+  from its own box a quarter wider in x and z. BDS took items on ledges with their feet up to -23.625
+  over a cart on y -26 (middle -25.5) and none from -23.5 up; items 0.55 to 0.95 east on the floor.
+  Sapling's reach was its box, and its middle 0.15 low; fixed (`vehicles/cargo.rs` `reaches`).
+  Floor items slide after `/tp`, so the east edge is only bounded (taken at 1.30 and 1.45, sliding).
+- Left: BDS took a reached item a tick after the `/tp`, sapling in the `/tp`'s tick (its commands run
+  before the carts' tick).
 - What raises a boat's underwater counter (not done); boat fall breaking (none found).
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
 - The horse screen: done without a capture, see mob-life.md "Mount inventories".

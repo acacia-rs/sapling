@@ -60,6 +60,33 @@ cauldron within ten under the tip, past air, `50 + the drop` ticks on; a cauldro
 not full and lava only empty.
 
 Sapling (`blocks/falling/dripstone.rs`, `blocks/drips.rs`) does all of the above; a mob or a
-survival player the tip lands on is hurt. Left: a stalagmite that loses its ground breaks only
-where updates.rs breaks things, a player falling on one is not hurt more, and dripstone does not
-grow.
+survival player the tip lands on is hurt.
+
+### Drilled 2026-11-05, group I (`bds_command_probe i2drip`, `i2grow`; thirteenth2i_drill.rs)
+
+- **A stalagmite losing its ground** (bds-i2drip.txt, a frustum and tip on stone, the stone set to
+  air): the frustum shown breaking in the same tick, gone with its item the next, the tip shown
+  breaking then and gone the tick after. `canSurvive` (14660c830): a standing piece needs a standing
+  piece or a whole top under it. Sapling left it standing; fixed as a ground rule
+  (`blocks/ground.rs`, which updates/loosened.rs breaks a tick on), re-drilled the same to a tick;
+  test `a_stalagmite_whose_ground_goes_breaks_piece_by_piece_a_tick_apart`.
+- **Falling on a stalagmite** (`SpeleothemBlock` fall-on 14660bc00, registered with a
+  `BlockEntityFallOnEvent` lambda): on a standing tip the fall counts 2 blocks more, twice over,
+  as `Stalagmite` (HurtAnimation 29, no landing position). BDS cost a survival player 8 dropped
+  from y -20 onto a tip in -26 (stone 3). Sapling counted a plain fall; fixed (`creatures/health/falls.rs`
+  `Ground::Spike`, `creatures/heat.rs`), test `a_stalagmite_tip_counts_two_blocks_more_twice_over`.
+  Sapling's drill could not show it: the drill bot fell through the tip (BDS put it on top).
+- **Growth** (14660e6b0, the block's constructor gives 7, true, 0.011377778): a root's random tick
+  draws the growth first; then a coin: stalagmite (14660eb20) or the stalactite's own tip
+  (14660e9e0). Either needs the root's tip within 7, unwaterlogged, a dripstone block over the root
+  with a water source over that, and air or a meeting tip under the tip. A stalagmite: the first of
+  the ten cells from the tip down holding a standing tip with room grows it up, or the first over a
+  standing piece or a whole top gets a new tip (no Java `canDripThrough` stop). A tip met by another
+  merges both (`merge`). The neighbours' `neighborChanged` (14660ceb0) sets each piece's thickness
+  (14660c4b0, Java's `calculateDripstoneThickness`). bds-i2grow.txt at `randomtickspeed` 4096: the
+  stalactite over air grew to -25, a stalagmite rose to meet it and the two merged; the one over a
+  stalagmite's tip two below merged with it; the one under stone never grew. Sapling grew nothing;
+  fixed (`blocks/drips/growth.rs`, thickness in `blocks/shapes.rs`), re-drilled: the same shapes
+  and merges, in one packet each as BDS's, test `a_stalactite_under_a_dripstone_block_under_water_grows`.
+  Left: sapling's growths came some four times slower than BDS's at the same rule (the random tick
+  pace), and BDS drew the stalactite's own tip 5 times of 7, sapling 2 (too few to tell the coin).

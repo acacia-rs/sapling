@@ -8,15 +8,15 @@ use bevy_ecs::prelude::*;
 use sapling_world::ItemStack;
 
 use crate::body::Body;
-use crate::components::{InLayer, NetId, Tick};
+use crate::components::{InLayer, NetId};
 use crate::entities::{Kind, Stored};
 use crate::inventory::Held;
 use crate::{containers, drops, entities, hoppers};
 
 const HOPPER: &str = "minecraft:hopper_minecart";
-/// A hopper minecart takes an item every this many ticks, from this far around its box's bottom.
+/// A hopper minecart that took an item waits this many ticks; its box reaches this much wider.
 const HOPPER_EVERY: u64 = 4;
-const HOPPER_REACH: f32 = 0.5;
+const HOPPER_REACH: f32 = 0.25;
 
 /// A vehicle's slots.
 #[derive(Component, Clone)]
@@ -94,28 +94,77 @@ pub(super) fn spill(world: &mut World, vehicle: Entity) {
     }
 }
 
-/// Lets each hopper minecart take up the first item lying in its reach that fits, when due; one
-/// on a powered activator rail is locked (research/captures/bds-e2rails.txt).
+/// The ticks a hopper minecart has to wait, and the cell it waits in: moving on ends the wait.
+#[derive(Component, Default)]
+struct HopperWait {
+    left: u64,
+    cell: [i32; 3],
+}
+
+/// Where a hopper minecart with the box `low..high` looks for items, in order (BDS
+/// `HopperSystem` 148489a30 and `Hopper::_tryAddItemsFromPos` 1429cdfe0): a block wide around its
+/// box's middle, from the middle up, a block at a time; then its box a quarter wider each way.
+fn reaches(low: [f32; 3], high: [f32; 3]) -> [([f32; 3], [f32; 3]); 3] {
+    let middle = [0, 1, 2].map(|axis| (low[axis] + high[axis]) / 2.0);
+    let around = |up: f32| ([middle[0] - 0.5, middle[1] + up, middle[2] - 0.5], [middle[0] + 0.5, middle[1] + up + 1.0, middle[2] + 0.5]);
+    let wider = ([low[0] - HOPPER_REACH, low[1], low[2] - HOPPER_REACH], [high[0] + HOPPER_REACH, high[1], high[2] + HOPPER_REACH]);
+    [around(0.0), around(1.0), wider]
+}
+
+/// The items whose box overlaps `min..max`, oldest first.
+fn items_touching(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
+    let mut lying = world.query::<(Entity, &drops::Dropped, &Body, &InLayer, &NetId)>();
+    let overlaps = |body: &Body| {
+        let (low, high) = body.bounds();
+        (0..3).all(|axis| low[axis] < max[axis] && high[axis] > min[axis])
+    };
+    let mut found: Vec<_> = lying.iter(world).filter(|(_, _, body, on, _)| on.0 == layer && overlaps(body)).map(|(item, dropped, _, _, id)| (id.0, item, dropped.stack().clone())).collect();
+    found.sort_unstable_by_key(|(id, ..)| *id);
+    found.into_iter().map(|(_, item, stack)| (item, stack)).collect()
+}
+
+/// Lets each hopper minecart not waiting take up the first item in its reach that fits, and wait
+/// after it took one; one on a powered activator rail is locked (research/captures/bds-e2rails.txt,
+/// bds-i2reach.txt).
 pub(super) fn take_up(world: &mut World) {
-    if world.resource::<Tick>().0 % HOPPER_EVERY != 0 {
-        return;
-    }
     let carts: Vec<(Entity, Entity, Body)> = world.query::<(Entity, &Kind, &InLayer, &Body)>().iter(world).filter(|(_, kind, ..)| kind.0 == HOPPER).map(|(cart, _, layer, body)| (cart, layer.0, *body)).collect();
     for (cart, layer, body) in carts {
+        let (low, high) = body.bounds();
+        let cell = [0, 1, 2].map(|axis| ((low[axis] + high[axis]) / 2.0).floor() as i32);
+        let wait = world.get::<HopperWait>(cart).map_or(0, |wait| if wait.cell == cell { wait.left } else { 0 });
+        world.entity_mut(cart).insert(HopperWait { left: wait.saturating_sub(1), cell });
         let Some(level) = world.get::<crate::components::Layer>(layer).map(|layer| &layer.world) else { continue };
-        if super::rails::rail_under(level, body.at).is_some_and(|rail| rail.kind == super::rails::RailKind::Activator && rail.on) {
+        if wait > 0 || super::rails::rail_under(level, body.at).is_some_and(|rail| rail.kind == super::rails::RailKind::Activator && rail.on) {
             continue;
         }
         let Some(mut slots) = cargo(world, cart) else { continue };
-        let [x, y, z] = body.at;
-        let (min, max) = ([x - HOPPER_REACH, y - HOPPER_REACH, z - HOPPER_REACH], [x + HOPPER_REACH, y + body.size[1], z + HOPPER_REACH]);
-        for (item, stack) in drops::lying_in(world, layer, min, max) {
-            let taken = hoppers::insert(world, &mut slots, &stack, |_| true);
-            if taken > 0 {
-                drops::take(world, item, taken);
-                load_cargo(world, cart, slots);
-                break;
+        'reach: for (min, max) in reaches(low, high) {
+            for (item, stack) in items_touching(world, layer, min, max) {
+                let taken = hoppers::insert(world, &mut slots, &stack, |_| true);
+                if taken > 0 {
+                    drops::take(world, item, taken);
+                    load_cargo(world, cart, slots);
+                    world.entity_mut(cart).insert(HopperWait { left: HOPPER_EVERY, cell });
+                    break 'reach;
+                }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::reaches;
+
+    /// research/captures/bds-i2reach.txt: a cart at x 0.5 took items lying 0.55 to 0.8 east and
+    /// up to 2 blocks over its rail, and none 3 over.
+    #[test]
+    fn a_hopper_minecart_reaches_a_quarter_past_its_box_and_two_blocks_up_from_its_middle() {
+        let item = |x: f32, y: f32| ([x - 0.125, y, -0.125], [x + 0.125, y + 0.25, 0.125]);
+        let takes = |(low, high): ([f32; 3], [f32; 3])| reaches([0.01, 0.0, -0.49], [0.99, 0.7, 0.49]).iter().any(|(min, max)| (0..3).all(|axis| low[axis] < max[axis] && high[axis] > min[axis]));
+        assert!([1.05, 1.15, 1.3].into_iter().all(|x| takes(item(x, 0.0))));
+        assert!(!takes(item(1.4, 0.0)));
+        assert!([1.0, 1.5, 2.0].into_iter().all(|y| takes(item(0.95, y))));
+        assert!(!takes(item(0.95, 3.0)));
     }
 }
