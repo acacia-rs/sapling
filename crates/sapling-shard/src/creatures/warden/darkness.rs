@@ -1,6 +1,7 @@
 //! The darkness a warden casts: from the tick it comes, and every 121 ticks after, darkness for
 //! 260 ticks to each survival or adventure player within 20 of it (its pack's `minecraft:mob_effect`;
-//! research/captures/bds-warden-findings.md "Darkness").
+//! research/captures/bds-warden-findings.md "Darkness"). One a shrieker calls up casts first with the
+//! shrieker's darkness, the tick before it is shown (bds-t2warden.txt).
 
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
@@ -28,14 +29,25 @@ pub(super) fn tick(world: &mut World) {
         .collect();
     for (warden, layer, at) in due {
         world.entity_mut(warden).insert(Darkening(now + EVERY));
-        let near = |feet: [f32; 3]| (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>() <= REACH * REACH;
-        let players: Vec<Entity> = in_world(world)
-            .into_iter()
-            .filter(|player| world.get::<InLayer>(*player).is_some_and(|on| on.0 == layer) && vitals::is_mortal(world, *player))
-            .filter(|player| world.get::<Position>(*player).is_some_and(|position| near(position.feet)))
-            .collect();
-        for player in players {
-            vitals::give_effect(world, player, Effect::Darkness, LASTS, 0, false);
-        }
+        cast(world, layer, at);
     }
+}
+
+/// Darkness to the mortal players in `layer` within reach of a warden at `at`.
+pub(super) fn cast(world: &mut World, layer: Entity, at: [f32; 3]) {
+    let near = |feet: [f32; 3]| (0..3).map(|axis| (feet[axis] - at[axis]).powi(2)).sum::<f32>() <= REACH * REACH;
+    let players: Vec<Entity> = in_world(world)
+        .into_iter()
+        .filter(|player| world.get::<InLayer>(*player).is_some_and(|on| on.0 == layer) && vitals::is_mortal(world, *player))
+        .filter(|player| world.get::<Position>(*player).is_some_and(|position| near(position.feet)))
+        .collect();
+    for player in players {
+        vitals::give_effect(world, player, Effect::Darkness, LASTS, 0, false);
+    }
+}
+
+/// `warden` cast its first darkness the tick before it came.
+pub(super) fn cast_before(world: &mut World, warden: Entity) {
+    let now = world.resource::<Tick>().0;
+    world.entity_mut(warden).insert(Darkening(now + EVERY - 1));
 }

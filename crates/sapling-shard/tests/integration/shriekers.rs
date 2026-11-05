@@ -36,6 +36,7 @@ fn a_shrieker_stood_on_warns_three_times_200_ticks_apart_then_a_warden_emerges()
     assert_eq!(names, ["shriek", "darkness", "nearby_close", "shriek", "darkness", "nearby_closer", "shriek", "darkness", "nearby_closest", "shriek", "darkness", "darkness", "warden", "agitated", "listening"], "{seen:?}");
     // bds-t2warden.txt: the warden, and the shrieker falling quiet, a tick after the darkness.
     assert_eq!(seen[12].0 - seen[10].0, 1, "{seen:?}");
+    assert_eq!(seen[11].0, seen[10].0, "the warden's own darkness with the shrieker's: {seen:?}");
     let shrieks: Vec<usize> = seen.iter().filter(|(_, name)| name == "shriek").map(|(tick, _)| *tick).collect();
     assert!(shrieks.windows(2).all(|pair| pair[1] - pair[0] == 200), "{shrieks:?}");
     assert_eq!(heard, shrieks.iter().map(|tick| tick + 1).collect::<Vec<_>>(), "heard from the block's corner a tick on");
