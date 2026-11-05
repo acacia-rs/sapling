@@ -5,7 +5,7 @@ use crate::common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{AddEntity, AddItemEntity, ContainerOpen, InventoryContent, LevelSoundEvent, UpdateAttributes};
+use acacia_proto::packets::{AddEntity, AddItemEntity, ContainerOpen, InventoryContent, InventorySlot, LevelSoundEvent, UpdateAttributes};
 use acacia_proto::types::{ContainerSlotType as Container, ItemStackResponsesItemStatus as Status, ItemV4, ItemV4Extra};
 use common::requests::{answer, place, request, slot, take};
 use common::{Harness, all, click};
@@ -174,6 +174,21 @@ fn a_furnace_refuses_what_does_not_belong_and_pays_for_what_is_taken() {
     let levels: Vec<UpdateAttributes> = all(&ticks(&mut h, 150));
     let progress = levels.last().and_then(|packet| packet.attributes.iter().find(|attribute| attribute.name == "minecraft:player.experience")).map(|attribute| attribute.current);
     assert!(progress.is_some_and(|progress| progress > 0.0), "{levels:?}");
+}
+
+/// How many times the open container's slot is shown again over the `n` ticks after a put into it.
+fn shown_again(block: &str, into: Container, to: u8) -> usize {
+    let mut h = setup(false, vec![Item::new("minecraft:cobblestone", 10)], vec![(HERE, Block::new(block))]);
+    let (window, _) = open(&mut h, 1, HERE);
+    assert_eq!(put(&mut h, 1, 0, 10, into, to), Status::Ok);
+    all::<InventorySlot>(&ticks(&mut h, 2)).iter().filter(|shown| shown.window_id.to_raw() == window && shown.slot == u32::from(to)).count()
+}
+
+#[test]
+fn a_furnace_shows_a_slot_put_into_once_and_a_chest_again_a_tick_on() {
+    // research/captures/bds-p2furnace.txt: cobblestone put in the output slot was shown with the answer alone.
+    assert_eq!(shown_again("furnace", Container::FurnaceOutput, 2), 0);
+    assert_eq!(shown_again("chest", Container::Container, 0), 1);
 }
 
 fn chest_entity([x, y, z]: [i32; 3], partner: [i32; 3], leads: bool) -> Value {

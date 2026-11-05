@@ -4,6 +4,7 @@
 // TODO: a wire broken without shears sets nothing off; only the line through a written cell is
 // looked at, not every line a hook could reach.
 
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 
@@ -104,11 +105,27 @@ fn wire_changed(world: &mut World, layer: Entity, pos: BlockPos) {
     }
 }
 
-/// A hook, a wire or what was one was written at `pos`: the lines through it are looked at again.
+/// Joins the wire at `pos` toward each wire beside it and each hook facing it, and suspends it, as
+/// BDS wrote every wire put by hand or set (bds-z2wire.txt).
+fn shape(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some((WIRE, ..)) = state(world, layer, pos) else { return };
+    let joins = ACROSS.map(|face| match state(world, layer, face.neighbour(pos)) {
+        Some((WIRE, ..)) => true,
+        Some((HOOK, properties, _)) => facing(properties) == Some(super::opposite(face)),
+        _ => false,
+    });
+    let bits = [("minecraft:connection_north", joins[0]), ("minecraft:connection_south", joins[1]), ("minecraft:connection_west", joins[2]), ("minecraft:connection_east", joins[3]), ("suspended_bit", true)];
+    set_bits(world, layer, pos, &bits);
+}
+
+/// A hook, a wire or what was one was written at `pos`: it and the wires beside it take their
+/// shapes, and the lines through it are looked at again.
 pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, old: &str, new: &str) {
     if old == new || ![old, new].iter().any(|name| *name == HOOK || *name == WIRE) {
         return;
     }
+    shape(world, layer, pos);
+    ACROSS.iter().for_each(|face| shape(world, layer, face.neighbour(pos)));
     if new == HOOK {
         update_line(world, layer, pos);
     }
@@ -136,8 +153,10 @@ fn update_line(world: &mut World, layer: Entity, hook: BlockPos) {
     }
     let attached = other.is_some();
     let powered = attached && wires.iter().any(|(_, pressed)| *pressed);
-    for end in [Some(hook), other].into_iter().flatten() {
-        set_bits(world, layer, end, &[("attached_bit", attached), ("powered_bit", powered)]);
+    // The far hook first, each heard at its own cell, as BDS did (B18; bds-z2wire.txt).
+    let ends: Vec<BlockPos> = [other, Some(hook)].into_iter().flatten().collect();
+    for end in &ends {
+        set_bits(world, layer, *end, &[("attached_bit", attached), ("powered_bit", powered)]);
     }
     for (wire, _) in &wires {
         set_bits(world, layer, *wire, &[("attached_bit", attached)]);
@@ -149,8 +168,7 @@ fn update_line(world: &mut World, layer: Entity, hook: BlockPos) {
         (true, false, ..) => Some("detach"),
         _ => None,
     };
-    if let Some((name, registry)) = sound.zip(level(world, layer).map(|level| level.registry())) {
-        let heard = send::sound(name, registry, hook, registry.air_id());
-        send::to_viewers(world, layer, hook, &[heard]);
-    }
+    let Some((name, registry)) = sound.zip(level(world, layer).map(|level| level.registry())) else { return };
+    let heard: Vec<bytes::Bytes> = ends.iter().map(|[x, y, z]| send::sound_at(name, registry, Vec3f { x: *x as f32 + 0.5, y: *y as f32 + 0.1, z: *z as f32 + 0.5 }, registry.air_id())).collect();
+    send::to_viewers(world, layer, hook, &heard);
 }
