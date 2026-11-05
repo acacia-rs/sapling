@@ -295,8 +295,12 @@ over a layer apart, of x-neighbours 23%, of z-neighbours across a chunk's edge 4
 since (`snowfall.rs` `smoothed`, assert in `water_freezes_and_snow_lies_where_it_is_cold_while_it_snows`),
 sapling-u1cold.txt: 2.6%, 30% and 51% (its snow stopped 7 s sooner, the drill's waits being wall time). The same cell rule also lays a layer on air over a whole
 layer where the biome piles past 8 (ice spikes, ice mountains), which sapling did not.
-Left: BDS moves a replaceable plant at the cell into the second layer under the snow; sapling
-lays snow only into air.
+A small plant at the cell (`canPlaceTopSnow` takes air or a block whose snowlogging value
+144c4e400 is 3) goes into the second layer under the snow, as BDS's freeze pass leaves short grass,
+ferns and flowers (sapling-worldgen `block/layers.rs`); clearing the snow gives it back. Sapling
+since 2026-11-05 (`blocks/waterlog.rs` `snow_keeps`, `snowfall.rs` `room`; unit test
+`snow_keeps_a_small_plant_under_it_and_gives_it_back_when_cleared`). Not drilled live: the BDS drill
+world is plains, too warm for snow.
 
 - Light, drilled 2026-10-29 with `lightgrow`, `lightpoke` and `croprates` (`examples/shared/growth_drill.rs`;
   `research/captures/bds-lightgrow.txt`, `bds-lightpoke.txt`, `bds-croprates.txt`). The scenes use sealed rooms lit
