@@ -116,7 +116,7 @@ pub fn efficiency(level: u8) -> f32 {
 }
 
 /// The chance in a hundred that a use wears a stack with Unbreaking at `level`, `armour` or a tool.
-// TODO: armour's 60 + 40 / (level + 1) is the wiki's; only the tools' was decompiled (block-rules.md).
+// Armour's 60 + 40 / (level + 1) is the wiki's; bds-r1wear.txt agrees (Unbreaking III, 22 hits wore 13 to 17).
 pub fn wear_chance(level: u8, armour: bool) -> u32 {
     let level = u32::from(level);
     match (level, armour) {

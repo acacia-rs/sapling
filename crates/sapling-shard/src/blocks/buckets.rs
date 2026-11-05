@@ -125,6 +125,9 @@ impl Request<'_> {
         if is_water && liquid::is_hot(self.world, site.layer) {
             let [x, y, z] = target.map(|c| c as f32 + 0.5);
             send::to_viewers(self.world, site.layer, target, &[send::noise("fizz", Vec3f { x, y, z }, -1)]);
+            if let Some(bucket) = mob {
+                crate::creatures::release_from_bucket(self.world, site.layer, bucket, target);
+            }
         } else {
             // What a Popped block leaves, as if broken; lava burns everything.
             if let Some((name, properties)) = washed.filter(|_| is_water && pops) {
@@ -134,15 +137,22 @@ impl Request<'_> {
             if !liquid::pour(self.world, site.layer, target, liquid, waterlogs) {
                 return false;
             }
-            let sound = match (is_water, mob) {
-                (true, Some(_)) => "bucket.empty.fish",
-                (true, None) => "bucket.empty.water",
+            let fish = mob.and_then(|bucket| crate::creatures::bucketed_kind(&bucket.name)).is_some_and(|kind| !matches!(kind, "minecraft:axolotl" | "minecraft:tadpole"));
+            let sound = match (is_water, fish) {
+                (true, true) => "bucket.empty.fish",
+                (true, false) => "bucket.empty.water",
                 (false, _) => "bucket.empty.lava",
             };
-            self.hear(site, sound);
-        }
-        if let Some(bucket) = mob {
-            crate::creatures::release_from_bucket(self.world, site.layer, bucket, target);
+            match mob {
+                // The mob is shown before the pour is heard, and only a fish's is heard as one (bds-r1buckets.txt, bds-glide2.txt).
+                Some(bucket) => {
+                    crate::creatures::release_from_bucket(self.world, site.layer, bucket, target);
+                    if let Some((cell, heard)) = self.at_feet(sound) {
+                        crate::entities::after_announcing(self.world, site.layer, cell, vec![heard]);
+                    }
+                }
+                None => self.hear(site, sound),
+            }
         }
         if site.mode != GameMode::Creative {
             self.swap_held(BUCKET);
@@ -192,9 +202,16 @@ impl Request<'_> {
 
     /// Lets those near the player hear `name` at its feet, where BDS plays a bucket's sounds.
     fn hear(&mut self, site: &Site, name: &str) {
-        let Some(feet) = self.world.get::<Position>(self.entity).map(|position| position.feet) else { return };
+        if let Some((cell, heard)) = self.at_feet(name) {
+            send::to_viewers(self.world, site.layer, cell, &[heard]);
+        }
+    }
+
+    /// The sound `name` at the player's feet, and their cell.
+    fn at_feet(&self, name: &str) -> Option<([i32; 3], bytes::Bytes)> {
+        let feet = self.world.get::<Position>(self.entity)?.feet;
         let [x, y, z] = feet;
-        send::to_viewers(self.world, site.layer, feet.map(|c| c.floor() as i32), &[send::noise(name, Vec3f { x, y, z }, -1)]);
+        Some((feet.map(|c| c.floor() as i32), send::noise(name, Vec3f { x, y, z }, -1)))
     }
 
     /// See [`inventory::swap_held`].

@@ -74,7 +74,7 @@ fn greet(world: &mut World, player: Entity) {
     let (Some(id), Some(mut effects)) = (world.get::<NetId>(player).map(|id| id.0), world.get_mut::<Effects>(player).filter(|effects| effects.2)) else { return };
     effects.2 = false;
     for active in effects.0.clone() {
-        tell(world, player, &told(id, MobEffectEventId::Add, &active, active.left));
+        tell_effect(world, player, id, MobEffectEventId::Add, &active);
         match active.effect {
             Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
             Effect::HealthBoost => boost(world, player, id),
@@ -83,8 +83,11 @@ fn greet(world: &mut World, player: Entity) {
     }
 }
 
-fn told(id: u64, event_id: MobEffectEventId, active: &Active, duration: u32) -> MobEffect {
-    MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: duration as i32, tick: 0, ambient: active.ambient }
+/// Tells the player of one effect, stamped with the tick it is told in as BDS's (bds-r1buckets.txt).
+fn tell_effect(world: &mut World, player: Entity, id: u64, event_id: MobEffectEventId, active: &Active) {
+    let tick = world.resource::<crate::components::Tick>().0;
+    let told = MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: active.left as i32, tick, ambient: active.ambient };
+    tell(world, player, &told);
 }
 
 /// Puts `amount` of health on top of a player's own, told at once.
@@ -137,7 +140,7 @@ fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bo
     effects.0.retain(|active| !gone(active));
     effects.1 |= !taken.is_empty();
     for active in &taken {
-        tell(world, player, &told(id, MobEffectEventId::Remove, active, active.left));
+        tell_effect(world, player, id, MobEffectEventId::Remove, active);
         match active.effect {
             Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
             Effect::Absorption => pad(world, player, 0.0),
@@ -209,7 +212,7 @@ fn give_as(world: &mut World, player: Entity, new: Active) -> bool {
         }
     };
     effects.1 = true;
-    tell(world, player, &told(id, event_id, &now, now.left));
+    tell_effect(world, player, id, event_id, &now);
     match effect {
         Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
         Effect::Absorption => pad(world, player, CUSHIONS * (f32::from(now.amplifier) + 1.0)),

@@ -195,6 +195,7 @@ fn tnt_hurts(difficulty: Difficulty) -> (f32, Vec<[f32; 3]>, bool) {
         // Far enough that the blast's harm before Resistance is under the player's health: no throw past that.
         assert!(ctx.summon_as(None, "minecraft:tnt", [x + 5.0, y, z], 0.0, 0.0, None).is_some());
     });
+    let feet = common::asking::ask(&mut h, |ctx| ctx.position(PlayerId(1)).unwrap().feet);
     let sent: Vec<RawPacket> = (0..82).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     let thrown: Vec<[f32; 3]> = all::<SetEntityMotion>(&sent).iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| [motion.velocity.x, motion.velocity.y, motion.velocity.z]).collect();
     let order: Vec<&str> = sent.iter().filter_map(|raw| {
@@ -203,13 +204,18 @@ fn tnt_hurts(difficulty: Difficulty) -> (f32, Vec<[f32; 3]>, bool) {
         if motion { Some("motion") } else if hurt { Some("hurt") } else { None }
     }).collect();
     let health = common::asking::ask(&mut h, |ctx| ctx.health(PlayerId(1))).expect("alive");
-    (20.0 - health, thrown, order == ["motion", "hurt", "motion"])
+    // The push is the impact: 1 less the blast's distance from the feet over 8 (open ground, all seen).
+    let flash = all::<LevelEvent>(&sent).into_iter().find(|event| event.event == LevelEventEvent::ParticleExplosion).expect("a blast").position;
+    let far = ((flash.x - feet[0]).powi(2) + (flash.y - feet[1]).powi(2) + (flash.z - feet[2]).powi(2)).sqrt();
+    let push = thrown.get(1).zip(thrown.first()).map(|(all, knock)| (0..3).map(|a| (all[a] - knock[a]).powi(2)).sum::<f32>().sqrt());
+    let from_feet = push.is_some_and(|push| (push - (1.0 - far / 8.0)).abs() < 1e-3);
+    (20.0 - health, thrown, order == ["motion", "hurt", "motion"] && from_feet)
 }
 
 #[test]
 fn primed_tnt_costs_a_player_the_same_on_easy_and_tells_its_knock_before_the_hurt() {
-    // bds-r1ench.txt: 7.106 of 60 on easy in Resistance IV, the blast rule unhalved; SetEntityMotion
-    // (-0.4, 0.4) alone, HurtAnimation, then the knock with the push (-0.986, 0.815).
+    // bds-r1ench.txt: 7.769 of 60 on easy in Resistance IV, the blast rule unhalved, measured from the
+    // feet; SetEntityMotion (-0.4, 0.4) alone, HurtAnimation, then the knock with the push.
     let (easy, thrown, ordered) = tnt_hurts(Difficulty::Easy);
     let (normal, ..) = tnt_hurts(Difficulty::Normal);
     // The hop's random drift moves the blast a little; easy's halving would cost about half.

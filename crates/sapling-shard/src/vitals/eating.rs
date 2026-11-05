@@ -174,7 +174,10 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     show(world, player, false);
     let (Some(feet), Some(layer)) = (world.get::<Position>(player).map(|position| position.feet), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
     if meal.food.drunk {
-        drained(world, player, meal.food.ominous);
+        // bds-r1buckets.txt: milk drunk was heard as nothing.
+        if !meal.food.cures {
+            drained(world, player, meal.food.ominous);
+        }
         return;
     }
     // BDS's burp comes the tick after the eating is told (bds-foods3.txt, bds-small.txt).

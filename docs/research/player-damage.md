@@ -194,9 +194,9 @@ Drilled 2026-11-05 (research/captures/bds-n13play.txt, bds-n13more.txt, bds-n13i
   unhalved (impact 0.717); Blast Protection IV took about a third off the harm and nothing off the
   throw. Every blast on BDS told the hit's 0.4 knock alone, then `HurtAnimation`, then knock and push
   (bds-boom.txt, bds-ghast.txt, bds-o3wither.txt); sapling told one motion after the hurt and halved
-  TNT on easy. Fixed (`blast.rs` `explode_primed`, `struck.rs` `hit_from`). Left: sapling's impact
-  came out 0.663 against BDS's 0.717 at what looked the same spot; the drill now shows the blast's
-  `LevelEvent` to place it. Knockback I and II on a cow, and `/damage` of 10 by four causes bare, in
+  TNT on easy. With the blast's `LevelEvent` shown, a rerun placed it 1.81 from the feet: 7.769 lost,
+  impact 0.774, `1 - feet distance / 8`, the throw towards the eyes; sapling had measured from the
+  eyes (0.70). Fixed (`blast.rs` `explode_primed`, `struck.rs` `hit_from`). Knockback I and II on a cow, and `/damage` of 10 by four causes bare, in
   diamond and in Protection IV diamond, were the same on both.
 - Exhaustion: a fall, a zombie's hits and burning in fire cost none; breaking dirt and short grass
   0.005 each, a hit on a cow 0.1; sapling the same (sapling-n13play.txt).

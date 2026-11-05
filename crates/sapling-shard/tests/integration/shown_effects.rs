@@ -74,10 +74,17 @@ fn an_effect_given_by_a_command_is_first_counted_the_tick_after() {
     h.shard.add_handler_at(sapling_api::Priority::Normal, Box::new(Commanding));
     h.enter(1, "Alex");
     let told = |sent: &[RawPacket]| all::<MobEffect>(sent).iter().map(|effect| (effect.event_id.clone(), effect.duration)).collect::<Vec<_>>();
+    let ticks = |sent: &[RawPacket]| all::<MobEffect>(sent).iter().map(|effect| effect.tick).collect::<Vec<_>>();
     // bds-r1fx.txt: instant health told gone a tick after its Add; speed 30 cleared a second in told 581.
     h.receive(1, &says("heal"));
-    assert_eq!(told(h.tick_all().to(1)), [(MobEffectEventId::Add, 1)]);
-    assert_eq!(told(h.tick_all().to(1)), [(MobEffectEventId::Remove, 0)]);
+    let added = h.tick_all().to(1).to_vec();
+    assert_eq!(told(&added), [(MobEffectEventId::Add, 1)]);
+    let removed = h.tick_all().to(1).to_vec();
+    assert_eq!(told(&removed), [(MobEffectEventId::Remove, 0)]);
+    // Each is stamped with the tick it is told in, as BDS's were (bds-r1buckets.txt).
+    let [stamp] = ticks(&added)[..] else { panic!("left: one Add") };
+    assert_eq!(ticks(&removed), [stamp + 1], "left: Remove stamp");
+    assert!(stamp > 0, "left: stamp {stamp}");
     h.receive(1, &says("speed"));
     (0..20).for_each(|_| drop(h.tick_all()));
     h.receive(1, &says("clear"));

@@ -89,7 +89,7 @@ fn seen(world: &World, layer: Entity, at: [f32; 3], feet: [f32; 3], [wide, high]
 fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], feet: [f32; 3], power: f32, seen: f32, rule: Rule) -> Option<(f32, [f32; 3])> {
     let away: [f32; 3] = std::array::from_fn(|axis| eyes[axis] - at[axis]);
     let far = distance(eyes, at);
-    let measured = if matches!(rule, Rule::Plain | Rule::Primed) { far } else { distance(feet, at) };
+    let measured = if rule == Rule::Plain { far } else { distance(feet, at) };
     let impact = (1.0 - measured / (2.0 * power)) * seen;
     let harm = (impact * impact + impact) / 2.0 * HARM * 2.0 * power + if rule == Rule::Fireball { 0.0 } else { 1.0 };
     let harm = match world.resource::<Settings>().0.difficulty {
@@ -119,8 +119,9 @@ pub(crate) fn explode(world: &mut World, source: Option<Entity>, layer: Entity, 
     blow(world, source, layer, at, power, wreck, Rule::Plain);
 }
 
-/// As [`explode`], primed TNT's or a TNT minecart's: the same on every difficulty (bds-r1ench.txt:
-/// 7.106 of 60 on easy under Resistance IV, no halving), as Java scales only a mob's blast.
+/// As [`explode`], primed TNT's or a TNT minecart's: measured from the feet and the same on every
+/// difficulty (bds-r1ench.txt: TNT 1.81 from the feet cost 7.769 of 60 on easy under Resistance IV,
+/// impact 0.774, and threw towards the eyes by that).
 pub(crate) fn explode_primed(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
     blow(world, Some(source), layer, at, power, wreck, Rule::Primed);
 }
