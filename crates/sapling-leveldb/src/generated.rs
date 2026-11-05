@@ -130,16 +130,41 @@ pub fn generated_cauldron(pos: [i32; 3], potion: i16) -> Value {
     entity("Cauldron", pos, vec![("Items", empty()), ("PotionId", Value::Short(potion)), ("PotionType", Value::Short(-1))])
 }
 
-/// A flower pot holding the stateless plant `plant` (`minecraft:red_mushroom`).
-pub fn generated_flower_pot(pos: [i32; 3], plant: &str) -> Value {
-    // The plant's first state, as BDS saved a template's cactus (`age` 0) and a potted sapling (research/captures/bds-potsapling.txt).
+/// The plant `plant` in its first state, as BDS saved a template's cactus (`age` 0) and a potted
+/// sapling (research/captures/bds-potsapling.txt).
+fn plant_block(plant: &str) -> Value {
     let states = match plant {
         "minecraft:cactus" => vec![("age", Value::Int(0))],
         sapling if sapling.ends_with("_sapling") => vec![("age_bit", Value::Byte(0))],
         _ => Vec::new(),
     };
-    let block = compound(vec![("name", string(plant)), ("states", compound(states)), ("version", Value::Int(crate::states::STATE_VERSION))]);
-    entity("FlowerPot", pos, vec![("PlantBlock", block)])
+    compound(vec![("name", string(plant)), ("states", compound(states)), ("version", Value::Int(crate::states::STATE_VERSION))])
+}
+
+/// A flower pot holding the plant `plant` (`minecraft:red_mushroom`).
+pub fn generated_flower_pot(pos: [i32; 3], plant: &str) -> Value {
+    entity("FlowerPot", pos, vec![("PlantBlock", plant_block(plant))])
+}
+
+/// A chest with no loot holding `items` (sapling-worldgen `BlockEntity::Chest`'s list), as BDS
+/// saved a mansion's: `Findable` 0, each item with its slot and, a plant, its block.
+pub fn generated_chest(pos: [i32; 3], items: &str) -> Value {
+    let item = |spec: &str| {
+        let words: Vec<&str> = spec.split(' ').collect();
+        let [slot, count, name, more @ ..] = words.as_slice() else { panic!("a chest item: {spec}") };
+        let mut fields = vec![("Count", Value::Byte(count.parse().expect("a count"))), ("Damage", Value::Short(0)), ("Name", string(name)), ("Slot", Value::Byte(slot.parse().expect("a slot"))), ("WasPickedUp", Value::Byte(0))];
+        if more.contains(&"block") {
+            fields.insert(0, ("Block", plant_block(name)));
+        }
+        let enchants: Vec<Value> = more.iter().filter_map(|word| word.strip_prefix("ench=")?.split_once(':')).map(|(id, level)| compound(vec![("id", Value::Short(id.parse().expect("an id"))), ("lvl", Value::Short(level.parse().expect("a level")))])).collect();
+        if !enchants.is_empty() {
+            fields.push(("tag", compound(vec![("ench", Value::List(List { tag: 10, items: enchants }))])));
+        }
+        compound(fields)
+    };
+    let stacks: Vec<Value> = items.split(';').filter(|spec| !spec.is_empty()).map(item).collect();
+    let items = if stacks.is_empty() { empty() } else { Value::List(List { tag: 10, items: stacks }) };
+    entity("Chest", pos, vec![("Findable", Value::Byte(0)), ("Items", items)])
 }
 
 #[cfg(test)]
@@ -170,5 +195,17 @@ mod tests {
         assert_eq!(keys(&generated_flower_pot([0, 0, 0], "minecraft:red_mushroom")), ["BlockEntityVersion", "PlantBlock", "id", "x", "y", "z"]);
         let cactus = generated_flower_pot([0, 0, 0], "minecraft:cactus");
         assert_eq!(cactus.get("PlantBlock").and_then(|plant| plant.get("states")).and_then(|states| states.get("age")), Some(&Value::Int(0)));
+    }
+
+    #[test]
+    fn a_mansion_chest_keeps_its_items_as_bds_saved_them() {
+        let empty_chest = generated_chest([0, 0, 0], "");
+        assert_eq!(keys(&empty_chest), ["BlockEntityVersion", "Findable", "Items", "id", "x", "y", "z"]);
+        assert_eq!(empty_chest.get("Items"), Some(&empty()));
+        let chest = generated_chest([0, 0, 0], "8 1 minecraft:allium block;10 1 minecraft:iron_axe ench=15:1");
+        let Some(Value::List(items)) = chest.get("Items") else { panic!("items") };
+        assert_eq!(keys(&items.items[0]), ["Block", "Count", "Damage", "Name", "Slot", "WasPickedUp"]);
+        assert_eq!(items.items[0].get("Block").and_then(|block| block.get("name")), Some(&string("minecraft:allium")));
+        assert_eq!((items.items[1].get("Slot"), keys(&items.items[1]).last().map(String::as_str)), (Some(&Value::Byte(10)), Some("tag")));
     }
 }

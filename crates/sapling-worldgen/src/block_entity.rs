@@ -24,6 +24,9 @@ pub enum BlockEntity {
     Cauldron(i16),
     /// A flower pot and the plant in it (`minecraft:red_mushroom`; templates' by templates_to_rust.py).
     FlowerPot(&'static str),
+    /// A chest with no loot and the items its template put in it, `slot count name` (then `block`,
+    /// `ench=<id>:<level>`) each, joined by `;` (templates_to_rust.py `chest_item`); a mansion's.
+    Chest(&'static str),
 }
 
 impl BlockEntity {
@@ -50,6 +53,7 @@ impl BlockEntity {
             Self::Bell => name == "bell",
             Self::Cauldron(_) => name == "cauldron",
             Self::FlowerPot(_) => name == "flower_pot",
+            Self::Chest(_) => matches!(name, "chest" | "trapped_chest"),
         }
     }
 }

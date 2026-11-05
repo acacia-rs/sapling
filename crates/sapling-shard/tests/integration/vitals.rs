@@ -81,7 +81,9 @@ fn lava_kills_a_player_who_leaves_what_it_held_and_rises_whole_at_the_spawn() {
         told.extend(sent.to(1).to_vec());
         seen.extend(sent.to(2).to_vec());
     }
-    assert_eq!(health(&told), [16.0, 12.0, 8.0, 4.0, 0.0], "1 of the fire and 4 of the lava each half second");
+    assert_eq!(health(&told), [19.0, 16.0, 12.0, 8.0, 4.0, 0.0], "1 of the fire, the lava's 4 from the next tick each half second");
+    let hurts: Vec<i32> = events(&told).into_iter().filter(|(id, _)| *id == EntityEventEventId::HurtAnimation).map(|(_, data)| data).collect();
+    assert_eq!(hurts, [6, 8, 8, 8, 8], "caught fire, then the lava's hits alone (bds-g7lava.txt)");
     assert_eq!(health(&seen), health(&told));
     assert_eq!(all::<DeathInfo>(&told).into_iter().map(|info| (info.cause, info.messages)).collect::<Vec<_>>(), [("death.attack.lava".to_owned(), vec!["Alex".to_owned()])]);
     assert_eq!(all::<Respawn>(&told).into_iter().map(|respawn| respawn.state).collect::<Vec<_>>(), [0]);

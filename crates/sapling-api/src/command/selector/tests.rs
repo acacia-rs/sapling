@@ -198,6 +198,15 @@ fn who_filters_test_names_kinds_tags_and_players() {
 }
 
 #[test]
+fn the_older_villager_names_take_the_newer_villagers() {
+    let villager = mob(7, "villager_v2", [0.0; 3]);
+    let Ok(Selector::Variable(_, filters)) = parsed("@e[type=villager]") else { panic!() };
+    let Ok(Selector::Variable(_, newer)) = parsed("@e[type=villager_v2]") else { panic!() };
+    let Ok(Selector::Variable(_, zombie)) = parsed("@e[type=zombie_villager]") else { panic!() };
+    assert_eq!([&filters, &newer, &zombie].map(|filters| super::matching::passes(filters, &villager, [0.0; 3])), [true, true, false]);
+}
+
+#[test]
 fn a_type_that_rules_players_out_is_known() {
     let excludes = |line: &str| parsed(line).unwrap().excludes_players();
     assert_eq!(["@e[type=pig]", "@e[type=!player]", "@e[type=player]", "@e[type=!pig]", "@a", "Alex"].map(excludes), [true, true, false, false, false, false]);

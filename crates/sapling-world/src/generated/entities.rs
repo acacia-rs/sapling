@@ -1,9 +1,9 @@
 //! Generated block entities (spawners, loot containers, trial spawners, vaults, beds, bells,
-//! cauldrons, flower pots) as BDS saves them.
+//! cauldrons, flower pots, a mansion's chests) as BDS saves them.
 
 use acacia_proto::nbt::{self, LittleEndian, Nbt, Value};
 use bytes::BytesMut;
-use sapling_leveldb::{generated_bed, generated_bell, generated_cauldron, generated_flower_pot, generated_loot, generated_pot, generated_spawner, generated_trial_spawner, generated_vault};
+use sapling_leveldb::{generated_bed, generated_bell, generated_cauldron, generated_chest, generated_flower_pot, generated_loot, generated_pot, generated_spawner, generated_trial_spawner, generated_vault};
 use sapling_worldgen::{BlockEntity, ChunkShape};
 
 /// `entity` of the block `block` (its name) at world position `pos`.
@@ -18,6 +18,7 @@ pub(crate) fn block_entity_nbt(pos: [i32; 3], block: &str, entity: BlockEntity) 
         BlockEntity::Bell => generated_bell(pos),
         BlockEntity::Cauldron(potion) => generated_cauldron(pos, potion),
         BlockEntity::FlowerPot(plant) => generated_flower_pot(pos, plant),
+        BlockEntity::Chest(items) => generated_chest(pos, items),
     })
 }
 

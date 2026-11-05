@@ -101,6 +101,7 @@ impl Reader {
             "bell" => BlockEntity::Bell,
             "cauldron" => BlockEntity::Cauldron(-1),
             "flower_pot" => BlockEntity::FlowerPot(self.short_str()),
+            "chest" => BlockEntity::Chest(self.short_str()),
             kind => panic!("templates.bin: unknown block entity {kind}"),
         }
     }

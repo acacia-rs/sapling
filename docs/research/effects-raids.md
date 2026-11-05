@@ -268,7 +268,7 @@ only by slaying, the bottle's particles, `/setblock` bells and beds keeping thei
   160 ticks on: `ominous_item_spawner.spawn_item_begin` as it came,
   `about_to_spawn_item` 27 ticks on, and at 62 ticks its item (an arrow thrown down at 1.29, a lingering
   potion dropped at 0.5) with `spawn_item` and the spawner gone. Not ported: sapling has no ominous item
-  spawner (`spawners/trial/ominous.rs` TODO).
+  spawner (`spawners/trial/ominous.rs` TODO); BDS's rule is in spawners.md, "Ominous item spawners".
 
 Drilled the same: a bell rung with a slowed pillager 4 off sent nothing for the pillager (bds-fx3.txt),
 as sapling (Bedrock has no glowing).

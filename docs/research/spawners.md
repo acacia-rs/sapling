@@ -166,3 +166,27 @@ Left out:
   middle), and a spawn is told as both puffs, then the mob, then `trial_spawner.spawn_mob`. Fixed
   (`spawners/trial/waves.rs`, `trial.rs`).
 - `/effect @s trial_omen 120 0` by an active spawner turned it ominous on neither in 30 s.
+
+## Ominous item spawners
+
+Decompiled 2026-11-05 (twelfth7; TrialSpawner tick 1411923a0, spawn 141197c30, spot 141199cf0, item roll
+1411990f0, entity tick 1429fa630); captures bds-u1omen.txt. Not ported (`spawners/trial/ominous.rs` TODO).
+
+- When: an active spawner with `ominous` set, at `level.currentTick % 160 == 0` (the world's tick, not the
+  spawner's), one at most; it needs a detected player alive, not creative, within `required_player_range`.
+- Over whom: a level-random coin picks the current mobs if any, else the detected players (the same filter);
+  `nextInt(n)` one. From its head attach point A, E = A + (0, nextInt(4) + 2, 0); a block clip A to E: on a
+  hit the spot is the hit cell's middle one lower, else E raw. Fails in A's cell or its box. [U] the first
+  capture spot's +0.02 in y.
+- Item: the ominous config's `items_to_drop_when_ominous` (default
+  `loot_tables/spawners/trial_chamber/items_to_drop_when_ominous.json`: a lingering potion of wind_charged,
+  oozing, weaving, infested, strength, swiftness or slow_falling; an arrow, poison arrow, strong slowness
+  arrow, 1-3 fire or 1-3 wind charges), rolled once and kept, by MT19937 seeded
+  `u = floor(z/30) 0x6ebfff5 ^ floor(y/20) ^ floor(x/30) 0x2fc20f`, then `(u 0x285b825 + 0xb) u + seed`; each
+  spawn takes one kept stack weighted by count.
+- The entity (type 0x91): AddEntity at the spot, flags 0, 0.6 by 1.8, still; `MinecartDisplayBlock` the item
+  compound, `MinecartDisplayOffset` its delay, `nextInt(61) + 60`; `spawn_item_begin` there and LevelEvent 3612
+  at the trial spawner with 1. At 35 ticks left `about_to_spawn_item`; at 0 the item's projectile shot down
+  (0, -1, 0) (an arrow at about 1.29 with spread, a lingering potion at (0, -0.5, 0)), else a one-count item
+  dropped, then `spawn_item` and the entity gone in that tick. [U] each item's dispense power and spread, and
+  whether a stack of charges throws one.

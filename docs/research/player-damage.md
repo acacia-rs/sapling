@@ -219,7 +219,12 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
   experience dropped (not under `keepInventory`), the death screen, rising at the world's spawn.
 - A fall costs each block begun past three, less the move the player lands in, which BDS does not
   count: 12 blocks cost the bot 8, its last tick's 1.19 left out; 6 cost 3.
-- Fire and lava in one tick are told as one health (16), where BDS told 19 and then 16.
+- In lava (bds-g7lava.txt, `bds_command_probe g7lava`, 2026-11-05): BDS tells its catching fire (6, 1)
+  the tick it comes, then the next tick lava's (8, 4 over the guard), then 8 every 10 ticks and no fire
+  tick (7) till it is out. Sapling told 6 and 8 in one tick (health 16) and 7s in the lava; fixed in
+  `vitals/stand.rs` (the lava's hit before the fire's own, once lit), test `vitals` lava; re-drilled the
+  same unwarded (sapling-g7lava.txt). Left: under resistance 255 BDS's player put in lava set around it
+  showed 8 at once and no 6, and two 7s after where sapling shows 6, 8 and one 7.
 - Run against sapling (research/captures/sapling-hurt.txt, sapling-smother.txt) the drills show the same
   flashes, causes and rhythm; the health differs where BDS mends (those runs were before sapling mended)
   or `/effect` heals, which sapling lacks.

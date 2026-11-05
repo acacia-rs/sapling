@@ -73,7 +73,14 @@ rate (twelfth5): BDS 6, 6 and 10 of 12 (`bds-orepace2.txt`; 48 of 72 with the fi
 `TICK_SCALE` 1 4, 7 and 4 (`sapling-orepace.txt`). The formula at the drill chunk's n = 3 (1755 ticks)
 gives 51% out in 63 s: sapling's 42% is a standard error under it, BDS's 67% nearly three over, while
 BDS's `ores` (16 of 25 in 90 s), `firepace` and `g3rate` fit it. Left open: no rule found that ends lit ore
-faster at rule 1 on BDS; the next step is a lit ore's life read off a patched BDS's random-tick picks. A fire aging must not count as a new fire, or it
+faster at rule 1 on BDS; the next step is a lit ore's life read off a patched BDS's random-tick picks.
+Decompiled 2026-11-05 (twelfth7): a lit ore's `randomTick` (144bc1f20) puts it out at its first random
+tick, with no other path; the picks come from `LevelChunk::tickImpl` (1409f98a0): `floor(2.5 n) x rule`
+a subchunk, layer 1 only under a flag, no cell ticked twice. That gives 50% a round (36 of 72) against
+BDS's 48, the excess front-loaded (9 out in the first 2 s against 1.6 expected), as if the rule's 0 to 1
+step gave more picks. Left open: reading the picks live needs a Linux ptrace port of the
+`scripts/bds_dbg*` debugger (Windows only); the probe is a breakpoint after the cell decode in 1409f98a0
+and on the Linux build's counterpart of 144bc1f20, counted over the first 2 s after the rule goes to 1. A fire aging must not count as a new fire, or it
 ticks again a step on: before that fix fire over stone went in 3.0 s at 4.
 
 What burns is told by tag and name with the Java game's numbers (`burns` in `blocks/fire.rs`).
