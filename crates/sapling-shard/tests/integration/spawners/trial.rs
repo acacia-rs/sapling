@@ -83,3 +83,17 @@ fn bad_omen_turns_to_trial_omen_and_the_spawner_ominous() {
     let events: Vec<_> = common::all::<acacia_proto::packets::LevelEvent>(&sent).into_iter().map(|event| (event.event.to_raw(), event.data, event.position.x)).filter(|(id, ..)| matches!(id, 3615 | 3616)).collect();
     assert_eq!(events, [(3616, 0, 3.0), (3615, 1, 3.0)]);
 }
+
+#[test]
+fn an_ominous_spawner_drops_an_item_spawner_over_its_player_which_lets_its_item_go() {
+    let mut h = chamber();
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, sapling_api::Effect::TrialOmen, 6000, 0, true)));
+    let sent: Vec<_> = (0..300).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let carriers: Vec<_> = common::all::<acacia_proto::packets::AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:ominous_item_spawner").collect();
+    let carrier = carriers.first().expect("an ominous item spawner");
+    let delay = carrier.metadata.iter().find(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::MinecartDisplayOffset).map(|item| item.value.clone());
+    assert!(matches!(delay, Some(acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Int(60..=120)))), "{delay:?}");
+    let heard: Vec<_> = common::all::<acacia_proto::packets::LevelSoundEvent>(&sent).into_iter().map(|sound| sound.sound_id).filter(|name| name.starts_with("ominous_item_spawner.")).collect();
+    assert_eq!(heard, ["ominous_item_spawner.spawn_item_begin", "ominous_item_spawner.about_to_spawn_item", "ominous_item_spawner.spawn_item"]);
+    assert!(common::all::<acacia_proto::packets::RemoveEntity>(&sent).iter().any(|removed| removed.entity_id_self == carrier.unique_id), "gone with its item");
+}

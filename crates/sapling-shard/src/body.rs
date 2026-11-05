@@ -204,7 +204,12 @@ impl Body {
         self.rise_onto_low_block(level);
         if let Some(speed) = self.thrown.take() {
             self.motion = speed;
-            let moved = [speed[0], speed[1] + std::mem::take(&mut self.lift), speed[2]];
+            let lift = std::mem::take(&mut self.lift);
+            if lift > 0.0 {
+                // A leap is off the ground at once: BDS's breeze kept its launch speed across (bds-g10breeze.txt).
+                self.stood = false;
+            }
+            let moved = [speed[0], speed[1] + lift, speed[2]];
             self.on_ground = self.travel(level, physics, moved);
             return moved;
         }

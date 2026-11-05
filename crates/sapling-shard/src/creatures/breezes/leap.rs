@@ -7,10 +7,12 @@
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
 
+use sapling_api::Effect;
+
 use crate::blocks::Dice;
 use crate::body::Body;
 use crate::components::{Layer, Position};
-use super::super::{hunting, legs};
+use super::super::{afflictions, hunting, legs};
 
 /// It leaps at prey further than the first and nearer than the second.
 const VALID: [f32; 2] = [4.0, 20.0];
@@ -26,6 +28,8 @@ const SEES_OVER: i32 = 4;
 const ANGLES: [f32; 5] = [40.0, 55.0, 60.0, 75.0, 80.0];
 const FASTEST: f32 = 1.4;
 const GRAVITY: f32 = 0.08;
+/// Jump boost's power a level, added after the solve (research/captures/bds-g10breeze.txt, V: 0.5).
+const BOOST: f32 = 0.1;
 
 /// The speed of a leap at prey standing at `feet`, picked as the breeze readies; none where it
 /// may not leap.
@@ -35,6 +39,7 @@ pub(super) fn pick(world: &mut World, entity: Entity, layer: Entity, body: &Body
         return None;
     }
     let looks = looks(world, entity);
+    let boost = afflictions::level(world, entity, Effect::JumpBoost).map_or(0.0, |level| BOOST * f32::from(level + 1));
     world.get_resource_or_insert_with(Dice::default);
     world.resource_scope(|world, mut dice: Mut<Dice>| {
         let level = &world.get::<Layer>(layer)?.world;
@@ -56,8 +61,15 @@ pub(super) fn pick(world: &mut World, entity: Entity, layer: Entity, body: &Body
         for at in 1..angles.len() {
             angles.swap(at, dice.roll(at as u32 + 1) as usize);
         }
-        angles.into_iter().find_map(|angle| launch(body.at, to, angle))
+        angles.into_iter().find_map(|angle| launch(body.at, to, angle)).map(|speed| boosted(speed, boost))
     })
+}
+
+/// `speed` with jump boost's `boost` added along it, kept to its rise (149fb78e0 after the solve).
+fn boosted([x, y, z]: [f32; 3], boost: f32) -> [f32; 3] {
+    let length = (x * x + y * y + z * z).sqrt();
+    let up = if length >= 1e-4 { y / length } else { 0.0 };
+    [x, y + boost * up, z]
 }
 
 /// The yaw the breeze's prey looks along; BDS's default where it has none is 0.
@@ -113,5 +125,15 @@ mod tests {
         assert!(close(launch(first, aim(first, [0, -18, -2]), 40.0).unwrap(), [0.0, 0.501_268, 0.597_478]));
         let fourth = [2.521_084, -19.0, -4.122_596];
         assert!(close(launch(fourth, aim(fourth, [-1, -18, -3]), 80.0).unwrap(), [-0.126_371, 0.891_687, 0.093_629]));
+    }
+
+    #[test]
+    fn jump_boost_lifts_a_launch_by_its_power_along_it() {
+        // bds-g10breeze.txt's three launches under jump boost V: 55, 75 and 40 degrees solved, 0.5 added.
+        for (angle, across, shown) in [(55.0_f32, 0.521_81_f32, 1.154_72_f32), (75.0, 0.250_25, 1.416_84), (40.0, 0.705_74, 0.913_46)] {
+            let rise = across * angle.to_radians().tan();
+            let [_, y, _] = boosted([across, rise, 0.0], 0.5);
+            assert!((y - shown).abs() < 5e-4, "{angle}: {y} against {shown}");
+        }
     }
 }

@@ -1,0 +1,284 @@
+## drill starts at 1793845156412
+## /kill @e[type=!player]
+     18 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1018 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1018 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1018 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /weather clear
+   2019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2019 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+## /difficulty easy
+   3019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"EASY\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3019 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["EASY"]
+   3169 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   3169 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /gamemode creative @s
+   4018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4018 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4018 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /gamemode creative CmdWatcher
+   5019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.other\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"},{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5019 actor   CommandOutput success_count=1 data=None commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+## /effect @s clear
+   6067 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive.all success=false ["CmdActor"]
+## /clear @s
+   7068 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /fill -8 -27 -8 16 -27 8 stone
+   8124 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"425\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8127 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["425"]
+## /fill -8 -26 -8 16 -16 8 air
+   9088 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s 0.5 -26 0.5 -90 0
+  10047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10047 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10047 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+## /tp CmdWatcher 0.5 -26 0.5
+  11047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11047 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+## /
+## /fill 2 -26 -1 4 -26 1 glass
+  13047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"9\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13048 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["9"]
+## /setblock 3 -26 0 lava
+  14049 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: -26, z: 0 }, block_runtime_id: 2765474998, flags: UpdateBlockFlags(3), layer: 0 }
+  14049 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14049 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 3, y: -26, z: 0 }, block_runtime_id: 2765474998, flags: UpdateBlockFlags(3), layer: 0 }
+  14049 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /fill -4 -26 -1 -2 -26 1 glass
+  15048 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"9\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15048 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["9"]
+  15997 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  15997 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /setblock -3 -26 0 water
+  16049 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: -3, y: -26, z: 0 }, block_runtime_id: 1211861802, flags: UpdateBlockFlags(3), layer: 0 }
+  16049 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: -3, y: -26, z: 0 }, block_runtime_id: 1211861802, flags: UpdateBlockFlags(3), layer: 0 }
+  16049 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  16049 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode survival @s
+  17096 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  17097 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  17097 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /effect @s resistance 120 255 true
+  18096 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success\",\"with\":{\"rawtext\":[{\"text\":\"%potion.resistance\"},{\"text\":\"255\"},{\"text\":\"CmdActor\"},{\"text\":\"120\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18096 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 11, amplifier: 255, particles: false, duration: 2400, tick: 0, ambient: false }
+  18096 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Add, effect_id: 11, amplifier: 255, particles: false, duration: 2400, tick: 0, ambient: false }
+  18096 actor   CommandOutput success_count=1 data=None commands.effect.success success=true ["%potion.resistance", "255", "CmdActor", "120"]
+## /
+## /tp @s 3.5 -26 0.5
+  20072 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"3.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20072 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "3.50", "-26.00", "0.50"]
+  20072 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  20072 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"3.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20072 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  20563 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  20564 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  21073 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  21073 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  21565 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  21565 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  22070 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  22070 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  22568 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  22569 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /tp @s -2.5 -26 0.5
+  23085 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  23086 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  23307 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-2.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23307 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-2.50", "-26.00", "0.50"]
+  23307 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-2.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /tp @s 6.5 -26 0.5
+  26121 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"6.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26122 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"6.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  26122 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "6.50", "-26.00", "0.50"]
+## /
+## /setblock 6 -26 0 lava
+  28123 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 2765474998, flags: UpdateBlockFlags(3), layer: 0 }
+  28123 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  28123 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 2765474998, flags: UpdateBlockFlags(3), layer: 0 }
+  28123 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28123 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  28123 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  28614 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  28615 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  28973 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  28973 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+  29116 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  29117 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  29613 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  29613 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  30111 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  30111 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  30610 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  30611 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /fill 5 -26 -1 7 -26 1 air
+  31112 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+  31112 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  31112 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+  31112 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+  32059 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 7, fire_at_position: None }
+  32060 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 7, fire_at_position: None }
+## /tp @s -2.5 -26 0.5
+  32110 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-2.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32111 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-2.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32111 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-2.50", "-26.00", "0.50"]
+## /
+## /
+## /tp @s 3.5 -26 0.5
+  35262 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"3.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35262 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  35262 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"3.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35262 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "3.50", "-26.00", "0.50"]
+  35263 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  35768 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  35769 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  36266 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  36267 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  36765 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  36765 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  37265 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  37266 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  37764 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  37765 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /tp @s -2.5 -26 0.5
+  38263 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-2.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  38264 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-2.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  38264 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-2.50", "-26.00", "0.50"]
+## /
+## /
+## /tp @s 6.5 -26 0.5
+  41259 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"6.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41259 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"6.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41259 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "6.50", "-26.00", "0.50"]
+  41760 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  41761 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /
+## /setblock 6 -26 0 lava
+  43261 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 2765474998, flags: UpdateBlockFlags(3), layer: 0 }
+  43261 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  43261 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  43261 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 2765474998, flags: UpdateBlockFlags(3), layer: 0 }
+  43261 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  43261 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  43760 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  43760 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  44259 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  44260 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  44759 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  44760 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  45261 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  45261 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  45761 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  45761 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /fill 5 -26 -1 7 -26 1 air
+  46262 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+  46262 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  46262 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+  46262 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+  47209 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 7, fire_at_position: None }
+  47209 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 7, fire_at_position: None }
+## /tp @s -2.5 -26 0.5
+  47261 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-2.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47262 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-2.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47262 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-2.50", "-26.00", "0.50"]
+## /
+## /
+## /tp @s 3.5 -26 0.5
+  50262 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"3.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50262 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  50262 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"3.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50262 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "3.50", "-26.00", "0.50"]
+  50262 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  50762 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  50762 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  51260 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  51260 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  51761 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  51761 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  52261 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  52261 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  52762 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  52762 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /tp @s -2.5 -26 0.5
+  53577 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  53577 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  53611 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-2.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  53612 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-2.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  53612 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-2.50", "-26.00", "0.50"]
+  54560 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  54561 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /
+## /
+## /tp @s 6.5 -26 0.5
+  56613 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"6.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  56614 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"6.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  56614 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "6.50", "-26.00", "0.50"]
+## /
+## /setblock 6 -26 0 lava
+  58614 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 2765474998, flags: UpdateBlockFlags(3), layer: 0 }
+  58614 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  58614 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  58614 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 2765474998, flags: UpdateBlockFlags(3), layer: 0 }
+  58614 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  58614 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 6, fire_at_position: None }
+  59111 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  59111 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  59612 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  59612 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  60110 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  60111 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /
+  60611 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  60611 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  61112 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+  61112 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 8, fire_at_position: None }
+## /fill 5 -26 -1 7 -26 1 air
+  61617 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+  61617 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  61617 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 6, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(2), layer: 0 }
+  61617 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["1"]
+  62561 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 7, fire_at_position: None }
+  62561 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: HurtAnimation, data: 7, fire_at_position: None }
+## /tp @s -2.5 -26 0.5
+  62612 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-2.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  62613 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-2.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  62613 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-2.50", "-26.00", "0.50"]
+## /
+## /
+## /effect @s clear
+  65663 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.effect.success.removed.all\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  65663 watcher MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 11, amplifier: 255, particles: false, duration: 1452, tick: 0, ambient: false }
+  65664 actor   MobEffect MobEffect { runtime_entity_id: 1, event_id: Remove, effect_id: 11, amplifier: 255, particles: false, duration: 1452, tick: 0, ambient: false }
+  65664 actor   CommandOutput success_count=1 data=None commands.effect.success.removed.all success=true ["CmdActor"]
+## /tp @s 0.5 -26 0.5
+  66663 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  66663 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  66663 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+  67362 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  67362 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+## /gamemode creative @s
+  67662 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  67662 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  67662 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /fill -8 -26 -8 16 -16 8 air
+  68763 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"18\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  68763 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["18"]
+## /
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1

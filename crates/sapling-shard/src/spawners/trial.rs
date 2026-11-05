@@ -6,7 +6,10 @@
 
 mod configs;
 mod ominous;
+mod ominous_items;
 mod waves;
+
+pub(super) use ominous_items::tick as carry;
 
 use std::collections::HashSet;
 
@@ -143,6 +146,9 @@ pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fiel
     }
     if matches!(state, WAITING_FOR_PLAYERS | ACTIVE) && waves::scans(pos, now) && !halted(world, layer) {
         trial.told |= ominous::awaken(world, layer, pos, near, &mut trial, now);
+    }
+    if state == ACTIVE && trial.ominous && !halted(world, layer) {
+        ominous_items::drop_over(world, layer, pos, near, &trial, now);
     }
     let to = match state {
         INACTIVE => Some(WAITING_FOR_PLAYERS),

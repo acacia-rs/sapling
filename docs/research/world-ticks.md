@@ -158,9 +158,16 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
   the face it hit (7.875 against BDS's 8.0, its box against BDS's ray). Fixed 2026-11-05: a shot stops
   where the ray from its position along its move enters a block's collision box (`creatures/flight/ray.rs`),
   the hit point and the face's axis going to `shot_stopped`; re-drilled, sapling's stuck at 8.0
-  (sapling-u1fire.txt). Sapling's panes collide as their posts only, so a ray passes between them
-  (the blaze test's wall is a slab row now). Left: on BDS the flame arrow that primed the TNT bounced back at
-  about -0.1 of its motion and fell to the floor (x 6.05), where sapling's stays stuck in the air.
+  (sapling-u1fire.txt). Panes (g10pane, 2026-11-05): a filled row stopped both servers' arrows on the
+  connected arm (x 8.4375) and a lone pane let both pass to the wall behind (x 12), so sapling's panes collide
+  as BDS's; the posts-only case was the blaze test's `set_block`, which reshapes no neighbour.
+- Flame arrow at TNT (bds-g10flame.txt): the tick it meets the TNT BDS tells `SoundIgnite` and leaves the
+  arrow on the face unstuck; the next, the TNT is primed, `bow.hit` told, and the arrow, meeting the primed
+  TNT, goes -0.1 times its motion without moving; it flies back from the tick after. A block's hit
+  (`bow.hit`, then an arrow's `ArrowShake` 7) is told the tick after it sticks. An arrow whose block is set to
+  air lies a tick more, then falls from rest and sticks below. Ported (`flight.rs`, `stuck.rs`,
+  `flight/in_way.rs`; tests `shot_blocks`); re-drilled the same (sapling-g10flame.txt) but for one tick:
+  sapling primes the TNT in the tick the arrow meets it, BDS the tick after.
 
 ## Coral fan by hand
 

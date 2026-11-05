@@ -80,7 +80,10 @@ a subchunk, layer 1 only under a flag, no cell ticked twice. That gives 50% a ro
 BDS's 48, the excess front-loaded (9 out in the first 2 s against 1.6 expected), as if the rule's 0 to 1
 step gave more picks. Left open: reading the picks live needs a Linux ptrace port of the
 `scripts/bds_dbg*` debugger (Windows only); the probe is a breakpoint after the cell decode in 1409f98a0
-and on the Linux build's counterpart of 144bc1f20, counted over the first 2 s after the rule goes to 1. A fire aging must not count as a new fire, or it
+and on the Linux build's counterpart of 144bc1f20, counted over the first 2 s after the rule goes to 1.
+Left again 2026-11-05 (twelfth10), not cheap: the testbox BDS is a stripped Linux ELF (clang) with no
+symbols, so both breakpoints need 1409f98a0 and 144bc1f20 found anew in it by hand (MSVC labels do not carry
+over), on top of the ptrace port. A fire aging must not count as a new fire, or it
 ticks again a step on: before that fix fire over stone went in 3.0 s at 4.
 
 What burns is told by tag and name with the Java game's numbers (`burns` in `blocks/fire.rs`).
