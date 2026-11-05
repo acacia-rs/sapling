@@ -31,7 +31,7 @@ const IDS: &[(&str, u32)] = &[
     ("crimson_forest", 179), ("warped_forest", 180), ("basalt_deltas", 181), ("jagged_peaks", 182), ("frozen_peaks", 183),
     ("snowy_slopes", 184), ("grove", 185), ("meadow", 186), ("lush_caves", 187), ("dripstone_caves", 188),
     ("stony_peaks", 189), ("deep_dark", 190), ("mangrove_swamp", 191), ("cherry_grove", 192), ("pale_garden", 193),
-    ("sulfur_caves", 194),
+    ("sulfur_caves", 194), ("dappled_forest", 195),
 ];
 
 /// The biomes whose climate's `snow_accumulation` starts above 0, from BDS's packs: what

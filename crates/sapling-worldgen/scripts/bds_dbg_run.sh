@@ -3,6 +3,8 @@
 # tools/worldgen-oracle/run.sh with BDS started under bds_dbg.py: generates the chunk regions and leaves
 # <out dir>/dbg/ (dbg.log, trace-*.txt), <out dir>/worldgen.log and, after a clean stop, <out dir>/world/.
 # One run at a time per BDS copy (a lock dir guards it); ports $WORLDGEN_PORT and the next (default 19290).
+# A Linux copy runs under gdb with bds_gdb.py, whose configs differ (data/dbg_canon_linux.json); WORLDGEN_EXE names
+# the executable in the copy (default bedrock_server.exe, else bedrock_server; e.g. a patched bedrock_server.canon).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 bds=${WORLDGEN_BDS:?set WORLDGEN_BDS to your own BDS copy}
@@ -48,7 +50,12 @@ deadline=$((SECONDS + limit))
   until grep -qE 'WORLDGEN done|Quit correctly' "$log" || [ $SECONDS -ge $deadline ]; do sleep 1; done
   echo stop
   until grep -q 'Quit correctly' "$log" || [ $SECONDS -ge $deadline ]; do sleep 1; done
-} | (cd "$bds" && timeout "$limit" py -3 -s "$here/bds_dbg.py" "$bds/bedrock_server.exe" "$cfg" "$out/dbg") >"$log" 2>&1 || true
+} | if [ -f "$bds/bedrock_server.exe" ]; then
+  (cd "$bds" && timeout "$limit" py -3 -s "$here/bds_dbg.py" "$bds/${WORLDGEN_EXE:-bedrock_server.exe}" "$cfg" "$out/dbg")
+else
+  (cd "$bds" && LD_LIBRARY_PATH=. BDS_GDB_CFG="$cfg" BDS_GDB_LOG="$out/dbg/dbg.log" timeout "$limit" gdb -q -batch \
+    -ex 'set disable-randomization on' -x "$here/bds_gdb.py" -ex run --args "./${WORLDGEN_EXE:-bedrock_server}")
+fi >"$log" 2>&1 || true
 grep -E 'WORLDGEN (done|.*(error|retry))' "$log" | head -5 || true
 if grep -q 'Quit correctly' "$log"; then cp -r "$bds/worlds/$level" "$out/world"; fi
 echo "$(grep -c '^hit' "$out/dbg/dbg.log") hits logged in $out/dbg/dbg.log"

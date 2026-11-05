@@ -1,0 +1,8 @@
+{"hits": true, "breakpoints": [
+ {"at": "0x517ab30", "label": "load", "mem": [["rsi", 80, "ii"]]},
+ {"at": "0xc970f80", "label": "structfeat", "ints": ["r8", "r9"]},
+ {"at": "0x517cd10", "label": "deco", "mem": [["rsi", 416, "i"], ["rsi", 424, "i"]]},
+ {"at": "0x5181650", "label": "decorate"},
+ {"at": "0xd2ecbfd", "label": "draw", "regs": ["rax"]},
+ {"at": "0xd2ece1c", "label": "draw", "regs": ["rax"]}
+]}

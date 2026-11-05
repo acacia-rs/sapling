@@ -80,6 +80,10 @@ pub fn replay(generator: &mut sapling_worldgen::OverworldGenerator) -> Option<Ve
     if let Ok(color) = std::env::var("SAPLING_ORACLE_DEAD_CORAL") {
         sapling_worldgen::OverworldGenerator::set_dead_coral(color.parse().expect("a coral colour 0..5"));
     }
+    // A canon made on the Linux BDS (its env.txt).
+    if std::env::var_os("SAPLING_ORACLE_LINUX").is_some() {
+        sapling_worldgen::platform::follow_linux_bds();
+    }
     let rows = read(std::env::var("SAPLING_ORACLE_ORDER").ok()?);
     let order: Vec<(i32, i32)> = rows.iter().map(|row| (row[0] as i32, row[1] as i32)).collect();
     let spent: Vec<Option<u32>> = rows.iter().map(|row| row.get(2).map(|&draws| draws as u32)).collect();

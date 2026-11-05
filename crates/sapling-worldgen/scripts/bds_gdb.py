@@ -6,9 +6,13 @@ Config: {"log": "<out file>", "breakpoints": [...]}, each breakpoint
     {"at": "0xcf63820", "label": "ore tick",
      "mem": [["rsi", 8, "iii"], ["rdi", 8, "Q", [0]]],   # register, offset, struct format, pointer hops first
      "box": [0, x0, y0, z0, x1, y1, z1],                  # keep hits whose mem[0] lies in the box
-     "backtrace": 4}                                      # return addresses, ELF-relative
+     "backtrace": 4,                                      # return addresses, ELF-relative
+     "gates": "draws", "when": [[-263], [-392]],          # enable breakpoints labelled "draws" while mem == when
+     "gated": true}                                       # start disabled, for a gates breakpoint to enable
 Addresses are the ELF's own (bds_elf.py prints them); the image loads at BASE with randomization off. Each
-hit is one line: wall time, label, thread, the mem values, the backtrace.
+hit is one line: wall time, label, thread, the mem values, the backtrace. With "hits": true in the config the
+lines are bds_dbg.py's (`hit <label> t<thread> ... rax=<hex> [reg+off]=(...)`), which dbg_loads.py reads
+(data/dbg_canon_linux.json). BDS_GDB_LOG overrides the config's log path.
 """
 
 import json
@@ -22,7 +26,7 @@ BASE = 0x555555554000
 REGS = ("rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15")
 
 cfg = json.load(open(os.environ["BDS_GDB_CFG"]))
-out = open(cfg.get("log", "gdb-hits.log"), "a", buffering=1)
+out = open(os.environ.get("BDS_GDB_LOG") or cfg.get("log", "gdb-hits.log"), "a", buffering=1)
 
 
 def read(inferior, reg, off, fmt, hops=()):
@@ -45,6 +49,7 @@ class Logged(gdb.Breakpoint):
     def __init__(self, spec):
         super().__init__(f"*{BASE + int(spec['at'], 16):#x}", internal=True)
         self.spec = spec
+        self.enabled = not spec.get("gated")
 
     def stop(self):
         spec, inferior = self.spec, gdb.selected_inferior()
@@ -52,10 +57,23 @@ class Logged(gdb.Breakpoint):
             values = [read(inferior, *m) for m in spec.get("mem", [])]
         except gdb.MemoryError as error:
             values = [f"unreadable: {error}"]
+        if spec.get("gates"):
+            wanted = [list(v) for v in values] == spec["when"]
+            for other in LOGGED:
+                if other.spec.get("label") == spec["gates"]:
+                    other.enabled = wanted
         box = spec.get("box")
         if box and not isinstance(values[0], tuple):
             return False
         if box and not all(lo <= v <= hi for v, lo, hi in zip(values[box[0]], box[1:4], box[4:7])):
+            return False
+        if cfg.get("hits"):
+            regs = [f"{r}={int(gdb.parse_and_eval('$' + r)) & 0xFFFFFFFFFFFFFFFF:x}" for r in spec.get("regs", [])]
+            mems = [f"[{m[0]}+{m[1]:x}]={v}" for m, v in zip(spec.get("mem", []), values)]
+            # "ints": registers holding an int argument (a ChunkPos passed in r8d, r9d), logged as one-int tuples
+            mems += [f"[{r}]=({struct.unpack('<i', struct.pack('<I', int(gdb.parse_and_eval('$' + r)) & 0xFFFFFFFF))[0]},)"
+                     for r in spec.get("ints", [])]
+            out.write(" ".join([f"hit {spec['label']} t{gdb.selected_thread().num}"] + regs + mems) + "\n")
             return False
         line = [f"{time.time():.3f}", spec.get("label", spec["at"]), str(gdb.selected_thread().num)]
         line += [" ".join(map(str, v)) if isinstance(v, tuple) else v for v in values]
@@ -71,6 +89,5 @@ for name in ("SIGPIPE", "SIGUSR1", "SIGUSR2", "SIG32", "SIG33", "SIG34", "SIG35"
     gdb.execute(f"handle {name} nostop noprint pass", to_string=True)
 gdb.execute("set pagination off")
 gdb.execute("set confirm off")
-for spec in cfg["breakpoints"]:
-    Logged(spec)
+LOGGED = [Logged(spec) for spec in cfg["breakpoints"]]
 out.write(f"# {time.time():.3f} armed {len(cfg['breakpoints'])} breakpoints\n")

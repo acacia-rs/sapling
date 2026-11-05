@@ -12,7 +12,7 @@ log=$run/dbg/dbg.log
 [ -d "$run/world" ] || { echo "$run/world missing: the run did not stop cleanly" >&2; exit 1; }
 orders=(--structure-order "$run/structure-order.txt")
 if grep -q '^hit decorate ' "$log"; then orders+=(--order "$run/order.txt"); fi
-py -3 -I "$here/../crates/sapling-worldgen/scripts/dbg_loads.py" "$log" "${orders[@]}"
+python3 -I "$here/../crates/sapling-worldgen/scripts/dbg_loads.py" "$log" "${orders[@]}"
 remote=replay-worlds/$name
 tar czf - -C "$run" world $(cd "$run" && ls structure-order.txt order.txt 2>/dev/null) |
   ssh -o ConnectTimeout=20 testbox "rm -rf $remote && mkdir -p $remote && tar xzf - -C $remote && mv $remote/world $remote/$world && ln -s $world $remote/$world-run2 && ls $remote"

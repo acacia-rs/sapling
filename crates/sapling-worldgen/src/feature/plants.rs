@@ -82,7 +82,9 @@ pub fn may_place(view: &View, [x, y, z]: [i32; 3], block: Block) -> bool {
     let double = matches!(block, Block::TallGrass | Block::LargeFern | Block::Sunflower | Block::Lilac | Block::RoseBush | Block::Peony);
     let there = view.block(x, y, z);
     // A bee nest searching up a mangrove meets the tree's own roots (oracle: the root stays).
-    let open = there == Block::Air || there.is_fluid() || there.is_snow_layer() ||super::tree::common::is_replaceable_plant(there);
+    // A plant that can't contain liquid stays out of water (dappled canon: red shrub).
+    let wet = there.is_fluid() && (block.is_waterlogged() || !block.is_plant());
+    let open = there == Block::Air || wet || there.is_snow_layer() || super::tree::common::is_replaceable_plant(there);
     open && can_survive(view, [x, y, z], block) && (!double || view.block(x, y + 1, z) == Block::Air)
 }
 

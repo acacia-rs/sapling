@@ -61,6 +61,7 @@ pub fn is_replaceable_plant(block: Block) -> bool {
             | Block::ShortDryGrass
             | Block::TallDryGrass
             | Block::Bush
+            | Block::RedShrub
             | Block::Seagrass
             | Block::SeagrassBottom
             | Block::SeagrassTop

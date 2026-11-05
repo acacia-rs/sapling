@@ -1,5 +1,5 @@
 //! `minecraft:horizontal_tree_decoration_feature` (place 149e8ca80; shelf mushrooms on poplar
-//! logs): the block on one random side of the log it is placed at. Unverified, as poplar.rs.
+//! logs): the block on one random side of the log it is placed at. Judged as poplar.rs.
 
 use super::fallen::FACINGS;
 use super::spec::HorizontalDecoration;

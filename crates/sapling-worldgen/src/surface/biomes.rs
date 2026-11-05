@@ -280,6 +280,11 @@ pub fn surface_spec(biome: u32) -> Option<SurfaceSpec> {
             adjustments: &[], steep: None,
         },
         194 => return None, // sulfur_caves: noise_gradient (surface_gradient)
+        195 => SurfaceSpec { // dappled_forest
+            builder: Builder::Overworld, sea_floor_depth: 7, temperature: 0.6,
+            materials: Materials { top: Block::GrassBlock, mid: Block::Dirt, sea_floor: Block::Gravel, foundation: Block::Stone, sea: Block::Water },
+            adjustments: &[Adjustment { noise_scale: 0.22, range: [0.3, 1.0], top_material: Some(Block::CoarseDirt), mid_material: None, sea_floor_material: None, foundation_material: None }], steep: None,
+        },
         _ => return None,
     })
 }

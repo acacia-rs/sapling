@@ -2,7 +2,7 @@
 //! the passes, `BiomeDecorationSystem::decorate` (14580bb90) the chunk's biomes in palette order,
 //! `decorateBiome` (14580b170) each biome's rules for the pass.
 
-use super::data::{FEATURES, RULES};
+use super::data::{FEATURES, LINUX_ORDER, RULES};
 use super::molang::{Molang, Scope, World};
 use super::place::Ctx;
 use super::scatter::{self, Draws};
@@ -52,13 +52,15 @@ pub fn decorate_chunk(seed: &LargeFeatureSeed, chunk: (i32, i32), inputs: Inputs
     let order = if corner { vec![own.biome(15, 127, 15)] } else { palette_order(&own) };
     let mut source = Source { chunk, chunk_seed, random: Mt19937::new(chunk_seed), inputs };
     let mut scope = Scope::new();
+    let linux = crate::platform::linux();
+    let rules = || (0..RULES.len()).map(move |i| &RULES[if linux { LINUX_ORDER[i] as usize } else { i }]);
     for pass in Pass::ALL {
         for &biome in &order {
             // `decorateBiome` sets the origin once for the biome's rules; a scatter feature then leaves its own (place.rs).
             scope.set_origin([chunk.0 * 16, 0, chunk.1 * 16]);
             // With one biome BDS places every position without looking up its biome.
             let only = (order.len() > 1).then_some(biome);
-            for rule in RULES.iter().filter(|rule| rule.pass == pass && rule.biomes.contains(biome)) {
+            for rule in rules().filter(|rule| rule.pass == pass && rule.biomes.contains(biome)) {
                 run(rule, &mut source, only, &own, view, &mut scope);
             }
         }

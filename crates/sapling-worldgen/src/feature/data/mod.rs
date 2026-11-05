@@ -6,4 +6,4 @@ mod features;
 mod rules;
 
 pub use features::{ELEMENTS, FEATURES, NAMES};
-pub use rules::RULES;
+pub use rules::{LINUX_ORDER, RULES};
