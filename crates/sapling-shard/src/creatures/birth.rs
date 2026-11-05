@@ -62,7 +62,7 @@ fn spawn_with(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reas
     if let Some(event) = event {
         riders::arrive(world, entity, kind, event);
     }
-    super::spawn_gear::arm(world, entity, kind);
+    super::spawn_gear::arm(world, entity, kind, event);
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
     super::captains::arm(world, entity, kind, event);

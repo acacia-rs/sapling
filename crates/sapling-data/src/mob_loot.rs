@@ -12,8 +12,10 @@ use crate::enchant::{self, Draws};
 use crate::recipes::{Station, smelted};
 
 mod item_data;
+mod regional;
 
 pub use item_data::Looted;
+pub use regional::{Regional, moon_fullness, special_multiplier};
 
 static LOOT: LazyLock<Value> = LazyLock::new(|| serde_json::from_str(include_str!("../data/mob-loot.json")).expect("mob-loot.json is JSON"));
 
@@ -29,6 +31,8 @@ pub enum Killer {
 struct Death {
     on_fire: bool,
     killer: Killer,
+    /// Where a born mob's equipment is rolled; tables run for no mob's birth know no difficulty.
+    regional: Option<Regional>,
 }
 
 impl Death {
@@ -80,7 +84,7 @@ impl Roll<'_> {
 pub fn mob_loot(kind: &str, on_fire: bool, killer: Killer, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u32)> {
     let mut left = Vec::new();
     if let Some(table) = LOOT["entities"][kind].as_str() {
-        run(table, Death { on_fire, killer }, &mut Roll { draws: &mut Fractions(roll), bds_order: false }, &mut left);
+        run(table, Death { on_fire, killer, regional: None }, &mut Roll { draws: &mut Fractions(roll), bds_order: false }, &mut left);
     }
     counted(left)
 }
@@ -98,15 +102,22 @@ pub fn table_loot(table: &str, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u3
 /// [`table_loot`] as `killer` sees it, as `/loot ... loot <table> <tool>` runs a table.
 pub fn table_loot_for(table: &str, killer: Killer, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u32)> {
     let mut left = Vec::new();
-    run(table, Death { on_fire: false, killer }, &mut Roll { draws: &mut Fractions(roll), bds_order: false }, &mut left);
+    run(table, Death { on_fire: false, killer, regional: None }, &mut Roll { draws: &mut Fractions(roll), bds_order: false }, &mut left);
     counted(left)
+}
+
+/// What a mob's equipment table gives it at its birth under `regional`, enchanted where it says.
+pub fn gear_loot(table: &str, regional: Regional, roll: &mut dyn FnMut() -> f32) -> Vec<Looted> {
+    let mut left = Vec::new();
+    run(table, Death { on_fire: false, killer: Killer::None, regional: Some(regional) }, &mut Roll { draws: &mut Fractions(roll), bds_order: false }, &mut left);
+    left
 }
 
 /// [`table_loot`] drawing from BDS's `Random` in BDS's order, the stacks in the order BDS makes
 /// them, with the item data the tables set (item_data.rs).
 pub fn drawn_table_loot(table: &str, draws: &mut dyn Draws) -> Vec<Looted> {
     let mut left = Vec::new();
-    run(table, Death { on_fire: false, killer: Killer::None }, &mut Roll { draws, bds_order: true }, &mut left);
+    run(table, Death { on_fire: false, killer: Killer::None, regional: None }, &mut Roll { draws, bds_order: true }, &mut left);
     left
 }
 
@@ -116,9 +127,19 @@ pub fn has_loot_table(table: &str) -> bool {
 }
 
 fn run(table: &str, death: Death, roll: &mut Roll, left: &mut Vec<Looted>) {
-    let Some(pools) = LOOT["tables"][table]["pools"].as_array() else { return };
-    for pool in pools {
+    run_pools(&LOOT["tables"][table]["pools"], death, roll, left);
+}
+
+/// A table's pools, or those an item entry runs after its item (an armour set's next piece).
+fn run_pools(pools: &Value, death: Death, roll: &mut Roll, left: &mut Vec<Looted>) {
+    for pool in pools.as_array().into_iter().flatten() {
         if !holds(&pool["conditions"], death, roll) {
+            continue;
+        }
+        if pool.get("tiers").is_some() {
+            if let Some(entry) = regional::tier(pool, roll.draws) {
+                take(entry, death, roll, left);
+            }
             continue;
         }
         let rolls = roll.number(&pool["rolls"]);
@@ -178,12 +199,18 @@ fn take(entry: &Value, death: Death, roll: &mut Roll, left: &mut Vec<Looted>) {
                             item_data::apply(function, &mut looted, roll.draws);
                         }
                     }
-                    // TODO: the other functions' item data (damage, gear enchantments, trims), and their draws.
+                    Some("enchant_random_gear") => {
+                        if let Some(regional) = death.regional {
+                            item_data::enchant_gear(function["chance"].as_f64().unwrap_or(0.0) as f32, regional.multiplier, &mut looted, roll.draws);
+                        }
+                    }
+                    // TODO: the other functions' item data (damage, trims), and their draws.
                     _ => {}
                 }
             }
             if looted.count > 0 {
                 left.push(looted);
+                run_pools(&entry["pools"], death, roll, left);
             }
         }
         Some("loot_table") => run(name, death, roll, left),
@@ -200,6 +227,8 @@ fn holds(conditions: &Value, death: Death, roll: &mut Roll) -> bool {
             let [chance, per_level] = [&condition["chance"], &condition["looting_multiplier"]].map(|value| value.as_f64().unwrap_or(0.0) as f32);
             roll.draws.float() < enchant::looting_chance(chance, per_level, death.looting())
         }
+        Some("random_difficulty_chance") => death.regional.is_some_and(|regional| roll.draws.float() < regional::difficulty_chance(condition, regional.difficulty)),
+        Some("random_regional_difficulty_chance") => death.regional.is_some_and(|regional| roll.draws.float() < condition["max_chance"].as_f64().unwrap_or(0.0) as f32 * regional.multiplier),
         Some("killed_by_player" | "killed_by_player_or_pets") => by_player,
         Some("killed_by_entity") => by_player && condition["entity_type"] == "minecraft:player",
         Some("entity_properties") => death.on_fire && condition["entity"] == "this" && condition["properties"] == serde_json::json!({"on_fire": true}),

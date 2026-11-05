@@ -107,6 +107,15 @@ pub(super) fn hands(world: &World, piglin: Entity) -> Option<[Option<ItemStack>;
     world.get::<Hands>(piglin).map(|hands| [hands.main.clone(), hands.off.clone()])
 }
 
+/// A new piglin holds `item` in its main hand; false for any other kind.
+pub(super) fn hold(world: &mut World, piglin: Entity, item: &ItemStack) -> bool {
+    if world.get::<Kind>(piglin).is_none_or(|kind| kind.0 != PIGLIN) {
+        return false;
+    }
+    world.entity_mut(piglin).insert(Hands { main: Some(item.clone()), off: None });
+    true
+}
+
 /// A stored piglin's hands become its own, no longer shown from its stored look.
 pub(super) fn adopt(world: &mut World, piglin: Entity) {
     if world.get::<Kind>(piglin).is_none_or(|kind| kind.0 != PIGLIN) {

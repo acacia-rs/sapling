@@ -26,8 +26,6 @@ const SEA_LEVEL: i32 = 63;
 const SLIME_CHUNK_TOP: i32 = 39;
 /// The levels swamp slimes appear at.
 const SWAMP: std::ops::Range<i32> = 50..69;
-/// How full the moon is on each day of its cycle, swamp slimes' odds (bds-blocks `14a75c000`).
-const MOON: [f32; 8] = [1.0, 0.75, 0.5, 0.25, 0.0, 0.25, 0.5, 0.75];
 
 /// Whether `kind` may appear at `found` by BDS's code; rolls natural spawning's dice for a swamp slime.
 pub(super) fn admits(world: &mut World, layer: Entity, kind: &str, found: &Found) -> bool {
@@ -51,7 +49,7 @@ fn slime(world: &mut World, layer: Entity, found: &Found) -> bool {
     }
     let roll = dice.fraction();
     let Some(time) = world.get::<Layer>(layer).map(|layer| layer.world.level().time) else { return false };
-    roll < MOON[(time / 24_000).unsigned_abs() as usize % MOON.len()] && sapling_data::biome_has_tag(found.biome, "swamp")
+    roll < sapling_data::moon_fullness(time) && sapling_data::biome_has_tag(found.biome, "swamp")
 }
 
 /// Whether a mob of `kind` with its feet `at` in `cell` passes its class's own spawn check: a
