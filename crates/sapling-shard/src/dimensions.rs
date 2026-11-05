@@ -22,18 +22,27 @@ const WORLD_EDGE: f32 = 30_000_000.0;
 #[derive(Component, Clone, Copy, Default)]
 pub(crate) struct Realm(pub [Option<Entity>; 3]);
 
-/// The dimension a player's client is in, and the id of its next loading screen: BDS counts a
-/// player's dimension changes from 0.
+/// The dimension a player's client is in.
 #[derive(Component, Clone, Copy, Default)]
 pub(crate) struct ClientDimension {
     pub dimension: i32,
-    next_screen: u32,
 }
 
 impl ClientDimension {
     pub fn new(dimension: i32) -> Self {
-        Self { dimension, next_screen: 0 }
+        Self { dimension }
     }
+}
+
+/// The id of the next loading screen: BDS counts every player's dimension changes from 0 in one
+/// run, on through rejoins (research/captures/bds-w1screens.txt: 0 to 7 over two players).
+#[derive(Resource, Default)]
+struct LoadingScreens(u32);
+
+fn next_screen(world: &mut World) -> Option<u32> {
+    let mut screens = world.get_resource_or_insert_with(LoadingScreens::default);
+    screens.0 += 1;
+    Some(screens.0 - 1)
 }
 
 /// A dimension change under way: until its columns near the player are sent, then until the
@@ -108,10 +117,7 @@ pub(crate) fn crosses(world: &World, player: Entity, layer: Entity) -> bool {
 /// feet at `feet`, as BDS moves one: what it saw goes, then ChangeDimension with a new loading
 /// screen; its columns follow, and its inputs are not taken until it says it arrived.
 pub(crate) fn change(world: &mut World, player: Entity, layer: Entity, feet: [f32; 3]) {
-    let screen = world.get_mut::<ClientDimension>(player).map(|mut client| {
-        client.next_screen += 1;
-        client.next_screen - 1
-    });
+    let screen = next_screen(world);
     if !switch(world, player, layer, feet, feet, screen, false) {
         return;
     }
@@ -124,10 +130,7 @@ pub(crate) fn change(world: &mut World, player: Entity, layer: Entity, feet: [f3
 /// does (research/captures/bds-dragon-home.txt): ChangeDimension to [`UNFOUND`] with `respawn`
 /// and a counted loading screen; it is told where it rises once it says it is there.
 pub(crate) fn go_home(world: &mut World, player: Entity, home: Entity, feet: [f32; 3]) {
-    let screen = world.get_mut::<ClientDimension>(player).map(|mut client| {
-        client.next_screen += 1;
-        client.next_screen - 1
-    });
+    let screen = next_screen(world);
     if !switch(world, player, home, feet, UNFOUND, screen, true) {
         return;
     }

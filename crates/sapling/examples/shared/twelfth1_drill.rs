@@ -1,5 +1,6 @@
 //! The twelfth wave's group 4 drills (research/parity/TWELFTH-BRIEF.md): calves of a Nether or
-//! End cow sent into the overworld and an overworld cow (`w1inherit`).
+//! End cow sent into the overworld and an overworld cow (`w1inherit`); two players' loading screens
+//! about a rejoin (`w1screens`); a book page's longest kept length (`w1pages`).
 
 use super::creatures::{waits, with};
 
@@ -8,12 +9,40 @@ const SHOWN: &[&str] = &[
     "MobEquipment", "MobArmorEquipment", "UpdateBlock", "BlockEntityData", "CommandOutput", "Text",
 ];
 
+const SCREENS: &[&str] = &["ChangeDimension", "CommandOutput", "PlayStatus", "Respawn"];
+const PAGES: &[&str] = &["CommandOutput", "Disconnect"];
+
 /// The drill called `name` of this file.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
         "w1inherit" => (inherited(), SHOWN),
+        "w1screens" => (screens(), SCREENS),
+        "w1pages" => (pages(), PAGES),
         _ => return None,
     })
+}
+
+/// The loading screens' numbers: the actor to the End and back, the watcher the same, then the
+/// actor again after a rejoin (BDS went on counting past one in t2ecredits).
+fn screens() -> Vec<String> {
+    let trip = |who: &str| [format!("execute as {who} in the_end run tp @s 0.5 80 40.5"), String::new(), String::new(), String::new(), format!("execute as {who} in overworld run tp @s 0.5 -26 0.5"), String::new(), String::new(), String::new()];
+    let mut lines = owned(["gamemode creative @a", "tp CmdWatcher 0.5 -26 3.5", ""]);
+    lines.extend(trip("@s"));
+    lines.extend(trip("CmdWatcher"));
+    lines.extend(owned(["!rejoin", "", "", ""]));
+    lines.extend(trip("@s"));
+    lines.extend(trip("CmdWatcher"));
+    lines
+}
+
+/// Pages of a rising length written raw into a book and read back, until BDS lets its writer go
+/// (t2ebook1: at 1000; t12book kept 513).
+fn pages() -> Vec<String> {
+    let mut lines = owned(["clear @s", "replaceitem entity @s slot.weapon.mainhand 0 writable_book", "", "!write x", ""]);
+    for length in [514, 600, 700, 768, 769, 800, 900, 999] {
+        lines.extend([format!("!rawpage {}", "d".repeat(length)), String::new(), "!inv".to_owned()]);
+    }
+    with(lines, &["clear @s"])
 }
 
 fn owned<const N: usize>(lines: [&str; N]) -> Vec<String> {

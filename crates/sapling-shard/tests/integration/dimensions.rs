@@ -87,6 +87,17 @@ fn a_move_into_the_nether_and_back_goes_as_on_bds() {
 }
 
 #[test]
+fn loading_screens_are_counted_over_every_player() {
+    // research/captures/bds-w1screens.txt: the actor's trips 0 and 1, the watcher's 2 and 3.
+    let mut h = two_players();
+    h.remote.run(|ctx| assert!(ctx.travel(ALEX, NETHER, [0.5, 70.0, 0.5])));
+    let first = h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.travel(PlayerId(2), NETHER, [0.5, 70.0, 0.5])));
+    let second = h.tick_all();
+    assert_eq!([all::<ChangeDimension>(first.to(1)).remove(0).loading_screen_id, all::<ChangeDimension>(second.to(2)).remove(0).loading_screen_id], [Some(0), Some(1)]);
+}
+
+#[test]
 fn a_dimension_shares_its_overworlds_time_and_rules() {
     let mut h = two_players();
     h.remote.run(|ctx| assert!(ctx.travel(ALEX, NETHER, [0.5, 70.0, 0.5])));
