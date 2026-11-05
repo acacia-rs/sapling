@@ -21,8 +21,11 @@ use crate::labels::Labels;
 use crate::view::View;
 
 pub(crate) mod gone;
+mod linked;
 pub(crate) mod moved;
 mod rehomed;
+
+pub(crate) use linked::Linked;
 
 pub(crate) use rehomed::rehome;
 use rehomed::placed;
@@ -248,7 +251,7 @@ const SHOWN_WITHIN: i32 = 4;
 /// Adds the mobs whose column came within each player's [`SHOWN_WITHIN`] circle and removes those
 /// that left it or are gone. A player whose view stayed where it was while no mob came or went is
 /// skipped.
-pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query<(&Mob, &NetId, Option<&Labels>)>) {
+pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query<(&Mob, &NetId, Option<&Labels>, Option<&Linked>)>) {
     for (stage, in_layer, view, mut sees, mut out, hidden) in &mut viewers {
         let made_for = Some((view.moves(), grid.changes));
         if *stage != Stage::InWorld || sees.made_for == made_for {
@@ -256,9 +259,11 @@ pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query
         }
         let mut covered: Vec<(Entity, u64)> = grid.grid.within(in_layer.0, view, SHOWN_WITHIN).copied().filter(|(entity, _)| !Hidden::hides(hidden, *entity)).collect();
         covered.sort_unstable_by_key(|(_, id)| *id);
-        let new: Vec<_> = covered.iter().filter(|(entity, _)| !sees.mobs.contains_key(entity)).filter_map(|(entity, _)| mobs.get(*entity).ok()).collect();
-        for (mob, id, labels) in &new {
-            out.0.extend_from_slice(&mob.announcement);
+        let new: Vec<Entity> = covered.iter().map(|(entity, _)| *entity).filter(|entity| !sees.mobs.contains_key(entity) && mobs.contains(*entity)).collect();
+        let rides = |mob: Entity| mobs.get(mob).ok()?.3?.rides.as_ref().map(|(mount, drives, _)| (*mount, *drives));
+        let new: Vec<_> = linked::order(&new, rides).into_iter().filter_map(|entity| mobs.get(entity).ok()).collect();
+        for (mob, id, labels, linked) in &new {
+            out.0.extend(linked::dressed(&mob.announcement, *linked));
             out.0.extend(crate::labels::packet(*labels, id.0));
         }
         for (mob, ..) in &new {

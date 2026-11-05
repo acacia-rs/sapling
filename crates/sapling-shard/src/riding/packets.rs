@@ -21,8 +21,11 @@ pub(super) enum LinkKind {
 }
 
 pub(super) fn link(vehicle: u64, rider: u64, kind: LinkKind, immediate: bool) -> Bytes {
-    let link = Link { ridden_entity_id: vehicle as i64, rider_entity_id: rider as i64, r#type: kind as u8, immediate, rider_initiated: true, angular_velocity: 0.0 };
-    sapling_net::encode(&SetEntityLink { link })
+    sapling_net::encode(&SetEntityLink { link: link_of(vehicle, rider, kind, immediate) })
+}
+
+pub(super) fn link_of(vehicle: u64, rider: u64, kind: LinkKind, immediate: bool) -> Link {
+    Link { ridden_entity_id: vehicle as i64, rider_entity_id: rider as i64, r#type: kind as u8, immediate, rider_initiated: true, angular_velocity: 0.0 }
 }
 
 fn item(key: Key, value: Plain) -> Item {
@@ -42,10 +45,15 @@ fn data(id: u64, metadata: Vec<Item>) -> Bytes {
 
 /// The rider `id`'s seat, `position` against its vehicle; with its turn held, all of BDS's items.
 pub(super) fn seat(id: u64, seat: &Seat, position: [f32; 3], whole: bool) -> Bytes {
+    data(id, seat_items(seat, position, whole))
+}
+
+/// [`seat`]'s metadata items.
+pub(super) fn seat_items(seat: &Seat, position: [f32; 3], whole: bool) -> Vec<Item> {
     let [x, y, z] = position;
     let mut metadata = vec![item(Key::RiderSeatPosition, Plain::Vec3f(Vec3f { x, y, z }))];
     if !whole {
-        return data(id, metadata);
+        return metadata;
     }
     match seat.lock {
         Some(lock) => {
@@ -56,7 +64,7 @@ pub(super) fn seat(id: u64, seat: &Seat, position: [f32; 3], whole: bool) -> Byt
         }
         None => metadata.push(item(Key::RiderMaxRotation, Plain::Float(FREE_TURN))),
     }
-    data(id, metadata)
+    metadata
 }
 
 /// The whole word of an entity's flags.

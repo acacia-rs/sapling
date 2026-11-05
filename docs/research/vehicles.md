@@ -26,7 +26,12 @@ were not found in any of these; sapling does what is listed there.
   driver's seat, 2 any other (LL). REC (bds-mounts.txt): a click mount sends `LevelSoundEvent mount`, the rider's
   seat `SetEntityData` and the link with `immediate` false, `rider_initiated` true.
 - Remove link (BDSRE 1457bd1f0): `immediate` = the passenger is being destroyed; `rider_initiated` = it left by
-  `Interact LeaveVehicle` or was bucked off.
+  `Interact LeaveVehicle` or was bucked off. Sapling sends `immediate` when a rider is forgotten (killed or
+  removed): `riding.rs` `forget`.
+- Mobs shown with a mount (REC bds-h3herds.txt): the driver's `AddEntity` (seat items in its metadata), its
+  equipment and its link, then the mount's `AddEntity` with the riders' links inside, the link again, then the
+  mount's data. A passenger keeps its own place. Sapling: `mobs/linked.rs` (order, dressing) filled by
+  `riding/announced.rs`; a player rider's seat still goes out as its own `SetEntityData`.
 - A rider's data: `RiderSeatPosition` (seat in the vehicle frame plus the rider's height), `RiderRotationLocked`,
   `RiderMaxRotation` (the seat's `lock_rider_rotation`), `RiderSeatRotationOffset` (`rotate_rider_by`; the boat's −90).
 - Rider height above its seat (REC): player +1.22001 (its wire position is at the eyes), zombie −0.5, cow 0.
@@ -126,7 +131,8 @@ were not found in any of these; sapling does what is listed there.
 ## Unverified
 
 - The links' `immediate`/`rider_initiated` for a non-click mount; type 2 for a second rider.
-- The add link's order against `SetEntityData` for later viewers: sapling sends seats and links after AddEntity.
+- The add link's order against `SetEntityData` for later viewers when the rider is a player (mob riders: "Links
+  and seats").
 - A minecart's stored `Pos`: kept where the wire puts it, as a boat's (a boat on y -26 was kept at
   -25.625, as shown; research/captures/bds-t2ekeep-dump.txt; `actors.rs` `compound_now`).
 - A placed minecart's height on its rail (box bottom on the rail block's floor here; BDS spawns at y + 0.5 then snaps).
