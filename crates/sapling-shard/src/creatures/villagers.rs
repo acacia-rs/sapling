@@ -4,8 +4,8 @@
 //! llamas and the timer it leaves by (wandering.rs).
 //! A villager keeps its pack's day (schedule.rs), sleeps in a bed it claims (beds.rs), flees what
 //! it fears and hides at a bell (fear.rs); a player's standing with its village (standing.rs); its
-//! village's iron golems (golems.rs, golem_spawns.rs).
-// TODO: villager breeding (husbandry) is to arm its baby with `arm(.., Some("minecraft:entity_born"))`.
+//! village's iron golems (golems.rs, golem_spawns.rs). It picks up food (pantry.rs) and breeds by it
+//! (love.rs).
 
 mod beds;
 mod conversion;
@@ -14,6 +14,8 @@ mod fear;
 mod golem_spawns;
 mod golems;
 mod jobs;
+mod love;
+mod pantry;
 mod schedule;
 mod standing;
 mod storage;
@@ -37,6 +39,7 @@ use deals::Deal;
 pub(super) use conversion::{hasten_cures, infect, kept_through_turning, turned};
 pub(crate) use fear::alarm;
 pub(super) use golem_spawns::tick as spawn_golems;
+pub(super) use pantry::put as put_in_pantry;
 pub(super) use standing::{hit as hurt_standing, outlaw};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};
 
@@ -196,7 +199,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity) -> bool {
 /// Before the trader's move: one with a customer stands still; a villager hides, flees, then
 /// keeps its schedule, its pack's goals in their priority. False when it is free to stroll.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
-    let (Some(served), Some(body)) = (world.get::<Trader>(entity).map(|trader| trader.customer.is_some()), world.get::<Body>(entity).copied()) else { return false };
+    let (Some((served, villager)), Some(body)) = (world.get::<Trader>(entity).map(|trader| (trader.customer.is_some(), trader.leaves_at.is_none())), world.get::<Body>(entity).copied()) else { return false };
     if served && trading::keeps_customer(world, entity) {
         super::legs::rest(world, entity);
         return true;
@@ -205,7 +208,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
     if activity != Some(schedule::Activity::Bed) {
         beds::lie(world, entity, false);
     }
-    if fear::hides(world, entity, layer, &body) || fear::flees(world, entity, layer, &body) {
+    if fear::hides(world, entity, layer, &body) || fear::flees(world, entity, layer, &body) || (villager && (pantry::fetch(world, entity, layer, &body) || love::court(world, entity, layer, &body))) {
         return true;
     }
     match activity {

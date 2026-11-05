@@ -121,11 +121,14 @@ pub(crate) fn head(kind: &str, body: &Body) -> [f32; 3] {
     [x, y + HEAD_UP * height, z + forward]
 }
 
-/// The sound `name` a mob makes as it appears, at its head: `spawn`, or a split slime's `born`.
-pub(super) fn spawn_sound(name: &str, id: u64, kind: &str, body: &Body) -> Bytes {
-    let [x, y, z] = head(kind, body);
+/// The sound `name` a mob makes as it appears, at its head, a baby's for a `baby`: `spawn`, or a
+/// split slime's or bred baby's `born`.
+pub(super) fn spawn_sound(name: &str, id: u64, kind: &str, body: &Body, baby: bool) -> Bytes {
+    let mut sized = *body;
+    sized.size = sapling_data::mob_look(kind, baby).filter(|_| baby).map_or(body.size, |(size, _)| size);
+    let [x, y, z] = head(kind, &sized);
     let position = Vec3f { x, y, z };
-    let sound = LevelSoundEvent { sound_id: name.into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    let sound = LevelSoundEvent { sound_id: name.into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: baby, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
     sapling_net::encode(&sound)
 }
 

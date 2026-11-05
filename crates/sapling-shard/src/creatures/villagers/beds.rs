@@ -46,6 +46,19 @@ pub(super) fn decide(level: &Level, claimed: &mut Claimed, trader: &mut Trader, 
     }
 }
 
+/// A village's reach for its free beds, across and up or down, in place of BDS's village bounds.
+const VILLAGE_ACROSS: i32 = 32;
+const VILLAGE_UP: i32 = 4;
+
+/// Whether a bed no villager claimed is within a village's reach of `feet` (bds-g11nobed.txt: none
+/// bred with every bed taken).
+pub(super) fn one_free(world: &World, layer: Entity, feet: [f32; 3]) -> bool {
+    let (Some(level), Some(claimed)) = (world.get::<crate::components::Layer>(layer).map(|layer| &layer.world), world.get_resource::<Claimed>()) else { return false };
+    let [x, y, z] = feet.map(|c| c.floor() as i32);
+    let free = |cell: [i32; 3]| jobs::block_at(level, cell) == Some(BED) && is_head(level, cell) && !claimed.sites.contains_key(&(layer, cell));
+    (-VILLAGE_UP..=VILLAGE_UP).any(|dy| (-VILLAGE_ACROSS..=VILLAGE_ACROSS).any(|dz| (-VILLAGE_ACROSS..=VILLAGE_ACROSS).any(|dx| free([x + dx, y + dy, z + dz]))))
+}
+
 /// The middle of the top of the villager's bed, if it has one.
 pub(super) fn own(world: &World, entity: Entity) -> Option<[f32; 3]> {
     let [x, y, z] = world.get::<Trader>(entity)?.bed?;

@@ -250,52 +250,39 @@ per check: BDS `0 1 1 1 2 1 2 3 3 3 3 3 2 1 1 1 1 1`, sapling before `1 3 3 3 3 
 after `0 0 0 0 0 0 0 2 2 2 2 2 1 1 1 1 0 0`: no early rush to bed; BDS's single early sleeper and its third
 bed-goer not matched (strolls are random on both).
 
-## Not drilled
+## Breeding
 
-- Gathering and the other schedule goals' walks beyond the home and bed counts above; standing's
-  numbers (no packet shows them).
-- Fear in the open: `n1fear` (bds-n1fear.txt, sapling-n1fear.txt, 2026-11-04) held a zombie still in
-  the open by two villagers: BDS's both stayed within 8 of it for 15 s, one within 4 for 9 s; sapling's
-  fled (0 or 1 within 8). Not fixed: as with the glass cage, BDS's `behavior.avoid_mob_type` did not
-  fire for a still zombie; its `canUse` (`probability_per_strength`, the target's strength) was not
-  found in the binary, and a hunting zombie was not drilled.
-  `f3fear` (2026-11-04, bds-f3fear.txt, sapling-f3fear.txt; villagers within 8 of the zombie each
-  second for 15 s): in the village by a hunting zombie BDS `2 2 1 0 ...`, sapling `1 2 2 1 1 1 0 0 1 ...`;
-  200 east with no beds or bell, still, BDS `1 0 0 ...`, sapling `0 0 ...` (both fled); there hunting, BDS
-  `3 0 0 ...` (gone in a second), sapling `3 1 3 3 2 2 2 1 ...` (never shook it off). The avoid goal was
-  decompiled (vtable 14a75d720: `canUse` 14190daa0, `findNearest` 14190d490 takes the first fitting
-  mob in its box, not the nearest; `canUse` then needs sight, a `RandomPos::getPosAvoid` spot
-  (14597bd90, kept to the mob's home and leash restriction) farther from the threat, and a path).
-  `f3fear2` (bds-f3fear2.txt; the zombie summoned 60 off, then put 4 from the pair) undid any village
-  rule: in the village both fled from a still zombie and a hunting one within 1 to 2 s, while alone one
-  villager stayed within 8 of a still zombie for 8 s and of a hunting one for most of 15 s. BDS's
-  fleeing is as often late as not, which fits a random spot search that fails; sapling flees straight
-  away at once. Not fixed: one run per case does not fit the search.
-- The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick, which matched the
-  drilled sleep and wake ticks.
-- Breeding, `f3breed` (2026-11-04, bds-f3breed.txt, sapling-f3breed.txt): two unskilled villagers in the
-  three-bed village, 24 bread dropped at their feet: BDS had a baby 96 s after the drop (at 0.5, 1.5),
-  sapling none in the 104 s watched. Neither side showed the bread as an item entity to the actor, so
-  what set BDS's pair off is not known; not fixed.
-  Rechecked 2026-11-05 (twelfth wave, group 8): sapling's villagers pick up no items and have no
-  inventory, `behavior.share_items` or `behavior.make_love`, so no pair can breed; BDS's `MakeLoveGoal`
-  has no RTTI or label (`bdsre str make_love` finds only its definition's glue, 1488b2450), so its
-  canUse (food held, free beds, timing) was not read. Not ported: one BDS baby gives no rule to fit.
-- Farmers farming, cartographers' explorer maps (map items that locate a structure), entity vibration
-  listeners (the allay's; the warden's hearing is in creatures/warden/hearing.rs) and fear's random spot
-  search (`RandomPos::getPosAvoid` 14597bd90, several runs a case to fit) were not reached in the
-  twelfth wave's group 8 (2026-11-05); the schedule walks' counts are strolls, random on both sides.
-- Job-site range: `f3poi` above (a held villager took none).
-- A baby's hurt standing (-3) moved no BDS golem within 30 s, not explained.
-- Standing from ranged kills, the +5 of 0x142445c80 (curing) and the founding reward; the aggressor a
-  golem defends against. Standing is kept as BDS's `VILLAGE_<id>_PLAYERS` (`Players`, each `ID` long and
-  `S` int; 0x142a2c140), the id sapling's village uuid and `ID` the low half of the player's uuid (sapling
-  players keep no `ActorUniqueID`).
+Drilled 2026-11-05 (twelfth wave, group 11; `examples/shared/twelfth11_drill.rs`, two unskilled
+villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g11*.txt`):
+- Food: `/replaceitem entity … slot.inventory` fills the pack's 8-slot inventory. Bred: both given 3
+  bread in one of three runs (`g11love-2`; not `g11love`, `g11love-3`), one given 24 that it shared
+  (`g11share`), 24 dropped at their feet (`g11breed-2`, `f3breed`; not `g11breed`, whose pickup came
+  late). Not bred: one given 3 (two runs), both given 2, both given 3 with one bed left (`g11nobed`), none
+  given anything over 300 s (`g11unfed`). In `g11breed-2` one villager took all the bread and took back
+  each 3 it threw its mate, so the mate need not hold food (sapling's rule; not settled).
+- The pairs that bred kept within 8 of each other and fell in love 19 to 29 s after they were fed;
+  those that did not had strolled apart (`g11love-3`: 11 to 32 off from 41 s). Sapling: a willing one
+  (3 bread, or 12 carrots, potatoes or beetroots) looks a tick in 1000 for a grown, awake mate within 8
+  with a bed free within 32 (`villagers/love.rs`, `beds.rs` `one_free`).
+- In love: `INLOVE` (flag bit 7) on both in one tick for 300 ticks; one walks to the other; both throw
+  `LoveParticles` events (BDS 4 to 20 each in the 300 ticks, at random; sapling a tick in 30); then the baby comes at the middle
+  of the walker's cell (`-4.5 -59.5 6.5` beside a walker at `-4.51, 6.05`), `INLOVE` off both, heard
+  `born` at the baby's head with `is_baby_mob` (also for animals' bred babies, `bds-llamabreed.txt`).
+  Each parent eats what made it willing and rests 6000 ticks (Java's; not drilled).
+- Pickup (`villagers/pantry.rs`): a grown villager walks to food within 3 and takes the whole stack at
+  once (`TakeItemEntity`; `g11breed-2` took 24 bread 0.45 s after the drop). Sharing (`share_items`:
+  BDS threw 3 bread each 1.5 s, which the thrower mostly took back) is not built.
+- Sapling drilled (`SAPLING_DRILL_WORLD=lowflat`): both given 3 bred in one of three runs
+  (sapling-g11love-6.txt: `INLOVE` 20.2 s after the feed, 300 ticks, the baby heard `born`; -7, -8 none,
+  their pair strolled apart), as BDS's one in three; 24 dropped was taken 0.2 s after the drop with no
+  baby (sapling-g11breed-2.txt), as BDS's `g11breed`. A first try searched free beds only within the
+  job reach (10) and never bred: the pairs strolled out of it.
+- Left: the baby is announced at the grown box and scale 1 and loses its `BABY` flag bit the next tick,
+  where BDS's comes at scale 0.5 (box 0.98 by 1.96); `summon villager … minecraft:entity_born` does the
+  same (sapling-village.txt). `data/Mobs.bin` has no baby `villager_v2` recording, so `mob_look` has none,
+  and `born` is heard at a grown head (1.62 up; BDS 0.83).
+- Test: `two_villagers_with_three_bread_each_and_a_free_bed_have_a_baby_heard_born_300_ticks_after_love`.
 
-## Left out
+## Not drilled and left out
 
-Gossip (Bedrock has none: its discounts are the cured ones of `economy_trade_table`, which a drilled
-cure did not give on BDS, `g8cured`), villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
-makes a baby's unskilled trader), explorer maps (their trades are never
-offered), the llamas' leashes and their going with their trader, a villager picking up and sharing food,
-farmers farming, cats spawning, the old trading screen.
+See villagers-open.md.
