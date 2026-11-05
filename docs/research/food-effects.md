@@ -82,9 +82,13 @@ Drilled 2026-10-29 (`research/captures/bds-foods.txt`, `bds-foods2.txt`, `bds-fo
   sapling made it instant; fixed).
 - Run against sapling (research/captures/sapling-foods.txt, sapling-foods2.txt, sapling-foods3.txt)
   after the fixes above every food's values, effects and leftovers match. Chorus fruit's
-  `teleport` sounds come before `CompletedUsingItem` on sapling, after it on BDS, and BDS told the
-  cooldown at the start only (bds-small.txt had it at the end too); left. Sapling also tells
-  hunger and saturation after a potion, which BDS did not.
+  `teleport` sounds came before `CompletedUsingItem` on sapling, after it on BDS (a tick later, the
+  burp at the new place), and BDS told the cooldown at the start only (bds-foods2.txt,
+  bds-foods3.txt; bds-small.txt had it at the end too). Sapling also told hunger and saturation
+  after a potion, and every attribute as a potion or milk was started, which BDS did not
+  (bds-drink.txt, bds-sick.txt). Fixed 2026-11-05: a food that feeds nothing tells no attributes
+  (`vitals/eating.rs` `feeds`), and the fruit scatters after the eating is told, the cooldown
+  told at the start only. The teleport still comes in the eating tick, not the next.
 
 ## Splash and lingering potions (`clouds`, `clouds2`)
 
@@ -112,5 +116,5 @@ down on the thrower, the watcher standing off along x.
 `sapling-data/src/food.rs` holds each food's effects, leftover and whether it cures;
 `vitals/eating.rs` applies them, and absorption is a ninth effect: 4 health a level on top of
 the player's own, which hits take first (`creatures/health.rs` `cushion`). Stews leave a bowl as
-in the Java game. The potions of the tables are drunk to the same effect (`consumable`) but the last four,
-whose effects the shard lacks and which are water.
+in the Java game. The potions of the tables are drunk to the same effect (`consumable`), the last four
+(43 to 46) too since the shard has wind charged, weaving, oozing and infested (33ed5347).

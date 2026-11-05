@@ -253,12 +253,14 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     assert_eq!(cushion(h.tick_all().to(2)), [1.0], "the cushion takes the hit");
     let sent = swallow(&mut h, "minecraft:milk_bucket");
     let gone: Vec<i32> = all::<MobEffect>(&sent).into_iter().filter(|effect| effect.event_id == MobEffectEventId::Remove).map(|effect| effect.effect_id).collect();
-    assert!(gone.contains(&10) && gone.contains(&22) && cushion(&sent) == [1.0, 0.0], "{gone:?}");
+    assert!(gone.contains(&10) && gone.contains(&22) && cushion(&sent) == [0.0], "{gone:?}");
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:bucket".to_owned())));
     assert!(all::<CompletedUsingItem>(h.tick_all().to(1)).is_empty());
     // A potion of strong regeneration (data 30), research/captures/bds-drink.txt.
     let sent = swallow_this(&mut h, Item { damage: 30, ..Item::new("minecraft:potion", 1) });
     assert_eq!(shown(&sent), [(MobEffectEventId::Add, 10, 450)]);
+    let fed = all::<UpdateAttributes>(&sent).iter().flat_map(|update| &update.attributes).any(|attribute| attribute.name == "minecraft:player.hunger");
+    assert!(!fed, "a potion tells no hunger");
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:glass_bottle".to_owned())));
     h.tick_all();
     // An ominous bottle of data 2: bad omen III without particles, the bottle gone (bds-ominous.txt).

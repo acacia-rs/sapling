@@ -1,6 +1,6 @@
 //! Eating and drinking: use held on a food until the shard takes it, as BDS does
 //! (docs/research/player-damage.md, "Eating"; food-effects.md).
-//! Every attribute is told as the use starts (told_all.rs).
+//! Every attribute is told as the use of a food that feeds starts (told_all.rs).
 // TODO: only survival and adventure players eat here.
 
 use acacia_proto::packets::{CompletedUsingItem, CompletedUsingItemUseMethod, EntityEvent, EntityEventEventId, LevelSoundEvent};
@@ -61,10 +61,16 @@ pub(crate) fn start(world: &mut World, player: Entity) {
     if chorus {
         crate::cooldowns::tell(world, player, CHORUS, CHORUS_COOLDOWN, false);
     }
-    if let Some(all) = super::told_all::all_attributes(world, player) {
+    if let Some(all) = super::told_all::all_attributes(world, player).filter(|_| feeds(&food)) {
         tell(world, player, &all);
     }
     show(world, player, true);
+}
+
+/// Whether a food feeds at all: BDS tells no attributes as a potion or milk is started or drunk
+/// (research/captures/bds-drink.txt, bds-sick.txt).
+fn feeds(food: &sapling_data::Food) -> bool {
+    food.hunger != 0.0 || food.saturation != 0.0
 }
 
 /// Chorus fruit cools down once eaten; BDS told it as the eating started too (research/captures/bds-small.txt).
@@ -148,10 +154,7 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
         (false, _) => CompletedUsingItemUseMethod::Eat,
     };
     let used = CompletedUsingItem { used_item_id: meal.id, use_method };
-    if holds_chorus(world, player) {
-        crate::cooldowns::tell(world, player, CHORUS, CHORUS_COOLDOWN, true);
-        super::chorus::scatter(world, player);
-    }
+    let chorus = holds_chorus(world, player);
     // BDS tells the effects first.
     afflict(world, player, &meal.food);
     world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&used);
@@ -160,9 +163,16 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
     vitals.hunger.feed(meal.food.hunger, meal.food.saturation);
     let hunger = vitals.hunger;
-    let (Some(id), Some([x, y, z])) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return };
-    tell(world, player, &hunger.told(id, now));
+    let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
+    if feeds(&meal.food) {
+        tell(world, player, &hunger.told(id, now));
+    }
     show(world, player, false);
+    // Chorus fruit's cooldown was told as it started; it scatters after the eating is told (bds-foods2.txt).
+    if chorus {
+        super::chorus::scatter(world, player);
+    }
+    let Some([x, y, z]) = world.get::<Position>(player).map(|position| position.feet) else { return };
     if meal.food.drunk {
         drained(world, player, meal.food.ominous);
         return;
