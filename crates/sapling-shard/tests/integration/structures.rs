@@ -184,6 +184,30 @@ fn start_game_tells_a_hardcore_world() {
 }
 
 #[test]
+fn a_loaded_structure_s_blocks_react_to_what_is_around_them_as_on_bds() {
+    // bds-e3turn.txt: the torch with no floor goes, the lichen keeps the face on the stone, the fence lets go.
+    let mut h = Harness::new();
+    h.enter(1, "Steve");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([0, 65, 0], &Block::new("stone")));
+        assert!(ctx.set_block([1, 65, 0], &Block::new("glow_lichen").with("multi_face_direction_bits=9")));
+        assert!(ctx.set_block([1, 65, 1], &Block::new("torch").with("torch_facing_direction=top")));
+        assert!(ctx.set_block([3, 65, 2], &Block::new("stone")));
+        assert!(ctx.set_block([2, 65, 2], &Block::new("oak_fence").with("minecraft:connection_east=1,minecraft:connection_north=0,minecraft:connection_south=0,minecraft:connection_west=0")));
+        assert_eq!(ctx.save_structure("bits", [0, 65, 0], [2, 65, 2], false, true, false), Ok(()));
+        assert_eq!(ctx.load_structure("mystructure:bits", [0, 70, 0], &StructureLoad::default()), Ok(()));
+    });
+    h.tick_all();
+    h.tick_all();
+    h.remote.run(|ctx| {
+        assert_eq!(ctx.block([1, 70, 0]), Some(Block::new("glow_lichen").with("multi_face_direction_bits=8")));
+        assert_eq!(ctx.block([1, 70, 1]), Some(Block::air()));
+        assert!(ctx.block([2, 70, 2]).is_some_and(|fence| fence.properties.contains("minecraft:connection_east=0")), "{:?}", ctx.block([2, 70, 2]));
+    });
+    h.tick_all();
+}
+
+#[test]
 fn a_player_past_the_border_is_put_back_inside() {
     let mut h = Harness::new();
     h.enter(1, "Steve");
