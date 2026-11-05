@@ -235,7 +235,8 @@ fn blocks_match_bds_canons() {
             Region::new("dappled forest", -262, -390, -259, -387),
             Region::new("dappled camp", 53, 79, 57, 83),
             Region::new("sulfur caves", -554, 510, -547, 517),
-            Region::new("sulfur spring", -752, -754, -748, -751),
+            Region::new("sulfur spring", -752, -755, -748, -751),
+            Region::new("frozen river icebergs", -753, -756, -747, -756),
         ],
     );
 }

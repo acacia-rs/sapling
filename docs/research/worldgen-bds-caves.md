@@ -45,8 +45,17 @@ springs on the surface above sulfur caves.
   - block_intersection (d280350/d280a90): every non-void cell's world block in the allowlist; air is listed.
   Placement (`StructureTemplate::placeInWorld` 141f52300/141f64f10, settings flags 0) lowers the template by
   `ground_level` and sets every non-void cell, air included. A second-layer water makes the block's waterlogged twin.
-- Canon `spring` (ac2): from 1269 cells wrong or missing over the 5x5 region to 25; that 25 is river seagrass in
-  row -755, shifted by the frozen ocean iceberg mismatch in row -756 (Left). The region is 5x4 without that row: 0.
+- Ticks: each template holds one or two potent sulfur cells with `tick_queue_data` (delays 1-729). BDS keeps them
+  on the cell's chunk for the game: the ac2 canon saved sulfur_spring_medium_2's three (85, 309, 369, with
+  `currentTick` 0) in chunk -751,-752's `PendingTicks`, none run. `View::keep_tick` → `chunk_kept_ticks` →
+  sapling-world generated/ticks.rs writes them (test `a_generated_sulfur_spring_keeps_its_potent_sulfur_ticks`).
+  The shard does not run potent sulfur ticks yet.
+- Unreachable in the 1.26.52 pack: a spring over water (every `sulfur_spring_*` feature's `block_intersection`
+  allowlist lacks water, and a refused spring only climbs on), `adjustment_radius` other than 0 and the
+  motion-blocking-only intersection (no vanilla `structure_template_feature` sets either).
+- Canon `spring` (ac2): 1269 cells wrong or missing over the 5x5 region, then 25 (river seagrass in row -755), then
+  0 once seagrass passed through ice (feature/aquatic.rs `solid`) and the iceberg x seed wrapped as on Linux
+  (worldgen-bds-linux-canons.md). Canon `iceberg` (row -756 of the same run): 102, then 0.
 
 ## Speleothems (feature/speleothem/)
 One class each for pointed dripstone and sulfur spikes, parameterised by base block, spike block and replaceable
@@ -343,13 +352,8 @@ mansion's -508,998 matches in all 997 calls although the oracle has 420 lush cel
 order again.
 
 ## Left
-- Sulfur springs: ported ("Sulfur springs" above) and judged by one spring, on grass. Not met yet: a
-  spring over water (the waterlogging branch of `placeInWorld`, settings +0x23 = 0), its potent sulfur's
-  `tick_queue_data` ticks (queued by `placeInWorld`, so decoration runs them; sapling queues none), the
-  motion-blocking-only intersection and a non-zero `adjustment_radius` (features_data.py refuses both).
-- Frozen ocean icebergs on Linux: the spring canon's chunks -748..-747,-756 have ours one or two cells higher
-  than BDS's (packed ice against water at the floor, air at the top), as if the `temperature > 0.1` lowering
-  differed (surface/frozen.rs). Its river seagrass shifted into row -755, which the spring region leaves out.
+- Sulfur springs: ported and judged by one spring, on grass ("Sulfur springs" above: blocks, ticks, and the
+  options no pack feature reaches). Potent sulfur's own ticks in game are not ported.
 - Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
   states of either (worldgen-bds-features.md, "Feature residue"). Given a run's thread draws they are exact
   (every canon, 2026-11-04); without them BDS has no one answer to match (worldgen-bds-order.md, "One engine").

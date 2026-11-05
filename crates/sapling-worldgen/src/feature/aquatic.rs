@@ -12,13 +12,14 @@ use crate::terrain::{HEIGHT, MIN_Y};
 /// a column gets age `KELP_AGES - 2`.
 const KELP_AGES: i32 = KELP.len() as i32;
 
-/// `isSolidBlockingBlock` (vtable 0x1b0): leaves are not (oracle: seagrass reaches the water under
-/// mangrove canopies).
+/// `isSolidBlockingBlock` (vtable 0x1b0; Linux 0xc8d6250): the type's solid-blocking property, a material
+/// that blocks motion and not the material's byte +1, which leaves (oracle: seagrass reaches the water under
+/// mangrove canopies) and ice (material 13; the spring canon's river seagrass under ice) have.
 pub(super) fn solid(view: &View, x: i32, y: i32, z: i32) -> bool {
     let block = view.block(x, y, z);
     // A structure's fences and stairs are not (oracle: kelp under a shipwreck's deck).
     let full = !matches!(block, Block::Template(_)) || crate::structure::template::flags(block) & crate::structure::template::FULL_CUBE != 0;
-    block.blocks_motion() && !block.is_leaves() && full
+    block.blocks_motion() && !block.is_leaves() && !matches!(block.name(), "ice" | "frosted_ice") && full
 }
 
 /// Up from `p` to the first water or air block (seagrass and kelp are not water: oracle).

@@ -1,5 +1,8 @@
 use super::*;
 
+use acacia_proto::RawPacket;
+use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateSubchunkBlocks};
+
 const VAULT: [i32; 3] = [2, 65, 0];
 
 /// Alex in survival beside an inactive vault.
@@ -95,6 +98,82 @@ fn a_vault_put_down_by_hand_wakes_for_its_placer() {
     h.receive(1, &click([VAULT[0], VAULT[1] - 1, VAULT[2]], 1, None));
     run(&mut h, 25);
     assert_eq!(state(&mut h), "active");
+}
+
+/// Alex's packets in the tick `event` is told and in the next.
+fn around(h: &mut Harness, event: LevelEventEvent) -> (Vec<RawPacket>, Vec<RawPacket>) {
+    for _ in 0..400 {
+        let sent = h.tick_all().to(1).to_vec();
+        if common::all::<LevelEvent>(&sent).iter().any(|told| told.event == event) {
+            return (sent, h.tick_all().to(1).to_vec());
+        }
+    }
+    panic!("no {event:?}");
+}
+
+fn shown_at_vault(sent: &[RawPacket]) -> Vec<u32> {
+    common::block_changes(sent).into_iter().filter(|(at, _)| *at == VAULT).map(|(_, id)| id).collect()
+}
+
+fn hash(h: &mut Harness) -> u32 {
+    let now = block(h, VAULT);
+    let registry = sapling_world::BlockRegistry::vanilla();
+    registry.network_hash(registry.find(&now.name, &now.properties).expect("a state"))
+}
+
+/// The vault's block listed twice in one UpdateSubchunkBlocks, then its entity twice; where the last entity went.
+fn listed_twice_then_entity_twice(sent: &[RawPacket], id: u32) -> usize {
+    let one = std::slice::from_ref::<RawPacket>;
+    let listing = sent.iter().position(|packet| !common::all::<UpdateSubchunkBlocks>(one(packet)).is_empty()).expect("listed");
+    assert_eq!(shown_at_vault(one(&sent[listing])), [id, id]);
+    assert_eq!(shown_at_vault(sent), [id, id], "listed only there");
+    let at_vault = |packet: &RawPacket| common::all::<BlockEntityData>(one(packet)).iter().any(|data| [data.position.x, data.position.y, data.position.z] == VAULT);
+    let entities: Vec<usize> = sent.iter().enumerate().filter(|(_, packet)| at_vault(packet)).map(|(i, _)| i).collect();
+    assert!(entities.len() == 2 && entities.iter().all(|&i| i > listing), "{entities:?} after {listing}");
+    entities[1]
+}
+
+#[test]
+fn a_vault_going_active_is_told_at_once_and_shown_the_next_tick() {
+    // research/captures/bds-x2ran.txt: AnimationVaultActivate, then a tick on its block listed twice and its entity twice.
+    let mut h = beside_a_vault();
+    let (told, next) = around(&mut h, LevelEventEvent::AnimationVaultActivate);
+    let active = hash(&mut h);
+    assert_eq!(state(&mut h), "active");
+    assert!(!shown_at_vault(&told).contains(&active), "not shown active with its animation");
+    listed_twice_then_entity_twice(&next, active);
+}
+
+#[test]
+fn an_unlocked_vault_is_shown_again_the_next_tick() {
+    // research/captures/bds-x2ran.txt: the key's tick shows block, entity and insert_item; the next its block and entity again.
+    let mut h = beside_a_vault();
+    run(&mut h, 25);
+    held(&mut h, "minecraft:trial_key", 2);
+    h.receive(1, &click(VAULT, 1, None));
+    h.tick_all();
+    let next = h.tick_all().to(1).to_vec();
+    let unlocking = hash(&mut h);
+    assert_eq!(state(&mut h), "unlocking");
+    assert_eq!(shown_at_vault(&next), [unlocking]);
+    assert!(common::all::<BlockEntityData>(&next).iter().any(|data| [data.position.x, data.position.y, data.position.z] == VAULT));
+}
+
+#[test]
+fn an_emptied_vault_closes_its_shutter_a_tick_after_its_animation() {
+    // research/captures/bds-x2ran.txt: ejecting to inactive told by AnimationVaultDeactivate; a tick on the block
+    // listed twice, the entity twice, then vault.close_shutter.
+    let mut h = beside_a_vault();
+    run(&mut h, 25);
+    held(&mut h, "minecraft:trial_key", 2);
+    h.receive(1, &click(VAULT, 1, None));
+    let (told, next) = around(&mut h, LevelEventEvent::AnimationVaultDeactivate);
+    let inactive = hash(&mut h);
+    assert_eq!(state(&mut h), "inactive");
+    let heard = |sent: &[RawPacket]| sent.iter().position(|packet| common::all::<LevelSoundEvent>(std::slice::from_ref(packet)).iter().any(|sound| sound.sound_id == "vault.close_shutter"));
+    assert_eq!(heard(&told), None, "not with its animation");
+    let shown = listed_twice_then_entity_twice(&next, inactive);
+    assert!(heard(&next).is_some_and(|at| at > shown), "{:?} after {shown}", heard(&next));
 }
 
 #[test]

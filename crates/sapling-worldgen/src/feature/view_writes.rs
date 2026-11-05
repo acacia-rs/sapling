@@ -20,18 +20,27 @@ pub struct Write {
 /// A liquid tick left on its cell's chunk queue: cell, lava, delay.
 pub type Routed = ([i32; 3], bool, u64);
 
+/// A tick a placed block queued for the game (`View::keep_tick`): cell, block, delay.
+pub type Kept = ([i32; 3], Block, u64);
+
 /// One source chunk's writes, per target chunk around it, the ticks it left on chunk queues, what
-/// `reach` followed, the instaticks it left on its own queue (`View::left`), and the block entities it
-/// filed (world cell).
+/// `reach` followed, the instaticks it left on its own queue (`View::left`), the block entities it
+/// filed (world cell), and the ticks its placed blocks queued for the game.
 pub struct ChunkWrites(
     pub(super) Vec<Vec<Write>>,
     pub(super) Vec<Routed>,
     pub(super) Option<(Vec<Option<Cells>>, Tries)>,
     pub(super) Vec<Routed>,
     pub(super) Vec<([i32; 3], BlockEntity)>,
+    pub(super) Vec<Kept>,
 );
 
 impl ChunkWrites {
+    /// The ticks this source's placed blocks queued in `chunk`, in order.
+    pub fn kept_in(&self, chunk: (i32, i32)) -> impl Iterator<Item = Kept> + '_ {
+        self.5.iter().copied().filter(move |(at, ..)| (at[0].div_euclid(16), at[2].div_euclid(16)) == chunk)
+    }
+
     /// The block entities this source filed in `chunk`, in order.
     pub fn entities_in(&self, chunk: (i32, i32)) -> impl Iterator<Item = ([i32; 3], BlockEntity)> + '_ {
         self.4.iter().copied().filter(move |(at, _)| (at[0].div_euclid(16), at[2].div_euclid(16)) == chunk)

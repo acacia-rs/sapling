@@ -46,7 +46,8 @@ pub fn build_iceberg(column: &mut Column, noises: &IcebergNoises, temperature: f
     }
     let floor = if 2.0 < top { (SEA_LEVEL as f32 - top) + -7.0 } else { 0.0 };
     let top = if 2.0 < top { SEA_LEVEL as f32 + top } else { 0.0 };
-    let mut random = noises.positional.at_wide(x, 0, z);
+    // Windows multiplies x in 64 bits (1487e4536); clang on Linux wraps it in an int (0x51f5344).
+    let mut random = if crate::platform::linux() { noises.positional.at(x, 0, z) } else { noises.positional.at_wide(x, 0, z) };
     let snow_limit = random.next_int_bounded(4) + 2;
     let snow_floor = SEA_LEVEL + 18 + random.next_int_bounded(10);
     let start = (column.start as f32).max(top + 1.0) as i32;
