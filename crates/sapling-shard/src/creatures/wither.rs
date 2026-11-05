@@ -5,8 +5,7 @@
 //! at half health it is armoured, blows up again, calls three wither skeletons and from then on
 //! dashes now and then (dash.rs). Its boss bar
 //! shows every second to players within 55; with none within 50 it heals 1 a second.
-// TODO: a stored wither's shield and the fire rate halving with each sixth of its health lost are
-// not done; one kept armoured does not dash until armoured again.
+// TODO: one kept armoured does not dash until armoured again.
 
 mod dash;
 mod dying;
@@ -80,7 +79,7 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
 }
 
 /// Puts a wither a world folder kept (its compound `compound`) back as it was: its max health,
-/// its charge and its armour (research/captures/bds-keepmobs.txt).
+/// its charge, its armour and its fire rate (research/captures/bds-keepmobs.txt, bds-m3wither.txt's world).
 pub(super) fn adopt(world: &mut World, wither: Entity, compound: &[u8]) {
     let Some(record) = sapling_world::wither_record(compound).filter(|_| world.get::<Wither>(wither).is_some()) else { return };
     if let Some(health) = world.get::<Health>(wither).copied() {
@@ -88,7 +87,9 @@ pub(super) fn adopt(world: &mut World, wither: Entity, compound: &[u8]) {
         world.entity_mut(wither).insert(Health::new(max, Some(health.left().min(max)), health.burning()));
     }
     let charging = u32::try_from(record.charging).unwrap_or(0);
-    world.entity_mut(wither).insert(Wither { charging, armoured: record.armoured, ..Wither::default() });
+    let mut kept = Wither { charging, armoured: record.armoured, ..Wither::default() };
+    kept.heads.rate = heads::Rate { every: u64::try_from(record.fire_rate).unwrap_or(1).max(1), under: Some(record.interval) };
+    world.entity_mut(wither).insert(kept);
 }
 
 /// Writes each kept wither's fight into what the world folder keeps of it.
@@ -96,7 +97,11 @@ pub(super) fn keep(world: &mut World) {
     let withers: Vec<(Entity, sapling_world::WitherRecord)> = world
         .query_filtered::<(Entity, &Wither, &Health), With<entities::Stored>>()
         .iter(world)
-        .map(|(wither, kept, health)| (wither, sapling_world::WitherRecord { charging: kept.charging as i32, armoured: kept.armoured, max_health: health.max() as i32 }))
+        .map(|(wither, kept, health)| {
+            let rate = kept.heads.rate;
+            let record = sapling_world::WitherRecord { charging: kept.charging as i32, armoured: kept.armoured, max_health: health.max() as i32, fire_rate: rate.every as i32, interval: rate.under.unwrap_or(health.max() as i32) };
+            (wither, record)
+        })
         .collect();
     for (wither, record) in withers {
         entities::restore(world, wither, |compound, _| sapling_world::withered_actor(compound, record).ok());
@@ -186,6 +191,7 @@ fn armour(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
     if let Some(mut kept) = world.get_mut::<Wither>(wither) {
         (kept.armoured, kept.stunned) = (true, STUNNED);
         kept.dash.arm(now);
+        kept.heads.rate.rearm();
     }
     tell(world, wither, layer, vec![(Key::WitherAerialAttack, Plain::Short(0))]);
     blow_up(world, wither, layer, [body.at[0], body.at[1] + HEAD_UP, body.at[2]]);
@@ -223,6 +229,7 @@ pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
         charge(world, wither, layer, &body);
         return true;
     }
+    heads::pace(world, wither);
     armour(world, wither, layer, &body);
     wreck::tick(world, wither, layer, &body);
     heal_alone(world, wither, layer, &body);

@@ -17,6 +17,7 @@ use crate::grid::Grid;
 use crate::hidden::Hidden;
 use crate::inventory::{self, Inventory};
 use crate::labels::Labels;
+use crate::mobs::Linked;
 use crate::movement::Motion;
 use crate::roster::Profile;
 use crate::view::View;
@@ -37,11 +38,12 @@ impl ToViewers {
 }
 
 type Viewer<'a> = (Entity, &'a Stage, &'a InLayer, &'a View, &'a mut Sees, &'a mut Outgoing, Option<&'a Hidden>);
-type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>, Option<&'a Effects>);
+type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>, Option<&'a Effects>, Option<&'a Linked>);
+type Shown<'a> = (&'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>, Option<&'a Effects>, Option<&'a Linked>);
 
-/// The player as a new viewer needs it: with what it holds, then what it wears, then the labels
-/// plugins gave it.
-fn spawn_packets((id, identity, position, motion, profile, inventory, labels, effects): (&NetId, &Identity, &Position, &Motion, &Profile, &Inventory, Option<&Labels>, Option<&Effects>)) -> Vec<Bytes> {
+/// The player as a new viewer needs it: seated and followed by its link if it rides
+/// (riding/announced.rs), with what it holds, then what it wears, then the labels plugins gave it.
+fn spawn_packets((id, identity, position, motion, profile, inventory, labels, effects, linked): Shown) -> Vec<Bytes> {
     let mut player = sapling_data::add_player(&AddPlayerOptions {
         held: inventory::in_hand(inventory),
         uuid: profile.uuid,
@@ -58,8 +60,15 @@ fn spawn_packets((id, identity, position, motion, profile, inventory, labels, ef
     if let Some(item) = player.metadata.iter_mut().find(|item| item.key == Key::VisibleMobEffects) {
         *item = effects::announced(id.0, effects);
     }
+    for item in linked.map_or(&[][..], |linked| &linked.seat) {
+        match player.metadata.iter_mut().find(|old| old.key == item.key) {
+            Some(old) => *old = item.clone(),
+            None => player.metadata.push(item.clone()),
+        }
+    }
     let player = sapling_net::encode(&player);
-    std::iter::once(player).chain(inventory::spawn_packets(id.0, inventory)).chain(crate::labels::packet(labels, id.0)).collect()
+    let link = linked.and_then(|linked| linked.rides.as_ref()).map(|(_, _, link)| link.clone());
+    std::iter::once(player).chain(link).chain(inventory::spawn_packets(id.0, inventory)).chain(crate::labels::packet(labels, id.0)).collect()
 }
 
 /// Adds the players that came into each player's view and removes those that left it.
@@ -79,8 +88,8 @@ pub(crate) fn update(mut viewers: Query<Viewer>, seen: Query<Seen>) {
         let mut covered: Vec<(u64, Entity)> = grid.covered(in_layer.0, view).copied().filter(|(_, other)| *other != viewer && !Hidden::hides(hidden, *other)).collect();
         covered.sort_unstable();
         for (_, other) in covered.iter().filter(|(_, other)| !sees.0.contains(other)) {
-            if let Ok((_, _, _, id, identity, position, motion, profile, inventory, labels, effects)) = seen.get(*other) {
-                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets((id, identity, position, motion, profile, inventory, labels, effects))));
+            if let Ok((_, _, _, id, identity, position, motion, profile, inventory, labels, effects, linked)) = seen.get(*other) {
+                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets((id, identity, position, motion, profile, inventory, labels, effects, linked))));
             }
         }
         let now: HashSet<Entity> = covered.into_iter().map(|(_, other)| other).collect();

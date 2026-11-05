@@ -37,7 +37,9 @@ pub struct Reaching {
     pub(super) outposts: Vec<Arc<outpost::Outpost>>,
     pub(super) cities: Vec<Arc<ancient_city::AncientCity>>,
     pub(super) villages: Vec<Arc<village::Village>>,
-    pub(super) v2: Vec<Arc<Vec<Piece>>>,
+    /// Those whose whole box meets the chunk, which files their spawn areas even with no piece in it;
+    /// `/place jigsaw`'s have no kind and file none.
+    pub(super) v2: Vec<(Option<StructureKind>, Arc<Vec<Piece>>)>,
     pub(super) mansions: Vec<Arc<mansion::Mansion>>,
 }
 

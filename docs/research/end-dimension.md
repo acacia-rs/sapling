@@ -261,6 +261,8 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
   owner (told as `OwnerEid`), able to meet the dragon then (extras 5.1; `dragon/fireball.rs` `reflect`, test
   `a_shot_sends_a_fireball_along_its_shooters_look_at_one_a_tick`); the shot is refused (an arrow bounces).
   Not drilled: the owner's `SetEntityData`, the shot's own fate, a mob shooter's look (taken as the shot's way).
+  Undrillable by summoning: `summon dragon_fireball` is a syntax error on BDS (2026-11-05, `m3reflect`,
+  research/captures/bds-m3reflect.txt); only a live dragon's fight throws one, and its aim is not steerable.
 - **The second kill's orbs**: sapling's did not join up (77 entities against BDS's 24); with merging built they
   list as BDS's (26, 26, 43 against 24, 24, 46; docs/research/experience.md "Drilled").
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,

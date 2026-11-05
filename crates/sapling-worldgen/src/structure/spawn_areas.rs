@@ -1,18 +1,24 @@
 //! The spawn areas a chunk's post-process files for the structures BDS spawns mobs in by structure
-//! (`addHardcodedSpawnAreas` 1438ced80): the start's whole box, then each piece meeting the chunk,
-//! both cut to the chunk's columns. See docs/research/structure-spawns.md.
+//! (`addHardcodedSpawnAreas` 1438ced80, and the data-driven ones): the start's whole box, then each
+//! piece meeting the chunk, both cut to the chunk's columns. See docs/research/structure-spawns.md.
 
 use super::BoundingBox;
 use super::canvas::Canvas;
 use crate::chunk::SpawnArea;
 
-/// How far below a piece's top the spawner starts looking down, per structure (the start's vt[3]).
-pub const FORTRESS: (&str, i32) = ("minecraft:fortress", 0);
-pub const MONUMENT: (&str, i32) = ("minecraft:monument", 0);
-pub const SWAMP_HUT: (&str, i32) = ("minecraft:swamp_hut", -3);
-pub const OUTPOST: (&str, i32) = ("minecraft:pillager_outpost", -3);
+/// How far below a piece's top the spawner starts looking down, per hardcoded structure (the start's
+/// vt[3]); None for data-driven ones.
+pub type Kind = (&'static str, Option<i32>);
 
-pub fn file(canvas: &mut Canvas, (structure, y_offset): (&'static str, i32), whole: BoundingBox, pieces: impl IntoIterator<Item = BoundingBox>) {
+pub const FORTRESS: Kind = ("minecraft:fortress", Some(0));
+pub const MONUMENT: Kind = ("minecraft:monument", Some(0));
+pub const SWAMP_HUT: Kind = ("minecraft:swamp_hut", Some(-3));
+pub const OUTPOST: Kind = ("minecraft:pillager_outpost", Some(-3));
+pub const DESERT_PYRAMID: Kind = ("minecraft:desert_pyramid", Some(0));
+pub const JUNGLE_PYRAMID: Kind = ("minecraft:jungle_pyramid", Some(0));
+pub const IGLOO: Kind = ("minecraft:igloo", Some(0));
+
+pub fn file(canvas: &mut Canvas, (structure, y_offset): Kind, whole: BoundingBox, pieces: impl IntoIterator<Item = BoundingBox>) {
     let column = canvas.bb;
     let cut = |b: BoundingBox| {
         let meets = b.x1 >= column.x0 && b.x0 <= column.x1 && b.z1 >= column.z0 && b.z0 <= column.z1;

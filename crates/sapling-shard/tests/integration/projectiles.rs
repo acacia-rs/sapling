@@ -156,10 +156,11 @@ fn a_riptide_throws_only_in_the_rain_still_falling() {
     assert!(!thrown(draw(&mut h, 10, 2)), "the rain gone");
 }
 
-/// `LightningRodBlock`'s projectile hit (Linux 0xc538e10): in a thunderstorm a Channeling trident
-/// on a rod calls a bolt to the middle of the cell above it; not drilled.
+/// `LightningRodBlock`'s projectile hit (Linux 0xc538e10): in a thunderstorm a Channeling trident on
+/// a rod calls a bolt to the middle of the rod's cell, with no `item.trident.thunder`, and powers
+/// it (research/captures/bds-m3rod.txt; this asked for the cell above and the sound before).
 #[test]
-fn a_channeling_trident_on_a_rod_calls_a_bolt_over_it_in_a_storm() {
+fn a_channeling_trident_on_a_rod_calls_a_bolt_onto_it_in_a_storm() {
     let mut h = ready(GameMode::Creative, &[], 0.0);
     let trident = Item { enchantments: vec![(32, 1)], ..Item::new("minecraft:trident", 1) };
     h.remote.run(move |ctx| {
@@ -171,8 +172,8 @@ fn a_channeling_trident_on_a_rod_calls_a_bolt_over_it_in_a_storm() {
     watch(&mut h, 200);
     let sent = draw(&mut h, 10, 10);
     let bolts: Vec<[f32; 3]> = added(&sent, "minecraft:lightning_bolt").iter().map(|bolt| [bolt.position.x, bolt.position.y, bolt.position.z]).collect();
-    assert!(bolts.len() == 1 && bolts[0][0] == 0.5 && bolts[0][2] == 4.5, "{bolts:?}");
-    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "item.trident.thunder"));
+    assert!(bolts == [[0.5, 66.0, 4.5]], "{bolts:?}");
+    assert!(!all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "item.trident.thunder"));
 }
 
 #[test]

@@ -4,6 +4,7 @@
 //! placed unclipped, so they reach the chunks around the start through BDS's 3x3 block source.
 
 use super::canvas::Canvas;
+use super::spawn_areas;
 use super::template::{Placement, Rotation, Template};
 use super::BoundingBox;
 use crate::block::Block;
@@ -18,6 +19,12 @@ pub const IGLOO_BIOMES: &[u32] = &[12, 30, 184];
 pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32)) {
     let (x0, z0) = (start.0 * 16, start.1 * 16);
     let origin = (x0, canvas.floor_height(x0, z0) - 1, z0);
+    // BDS files the top's unturned box: at the start's y 64 whole, and as its piece one below the
+    // box's average ground (Java 1.12's `offsetToAverageGroundLevel(-1)`), not the template's corner.
+    let top = |y| BoundingBox::new(x0, y, z0, x0 + 6, y + 4, z0 + 7);
+    let grounds: Vec<i32> = (z0..=z0 + 7).flat_map(|z| (x0..=x0 + 6).map(move |x| (x, z))).map(|(x, z)| canvas.top(x, z, true).max(63)).collect();
+    let average = grounds.iter().sum::<i32>() / grounds.len() as i32;
+    spawn_areas::file(canvas, spawn_areas::IGLOO, top(64), [top(average - 1)]);
     let rotation = Rotation::from_index(random.next_int(4));
     let placement = Placement::new(rotation, BoundingBox::new(i32::MIN, 0, i32::MIN, i32::MAX, 319, i32::MAX));
     if random.next_float() < 0.5 {

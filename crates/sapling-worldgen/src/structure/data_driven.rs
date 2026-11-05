@@ -9,7 +9,7 @@ use super::canvas::Canvas;
 use super::jigsaw::{ElementKind, Piece, SetEntry, StartHeight, V2Start, data};
 use super::probe::{Probe, RawHeights};
 use super::template::{Kind, Rotation, v2_block};
-use super::{BoundingBox, StructureKind, Structures};
+use super::{BoundingBox, StructureKind, Structures, spawn_areas};
 use crate::block::Block;
 use crate::density::Density;
 use crate::random::{JavaRandom, Xoroshiro};
@@ -112,10 +112,11 @@ impl Structures {
         self.v2_start(density, kind, chunk).is_some()
     }
 
-    /// The pieces of every v2 structure with a piece meeting `chunk`.
-    pub(super) fn v2_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<Arc<Vec<Piece>>> {
+    /// The kind and pieces of every v2 structure whose whole box meets `chunk`.
+    pub(super) fn v2_near(&self, density: &Density, chunk: (i32, i32)) -> Vec<(Option<StructureKind>, Arc<Vec<Piece>>)> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
-        self.v2_reaching(density, chunk, &|bb| bb.intersects(&column)).into_iter().map(|(_, pieces)| pieces).collect()
+        let found = self.v2_reaching(density, chunk, &|_| true).into_iter();
+        found.filter(|(_, pieces)| whole(pieces).intersects(&column)).map(|(kind, pieces)| (Some(kind), pieces)).collect()
     }
 
     /// The kind and pieces of every v2 structure around `chunk` with a piece that `near` accepts.
@@ -155,7 +156,7 @@ impl Structures {
     pub fn v2_template_cells(&self, density: &Density, chunk: (i32, i32)) -> Vec<([i32; 3], String, Block, u8, Block)> {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
         let mut cells = Vec::new();
-        for piece in self.v2_near(density, chunk).iter().flat_map(|s| s.iter()).filter(|p| p.bb.intersects(&column)) {
+        for piece in self.v2_near(density, chunk).iter().flat_map(|(_, s)| s.iter()).filter(|p| p.bb.intersects(&column)) {
             let ElementKind::Template { template, .. } = &piece.element.kind else { continue };
             for b in template.blocks.iter().filter(|b| b.state.kind() == Kind::Block) {
                 let (dx, dy, dz) = piece.rotation.apply(b.pos);
@@ -176,16 +177,42 @@ impl Structures {
         let column = BoundingBox::chunk(chunk.0, chunk.1);
         let cities = self.ancient_cities_near(density, chunk);
         let city = cities.iter().flat_map(|c| c.pieces.iter()).filter(|p| p.bb.intersects(&column));
-        pieces.iter().flat_map(|s| s.iter()).chain(city).map(line).collect()
+        pieces.iter().flat_map(|(_, s)| s.iter()).chain(city).map(line).collect()
     }
 
     /// Every piece meeting the canvas's chunk, in assembly order, all drawing loot seeds from the
     /// chunk's one decoration generator.
-    pub(super) fn place_v2(&self, canvas: &mut Canvas, structures: &[Arc<Vec<Piece>>]) {
+    pub(super) fn place_v2(&self, canvas: &mut Canvas, structures: &[(Option<StructureKind>, Arc<Vec<Piece>>)]) {
         let column = canvas.bb;
         let mut random = Xoroshiro::decoration(self.seed, column.x0 >> 4, column.z0 >> 4);
-        for piece in structures.iter().flat_map(|s| s.iter()).filter(|p| p.bb.intersects(&column)) {
+        for piece in structures.iter().flat_map(|(_, s)| s.iter()).filter(|p| p.bb.intersects(&column)) {
             piece.post_process_java(canvas, self.seed, &mut random);
+        }
+    }
+}
+
+/// Files each structure's spawn areas; BDS lists the data-driven ones before the hardcoded.
+pub(super) fn file_v2(canvas: &mut Canvas, structures: &[(Option<StructureKind>, Arc<Vec<Piece>>)]) {
+    for (kind, pieces) in structures {
+        let Some(kind) = kind else { continue };
+        spawn_areas::file(canvas, (v2_structure(*kind, pieces), None), whole(pieces), pieces.iter().map(|p| p.bb));
+    }
+}
+
+/// A v2 structure's box: its pieces' union.
+fn whole(pieces: &[Piece]) -> BoundingBox {
+    pieces.iter().map(|p| p.bb).reduce(|a, b| a.union(&b)).expect("a start piece")
+}
+
+/// The structure's id; a camp's is its variant's, known by its start piece's pool.
+fn v2_structure(kind: StructureKind, pieces: &[Piece]) -> &'static str {
+    match kind {
+        StructureKind::TrailRuins => "minecraft:trail_ruins",
+        StructureKind::TrialChambers => "minecraft:trial_chambers",
+        _ => {
+            let start = &pieces[0].element.name;
+            let variant = data().sets["abandoned_camp"].iter().find(|e| start.strip_prefix(e.pool.as_str()).is_some_and(|rest| rest.starts_with('/')));
+            variant.map_or("minecraft:abandoned_camp", |e| e.name.as_str())
         }
     }
 }
