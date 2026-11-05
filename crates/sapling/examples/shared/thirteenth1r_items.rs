@@ -139,22 +139,30 @@ const BUCKETS_SHOWN: &[&str] = &["UpdateBlock", "UpdateBlockSynced", "UpdateSubc
 /// and stairs; a cauldron filled and emptied by water, powder snow and lava; cod, axolotl and
 /// tadpole buckets poured and a cod taken back; powder snow set and taken; milk; dispensed buckets.
 fn buckets() -> Vec<String> {
+    // Poured water spreads and carries the player off: every case starts on a dry floor, back in place.
+    const RESET: [&str; 3] = ["fill -8 -26 -8 16 -24 8 air", "tp @s 0.5 -26 0.5 -90 0", ""];
     let mut lines = with(floor(), &["gamemode survival @s", "tp CmdWatcher 12.5 -26 6.5", ""]);
     lines.extend([hold("water_bucket"), "!look 0 10 0.1".into(), "!use".into(), String::new(), "setblock 2 -26 0 water".into(), hold("bucket"), "!look 2 0.3 0".into(), "!use".into(), String::new()]);
-    lines.extend(owned(["setblock 2 -26 0 air", "!look 2 0 0", ""]));
+    lines.extend(owned(RESET));
     for block in ["oak_fence", "smooth_stone_slab", "oak_stairs"] {
-        lines.extend([format!("setblock 2 -26 0 {block}"), hold("water_bucket"), "!click 2 0 0".into(), String::new(), String::new(), "setblock 2 -26 0 air".into()]);
+        lines.extend([format!("setblock 2 -26 0 {block}"), hold("water_bucket"), "!click 2 0 0".into(), String::new(), String::new()]);
+        lines.extend(owned(RESET));
     }
-    lines.push("setblock 2 -26 0 cauldron".into());
     for full in ["water_bucket", "powder_snow_bucket", "lava_bucket"] {
-        lines.extend([hold(full), "!click 2 0 0".into(), String::new(), hold("bucket"), "!click 2 0 0".into(), String::new()]);
+        lines.extend(["setblock 2 -26 0 cauldron".into(), hold(full), "!click 2 0 0".into(), String::new(), hold("bucket"), "!click 2 0 0".into(), String::new()]);
+        lines.extend(owned(RESET));
     }
-    lines.extend(["setblock 2 -26 0 air".into(), hold("cod_bucket"), "!click 2 -1 0".into(), String::new(), String::new(), hold("bucket"), "!interact cod".into(), String::new()]);
-    lines.extend(owned(["fill 1 -26 -1 3 -26 1 air", "kill @e[type=cod]"]));
+    // The cod poured into a hole in the floor, where its water stays.
+    lines.extend(owned(["setblock 2 -28 0 stone", "setblock 2 -27 0 air"]));
+    lines.extend([hold("cod_bucket"), "!click 2 -2 0".into(), String::new(), String::new(), hold("bucket"), "!interact cod".into(), String::new()]);
+    lines.extend(owned(["setblock 2 -27 0 stone"]));
+    lines.extend(owned(["kill @e[type=cod]"]));
+    lines.extend(owned(RESET));
     for (bucket, at) in [("axolotl_bucket", "2 -1 2"), ("tadpole_bucket", "2 -1 -2"), ("powder_snow_bucket", "-2 -1 2")] {
         lines.extend([hold(bucket), format!("!click {at}"), String::new(), String::new()]);
     }
-    lines.extend(["kill @e[type=!player]".into(), hold("bucket"), "!click -2 0 2".into(), String::new(), "fill -8 -26 -8 16 -16 8 air".into(), String::new()]);
+    lines.extend(["kill @e[type=!player]".into(), hold("bucket"), "!click -2 0 2".into(), String::new()]);
+    lines.extend(owned(RESET));
     lines.extend(["effect @s speed 30 1".into(), hold("milk_bucket"), String::new(), "!eat".into(), String::new(), String::new(), String::new()]);
     lines.extend(owned(["setblock -3 -26 3 dispenser [\"facing_direction\"=5]", "replaceitem block -3 -26 3 slot.container 0 water_bucket 1"]));
     for refill in ["bucket", "lava_bucket", "bucket"] {
