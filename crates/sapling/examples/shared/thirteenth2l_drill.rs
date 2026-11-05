@@ -11,8 +11,23 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "l2pace" => (pace(), SHOWN),
         "l2farm" => (farmland(), SHOWN),
         "l2carts" => (carts(), CARTS_SHOWN),
+        "l2shroom" => (mushrooms(), SHOWN),
         _ => return None,
     })
+}
+
+/// Twelve shut stone rooms 10 apart (5 by 2 by 3 of air), a brown mushroom in each, at `randomtickspeed` 200
+/// for 60 s: how soon and how often each spreads (the plants drill's one room spread 3 times).
+fn mushrooms() -> Vec<String> {
+    let mut lines = floor();
+    lines.extend(["fill 0 -27 10 36 -27 37 stone", "fill 0 -26 10 36 -22 37 air", ""].map(String::from));
+    for (x, z) in [0, 10, 20, 30].into_iter().flat_map(|x| [10, 20, 30].map(move |z| (x, z))) {
+        lines.extend([format!("fill {x} -26 {z} {} -23 {} stone", x + 6, z + 3), format!("fill {} -26 {} {} -24 {} air", x + 1, z + 1, x + 5, z + 2), format!("setblock {} -26 {} brown_mushroom", x + 3, z + 1)]);
+    }
+    lines.extend(["gamerule randomtickspeed 200", ""].map(String::from));
+    waits(&mut lines, 60);
+    lines.extend(["gamerule randomtickspeed 0", "fill 0 -26 10 36 -22 37 air", ""].map(String::from));
+    lines
 }
 
 const CARTS_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "CommandOutput", "AddEntity", "RemoveEntity", "MoveEntityDelta", "MoveEntityAbsolute", "SetEntityMotion"];

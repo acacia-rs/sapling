@@ -342,4 +342,8 @@ lays snow only into air.
   timing; a vine's sideways growth onto the top of a block (Java's last case) has no Bedrock state
   and is left out.
 - Each crop's own odds are drilled: all four ripen at one pace ("Light" above, `croprates`).
-- Wild plants' timing against `bds-plants.txt`: sapling's `plants` run was not compared.
+- Wild plants' timing, compared 2026-11-05 (thirteenth2l; `sapling-plants.txt`, and `l2shroom`:
+  twelve dark rooms, a brown mushroom each, 60 s at 200, `bds-l2shroom.txt`, `sapling-l2shroom.txt`):
+  same. Kelp grew its 9 cells at 2.5 s a cell on BDS, 2.2 s on sapling; mushrooms spread 24 times in 9
+  rooms on BDS, 21 in 8 on sapling, first spreads alike (median 22 s and 26 s). The cave vine's set age
+  is random on both (BDS's came up 25 and never grew). Vines were not in the drill.
