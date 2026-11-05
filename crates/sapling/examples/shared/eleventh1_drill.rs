@@ -54,10 +54,11 @@ fn cave_spiders() -> Vec<String> {
     with(lines, &["kill @e[type=!player]", "difficulty easy", "gamemode creative @s", "effect @s clear"])
 }
 
-/// A skeleton 12 off the survival actor at midnight, a held villager halfway between.
+/// A skeleton 12 off the survival actor at midnight, a held villager halfway between; put back
+/// once held, as a stroll in its first second took sapling's off the line.
 fn arrow_in_the_way() -> Vec<String> {
     let mut lines = super::warden::start("midnight");
-    lines.extend(["summon villager 6.5 -26 0.5 0 0 minecraft:spawn_farmer", &held("villager"), "summon skeleton 12.5 -26 0.5", &held("skeleton")].map(String::from));
+    lines.extend(["summon villager 6.5 -26 0.5 0 0 minecraft:spawn_farmer", &held("villager"), "tp @e[type=villager] 6.5 -26 0.5", "summon skeleton 12.5 -26 0.5", &held("skeleton")].map(String::from));
     super::warden::healed(&mut lines, 20);
     with(lines, &["kill @e[type=!player]", "gamemode creative @s", "effect @s clear"])
 }

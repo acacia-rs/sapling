@@ -45,6 +45,11 @@ pub(crate) struct Arrow {
     pub(super) summoned: bool,
 }
 
+/// A shot launched and not yet moved: BDS's first move is its launch speed, drag and weight taken
+/// after it (bds-e1arrow.txt), where a summoned one's first fall is its weight (bds-s7shots.txt).
+#[derive(Component)]
+struct Unflown;
+
 /// Who may pick a stuck shot up.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) enum Pickup {
@@ -129,7 +134,7 @@ pub(crate) fn launch(world: &mut World, launch: Launch, loosed: Option<Loosed>) 
     };
     let born = world.resource::<Tick>().0;
     let arrow = entities::spawn_mob(world, layer, shot.kind, Body::new(from, motion, shot.size), from, announce)?;
-    world.entity_mut(arrow).insert(Arrow { archer, by, gives, shot, born, stuck: None, summoned: false });
+    world.entity_mut(arrow).insert((Arrow { archer, by, gives, shot, born, stuck: None, summoned: false }, Unflown));
     if let Some(loosed) = loosed {
         world.entity_mut(arrow).insert(loosed);
     }
@@ -140,6 +145,7 @@ pub(crate) fn launch(world: &mut World, launch: Launch, loosed: Option<Loosed>) 
 /// (research/captures/bds-s7shots.txt).
 pub(crate) fn summon(world: &mut World, layer: Entity, shot: Shot, feet: [f32; 3]) -> Option<Entity> {
     let arrow = launch(world, Launch { layer, by: Entity::PLACEHOLDER, archer: String::new(), from: feet, motion: [0.0; 3], shot, gives: None }, None)?;
+    world.entity_mut(arrow).remove::<Unflown>();
     let mut state = world.get_mut::<Arrow>(arrow)?;
     (state.by, state.summoned) = (arrow, true);
     Some(arrow)
@@ -157,7 +163,8 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     let level = &world.get::<Layer>(layer)?.world;
     let wet = super::holds(level, body.at.map(|c| c.floor() as i32), WATER);
     let drag = if wet { shot.wet_drag } else { shot.drag };
-    let mut motion = [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag];
+    let unflown = world.entity_mut(arrow).take::<Unflown>().is_some();
+    let mut motion = if unflown { body.motion } else { [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag] };
     let behind: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - motion[axis]);
     let (passed, spent) = world.get::<Loosed>(arrow).map_or((Vec::new(), false), |loosed| (loosed.pierced.clone(), loosed.spent));
     let met = if spent { None } else { first_met(world, layer, by, body.at, motion, shot.size, &passed) };
