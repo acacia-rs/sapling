@@ -56,6 +56,11 @@ springs on the surface above sulfur caves.
 - Canon `spring` (ac2): 1269 cells wrong or missing over the 5x5 region, then 25 (river seagrass in row -755), then
   0 once seagrass passed through ice (feature/aquatic.rs `solid`) and the iceberg x seed wrapped as on Linux
   (worldgen-bds-linux-canons.md). Canon `iceberg` (row -756 of the same run): 102, then 0.
+- Canon `springs2` (af1, 2026-11-05, parity/thirteenth2af): chunks -882 -634 to -878 -626, holding
+  sulfur_spring_medium_1 at -14073 85 -10097 and small_2 at -14069 84 -10034 (and a trial chamber): 0 at its first
+  replay. `examples/spring_find.rs` (seed 20261003, x -1000 to -981 at stride 4, z ±1000) met 16 springs, all
+  small_1 to small_4 and medium_1, medium_2, every one on grass_block; a spring on stone, sulfur or deepslate and the
+  large templates were not met, so none is judged.
 
 ## Speleothems (feature/speleothem/)
 One class each for pointed dripstone and sulfur spikes, parameterised by base block, spike block and replaceable
