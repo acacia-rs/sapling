@@ -1,6 +1,6 @@
 //! What a stored mob keeps of its raising, under BDS's names: its age, love and breeding cooldown,
-//! owner, temper, lead holder, name and whether it stays (`Persistent`), and the flags `Actor`
-//! reads too. Its `definitions` (the component groups BDS restores it with) follow its events.
+//! owner, temper, lead holder, name, whether it stays (`Persistent`) and appeared by itself
+//! (`NaturalSpawn`), and the flags `Actor` reads too. Its `definitions` (the component groups BDS restores it with) follow its events.
 //! A baby's `Age` is the negative ticks left to grow up: BDS kept a calf summoned born shortly
 //! before as `Age` Int -23879 (research/captures/bds-t2ekeep-dump.txt).
 
@@ -24,9 +24,12 @@ pub struct Raising {
     pub sheared: bool,
     pub temper: i32,
     pub colour: i8,
+    /// A tropical fish's pattern colour (`Color2`).
+    pub colour2: i8,
     pub mark_variant: i32,
     pub name: String,
     pub persistent: bool,
+    pub natural: bool,
     pub leasher: Option<i64>,
 }
 
@@ -49,9 +52,11 @@ pub fn raising(compound: &[u8]) -> Result<Raising, Error> {
         sheared: byte("Sheared") != 0,
         temper: int("Temper"),
         colour: byte("Color"),
+        colour2: byte("Color2"),
         mark_variant: int("MarkVariant"),
         name: if let Some(Value::String(name)) = actor.get("CustomName") { name.to_string() } else { String::new() },
         persistent: byte("Persistent") != 0,
+        natural: byte("NaturalSpawn") != 0,
         leasher: id("LeasherID"),
     })
 }
@@ -71,8 +76,10 @@ pub fn raised_actor(compound: &[u8], raising: &Raising) -> Result<Vec<u8>, Error
         ("Sheared", byte(raising.sheared)),
         ("Temper", Value::Int(raising.temper)),
         ("Color", Value::Byte(raising.colour)),
+        ("Color2", Value::Byte(raising.colour2)),
         ("MarkVariant", Value::Int(raising.mark_variant)),
         ("Persistent", byte(raising.persistent)),
+        ("NaturalSpawn", byte(raising.natural)),
         ("LeasherID", Value::Long(raising.leasher.unwrap_or(NONE))),
     ];
     let kept = with_fields(compound, fields)?;
@@ -117,7 +124,7 @@ mod tests {
     fn a_raised_mob_reads_back_as_it_was_kept() {
         let wolf = new_actor(-7, "minecraft:wolf", [0.5, 65.0, 0.5], [0.0; 3]);
         assert_eq!(raising(&wolf).unwrap(), Raising::default());
-        let kept = Raising { baby: Some(1200), in_love: 300, love_cause: -9, breed_cooldown: 0, owner: Some(-9), tamed: true, sitting: true, sheared: false, temper: 0, colour: 14, mark_variant: 0, name: "Rex".into(), persistent: true, leasher: Some(42) };
+        let kept = Raising { baby: Some(1200), in_love: 300, love_cause: -9, breed_cooldown: 0, owner: Some(-9), tamed: true, sitting: true, sheared: false, temper: 0, colour: 14, colour2: 3, mark_variant: 0, name: "Rex".into(), persistent: true, natural: true, leasher: Some(42) };
         let raised = raised_actor(&wolf, &kept).unwrap();
         assert_eq!(raising(&raised).unwrap(), kept);
         let read = actors(&raised).unwrap().remove(0);

@@ -126,6 +126,8 @@ mod plugin_damage;
 mod paintings;
 mod patrols;
 mod peaceful;
+mod persistence;
+mod herd_looks;
 mod phantoms;
 mod piglins;
 mod hand_events;

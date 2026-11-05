@@ -49,6 +49,8 @@ const DONKEY: Layout = Layout { seats: &[&[seat([0.0, 0.925, -0.2])]], ..HORSE }
 const MULE: Layout = Layout { seats: &[&[seat([0.0, 0.975, -0.2])]], ..HORSE };
 const LLAMA: Layout = Layout { seats: &[&[seat([0.0, 1.17, -0.3])]], ..HORSE };
 const CAMEL: Layout = Layout { seats: &[&[seat([0.0, 1.905, 0.5])], &[seat([0.0, 1.905, 0.5]), seat([0.0, 1.905, -0.5])]], pulls_in: true, ..HORSE };
+const CAMEL_HUSK: Layout = Layout { riders: &["player", "parched", "husk"], pulls_in: false, ..CAMEL };
+const ZOMBIE_NAUTILUS: Layout = Layout { seats: &[&[seat([0.0, 0.925, -0.2])]], riders: &["drowned"], pulls_in: true, ..HORSE };
 
 /// The layout of a kind that takes riders (the adult's; babies are not told apart).
 pub(crate) fn layout(kind: &str) -> Option<&'static Layout> {
@@ -65,6 +67,8 @@ pub(crate) fn layout(kind: &str) -> Option<&'static Layout> {
         "minecraft:mule" => &MULE,
         "minecraft:llama" | "minecraft:trader_llama" => &LLAMA,
         "minecraft:camel" => &CAMEL,
+        "minecraft:camel_husk" => &CAMEL_HUSK,
+        "minecraft:zombie_nautilus" => &ZOMBIE_NAUTILUS,
         _ => return None,
     })
 }

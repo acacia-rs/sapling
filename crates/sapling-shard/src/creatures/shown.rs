@@ -46,8 +46,9 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, prop
     let extra = MetadataFlags1(raised.map_or(0, |raised| raised.unstored_flags().0) | saddle);
     let dressed = look.map(|look| raised.map_or_else(|| look.clone(), |raised| raised.dress(look)));
     let told = properties.map(|properties| properties.shown(kind));
+    let colour2 = raised.map_or(0, |raised| raised.kept.colour2);
     if let Some(shown) = dressed.and_then(|look| mobs::announcement_with(&Actor { position: body.at, health: left.or(look.health), ..look }, id, extra, told, (strides, strength))) {
-        return shown;
+        return super::looks::dressed(shown, kind, colour2);
     }
     let on_fire = health.is_some_and(Health::is_burning);
     let fire = if on_fire { MetadataFlags1::ONFIRE.0 } else { 0 };
@@ -79,7 +80,7 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, prop
     let mut shown = vec![sapling_net::encode(&added)];
     let held = HOLDS.iter().find(|(of, _)| *of == kind).map(|(_, item)| sapling_data::Stack { name: item, count: 1, damage: 0, block: None, tag: None });
     shown.extend(held.and_then(|stack| sapling_data::mob_hand(id, &stack, false)).map(|held| sapling_net::encode(&held)));
-    shown
+    super::looks::dressed(shown, kind, colour2)
 }
 
 /// What tells a viewer of the mob now: dressed as stored and raised, its health and facing.

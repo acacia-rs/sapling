@@ -98,6 +98,11 @@ fn medium(level: &Level, [x, y, z]: [i32; 3]) -> Option<Medium> {
     below.is_full_cube().then_some(Medium::Air)
 }
 
+/// Whether `cell` of `layer` is a bubble column, where a `disallow_spawns_in_bubble` kind does not appear.
+pub(super) fn in_bubble(world: &World, layer: Entity, [x, y, z]: [i32; 3]) -> bool {
+    world.get::<Layer>(layer).is_some_and(|layer| layer.world.registry().get(layer.world.block(x, y, z)).is_some_and(|state| state.name == "minecraft:bubble_column"))
+}
+
 /// Whether a mob `height` tall standing in `cell` has room: nothing with collision where its body is.
 pub(super) fn has_room(level: &Level, [x, y, z]: [i32; 3], height: f32) -> bool {
     let registry = level.registry();

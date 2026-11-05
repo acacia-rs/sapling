@@ -256,7 +256,7 @@ pub(crate) fn teleport(world: &mut World, id: EntityId, feet: [f32; 3]) -> bool 
 }
 
 /// [`teleport`] into the world `layer`: the entity leaves its riders and its old world's
-/// screens, and is announced in the new one at `feet` (mobs.rs [`mobs::rehome`]).
+/// screens, and is announced in the new one at `feet` under a new runtime id (mobs/rehomed.rs).
 pub(crate) fn teleport_into(world: &mut World, id: EntityId, layer: Entity, feet: [f32; 3]) -> bool {
     let Some(entity) = find(world, id) else { return false };
     if world.get::<InLayer>(entity).is_none_or(|in_layer| in_layer.0 == layer) {
@@ -274,8 +274,7 @@ pub(crate) fn teleport_into(world: &mut World, id: EntityId, layer: Entity, feet
         told.jump();
         drop(told.update(id.0, feet, body.motion, body.on_ground));
     }
-    mobs::rehome(world, entity, layer, feet);
-    true
+    mobs::rehome(world, entity, layer, feet).is_some()
 }
 
 pub(crate) fn remove(world: &mut World, id: EntityId) -> bool {

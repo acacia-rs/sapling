@@ -28,9 +28,10 @@ Rule components and how they are read:
 
 `pillager_patrol`'s world age, delay, mob event and village filters are `sapling_data::Gates`
 (structure-spawns.md "Patrols"). Left out: the guardian (ocean
-monuments: structure spawns, docs/research/structure-spawns.md); the slime and the phantom have their code gates (below); herd events (babies,
-horse and fish variants, riders), `disallow_spawns_in_bubble`; blazes, wither skeletons, cats and
-pillagers have no natural conditions (structures spawn them).
+monuments: structure spawns, docs/research/structure-spawns.md); the slime and the phantom have their code gates (below); herd events
+are husbandry.md "Herds"; `disallow_spawns_in_bubble` (the axolotl's) refuses a bubble column cell
+(spawn-rules.tsv `no_bubble`, `spawning/spots.rs` `in_bubble`; [P], BDS's own test not read); blazes,
+wither skeletons, cats and pillagers have no natural conditions (structures spawn them).
 
 ## Engine [D]
 
@@ -64,10 +65,11 @@ Decompiled from the bds-blocks build (`BDS_EXE=acacia/.testserver/bds-blocks/bed
 - Herd: one of the rule's herds by `nextInt(count)` (default 1 to 1), size
   `min + roundf(f² (max - min))` with `f` a `nextFloat` (`_spawnMobCluster` 1415ed230, `roundf` import
   14a5bd080), so small herds are likelier; every member on the same cell, at (x + 0.49, y, z + 0.49) in
-  worlds of 1.21 on. Herd events and guaranteed members are not built.
+  worlds of 1.21 on. Herd events: husbandry.md "Herds"; guaranteed members are not built.
 - Caps: counts over the 9×9 chunks round the cluster's chunk, split surface/underground: per category
   and per kind (`density_limit`, clipping the herd to what is left). The category cap is asked before
-  each member, `count <= cap`, so a category ends one over it. Every spawn is also clipped so the world
+  each member, `0 < cap && count < cap`, so a category ends at it (the structure pass's own reading
+  is one over: "Own spawn checks" end). Every spawn is also clipped so the world
   holds at most 200 spawnable mobs (BDS: those ticked last tick). The caps are floats the base
   `Dimension` constructor stores (141878200, stores 141879818 to 141879884), surface at +0x104 and
   underground at +0x120, indexed by `ActorSpawnRuleGroup`'s category (141d3b7f0): animal 4/4, monster
@@ -120,8 +122,11 @@ structure lists' decompile found asking only a walk target, structures/lists.rs 
 other kinds are Monster subclasses was not read (phantoms are taken as one) [U]. Tests
 `a_dimly_lit_floor_spawns_no_monster`, `guardians_appear_and_stay_in_a_monument`.
 
-The cap before each member: this decompile read `cap > 0 && count < cap`, a category stopping at
-its cap; the earlier one (1415ef8b2, "Engine") read `count <= cap`. Sapling keeps the earlier [U].
+The cap before each member [D] (2026-11-05): both readings were right, for different passes.
+`_spawnMobCluster` (1415ed230, natural clusters) asks `0 < cap && count < cap`, a category stopping
+at its cap; the structure pass in `BedrockSpawner::tick` (1415eebf0, the 1415ef8b2 compare) asks
+`-1 < cap && count <= cap`, one over. Sapling: `spawning/herds.rs` `cluster` stops at the cap (it
+ran one over before), `spawning/structures.rs` keeps one over.
 
 ## Phantoms [D]
 
@@ -145,10 +150,27 @@ within `min_distance`) despawn; at tick range 4, no player within `min(max_dista
 the simulation edge. Schema defaults [D]: inactivity 30, chance 800, all three on. sapling: a mob
 despawns only if it appeared naturally (`spawning::Natural`) and its kind has `despawn_from_distance`
 [P]; the roll is 1 in 800 [U], the distances 32/128 are the
-add-on documentation's [U], and the edge is no player's view covering its column. Mobs spawned by commands, eggs or plugins, and every mob loaded
-with its column, stay: sapling keeps no `Persistent` flag, so a natural mob saved with its column (a
-save while it is near a player) comes back persistent. The filter-only despawns (wandering trader,
-piglin brute, zoglin) are not built.
+add-on documentation's [U], and the edge is no player's view covering its column. Mobs spawned by
+commands, eggs or plugins stay.
+
+Saved [D, S]: BDS keeps `Persistent` (its `PersistentComponent`, which `_canDespawn` asks) and
+`NaturalSpawn` with every mob; a summoned one is saved `Persistent` 1, `NaturalSpawn` 0
+(bds-keepmobs.txt, bds-t2ekeep-dump.txt, the template actors of bds-t12actors). Sapling
+(`spawning/persistence.rs`, 2026-11-05) saves a `Natural` mob `Persistent` 0, `NaturalSpawn` 1 and
+any other `Persistent` 1, and a mob read back with `NaturalSpawn` 1 and `Persistent` 0 is `Natural`
+again; one saved with no `NaturalSpawn` (sapling's worlds before) stays, as it did. Tests
+`a_mob_saved_as_natural_comes_back_despawning_and_a_persistent_one_stays`,
+`natural_mobs_are_saved_not_persistent_and_summoned_ones_persistent`.
+
+Filter-only despawns [P, D]: where a kind's `minecraft:despawn` has `filters`, `_canDespawn` runs
+them instead of its own rules (0x141ba30e0: after the any-player check and a loaded-floor check,
+`fcn.141cf1b50` on the filter group; no persistence, view edge or 44 cap of its own). The piglin
+brute's and the zoglin's: not `is_persistent` and over 54 from the nearest player, or
+`inactivity_timer` 30, `random_chance` 800 and over 32 (sapling `spawning/despawn.rs` `FILTERED`, for
+`Natural` mobs of the two kinds). The wandering trader's: the `wandering_trader_despawning` family
+(its `minecraft:timer` of 2400 or 3600 s adds it) or no trade supply, and over 24, whatever its
+persistence: built before, villagers/wandering.rs (looked at every 20 ticks and not while trading, and
+the timer is not saved).
 
 Inactivity and the 44 cap (2026-11-04, bdsre, settled by decompile; sapling `spawning/despawn.rs`):
 
@@ -176,7 +198,7 @@ test `a_natural_mob_a_player_names_stays_when_the_player_goes`. Picked-up items 
   record is chunk tag 0x77 with structure names, not tag 57 with type bytes; patrols built
   2026-11-05, not drilled spawning naturally).
 - Herd events (spawner blocks: docs/research/spawners.md): undrillable live, natural spawning takes a
-  random spot and time (husbandry.md "Herds of babies").
+  random spot and time; drilled by summoning with the events instead (husbandry.md "Herds").
 - `doMobSpawning` and peaceful (2026-11-04, `e1spawn`, bds-e1spawn.txt): with the rule off a monster
   spawner made a pig by its egg still spawned pigs, and a cow egg hatched; `/difficulty peaceful`
   removed a zombie in its own tick and left a pig, and `/summon zombie` then answered

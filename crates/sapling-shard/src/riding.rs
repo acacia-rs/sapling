@@ -44,7 +44,7 @@ pub(crate) use mouth::{fall as mouth_at_death, open_mouths};
 pub(crate) use packets::sound as sound_packet;
 pub(crate) use body::{put as put_body, worn as body_worn};
 pub(crate) use packs::{load as load_pack, looted_armor, open as open_pack, refusal as pack_refusal, slots as pack_slots, spilled};
-pub(crate) use seats::layout;
+pub(crate) use seats::{layout, offset as seat_offset};
 pub(crate) use replaced::{is_mount, set as set_mount_item};
 use seats::PLAYER;
 

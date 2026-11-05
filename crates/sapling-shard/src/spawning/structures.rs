@@ -107,7 +107,7 @@ fn herd(world: &mut World, layer: Entity, found: &Found, entry: &Entry, size: u3
     let spot = Found { surface: entry.surface, ..*found };
     for _ in 0..size {
         // BDS asks the cap before each member, `held <= cap`, so a category ends one over it.
-        if held <= cap && entry.checks.pass(found.brightness, found.weathered) && spawn(world, layer, entry.kind, &spot, found.cell.map(|c| c as f32), entry.event) {
+        if held <= cap && entry.checks.pass(found.brightness, found.weathered) && spawn(world, layer, entry.kind, &spot, found.cell.map(|c| c as f32), entry.event).is_some() {
             held += 1;
         }
     }

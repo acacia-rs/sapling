@@ -71,6 +71,8 @@ pub struct SpawnRule {
     pub herds: Vec<HerdEvents>,
     pub gates: Gates,
     biomes: Filter,
+    /// `minecraft:disallow_spawns_in_bubble`: none in a bubble column.
+    pub no_bubble: bool,
 }
 
 const DIFFICULTIES: [&str; 4] = ["peaceful", "easy", "normal", "hard"];
@@ -108,6 +110,7 @@ fn parse(row: &'static str) -> Option<SpawnRule> {
         herds: Vec::new(),
         gates: Gates::default(),
         biomes: Filter::parse(biomes),
+        no_bubble: false,
     };
     for field in fields.split(' ').filter(|field| !field.is_empty()) {
         let (key, value) = field.split_once('=').unwrap_or((field, ""));
@@ -128,6 +131,7 @@ fn parse(row: &'static str) -> Option<SpawnRule> {
             "not_on" => rule.not_on = value.split(',').collect(),
             "permute" => rule.permute = value.split(',').filter_map(|entry| entry.split_once(':')).filter_map(|(weight, kind)| Some((weight.parse().ok()?, kind))).collect(),
             "herds" => rule.herds = HerdEvents::parse_all(value),
+            "no_bubble" => rule.no_bubble = true,
             _ => _ = rule.gates.read(key, value),
         }
     }
@@ -254,6 +258,7 @@ mod tests {
         assert!(cod.admits(&sea));
         assert!(!cod.admits(&Spot { distance: 40.0, ..sea }) && !cod.admits(&Spot { y: 70, ..sea }));
         assert_eq!((cod.density_at(true), cod.density_at(false)), (Some(20), None));
+        assert!(rule("minecraft:axolotl", 0).no_bubble && !cod.no_bubble);
     }
 
     #[test]

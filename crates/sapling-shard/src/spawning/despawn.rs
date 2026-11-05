@@ -29,6 +29,12 @@ pub(super) const MONSTER_BRIGHT: u8 = 13;
 const BRIGHTNESS_UP: f32 = 0.66;
 /// Read as always bright.
 const BRIGHT_KINDS: [&str; 2] = ["minecraft:blaze", "minecraft:magma_cube"];
+/// Kinds whose `minecraft:despawn` is filters alone, which `_canDespawn` runs instead of its own
+/// rules (no view edge, no 44 cap): not persistent and over [`FILTERED_FAR`] from every player, or
+/// idle 30 s, the 1 in 800 roll and over [`FILTERED_NEAR`]. The wandering trader's: villagers/wandering.rs.
+const FILTERED: [&str; 2] = ["minecraft:piglin_brute", "minecraft:zoglin"];
+const FILTERED_NEAR: f32 = 32.0;
+const FILTERED_FAR: f32 = 54.0;
 
 /// A tick of a living ticked mob: 1 more tick idle (`PostAIUpdateSystem`), 3 for a bright monster.
 pub(crate) fn count_idle(world: &mut World, mob: Entity, layer: Entity, kind: &str) {
@@ -58,9 +64,14 @@ pub(crate) fn tick(world: &mut World) {
     {
         let mut dice = world.get_resource_or_insert_with(SpawnDice::default);
         for (entity, layer, kind, at, idle) in natural {
-            let Some((near, far)) = sapling_data::despawn_distances(&kind) else { continue };
-            let far = if capped { far.min(TICK_RANGE_FAR) } else { far };
-            match goes(&watchers, layer, at, near, far, || idle >= INACTIVE && dice.0.roll(CHANCE) == 0) {
+            let filtered = FILTERED.contains(&kind.as_str());
+            let (near, far) = match sapling_data::despawn_distances(&kind) {
+                _ if filtered => (FILTERED_NEAR, FILTERED_FAR),
+                Some((near, far)) if capped => (near, far.min(TICK_RANGE_FAR)),
+                Some(distances) => distances,
+                None => continue,
+            };
+            match goes(&watchers, layer, at, (near, far, !filtered), || idle >= INACTIVE && dice.0.roll(CHANCE) == 0) {
                 Some(true) => gone.push(entity),
                 Some(false) if nearest(&watchers, layer, at) <= near => stirred.push(entity),
                 _ => {}
@@ -81,13 +92,14 @@ fn nearest(watchers: &[Watcher], layer: Entity, at: [f32; 3]) -> f32 {
     watchers.iter().filter(|watcher| watcher.layer == layer).map(|watcher| watcher.distance(at)).fold(f32::INFINITY, f32::min)
 }
 
-/// Whether a mob of `layer` at `at` goes, by its distances and, beyond `near`, `rolled`; `None`
-/// with no player in its world at all, when BDS despawns nothing and reads nothing.
-fn goes(watchers: &[Watcher], layer: Entity, at: [f32; 3], near: f32, far: f32, rolled: impl FnOnce() -> bool) -> Option<bool> {
+/// Whether a mob of `layer` at `at` goes, by its distances and, beyond `near`, `rolled`, and, with
+/// `edge`, when no player's view covers it; `None` with no player in its world at all, when BDS
+/// despawns nothing and reads nothing.
+fn goes(watchers: &[Watcher], layer: Entity, at: [f32; 3], (near, far, edge): (f32, f32, bool), rolled: impl FnOnce() -> bool) -> Option<bool> {
     let column = ChunkPos::of_block(at[0].floor() as i32, at[2].floor() as i32);
     let mut mine = watchers.iter().filter(|watcher| watcher.layer == layer).peekable();
     mine.peek()?;
-    if !mine.any(|watcher| watcher.sees(column)) {
+    if edge && !mine.any(|watcher| watcher.sees(column)) {
         return Some(true);
     }
     let nearest = nearest(watchers, layer, at);

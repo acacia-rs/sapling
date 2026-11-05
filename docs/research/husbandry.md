@@ -85,15 +85,37 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
   defaults (soft 4, hard 6, max 10) that sapling uses; the exact snap distance between 6.6 and 15.5
   was not pinned.
 
-## Herds of babies (ported from the packs)
+## Herds (ported from the packs)
 
 A spawn rule's `herd` list (`event`, `event_skip_count`, `initial_event`, `initial_event_count`)
 is now in spawn-rules.tsv's `herds=` field; `_spawnMobCluster` 1415ed230 picks one herd at random
 (`nextInt(herds)`) and fcn 1415ed0d0 fires `initial_event` on members below `initial_event_count`
-and `event` on those at or past `event_skip_count`. Sapling fires `minecraft:entity_born` that way
-(`spawning/herds.rs`), so a fox herd is two grown then babies; other herd events are a TODO there.
-Not drillable live (eleventh wave, 2026-11-04): natural spawning takes a random spot and time, and
-the other events (horse coats, tropical fish looks, riders) need the event fired on a spawned mob.
+and `event` on those at or past `event_skip_count`. Sapling (`spawning/herds.rs`) spawns with the
+events that make a mob (babies of fox, axolotl and polar bear herds, patrol captains and followers),
+so a fox herd is two grown then babies, and fires the others on the spawned mob
+(`creatures::fire_herd_event`). Natural spawning is not drillable live (random spot and time), so
+the events were drilled by summoning with them (2026-11-05, `h3herds`, bds-h3herds.txt against
+sapling-h3herds.txt):
+
+- Looks (`creatures/looks.rs`): a horse's `entity_spawned` rolls one of 7 coats (`Variant`) and 5
+  markings (`MarkVariant`); `make_<coat>` sets the coat (BDS's `make_black` came 4, 0). A tropical
+  fish's rolls `Variant` 0-1, `MarkVariant` 0-5, `Color` and `Color2` 0-14; `become_<name>` sets all
+  four from the pack's group (clownfish 0, 0, 1, 0; red snapper 1, 3, 14, 0). A summon's event
+  replaces `entity_spawned`; a herd's comes after it, so a herd's horses share a coat and keep their
+  markings. `Color2` is saved (sapling-leveldb `Raising`) and announced. Sapling matched BDS on the
+  four fired looks; the rolled ones are random on both sides.
+- Riders (`creatures/riders.rs`): a zombie horse's `spawn_adult_with_rider` gets a zombie
+  (`spawn_as_rider`), a camel husk's `spawn_with_rider` a husk in front and a parched (`ranged_mode`)
+  behind; a drowned's `as_rider` makes a zombie nautilus half a block up and rides it (new seat
+  layouts in `riding/seats.rs`: camel husk as the camel, the nautilus (0, 0.925, -0.2) for the
+  drowned family). Each rider is announced already in its seat, as BDS's were. Riders of a natural
+  mount despawn as it does.
+- Left: the riders' equipment (BDS's zombie and husk held an item, the parched a bow and helmet,
+  the drowned a trident); a horse summoned with no event rolls no baby (BDS: 2 of 4 plain summons
+  babies); BDS announced each rider before its mount, with the links in the mount's `AddEntity` and
+  `immediate` off, where sapling sends the mount first and the links after with `immediate` on (see
+  vehicles.md "Unverified", the send order line of leftovers.md); the husk's `Variant` 2 and the parched's
+  4 (every BDS husk is announced 2; sapling sends 0 for a kind without genes).
 
 ## Left out
 
@@ -130,13 +152,13 @@ vehicles work) take no player as a vehicle.
   of eight). Sapling's `/execute ... in overworld run tp` of a mob answered success and left it in
   the End: fixed (2026-11-05, `entities::teleport_into`, `ShardCtx::move_entity_into`; BDS took the
   mob off the old dimension's screens and announced it at its new place, under a new runtime id
-  and the same unique id, where sapling keeps both; test
-  `a_mob_sent_into_another_dimension_leaves_one_screen_for_the_other`). `w1inherit`
+  and the same unique id; sapling kept both until 2026-11-05, now gives the next runtime id
+  (mobs/rehomed.rs); test `a_mob_sent_into_another_dimension_leaves_one_screen_for_the_other`). `w1inherit`
   (bds-w1inherit.txt, sapling-w1inherit.txt, the flat plains world): two cows summoned in the
   Nether came warm, two in the End cold, the overworld's temperate, on both. Each pair was fed
   before the pens closed. BDS made three calves in 25 s: warm x cold gave cold (the pair is known
   by when the parents' love particles stopped), then a cold and a temperate one. Sapling made
   four: warm, temperate, temperate, cold. Every calf took one parent's climate on both sides,
   which fits sapling's random pick of a parent; three calves cannot show the odds.
-- Herds of babies from natural spawning (above); cats', parrots' and foxes' own goals (Left out).
+- Herds from natural spawning (above); cats', parrots' and foxes' own goals (Left out).
 - The exact distance a lead snaps at, between 6.6 and 15.5.

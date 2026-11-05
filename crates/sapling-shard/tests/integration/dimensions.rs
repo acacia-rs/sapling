@@ -130,15 +130,20 @@ fn a_mob_sent_into_another_dimension_leaves_one_screen_for_the_other() {
     h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [2.5, 65.0, 0.5]).is_some()));
     let sent: Vec<_> = (0..3).map(|_| h.tick_all()).collect();
     assert!(sent.iter().all(|sent| all::<AddEntity>(sent.to(1)).is_empty()), "none in Alex's Nether");
-    let cow = sent.iter().flat_map(|sent| all::<AddEntity>(sent.to(2))).next().expect("first in Steve's overworld").runtime_id;
+    let first = sent.iter().flat_map(|sent| all::<AddEntity>(sent.to(2))).next().expect("first in Steve's overworld");
+    let (cow, unique) = (first.runtime_id, first.unique_id);
     h.remote.run(move |ctx| assert!(ctx.move_entity_into(sapling_api::EntityId(cow), NETHER, [1.5, 70.0, 1.5])));
     let sent = h.tick_all();
     assert_eq!(all::<RemoveEntity>(sent.to(2)), [RemoveEntity { entity_id_self: cow as i64 }]);
     let added = all::<AddEntity>(sent.to(1));
-    assert_eq!(added.iter().map(|added| (added.runtime_id, [added.position.x, added.position.y, added.position.z])).collect::<Vec<_>>(), [(cow, [1.5, 70.0, 1.5])]);
+    // BDS gives it a new runtime id and keeps its unique id (bds-u1inherit.txt).
+    let moved = added.iter().map(|added| added.runtime_id).find(|id| *id != cow).expect("a new runtime id");
+    assert_eq!(added.iter().map(|added| (added.runtime_id, [added.position.x, added.position.y, added.position.z])).collect::<Vec<_>>(), [(moved, [1.5, 70.0, 1.5])]);
+    assert_eq!(added.iter().map(|added| added.unique_id).collect::<Vec<_>>(), [unique]);
     h.remote.run(move |ctx| {
-        assert_eq!(ctx.entity(sapling_api::EntityId(cow)).map(|cow| cow.feet[0]), Some(1.5));
-        assert!(!ctx.move_entity_into(sapling_api::EntityId(cow), 2, [0.5, 70.0, 0.5]), "no End here");
+        assert!(ctx.entity(sapling_api::EntityId(cow)).is_none());
+        assert_eq!(ctx.entity(sapling_api::EntityId(moved)).map(|cow| cow.feet[0]), Some(1.5));
+        assert!(!ctx.move_entity_into(sapling_api::EntityId(moved), 2, [0.5, 70.0, 0.5]), "no End here");
     });
     h.tick_all();
 }

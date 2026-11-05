@@ -6,7 +6,7 @@ use sapling_api::{EntityId, EntitySpawnEvent, SpawnReason};
 use sapling_world::Actor;
 
 use super::shown::{announcement, reshow, spawn_sound};
-use super::{Creature, Health, NO_DEATH, afflictions, bees, breezes, creaking, dolphins, drinks, frogs, genes, ghasts, harm, hunting, husbandry, legs, rams, slimes, spells, squids, stares, strides, strolling, swimming, teleports, vexes, villagers, wings, wither};
+use super::{Creature, Health, NO_DEATH, afflictions, bees, breezes, creaking, dolphins, drinks, frogs, genes, ghasts, harm, hunting, husbandry, legs, looks, rams, riders, slimes, spells, squids, stares, strides, strolling, swimming, teleports, vexes, villagers, wings, wither};
 use crate::body::Body;
 use crate::components::{Layer, NetId};
 use crate::entities;
@@ -22,7 +22,8 @@ const BABY_EVENTS: [&str; 3] = ["entity_born", "as_baby", "spawn_baby"];
 
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
 pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>) -> Option<EntityId> {
-    let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
+    let look = looks::of(world, kind, event);
+    let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| look.map(looks::Look::gene)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
     // BDS played no `spawn` at any of 112 summons naming an event (research/captures/bds-*.txt), nor
     // for a struck pig's or a piglin's turning (bds-n3struck.txt, bds-t2barter.txt) or a shrieker's
     // emerging warden (bds-t2warden.txt).
@@ -31,6 +32,13 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {
         entities::restore(world, entity, |compound, _| sapling_world::varied_actor(compound, gene.0, yaw).ok());
+    }
+    if let Some(look) = look {
+        looks::wear(world, entity, look);
+        reshow(world, entity);
+    }
+    if let Some(event) = event {
+        riders::arrive(world, entity, kind, event);
     }
     villagers::arm(world, entity, layer, kind, false, event);
     super::drowned::arm(world, entity, kind, event);
@@ -43,6 +51,18 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
         super::blast::light_forced(world, entity, layer, kind);
     }
     Some(id)
+}
+
+/// Fires a herd's spawn `event` on the spawned mob: the look it sets over the one rolled (looks.rs),
+/// and the riders it makes (riders.rs).
+pub(crate) fn fire_herd_event(world: &mut World, entity: Entity, kind: &str, event: &str) {
+    if let Some(look) = looks::fired(kind, event, looks::worn(world, entity)) {
+        looks::wear(world, entity, look);
+        let yaw = world.get::<legs::Legs>(entity).map_or(0.0, |legs| legs.yaw);
+        entities::restore(world, entity, |compound, _| sapling_world::varied_actor(compound, look.gene().0, yaw).ok());
+        reshow(world, entity);
+    }
+    riders::arrive(world, entity, kind, event);
 }
 
 /// How a mob comes: why, facing where, of which gene, and heard as what, if at all.
@@ -157,6 +177,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     afflictions::adopt(world, entity, &compound);
     wither::adopt(world, entity, &compound);
     husbandry::adopt(world, entity, &kind, Some((&actor, &compound)));
+    crate::spawning::adopt_natural(world, entity);
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     super::piglins::adopt(world, entity);
     super::captains::adopt(world, entity);

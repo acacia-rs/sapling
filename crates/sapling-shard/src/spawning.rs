@@ -10,6 +10,7 @@ mod eggs;
 mod gates;
 mod herds;
 mod peaceful;
+mod persistence;
 mod phantoms;
 mod spots;
 mod structures;
@@ -27,6 +28,7 @@ use crate::view::View;
 pub(crate) use despawn::{count_idle, tick as despawn};
 pub(crate) use eggs::{hatch, kind_of as egg_kind};
 pub(crate) use peaceful::{removed_in_peaceful, tick as remove_in_peaceful};
+pub(crate) use persistence::{adopt as adopt_natural, mark as mark_persistence};
 pub(crate) use phantoms::Rested;
 
 const MOB_SPAWNING: &str = "doMobSpawning";
@@ -34,8 +36,8 @@ const MOB_SPAWNING: &str = "doMobSpawning";
 const CHANCE: u32 = 11;
 const ODDS: u32 = 2000;
 
-/// A mob that appeared by itself: it despawns (despawn.rs). Spawned by a command, an egg or a
-/// plugin, or loaded with its column, a mob stays.
+/// A mob that appeared by itself: it despawns (despawn.rs), and is saved so (persistence.rs).
+/// Spawned by a command, an egg or a plugin, a mob stays.
 #[derive(Component)]
 pub(crate) struct Natural;
 
