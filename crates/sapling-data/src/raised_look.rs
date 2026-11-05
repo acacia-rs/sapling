@@ -19,6 +19,11 @@ pub fn mob_look(identifier: &str, baby: bool) -> Option<([f32; 2], f32)> {
     Some(([float(identifier, baby, Key::BoundingboxWidth)?, float(identifier, baby, Key::BoundingboxHeight)?], float(identifier, baby, Key::Scale).unwrap_or(1.0)))
 }
 
+/// The `minecraft:movement` a baby or grown mob of `identifier` was announced with.
+pub fn mob_pace(identifier: &str, baby: bool) -> Option<f32> {
+    recorded(identifier, baby)?.attributes.iter().find(|attribute| attribute.name == "minecraft:movement").map(|attribute| attribute.value)
+}
+
 fn set(id: u64, metadata: Vec<Item>) -> SetEntityData {
     SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }

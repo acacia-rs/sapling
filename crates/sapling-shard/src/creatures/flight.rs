@@ -10,6 +10,7 @@ use sapling_data::AddEntityOptions;
 use sapling_world::ItemStack;
 
 mod in_way;
+mod pitch;
 mod ray;
 
 use super::arrows::{Lands, Shot};
@@ -42,6 +43,8 @@ pub(crate) struct Arrow {
     pub(super) stuck: Option<u64>,
     /// By `/summon`: it stays put the tick it came.
     pub(super) summoned: bool,
+    /// Its yaw and pitch, unrounded (`pitch`).
+    pub(super) turn: [f32; 2],
     /// The body it bounced off, which it meets no more (BDS's flew out of it, bds-n3knock.txt).
     pub(super) bounced_off: Option<Entity>,
 }
@@ -135,7 +138,8 @@ pub(crate) fn launch(world: &mut World, launch: Launch, loosed: Option<Loosed>) 
     };
     let born = world.resource::<Tick>().0;
     let arrow = entities::spawn_mob(world, layer, shot.kind, Body::new(from, motion, shot.size), from, announce)?;
-    world.entity_mut(arrow).insert((Arrow { archer, by, gives, shot, born, stuck: None, summoned: false, bounced_off: None }, Unflown));
+    world.entity_mut(arrow).insert((Arrow { archer, by, gives, shot, born, stuck: None, summoned: false, turn: [yaw, pitch], bounced_off: None }, Unflown));
+    world.get_mut::<Told>(arrow)?.pitch(pitch);
     if let Some(loosed) = loosed {
         world.entity_mut(arrow).insert(loosed);
     }
@@ -230,14 +234,9 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
     // BDS keeps a shot's motion as its next move's, drag and weight taken after the move
     // (research/captures/bds-s7shots.txt, bds-shoot.txt): viewers are told that one.
     let next = if held { [0.0; 3] } else { [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag] };
-    let summoned = world.get::<Arrow>(arrow).is_some_and(|arrow| arrow.summoned);
+    let turned = if held { None } else { pitch::turn(world, arrow, gone) };
     let mut told = world.get_mut::<Told>(arrow)?;
-    if summoned && first {
-        // TODO: BDS turns a loosed shot as it flies too (bds-shoot.txt: pitch bytes 2, 1, 0, 255, 252
-        // from its 4th move); that rule is not fitted.
-        told.pitch(0.0);
-        told.pitch(facing(body.motion)[1]);
-    }
+    turned.into_iter().for_each(|pitch| told.pitch(pitch));
     let mut packets = told.update(id, body.at, next, held);
     packets.splice(0..0, flags);
     if held {

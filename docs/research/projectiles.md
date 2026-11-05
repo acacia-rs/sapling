@@ -21,6 +21,13 @@ BDS; see "Unverified".
 | `xp_bottle` | 0.5 | 0.05 | 0.99 / 0.6 | `angle_offset` -20, 3 to 11 experience |
 | `wind_charge_projectile` | 1.5 | 0 | 1 / 1 | box 0.3125, burst `knockback_scaling` 1.22, damage 1 |
 
+A thrown wind charge leaves at 2.25 a tick, its item's `launch_power_scale` 1.5 over the power
+(bds-q3wind.txt, 2.26). Meeting a block, it bursts 0.25 back from the face (particle data 1) and
+pushes mobs as a blast of reach 2.4 pushes them, 1.22 times as hard: measured from the feet less
+half the width, towards 0.9 up the body, added to the motion (two cows, 0.338 and 0.375, to 0.01).
+Not copied: BDS's `disappeared`/`reappeared` sounds and its removal and `wind_charge.burst` a tick
+after the burst.
+
 A lingering potion leaves a cloud with `duration` 30, `radius` 3, `radius_on_use` -0.5 and
 `reapplication_delay` 40.
 

@@ -28,7 +28,8 @@ pub(crate) struct Placing {
 }
 
 impl Placing {
-    pub(crate) fn new(world: &World, layer: Entity, template: StructureTemplate, at: BlockPos, how: &StructureLoad) -> Option<Placing> {
+    pub(crate) fn new(world: &mut World, layer: Entity, template: StructureTemplate, at: BlockPos, how: &StructureLoad) -> Option<Placing> {
+        let unseeded = world.get_resource_or_insert_with(blocks::Dice::default).roll(u32::MAX);
         let level = &world.get::<Layer>(layer)?.world;
         let turn = Turn::of(how.rotation, how.mirror);
         let ids = template.palette.iter().map(|entry| {
@@ -36,7 +37,7 @@ impl Placing {
             let properties = turn.states(&name, &properties);
             blocks::resolve(level.registry(), &Block { name, properties })
         }).collect();
-        let dice = Integrity::new(&how.seed, world.resource::<Tick>().0);
+        let dice = Integrity::new(&how.seed, unseeded);
         let kept = if how.include_blocks { (0..template.volume()).filter(|cell| dice.keeps(*cell, how.integrity)).collect() } else { Vec::new() };
         Some(Placing { template, at, turn, ids, kept, how: how.clone() })
     }
@@ -146,14 +147,15 @@ fn unpaired(entity: Value) -> Value {
 /// to bds-t3integ.txt): cell `i` of the template's order is kept when the first `nextFloat` of an
 /// MT19937 seeded with the seed's Java string hash plus `i`, times 100, is below the integrity. A
 /// number is a structure block's `seed`, taken as its low 32 bits, 0 too (bds-e3seed.txt); a
-/// command's seed cannot be one (`vanilla/structure.rs`).
+/// command's seed cannot be one (`vanilla/structure.rs`). No seed draws one: BDS's two loads in one
+/// tick differed (bds-q3integ2.txt).
 struct Integrity(u32);
 
 impl Integrity {
-    fn new(seed: &str, tick: u64) -> Self {
+    fn new(seed: &str, unseeded: u32) -> Self {
         Self(match seed.parse::<i64>() {
             Ok(number) => number as u32,
-            Err(_) if seed.is_empty() => tick as u32,
+            Err(_) if seed.is_empty() => unseeded,
             Err(_) => seed.encode_utf16().fold(0u32, |hash, unit| hash.wrapping_mul(31).wrapping_add(unit.into())),
         })
     }

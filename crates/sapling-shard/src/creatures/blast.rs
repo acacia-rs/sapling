@@ -27,7 +27,7 @@ const HARM: f32 = 7.0;
 /// What a blast's harm throws a mob by, away from it and up (bds-blasts.txt).
 const KNOCK: f32 = 0.4;
 /// A mob is thrown from the blast towards this far up its height (a pig's 0.81 of 0.9).
-const EYES: f32 = 0.9;
+pub(super) const EYES: f32 = 0.9;
 const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
 
 /// A lit fuse: the ticks left of it, and whether it was forced (it does not go out).
@@ -227,13 +227,13 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
 
 /// How hard a blast at `at` that reaches `reach` hits a mob at `feet`, `size` wide and high:
 /// BDS measures to its feet and takes half its width off (`Explosion::explode`).
-fn impact(world: &World, layer: Entity, at: [f32; 3], feet: [f32; 3], size: [f32; 2], reach: f32) -> Option<f32> {
+pub(super) fn impact(world: &World, layer: Entity, at: [f32; 3], feet: [f32; 3], size: [f32; 2], reach: f32) -> Option<f32> {
     let far = (distance(feet, at) - size[0] / 2.0).max(0.0);
     (far <= reach).then(|| (1.0 - far / reach) * seen(world, layer, at, feet, size))
 }
 
 /// The way from `from` to `to`, `long` long.
-fn towards(from: [f32; 3], to: [f32; 3], long: f32) -> [f32; 3] {
+pub(super) fn towards(from: [f32; 3], to: [f32; 3], long: f32) -> [f32; 3] {
     let far = distance(from, to);
     if far < 1e-4 { [0.0; 3] } else { std::array::from_fn(|axis| (to[axis] - from[axis]) / far * long) }
 }

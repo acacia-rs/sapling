@@ -383,6 +383,13 @@ The actor in survival at midnight on a walled stone floor, healed and put back b
   came and hit every second from 1.4 s; the baby took it at 0.25 s but first hit at 4.4 s (BDS 2.4 s,
   not followed); the cave spiders took and let go over and over as BDS's, but one held 5 off bit
   (BDS's held ones never did; not followed).
+- The baby's late hit (2026-11-05, `q3baby`, bds-q3baby.txt against sapling-q3baby.txt, three babies
+  7 off on easy): BDS's first hit 43, 30 and 32 ticks after the summon, sapling's 60, 60 and 57. Both
+  announce the baby with `minecraft:movement` 0.35 (the pack's `zombie_baby` group), but sapling hunted
+  at the grown zombie's 0.23. Fixed: a baby hunts at its announced pace over the grown one's
+  (`creatures/shown.rs` `pace_share`, `sapling_data::mob_pace`); test
+  `a_baby_zombie_7_off_hits_within_45_ticks_of_its_summon`. BDS's babies took the actor 0.3 to 0.8 s
+  later than sapling's (not followed).
 
 ## Ways (2026-11-04, `e1path`, research/captures/bds-e1path.txt)
 
@@ -415,7 +422,9 @@ kind with `panics=`, runs for 70 ticks from place to place within 5 blocks at th
 A creeper is lit, burns and bursts so (`creatures/blast.rs`): its blast hurts and throws players
 by the rule above, hurts mobs, and breaks blocks along the Java game's rays, which break that one
 stone. What a block withstands is guessed from its hardness; the fuse goes out when its prey
-is 6 off or gone, as the pack says, which was not drilled.
+is 6 off or gone, as the pack says: drilled 2026-11-05 (`q3creeper`, bds-q3creeper.txt against
+sapling-q3creeper.txt), prey stepped 5.5 off a lit fuse let it burn on, 6.5 and 7.5 off put it out until
+the creeper walked back, on both alike.
 
 A skeleton stands within 10 blocks of its prey and looses an arrow every 61 ticks
 (`creatures/arrows.rs`): aimed and spread as the Java game's, flying by the two numbers above,

@@ -305,6 +305,12 @@ and tnt.rs):
     hit test moved to `flight/in_way.rs`. Still left: the loosed tick's move (moving it there made
     a shot that met its prey at once go unannounced; the TODO in arrows.rs `loose`), and BDS turning
     a loosed shot in flight (bytes 2, 1, 0, 255, 252 from the fourth move; not fitted).
+  - Fitted 2026-11-05 (thirteenth wave, group Q) on bds-shoot.txt's skeleton arrow: each move the
+    shot's pitch goes a fifth of the way to that move's own angle (the Java game's `lerpRotation`),
+    and all the way at once from a shot announced at yaw and pitch 0 (the summoned one's byte 192);
+    bytes cut toward zero, every byte of the capture's 12 moves matched. `creatures/flight/pitch.rs`,
+    test `a_skeletons_arrow_is_told_pitching_down_as_it_flies`. The yaw was not seen to turn and is
+    left as announced.
   - Fixed 2026-11-05 (thirteenth wave): a mob's arrow and a dispenser's shot make their first move
     in the tick they are loosed (`creatures/arrows.rs` `first_move`). The instant-hit regression
     came from removing an arrow in the tick it hit, before it was announced; BDS removes an arrow
@@ -369,6 +375,12 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
 
 ## Not drilled
 
+- Seen on the way in thirteenth3q (2026-11-05), not followed: BDS's summoned boat stands 0.2 off the
+  summon point in x and z (bds-q3seats.txt: 4.5, 4.5 to 4.7, 4.3; earlier captures alike), sapling's on
+  it. A falling suspicious block that lands breaks with `ParticleDestroy` at the cell's corner and one
+  UpdateSubchunkBlocks setting it then air (bds-q3brush.txt's first run); sapling's particle is at the
+  entity, no block sent. `tp @s @e[type=arrow,c=1]` answered `success_count` 2 on BDS, 1 on sapling
+  (bds-q3arrows.txt). Slowness 255 does not hold BDS's cows (bds-q3wind.txt, bds-q3crowd.txt).
 - Repair through `minecraft:repairable` (data-driven items naming themselves), drilled 2026-11-04 on
   spears (research/captures/bds-t2espear.txt): two iron spears worn 150 and 130, one with sharpness
   II, made one worn 30 (no twentieth) that kept sharpness II, in either hotbar order; sapling gave 18

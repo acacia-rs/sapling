@@ -128,7 +128,7 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 
 ## Unverified
 
-- Animation modes place at once.
+- Animation modes: stale, animated since 2d3869af (`structures/animate.rs`; bds-structanim*.txt).
 - `/place featurerule` places nothing (`invalidfeaturerule.error`): on the drill's flat world BDS
   answered every rule, and `feature minecraft:beehive_feature`, at y -26 with `invalidposition.error`
   (bds-t1dplace4.txt), and its console placed nothing (bds-t1dplacec.txt), so what a rule places is
