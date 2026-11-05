@@ -23,6 +23,9 @@ const SIZE: [f32; 2] = [0.3125, 0.3125];
 const PLAYER: [f32; 2] = [0.6, 1.8];
 const SPEED: f32 = 1.2;
 const BLUE_SPEED: f32 = 0.6;
+/// Both skulls' `uncertainty_base` and `uncertainty_multiplier` (bds-y3wither.txt: skulls passed the
+/// actor 2.41 over its feet, sd 1.15).
+const UNCERTAINTY: [f32; 2] = [7.5, 1.0];
 const POWER: f32 = 1.0;
 const BLUE_RESISTS: f32 = 0.8;
 /// Wither II, for this many ticks on normal and on hard.
@@ -42,7 +45,9 @@ struct Skull {
 pub(super) fn fire(world: &mut World, layer: Entity, wither: Entity, from: [f32; 3], to: [f32; 3], blue: bool) {
     let aim: [f32; 3] = std::array::from_fn(|axis| to[axis] - from[axis]);
     let long = aim.iter().map(|c| c * c).sum::<f32>().sqrt().max(1e-4);
-    let motion = aim.map(|c| c / long * if blue { BLUE_SPEED } else { SPEED });
+    let off = super::super::arrows::spread(world, UNCERTAINTY);
+    let mut dice = world.get_resource_or_insert_with(crate::blocks::Dice::default);
+    let motion = aim.map(|c| (c / long + dice.gaussian() * off) * if blue { BLUE_SPEED } else { SPEED });
     let owner = world.get::<NetId>(wither).map_or(-1, |id| id.0 as i64);
     let kind = if blue { BLUE } else { BLACK };
     let [yaw, pitch] = crate::creatures::facing(motion);

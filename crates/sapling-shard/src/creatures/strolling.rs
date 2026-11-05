@@ -18,6 +18,10 @@ const TRIES: usize = 10;
 const FAR: f32 = 10.0;
 const ARRIVED: f32 = 0.5;
 const PATIENCE: u64 = 200;
+/// Within a block of its way's last middle its speed is the squared distance there, at least half:
+/// BDS's MoveControl::calculateMoveSpeed 1430b8050 and shouldSlowSpeed 1430b90d0 (bds-strolls.txt
+/// walks end 0.086, 0.076, 0.062, ... 0.022 a tick).
+const LAST_SLOWEST: f32 = 0.5;
 /// A hit mob flees this many ticks, to places up to this far along each axis.
 const FLEES: u64 = 70;
 const FLEES_FAR: f32 = 5.0;
@@ -85,7 +89,12 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: O
     });
     let stroll = stroll.filter(|(way, _)| !way.is_empty());
     match &stroll {
-        Some((way, _)) => legs::walk_turning(world, entity, layer, &body, middle(way[0]), speed, 0.0, legs::STROLL_TURN),
+        Some((way, _)) => {
+            let to = middle(way[0]);
+            let near = (to[0] - body.at[0]).powi(2) + (to[1] - body.at[2]).powi(2);
+            let slowed = if way.len() == 1 && near < 1.0 { near.max(LAST_SLOWEST) } else { 1.0 };
+            legs::walk(world, entity, layer, &body, to, speed * slowed, 0.0);
+        }
         None => legs::rest(world, entity),
     }
     if let Some(mut kept) = world.get_mut::<Stroll>(entity) {

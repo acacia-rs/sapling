@@ -13,9 +13,9 @@ use crate::sync::Told;
 /// Its legs come up to speed by this much of it a tick; the push of a tick is 0.98 of its speed squared.
 const PACE: f32 = 0.1;
 const STRIDE: f32 = 0.98;
-/// Degrees its body turns in a tick; strolling, as BDS's cows did (bds-glance.txt, 21 of 256 a tick).
-const TURN: f32 = 60.0;
-pub(super) const STROLL_TURN: f32 = 30.0;
+/// Degrees its body turns in a tick (`movement.basic`'s default `max_turn`), up to twice that while
+/// its legs are below speed: BDS's MoveControl::calculateYRotation 1430b8350 (bds-slain.txt: 30, then 60).
+const TURN: f32 = 30.0;
 /// In the air its legs push 0.02 of what they do on the ground at speed 1.
 const AIRBORNE: f32 = 0.02;
 /// It jumps at a block whose face is this near the middle of its box, if the block is over half
@@ -40,16 +40,11 @@ fn at_step(world: &World, layer: Entity, body: &Body, facing: f32) -> bool {
 /// Before the mob's move: it turns towards `to` and its legs push it there at `speed`, unless it
 /// is within `near` of it.
 pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32, near: f32) {
-    walk_turning(world, entity, layer, body, to, speed, near, TURN);
-}
-
-/// [`walk`], its body turning up to `most` degrees a tick.
-#[allow(clippy::too_many_arguments)]
-pub(super) fn walk_turning(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32, near: f32, most: f32) {
     let speed = speed * super::afflictions::pace(world, entity);
     let Some(mut legs) = world.get_mut::<Legs>(entity) else { return };
     let (dx, dz) = (to[0] - body.at[0], to[1] - body.at[2]);
     let turn = ((-dx).atan2(dz).to_degrees() - legs.yaw + 180.0).rem_euclid(360.0) - 180.0;
+    let most = if speed > 0.0 && legs.pace > 0.0 { TURN * (1.0 / legs.pace).clamp(1.0, 2.0) } else { TURN };
     legs.yaw += turn.clamp(-most, most);
     legs.pace = (legs.pace + PACE).min(1.0);
     // In a liquid its legs push as in the air, on the bottom too: BDS's zombie crossed a pool's

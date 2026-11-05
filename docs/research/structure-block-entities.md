@@ -272,6 +272,17 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   trial chamber pieces (test `trial_chamber_blocks_set_into_water_keep_none`); `cells` over x -460 to
   -433, y -14 to 2 then differs only in two ore blobs (gold at x -436 to -434, y -6 to -4; copper at y 20
   earlier), not looked into.
+  Looked at 2026-11-05 (thirteenth3ab): a second BDS run of the same regions (`20261003-y3tc-run2`,
+  `worldgen-oracle diff`) differs from the first in 18 cells of glow lichen and tripwire, none of them
+  ore, so the blobs are not BDS's run spread between these two runs. `cells` over all of chunk (-28, -27),
+  y -64 to 120: 52 cells differ, every one an ore blob. Copper at x -446 to -444, z -420/-419, y 20-21
+  is BDS's alone (andesite in ours); gold at x -436 to -434, z -426 to -424 sits a block lower in ours
+  (y -5/-6 against -4/-5); coal on the chunk's north and west edges (z -432, x -448) at y 31-32 in ours
+  and 29-30 in BDS; gold on the north edge at y -40/-41 in ours, -42 in BDS. Same x and z, y off by one or
+  two: the blobs' heights, not their draws across; the edge ones may come from the neighbours (-28, -28)
+  and (-29, -27). No repeatable canon covers this chunk (`c-tc` is chunks 2-14, 12-24), so not traced;
+  next: a one-worker seed-0 BDS run of these chunks and `replay_check` (memory: stock twins agreeing
+  can be luck).
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
   before the vault's first tick rewrites it (`spawners/vault.rs` takes the lesser of it and now + 1
   step), so left. Undrillable as a difference: the generator has no level clock to save, and a loaded
