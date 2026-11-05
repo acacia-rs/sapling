@@ -65,7 +65,11 @@ overloads (11 for `/scoreboard`, 2 for `/tag`).
   [obj, name], on one with none at all `list.player.empty` [name]; a `/titleraw` `*` score part
   reads the viewer's score; `/tag pig` is `noTargetMatch` (a type name is no selector).
 - Order of a holder's objectives past two (sapling: creation order).
-- Offline players' names (`commands.scoreboard.players.offlinePlayerName`) and their wire ids.
+- Offline players' names, drilled 2026-11-05 (bds-n13off.txt): a player gone is named
+  `commands.scoreboard.players.offlinePlayerName`, with `%` before it in `players list`'s names line
+  only (sapling the same since; test `a_player_gone_is_listed_by_bds_offline_name`). The unsigned
+  probe bot came back as a new holder (new unique id, score 1 not 6); a signed player keeping its
+  holder is undrilled (sapling keeps it).
 - Numbers past i32 and `^=`: drilled 2026-11-05 (bds-f1cmds.txt): `set`/`add` past i32 answer
   `commands.generic.num.invalid` [word], and `^=` is a syntax error at `^` ("ion @s f1 ", "^",
   "= @s f1"); sapling answers the same since.

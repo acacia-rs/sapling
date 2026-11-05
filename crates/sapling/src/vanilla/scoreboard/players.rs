@@ -5,7 +5,7 @@
 use std::hash::BuildHasher;
 
 use sapling_api::command::Selector;
-use sapling_api::{Output, ScoreHolder, ScoreOperation, Sender, ShardCtx};
+use sapling_api::{OFFLINE_PLAYER, Output, ScoreHolder, ScoreOperation, Sender, ShardCtx};
 
 use super::{Change, find_objective};
 use crate::vanilla::no_target;
@@ -73,7 +73,8 @@ pub(in crate::vanilla) fn change(ctx: &mut ShardCtx<'_>, sender: &Sender, out: &
 /// with one, each holder's scores.
 pub(in crate::vanilla) fn list(ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output, target: Option<&Selector>) {
     let Some(target) = target else {
-        let names: Vec<String> = ctx.score_holders().iter().map(|holder| ctx.holder_name(holder)).collect();
+        let named = |name: String| if name == OFFLINE_PLAYER { format!("%{name}") } else { name };
+        let names: Vec<String> = ctx.score_holders().iter().map(|holder| named(ctx.holder_name(holder))).collect();
         if names.is_empty() {
             return out.translate("commands.scoreboard.players.list.empty", Vec::new(), false);
         }
