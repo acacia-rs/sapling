@@ -135,7 +135,10 @@ Tags as in `containers-crafting.md` (REC, DATA, BDSRE, BDSRE-old, mem, inf). Not
 
 ## Not settled
 
-1. The exact movement packets BDS sends for a moving orb (`MoveEntityDelta` flags, any `SetEntityMotion`).
+1. A slowing orb on the ground (bds-n13net.txt, 2026-11-05). In the air BDS sends a MoveEntityDelta each tick and
+   a SetEntityMotion at the summon, about every sixth tick and on landing, as sapling does (sapling-n13net.txt).
+   Crawling on the ground, BDS's deltas thin out as it slows (gaps of 1, 2, 3, then 6 ticks, none once still);
+   sapling sends one each tick it moves. The rule was not found.
 2. Whether the player-side entity touch loop also calls `playerTouch` (pickup without homing), and what
    the player flag at +0x210 bit 0 is.
 3. What filter 14188aea0 applies (spectators / dead players excluded?).

@@ -1,7 +1,7 @@
 //! The thirteenth wave's group N drills (research/parity/THIRTEENTH-BRIEF.md): `/place`'s
 //! `keepJigsaws`, `ignoreStartHeight` and `liquidSettings` (`n13jig`, `n13liq`), a scoreboard
-//! holder leaving and coming back (`n13off`), and REMAINING3's player and item lines (`n13play`,
-//! `n13items`, `n13more`).
+//! holder leaving and coming back (`n13off`), and REMAINING3's player, item, command and network
+//! lines (`n13play`, `n13items`, `n13more`, `n13orb`, `n13net`, `n13names`, `n13sheet`).
 
 use super::creatures::{floor, with};
 
@@ -15,6 +15,9 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "n13items" => (items(), ITEMS_SHOWN),
         "n13more" => (more(), MORE_SHOWN),
         "n13orb" => (orbs(), MORE_SHOWN),
+        "n13net" => (wire(), NET_SHOWN),
+        "n13names" => (names(), NAMES_SHOWN),
+        "n13sheet" => (sheet(), SHEET_SHOWN),
         _ => return None,
     })
 }
@@ -60,6 +63,48 @@ fn orbs() -> Vec<String> {
         lines.extend([format!("gamemode {mode} @s"), "summon xp_orb 0.5 -26 0.5".into(), "".into(), "".into(), "".into(), "".into()]);
     }
     with(lines, &["tp CmdWatcher 0.5 -26 0.5", "gamemode creative @s", "kill @e[type=!player]", ""])
+}
+
+const NET_SHOWN: &[&str] = &["AddEntity", "AddItemEntity", "RemoveEntity", "MoveEntityDelta", "MoveEntityAbsolute", "SetEntityMotion", "MotionPredictionHints", "UpdateBlock", "UpdateBlockSynced", "LevelEvent", "LevelSoundEvent", "SpawnParticleEffect"];
+
+/// Sand falling five blocks; a thrown item; an orb homing from four blocks; water poured in the
+/// Nether.
+fn wire() -> Vec<String> {
+    let mut lines = with(floor(), &["gamemode survival @s", "fill 3 -32 0 3 -32 0 stone", "fill 3 -31 0 3 -27 0 air", ""]);
+    lines.extend(["setblock 3 -24 0 sand", "", "", "", "", "", "", "", "", "fill 3 -32 0 3 -24 0 stone", ""].map(String::from));
+    lines.extend(["replaceitem entity @s slot.hotbar 0 dirt 1", "", "!drop 0 1", "", "", "", "", "", "kill @e[type=item]", ""].map(String::from));
+    lines.extend(["summon xp_orb 0.5 -26 4.5", "", "", "", "", "", "", ""].map(String::from));
+    lines.extend(["gamemode creative @s", "execute in nether run tp @s 0.5 100 0.5 -90 0", "", "", "", "fill -1 99 -1 3 102 1 air", "fill -1 99 -1 3 99 1 stone", "tp @s 0.5 100 0.5 -90 0", "", "replaceitem entity @s slot.weapon.mainhand 0 water_bucket", "", "!click 2 -1 0 up", "", "", ""].map(String::from));
+    with(lines, &["execute in overworld run tp @s 0.5 -26 0.5", "", "clear @s", "kill @e[type=!player]", ""])
+}
+
+const SHEET_SHOWN: &[&str] = &["UpdateSubchunkBlocks", "UpdateBlock"];
+
+/// A portal sheet over two chunks and two sections, its frame broken at the near side low and at
+/// the far top.
+fn sheet() -> Vec<String> {
+    let mut lines = floor();
+    for gap in ["14 -20 3", "17 -12 3"] {
+        lines.extend(["fill 14 -27 3 17 -12 3 obsidian", "fill 15 -26 3 16 -13 3 portal [\"portal_axis\"=\"x\"]", "", ""].map(String::from));
+        lines.extend([format!("setblock {gap} air"), String::new(), String::new(), String::new()]);
+    }
+    with(lines, &["fill 14 -27 3 17 -12 3 air", "fill 14 -27 3 17 -27 3 stone", ""])
+}
+
+const NAMES_SHOWN: &[&str] = &["CommandOutput"];
+
+/// Old block names set on dirt and read back by a `testforblock` that fails; old item names given.
+fn names() -> Vec<String> {
+    const BLOCKS: [&str; 24] = ["double_plant", "coral_fan_dead", "skull", "wood", "brick_block", "hard_stained_glass", "hard_stained_glass_pane", "silver_glazed_terracotta", "invisibleBedrock", "lit_pumpkin", "magma", "web", "snow_layer", "melon_block", "golden_rail", "end_bricks", "quartz_ore", "mob_spawner", "trapdoor", "wooden_button", "wooden_pressure_plate", "fence_gate", "prismarine", "sponge"];
+    const ITEMS: [&str; 14] = ["scute", "horsearmorgold", "horsearmordiamond", "lodestonecompass", "wooden_door", "netherbrick", "frame", "glow_frame", "spawn_egg", "banner", "bed", "record_cat", "map", "camera"];
+    let mut lines = with(floor(), &["fill 1 -27 -1 3 -25 1 air", "setblock 2 -27 0 dirt", ""]);
+    for block in BLOCKS {
+        lines.extend([format!("setblock 2 -26 0 {block}"), "testforblock 2 -26 0 air".into(), "setblock 2 -25 0 air".into(), "setblock 2 -26 0 air".into()]);
+    }
+    for item in ITEMS {
+        lines.extend([format!("give @s {item}"), "clear @s".into()]);
+    }
+    with(lines, &["fill 1 -27 -1 3 -27 1 stone", ""])
 }
 
 const ITEMS_SHOWN: &[&str] = &["LevelSoundEvent", "InventorySlot", "InventoryContent", "MobArmorEquipment", "AddItemEntity", "RemoveEntity", "TakeItemEntity", "AddEntity", "UpdateAttributes", "SetEntityData", "CommandOutput"];

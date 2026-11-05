@@ -194,8 +194,10 @@ Send `MoveEntityDelta` when moved > 0.01, `SetEntityMotion` when v changed by > 
 - The meaning of `BlockType+0x130 & 1` (push speed 0.1 vs 0.25) and `+0x164 & 4` (solid); the push-up fallback
   when no face is free; entity flag 3 set by push-out.
 - `Actor::move` collision response (assumed to zero vy on landing; not read).
-- Which motion packet a client actually gets (SetActorMotion vs MotionPredictionHints: toggle 0x27 at 14cc224c0) and
-  what the per-viewer bandwidth filter (1414407f0, 1413e7730) drops beyond 80 blocks.
+- What the per-viewer bandwidth filter (1414407f0, 1413e7730) drops beyond 80 blocks. The packet choice is
+  settled (bds-n13net.txt, 2026-11-05): a thrown stack gets MoveEntityDelta every tick and SetEntityMotion at the
+  throw, about every sixth tick and on landing, no MotionPredictionHints; sapling-n13net.txt the same, but for
+  BDS's first delta carrying a yaw (`rot_y` 193, the thrower faced -90), which sapling leaves out.
 - Player-side touch: which box overlap calls `playerTouch` (Java inflates the player box by 1, 0.5, 1); not read.
 - Item+0x152 bits 0x20 (fire resistant) and 0x40 (should despawn) from use, not headers.
 - 140d5e660 (`dropTowards?`, throwTime 40, pickup 10, uses 0.1 and 0.2) was not decompiled.

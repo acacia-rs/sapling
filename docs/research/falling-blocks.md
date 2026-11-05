@@ -261,13 +261,16 @@ the `FallingBlock` compound (`{name, states, version}`) into `mFallingBlockSerId
 (`movzx`) into the int `mTime`. The write was not decompiled; sapling writes a byte, so a fall past 255 ticks
 would wrap if BDS's does too.
 
+## On the wire (drilled 2026-11-05, research/captures/bds-n13net.txt)
+
+- Sand set over a 7-block drop: UpdateBlockSynced(air, Create, the actor's id) then AddEntity at the cell's centre
+  and y + 0.46 (0.49 less the first tick's fall) with velocity -0.0392, a tick after the set; then a MoveEntityDelta
+  (y only) every tick and a SetEntityMotion about every seventh, on landing a MoveEntityDelta on the ground with
+  zero motion and UpdateBlockSynced(sand, Destroy), and RemoveEntity four ticks later. sapling-n13net.txt matches
+  value for value.
+
 ## Unverified / inferred
 
-- How the generic sync handles falling blocks on the wire: MoveActorDelta and SetActorMotion every tick, or a
-  client-simulated fall from one SetActorMotion. Also whether UpdateBlock(air) goes out before or after AddActor
-  in the start tick. **One BDS capture settles both**: a bot places sand over a 3-block drop and the proxy records
-  it.
-- The actor's height offset (0.49 from DF/Nukkit), and so whether the wire y during flight is feet + 0.49.
 - `Block+0xa6` = `mLavaFlammable` and `Material+6` = `mSuperHot` come from header offsets. `BlockType+0x132 & 0x80`
   (the forced place) and `0x163 & 0x80` (the break checks, on by default and cleared by TopSnow) are unnamed.
 - The default `shouldStopFalling` block search with argument 0x13, and `fcn.140d27800(entity, 0x5a)` being
