@@ -38,13 +38,13 @@ impl RawText {
         let mut read = Vec::new();
         for part in parts {
             let part = part.as_object().ok_or_else(|| error("itemIsNotObject"))?;
-            // TODO: which key wins in a part with several was not drilled.
-            read.push(if part.contains_key("text") {
+            // In a part with several keys, translate wins, then text, selector, score, either way round (bds-k1cmds.txt).
+            read.push(if part.contains_key("translate") {
+                RawPart::Translate { key: string(part, "translate", "translateNotString")?, with: part.get("with").map(Self::with).transpose()? }
+            } else if part.contains_key("text") {
                 RawPart::Text(string(part, "text", "textNotString")?)
             } else if part.contains_key("selector") {
                 RawPart::Selector(string(part, "selector", "selectorNotString")?)
-            } else if part.contains_key("translate") {
-                RawPart::Translate { key: string(part, "translate", "translateNotString")?, with: part.get("with").map(Self::with).transpose()? }
             } else if let Some(score) = part.get("score") {
                 let score = score.as_object().ok_or_else(|| error("scoreNotObject"))?;
                 RawPart::Score { name: string(score, "name", "scoreNameNotString")?, objective: string(score, "objective", "scoreObjectiveNotString")? }
@@ -137,6 +137,17 @@ mod tests {
         assert_eq!(nested.0, [RawPart::Translate { key: "%%s".into(), with: Some(RawText(vec![RawPart::Selector("@s".into())])) }]);
         assert_eq!(parsed(r#"{ "rawtext" : [ { "text" : "a ] }" } ] }"#).unwrap().0, [RawPart::Text("a ] }".into())], "spaces, and brackets in strings");
         assert_eq!(parsed(r#"{"rawtext":[{"text":"\"q\\"}]}"#).unwrap().0, [RawPart::Text("\"q\\".into())]);
+    }
+
+    #[test]
+    fn a_part_with_several_keys_reads_as_bds_read_it() {
+        // bds-k1cmds.txt: translate, then text, then selector, then score, in either order.
+        let translate = RawPart::Translate { key: "k".into(), with: None };
+        assert_eq!(parsed(r#"{"rawtext":[{"text":"T","translate":"k"}]}"#).unwrap().0, [translate.clone()]);
+        assert_eq!(parsed(r#"{"rawtext":[{"selector":"@s","translate":"k"}]}"#).unwrap().0, [translate.clone()]);
+        assert_eq!(parsed(r#"{"rawtext":[{"score":{"name":"@s","objective":"o"},"translate":"k"}]}"#).unwrap().0, [translate]);
+        assert_eq!(parsed(r#"{"rawtext":[{"selector":"@s","text":"T"}]}"#).unwrap().0, [RawPart::Text("T".into())]);
+        assert_eq!(parsed(r#"{"rawtext":[{"score":{"name":"@s","objective":"o"},"selector":"@s"}]}"#).unwrap().0, [RawPart::Selector("@s".into())]);
     }
 
     #[test]

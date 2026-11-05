@@ -104,6 +104,11 @@ async fn world_and_item_commands_answer_as_bds_answered() {
         (r#"give @s dirt 1 0 {"minecraft:can_place_on":{"blocks":["nosuch"]}}"#, "Component 'minecraft:can_place_on' could not be updated. [] 0"),
         (r#"give @s dirt 1 0 {"minecraft:can_place_on":{"blocks":"stone"}}"#, "Component 'minecraft:can_place_on' could not be updated. [] 0"),
         (r#"give @s dirt 1 0 {"can_destroy":{"blocks":["dirt"]}}"#, r#"commands.give.success ["Dirt", "1", "Alice"] 1"#),
+        // bds-k1cmds.txt.
+        ("replaceitem entity @s slot.hotbar 0 stone 0", r#"commands.generic.num.tooSmall ["0", "1"] 0"#),
+        ("replaceitem entity @s slot.hotbar 0 stone 65", r#"commands.generic.num.tooBig ["65", "64"] 0"#),
+        ("replaceitem entity @s slot.hotbar 0 wool 1 5", r#"commands.replaceitem.success.entity ["slot.hotbar", "0", "Alice", "1", "Lime Wool"] 1"#),
+        ("replaceitem entity @s slot.hotbar 0 wool 1 20", r#"commands.replaceitem.success.entity ["slot.hotbar", "0", "Alice", "1", "White Wool"] 1"#),
         ("spreadplayers ~ ~ -1 5 @a", r#"commands.generic.num.tooSmall ["-1.00", "0.00"] 0"#),
         ("spreadplayers ~ ~ 10 1 @a", r#"commands.generic.num.tooSmall ["1.00", "11.00"] 0"#),
         ("spreadplayers ~ ~ 1 5 nobody", "commands.generic.noTargetMatch [] 0"),
