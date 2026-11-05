@@ -5,7 +5,7 @@
 //! start to waste 30 to 119 seconds after they come, 1 a second. An evoker's vex tells its prey
 //! again every tick after it took it, `mob.warning` a tick on, as two of BDS's three did
 //! (bds-evoker.txt); one spawned by command tells it once (bds-vex.txt).
-// TODO: one spawned by command did not charge in 30 seconds on BDS (bds-vex.txt), and does here.
+// TODO: one spawned by command charged in one of three 30 s BDS runs, after its flickering target held (mob-kinds.md).
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use acacia_proto::types::MetadataFlags1;

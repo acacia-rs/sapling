@@ -357,6 +357,14 @@ Sapling's run: sapling-kinds3.txt.
   0.3 s after it came and let it go at 18.8 s, never hit it, and in that time flew straight off
   south-west away from it at a rising 0.4 a tick, so it had a target but no charge; the charge goal's
   code (no RTTI) still was not found. Left as it was.
+  Drilled 2026-11-05 (twelfth wave, group 11; `g11vex`, four vexes summoned 6 off the actor, 30 s):
+  bds-g11vex.txt had no charge, and the vexes' `TargetEid` flickered to the actor for one tick every 10
+  ticks in bursts of a few seconds while they wandered up to 30 off; bds-g11vex-2.txt had the same
+  flicker until one vex held the actor from 32.8 s and charged three times (`charge`), hurting it twice.
+  So a commanded vex does charge, once it keeps its target; what drops the target the tick after it is
+  taken (the pack's `must_see`, with the actor's view of it blocked by the stone floor, is the likeliest)
+  was not settled in three BDS runs (bds-vex.txt, bds-g11vex.txt, bds-g11vex-2.txt). Sapling's
+  commanded vex keeps its target and charges within seconds. Left, as more runs are needed to fit it.
 
 ## Sapling
 
@@ -391,7 +399,8 @@ fewer than 8 vexes are within 16, summons three (`creatures/vexes.rs`, `Physics:
 by the Java game's vex goals: a tick in 7 a charge at prey more than 2 off, 5.5 on easy where
 their boxes meet, else a wander up to 7 off where it came; they waste from 30 to 119 seconds on.
 It steps away from nobody and its fangs bite no mob; a fang stands on full blocks only. A vex
-spawned by command charges here, where BDS's did not in 30 seconds (`bds-vex.txt`).
+spawned by command charges here within seconds, where BDS's charged in one of three 30 s runs
+(`bds-g11vex-2.txt`; see "The commanded vex" above).
 
 A dolphin swims as above (`creatures/dolphins.rs`, `Physics::SWIMMER`, `InLiquid::Swims`) to
 spots of water up to 10 off, or at its hitter, which it bites as other hunters do (`provoked`,
