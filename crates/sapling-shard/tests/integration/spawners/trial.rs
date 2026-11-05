@@ -44,6 +44,16 @@ fn a_spawner_sees_its_player_through_glass_but_not_stone() {
 }
 
 #[test]
+fn a_spawner_sees_through_panes_bars_and_tinted_glass_but_not_leaves() {
+    // bds-ab3sight.txt: zombies came behind glass panes, iron bars, tinted glass and a red stained
+    // pane; none behind persistent oak leaves.
+    for wall in ["minecraft:glass_pane", "minecraft:iron_bars", "minecraft:tinted_glass", "minecraft:red_stained_glass_pane"] {
+        assert_eq!(walled_in(wall), "2", "behind {wall}");
+    }
+    assert_eq!(walled_in("minecraft:oak_leaves"), "1", "behind leaves");
+}
+
+#[test]
 fn its_shutters_are_heard_at_its_corner_after_its_state() {
     // research/captures/bds-x2ran.txt: state 3 then `open_shutter`, state 5 then `close_shutter`, at the corner.
     use acacia_proto::RawPacket;

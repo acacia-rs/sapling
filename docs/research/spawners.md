@@ -153,6 +153,11 @@ Left out:
   `ParticleWolfArmorBreak`) at their corners. Sapling (sapling-y3trial.txt) matched at the eyes, stone and
   open sites but not behind glass. Fixed: glass (any block named `*glass`) no longer blocks the sight, as
   Java's visual-shape clip; panes, leaves and the other see-through blocks were not drilled.
+  `ab3sight` (2026-11-05, bds-ab3sight.txt, sapling-ab3sight.txt): BDS's spawners 8 off behind walls of
+  glass panes, iron bars, tinted glass and red stained panes each spawned zombies; the one behind
+  persistent oak leaves none. Sapling spawned only behind tinted glass. Fixed: panes and bars (names
+  ending `glass_pane` or `_bars`) no longer block either, leaves still do (`spawners.rs` `in_sight`, test
+  `a_spawner_sees_through_panes_bars_and_tinted_glass_but_not_leaves`).
 - The eject velocity's odd x/z term BDS's trial spawner adds (left out); the vault's per-axis spread. One BDS
   reward (bds-t3trial.txt): item at x+0.5, y+1.0, z+0.5, moving (0.028, 0.156, 0.010), `eject_item` there
   with extra data -718719502. Sapling's wave there never ended (its zombies did not burn by day, BDS's did)

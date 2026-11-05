@@ -444,6 +444,9 @@ By night on the stone floor, the survival actor held in place:
   rolled only for riders. Fixed: `creatures/spawn_gear.rs` rolls them at every birth; test
   `armed_kinds_are_shown_holding_their_equipment_tables_weapon_as_they_are_summoned`. Left (TODO
   there): armour pools under `random_difficulty_chance`, `enchant_random_gear`, and dropping the gear.
+  Re-drilled (sapling-y3gear.txt): each kind now shows BDS's item ids; still different, the piglin
+  (BDS: a crossbow, its `spawn_adult` picks the ranged or melee unit at even odds) showed nothing, as
+  sapling arms no summoned piglin; its drowned came unarmed again (odds).
 
 ## Not drilled
 
