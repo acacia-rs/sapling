@@ -4,11 +4,15 @@
 
 use super::view::View;
 use crate::block::Block;
+use crate::block_entity::BlockEntity;
 use crate::end::Spike;
 use crate::random::Mt19937;
 
 /// `getIslandHeightValue(chunk x, chunk z, 1, 1)` (148244960).
 pub type IslandHeight<'a> = &'a dyn Fn(i32, i32) -> f32;
+
+/// Java 1.12's `ChunkGeneratorEnd.spawnPoint`, every generated gateway's `ExitPortal`.
+const GATEWAY_EXIT: [i32; 3] = [100, 50, 0];
 
 pub fn decorate(random: &mut Mt19937, chunk: (i32, i32), view: &mut View, spikes: &[Spike; 10], island: IslandHeight) {
     let (x0, z0) = (chunk.0 * 16, chunk.1 * 16);
@@ -150,7 +154,8 @@ fn grow_chorus(view: &mut View, random: &mut Mt19937, at: [i32; 3], root: [i32; 
     }
 }
 
-/// `EndGatewayFeature::place` (144c120f0): the gateway between two infiniburn bedrock caps, air around.
+/// `EndGatewayFeature::place` (144c120f0): the gateway between two infiniburn bedrock caps, air around;
+/// its entity leads over the arrival platform's spot, as BDS saved it (oracle 20261003-end).
 fn end_gateway(view: &mut View, [x, y, z]: [i32; 3]) {
     for dx in -1..=1i32 {
         for dy in -2..=2i32 {
@@ -166,4 +171,5 @@ fn end_gateway(view: &mut View, [x, y, z]: [i32; 3]) {
             }
         }
     }
+    view.set_block_entity([x, y, z], BlockEntity::EndGateway(GATEWAY_EXIT));
 }

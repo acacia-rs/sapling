@@ -3,7 +3,7 @@
 //! it hits (hits.rs). Where it meets a block an arrow or a trident sticks, for a minute, or for
 //! the world folder to keep if a player loosed it; anything else lands (landing.rs).
 
-use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
+use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_data::AddEntityOptions;
@@ -24,7 +24,6 @@ use in_way::first_met;
 
 /// Ticks one lies stuck before it goes, unless a player may pick it up.
 const LIES: u64 = 1200;
-const SHAKES: i32 = 7;
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
 /// The wire's own key 18 carries a tipped arrow's item data, its potion plus one (an `arrow` of data
 /// 26 showed Byte 26; research/captures/bds-t2epack.txt).
@@ -167,8 +166,12 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     let mut motion = if unflown { body.motion } else { [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag] };
     let behind: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - motion[axis]);
     let (passed, spent) = world.get::<Loosed>(arrow).map_or((Vec::new(), false), |loosed| (loosed.pierced.clone(), loosed.spent));
-    let met = if spent { None } else { first_met(world, layer, by, body.at, motion, shot.size, &passed) };
-    if let Some((at, struck, is_player)) = met {
+    let met = if spent { None } else { first_met(world, layer, by, body.at, motion, shot.size, &passed, shot.lands == Lands::Hurts) };
+    let bounced = met.is_some_and(|(_, struck, _)| super::stuck::bounces_off(world, struck, body.at, motion));
+    if bounced {
+        motion = motion.map(|c| c * -0.1);
+        crate::late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound(shot.heard[0], body.at, ""));
+    } else if let Some((at, struck, is_player)) = met {
         if shot.lands != Lands::Hurts {
             landing::land(world, arrow, layer, at, behind, Some((struck, is_player)));
             mobs::remove(world, arrow);
@@ -192,13 +195,15 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     }
     let before = body.at;
     body.motion = motion;
-    let met_block = ray::first_block(&world.get::<Layer>(layer)?.world, before, motion);
-    let part = met_block.map_or(1.0, |(part, _)| part);
+    // Bounced, BDS's shot stays where it was this tick (bds-g10flame.txt).
+    let met_block = if bounced { None } else { ray::first_block(&world.get::<Layer>(layer)?.world, before, motion) };
+    let part = if bounced { 0.0 } else { met_block.map_or(1.0, |(part, _)| part) };
     body.at = std::array::from_fn(|axis| before[axis] + motion[axis] * part);
     let stopped = met_block.is_some();
+    let mut holds = true;
     if let Some((_, face)) = met_block {
         let by_mob = world.get::<super::Creature>(by).is_some();
-        crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, face, shot.sticks, shot.burns > 0, by_mob);
+        holds = crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, face, shot.sticks, shot.burns > 0, by_mob);
         let by_player = world.get::<crate::components::Identity>(by).is_some();
         crate::blocks::vibrate(world, layer, body.at, crate::blocks::GameEvent::ProjectileLand, by_player);
     }
@@ -207,7 +212,9 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
         mobs::remove(world, arrow);
         return None;
     }
-    if stopped {
+    // A block the shot set off or broke holds it no more: it flies on from there (bds-g10flame.txt).
+    let held = stopped && holds && ray::first_block(&world.get::<Layer>(layer)?.world, before, motion).is_some();
+    if held {
         body.motion = [0.0; 3];
         world.get_mut::<Arrow>(arrow)?.stuck = Some(now);
     }
@@ -219,7 +226,7 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     let drag = if super::holds(level, body.at.map(|c| c.floor() as i32), WATER) { shot.wet_drag } else { shot.drag };
     // BDS keeps a shot's motion as its next move's, drag and weight taken after the move
     // (research/captures/bds-s7shots.txt, bds-shoot.txt): viewers are told that one.
-    let next = if stopped { [0.0; 3] } else { [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag] };
+    let next = if held { [0.0; 3] } else { [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag] };
     let summoned = world.get::<Arrow>(arrow).is_some_and(|arrow| arrow.summoned);
     let mut told = world.get_mut::<Told>(arrow)?;
     if summoned && first {
@@ -228,16 +235,15 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
         told.pitch(0.0);
         told.pitch(facing(body.motion)[1]);
     }
-    let mut packets = told.update(id, body.at, next, stopped);
+    let mut packets = told.update(id, body.at, next, held);
     packets.splice(0..0, flags);
-    if stopped {
+    if held {
         super::stuck::keep(world, arrow, layer, &body);
-        if shot.kind == super::arrows::ARROW.kind {
-            packets.push(sapling_net::encode(&EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArrowShake, data: SHAKES, fire_at_position: None }));
-        }
-        packets.push(sound(shot.heard[1], body.at, ""));
     }
     entities::tell_viewers(world, arrow, layer, body.at.map(|c| c.floor() as i32), packets);
+    if stopped {
+        super::stuck::tell_hit(world, layer, id, body.at, shot, held);
+    }
     Some(())
 }
 
@@ -266,6 +272,11 @@ pub(super) fn tick(world: &mut World) {
         let (kept, returning) = world.get::<Loosed>(arrow).map_or((false, false), |loosed| (trident && loosed.pickup != Pickup::Never, loosed.returning));
         match stuck {
             _ if returning || still => {}
+            Some(_) if super::stuck::loosened(world, arrow, layer) => {
+                // Unflown, its first tick free is its zero motion: BDS's fell from the tick after that.
+                super::stuck::unstick(world, arrow);
+                world.entity_mut(arrow).insert(Unflown);
+            }
             Some(since) if now >= since + LIES && !kept => mobs::remove(world, arrow),
             Some(_) => {
                 let at = world.get::<Body>(arrow).map_or([0; 3], |body| body.at.map(|c| c.floor() as i32));

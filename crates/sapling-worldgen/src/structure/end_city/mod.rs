@@ -79,6 +79,9 @@ impl EndCity {
                 } else if marker == "Elytra" && bb.contains(x, y, z) {
                     let facing = [3, 4, 2, 5][piece.rotation as usize];
                     canvas.set(x, y, z, named("frame", &format!("facing_direction={facing},item_frame_map_bit=0,item_frame_photo_bit=0"), false));
+                } else if marker == "Sentry" {
+                    // A shulker at the cell's corner (14831a670).
+                    canvas.add_actor("minecraft:shulker", "minecraft:entity_spawned", (x, y, z));
                 }
             }
         }

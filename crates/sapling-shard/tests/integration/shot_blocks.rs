@@ -6,9 +6,10 @@ use crate::common;
 use std::sync::mpsc;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, LevelSoundEvent};
+use acacia_proto::packets::{AddItemEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, SetEntityMotion};
+use common::shooting::{ALEX, added, click_air, ready, release};
 use common::{Harness, all};
-use sapling_api::{Block, Item, RuleValue};
+use sapling_api::{Block, GameMode, Item, RuleValue, Slot};
 
 const DISPENSER: [i32; 3] = [3, 65, 6];
 const AIMED: [i32; 3] = [6, 65, 6];
@@ -56,6 +57,46 @@ fn an_arrow_breaks_a_chorus_flower_which_leaves_itself() {
 fn with_the_rule_off_a_pot_stays() {
     let (mut h, _) = shoot_at(Block::new("decorated_pot"), false);
     assert_eq!(name_at(&mut h, AIMED), "minecraft:decorated_pot");
+}
+
+fn told_motions(sent: &[RawPacket], id: u64) -> Vec<[f32; 3]> {
+    all::<SetEntityMotion>(sent).iter().filter(|motion| motion.runtime_entity_id == id).map(|motion| [motion.velocity.x, motion.velocity.y, motion.velocity.z]).collect()
+}
+
+#[test]
+fn an_arrow_whose_block_goes_falls_and_sticks_in_the_one_below() {
+    let (mut h, sent) = shoot_at(Block::new("end_stone"), false);
+    let arrow = added(&sent, "minecraft:arrow").pop().expect("the arrow").runtime_id;
+    h.remote.run(|ctx| assert!(ctx.update_block(AIMED, &Block::new("air"))));
+    let fell: Vec<RawPacket> = (0..30).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let heights: Vec<f32> = all::<MoveEntityDelta>(&fell).iter().filter(|delta| delta.runtime_entity_id == arrow).filter_map(|delta| delta.y).collect();
+    assert_eq!(heights.last(), Some(&65.0), "onto the floor: {heights:?}");
+    let shakes = all::<EntityEvent>(&fell).into_iter().filter(|event| event.runtime_entity_id == arrow && event.event_id == EntityEventEventId::ArrowShake).count();
+    assert_eq!(shakes, 1, "stuck again");
+}
+
+#[test]
+fn a_flame_arrow_primes_tnt_and_bounces_back_off_it() {
+    let mut h = ready(GameMode::Creative, &[("minecraft:bow", 1, 0), ("minecraft:arrow", 1, 0)], 20.0);
+    let bow = Item { enchantments: vec![(21, 1)], ..Item::new("minecraft:bow", 1) };
+    h.remote.run(move |ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&bow)));
+        assert!(ctx.update_block([0, 65, 3], &Block::new("tnt")));
+    });
+    h.tick_all();
+    h.receive(1, &click_air());
+    (0..20).for_each(|_| drop(h.tick_all()));
+    h.receive(1, &release());
+    let ticks: Vec<Vec<RawPacket>> = (0..7).map(|_| h.tick_all().to(1).to_vec()).collect();
+    // BDS tells the ignite the tick the arrow meets the TNT and primes it the tick after (bds-g10flame.txt).
+    let ignited = ticks.iter().position(|sent| all::<LevelEvent>(sent).iter().any(|event| event.event == LevelEventEvent::SoundIgnite)).expect("ignited");
+    assert!(added(&ticks[ignited], "minecraft:tnt").is_empty() && added(&ticks[ignited + 1], "minecraft:tnt").len() == 1);
+    let sent: Vec<RawPacket> = ticks.concat();
+    assert_eq!(added(&sent, "minecraft:tnt").len(), 1, "primed");
+    let arrow = added(&sent, "minecraft:arrow").pop().expect("the arrow").runtime_id;
+    let motions = told_motions(&sent, arrow);
+    assert!(motions.iter().any(|motion| motion[2] < 0.0), "{motions:?}");
+    assert!(!all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == arrow && event.event_id == EntityEventEventId::ArrowShake), "not stuck");
 }
 
 #[test]

@@ -29,7 +29,7 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     // A bred baby is heard `born` (bds-g11love-2.txt, bds-llamabreed.txt).
     let sound = match reason {
         SpawnReason::Bred => Some("born"),
-        _ => (reason != SpawnReason::Lightning && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn"),
+        _ => (!matches!(reason, SpawnReason::Lightning | SpawnReason::Structure) && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn"),
     };
     let id = born_by(world, layer, kind, feet, Birth { reason, yaw, gene, sound }, event)?;
     let entity = entities::find(world, id)?;
@@ -165,6 +165,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     world.entity_mut(entity).insert(Creature { look: Some(actor) });
     super::piglins::adopt(world, entity);
     super::captains::adopt(world, entity);
+    super::raids::adopt_patrol(world, entity, &compound);
     if kind == crate::dragon::DRAGON {
         crate::dragon::adopt(world, entity);
     }

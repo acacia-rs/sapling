@@ -1,5 +1,5 @@
 //! The time of day. Each world's counter (`sapling_world::Level::time`) advances a tick at a time
-//! while its `doDayLightCycle` rule is on. A client counts on by itself from what it was last
+//! while its `doDayLightCycle` rule is on; its age (`Level::age`) always does. A client counts on by itself from what it was last
 //! told, so it is told at the join, when the time is set or stopped, and now and then to stay in
 //! step, in the packets of `sapling_data::world_clocks`.
 
@@ -40,6 +40,7 @@ pub(crate) fn advance(world: &mut World) {
         if realm.is_none_or(|realm| realm.0[0] == Some(layer)) {
             let level = level.world.level_mut();
             level.time += i64::from(runs(level));
+            level.age += 1;
         }
     }
     dimensions::share_levels(world);

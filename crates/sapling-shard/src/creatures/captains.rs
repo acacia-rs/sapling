@@ -38,8 +38,10 @@ fn is_ominous(stack: &ItemStack) -> bool {
     stack.name == BANNER && matches!(&stack.tag, Some(Value::Compound(fields)) if fields.iter().any(|(key, value)| key == "Type" && *value == Value::Int(OMINOUS)))
 }
 
-/// A mob of `kind` that came with spawn `event`: a captain if the event makes one, shown with its banner.
+/// A mob of `kind` that came with spawn `event`: a captain if the event makes one, shown with its
+/// banner, and in a patrol if the event puts it in one (raids/patrols.rs).
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str, event: Option<&str>) {
+    super::raids::join_patrol(world, entity, kind, event);
     if !KINDS.contains(&kind) || !event.is_some_and(|event| EVENTS.contains(&event)) {
         return;
     }

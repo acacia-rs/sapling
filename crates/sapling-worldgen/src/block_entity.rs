@@ -27,6 +27,8 @@ pub enum BlockEntity {
     /// A chest with no loot and the items its template put in it, `slot count name` (then `block`,
     /// `ench=<id>:<level>`) each, joined by `;` (templates_to_rust.py `chest_item`); a mansion's.
     Chest(&'static str),
+    /// An end gateway, never ticked, and the block its travellers go over.
+    EndGateway([i32; 3]),
 }
 
 impl BlockEntity {
@@ -54,6 +56,7 @@ impl BlockEntity {
             Self::Cauldron(_) => name == "cauldron",
             Self::FlowerPot(_) => name == "flower_pot",
             Self::Chest(_) => matches!(name, "chest" | "trapped_chest"),
+            Self::EndGateway(_) => name == "end_gateway",
         }
     }
 }
@@ -74,6 +77,13 @@ mod tests {
         let loot = BlockEntity::Loot { table: "loot_tables/chests/simple_dungeon.json", seed: 1 };
         assert!(loot.fits("chest") && loot.fits("oxidized_copper_chest") && !loot.fits("stone"));
         assert!(BlockEntity::Spawner("minecraft:zombie").fits("mob_spawner") && !BlockEntity::Spawner("minecraft:zombie").fits("chest"));
+    }
+
+    #[test]
+    fn an_end_gateway_keeps_bds_exit() {
+        // The gateway at 1188,65,-97 of the oracle world 20261003-end, as BDS saved it.
+        let entities = crate::EndGenerator::new(20261003).chunk_blocks(74, -7).block_entities();
+        assert_eq!(entities, [([4, 65, 15], BlockEntity::EndGateway([100, 50, 0]))]);
     }
 
     #[test]

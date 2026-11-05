@@ -62,7 +62,8 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the villages are unreadable; no raid goes on, no standing is kept");
             Vec::new()
         });
-        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None }
+        let age = dat.age().unwrap_or(0);
+        Level { spawn, time, age, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None }
     }
 }
 
@@ -75,7 +76,7 @@ fn game_version() -> [i32; 5] {
 impl WorldStorage for LevelDbStorage {
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
         let column = self.0.load_column(ChunkKey::new(pos.x, pos.z, dimension))?;
-        Ok(column.map(|c| StoredColumn { chunk: c.chunk, block_entities: c.block_entities, actors: c.actors, pending_ticks: c.pending_ticks, spawn_areas: c.spawn_areas }))
+        Ok(column.map(|c| StoredColumn { block_entities: c.block_entities, actors: c.actors, pending_ticks: c.pending_ticks, spawn_areas: c.spawn_areas, ..StoredColumn::of(c.chunk) }))
     }
 
     fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
@@ -105,6 +106,7 @@ impl WorldStorage for LevelDbStorage {
             dat.set_last_opened_with(version);
         }
         dat.set_time(level.time);
+        dat.set_age(level.age);
         dat.set_weather(level.weather);
         if let Some(difficulty) = level.difficulty {
             dat.set_difficulty(difficulty);

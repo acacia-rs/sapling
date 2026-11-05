@@ -223,8 +223,11 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
   the tick it comes, then the next tick lava's (8, 4 over the guard), then 8 every 10 ticks and no fire
   tick (7) till it is out. Sapling told 6 and 8 in one tick (health 16) and 7s in the lava; fixed in
   `vitals/stand.rs` (the lava's hit before the fire's own, once lit), test `vitals` lava; re-drilled the
-  same unwarded (sapling-g7lava.txt). Left: under resistance 255 BDS's player put in lava set around it
-  showed 8 at once and no 6, and two 7s after where sapling shows 6, 8 and one 7.
+  same unwarded (sapling-g7lava.txt). Under resistance 255 (g10lava, three rounds each, 2026-11-05): with
+  lava set around it BDS told 6, then 8s, and one 7 about 1 s after the lava went, as sapling does
+  (sapling-g10lava.txt). Teleported into lava, BDS's rounds differ among themselves (8s only; 6 then 8s; 6 and
+  8 by turns), a sub-tick phase not modelled; sapling tells 6 then 8s. The earlier "8 at once, two 7s" was one
+  such round.
 - Run against sapling (research/captures/sapling-hurt.txt, sapling-smother.txt) the drills show the same
   flashes, causes and rhythm; the health differs where BDS mends (those runs were before sapling mended)
   or `/effect` heals, which sapling lacks.

@@ -190,6 +190,19 @@ impl<'a> Canvas<'a> {
         self.shape.add_spawn_area(area);
     }
 
+    /// A mob of `kind`, made by `event`, at the corner of the cell `at`; only inside the chunk (148359de0).
+    pub fn add_actor(&mut self, kind: &'static str, event: &'static str, (x, y, z): (i32, i32, i32)) {
+        self.add_actor_at(kind, event, [x as f32, y as f32, z as f32]);
+    }
+
+    /// A mob of `kind`, made by `event`, its feet at `feet`; only inside the chunk.
+    pub fn add_actor_at(&mut self, kind: &'static str, event: &'static str, feet: [f32; 3]) {
+        let [x, y, z] = feet.map(|c| c.floor() as i32);
+        if self.bb.contains(x, y, z) {
+            self.shape.add_actor(crate::chunk::TemplateActor { kind, event, feet });
+        }
+    }
+
     fn write_past(&mut self, x: i32, y: i32, z: i32, block: Block) {
         self.unclipped.push(([x, y, z], block));
         self.written.insert((x, y, z), block);

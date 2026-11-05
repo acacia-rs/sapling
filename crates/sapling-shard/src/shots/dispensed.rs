@@ -48,6 +48,28 @@ pub(crate) fn shoot(world: &mut World, layer: Entity, from: [f32; 3], way: [f32;
             aimed.map(|c| (c / long + dice.gaussian() * SPREAD * uncertainty) * power)
         }
     };
+    fire(world, layer, from, motion, shot, item)
+}
+
+/// Shoots `item` from `from` along the unit way `way` with no shooter, as BDS's
+/// `Spawner::spawnProjectile` (14118d160) does for an ominous item spawner: at the power and
+/// `uncertainty_base` of the shot's entity JSON, unraised (bds-u1omen.txt). False for what it does not shoot.
+pub(crate) fn shoot_unowned(world: &mut World, layer: Entity, from: [f32; 3], way: [f32; 3], item: &ItemStack) -> bool {
+    let Some((shot, ..)) = kind_of(item) else { return false };
+    let (power, uncertainty) = match item.name.as_str() {
+        "minecraft:fire_charge" => (1.3, 10.0),
+        "minecraft:wind_charge" => (1.5, 1.0),
+        name if name == ARROW.kind => (1.1, 16.0),
+        _ => (0.5, 0.0),
+    };
+    let motion = {
+        let mut dice = world.get_resource_or_insert_with(Dice::default);
+        way.map(|c| (c + dice.gaussian() * SPREAD * uncertainty) * power)
+    };
+    fire(world, layer, from, motion, shot, item)
+}
+
+fn fire(world: &mut World, layer: Entity, from: [f32; 3], motion: [f32; 3], shot: Shot, item: &ItemStack) -> bool {
     let loosed = (shot.kind == ARROW.kind).then(|| Loosed { player: None, tipped: ammo::tip(item), ..Loosed::new(Entity::PLACEHOLDER, Pickup::Anyone, Some(ItemStack { count: 1, ..item.clone() })) });
     crate::creatures::launch(world, Launch { layer, by: Entity::PLACEHOLDER, archer: ARCHER.into(), from, motion, shot, gives: None }, loosed).is_some()
 }

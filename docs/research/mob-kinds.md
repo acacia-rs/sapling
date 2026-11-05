@@ -439,7 +439,11 @@ snapped to a floor within 10, not lava, seen from its eyes; the aim that cell's 
 towards the breeze by its x for both axes (BDS's slip), one above the floor; the first of 40, 55, 60,
 75 and 80 degrees shuffled whose parabola, v² = |h² 0.08 / (2 sin cos h - 2 dy cos²)|, needs 1.4 or
 less. All five bds-breeze.txt launches fit to 1e-4. [U] the pack's 4-8 landing distance against the
-2 to 2.83 the capture fits; the solid flag read as `is_solid`. Jump boost adds nothing. The breeze drill
+2 to 2.83 the capture fits; the solid flag read as `is_solid`. Jump boost (149fb78e0, effect 8) adds 0.1 a
+level times the launch's y over its length to its y, after the solve: bds-g10breeze.txt's three launches under
+jump boost V fit to 1e-4 (`breezes/leap.rs` `boosted`). A leap keeps its launch speed across from its first tick
+(BDS's x stayed -0.5035 a tick); sapling's took ground friction on its second, fixed in `body.rs`
+(sapling-g10breeze.txt). [U] sapling's first SetEntityMotion comes a tick after BDS's. The breeze drill
 cannot judge the landings: its capture lacks the actor, whom each burst pushes. A charge that meets nothing flies on.
 
 A ghast floats and shoots as above (`creatures/ghasts.rs`, `creatures/fireballs.rs`,

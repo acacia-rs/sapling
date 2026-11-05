@@ -1,6 +1,8 @@
-//! `BlockTickingQueue` as decoration uses it: a pending heap and an active heap of liquid ticks,
-//! ordered by (time, priority) with MSVC's `push_heap`/`pop_heap`, whose order among equal keys
-//! decides which cell flows first (141603c30 add, 1416042f0 tickPendingTicks, 141607780).
+//! `BlockTickingQueue` as decoration uses it: a pending heap and an active heap of liquid ticks
+//! (`crate::tick_heap`), whose order among equal keys decides which cell flows first
+//! (141603c30 add, 1416042f0 tickPendingTicks, 141607780).
+
+use crate::tick_heap::{Keyed, TickHeap};
 
 /// One scheduled tick; `lava` stands for the block it was scheduled with.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -10,64 +12,14 @@ pub struct Tick {
     pub time: u64,
 }
 
-impl Tick {
-    /// MSVC's predicate for a min-heap on time: `self` sorts after `other`. Priorities are all 0.
-    fn after(&self, other: &Tick) -> bool {
-        self.time > other.time
+impl Keyed for Tick {
+    /// Decoration's liquid ticks all have priority 0.
+    fn key(&self) -> (u64, i32) {
+        (self.time, 0)
     }
 }
 
-#[derive(Default)]
-struct Heap(Vec<Tick>);
-
-impl Heap {
-    fn push(&mut self, tick: Tick) {
-        self.0.push(tick);
-        let mut hole = self.0.len() - 1;
-        while hole > 0 {
-            let parent = (hole - 1) >> 1;
-            if !self.0[parent].after(&tick) {
-                break;
-            }
-            self.0[hole] = self.0[parent];
-            hole = parent;
-        }
-        self.0[hole] = tick;
-    }
-
-    fn pop(&mut self) -> Option<Tick> {
-        let top = *self.0.first()?;
-        let last = self.0.pop().expect("non-empty");
-        let count = self.0.len();
-        if count == 0 {
-            return Some(top);
-        }
-        let mut hole = 0;
-        let max_non_leaf = (count - 1) >> 1;
-        while hole < max_non_leaf {
-            let mut child = 2 * hole + 2;
-            if self.0[child].after(&self.0[child - 1]) {
-                child -= 1;
-            }
-            self.0[hole] = self.0[child];
-            hole = child;
-        }
-        if hole == max_non_leaf && count % 2 == 0 {
-            self.0[hole] = self.0[count - 1];
-            hole = count - 1;
-        }
-        while hole > 0 {
-            let parent = (hole - 1) >> 1;
-            if !self.0[parent].after(&last) {
-                break;
-            }
-            self.0[hole] = self.0[parent];
-            hole = parent;
-        }
-        self.0[hole] = last;
-        Some(top)
-    }
-}
+type Heap = TickHeap<Tick>;
 
 /// The queue decoration hands its block source; its clock starts at 1 (the queue's constructor).
 pub struct TickQueue {
@@ -97,7 +49,7 @@ impl TickQueue {
     /// `LiquidBlock::neighborChanged`'s test: a tick for this cell and liquid already due at `now + delay`.
     pub fn has(&self, at: [i32; 3], lava: bool, delay: u64) -> bool {
         let time = self.now.wrapping_add(delay);
-        self.pending.0.iter().any(|t| t.at == at && t.lava == lava && t.time == time)
+        self.pending.iter().any(|t| t.at == at && t.lava == lava && t.time == time)
     }
 
     /// `acquireAllTicks` (141607780): `other`'s pending ticks popped in its heap order into this queue.
@@ -108,7 +60,7 @@ impl TickQueue {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.pending.0.is_empty()
+        self.pending.is_empty()
     }
 
     /// The ticks of the next `tickPendingTicks(MAX, INT_MAX, instatick)` call, in the order it
@@ -121,7 +73,7 @@ impl TickQueue {
     pub fn take_due(&mut self, until: u64) -> Vec<Tick> {
         self.now = until;
         let mut active = Heap::default();
-        while self.pending.0.first().is_some_and(|t| t.time <= until) {
+        while self.pending.peek().is_some_and(|t| t.time <= until) {
             active.push(self.pending.pop().expect("non-empty"));
         }
         std::iter::from_fn(|| active.pop()).collect()
@@ -147,20 +99,5 @@ impl TickQueue {
     /// An in-game queue whose clock starts at 0.
     pub fn game() -> Self {
         Self { now: 0, game: true, ..Self::default() }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn pops_in_time_order() {
-        let mut heap = Heap::default();
-        for (i, time) in [5u64, 1, 4, 1, 3, 9, 0].into_iter().enumerate() {
-            heap.push(Tick { at: [i as i32, 0, 0], lava: false, time });
-        }
-        let times: Vec<u64> = std::iter::from_fn(|| heap.pop()).map(|t| t.time).collect();
-        assert_eq!(times, [0, 1, 1, 3, 4, 5, 9]);
     }
 }

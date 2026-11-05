@@ -117,6 +117,7 @@ pub(crate) fn watched(world: &World) -> Vec<(Entity, BlockPos)> {
 
 /// Ticks every watched spawner block; one whose entity is gone is let go.
 pub(crate) fn tick(world: &mut World) {
+    trial::carry(world);
     let Some(watched) = world.get_resource::<Watched>().map(|watched| watched.0.clone()) else { return };
     for (layer, pos) in watched {
         let Some(fields) = Fields::at(world, layer, pos) else {

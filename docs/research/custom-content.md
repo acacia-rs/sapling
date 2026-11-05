@@ -51,5 +51,5 @@ Only a real client can confirm these; none were checked against BDS or a client:
 - armour rendering of a wearable custom item; the cooldown bar
 - that a client accepts `hidden_in_commands` 2, `molangVersion` 13 and the creative group placement for custom entries
 - the client's own break time and selection box for a custom block
-- collision boxes other than a full cube (the server treats them as full: TODO in `blocks/custom.rs`)
+- permutations' collision boxes (the server's physics reads the block's base box only, `blocks/custom.rs` `collision_box`)
 - a cooldown is not enforced server-side; eating a custom food was checked only in data

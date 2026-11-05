@@ -146,6 +146,13 @@ pub fn generated_flower_pot(pos: [i32; 3], plant: &str) -> Value {
     entity("FlowerPot", pos, vec![("PlantBlock", plant_block(plant))])
 }
 
+/// An end gateway leading over `exit`, as BDS's generation leaves one (oracle 20261003-end, which had
+/// aged it 23 ticks): `EndGatewayBadPosChecked` 1.
+pub fn generated_end_gateway(pos: [i32; 3], exit: [i32; 3]) -> Value {
+    let exit = Value::List(List { tag: 3, items: exit.map(Value::Int).into() });
+    entity("EndGateway", pos, vec![("Age", Value::Int(0)), ("EndGatewayBadPosChecked", Value::Byte(1)), ("ExitPortal", exit)])
+}
+
 /// A chest with no loot holding `items` (sapling-worldgen `BlockEntity::Chest`'s list), as BDS
 /// saved a mansion's: `Findable` 0, each item with its slot and, a plant, its block.
 pub fn generated_chest(pos: [i32; 3], items: &str) -> Value {
@@ -193,6 +200,7 @@ mod tests {
         assert_eq!(keys(&generated_bell([0, 0, 0]))[..4], ["BlockEntityVersion", "Direction", "Ringing", "Ticks"]);
         assert_eq!(keys(&generated_cauldron([0, 0, 0], -1))[..4], ["BlockEntityVersion", "Items", "PotionId", "PotionType"]);
         assert_eq!(keys(&generated_flower_pot([0, 0, 0], "minecraft:red_mushroom")), ["BlockEntityVersion", "PlantBlock", "id", "x", "y", "z"]);
+        assert_eq!(keys(&generated_end_gateway([0, 0, 0], [100, 50, 0])), ["Age", "BlockEntityVersion", "EndGatewayBadPosChecked", "ExitPortal", "id", "x", "y", "z"]);
         let cactus = generated_flower_pot([0, 0, 0], "minecraft:cactus");
         assert_eq!(cactus.get("PlantBlock").and_then(|plant| plant.get("states")).and_then(|states| states.get("age")), Some(&Value::Int(0)));
     }

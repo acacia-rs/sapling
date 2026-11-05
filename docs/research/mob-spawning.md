@@ -26,7 +26,8 @@ Rule components and how they are read:
 - Biome filters: a list is `all_of`; `has_biome_tag` with `==`/`!=`/`not`; `is_snow_covered` is the
   biome's minimum snow level above 0 ("Snow cover" below).
 
-Left out: `pillager_patrol` (needs patrol events, world age, villages) and the guardian (ocean
+`pillager_patrol`'s world age, delay, mob event and village filters are `sapling_data::Gates`
+(structure-spawns.md "Patrols"). Left out: the guardian (ocean
 monuments: structure spawns, docs/research/structure-spawns.md); the slime and the phantom have their code gates (below); herd events (babies,
 horse and fish variants, riders), `disallow_spawns_in_bubble`; blazes, wither skeletons, cats and
 pillagers have no natural conditions (structures spawn them).
@@ -88,6 +89,40 @@ monster, swamp, mangrove or frozen biome). sapling: `spawning/gates.rs`, tested 
   `|time / 24000| & 7`, and a biome tag [U: read as `swamp`; BDS reads a tag id off the level].
 - Elsewhere none. sapling draws both rolls from natural spawning's dice.
 
+## Own spawn checks [D]
+
+Each spawned mob's class asks `checkSpawnRules` (actor vtable slot 145, +0x488; classes tied to
+vtables through the factory registrar 141e9b120) after the pack's rules and the cluster's caps.
+
+- Monster (14298fc00): `isDarkEnoughToSpawn` (14298f930), then Mob's. In the overworld and the End
+  (Dimension +0x1a6, the ultrawarm flag, clear) the block light at the feet (fcn.1415f7530, the
+  sub-chunk's block nibble) must be exactly 0, then the brightness recomputed for thunder (sky
+  darkening 10), then raw under 8; the Nether asks only raw under 8. Older worlds take other
+  branches behind base-game-version gates (140247750 with constants 14cc48300, 14cc486c0,
+  14cc486a0, filled at run time) [U]. Zombie and zombie villager (14299de30): the same.
+- Zombie pigman (1429904c0): no darkness, difficulty or floor test of its own; refused if any
+  entity in its box (fcn.1415fa820) not removed obstructs spawning (Actor +0x26c, set for every mob
+  by `Mob::initializeComponents` 1429e0c20), or any block's collision box is in it. Every member of
+  a herd is put on the one cell, so the first obstructs the rest: BDS's natural pigmen come alone
+  though both rules give herds of 2 to 4 (`spawn_zombified_piglin` weight 100,
+  `spawn_few_zombified_piglins` weight 1).
+- Guardian and elder guardian (1459a02d0): pass on the level random's `nextInt(20) == 0`, else only
+  where Java's `canSeeSkyFromBelowWater` fails (141603400: at or over sea level the height map;
+  under it, an opaque block that is no liquid between the spot and the sea's surface).
+- Their own: silverfish 142997390, shulker 1429959b0, endermite 14599c770, mooshroom 142a4bfe0 (its
+  floor block), slime 142999ca0 (with the lambda above); the warden's and two others return true
+  (1400a2880).
+
+Sapling: spawning/gates.rs `own_check`, from herds.rs `spawn`, so for the structure pass too: the
+pigman's and the guardians' checks, and block light 0 outside the Nether for the monster category
+but slimes, pigmen, silverfish, endermites, shulkers, wardens, and pillagers and blazes (which the
+structure lists' decompile found asking only a walk target, structures/lists.rs `Checks`); which
+other kinds are Monster subclasses was not read (phantoms are taken as one) [U]. Tests
+`a_dimly_lit_floor_spawns_no_monster`, `guardians_appear_and_stay_in_a_monument`.
+
+The cap before each member: this decompile read `cap > 0 && count < cap`, a category stopping at
+its cap; the earlier one (1415ef8b2, "Engine") read `count <= cap`. Sapling keeps the earlier [U].
+
 ## Phantoms [D]
 
 `InsomniaSystem::tick` (`148489af0`, per player, not spectators): a sleeping player's count is set to
@@ -138,7 +173,8 @@ test `a_natural_mob_a_player_names_stays_when_the_player_goes`. Picked-up items 
 ## Left
 
 - Structure spawns and patrols: docs/research/structure-spawns.md (built 2026-11-05: the saved
-  record is chunk tag 0x77 with structure names, not tag 57 with type bytes; patrols not built).
+  record is chunk tag 0x77 with structure names, not tag 57 with type bytes; patrols built
+  2026-11-05, not drilled spawning naturally).
 - Herd events (spawner blocks: docs/research/spawners.md): undrillable live, natural spawning takes a
   random spot and time (husbandry.md "Herds of babies").
 - `doMobSpawning` and peaceful (2026-11-04, `e1spawn`, bds-e1spawn.txt): with the rule off a monster

@@ -75,6 +75,63 @@ pub(super) fn held(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     true
 }
 
+/// The writes kept while [`logged`] runs: each one's world, cell, layer (0 or 1) and block written.
+#[derive(Resource, Default)]
+pub(crate) struct Logged(Option<Vec<(Entity, BlockPos, u32, u32)>>);
+
+/// Runs `writes` keeping every block [`super::set`] and [`super::set_liquid`] write, then shows them
+/// as BDS shows a sub-chunk's writes of a tick (bds-plantpop2.txt, bds-fixset.txt): each write
+/// listed in the order made, layer 1's as `extra`, in one UpdateSubchunkBlocks, or an UpdateBlock
+/// for a write alone. Inside an open batch or log, that takes the writes instead.
+pub(crate) fn logged<R>(world: &mut World, writes: impl FnOnce(&mut World) -> R) -> R {
+    let is_open = |world: &World| world.get_resource::<Held>().is_some_and(|held| held.0.is_some()) || world.get_resource::<Logged>().is_some_and(|log| log.0.is_some());
+    let opens = !is_open(world);
+    if opens {
+        world.get_resource_or_insert_with(Logged::default).0 = Some(Vec::new());
+    }
+    let result = writes(world);
+    if opens {
+        show_logged(world);
+    }
+    result
+}
+
+/// Keeps a write of `id` into `layer_index` at `pos` where a log is open.
+pub(super) fn log(world: &mut World, layer: Entity, pos: BlockPos, layer_index: u32, id: u32) -> bool {
+    let Some(log) = world.get_resource_mut::<Logged>().and_then(|log| log.into_inner().0.as_mut()) else { return false };
+    log.push((layer, pos, layer_index, id));
+    true
+}
+
+/// Lists the layer-0 block at `pos` once more where a log is open, for a block BDS writes twice.
+pub(crate) fn log_again(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(id) = world.get::<Layer>(layer).map(|level| level.world.block(pos[0], pos[1], pos[2])) else { return };
+    log(world, layer, pos, 0, id);
+}
+
+fn show_logged(world: &mut World) {
+    let Some(log) = world.get_resource_mut::<Logged>().and_then(|mut log| log.0.take()) else { return };
+    let mut sections: Vec<((Entity, BlockPos), Vec<(BlockPos, u32, u32)>)> = Vec::new();
+    for (layer, pos, layer_index, id) in log {
+        let section = (layer, pos.map(|c| c.div_euclid(16) * 16));
+        match sections.iter_mut().find(|(at, _)| *at == section) {
+            Some((_, writes)) => writes.push((pos, layer_index, id)),
+            None => sections.push((section, vec![(pos, layer_index, id)])),
+        }
+    }
+    for ((layer, corner), writes) in sections {
+        let Some(registry) = world.get::<Layer>(layer).map(|level| level.world.registry()) else { continue };
+        let packet = match writes.as_slice() {
+            [(pos, layer_index, id)] => update_flagged(registry, *pos, *id, *layer_index, FLAGS),
+            _ => {
+                let of = |wanted: u32| writes.iter().filter(|(_, layer_index, _)| *layer_index == wanted).map(|&(pos, _, id)| update_of(registry, &(pos, id, FLAGS.0))).collect();
+                sapling_net::encode(&UpdateSubchunkBlocks { x: corner[0], y: corner[1], z: corner[2], blocks: of(0), extra: of(1) })
+            }
+        };
+        to_viewers(world, layer, corner, &[packet]);
+    }
+}
+
 /// Cells seen breaking while a batch was open, and the block seen there.
 #[derive(Resource, Default)]
 pub(crate) struct HeldBreaks(Vec<(Entity, BlockPos, u32)>);

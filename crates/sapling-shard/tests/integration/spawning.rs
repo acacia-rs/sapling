@@ -13,6 +13,8 @@ use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, ItemStack, Memory
 
 const ALEX: PlayerId = PlayerId(1);
 const MIDNIGHT: i64 = 18000;
+/// 30 off chunk (0, 0)'s middle: structure spawns want a player 24 to 44 away.
+const FROM_THE_MIDDLE: [f32; 3] = [8.5, 64.0, 38.5];
 const MONSTERS: &[&str] = &["minecraft:zombie", "minecraft:zombie_villager_v2", "minecraft:skeleton", "minecraft:spider", "minecraft:creeper", "minecraft:enderman", "minecraft:witch"];
 
 /// A void world with a floor of `floor` at y 64 over the four chunks each way of the origin: every
@@ -76,6 +78,14 @@ fn monsters_appear_in_the_dark_away_from_the_player_up_to_their_cap() {
 fn a_lit_floor_spawns_nothing() {
     let mut h = at_midnight("minecraft:glowstone");
     run(&mut h, 200);
+    assert_eq!(monsters(&mut h), []);
+}
+
+/// Block light 2 passes the pack rules' brightness 0 to 7, not Monster's own check (mob-spawning.md "Own spawn checks").
+#[test]
+fn a_dimly_lit_floor_spawns_no_monster() {
+    let mut h = at_midnight("minecraft:magma");
+    run(&mut h, 400);
     assert_eq!(monsters(&mut h), []);
 }
 
@@ -160,16 +170,17 @@ fn a_natural_mob_a_player_names_stays_when_the_player_goes() {
     assert_eq!(left, [named.id]);
 }
 
-/// Stored glowstone at y 63 under the chunks -3 to 2 each way, too bright for natural monsters, but
-/// stone under chunk (0, 0), a swamp hut piece whole (docs/research/structure-spawns.md).
-fn stored_hut() -> Arc<MemoryStorage> {
+/// Stored water at y 63 under the chunks -3 to 2 each way, where no land monster stands (glowstone
+/// would light the piece past Monster's block light 0), but stone under chunk (0, 0), a piece of
+/// `structure` whole (docs/research/structure-spawns.md).
+fn stored_piece(structure: &str) -> Arc<MemoryStorage> {
     let registry = BlockRegistry::vanilla();
     let floor = |name| registry.states_of(name).next().unwrap().0;
     let storage = Arc::new(MemoryStorage::default());
-    let area = |bounds, whole| SpawnArea { structure: "minecraft:swamp_hut".into(), bounds, whole, y_offset: Some(-3) };
+    let area = |bounds, whole| SpawnArea { structure: structure.into(), bounds, whole, y_offset: Some(-3) };
     for (cx, cz) in (-3..3).flat_map(|cx| (-3..3).map(move |cz| (cx, cz))) {
         let mut chunk = Chunk::empty(cx, cz, Dimension::overworld(registry.air_id()));
-        let block = floor(if (cx, cz) == (0, 0) { "minecraft:stone" } else { "minecraft:glowstone" });
+        let block = floor(if (cx, cz) == (0, 0) { "minecraft:stone" } else { "minecraft:water" });
         (0..16).for_each(|x| (0..16).for_each(|z| chunk.set(x, 63, z, 0, block)));
         let mut column = StoredColumn::of(chunk);
         if (cx, cz) == (0, 0) {
@@ -182,7 +193,7 @@ fn stored_hut() -> Arc<MemoryStorage> {
 
 #[test]
 fn witches_appear_in_a_hut_piece_where_nothing_else_does() {
-    let mut h = Harness::with(common::config(), World::with_storage(stored_hut()));
+    let mut h = Harness::with(common::config(), World::with_storage(stored_piece("minecraft:swamp_hut")));
     enter_stored(&mut h, 1);
     h.remote.run(|ctx| {
         ctx.set_game_mode(ALEX, GameMode::Creative);
@@ -191,6 +202,9 @@ fn witches_appear_in_a_hut_piece_where_nothing_else_does() {
     run(&mut h, 1500);
     assert_eq!(monsters(&mut h), [], "peaceful");
     h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Normal));
+    run(&mut h, 1500);
+    assert_eq!(monsters(&mut h), [], "a player under 24 off");
+    h.remote.run(|ctx| ctx.teleport(ALEX, FROM_THE_MIDDLE));
     run(&mut h, 3000);
     let found = monsters(&mut h);
     assert!(!found.is_empty(), "no witch in the hut");
@@ -199,6 +213,22 @@ fn witches_appear_in_a_hut_piece_where_nothing_else_does() {
         // At the middle of the piece, on the block's corner (1415efb20).
         assert!(monster.kind == "minecraft:witch" && [x, y, z] == [8.0, 64.0, 8.0], "{monster:?}");
     }
+}
+
+#[test]
+fn an_outpost_keeps_to_its_pillager_caps() {
+    let mut h = Harness::with(common::config(), World::with_storage(stored_piece("minecraft:pillager_outpost")));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_time(MIDNIGHT);
+        ctx.teleport(ALEX, FROM_THE_MIDDLE);
+    });
+    run(&mut h, 6000);
+    let pillagers = ask(&mut h, |ctx| ctx.entities().into_iter().filter(|entity| entity.kind == "minecraft:pillager").count());
+    // The pillager's own cap of 7, and one captain while none stood there.
+    assert!((1..=8).contains(&pillagers), "{pillagers} pillagers");
 }
 
 /// Water from y 40 to 62 over stone under the chunks -3 to 2 each way, a monument building over
@@ -229,6 +259,7 @@ fn guardians_appear_and_stay_in_a_monument() {
         ctx.set_game_mode(ALEX, GameMode::Creative);
         ctx.set_difficulty(Difficulty::Normal);
         ctx.set_time(6000);
+        ctx.teleport(ALEX, FROM_THE_MIDDLE);
     });
     run(&mut h, 2000);
     let guardians = ask(&mut h, |ctx| ctx.entities().into_iter().filter(|entity| entity.kind == "minecraft:guardian").count());

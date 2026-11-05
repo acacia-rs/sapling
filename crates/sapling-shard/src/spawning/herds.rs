@@ -6,11 +6,10 @@ use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Difficulty, SpawnReason};
-use sapling_data::{HerdEvents, SpawnRule, spawn_category, spawn_rules};
+use sapling_data::{HerdEvents, SpawnRule, kind_and_event, spawn_category, spawn_rules};
 use sapling_world::ChunkPos;
 
-use super::{gates, phantoms, structures};
-use sapling_data::Medium;
+use super::{delays, gates, phantoms, structures};
 use super::spots::{self, Found};
 use super::{Natural, SpawnDice, Watcher};
 use crate::body::Body;
@@ -25,12 +24,12 @@ pub(super) const ALL: usize = 200;
 
 /// A category's caps of mobs about a cluster on the surface and underground: the base `Dimension`
 /// constructor's (141878200, +0x104 and +0x120), so every dimension's (mob-spawning.md "Caps").
-pub(super) const CAPS: &[(&str, usize, usize)] = &[("animal", 4, 4), ("monster", 8, 16), ("water_animal", 36, 36), ("ambient", 0, 2)];
+pub(super) const CAPS: &[(&str, usize, usize)] = &[("animal", 4, 4), ("monster", 8, 16), ("water_animal", 36, 36), ("ambient", 0, 2), ("pillager", 8, 8)];
 /// The herd events a natural mob is made by here (sapling_data::HerdEvents): babies of fox, axolotl
-/// and polar bear herds.
+/// and polar bear herds, and a patrol's captain and followers.
 // TODO: the other herd events (horse coats, tropical fish looks, drowned and husk riders) need the
 // event fired on a spawned mob; a summon's event replaces `entity_spawned` instead.
-const FIRED: [&str; 1] = ["minecraft:entity_born"];
+const FIRED: [&str; 3] = ["minecraft:entity_born", "minecraft:promote_to_patrol_captain", "minecraft:spawn_as_patrol_follower"];
 
 pub(super) fn difficulty(world: &World) -> u8 {
     match world.resource::<Settings>().0.difficulty {
@@ -54,18 +53,30 @@ pub(super) struct Counts {
     pub all: usize,
 }
 
+impl Counts {
+    pub fn of_kind(&self, kind: &str, place: usize) -> u32 {
+        self.kinds.get(kind).map_or(0, |held| held[place]) as u32
+    }
+}
+
+/// Whether a mob spawned as a surface one: BDS counts a mob against the caps by that flag
+/// (`_updateBaseTypeCount` 1415ee820), not by where it stands now.
+#[derive(Component, Clone, Copy)]
+pub(super) struct Surfaced(pub bool);
+
 pub(super) fn count(world: &mut World, layer: Entity, around: ChunkPos) -> Counts {
-    let mut mobs = world.query_filtered::<(&InLayer, &Kind, &Body), With<Creature>>();
+    let mut mobs = world.query_filtered::<(&InLayer, &Kind, &Body, Option<&Surfaced>), With<Creature>>();
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return Counts::default() };
     let mut counts = Counts::default();
-    for (_, kind, body) in mobs.iter(world).filter(|(in_layer, ..)| in_layer.0 == layer) {
+    for (_, kind, body, surfaced) in mobs.iter(world).filter(|(in_layer, ..)| in_layer.0 == layer) {
         counts.all += 1;
         let [x, y, z] = body.at.map(|c| c.floor() as i32);
         let column = ChunkPos::of_block(x, z);
         if (column.x - around.x).abs() > COUNTED || (column.z - around.z).abs() > COUNTED {
             continue;
         }
-        let place = usize::from(level.top_solid(x, z).is_some_and(|top| y <= top));
+        let surface = surfaced.map_or_else(|| level.top_solid(x, z).is_none_or(|top| y > top), |surfaced| surfaced.0);
+        let place = usize::from(!surface);
         if let Some(category) = spawn_category(&kind.0).or_else(|| structures::category(&kind.0)) {
             counts.categories.entry(category).or_default()[place] += 1;
         }
@@ -85,7 +96,7 @@ pub(super) fn attempt(world: &mut World, layer: Entity, chunk: ChunkPos, watcher
         }
     }
     if let Some(top) = levels.first() {
-        structures::attempt(world, layer, chunk, top.medium == Medium::Water);
+        structures::attempt(world, layer, chunk, top.medium, watchers);
     }
 }
 
@@ -93,7 +104,7 @@ fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]
     let distance = watchers.iter().filter(|watcher| watcher.layer == layer).map(|watcher| watcher.distance(found.feet())).fold(f32::INFINITY, f32::min);
     let spot = found.spot(difficulty(world), distance);
     let mut admitted: Vec<&SpawnRule> = spawn_rules().iter().filter(|rule| rule.admits(&spot)).collect();
-    admitted.retain(|rule| gates::admits(world, layer, rule.kind, found));
+    admitted.retain(|rule| gates::admits(world, layer, rule.kind, found) && delays::open(world, layer, &rule.gates, found, watchers));
     let rule = pick(&admitted, fraction(world))?;
     let place = usize::from(!found.surface);
     let counts = count(world, layer, ChunkPos::of_block(found.cell[0], found.cell[2]));
@@ -103,19 +114,25 @@ fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]
     let room = rule.density_at(found.surface).map_or(u32::MAX, |density| density.saturating_sub(of_kind)).min(ALL.saturating_sub(counts.all) as u32);
     let herd = if rule.herds.is_empty() { None } else { pick_herd(&rule.herds, fraction(world)) };
     let size = herd_size(rule.herd, fraction(world)).min(room);
+    if !delays::lucky(world, layer, &rule.gates) {
+        return None;
+    }
     let mut member = 0;
     // BDS asks the cap before each member, `held <= cap`, so a category ends one over it (1415ef8b2 on).
     for _ in 0..size {
         if held > cap {
             break;
         }
-        let kind = rule.permuted(fraction(world));
+        let (kind, permuted_event) = kind_and_event(rule.permuted(fraction(world)));
         let place = if kind == phantoms::PHANTOM { phantoms::place(world, layer, found) } else { Some(*found) };
-        let event = herd.and_then(|herd| herd.events_of(member).find(|event| FIRED.contains(event)));
+        let event = herd.and_then(|herd| herd.events_of(member).find(|event| FIRED.contains(event))).or(permuted_event);
         if place.is_some_and(|place| spawn(world, layer, kind, &place, place.feet(), event)) {
             held += 1;
             member += 1;
         }
+    }
+    if member > 0 {
+        delays::restart(world, layer, &rule.gates);
     }
     Some(())
 }
@@ -144,16 +161,16 @@ fn pick_herd(herds: &[HerdEvents], roll: f32) -> Option<&HerdEvents> {
     herds.get(((roll * herds.len() as f32) as usize).min(herds.len().saturating_sub(1)))
 }
 
-/// A mob of `kind` with its feet `at`, if it fits in `place`, that despawns, as `event` makes it;
-/// whether one came.
+/// A mob of `kind` with its feet `at`, if it fits in `place` and passes its class's own check,
+/// that despawns, as `event` makes it; whether one came.
 pub(super) fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found, at: [f32; 3], event: Option<&str>) -> bool {
     let Some([_, height]) = sapling_data::mob_size(kind) else { return false };
-    if !world.get::<Layer>(layer).is_some_and(|level| spots::has_room(&level.world, place.cell, height)) {
+    if !world.get::<Layer>(layer).is_some_and(|level| spots::has_room(&level.world, place.cell, height)) || !gates::own_check(world, layer, kind, at, place.cell) {
         return false;
     }
     let Some(id) = crate::creatures::spawn_as(world, layer, kind, at, SpawnReason::Natural, 0.0, event) else { return false };
     if let Some(entity) = entities::find(world, id) {
-        world.entity_mut(entity).insert(Natural);
+        world.entity_mut(entity).insert((Natural, Surfaced(place.surface)));
     }
     true
 }

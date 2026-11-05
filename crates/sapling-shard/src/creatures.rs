@@ -42,13 +42,14 @@ mod heat;
 mod hits;
 mod hunting;
 mod husbandry;
+mod killing;
 mod landing;
 mod legs;
 mod omens;
 mod paths;
 mod piglins;
 mod properties;
-mod raids;
+pub(crate) mod raids;
 mod rams;
 mod scooping;
 mod shooting;
@@ -80,14 +81,13 @@ mod worn;
 mod zombifying;
 
 use bevy_ecs::prelude::*;
-use acacia_proto::packets::{EntityEvent, EntityEventEventId};
-use sapling_api::EntityId;
 
 use sapling_world::Actor;
 
 use crate::body::Body;
 use birth::{Birth, born, spawn_entity};
 use death::{die, leaves_loot};
+use killing::kill;
 use shown::{head, physics_of, reshow};
 pub(crate) use birth::{from_storage, is_arriving, spawn, spawn_as};
 pub(crate) use shown::{head as head_of, is_baby};
@@ -169,31 +169,7 @@ pub(crate) fn keep_state(world: &mut World) {
     wither::keep(world);
     piglins::keep(world);
     captains::keep(world);
-}
-
-/// Kills the entity `id` (see `ShardCtx::kill_entity`).
-fn kill(world: &mut World, id: EntityId) -> bool {
-    let Some(entity) = entities::find(world, id).filter(|entity| world.get::<Dying>(*entity).is_none() && !crate::dragon::is_dying(world, *entity)) else { return false };
-    let (Some(kind), Some(body), Some(layer)) = (world.get::<entities::Kind>(entity).map(|kind| kind.0.clone()), world.get::<Body>(entity).copied(), world.get::<InLayer>(entity).map(|layer| layer.0)) else { return false };
-    if world.get::<Creature>(entity).is_none() || NO_DEATH.contains(&kind.as_str()) {
-        mobs::remove(world, entity);
-        return true;
-    }
-    if let Some(health) = world.get::<Health>(entity).copied() {
-        let whole = health.left() + health.cushion();
-        let Some(harm) = crate::damage::ask(world, entity, whole, Cause::Generic, None) else { return false };
-        if harm < whole {
-            let mut health = world.get_mut::<Health>(entity).expect("read above");
-            health.lose(harm);
-            let hit = harm::strike(id.0, &health, Cause::Generic, None);
-            entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![hit]);
-            return harm > 0.0;
-        }
-    }
-    let death = EntityEvent { runtime_entity_id: id.0, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None };
-    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&death)]);
-    die(world, entity, layer, &kind, &body);
-    true
+    raids::keep_patrols(world);
 }
 
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.

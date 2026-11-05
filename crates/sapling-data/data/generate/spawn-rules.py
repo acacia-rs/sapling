@@ -11,8 +11,6 @@ spec = importlib.util.spec_from_file_location("mob_loot", os.path.join(HERE, "mo
 packs = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(packs)
 
-# Conditions holding these need what sapling has not built (patrols, villages); they are left out.
-UNBUILT = ("minecraft:mob_event_filter", "minecraft:delay_filter", "minecraft:world_age_filter", "minecraft:player_in_village_filter")
 # Kinds whose rules BDS's own code gates (ocean monuments): left out too. Slimes' and phantoms' gates
 # are sapling-shard's spawning/gates.rs and phantoms.rs.
 GATED = ("minecraft:guardian",)
@@ -62,9 +60,22 @@ def condition(kind, category, held):
     if "minecraft:brightness_filter" in held:
         light = held["minecraft:brightness_filter"]
         fields.append(f"light={light.get('min', 0)}~{light.get('max', 15)}" + ("w" if light.get("adjust_for_weather") else ""))
-    for key, name in (("minecraft:difficulty_filter", "difficulty"), ("minecraft:height_filter", "height"), ("minecraft:distance_filter", "distance")):
+    if "minecraft:difficulty_filter" in held:
+        level = held["minecraft:difficulty_filter"]
+        fields.append(f"difficulty={level.get('min', 'peaceful')}~{level.get('max', 'hard')}")
+    for key, name in (("minecraft:height_filter", "height"), ("minecraft:distance_filter", "distance")):
         if key in held:
             fields.append(f"{name}={held[key]['min']}~{held[key]['max']}")
+    if "minecraft:mob_event_filter" in held:
+        fields.append(f"event={held['minecraft:mob_event_filter']['event']}")
+    if "minecraft:world_age_filter" in held:
+        fields.append(f"age={held['minecraft:world_age_filter']['min']}")
+    if "minecraft:delay_filter" in held:
+        delay = held["minecraft:delay_filter"]
+        fields.append(f"delay={delay['min']}~{delay['max']}:{delay.get('spawn_chance', 100)}:{delay['identifier']}")
+    if "minecraft:player_in_village_filter" in held:
+        village = held["minecraft:player_in_village_filter"]
+        fields.append(f"village={village['distance']}:{village['village_border_tolerance']}")
     if "minecraft:density_limit" in held:
         limit = held["minecraft:density_limit"]
         fields.append(f"density={limit.get('surface', '-')}:{limit.get('underground', '-')}")
@@ -103,7 +114,7 @@ def main():
         rules = document["minecraft:spawn_rules"]
         kind, category = rules["description"]["identifier"], rules["description"]["population_control"]
         for held in rules.get("conditions", []):
-            if kind in GATED or any(key in held for key in UNBUILT):
+            if kind in GATED:
                 left.append(name)
                 continue
             rows.append(condition(kind, category, held))

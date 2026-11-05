@@ -5,7 +5,7 @@ mod memory;
 
 use acacia_world::Chunk;
 use sapling_leveldb::PlayerData;
-use sapling_worldgen::{ChunkShape, PlaceFailure, StructureWrites};
+use sapling_worldgen::{ChunkShape, PlaceFailure, StructureWrites, TemplateActor};
 
 use crate::ChunkPos;
 pub use crate::level::Level;
@@ -26,11 +26,14 @@ pub struct StoredColumn {
     pub pending_ticks: Vec<u8>,
     /// Its structures' spawn areas, one record (`sapling_leveldb::decode_spawn_areas`).
     pub spawn_areas: Vec<u8>,
+    /// Mobs its generation placed and nothing has made yet: the shard makes them as the column
+    /// arrives, and storage never keeps them.
+    pub template_actors: Vec<TemplateActor>,
 }
 
 impl StoredColumn {
     pub fn of(chunk: Chunk) -> Self {
-        Self { chunk, block_entities: Vec::new(), actors: Vec::new(), pending_ticks: Vec::new(), spawn_areas: Vec::new() }
+        Self { chunk, block_entities: Vec::new(), actors: Vec::new(), pending_ticks: Vec::new(), spawn_areas: Vec::new(), template_actors: Vec::new() }
     }
 }
 

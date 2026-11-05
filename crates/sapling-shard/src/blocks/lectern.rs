@@ -3,7 +3,8 @@
 //! the entity keeps it (`book`, `hasBook`, `page` 0, `totalPages`); a click on one with a book
 //! opens its screen. LecternUpdate turns its page. A comparator reads it.
 //! A turn to page 0 powers it a tick later for two ticks, as BDS did; turns to other pages showed no
-//! power (bds-books.txt). Broken, it leaves the book whole (entities.rs).
+//! power, only the lectern again two ticks later (bds-books.txt). Broken, it leaves the book whole
+//! (entities.rs).
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::LecternUpdate;
@@ -22,6 +23,8 @@ pub(super) const BOOK: &str = "book";
 const BOOKS: [&str; 2] = ["minecraft:writable_book", "minecraft:written_book"];
 /// Ticks a turned lectern stays powered.
 const PULSE: u64 = 2;
+/// Ticks after a turn to a page past 0 that BDS showed the lectern again.
+const RESHOWN: u64 = 2;
 
 fn is_lectern(world: &World, layer: Entity, pos: BlockPos) -> bool {
     send::block_at(world, layer, pos).is_some_and(|block| block.name == LECTERN)
@@ -116,15 +119,36 @@ pub(crate) fn turn_pages(world: &mut World) {
             super::send::resync(world, player, &[pos]);
             continue;
         };
+        // BDS (bds-books.txt): to page 0 the block and entity at once, then the pulse; to another
+        // page the entity twice, and the block and entity again two ticks later.
+        if page == 0 {
+            send::show(world, layer, pos);
+        }
         keep(world, layer, pos, vec![("page", Value::Int(page))]);
         if page == 0 {
             queued::cancel(world, layer, pos, Job::Lectern);
             queued::after(world, layer, pos, 1, Job::Lectern);
+        } else {
+            show_entity(world, layer, pos);
+            queued::after(world, layer, pos, RESHOWN, Job::LecternShown);
         }
     }
 }
 
-/// The page-turn pulse: an unpowered lectern is powered for [`PULSE`] ticks, a powered one goes off.
+fn show_entity(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(shown) = level(world, layer).and_then(|level| level.block_entity(pos)).map(|entity| send::block_entity_data(pos, entity)) else { return };
+    send::to_viewers(world, layer, pos, &[shown]);
+}
+
+/// A lectern whose page turned to one past 0 is shown again, block and entity.
+pub(super) fn reshow(world: &mut World, layer: Entity, pos: BlockPos) {
+    if is_lectern(world, layer, pos) {
+        send::show_whole(world, layer, pos);
+    }
+}
+
+/// The page-turn pulse: an unpowered lectern is powered for [`PULSE`] ticks, a powered one goes
+/// off, each shown with its entity (the queue's batch, send/sections.rs).
 pub(super) fn pulse(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     let Some(level) = level(world, layer).filter(|level| level.in_height(y)) else { return };
     let id = level.block(x, y, z);

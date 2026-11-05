@@ -106,15 +106,35 @@ fn set_off(world: &mut World, layer: Entity, pos: BlockPos, fuse: i32) -> bool {
     true
 }
 
+fn tell_ignited(world: &mut World, layer: Entity, pos: BlockPos) {
+    let [x, y, z] = pos.map(|c| c as f32);
+    let lit = LevelEvent { event: LevelEventEvent::SoundIgnite, position: Vec3f { x: x + 0.5, y, z: z + 0.5 }, data: 0 };
+    blocks::to_viewers(world, layer, pos, &[sapling_net::encode(&lit)]);
+}
+
 /// Lights the TNT block at `pos`, with the sound of it; false for any other block.
 pub(crate) fn light(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     if !is_tnt(world, layer, pos) {
         return false;
     }
-    let [x, y, z] = pos.map(|c| c as f32);
-    let lit = LevelEvent { event: LevelEventEvent::SoundIgnite, position: Vec3f { x: x + 0.5, y, z: z + 0.5 }, data: 0 };
-    blocks::to_viewers(world, layer, pos, &[sapling_net::encode(&lit)]);
+    tell_ignited(world, layer, pos);
     set_off(world, layer, pos, FUSE)
+}
+
+/// [`light`] by a burning shot: the sound now, the TNT primed at the next tick's block ticks, as
+/// BDS's was (research/captures/bds-g10flame.txt); false for any other block.
+pub(crate) fn light_next_tick(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    if !is_tnt(world, layer, pos) {
+        return false;
+    }
+    tell_ignited(world, layer, pos);
+    blocks::queue_job(world, layer, pos, 1, blocks::Job::Ignite);
+    true
+}
+
+/// The TNT at `pos` a shot lit a tick ago is primed, if it is still there.
+pub(crate) fn ignited(world: &mut World, layer: Entity, pos: BlockPos) {
+    set_off(world, layer, pos, FUSE);
 }
 
 /// A blast reached the block at `pos`: TNT is primed on a short fuse; false for any other block.
