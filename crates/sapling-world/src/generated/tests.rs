@@ -164,8 +164,9 @@ fn structures_are_located_where_bds_located_them() {
 fn biomes_are_located_where_bds_located_them() {
     let world = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), LOCATE_SEED, 1)));
     let id = |name: &str| sapling_data::biome_id(name).unwrap();
-    let found = ["minecraft:plains", "minecraft:desert", "minecraft:mushroom_island", "minecraft:warm_ocean"].map(|name| world.locate_biome(id(name), [0, 120, 0]));
-    assert_eq!(found, [Some([-736, 125, -96]), Some([-2272, 84, 416]), None, None]);
+    let found = ["minecraft:plains", "minecraft:desert", "minecraft:mushroom_island", "minecraft:warm_ocean", "minecraft:deep_dark"].map(|name| world.locate_biome(id(name), [0, 120, 0]));
+    // The deep dark is found off the surface, in the 16-block lattice under it.
+    assert_eq!(found, [Some([-736, 125, -96]), Some([-2272, 84, 416]), None, None, Some([32, -43, -128])]);
     assert_eq!(World::void().locate_biome(id("minecraft:plains"), [0, 120, 0]), None);
 }
 
