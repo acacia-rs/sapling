@@ -12,8 +12,22 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "l2farm" => (farmland(), SHOWN),
         "l2carts" => (carts(), CARTS_SHOWN),
         "l2shroom" => (mushrooms(), SHOWN),
+        "l2meal" => (crop_meal(), SHOWN),
         _ => return None,
     })
+}
+
+/// In survival, wheat set at growth 0 a block east of the actor on wet farmland and bone-mealed once,
+/// 30 times over: how far one click grows a crop.
+fn crop_meal() -> Vec<String> {
+    let mut lines: Vec<String> = ["kill @e[type=!player]", "gamerule randomtickspeed 0", "fill ~-1 ~-1 ~7 ~1 ~-1 ~9 stone", "tp @s ~ ~ ~8 -90 0", "fill ~1 ~ ~-3 ~7 ~8 ~3 air", "fill ~1 ~-1 ~-3 ~7 ~-1 ~3 farmland [\"moisturized_amount\"=7]", "gamemode survival @s", "clear @s", "replaceitem entity @s slot.weapon.mainhand 0 bone_meal 64", ""]
+        .map(String::from)
+        .into();
+    for _ in 0..30 {
+        lines.extend(["setblock ~1 ~ ~ wheat", "!click 1 0 0", ""].map(String::from));
+    }
+    lines.extend(["setblock ~1 ~ ~ air", "clear @s", "gamemode creative @s", "gamerule randomtickspeed 1", ""].map(String::from));
+    lines
 }
 
 /// Twelve shut stone rooms 10 apart (5 by 2 by 3 of air), a brown mushroom in each, at `randomtickspeed` 200

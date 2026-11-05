@@ -42,7 +42,9 @@ Measured with `bds_command_probe bonemeal2` (`bds-bonemeal2.txt`), eight clicks 
 | sweet berry bush | a stage a click to 3; the click after picked it |
 | oak sapling | `age_bit` set at the first click, the particles alone for five more, a tree at the seventh |
 
-Sapling grows a crop 2 to 5 stages a click, the Java game's step, which these fit, and a bush
+A crop's step is 2 to 4, evenly (`l2meal`, bds-l2meal.txt, 2026-11-05: 30 wheat at 0 clicked once
+went to 2, 3 and 4, 10, 8 and 12 times, never the Java game's 5); sapling's was 2 to 5, now 2 to 4
+(`bonemeal.rs` `CROP_STEP`; sapling-l2meal.txt the same). Sapling grows a bush
 one; a ripe crop takes none and spends none, where in creative it still took it. A sapling
 takes it as BDS's `SaplingBlock::onFertilized` does (saplings.md): a tree at once in creative,
 else 45 in 100 a click to age and then to grow.

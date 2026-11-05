@@ -114,10 +114,27 @@ fn in_survival_a_crop_grows_some_stages_a_click_and_a_ripe_one_takes_none() {
     let mut h = fed(false, &[([2, 64, 0], "minecraft:farmland"), ([2, 65, 0], "minecraft:wheat")]);
     let shown: Vec<usize> = (0..8).map(|_| meal(&mut h, [2, 65, 0])).collect();
     let taken = shown.iter().sum::<usize>();
-    assert!((2..=4).contains(&taken) && shown[4..].iter().all(|shown| *shown == 0), "two to five stages a click to seven: {shown:?}");
+    assert!((2..=4).contains(&taken) && shown[4..].iter().all(|shown| *shown == 0), "two to four stages a click to seven: {shown:?}");
     h.remote.run(move |ctx| {
         assert!(ctx.block([2, 65, 0]).is_some_and(|wheat| wheat.properties.contains("growth=7")));
         assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|held| usize::from(held.count)), Some(8 - taken), "a ripe crop spends none");
     });
     h.tick_all();
+}
+
+#[test]
+fn in_survival_a_click_grows_a_crop_two_three_or_four_stages() {
+    // research/captures/bds-l2meal.txt: 30 wheat at 0 went to 2, 3 and 4, never 5.
+    let mut h = fed(false, &[([2, 64, 0], "minecraft:farmland")]);
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:bone_meal", 64)))));
+    let steps: Vec<String> = (0..30)
+        .map(|_| {
+            h.remote.run(|ctx| assert!(ctx.set_block([2, 65, 0], &Block::new("minecraft:wheat"))));
+            h.tick_all();
+            meal(&mut h, [2, 65, 0]);
+            common::asking::ask(&mut h, |ctx| ctx.block([2, 65, 0]).map(|wheat| wheat.properties).unwrap_or_default())
+        })
+        .collect();
+    let seen = |step: u8| steps.iter().any(|wheat| wheat.contains(&format!("growth={step}")));
+    assert!(seen(2) && seen(3) && seen(4) && !seen(5) && !seen(0), "{steps:?}");
 }

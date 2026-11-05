@@ -1,7 +1,6 @@
 //! Bone meal on a plant, as BDS grew them for a creative player (docs/research/bone-meal.md).
 // Saplings take theirs in saplings.rs.
-// TODO: outside creative a crop's step is the Java
-// game's 2 to 5, which BDS's steps of 2 to 4 fit; where grass and flowers come up, and which, is a guess at BDS's scatter.
+// TODO: where grass and flowers come up, and which, is a guess at BDS's scatter.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -14,6 +13,9 @@ mod more;
 
 const RIPE: u8 = 7;
 const RIPE_BUSH: u8 = 3;
+/// A crop's step a click outside creative, from the first, this many ways: BDS's 30 wheat at 0 went to 2, 3
+/// and 4 (10, 8, 12 times; research/captures/bds-l2meal.txt), never the Java game's 5.
+const CROP_STEP: [u8; 2] = [2, 3];
 /// What a stem grows by a click: BDS's went 0, 3, 6, 7.
 const STEM_STEP: u8 = 3;
 /// Cane a click puts on the top of a stalk: BDS's one high went to three, three to five, and
@@ -86,7 +88,7 @@ fn grown(level: &Level, pos: BlockPos, creative: bool, roll: &mut dyn FnMut() ->
         _ if CROPS.contains(&name) => match growth? {
             // A ripe crop took it in creative and not in survival.
             RIPE.. => creative.then(Vec::new),
-            now => grow_to(if creative { RIPE } else { (now + 2 + (roll() * 4.0) as u8).min(RIPE) }),
+            now => grow_to(if creative { RIPE } else { (now + CROP_STEP[0] + (roll() * CROP_STEP[1] as f32) as u8).min(RIPE) }),
         },
         _ if STEMS.contains(&name) => growth.filter(|now| *now < RIPE).and_then(|now| grow_to((now + STEM_STEP).min(RIPE))),
         "sweet_berry_bush" => growth.filter(|now| *now < RIPE_BUSH).and_then(|now| grow_to(if creative { RIPE_BUSH } else { now + 1 })),
