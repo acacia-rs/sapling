@@ -84,5 +84,9 @@ Java's `MapItem.update`: `f = 1 << scale`, `r = 128 / f` (halved under a ceiling
   -4294967267, -4294967262) to 1396458477, 2162056098 and 3185328418, after 255902174 in the first capture:
   positive, 32 bits wide, in no order, apart from the unique-id run. Where BDS draws them was not found
   (the cartography handlers 142c80c10 and 142c81720 call no random); sapling hashes the tick and the map
-  count into a free id of that range (`maps::locked_id`). The locked map's `included_in` was its own id and
+  count into a free id of that range (`maps::locked_id`). Read (2026-11-05, twelfth wave): the lock handler
+  142c81720 takes a function-static generator (141cbf950) and fills 4 bytes from it (141ccbe30, size 4) as
+  the new id, handed with the old id to the copy-and-lock (vtable +0x10 of the object at +0x180) and saved
+  as `map_uuid`: an unseeded random u32, so no capture can predict it; sapling's draw is the parity there.
+  The locked map's `included_in` was its own id and
   the zoom ids of the map it came from. A second lock of a locked map: status 9.
