@@ -19,7 +19,9 @@ pub(super) fn put(ctx: &mut ShardCtx<'_>, sender: &Sender, target: &Target, item
     let made = items.len();
     match target {
         Target::Spawn(position) => {
-            let at = position.resolve(ctx, sender);
+            // BDS drops at the cell's corner, an eighth up (bds-e2rails.txt, bds-lootcmd2.txt).
+            let [x, y, z] = position.resolve(ctx, sender).map(f32::floor);
+            let at = [x, y + 0.125, z];
             items.iter().for_each(|item| _ = ctx.drop_item(item, at));
             success(out, made);
         }

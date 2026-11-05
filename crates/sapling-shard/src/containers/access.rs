@@ -1,7 +1,8 @@
 //! Who may use a container: a chest under a block does not open, and a screen closes once its
 //! block is gone (docs/research/beds-and-containers.md, sections 5 and 6).
-// TODO: sitting cats are not looked for; shulker boxes are not checked.
+// TODO: sitting cats are not looked for.
 
+use acacia_proto::nbt::Value;
 use acacia_proto::packets::ContainerClose;
 use acacia_proto::types::{WindowID, WindowType};
 use bevy_ecs::prelude::*;
@@ -16,18 +17,41 @@ const LID_MIN: [f32; 3] = [1.0 / 16.0, 0.0, 1.0 / 16.0];
 const LID_MAX: [f32; 3] = [15.0 / 16.0, 0.5, 15.0 / 16.0];
 const LIDDED: &[&str] = &["minecraft:chest", "minecraft:trapped_chest", "minecraft:ender_chest"];
 
-/// Whether something in the cell above `[x, y, z]` collides with the space its lid needs.
-fn lid_is_held_down(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world).filter(|level| level.in_height(y + 1)) else { return false };
-    let Some(above) = level.registry().get(level.block(x, y + 1, z)) else { return false };
-    let overlaps = |min: [f32; 3], max: [f32; 3]| (0..3).all(|axis| min[axis] < LID_MAX[axis] && max[axis] > LID_MIN[axis]);
-    above.boxes.iter().any(|shape| overlaps(shape.min, shape.max))
+/// Whether something in the cell `offset` from `[x, y, z]` collides with the space `lid_min..lid_max`
+/// in that cell.
+fn lid_is_held_down(world: &World, layer: Entity, [x, y, z]: BlockPos, offset: BlockPos, (lid_min, lid_max): ([f32; 3], [f32; 3])) -> bool {
+    let [x, y, z] = [x + offset[0], y + offset[1], z + offset[2]];
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world).filter(|level| level.in_height(y)) else { return false };
+    let Some(next) = level.registry().get(level.block(x, y, z)) else { return false };
+    let overlaps = |min: [f32; 3], max: [f32; 3]| (0..3).all(|axis| min[axis] < lid_max[axis] && max[axis] > lid_min[axis]);
+    next.boxes.iter().any(|shape| overlaps(shape.min, shape.max))
 }
 
-/// Whether the chest `block` at `pos` cannot open: something above either half holds its lid
-/// down. Other containers always open.
+/// The cell a shulker box's lid opens into, by its entity's `facing` (Bedrock order, up when
+/// unset); the lid needs that cell's bottom half whichever way (beds-and-containers.md, section 6).
+fn shulker_lid(world: &World, layer: Entity, pos: BlockPos) -> BlockPos {
+    let facing = world.get::<Layer>(layer).and_then(|layer| layer.world.block_entity(pos)).and_then(|entity| match entity.nbt.get("facing") {
+        Some(Value::Byte(facing)) => Some(*facing),
+        _ => None,
+    });
+    match facing.unwrap_or(1) {
+        0 => [0, -1, 0],
+        2 => [0, 0, -1],
+        3 => [0, 0, 1],
+        4 => [-1, 0, 0],
+        5 => [1, 0, 0],
+        _ => [0, 1, 0],
+    }
+}
+
+/// Whether the container `block` at `pos` cannot open: something above either half of a chest
+/// holds its lid down, or something in the cell a shulker box opens into (a carpet too,
+/// research/captures/bds-e2lids.txt). Other containers always open.
 pub(super) fn is_blocked(world: &World, layer: Entity, pos: BlockPos, block: &str) -> bool {
-    LIDDED.contains(&block) && pairs::halves(world, layer, pos).into_iter().any(|half| lid_is_held_down(world, layer, half))
+    if super::is_shulker_box(block) {
+        return lid_is_held_down(world, layer, pos, shulker_lid(world, layer, pos), ([0.0; 3], [1.0, 0.5, 1.0]));
+    }
+    LIDDED.contains(&block) && pairs::halves(world, layer, pos).into_iter().any(|half| lid_is_held_down(world, layer, half, [0, 1, 0], (LID_MIN, LID_MAX)))
 }
 
 /// Whether the block `viewing` shows is still there.

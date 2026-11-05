@@ -2,6 +2,8 @@
 //! (sapling-leveldb `custom_states.rs`), so where a vanilla state comes from the registry, a custom
 //! one comes from here, with what the plugin said of it (`sapling_data::custom_block`).
 
+use std::collections::BTreeMap;
+
 use sapling_api::{Block, BlockDrop, CustomBlock, Item};
 use sapling_world::{BlockRegistry, CustomBlockStates, Material, Mining, custom_ids, custom_state, register_custom_block};
 
@@ -83,12 +85,19 @@ pub(crate) fn drops(name: &str) -> Option<Vec<Item>> {
     })
 }
 
-/// The boxes the custom block `id` stops entities with, in its cell (none where it has no
-/// `minecraft:collision_box`); `None` for a vanilla state.
+/// The boxes the custom state `id` stops entities with, in its cell (none where it has no
+/// `minecraft:collision_box`), a permutation's where one holds; `None` for a vanilla state.
 pub(crate) fn collision_box(id: u32) -> Option<Option<acacia_physics::Aabb>> {
+    // Conditions are Molang compiled per look; a state's box never changes once registered.
+    static BOXES: std::sync::RwLock<BTreeMap<u32, Option<acacia_physics::Aabb>>> = std::sync::RwLock::new(BTreeMap::new());
+    if let Some(&known) = BOXES.read().expect("custom boxes lock").get(&id) {
+        return Some(known);
+    }
     let state = custom_state(id)?;
-    let found = sapling_data::custom_block(state.name).and_then(|block| block.collision);
-    Some(found.map(|found| acacia_physics::Aabb { min: found.min.map(|c| c / 16.0), max: found.max.map(|c| c / 16.0) }))
+    let found = sapling_data::custom_block(state.name).and_then(|block| sapling_data::collision_in(&block, &state.states));
+    let found = found.map(|found| acacia_physics::Aabb { min: found.min.map(|c| c / 16.0), max: found.max.map(|c| c / 16.0) });
+    BOXES.write().expect("custom boxes lock").insert(id, found);
+    Some(found)
 }
 
 /// The vanilla state the server's physics reads a custom one as for all but its box

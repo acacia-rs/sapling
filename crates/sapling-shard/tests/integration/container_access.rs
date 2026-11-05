@@ -30,9 +30,18 @@ fn opens(h: &mut Harness) -> bool {
 
 #[test]
 fn a_chest_under_a_block_does_not_open_and_one_under_a_torch_does() {
-    let mut h = at_a_chest();
+    opens_under(at_a_chest(), &[("stone", false), ("oak_slab", false), ("torch", true), ("air", true)]);
+}
+
+/// research/captures/bds-e2lids.txt: a box set facing up opened under nothing but air.
+#[test]
+fn a_shulker_box_under_a_block_a_slab_or_a_carpet_does_not_open() {
+    opens_under(beside("undyed_shulker_box"), &[("stone", false), ("oak_slab", false), ("white_carpet", false), ("air", true)]);
+}
+
+fn opens_under(mut h: Harness, cases: &[(&'static str, bool)]) {
     let above = [CHEST[0], CHEST[1] + 1, CHEST[2]];
-    for (block, opens_under) in [("stone", false), ("oak_slab", false), ("torch", true), ("air", true)] {
+    for &(block, opens_under) in cases {
         h.remote.run(move |ctx| assert!(ctx.set_block(above, &Block::new(block))));
         h.tick(1);
         assert_eq!(opens(&mut h), opens_under, "under {block}");

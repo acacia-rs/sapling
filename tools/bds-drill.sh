@@ -8,6 +8,10 @@ set -uo pipefail
 bds=$(realpath "$1") port=$2 out=$(realpath -m "$4")
 exe=$([ -f "$bds/bedrock_server.exe" ] && echo .exe)
 probe=$(realpath "$(dirname "$0")/../target/debug/examples/$3$exe")
+# BDS_GDB=<config.json> (absolute): the Linux server runs under gdb with bds_gdb.py's breakpoints
+# (docs/research/worldgen-bds-debugger.md "Linux").
+run=("./bedrock_server$exe")
+[ -n "${BDS_GDB:-}" ] && run=(env BDS_GDB_CFG="$BDS_GDB" gdb -q -batch -ex 'set disable-randomization on' -x "$(realpath "$(dirname "$0")/../crates/sapling-worldgen/scripts/bds_gdb.py")" -ex run --args ./bedrock_server)
 # The shipped server.properties has CRLF lines: a kept \r named a world that never existed, so no
 # drill's world was wiped (devbox's kept clocks, sculk and game rules from earlier drills).
 world=$(grep -E '^level-name=' "$bds/server.properties" | cut -d= -f2 | tr -d '\r')
@@ -31,6 +35,6 @@ cd "$bds" || exit 1
   echo "probe exit $?" >>"$out"
   echo stop
   sleep 5
-} | LD_LIBRARY_PATH=. timeout 600 "./bedrock_server$exe" >"$log" 2>&1
+} | LD_LIBRARY_PATH=. timeout 600 "${run[@]}" >"$log" 2>&1
 echo "server exit $?, probe: $(tail -1 "$out"), $(wc -l <"$out") lines in $out"
 grep -E 'ERROR|WARN' "$log" | head -20

@@ -161,6 +161,8 @@ ender chest and barrel actors; shulker box has its own AABB). Fields set by the 
 4. Shulker box (vtable at 14a841d20): no component lookup; box = one full cell next to it in its `facing_direction`
    (`x/z ± 1` or `y ± 1`) with height 0.5 from that cell's bottom (`[cell, cell + (1, 0.5, 1)]` for up/sideways;
    inf for down); collision overlap → cannot open; no cat check (slot returns false). BDSRE
+   Drilled 2026-11-05 (`e2lids`, thirteenth2e_drill.rs): a set box (facing up) refused under stone, a bottom
+   slab and a carpet, opened under air; sapling follows it (`containers/access.rs`).
 5. Double chest: whether `canOpen` also tests the paired half (Java: either half blocked → refused) was not
    located in this exe; containers-crafting.md A1 says yes (mem). `ChestBlock::use` not located here.
 6. Barrel: its actor inherits `_canOpenThis` unchanged, but whether `BarrelBlock::use` calls it was not checked;

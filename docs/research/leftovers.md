@@ -199,7 +199,11 @@ and are not kept; tests in tests/integration/mounts_drilled.rs):
   sent newest first but for that one pair, which points to the rule-off armour being made in a
   later step than the saddle. The sender is a virtual `Actor::tryCreateAddActorPacket`
   (140d2cc70, vtable +0xb8), reached only through vtables; its caller was not found. Left: a
-  breakpoint there on a Windows BDS would name the step; until then sapling keeps its by-id order
+  breakpoint there on a Windows BDS would name the step. Broken on the Linux BDS 2026-11-05
+  (thirteenth2e; slot 24 of Actor and ItemActor, `bds-e1loot-gdb.txt`, `-hits.txt`): every AddActor
+  came through one six-frame call path, so no later step makes the armour; and this run sent the rule-off
+  pair newest first (armour 23, saddle 22) in one batch. The pair's order varies between runs, so
+  newest first stands with no exception; sapling keeps its by-id order
   (its own making order differs from BDS's), which gives e1loot's, saddleevents', the golems' and
   the sand's sends.
   Sapling's (sapling-t12goods.txt) left the emeralds and chest and lost the slot-0 diamonds. Fixed:

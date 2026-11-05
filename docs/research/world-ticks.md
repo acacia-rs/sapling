@@ -129,8 +129,10 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
   (`blocks/liquid.rs` `set`, bds-plantpop2.txt).
 - Packet shape: BDS shows a commanded block written twice in a tick as one UpdateSubchunkBlocks listing each
   write (an aged vine twice; kelp or a coral fan with its water as both `water` and `flowing_water` in the extra
-  layer). Sapling logs a commanded put that ages or wets (`send/sections.rs` `logged`) and sends the same,
-  with `water` alone in the extra layer (sapling has no `flowing_water` state there).
+  layer). Sapling logs a commanded put that ages or wets (`send/sections.rs` `logged`) and sends the same;
+  since thirteenth2e the poured water is listed again as `flowing_water` (`log_flowing`, shown only: what BDS
+  keeps in the cell after its tick is not observable by command), test
+  `a_live_coral_fan_set_by_command_keeps_a_water_source_beside_itself`.
 - Undrillable here: arrows (`/summon arrow` is inert in sapling's drill).
 
 ## Parity drill (2026-11-04, `bds_command_probe t3odds`, `t3sponge`, `t3uses`)

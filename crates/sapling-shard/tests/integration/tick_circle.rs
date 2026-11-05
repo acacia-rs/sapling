@@ -138,6 +138,36 @@ fn block_ticks_and_circuits_wait_out_of_the_tick_region_and_catch_up_as_on_bds()
 }
 
 #[test]
+fn a_tick_queued_where_the_column_stopped_ticking_counts_from_its_last_tick_as_on_bds() {
+    let mut h = Harness::with(ShardConfig { tick_distance: 4, max_view_radius: 8, ..config() }, platform());
+    h.enter(1, "Alex");
+    h.receive(1, &RequestChunkRadius { chunk_radius: 8, max_radius: 8 });
+    ask(&mut h, |ctx| ctx.teleport(PlayerId(1), [56.5, 65.0, 24.5]));
+    (0..20).for_each(|_| drop(h.tick(1)));
+    // bds-e2stale.txt: lava from chunk 4,1 runs into 4,2 while the player is at 0,0, where 4,2 does not
+    // tick; the tick its first cell there queued was due at once when the player came back.
+    let cell = |z: i32| [70, 70, z];
+    ask(&mut h, move |ctx| {
+        for z in 30..=34 {
+            for at in [[70, 69, z], [69, 70, z], [71, 70, z]] {
+                assert!(ctx.set_block(at, &Block::new("minecraft:stone")));
+            }
+        }
+        assert!(ctx.set_block(cell(30), &Block::new("minecraft:stone")) && ctx.set_block(cell(32), &Block::new("minecraft:stone")));
+        assert!(ctx.set_block(cell(31), &Block::new("minecraft:lava")));
+        ctx.teleport(PlayerId(1), [8.5, 65.0, 0.5]);
+    });
+    (0..40).for_each(|_| drop(h.tick(1)));
+    assert!(ask(&mut h, move |ctx| ctx.update_block(cell(32), &Block::air())));
+    let lava = |h: &mut Harness, z: i32| ask(h, move |ctx| ctx.block(cell(z)).is_some_and(|block| block.name == "minecraft:lava"));
+    (0..32).for_each(|_| drop(h.tick(1)));
+    assert!(lava(&mut h, 32) && !lava(&mut h, 33));
+    ask(&mut h, |ctx| ctx.teleport(PlayerId(1), [56.5, 65.0, 24.5]));
+    (0..5).for_each(|_| drop(h.tick(1)));
+    assert!(lava(&mut h, 33), "due from 4,2's last tick, not 30 ticks after it was queued");
+}
+
+#[test]
 fn a_chunk_with_blocks_above_its_lowest_section_ticks_a_cell_a_quarter_more_often_as_on_bds() {
     // research/captures/bds-g3rate.txt: lit ore in a chunk filled to one section (two picks a tick in 4096
     // cells) against one filled to two (five in 8192).

@@ -1,12 +1,18 @@
-//! Block ticks queued for later, for the blocks that wait a while after a signal or a touch (BDS's
-//! `BlockTickingQueue`, docs/research/tick-queue.md), in their columns' queues (chunk_ticks.rs):
-//! each job checks its block is still there.
+//! Block ticks queued for later (BDS's `BlockTickingQueue`, docs/research/tick-queue.md): liquids
+//! that move (liquid.rs) and the blocks that wait a while after a signal or a touch share one queue
+//! per column (chunk_ticks.rs) and its 100 a tick, as BDS's chunk keeps one `mTickQueue` for both.
+//! Each job checks its block is still there.
 // What waits is saved with its column (pending.rs).
+
+use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
+use sapling_world::ChunkPos;
 
 use super::chunk_ticks::ChunkTicks;
+use super::liquid::{self, Liquid};
+use crate::chunks::UNLOAD_INTERVAL;
 use crate::components::Tick;
 use crate::ticking::Region;
 
@@ -52,38 +58,84 @@ pub(crate) enum Job {
     Ignite,
 }
 
-#[derive(Resource, Default)]
-pub(crate) struct Queued(ChunkTicks<Job>);
+/// What a queued tick is for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Ticked {
+    /// The liquid in the cell moves (liquid.rs).
+    Flow(Liquid),
+    Job(Job),
+}
 
-fn add(world: &mut World, layer: Entity, pos: BlockPos, due: u64, job: Job) {
-    world.get_resource_or_insert_with(Queued::default).0.add(layer, pos, due, job);
+impl From<Job> for Ticked {
+    fn from(job: Job) -> Self {
+        Ticked::Job(job)
+    }
+}
+
+#[derive(Resource, Default)]
+pub(crate) struct Queued(ChunkTicks<Ticked>);
+
+/// The last tick each column ticked, while loaded: BDS dates a queued tick from its chunk queue's
+/// `mCurrentTick`, which stands still while the chunk does not tick (bds-e2stale.txt).
+#[derive(Resource, Default)]
+struct Clocks(HashMap<(Entity, ChunkPos), u64>);
+
+/// The tick a tick queued at `pos` counts its delay from: now, or the last tick of a column that
+/// has stopped ticking. A column never seen ticking counts from now.
+pub(super) fn clock(world: &World, layer: Entity, [x, _, z]: BlockPos) -> u64 {
+    let now = world.resource::<Tick>().0;
+    match world.get_resource::<Clocks>().and_then(|clocks| clocks.0.get(&(layer, ChunkPos::of_block(x, z)))) {
+        Some(&ticked) if ticked + 1 < now => ticked,
+        _ => now,
+    }
+}
+
+/// Dates the columns that tick now; drops those no longer loaded.
+fn wind_clocks(world: &mut World, now: u64) {
+    let ticking = crate::ticking::ticked_columns(world);
+    world.resource_scope(|world, mut clocks: Mut<Clocks>| {
+        clocks.0.extend(ticking.into_iter().map(|column| (column, now)));
+        if now % UNLOAD_INTERVAL == 0 {
+            clocks.0.retain(|&(layer, column), _| super::level(world, layer).is_some_and(|level| level.is_loaded(column)));
+        }
+    });
+}
+
+pub(super) fn add(world: &mut World, layer: Entity, pos: BlockPos, due: u64, ticked: Ticked) {
+    world.get_resource_or_insert_with(Queued::default).0.add(layer, pos, due, ticked);
+}
+
+/// Whether `ticked` waits for the cell at `pos`, due at `due` if given.
+pub(super) fn has(world: &World, layer: Entity, pos: BlockPos, due: Option<u64>, ticked: Ticked) -> bool {
+    world.get_resource::<Queued>().is_some_and(|queued| queued.0.has(layer, pos, due, |waiting| *waiting == ticked))
 }
 
 /// Runs `job` on the block at `pos` `delay` ticks from now.
 pub(crate) fn after(world: &mut World, layer: Entity, pos: BlockPos, delay: u64, job: Job) {
-    let due = world.resource::<Tick>().0 + delay.max(1);
-    add(world, layer, pos, due, job);
+    let due = clock(world, layer, pos) + delay.max(1);
+    add(world, layer, pos, due, Ticked::Job(job));
 }
 
 /// Runs `job` on the block at `pos` later in this tick, or in the next where its column's jobs ran.
 pub(crate) fn this_tick(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
     let now = world.resource::<Tick>().0;
-    add(world, layer, pos, now, job);
+    add(world, layer, pos, now, Ticked::Job(job));
 }
 
 /// Whether `job` waits for the block at `pos`.
 pub(crate) fn is_waiting(world: &World, layer: Entity, pos: BlockPos, job: Job) -> bool {
-    world.get_resource::<Queued>().is_some_and(|queued| queued.0.has(layer, pos, None, |waiting| *waiting == job))
+    has(world, layer, pos, None, Ticked::Job(job))
 }
 
 /// Drops what waits of `job` for the block at `pos`.
 pub(crate) fn cancel(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
     if let Some(mut queued) = world.get_resource_mut::<Queued>() {
-        queued.0.remove(layer, pos, |waiting| *waiting == job);
+        queued.0.remove(layer, pos, |waiting| *waiting == Ticked::Job(job));
     }
 }
 
-/// What waits, for its column to keep (pending.rs): each job's cell and when it is due.
+/// What waits, liquids' ticks and jobs, for its column to keep (pending.rs): each tick's cell and
+/// when it is due.
 pub(super) fn waiting(world: &World) -> Vec<(Entity, BlockPos, u64)> {
     world.get_resource::<Queued>().map(|queued| queued.0.waiting().into_iter().map(|(layer, pos, due, _)| (layer, pos, due)).collect()).unwrap_or_default()
 }
@@ -116,19 +168,20 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
     })
 }
 
-/// [`after`], unless the same job already waits at that tick: a column saved and loaded again
-/// before its jobs ran brings them back a second time.
-pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, delay: u64, job: Job) {
-    let due = world.resource::<Tick>().0 + delay.max(1);
-    let queued = world.get_resource::<Queued>().is_some_and(|queued| queued.0.has(layer, pos, Some(due), |waiting| *waiting == job));
-    if !queued {
-        add(world, layer, pos, due, job);
+/// Queues `ticked` at `pos` in `delay` ticks, unless the same waits for that tick: a column saved
+/// and loaded again before its ticks ran brings them back a second time.
+pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, delay: u64, ticked: impl Into<Ticked>) {
+    let (due, ticked) = (world.resource::<Tick>().0 + delay.max(1), ticked.into());
+    if !has(world, layer, pos, Some(due), ticked) {
+        add(world, layer, pos, due, ticked);
     }
 }
 
-/// Runs the jobs that are due, column by column where the column ticks ([`Region::ticks`]).
+/// Runs the ticks that are due, column by column where the column ticks ([`Region::ticks`]).
 pub(crate) fn tick(world: &mut World) {
     let now = world.resource::<Tick>().0;
+    world.init_resource::<Clocks>();
+    wind_clocks(world, now);
     let Some(columns) = world.get_resource_mut::<Queued>().map(|mut queued| queued.0.columns_due(now)).filter(|columns| !columns.is_empty()) else { return };
     let region = Region::of(world);
     for (layer, column) in columns {
@@ -136,13 +189,30 @@ pub(crate) fn tick(world: &mut World) {
             continue;
         }
         let due = world.resource_mut::<Queued>().0.take(layer, column, now);
-        for (pos, job) in due {
-            run(world, layer, pos, job);
+        for (pos, ticked) in due {
+            match held_back(world, layer, pos) {
+                Some(true) => add(world, layer, pos, now, ticked),
+                Some(false) => {}
+                None => run(world, layer, pos, ticked),
+            }
         }
     }
 }
 
-fn run(world: &mut World, layer: Entity, pos: BlockPos, job: Job) {
+/// `tickPendingTicks` (1416042f0): a tick within 8 blocks of a column not loaded is not run but
+/// queued again for the next game tick (`Some(true)`), or dropped where its own column is gone.
+fn held_back(world: &World, layer: Entity, [x, _, z]: BlockPos) -> Option<bool> {
+    let level = super::level(world, layer)?;
+    let loaded = |dx: i32, dz: i32| level.is_loaded(ChunkPos::of_block(x + dx, z + dz));
+    let around = [(-8, -8), (8, -8), (-8, 8), (8, 8)].into_iter().all(|(dx, dz)| loaded(dx, dz));
+    (!around).then(|| loaded(0, 0))
+}
+
+fn run(world: &mut World, layer: Entity, pos: BlockPos, ticked: Ticked) {
+    let job = match ticked {
+        Ticked::Flow(liquid) => return liquid::ticked(world, layer, pos, liquid),
+        Ticked::Job(job) => job,
+    };
     match job {
         Job::Fire => super::dispensers::fire(world, layer, pos),
         Job::Crafted => super::crafter::crafted(world, layer, pos),

@@ -105,7 +105,18 @@ tickPendingTicks(q, region, until, max, insta):               # 1416042f0
   tick; whichever `tick` runs first fills C and the other's `spread_to` returns (`liq(C)` is lava). If P and C are
   in one chunk the winner is set by heap shape, not insertion order: usually one way, flipped by any difference in
   that chunk's queue history (a lava recede roll is enough, since it moves an entry's due tick by x4).
-- Sapling (`blocks/chunk_ticks.rs`, used by `liquid.rs` `Flows` and `queued.rs`): per-column heaps with BDS's
-  push/pop (`sapling-worldgen` `tick_heap.rs`), due ones moved to an active heap, duplicates kept, removal by mark,
-  100 per column per tick, each column run once a tick. Not modelled: one queue shared by liquids and other jobs
-  (separate queues, separate limits), the chunk clock lag, the re-queue of ticks 8 blocks from unloaded columns.
+- Sapling (`blocks/chunk_ticks.rs`, used by `queued.rs`): per-column heaps with BDS's push/pop (`sapling-worldgen`
+  `tick_heap.rs`), due ones moved to an active heap, duplicates kept, removal by mark, 100 per column per tick, each
+  column run once a tick. Liquids' ticks and the other blocks' jobs share one queue per column and its 100
+  (`queued::Ticked`, since thirteenth2e), run where the jobs ran in the tick (`handlers.rs` `run_queued`); a tick
+  within 8 blocks of an unloaded column waits a tick, or goes with its own column.
+
+## The chunk's clock (drilled 2026-11-05, thirteenth2e)
+
+`tick = mCurrentTick + delay`, and `mCurrentTick` moves only when the chunk ticks. `bds_command_probe e2clock`
+(bds-e2clock.txt): a plug set to air beside water and lava in a ticking chunk, water's first step 5 ticks after the
+air was sent, lava's 30, as each later step: a command's tick counts from now, as sapling's did. `e2stale`
+(bds-e2stale.txt): lava in chunk 4,1 ran into 4,2 while the bots stood at chunk 0,0 (4,2 not ticking); its next
+cell came 73 ms after the bots' `tp` back, where sapling's waited out the 30 ticks (500 ms, sapling-e2stale.txt).
+Sapling now dates a tick from the column's last ticking tick when the column has stopped ticking (`queued::clock`,
+`Clocks`; a column never seen ticking counts from now); test `a_tick_queued_where_the_column_stopped_ticking_counts_from_its_last_tick_as_on_bds`.

@@ -3,6 +3,8 @@
 //! `internal/blockinternal` lays it out, with BDS's `molangVersion` and `menu_category` from
 //! StartGame.bin), and what the shard asks of them by name.
 
+pub(crate) mod conditions;
+
 use std::sync::{Arc, RwLock};
 
 use acacia_proto::nbt::{List, Nbt, Str, Value};

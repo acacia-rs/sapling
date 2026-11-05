@@ -83,7 +83,13 @@ step gave more picks. Left open: reading the picks live needs a Linux ptrace por
 and on the Linux build's counterpart of 144bc1f20, counted over the first 2 s after the rule goes to 1.
 Left again 2026-11-05 (twelfth10), not cheap: the testbox BDS is a stripped Linux ELF (clang) with no
 symbols, so both breakpoints need 1409f98a0 and 144bc1f20 found anew in it by hand (MSVC labels do not carry
-over), on top of the ptrace port. A fire aging must not count as a new fire, or it
+over), on top of the ptrace port. Read live 2026-11-05 (thirteenth2e): gdb on the Linux BDS
+(worldgen-bds-debugger.md "Linux"), a breakpoint on the redstone ore's random-tick subscription
+(`__func` operator() 0xcf63820) over `orepace` (`bds-orepace-gdb.txt`, hits `bds-orepace-gdb-hits.txt`):
+every random tick of a lit ore put it out within the same tick, none without one, and the rounds went 7, 5
+and 7 of 12 (19 of 36, 53%, the formula's 51%); one round had 3 in its first 1.5 s, the others none in 4 s.
+So BDS's lit ore follows the formula, and the earlier 48 of 72 was its spread; sapling is the same.
+A fire aging must not count as a new fire, or it
 ticks again a step on: before that fix fire over stone went in 3.0 s at 4.
 
 What burns is told by tag and name with the Java game's numbers (`burns` in `blocks/fire.rs`).
