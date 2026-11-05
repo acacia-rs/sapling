@@ -27,7 +27,7 @@ fn villager(blocks: &[([i32; 3], &str)], feet: [f32; 3], event: &'static str) ->
     storage.store_player(&acacia_auth::login::offline_identity("Steve"), &PlayerData { main: vec![coal.clone(), coal], ..PlayerData::default() }).unwrap();
     let mut h = Harness::with(config(), World::with_storage(storage.clone()));
     enter_stored(&mut h, 1);
-    h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", feet, 0.0, Some(event)).is_some()));
+    h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", feet, 0.0, 0.0, Some(event)).is_some()));
     let sent: Vec<_> = (0..3).flat_map(|_| h.tick(1)).collect();
     let id = all::<AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:villager_v2").expect("the villager shown").runtime_id;
     (h, storage, id)
@@ -139,7 +139,7 @@ fn a_new_armorer_is_last_told_as_an_armorer() {
     let storage = floor_holding(Vec::new(), &[]);
     let mut h = Harness::with(config(), World::with_storage(storage));
     enter_stored(&mut h, 1);
-    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", [2.5, 64.0, 0.5], 0.0, Some("minecraft:become_armorer")).is_some()));
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", [2.5, 64.0, 0.5], 0.0, 0.0, Some("minecraft:become_armorer")).is_some()));
     let sent: Vec<_> = (0..3).flat_map(|_| h.tick(1)).collect();
     let id = all::<AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:villager_v2").expect("shown").runtime_id;
     assert_eq!(metadata(&sent, id, Key::Variant).last(), Some(&8));
@@ -148,7 +148,7 @@ fn a_new_armorer_is_last_told_as_an_armorer() {
 #[test]
 fn a_village_golem_is_kept_with_its_group_as_bds_keeps_it() {
     let (mut h, storage, _) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");
-    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", [4.5, 64.0, 4.5], 0.0, Some("minecraft:from_village")).is_some()));
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", [4.5, 64.0, 4.5], 0.0, 0.0, Some("minecraft:from_village")).is_some()));
     (0..2).for_each(|_| drop(h.tick(1)));
     h.shard.save_worlds();
     let column = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
@@ -193,7 +193,7 @@ fn a_villager_a_zombie_kills_on_hard_becomes_a_zombie_villager_keeping_its_profe
         let storage = floor_holding(Vec::new(), &[]);
         let mut h = Harness::with(config(), World::with_storage(storage));
         enter_stored(&mut h, 1);
-        h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", [2.5, 64.0, 0.5], 0.0, Some("minecraft:become_armorer")).is_some()));
+        h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:villager_v2", [2.5, 64.0, 0.5], 0.0, 0.0, Some("minecraft:become_armorer")).is_some()));
         let sent: Vec<_> = (0..3).flat_map(|_| h.tick(1)).collect();
         let id = all::<AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:villager_v2").expect("shown").runtime_id;
         h.remote.run(move |ctx| {
@@ -225,7 +225,7 @@ fn a_weakened_zombie_villager_given_a_golden_apple_shakes_and_is_cured() {
         ctx.set_difficulty(sapling_api::Difficulty::Easy);
         ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Survival);
         assert!(ctx.set_item(sapling_api::PlayerId(1), sapling_api::Slot::Main(0), Some(&sapling_api::Item::new("minecraft:golden_apple", 2))));
-        assert!(ctx.summon_as(None, "minecraft:zombie_villager_v2", [2.5, 64.0, 0.5], 0.0, None).is_some());
+        assert!(ctx.summon_as(None, "minecraft:zombie_villager_v2", [2.5, 64.0, 0.5], 0.0, 0.0, None).is_some());
     });
     let sent: Vec<_> = (0..3).flat_map(|_| h.tick(1)).collect();
     let zombie = all::<AddEntity>(&sent).iter().find(|added| added.entity_type == "minecraft:zombie_villager_v2").expect("shown").runtime_id;

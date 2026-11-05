@@ -14,7 +14,7 @@ fn a_drowned_come_as_ranged_holds_a_trident_and_throws_it_a_tick_after_its_swing
     h.remote.run(|ctx| {
         ctx.set_difficulty(Difficulty::Easy);
         ctx.set_time(18000);
-        assert!(ctx.summon_as(None, "minecraft:drowned", [6.5, 65.0, -6.5], 0.0, Some("minecraft:as_ranged_adult")).is_some());
+        assert!(ctx.summon_as(None, "minecraft:drowned", [6.5, 65.0, -6.5], 0.0, 0.0, Some("minecraft:as_ranged_adult")).is_some());
     });
     let ticks: Vec<Vec<RawPacket>> = (0..120).map(|_| h.tick_all().to(1).to_vec()).collect();
     let drowned = ticks.iter().find_map(|sent| all::<AddEntity>(sent).into_iter().find(|added| added.entity_type == "minecraft:drowned")).expect("shown").runtime_id;

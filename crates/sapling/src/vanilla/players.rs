@@ -120,9 +120,7 @@ impl Command for Summon {
             kind if kind == "minecraft:zombie_villager" || kind == "minecraft:villager" => format!("{kind}_v2"),
             kind => kind,
         };
-        // TODO: the pitch is taken and not kept.
-        let _ = self.pitch;
-        let summoned = ctx.summon_as(sender.player().map(|by| by.id), &kind, at, self.yaw.unwrap_or(0.0), self.event.as_deref()).is_some();
+        let summoned = ctx.summon_as(sender.player().map(|by| by.id), &kind, at, self.yaw.unwrap_or(0.0), self.pitch.unwrap_or(0.0), self.event.as_deref()).is_some();
         out.translate(if summoned { "commands.summon.success" } else { "commands.summon.failed" }, Vec::new(), summoned);
     }
 }

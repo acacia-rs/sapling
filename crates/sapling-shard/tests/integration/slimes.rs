@@ -16,7 +16,7 @@ fn width(added: &AddEntity) -> Option<f32> {
 }
 
 fn summon(h: &mut Harness, event: &'static str, feet: [f32; 3]) {
-    h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:slime", feet, 0.0, Some(event)).is_some()));
+    h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:slime", feet, 0.0, 0.0, Some(event)).is_some()));
 }
 
 #[test]

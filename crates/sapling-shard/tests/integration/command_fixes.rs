@@ -113,7 +113,7 @@ fn a_player_killed_by_damage_from_a_mob_dies_by_that_mob() {
 
 fn summoned(h: &mut Harness, kind: &'static str) -> EntityId {
     ask(h, move |ctx| ctx.set_difficulty(Difficulty::Easy));
-    ask(h, move |ctx| ctx.summon_as(None, kind, [4.5, 65.0, 0.5], 0.0, Some("minecraft:spawn_tame_adult"))).expect("summoned")
+    ask(h, move |ctx| ctx.summon_as(None, kind, [4.5, 65.0, 0.5], 0.0, 0.0, Some("minecraft:spawn_tame_adult"))).expect("summoned")
 }
 
 fn put(h: &mut Harness, id: EntityId, slot: MobSlot, item: &'static str) -> (Result<(), MobSlotRefusal>, Vec<RawPacket>) {

@@ -35,7 +35,7 @@ fn village(time: i64, feet: [f32; 3], event: &'static str) -> (Harness, u64) {
         ctx.set_difficulty(Difficulty::Easy);
         // A monster spawned near the bed wakes the sleeper, as the spawns' draws fall.
         assert!(ctx.set_game_rule("doMobSpawning", sapling_api::RuleValue::Bool(false)));
-        ctx.summon_as(None, "minecraft:villager_v2", feet, 0.0, Some(event)).expect("summoned").0
+        ctx.summon_as(None, "minecraft:villager_v2", feet, 0.0, 0.0, Some(event)).expect("summoned").0
     });
     (h, id)
 }
@@ -106,7 +106,7 @@ fn love(bread: u8, most: usize) -> Option<(usize, bool)> {
     let second = common::asking::ask(&mut h, |ctx| {
         let half = |head: u8| Block { name: "minecraft:bed".into(), properties: format!("direction=0,head_piece_bit={head},occupied_bit=0") };
         assert!((0..2).all(|bed| ctx.set_block([-3 + 2 * bed, 65, 8], &half(0)) && ctx.set_block([-3 + 2 * bed, 65, 9], &half(1))));
-        ctx.summon_as(None, "minecraft:villager_v2", [-2.5, 65.0, 4.5], 0.0, Some("minecraft:become_unskilled")).expect("summoned").0
+        ctx.summon_as(None, "minecraft:villager_v2", [-2.5, 65.0, 4.5], 0.0, 0.0, Some("minecraft:become_unskilled")).expect("summoned").0
     });
     for id in [first, second] {
         let given = common::asking::ask(&mut h, move |ctx| ctx.set_mob_item(sapling_api::EntityId(id), sapling_api::MobSlot::Inventory(0), Some(&sapling_api::Item::new("minecraft:bread", bread))));
@@ -200,7 +200,7 @@ fn golem_targets(sent: &[acacia_proto::RawPacket], golem: u64) -> Vec<i64> {
 /// The golems' runtime ids, one summoned by each of `events` (`None` plainly).
 fn golems(h: &mut Harness, events: [Option<&'static str>; 2]) -> Vec<u64> {
     for (n, event) in events.into_iter().enumerate() {
-        h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", [6.5 + 4.0 * n as f32, 65.0, 6.5], 0.0, event).is_some()));
+        h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", [6.5 + 4.0 * n as f32, 65.0, 6.5], 0.0, 0.0, event).is_some()));
     }
     let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:iron_golem").map(|added| added.runtime_id).collect()

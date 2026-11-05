@@ -76,6 +76,28 @@ selecting,session,items,enchanting}.rs`.
   first, every thousandth and last of BDS's 4092 alike).
 - `/gamerule` lists BDS's four overloads: `playerwaypoints`, 32 bool rules, 5 int rules.
 
+## Drilled 2026-11-05 (`bds-h1summon.txt`, `bds-h1camera.txt`, `bds-h1cmds.txt`)
+
+- `/summon pig x y z 90 45`: AddEntity pitch 45, yaw 90; the head comes level 10° a tick from the
+  summon's tick on (MoveEntityDelta rot_x 24, 17, 10, 3, 0). `summon_as` takes the pitch
+  (`creatures/gaze.rs`; test `summon_looks`).
+- `/ride ... summon_rider <kind> <event> <name>`: the rider faces yaw 0 where the ride is, is
+  named, and stays though the ride refuses it (`summonRider.failed`, zombie on a pig; bds-ride.txt
+  kept two such zombies too). `summon_ride` puts the ride at a player's eyes (feet + 1.62), yaw 0;
+  a ride the rider cannot mount stays, unnamed, and the answer is `summonRide.notRideable []`
+  (earlier `bds-f1cmds.txt` mounted and named its horse "Ride"). `ShardCtx::name_entity` names a
+  mob as a name tag does; boats and minecarts take no name in sapling.
+- `/camera`: see the run, bdsre 0x140ff03e0. Checks in order: easing with seconds > 0 on a preset
+  without it (`invalid.easing`, first_person; third_person's not drilled), `rot` pitch, then
+  `view_offset` (|x|, |y| > 64 → `invalid.view.offset`) and `entity_offset` (> 64 on an axis →
+  `invalid.entity.offset`), each `invalid.offset.camera` on first_person or third_person. The
+  offsets go in the instruction set's `offset` (Vec2) and `entity_offset`.
+- `target_entity <one> [target_center_offset x y z]` and `play_spline` want the free camera
+  (`set minecraft:free` last), else `generic.wrongTargetCamera` before the target is looked up;
+  `attach_to_entity <one>` sends the entity's unique id; `detach_from_entity` and `remove_target`
+  send `Some(true)`. Many targets → `generic.tooManyTargets`, none → `generic.noTargetMatch`.
+  What `play_spline` does on a free camera was not drilled.
+
 ## Not seen; sapling's choice
 
 - `/defaultgamemode`, `/seed` and `/version` do not exist on BDS 1.26.52: sapling answers under

@@ -114,7 +114,7 @@ fn run_scheduled(ctx: &mut ShardCtx<'_>, function: &str) {
     let ran = RawText(vec![RawPart::Text(lines.to_string()), RawPart::Text(function.to_owned())]);
     let echo = RawText(vec![RawPart::Text("§7§o[".into()), translate("commands.origin.server", None), RawPart::Text(": ".into()), translate("commands.schedule.functionRan", Some(ran)), RawPart::Text("]".into())]);
     let operators: Vec<_> = ctx.players().filter(|player| ctx.permission(player.id) == Some(Permission::Operator)).collect();
-    operators.iter().for_each(|player| ctx.tell_raw(player.id, &echo));
+    operators.iter().for_each(|player| ctx.show_raw(player.id, &echo));
 }
 
 /// Every tick: the scheduled functions now due, then each of `tick.json`'s in every world here.

@@ -18,7 +18,7 @@ impl EntityBackend for Ctx<'_> {
         Some(summoned)
     }
 
-    fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], yaw: f32, event: Option<&str>) -> Option<EntityId> {
+    fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], yaw: f32, pitch: f32, event: Option<&str>) -> Option<EntityId> {
         let made_alone = [ORB, crate::dragon::CRYSTAL, tnt::KIND, crate::lightning::KIND].contains(&kind);
         // BDS summoned no zombie on peaceful (research/captures/bds-server.txt).
         let peaceful = self.world.resource::<crate::components::Settings>().0.difficulty == sapling_api::Difficulty::Peaceful;
@@ -30,7 +30,11 @@ impl EntityBackend for Ctx<'_> {
             _ if shot.is_some() => shot?,
             _ if crate::vehicles::is_vehicle(kind) => crate::vehicles::summon(self.world, worlds::current(self.world), kind, feet, yaw)?,
             true => self.spawn_entity(kind, feet)?,
-            false => super::spawn_as(self.world, worlds::current(self.world), kind, feet, sapling_api::SpawnReason::Command, yaw, event)?,
+            false => {
+                let summoned = super::spawn_as(self.world, worlds::current(self.world), kind, feet, sapling_api::SpawnReason::Command, yaw, event)?;
+                super::gaze::pitch_new(self.world, summoned, pitch);
+                summoned
+            }
         };
         if let Some(player) = by.and_then(|by| self.entity(by)) {
             super::summoned::show(self.world, player, kind);
@@ -73,6 +77,10 @@ impl EntityBackend for Ctx<'_> {
 
     fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool {
         entities::teleport(self.world, id, feet)
+    }
+
+    fn name_entity(&mut self, id: EntityId, name: &str) -> bool {
+        entities::find(self.world, id).is_some_and(|mob| super::husbandry::give_name(self.world, mob, name.to_owned()))
     }
 
     fn turn_entity(&mut self, id: EntityId, yaw: f32) -> bool {

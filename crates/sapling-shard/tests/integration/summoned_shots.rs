@@ -13,7 +13,7 @@ fn a_summoned_shot_falls_from_the_tick_after_and_is_shown_then() {
     h.enter(1, "Alex");
     for (index, (kind, weight, ticks_to_moving)) in [("minecraft:arrow", 0.05f32, 1), ("minecraft:snowball", 0.03, 2)].into_iter().enumerate() {
         let x = index as f32 * 3.0 + 0.5;
-        h.remote.run(move |ctx| assert!(ctx.summon_as(None, kind, [x, 75.0, 4.5], 0.0, None).is_some()));
+        h.remote.run(move |ctx| assert!(ctx.summon_as(None, kind, [x, 75.0, 4.5], 0.0, 0.0, None).is_some()));
         let sent = h.tick(1);
         let added = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == kind).expect("announced");
         let id = added.runtime_id;

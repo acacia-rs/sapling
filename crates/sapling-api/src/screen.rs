@@ -4,7 +4,7 @@
 //! bds-controls.txt).
 
 use crate::command::Input;
-use crate::{EntityId, PlayerId, ShardCtx};
+use crate::{EntityId, PlayerId, ShardCtx, Target};
 
 /// One change to a player's client, each its own packet.
 #[derive(Debug, Clone, PartialEq)]
@@ -28,6 +28,12 @@ pub enum ScreenAction {
     CameraFov { degrees: f32, ease_seconds: f32, ease: String },
     /// The field of view back to the player's own.
     ClearCameraFov,
+    /// A free camera turned on `target`, at `offset` from its middle.
+    CameraTarget { target: Target, offset: Option<[f32; 3]> },
+    RemoveCameraTarget,
+    /// The camera follows `target`, as `/camera attach_to_entity` asks.
+    AttachCamera(Target),
+    DetachCamera,
     /// Recipes, by id, the player's recipe book gains or loses.
     Recipes { ids: Vec<String>, change: RecipeChange },
     Music(Music),
@@ -68,6 +74,9 @@ pub struct Camera {
     pub facing: Option<[f32; 3]>,
     /// Back to the preset's own place and turn.
     pub default: bool,
+    /// `view_offset` (x, y) and `entity_offset` (x, y, z).
+    pub view_offset: Option<[f32; 2]>,
+    pub entity_offset: Option<[f32; 3]>,
 }
 
 /// An animation an entity plays once, as `/playanimation` asks.

@@ -36,7 +36,7 @@ fn told<T: Send + 'static>(h: &mut Harness, call: impl FnOnce(&mut ShardCtx<'_>)
 
 fn summoned(h: &mut Harness, kind: &'static str, event: Option<&'static str>, z: f32) -> (EntityId, Vec<RawPacket>) {
     ask(h, move |ctx| ctx.set_difficulty(Difficulty::Easy));
-    let (id, sent) = told(h, move |ctx| ctx.summon_as(None, kind, [4.5, 65.0, z], 0.0, event));
+    let (id, sent) = told(h, move |ctx| ctx.summon_as(None, kind, [4.5, 65.0, z], 0.0, 0.0, event));
     (id.expect("summoned"), sent)
 }
 
@@ -103,7 +103,7 @@ fn hands_given_by_command_are_saved_with_the_mob() {
     enter_stored(&mut h, 1);
     let zombie = ask(&mut h, |ctx| {
         ctx.set_difficulty(Difficulty::Easy);
-        ctx.summon_as(None, "minecraft:zombie", [8.5, 64.0, 8.5], 0.0, None)
+        ctx.summon_as(None, "minecraft:zombie", [8.5, 64.0, 8.5], 0.0, 0.0, None)
     })
     .expect("a zombie");
     assert_eq!(put(&mut h, zombie, MobSlot::MainHand, Some("minecraft:iron_sword")).0, Ok(()));

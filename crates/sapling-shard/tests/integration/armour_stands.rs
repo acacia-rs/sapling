@@ -159,7 +159,7 @@ fn a_stand_taken_from_the_fire_burns_one_a_second_till_it_is_gone() {
 fn a_stand_turned_by_a_teleport_is_told_its_body_then_its_head_as_on_bds() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
-    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:armor_stand", STAND, 30.0, None).is_some()));
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:armor_stand", STAND, 30.0, 0.0, None).is_some()));
     let shown: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     let added = all::<AddEntity>(&shown).into_iter().find(|added| added.entity_type == "minecraft:armor_stand").expect("shown");
     // research/captures/bds-g8rot.txt: summoned at 30, announced on its byte.

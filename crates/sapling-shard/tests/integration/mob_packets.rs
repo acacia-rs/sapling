@@ -41,7 +41,7 @@ fn the_body_slot_is_kept_by_the_world_folder_and_worn_again() {
     let storage = floor_with(Vec::new());
     let mut h = Harness::with(config(), World::with_storage(storage.clone()));
     enter_stored(&mut h, 1);
-    let summon = |h: &mut Harness, kind: &'static str, event, x| ask(h, move |ctx| ctx.summon_as(None, kind, [x, 64.0, 8.5], 0.0, event)).expect(kind);
+    let summon = |h: &mut Harness, kind: &'static str, event, x| ask(h, move |ctx| ctx.summon_as(None, kind, [x, 64.0, 8.5], 0.0, 0.0, event)).expect(kind);
     let pig = summon(&mut h, "minecraft:pig", None, 4.5);
     let horse = summon(&mut h, "minecraft:horse", Some("minecraft:spawn_tame_adult"), 8.5);
     put(&mut h, pig, MobSlot::Body, "minecraft:iron_horse_armor");

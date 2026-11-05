@@ -29,8 +29,8 @@ fn a_patrol_captain_wanders_and_its_followers_keep_up() {
         ctx.set_difficulty(Difficulty::Normal);
     });
     let spawned = common::asking::ask(&mut h, |ctx| {
-        let captain = ctx.summon_as(None, "minecraft:pillager", [20.5, 65.0, 20.5], 0.0, Some("minecraft:promote_to_patrol_captain"));
-        let followers = [[30.5, 65.0, 20.5], [20.5, 65.0, 30.5]].map(|at| ctx.summon_as(None, "minecraft:pillager", at, 0.0, Some("minecraft:spawn_as_patrol_follower")));
+        let captain = ctx.summon_as(None, "minecraft:pillager", [20.5, 65.0, 20.5], 0.0, 0.0, Some("minecraft:promote_to_patrol_captain"));
+        let followers = [[30.5, 65.0, 20.5], [20.5, 65.0, 30.5]].map(|at| ctx.summon_as(None, "minecraft:pillager", at, 0.0, 0.0, Some("minecraft:spawn_as_patrol_follower")));
         (captain, followers)
     });
     let (Some(captain), [Some(first), Some(second)]) = spawned else { panic!("summoned: {spawned:?}") };

@@ -143,7 +143,7 @@ fn a_creeper_summoned_with_its_forced_fuse_bursts_30_ticks_on_with_no_prey() {
     let mut h = ready();
     // Peaceful takes monsters away.
     h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Easy));
-    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:creeper", [0.5, 65.0, 6.5], 0.0, Some("minecraft:start_exploding_forced")).is_some()));
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:creeper", [0.5, 65.0, 6.5], 0.0, 0.0, Some("minecraft:start_exploding_forced")).is_some()));
     let sent = ticks(&mut h, 40);
     let burst = sent.iter().position(|tick| all::<LevelEvent>(tick).iter().any(|event| event.event == LevelEventEvent::ParticleExplosion));
     // research/captures/bds-fights.txt: 1.55 s after the summon, Alex in creative.

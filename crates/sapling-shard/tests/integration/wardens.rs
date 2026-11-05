@@ -56,7 +56,7 @@ fn with_warden(feet: [f32; 3], event: Option<&'static str>, alex: GameMode) -> (
         ctx.set_difficulty(Difficulty::Easy);
         ctx.set_game_mode(PlayerId(1), alex);
         ctx.set_game_mode(PlayerId(2), GameMode::Creative);
-        assert!(ctx.summon_as(None, KIND, feet, 0.0, event).is_some());
+        assert!(ctx.summon_as(None, KIND, feet, 0.0, 0.0, event).is_some());
     });
     let sent = h.tick_all().to(2).to_vec();
     let warden = all::<AddEntity>(&sent).remove(0).runtime_id;

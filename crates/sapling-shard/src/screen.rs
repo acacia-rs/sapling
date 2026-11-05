@@ -6,7 +6,7 @@ use std::collections::HashSet;
 
 use acacia_proto::nbt::{Nbt, Value as NbtValue};
 use acacia_proto::packets::{
-    AnimateEntity, LevelEventGeneric, CameraInstruction, CameraInstructionFade as Fade, CameraInstructionFadeTime as FadeTime, CameraInstructionFov as Fov, CameraInstructionInstructionSet as Set, CameraInstructionInstructionSetEaseData as Ease, CameraShake, CameraShakeAction, PlayerFog,
+    AnimateEntity, LevelEventGeneric, CameraInstruction, CameraInstructionFade as Fade, CameraInstructionFadeTime as FadeTime, CameraInstructionFov as Fov, CameraInstructionInstructionSet as Set, CameraInstructionInstructionSetEaseData as Ease, CameraInstructionTarget as Target, CameraShake, CameraShakeAction, PlayerFog,
     SetHud, SetHudVisibility, UnlockedRecipes, UnlockedRecipesUnlockType as Unlock, UpdateClientInputLocks,
 };
 use acacia_proto::types::{EaseType, Element, InputLockFlags, Vec2f, Vec3f};
@@ -34,8 +34,8 @@ fn camera(set: &Camera) -> CameraInstruction {
         position: set.position.map(vec3),
         rotation,
         facing: set.facing.map(vec3),
-        offset: None,
-        entity_offset: None,
+        offset: set.view_offset.map(|[x, z]| Vec2f { x, z }),
+        entity_offset: set.entity_offset.map(vec3),
         default: set.default.then_some(true),
         remove_ignore_starting_values: set.default,
     };
@@ -99,6 +99,8 @@ pub(crate) fn packet(action: &ScreenAction) -> Option<Bytes> {
         ScreenAction::CameraFade { seconds, colour } => sapling_net::encode(&fade(*seconds, *colour)),
         ScreenAction::CameraFov { degrees, ease_seconds, ease } => sapling_net::encode(&fov(*degrees, *ease_seconds, ease, false)),
         ScreenAction::ClearCameraFov => sapling_net::encode(&fov(0.0, 0.0, "linear", true)),
+        ScreenAction::RemoveCameraTarget => sapling_net::encode(&CameraInstruction { remove_target: Some(true), ..cleared(None) }),
+        ScreenAction::DetachCamera => sapling_net::encode(&CameraInstruction { detach_from_entity: Some(true), ..cleared(None) }),
         ScreenAction::Recipes { ids, change } => {
             let unlock_type = match change {
                 RecipeChange::Initial => Unlock::InitiallyUnlocked,
@@ -121,9 +123,23 @@ impl Ctx<'_> {
                 book.changed(ids, *change);
             }
         }
-        if let (Some(packet), Some(mut out)) = (packet(action), self.out(player)) {
+        let packet = match action {
+            ScreenAction::CameraTarget { target, offset } => self.unique_id(target).map(|entity_unique_id| CameraInstruction { target: Some(Target { offset: offset.map(vec3), entity_unique_id }), ..cleared(None) }).map(|packet| sapling_net::encode(&packet)),
+            ScreenAction::AttachCamera(target) => self.unique_id(target).map(|id| sapling_net::encode(&CameraInstruction { attach_to_entity: Some(id), ..cleared(None) })),
+            _ => packet(action),
+        };
+        if let (Some(packet), Some(mut out)) = (packet, self.out(player)) {
             out.0.push(packet);
         }
+    }
+
+    fn unique_id(&self, target: &sapling_api::Target) -> Option<i64> {
+        let entity = match target {
+            sapling_api::Target::Player(player) => self.entity(player.id)?,
+            sapling_api::Target::Entity(id) => entities::find(self.world, *id)?,
+            _ => return None,
+        };
+        self.world.get::<NetId>(entity).map(|id| id.0 as i64)
     }
 
     pub(crate) fn locked_inputs(&self, player: PlayerId) -> u32 {

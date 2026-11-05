@@ -24,8 +24,8 @@ fn a_horse_on_grass_grazes_for_50_ticks_now_and_then_and_one_on_stone_never() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.remote.run(|ctx| (1..=3).for_each(|x| (1..=3).for_each(|z| assert!(ctx.set_block([x, 64, z], &Block::new("grass_block"))))));
-    let on_grass = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:horse", [2.5, 65.0, 2.5], 0.0, None)).expect("a horse");
-    let on_stone = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:donkey", [-3.5, 65.0, -3.5], 0.0, None)).expect("a donkey");
+    let on_grass = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:horse", [2.5, 65.0, 2.5], 0.0, 0.0, None)).expect("a horse");
+    let on_stone = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:donkey", [-3.5, 65.0, -3.5], 0.0, 0.0, None)).expect("a donkey");
     // Past their first data, which holds data 16 too.
     (0..2).for_each(|_| drop(h.tick_all()));
     // One tick in 300: none in 3000 ticks is a chance of e^-10.
@@ -47,8 +47,8 @@ fn a_hurt_horse_heals_one_now_and_then_and_a_cow_never() {
     use acacia_proto::packets::UpdateAttributes;
     let mut h = Harness::new();
     h.enter(1, "Alex");
-    let horse = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:horse", [2.5, 65.0, 2.5], 0.0, None)).expect("a horse");
-    let cow = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:cow", [-3.5, 65.0, -3.5], 0.0, None)).expect("a cow");
+    let horse = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:horse", [2.5, 65.0, 2.5], 0.0, 0.0, None)).expect("a horse");
+    let cow = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:cow", [-3.5, 65.0, -3.5], 0.0, 0.0, None)).expect("a cow");
     (0..2).for_each(|_| drop(h.tick_all()));
     h.remote.run(move |ctx| assert!(ctx.hurt_entity(horse, 6.0, sapling_api::DamageCause::Generic) && ctx.hurt_entity(cow, 6.0, sapling_api::DamageCause::Generic)));
     // One tick in 900 (research/captures/bds-e1heal.txt): none in 4000 ticks is a chance of e^-4.4.

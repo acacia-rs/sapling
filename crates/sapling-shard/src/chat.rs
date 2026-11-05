@@ -143,6 +143,13 @@ impl sapling_api::ChatBackend for crate::handlers::Ctx<'_> {
             out.0.push(packet);
         }
     }
+
+    fn show_raw(&mut self, to: PlayerId, json: &str) {
+        let packet = text(TextType::Json, TextCategory::MessageOnly, TextContent::Json(TextContentJson { message: json.to_owned() }), "");
+        if let Some(mut out) = self.out(to) {
+            out.0.push(packet);
+        }
+    }
 }
 
 /// Runs this tick's chat lines through the handlers and sends what they let through.

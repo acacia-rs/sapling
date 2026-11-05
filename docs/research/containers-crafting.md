@@ -21,10 +21,11 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 4. **Barrels do not look open** (no `open_bit` block change), and **no container sounds** at all (A3, C).
 5. Resolved: cake, honey block and honey bottle to sugar, the two-output recipes, give their leftovers as
    BDS (E4); test `a_cake_is_made_with_its_three_buckets_given_back`.
-6. **Inventory screen `ContainerOpen` entity id**: sapling sends the player's id, BDS sends -1 (A1).
+6. Resolved: the inventory screen's `ContainerOpen` entity id is -1 as BDS's (`inventory/equipment.rs` `NO_ENTITY`).
 7. Furnaces, stonecutters, smithing tables, hoppers, shulker and ender chests do not open (D, F, G, C).
-8. Not visible to an honest client: no grid check for `CraftRecipe` (E1), no reach check (A5), the lid's
-   `BlockEvent` is not repeated for players who arrive later (A3), a blocked chest still opens (A1).
+8. Not visible to an honest client: no grid check for `CraftRecipe` (E1), no reach check (A5), a blocked
+   chest still opens (A1). An open lid's `BlockEvent` is sent again every 80 ticks, as BDS's tick does, so
+   a later arrival sees it then (`containers/screens.rs`).
 
 ## A. Chest open and close
 

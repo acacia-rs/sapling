@@ -1,8 +1,8 @@
 //! `/tickingarea add|remove|remove_all|list|preload`, answered as BDS answered
 //! (research/captures/bds-ticking.txt): a box of at most 100 chunks or a circle of radius at most
 //! 4, ten areas a dimension, each area listed on a line of its own with its bounds widened to whole
-//! chunks; what a change touched is listed after it, each line ended.
-// TODO: `list all-dimensions` lists the dimension in scope only, under the overworld's name.
+//! chunks; what a change touched is listed after it, each line ended. `list all-dimensions` and the
+//! count in use take every dimension (bds-h1cmds.txt).
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, parse_choice};
 use sapling_api::{Command, MOST_TICKING_AREAS, Output, Permission, Sender, ShardCtx, TickingArea};
@@ -125,7 +125,20 @@ fn missed(out: &mut Output, verb: &str, pick: &Pick, here: [f32; 3]) {
 }
 
 fn in_use(ctx: &ShardCtx<'_>, out: &mut Output) {
-    out.translate("commands.tickingarea.inuse", vec![ctx.ticking_areas().len().to_string(), MOST_TICKING_AREAS.to_string()], true);
+    out.translate("commands.tickingarea.inuse", vec![ctx.ticking_areas_everywhere().len().to_string(), MOST_TICKING_AREAS.to_string()], true);
+}
+
+/// Each dimension's name and its areas' lines, dimensions in the order their first area came;
+/// BDS listed a Nether area added first before the overworld's (bds-h1cmds.txt).
+fn by_dimension(areas: &[(i32, TickingArea)]) -> String {
+    let mut dimensions: Vec<i32> = Vec::new();
+    for (dimension, _) in areas {
+        if !dimensions.contains(dimension) {
+            dimensions.push(*dimension);
+        }
+    }
+    let listed = |dimension: i32| areas.iter().filter(|(of, _)| *of == dimension).map(|(_, area)| line(area)).collect::<Vec<_>>().join("\n");
+    dimensions.iter().map(|dimension| format!("%dimension.dimensionName{dimension}: \n{}", listed(*dimension))).collect::<Vec<_>>().join("\n")
 }
 
 /// The first `AreaN` no area is named.
@@ -189,23 +202,22 @@ impl Command for TickingAreaCommand {
                 out.print(touched(&removed));
                 in_use(ctx, out);
             }
-            Action::List { all_dimensions } => {
+            Action::List { all_dimensions: true } => {
+                let areas = ctx.ticking_areas_everywhere();
+                if areas.is_empty() {
+                    return out.translate("commands.tickingarea-list.failure.allDimensions", Vec::new(), false);
+                }
+                out.print("§a%commands.tickingarea-list.success.allDimensions");
+                out.print(by_dimension(&areas));
+                in_use(ctx, out);
+            }
+            Action::List { all_dimensions: false } => {
                 let areas = ctx.ticking_areas();
                 if areas.is_empty() {
-                    let key = if all_dimensions { "commands.tickingarea-list.failure.allDimensions" } else { "commands.tickingarea.noneExist.currentDimension" };
-                    return out.translate(key, Vec::new(), false);
+                    return out.translate("commands.tickingarea.noneExist.currentDimension", Vec::new(), false);
                 }
-                let lines = areas.iter().map(line).collect::<Vec<_>>().join("\n");
-                match all_dimensions {
-                    true => {
-                        out.print("§a%commands.tickingarea-list.success.allDimensions");
-                        out.print(format!("%dimension.dimensionName0: \n{lines}"));
-                    }
-                    false => {
-                        out.print("§a%commands.tickingarea-list.success.currentDimension");
-                        out.print(lines);
-                    }
-                }
+                out.print("§a%commands.tickingarea-list.success.currentDimension");
+                out.print(areas.iter().map(line).collect::<Vec<_>>().join("\n"));
                 in_use(ctx, out);
             }
             Action::Preload { pick, preload } => {

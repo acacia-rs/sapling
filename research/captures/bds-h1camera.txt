@@ -1,0 +1,160 @@
+## drill starts at 1793857034224
+## /kill @e[type=!player]
+     74 actor   CommandOutput success_count=5 data=None commands.kill.successful success=true ["Cow, Pig, Sheep, Sheep, Cow"]
+     74 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"Cow, Pig, Sheep, Sheep, Cow\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamerule domobspawning false
+   1011 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1011 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+   1012 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1012 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather clear
+   2012 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+   2013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /difficulty easy
+   3014 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["EASY"]
+   3015 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"EASY\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative @s
+   4017 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4017 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   4017 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative CmdWatcher
+   5019 actor   CommandOutput success_count=1 data=None commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+   5019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.other\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"},{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5282 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 377, paused: false }] }) }
+   5283 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 377, paused: false }] }) }
+## /effect @s clear
+   6017 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive.all success=false ["CmdActor"]
+## /clear @s
+   7014 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /fill -8 -27 -8 16 -27 8 stone
+   8020 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["425"]
+   8020 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"425\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill -8 -26 -8 16 -16 8 air
+   9021 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s 0.5 -26 0.5 -90 0
+  10022 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10022 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+  10022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp CmdWatcher 0.5 -26 0.5
+  11025 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+  11026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /summon pig 3 -26 0
+  13024 actor   CommandOutput success_count=1 data=None commands.summon.success success=true []
+  13024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.summon.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /camera @s set minecraft:follow_orbit
+  15028 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 2, ease_data: None, position: None, rotation: None, facing: None, offset: None, entity_offset: None, default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  15028 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  15028 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s target_entity @e[type=pig,c=1]
+  16025 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s target_entity @e[type=pig,c=1] target_center_offset 0 1 0
+  17024 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s set minecraft:follow_orbit view_offset 1 2
+  18026 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 2, ease_data: None, position: None, rotation: None, facing: None, offset: Some(Vec2f { x: 1.0, z: 2.0 }), entity_offset: None, default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  18026 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  18026 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18082 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 633, paused: false }] }) }
+  18083 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 633, paused: false }] }) }
+## /camera @s set minecraft:follow_orbit entity_offset 1 2 3
+  19032 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 2, ease_data: None, position: None, rotation: None, facing: None, offset: None, entity_offset: Some(Vec3f { x: 1.0, y: 2.0, z: 3.0 }), default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  19032 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  19032 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+## /camera @s set minecraft:follow_orbit ease 1 linear rot 10 20 view_offset 1 2 entity_offset 1 2 3
+  20028 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 2, ease_data: Some(CameraInstructionInstructionSetEaseData { type: Linear, duration: 1.0 }), position: None, rotation: Some(Vec2f { x: 10.0, z: 20.0 }), facing: None, offset: Some(Vec2f { x: 1.0, z: 2.0 }), entity_offset: Some(Vec3f { x: 1.0, y: 2.0, z: 3.0 }), default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  20028 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  20028 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+## /camera @s set minecraft:free
+  21038 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 3, ease_data: None, position: None, rotation: None, facing: None, offset: None, entity_offset: None, default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  21038 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  21038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s target_entity @e[type=pig,c=1]
+  22038 actor   CameraInstruction CameraInstruction { instruction_set: None, clear: None, fade: None, target: Some(CameraInstructionTarget { offset: None, entity_unique_id: -4294967279 }), remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  22038 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  22038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s target_entity @e[type=pig,c=1] target_center_offset 0 1 0
+  23038 actor   CameraInstruction CameraInstruction { instruction_set: None, clear: None, fade: None, target: Some(CameraInstructionTarget { offset: Some(Vec3f { x: 0.0, y: 1.0, z: 0.0 }), entity_unique_id: -4294967279 }), remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  23038 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  23038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s set minecraft:free view_offset 1 2
+  24038 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 3, ease_data: None, position: None, rotation: None, facing: None, offset: Some(Vec2f { x: 1.0, z: 2.0 }), entity_offset: None, default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  24038 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  24038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s set minecraft:free entity_offset 1 2 3
+  25034 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 3, ease_data: None, position: None, rotation: None, facing: None, offset: None, entity_offset: Some(Vec3f { x: 1.0, y: 2.0, z: 3.0 }), default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  25034 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  25034 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s set minecraft:free ease 1 linear rot 10 20 view_offset 1 2 entity_offset 1 2 3
+  26040 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 3, ease_data: Some(CameraInstructionInstructionSetEaseData { type: Linear, duration: 1.0 }), position: None, rotation: Some(Vec2f { x: 10.0, z: 20.0 }), facing: None, offset: Some(Vec2f { x: 1.0, z: 2.0 }), entity_offset: Some(Vec3f { x: 1.0, y: 2.0, z: 3.0 }), default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  26040 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  26041 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s set minecraft:fixed_boom
+  27038 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 1, ease_data: None, position: None, rotation: None, facing: None, offset: None, entity_offset: None, default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  27038 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  27038 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s target_entity @e[type=pig,c=1]
+  28038 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s target_entity @e[type=pig,c=1] target_center_offset 0 1 0
+  29038 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s set minecraft:fixed_boom view_offset 1 2
+  30045 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30045 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 1, ease_data: None, position: None, rotation: None, facing: None, offset: Some(Vec2f { x: 1.0, z: 2.0 }), entity_offset: None, default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  30045 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  30878 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 889, paused: false }] }) }
+  30879 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 889, paused: false }] }) }
+## /camera @s set minecraft:fixed_boom entity_offset 1 2 3
+  31047 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 1, ease_data: None, position: None, rotation: None, facing: None, offset: None, entity_offset: Some(Vec3f { x: 1.0, y: 2.0, z: 3.0 }), default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  31047 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  31047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s set minecraft:fixed_boom ease 1 linear rot 10 20 view_offset 1 2 entity_offset 1 2 3
+  32047 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 1, ease_data: Some(CameraInstructionInstructionSetEaseData { type: Linear, duration: 1.0 }), position: None, rotation: Some(Vec2f { x: 10.0, z: 20.0 }), facing: None, offset: Some(Vec2f { x: 1.0, z: 2.0 }), entity_offset: Some(Vec3f { x: 1.0, y: 2.0, z: 3.0 }), default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  32047 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  32048 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s set minecraft:first_person
+  33048 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 0, ease_data: None, position: None, rotation: None, facing: None, offset: None, entity_offset: None, default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  33048 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  33048 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s target_entity @e[type=pig,c=1]
+  34050 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s target_entity @e[type=pig,c=1] target_center_offset 0 1 0
+  35044 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s set minecraft:first_person view_offset 1 2
+  36044 actor   CommandOutput success_count=0 data=None commands.camera.invalid.offset.camera success=false []
+## /camera @s set minecraft:first_person entity_offset 1 2 3
+  37052 actor   CommandOutput success_count=0 data=None commands.camera.invalid.offset.camera success=false []
+## /camera @s set minecraft:first_person ease 1 linear rot 10 20 view_offset 1 2 entity_offset 1 2 3
+  38048 actor   CommandOutput success_count=0 data=None commands.camera.invalid.easing success=false []
+## /camera @s set minecraft:follow_orbit view_offset 40 2
+  39056 actor   CameraInstruction CameraInstruction { instruction_set: Some(CameraInstructionInstructionSet { runtime_id: 2, ease_data: None, position: None, rotation: None, facing: None, offset: Some(Vec2f { x: 40.0, z: 2.0 }), entity_offset: None, default: None, remove_ignore_starting_values: false }), clear: None, fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  39056 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  39056 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /camera @s set minecraft:follow_orbit entity_offset 1 200 3
+  40056 actor   CommandOutput success_count=0 data=None commands.camera.invalid.entity.offset success=false []
+## /camera @s target_entity @a
+  41052 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s target_entity @e[type=cow]
+  42058 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s attach_to_entity @e
+  43056 actor   CommandOutput success_count=0 data=None commands.generic.tooManyTargets success=false []
+  43688 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1145, paused: false }] }) }
+  43688 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1145, paused: false }] }) }
+## /camera @s play_spline nosuch
+  44058 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s play_spline minecraft:nosuch
+  45058 actor   CommandOutput success_count=0 data=None commands.generic.wrongTargetCamera success=false []
+## /camera @s remove_target
+  46059 actor   CameraInstruction CameraInstruction { instruction_set: None, clear: None, fade: None, target: None, remove_target: Some(true), fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  46059 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  46059 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+## /camera @s clear
+  47065 actor   CameraInstruction CameraInstruction { instruction_set: None, clear: Some(true), fade: None, target: None, remove_target: None, fov: None, spline: None, attach_to_entity: None, detach_from_entity: None }
+  47065 actor   CommandOutput success_count=1 data=None commands.camera.success success=true ["CmdActor"]
+  47065 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.camera.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /kill @e[type=!player]
+  48059 actor   CommandOutput success_count=10 data=None commands.kill.successful success=true ["Pig, Leather, Raw Beef, Raw Porkchop, White Wool, Raw Mutton, White Wool, Raw Mutton, Leather, Raw Beef"]
+  48059 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.kill.successful\",\"with\":{\"rawtext\":[{\"text\":\"Pig, Leather, Raw Beef, Raw Porkchop, White Wool, Raw Mutton, White Wool, Raw Mutton, Leather, Raw Beef\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+probe exit 0

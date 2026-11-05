@@ -40,7 +40,7 @@ pub(super) type Dress<'a> = (Option<&'a Actor>, Option<&'a Raised>, Option<&'a P
 /// The mob `id` as its viewers are told of it: dressed as it was stored (`look`), or as BDS
 /// announced its kind, in `variant` and with its `properties`; either as it is `raised` now.
 // TODO: a mob dressed as it was stored is not shown on fire to one who comes to see it burning.
-pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, properties, strides, strength): Dress<'_>, health: Option<&Health>, yaw: f32, variant: i32) -> Vec<Bytes> {
+pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, properties, strides, strength): Dress<'_>, health: Option<&Health>, [yaw, pitch]: [f32; 2], variant: i32) -> Vec<Bytes> {
     let left = health.map(Health::left);
     let saddle = raised.filter(|raised| raised.saddled).map_or(0, |_| crate::riding::saddle_flags(kind).0);
     let extra = MetadataFlags1(raised.map_or(0, |raised| raised.unstored_flags().0) | saddle);
@@ -58,7 +58,7 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, prop
         identifier: kind,
         feet: body.at,
         yaw,
-        pitch: 0.0,
+        pitch,
         variant,
         mark_variant: kept.map_or(0, |kept| kept.mark_variant),
         color: kept.map_or(0, |kept| kept.colour),
@@ -89,8 +89,9 @@ fn shown_now(world: &World, entity: Entity) -> Option<Vec<Bytes>> {
     let raised = world.get::<Raised>(entity);
     let look = world.get::<Creature>(entity).and_then(|creature| creature.look.as_ref());
     let yaw = world.get::<Legs>(entity).map_or(0.0, |legs| legs.yaw);
+    let pitch = world.get::<Told>(entity).map_or(0.0, |told| told.facing()[1]);
     let strides = world.get::<super::strides::Strode>(entity).map(|strode| &strode.0);
-    let mut shown = announcement(id, kind, body, (look, raised, world.get::<Properties>(entity), strides, crate::riding::strength_of(world, entity)), world.get::<Health>(entity), yaw, world.get::<Gene>(entity).map_or(0, |gene| gene.0));
+    let mut shown = announcement(id, kind, body, (look, raised, world.get::<Properties>(entity), strides, crate::riding::strength_of(world, entity)), world.get::<Health>(entity), [yaw, pitch], world.get::<Gene>(entity).map_or(0, |gene| gene.0));
     shown.extend(super::drowned::held(world, entity, id));
     shown.extend(super::piglins::held(world, entity, id));
     shown.extend(super::captains::worn(world, entity, id));
