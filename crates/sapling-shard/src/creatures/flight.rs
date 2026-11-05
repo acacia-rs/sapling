@@ -151,7 +151,7 @@ pub(crate) fn summon(world: &mut World, layer: Entity, shot: Shot, feet: [f32; 3
 }
 
 /// A tick of one flying shot: whether it is still there.
-fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Option<()> {
+pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Option<()> {
     let mut body = *world.get::<Body>(arrow)?;
     let start = body.at;
     let (shot, born, by) = world.get::<Arrow>(arrow).map(|arrow| (arrow.shot, arrow.born, arrow.by))?;
@@ -174,10 +174,10 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     } else if let Some((at, struck, is_player)) = met {
         if shot.lands != Lands::Hurts {
             landing::land(world, arrow, layer, at, behind, Some((struck, is_player)));
-            mobs::remove(world, arrow);
-            return None;
+            return hits::gone(world, arrow, born == now);
         }
         match hits::hit(world, arrow, layer, struck, is_player, at, motion) {
+            After::Gone if shot.kind == super::arrows::ARROW.kind => return hits::gone(world, arrow, true),
             After::Gone => {
                 mobs::remove(world, arrow);
                 return None;
@@ -209,8 +209,7 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     }
     if stopped && !shot.sticks {
         landing::land(world, arrow, layer, body.at, behind, None);
-        mobs::remove(world, arrow);
-        return None;
+        return hits::gone(world, arrow, born == now);
     }
     // A block the shot set off or broke holds it no more: it flies on from there (bds-g10flame.txt).
     let held = stopped && holds && ray::first_block(&world.get::<Layer>(layer)?.world, before, motion).is_some();
@@ -269,6 +268,7 @@ pub(super) fn tick(world: &mut World) {
         .map(|(arrow, layer, id, state)| (arrow, layer.0, id.0, state.stuck, state.shot.kind != super::arrows::ARROW.kind, state.summoned && state.born == now))
         .collect();
     for (arrow, layer, id, stuck, trident, still) in arrows {
+        if world.get::<hits::Struck>(arrow).is_some() { mobs::remove(world, arrow); continue; }
         let (kept, returning) = world.get::<Loosed>(arrow).map_or((false, false), |loosed| (trident && loosed.pickup != Pickup::Never, loosed.returning));
         match stuck {
             _ if returning || still => {}

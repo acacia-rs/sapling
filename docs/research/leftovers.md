@@ -301,6 +301,15 @@ and tnt.rs):
     hit test moved to `flight/in_way.rs`. Still left: the loosed tick's move (moving it there made
     a shot that met its prey at once go unannounced; the TODO in arrows.rs `loose`), and BDS turning
     a loosed shot in flight (bytes 2, 1, 0, 255, 252 from the fourth move; not fitted).
+  - Fixed 2026-11-05 (thirteenth wave): a mob's arrow and a dispenser's shot make their first move
+    in the tick they are loosed (`creatures/arrows.rs` `first_move`). The instant-hit regression
+    came from removing an arrow in the tick it hit, before it was announced; BDS removes an arrow
+    or snowball that hit a body the tick after the hit and sends no move in the hit tick
+    (bds-shoot.txt, bds-n3knock.txt, bds-e1arrow.txt), so sapling now marks it `hits::Struck` and
+    removes it at the next tick (`creatures/flight.rs`). Re-drilled (sapling-shoot.txt,
+    sapling-e1arrow.txt): AddEntity, the first move and SetEntityMotion in one tick, a point-blank
+    arrow announced with its hit and gone the tick after, as BDS. Small fireballs, llama spit and
+    witch potions still move first a tick after (BDS: the loosing tick).
 
 Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
 

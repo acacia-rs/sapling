@@ -12,7 +12,7 @@ use super::flight::{self, Launch};
 pub(super) use super::flight::sound;
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::Settings;
+use crate::components::{InLayer, NetId, Settings, Tick};
 use crate::late_sounds;
 
 /// What a shot does where it lands, beyond meeting a block or a body.
@@ -143,13 +143,18 @@ pub(super) fn loose(world: &mut World, layer: Entity, by: Entity, kind: &str, ar
         Some(off) => (c / long + dice.gaussian() * off) * shot.speed,
         None => c / long * shot.speed + (dice.fraction() + dice.fraction() - 1.0) * shot.spread,
     });
-    // TODO: BDS's makes its first move, by its whole launch speed, in the tick it is loosed (bds-shoot.txt);
-    // sapling's a tick on. A shot that met its prey in its first tick would be gone unannounced here.
-    if flight::launch(world, Launch { layer, by, archer: kind.to_owned(), from, motion, shot, gives }, None).is_none() {
-        return;
-    }
+    let Some(arrow) = flight::launch(world, Launch { layer, by, archer: kind.to_owned(), from, motion, shot, gives }, None) else { return };
     let middle = [archer.at[0], archer.at[1] + archer.size[1] / 2.0, archer.at[2]];
     late_sounds::play_later(world, 0, layer, archer.at.map(|c| c.floor() as i32), flight::sound(shot.sound, middle, kind));
+    first_move(world, arrow);
+}
+
+/// A mob's or a dispenser's shot makes its first move, by its whole launch speed, in the tick it
+/// is loosed, as BDS's (bds-shoot.txt, bds-n3knock.txt).
+pub(crate) fn first_move(world: &mut World, shot: Entity) {
+    let (Some(id), Some(layer)) = (world.get::<NetId>(shot).map(|id| id.0), world.get::<InLayer>(shot).map(|layer| layer.0)) else { return };
+    let now = world.resource::<Tick>().0;
+    flight::fly(world, shot, layer, id, now);
 }
 
 /// The world's difficulty as BDS counts it, peaceful 0 to hard 3.
