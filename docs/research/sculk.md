@@ -341,8 +341,9 @@ A catalyst in a stone floor and deaths by `/kill` at midnight on easy:
   cursors join the catalyst's after its tick, `catalyst.rs` `fresh`). BDS shows the spread's blocks and sounds a
   tick after the 2037/2038 of the same move; so does sapling since 2026-11-05 (`catalyst.rs` `later`,
   written at once, shown the next tick). Re-drilled live 2026-11-05 (thirteenth1k, TICK_SCALE 1): the spread's
-  blocks go out as one UpdateSubchunkBlocks per tick (sapling had sent single UpdateBlocks; now
-  `send::show_together`), and the bloom was shown in the death's tick; now `bloom` shows 2036 at once and
+  blocks go out as one UpdateSubchunkBlocks per tick, each write with the state it wrote (a vein later
+  cleared in the tick shows as the vein, then air; sapling had sent single UpdateBlocks; now
+  `send::show_states`, sapling-catalyst.txt), and the bloom was shown in the death's tick; now `bloom` shows 2036 at once and
   `open_blooms` sets and shows `bloom=1` the next tick, `bloom=0` 8 after (test
   `the_bloom_is_shown_the_tick_after_its_particles_and_wilts_eight_later`).
 - sapling's `/summon … minecraft:entity_born` made a grown cow, whose death left a cursor (fixed: `entity_born`,

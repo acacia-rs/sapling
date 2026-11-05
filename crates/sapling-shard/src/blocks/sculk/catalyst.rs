@@ -48,7 +48,8 @@ pub(crate) struct Catalysts {
 }
 
 enum Later {
-    Block(BlockPos),
+    /// A cell and the state written: BDS shows each write, a vein later cleared included (bds-catalyst.txt).
+    Block(BlockPos, u32),
     Packet(BlockPos, bytes::Bytes),
 }
 
@@ -136,10 +137,10 @@ fn show_later(world: &mut World, later: Vec<(Entity, Later)>) {
     layers.dedup();
     for layer in layers {
         let cells: Vec<_> = later.iter().filter_map(|(at, later)| match later {
-            Later::Block(pos) if *at == layer => Some((*pos, send::FLAGS)),
+            Later::Block(pos, id) if *at == layer => Some((*pos, *id)),
             _ => None,
         }).collect();
-        send::show_together(world, layer, &cells);
+        send::show_states(world, layer, &cells);
     }
     for (layer, later) in later {
         if let Later::Packet(pos, packet) = later {
@@ -207,7 +208,7 @@ impl Cells for Live<'_> {
         let id = if level.registry().get(id).is_some_and(|state| state.name == SHRIEKER) { with_property(level.registry(), id, "can_summon", "0").unwrap_or(id) } else { id };
         let set = send::set_quietly(self.world, self.layer, [x, y, z], id);
         if set {
-            self.later.push((self.layer, Later::Block([x, y, z])));
+            self.later.push((self.layer, Later::Block([x, y, z], id)));
         }
         set
     }
