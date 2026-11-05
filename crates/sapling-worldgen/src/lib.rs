@@ -39,6 +39,7 @@ pub use end::EndGenerator;
 pub use nether::NetherGenerator;
 #[doc(hidden)]
 pub use feature::grow::{is_feature, place_feature};
+pub use feature::flowers::meal_flower;
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 
 /// BDS's `SculkSpreader` for a live world: a sculk catalyst's cursors (docs/research/sculk.md, "Catalyst").

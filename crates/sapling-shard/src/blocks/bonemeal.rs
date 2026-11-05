@@ -1,15 +1,16 @@
 //! Bone meal on a plant, as BDS grew them for a creative player (docs/research/bone-meal.md).
 // Saplings take theirs in saplings.rs.
-// TODO: where grass and flowers come up, and which, is a guess at BDS's scatter.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos};
+use sapling_worldgen::random::Mt19937;
 
 use super::{Dice, level, send, with_property};
 
 mod more;
+mod scatter;
 
 const RIPE: u8 = 7;
 const RIPE_BUSH: u8 = 3;
@@ -26,11 +27,6 @@ const CROPS: [&str; 4] = ["wheat", "carrots", "potatoes", "beetroot"];
 const STEMS: [&str; 2] = ["melon_stem", "pumpkin_stem"];
 const FLOWERS: [&str; 12] =
     ["poppy", "dandelion", "azure_bluet", "oxeye_daisy", "cornflower", "allium", "blue_orchid", "lily_of_the_valley", "red_tulip", "orange_tulip", "white_tulip", "pink_tulip"];
-/// Tries at a cell beside a flower, and around a grass block; one sprout in this many is a flower.
-const FLOWER_TRIES: usize = 6;
-const SPROUT_TRIES: usize = 24;
-const FLOWER_IN: f32 = 8.0;
-const ROLLS: usize = 3 * SPROUT_TRIES + 1;
 const MUSHROOM_ODDS: f32 = 0.4;
 
 type Level = sapling_world::World;
@@ -58,19 +54,17 @@ fn top_of(level: &Level, [x, y, z]: BlockPos, name: &str) -> (i32, i32) {
     (top, (0..).take_while(|down| is(top - down)).count() as i32)
 }
 
-/// `plant` on the free cells over grass that `tries` picks beside `pos`, at most `reach` off.
-fn scattered(level: &Level, [x, y, z]: BlockPos, reach: i32, tries: usize, roll: &mut dyn FnMut() -> f32, plant: &mut dyn FnMut(f32) -> Option<u32>) -> Vec<(BlockPos, u32)> {
-    let mut grown: Vec<(BlockPos, u32)> = Vec::new();
-    let span = (2 * reach + 1) as f32;
-    for _ in 0..tries {
-        let cell = [x + (roll() * span) as i32 - reach, y, z + (roll() * span) as i32 - reach];
-        let which = roll();
-        let is_free = is_air(level, cell) && name_at(level, [cell[0], y - 1, cell[2]]) == Some("grass_block") && !grown.iter().any(|(at, _)| *at == cell);
-        if let Some(id) = plant(which).filter(|_| is_free) {
-            grown.push((cell, id));
-        }
-    }
-    grown
+/// What bone meal on a grass block with air over it, or on a flower, brings up around it (scatter.rs);
+/// `None` for any other block.
+fn scattered(world: &mut World, layer: Entity, pos: BlockPos) -> Option<Vec<(BlockPos, u32)>> {
+    let (name, is_grass) = level(world, layer).and_then(|level| {
+        let name = name_at(level, pos)?;
+        let is_grass = name == "grass_block" && is_air(level, [pos[0], pos[1] + 1, pos[2]]);
+        (is_grass || FLOWERS.contains(&name)).then(|| (name.to_owned(), is_grass))
+    })?;
+    let mut random = Mt19937::new(world.get_resource_or_insert_with(Dice::default).roll(u32::MAX));
+    let level = level(world, layer)?;
+    Some(if is_grass { scatter::grass(level, pos, &mut random) } else { scatter::flower(level, pos, &name, &mut random) })
 }
 
 /// The blocks bone meal on the block at `pos` sets: `None` for what takes none, and nothing for
@@ -95,14 +89,6 @@ fn grown(level: &Level, pos: BlockPos, creative: bool, roll: &mut dyn FnMut() ->
         "short_grass" | "fern" if is_air(level, above) => {
             let tall = if name == "fern" { "large_fern" } else { "tall_grass" };
             Some(vec![(pos, state(level, tall, "upper_block_bit=0")?), (above, state(level, tall, "upper_block_bit=1")?)])
-        }
-        _ if FLOWERS.contains(&name) => Some(scattered(level, pos, 1, FLOWER_TRIES, roll, &mut |_| Some(id))),
-        "grass_block" if is_air(level, above) => {
-            let mut sprout = |which: f32| state(level, if which * FLOWER_IN < 1.0 { FLOWERS[(which * FLOWER_IN * 3.0) as usize % 3] } else { "short_grass" }, "");
-            let mut sprouts = vec![(above, sprout(1.0)?)];
-            let around = scattered(level, above, 2, SPROUT_TRIES, roll, &mut sprout);
-            sprouts.extend(around.into_iter().filter(|(cell, _)| *cell != above));
-            Some(sprouts)
         }
         // A dispenser's grew short sea grass tall under still water, top first, and tall took none (bds-u1meal.txt).
         "seagrass" if properties == "sea_grass_type=default" && is_still_water(level, above) => {
@@ -192,12 +178,18 @@ pub(super) fn feed(world: &mut World, layer: Entity, pos: BlockPos, creative: bo
         }
         return took;
     }
-    let rolls: Vec<f32> = {
-        let mut dice = world.get_resource_or_insert_with(Dice::default);
-        (0..ROLLS).map(|_| dice.fraction()).collect()
-    };
-    let mut rolls = rolls.into_iter();
-    let Some(grown) = level(world, layer).and_then(|level| grown(level, pos, creative, &mut || rolls.next().unwrap_or(0.5))) else { return false };
+    if let Some(grown) = scattered(world, layer, pos) {
+        if grown.is_empty() {
+            return false;
+        }
+        particle(world, layer, pos);
+        for (cell, id) in grown {
+            send::set(world, layer, cell, id);
+        }
+        return true;
+    }
+    let roll = world.get_resource_or_insert_with(Dice::default).fraction();
+    let Some(grown) = level(world, layer).and_then(|level| grown(level, pos, creative, &mut || roll)) else { return false };
     particle(world, layer, pos);
     for (cell, id) in grown {
         send::set(world, layer, cell, id);
