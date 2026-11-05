@@ -25,9 +25,9 @@ const BLAZE: &str = "minecraft:blaze";
 const CHICKEN: &str = "minecraft:chicken";
 const ENDERMITE: &str = "minecraft:endermite";
 /// A player's wind charge (its pack's `explode`): power 1.2 reaching twice that, thrown 1.22 times
-/// as hard, 1 off whom it hit.
-// TODO: the reach and the throw are the Java game's explosion rule over the pack's numbers.
-const WIND: Gust = Gust { reach: 2.4, push: 1.22, harm: 1.0 };
+/// as hard, 1 off whom it hit; mobs are pushed too.
+// TODO: the players' reach and throw are the Java game's explosion rule over the pack's numbers.
+const WIND: Gust = Gust { reach: 2.4, push: 1.22, harm: 1.0, mobs: true };
 /// The splash a bottle o' enchanting breaks with (the Java game's colour).
 const BOTTLE_COLOUR: i32 = 0xFF38_5DC6_u32 as i32;
 
@@ -81,15 +81,23 @@ pub(super) fn land(world: &mut World, shot: Entity, layer: Entity, at: [f32; 3],
         }
         Lands::Wind => {
             let player = struck.filter(|(_, is_player)| *is_player).map(|(struck, _)| struck);
+            let at = if struck.is_some() { at } else { drawn_back(at, from) };
             charges::gust(world, layer, at, player, &archer, world.get::<Body>(by).map_or(from, |body| body.at), WIND);
             if let Some((mob, false)) = struck {
                 harm::wound_by(world, mob, layer, WIND.harm, Cause::Projectile, thrower);
             }
             let [x, y, z] = at;
-            let packets = [sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleWindExplosion, position: Vec3f { x, y, z }, data: 0 }), flight::sound("wind_charge.burst", at, "")];
+            let packets = [sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleWindExplosion, position: Vec3f { x, y, z }, data: 1 }), flight::sound("wind_charge.burst", at, "")];
             view::to_viewers(world, layer, at.map(|c| c.floor() as i32), &packets);
         }
     }
+}
+
+/// Where a charge that met a block at `at`, flying from `from`, bursts: [`charges::BACK`] back.
+fn drawn_back(at: [f32; 3], from: [f32; 3]) -> [f32; 3] {
+    let way: [f32; 3] = std::array::from_fn(|axis| at[axis] - from[axis]);
+    let long = way.iter().map(|c| c * c).sum::<f32>().sqrt().max(1e-4);
+    std::array::from_fn(|axis| at[axis] - way[axis] / long * charges::BACK)
 }
 
 /// A bottle breaking at `at`, its splash of `colour` and the glass heard.

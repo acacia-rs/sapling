@@ -154,6 +154,8 @@ mod shot_blocks;
 mod shot_buttons;
 mod shot_hits;
 mod shot_pitch;
+mod baby_hunt;
+mod wind_gust;
 mod shown_effects;
 mod shriekers;
 mod skeleton_traps;

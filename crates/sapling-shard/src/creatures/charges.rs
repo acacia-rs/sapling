@@ -33,8 +33,8 @@ const HARM: f32 = 1.0;
 const REACH: f32 = 6.0;
 const PUSH: f32 = 0.6;
 const EYES: f32 = 1.62;
-/// It is drawn back this far from a block it meets.
-const BACK: f32 = 0.25;
+/// It is drawn back this far from a block it meets (a player's charge too, bds-q3wind.txt).
+pub(super) const BACK: f32 = 0.25;
 
 #[derive(Component)]
 struct Charge {
@@ -90,9 +90,10 @@ pub(super) struct Gust {
     pub reach: f32,
     pub push: f32,
     pub harm: f32,
+    pub mobs: bool,
 }
 
-const BREEZE: Gust = Gust { reach: REACH, push: PUSH, harm: HARM };
+const BREEZE: Gust = Gust { reach: REACH, push: PUSH, harm: HARM, mobs: false };
 
 /// A wind burst at `at` from a charge shot by `kind` at `from`: `struck` is hurt and thrown from
 /// `from`, every other player within its reach is pushed towards its eyes.
@@ -107,6 +108,24 @@ pub(super) fn gust(world: &mut World, layer: Entity, at: [f32; 3], struck: Optio
             true => drop(vitals::winded(world, player, gust.harm, kind, from, push)),
             false if off < gust.reach => vitals::pushed(world, player, push),
             false => {}
+        }
+    }
+    if gust.mobs {
+        push_mobs(world, layer, at, gust);
+    }
+}
+
+/// Mobs in a burst at `at` are pushed as by a blast of its reach, `push` times as hard
+/// (bds-q3wind.txt: measured from the feet less half the width, towards 0.9 up).
+fn push_mobs(world: &mut World, layer: Entity, at: [f32; 3], gust: Gust) {
+    let mut mobs = world.query_filtered::<(Entity, &InLayer, &Body), With<super::health::Health>>();
+    let near: Vec<(Entity, Body)> = mobs.iter(world).filter(|(_, in_layer, _)| in_layer.0 == layer).map(|(mob, _, body)| (mob, *body)).collect();
+    for (mob, its) in near {
+        let Some(impact) = super::blast::impact(world, layer, at, its.at, its.size, gust.reach) else { continue };
+        let push = super::blast::towards(at, [its.at[0], its.at[1] + its.size[1] * super::blast::EYES, its.at[2]], impact * gust.push);
+        if let Some(mut body) = world.get_mut::<Body>(mob) {
+            let thrown = std::array::from_fn(|axis| body.motion[axis] + push[axis]);
+            body.throw(thrown);
         }
     }
 }

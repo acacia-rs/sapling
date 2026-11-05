@@ -24,8 +24,10 @@ const THROWN: &[(&str, Shot, f32, bool, u64)] = &[
     ("minecraft:splash_potion", SPLASH, BOTTLE_SPEED, true, 0),
     ("minecraft:lingering_potion", LINGERING, BOTTLE_SPEED, true, 0),
     ("minecraft:experience_bottle", BOTTLE, BOTTLE_SPEED, true, 0),
-    ("minecraft:wind_charge", WIND, THROWN_SPEED, false, WIND_COOLDOWN),
+    ("minecraft:wind_charge", WIND, WIND_SPEED, false, WIND_COOLDOWN),
 ];
+/// The item's `launch_power_scale` over its projectile's `power` (bds-q3wind.txt: 2.26 a tick).
+const WIND_SPEED: f32 = THROWN_SPEED * 1.5;
 
 /// The player throws the `stack` it holds, if it is a thing thrown; true when it is one.
 pub(super) fn throw(world: &mut World, player: Entity, stack: &ItemStack) -> bool {
