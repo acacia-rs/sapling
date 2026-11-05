@@ -22,8 +22,14 @@ fn cows_fed_wheat_have_a_calf_with_experience_that_feeding_grows_up_sooner() {
     let mut h = ready(GameMode::Survival, &[("minecraft:wheat", 12, 0)], 0.0);
     let (a, b) = (spawn(&mut h, COW, [2.5, 65.0, 0.5]), spawn(&mut h, COW, [3.5, 65.0, 0.5]));
     let fed = [click_on(&mut h, a), click_on(&mut h, b)].concat();
-    assert!(showed(&fed, a, Event::InLoveParticles) && showed(&fed, b, Event::InLoveParticles), "hearts");
-    assert_eq!((has_flag(&fed, a, Flags::INLOVE), has_flag(&fed, b, Flags::INLOVE)), (Some(true), Some(true)));
+    // BDS (bds-n13herd.txt, bds-n3foals.txt): eating at the feed, in love the tick after, hearts
+    // (LoveParticles, never InLoveParticles) every 16 ticks from the ninth; tempted while wheat is held.
+    assert!(showed(&fed, a, Event::EatingItem) && showed(&fed, b, Event::EatingItem), "eating");
+    let hearts = watch(&mut h, 9);
+    let told = [fed.clone(), hearts.clone()].concat();
+    assert!(showed(&hearts, a, Event::LoveParticles) && showed(&hearts, b, Event::LoveParticles) && !showed(&told, a, Event::InLoveParticles), "hearts");
+    assert_eq!((has_flag(&told, a, Flags::INLOVE), has_flag(&told, b, Flags::INLOVE)), (Some(true), Some(true)));
+    assert_eq!(has_flag(&told, a, Flags::TEMPTED), Some(true), "wheat in hand");
 
     let sent = watch(&mut h, 200);
     let calves = added(&sent, COW);
