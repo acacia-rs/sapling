@@ -1,7 +1,8 @@
 //! A generated column's waiting block ticks as the `PendingTicks` record a stored column carries, so
 //! the shard queues them when the column arrives (sapling-shard blocks/pending.rs): decoration's leftover
-//! liquid ticks (`OverworldGenerator::chunk_game_ticks`, in order), then one per bubble column cell. All are
-//! due on its first tick, as in BDS (the generator's leftovers.rs).
+//! liquid ticks (`OverworldGenerator::chunk_game_ticks`, in order), then one per bubble column cell, all due on
+//! its first tick as in BDS (the generator's leftovers.rs); then the ticks placed blocks queued with their delays
+//! (`OverworldGenerator::chunk_kept_ticks`: a sulfur spring's potent sulfur).
 
 use acacia_world::BlockRegistry;
 use sapling_worldgen::{Block, ChunkShape, HEIGHT, MIN_Y};
@@ -12,7 +13,7 @@ use crate::ChunkPos;
 /// The tick's block: a water tick on a magma cell is the magma's own (bubbles above it). A bubble column
 /// decoration set keeps its own tick until the game runs it: BDS's tick-free worlds save one per cell
 /// (seed 20261003, 321 near the origin), so the column climbs once the chunk ticks.
-pub(crate) fn pending_ticks(pos: ChunkPos, shape: &ChunkShape, ticks: &[([i32; 3], bool)], ids: &BlockIds, registry: &BlockRegistry) -> Vec<u8> {
+pub(crate) fn pending_ticks(pos: ChunkPos, shape: &ChunkShape, ticks: &[([i32; 3], bool)], kept: &[([i32; 3], Block, u64)], ids: &BlockIds, registry: &BlockRegistry) -> Vec<u8> {
     let magma = |[x, y, z]: [i32; 3]| ChunkPos::of_block(x, z) == pos && shape.block((x & 15) as usize, y, (z & 15) as usize) == Block::Magma;
     let block = |at, lava| match lava {
         true => Block::Lava,
@@ -28,6 +29,7 @@ pub(crate) fn pending_ticks(pos: ChunkPos, shape: &ChunkShape, ticks: &[([i32; 3
             }
         }
     }
+    waiting.extend(kept.iter().map(|&(at, block, delay)| (at, ids.id(block), delay as i64)));
     if waiting.is_empty() {
         return Vec::new();
     }

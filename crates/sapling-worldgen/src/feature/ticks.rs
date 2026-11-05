@@ -101,3 +101,11 @@ impl TickQueue {
         Self { now: 0, game: true, ..Self::default() }
     }
 }
+
+impl super::Features {
+    /// The ticks placed blocks queued on `chunk` for the game (`View::keep_tick`), in decoration order.
+    pub fn kept_ticks(&self, chunk: (i32, i32), inputs: super::Inputs) -> Vec<super::view::Kept> {
+        let sources = self.sources_before(chunk, super::Rank::MAX);
+        sources.into_iter().flat_map(|source| self.source_writes(source, inputs).kept_in(chunk).collect::<Vec<_>>()).collect()
+    }
+}

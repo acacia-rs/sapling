@@ -191,6 +191,17 @@ fn a_generated_column_keeps_a_tick_per_bubble_column_cell() {
     assert!(ticks.iter().all(|tick| tick.time - saved_at == 1), "{ticks:?}");
 }
 
+/// A sulfur spring's potent sulfur keeps its template's ticks with their delays: BDS's tick-free world of this
+/// seed (canon ac2, Linux) saved these three in chunk (-751, -752), sulfur_spring_medium_2's `tick_queue_data`.
+#[test]
+fn a_generated_sulfur_spring_keeps_its_potent_sulfur_ticks() {
+    let generated = Generated::with_areas(MemoryStorage::default(), SEED, 1);
+    let (saved_at, ticks) = crate::decode_pending_ticks(&generated.generate_column(ChunkPos::new(-751, -752)).pending_ticks).unwrap();
+    let kept: Vec<(&str, [i32; 3], i64)> = ticks.iter().map(|tick| (tick.name.as_str(), tick.pos, tick.time - saved_at)).collect();
+    let at = [-12004, 67, -12032];
+    assert_eq!(kept, [85, 309, 369].map(|delay| ("minecraft:potent_sulfur", at, delay)));
+}
+
 /// Decoration's leftover liquid ticks go out with their column, due at once (generated/ticks.rs).
 #[test]
 fn a_generated_column_keeps_the_liquid_ticks_its_queue_holds() {

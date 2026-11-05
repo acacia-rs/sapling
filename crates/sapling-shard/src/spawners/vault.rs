@@ -2,18 +2,22 @@
 //! active while a player not yet rewarded is near, unlocking when such a player uses the key, and
 //! ejecting, one item each [`STEP`] ticks; each player is rewarded once (`rewarded_players`).
 
-use std::collections::HashMap;
+mod key;
+mod shown;
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::LevelEventEvent;
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, GameMode, Item};
+use sapling_api::{BlockPos, Item};
 use sapling_world::ItemStack;
+
+pub(super) use key::use_key;
+pub(super) use shown::show_due;
 
 use super::eject::{event, item, roll, sound};
 use super::fields::{Fields, as_longs, compounds, longs};
 use super::{Near, centre, dice, distance, now, property, set_state};
-use crate::components::{Layer, Mode};
+use crate::components::Layer;
 
 const REWARD: &str = "loot_tables/chests/trial_chambers/reward.json";
 const OMINOUS_REWARD: &str = "loot_tables/chests/trial_chambers/reward_ominous.json";
@@ -27,8 +31,6 @@ const STEP: i64 = 20;
 const UNLOCKING: i64 = 14;
 /// The most players a vault remembers; the earliest goes first.
 const REMEMBERED: usize = 128;
-/// A refused key is heard no more often than this.
-const FAIL_GAP: i64 = 15;
 /// Items come out this far over the block's corner, at this speed up and up to this times
 /// (`rand - rand`) any way.
 const OUT: [f32; 3] = [0.5, 1.2 - 0.125, 0.5];
@@ -36,10 +38,6 @@ const OUT: [f32; 3] = [0.5, 1.2 - 0.125, 0.5];
 const EJECT_SOUND: [f32; 3] = [0.5, 1.2, 0.5];
 const UP: f32 = 0.2;
 const SPREAD: f32 = 0.034455;
-
-/// When each vault last refused a key aloud; BDS keeps it unsaved too.
-#[derive(Resource, Default)]
-struct Refusals(HashMap<(Entity, BlockPos), i64>);
 
 /// Its `config`, with BDS's defaults; an ominous vault's ([U]: its template sets them) where none is saved.
 struct Config {
@@ -146,19 +144,25 @@ pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fiel
     // A stored world's ticks are BDS's, not this shard's.
     let resumes = vault.data.int("state_updating_resumes_at", 0).min(now + STEP);
     let mut kept = shown;
-    let (mut entered, mut heard) = (false, None);
+    let (mut entered, mut heard, mut settled) = (false, None, false);
     if now >= resumes {
         let next = step(world, layer, pos, &mut vault, near);
         vault.data.set("state_updating_resumes_at", Value::Long(now + next.1));
         if let Some(to) = next.0 {
             heard = enter(world, layer, pos, &mut vault, to);
-            (shown, entered) = (true, true);
+            (shown, entered, settled) = (true, true, settles(to));
         }
         shown |= vault.state == "ejecting";
         kept = true;
     }
     // BDS showed an idle vault's entity once, at its set (research/captures/bds-s7ents.txt); a busy one's
     // block again with it each second (bds-x2ran.txt).
+    if settled {
+        if let Some(mut level) = world.get_mut::<crate::components::Layer>(layer) {
+            _ = level.world.set_block_entity(pos, &vault.into_value());
+        }
+        return shown::next_tick(world, layer, pos, true, heard);
+    }
     if shown && !entered {
         if let Some(mut level) = world.get_mut::<crate::components::Layer>(layer) {
             _ = level.world.set_block_entity(pos, &vault.into_value());
@@ -236,8 +240,18 @@ fn enter(world: &mut World, layer: Entity, pos: BlockPos, vault: &mut Vault, to:
         _ => {}
     }
     vault.state = to;
-    set_state(world, layer, pos, "vault_state", to);
+    if settles(to) {
+        let id = world.get::<Layer>(layer).and_then(|level| crate::blocks::with_property(level.world.registry(), level.world.block(pos[0], pos[1], pos[2]), "vault_state", to));
+        id.map(|id| crate::blocks::set_quietly(world, layer, pos, id));
+    } else {
+        set_state(world, layer, pos, "vault_state", to);
+    }
     sound
+}
+
+/// A state the vault's own update enters, shown a tick late ([`shown`]).
+fn settles(state: &str) -> bool {
+    matches!(state, "active" | "inactive")
 }
 
 /// A block entity as `/clone` copies it: a vault's copy is connected to nobody until its next update,
@@ -257,45 +271,4 @@ pub(crate) fn cloned(entity: &Value) -> Value {
 /// Where BDS tells a vault's sounds and animations: its cell's corner.
 fn corner(pos: BlockPos) -> [f32; 3] {
     pos.map(|c| c as f32)
-}
-
-/// A click with `held` on an active vault: its key, from a player not yet rewarded, unlocks it
-/// (`VaultBlockActor::tryInsertKey`). `Some(spent)` on an active vault, `None` otherwise.
-pub(super) fn use_key(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, held: &str) -> Option<bool> {
-    let mut vault = load(world, layer, pos, Fields::at(world, layer, pos)?)?;
-    if vault.state != "active" {
-        return None;
-    }
-    let unique_id = world.get::<crate::tags::Marks>(player).map_or(0, |marks| marks.unique_id);
-    let refusal = if held != vault.config.key { Some("vault.insert_item_fail") } else if vault.rewarded().contains(&unique_id) { Some("vault.reject_rewarded_player") } else { None };
-    let now = now(world);
-    if let Some(refusal) = refusal {
-        let mut refusals = world.get_resource_or_insert_with(Refusals::default);
-        if refusals.0.get(&(layer, pos)).is_none_or(|last| now - last >= FAIL_GAP) {
-            refusals.0.insert((layer, pos), now);
-            sound(world, layer, pos, refusal, centre(pos), -1);
-        }
-        return Some(false);
-    }
-    let table = vault.config.loot_table.clone();
-    let items: Vec<Value> = roll(world, &table).into_iter().filter_map(|(name, count)| stack_value(world, layer, name, count)).collect();
-    if items.is_empty() {
-        return Some(false);
-    }
-    vault.data.set("total_ejections_needed", Value::Long(items.len() as i64));
-    vault.display(items.last().cloned());
-    vault.data.set("items_to_eject", compounds(items));
-    vault.data.set("state_updating_resumes_at", Value::Long(now + UNLOCKING));
-    let mut rewarded = vault.rewarded();
-    rewarded.push(unique_id);
-    let over = rewarded.len().saturating_sub(REMEMBERED);
-    rewarded.drain(..over);
-    vault.data.set("rewarded_players", longs(&rewarded));
-    let heard = enter(world, layer, pos, &mut vault, "unlocking");
-    crate::blocks::keep_entity(world, layer, pos, &vault.into_value());
-    if let Some(heard) = heard {
-        sound(world, layer, pos, heard, corner(pos), -1);
-    }
-    let creative = world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative);
-    Some(!creative)
 }

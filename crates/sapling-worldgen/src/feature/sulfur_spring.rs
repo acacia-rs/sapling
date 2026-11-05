@@ -135,10 +135,20 @@ fn ground_near(view: &View, [x, y, z]: [i32; 3]) -> bool {
     (y - 2..=y + 2).any(|y| solid(y) && !solid(y + 1))
 }
 
-/// `StructureTemplate::placeInWorld` (141f52300) with the feature's settings: every non-void cell, air too.
+/// `StructureTemplate::placeInWorld` (141f52300) with the feature's settings: every non-void cell, air too, then
+/// each `tick_queue_data` tick on its cell's chunk, kept for the game.
 fn place_cells(view: &mut View, template: &SpringTemplate, [x, y, z]: [i32; 3], rotation: i32) {
-    for &(cx, cy, cz, kind) in template.cells {
+    let at = |cx: u8, cy: u8, cz: u8| {
         let [dx, dz] = turn([cx as i32, cz as i32], rotation);
-        view.set_block(x + dx, y + cy as i32, z + dz, KINDS[kind as usize]);
+        [x + dx, y + cy as i32, z + dz]
+    };
+    for &(cx, cy, cz, kind) in template.cells {
+        let [x, y, z] = at(cx, cy, cz);
+        view.set_block(x, y, z, KINDS[kind as usize]);
+    }
+    for &(cx, cy, cz, delays) in template.ticks {
+        let cell = at(cx, cy, cz);
+        let block = view.block(cell[0], cell[1], cell[2]);
+        delays.iter().for_each(|&delay| view.keep_tick(cell, block, delay.into()));
     }
 }

@@ -194,8 +194,15 @@ at `+0.5 +1 +0.5`; the cloned spawner's entity (`spawn_data` alone, shown twice)
 - Fixed (thirteenth2z): a set vault is watched when its entity is made (`blocks/set_entities.rs` `furnish`), so it
   is active the next tick as on BDS, not at the 100-tick sweep; a cloned vault's entity has `connected_players`
   `[]` (`spawners::cloned`) and is shown only after the clone's blocks. Tests in integration/thirteenth2z.rs.
-Left: its unlocking shows the block at the click and again with the entity two ticks on; the ejected count
-(4 against 3) is the loot roll's; a cloned vault goes inactive a second on.
+- Fixed (thirteenth2ae, `spawners/vault/shown.rs`): a state the vault's own update enters (active, inactive) is
+  written at once and told by its animation, but its block goes out the next tick, listed twice in one
+  UpdateSubchunkBlocks, then its entity twice, then its sound (`vault.close_shutter` when leaving ejecting). This
+  is the cloned vault going inactive a second on: its timing matched, its packets did not. A key's unlocking is
+  shown at the click (block, entity, `vault.insert_item`) and its block and entity again the next tick. Tests
+  in spawners/vault.rs.
+- The ejected count (4 against 3) is the reward table's roll (1 + 1..3 + 1 items), not a rule difference.
+Left: BDS also resent the clicker six cells at the click (the vault, the cells above and below it, the clicked
+face's neighbour and the cells above and below that); sapling does not.
 
 ## Ominous item spawners
 

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use super::light;
 use super::reach::Reach;
 use super::ticks::TickQueue;
-pub use super::view_writes::{ChunkWrites, REACH, Routed, Write};
+pub use super::view_writes::{ChunkWrites, Kept, REACH, Routed, Write};
 use super::view_writes::{SIDE, slot};
 use crate::Dimension;
 use crate::block::Block;
@@ -54,6 +54,7 @@ pub struct View<'a> {
     bounds: (i32, i32),
     /// Block entities filed for cells of the region, in order (world cell).
     entities: Vec<([i32; 3], BlockEntity)>,
+    kept: Vec<Kept>,
 }
 
 impl<'a> View<'a> {
@@ -76,6 +77,7 @@ impl<'a> View<'a> {
             ultrawarm: false,
             bounds: (MIN_Y, MIN_Y + HEIGHT as i32),
             entities: Vec::new(),
+            kept: Vec::new(),
         }
     }
 
@@ -83,6 +85,14 @@ impl<'a> View<'a> {
     pub fn set_block_entity(&mut self, at: [i32; 3], entity: BlockEntity) {
         if self.has_block(at[0], at[1], at[2]) {
             self.entities.push((at, entity));
+        }
+    }
+
+    /// Queues a tick of `block` at `at` on its chunk for the game, due `delay` after the world's start
+    /// (docs/research/worldgen-bds-caves.md, "Sulfur springs"); nothing outside the writable region.
+    pub fn keep_tick(&mut self, at: [i32; 3], block: Block, delay: u64) {
+        if self.has_block(at[0], at[1], at[2]) {
+            self.kept.push((at, block, delay));
         }
     }
 
@@ -265,6 +275,6 @@ impl<'a> View<'a> {
     }
 
     pub fn into_writes(self) -> ChunkWrites {
-        ChunkWrites(self.writes, self.routed, self.reach.map(Reach::into_parts), self.left, self.entities)
+        ChunkWrites(self.writes, self.routed, self.reach.map(Reach::into_parts), self.left, self.entities, self.kept)
     }
 }

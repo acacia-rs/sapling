@@ -10,7 +10,7 @@ mod tests;
 
 use acacia_world::{BlockRegistry, Dimension};
 use sapling_leveldb::PlayerData;
-use sapling_worldgen::{ChunkBiomes, ChunkShape, EndGenerator, NetherGenerator, OverworldGenerator, PlaceFailure, StructureWrites};
+use sapling_worldgen::{Block, ChunkBiomes, ChunkShape, EndGenerator, NetherGenerator, OverworldGenerator, PlaceFailure, StructureWrites};
 
 use crate::storage::{Level, ShapeLoader, StorageError, StoredColumn, WorldStorage};
 use crate::{ChunkPos, END, NETHER, OVERWORLD};
@@ -47,6 +47,13 @@ impl Generator {
             Self::Overworld(generator) => generator.chunk_game_ticks(pos.x, pos.z),
             Self::Nether(generator) => generator.chunk_game_ticks(pos.x, pos.z),
             Self::End(_) => Vec::new(),
+        }
+    }
+
+    fn kept_ticks(&self, pos: ChunkPos) -> Vec<([i32; 3], Block, u64)> {
+        match self {
+            Self::Overworld(generator) => generator.chunk_kept_ticks(pos.x, pos.z),
+            Self::Nether(_) | Self::End(_) => Vec::new(),
         }
     }
 }
@@ -110,7 +117,8 @@ impl<S: WorldStorage> Generated<S> {
     /// The column the generator makes at `pos`, whatever `inner` holds there.
     pub fn generate_column(&self, pos: ChunkPos) -> StoredColumn {
         let (shape, biomes) = self.generator.chunk(pos);
-        let pending_ticks = ticks::pending_ticks(pos, &shape, &self.generator.game_ticks(pos), &self.ids, BlockRegistry::vanilla());
+        let waiting = (self.generator.game_ticks(pos), self.generator.kept_ticks(pos));
+        let pending_ticks = ticks::pending_ticks(pos, &shape, &waiting.0, &waiting.1, &self.ids, BlockRegistry::vanilla());
         let block_entities = generated_block_entities(pos.x, pos.z, &shape);
         let areas: Vec<sapling_leveldb::SpawnArea> = shape.spawn_areas().iter().map(|a| sapling_leveldb::SpawnArea { structure: a.structure.into(), bounds: a.bounds, whole: a.whole, y_offset: a.y_offset }).collect();
         let spawn_areas = sapling_leveldb::encode_spawn_areas(&areas);

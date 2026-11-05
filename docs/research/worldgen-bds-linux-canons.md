@@ -48,6 +48,9 @@ split it into tries. This found the fallen poplar that BDS laid over a red shrub
 - Tick heap pops: libc++'s `pop_heap` (Floyd's: the hole goes down to a leaf of the whole heap, taking the left
   child on ties) where MSVC takes the right child on ties. Equal-time liquid ticks run in another order
   (`tick_heap.rs`). This fixed the camp canon's last 3 lava cells.
+- The frozen ocean iceberg's positional seed (`OceanFrozenSurfaceBuilder`, Linux 0x51f5344): clang wraps
+  `x * 3129871` in an int (`imul` by 0x2fc20f00000001, `sar 32`); MSVC multiplies in 64 bits (1487e4536). The
+  icebergs of the spring canon's row -756 sat a cell or two off until surface/frozen.rs followed it (1078 cells).
 - Mth's sine table: UCRT `sinf` on Windows, glibc's on Linux (acacia-physics `sinf.rs` holds the Linux table).
   Not met in worldgen yet.
 - `std::hash<int>`: FNV-1a on Windows, identity on Linux (structure start maps, template markers). Not met yet.
