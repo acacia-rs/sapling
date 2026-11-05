@@ -153,6 +153,7 @@ mod skin_change;
 mod shot_blocks;
 mod shot_buttons;
 mod shot_hits;
+mod shot_pitch;
 mod shown_effects;
 mod shriekers;
 mod skeleton_traps;

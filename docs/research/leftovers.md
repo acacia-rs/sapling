@@ -305,6 +305,12 @@ and tnt.rs):
     hit test moved to `flight/in_way.rs`. Still left: the loosed tick's move (moving it there made
     a shot that met its prey at once go unannounced; the TODO in arrows.rs `loose`), and BDS turning
     a loosed shot in flight (bytes 2, 1, 0, 255, 252 from the fourth move; not fitted).
+  - Fitted 2026-11-05 (thirteenth wave, group Q) on bds-shoot.txt's skeleton arrow: each move the
+    shot's pitch goes a fifth of the way to that move's own angle (the Java game's `lerpRotation`),
+    and all the way at once from a shot announced at yaw and pitch 0 (the summoned one's byte 192);
+    bytes cut toward zero, every byte of the capture's 12 moves matched. `creatures/flight/pitch.rs`,
+    test `a_skeletons_arrow_is_told_pitching_down_as_it_flies`. The yaw was not seen to turn and is
+    left as announced.
   - Fixed 2026-11-05 (thirteenth wave): a mob's arrow and a dispenser's shot make their first move
     in the tick they are loosed (`creatures/arrows.rs` `first_move`). The instant-hit regression
     came from removing an arrow in the tick it hit, before it was announced; BDS removes an arrow
