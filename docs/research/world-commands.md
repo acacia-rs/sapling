@@ -101,12 +101,25 @@ selecting,session,items,enchanting}.rs`.
   without `minecraft:`; a block name not known or `blocks` not a list → `Component '<as typed>' could
   not be updated.`; an unknown component → `is not a supported component.`. Each name widens to the
   current names of its legacy id over its metas (granite → the stones; `legacy_group`); BDS lists
-  them in its hash order, sapling in name order. On the wire they go in ItemV4 extra
+  them in one fixed order, sapling in name order. On the wire they go in ItemV4 extra
   `can_place_on`/`can_destroy`, not the NBT; saved at the stack's top level (`CanPlaceOn`,
   `CanDestroy`). Adventure players break only what the held item's `can_destroy` names and place
-  only on what its `can_place_on` names (test `adventure_lists`). BDS refused both of the bot's
-  adventure places, even onto grass named by the stack; likely the bot's held-slot mismatch, not
-  confirmed.
+  only on what its `can_place_on` names (test `adventure_lists`).
+- BDS's list order (`k1lock`, bds-k1lock.txt, 2026-11-05): not per name and not the order typed. Two
+  lists of 30 and 39 names are both one global order filtered (the 39 minus dirt's and stone's
+  groups is the 30 exactly), and h1lock's run, earlier, kept the same relative order: a walk of the
+  block registry, the same each run. It is no single sort or bucket order of FNV-1a, FNV-1,
+  CityHash or MurmurHash64A of the names, with or without `minecraft:`, at any bucket count under
+  200000 (a libc++ table's order also carries its insert and rehash history), and it is the Linux
+  build's; the Windows build sapling follows (MSVC tables) would differ. Left: sapling keeps name
+  order.
+- The adventure places (bds-k1lock.txt): BDS refused the `can_place_on` stone onto grass in
+  survival too, and placed plain stone there; acacia's bot sends its held item with empty
+  `can_place_on`/`can_destroy` (`interact/wire.rs` `to_wire`), and BDS refuses a held item that does
+  not match its own. So a listed stack's place on BDS cannot be drilled with this bot; plain stone in
+  adventure was refused, as sapling refuses it. sapling does not compare the claimed item's lists and
+  placed the listed stone in survival (sapling-k1lock.txt); a real client sends its lists, so only a
+  client that misreports them sees the difference (left as sapling's choice).
 
 ## Not seen; sapling's choice
 

@@ -46,6 +46,24 @@ fn a_summoned_bolt_thunders_burns_hurts_once_and_goes() {
 }
 
 #[test]
+fn a_bolt_takes_away_the_items_and_orbs_in_reach_netherite_too() {
+    // research/captures/bds-m3struck.txt: sticks, netherite, a nether star, cobblestone and an orb all went.
+    let mut h = ready(Difficulty::Easy);
+    h.remote.run(|ctx| {
+        for name in ["minecraft:stick", "minecraft:netherite_ingot", "minecraft:nether_star"] {
+            assert!(ctx.drop_item(&sapling_api::Item::new(name, 1), [-4.5, 65.0, -4.5]));
+        }
+        assert!(ctx.drop_item(&sapling_api::Item::new("minecraft:stick", 1), [5.5, 65.0, 5.5]));
+        assert!(ctx.spawn_entity("minecraft:xp_orb", [-4.5, 65.0, -4.5]).is_some());
+    });
+    watch(&mut h, 20);
+    h.remote.run(|ctx| assert!(ctx.spawn_entity(BOLT, [-4.5, 65.0, -4.5]).is_some()));
+    watch(&mut h, 2);
+    let left = kinds(&mut h).into_iter().filter(|kind| kind == "minecraft:item" || kind == "minecraft:xp_orb").count();
+    assert_eq!(left, 1, "only the stick out of reach is left");
+}
+
+#[test]
 fn on_easy_a_bolt_lights_no_fire() {
     let mut h = ready(Difficulty::Easy);
     h.remote.run(|ctx| assert!(ctx.spawn_entity(BOLT, [2.5, 65.0, 0.5]).is_some()));
@@ -87,6 +105,8 @@ fn a_struck_rod_is_powered_eight_ticks_and_scrapes_the_copper_it_stands_on() {
     });
     let sparks = all::<LevelEvent>(&watch(&mut h, 1)).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [3.0, 65.0, 3.0]).count();
     assert_eq!(sparks, 6, "BDS's sparks at the rod's corner");
+    // The rod powered a tick after the sparks, as the bolt landed (bds-rsdevices.txt 69133, 69180).
+    watch(&mut h, 1);
     let rod = ask(&mut h, |ctx| ctx.block([3, 65, 3]).unwrap());
     assert!(rod.name == "minecraft:lightning_rod" && rod.properties.contains("powered_bit=1"), "{rod:?}");
     let copper = ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name);

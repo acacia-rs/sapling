@@ -11,6 +11,27 @@ use common::raising::plain_in;
 use common::{Harness, all};
 use sapling_api::Difficulty;
 
+/// BDS showed the zombie before its horse, its seat in its `AddEntity` and its link after it, then
+/// the horse with the link inside its own; a dying rider's unlink is immediate (vehicles.md).
+#[test]
+fn a_rider_is_shown_before_its_mount_and_unlinked_at_once_when_it_dies() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    ask(&mut h, |ctx| ctx.set_difficulty(Difficulty::Easy));
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:zombie_horse", [2.5, 65.0, 4.5], 0.0, 0.0, Some("minecraft:spawn_adult_with_rider")).is_some()));
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let added: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type != "minecraft:player").collect();
+    assert_eq!(added.iter().map(|added| added.entity_type.as_str()).collect::<Vec<_>>(), ["minecraft:zombie", "minecraft:zombie_horse"]);
+    let (zombie, horse) = (&added[0], &added[1]);
+    assert!(plain_in(&zombie.metadata, Key::RiderSeatPosition).is_some(), "the seat rides in the rider's announcement");
+    assert_eq!(horse.links.iter().map(|link| (link.ridden_entity_id, link.rider_entity_id, link.r#type)).collect::<Vec<_>>(), [(horse.unique_id, zombie.unique_id, 1)]);
+    let rider = sapling_api::EntityId(zombie.runtime_id);
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(rider)));
+    let sent: Vec<_> = (0..30).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let off: Vec<_> = all::<SetEntityLink>(&sent).into_iter().filter(|told| told.link.r#type == 0).map(|told| told.link.immediate).collect();
+    assert_eq!(off, [true]);
+}
+
 fn int(added: &AddEntity, key: Key) -> i32 {
     match plain_in(&added.metadata, key) {
         Some(Plain::Int(value)) => value,

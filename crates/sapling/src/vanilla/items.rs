@@ -24,7 +24,7 @@ const COLOURED: [(&str, &str); 8] = [
 
 /// The item an item name and data value name, and the data left for it: an old coloured name
 /// takes its colour from the data.
-fn item_and_data(name: &str, data: Option<i32>) -> (String, Option<i16>) {
+pub(super) fn item_and_data(name: &str, data: Option<i32>) -> (String, Option<i16>) {
     let plain = name.strip_prefix("minecraft:").unwrap_or(name);
     if let (CORAL_BLOCK, Some(data)) = (plain, data) {
         return (old_coral_block(data), None);

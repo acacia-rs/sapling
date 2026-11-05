@@ -125,8 +125,22 @@ fn the_spreads_sounds_are_heard_a_tick_after_the_charge_that_made_them_moves() {
     let heard: Vec<usize> = (1..sent.len()).filter(|at| spread(&sent[*at])).collect();
     assert!(!heard.is_empty(), "the charge spread");
     assert!(heard.iter().all(|at| moved(&sent[at - 1])), "each spread heard a tick after a move: {heard:?}");
+    let batched = |tick: &[RawPacket]| !all::<acacia_proto::packets::UpdateSubchunkBlocks>(tick).is_empty() && all::<acacia_proto::packets::UpdateBlock>(tick).iter().all(|update| [update.position.x, update.position.y, update.position.z] == CATALYST);
+    assert!(heard.iter().all(|at| batched(&sent[*at])), "the spread's blocks in UpdateSubchunkBlocks, as BDS's");
     let first = sent.iter().position(|tick| moved(tick)).expect("moved");
     assert!(!spread(&sent[first]), "nothing heard with the first move");
+}
+
+#[test]
+fn the_bloom_is_shown_the_tick_after_its_particles_and_wilts_eight_later() {
+    // research/captures/bds-catalyst.txt: 2036, `bloom=1` the next tick, `bloom=0` 8 ticks after that.
+    let mut h = ready();
+    let mut sent = kill_cow(&mut h, [4.5, 65.0, 4.5]);
+    sent.extend((0..12).map(|_| ticks(&mut h, 1)));
+    let at_catalyst = |tick: &[RawPacket]| all::<acacia_proto::packets::UpdateBlock>(tick).iter().filter(|update| [update.position.x, update.position.y, update.position.z] == CATALYST).count();
+    let death = sent.iter().position(|tick| events(tick, BLOOM) == 1).expect("the bloom");
+    let shown: Vec<usize> = (death..sent.len()).filter(|at| at_catalyst(&sent[*at]) > 0).map(|at| at - death).collect();
+    assert_eq!(shown, [1, 9], "bloom=1 a tick after the particles, bloom=0 8 after that");
 }
 
 #[test]

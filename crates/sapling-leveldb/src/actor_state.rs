@@ -1,7 +1,7 @@
 //! What a stored mob keeps of its passing state, as a BDS 1.26 world held it
 //! (research/captures/bds-keepmobs.txt): its effects (`ActiveEffects`), a primed TNT's `Fuse`
 //! byte beside `IsFuseLit`, and a wither's charge (`Invul` and `SpawningFrames`, the same ticks),
-//! `Phase` (1 charging, 0 after), `AirAttack` (0 once armoured) and `maxHealth`.
+//! `Phase` (0 once armoured), `AirAttack` (0 once armoured), `maxHealth`, its fire rate and `ShieldHealth`.
 
 use acacia_proto::nbt::{self, List, LittleEndian, Str, Value};
 
@@ -77,24 +77,38 @@ pub struct WitherRecord {
     pub armoured: bool,
     /// The max health its difficulty gave it.
     pub max_health: i32,
+    /// Ticks between its middle head's shots (`firerate`), and the health under which it next
+    /// halves (`lastHealthInterval`); a record without them gets 20 and its max health.
+    pub fire_rate: i32,
+    pub interval: i32,
 }
+
+/// `ShieldHealth`, which BDS saved as 30 whatever the fight (research/captures/bds-m3wither.txt's world).
+const SHIELD: i32 = 30;
+const FIRE_RATE: i32 = 20;
 
 /// A stored wither's fight, where it keeps one.
 pub fn wither_record(compound: &[u8]) -> Option<WitherRecord> {
     let fields = fields_of(compound).ok()?;
-    Some(WitherRecord { charging: int(&fields, "Invul")?, armoured: int(&fields, "AirAttack") == Some(0), max_health: int(&fields, "maxHealth")? })
+    let max_health = int(&fields, "maxHealth")?;
+    let (fire_rate, interval) = (int(&fields, "firerate").unwrap_or(FIRE_RATE), int(&fields, "lastHealthInterval").unwrap_or(max_health));
+    Some(WitherRecord { charging: int(&fields, "Invul")?, armoured: int(&fields, "AirAttack") == Some(0), max_health, fire_rate, interval })
 }
 
 /// One stored wither's compound keeping `record`; the rest as it was.
 pub fn withered_actor(compound: &[u8], record: WitherRecord) -> Result<Vec<u8>, Error> {
-    let WitherRecord { charging, armoured, max_health } = record;
+    let WitherRecord { charging, armoured, max_health, fire_rate, interval } = record;
     with_fields(
         compound,
         [
             ("AirAttack", Value::Byte(i8::from(!armoured))),
             ("Invul", Value::Int(charging)),
             ("SpawningFrames", Value::Int(charging)),
-            ("Phase", Value::Int(i32::from(charging > 0))),
+            // The half-health turns it has left (bds-keepmobs.txt, bds-m3wither0's world: 1 once charged).
+            ("Phase", Value::Int(i32::from(!armoured))),
+            ("ShieldHealth", Value::Int(SHIELD)),
+            ("firerate", Value::Int(fire_rate)),
+            ("lastHealthInterval", Value::Int(interval)),
             ("maxHealth", Value::Int(max_health)),
         ],
     )
@@ -117,9 +131,9 @@ mod tests {
         assert_eq!(actor_fuse(&fused_actor(&tnt, 60).unwrap()), Some(60));
         let wither = new_actor(5, "minecraft:wither", [0.5, 64.0, 0.5], [0.0; 3]);
         assert_eq!(wither_record(&wither), None);
-        let record = WitherRecord { charging: 40, armoured: false, max_health: 300 };
+        let record = WitherRecord { charging: 40, armoured: false, max_health: 300, fire_rate: 20, interval: 300 };
         assert_eq!(wither_record(&withered_actor(&wither, record).unwrap()), Some(record));
-        let armoured = WitherRecord { charging: 0, armoured: true, max_health: 450 };
+        let armoured = WitherRecord { charging: 0, armoured: true, max_health: 450, fire_rate: 5, interval: 300 };
         assert_eq!(wither_record(&withered_actor(&wither, armoured).unwrap()), Some(armoured));
     }
 }

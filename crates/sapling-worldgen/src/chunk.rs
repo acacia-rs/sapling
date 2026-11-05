@@ -77,7 +77,8 @@ pub struct SpawnArea {
     pub bounds: [i32; 6],
     /// The start's whole box; else one piece's.
     pub whole: bool,
-    pub y_offset: i32,
+    /// None for the data-driven structures (trial chambers, trail ruins, camps).
+    pub y_offset: Option<i32>,
 }
 
 /// A mob a structure's template placed in the chunk (docs/research/structure-spawns.md "Template actors").

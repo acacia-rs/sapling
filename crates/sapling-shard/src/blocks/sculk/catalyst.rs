@@ -43,17 +43,20 @@ pub(crate) struct Catalysts {
     /// The spread's blocks and sounds, shown the tick after the charge's move that made them, as
     /// BDS's were (research/captures/bds-catalyst.txt).
     later: Vec<(Entity, Later)>,
+    /// Blooms set in the tick given, the one after the death that made them, as BDS showed them.
+    blooms: Vec<(Entity, BlockPos, u64)>,
 }
 
 enum Later {
-    Block(BlockPos),
+    /// A cell and the state written: BDS shows each write, a vein later cleared included (bds-catalyst.txt).
+    Block(BlockPos, u32),
     Packet(BlockPos, bytes::Bytes),
 }
 
 fn catalysts(world: &mut World) -> Mut<'_, Catalysts> {
     if !world.contains_resource::<Catalysts>() {
         let seed = world.get_resource_or_insert_with(Dice::default).roll(u32::MAX);
-        world.insert_resource(Catalysts { cursors: BTreeMap::new(), fresh: Vec::new(), random: Mt19937::new(seed), later: Vec::new() });
+        world.insert_resource(Catalysts { cursors: BTreeMap::new(), fresh: Vec::new(), random: Mt19937::new(seed), later: Vec::new(), blooms: Vec::new() });
     }
     world.resource_mut::<Catalysts>()
 }
@@ -97,14 +100,28 @@ pub(super) fn int(name: &str, value: i32) -> Nbt {
     Nbt { name: name.to_owned(), value: NbtValue::Int(value) }
 }
 
-/// `SculkCatalystBlock::bloom` (148b435b0): `bloom` set for 8 ticks, and the bloom particles.
+/// `SculkCatalystBlock::bloom` (148b435b0): the bloom particles now, and `bloom` set for 8 ticks
+/// from the next tick, when BDS showed it (bds-catalyst.txt: 2036, `bloom=1` a tick on, `bloom=0` 8 after).
 fn bloom(world: &mut World, layer: Entity, pos: BlockPos) {
     let [x, y, z] = pos;
-    let Some(bloomed) = level(world, layer).and_then(|level| with_property(level.registry(), level.block(x, y, z), "bloom", "1")) else { return };
-    send::set(world, layer, pos, bloomed);
-    queued::after(world, layer, pos, BLOOMING, Job::Sculk);
+    let now = world.resource::<crate::components::Tick>().0;
+    catalysts(world).blooms.push((layer, pos, now + 1));
     let told = generic(BLOOM, vec![int("originX", x), int("originY", y), int("originZ", z)]);
     send::to_viewers(world, layer, pos, &[told]);
+}
+
+/// Sets and shows the blooms due by `now`.
+fn open_blooms(world: &mut World, blooms: &mut Vec<(Entity, BlockPos, u64)>, now: u64) {
+    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(blooms).into_iter().partition(|(.., due)| *due <= now);
+    *blooms = waiting;
+    for (layer, pos, _) in due {
+        let [x, y, z] = pos;
+        let Some(bloomed) = level(world, layer).and_then(|level| with_property(level.registry(), level.block(x, y, z), "bloom", "1")) else { continue };
+        if send::set_quietly(world, layer, pos, bloomed) {
+            send::show(world, layer, pos);
+        }
+        queued::after(world, layer, pos, BLOOMING, Job::Sculk);
+    }
 }
 
 /// A catalyst's bloom is over.
@@ -113,16 +130,32 @@ pub(super) fn wilt(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     send::set(world, layer, [x, y, z], wilted);
 }
 
+/// Shows last tick's spread: its blocks in an UpdateSubchunkBlocks per sub-chunk, then its sounds, as
+/// BDS did (research/captures/bds-catalyst.txt).
+fn show_later(world: &mut World, later: Vec<(Entity, Later)>) {
+    let mut layers: Vec<Entity> = later.iter().map(|(layer, _)| *layer).collect();
+    layers.dedup();
+    for layer in layers {
+        let cells: Vec<_> = later.iter().filter_map(|(at, later)| match later {
+            Later::Block(pos, id) if *at == layer => Some((*pos, *id)),
+            _ => None,
+        }).collect();
+        send::show_states(world, layer, &cells);
+    }
+    for (layer, later) in later {
+        if let Later::Packet(pos, packet) = later {
+            send::to_viewers(world, layer, pos, &[packet]);
+        }
+    }
+}
+
 /// Every catalyst's cursors take a round (`SculkCatalystBlockActor::tick` 144879bc0), kept in its
 /// block actor. A catalyst gone from a loaded column takes its cursors with it.
 pub(super) fn tick(world: &mut World) {
     let Some(mut catalysts) = world.remove_resource::<Catalysts>() else { return };
-    for (layer, later) in std::mem::take(&mut catalysts.later) {
-        match later {
-            Later::Block(pos) => send::show(world, layer, pos),
-            Later::Packet(pos, packet) => send::to_viewers(world, layer, pos, &[packet]),
-        }
-    }
+    let now = world.resource::<crate::components::Tick>().0;
+    open_blooms(world, &mut catalysts.blooms, now);
+    show_later(world, std::mem::take(&mut catalysts.later));
     let mut spent = Vec::new();
     for (&(layer, pos), cursors) in catalysts.cursors.iter_mut() {
         let loaded = level(world, layer).is_some_and(|level| level.is_loaded(send::column(pos)));
@@ -175,7 +208,7 @@ impl Cells for Live<'_> {
         let id = if level.registry().get(id).is_some_and(|state| state.name == SHRIEKER) { with_property(level.registry(), id, "can_summon", "0").unwrap_or(id) } else { id };
         let set = send::set_quietly(self.world, self.layer, [x, y, z], id);
         if set {
-            self.later.push((self.layer, Later::Block([x, y, z])));
+            self.later.push((self.layer, Later::Block([x, y, z], id)));
         }
         set
     }

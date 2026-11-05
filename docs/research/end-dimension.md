@@ -66,12 +66,18 @@ in it was teleported, in the tick after it got there, to (100.5, 51, 0.5): the e
 0.5), no safe-spot search (block actor tick 1487fcae0), told as two MovePlayer Teleport (cause 0, source types 1
 then 0) after a SetEntityMotion; the actor stood inside end stone there. The next tick the gateway was sent
 again as UpdateBlock flags 19 (BDS also does that every ~10 s: the beam). The gateway then waits 20 ticks
-(Java 40). Only in the End; ender pearls, riders and mounts are left. Block entity: `Age`, `ExitPortal` (three
+(Java 40). Only in the End. bds-k1gate.txt (seed 20261018, 2026-11-05): a pig summoned in the gateway left
+the actor's view within a tick (sent through); a tamed horse teleported into it with the actor riding stayed,
+rider and all; `/summon ender_pearl` is a syntax error, so a pearl is undrillable by command. sapling sends
+mobs through as `/tp` moves them (`gateway.rs` `mobs_in_gateways`, [U] what viewers at the exit see) and
+leaves riders and ridden ones (test `a_gateway_sends_a_mob_through_but_not_a_rider`). Block entity: `Age`, `ExitPortal` (three
 ints), `EndGatewayBadPosChecked`; no `ExactTeleport`. sapling: a gateway's `ExitPortal`, else (100, 50, 0) (the
 generated columns keep no block entity), the same two MovePlayer, the update the tick after (to the traveller too,
-whose client still holds the column), the cooldown (sapling-end-gateway.txt); no SetEntityMotion and no periodic beam.
-The SetEntityMotion's content is still unseen: `bds_command_probe h1gate` (bds-h1gate.txt, 2026-11-05) on the
-default drill world was not sent through at (1953, 66, 181).
+whose client still holds the column), the cooldown (sapling-end-gateway.txt); no periodic beam.
+The SetEntityMotion, re-drilled on seed 20261018 (`bds_command_probe h1gate`, bds-h1gate.txt, 2026-11-05; the
+default drill world has no gateway there): to the traveller only, its own runtime id, velocity zero, `tick` the
+player's last input tick (the MovePlayer's), just before the two MovePlayer. sapling sends the same
+(`portals/gateway.rs` `stop`; sapling-h1gate.txt).
 
 The gateway's block actor, decompiled 2026-11-05 (twelfth7; tick 1487fcae0, load 1487fc680, save 1487fc8d0):
 `Age` goes up by one each tick it ticks, uncapped; it is sent (block and block entity) at the end of a tick in
@@ -251,8 +257,12 @@ research/dragon-fight-decompile.md (the fight manager) and research/dragon-ai-de
 
 ## Not done, and why
 
-- **Dragon:** another projectile does not send its fireball back (BDS: along the shooter's look at speed 1,
-  extras 5.1); sapling's players do not shoot yet, and no mob that does comes near the fight.
+- **Dragon:** a shot that meets its fireball now sends it off along the shooter's look at 1, the shooter its
+  owner (told as `OwnerEid`), able to meet the dragon then (extras 5.1; `dragon/fireball.rs` `reflect`, test
+  `a_shot_sends_a_fireball_along_its_shooters_look_at_one_a_tick`); the shot is refused (an arrow bounces).
+  Not drilled: the owner's `SetEntityData`, the shot's own fate, a mob shooter's look (taken as the shot's way).
+  Undrillable by summoning: `summon dragon_fireball` is a syntax error on BDS (2026-11-05, `m3reflect`,
+  research/captures/bds-m3reflect.txt); only a live dragon's fight throws one, and its aim is not steerable.
 - **The second kill's orbs**: sapling's did not join up (77 entities against BDS's 24); with merging built they
   list as BDS's (26, 26, 43 against 24, 24, 46; docs/research/experience.md "Drilled").
 - **Spike bedrock and crystals.** `postProcessMobsAt` 148246230 puts an EnderCrystal (ShowBottom) at (x + 0.5,

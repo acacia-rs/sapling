@@ -7,7 +7,8 @@ use crate::common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::{List, Value};
-use acacia_proto::packets::{EntityEvent, EntityEventEventId as Event, Interact, InteractActionId, InventoryTransaction, SetEntityData, SetEntityLink};
+use acacia_proto::Packet;
+use acacia_proto::packets::{AddEntity, AddPlayer, EntityEvent, EntityEventEventId as Event, Interact, InteractActionId, InventoryTransaction, SetEntityData, SetEntityLink};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, TransactionTransactionData, TransactionTransactionDataItemUseOnEntityActionType as OnEntity};
 use common::stored::{actor, compound, enter_stored, floor_with};
 use common::{Harness, all, attack, config};
@@ -169,11 +170,33 @@ fn a_boat_kept_with_its_rider_takes_it_back_when_loaded() {
     let mut h = Harness::with(config(), World::with_storage(floor_with([boat, pig].concat())));
     let sent = enter_stored(&mut h, 1);
     let sent = [sent, ticks(&mut h, 5)].concat();
-    assert_eq!(links(&sent).len(), 1, "the pig rides the boat: {:?}", links(&sent));
+    // Told after the pig's announcement and again after the boat's, as BDS's riders (bds-h3herds.txt).
+    let told = links(&sent);
+    assert!(!told.is_empty() && told.iter().all(|link| *link == told[0] && link.2 == 1), "the pig rides the boat: {told:?}");
     h.remote.run(|ctx| {
         let all = ctx.entities();
         let kind_of = |name: &str| all.iter().find(|entity| entity.kind == name).map(|entity| entity.id).expect(name);
         assert_eq!(ctx.riders(kind_of("minecraft:boat")), vec![Target::Entity(kind_of("minecraft:pig"))]);
     });
     h.tick(1);
+}
+
+/// research/captures/bds-m3rideview.txt: a player coming to see a boat's player rider got its
+/// `AddPlayer` with the seat, its link, then the boat.
+#[test]
+fn a_late_viewer_gets_a_player_rider_seated_then_its_link_then_the_boat() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let boat = spawned(&mut h, &[("minecraft:boat", [2.5, 65.0, 0.5])])[0];
+    h.receive(1, &interact(boat.0));
+    ticks(&mut h, 2);
+    let mut seen = h.enter(2, "Bob").to(2).to_vec();
+    (0..3).for_each(|_| seen.extend_from_slice(h.tick_all().to(2)));
+    let at = |id: u32| seen.iter().position(|p| p.id == id);
+    let alex = at(AddPlayer::ID).expect("Alex shown");
+    let player: AddPlayer = seen[alex].decode().unwrap();
+    assert!(player.metadata.iter().any(|item| item.key == Key::RiderSeatPosition), "the seat rides in the AddPlayer");
+    assert_eq!(links(&seen[alex + 1..alex + 2]), [(boat.0 as i64, 1, 1)], "the link right after it");
+    assert!(at(AddEntity::ID).is_some_and(|added| added > alex + 1), "the boat after");
+    assert_eq!(links(&seen).len(), 1, "told once");
 }

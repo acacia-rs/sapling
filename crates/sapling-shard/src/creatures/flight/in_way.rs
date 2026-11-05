@@ -34,13 +34,19 @@ fn met_primed(world: &mut World, layer: Entity, at: [f32; 3], size: [f32; 2]) ->
     lit.iter(world).find(|(_, in_layer, body)| in_layer.0 == layer && reaches(body, at, size)).map(|(tnt, ..)| tnt)
 }
 
+/// The dragon fireball of `layer` whose box the shot's reaches into (it has a `PickComponent`, extras 5.1).
+fn met_fireball(world: &mut World, layer: Entity, at: [f32; 3], size: [f32; 2]) -> Option<Entity> {
+    let mut balls = world.query_filtered::<(Entity, &InLayer, &Body), With<crate::dragon::Fireball>>();
+    balls.iter(world).find(|(_, in_layer, body)| in_layer.0 == layer && reaches(body, at, size)).map(|(ball, ..)| ball)
+}
+
 /// Whether a shot of `size` with its bottom middle at `at` reaches into `body`'s box.
 fn reaches(body: &Body, at: [f32; 3], size: [f32; 2]) -> bool {
     let across = (body.size[0] + size[0]) / 2.0;
     (at[0] - body.at[0]).abs() < across && (at[2] - body.at[2]).abs() < across && at[1] + size[1] > body.at[1] && at[1] < body.at[1] + body.size[1]
 }
 
-/// The first player or mob (or primed TNT, for a shot that hurts: `tnt`) on the shot's way from `at`
+/// The first player or mob (or primed TNT or dragon fireball, for a shot that hurts: `tnt`) on the shot's way from `at`
 /// by `motion`, where it met it, and whether a player. A creative player only an arrow meets,
 /// which BDS's bounced off one (bds-f1pickup.txt).
 pub(super) fn first_met(world: &mut World, layer: Entity, by: Entity, at: [f32; 3], motion: [f32; 3], size: [f32; 2], passed: &[Entity], tnt: bool, arrow: bool) -> Option<([f32; 3], Entity, bool)> {
@@ -50,5 +56,6 @@ pub(super) fn first_met(world: &mut World, layer: Entity, by: Entity, at: [f32; 
     (1..=looks).find_map(|look| {
         let point = on_way(look);
         met(world, layer, by, point, size, passed, arrow).map(|player| (point, player, true)).or_else(|| met_mob(world, layer, by, point, size, passed).map(|mob| (point, mob, false))).or_else(|| tnt.then(|| met_primed(world, layer, point, size)).flatten().map(|lit| (point, lit, false)))
+            .or_else(|| tnt.then(|| met_fireball(world, layer, point, size)).flatten().map(|ball| (point, ball, false)))
     })
 }

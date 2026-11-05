@@ -66,7 +66,13 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   `banana` a syntax error. Without level 4 the parsed line is `generic.error.permissions ["place"]`.
 - `jigsaw <pool> <target> <maxDepth>`: depth 0 and 30 → `maxdepth.error` []; an unknown pool or a
   target the pool lacks → `generation.error` []; `trail_ruins/tower road_anchor 3` and
-  `village/plains/town_centers bottom 2` placed.
+  `village/plains/town_centers bottom 2` placed. bds-k1jig.txt (2026-11-05, every name namespaced
+  but as said): a pool or target without `minecraft:` → `generation.error` (sapling the same,
+  `vanilla/worldgen.rs`). A town centre one deep (seed 20261018, y -60): one iron golem made with
+  `doMobSpawning` off, none with `includeEntities` false (sapling: the templates' marker mobs, made
+  unless it is false, `generation.rs` `write`; test `a_placed_village_names_its_marker_mobs`);
+  `keepJigsaws` true left 32 jigsaw blocks (a fill replacing them counted 32), false none (sapling
+  never keeps them). No villager in a town centre.
 
 ## /tickingarea
 
@@ -114,11 +120,12 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   unseen. `structure` names beyond those drilled: sapling takes `/locate`'s names, `village` too,
   where BDS's `ancient_city` and `mineshaft` were `invalidstructure.error` and
   `abandoned_camp_meadow` a `generation.error`; a structure is drawn only over loaded columns
-  (`chunknotloaded.error`, where BDS placed one 9000 blocks off); a jigsaw target is matched by
-  jigsaw name, which `village/.../town_centers bottom` is not here; the structure options
-  (`ignoreStartHeight`, `keepJigsaws`, `includeEntities`, `liquidSettings`) are taken, not
-  followed; the depth limit is taken as 20 (1..20; 0 and 30 refused); no block entities, loot or
-  entities are placed with a structure.
+  (`chunknotloaded.error`, where BDS placed one 9000 blocks off); `ignoreStartHeight`,
+  `keepJigsaws` and `liquidSettings` are taken, not followed (keeping jigsaws needs worldgen to
+  write jigsaw blocks with their entities); `includeEntities` is followed for `/place structure`
+  as for jigsaws, undrilled there; the depth limit is taken as 20 (1..20; 0 and 30 refused).
+  Block entities are placed with their loot tables (`StructureWrites::entities`); what BDS's
+  chests held is unseen by command.
 - Ticking-area ids are made by sapling (BDS's are random UUIDs).
 - Hardcore: StartGame's flag on BDS, and whether a hardcore world made fresh (cheats off) refuses
   `/difficulty` by another rule than cheats.

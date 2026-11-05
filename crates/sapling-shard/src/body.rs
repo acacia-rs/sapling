@@ -6,6 +6,7 @@
 mod bubbles;
 mod liquid;
 mod physics;
+mod stuck;
 
 use acacia_physics::{Aabb, WorldView, collide_box};
 use bevy_ecs::prelude::Component;
@@ -136,17 +137,6 @@ impl Body {
         }
     }
 
-    /// Lifts a mob standing in a block lower than a full one onto its top: BDS's cows went onto blocks
-    /// of 0.375 to 0.9375 set where they stood, the tick after, and stayed in a full one
-    /// (research/captures/bds-lifts.txt).
-    fn rise_onto_low_block(&mut self, level: &Level) {
-        let feet = self.at[1];
-        let under = physics_view(level, |view| overlapped(view, &self.aabb())).into_iter().filter(|b| b.min[1] <= feet + TOUCH).map(|b| b.max[1]).reduce(f32::max);
-        if let Some(top) = under.filter(|top| *top > feet + TOUCH && *top - feet < 1.0 - TOUCH) {
-            (self.at[1], self.motion[1]) = (top, 0.0);
-        }
-    }
-
     /// Whether no block's collision box reaches into its own.
     pub fn is_free(&self, level: &Level) -> bool {
         physics_view(level, |view| overlapped(view, &self.aabb())).is_empty()
@@ -202,6 +192,7 @@ impl Body {
         let walking = [walking[0] + jostle_x, walking[1], walking[2] + jostle_z];
         let stood = std::mem::replace(&mut self.stood, self.on_ground);
         self.rise_onto_low_block(level);
+        self.push_out_of_block(level);
         if let Some(speed) = self.thrown.take() {
             self.motion = speed;
             let lift = std::mem::take(&mut self.lift);

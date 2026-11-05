@@ -2,9 +2,9 @@
 //! a container block's slot, `/replaceitem entity <target> <slot type> <slot> <item> [amount]
 //! [data]` into a player's or a mob's, answering as BDS does (research/captures/bds-replaceitem.txt,
 //! bds-hit.txt, bds-fixreplace.txt).
-// TODO: of a player's slots the hand, the hotbar, the inventory and armour; the data value is the item's, unchecked;
-// BDS's bound on the amount may be the item's own stack size (only stone's 64 was recorded), and an amount
-// below 1 was not tried.
+// Amounts 1 to 64 whatever the item (bds-k1cmds.txt: 17 and 64 pearls, 2 swords taken, 65 stone refused); old
+// coloured names take their colour from the data as `/give`'s do, other data is the item's, unchecked.
+// TODO: of a player's slots the hand, the hotbar, the inventory and armour.
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, EntityInfo, Item, MobSlot, MobSlotRefusal, Output, Permission, Sender, ShardCtx, Slot};
@@ -148,8 +148,11 @@ impl Command for ReplaceItem {
         if count > MOST {
             return out.translate("commands.generic.num.tooBig", vec![count.to_string(), MOST.to_string()], false);
         }
-        let name = super::item_named(&self.item.0);
-        let data = self.data.unwrap_or(0) as i16;
+        if count < 1 {
+            return out.translate("commands.generic.num.tooSmall", vec![count.to_string(), "1".into()], false);
+        }
+        let (name, data) = super::items::item_and_data(&self.item.0, self.data);
+        let data = data.unwrap_or(0);
         let mut item = (name != "minecraft:air").then(|| Item { damage: data, ..Item::new(&name, count.clamp(1, MOST) as u8) });
         if let (Some(item), Some(json)) = (item.as_mut(), self.components.as_deref()) {
             if let Err((line, parameters)) = super::items::set_components(item, json) {

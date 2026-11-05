@@ -124,3 +124,23 @@ fn a_mob_in_a_block_lower_than_a_full_one_rises_onto_it_and_stays_in_a_full_one(
         assert_eq!(cow.at[1], top, "{name}");
     }
 }
+
+#[test]
+fn a_mob_in_a_full_block_goes_out_its_nearest_open_side_flush() {
+    // research/captures/bds-m3inblock.txt: a cow at x 12.8 in a stone set at its feet went to 13.45 that tick.
+    let mut level = level();
+    let stone = level.block_id("minecraft:stone").unwrap();
+    level.set_block(0, 65, 2, stone);
+    let step = |at: [f32; 3], level: &Level| {
+        let mut cow = Body::new(at, [0.0; 3], [0.9, 1.3]);
+        cow.step(level, &Physics::MOB, &mut || 0.5);
+        cow.at
+    };
+    // The side plus half the width in f32: BDS's 0.16 one was told at 1.4499999.
+    assert_eq!(step([0.8, 65.0, 2.5], &level), [1.0 + 0.45, 65.0, 2.5]);
+    assert_eq!(step([0.5, 65.0, 2.5], &level), [0.5, 65.0, 3.0 + 0.45], "a tie goes south (bds-bodies.txt)");
+    for (x, z) in [(0, 3), (0, 1), (1, 2), (-1, 2)] {
+        level.set_block(x, 65, z, stone);
+    }
+    assert_eq!(step([0.5, 65.0, 2.5], &level), [0.5, 65.0, 2.5], "walled in all round it stays (bds-lifts.txt)");
+}

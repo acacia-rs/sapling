@@ -7,7 +7,7 @@
 // structure options are taken, not followed: BDS's console placed nothing (bds-t1dplacec.txt).
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, parse_choice};
-use sapling_api::{Command, Output, Permission, PlaceError, Sender, ShardCtx};
+use sapling_api::{Command, Output, Permission, PlaceError, PlaceOptions, Sender, ShardCtx};
 
 use super::structure::heights;
 
@@ -80,6 +80,8 @@ enum What {
 pub(crate) struct Place {
     what: What,
     at: Option<BlockCoords>,
+    // TODO: keepJigsaws (BDS kept a town centre's 32 jigsaw blocks), ignoreStartHeight and liquidSettings are taken, not followed.
+    options: PlaceOptions,
 }
 
 /// `liquidSettings`' words: BDS took both and refused `banana` (bds-t1dplace.txt).
@@ -114,7 +116,8 @@ impl CommandSyntax for Place {
             1 => sapling_data::command_takes_feature_rule(&first),
             _ => true,
         };
-        if !first.starts_with("minecraft:") || !known {
+        // A pool without its namespace parses, and fails to place (bds-k1jig.txt).
+        if (verb != 3 && !first.starts_with("minecraft:")) || !known {
             return Err(args.error_at(mark));
         }
         let what = match verb {
@@ -129,20 +132,23 @@ impl CommandSyntax for Place {
             }
         };
         let at = Option::<BlockCoords>::parse(args)?;
+        let mut options = PlaceOptions::default();
         if matches!(what, What::Structure(_) | What::Jigsaw { .. }) {
-            let flags = if matches!(what, What::Structure(_)) { 3 } else { 2 };
-            for _ in 0..flags {
-                if Option::<bool>::parse(args)?.is_none() {
-                    break;
-                }
+            // The structure's flags are ignoreStartHeight, keepJigsaws, includeEntities; a jigsaw's the last two.
+            let names = if matches!(what, What::Structure(_)) { 3 } else { 2 };
+            let mut flags = Vec::new();
+            while flags.len() < names {
+                let Some(flag) = Option::<bool>::parse(args)? else { break };
+                flags.push(flag);
             }
+            options = PlaceOptions::with_entities(flags.get(names - 1).copied().unwrap_or(true));
             let mark = args.mark();
             if !args.is_empty() && !LIQUID_SETTINGS.contains(&args.word()?) {
                 return Err(args.error_at(mark));
             }
         }
         args.finish()?;
-        Ok(Self { what, at })
+        Ok(Self { what, at, options })
     }
 }
 
@@ -156,10 +162,11 @@ impl Command for Place {
         let (placed, unknown) = match &self.what {
             What::Feature(name) => (ctx.place_feature(name, at), "commands.place.invalidfeature.error"),
             What::FeatureRule(_) => (Err(PlaceError::Unknown), "commands.place.invalidposition.error"),
-            What::Structure(name) => (ctx.place_structure(name, at), "commands.place.invalidstructure.error"),
+            What::Structure(name) => (ctx.place_structure(name, at, self.options), "commands.place.invalidstructure.error"),
             What::Jigsaw { max_depth, .. } if !(1..=MOST_DEPTH).contains(max_depth) => return out.translate("commands.place.maxdepth.error", Vec::new(), false),
-            // BDS answered an unknown pool so, not as an unknown structure.
-            What::Jigsaw { pool, target, max_depth } => (ctx.place_jigsaw(pool, target, *max_depth, at), "commands.place.generation.error"),
+            // BDS answered an unknown pool so, not as an unknown structure, and a pool or target without its namespace (bds-k1jig.txt).
+            What::Jigsaw { pool, target, .. } if !pool.contains(':') || !target.contains(':') => (Err(PlaceError::Unknown), "commands.place.generation.error"),
+            What::Jigsaw { pool, target, max_depth } => (ctx.place_jigsaw(pool, target, *max_depth, at, self.options), "commands.place.generation.error"),
         };
         match placed {
             Ok(()) => out.translate("commands.place.success", Vec::new(), true),

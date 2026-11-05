@@ -46,6 +46,7 @@ pub struct Data {
 
 /// One structure of a v2 structure set (the pack's `structure_sets` and `structures` JSON).
 pub struct SetEntry {
+    /// The structure's id, `minecraft:` prefixed (`minecraft:abandoned_camp_meadow`).
     pub name: String,
     pub weight: i32,
     pub pool: String,
@@ -155,7 +156,7 @@ fn parse(text: &str) -> Data {
             "s" => {
                 let int = |i: usize| fields[i].parse().unwrap();
                 let biomes = fields[8].split(',').filter(|b| *b != "-").map(|b| b.parse().unwrap()).collect();
-                let entry = SetEntry { name: fields[2].into(), weight: int(3), pool: fields[4].into(), max_depth: int(5), horizontal: int(6), padding: int(7), biomes };
+                let entry = SetEntry { name: format!("minecraft:{}", fields[2]),weight: int(3), pool: fields[4].into(), max_depth: int(5), horizontal: int(6), padding: int(7), biomes };
                 sets.entry(fields[1].to_string()).or_insert_with(Vec::new).push(entry);
             }
             _ => panic!("bad pools.txt line {line}"),

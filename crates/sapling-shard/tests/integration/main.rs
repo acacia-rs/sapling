@@ -166,6 +166,7 @@ mod special_recipes;
 mod spectators;
 mod stored_mobs;
 mod strides;
+mod strolls;
 mod structure_blocks;
 mod structures;
 mod adventure_lists;

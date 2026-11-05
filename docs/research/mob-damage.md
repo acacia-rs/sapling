@@ -128,9 +128,17 @@ Sapling's runs: sapling-bodies.txt, sapling-lifts.txt (after the fixes).
   stonecutter, an enchanting table, an end portal frame, soul sand, farmland 0.9375), puts it on the
   block's top the tick after. In a full block (stone under a cow, a pig, an iron golem in lava made stone)
   it stays in, and smothers where its head is in it; a cow whose head was clear was moved 0.95 aside
-  (its box flush beyond the cell) and 0.9 back over two ticks, which sapling does not copy. The earlier
+  (its box flush beyond the cell) and 0.9 back over two ticks. The earlier
   note that a mob in lava made stone is lifted onto it was wrong. Sapling left every mob in; now
   `Body::rise_onto_low_block`, test `a_mob_in_a_block_lower_than_a_full_one_rises_onto_it_and_stays_in_a_full_one`.
+- In a block, the open ground (2026-11-05, `m3inblock`, thirteenth3m_drill.rs, research/captures/bds-m3inblock.txt):
+  stone set at the feet of cows in the open, in the tick its `UpdateBlock` was told, moved one at x 12.8 to
+  13.45 and one at 1.29 (its box 0.16 into the cell) to 1.4499999: out the nearest side, its box flush.
+  The pen cows (`lifts`) had stone all round and stayed; bds-bodies.txt's went out south (a tie) into the
+  pen's wall and back, which a mob walled in all round does not copy in sapling. Slowness 255 did not
+  hold the others still, so the drill shows no more. Sapling now pushes a mob out the nearest side with
+  room, a tie south first (`body/stuck.rs` `push_out_of_block`, test
+  `a_mob_in_a_full_block_goes_out_its_nearest_open_side_flush`).
 - A cow shut in water two deep under stone swims up to the roof (its head at the stone, -25.3) and bobs
   there, on both: sapling's floating (`creatures/floating.rs`) already did. Same.
 

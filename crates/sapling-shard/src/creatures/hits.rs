@@ -58,9 +58,24 @@ fn archer_feet(world: &World, by: Entity) -> Option<[f32; 3]> {
     world.get::<Position>(by).map(|position| position.feet).or_else(|| world.get::<Body>(by).map(|body| body.at))
 }
 
+/// Whether `shot` is a loosed trident with Channeling.
+pub(crate) fn channels(world: &World, shot: Entity) -> bool {
+    world.get::<Loosed>(shot).and_then(|loosed| loosed.item.as_ref()).is_some_and(|item| enchant::level(item.tag.as_ref(), enchant::Enchant::Channeling) > 0)
+}
+
 /// The shot `arrow`, flying at `motion`, met `struck` at `at`.
 pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entity, is_player: bool, at: [f32; 3], motion: [f32; 3]) -> After {
     let Some((archer, by, gives, shot)) = flight::shooter(world, arrow) else { return After::Gone };
+    // Its hurt does nothing, so the shot is refused as by anything that takes nothing.
+    if crate::dragon::reflect_fireball(world, struck, by, motion) {
+        if shot.kind == super::arrows::ARROW.kind {
+            return After::Bounced;
+        }
+        if let Some(mut loosed) = world.get_mut::<Loosed>(arrow) {
+            loosed.spent = true;
+        }
+        return After::Back;
+    }
     let loosed = world.get::<Loosed>(arrow).cloned();
     let speed = motion.iter().map(|c| c * c).sum::<f32>().sqrt();
     let from: [f32; 3] = std::array::from_fn(|axis| at[axis] - motion[axis]);
@@ -90,7 +105,7 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
             throw_mob(world, struck, layer, motion, push, loosed.player);
         }
     }
-    if loosed.as_ref().and_then(|loosed| loosed.item.as_ref()).is_some_and(|item| enchant::level(item.tag.as_ref(), enchant::Enchant::Channeling) > 0) {
+    if channels(world, arrow) {
         let feet = world.get::<crate::components::Position>(struck).map(|position| position.feet).or_else(|| world.get::<Body>(struck).map(|body| body.at));
         crate::lightning::channel(world, layer, feet.unwrap_or(at));
     }

@@ -50,6 +50,7 @@ impl Structures {
             mineshafts.sort_by_key(|m| order.iter().position(|start| *start == m.start));
         }
         let mut canvas = Canvas::new(shape, chunk, neighbours.placed).with_features(features);
+        super::data_driven::file_v2(&mut canvas, v2);
         let seeds = LargeFeatureSeed::new(self.level_seed);
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = || Mt19937::new(seed);
@@ -69,9 +70,12 @@ impl Structures {
             let start_random = neighbours.pyramid_from_start.then(|| Mt19937::new(seeds.chunk(temple.start().0, temple.start().1)));
             let Some(bb) = temple.post_process(&mut canvas, &mut random, neighbours.temple_height, start_random) else { continue };
             placed.push(bb);
-            if temple.temple == Temple::SwampHut {
-                spawn_areas::file(&mut canvas, spawn_areas::SWAMP_HUT, temple.bb, [bb]);
-            }
+            let kind = match temple.temple {
+                Temple::SwampHut => spawn_areas::SWAMP_HUT,
+                Temple::DesertPyramid => spawn_areas::DESERT_PYRAMID,
+                Temple::JungleTemple => spawn_areas::JUNGLE_PYRAMID,
+            };
+            spawn_areas::file(&mut canvas, kind, temple.bb, [bb]);
             // Logged per start (dbg_canon.json `upgrades`): huts and jungle temples, mineshafts and
             // strongholds upgrade; desert pyramids, igloos and every other kind do not.
             match temple.temple {

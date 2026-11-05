@@ -43,9 +43,9 @@ impl Forced {
         Ok(Self { reaching, bb: None })
     }
 
-    fn jigsaw(pieces: Arc<Vec<Piece>>) -> Result<Self, PlaceFailure> {
+    fn jigsaw(kind: Option<StructureKind>, pieces: Arc<Vec<Piece>>) -> Result<Self, PlaceFailure> {
         let bb = union(pieces.iter().map(|p| p.bb));
-        Self::spanning(Reaching { v2: vec![pieces], ..Default::default() }, bb)
+        Self::spanning(Reaching { v2: vec![(kind, pieces)], ..Default::default() }, bb)
     }
 }
 
@@ -108,7 +108,7 @@ impl Structures {
             }
             StructureKind::TrialChambers | StructureKind::TrailRuins | StructureKind::AbandonedCamp => {
                 let pieces = self.forced_v2(density, kind, start).ok_or(PlaceFailure::Failed)?;
-                Forced::jigsaw(pieces)
+                Forced::jigsaw(Some(kind), pieces)
             }
         }
     }
@@ -131,6 +131,6 @@ impl Structures {
         let mut random = JavaRandom::large_feature(self.seed, at[0] >> 4, at[2] >> 4);
         let (piece, centre) = start.named_start(&target, (at[0], at[1], at[2]), &mut random).ok_or(PlaceFailure::Failed)?;
         let raw = RawHeights::new(density);
-        Forced::jigsaw(Arc::new(start.grow(piece, centre, Vec::new(), &mut random, &|x, z| raw.at(x, z))))
+        Forced::jigsaw(None, Arc::new(start.grow(piece, centre, Vec::new(), &mut random, &|x, z| raw.at(x, z))))
     }
 }

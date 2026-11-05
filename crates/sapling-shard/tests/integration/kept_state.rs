@@ -45,7 +45,7 @@ fn effects_a_lit_fuse_and_a_withers_armour_come_back_and_are_saved_as_they_went_
     assert!(effects.iter().zip([1900, 3920]).all(|([.., left, _], was)| (was - 60..=was - 20).contains(left)), "{effects:?}");
     let fuse = actor_fuse(&of("minecraft:tnt")).expect("a fuse");
     assert!((60..=100).contains(&fuse), "{fuse}");
-    assert_eq!(wither_record(&of("minecraft:wither")), Some(WitherRecord { charging: 0, armoured: true, max_health: 300 }));
+    assert_eq!(wither_record(&of("minecraft:wither")), Some(WitherRecord { charging: 0, armoured: true, max_health: 300, fire_rate: 20, interval: 300 }));
 }
 
 #[test]
@@ -63,4 +63,30 @@ fn a_summoned_wither_is_saved_charging_with_its_difficultys_health() {
     let column = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
     let record = stored_actors(&column.actors).unwrap().iter().find_map(|(.., compound)| wither_record(compound)).expect("a wither");
     assert!((185..=195).contains(&record.charging) && !record.armoured && record.max_health == 300, "{record:?}");
+    // bds-m3wither0's world: firerate 20 and lastHealthInterval its max health until hurt.
+    assert_eq!((record.fire_rate, record.interval), (20, 300));
+}
+
+#[test]
+fn off_easy_each_sixth_of_its_health_lost_halves_its_fire_rate_and_is_saved() {
+    // research/captures/bds-m3wither.txt and its world: on normal 20, 10 under 375, 5 under 300 of 450.
+    let storage = floor_with(Vec::new());
+    let mut h = Harness::with(config(), World::with_storage(storage.clone()));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative);
+        ctx.set_difficulty(sapling_api::Difficulty::Normal);
+    });
+    let id = common::asking::ask(&mut h, |ctx| ctx.spawn_entity("minecraft:wither", [8.5, 64.0, 8.5]).unwrap());
+    (0..205).for_each(|_| drop(h.tick(1)));
+    let mut saved = Vec::new();
+    for _ in 0..2 {
+        assert!(common::asking::ask(&mut h, move |ctx| ctx.hurt_entity(id, 80.0, sapling_api::DamageCause::Attack)));
+        (0..15).for_each(|_| drop(h.tick(1)));
+        h.shard.save_worlds();
+        let column = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
+        let record = stored_actors(&column.actors).unwrap().iter().find_map(|(.., compound)| wither_record(compound)).expect("a wither");
+        saved.push((record.fire_rate, record.interval));
+    }
+    assert_eq!(saved, [(10, 375), (5, 300)]);
 }

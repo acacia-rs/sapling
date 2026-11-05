@@ -1,20 +1,22 @@
-//! Mobs a structure's template placed in a generated column (an outpost's pillagers): made once as
-//! the column arrives, kept with it as any mob, not made again (docs/research/structure-spawns.md
-//! "Template actors").
+//! Mobs a structure's template placed in a generated column (an outpost's pillagers): made once the
+//! column ticks with its neighbours loaded, kept with it as any mob, not made again
+//! (docs/research/structure-spawns.md "Template actors").
 
 use crate::common;
 
 use std::sync::{Arc, mpsc};
 
+use acacia_proto::RawPacket;
+use acacia_proto::packets::AddEntity;
 use common::stored::enter_stored;
-use common::{Harness, config};
+use common::{Harness, all, config};
 use sapling_api::{Difficulty, EntityInfo};
 use sapling_shard::ShardConfig;
 use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, MemoryStorage, StoredColumn, World, WorldStorage};
 use sapling_worldgen::TemplateActor;
 
-/// Storage that generates column (0, 0), a stone floor at y 63 with a captain on it, where `inner` has none.
-struct Generating(Arc<MemoryStorage>);
+/// Storage that generates columns with a stone floor at y 63, a captain on column `.1`'s, where `inner` has none.
+struct Generating(Arc<MemoryStorage>, ChunkPos);
 
 impl WorldStorage for Generating {
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, sapling_world::StorageError> {
@@ -26,13 +28,23 @@ impl WorldStorage for Generating {
         let stone = registry.states_of("minecraft:stone").next().unwrap().0;
         (0..16).for_each(|x| (0..16).for_each(|z| chunk.set(x, 63, z, 0, stone)));
         let captain = TemplateActor { kind: "minecraft:pillager", event: "minecraft:spawn_as_illager_captain", feet: [pos.x as f32 * 16.0 + 8.0, 64.0, pos.z as f32 * 16.0 + 8.0] };
-        let template_actors = if pos == ChunkPos::new(0, 0) { vec![captain] } else { Vec::new() };
+        let template_actors = if pos == self.1 { vec![captain] } else { Vec::new() };
         Ok(Some(StoredColumn { template_actors, ..StoredColumn::of(chunk) }))
     }
 
     fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), sapling_world::StorageError> {
         self.0.store_column(pos, dimension, column)
     }
+}
+
+/// Ticks `count` times; what player 1 was sent.
+fn ticks(h: &mut Harness, count: usize) -> Vec<RawPacket> {
+    (0..count).flat_map(|_| h.tick_all().to(1).to_vec()).collect()
+}
+
+/// Where the pillagers shown in `sent` were announced.
+fn shown_at(sent: &[RawPacket]) -> Vec<[f32; 3]> {
+    all::<AddEntity>(sent).into_iter().filter(|added| added.entity_type == "minecraft:pillager").map(|added| [added.position.x, added.position.y, added.position.z]).collect()
 }
 
 fn pillagers(h: &mut Harness) -> Vec<EntityInfo> {
@@ -45,11 +57,11 @@ fn pillagers(h: &mut Harness) -> Vec<EntityInfo> {
 #[test]
 fn a_template_mob_comes_once_with_its_column_and_stays_with_it() {
     let inner = Arc::new(MemoryStorage::default());
-    let mut h = Harness::with(ShardConfig { difficulty: Difficulty::Normal, ..config() }, World::with_storage(Arc::new(Generating(inner.clone()))));
-    enter_stored(&mut h, 1);
+    let mut h = Harness::with(ShardConfig { difficulty: Difficulty::Normal, ..config() }, World::with_storage(Arc::new(Generating(inner.clone(), ChunkPos::new(0, 0)))));
+    let sent = [enter_stored(&mut h, 1), ticks(&mut h, 3)].concat();
     let first = pillagers(&mut h);
     assert_eq!(first.len(), 1, "{first:?}");
-    assert!((first[0].feet[0] - 8.0).abs() < 0.01, "at its cell's corner: {first:?}");
+    assert_eq!(shown_at(&sent), [[8.0, 64.0, 8.0]], "at its cell's corner");
     h.shard.save_worlds();
     let stored = inner.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("saved with its mob");
     assert!(stored.template_actors.is_empty());
@@ -58,5 +70,20 @@ fn a_template_mob_comes_once_with_its_column_and_stays_with_it() {
     h.leave(1);
     (0..350).for_each(|_| h.shard.tick());
     enter_stored(&mut h, 2);
+    ticks(&mut h, 3);
     assert_eq!(pillagers(&mut h).len(), 1, "back from storage, not made again");
+}
+
+/// BDS made none of a mansion's illagers in a ticking column whose neighbours it had not loaded (bds-jxmansion3).
+#[test]
+fn a_template_mob_waits_until_its_column_ticks_with_its_neighbours_loaded() {
+    let inner = Arc::new(MemoryStorage::default());
+    let mut h = Harness::with(ShardConfig { difficulty: Difficulty::Normal, ..config() }, World::with_storage(Arc::new(Generating(inner, ChunkPos::new(2, 0)))));
+    enter_stored(&mut h, 1);
+    ticks(&mut h, 20);
+    assert!(pillagers(&mut h).is_empty(), "column (3, 0) is out of a radius-2 view");
+    h.remote.run(|ctx| ctx.teleport(sapling_api::PlayerId(1), [40.5, 64.0, 8.5]));
+    let sent = ticks(&mut h, 40);
+    assert_eq!(pillagers(&mut h).len(), 1);
+    assert_eq!(shown_at(&sent), [[40.0, 64.0, 8.0]]);
 }

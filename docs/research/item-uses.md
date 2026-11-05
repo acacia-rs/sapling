@@ -88,8 +88,9 @@ went on (research/captures/bds-t2edon.txt); sapling put them on and now leaves t
 
 - ClientStartItemCooldown: `minecraft:ender_pearl` 20, `minecraft:wind_charge` 10 at the throw;
   `minecraft:goat_horn` 140 at the use and again at its completion; `minecraft:chorusfruit` 20 at
-  the start of eating and again when eaten. A second pearl or wind charge thrown after the cooldown
-  ran out got no packet on BDS (both drilled once); sapling tells every one.
+  the start of eating and again when eaten. Every throw after the cooldown ran out is told: four
+  pearls 3 to 8 s apart and three wind charges each got one (bds-k1cool.txt, 2026-11-05; the older
+  single-drill reading of no second packet was wrong); sapling tells every one.
 - Goat horn: SetEntityData USING_ITEM to all, `horn_call0` (the variant's number) from feet + 1.52
   with the player as the entity; 20 ticks on CompletedUsingItem (method -1), windows resent, USING
   cleared. A use while cooling did nothing.
