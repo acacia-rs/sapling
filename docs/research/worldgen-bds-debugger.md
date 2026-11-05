@@ -1,4 +1,4 @@
-# Breakpoints on a live BDS (Windows)
+# Breakpoints on a live BDS (Windows; Linux at the end)
 
 When the decompile and the oracle disagree, ask the running server. `crates/sapling-worldgen/scripts/bds_dbg.py`
 is a small Win32 debugger (Python ctypes, no install: the machine has no cdb, WinDbg or gdb) that starts
@@ -189,4 +189,22 @@ thread contexts, hardware breakpoints), `bds_dbg_hits.py` (filters and what a hi
 - In two of about a dozen early runs an expected hit was absent (a tree's volume cells, a single-block try): most
   likely the step-over window above, since closed. A hit can still be missing because BDS's same-phase chunk order
   differs between runs.
-- Linux BDS on testbox was not tried: its addresses differ from the Windows decompile's.
+
+## Linux (gdb, 2026-11-05)
+
+The testbox BDS (`~/work/bds-*/bedrock_server`, 1.26.52.3) is a stripped clang ELF, but every polymorphic
+class keeps its RTTI name, so virtual functions are found without symbols:
+- `scripts/bds_elf.py <exe> vtable <Class> [<Base>]` lists a class's primary vtable from its relocations
+  (`*` where it overrides the base); `slot`, `refs` as its docstring. Itanium puts two destructors first, so a
+  Windows slot n is usually Linux slot n + 1 (Actor's `tryCreateAddActorPacket`: +0xb8 there, slot 24 here).
+- A BlockEvents subscription is a libc++ `std::function`: name its `__func` type (`strings` the exe) and take
+  slot 6 (`RedStoneOreBlock`'s random tick: 0xcf63820, event in rsi, its BlockPos at +8).
+- Non-virtual code is reached through an override: `Dimension::onBlockChanged` is LevelListener slot 5
+  (0xc969380; rdx the BlockPos, ecx the layer), found as the slot the dimensions override.
+- `BDS_GDB=<config.json> tools/remote-drill.sh bds ...` runs the server under gdb (`set disable-randomization
+  on`, image at 0x555555554000) with `scripts/bds_gdb.py`'s logging breakpoints: one line per hit with wall
+  time, so hits line up with the probe's `drill starts at` ms. ptrace_scope is 1, so BDS must be gdb's child.
+  A 63 s drill with a filtered breakpoint ran at normal speed; filter by `box` as on Windows.
+- A function returning a smart pointer takes the return slot in rdi and `this` in rsi.
+- Used for: lit ore's pace (fire.md), portal section order (nether-dimension.md), drop send order
+  (leftovers.md). Linux containers are libc++, not MSVC: hash orders read off testbox captures follow libc++.

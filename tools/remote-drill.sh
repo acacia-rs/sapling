@@ -8,13 +8,13 @@
 # server's port (default 19183); SAPLING_DRILL_WORLD=strongholds its overworld (see drill_server.rs,
 # also for SAPLING_DRILL_SEED);
 # SAPLING_TICK_DISTANCE its `tick-distance` (default 4, as the BDS copies).
-# KEEP_WORLD=1 starts BDS on the last drill's world. CONSOLE and CONSOLE_AT as for bds-drill.sh (BDS only;
+# KEEP_WORLD=1 starts BDS on the last drill's world; BDS_GDB=<config.json> runs it under gdb (bds-drill.sh). CONSOLE and CONSOLE_AT as for bds-drill.sh (BDS only;
 # the server's log, console answers included, stays in $BDS_DIR/drill.log).
 set -uo pipefail
 target=$1 example=$2 out=$3 words="${*:4}"
 source "$(dirname "$0")/remote-sync.sh"
 case $target in
-  bds) run="KEEP_WORLD=${KEEP_WORLD:-0} CONSOLE=\"${CONSOLE:-}\" CONSOLE_AT=${CONSOLE_AT:-15} bash tools/bds-drill.sh ${BDS_DIR:-~/work/bds-mechanisms} ${BDS_PORT:-19182} $example drill.txt $words" build="--example $example" ;;
+  bds) run="KEEP_WORLD=${KEEP_WORLD:-0} BDS_GDB=${BDS_GDB:-} CONSOLE=\"${CONSOLE:-}\" CONSOLE_AT=${CONSOLE_AT:-15} bash tools/bds-drill.sh ${BDS_DIR:-~/work/bds-mechanisms} ${BDS_PORT:-19182} $example drill.txt $words" build="--example $example" ;;
   sapling) run="TICK_SCALE=${TICK_SCALE:-} SAPLING_DRILL_WORLD=${SAPLING_DRILL_WORLD:-flat} SAPLING_DRILL_SEED=${SAPLING_DRILL_SEED:-} SAPLING_TICK_DISTANCE=${SAPLING_TICK_DISTANCE:-4} bash tools/sapling-drill.sh ${SAPLING_PORT:-19183} $example drill.txt $words" build="--example $example --example drill_server" ;;
   *) echo "first argument: bds or sapling" >&2; exit 2 ;;
 esac

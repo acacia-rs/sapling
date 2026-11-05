@@ -93,6 +93,16 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
   made or lit portals across a boundary; the seventh (-collide.txt, x 1935) sent (121,4), (120,5), (120,4)
   for first touches (120,4), (121,4), (120,5). The map's list order with the decompiled hash fits neither,
   for any bucket count. sapling sends Nether portal sections last touched first.
+  Read live 2026-11-05 (thirteenth2e, gdb on `Dimension::onBlockChanged`, worldgen-bds-debugger.md "Linux";
+  `bds-portal-sections-gdb.txt` and `-hits.txt`): the captures are the Linux server's, whose map is libc++'s,
+  not MSVC's. Its hash is boost's `hash_combine` of the sub-chunk x, y, z from seed 0 (emplace 0xc97d600);
+  a key in an empty bucket goes to the front of the list, one in a used bucket just before that bucket's
+  first. So sections go out first-touched-last unless two share a bucket. The x 60 frame (first touches
+  (3,-3,2), (3,-4,2), (3,-3,1), (3,-4,1)) went out reversed, and -collide's x 1935 fits with 5 buckets, a
+  fresh Nether map's count after its third insert (libc++ grows 2, 5, 11, 23 ...): (120,5) shares (120,4)'s
+  bucket (hash both, mod 5). Within a section the cells go in touch order, and the
+  frame's touch order is BDS's own (neither flood nor columns; the same in two runs). Not ported: sapling's
+  hash orders follow the Windows server, and this one needs the map's bucket history per dimension.
 
 ## `/execute in` (bds-t1dexec.txt)
 
