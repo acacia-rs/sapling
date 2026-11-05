@@ -101,6 +101,7 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 pub(crate) fn write_back(world: &mut World) {
     crate::tnt::keep_fuses(world);
     crate::orbs::keep_ages(world);
+    blocks::keep_fall_times(world);
     creatures::keep_state(world);
     crate::spawning::mark_persistence(world);
     let kept: Vec<(Entity, ChunkPos, i64, Vec<u8>)> = world

@@ -246,7 +246,9 @@ shift search; `chunk_float_find` locates BDS's rail runs in the chunk stream). D
 reads planks a crossing's floor left in phase-0 chunk (-90,-124); BDS read air there. Neither "carved" nor
 "after its pieces" neighbours fit every case; phase order fits better overall. Plains villages near rivers (the six
 /locate misses; see "Structure post-process order" below for why the drift stays): VillageFeature::isFeatureChunk (1480a80e0) is containsOnly(x*16+8, prelim surface or 1, z*16+8,
-r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28) not identified,
+r 2), as ours; locate (141efb740) adds a flag-gated per-chunk filter (feature +0x1d8, vt 0x28), whose byte
+argument its callers 1480a8060/1480a8900 pass through from theirs: most likely `/locate`'s `useNewChunksOnly`
+(LocateCommand setup 143aaa8a0, field +0x4c; sapling parses it and ignores it), off by default, so not the six,
 and (flag at +0x30 of its settings, +0x5c7..+0x686) a biome test at (x*16+8, preliminary surface or 1,
 z*16+8) through the biome source (vt+0x50) and 143914da0. Testing that point's biome against the village
 list changed none of the six: our six answers are plains at the centre with surface 56, like one BDS

@@ -155,6 +155,10 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
         (false, _) => CompletedUsingItemUseMethod::Eat,
     };
     let used = CompletedUsingItem { used_item_id: meal.id, use_method };
+    let eyes = world.get::<Position>(player).map(|position| [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]]);
+    if let (Some(eyes), Some(layer), false) = (eyes, world.get::<InLayer>(player).map(|layer| layer.0), meal.food.drunk) {
+        crate::blocks::vibrate(world, layer, eyes, crate::blocks::GameEvent::Eat, true);
+    }
     // Chorus fruit's cooldown was told as it started; BDS's MovePlayer comes before the eating is told (bds-foods2.txt, bds-foods3.txt).
     if holds_chorus(world, player) {
         super::chorus::scatter(world, player);

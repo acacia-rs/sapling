@@ -47,7 +47,9 @@ pub fn food(name: &str) -> Option<Food> {
         return custom.food;
     }
     Some(match name.strip_prefix("minecraft:").unwrap_or(name) {
-        "apple" | "chorus_fruit" => plain(4.0, 2.4),
+        "apple" => plain(4.0, 2.4),
+        // BDS's was eaten with hunger full (research/captures/bds-v2tp.txt).
+        "chorus_fruit" => Food { always: true, ..plain(4.0, 2.4) },
         "baked_potato" | "bread" | "cooked_cod" | "cooked_rabbit" => plain(5.0, 6.0),
         // BDS's f32 product, 1.8000001 (bds-foods2.txt).
         "beef" | "porkchop" | "rabbit" => plain(3.0, 3.0 * 0.3 * 2.0),

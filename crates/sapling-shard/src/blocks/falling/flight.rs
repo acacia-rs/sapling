@@ -99,9 +99,16 @@ fn crush(world: &mut World, layer: Entity, body: &Body, fallen: f32) {
     }
 }
 
+/// Writes each kept falling block's time in the air into what the world folder keeps of it.
+pub(crate) fn keep_times(world: &mut World) {
+    let falling: Vec<(Entity, u32)> = world.query_filtered::<(Entity, &FallingBlock), With<entities::Stored>>().iter(world).map(|(entity, falling)| (entity, falling.airborne)).collect();
+    for (entity, time) in falling {
+        entities::restore(world, entity, |compound, _| sapling_world::timed_falling_block(compound, time).ok());
+    }
+}
+
 /// Makes a falling block a world folder kept (its actor compound `compound`) fall in `layer`
 /// again; false for one whose block the registry does not know.
-// TODO: its fall time is kept as it began, not as it is when the column is saved.
 pub(crate) fn from_storage(world: &mut World, layer: Entity, at: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
     let Some((hash, time)) = sapling_world::falling_block(&compound) else { return false };
     let Some(block) = level(world, layer).and_then(|level| level.registry().runtime_id_from_hash(hash)) else { return false };

@@ -4,8 +4,8 @@
 //! the event, then cools down. A calibrated sensor powered from behind hears only the frequency
 //! of that power. A shrieker hears sensors going active, and shrieks when a player set one off
 //! (shrieks.rs).
-// TODO: a broken wool block and steps on wool are heard; no amethyst resonates; teleports, mobs,
-// eating, damage and explosions are not heard.
+// TODO: a broken wool block and steps on wool are heard; no amethyst resonates; mobs, drinking,
+// damage and explosions are not heard.
 
 mod catalyst;
 mod events;
@@ -187,6 +187,14 @@ fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEv
 /// [`vibrate`] from the middle of the block at `pos`.
 pub(crate) fn vibrate_at(world: &mut World, layer: Entity, pos: BlockPos, event: GameEvent, by_player: bool) {
     vibrate(world, layer, pos.map(|c| c as f32 + 0.5), event, by_player);
+}
+
+/// An entity `/tp` moved from `from` to `to` is heard at the cell it arrives in; one put where it
+/// stood is not (research/captures/bds-v2tp.txt).
+pub(crate) fn teleported(world: &mut World, layer: Entity, from: [f32; 3], to: [f32; 3], by_player: bool) {
+    if from != to {
+        vibrate(world, layer, to, GameEvent::Teleport, by_player);
+    }
 }
 
 /// A player walked from `from` to `to` (feet): a step is heard every 1/0.6 blocks walked on the

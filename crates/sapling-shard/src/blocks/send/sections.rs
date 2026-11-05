@@ -75,6 +75,11 @@ pub(super) fn held(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     true
 }
 
+/// Whether the open batch holds `pos`, whose entity [`show_held`] then shows after its block.
+pub(crate) fn holds(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    world.get_resource::<Held>().and_then(|held| held.0.as_ref()).is_some_and(|(_, cells)| cells.contains(&(layer, pos)))
+}
+
 /// The writes kept while [`logged`] runs: each one's world, cell, layer (0 or 1) and block written.
 #[derive(Resource, Default)]
 pub(crate) struct Logged(Option<Vec<(Entity, BlockPos, u32, u32)>>);

@@ -188,4 +188,9 @@ Drilled 2026-11-05 (`z2open`, bds-z2open.txt), clicks on set blocks:
 - Chiseled bookshelf: the comparator read the slot plus one (2, then 6). The bot's click point varies, so the
   slots differ run to run; sapling's comparator matched its own slot.
 - Copper golem statue: set, it has an entity (`Actor` compound) shown twice; a click shows the block and entity
-  again. Sapling makes no entity for it (open).
+  again. Fixed 2026-11-05 (bds-v2statue.txt; `blocks/statues.rs`): set at any stage or put by hand, the block and
+  `CopperGolemStatue` (`Actor` {`ActorIdentifier` `minecraft:copper_golem<>`, `SaveData` {}}, `Pose` 0) are shown
+  at once and again a tick later; an empty hand's click turns `Pose` on by one of four and shows both at once,
+  unheard, to everyone.
+- Shulker box put by hand (bds-v2ents.txt, bds-p2more.txt): the box listed twice, its entity twice, the place
+  sound, the entity again, all in the tick. Sapling showed the entity once; fixed (`blocks/place.rs`).

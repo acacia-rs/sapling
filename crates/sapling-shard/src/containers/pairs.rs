@@ -75,9 +75,10 @@ pub(super) fn pair_placed(world: &mut World, layer: Entity, pos: BlockPos) {
 }
 
 /// A chest's entity copied to `to` by `/clone`: a half's partner moved with it (BDS clones a half
-/// only with its partner), a single chest marked `forceunpair` (bds-worldcmds.txt, bds-t3chests.txt).
+/// only with its partner), a single chest or a shulker box marked `forceunpair` (bds-worldcmds.txt,
+/// bds-t3chests.txt, bds-v2ents.txt).
 pub(crate) fn carried(entity: &Value, to: BlockPos) -> Value {
-    if entity.get("id") != Some(&Value::String("Chest".into())) {
+    if !["Chest", "ShulkerBox"].map(|id| Value::String(id.into())).iter().any(|id| entity.get("id") == Some(id)) {
         return entity.clone();
     }
     let (Some(Value::Int(x)), Some(Value::Int(z))) = (entity.get("x"), entity.get("z")) else { return entity.clone() };

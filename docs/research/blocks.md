@@ -146,6 +146,16 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
 - A big dripleaf on stone, stood on: BDS showed `big_dripleaf_tilt=unstable` and then broke it;
   sapling broke it untilted. Fixed (`blocks/dripleaf.rs`).
 
+## Parity drill (2026-11-05, `bds_command_probe v2nether`)
+
+- A bed clicked at its foot in the Nether, again (bds-v2nether.txt): the foot's dust at its corner with the foot's
+  hash, then the blast at the head's middle, on both. Not matched: BDS lists the bed's two cells in the blast's
+  UpdateSubchunkBlocks and sends the blast's `LevelEventGeneric` 4052 (origin and every cell blown) after the
+  `ParticleExplosion`; sapling shows the two halves gone in UpdateBlocks before the blast and sends no 4052 for a
+  bed (it sends the crystal's form only, `dragon/crystals.rs`).
+- Found, not followed: 3 s after an `execute in nether` teleport of the drill's bot, sapling's `/fill` there
+  answered `outOfWorld` and the bot had no position (a loaded run; 7 s after, it filled); BDS's filled at 3 s.
+
 ## Not drilled
 
 - Fire from a bed's blast cell by cell (BDS's fire pass not read).

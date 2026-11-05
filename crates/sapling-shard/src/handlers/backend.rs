@@ -160,7 +160,11 @@ impl Backend for Ctx<'_> {
     fn teleport(&mut self, player: PlayerId, feet: [f32; 3]) {
         let entity = self.entity(player).filter(|_| feet.iter().all(|c| c.is_finite()));
         if let Some(entity) = entity.filter(|entity| crate::player_events::may_teleport(self.world, *entity, feet)) {
+            let from = self.world.get::<Position>(entity).map(|position| position.feet);
             crate::sleep::teleport_waking(self.world, entity, feet);
+            if let (Some(from), Some(layer)) = (from, self.world.get::<crate::components::InLayer>(entity).map(|layer| layer.0)) {
+                blocks::teleported(self.world, layer, from, feet, true);
+            }
         }
     }
 

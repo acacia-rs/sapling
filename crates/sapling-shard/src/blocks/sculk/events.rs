@@ -14,6 +14,8 @@ pub(crate) enum GameEvent {
     SculkTouch,
     ProjectileLand,
     ProjectileShoot,
+    /// A food eaten, heard from the eater's eyes as it was eaten (research/captures/bds-v2tp.txt).
+    Eat,
     ContainerClose,
     BlockClose,
     ContainerOpen,
@@ -26,6 +28,8 @@ pub(crate) enum GameEvent {
     BlockPlace,
     FluidPlace,
     LightningStrike,
+    /// An entity put elsewhere by `/tp`, heard where it arrives (research/captures/bds-v2tp.txt).
+    Teleport,
     Explode,
     /// A sensor went active: what shriekers hear, and nothing else does.
     TendrilsClicking,
@@ -38,11 +42,12 @@ impl GameEvent {
             GameEvent::Step | GameEvent::SculkTouch => 1,
             GameEvent::ProjectileLand => 2,
             GameEvent::ProjectileShoot => 3,
+            GameEvent::Eat => 8,
             GameEvent::ContainerClose | GameEvent::BlockClose => 9,
             GameEvent::ContainerOpen | GameEvent::BlockOpen | GameEvent::DispenseFail | GameEvent::NotePlay | GameEvent::PrimeFuse => 10,
             GameEvent::BlockDestroy | GameEvent::FluidPickup => 12,
             GameEvent::BlockPlace | GameEvent::FluidPlace => 13,
-            GameEvent::LightningStrike => 14,
+            GameEvent::LightningStrike | GameEvent::Teleport => 14,
             GameEvent::Explode => 15,
             GameEvent::TendrilsClicking => 0,
         }

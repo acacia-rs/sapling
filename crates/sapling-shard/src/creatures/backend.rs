@@ -77,7 +77,12 @@ impl EntityBackend for Ctx<'_> {
     }
 
     fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool {
-        entities::teleport(self.world, id, feet)
+        let from = entities::find(self.world, id).and_then(|entity| Some((self.world.get::<crate::body::Body>(entity)?.at, self.world.get::<crate::components::InLayer>(entity)?.0)));
+        let moved = entities::teleport(self.world, id, feet);
+        if let (true, Some((from, layer))) = (moved, from) {
+            crate::blocks::teleported(self.world, layer, from, feet, false);
+        }
+        moved
     }
 
     fn name_entity(&mut self, id: EntityId, name: &str) -> bool {

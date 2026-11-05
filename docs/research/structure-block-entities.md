@@ -233,8 +233,16 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
     reading (`daylight::left_for_the_second`; one placed by hand is read the next tick); the bed's
     second show sends `BlockPlace` from its foot, heard by the sensor, whose power sounds play at
     its corner with id -1 (`shown_again::show_beds`, `sculk::play`).
-  - Not drilled: a shulker box holding stacks (its `Items` are shown as kept), a sign with text, a
-    vault or trial spawner that ran.
+  - Drilled 2026-11-05 by `/clone` (bds-v2ents.txt, bds-v2ran.txt): a shulker box filled by
+    `replaceitem`, a sign written by hand, a vault a key was used on and a trial spawner given an egg
+    are cloned with what they hold, shown as BDS's (the box's `Items`, the sign's text, the vault's
+    reduced form, the spawner's `spawn_data`), a cloned box marked `forceunpair` 1 as a lone chest is
+    (`containers::pairs::carried`). BDS shows a clone's cell in one UpdateSubchunkBlocks listing it
+    twice with its layer-1 air as `extra`, then the entity once or twice (twice in 7 of 9 clones);
+    sapling's batch showed the new entity, the copied one, the block and the entity again, and now the
+    block then the entity (`send::keep_entity` and `set_entities::furnish` leave a held cell's entity to
+    `show_held`). Not matched: the doubled listing and the second entity. Neither the vault nor the
+    spawner ran a wave in the drill (the vault stayed inactive, the spawner spawned nothing in 60 s).
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
   chambers' dead bush at (-446, -11, -425), is water in our blocks there (a block difference).
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
