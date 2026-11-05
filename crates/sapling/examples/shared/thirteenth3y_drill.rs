@@ -163,10 +163,19 @@ fn omen() -> Vec<String> {
 
 const GOLEM: &str = "summon iron_golem 10.5 -60 -6.5 0 0 minecraft:from_village";
 
-/// The village with nobody acting for 30 s.
+/// A held grown villager summoned into the village and hit once by the actor.
+const HIT_ONE: [&str; 5] = [
+    "summon villager 2.5 -60 -3.5 0 0 minecraft:become_unskilled", "effect @e[type=villager_v2] slowness 1000 255 true", "tag @e[type=villager_v2,x=2.5,y=-60,z=-3.5,r=1] add hit",
+    "execute at @e[tag=hit] run tp @s ~ ~ ~-1.5 facing ~ ~1 ~", "!hit villager_v2",
+];
+
+/// [`HIT_ONE`], 10 s on a new villager summoned, watched 20 s: its founding reward on the standing.
 fn found() -> Vec<String> {
     let mut out = village(&UNSKILLED);
-    every(&mut out, "testfor @e[type=villager_v2]", 10, 3);
+    out.extend(owned(HIT_ONE));
+    waits(&mut out, 10);
+    out.extend(owned(["summon villager 8.5 -60 4.5 0 0 minecraft:become_unskilled", "effect @e[type=villager_v2] slowness 1000 255 true"]));
+    every(&mut out, "testfor @e[type=villager_v2]", 10, 2);
     out
 }
 
@@ -198,19 +207,17 @@ fn ranged() -> Vec<String> {
     out
 }
 
-/// A grown villager hit once, then one killed by a zombie on hard and its zombie villager cured;
-/// watched until it is cured.
+/// [`HIT_ONE`], 10 s on a summoned zombie villager cured, watched until 30 s after its cure: the
+/// cure's +5, and whether the villager it becomes gives a founding reward too.
 fn cure() -> Vec<String> {
     let mut out = village(&UNSKILLED);
+    out.extend(owned(HIT_ONE));
+    waits(&mut out, 10);
     out.extend(owned([
-        "summon villager 2.5 -60 -3.5 0 0 minecraft:become_unskilled", "effect @e[type=villager_v2] slowness 1000 255 true", "tag @e[type=villager_v2,x=2.5,y=-60,z=-3.5,r=1] add hit",
-        "execute at @e[tag=hit] run tp @s ~ ~ ~-1.5 facing ~ ~1 ~", "!hit villager_v2", "",
-        "summon villager 8.5 -60 4.5 0 0 minecraft:become_unskilled", "effect @e[type=villager_v2] slowness 1000 255 true",
-        "difficulty hard", "summon zombie 14.5 -60 -10.5", "effect @e[type=zombie] slowness 1000 255 true",
-        "damage @e[type=villager_v2,x=8.5,y=-60,z=4.5,r=3] 100 entity_attack entity @e[type=zombie,c=1]", "kill @e[type=zombie]",
-        "effect @e[type=zombie_villager_v2] slowness 1000 255 true", "effect @e[type=zombie_villager_v2] fire_resistance 1000 0 true", "effect @e[type=zombie_villager_v2] weakness 1000 0 true",
-        "difficulty easy", "replaceitem entity @s slot.weapon.mainhand 0 golden_apple 1", "execute at @e[type=zombie_villager_v2] run tp @s ~ ~ ~-1.5", "", "!interact zombie_villager_v2", "",
+        "summon zombie_villager_v2 8.5 -60 4.5", "effect @e[type=zombie_villager_v2] slowness 1000 255 true", "effect @e[type=zombie_villager_v2] fire_resistance 1000 0 true",
+        "effect @e[type=zombie_villager_v2] weakness 1000 0 true", "replaceitem entity @s slot.weapon.mainhand 0 golden_apple 1", "execute at @e[type=zombie_villager_v2] run tp @s ~ ~ ~-1.5", "",
+        "!interact zombie_villager_v2", "",
     ]));
-    every(&mut out, "testfor @e[type=zombie_villager_v2]", 10, 30);
+    every(&mut out, "testfor @e[type=zombie_villager_v2]", 10, 36);
     out
 }
