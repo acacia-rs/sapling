@@ -192,6 +192,16 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   through and after the hits; so its slowness was not what kept it off. Past the player swap the goal
   filters and calls canAttack (14903c720) with a must_reach path test (14903f1c0); not traced. Sapling's
   golem took no target either, so the two agree on this scene.
+  Traced 2026-11-05 (thirteenth3ad): `ab3golem` on the Linux BDS under gdb (`BDS_GDB`, breakpoints in
+  `DefendVillageTargetGoal::canUse`, Linux 0x576c340; bds-ad3golem-gdb.txt, its hits in
+  bds-ad3golem-gdb-hits.txt). Of 1063 calls the golem had its village every time and an aggressor
+  (the player) in 796; the chance (+0x90) passed 55 times, the swap for a player at -15 or lower gave
+  the player 25 times, the filters passed it each time, and canAttack (Linux 0xbdd60e0, called with
+  no reach flags; its result is canUse's) refused it 23 times and took it twice. Both times the golem
+  took the player as its target (`TargetEid` -4294967295 at 58.4 s and 86.2 s), between slimes it
+  took. So BDS's golem does turn on the baby's hitter, seldom: canAttack's refusals, not the
+  standing, keep it off; which of canAttack's tests refuses (must_reach's path, 14903f1c0, likely) is
+  not traced. The earlier run's no target was these odds. Sapling's never took the player: left.
 - Prices take no standing: `economy_trade_table` reads only the cured, nearby-cured and hero discounts
   [BDS definition 141ba86e0].
 

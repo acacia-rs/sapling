@@ -18,6 +18,8 @@ const SADDLE: &str = "minecraft:saddle";
 /// How far above its feet a mob's loot appears (where the wire puts it), as BDS was seen to
 /// (research/captures/bds-kill.txt).
 const LOOT_LIFT: f32 = 0.075;
+/// How far above its feet a mob's own gear lands, tossed as it dies (research/captures/bds-ad3drops.txt).
+const GEAR_LIFT: f32 = 0.125;
 
 /// What a mob that died leaves, tossed where it is the tick after its death, as BDS's loot, a
 /// mount's chest and saddle came (research/captures/bds-bodies.txt, bds-chestdie.txt).
@@ -58,6 +60,7 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
         }
     } else {
         if lasts.is_none() {
+            let_gear_go(world, entity, layer, kind, body);
             stacks.extend(remains(world, entity, layer, kind));
         }
         stacks.extend(spilled);
@@ -113,11 +116,9 @@ pub(super) fn leave_remains(world: &mut World, entity: Entity, layer: Entity, ki
 /// The dead mob's loot, where the world's rules let it leave any.
 fn remains(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> Vec<ItemStack> {
     let on_fire = world.get::<Health>(entity).is_some_and(|health| health.is_burning());
-    let by_player = world.get::<attacks::Slain>(entity).is_some();
-    let killer = match world.get::<attacks::Slain>(entity) {
-        Some(slain) => sapling_data::Killer::Player { looting: slain.1 },
-        None => sapling_data::Killer::None,
-    };
+    let looting = world.get::<attacks::Slain>(entity).map(|slain| slain.1);
+    let by_player = looting.is_some();
+    let killer = looting.map_or(sapling_data::Killer::None, |looting| sapling_data::Killer::Player { looting });
     if !leaves_loot(world, layer) || crate::riding::saddled_bare(world, entity) {
         return Vec::new();
     }
@@ -128,6 +129,16 @@ fn remains(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> Vec<
     stacks.extend(super::drowned::let_go(world, entity, by_player));
     stacks.extend(super::captains::let_go(world, entity, by_player));
     stacks
+}
+
+/// The gear the dying mob lets go of, tossed in its death's tick: BDS's swords had lower ids than
+/// all the loot of the pigmen killed with them (research/captures/bds-ad3drops.txt).
+fn let_gear_go(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
+    let looting = world.get::<attacks::Slain>(entity).map(|slain| slain.1);
+    let [x, y, z] = body.at;
+    for stack in super::spawn_gear::let_go(world, entity, kind, looting) {
+        drops::toss(world, layer, stack, [x, y + GEAR_LIFT, z]);
+    }
 }
 
 /// Whether the world's `doMobLoot` lets the dead leave loot and experience.

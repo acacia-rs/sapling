@@ -89,6 +89,8 @@ pub(crate) struct Summon {
     pitch: Option<f32>,
     /// A spawn event of the kind's: `minecraft:panda_lazy`.
     event: Option<String>,
+    /// Its name tag (bds-ad3reload.txt: `summon cow ... minecraft:entity_spawned cow1`).
+    name: Option<String>,
 }
 
 /// An entity name `/summon` takes: BDS knows its newer villagers only by the older names, so a
@@ -120,7 +122,11 @@ impl Command for Summon {
             kind if kind == "minecraft:zombie_villager" || kind == "minecraft:villager" => format!("{kind}_v2"),
             kind => kind,
         };
-        let summoned = ctx.summon_as(sender.player().map(|by| by.id), &kind, at, self.yaw.unwrap_or(0.0), self.pitch.unwrap_or(0.0), self.event.as_deref()).is_some();
+        let made = ctx.summon_as(sender.player().map(|by| by.id), &kind, at, self.yaw.unwrap_or(0.0), self.pitch.unwrap_or(0.0), self.event.as_deref());
+        if let (Some(made), Some(name)) = (made, &self.name) {
+            ctx.set_name_tag(made, Some(name));
+        }
+        let summoned = made.is_some();
         out.translate(if summoned { "commands.summon.success" } else { "commands.summon.failed" }, Vec::new(), summoned);
     }
 }

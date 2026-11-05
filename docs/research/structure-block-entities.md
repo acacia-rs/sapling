@@ -283,6 +283,12 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   and (-29, -27). No repeatable canon covers this chunk (`c-tc` is chunks 2-14, 12-24), so not traced;
   next: a one-worker seed-0 BDS run of these chunks and `replay_check` (memory: stock twins agreeing
   can be luck).
+  Judged 2026-11-05 (thirteenth3ad): with Linux generation (`SAPLING_ORACLE_LINUX=1`) `cells` still gave
+  the same 52, so not the rule order. A one-worker seed-0 Linux run of chunks -30..-26, -29..-25
+  (canon `tcores`, dir `ad3tc`, worldgen-bds-linux-canons.md): `replay_check` 0 cells differ in each
+  source chunk writing into (-28, -27), and `blocks_match_bds_canons`' new region "trial chamber ores"
+  (that chunk) is 0 wrong, 0 missing. The blobs' heights were the stock runs' own (both stock runs drew
+  them alike), not ours.
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
   before the vault's first tick rewrites it (`spawners/vault.rs` takes the lesser of it and now + 1
   step), so left. Undrillable as a difference: the generator has no level clock to save, and a loaded

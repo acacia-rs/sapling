@@ -325,6 +325,12 @@ a tenth of the wanted speed a tick; within 1 squared of the path's last node (`s
 with speed squared). Ported: `LAST_SLOWEST` in `creatures/strolling.rs`; test
 `a_strolling_cow_slows_to_half_its_speed_on_its_last_block`. The corner pauses are not in MoveControl:
 the mid-walk turns of 21 of 256 keep their speed, so they come from the path follower; not found.
+Located, not read (2026-11-05, thirteenth3ad): `NavigationSystem::tick` (142f1c490) calls, per mob not
+riding, `NavigationComponent`'s `mNavigation` (+0x50) virtual +0x10, `PathNavigation::tick` (the walker's
+class; Linux typeinfo `14PathNavigation`, vtable 0xf241ca8, `tick` slot 3 at 0xbd6fa40, `updatePath` slot
+13 at 0xbd70f60; Windows has no RTTI for it). LeviLamina's header names the component's fields:
+`mTickTimeout`, `mLastStuckCheck`, `mLastStuckCheckPosition`, `mEndPathRadiusSqr`, `mTerminationThreshold`;
+a stuck check or the node-reached radius there is where a pause at a corner would come from.
 
 ## Fleeing (`flee`)
 
@@ -442,11 +448,40 @@ By night on the stone floor, the survival actor held in place:
   vex's (sapling-y3gear.txt; its drowned came unarmed, by `drowned.rs`'s odds): the pack's `minecraft:equipment` tables (skeleton_gear,
   wither_skeleton_gear, zombie_pigman_gear, piglin_brute_gear, pillager_gear, vindicator_gear) were
   rolled only for riders. Fixed: `creatures/spawn_gear.rs` rolls them at every birth; test
-  `armed_kinds_are_shown_holding_their_equipment_tables_weapon_as_they_are_summoned`. Left (TODO
-  there): armour pools under `random_difficulty_chance`, `enchant_random_gear`, and dropping the gear.
+  `armed_kinds_are_shown_holding_their_equipment_tables_weapon_as_they_are_summoned`.
   Re-drilled (sapling-y3gear.txt): each kind now shows BDS's item ids; still different, the piglin
   (BDS: a crossbow, its `spawn_adult` picks the ranged or melee unit at even odds) showed nothing, as
   sapling arms no summoned piglin; its drowned came unarmed again (odds).
+- Gear, the rest (thirteenth3ad). Decompiled: `Level::getSpecialMultiplier` (Linux 0xc8a2090, Level
+  slot 40) reads the level's tick count where a day count is meant, so its age term is always 0.25:
+  `raw = difficulty x (1 + (min(moon x 0.25, 0.25) + (hard ? 0.5 : 0.375)) x (easy ? 0.5 : 1))`, then 0
+  under 2, 1 over 4, else `(raw - 2) / 2` (moon 1, 0.75 ... by `(time / 24000) % 8`): 0.625 on normal
+  under a full moon, 1 on hard. `random_difficulty_chance` (14581d870) is the difficulty's chance or
+  `default_chance`; `random_regional_difficulty_chance` (14581d770) `max_chance x multiplier`;
+  `enchant_random_gear` (1412863a0) `chance x multiplier`, then an enchant at level
+  `5 + multiplier x nextInt(18)`, no treasure; a `tiers` pool (`LootPool::addRandomItems` 14127b8e0)
+  takes entry `nextInt(initial_range)` plus one per bonus roll under `bonus_chance`.
+  `Mob::dropEquipmentOnDeath` (1429f04f0): each slot by the kind's `slot_drop_chance` or 0.25 (the
+  table at 14a73e498), plus 0.01 a Looting level, only if a player slew it or the chance is whole;
+  a piece dropped by chance is worn `nextInt(nextInt(max(lasts, 4) - 3) + 1)` short of full; Curse
+  of Vanishing stays. Drilled (bds-ad3drops.txt, `ad3drops`: 48 zombie pigmen the creative actor's
+  `/damage ... entity @s` killed, 16 `/kill`ed): 13 left a sword or spear, worn 11 to 32, in the
+  death's tick (their runtime ids under all the loot's) and 0.125 over the feet (the loot 0.075, a
+  tick later); none of the `/kill`ed; 15 of the 64 swords held were enchanted. `ad3armor`
+  (bds-ad3armor.txt: 32 skeletons on hard by midnight, 32 on normal): 5 and 3 wore armour (partial
+  sets of one tier), bows enchanted 1 and 2. Ported: sapling-data `mob_loot/regional.rs`
+  (`special_multiplier`, the two conditions, tiers), `enchant_random_gear` in `item_data.rs`,
+  `creatures/spawn_gear.rs` (the piglin's unit by its spawn event, none for an event its pack lacks
+  such as `minecraft:spawn_adult`, as bds-goldpickup.txt's; `let_go`), `death.rs` `let_gear_go`;
+  tests `zombie_pigmen_a_player_slays_drop_their_sword_one_time_in_four_worn_and_none_die_alone`,
+  `skeletons_on_hard_come_in_armour_about_one_in_seven_and_never_on_easy`,
+  `an_adult_piglin_comes_holding_a_crossbow_or_a_golden_sword_by_its_unit_and_a_baby_holds_nothing`,
+  sapling-data `the_special_multiplier_goes_with_difficulty_and_the_moon`. Sapling's runs
+  (sapling-ad3drops.txt, sapling-ad3armor.txt): 8 of 48 swords left, 12 of 64 held enchanted; 8 and
+  1 skeletons armoured, within the odds. Re-drilled y3gear: sapling's piglin was armed but then took
+  the zombie pigman's gold nuggets lying there into its main hand (`piglins/pickup.rs`); BDS's held
+  its crossbow (its pack keeps nuggets `stored_in_inventory`; the drill shows no item packets, so
+  whether BDS's took them is not known). Left: that, and the other functions' item data.
 
 ## Not drilled
 
@@ -553,8 +588,8 @@ Where the floor between is not free it goes by the shortest way over whole cells
 passed by the same cells and the first hits came 4.1 s and 6.5 s after. Strolling and fleeing
 mobs do not look for a way.
 
-Different: it sends a mob's speed as it is before the drag, turns 60
-degrees a tick with its head (BDS 30, its body after: "Reach, holes and walls"), stops when its box touches the
-player's since players and mobs do not push each other, shows no mob holding
-its weapon, lets a spider hunt by day, hunts nobody on peaceful
+Its told speed is BDS's, after the tick's drag (3bae7356; re-drilled 2026-11-05, sapling-chase.txt:
+the jump told 0.3332 up, 0.0623 across, as bds-chase.txt).
+Different: its head does not lag its body (both turn 30 a tick: "Reach, holes and walls"), it stops when its box touches the
+player's since players and mobs do not push each other, lets a spider hunt by day, hunts nobody on peaceful
 (where BDS has no monsters), and tells every viewer every move.

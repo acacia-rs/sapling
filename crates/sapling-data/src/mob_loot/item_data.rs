@@ -2,7 +2,7 @@
 //! arrow's data is its potion's + 1) and `enchant_randomly`, which takes one `nextInt(30)` of the
 //! loot's random as its cost and the enchantments from a thread's own random
 //! (`EnchantRandomlyFunction` vtable 14a8fbe40, apply 14752bc20, then `EnchantUtils::randomlyEnchant`
-//! 141b62a20).
+//! 141b62a20); and a mob's equipment's `enchant_random_gear`.
 
 use std::hash::{BuildHasher, RandomState};
 
@@ -79,5 +79,18 @@ pub(super) fn apply(function: &Value, looted: &mut Looted, draws: &mut dyn Draws
             }
         }
         _ => {}
+    }
+}
+
+/// `enchant_random_gear` (apply 1412863a0): with `chance` times the special `multiplier`, `looted`
+/// enchanted at 5 more than `multiplier` of a `nextInt(18)`, both drawn from the loot's random.
+pub(super) fn enchant_gear(chance: f32, multiplier: f32, looted: &mut Looted, draws: &mut dyn Draws) {
+    if draws.float() >= chance * multiplier {
+        return;
+    }
+    let cost = (multiplier * draws.int(18) as f32 + 5.0) as u8;
+    let stack = Stack { name: &looted.name, count: looted.count.min(64) as u8, damage: looted.data, block: None, tag: looted.tag.as_ref() };
+    if let Some(made) = with_levels(&stack, cost, false, &mut Unrepeatable::new()) {
+        (looted.name, looted.tag) = (made.name, made.tag);
     }
 }

@@ -235,6 +235,16 @@ tests/integration/mob_packets.rs):
   (20, 19, 18); sapling's `mobs::update` shows them by runtime id, oldest first. Not followed:
   bds-w3despawn's 28 shown on the walk back to the hut follow no rule by id or chunk (chunk
   240,-111 gave 65, 70, 69, 61, 48, then 18 five batches on, after chunks 240,-114 and 239,-110).
+  Drilled 2026-11-05 (thirteenth3ad, `ad3reload`, bds-ad3reload.txt) to test the EnTT lead (a
+  storage walked from its end, the newest swapped into a removed one's place): five named cows
+  17 to 21 in one chunk, `cow1` (18) killed, both players 3000 off for 40 s and back: shown again
+  21, 20, 19, 17, newest first by id with no swap (the swap would give 20, 19, 21, 17); the run before
+  it, none killed, 21 to 17. Ported: an entity a world folder kept is shown newest first, those
+  made in the world still by id (`mobs.rs` `FromFolder`; test `a_world_folders_cows_are_shown_newest_first`).
+  w3despawn's order across chunks is still not followed. Sapling's `/summon` took no name tag after
+  the event (sapling-ad3reload.txt: a syntax error); it does now (test in world_commands.rs). Left:
+  a selector's `name=` matches no entity in sapling (sapling-api `selector/gather.rs` gives entities
+  no name; BDS's `kill @e[type=cow,name=cow1]` killed it and answered `["cow1"]`).
 - Fixed: at a mob's death, after its two emptied hands, a MobArmorEquipment of what it wears with its
   body slot (`creatures/worn.rs` `shown_dead`), as bds-bodyslot.txt's horse (body iron at death).
   Re-drilled on sapling (bodyslot, mountflags; sapling-mountflags.txt): each summon's two SetEntityData

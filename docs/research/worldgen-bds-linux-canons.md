@@ -13,6 +13,8 @@ WORLDGEN_BDS=<dir> WORLDGEN_EXE=bedrock_server.canon WORLDGEN_THREADS=1 WORLDGEN
 python3 -I crates/sapling-worldgen/scripts/dbg_loads.py <out>/dbg/dbg.log --order <out>/order.txt --structure-order <out>/structure-order.txt
 tools/worldgen-oracle/canon-upload.sh <out> <canon> <world>     # then write env.txt: SAPLING_ORACLE_LINUX=1
 ```
+Canons so far (tools/replay-canons.txt): `dappled` (aa1), `tcores` (ad3tc: chunk -28,-27 of the trial
+chambers, run over -30,-29 to -26,-25 with WORLDGEN_WORKERS=1; 241 decorations).
 `bds_dbg_run.sh` runs a non-`.exe` under gdb with `scripts/bds_gdb.py`; one run logs both the decoration and
 the structure order. The region is picked with BDS's own `/locate biome` and the saved world's biome ids.
 

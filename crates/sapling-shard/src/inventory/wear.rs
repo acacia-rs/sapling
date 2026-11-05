@@ -37,7 +37,7 @@ pub(super) fn damage(tag: &Option<Value>) -> i32 {
     }
 }
 
-pub(super) fn set_damage(tag: &mut Option<Value>, damage: i32) {
+pub(crate) fn set_damage(tag: &mut Option<Value>, damage: i32) {
     if let Value::Compound(fields) = tag.get_or_insert_with(|| Value::Compound(Vec::new())) {
         fields.retain(|(key, _)| key != DAMAGE);
         fields.push((DAMAGE.into(),Value::Int(damage)));

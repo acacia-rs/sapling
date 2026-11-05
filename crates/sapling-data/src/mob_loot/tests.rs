@@ -73,3 +73,28 @@ fn generated_containers_tables_are_kept() {
         assert!(!table_loot(table, &mut always(0.3)).is_empty(), "{table}");
     }
 }
+
+/// `Level::getSpecialMultiplier` (Linux 0xc8a2090): by difficulty, the moon (full on day 0, new on
+/// day 4) and the world's first ticks.
+#[test]
+fn the_special_multiplier_goes_with_difficulty_and_the_moon() {
+    let noon = |day: i64| day * 24_000 + 6000;
+    let at = |difficulty, time| (special_multiplier(difficulty, time) * 1000.0).round() / 1000.0;
+    assert_eq!([0, 1, 2, 3].map(|difficulty| at(difficulty, noon(0))), [0.0, 0.0, 0.625, 1.0]);
+    assert_eq!(at(2, noon(4)), 0.375, "normal under a new moon");
+    assert_eq!(at(2, 0), 0.125, "normal at the world's first tick");
+}
+
+/// skeleton_gear.json drawing nothing but 0: its bow enchanted (`enchant_random_gear` 0.1), then the
+/// armour pool on hard picks its tier 0 moved on by all three bonus rolls (chain), every piece's
+/// next one after it; on easy no armour.
+#[test]
+fn a_hard_skeleton_drawing_low_wears_a_chain_set_and_holds_an_enchanted_bow() {
+    let hard = gear_loot("loot_tables/entities/skeleton_gear.json", Regional::at(3, 6000), &mut always(0.0));
+    let names: Vec<&str> = hard.iter().map(|looted| looted.name.as_str()).collect();
+    assert_eq!(names, ["minecraft:bow", "minecraft:chainmail_helmet", "minecraft:chainmail_chestplate", "minecraft:chainmail_leggings", "minecraft:chainmail_boots"]);
+    assert!(hard[0].tag.is_some(), "the bow enchanted");
+    let easy = gear_loot("loot_tables/entities/skeleton_gear.json", Regional::at(1, 6000), &mut always(0.0));
+    assert_eq!(easy.iter().map(|looted| looted.name.as_str()).collect::<Vec<_>>(), ["minecraft:bow"]);
+    assert!(easy[0].tag.is_none(), "no multiplier, no enchantment");
+}

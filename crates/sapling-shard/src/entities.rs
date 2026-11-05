@@ -105,7 +105,7 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, body: Body, wi
 pub(crate) fn loaded(world: &mut World, unique_id: i64) {
     let found = world.query_filtered::<(Entity, &crate::tags::UniqueId), With<first_data::Due>>().iter(world).find(|(_, id)| id.0 == unique_id).map(|(entity, _)| entity);
     if let Some(entity) = found {
-        world.entity_mut(entity).remove::<first_data::Due>();
+        world.entity_mut(entity).remove::<first_data::Due>().insert(mobs::FromFolder);
     }
 }
 
