@@ -68,6 +68,18 @@ fn air_section() -> Section {
     Section::Shared(AIR.get_or_init(|| Arc::new([pack(Block::Air); SECTION])).clone())
 }
 
+/// A box a structure's post-process files for spawning in the chunk (structure/spawn_areas.rs), as
+/// sapling-leveldb's `SpawnArea` saves it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpawnArea {
+    pub structure: &'static str,
+    /// Inclusive `[x0, y0, z0, x1, y1, z1]`, within the chunk's columns.
+    pub bounds: [i32; 6],
+    /// The start's whole box; else one piece's.
+    pub whole: bool,
+    pub y_offset: i32,
+}
+
 /// One chunk column: `block(x, y, z)` with y from -64 to 319.
 pub struct ChunkShape {
     /// `pack`ed blocks by section, bottom up.
@@ -79,6 +91,8 @@ pub struct ChunkShape {
     fluid_ticks: Vec<(u32, bool)>,
     /// Block entities as generation filed them (index, entity), oldest first: see `block_entities`.
     entities: Vec<(u32, BlockEntity)>,
+    /// What its own post-process filed for structure spawning (structure/spawn_areas.rs).
+    spawn_areas: Vec<SpawnArea>,
 }
 
 // SAFETY: `data` points into the sections' own heap blocks, which never move and are written only
@@ -88,14 +102,16 @@ unsafe impl Sync for ChunkShape {}
 
 impl Clone for ChunkShape {
     fn clone(&self) -> Self {
-        Self::from_sections(self.sections.clone(), self.fluid_ticks.clone(), self.entities.clone())
+        let mut copy = Self::from_sections(self.sections.clone(), self.fluid_ticks.clone(), self.entities.clone());
+        copy.spawn_areas = self.spawn_areas.clone();
+        copy
     }
 }
 
 impl ChunkShape {
     fn from_sections(sections: [Section; SECTIONS], fluid_ticks: Vec<(u32, bool)>, entities: Vec<(u32, BlockEntity)>) -> Self {
         let data = std::array::from_fn(|s| sections[s].blocks().as_ptr());
-        Self { sections, data, fluid_ticks, entities }
+        Self { sections, data, fluid_ticks, entities, spawn_areas: Vec::new() }
     }
 
     /// All air.
@@ -106,6 +122,15 @@ impl ChunkShape {
     /// Files `entity` for the cell at `index`; it counts while the cell holds a block of its kind.
     pub(crate) fn add_block_entity(&mut self, index: usize, entity: BlockEntity) {
         self.entities.push((index as u32, entity));
+    }
+
+    pub(crate) fn add_spawn_area(&mut self, area: SpawnArea) {
+        self.spawn_areas.push(area);
+    }
+
+    /// The structure spawn areas its post-process filed, in filing order.
+    pub fn spawn_areas(&self) -> &[SpawnArea] {
+        &self.spawn_areas
     }
 
     /// The block entities of cells that hold a block of their kind, the last filed for a cell that

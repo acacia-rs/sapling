@@ -36,6 +36,14 @@ pub struct Outpost {
     pub pieces: Vec<Piece>,
 }
 
+impl Outpost {
+    /// The start's box as its spawn areas give it: the pieces' columns, from 63 up (read off BDS saves).
+    pub fn whole_box(&self) -> BoundingBox {
+        let union = self.pieces.iter().map(|p| p.bb).reduce(|a, b| a.union(&b)).expect("an outpost has its tower");
+        BoundingBox { y0: 63, ..union }
+    }
+}
+
 impl Piece {
     fn new(name: &str, origin: (i32, i32), rotation: Rotation, integrity: f32, feature: bool) -> Self {
         let template = Template::get(&format!("pillageroutpost/{name}"));
@@ -60,6 +68,11 @@ impl Piece {
             (false, true) => Some((low + high) / 2),
             (false, false) => Some(high - 4),
         }
+    }
+
+    /// Its box once placed at `y`.
+    pub fn placed_box(&self, y: i32) -> BoundingBox {
+        BoundingBox { y0: y, y1: y + self.template.size.1, ..self.bb }
     }
 
     /// Places the piece at `y` within the canvas's chunk; `seed` is the chunk's structure seed and

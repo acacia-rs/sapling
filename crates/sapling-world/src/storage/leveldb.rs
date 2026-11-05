@@ -75,11 +75,13 @@ fn game_version() -> [i32; 5] {
 impl WorldStorage for LevelDbStorage {
     fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, StorageError> {
         let column = self.0.load_column(ChunkKey::new(pos.x, pos.z, dimension))?;
-        Ok(column.map(|c| StoredColumn { chunk: c.chunk, block_entities: c.block_entities, actors: c.actors, pending_ticks: c.pending_ticks }))
+        Ok(column.map(|c| StoredColumn { chunk: c.chunk, block_entities: c.block_entities, actors: c.actors, pending_ticks: c.pending_ticks, spawn_areas: c.spawn_areas }))
     }
 
     fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), StorageError> {
-        Ok(self.0.store_column(ChunkKey::new(pos.x, pos.z, dimension), &column.chunk, &column.block_entities, &column.actors, &column.pending_ticks)?)
+        let key = ChunkKey::new(pos.x, pos.z, dimension);
+        self.0.store_column(key, &column.chunk, &column.block_entities, &column.actors, &column.pending_ticks)?;
+        Ok(self.0.store_spawn_areas(key, &column.spawn_areas)?)
     }
 
     fn load_player(&self, id: &str) -> Result<Option<PlayerData>, StorageError> {

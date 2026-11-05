@@ -9,7 +9,7 @@ use common::raising::use_on;
 use common::stored::{compound, enter_stored};
 use common::{Harness, click};
 use sapling_api::{Difficulty, EntityInfo, GameMode, Item, PlayerId, RuleValue, ShardCtx, Slot};
-use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, ItemStack, MemoryStorage, PlayerData, StoredColumn, World, WorldStorage};
+use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, ItemStack, MemoryStorage, PlayerData, SpawnArea, StoredColumn, World, WorldStorage, encode_spawn_areas};
 
 const ALEX: PlayerId = PlayerId(1);
 const MIDNIGHT: i64 = 18000;
@@ -158,6 +158,81 @@ fn a_natural_mob_a_player_names_stays_when_the_player_goes() {
     run(&mut h, 3);
     let left: Vec<_> = monsters(&mut h).into_iter().map(|monster| monster.id).collect();
     assert_eq!(left, [named.id]);
+}
+
+/// Stored glowstone at y 63 under the chunks -3 to 2 each way, too bright for natural monsters, but
+/// stone under chunk (0, 0), a swamp hut piece whole (docs/research/structure-spawns.md).
+fn stored_hut() -> Arc<MemoryStorage> {
+    let registry = BlockRegistry::vanilla();
+    let floor = |name| registry.states_of(name).next().unwrap().0;
+    let storage = Arc::new(MemoryStorage::default());
+    let area = |bounds, whole| SpawnArea { structure: "minecraft:swamp_hut".into(), bounds, whole, y_offset: Some(-3) };
+    for (cx, cz) in (-3..3).flat_map(|cx| (-3..3).map(move |cz| (cx, cz))) {
+        let mut chunk = Chunk::empty(cx, cz, Dimension::overworld(registry.air_id()));
+        let block = floor(if (cx, cz) == (0, 0) { "minecraft:stone" } else { "minecraft:glowstone" });
+        (0..16).for_each(|x| (0..16).for_each(|z| chunk.set(x, 63, z, 0, block)));
+        let mut column = StoredColumn::of(chunk);
+        if (cx, cz) == (0, 0) {
+            column.spawn_areas = encode_spawn_areas(&[area([0, 63, 0, 15, 69, 15], true), area([0, 63, 0, 15, 69, 15], false)]);
+        }
+        storage.store_column(ChunkPos::new(cx, cz), 0, &column).unwrap();
+    }
+    storage
+}
+
+#[test]
+fn witches_appear_in_a_hut_piece_where_nothing_else_does() {
+    let mut h = Harness::with(common::config(), World::with_storage(stored_hut()));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        ctx.set_time(MIDNIGHT);
+    });
+    run(&mut h, 1500);
+    assert_eq!(monsters(&mut h), [], "peaceful");
+    h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Normal));
+    run(&mut h, 3000);
+    let found = monsters(&mut h);
+    assert!(!found.is_empty(), "no witch in the hut");
+    for monster in &found {
+        let [x, y, z] = monster.feet;
+        // At the middle of the piece, on the block's corner (1415efb20).
+        assert!(monster.kind == "minecraft:witch" && [x, y, z] == [8.0, 64.0, 8.0], "{monster:?}");
+    }
+}
+
+/// Water from y 40 to 62 over stone under the chunks -3 to 2 each way, a monument building over
+/// chunk (0, 0) from 39 to 61.
+fn stored_monument() -> Arc<MemoryStorage> {
+    let registry = BlockRegistry::vanilla();
+    let [stone, water] = ["minecraft:stone", "minecraft:water"].map(|name| registry.states_of(name).next().unwrap().0);
+    let storage = Arc::new(MemoryStorage::default());
+    let area = |whole| SpawnArea { structure: "minecraft:monument".into(), bounds: [0, 39, 0, 15, 61, 15], whole, y_offset: Some(0) };
+    for (cx, cz) in (-3..3).flat_map(|cx| (-3..3).map(move |cz| (cx, cz))) {
+        let mut chunk = Chunk::empty(cx, cz, Dimension::overworld(registry.air_id()));
+        (0..16).for_each(|x| (0..16).for_each(|z| (39..=62).for_each(|y| chunk.set(x, y, z, 0, if y == 39 { stone } else { water }))));
+        let mut column = StoredColumn::of(chunk);
+        if (cx, cz) == (0, 0) {
+            column.spawn_areas = encode_spawn_areas(&[area(true), area(false)]);
+        }
+        storage.store_column(ChunkPos::new(cx, cz), 0, &column).unwrap();
+    }
+    storage
+}
+
+#[test]
+fn guardians_appear_and_stay_in_a_monument() {
+    let config = sapling_shard::ShardConfig { mobs_stroll: true, ..common::config() };
+    let mut h = Harness::with(config, World::with_storage(stored_monument()));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_time(6000);
+    });
+    run(&mut h, 2000);
+    let guardians = ask(&mut h, |ctx| ctx.entities().into_iter().filter(|entity| entity.kind == "minecraft:guardian").count());
+    assert!(guardians > 0, "no guardian stayed");
 }
 
 #[test]

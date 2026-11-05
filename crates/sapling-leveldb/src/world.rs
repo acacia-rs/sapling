@@ -30,6 +30,8 @@ pub struct DiskColumn {
     pub actors: Vec<u8>,
     /// The block ticks that were waiting when it was saved, one compound (pending_ticks.rs).
     pub pending_ticks: Vec<u8>,
+    /// Its structures' spawn areas as stored (spawn_areas.rs).
+    pub spawn_areas: Vec<u8>,
 }
 
 pub struct LevelDbWorld {
@@ -113,7 +115,16 @@ impl LevelDbWorld {
         let block_entities = self.db.get(&key.tag(Tag::BlockEntities))?.unwrap_or_default();
         let actors = actors::load(&self.db, key)?;
         let pending_ticks = self.db.get(&key.tag(Tag::PendingTicks))?.unwrap_or_default();
-        Ok(Some(DiskColumn { chunk, version: version.first().copied().unwrap_or(0), data3d, block_entities, actors, pending_ticks }))
+        let spawn_areas = self.db.get(&key.tag(Tag::SpawnAreas))?.unwrap_or_default();
+        Ok(Some(DiskColumn { chunk, version: version.first().copied().unwrap_or(0), data3d, block_entities, actors, pending_ticks, spawn_areas }))
+    }
+
+    /// Writes a column's spawn areas record (spawn_areas.rs) as given; an empty one removes it.
+    pub fn store_spawn_areas(&self, key: ChunkKey, record: &[u8]) -> Result<(), Error> {
+        match record {
+            [] => self.db.delete(&key.tag(Tag::SpawnAreas)),
+            record => self.db.put(&key.tag(Tag::SpawnAreas), record),
+        }
     }
 
     /// Writes a column's blocks, biomes, heightmap, block entities, actors and pending ticks

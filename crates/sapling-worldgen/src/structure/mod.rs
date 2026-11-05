@@ -33,6 +33,9 @@ mod ruined_portal;
 mod ruined_portal_age;
 mod scattered;
 mod shipwreck;
+mod spawn_areas;
+#[cfg(test)]
+mod spawn_area_tests;
 mod stage;
 mod start_cache;
 mod start_map;

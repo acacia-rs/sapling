@@ -12,7 +12,7 @@ use super::probe::Probe;
 use super::reaching::{Reaching, STRONGHOLD_REACH};
 use super::scattered::{Scattered, Temple};
 use super::stronghold::{self, Stronghold};
-use super::{BoundingBox, StructureKind, Structures, template, treasure};
+use super::{BoundingBox, StructureKind, Structures, spawn_areas, template, treasure};
 use crate::biome::ChunkBiomes;
 use crate::block::Block;
 use crate::block_entity::BlockEntity;
@@ -69,6 +69,9 @@ impl Structures {
             let start_random = neighbours.pyramid_from_start.then(|| Mt19937::new(seeds.chunk(temple.start().0, temple.start().1)));
             let Some(bb) = temple.post_process(&mut canvas, &mut random, neighbours.temple_height, start_random) else { continue };
             placed.push(bb);
+            if temple.temple == Temple::SwampHut {
+                spawn_areas::file(&mut canvas, spawn_areas::SWAMP_HUT, temple.bb, [bb]);
+            }
             // Logged per start (dbg_canon.json `upgrades`): huts and jungle temples, mineshafts and
             // strongholds upgrade; desert pyramids, igloos and every other kind do not.
             match temple.temple {
@@ -96,6 +99,7 @@ impl Structures {
         for monument in monuments {
             monument.post_process(&mut canvas, &mut random);
             placed.push(monument.building.bb);
+            spawn_areas::file(&mut canvas, spawn_areas::MONUMENT, monument.building.bb, [monument.building.bb]);
         }
         Self::place_ocean_ruins(&mut canvas, ruins, seed);
         canvas.whole = true;

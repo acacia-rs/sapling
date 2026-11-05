@@ -49,6 +49,8 @@ pub(crate) struct Column {
     actors: Vec<u8>,
     /// As stored (`StoredColumn::pending_ticks`); the shard writes them back before a save.
     pending_ticks: Vec<u8>,
+    /// As stored (`StoredColumn::spawn_areas`): nothing here changes them.
+    spawn_areas: Vec<u8>,
     /// Written since it was created, loaded or last handed to storage.
     modified: bool,
     damaged: bool,
@@ -71,12 +73,12 @@ impl Column {
     }
 
     /// A column as storage holds it; one saved without biomes gets the default.
-    pub fn from_stored(StoredColumn { mut chunk, block_entities, actors, pending_ticks }: StoredColumn) -> Self {
+    pub fn from_stored(StoredColumn { mut chunk, block_entities, actors, pending_ticks, spawn_areas }: StoredColumn) -> Self {
         if chunk.biome(0, chunk.dimension().min_y, 0).is_none() {
             chunk.fill_biomes(default_biome(chunk.dimension()));
         }
         let sections = (0..chunk.section_count()).map(|_| OnceLock::new()).collect();
-        Self { chunk, block_entities, tiles: OnceLock::new(), actors, pending_ticks, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
+        Self { chunk, block_entities, tiles: OnceLock::new(), actors, pending_ticks, spawn_areas, modified: false, damaged: false, heights: OnceLock::new(), announce: OnceLock::new(), announce_cached: OnceLock::new(), sections }
     }
 
     /// A copy for an arena to write to. The blocks are copied; the encodings are the same bytes
@@ -89,6 +91,7 @@ impl Column {
             tiles: self.tiles.clone(),
             actors: self.actors.clone(),
             pending_ticks: self.pending_ticks.clone(),
+            spawn_areas: self.spawn_areas.clone(),
             modified: false,
             damaged: false,
             heights: self.heights.clone(),
@@ -118,7 +121,17 @@ impl Column {
 
     /// A copy of the column as storage should hold it.
     pub fn stored(&self) -> StoredColumn {
-        StoredColumn { chunk: self.chunk.clone(), block_entities: self.block_entities.clone(), actors: self.actors.clone(), pending_ticks: self.pending_ticks.clone() }
+        StoredColumn {
+            chunk: self.chunk.clone(),
+            block_entities: self.block_entities.clone(),
+            actors: self.actors.clone(),
+            pending_ticks: self.pending_ticks.clone(),
+            spawn_areas: self.spawn_areas.clone(),
+        }
+    }
+
+    pub fn spawn_areas(&self) -> &[u8] {
+        &self.spawn_areas
     }
 
     pub fn actors(&self) -> &[u8] {

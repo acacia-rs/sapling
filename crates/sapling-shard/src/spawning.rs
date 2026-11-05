@@ -1,5 +1,6 @@
 //! Natural spawning and despawning: in the chunks about players, mobs appear by the vanilla packs'
 //! spawn rules (`sapling_data::spawn_rules`) where `doMobSpawning` is on, within the caps (herds.rs),
+//! and structures' own mobs in their pieces (structures.rs),
 //! and go again by their kind's despawn rules (despawn.rs); spawn eggs (eggs.rs). BDS's numbers and
 //! what is left out: docs/research/mob-spawning.md.
 
@@ -10,6 +11,7 @@ mod herds;
 mod peaceful;
 mod phantoms;
 mod spots;
+mod structures;
 
 use std::collections::BTreeSet;
 

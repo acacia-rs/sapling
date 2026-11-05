@@ -85,6 +85,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let builder = builder.tick(clock::scaled(sapling_shard::TICK));
     // `SAPLING_TICK_DISTANCE`: the BDS copy's `tick-distance` the drill is compared with (default 4).
     let builder = builder.tick_distance(std::env::var("SAPLING_TICK_DISTANCE").ok().and_then(|chunks| chunks.parse().ok()).unwrap_or(4));
+    // `SAPLING_DRILL_SEED`: with the generated world, another seed for every dimension, a BDS default world's
+    // (twelfth3_drill.rs).
+    let generated = std::env::var("SAPLING_DRILL_WORLD").as_deref() == Ok("generated");
+    let seed = std::env::var("SAPLING_DRILL_SEED").ok().and_then(|seed| seed.parse().ok()).filter(|_| generated).unwrap_or(NETHER_SEED);
     let builder = match std::env::var("SAPLING_DRILL_WORLD").as_deref() {
         Ok("strongholds") => builder.world(World::with_storage(std::sync::Arc::new(Strongholds(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 1)))), [0.5, 64.0, 0.5]),
         Ok("cold") => {
@@ -92,13 +96,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             cold.level_mut().seed = NETHER_SEED;
             builder.world(cold, OPEN_SPAWN)
         }
-        Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), NETHER_SEED, 2))), GENERATED_SPAWN),
+        Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), seed, 2))), GENERATED_SPAWN),
         // Joining over the void, the probes' first commands went unanswered.
         _ => builder.world(ground, if open { OPEN_SPAWN } else { [0.5, 64.0, 0.5] }),
     };
     // The test BDS's Nether, generated from its seed (tools/bds-drill.sh worlds: bds-nether's level-seed).
-    let nether = World::with_storage_in(std::sync::Arc::new(Generated::nether(MemoryStorage::default(), NETHER_SEED, 2)), NETHER);
-    let end = World::with_storage_in(std::sync::Arc::new(Generated::end(MemoryStorage::default(), NETHER_SEED, 2)), END);
+    let nether = World::with_storage_in(std::sync::Arc::new(Generated::nether(MemoryStorage::default(), seed, 2)), NETHER);
+    let end = World::with_storage_in(std::sync::Arc::new(Generated::end(MemoryStorage::default(), seed, 2)), END);
     let builder = builder.nether(nether).end(end);
     let server = builder.handler(Operators).vanilla_commands().start().await?;
     tracing::info!(port, "started");

@@ -19,6 +19,8 @@ pub enum Tag {
     FinalizedState = 0x36,
     /// Where worlds older than 1.16.100 keep the version byte.
     LegacyVersion = 0x76,
+    /// The structures' spawn areas (spawn_areas.rs).
+    SpawnAreas = 0x77,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
