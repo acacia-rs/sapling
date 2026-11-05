@@ -21,7 +21,8 @@ fn entered(block: &Aabb, at: [f32; 3], motion: [f32; 3]) -> Option<(f32, usize)>
     let (mut near, mut far, mut axis) = (f32::NEG_INFINITY, f32::INFINITY, None);
     for a in 0..3 {
         if motion[a] == 0.0 {
-            if at[a] <= block.min[a] || at[a] >= block.max[a] {
+            // On a face counts: BDS's arrow freed on one fell onto the block below it (bds-g10flame.txt).
+            if at[a] < block.min[a] || at[a] > block.max[a] {
                 return None;
             }
             continue;
@@ -49,5 +50,6 @@ mod tests {
         assert_eq!(entered(&stone, [6.0, -24.0, 0.5], [1.0, 0.0, 0.0]), None, "over it");
         assert_eq!(entered(&stone, [8.5, -25.5, 0.5], [1.0, 0.0, 0.0]), None, "from inside");
         assert_eq!(entered(&stone, [8.5, -24.5, 0.5], [0.0, -1.0, 0.0]), Some((0.5, 1)), "onto its top");
+        assert_eq!(entered(&stone, [8.0, -24.5, 0.5], [0.0, -1.0, 0.0]), Some((0.5, 1)), "down its face onto its top");
     }
 }

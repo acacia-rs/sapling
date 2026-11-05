@@ -1,6 +1,8 @@
 //! Shots that stuck where they met a block (flight.rs): those a player may pick up are kept with
 //! their column and come back from the world folder stuck.
 
+use acacia_physics::WorldView;
+use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use acacia_proto::types::MetadataFlags1;
 use bevy_ecs::prelude::*;
 use sapling_data::AddEntityOptions;
@@ -12,6 +14,8 @@ use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Tick};
 use crate::entities;
 use crate::sync::Told;
+
+const SHAKES: i32 = 7;
 
 /// Has the world folder keep a stuck shot a player may pick up, with its column.
 pub(super) fn keep(world: &mut World, arrow: Entity, layer: Entity, body: &Body) -> Option<()> {
@@ -51,6 +55,34 @@ pub(crate) fn lying(world: &mut World) -> Vec<(Entity, Entity, [f32; 3], u64, Lo
     let mut shots = world.query::<(Entity, &InLayer, &Body, &NetId, &Loosed, &Arrow)>();
     let lies = |loosed: &Loosed, arrow: &Arrow| loosed.pickup != Pickup::Never && !loosed.returning && arrow.stuck.is_some();
     shots.iter(world).filter(|(.., loosed, arrow)| lies(loosed, arrow)).map(|(arrow, layer, body, id, loosed, _)| (arrow, layer.0, body.at, id.0, loosed.clone())).collect()
+}
+
+/// Whether nothing holds the stuck shot `arrow` any more: no block's collision box touches it, as
+/// when its block is set to air. BDS's then lies a tick more and falls from rest (bds-g10flame.txt).
+pub(super) fn loosened(world: &World, arrow: Entity, layer: Entity) -> bool {
+    let (Some(body), Some(level)) = (world.get::<Body>(arrow), world.get::<Layer>(layer)) else { return false };
+    let near = acacia_physics::Aabb { min: body.at, max: body.at }.grow(1e-3);
+    let mut boxes = Vec::new();
+    crate::terrain::physics_view(&level.world, |view| view.collisions(&near, &mut boxes));    boxes.is_empty()
+}
+
+/// Whether a shot at `at` moving by `motion` bounces off `struck`: primed TNT it flies into, which
+/// BDS's arrow left a tenth as fast the other way (bds-g10flame.txt).
+pub(super) fn bounces_off(world: &World, struck: Entity, at: [f32; 3], motion: [f32; 3]) -> bool {
+    let Some(tnt) = world.get::<Body>(struck).filter(|_| world.get::<crate::tnt::Primed>(struck).is_some()) else { return false };
+    let towards = (tnt.at[0] - at[0]) * motion[0] + (tnt.at[2] - at[2]) * motion[2];
+    towards > 0.0
+}
+
+/// What BDS tells of a shot's hit on a block, the tick after (bds-g10flame.txt): its sound, then an
+/// arrow's shake where it is `held`.
+pub(super) fn tell_hit(world: &mut World, layer: Entity, id: u64, at: [f32; 3], shot: Shot, held: bool) {
+    let cell = at.map(|c| c.floor() as i32);
+    crate::late_sounds::play_later(world, 1, layer, cell, super::flight::sound(shot.heard[1], at, ""));
+    if held && shot.kind == super::arrows::ARROW.kind {
+        let shake = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::ArrowShake, data: SHAKES, fire_at_position: None };
+        crate::late_sounds::play_later(world, 1, layer, cell, sapling_net::encode(&shake));
+    }
 }
 
 /// The shot frees itself from where it was stuck: it flies again (a trident coming back).
