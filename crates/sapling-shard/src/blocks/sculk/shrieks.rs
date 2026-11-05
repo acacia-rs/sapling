@@ -36,8 +36,6 @@ const SOUND_SPREAD: i32 = 10;
 /// warning comes a tick after the darkness.
 const SHRIEK_SOUND: &str = "block.sculk_shrieker.shriek";
 const WARNINGS: [&str; 3] = ["nearby_close", "nearby_closer", "nearby_closest"];
-/// Heard at the summoned warden's feet, of no entity (Java's `WARDEN_AGITATED` there).
-const SUMMONED_SOUND: &str = "agitated";
 const SEARCH: [i32; 2] = [5, 6];
 const SEARCH_TRIES: usize = 20;
 
@@ -59,6 +57,8 @@ impl Tracker {
 struct Warnings {
     trackers: HashMap<Entity, Tracker>,
     answers: HashMap<(Entity, BlockPos), u8>,
+    /// Those whose darkness came, answering the tick after.
+    darkened: HashMap<(Entity, BlockPos), u8>,
 }
 
 fn feet(world: &World, player: Entity) -> Option<[f32; 3]> {
@@ -125,22 +125,35 @@ fn warn(world: &mut World, layer: Entity, pos: BlockPos, player: Option<Entity>)
     true
 }
 
-/// The shriek at `pos` ended: it falls quiet, then darkness and the warning, or a warden.
+/// The shriek at `pos` ended: darkness, and a tick later it falls quiet with the warning or a
+/// warden, as BDS showed all five ends in bds-t2warden.txt; one that answers nothing at once.
 pub(super) fn ended(world: &mut World, layer: Entity, pos: BlockPos) {
-    set_number(world, layer, pos, "active", 0);
-    let Some(warning) = world.get_resource_mut::<Warnings>().and_then(|mut warnings| warnings.answers.remove(&(layer, pos))) else { return };
+    let (darkened, answering) = {
+        let mut warnings = world.get_resource_or_insert_with(Warnings::default);
+        let darkened = warnings.darkened.remove(&(layer, pos));
+        let answering = darkened.is_none().then(|| warnings.answers.remove(&(layer, pos))).flatten();
+        if let Some(warning) = answering {
+            warnings.darkened.insert((layer, pos), warning);
+        }
+        (darkened, answering)
+    };
+    if answering.is_none() {
+        set_number(world, layer, pos, "active", 0);
+        return darkened.into_iter().for_each(|warning| answer(world, layer, pos, warning));
+    }
+    queued::after(world, layer, pos, 1, Job::Sculk);
     let centre = pos.map(|c| c as f32 + 0.5);
     for player in players_near(world, layer, centre, DARKNESS_REACH) {
         if vitals::is_mortal(world, player) {
             vitals::give_effect(world, player, Effect::Darkness, DARKNESS, 0, false);
         }
     }
+}
+
+fn answer(world: &mut World, layer: Entity, pos: BlockPos, warning: u8) {
     if warning >= TOP {
-        if let Some(spot) = warden_spot(world, layer, pos)
-            && crate::creatures::summon_warden(world, layer, spot)
-        {
-            let [x, y, z] = spot;
-            send::to_viewers(world, layer, pos, &[send::noise(SUMMONED_SOUND, Vec3f { x, y, z }, -1)]);
+        if let Some(spot) = warden_spot(world, layer, pos) {
+            crate::creatures::summon_warden(world, layer, spot);
         }
         return;
     }
@@ -152,7 +165,7 @@ pub(super) fn ended(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(level) = level(world, layer) else { return };
     let at = Vec3f { x: (pos[0] + offset[0]) as f32, y: (pos[1] + offset[1]) as f32, z: (pos[2] + offset[2]) as f32 };
     let sound = send::sound_at(name, level.registry(), at, level.block(pos[0], pos[1], pos[2]));
-    crate::late_sounds::play_later(world, 1, layer, pos, sound);
+    send::to_viewers(world, layer, pos, &[sound]);
 }
 
 /// A spot within 5 across and 6 up or down with ground under it and room for a warden.
