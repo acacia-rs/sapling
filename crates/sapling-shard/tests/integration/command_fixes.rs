@@ -32,6 +32,18 @@ fn properties(h: &mut Harness, pos: [i32; 3]) -> String {
 }
 
 #[test]
+fn a_summoned_mob_shows_its_summoner_spawning_it_and_a_summoned_tnt_does_not() {
+    use acacia_proto::packets::{EntityEvent, EntityEventEventId};
+    let mut h = alex();
+    let spawned = |sent: &[RawPacket]| all::<EntityEvent>(sent).iter().filter(|event| event.event_id == EntityEventEventId::EntitySpawn).map(|event| event.data).collect::<Vec<_>>();
+    // bds-r1ench.txt: `/summon cow` showed 720898 (11 << 16 | 2), `/summon tnt` nothing.
+    let (_, sent) = told(&mut h, |ctx| ctx.summon_as(Some(ALEX), "minecraft:cow", [4.5, 65.0, 0.5], 0.0, 0.0, None));
+    assert_eq!(spawned(&sent), [720898]);
+    let (_, sent) = told(&mut h, |ctx| ctx.summon_as(Some(ALEX), "minecraft:tnt", [4.5, 65.0, 0.5], 0.0, 0.0, None));
+    assert_eq!(spawned(&sent), Vec::<i32>::new());
+}
+
+#[test]
 fn a_bed_set_by_command_lies_whole_with_its_head_in_the_cell_named() {
     let mut h = alex();
     let (set, sent) = told(&mut h, |ctx| ctx.update_block([10, 65, -4], &Block::new("minecraft:bed")));

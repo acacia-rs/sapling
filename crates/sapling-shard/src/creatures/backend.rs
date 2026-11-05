@@ -26,17 +26,18 @@ impl EntityBackend for Ctx<'_> {
             return None;
         }
         let shot = crate::shots::summon(self.world, worlds::current(self.world), kind, feet).and_then(|shot| self.world.get::<NetId>(shot)).map(|id| EntityId(id.0));
-        let summoned = match made_alone {
-            _ if shot.is_some() => shot?,
-            _ if crate::vehicles::is_vehicle(kind) => crate::vehicles::summon(self.world, worlds::current(self.world), kind, feet, yaw)?,
-            true => self.spawn_entity(kind, feet)?,
+        let (summoned, mob) = match made_alone {
+            _ if shot.is_some() => (shot?, false),
+            _ if crate::vehicles::is_vehicle(kind) => (crate::vehicles::summon(self.world, worlds::current(self.world), kind, feet, yaw)?, false),
+            true => (self.spawn_entity(kind, feet)?, false),
             false => {
                 let summoned = super::birth::summoned(self.world, worlds::current(self.world), kind, feet, yaw, event)?;
                 super::gaze::pitch_new(self.world, summoned, pitch);
-                summoned
+                (summoned, true)
             }
         };
-        if let Some(player) = by.and_then(|by| self.entity(by)) {
+        // BDS showed no `EntitySpawn` for a summoned TNT, shot, vehicle, orb or bolt (bds-r1ench.txt and others).
+        if let Some(player) = by.and_then(|by| self.entity(by)).filter(|_| mob) {
             super::summoned::show(self.world, player, kind);
         }
         Some(summoned)
