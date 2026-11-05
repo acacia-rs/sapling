@@ -3,7 +3,7 @@
 //! (docs/research/block-uses.md, "Blasts").
 // TODO: a fuse stays lit for a prey out of sight; no arrows, orbs or falling blocks are thrown; Blast Protection spares no mob's throw.
 
-mod rays;
+pub(super) mod rays;
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::{MetadataFlags1, Vec3f};
@@ -156,7 +156,7 @@ fn set_fires(world: &mut World, layer: Entity, cells: &[[i32; 3]]) {
 fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, rule: Rule) {
     crate::blocks::vibrate(world, layer, at, crate::blocks::GameEvent::Explode, false);
     let fireball = rule == Rule::Fireball;
-    let (cells, free) = if wreck != Wreck::Nothing { rays::broken(world, layer, at, power) } else { Default::default() };
+    let (cells, free) = if wreck != Wreck::Nothing { rays::broken(world, source, layer, at, power) } else { Default::default() };
     let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
         let kind = source.and_then(|source| world.get::<entities::Kind>(source)).map(|kind| kind.0.clone());
         let blast = crate::plugins::offer_in(world, layer, ExplosionEvent::new(at, kind, power, cells));

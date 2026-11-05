@@ -28,9 +28,14 @@ fn wet(level: &Level, [x, y, z]: [i32; 3]) -> bool {
     level.in_height(y) && (is_water(level, level.block(x, y, z)) || is_water(level, level.liquid(x, y, z)))
 }
 
+/// A blast from this source counts no block's resistance above this (a pack's `max_resistance`).
+#[derive(Component)]
+pub(in crate::creatures) struct Capped(pub(in crate::creatures) f32);
+
 /// The cells a blast of `power` at `at` breaks, none where its middle is in water, and the free
 /// cells its rays cross. A ray stops at water; air costs it nothing.
-pub(super) fn broken(world: &mut World, layer: Entity, at: [f32; 3], power: f32) -> (Vec<[i32; 3]>, Vec<[i32; 3]>) {
+pub(super) fn broken(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32) -> (Vec<[i32; 3]>, Vec<[i32; 3]>) {
+    let cap = source.and_then(|source| world.get::<Capped>(source)).map_or(f32::MAX, |cap| cap.0);
     let strengths: Vec<f32> = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         (0..RAYS * RAYS * RAYS).map(|_| power * (0.7 + dice.fraction() * 0.6)).collect()
@@ -54,7 +59,7 @@ pub(super) fn broken(world: &mut World, layer: Entity, at: [f32; 3], power: f32)
             let state = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten();
             match state.filter(|state| !state.is_air()) {
                 Some(state) => {
-                    left -= (sapling_data::blast_resistance(state.name).unwrap_or(0.0) + STEP) * STEP;
+                    left -= (sapling_data::blast_resistance(state.name).unwrap_or(0.0).min(cap) + STEP) * STEP;
                     if left > 0.0 && !cells.contains(&cell) {
                         cells.push(cell);
                     }
