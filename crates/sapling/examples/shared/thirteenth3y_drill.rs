@@ -99,27 +99,31 @@ fn gear() -> Vec<String> {
 /// ahead and its cloud watched 32 s.
 fn arrow() -> Vec<String> {
     let mut lines = with(start("noon"), &["gamemode creative @s", "replaceitem entity @s slot.weapon.mainhand 0 bow", "replaceitem entity @s slot.inventory 0 arrow 8", "gamemode survival @s", "tp @s 0.5 -26 0.5 180 0"]);
-    lines.extend(owned(["summon cow 0.5 -26 -5.5", "", "!look 0 0.7 -6", "!use", "", "!release", "", "", "kill @e[type=cow]", "kill @e[type=arrow]"]));
-    lines.extend(owned(["summon cow 0.5 -26 -2.5", "", "!hit cow", "", "", "kill @e[type=cow]", "kill @e[type=item]"]));
+    lines.extend(owned(["summon cow 0.5 -26 -5.5", "effect @e[type=cow] slowness 120 255 true", "!look 0 0.9 -6", "!use", "", "!release", "", "", "kill @e[type=cow]", "kill @e[type=arrow]"]));
+    lines.extend(owned(["summon cow 0.5 -26 -1.5", "effect @e[type=cow] slowness 120 255 true", "", "!hit cow", "", "", "kill @e[type=cow]", "kill @e[type=item]"]));
     lines.extend(owned(["replaceitem entity @s slot.weapon.mainhand 0 lingering_potion 1 23", "summon cow 0.5 -26 -4.5", "effect @e[type=cow] slowness 120 255 true", "!look 0 -1 -4", "!use", "!release"]));
     waits(&mut lines, 32);
     with(lines, &["kill @e[type=!player]", "gamemode creative @s", "clear @s"])
 }
 
-/// An ender dragon held on the floor by a repeating command block, a held cow beside it, a lingering
-/// potion of harming thrown between them; watched 20 s.
+/// A lingering potion of harming thrown by a held cow, then an ender dragon summoned and put on the
+/// cloud's spot each tick by a repeating command block; watched 20 s.
 fn dragon() -> Vec<String> {
-    let mut lines = with(start("noon"), &["gamemode creative @s", "gamerule mobgriefing false", "tp @s 0.5 -26 0.5 180 0", "setblock 3 -26 3 repeating_command_block", "summon ender_dragon 0.5 -26 -8.5"]);
-    lines.extend(owned(["!cmdblock 3 0 3 1 0 0 0 0 0 tp @e[type=ender_dragon] 0.5 -26 -8.5", "summon cow 2.5 -26 -6.5", "effect @e[type=cow] slowness 120 255 true", "", "replaceitem entity @s slot.weapon.mainhand 0 lingering_potion 1 23", "!look 1 -1.5 -6", "!use", "!release"]));
+    let mut lines = with(start("noon"), &["gamemode creative @s", "gamerule mobgriefing false", "tp @s 0.5 -26 3.5 180 0", "setblock 3 -26 6 repeating_command_block"]);
+    lines.extend(owned(["!cmdblock 3 0 3 1 0 0 0 0 0 execute at @e[type=area_effect_cloud] run tp @e[type=ender_dragon] ~ ~ ~", "summon cow 0.5 -26 -1.5", "effect @e[type=cow] slowness 120 255 true", "", "replaceitem entity @s slot.weapon.mainhand 0 lingering_potion 1 23", "!look 0 -1.6 -4", "!use", "!release", "", "summon ender_dragon 0.5 -26 -12.5"]));
     waits(&mut lines, 20);
-    with(lines, &["setblock 3 -26 3 air", "kill @e[type=!player]", "gamerule mobgriefing true", "clear @s"])
+    with(lines, &["setblock 3 -26 6 air", "kill @e[type=!player]", "gamerule mobgriefing true", "clear @s"])
 }
+
+/// Trial spawners stop with `doMobSpawning` off, on BDS as in sapling (spawners/trial.rs).
+const TRIAL_START: [&str; 6] = ["kill @e[type=!player]", "gamerule domobspawning true", "difficulty easy", "time set noon", "effect @s resistance 600 255 true", "clear @s"];
+const TRIAL_END: [&str; 5] = ["gamemode creative @s", "kill @e[type=!player]", "gamerule domobspawning false", "effect @s clear", "tp @s 0.5 -26 0.5"];
 
 /// A trial spawner with a zombie at `[x, y, z]`, its egg used from a barrier 4 west.
 fn spawner(lines: &mut Vec<String>, [x, y, z]: [i32; 3], ominous: bool) {
     let state = if ominous { " [\"ominous\"=true]" } else { "" };
     lines.extend([
-        "gamemode creative @s".to_owned(), format!("tp @s {}.5 {y} {z}.5", x - 4), String::new(), format!("setblock {} {} {z} barrier", x - 4, y - 1), format!("fill {} {y} {} {} {} {} air", x - 3, z - 1, x - 1, y + 2, z + 1),
+        "gamemode creative @s".to_owned(), format!("setblock {} {} {z} barrier", x - 4, y - 1), format!("tp @s {}.5 {y} {z}.5", x - 4), String::new(), format!("fill {} {y} {} {} {} {} air", x - 3, z - 1, x - 1, y + 2, z + 1),
         format!("setblock {x} {y} {z} trial_spawner{state}"), "replaceitem entity @s slot.weapon.mainhand 0 zombie_spawn_egg".to_owned(), String::new(), "!click 4 0 0 west".to_owned(), String::new(), "clear @s".to_owned(),
     ]);
 }
@@ -136,25 +140,25 @@ fn trial_site(lines: &mut Vec<String>, x: i32, y: i32, more: &[&str], stand: &st
 /// Trial spawners each tested alone, 40 apart on the flat ground: one 15 over the actor's feet (its
 /// eyes 13.9 under it, range 14), one 8 off behind a stone wall, one behind glass, one in the open.
 fn trial() -> Vec<String> {
-    let mut lines = owned(["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "effect @s resistance 600 255 true", "clear @s"]);
+    let mut lines = owned(TRIAL_START);
     trial_site(&mut lines, 60, -45, &[], "60.5 -60 0.5");
     trial_site(&mut lines, 100, -60, &["fill 99 -60 4 101 -57 4 stone"], "100.5 -60 8.5");
     trial_site(&mut lines, 140, -60, &["fill 139 -60 4 141 -57 4 glass"], "140.5 -60 8.5");
     trial_site(&mut lines, 180, -60, &[], "180.5 -60 8.5");
-    with(lines, &["gamemode creative @s", "kill @e[type=!player]", "effect @s clear", "tp @s 0.5 -26 0.5"])
+    with(lines, &TRIAL_END)
 }
 
 /// Eight ominous trial spawners in two rows 6 apart, the actor among them for 60 s: what each item
 /// spawner carries (its `MinecartDisplayBlock`) and what it throws.
 fn omen() -> Vec<String> {
-    let mut lines = owned(["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "effect @s resistance 600 255 true", "clear @s"]);
+    let mut lines = owned(TRIAL_START);
     for site in 0..8 {
         spawner(&mut lines, [220 + 6 * (site % 4), -60, 12 * (site / 4)], true);
     }
     lines.push("tp @s 229.5 -60 6.5".into());
     lines.push("gamemode survival @s".into());
     waits(&mut lines, 60);
-    with(lines, &["gamemode creative @s", "kill @e[type=!player]", "effect @s clear", "tp @s 0.5 -26 0.5"])
+    with(lines, &TRIAL_END)
 }
 
 const GOLEM: &str = "summon iron_golem 10.5 -60 -6.5 0 0 minecraft:from_village";
