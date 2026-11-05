@@ -105,6 +105,7 @@ tickPendingTicks(q, region, until, max, insta):               # 1416042f0
   tick; whichever `tick` runs first fills C and the other's `spread_to` returns (`liq(C)` is lava). If P and C are
   in one chunk the winner is set by heap shape, not insertion order: usually one way, flipped by any difference in
   that chunk's queue history (a lava recede roll is enough, since it moves an entry's due tick by x4).
-- Sapling (`liquid.rs` `Flows`): BTreeMap by (due, insertion counter), global, with a `queued` set that drops a
-  second schedule for a cell already queued. BDS: per-chunk heaps, ties by heap shape, duplicates kept and both run,
-  100 per chunk per tick.
+- Sapling (`blocks/chunk_ticks.rs`, used by `liquid.rs` `Flows` and `queued.rs`): per-column heaps with BDS's
+  push/pop (`sapling-worldgen` `tick_heap.rs`), due ones moved to an active heap, duplicates kept, removal by mark,
+  100 per column per tick, each column run once a tick. Not modelled: one queue shared by liquids and other jobs
+  (separate queues, separate limits), the chunk clock lag, the re-queue of ticks 8 blocks from unloaded columns.

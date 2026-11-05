@@ -36,9 +36,10 @@ fn met(at: [f32; 3], motion: [f32; 3], axis: usize) -> BlockPos {
 /// `SmallFireball.onHitBlock`; one dispensed at TNT lit no TNT on BDS, research/captures/bds-bkticks.txt),
 /// TNT another `burning` one met is lit (`TntBlock.onProjectileHit`). `sticks` for an arrow or trident.
 /// A mob's shot lights nothing while `mobGriefing` is off (a blaze's lit none on BDS, bds-u1blaze.txt).
-/// `at` is where its ray met the face across `axis` (B25).
+/// `at` is where its ray met the face across `axis` (B25). False where the block lets the shot
+/// lie on its face unheld: TNT it lit, primed only next tick (bds-g10flame.txt).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], axis: usize, sticks: bool, burning: bool, by_mob: bool) {
+pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], axis: usize, sticks: bool, burning: bool, by_mob: bool) -> bool {
     let pos = met(at, motion, axis);
     super::shot_blocks::shot(world, layer, pos, kind, motion);
     super::dripleaf::shot(world, layer, pos);
@@ -49,16 +50,16 @@ pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f3
         if lights {
             super::fire::light(world, layer, before);
         }
-    } else if burning && lights && crate::tnt::light(world, layer, pos) {
-        return;
+    } else if burning && lights && crate::tnt::light_next_tick(world, layer, pos) {
+        return false;
     }
     let is_target = level(world, layer).filter(|level| level.in_height(pos[1])).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).is_some_and(|state| state.name == TARGET);
-    if !is_target {
-        return;
+    if is_target {
+        redstone::emit(world, layer, pos, strength(pos, at, axis));
+        queued::cancel(world, layer, pos, Job::TargetOff);
+        queued::after(world, layer, pos, if sticks { ARROW_TICKS } else { OTHER_TICKS }, Job::TargetOff);
     }
-    redstone::emit(world, layer, pos, strength(pos, at, axis));
-    queued::cancel(world, layer, pos, Job::TargetOff);
-    queued::after(world, layer, pos, if sticks { ARROW_TICKS } else { OTHER_TICKS }, Job::TargetOff);
+    true
 }
 
 pub(super) fn ended(world: &mut World, layer: Entity, pos: BlockPos) {

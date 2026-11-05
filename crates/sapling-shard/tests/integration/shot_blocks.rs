@@ -6,8 +6,8 @@ use crate::common;
 use std::sync::mpsc;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, EntityEvent, EntityEventEventId, LevelSoundEvent, MoveEntityDelta, SetEntityMotion};
-use common::shooting::{ALEX, added, draw, ready};
+use acacia_proto::packets::{AddItemEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent, MoveEntityDelta, SetEntityMotion};
+use common::shooting::{ALEX, added, click_air, ready, release};
 use common::{Harness, all};
 use sapling_api::{Block, GameMode, Item, RuleValue, Slot};
 
@@ -84,7 +84,14 @@ fn a_flame_arrow_primes_tnt_and_bounces_back_off_it() {
         assert!(ctx.update_block([0, 65, 3], &Block::new("tnt")));
     });
     h.tick_all();
-    let sent = draw(&mut h, 20, 6);
+    h.receive(1, &click_air());
+    (0..20).for_each(|_| drop(h.tick_all()));
+    h.receive(1, &release());
+    let ticks: Vec<Vec<RawPacket>> = (0..7).map(|_| h.tick_all().to(1).to_vec()).collect();
+    // BDS tells the ignite the tick the arrow meets the TNT and primes it the tick after (bds-g10flame.txt).
+    let ignited = ticks.iter().position(|sent| all::<LevelEvent>(sent).iter().any(|event| event.event == LevelEventEvent::SoundIgnite)).expect("ignited");
+    assert!(added(&ticks[ignited], "minecraft:tnt").is_empty() && added(&ticks[ignited + 1], "minecraft:tnt").len() == 1);
+    let sent: Vec<RawPacket> = ticks.concat();
     assert_eq!(added(&sent, "minecraft:tnt").len(), 1, "primed");
     let arrow = added(&sent, "minecraft:arrow").pop().expect("the arrow").runtime_id;
     let motions = told_motions(&sent, arrow);

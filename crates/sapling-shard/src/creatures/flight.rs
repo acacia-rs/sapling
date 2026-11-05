@@ -200,9 +200,10 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     let part = if bounced { 0.0 } else { met_block.map_or(1.0, |(part, _)| part) };
     body.at = std::array::from_fn(|axis| before[axis] + motion[axis] * part);
     let stopped = met_block.is_some();
+    let mut holds = true;
     if let Some((_, face)) = met_block {
         let by_mob = world.get::<super::Creature>(by).is_some();
-        crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, face, shot.sticks, shot.burns > 0, by_mob);
+        holds = crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, face, shot.sticks, shot.burns > 0, by_mob);
         let by_player = world.get::<crate::components::Identity>(by).is_some();
         crate::blocks::vibrate(world, layer, body.at, crate::blocks::GameEvent::ProjectileLand, by_player);
     }
@@ -212,7 +213,7 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
         return None;
     }
     // A block the shot set off or broke holds it no more: it flies on from there (bds-g10flame.txt).
-    let held = stopped && ray::first_block(&world.get::<Layer>(layer)?.world, before, motion).is_some();
+    let held = stopped && holds && ray::first_block(&world.get::<Layer>(layer)?.world, before, motion).is_some();
     if held {
         body.motion = [0.0; 3];
         world.get_mut::<Arrow>(arrow)?.stuck = Some(now);

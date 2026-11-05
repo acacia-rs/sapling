@@ -77,7 +77,7 @@ went on (research/captures/bds-t2edon.txt); sapling put them on and now leaves t
   BlockEntityData. The comparator read 15 with a book at page 0 and at page 1 of 3 (the comparator set
   again, so read afresh): no page dependence, unlike the Java game. A turn to page 0 pulsed
   `powered_bit` from the next tick for two ticks; a turn to another page resent the unpowered block two
-  ticks later and showed no power. Sapling pulses on page 0 only and resends nothing. Broken, the lectern dropped the book with its tag.
+  ticks later and showed no power. Sapling does the same (`blocks/lectern.rs`). Broken, the lectern dropped the book with its tag.
 
 ## Cooldowns and held uses (`small`; `cooldowns.rs`, `instruments.rs`)
 
@@ -97,7 +97,7 @@ went on (research/captures/bds-t2edon.txt); sapling put them on and now leaves t
   with those slots, nothing resent. The banner kept its Damage (15, white) and gained
   `Patterns [{Color 1, Pattern bo}]` before `Type`.
 - **Beacon**: placed by /setblock it sent BlockEntityData `{primary 0, secondary 0}` twice (sapling
-  makes the entity at the first payment). The payment Placed into `BeaconPayment` 27 drew an
+  makes and shows it at the set since 4986fd07, `blocks/set_entities.rs`). The payment Placed into `BeaconPayment` 27 drew an
   InventorySlot of window 3 slot 0; `BeaconPayment{1, 0}` + Destroy 27 answered Ok, no BlockEntityData.
   On a one-layer iron pyramid speed came to the payer and the watcher as MobEffect Add, amplifier 0,
   duration 220, ambient, particles, then Update every 80 ticks.

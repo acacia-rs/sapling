@@ -54,14 +54,18 @@ fn a_book_is_written_signed_and_put_on_a_lectern_whose_page_turns() {
     assert_eq!(kept.nbt.decode().unwrap().value.get("totalPages"), Some(&Value::Int(2)));
     assert!(held(&mut h, Slot::Main(0)).is_none(), "the book left the hand");
 
+    // To page 1: the entity twice, then block and entity two ticks later, as BDS (bds-books.txt).
     h.receive(1, &LecternUpdate { page: 1, page_count: 2, position: Vec3i { x: 0, y: 65, z: 2 } });
-    let turned = all::<BlockEntityData>(h.tick_all().to(1)).pop().expect("the turned page");
+    let ticks: Vec<Vec<acacia_proto::RawPacket>> = (0..3).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let turned = all::<BlockEntityData>(&ticks[0]).pop().expect("the turned page");
     assert_eq!(turned.nbt.decode().unwrap().value.get("page"), Some(&Value::Int(1)));
+    let shown = |ticks: &[Vec<acacia_proto::RawPacket>]| ticks.iter().map(|sent| (all::<UpdateBlock>(sent).len(), all::<BlockEntityData>(sent).len())).collect::<Vec<_>>();
+    assert_eq!(shown(&ticks), [(0, 2), (0, 0), (1, 1)]);
 
-    // Back to page 0: powered from the next tick for two.
+    // Back to page 0: shown at once, then powered from the next tick for two, each with its entity.
     h.receive(1, &LecternUpdate { page: 0, page_count: 2, position: Vec3i { x: 0, y: 65, z: 2 } });
-    let updates: Vec<usize> = (0..5).map(|_| all::<UpdateBlock>(h.tick_all().to(1)).len()).collect();
-    assert_eq!(updates, [0, 1, 0, 1, 0]);
+    let ticks: Vec<Vec<acacia_proto::RawPacket>> = (0..5).map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert_eq!(shown(&ticks), [(1, 1), (1, 1), (0, 0), (1, 1), (0, 0)]);
 
     // A hit takes the book off: the lectern keeps no book and the book lies over it.
     h.receive(1, &common::block_actions(&[(acacia_proto::types::Action::StartBreak, [0, 65, 2])]));

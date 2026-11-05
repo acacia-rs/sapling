@@ -28,6 +28,7 @@ mod structure_queries;
 mod structured;
 mod surface;
 mod terrain;
+pub mod tick_heap;
 
 use std::sync::Arc;
 

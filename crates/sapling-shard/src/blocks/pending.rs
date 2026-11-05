@@ -83,8 +83,8 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     };
     for PendingTick { name, properties, pos, time } in ticks {
         let delay = (time - saved_at).max(1) as u64;
-        if liquid::Liquid::of(&name).is_some() {
-            liquid::again(world, layer, pos, delay);
+        if let Some(kind) = liquid::Liquid::of(&name) {
+            liquid::again(world, layer, pos, kind, delay);
         } else if matches!(name.as_str(), "minecraft:fire" | "minecraft:soul_fire") {
             fire::again(world, layer, pos, delay);
         } else if falling::falls(&name) {
