@@ -2,8 +2,7 @@
 //! `data/generate/mob-loot.py`), run for a death no one caused or one a player caused with the
 //! Looting it held (enchant.rs), of a mob, cooked when the mob was on fire. [`drawn_table_loot`]
 //! runs a table in BDS's draw order (`LootPool::addRandomItems` 14127b8e0), for a container's seeded loot.
-// TODO: item data the tables set (tipped arrows, damaged gear, enchantments) is dropped; the item
-// is left plain, and `enchant_randomly` draws nothing. A pet's kill counts as no one's.
+// TODO: only the seeded tables keep item data (item_data.rs); a mob's loot is left plain. A pet's kill counts as no one's.
 
 use std::sync::LazyLock;
 
@@ -11,6 +10,10 @@ use serde_json::Value;
 
 use crate::enchant::{self, Draws};
 use crate::recipes::{Station, smelted};
+
+mod item_data;
+
+pub use item_data::Looted;
 
 static LOOT: LazyLock<Value> = LazyLock::new(|| serde_json::from_str(include_str!("../data/mob-loot.json")).expect("mob-loot.json is JSON"));
 
@@ -79,7 +82,11 @@ pub fn mob_loot(kind: &str, on_fire: bool, killer: Killer, roll: &mut dyn FnMut(
     if let Some(table) = LOOT["entities"][kind].as_str() {
         run(table, Death { on_fire, killer }, &mut Roll { draws: &mut Fractions(roll), bds_order: false }, &mut left);
     }
-    left
+    counted(left)
+}
+
+fn counted(left: Vec<Looted>) -> Vec<(String, u32)> {
+    left.into_iter().map(|looted| (looted.name, looted.count)).collect()
 }
 
 /// What the table at `table` (its path in the packs, `loot_tables/...json`) gives a block that
@@ -92,11 +99,12 @@ pub fn table_loot(table: &str, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u3
 pub fn table_loot_for(table: &str, killer: Killer, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u32)> {
     let mut left = Vec::new();
     run(table, Death { on_fire: false, killer }, &mut Roll { draws: &mut Fractions(roll), bds_order: false }, &mut left);
-    left
+    counted(left)
 }
 
-/// [`table_loot`] drawing from BDS's `Random` in BDS's order, the stacks in the order BDS makes them.
-pub fn drawn_table_loot(table: &str, draws: &mut dyn Draws) -> Vec<(String, u32)> {
+/// [`table_loot`] drawing from BDS's `Random` in BDS's order, the stacks in the order BDS makes
+/// them, with the item data the tables set (item_data.rs).
+pub fn drawn_table_loot(table: &str, draws: &mut dyn Draws) -> Vec<Looted> {
     let mut left = Vec::new();
     run(table, Death { on_fire: false, killer: Killer::None }, &mut Roll { draws, bds_order: true }, &mut left);
     left
@@ -107,7 +115,7 @@ pub fn has_loot_table(table: &str) -> bool {
     LOOT["tables"].get(table).is_some()
 }
 
-fn run(table: &str, death: Death, roll: &mut Roll, left: &mut Vec<(String, u32)>) {
+fn run(table: &str, death: Death, roll: &mut Roll, left: &mut Vec<Looted>) {
     let Some(pools) = LOOT["tables"][table]["pools"].as_array() else { return };
     for pool in pools {
         if !holds(&pool["conditions"], death, roll) {
@@ -145,28 +153,37 @@ fn pick<'a>(entries: &[&'a Value], roll: &mut Roll) -> Option<&'a Value> {
     })
 }
 
-fn take(entry: &Value, death: Death, roll: &mut Roll, left: &mut Vec<(String, u32)>) {
+fn take(entry: &Value, death: Death, roll: &mut Roll, left: &mut Vec<Looted>) {
     let Some(name) = entry["name"].as_str() else { return };
     match entry["type"].as_str() {
         Some("item") => {
-            let (mut name, mut count) = (name, 1);
+            let mut looted = Looted { name: name.to_owned(), count: 1, data: 0, tag: None };
             for function in entry["functions"].as_array().into_iter().flatten() {
-                // The other functions change only the item's data.
                 match function["function"].as_str().map(|name| name.trim_start_matches("minecraft:")) {
-                    Some("set_count") if holds(&function["conditions"], death, roll) => count = roll.number(&function["count"]),
-                    Some("furnace_smelt") if holds(&function["conditions"], death, roll) => name = smelted(Station::Furnace, name, 0).map_or(name, |(made, _)| made.name),
-                    Some("looting_enchant") if death.looting() > 0 => {
-                        let range = [&function["count"]["min"], &function["count"]["max"]].map(|end| end.as_f64().unwrap_or(0.0) as f32);
-                        count += enchant::looted(range, death.looting(), &mut || roll.draws.float());
-                        if let Some(limit) = function["limit"].as_u64().filter(|limit| *limit > 0) {
-                            count = count.min(limit as u32);
+                    Some("set_count") if holds(&function["conditions"], death, roll) => looted.count = roll.number(&function["count"]),
+                    Some("furnace_smelt") if holds(&function["conditions"], death, roll) => {
+                        if let Some((made, _)) = smelted(Station::Furnace, &looted.name, 0) {
+                            looted.name = made.name.to_owned();
                         }
                     }
+                    Some("looting_enchant") if death.looting() > 0 => {
+                        let range = [&function["count"]["min"], &function["count"]["max"]].map(|end| end.as_f64().unwrap_or(0.0) as f32);
+                        looted.count += enchant::looted(range, death.looting(), &mut || roll.draws.float());
+                        if let Some(limit) = function["limit"].as_u64().filter(|limit| *limit > 0) {
+                            looted.count = looted.count.min(limit as u32);
+                        }
+                    }
+                    Some(function_name) if item_data::SETS.contains(&function_name) => {
+                        if holds(&function["conditions"], death, roll) {
+                            item_data::apply(function, &mut looted, roll.draws);
+                        }
+                    }
+                    // TODO: the other functions' item data (damage, gear enchantments, trims), and their draws.
                     _ => {}
                 }
             }
-            if count > 0 {
-                left.push((name.to_owned(), count));
+            if looted.count > 0 {
+                left.push(looted);
             }
         }
         Some("loot_table") => run(name, death, roll, left),

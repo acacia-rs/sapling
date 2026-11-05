@@ -248,8 +248,12 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   capture's gravel brushed again after a pause showed progress 1, 2, 3 and done ~5, 10, 16 ticks in
   (one a tick would be 2, 5, 9). Probe a second pause with tick stamps to settle it.
 
-- [U] `enchant_randomly` (a dungeon's book) draws nothing in sapling; a table that rolls a book desyncs
-  after it. Checked on one seed only.
+- `enchant_randomly` (a dungeon's book; thirteenth2d, 2026-11-05): BDS's `EnchantRandomlyFunction`
+  (apply 14752bc20) draws one `nextInt(30)` from the loot random as the cost, then enchants by
+  `EnchantUtils::randomlyEnchant` (141b62a20) on a thread-local random, `treasure` as the JSON says.
+  Sapling does the same (`sapling-data` `mob_loot/item_data.rs`, its enchantments unrepeatable);
+  seeds 5 and 73, books rolled third and first, fill BDS's slots (bds-loot-books.txt; test
+  `a_dungeon_book_draws_its_cost_and_the_chest_stays_in_step`).
 - [U] Whether a comparator reads 0 from unopened loot or the drill's comparators faced the wrong way.
 - [U] 3 village chests' seeds: BDS's are draws 157 of chunk (-63, 9)'s structure MT and 306 and 459 of
   (-62, 8)'s, sapling's 158, 301 and 449, while (-62, 8)'s chest at draw 433 matches; the draws

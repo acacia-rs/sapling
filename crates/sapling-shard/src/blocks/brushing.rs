@@ -197,8 +197,8 @@ fn unpack(world: &mut World, layer: Entity, fields: &mut Vec<(acacia_proto::nbt:
     };
     fields.retain(|(name, _)| name != "LootTable" && name != "LootTableSeed");
     let rolled = crate::containers::loot::rolled(&table, seed, vec![0]).into_iter().next();
-    let Some(((name, count), level)) = rolled.map(|(_, item)| item).zip(level(world, layer)) else { return };
-    let mut item = ItemStack { name, count: count.min(64) as u8, damage: 0, block: None, tag: None }.fields(level.registry());
+    let Some((looted, level)) = rolled.map(|(_, item)| item).zip(level(world, layer)) else { return };
+    let mut item = ItemStack { name: looted.name, count: looted.count.min(64) as u8, damage: looted.data, block: None, tag: looted.tag }.fields(level.registry());
     item.push(("WasPickedUp".into(), Value::Byte(0)));
     put(fields, ITEM, Value::Compound(item));
 }

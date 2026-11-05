@@ -115,7 +115,11 @@ fn seed(at: BlockPos) -> u32 {
 
 /// The end island BDS builds at (x, 75, z) where an exit finds no spawn: its cell and its end stone.
 pub(super) fn island([x, _, z]: BlockPos) -> (BlockPos, Vec<BlockPos>) {
-    let at = [x, ISLAND_Y, z];
+    island_at([x, ISLAND_Y, z])
+}
+
+/// The end island BDS builds at `at` itself, as a relink does.
+pub(super) fn island_at(at: BlockPos) -> (BlockPos, Vec<BlockPos>) {
     island_seeded(at, seed(at))
 }
 

@@ -91,6 +91,9 @@ pub(super) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &s
     }
     let Some(entity) = level.world.block_entity(pos).map(|entity| super::send::block_entity_data(pos, entity)) else { return };
     super::send::to_viewers(world, layer, pos, &[entity]);
+    if SKULLS.contains(&block) {
+        head_placed(world, layer, pos);
+    }
     if is_unheld_frame(world, layer, pos) {
         let Some(level) = super::level(world, layer) else { return };
         let particles = super::send::destroy_particles(level.registry(), pos, level.block(pos[0], pos[1], pos[2]));
@@ -101,6 +104,14 @@ pub(super) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &s
         _ if is_shown_again(block) => super::shown_again::next_tick(world, layer, pos),
         _ => {}
     }
+}
+
+/// A set head's place sound, after its entity, which BDS played for heads alone, naming the state
+/// set, not the first as a player's placing does (research/captures/bds-bkuses.txt).
+fn head_placed(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(level) = super::level(world, layer) else { return };
+    let sound = super::send::sound("place", level.registry(), pos, level.block(pos[0], pos[1], pos[2]));
+    super::send::to_viewers(world, layer, pos, &[sound]);
 }
 
 /// What a tick has done to a set block's entity by the time BDS showed it again: a jukebox with

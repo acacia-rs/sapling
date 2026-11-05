@@ -1,7 +1,9 @@
-//! The ominous item spawners an active ominous trial spawner drops over its players
-//! (docs/research/spawners.md "Ominous item spawners", research/captures/bds-u1omen.txt): every
-//! 160 world ticks one over a player it may take on, carrying an item of its ominous table, which
-//! it lets go 60 to 120 ticks on, shot straight down (shots/dispensed.rs) or dropped.
+//! The ominous item spawners an active ominous trial spawner drops over its players or its wave's
+//! mobs (docs/research/spawners.md "Ominous item spawners", research/captures/bds-u1omen.txt): every
+//! 160 world ticks one, carrying an item of the spawner's kept ominous table, which it lets go 60 to
+//! 120 ticks on, shot straight down (shots/dispensed.rs) or dropped.
+
+use std::collections::HashMap;
 
 use acacia_proto::types::MetadataDictionaryItemValueDefault as Plain;
 use acacia_proto::types::MetadataDictionaryItemKey as Key;
@@ -9,28 +11,34 @@ use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 use sapling_world::ItemStack;
 
-use super::super::{Near, dice, distance};
+use super::super::{Near, centre, dice, distance};
 use super::{Trial, event, sound};
 use acacia_proto::packets::LevelEventEvent;
 use crate::body::Body;
 use crate::components::{InLayer, Layer};
+use crate::containers::loot;
 use crate::entities;
+use crate::tags::UniqueId;
 
 const KIND: &str = "minecraft:ominous_item_spawner";
+const TABLE: &str = "loot_tables/spawners/trial_chamber/items_to_drop_when_ominous.json";
 const EVERY: i64 = 160;
 const SIZE: [f32; 2] = [0.6, 1.8];
 /// Ticks it carries its item: the first and how many more it may.
 const DELAY: [u32; 2] = [60, 61];
 const WARNS_AT: u32 = 35;
-/// Blocks over the player's head attach point: the first and how many more it may.
+/// Blocks over the target's head attach point: the first and how many more it may.
 const ABOVE: [u32; 2] = [2, 4];
 /// A player's head attach point over its feet; fits the first spot of bds-u1omen.txt.
 const HEAD: f32 = 1.52;
-/// `items_to_drop_when_ominous.json`'s two pools, each item one weight: a lingering potion of
-/// these, and one of these (their data, a tipped arrow's its potion + 1).
-// TODO: [U] BDS rolls the table once per spawner by an MT19937 seeded from its position and keeps it (spawners.md).
-const POTIONS: [i16; 7] = [43, 45, 44, 46, 31, 14, 40];
-const SHOTS: [(&str, i16); 5] = [("minecraft:arrow", 0), ("minecraft:arrow", 26), ("minecraft:arrow", 43), ("minecraft:fire_charge", 0), ("minecraft:wind_charge", 0)];
+/// A mob's head attach point over its feet, a share of its height. [U] BDS's per-mob points.
+const MOB_HEAD: f32 = 0.85;
+/// The side of the box a spot is tested with against blocks' collision boxes: a point, near enough.
+const POINT: f32 = 0.001;
+
+/// Each ominous trial spawner's table, rolled once and kept (BDS keeps it unsaved, at +0x80).
+#[derive(Resource, Default)]
+struct Kept(HashMap<(Entity, BlockPos), Vec<ItemStack>>);
 
 /// An ominous item spawner: what it lets go and in how many ticks, and the trial spawner it came from.
 #[derive(Component)]
@@ -40,38 +48,82 @@ pub(crate) struct Carrying {
     spawner: BlockPos,
 }
 
-fn stack(name: &str, damage: i16) -> ItemStack {
-    ItemStack { name: name.to_owned(), count: 1, damage, block: None, tag: None }
+/// The MT19937 seed BDS rolls the table of the spawner at `pos` with (1411990f0).
+fn table_seed([x, y, z]: BlockPos, level_seed: i64) -> u32 {
+    let u = (z.div_euclid(30).wrapping_mul(0x6eb_fff5) ^ y.div_euclid(20) ^ x.div_euclid(30).wrapping_mul(0x2f_c20f)) as u32;
+    u.wrapping_mul(0x285_b825).wrapping_add(0xb).wrapping_mul(u).wrapping_add(level_seed as u32)
 }
 
-/// One of the table's items, by the spawner blocks' dice.
-fn pick(world: &mut World) -> ItemStack {
-    let mut dice = dice(world);
-    if dice.roll(2) == 0 {
-        return stack("minecraft:lingering_potion", POTIONS[dice.roll(POTIONS.len() as u32) as usize]);
+/// The table rolled for the spawner at `pos`, kept for it.
+fn roll(world: &mut World, layer: Entity, pos: BlockPos) -> Vec<ItemStack> {
+    let home = crate::dimensions::home(world, layer);
+    let seed = world.get::<Layer>(home).map_or(0, |level| level.world.level().seed);
+    let Some(level) = world.get::<Layer>(layer) else { return Vec::new() };
+    let registry = level.world.registry();
+    let kept: Vec<ItemStack> = loot::drawn(TABLE, table_seed(pos, seed)).into_iter().filter_map(|looted| loot::kept_stack(looted, registry)).collect();
+    world.get_resource_or_insert_with(Kept::default).0.insert((layer, pos), kept.clone());
+    kept
+}
+
+/// One of the spawner's kept stacks by the blocks' dice, weighted by count; one of it.
+fn pick(world: &mut World, layer: Entity, pos: BlockPos) -> Option<ItemStack> {
+    let kept = world.get_resource_or_insert_with(Kept::default).0.get(&(layer, pos)).cloned().unwrap_or_default();
+    let kept = if kept.is_empty() { roll(world, layer, pos) } else { kept };
+    let total: u32 = kept.iter().map(|stack| u32::from(stack.count)).sum();
+    if total == 0 {
+        return None;
     }
-    let (name, damage) = SHOTS[dice.roll(SHOTS.len() as u32) as usize];
-    stack(name, damage)
+    let mut left = dice(world).roll(total);
+    let stack = kept.iter().find(|stack| {
+        let found = left < u32::from(stack.count);
+        left = left.saturating_sub(stack.count.into());
+        found
+    })?;
+    Some(ItemStack { count: 1, ..stack.clone() })
 }
 
-/// Drops one over a player in `near` the spawner at `pos` may take on, on its tick; whether it did.
+/// The head attach points of the wave's `mobs` that are alive here, in the wave's order.
+fn mob_heads(world: &mut World, layer: Entity, mobs: &[i64]) -> Vec<[f32; 3]> {
+    let mut found = world.query::<(Entity, &UniqueId, &InLayer, &Body)>();
+    let bodies: Vec<(i64, Entity, [f32; 3])> = found
+        .iter(world)
+        .filter(|(_, id, in_layer, _)| in_layer.0 == layer && mobs.contains(&id.0))
+        .map(|(entity, id, _, body)| (id.0, entity, [body.at[0], body.at[1] + body.size[1] * MOB_HEAD, body.at[2]]))
+        .collect();
+    let alive: Vec<_> = bodies.into_iter().filter(|(_, entity, _)| crate::creatures::is_alive(world, *entity)).collect();
+    mobs.iter().filter_map(|id| alive.iter().find(|(of, ..)| of == id).map(|(.., head)| *head)).collect()
+}
+
+/// Drops one over a detected player in `near` or, on a coin, one of the wave's mobs, each within
+/// range of the spawner at `pos`, on its tick; whether it did.
 pub(super) fn drop_over(world: &mut World, layer: Entity, pos: BlockPos, near: &[Near], trial: &Trial, now: i64) -> bool {
     if now % EVERY != 0 {
         return false;
     }
-    let corner = pos.map(|c| c as f32);
-    let can: Vec<Near> = near.iter().copied().filter(|player| crate::vitals::is_mortal(world, player.entity) && distance(player.eyes(), corner) <= trial.range).collect();
-    if can.is_empty() {
+    let middle = centre(pos);
+    let in_range = |head: &[f32; 3]| distance(*head, middle) < trial.range;
+    let players: Vec<[f32; 3]> = near
+        .iter()
+        .filter(|player| trial.registered.contains(&player.unique_id) && crate::vitals::is_mortal(world, player.entity))
+        .map(|player| [player.feet[0], player.feet[1] + HEAD, player.feet[2]])
+        .filter(in_range)
+        .collect();
+    if players.is_empty() {
         return false;
     }
-    // TODO: [U] BDS's coin between the wave's mobs and the players, and a mob's head attach point.
-    let (above, chosen) = {
+    let on_mobs = dice(world).roll(2) == 1 && !trial.mobs.is_empty();
+    let heads = if on_mobs { mob_heads(world, layer, &trial.mobs).into_iter().filter(in_range).collect() } else { players };
+    if heads.is_empty() {
+        return false;
+    }
+    let (head, above) = {
         let mut dice = dice(world);
-        (ABOVE[0] + dice.roll(ABOVE[1]), can[dice.roll(can.len() as u32) as usize])
+        // BDS draws no index for a lone target.
+        let chosen = if heads.len() == 1 { 0 } else { dice.roll(heads.len() as u32) as usize };
+        (heads[chosen], ABOVE[0] + dice.roll(ABOVE[1]))
     };
-    let head = [chosen.feet[0], chosen.feet[1] + HEAD, chosen.feet[2]];
     let Some(at) = spot(world, layer, head, above) else { return false };
-    let item = pick(world);
+    let Some(item) = pick(world, layer, pos) else { return false };
     let left = DELAY[0] + dice(world).roll(DELAY[1]);
     let shown = crate::fireworks::display_item(world, layer, &item);
     let spawned = entities::spawn(world, layer, KIND, Body::new(at, [0.0; 3], SIZE), at, |id| {
@@ -85,12 +137,12 @@ pub(super) fn drop_over(world: &mut World, layer: Entity, pos: BlockPos, near: &
     let Some(spawned) = spawned else { return false };
     world.entity_mut(spawned).insert(Carrying { item, left, spawner: pos });
     sound(world, layer, pos, "ominous_item_spawner.spawn_item_begin", at, -1);
-    event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerSpawning, corner, 1);
+    event(world, layer, pos, LevelEventEvent::ParticleTrialSpawnerSpawning, pos.map(|c| c as f32), 1);
     true
 }
 
 /// Where over `head` it comes: `above` blocks up, or in the middle of the cell under the first
-/// block in the way; none in `head`'s own cell.
+/// block in the way; none in `head`'s own cell or in a block's collision box.
 fn spot(world: &World, layer: Entity, head: [f32; 3], above: u32) -> Option<[f32; 3]> {
     let level = &world.get::<Layer>(layer)?.world;
     let [x, y, z] = head.map(|c| c.floor() as i32);
@@ -100,7 +152,8 @@ fn spot(world: &World, layer: Entity, head: [f32; 3], above: u32) -> Option<[f32
         Some(hit) => [x as f32 + 0.5, hit as f32 - 0.5, z as f32 + 0.5],
         None => [head[0], head[1] + above as f32, head[2]],
     };
-    (at.map(|c| c.floor() as i32) != [x, y, z]).then_some(at)
+    let free = Body::new(at, [0.0; 3], [POINT; 2]).is_free(level);
+    (free && at.map(|c| c.floor() as i32) != [x, y, z]).then_some(at)
 }
 
 /// Counts every ominous item spawner down a tick: it warns at 35 left and lets its item go at 0.
@@ -125,5 +178,23 @@ pub(crate) fn tick(world: &mut World) {
         }
         crate::mobs::remove(world, entity);
         sound(world, layer, spawner, "ominous_item_spawner.spawn_item", at, -1);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_kept_table_is_one_lingering_potion_and_one_shot_by_region() {
+        assert_eq!(table_seed([0, 0, 0], 0x1_0000_0007), 7);
+        assert_eq!(table_seed([29, 19, 29], 7), table_seed([0, 0, 0], 7));
+        assert_ne!(table_seed([30, 0, 0], 7), table_seed([0, 0, 0], 7));
+        for seed in 0..50 {
+            let [potion, shot]: [sapling_data::Looted; 2] = loot::drawn(TABLE, seed).try_into().expect("two pools");
+            assert!(potion.name == "minecraft:lingering_potion" && [31, 14, 40, 43, 44, 45, 46].contains(&potion.data), "{potion:?}");
+            let shots = [("minecraft:arrow", 0), ("minecraft:arrow", 26), ("minecraft:arrow", 43), ("minecraft:fire_charge", 0), ("minecraft:wind_charge", 0)];
+            assert!(shots.contains(&(shot.name.as_str(), shot.data)) && (1..=3).contains(&shot.count), "{shot:?}");
+        }
     }
 }

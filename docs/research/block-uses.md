@@ -291,8 +291,11 @@ Captures research/captures/bds-t3uses.txt, bds-t3nether.txt against sapling-*.
   clears it and throws out a snowball. Both play `item.use.on` at the middle, the hoe's naming the
   dirt left, the shovel's the snow taken (`blocks/tools.rs`). Fixed.
 - Same: note block instruments by the block under, and the other tool uses of the scene. The
-  sounds BDS plays after `/setblock` of a head, and the blocks it sends again after a frame or
-  jukebox click, are not copied.
+  blocks BDS sends again after a frame or jukebox click are not copied.
+- `/setblock` of a head (zombie, skeleton, creeper, piglin): after the block and its entity BDS plays
+  `place` at the cell's middle, its extra data the hash of the state set (zombie_head facing 1:
+  173921225, not the first state's), and no other set block of the scene plays one. Ported
+  (thirteenth2d, `blocks/set_entities.rs`; test `a_set_head_plays_its_place_sound_and_a_set_stone_none`).
 
 ## A comparator behind a jukebox
 

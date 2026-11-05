@@ -60,6 +60,22 @@ fn a_set_block_shows_its_entity_as_bds_s_did_and_some_again() {
     }
 }
 
+/// research/captures/bds-bkuses.txt: a set head plays `place` after its entity, at the cell's middle,
+/// naming the block as BDS's did (zombie_head facing up: 173921225); a set stone plays nothing.
+#[test]
+fn a_set_head_plays_its_place_sound_and_a_set_stone_none() {
+    use acacia_proto::packets::LevelSoundEvent;
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.update_block([2, 65, 2], &Block::new("minecraft:zombie_head").with("facing_direction=1"))));
+    let sent = h.tick_all().to(1).to_vec();
+    let heard: Vec<(String, [f32; 3], i32)> = all::<LevelSoundEvent>(&sent).into_iter().map(|sound| (sound.sound_id, [sound.position.x, sound.position.y, sound.position.z], sound.extra_data)).collect();
+    assert_eq!(heard, [("place".to_owned(), [2.5, 65.5, 2.5], 173_921_225)]);
+    h.remote.run(|ctx| assert!(ctx.update_block([2, 65, 4], &Block::new("minecraft:stone"))));
+    assert!(all::<LevelSoundEvent>(h.tick_all().to(1)).is_empty());
+}
+
 /// research/captures/bds-e3sets.txt: a frame set with nothing behind it showed its break at once
 /// and was gone a tick later, its item dropped.
 #[test]

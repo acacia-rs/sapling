@@ -2,7 +2,8 @@
 //! of seed 20261018 (research/captures/bds-dragon-again.txt): twenty places on a circle of 96 at
 //! y 75, taken from the end of a list shuffled for the world. Each is a job that waits for the
 //! columns round the gateway and round its exit, then builds the gateway (gateway_shape.rs) with
-//! its exit in its block entity.
+//! its exit in its block entity. A loaded gateway with no exit queues one that builds only the far
+//! end; one with an exit queues a relink (relinks.rs). The jobs run one at a time, in order.
 
 use std::collections::VecDeque;
 
@@ -10,20 +11,29 @@ use acacia_proto::nbt::{List, Value};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
-use super::{Fight, exits, gateway_shape};
+use super::{Fight, exits, gateway_shape, relinks};
 use crate::components::Layer;
 
 const COUNT: i32 = 20;
 const RADIUS: f32 = 96.0;
 const HEIGHT: i32 = 75;
+/// Chunks round each end of a relink it reads.
+const RELINK_READS: i32 = 3;
 
-/// The gateways a fight has yet to build, the one under way first.
+/// The gateway jobs a fight has yet to do, the one under way first.
 #[derive(Default)]
 pub(super) struct Jobs(VecDeque<Job>);
 
 struct Job {
     at: BlockPos,
-    search: exits::Search,
+    work: Work,
+}
+
+enum Work {
+    /// A far gateway and its island, and this one too when `place_main`.
+    Build { place_main: bool, search: exits::Search },
+    /// A relink with the gateway's exit, which the walk finds anew first when there is one.
+    Relink { exit: BlockPos, walk: Option<exits::Search> },
 }
 
 /// The cell of gateway `index`: `96·cos(2(i·0.15707964 - π))` in f32, truncated (14829b719).
@@ -44,27 +54,86 @@ pub(super) fn order(seed: i64) -> Vec<i32> {
     order
 }
 
-/// Has gateway `index` built once its exit is found.
-pub(super) fn queue(world: &mut World, layer: Entity, index: i32) {
-    let at = place(index);
-    if let Some(mut fight) = world.get_mut::<Fight>(layer) {
-        fight.gateways.0.push_back(Job { at, search: exits::Search::new(at) });
+fn push(world: &mut World, layer: Entity, job: Job) {
+    if let Some(mut fight) = super::fight_of(world, layer) {
+        fight.gateways.0.push_back(job);
     }
 }
 
-/// Goes on with the first queued gateway's search; once its exit is found, builds it and its far
-/// end, each leading to the other.
+/// Has gateway `index` built once its exit is found.
+pub(super) fn queue(world: &mut World, layer: Entity, index: i32) {
+    let at = place(index);
+    push(world, layer, Job { at, work: Work::Build { place_main: true, search: exits::Search::new(at) } });
+}
+
+/// Gives the gateway at `pos`, loaded with no exit, a far end (`_spawnNewGateway(pos, 0, 1)` from its tick 1487fcae0).
+pub(crate) fn open_far(world: &mut World, layer: Entity, pos: BlockPos) {
+    push(world, layer, Job { at: pos, work: Work::Build { place_main: false, search: exits::Search::new(pos) } });
+}
+
+/// Relinks the gateway at `pos`, loaded with `exit`; `walk` finds its exit anew first.
+pub(crate) fn relink(world: &mut World, layer: Entity, pos: BlockPos, exit: BlockPos, walk: bool) {
+    push(world, layer, Job { at: pos, work: Work::Relink { exit, walk: walk.then(|| exits::Search::new(pos)) } });
+}
+
+/// Goes on with the first queued job; it stays first until it has what it reads.
 pub(super) fn tick(world: &mut World, layer: Entity) {
     let Some(mut job) = world.get_mut::<Fight>(layer).and_then(|mut fight| fight.gateways.0.pop_front()) else { return };
-    let found = world.get_mut::<Layer>(layer).and_then(|mut level| job.search.step(&mut level.world, job.at));
-    let Some(found) = found else {
+    let at = job.at;
+    let done = match &mut job.work {
+        Work::Build { place_main, search } => {
+            let found = world.get_mut::<Layer>(layer).and_then(|mut level| search.step(&mut level.world, at));
+            if let Some(found) = &found {
+                if *place_main {
+                    build(world, layer, at, found.landing);
+                } else {
+                    set_exit(world, layer, at, found.landing, true);
+                }
+                build(world, layer, found.far, found.back);
+            }
+            found.is_some()
+        }
+        Work::Relink { exit, walk } => relink_step(world, layer, at, exit, walk),
+    };
+    if !done {
         if let Some(mut fight) = world.get_mut::<Fight>(layer) {
             fight.gateways.0.push_front(job);
         }
+    }
+}
+
+/// A step of a relink; whether it is over.
+fn relink_step(world: &mut World, layer: Entity, at: BlockPos, exit: &mut BlockPos, walk: &mut Option<exits::Search>) -> bool {
+    let Some(mut level) = world.get_mut::<Layer>(layer) else { return true };
+    if let Some(search) = walk {
+        let Some([x, z]) = search.point(&mut level.world) else { return false };
+        *exit = [x.floor() as i32, 0, z.floor() as i32];
+        *walk = None;
+        drop(level);
+        set_exit(world, layer, at, *exit, false);
+        return false;
+    }
+    if !exits::loaded(&mut level.world, at, RELINK_READS) || !exits::loaded(&mut level.world, *exit, RELINK_READS) {
+        return false;
+    }
+    let near = relinks::link(&mut level.world, at, *exit, false);
+    let far = relinks::link(&mut level.world, *exit, at, true);
+    drop(level);
+    for (gateway, new_exit) in near.into_iter().chain(far) {
+        set_exit(world, layer, gateway, new_exit, true);
+    }
+    true
+}
+
+/// Puts `exit` in the gateway entity at `pos`, shown as BDS shows a changed gateway when `shown`.
+fn set_exit(world: &mut World, layer: Entity, pos: BlockPos, exit: BlockPos, shown: bool) {
+    let Some(entity) = world.get::<Layer>(layer).and_then(|level| level.world.block_entity(pos)).map(|entity| relinks::with_exit(&entity.nbt, exit)) else { return };
+    let kept = world.get_mut::<Layer>(layer).is_some_and(|mut level| level.world.set_block_entity(pos, &entity));
+    if !kept || !shown {
         return;
-    };
-    build(world, layer, job.at, found.landing);
-    build(world, layer, found.far, found.back);
+    }
+    let Some(packets) = world.get::<Layer>(layer).map(|level| relinks::shown(&level.world, pos)) else { return };
+    crate::view::to_viewers(world, layer, pos, &packets);
 }
 
 fn build(world: &mut World, layer: Entity, at: BlockPos, exit: BlockPos) {

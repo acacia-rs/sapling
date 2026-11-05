@@ -85,7 +85,23 @@ there is no 2400-tick beam. Ported 2026-11-05 (twelfth10): a generated gateway g
 [100, 50, 0]; `feature/end.rs`, sapling-leveldb `generated_end_gateway`), ages in ticked End columns, and is shown
 (UpdateBlock 19 and its entity) at Age 1 and 200 and the ticks after a trip and its cooldown, with the trip's
 BlockEvent (`portals/gateway.rs`). Re-drilled, sapling-u1gate.txt sends Age 1 then 200 as bds-u1gate.txt does.
-Left (gateway.rs TODO): finding an exit for a gateway with none, and relinks.
+
+Loads and relinks, drilled 2026-11-05 (thirteenth2d; `d2gate1`, then `d2gate2` on the kept world after a
+restart, seed 20261018 in the copy's server.properties; research/captures/bds-d2gate1.txt, bds-d2gate2.txt).
+`/setblock … end_gateway` is a syntax error on BDS (not in its block enum), so a gateway with no exit comes only
+from data. The worldgen gateway at (1953, 66, 181), saved at Age 107, was shown (UpdateBlock 19 and its entity) in
+its first tick after the load (Age 108), relinked 5 ticks later to ExitPortal (101, 59, 1) and shown again; the trip
+then went to (101.5, 60, 1.5). The constructor leaves the load flags clear, so only a load starts either job. The
+relink (148274e90, both ends once loaded): keep the exit when it and the cell over it are free and the one under it
+blocks; else the end-stone `findValidSpawn` within a chunk round it (an island at the exit itself where there is
+none); then the gateway nearest the exit within 32 on each axis (by the exit's middle) gets the same round its own
+exit. A loaded gateway with no exit or (0, 0, 0) queues `_spawnNewGateway(pos, placeMain 0, placeFar 1)`: the far
+gateway and island, and this one's exit set. Both are fight jobs, one at a time. sapling (`portals/gateway_load.rs`,
+`dragon/relinks.rs`, `dragon/gateways.rs`; test `end_gateway_loads`): a gateway in a column that came from storage
+with an `Age` over 0 (a generated column's arrives at 0 and is never treated as loaded, as BDS's is not) does the
+same in its first tick. [U] the second `findValidSpawn` with its fallback on after an island: taken as the exit
+itself where it still finds none. Not drilled on sapling (its drill server keeps no world across a restart); the
+shard test pins the order and the end-stone pick.
 
 ## Dying in the End (bds-end-death-none.txt)
 
