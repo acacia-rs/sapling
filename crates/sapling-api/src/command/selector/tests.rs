@@ -48,7 +48,7 @@ fn every_base_and_names_parse() {
 fn every_filter_reads_as_bedrock_writes_it() {
     let line = r#"@e[x=1,y=~2,z=~,dx=3,dy=-1,r=..5,rm=1,c=-2,name=!"Bob Ross",type=pig,type=!minecraft:cow,family=Monster,tag=,tag=!red,m=c,m=!default,l=3..,rx=10,rxm=-10,ry=-170,rym=170,scores={kills=1..,deaths=!0},haspermission={camera=disabled,movement=enabled}]"#;
     let f = filters(line);
-    assert_eq!(f.origin, [Some(Axis::At(1.0)), Some(Axis::Off(2.0)), Some(Axis::Off(0.0))]);
+    assert_eq!(f.origin, [Some(Axis::Whole(1.0)), Some(Axis::Off(2.0)), Some(Axis::Off(0.0))]);
     assert_eq!((f.volume, f.distance, f.count), ([Some(3.0), Some(-1.0), None], Bounds { min: Some(1.0), max: Some(5.0) }, Some(-2)));
     assert_eq!(f.names, [not("Bob Ross".to_owned(), true)]);
     assert_eq!(f.types, [not("minecraft:pig".to_owned(), false), not("minecraft:cow".to_owned(), true)]);
