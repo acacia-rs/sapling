@@ -106,6 +106,16 @@ pub(crate) fn is_baby(world: &World, entity: Entity) -> bool {
     world.get::<Raised>(entity).is_some_and(Raised::is_baby)
 }
 
+/// A baby's pace over a grown one's of `kind`, as both were announced: BDS's baby zombies hunt at
+/// their 0.35 (bds-q3baby.txt).
+pub(super) fn pace_share(world: &World, entity: Entity, kind: &str) -> f32 {
+    let paces = (sapling_data::mob_pace(kind, true), sapling_data::mob_pace(kind, false));
+    match paces {
+        (Some(baby), Some(grown)) if grown > 0.0 && is_baby(world, entity) => baby / grown,
+        _ => 1.0,
+    }
+}
+
 /// Players who come to see the mob later are told of it as it is now.
 pub(super) fn reshow(world: &mut World, entity: Entity) {
     if let Some(shown) = shown_now(world, entity) {

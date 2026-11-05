@@ -238,7 +238,7 @@ pub(super) fn approach(world: &mut World, entity: Entity, layer: Entity, body: &
 
 /// Before the hunter's move: it walks at its prey, if it has any.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
-    let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed)) else { return false };
+    let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed * super::shown::pace_share(world, entity, kind))) else { return false };
     let prey = pick(world, entity, layer, id, kind, &body);
     match sapling_data::mob_traits(kind).hunts.and_then(|hunts| hunts.fights) {
         Some("spells") => return super::spells::steer(world, entity, layer, id, kind, &body, prey),
