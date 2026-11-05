@@ -393,6 +393,9 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
     2, 11, 19, 21). Fixed (vitals/effects.rs `take`). BDS sends the actor's health and pace
     UpdateAttributes and VisibleMobEffects the tick after; sapling at once (open).
   - Slowness 255 does not hold BDS's cows (bds-q3wind.txt, bds-q3crowd.txt).
+- Seen in thirteenth3s (bds-s3poi.txt): BDS's `@e[family=armorer]` matched a villager that took up
+  armoring, so a component group's `type_family` counts; sapling's selector families are by kind
+  only (sapling-api command/selector/gather.rs `families`), so it matched none (open).
 - Repair through `minecraft:repairable` (data-driven items naming themselves), drilled 2026-11-04 on
   spears (research/captures/bds-t2espear.txt): two iron spears worn 150 and 130, one with sharpness
   II, made one worn 30 (no twentieth) that kept sharpness II, in either hotbar order; sapling gave 18
