@@ -141,6 +141,10 @@ pub(crate) fn set_anchor_spawn(world: &mut World, player: Entity, layer: Entity,
         return false;
     }
     tell(world, player, "tile.respawn_anchor.respawnSet");
+    // The client placed what it held against the anchor; BDS sends the windows back (bds-t3nether.txt).
+    if world.get::<crate::inventory::Inventory>(player).is_some_and(|inventory| inventory.in_hand().is_some()) {
+        crate::inventory::show_windows(world, player, false);
+    }
     to_viewers(world, layer, pos, &[noise("respawn_anchor.set_spawn", centre(pos), -1)]);
     true
 }

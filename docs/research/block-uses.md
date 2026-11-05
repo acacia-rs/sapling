@@ -277,7 +277,9 @@ Captures research/captures/bds-t3uses.txt, bds-t3nether.txt against sapling-*.
 - A charged respawn anchor clicked with dirt in the Overworld burst; sapling put the dirt against it.
   Fixed: only glowstone below charge 4 is put to it (`blocks/handled.rs` `takes_click`). In the
   Nether with dirt in hand: SetSpawnPosition, `tile.respawn_anchor.respawnSet` and
-  `respawn_anchor.set_spawn` on both, the second click nothing; BDS also resent the inventory.
+  `respawn_anchor.set_spawn` on both, the second click nothing; BDS also resent the inventory
+  (bds-t3nether.txt; with an empty hand it did not, bds-anchor.txt). Fixed 2026-11-05: sapling
+  sends the four windows after the words when the hand holds something (`sleep/spawn.rs`).
 
 - Bone meal has its own drill and notes: `bone-meal.md`.
 - Fire has its own drill and notes: `fire.md`. The obsidian row above was taken with
