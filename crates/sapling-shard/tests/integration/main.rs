@@ -141,6 +141,7 @@ mod redstone_blocks;
 mod riding;
 mod saplings;
 mod sculk_catalyst;
+mod sculk_catalyst_saves;
 mod shapes;
 mod skin_change;
 mod shot_blocks;
