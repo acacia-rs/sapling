@@ -124,12 +124,15 @@ fn a_panda_and_a_bee_hit_their_hitter_back_once_and_no_more() {
         });
         let mob = (0..5).flat_map(|_| all::<AddEntity>(h.tick_all().to(1))).collect::<Vec<_>>().remove(0).runtime_id;
         h.receive(1, &attack(mob));
-        let mut hurt = Vec::new();
-        for _ in 0..240 {
+        let (mut hurt, mut first) = (Vec::new(), None);
+        for tick in 0..240 {
             let own = all::<UpdateAttributes>(h.tick_all().to(1)).into_iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| update.attributes);
             hurt.extend(own.filter(|attribute| attribute.name == "minecraft:health" && attribute.current < 20.0).map(|attribute| attribute.current));
+            first = first.or((!hurt.is_empty()).then_some(tick));
         }
         assert_eq!(hurt.first(), Some(&18.0), "{kind}");
+        // bds-provoke3-findings.md: a panda stood some 48 ticks, then walked up; its hits came 74 and 75 ticks on.
+        assert!(kind != "minecraft:panda" || first.is_some_and(|tick| tick > 48), "{kind} stands first: {first:?}");
         assert!(hurt.iter().all(|left| *left >= 18.0), "{kind} hits once: {hurt:?}");
     }
 }

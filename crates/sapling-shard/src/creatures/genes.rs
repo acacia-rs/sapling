@@ -21,6 +21,7 @@ const MAIN: [i32; 4] = [1, 2, 3, AGGRESSIVE];
 /// A weak one's health, and an aggressive one's hit.
 const WEAK_HEALTH: f32 = 10.0;
 const AGGRESSIVE_ATTACK: f32 = 6.0;
+const STANDS: u64 = 48;
 
 /// The gene a mob shows as its `Variant`.
 #[derive(Component, Clone, Copy)]
@@ -89,6 +90,12 @@ pub(super) fn hunts(world: &World, entity: Entity, hunts: Hunts) -> Hunts {
         Some(Gene(AGGRESSIVE)) => Hunts { attack: AGGRESSIVE_ATTACK, once: false, ..hunts },
         _ => hunts,
     }
+}
+
+/// Whether a panda that took its prey stands yet: BDS's stood about 48 ticks before walking up
+/// (research/captures/bds-provoke3-findings.md).
+pub(super) fn stands(world: &World, entity: Entity, now: u64) -> bool {
+    is_panda(world, entity) && super::hunting::quarry(world, entity).is_some_and(|(_, since)| now < since + STANDS)
 }
 
 /// The full health of a mob of `kind` and `gene`, its kind's being `max`.
