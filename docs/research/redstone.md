@@ -302,9 +302,12 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
     (it reads the torch after its flip, where its dust reads it before) and went out 4 ticks after. Not fixed.
   - Re-drilled 2026-11-04 (`e3lamp`, bds-e3lamp.txt against sapling-e3lamp.txt, a lamp over the torch and one
     under the dust): BDS lit both in the batch of the torch's first flip, sapling a batch later; both went out
-    8 ticks after the torch's last flip on BDS (6 after the dust's last 0), 4 on sapling. Still not fixed:
-    sapling's lamps take a torch's flipped output by the repeaters' second search (redstone.rs
-    `evaluate_circuit`), which repeaters need.
+    8 ticks after the torch's last flip on BDS (6 after the dust's last 0), 4 on sapling. Fixed 2026-11-04:
+    a torch powering itself is in R20's half pulse from count 1 to 16, and the users' search (lamps, doors,
+    not repeaters) takes a half-pulsing torch as lit (`TorchState::is_half_pulse`, redstone.rs). Re-drilled,
+    sapling-e3lamp.txt lights both lamps in the first flip's batch and puts them out 8 ticks after the last;
+    test `a_torch_clock_holds_its_lamps_lit_from_its_first_flip_till_8_ticks_after_its_last`. The 18 after
+    the first burnout (`n2bclock`) was not re-drilled.
 
 ## Repeaters (2026-10-09, `bds_command_probe repeater-facing` and `repeaters`, research/captures/bds-redstone-repeaters.txt)
 
