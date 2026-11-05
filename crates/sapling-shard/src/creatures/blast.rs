@@ -117,24 +117,39 @@ pub(crate) enum Wreck {
 
 /// A blast of `power` at `at`: of `source`, if an entity made it, which is gone with it.
 pub(crate) fn explode(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
-    blow(world, source, layer, at, power, wreck, Rule::Plain);
+    blow(world, source, layer, at, power, wreck, Rule::Plain, |_| {});
 }
 
 /// As [`explode`], primed TNT's or a TNT minecart's: measured from the feet and the same on every
 /// difficulty (bds-r1ench.txt: TNT 1.81 from the feet cost 7.769 of 60 on easy under Resistance IV,
 /// impact 0.774, and threw towards the eyes by that).
 pub(crate) fn explode_primed(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
-    blow(world, Some(source), layer, at, power, wreck, Rule::Primed);
+    blow(world, Some(source), layer, at, power, wreck, Rule::Primed, |_| {});
 }
 
 /// As [`explode`], a ghast's fireball's blast, by its own rule ([`reaches`]).
 pub(super) fn explode_fireball(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
-    blow(world, Some(source), layer, at, power, wreck, Rule::Fireball);
+    blow(world, Some(source), layer, at, power, wreck, Rule::Fireball, |_| {});
 }
 
-/// As [`explode`] with no source, a blast that sets fire: a bed's or a respawn anchor's.
-pub(crate) fn explode_burning(world: &mut World, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
-    blow(world, None, layer, at, power, wreck, Rule::Burning);
+/// As [`explode`] with no source, a blast that sets fire: a bed's or a respawn anchor's, which `clears`
+/// takes away first, its cells listed with the blast's (bds-p2last.txt, bds-v2nether.txt).
+pub(crate) fn explode_burning(world: &mut World, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, clears: impl FnOnce(&mut World)) {
+    blow(world, None, layer, at, power, wreck, Rule::Burning, clears);
+}
+
+/// The particles BDS sends after a blast's flash (`LevelEventGeneric` 2026, zigzagged as acacia-proto does not,
+/// sleep.rs): its middle, power and every cell it blew, the tags in name order as BDS's (bds-fights.txt).
+pub(crate) fn blast_particles([x, y, z]: [f32; 3], power: f32, cells: &[[i32; 3]]) -> bytes::Bytes {
+    use acacia_proto::nbt::{Nbt, Value};
+    let float = |name: String, value: f32| Nbt { name, value: Value::Float(value) };
+    let mut nbt = vec![float("originX".into(), x), float("originY".into(), y), float("originZ".into(), z), float("radius".into(), power)];
+    nbt.push(Nbt { name: "size".into(), value: Value::Int(cells.len() as i32) });
+    for (i, cell) in cells.iter().enumerate() {
+        nbt.extend(["x", "y", "z"].into_iter().zip(cell).map(|(axis, c)| float(format!("pos{i}{axis}"), *c as f32)));
+    }
+    nbt.sort_by(|a, b| a.name.cmp(&b.name));
+    sapling_net::encode(&acacia_proto::packets::LevelEventGeneric { event_id: 2026 << 1, nbt })
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -146,20 +161,32 @@ enum Rule {
 }
 
 /// Lights about a third of `cells`, each free over a solid block, as the Java game's
-/// `Explosion.finalizeExplosion` with fire.
+/// `Explosion.finalizeExplosion` with fire; each left unlit is listed as air written again, as BDS's anchor and
+/// bed blasts listed them, a broken cell twice (bds-p2last.txt, bds-v2nether.txt).
 fn set_fires(world: &mut World, layer: Entity, cells: &[[i32; 3]]) {
     for &[x, y, z] in cells {
-        if world.get_resource_or_insert_with(blocks::Dice::default).roll(3) != 0 {
-            continue;
-        }
-        let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world).filter(|level| level.in_height(y - 1)) else { continue };
-        if level.registry().get(level.block(x, y - 1, z)).is_some_and(|under| under.is_solid()) {
+        let rolled = world.get_resource_or_insert_with(blocks::Dice::default).roll(3) == 0;
+        let level = world.get::<Layer>(layer).map(|layer| &layer.world).filter(|level| level.in_height(y - 1));
+        if rolled && level.is_some_and(|level| level.registry().get(level.block(x, y - 1, z)).is_some_and(|under| under.is_solid())) {
             blocks::light_fire(world, layer, [x, y, z]);
+        } else {
+            blocks::log_again(world, layer, [x, y, z]);
         }
     }
 }
 
-fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, rule: Rule) {
+/// A blast, and first what `clears` takes away; what both write is shown together, sub-chunk by sub-chunk,
+/// and then the blast's drops, as BDS showed a tick's writes (bds-p2last.txt, bds-blasts.txt).
+#[allow(clippy::too_many_arguments)]
+fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, rule: Rule, clears: impl FnOnce(&mut World)) {
+    let left = blocks::logged(world, |world| {
+        clears(world);
+        blast(world, source, layer, at, power, wreck, rule)
+    });
+    blocks::spill_blown(world, layer, left);
+}
+
+fn blast(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, rule: Rule) -> blocks::Blown {
     crate::blocks::vibrate(world, layer, at, crate::blocks::GameEvent::Explode, false);
     let (cells, free) = if wreck != Wreck::Nothing { rays::broken(world, source, layer, at, power) } else { Default::default() };
     let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
@@ -169,7 +196,7 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
             if let Some(source) = source {
                 mobs::remove(world, source);
             }
-            return;
+            return blocks::Blown::default();
         }
         (blast.power, blast.blocks)
     } else {
@@ -178,9 +205,12 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
     let [x, y, z] = at;
     let cell = at.map(|c| c.floor() as i32);
     let flash = LevelEvent { event: LevelEventEvent::ParticleExplosion, position: Vec3f { x, y, z }, data: power as i32 };
+    // A burning blast lists the free cells it reached too (bds-v2nether.txt); others only what they broke (bds-fights.txt).
+    let listed = if rule == Rule::Burning { [&cells[..], &free[..]].concat() } else { cells.clone() };
+    let shown = vec![sapling_net::encode(&flash), blast_particles(at, power, &listed)];
     match source {
-        Some(source) => entities::tell_viewers(world, source, layer, cell, vec![sapling_net::encode(&flash)]),
-        None => blocks::to_viewers(world, layer, cell, &[sapling_net::encode(&flash)]),
+        Some(source) => entities::tell_viewers(world, source, layer, cell, shown),
+        None => blocks::to_viewers(world, layer, cell, &shown),
     }
     let bang = LevelSoundEvent { sound_id: "explode".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
     late_sounds::play_later(world, 1, layer, cell, sapling_net::encode(&bang));
@@ -222,15 +252,11 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
         Wreck::Decays => 1.0 / power,
         Wreck::Nothing | Wreck::Breaks => 0.0,
     };
-    // BDS shows a blast's broken cells and fires a sub-chunk at a time, then its drops (bds-p2last.txt, bds-blasts.txt).
-    let left = blocks::logged(world, |world| {
-        let left = if wreck != Wreck::Nothing { blocks::break_blown(world, layer, &cells, leaves) } else { Default::default() };
-        if rule == Rule::Burning {
-            set_fires(world, layer, &[cells, free].concat());
-        }
-        left
-    });
-    blocks::spill_blown(world, layer, left);
+    let left = if wreck != Wreck::Nothing { blocks::break_blown(world, layer, &cells, leaves) } else { Default::default() };
+    if rule == Rule::Burning {
+        set_fires(world, layer, &listed);
+    }
+    left
 }
 
 /// A tick of a lit fuse; whether the mob burst, and is gone.

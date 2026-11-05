@@ -56,7 +56,7 @@ mod world_event;
 mod world_notice;
 
 pub use block::{Block, BlockPos, BreakEvent, Face, InteractEvent, PlaceEvent};
-pub use block_entity::{BlockEntityBackend, BlockEntityData};
+pub use block_entity::{BlockEntityBackend, BlockEntityData, Copied};
 pub use border::{BorderBackend, WorldBorder};
 pub use generation::{GenerationBackend, PlaceError, PlaceOptions};
 pub use structure::{Mirror, Rotation, StructureAnimation, StructureBackend, StructureError, StructureLoad};

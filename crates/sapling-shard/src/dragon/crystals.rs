@@ -4,9 +4,8 @@
 //! Anything that hurts one blows it up at power 6, breaking nothing (ender_crystal.json,
 //! research/dragon-fight-decompile.md 7). Its beam points at a block.
 
-use acacia_proto::packets::{AddEntity, LevelEventGeneric, SetEntityData};
+use acacia_proto::packets::{AddEntity, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3i};
-use acacia_proto::nbt::{Nbt, Value as NbtValue};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::BlockPos;
@@ -18,8 +17,6 @@ use crate::entities;
 
 pub(crate) const KIND: &str = "minecraft:ender_crystal";
 const POWER: f32 = 6.0;
-/// `LevelEventGeneric` 2026, an explosion's particles, zigzagged as acacia-proto does not (sleep.rs).
-const EXPLOSION_PARTICLES: u32 = 2026 << 1;
 /// Blocks one may stand on.
 const BASES: [&str; 2] = ["minecraft:obsidian", "minecraft:bedrock"];
 const NO_BEAM: BlockPos = [0, 0, 0];
@@ -98,11 +95,9 @@ pub(super) fn set_beam(world: &mut World, crystal: Entity, at: Option<BlockPos>)
     entities::tell_viewers(world, crystal, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&told)]);
 }
 
-/// The particles BDS sends after an explosion's flash (`LevelEventGeneric`).
-pub(crate) fn blast_particles([x, y, z]: [f32; 3], power: f32) -> Bytes {
-    let float = |name: &str, value: f32| Nbt { name: name.to_owned(), value: NbtValue::Float(value) };
-    let nbt = vec![float("originX", x), float("originY", y), float("originZ", z), float("radius", power), Nbt { name: "size".into(), value: NbtValue::Int(0) }];
-    sapling_net::encode(&LevelEventGeneric { event_id: EXPLOSION_PARTICLES, nbt })
+/// The particles BDS sends after a blast's flash that broke nothing.
+pub(crate) fn blast_particles(at: [f32; 3], power: f32) -> Bytes {
+    crate::creatures::blast_particles(at, power, &[])
 }
 
 /// The crystal blows up where it stands and is gone: it hurts what is near, breaking nothing.
@@ -111,7 +106,6 @@ pub(crate) fn burst(world: &mut World, crystal: Entity) {
     let (Some(layer), Some(at)) = (world.get::<InLayer>(crystal).map(|layer| layer.0), world.get::<Body>(crystal).map(|body| body.at)) else { return };
     world.entity_mut(crystal).remove::<Crystal>();
     crate::creatures::explode(world, Some(crystal), layer, at, POWER, crate::creatures::Wreck::Nothing);
-    crate::blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[blast_particles(at, POWER)]);
     super::count::crystal_gone(world, layer, crystal, at);
 }
 

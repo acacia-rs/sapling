@@ -14,7 +14,8 @@ pub(crate) enum GameEvent {
     SculkTouch,
     ProjectileLand,
     ProjectileShoot,
-    /// A food eaten, heard from the eater's eyes as it was eaten (research/captures/bds-v2tp.txt).
+    /// A food eaten or a drink drunk (BDS's `eat` and `drink`, both 8), heard from the eyes as it was
+    /// finished (research/captures/bds-v2tp.txt, bds-x2drink.txt).
     Eat,
     ContainerClose,
     BlockClose,

@@ -28,6 +28,35 @@ fn a_wave_comes_for_the_player_three_at_once_and_six_in_all() {
 }
 
 #[test]
+fn its_shutters_are_heard_at_its_corner_after_its_state() {
+    // research/captures/bds-x2ran.txt: state 3 then `open_shutter`, state 5 then `close_shutter`, at the corner.
+    use acacia_proto::RawPacket;
+    use acacia_proto::packets::LevelSoundEvent;
+    let mut h = chamber();
+    let mut sent: Vec<RawPacket> = Vec::new();
+    // `state` would tick unseen; the close is watched for in what Alex is sent instead.
+    for _ in 0..1200 {
+        h.remote.run(|ctx| ctx.entities().into_iter().filter(|entity| entity.kind == "minecraft:zombie").for_each(|zombie| _ = ctx.kill_entity(zombie.id)));
+        let now = h.tick_all().to(1).to_vec();
+        let closed = crate::common::all::<LevelSoundEvent>(&now).iter().any(|sound| sound.sound_id == "trial_spawner.close_shutter");
+        sent.extend(now);
+        if closed {
+            break;
+        }
+    }
+    let registry = sapling_world::BlockRegistry::vanilla();
+    let hash = |state: u8| registry.find("minecraft:trial_spawner", &format!("ominous=0,trial_spawner_state={state}")).map(|id| registry.network_hash(id));
+    let shown = |packet: &RawPacket| -> Option<String> {
+        let one = std::slice::from_ref(packet);
+        let sound = crate::common::all::<LevelSoundEvent>(one).into_iter().find(|sound| sound.sound_id.ends_with("_shutter"));
+        let state = crate::common::block_changes(one).into_iter().filter(|(at, _)| *at == SPAWNER).find_map(|(_, block)| [3, 5].into_iter().find(|state| hash(*state) == Some(block)));
+        sound.map(|sound| format!("{} {:?}", sound.sound_id, [sound.position.x, sound.position.y, sound.position.z])).or(state.map(|state| format!("state {state}")))
+    };
+    let order: Vec<String> = sent.iter().filter_map(shown).filter(|seen| ["state 3", "state 5"].contains(&seen.as_str()) || seen.contains("shutter")).collect();
+    assert_eq!(order, ["state 3", "trial_spawner.open_shutter [3.0, 65.0, 3.0]", "state 5", "trial_spawner.close_shutter [3.0, 65.0, 3.0]"]);
+}
+
+#[test]
 fn a_wave_beaten_ejects_a_reward_and_cools_down() {
     let mut h = chamber();
     let mut killed = 0;

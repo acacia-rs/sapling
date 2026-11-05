@@ -66,6 +66,38 @@ fn a_bed_bursts_in_the_nether_at_its_head() {
 }
 
 #[test]
+fn a_bed_clicked_at_its_head_bursts_with_its_foots_dust() {
+    // research/captures/bds-x2bed.txt: the head clicked, the dust at the foot's corner alone.
+    let mut h = by_a_nether_bed(true);
+    h.receive(1, &click(HEAD, 1, None));
+    let sent: Vec<RawPacket> = h.tick_all().to(1).to_vec();
+    let dust: Vec<[f32; 3]> = all::<LevelEvent>(&sent).into_iter().filter(|event| event.event == LevelEventEvent::ParticleDestroyBlockNoSound).map(|event| [event.position.x, event.position.y, event.position.z]).collect();
+    assert_eq!(dust, [FOOT.map(|c| c as f32)]);
+}
+
+#[test]
+fn a_bursting_bed_lists_its_halves_head_first_with_the_blast_after_its_particles() {
+    // research/captures/bds-v2nether.txt: the flash, the blast's LevelEventGeneric 4052, then the head's and the
+    // foot's air first in their sub-chunk's UpdateSubchunkBlocks, never an UpdateBlock of their own.
+    use acacia_proto::packets::{LevelEventGeneric, UpdateBlock, UpdateSubchunkBlocks};
+    let mut h = by_a_nether_bed(true);
+    // A set bed is shown again a tick on (structure-block-entities.md, `shown_again::show_beds`).
+    h.tick_all();
+    h.receive(1, &click(FOOT, 1, None));
+    let sent: Vec<RawPacket> = h.tick_all().to(1).to_vec();
+    let flash = sent.iter().position(|packet| all::<LevelEvent>(std::slice::from_ref(packet)).iter().any(|event| event.event == LevelEventEvent::ParticleExplosion)).expect("a blast");
+    let particles = sent.iter().position(|packet| all::<LevelEventGeneric>(std::slice::from_ref(packet)).iter().any(|event| event.event_id == 2026 << 1));
+    assert_eq!(particles, Some(flash + 1));
+    let halves = |update: &UpdateBlock| [FOOT, HEAD].contains(&[update.position.x, update.position.y, update.position.z]);
+    assert!(!all::<UpdateBlock>(&sent).iter().any(halves), "no half alone");
+    let listed = |sent: &[RawPacket]| -> Vec<[i32; 3]> { all::<UpdateSubchunkBlocks>(sent).into_iter().flat_map(|batch| batch.blocks).map(|cell| [cell.position.x, cell.position.y, cell.position.z]).collect() };
+    assert!(!listed(&sent[..flash]).iter().any(|cell| [FOOT, HEAD].contains(cell)), "no half before the blast");
+    let after = listed(&sent[flash..]);
+    let (head, foot) = (after.iter().position(|cell| *cell == HEAD), after.iter().position(|cell| *cell == FOOT));
+    assert!(head.is_some() && head < foot, "{head:?} {foot:?}");
+}
+
+#[test]
 fn a_wet_sponge_set_in_the_nether_dries_with_bds_s_steam() {
     // research/captures/bds-bknether.txt: event 3501 at 0.875 up the cell, then the dry sponge.
     let mut h = by_a_nether_bed(false);

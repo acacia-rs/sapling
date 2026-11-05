@@ -21,7 +21,7 @@ use sapling_world::new_block_entity;
 
 use super::eject::{event, gaussian, item, roll, sound};
 use super::fields::Fields;
-use super::{Near, TRIAL_SPAWNER, centre, dice, now, property, set_state};
+use super::{Near, TRIAL_SPAWNER, dice, now, property, set_state};
 use crate::components::{Layer, Settings};
 use configs::Config;
 
@@ -180,6 +180,15 @@ pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fiel
     };
     if let Some(to) = to {
         set_state(world, layer, pos, "trial_spawner_state", &to.to_string());
+        // After the block, at its corner (research/captures/bds-x2ran.txt).
+        let shutter = match (state, to) {
+            (ACTIVE, WAITING_FOR_REWARD) => Some("trial_spawner.open_shutter"),
+            (EJECTING, COOLDOWN) => Some("trial_spawner.close_shutter"),
+            _ => None,
+        };
+        if let Some(shutter) = shutter {
+            sound(world, layer, pos, shutter, pos.map(|c| c as f32), -1);
+        }
         trial.told = true;
     }
     keep(world, layer, pos, trial, &before);
@@ -214,7 +223,6 @@ fn wave(world: &mut World, layer: Entity, pos: BlockPos, near: &[Near], trial: &
     if (trial.total_spawned as f32) < total || !trial.mobs.is_empty() {
         return None;
     }
-    sound(world, layer, pos, "trial_spawner.open_shutter", centre(pos), -1);
     trial.cooldown_end = now + trial.config.cooldown;
     Some(WAITING_FOR_REWARD)
 }
@@ -234,7 +242,6 @@ fn pick_table(world: &mut World, config: &Config) -> String {
 /// A roll of the chosen table for one of the players it took on, until none is left.
 fn reward(world: &mut World, layer: Entity, pos: BlockPos, trial: &mut Trial) -> Option<u8> {
     if trial.registered.pop().is_none() {
-        sound(world, layer, pos, "trial_spawner.close_shutter", centre(pos), -1);
         return Some(COOLDOWN);
     }
     let table = trial.fields.string("selected_loot_table").unwrap_or_default().to_owned();

@@ -2,7 +2,7 @@
 //! A cloned chest is marked `forceunpair` unless its other half came with it (containers/pairs.rs).
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, Parameter, ParameterSpec, ParseError, States};
-use sapling_api::{Block, BlockEntityData, BlockPos, Command, CommandEnum, Output, Permission, Sender, ShardCtx};
+use sapling_api::{Block, BlockEntityData, BlockPos, Command, CommandEnum, Copied, Output, Permission, Sender, ShardCtx};
 
 use super::blocks::{block, has_states};
 use super::regions::{MOST_BLOCKS, Region, block_spec};
@@ -120,21 +120,13 @@ impl Command for CloneCommand {
         if copied.is_empty() {
             return out.translate("commands.clone.failed", Vec::new(), false);
         }
-        ctx.batch_blocks(|ctx| {
-            if self.mode == CloneMode::Move {
-                for (pos, ..) in &copied {
-                    ctx.update_block(*pos, &Block::air());
-                }
-            }
-            for (pos, there, entity) in &copied {
-                let to = std::array::from_fn(|axis| pos[axis] - source.low[axis] + target.low[axis]);
-                ctx.update_block(to, there);
-                if let Some(entity) = entity {
-                    ctx.set_block_entity(to, entity);
-                }
-            }
-        });
-        out.translate("commands.clone.success", vec![copied.len().to_string()], true);
+        let cleared: Vec<BlockPos> = if self.mode == CloneMode::Move { copied.iter().map(|(pos, ..)| *pos).collect() } else { Vec::new() };
+        let copies: Vec<Copied> = copied
+            .iter()
+            .map(|(pos, there, entity)| Copied { from: *pos, to: std::array::from_fn(|axis| pos[axis] - source.low[axis] + target.low[axis]), block: there.clone(), entity: entity.clone() })
+            .collect();
+        let counted = ctx.copy_blocks(&cleared, &copies);
+        out.translate("commands.clone.success", vec![counted.to_string()], true);
     }
 }
 

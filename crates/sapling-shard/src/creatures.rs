@@ -103,7 +103,7 @@ pub(crate) use attacks::{attacked, hit_from_near};
 pub(crate) use hits::channels;
 pub(crate) use bees::{bees_in, hive_broken};
 pub(crate) use creaking::{heart_noticed, hearts_arrived};
-pub(crate) use blast::{Wreck, explode, explode_burning, explode_primed};
+pub(crate) use blast::{Wreck, blast_particles, explode, explode_burning, explode_primed};
 pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, in_rain, is_full_block, touches, wound};
 pub(crate) use heat::softening;

@@ -32,6 +32,8 @@ const FAIL_GAP: i64 = 15;
 /// Items come out this far over the block's corner, at this speed up and up to this times
 /// (`rand - rand`) any way.
 const OUT: [f32; 3] = [0.5, 1.2 - 0.125, 0.5];
+/// Where an ejected item is heard from, over the corner (research/captures/bds-x2ran.txt).
+const EJECT_SOUND: [f32; 3] = [0.5, 1.2, 0.5];
 const UP: f32 = 0.2;
 const SPREAD: f32 = 0.034455;
 
@@ -144,20 +146,31 @@ pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fiel
     // A stored world's ticks are BDS's, not this shard's.
     let resumes = vault.data.int("state_updating_resumes_at", 0).min(now + STEP);
     let mut kept = shown;
+    let (mut entered, mut heard) = (false, None);
     if now >= resumes {
         let next = step(world, layer, pos, &mut vault, near);
         vault.data.set("state_updating_resumes_at", Value::Long(now + next.1));
         if let Some(to) = next.0 {
-            enter(world, layer, pos, &mut vault, to);
-            shown = true;
+            heard = enter(world, layer, pos, &mut vault, to);
+            (shown, entered) = (true, true);
         }
+        shown |= vault.state == "ejecting";
         kept = true;
     }
-    // BDS showed an idle vault's entity once, at its set (research/captures/bds-s7ents.txt).
-    if shown {
+    // BDS showed an idle vault's entity once, at its set (research/captures/bds-s7ents.txt); a busy one's
+    // block again with it each second (bds-x2ran.txt).
+    if shown && !entered {
+        if let Some(mut level) = world.get_mut::<crate::components::Layer>(layer) {
+            _ = level.world.set_block_entity(pos, &vault.into_value());
+        }
+        crate::blocks::show_whole(world, layer, pos);
+    } else if shown {
         crate::blocks::keep_entity(world, layer, pos, &vault.into_value());
     } else if kept && let Some(mut level) = world.get_mut::<crate::components::Layer>(layer) {
         _ = level.world.set_block_entity(pos, &vault.into_value());
+    }
+    if let Some(heard) = heard {
+        sound(world, layer, pos, heard, corner(pos), -1);
     }
 }
 
@@ -189,23 +202,28 @@ fn step(world: &mut World, layer: Entity, pos: BlockPos, vault: &mut Vault, near
                 let motion = [spread(), UP + spread(), spread()];
                 item(world, layer, (stack.name, stack.count.into()), at, motion);
             }
-            sound(world, layer, pos, "vault.eject_item", centre(pos), pitch);
-            event(world, layer, pos, LevelEventEvent::AnimationVaultEjectItem, centre(pos), 0);
+            event(world, layer, pos, LevelEventEvent::AnimationVaultEjectItem, corner(pos), 0);
+            sound(world, layer, pos, "vault.eject_item", std::array::from_fn(|axis| pos[axis] as f32 + EJECT_SOUND[axis]), pitch);
             (None, STEP)
         }
         _ => (None, STEP),
     }
 }
 
-/// Goes to `to`, told as BDS's `onTransitionBetweenStates` tells it.
-fn enter(world: &mut World, layer: Entity, pos: BlockPos, vault: &mut Vault, to: &'static str) {
-    if vault.state == "ejecting" {
-        sound(world, layer, pos, "vault.close_shutter", centre(pos), -1);
-    }
+/// Goes to `to`, told as BDS's `onTransitionBetweenStates` tells it: its animation now, the sound it
+/// returns after its block and entity (research/captures/bds-x2ran.txt).
+#[must_use]
+fn enter(world: &mut World, layer: Entity, pos: BlockPos, vault: &mut Vault, to: &'static str) -> Option<&'static str> {
+    let sound = match (vault.state, to) {
+        ("ejecting", _) => Some("vault.close_shutter"),
+        (_, "unlocking") => Some("vault.insert_item"),
+        (_, "ejecting") => Some("vault.open_shutter"),
+        _ => None,
+    };
     match to {
         "inactive" => {
             vault.display(None);
-            event(world, layer, pos, LevelEventEvent::AnimationVaultDeactivate, centre(pos), 0);
+            event(world, layer, pos, LevelEventEvent::AnimationVaultDeactivate, corner(pos), 0);
         }
         "active" => {
             if vault.data.get("display_item").is_none() {
@@ -213,14 +231,18 @@ fn enter(world: &mut World, layer: Entity, pos: BlockPos, vault: &mut Vault, to:
                 let item = pick_display(world, layer, &table);
                 vault.display(item);
             }
-            event(world, layer, pos, LevelEventEvent::AnimationVaultActivate, centre(pos), 0);
+            event(world, layer, pos, LevelEventEvent::AnimationVaultActivate, corner(pos), 0);
         }
-        "unlocking" => sound(world, layer, pos, "vault.insert_item", centre(pos), -1),
-        "ejecting" => sound(world, layer, pos, "vault.open_shutter", centre(pos), -1),
         _ => {}
     }
     vault.state = to;
     set_state(world, layer, pos, "vault_state", to);
+    sound
+}
+
+/// Where BDS tells a vault's sounds and animations: its cell's corner.
+fn corner(pos: BlockPos) -> [f32; 3] {
+    pos.map(|c| c as f32)
 }
 
 /// A click with `held` on an active vault: its key, from a player not yet rewarded, unlocks it
@@ -255,8 +277,11 @@ pub(super) fn use_key(world: &mut World, player: Entity, layer: Entity, pos: Blo
     let over = rewarded.len().saturating_sub(REMEMBERED);
     rewarded.drain(..over);
     vault.data.set("rewarded_players", longs(&rewarded));
-    enter(world, layer, pos, &mut vault, "unlocking");
+    let heard = enter(world, layer, pos, &mut vault, "unlocking");
     crate::blocks::keep_entity(world, layer, pos, &vault.into_value());
+    if let Some(heard) = heard {
+        sound(world, layer, pos, heard, corner(pos), -1);
+    }
     let creative = world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative);
     Some(!creative)
 }

@@ -156,8 +156,13 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     };
     let used = CompletedUsingItem { used_item_id: meal.id, use_method };
     let eyes = world.get::<Position>(player).map(|position| [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]]);
-    if let (Some(eyes), Some(layer), false) = (eyes, world.get::<InLayer>(player).map(|layer| layer.0), meal.food.drunk) {
-        crate::blocks::vibrate(world, layer, eyes, crate::blocks::GameEvent::Eat, true);
+    let heard = move |world: &mut World| {
+        if let (Some(eyes), Some(layer)) = (eyes, world.get::<InLayer>(player).map(|layer| layer.0)) {
+            crate::blocks::vibrate(world, layer, eyes, crate::blocks::GameEvent::Eat, true);
+        }
+    };
+    if !meal.food.drunk {
+        heard(world);
     }
     // Chorus fruit's cooldown was told as it started; BDS's MovePlayer comes before the eating is told (bds-foods2.txt, bds-foods3.txt).
     if holds_chorus(world, player) {
@@ -182,7 +187,8 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
         if !meal.food.cures {
             drained(world, player, meal.food.ominous);
         }
-        return;
+        // A drink is heard too, milk as well, after the bottle's sound (research/captures/bds-x2drink.txt).
+        return heard(world);
     }
     // BDS's burp comes the tick after the eating is told (bds-foods3.txt, bds-small.txt).
     let [x, y, z] = feet;

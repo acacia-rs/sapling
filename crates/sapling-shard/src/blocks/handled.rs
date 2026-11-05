@@ -113,11 +113,8 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
                 return true;
             }
             let air = registry.air_id();
-            // BDS lists the anchor's air with its blast's cells (bds-p2last.txt).
-            send::logged(world, |world| {
-                send::set(world, layer, pos, air);
-                crate::creatures::explode_burning(world, layer, pos.map(|c| c as f32 + 0.5), ANCHOR_POWER, crate::creatures::Wreck::Decays);
-            });
+            let clears = move |world: &mut World| _ = send::set(world, layer, pos, air);
+            crate::creatures::explode_burning(world, layer, pos.map(|c| c as f32 + 0.5), ANCHOR_POWER, crate::creatures::Wreck::Decays, clears);
             true
         }
         "minecraft:dragon_egg" => {
