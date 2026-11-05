@@ -4,11 +4,12 @@
 
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
-use sapling_api::BlockPos;
+use sapling_api::{BlockPos, Face};
 use sapling_world::World as Level;
 use sapling_worldgen::random::Xoroshiro;
 
 use super::queued::{self, Job};
+use super::sculk::GameEvent;
 use super::{level, send, with_property};
 
 const SULFUR: &str = "minecraft:potent_sulfur";
@@ -21,6 +22,10 @@ const CONTINUOUS: usize = 4;
 /// Seconds erupting and seconds dormant, lowest and highest, by the height of the water over it,
 /// 1 to 4 (the table at 0x1c7debc).
 const WAITS: [([f32; 2], [f32; 2]); 4] = [([1.0, 2.0], [15.0, 30.0]), ([2.0, 3.0], [25.0, 40.0]), ([3.0, 4.0], [35.0, 50.0]), ([4.0, 5.0], [45.0, 60.0])];
+
+/// The speed up an eruption lifts a body to and the height of its plume over the water, by the height of
+/// the water, 1 to 4 (the same table).
+const PLUMES: [(f32, i32); 4] = [(0.4, 5), (0.5, 10), (0.6, 15), (0.7, 20)];
 
 /// The state number of the potent sulfur at `pos`; `None` for another block.
 fn state_at(level: &Level, [x, y, z]: BlockPos) -> Option<usize> {
@@ -71,6 +76,15 @@ fn open_height(level: &Level, [x, y, z]: BlockPos) -> usize {
     if open { height } else { 0 }
 }
 
+/// The geyser at `pos` if it erupts open to the top: the speed up it lifts a body to, and the height
+/// over `pos` its plume reaches (`GeyserBoostSystem`, Linux 0x753a640).
+pub(crate) fn plume(level: &Level, pos: BlockPos) -> Option<(f32, i32)> {
+    state_at(level, pos).filter(|&state| state >= ERUPTING)?;
+    let height = open_height(level, pos);
+    let (speed, plume) = PLUMES[height.checked_sub(1)?];
+    Some((speed, plume + height as i32 + 1))
+}
+
 /// Ticks to wait in `state` (2 or 3): seconds lerped by the cell's positional random from the level seed,
 /// the first float for dormant, the second for erupting, times 20 and truncated.
 fn wait(seed: i64, [x, y, z]: BlockPos, height: usize, state: usize) -> u64 {
@@ -84,18 +98,24 @@ fn wait(seed: i64, [x, y, z]: BlockPos, height: usize, state: usize) -> u64 {
     (((high - low) * u + low) * 20.0) as i32 as u64
 }
 
-/// Sets the cell to `state` (0xcf57f80), heard when an eruption starts with water over it open to the
-/// top; dormant or erupting queues its next turn even when the state is already so.
+/// Sets the cell to `state` (0xcf57f80): an eruption's start and end send out `block_attach` and
+/// `block_destroy` vibrations, the start is heard with water over it open to the top; dormant or
+/// erupting queues its next turn even when the state is already so.
 fn set(world: &mut World, layer: Entity, pos: BlockPos, now: usize, state: usize) {
     let Some(level) = level(world, layer) else { return };
     let (height, open) = (water_height(level, pos), open_height(level, pos));
     if state != now {
         let Some(id) = with_property(level.registry(), level.block(pos[0], pos[1], pos[2]), STATE, STATES[state]) else { return };
         send::set(world, layer, pos, id);
+        // BDS's block shows first, then the sound, then the vibration's flight (research/captures/bds-ag2geyser.txt).
         if state >= ERUPTING && now < ERUPTING && open > 0 {
             let heard = if state == CONTINUOUS { "geyser_continuous_eruption_start" } else { "geyser_eruption_start" };
             let [x, y, z] = pos.map(|c| c as f32 + 0.5);
-            send::to_viewers(world, layer, pos, &[send::noise(heard, Vec3f { x, y, z }, -1)]);
+            send::after_blocks(world, layer, pos, send::noise(heard, Vec3f { x, y, z }, -1));
+        }
+        if (state >= ERUPTING) != (now >= ERUPTING) {
+            let event = if state >= ERUPTING { GameEvent::BlockAttach } else { GameEvent::BlockDestroy };
+            super::sculk::vibrate_at(world, layer, pos, event, false);
         }
     }
     if state == DORMANT || state == ERUPTING {
@@ -116,6 +136,64 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
         _ => return,
     };
     set(world, layer, pos, now, next);
+}
+
+/// Whether putting `name` at `pos` may change a potent sulfur: it is one, or one is beside it.
+pub(super) fn touches(world: &World, layer: Entity, pos: BlockPos, name: &str) -> bool {
+    let Some(level) = level(world, layer) else { return false };
+    name.trim_start_matches("minecraft:") == "potent_sulfur" || Face::ALL.iter().any(|face| state_at(level, face.neighbour(pos)).is_some())
+}
+
+/// A potent sulfur put at `pos` in place of another block takes the state its surroundings ask for, a
+/// set `dormant` showing dry under air (`BlockPlaceEvent`, 0xcf57850; research/captures/bds-af2sulfur.txt).
+pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str, now: &str) {
+    if now != SULFUR || was == SULFUR {
+        return;
+    }
+    let Some(level) = level(world, layer) else { return };
+    let Some(state) = state_at(level, pos) else { return };
+    let asked = wanted(level, pos, state);
+    set(world, layer, pos, state, asked);
+}
+
+/// Changed cells kept while a plugin's batch is open: BDS's `/fill` writes every cell before any
+/// neighbour hears of it (research/captures/bds-ag2lava.txt).
+#[derive(Resource, Default)]
+struct Deferred(Option<Vec<(Entity, BlockPos)>>);
+
+/// Keeps what [`neighbours_changed`] is told until [`run_deferred`]; false where already keeping.
+pub(crate) fn defer_neighbours(world: &mut World) -> bool {
+    let mut deferred = world.get_resource_or_insert_with(Deferred::default);
+    deferred.0.is_none() && deferred.0.replace(Vec::new()).is_none()
+}
+
+/// Stops keeping and runs [`neighbours_changed`] for each cell kept, in order.
+pub(crate) fn run_deferred(world: &mut World) {
+    let kept = world.get_resource_mut::<Deferred>().and_then(|mut deferred| deferred.0.take()).unwrap_or_default();
+    for (layer, pos) in kept {
+        neighbours_changed(world, layer, pos);
+    }
+}
+
+/// The block at `pos` changed: each potent sulfur beside it that its surroundings now ask another state
+/// of drops its queued turns and takes it (`neighborChanged`, 0xcf57c30), wet under water set over it.
+pub(super) fn neighbours_changed(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some(kept) = world.get_resource_mut::<Deferred>().and_then(|deferred| deferred.into_inner().0.as_mut()) {
+        kept.push((layer, pos));
+        return;
+    }
+    for beside in Face::ALL.map(|face| face.neighbour(pos)) {
+        let Some(level) = level(world, layer) else { return };
+        let Some(state) = state_at(level, beside) else { continue };
+        let asked = wanted(level, beside, state);
+        if asked == state {
+            continue;
+        }
+        if state == DORMANT || state == ERUPTING {
+            queued::cancel(world, layer, beside, Job::PotentSulfur);
+        }
+        set(world, layer, beside, state, asked);
+    }
 }
 
 #[cfg(test)]

@@ -120,6 +120,7 @@ pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liq
 /// and lava that now touches water hardens.
 pub(super) fn disturb(world: &mut World, layer: Entity, pos: BlockPos) {
     wake(world, layer, pos, true);
+    super::sulfur::neighbours_changed(world, layer, pos);
 }
 
 /// After a block at `pos` changed for another reason (a break, a place, a handler's write): only

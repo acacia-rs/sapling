@@ -61,6 +61,13 @@ springs on the surface above sulfur caves.
   replay. `examples/spring_find.rs` (seed 20261003, x -1000 to -981 at stride 4, z ±1000) met 16 springs, all
   small_1 to small_4 and medium_1, medium_2, every one on grass_block; a spring on stone, sulfur or deepslate and the
   large templates were not met, so none is judged.
+- Canon `ag2` (2026-11-05, parity/thirteenth2ag): BDS's `/locate biome minecraft:sulfur_caves` from 49 origins (±18000
+  blocks, step 6000, both axes), then `spring_find` 33x33 chunks round each answer: 9671 sulfur caves chunks traced,
+  32 springs (24 on grass, 3 on stone, 3 sand, 1 gravel, 1 on cinnabar, the sulfur list's second id), one
+  sulfur_spring_medium_3. None on deepslate or sulfur. Regions `stonesprings` (1090 -1139 to 1096 -1132: medium_1 on
+  stone at 17485 76 -18129, medium_3 at 17512 81 -18172), `deepspring` (710 1130 to 714 1134: small_2 on stone at
+  11402 26 18125, underground) and `cinnabarspring` (315 348 to 319 352: medium_1 on cinnabar at 5086 15 5610): 0
+  wrong, 0 missing at their first replay, BDS's saved potent sulfur in each.
 
 ## Speleothems (feature/speleothem/)
 One class each for pointed dripstone and sulfur spikes, parameterised by base block, spike block and replaceable

@@ -146,6 +146,7 @@ fn write(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<u32
     super::leaves::written(world, layer, pos, old);
     super::scaffolds::written(world, layer, pos);
     super::portals::written(world, layer, pos);
+    super::sulfur::written(world, layer, pos, was, now);
     // A hook above may have written the cell again (a wire's shape): the cell as it now stands is shown.
     world.get::<Layer>(layer).map(|level| level.world.block(x, y, z))
 }

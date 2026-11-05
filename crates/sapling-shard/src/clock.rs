@@ -33,9 +33,22 @@ fn state(level: &Level) -> SyncWorldClocks {
     sapling_data::clock_state(wire_time(level), !runs(level))
 }
 
+/// The shard tick on which the worlds last aged.
+#[derive(Resource)]
+struct Aged(u64);
+
+/// A level's age at shard tick `tick`: the age it had on the tick it last aged, moved on by the ticks
+/// since; before the first tick, the age it has is the one of the tick before.
+pub(crate) fn age_at(world: &World, age: i64, tick: u64) -> i64 {
+    let aged = world.get_resource::<Aged>().map_or(world.resource::<Tick>().0 as i64 - 1, |aged| aged.0 as i64);
+    age + (tick as i64 - aged)
+}
+
 /// Advances every world's clock, the other dimensions of an overworld with it, and reminds
 /// their players of it every [`SYNC_INTERVAL`] ticks.
 pub(crate) fn advance(world: &mut World) {
+    let now = world.resource::<Tick>().0;
+    world.insert_resource(Aged(now));
     for (layer, mut level, realm) in world.query::<(Entity, &mut Layer, Option<&Realm>)>().iter_mut(world) {
         if realm.is_none_or(|realm| realm.0[0] == Some(layer)) {
             let level = level.world.level_mut();

@@ -199,6 +199,7 @@ mod twelfth3;
 #[path = "shared/thirteenth3ab_drill.rs"] mod thirteenth3ab;
 #[path = "shared/thirteenth3ad_drill.rs"] mod thirteenth3ad;
 #[path = "shared/thirteenth2af_drill.rs"] mod thirteenth2af;
+#[path = "shared/thirteenth2ag_drill.rs"] mod thirteenth2ag;
 
 use std::time::{Duration, Instant};
 
@@ -317,6 +318,7 @@ const DRILLS: &[fn(&str) -> Named] = &[
     thirteenth3ab::drill,
     thirteenth3ad::drill,
     thirteenth2af::drill,
+    thirteenth2ag::drill,
 ];
 
 fn owned(lines: &[&str]) -> Vec<String> {

@@ -4,6 +4,7 @@
 //! What viewers are told: sync.rs.
 
 mod bubbles;
+mod geyser;
 mod liquid;
 mod physics;
 mod stuck;

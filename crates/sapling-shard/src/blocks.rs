@@ -130,6 +130,7 @@ pub(crate) use conduits::tick as wake_conduits;
 pub(crate) use pending::{arrived as ticks_arrived, write_back as write_back_ticks, write_back_before_saving as write_back_ticks_before_saving};
 pub(crate) use rods::{Strike as LightningStrike, felt as lightning_felt, sparks as lightning_sparks, struck as lightning_struck};
 pub(crate) use sculk::{GameEvent, catalysts_arrived, mob_died, teleported, tick as hear_vibrations, vibrate, vibrate_at, walked};
+pub(crate) use sulfur::{defer_neighbours as defer_sulfur_neighbours, plume as geyser_plume, run_deferred as run_deferred_sulfur_neighbours};
 pub(crate) use target::shot_stopped;
 pub(crate) use tripwire::tick as trip_wires;
 
@@ -180,8 +181,16 @@ pub(crate) fn update_block(world: &mut World, layer: Entity, pos: BlockPos, bloc
     put
 }
 
-/// [`update_block`] without a set bed's dust and batch.
+/// [`update_block`] without a set bed's dust and batch; listed with what potent sulfur at or beside the
+/// cell does about it, as BDS lists a tick's writes ([`send::logged`], research/captures/bds-ag2geyser.txt).
 pub(super) fn put_settled(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
+    if sulfur::touches(world, layer, pos, &block.name) {
+        return send::logged(world, |world| put_settled_now(world, layer, pos, block));
+    }
+    put_settled_now(world, layer, pos, block)
+}
+
+fn put_settled_now(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> bool {
     let registry = level(world, layer).map(|level| level.registry());
     let put_as = registry.and_then(|registry| send::resolve(registry, block)).map(|id| (falling::as_put(world, layer, pos, id), id));
     let swapped = match (registry, put_as) {

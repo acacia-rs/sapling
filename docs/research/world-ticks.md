@@ -126,9 +126,44 @@ in the liquid layer of a block with an empty collision box.
   together when the drill's players arrived, so the cell was dry (ice over it) before anyone saw it. Sapling's
   `blocks/pending.rs` now dates kept ticks by `Level::age` (tests `water_a_kept_tick_is_due_by_the_level_s_clock`,
   `a_generated_spring_s_potent_sulfur_dries_under_its_ice_when_its_tick_runs`, `..._ticks_are_kept_on_save`).
-- Not ported: the place and neighbour rules (0xcf57860, 0xcf57c80: BDS shows a set potent sulfur dry or wet by what is
-  over it, even one set `dormant`, and turns it wet when water is set over it; they set without queueing), the two
-  game events (vibrations), `GeyserBoostSystem` (an erupting geyser lifts entities) and the client's plume.
+- Kept ticks across a save (parity/thirteenth2ag): a save between ticks (`save_worlds`, a hold, the shard's close)
+  came after the tick counter moved on but before the level aged again, so every kept tick was written one tick
+  early. `clock::age_at` maps a shard tick to the level's clock from the tick the level last aged (test
+  `water_a_kept_tick_keeps_its_time_across_a_load_and_a_save`; AF's spring test now holds exactly).
+- In play (parity/thirteenth2ag; drills `ag2geyser`, `ag2boost`, `ag2reset`, `ag2far`, `ag2lava`, research/captures/
+  bds-ag2*.txt and sapling-ag2*.txt):
+  - Place (`BlockPlaceEvent`, 0xcf57850): a potent sulfur written over another block takes `compute` at once and is
+    set as the tick sets (so a dormant one queues its eruption): set `dormant` under air it shows dry. A state-only
+    `/setblock` over a potent sulfur fires nothing: BDS kept `wet` and `dormant` set over a dry one (ag2reset).
+  - Neighbour (`neighborChanged`, 0xcf57c30): a changed neighbour makes it take `compute` if that differs; leaving
+    dormant or erupting first removes its queued ticks (0xc8d31a0). Water set over one over magma: dormant, erupting
+    473 ticks later; water taken off: dry, no eruption. Sapling: `sulfur::written` (send.rs write) and
+    `sulfur::neighbours_changed` (updates.rs settle, liquid.rs disturb). BDS lists the command's write and the
+    sulfur's in one UpdateSubchunkBlocks (`water; dormant`, a placed one `dry; dry`): `put_settled` logs them.
+  - Vibrations: entering erupting or continuous posts `block_attach` (f5e9d48, frequency 10), leaving them
+    `block_destroy` (f5e9d50), with no source, from the cell's middle. A sensor four cells off went active 4 ticks
+    after the start (both sides). Order: the block, the start sound, then the vibration's flight. Continuous to
+    wet (its lava set to stone or filled with air) posts `block_destroy` too (ag2lava). BDS sends the flight a tick
+    after the block; sapling the same tick (the sensor powers on the same tick on both).
+  - `/fill` writes every cell before any neighbour hears (ag2lava): lava filled alone wets the sulfur over it, lava
+    and sulfur filled together list `air; air` with no wet write and no vibration. Sapling's plugin batch
+    (`hold_blocks`, handlers/backend.rs) keeps the sulfur's neighbour changes until it closes (`sulfur::defer_neighbours`;
+    test `a_batch_takes_a_geyser_away_unheard_but_its_lava_alone_wets_it`). Other blocks still settle cell by cell.
+  - `GeyserBoostSystem::tick` (Linux 0x753a640, mobs and falling blocks): from the cell at the feet (box middle in
+    x z) down, the first of 25 cells with a collision box must be potent sulfur erupting or continuous and open
+    (0xcf59340, water height h); while the box's bottom is under `y + plume[h] + h + 1` (plume 5, 10, 15, 20) and
+    its speed up under 0.4, 0.5, 0.6, 0.7, it gains 0.2 a tick (table 0x1c7debc +0x14, +0x18; 0x10987c4). A pig
+    in the water over a one-water geyser rose from -23.3 to -17.2 (sulfur at -25) and bobbed about -18; sapling's
+    (body/geyser.rs) to -16.7. A flying player is skipped; a third MovementEffects slot (GEYSER_BOOST) at -1 skips
+    it too, which no drilled mob had.
+  - The positional seed wraps x in an int on both builds: Linux `imul` by 0x2fc20f00000000 then `sar 32`
+    (0xcf58437), Windows `imul r32` (bds-blocks 144bb97fc), as Java. It first differs from a 64-bit product at
+    |x| 687 (random/tests.rs). A geyser at x 1000 (ag2far, level seed 0xa6e22b9d22bcfc24) erupted 424 ticks after
+    its water and lasted 36: the wrapped seed gives 424 and 36, a 64-bit one 451 and 26.
+- Not ported: `geyser_continuous_eruption_active` (BDS played it every 40 ticks at the water's top, `y + h + 1`,
+  while continuous; no erupting one lasted long enough to hear `geyser_eruption_active`): its sender was not found
+  (not in PotentSulfurBlock's tick or set, the block actor's tick only sets a flag). Sapling's pig is not resent
+  `SetEntityMotion` as BDS's was; the client's plume.
 
 ## Parity drill (2026-10-29, `bds_command_probe bkticks` and `bknether`)
 

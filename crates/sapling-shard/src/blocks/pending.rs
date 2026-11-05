@@ -30,7 +30,6 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 
 /// Writes what waits into every loaded column (see the module).
 pub(crate) fn write_back(world: &mut World) {
-    let now = world.resource::<Tick>().0;
     let mut waiting = queued::waiting(world);
     waiting.extend(falling::waiting(world));
     waiting.extend(fire::waiting(world));
@@ -43,7 +42,7 @@ pub(crate) fn write_back(world: &mut World) {
     for layer in layers {
         let Some(level) = level(world, layer) else { continue };
         let age = level.level().age;
-        let on_level_clock = |due: u64| age + (due as i64 - now as i64);
+        let on_level_clock = |due: u64| crate::clock::age_at(world, age, due);
         let records: Vec<(ChunkPos, Vec<u8>)> = level
             .loaded_positions()
             .into_iter()
@@ -84,7 +83,8 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
         }
     };
     // A record dated past the level's clock (a world whose level.dat is older) counts from its own date.
-    let since = level(world, layer).map_or(saved_at, |level| level.level().age.max(saved_at));
+    let now = world.resource::<Tick>().0;
+    let since = level(world, layer).map_or(saved_at, |level| crate::clock::age_at(world, level.level().age, now).max(saved_at));
     for PendingTick { name, properties, pos, time } in ticks {
         let delay = (time - since).max(1) as u64;
         if let Some(kind) = liquid::Liquid::of(&name) {

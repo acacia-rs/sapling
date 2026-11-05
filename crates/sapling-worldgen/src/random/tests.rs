@@ -83,6 +83,18 @@ fn position_seed_matches_mth_get_seed() {
     assert_eq!(position_seed(1, 0, 0), l.wrapping_mul(l).wrapping_mul(42317861).wrapping_add(l * 11) >> 16);
 }
 
+/// x * 3129871 first leaves an int at |x| 687, where the int-wrapping seed (both BDS builds' potent sulfur, Linux's
+/// frozen ocean) parts from the 64-bit one (Windows's frozen ocean): docs/research/worldgen-bds-linux-canons.md.
+#[test]
+fn position_seed_wraps_x_from_687() {
+    for x in [0, 1, 686, -686] {
+        assert_eq!(position_seed(x, 70, -5), wide_position_seed(x, 70, -5), "x {x}");
+    }
+    for x in [687, -687, 1000, 30_000_000] {
+        assert_ne!(position_seed(x, 70, -5), wide_position_seed(x, 70, -5), "x {x}");
+    }
+}
+
 #[test]
 fn mt19937_matches_reference_output() {
     let mut random = Mt19937::new(5489);

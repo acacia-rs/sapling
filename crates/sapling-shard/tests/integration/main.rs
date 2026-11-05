@@ -143,6 +143,7 @@ mod plugin_dialogue;
 mod plugin_ui;
 mod plugins;
 mod portals;
+mod potent_sulfur;
 mod priorities;
 mod projectiles;
 mod redstone;

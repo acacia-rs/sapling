@@ -108,5 +108,5 @@ fn a_generated_spring_s_potent_sulfur_ticks_are_kept_on_save() {
     // Each is as far off as the level's clock has run since the column's date (0).
     let gone: Vec<i64> = waits.iter().zip([85, 309, 369]).map(|(&(_, _, wait), delay)| delay - wait).collect();
     assert!(waits.iter().all(|&(name, pos, _)| name == "minecraft:potent_sulfur" && pos == SULFUR), "{waits:?}");
-    assert!(gone.iter().all(|&gone| (saved_at..=saved_at + 1).contains(&gone) && (60..85).contains(&gone)), "{waits:?} saved at {saved_at}");
+    assert!(gone.iter().all(|&gone| gone == saved_at && (60..85).contains(&gone)), "{waits:?} saved at {saved_at}");
 }

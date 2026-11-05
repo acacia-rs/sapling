@@ -36,8 +36,10 @@ fn column(level: &Level, body: &Body) -> Option<(bool, bool)> {
     None
 }
 
-/// Changes the body's speed up by the column it is in, if one.
+/// Changes the body's speed up by an erupting geyser under it (geyser.rs), then by the column it is
+/// in, if one.
 pub(super) fn push(level: &Level, body: &mut Body) {
+    super::geyser::lift(level, body);
     let Some((drags_down, above)) = column(level, body) else { return };
     let vy = &mut body.motion[1];
     *vy = match (drags_down, above) {

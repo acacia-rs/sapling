@@ -14,11 +14,14 @@ fn main() {
     let climate = &generator.density().climate;
     let points = [(8, 8), (0, 0), (15, 0), (0, 15), (15, 15)];
     let has_caves = |cx: i32, cz: i32| points.iter().any(|&(dx, dz)| (-40..=40).step_by(8).any(|y| climate.biome_at(cx * 16 + dx, y, cz * 16 + dz) == SULFUR_CAVES));
+    let mut traced = 0;
     for cx in (x0 as i32..=x1 as i32).step_by(stride) {
         for cz in (z0 as i32..=z1 as i32).step_by(stride).filter(|&cz| has_caves(cx, cz)) {
+            traced += 1;
             for line in generator.source_feature_trace(cx, cz).iter().filter(|line| line.contains("sulfur spring")) {
                 println!("{cx} {cz}{line}");
             }
         }
     }
+    println!("traced {traced} chunks with sulfur caves");
 }

@@ -24,6 +24,8 @@ pub(crate) enum GameEvent {
     DispenseFail,
     NotePlay,
     PrimeFuse,
+    /// An eruption's start (blocks/sulfur.rs); its end is a `BlockDestroy`.
+    BlockAttach,
     BlockDestroy,
     FluidPickup,
     BlockPlace,
@@ -45,7 +47,7 @@ impl GameEvent {
             GameEvent::ProjectileShoot => 3,
             GameEvent::Eat => 8,
             GameEvent::ContainerClose | GameEvent::BlockClose => 9,
-            GameEvent::ContainerOpen | GameEvent::BlockOpen | GameEvent::DispenseFail | GameEvent::NotePlay | GameEvent::PrimeFuse => 10,
+            GameEvent::ContainerOpen | GameEvent::BlockOpen | GameEvent::DispenseFail | GameEvent::NotePlay | GameEvent::PrimeFuse | GameEvent::BlockAttach => 10,
             GameEvent::BlockDestroy | GameEvent::FluidPickup => 12,
             GameEvent::BlockPlace | GameEvent::FluidPlace => 13,
             GameEvent::LightningStrike | GameEvent::Teleport => 14,

@@ -14,7 +14,8 @@ python3 -I crates/sapling-worldgen/scripts/dbg_loads.py <out>/dbg/dbg.log --orde
 tools/worldgen-oracle/canon-upload.sh <out> <canon> <world>     # then write env.txt: SAPLING_ORACLE_LINUX=1
 ```
 Canons so far (tools/replay-canons.txt): `dappled` (aa1), `tcores` (ad3tc: chunk -28,-27 of the trial
-chambers, run over -30,-29 to -26,-25 with WORLDGEN_WORKERS=1; 241 decorations).
+chambers, run over -30,-29 to -26,-25 with WORLDGEN_WORKERS=1; 241 decorations), `ag2` (three sulfur spring
+regions in one run, WORLDGEN_WORKERS=1; 923 decorations; worldgen-bds-caves.md "Sulfur springs").
 `bds_dbg_run.sh` runs a non-`.exe` under gdb with `scripts/bds_gdb.py`; one run logs both the decoration and
 the structure order. The region is picked with BDS's own `/locate biome` and the saved world's biome ids.
 
@@ -53,6 +54,9 @@ split it into tries. This found the fallen poplar that BDS laid over a red shrub
 - The frozen ocean iceberg's positional seed (`OceanFrozenSurfaceBuilder`, Linux 0x51f5344): clang wraps
   `x * 3129871` in an int (`imul` by 0x2fc20f00000001, `sar 32`); MSVC multiplies in 64 bits (1487e4536). The
   icebergs of the spring canon's row -756 sat a cell or two off until surface/frozen.rs followed it (1078 cells).
+  Potent sulfur's wait seed is not a platform difference: both builds wrap x in an int (Linux `imul` by
+  0x2fc20f00000000, `sar 32` at 0xcf58437; Windows `imul r10d,[rsi],0x2fc20f` at 144bb97fc), first off a 64-bit
+  product at |x| 687 (world-ticks.md "Potent sulfur").
 - Mth's sine table: UCRT `sinf` on Windows, glibc's on Linux (acacia-physics `sinf.rs` holds the Linux table).
   Not met in worldgen yet.
 - `std::hash<int>`: FNV-1a on Windows, identity on Linux (structure start maps, template markers). Not met yet.

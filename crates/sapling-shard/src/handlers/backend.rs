@@ -83,10 +83,15 @@ impl Backend for Ctx<'_> {
     }
 
     fn hold_blocks(&mut self) -> bool {
-        blocks::hold(self.world, acacia_proto::types::UpdateBlockFlags::NETWORK)
+        let opened = blocks::hold(self.world, acacia_proto::types::UpdateBlockFlags::NETWORK);
+        if opened {
+            blocks::defer_sulfur_neighbours(self.world);
+        }
+        opened
     }
 
     fn show_held_blocks(&mut self) {
+        blocks::run_deferred_sulfur_neighbours(self.world);
         blocks::show_held(self.world);
     }
 

@@ -54,3 +54,30 @@ fn water_a_kept_tick_is_due_by_the_level_s_clock() {
     h.tick(1);
     assert_eq!(got.recv().expect("ran").as_deref(), Some("minecraft:water"));
 }
+
+/// A kept tick that has not come due is saved again at the time it was loaded with, however long the
+/// column was in and whether the save comes in a tick or between two.
+#[test]
+fn water_a_kept_tick_keeps_its_time_across_a_load_and_a_save() {
+    let registry = BlockRegistry::vanilla();
+    let water = registry.find("minecraft:water", "liquid_depth=0").unwrap();
+    let storage = floor_holding(Vec::new(), &[([3, 64, 3], "minecraft:water")]);
+    let mut column = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().unwrap();
+    column.pending_ticks = encode_pending_ticks(registry, 1_000, &[([3, 64, 3], water, 5_000)]);
+    storage.store_column(ChunkPos::new(0, 0), 0, &column).unwrap();
+    let mut level = World::with_storage(storage.clone());
+    level.level_mut().age = 1_000;
+    let mut h = Harness::with(config(), level);
+    enter_stored(&mut h, 1);
+    let kept = |h: &mut Harness| {
+        h.shard.save_worlds();
+        let (saved_at, ticks) = decode_pending_ticks(&storage.load_column(ChunkPos::new(0, 0), 0).unwrap().unwrap().pending_ticks).unwrap();
+        (saved_at, ticks.iter().map(|tick| tick.time).collect::<Vec<_>>())
+    };
+    (0..25).for_each(|_| _ = h.tick(1));
+    let (first_at, first) = kept(&mut h);
+    (0..40).for_each(|_| _ = h.tick(1));
+    let (then_at, then) = kept(&mut h);
+    assert_eq!((first, then), (vec![5_000], vec![5_000]), "saved at {first_at} and {then_at}");
+    assert_eq!(then_at - first_at, 40);
+}

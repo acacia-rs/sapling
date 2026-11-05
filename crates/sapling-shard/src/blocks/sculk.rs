@@ -180,7 +180,7 @@ fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEv
         }
         let when = now + (distance as u64).max(1);
         listeners.coming.push(Coming { when, layer, listener, frequency: event.frequency(), strength, by_player });
-        send::to_viewers(world, layer, cell, &[events::signal(cell, listener, distance as u64)]);
+        send::after_blocks(world, layer, cell, events::signal(cell, listener, distance as u64));
     }
 }
 
