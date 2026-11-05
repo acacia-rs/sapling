@@ -58,7 +58,7 @@ fn an_awake_heart_calls_a_creaking_that_sways_off_hits_and_crumbles_when_the_hea
     let at = creaking.position;
     h.receive(1, &input_at([at.x + 1.5, at.y, at.z]));
     h.tick_all();
-    h.receive(1, &attack(creaking.runtime_id));
+    h.receive(1, &common::attack_from(creaking.runtime_id, [at.x + 1.5, at.y, at.z]));
     let swayed: Vec<RawPacket> = (0..9).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     let health = all::<UpdateAttributes>(&swayed).iter().filter(|update| update.runtime_entity_id == creaking.runtime_id).count();
     assert_eq!((properties(&swayed, creaking.runtime_id), health), ((1..=6).chain([0]).map(|value| (1, value)).collect(), 0), "swayed a tick at a time, unharmed");

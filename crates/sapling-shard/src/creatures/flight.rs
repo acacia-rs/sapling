@@ -177,11 +177,7 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
             return hits::gone(world, arrow, born == now);
         }
         match hits::hit(world, arrow, layer, struck, is_player, at, motion) {
-            After::Gone if shot.kind == super::arrows::ARROW.kind => return hits::gone(world, arrow, true),
-            After::Gone => {
-                mobs::remove(world, arrow);
-                return None;
-            }
+            After::Gone => return hits::gone(world, arrow, shot.kind == super::arrows::ARROW.kind || born == now),
             After::On => {}
             After::Back => {
                 body.at = at;
