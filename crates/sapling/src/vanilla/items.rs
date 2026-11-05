@@ -58,23 +58,48 @@ fn item_word(args: &mut Args<'_>) -> Result<String, ParseError> {
     Ok(name)
 }
 
-/// What `/give`'s components set on the stack, or the line BDS refuses one with.
-fn components(json: &str) -> Result<(bool, Option<ItemLock>), (String, Vec<String>)> {
+/// Sets the components `/give` and `/replaceitem` take on `item`, or the line BDS refuses one with.
+pub(super) fn set_components(item: &mut Item, json: &str) -> Result<(), (String, Vec<String>)> {
     let parsed: serde_json::Map<String, serde_json::Value> = serde_json::from_str(json).map_err(|error| ("commands.give.tagError".to_owned(), vec![error.to_string()]))?;
-    let (mut keep_on_death, mut lock) = (false, None);
     for (name, value) in &parsed {
-        match name.as_str() {
-            "minecraft:keep_on_death" => keep_on_death = true,
-            "minecraft:item_lock" => match value.get("mode").and_then(serde_json::Value::as_str) {
-                Some("lock_in_slot") => lock = Some(ItemLock::InSlot),
-                Some("lock_in_inventory") => lock = Some(ItemLock::InInventory),
-                _ => return Err(("commands.give.tagError".to_owned(), vec![name.clone()])),
-            },
-            // TODO: `minecraft:can_destroy` and `minecraft:can_place_on`: stacks do not carry them yet.
-            _ => return Err((format!("Component '{name}' is not a supported component."), Vec::new())),
+        // BDS took `can_place_on` unnamespaced too (research/captures/bds-h1lock.txt).
+        let listed = match name.strip_prefix("minecraft:").unwrap_or(name) {
+            "can_place_on" => &mut item.can_place_on,
+            "can_destroy" => &mut item.can_destroy,
+            _ => {
+                match name.as_str() {
+                    "minecraft:keep_on_death" => item.keep_on_death = true,
+                    "minecraft:item_lock" => match value.get("mode").and_then(serde_json::Value::as_str) {
+                        Some("lock_in_slot") => item.lock = Some(ItemLock::InSlot),
+                        Some("lock_in_inventory") => item.lock = Some(ItemLock::InInventory),
+                        _ => return Err(("commands.give.tagError".to_owned(), vec![name.clone()])),
+                    },
+                    _ => return Err((format!("Component '{name}' is not a supported component."), Vec::new())),
+                }
+                continue;
+            }
+        };
+        *listed = block_list(value).ok_or_else(|| (format!("Component '{name}' could not be updated."), Vec::new()))?;
+    }
+    Ok(())
+}
+
+/// A component's `{"blocks": [..]}`, each name widened to the blocks of its old numeric id as BDS
+/// widened it (`dirt` to dirt and coarse dirt; sapling_world::legacy_group); `None` for an unknown
+/// block or no list.
+// BDS lists the widened names in its hash set's order, which is not followed (bds-h1lock.txt).
+fn block_list(value: &serde_json::Value) -> Option<Vec<String>> {
+    let mut blocks: Vec<String> = Vec::new();
+    for name in value.get("blocks")?.as_array()? {
+        let name = name.as_str().filter(|name| sapling_data::command_takes_block(name))?;
+        let namespaced = if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") };
+        for block in sapling_world::legacy_group(&namespaced) {
+            if !blocks.contains(&block) {
+                blocks.push(block);
+            }
         }
     }
-    Ok((keep_on_death, lock))
+    Some(blocks)
 }
 
 /// `/give <player> <itemName> [amount] [data] [components]`.
@@ -114,12 +139,11 @@ impl Command for Give {
         if let Some(data) = self.data.filter(|data| *data < 0) {
             return out.translate("commands.generic.num.tooSmall", vec![data.to_string(), "0".into()], false);
         }
-        let (keep_on_death, lock) = match self.components.as_deref().map(components).transpose() {
-            Ok(set) => set.unwrap_or_default(),
-            Err((line, parameters)) => return out.translate(line, parameters, false),
-        };
         let (name, data) = item_and_data(&self.item, self.data);
-        let item = Item { damage: data.unwrap_or(0), keep_on_death, lock, ..Item::new(name, 1) };
+        let mut item = Item { damage: data.unwrap_or(0), ..Item::new(name, 1) };
+        if let Some(Err((line, parameters))) = self.components.as_deref().map(|json| set_components(&mut item, json)) {
+            return out.translate(line, parameters, false);
+        }
         // BDS tells the recipient at most 36 stacks, whatever fit (research/captures/bds-spread.txt).
         let told = amount.min(36 * i32::from(sapling_data::max_stack(&item.name).max(1))).to_string();
         let (shown, count) = (item_display_name(&item.name, item.damage), amount.to_string());

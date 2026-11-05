@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use sapling_api::command::{Args, Parameter, ParseError, Selector};
-use sapling_api::{Output, Player, PlayerId, ScreenAction, Sender, ShardCtx, Target};
+use sapling_api::{Player, PlayerId, ScreenAction, Sender, ShardCtx, Target};
 
 use super::super::targets;
 

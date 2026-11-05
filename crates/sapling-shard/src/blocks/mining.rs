@@ -18,6 +18,13 @@ use super::send;
 use crate::components::{InLayer, Layer, Tick};
 use crate::inventory::Inventory;
 
+/// Whether a player in `mode` mines the block `name` as in survival, taking its time and its
+/// loot: in adventure mode only with a hand whose `can_destroy` names it.
+pub(super) fn mines(world: &World, player: Entity, mode: sapling_api::GameMode, name: &str) -> bool {
+    use sapling_api::GameMode;
+    mode == GameMode::Survival || mode == GameMode::Adventure && crate::inventory::hand_allows(world, player, true, name)
+}
+
 /// Ticks a break may arrive early: an input can be a tick or two ahead of the shard's count.
 const LEEWAY: u64 = 3;
 /// `BlockStartBreak` carries this over the break's ticks: the crack's growth per tick.

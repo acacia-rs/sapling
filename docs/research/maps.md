@@ -46,6 +46,28 @@ Java's `MapItem.update`: `f = 1 << scale`, `r = 128 / f` (halved under a ceiling
   is `0xFF000000`. Tinted colour `c = own / 255 * tint / 255 * 255`.
 - Nether: Java's noise `(x + z * 231871)` squared, dirt or stone, height 100.
 
+### Tints (decompiled 2026-11-05: render 141a633d0, providers 1411a4a60, average 1411a8110)
+
+A block with a map-colour component multiplies its colour per channel by its tint method's tint;
+a block without one uses `getMapColor`, untinted. The tint is an equal-weight f32 average over sample
+points around the block (y offset 0), each the biome there's colour (0xRRGGBB, channels summed as
+floats), times `1 / (n * 255)`, each clamped to 0..1:
+
+| method (enum order assumed) | colour | samples |
+|---|---|---|
+| default_foliage | biome foliage override, else the gradient below | ring of 8 at ±4 (no centre) |
+| birch / evergreen / dry foliage | 0x80a755 / 0x619961 / 0x5c3c32 | the same ring |
+| grass | biome grass override; swamp noise (PerlinSimplex seed 2345, one octave, `(x, z) * 0.0225`, `>= -0.1` → 0x6a7039 else 0x4c763c); else the gradient | (±8, ±8) corners and the centre |
+| water | the biome's water colour (`biome+0x38`) | 3x3 at ±1, centre in |
+
+Gradient: `t = clamp01(temperature)`, `d = clamp01(downfall)`, `i = clamp((int)((1-t)*255))`,
+`j = clamp((int)((1-d*t)*255))`, `x = i/256`, `y = j/256`; per channel
+`y*(x*A1 + (1-x)*A0) + (1-y)*(x*B1 + (1-x)*B0)`, truncated to a byte. Grass A1/A0/B1/B0: R .5019608 /
+.7490196 / .42352942 / .2784314, G .7058824 / .7137255 / .7058824 / .8156863, B .5921569 / .33333334 /
+.5764706 / .2; foliage: R .3764706 / .68235296 / .29411766 / .101960786, G .6313726 / .6431373 / .65882355 /
+.7490196, B .48235294 / .16470589 / .45882353 / 0. Unsettled: which blocks carry which method (data, not
+code), whether `1/(n*255)` is f32, and which biome components the overrides are.
+
 ## Markers (decompiled 14371cdf0, capture)
 
 - Every player in the world: `u = round((pos - centre) / f)` (half away from zero) per axis. Within
@@ -75,7 +97,9 @@ Java's `MapItem.update`: `f = 1 << scale`, `r = 128 / f` (halved under a ceiling
 
 ## Open
 
-- Tints: BDS blends biome tints across neighbours; `map-tints.tsv` holds one probed spot per biome.
+- Tints: BDS blends biome tints across neighbours ("Tints" above); `map-tints.tsv` holds one probed spot
+  per biome, and sapling takes the drawn column's biome's alone. Porting needs each biome's temperature,
+  downfall, water colour and overrides, and the method of each tinted block.
 - Only default block states were drawn; state-dependent colours (log axis, beds) use the default's.
 - Saving (sapling-leveldb `maps.rs`, from a BDS world's `map_<id>` records): BDS saved all five scales of a
   filled map at once, each `parentMapId` the id one up (-1 at scale 4); sapling saves the maps it made.

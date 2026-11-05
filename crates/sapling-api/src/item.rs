@@ -15,11 +15,15 @@ pub struct Item {
     pub keep_on_death: bool,
     /// What `minecraft:item_lock` keeps it from.
     pub lock: Option<ItemLock>,
+    /// The blocks, namespaced, a player in adventure mode may place it on (`minecraft:can_place_on`)
+    /// and break with it (`minecraft:can_destroy`).
+    pub can_place_on: Vec<String>,
+    pub can_destroy: Vec<String>,
 }
 
 impl Item {
     pub fn new(name: impl Into<String>, count: u8) -> Self {
-        Self { name: name.into(), count, damage: 0, enchantments: Vec::new(), keep_on_death: false, lock: None }
+        Self { name: name.into(), count, damage: 0, enchantments: Vec::new(), keep_on_death: false, lock: None, can_place_on: Vec::new(), can_destroy: Vec::new() }
     }
 
     /// The level of the enchantment numbered `id` on it; 0 without it.

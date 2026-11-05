@@ -97,6 +97,16 @@ selecting,session,items,enchanting}.rs`.
   `attach_to_entity <one>` sends the entity's unique id; `detach_from_entity` and `remove_target`
   send `Some(true)`. Many targets → `generic.tooManyTargets`, none → `generic.noTargetMatch`.
   What `play_spline` does on a free camera was not drilled.
+- `can_place_on` / `can_destroy` (`bds-h1lock.txt`): `/give` and `/replaceitem` components, with or
+  without `minecraft:`; a block name not known or `blocks` not a list → `Component '<as typed>' could
+  not be updated.`; an unknown component → `is not a supported component.`. Each name widens to the
+  current names of its legacy id over its metas (granite → the stones; `legacy_group`); BDS lists
+  them in its hash order, sapling in name order. On the wire they go in ItemV4 extra
+  `can_place_on`/`can_destroy`, not the NBT; saved at the stack's top level (`CanPlaceOn`,
+  `CanDestroy`). Adventure players break only what the held item's `can_destroy` names and place
+  only on what its `can_place_on` names (test `adventure_lists`). BDS refused both of the bot's
+  adventure places, even onto grass named by the stack; likely the bot's held-slot mismatch, not
+  confirmed.
 
 ## Not seen; sapling's choice
 
