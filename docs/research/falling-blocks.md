@@ -266,9 +266,11 @@ ticks fallen so far, wrapped the same (`sapling_world::timed_falling_block`, wri
 ## Dripstone on a player (drilled 2026-11-05, research/captures/bds-v2drip.txt)
 
 - A hanging tip let go 10 and 20 blocks over a survival player cost it 9 and 19 (20 to 11, 20 to 1) on both, with
-  the same dust and `PointedDripstoneLand` at the cell's corner. Not matched: in BDS's tick the health update comes
-  after the landing's two LevelEvents (after the hurt animation), in sapling's before them; BDS's anvil
-  (bds-anvil.txt) orders it the same way, the health told at the tick's end.
+  the same dust and `PointedDripstoneLand` at the cell's corner. In BDS's tick the health update comes after the
+  landing's two LevelEvents (after the hurt animation); BDS's anvil (bds-anvil.txt, bds-z2open.txt) orders it the
+  same way, the health told at the tick's end. Fixed 2026-11-05 (thirteenth2x): a landing's health is held
+  (`vitals::health_held`) and told after the landing's packets (`blocks/falling/flight.rs`); tests in
+  thirteenth2x.rs.
 
 ## On the wire (drilled 2026-11-05, research/captures/bds-n13net.txt)
 
