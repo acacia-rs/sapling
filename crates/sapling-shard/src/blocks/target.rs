@@ -24,16 +24,11 @@ fn strength(pos: BlockPos, point: [f32; 3], axis: usize) -> u8 {
     ((REACH - off) * 16.0 / REACH).clamp(1.0, 15.0) as u8
 }
 
-/// The cell and the axis of the face a shot moving at `motion` met, its box (`size`, bottom middle
-/// at `at`) stopped short on the axes in `stopped`; and where on that face it hit.
-fn met(at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3]) -> Option<(BlockPos, usize, [f32; 3])> {
-    let axis = (0..3).filter(|axis| stopped[*axis]).max_by(|a, b| motion[*a].abs().total_cmp(&motion[*b].abs()))?;
-    let half = [size[0] / 2.0, size[1] / 2.0, size[0] / 2.0];
-    let mut point = [at[0], at[1] + half[1], at[2]];
-    point[axis] += motion[axis].signum() * half[axis];
-    let mut inside = point;
+/// The cell behind the face across `axis` a shot moving at `motion` met at `at`.
+fn met(at: [f32; 3], motion: [f32; 3], axis: usize) -> BlockPos {
+    let mut inside = at;
     inside[axis] += motion[axis].signum() * 0.01;
-    Some((inside.map(|c| c.floor() as i32), axis, point))
+    inside.map(|c| c.floor() as i32)
 }
 
 /// A shot of entity type `kind` stopped by a block: a target it met gives its signal, a block it
@@ -41,9 +36,10 @@ fn met(at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3]) -> Op
 /// `SmallFireball.onHitBlock`; one dispensed at TNT lit no TNT on BDS, research/captures/bds-bkticks.txt),
 /// TNT another `burning` one met is lit (`TntBlock.onProjectileHit`). `sticks` for an arrow or trident.
 /// A mob's shot lights nothing while `mobGriefing` is off (a blaze's lit none on BDS, bds-u1blaze.txt).
+/// `at` is where its ray met the face across `axis` (B25).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], size: [f32; 2], stopped: [bool; 3], sticks: bool, burning: bool, by_mob: bool) {
-    let Some((pos, axis, point)) = met(at, motion, size, stopped) else { return };
+pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], axis: usize, sticks: bool, burning: bool, by_mob: bool) {
+    let pos = met(at, motion, axis);
     super::shot_blocks::shot(world, layer, pos, kind, motion);
     super::dripleaf::shot(world, layer, pos);
     let lights = !by_mob || crate::rules::on(world, layer, GRIEFING);
@@ -60,7 +56,7 @@ pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f3
     if !is_target {
         return;
     }
-    redstone::emit(world, layer, pos, strength(pos, point, axis));
+    redstone::emit(world, layer, pos, strength(pos, at, axis));
     queued::cancel(world, layer, pos, Job::TargetOff);
     queued::after(world, layer, pos, if sticks { ARROW_TICKS } else { OTHER_TICKS }, Job::TargetOff);
 }
@@ -77,6 +73,6 @@ mod tests {
     fn the_nearer_the_middle_the_stronger() {
         let on = |x: f32, y: f32| strength([0, 3, 7], [x, y, 7.0], 2);
         assert_eq!([on(0.5, 3.5), on(0.95, 3.5), on(0.75, 3.5), on(0.999, 3.001)], [15, 5, 10, 1]);
-        assert_eq!(met([2.5, 4.0, 0.75], [0.0, 0.0, 1.0], [0.5, 0.5], [false, false, true]), Some(([2, 4, 1], 2, [2.5, 4.25, 1.0])));
+        assert_eq!([met([2.5, 4.25, 1.0], [0.0, 0.0, 1.0], 2), met([2.5, 4.0, 1.5], [0.3, -1.0, 0.0], 1)], [[2, 4, 1], [2, 3, 1]]);
     }
 }

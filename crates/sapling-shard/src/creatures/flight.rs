@@ -10,6 +10,7 @@ use sapling_data::AddEntityOptions;
 use sapling_world::ItemStack;
 
 mod in_way;
+mod ray;
 
 use super::arrows::{Lands, Shot};
 use super::hits::{self, After};
@@ -184,12 +185,13 @@ fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now: u64) -> Op
     }
     let before = body.at;
     body.motion = motion;
-    body.shove(&world.get::<Layer>(layer)?.world, motion);
-    let short: [bool; 3] = std::array::from_fn(|axis| (body.at[axis] - before[axis] - motion[axis]).abs() > 1e-4);
-    let stopped = short.contains(&true);
-    if stopped {
+    let met_block = ray::first_block(&world.get::<Layer>(layer)?.world, before, motion);
+    let part = met_block.map_or(1.0, |(part, _)| part);
+    body.at = std::array::from_fn(|axis| before[axis] + motion[axis] * part);
+    let stopped = met_block.is_some();
+    if let Some((_, face)) = met_block {
         let by_mob = world.get::<super::Creature>(by).is_some();
-        crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, shot.size, short, shot.sticks, shot.burns > 0, by_mob);
+        crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, face, shot.sticks, shot.burns > 0, by_mob);
         let by_player = world.get::<crate::components::Identity>(by).is_some();
         crate::blocks::vibrate(world, layer, body.at, crate::blocks::GameEvent::ProjectileLand, by_player);
     }

@@ -6,8 +6,8 @@ use crate::common;
 use common::{Harness, all};
 use sapling_api::{Block, Difficulty, Effect, PlayerId, RuleValue};
 
-/// Fires about after a blaze shot 1200 ticks at a warded player behind a glass pane wall, a row
-/// of stone behind the panes for a fire to stand on.
+/// Fires about after a blaze shot 1200 ticks at a warded player behind a wall of bottom slabs, a
+/// row of stone behind them for a fire to stand on.
 fn fires(griefing: bool) -> usize {
     let mut h = Harness::new();
     h.enter(1, "Alex");
@@ -20,8 +20,8 @@ fn fires(griefing: bool) -> usize {
             assert!(ctx.give_effect(PlayerId(1), effect, 2000, 4, false));
         }
         for x in -3..=3 {
-            assert!(ctx.set_block([x, 65, 2], &Block::new("minecraft:glass_pane")));
-            assert!(ctx.set_block([x, 66, 2], &Block::new("minecraft:glass_pane")));
+            // Its fireballs' rays pass between sapling's pane posts: a slab the blaze sees over stops them.
+            assert!(ctx.set_block([x, 66, 2], &Block::new("minecraft:smooth_stone_slab")));
             assert!(ctx.set_block([x, 65, 3], &Block::new("minecraft:stone")));
         }
         assert!(ctx.spawn_entity("minecraft:blaze", [0.5, 65.0, 6.5]).is_some());
