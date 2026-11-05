@@ -30,7 +30,11 @@ fn a_horse_on_grass_grazes_for_50_ticks_now_and_then_and_one_on_stone_never() {
     (0..2).for_each(|_| drop(h.tick_all()));
     // One tick in 300: none in 3000 ticks is a chance of e^-10.
     let each: Vec<Vec<RawPacket>> = (0..3000).map(|_| h.tick_all().to(1).to_vec()).collect();
-    let grazed = told(&each, on_grass);
+    let mut grazed = told(&each, on_grass);
+    // A meal begun in the last 50 ticks ends past the watch.
+    if grazed.len() % 2 == 1 && grazed.last().is_some_and(|&(tick, value)| value == 32 && tick + 50 >= each.len()) {
+        grazed.pop();
+    }
     assert!(!grazed.is_empty() && grazed.len() % 2 == 0, "{grazed:?}");
     for meal in grazed.chunks(2) {
         assert_eq!((meal[0].1, meal[1].1, meal[1].0 - meal[0].0), (32, 0, 50), "{grazed:?}");
