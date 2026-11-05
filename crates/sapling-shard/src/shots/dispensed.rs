@@ -18,12 +18,13 @@ const RAISED: f32 = 0.1;
 const CHARGE_SPREAD: f32 = 0.05;
 const ARCHER: &str = "dispenser";
 
-/// The shot `item` makes out of a dispenser, its power and uncertainty (the item JSON's; arrows'
-/// uncertainty is its base less 4 for each step of normal difficulty, unverified).
+/// The shot `item` makes out of a dispenser, its power and uncertainty (the item JSON's). Arrows'
+/// were fitted to bds-r1disp.txt: 1.1, and 22 (0.175 a tick on each axis), as the entity JSON's 16
+/// and Java's dispenser 6 together would give.
 fn kind_of(item: &ItemStack) -> Option<(Shot, f32, f32)> {
     let potion = |shot: Shot| Some((shot, 0.5, 6.0));
     match item.name.as_str() {
-        name if name == ARROW.kind || name == "minecraft:spectral_arrow" => Some((PLAYER_ARROW, 1.6, 8.0)),
+        name if name == ARROW.kind || name == "minecraft:spectral_arrow" => Some((PLAYER_ARROW, 1.1, 22.0)),
         "minecraft:snowball" => Some((SNOWBALL, 1.5, 6.0)),
         "minecraft:egg" | "minecraft:blue_egg" | "minecraft:brown_egg" => Some((EGG, 1.5, 6.0)),
         "minecraft:splash_potion" => potion(Shot { lands: Lands::Splash(item.damage), ..SPLASH }),

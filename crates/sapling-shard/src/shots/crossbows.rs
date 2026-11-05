@@ -72,9 +72,33 @@ pub(super) fn may_load(world: &World, player: Entity, stack: &ItemStack) -> bool
     stack.name == CROSSBOW && loaded(stack).is_none() && (super::is_creative(world, player) || ammo(world, player).is_some())
 }
 
-/// The crossbow `stack` let go after `ticks` of loading: loaded, if that was long enough.
+fn charge_of(stack: &ItemStack) -> u64 {
+    enchant::charge_ticks(enchant::level(stack.tag.as_ref(), Enchant::QuickCharge))
+}
+
+/// A tick of the crossbows being loaded, counted from 1 at the use: BDS told the loading sounds at
+/// a fifth, three fifths and the whole of the load and loaded it the tick after, still held
+/// (bds-r1shots.txt: 4, 14, 24 and 25 ticks after the use, with Quick Charge's fractions assumed).
+pub(super) fn tick(world: &mut World) {
+    let now = world.resource::<crate::components::Tick>().0;
+    let loading: Vec<(Entity, u64)> = world.query::<(Entity, &super::Drawing)>().iter(world).filter(|(_, drawing)| drawing.item == CROSSBOW).map(|(player, drawing)| (player, drawing.since)).collect();
+    for (player, since) in loading {
+        let Some(stack) = super::held(world, player).filter(|stack| stack.name == CROSSBOW) else { continue };
+        let (charge, counted) = (charge_of(&stack), now.saturating_sub(since) + 1);
+        let sound = [(charge.div_ceil(5), "crossbow.loading.start"), ((charge * 3).div_ceil(5), "crossbow.loading.middle"), (charge, "crossbow.loading.end")];
+        if let Some((_, sound)) = sound.iter().find(|(at, _)| *at == counted) {
+            super::heard_plain(world, player, sound);
+        }
+        if counted > charge {
+            super::release(world, player);
+        }
+    }
+}
+
+/// The crossbow `stack` let go after `ticks` of loading: loaded, if that was long enough, and
+/// `ChargedItem` shown.
 pub(super) fn load(world: &mut World, player: Entity, stack: &ItemStack, ticks: u64) {
-    if ticks < enchant::charge_ticks(enchant::level(stack.tag.as_ref(), Enchant::QuickCharge)) {
+    if ticks < charge_of(stack) {
         return;
     }
     let creative = super::is_creative(world, player);
@@ -83,7 +107,9 @@ pub(super) fn load(world: &mut World, player: Entity, stack: &ItemStack, ticks: 
         ammo::spend(world, player, place);
     }
     super::set_hand(world, player, Some(charged(stack, Some(&arrow))));
-    super::heard(world, player, "crossbow.loading.end");
+    let (Some(layer), Some(position), Some(id)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).map(|position| position.feet), world.get::<crate::components::NetId>(player).map(|id| id.0)) else { return };
+    let event = acacia_proto::packets::EntityEvent { runtime_entity_id: id, event_id: acacia_proto::packets::EntityEventEventId::ChargedItem, data: 0, fire_at_position: None };
+    crate::view::to_viewers(world, layer, position.map(|c| c.floor() as i32), &[sapling_net::encode(&event)]);
 }
 
 /// The player shoots the loaded crossbow `stack` it holds; true when it was one.
@@ -111,6 +137,6 @@ pub(super) fn shoot(world: &mut World, player: Entity, stack: &ItemStack) -> boo
         let uses = if turns.len() > 1 || rocket { MULTISHOT_WEAR } else { 1 };
         crate::inventory::wear_hand_by(world, player, uses, shots::shooter_lasts(CROSSBOW).unwrap_or(u16::MAX));
     }
-    super::heard(world, player, "crossbow.shoot");
+    super::heard_plain(world, player, "crossbow.shoot");
     true
 }

@@ -231,9 +231,10 @@ Block behaviours (BlockType vt+0x190):
 - `Random` vt+8 is `nextInt(bound)` and vt+0x28 `nextFloat` (inferred from use).
 - Names of hash globals 14ccf9950 (air), 14ccdb710 (fire), 14cce2cf8 (tnt), 14ccdafe8 (lava), 14ccdd3a0, the dirt
   list 14ccdb858, tag 14ccdb7d0, recipe tag 14cde8268, game events 14cc89850 / 14cc8a91c / 14cc8a9ec.
-- Arrow pickup flag (142a7d140 not read); arrow uncertainty: whether `uncertainty_multiplier` × difficulty is
-  subtracted before comp+0x1a0; snowball/egg default uncertainty. sapling uses 8 for arrows (16 less 4 × normal
-  difficulty) and Java's 6 for snowballs, eggs, potions and bottles (`shots/dispensed.rs`).
+- Arrows, drilled 2026-11-05 (bds-r1disp.txt, twelve shots on easy; bds-f1pickup.txt): they left at 1.11 a
+  tick on average with 0.175 of spread on each axis, so power 1.1 and an uncertainty of about 21 (±2.5); sapling
+  takes 22, the entity JSON's 16 and Java's dispenser 6 together (`shots/dispensed.rs`); before, 1.6 and 8.
+  Players took them (pickup by anyone). Snowball/egg default uncertainty is still Java's 6.
 - Wind charge's dispense path (assumed ComponentItem projectile).
 - Spawn egg exact position for up/down and the 5% branch; shears details; `Item::dispense` special at 141a88af0.
 - Crafter toggle-slot server handling (empty slot required? sound?), interact 14713f470.
