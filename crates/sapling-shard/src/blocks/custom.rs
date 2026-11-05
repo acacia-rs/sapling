@@ -83,9 +83,16 @@ pub(crate) fn drops(name: &str) -> Option<Vec<Item>> {
     })
 }
 
-/// The vanilla state the server's physics reads a custom one as: stone where it stops entities,
-/// air where it does not.
-// TODO: a custom collision box other than a full cube is read as a full cube.
+/// The boxes the custom block `id` stops entities with, in its cell (none where it has no
+/// `minecraft:collision_box`); `None` for a vanilla state.
+pub(crate) fn collision_box(id: u32) -> Option<Option<acacia_physics::Aabb>> {
+    let state = custom_state(id)?;
+    let found = sapling_data::custom_block(state.name).and_then(|block| block.collision);
+    Some(found.map(|found| acacia_physics::Aabb { min: found.min.map(|c| c / 16.0), max: found.max.map(|c| c / 16.0) }))
+}
+
+/// The vanilla state the server's physics reads a custom one as for all but its box
+/// ([`collision_box`]): stone where it stops entities, air where it does not.
 pub(crate) fn stand_in(registry: &BlockRegistry, id: u32) -> u32 {
     static STONE: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
     match custom_state(id) {
