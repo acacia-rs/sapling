@@ -264,7 +264,7 @@ a wall at x 3 gave a 4 by 4 (`unpacked`, `BurningSkull`) on an open wall, `Sea` 
 `Bust` in a 2 by 2 one, each `AddPainting` at the wall less 1/32 and the middle of its cells, moved
 half a block to the viewer's left and up for an even width and height (Java's offsets). sapling
 (`paintings.rs`) does the same with "solid" as collision, and keeps the painting with its column.
-Breaking one is not built; a hung painting is a statue like the stored ones.
+A hit or a lost wall breaks one, dropping a painting outside creative (ba5d1a76, `paintings/falls.rs`).
 
 ## Armour stands (`armorstand`)
 
