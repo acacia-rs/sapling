@@ -14,9 +14,10 @@ use crate::components::{Layer, Tick};
 const EVERY: f32 = 120.0;
 const TRIES: usize = 10;
 /// A stroll goes up to this far along each axis, takes the next cell of its way this near the
-/// middle of the last, and is given up after this many ticks.
+/// middle of the last (half its width if more: `PathNavigation::updatePath`, Linux 0xbd70f60), and
+/// is given up after this many ticks.
 const FAR: f32 = 10.0;
-const ARRIVED: f32 = 0.5;
+const ARRIVED: f32 = 0.6;
 const PATIENCE: u64 = 200;
 /// Within a block of its way's last middle its speed is the squared distance there, at least half:
 /// BDS's MoveControl::calculateMoveSpeed 1430b8050 and shouldSlowSpeed 1430b90d0 (bds-strolls.txt
@@ -78,10 +79,11 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: O
         starts.then(|| way_to(world, layer, &body, far, shuns_sun)).flatten().map(|way| (way, now + PATIENCE))
     });
     let middle = |[x, _, z]: Cell| [x as f32 + 0.5, z as f32 + 0.5];
+    let arrived = (body.size[0] * 0.5).max(ARRIVED);
     let stroll = stroll.filter(|(_, until)| now < *until).map(|(mut way, until)| {
         while way.first().is_some_and(|cell| {
             let [x, z] = middle(*cell);
-            (x - body.at[0]).hypot(z - body.at[2]) < ARRIVED
+            (x - body.at[0]).hypot(z - body.at[2]) < arrived
         }) {
             way.remove(0);
         }
