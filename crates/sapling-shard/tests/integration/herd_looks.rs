@@ -4,8 +4,8 @@
 
 use crate::common;
 
-use acacia_proto::packets::{AddEntity, SetEntityLink};
-use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain};
+use acacia_proto::packets::{AddEntity, MobEquipment, SetEntityLink};
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, WindowID};
 use common::asking::ask;
 use common::raising::plain_in;
 use common::{Harness, all};
@@ -53,4 +53,12 @@ fn rider_events_make_their_riders_and_mounts() {
     assert_eq!(["minecraft:zombie", "minecraft:husk", "minecraft:parched", "minecraft:zombie_nautilus"].map(count), [1, 1, 1, 1], "{kinds:?}");
     let riders: std::collections::HashSet<_> = all::<SetEntityLink>(&sent).iter().filter(|link| link.link.r#type != 0).map(|link| link.link.rider_entity_id).collect();
     assert_eq!(riders.len(), 4, "each rides");
+    // Each rider's equipment table: the zombie's and husk's spear, the parched's bow, the drowned's trident.
+    let added = all::<AddEntity>(&sent);
+    let held = |kind: &str| {
+        let id = added.iter().find(|added| added.entity_type == kind).unwrap_or_else(|| panic!("{kind} shown")).runtime_id;
+        all::<MobEquipment>(&sent).into_iter().filter(|held| held.runtime_entity_id == id && held.window_id == WindowID::Inventory).map(|held| held.item.network_id).find(|item| *item != 0)
+    };
+    let names = ["minecraft:iron_spear", "minecraft:iron_spear", "minecraft:bow", "minecraft:trident"].map(|name| sapling_data::item(&sapling_data::Stack { name, count: 1, damage: 0, block: None, tag: None }, None).map(|item| item.network_id));
+    assert_eq!(["minecraft:zombie", "minecraft:husk", "minecraft:parched", "minecraft:drowned"].map(held), names);
 }

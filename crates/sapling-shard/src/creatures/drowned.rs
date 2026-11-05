@@ -24,6 +24,7 @@ use crate::entities;
 
 const DROWNED: &str = "minecraft:drowned";
 const RANGED: &str = "minecraft:as_ranged_adult";
+const RIDER: &str = "as_rider";
 /// Of this many drowned, `ARMED` come armed so.
 const ARMED: u32 = 25;
 const OF: u32 = 400;
@@ -68,9 +69,11 @@ pub(super) fn arm(world: &mut World, drowned: Entity, kind: &str, event: Option<
     if kind != DROWNED {
         return;
     }
-    let armed = event == Some(RANGED) || event.is_none() && world.get_resource_or_insert_with(Dice::default).roll(OF) < ARMED;
+    // A rider's `drowned_rider_equipment` is a trident alone (bds-h3herds.txt).
+    let rider = event.is_some_and(|event| event.trim_start_matches("minecraft:") == RIDER);
+    let armed = rider || event == Some(RANGED) || event.is_none() && world.get_resource_or_insert_with(Dice::default).roll(OF) < ARMED;
     let Some(id) = world.get::<NetId>(drowned).map(|id| id.0).filter(|_| armed) else { return };
-    let shell = world.get_resource_or_insert_with(Dice::default).fraction() < SHELLED;
+    let shell = !rider && world.get_resource_or_insert_with(Dice::default).fraction() < SHELLED;
     world.entity_mut(drowned).insert(Thrower { shell, ..Thrower::default() });
     super::reshow(world, drowned);
     let (held, Some(body)) = (held(world, drowned, id), world.get::<Body>(drowned).copied()) else { return };
