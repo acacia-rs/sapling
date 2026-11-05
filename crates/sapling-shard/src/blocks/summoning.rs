@@ -4,9 +4,10 @@
 //! (0x1415f2940) puts it: its match corner, the skull row's lowest end, plus 1 east, 2 down and 1
 //! south in world axes whatever way the T stands, then (0.5, 0.05, 0.5). The T may stand or lie any
 //! way, as BDS's matcher found one lying on the floor (bds-n2wither.txt).
-// TODO: a T lying with its skulls along x, or standing along x (wither-lightning-fireworks.md); 120
-// soul particles are not shown.
+// TODO: a T lying with its skulls along x, or standing along x (wither-lightning-fireworks.md).
 
+use acacia_proto::packets::{LevelEvent, LevelEventEvent};
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Difficulty};
 
@@ -18,6 +19,8 @@ const SOULS: [&str; 2] = ["minecraft:soul_sand", "minecraft:soul_soil"];
 /// Where the wither stands from its match corner's cell.
 const FROM_CORNER: [f32; 3] = [1.5, -1.95, 1.5];
 const AXES: [[i32; 3]; 3] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+const SOULS_SHOWN: usize = 120;
+const SOUL_PARTICLE: i32 = 15;
 
 fn name_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<&'static str> {
     let level = level(world, layer)?;
@@ -51,14 +54,28 @@ pub(super) fn placed(world: &mut World, layer: Entity, pos: BlockPos, name: &str
         built(world, layer, [0, 1, 2].map(|axis| pos[axis] - along[axis] * step), along, down).map(|cells| (cells, along, down))
     });
     let Some((cells, along, down)) = found else { return };
+    let corner = [0, 1, 2].map(|axis| cells[..3].iter().map(|cell| cell[axis]).min().unwrap_or(0));
+    let mut spot = [0, 1, 2].map(|axis| corner[axis] as f32 + FROM_CORNER[axis]);
+    spot[0] += lying_east(along, down);
+    let particles = souls(world, spot);
+    crate::view::to_viewers(world, layer, spot.map(|c| c.floor() as i32), &particles);
     let air = Block::new("minecraft:air");
     for cell in &cells {
         send::put_block(world, layer, *cell, &air);
     }
-    let corner = [0, 1, 2].map(|axis| cells[..3].iter().map(|cell| cell[axis]).min().unwrap_or(0));
-    let mut spot = [0, 1, 2].map(|axis| corner[axis] as f32 + FROM_CORNER[axis]);
-    spot[0] += lying_east(along, down);
     crate::creatures::build_wither(world, layer, spot);
+}
+
+/// The 120 particles BDS showed before the T went (bds-gxwither.txt): each at the wither's spot plus
+/// a fraction across, and 2 below to 1.9 above, as the Java game's skull block placed them.
+fn souls(world: &mut World, spot: [f32; 3]) -> Vec<bytes::Bytes> {
+    let mut dice = world.get_resource_or_insert_with(super::Dice::default);
+    (0..SOULS_SHOWN)
+        .map(|_| {
+            let [x, y, z] = [spot[0] + dice.fraction(), spot[1] - 2.0 + dice.fraction() * 3.9, spot[2] + dice.fraction()];
+            sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleProjectileHit, position: Vec3f { x, y, z }, data: SOUL_PARTICLE })
+        })
+        .collect()
 }
 
 /// BDS's wither from a T lying with its skulls along z stands a block further east than the

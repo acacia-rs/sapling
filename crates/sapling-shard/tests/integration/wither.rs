@@ -60,6 +60,10 @@ fn a_skull_on_a_t_of_soul_sand_calls_a_wither_that_charges_then_bursts() {
     assert!((wither.position.x, wither.position.z) == (0.5, 4.5) && (wither.position.y - 65.05).abs() < 0.1, "{:?}", wither.position);
     let cleared = ask(&mut h, |ctx| [[0, 65, 3], [0, 66, 3], [-1, 67, 3], [0, 67, 3]].iter().all(|pos| ctx.block(*pos).is_some_and(|block| block.name == "minecraft:air")));
     assert!(cleared, "the T is taken away");
+    // bds-gxwither.txt: 120 particles about its spot, before the T goes.
+    let souls: Vec<LevelEvent> = all::<LevelEvent>(&sent).into_iter().filter(|event| event.event == LevelEventEvent::ParticleProjectileHit && event.data == 15).collect();
+    let about = |event: &LevelEvent| (0.5..1.5).contains(&event.position.x) && (4.5..5.5).contains(&event.position.z) && (event.position.y - wither.position.y + 0.05).abs() <= 2.0;
+    assert!(souls.len() == 120 && souls.iter().all(about), "{} souls", souls.len());
     let id = EntityId(wither.runtime_id);
     assert!(!ask(&mut h, move |ctx| ctx.hurt_entity(id, 10.0, DamageCause::Attack)), "untouchable while it charges");
     let charge = watch(&mut h, 200);
