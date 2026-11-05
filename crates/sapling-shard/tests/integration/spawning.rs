@@ -103,16 +103,35 @@ fn peaceful_and_do_mob_spawning_off_spawn_nothing() {
     assert_eq!(monsters(&mut h), []);
 }
 
+/// `/away`: the sender 120 east, moved by a command as the drill's `/tp` moved it.
+#[derive(sapling_api::Command)] #[command(crate = "sapling_api")]
+struct Away;
+impl sapling_api::Command for Away {
+    fn run(self, ctx: &mut ShardCtx<'_>, sender: &sapling_api::Sender, _: &mut sapling_api::Output) { ctx.teleport(sender.player().expect("a player").id, [120.5, 65.0, 0.5]) }
+}
+
+/// bds-w3despawn.txt: mobs out of every tick region stay however long (`DespawnSystem` views only
+/// `ActorTickedComponent`); back near them, the natural ones past 44 go. 12 chunks keep their columns
+/// loaded 120 east; on the command's tick Alex's view still covers them.
 #[test]
-fn natural_mobs_go_when_the_player_is_far_and_summoned_ones_stay() {
-    let mut h = at_midnight("minecraft:stone");
+fn natural_mobs_out_of_every_tick_region_stay_and_go_once_ticked_again() {
+    let mut h = at_midnight_with(sapling_shard::ShardConfig { max_view_radius: 12, ..common::config() }, "minecraft:stone");
+    h.shard.add_command::<Away>();
+    h.receive(1, &acacia_proto::packets::RequestChunkRadius { chunk_radius: 12, max_radius: 12 });
     run(&mut h, 400);
-    assert!(!monsters(&mut h).is_empty());
+    let ids = |h: &mut Harness| monsters(h).into_iter().map(|monster| monster.id).collect::<Vec<_>>();
+    let natural = ids(&mut h);
     let summoned = ask(&mut h, |ctx| ctx.spawn_entity("minecraft:zombie", [10.5, 65.0, 10.5])).expect("a zombie");
-    h.remote.run(|ctx| ctx.teleport(ALEX, [1000.5, 65.0, 0.5]));
+    let origin = acacia_proto::types::CommandOrigin { r#type: "player".into(), uuid: acacia_proto::manual::Uuid([1; 16]), request_id: "req".into(), player_entity_id: 0 };
+    h.receive(1, &acacia_proto::packets::CommandRequest { command: "/away".into(), origin, internal: false, version: "latest".into() });
+    run(&mut h, 1200);
+    assert_eq!(ask(&mut h, |ctx| ctx.position(ALEX).map(|at| at.feet[0])), Some(120.5), "moved by the command");
+    let left = ids(&mut h);
+    assert!(natural.iter().chain([&summoned]).all(|id| left.contains(id)), "{natural:?} and {summoned:?}, then {left:?}");
+    h.remote.run(|ctx| ctx.teleport(ALEX, [0.5, 135.0, 0.5]));
     run(&mut h, 3);
-    let left: Vec<_> = monsters(&mut h).into_iter().map(|monster| monster.id).collect();
-    assert_eq!(left, [summoned]);
+    let left = ids(&mut h);
+    assert!(left.contains(&summoned) && !natural.is_empty() && natural.iter().all(|id| !left.contains(id)), "{natural:?}, then {left:?}");
 }
 
 /// BDS caps the far distance at 44 only where the chunk tick range is 4 or less (`_canDespawn`,
@@ -164,7 +183,8 @@ fn a_natural_mob_a_player_names_stays_when_the_player_goes() {
     run(&mut h, 2);
     h.receive(1, &use_on(named.id.0));
     run(&mut h, 2);
-    h.remote.run(|ctx| ctx.teleport(ALEX, [1000.5, 65.0, 0.5]));
+    // 70 over them, where they are still ticked: a column out of every tick region keeps its natural mobs too (bds-w3despawn.txt).
+    h.remote.run(|ctx| ctx.teleport(ALEX, [0.5, 135.0, 0.5]));
     run(&mut h, 3);
     let left: Vec<_> = monsters(&mut h).into_iter().map(|monster| monster.id).collect();
     assert_eq!(left, [named.id]);

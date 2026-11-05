@@ -231,6 +231,10 @@ tests/integration/mob_packets.rs):
   the AddEntity's properties. It is not sent when a mob is shown again or to a player who comes later;
   for a mob loaded from a world folder it was not drilled and sapling sends none. The first data's
   values: sixth wave, below. Tests read changes past it (`common/data.rs`).
+- Mobs shown again as a player comes back: bds-s3far's three cows of one chunk came newest first
+  (20, 19, 18); sapling's `mobs::update` shows them by runtime id, oldest first. Not followed:
+  bds-w3despawn's 28 shown on the walk back to the hut follow no rule by id or chunk (chunk
+  240,-111 gave 65, 70, 69, 61, 48, then 18 five batches on, after chunks 240,-114 and 239,-110).
 - Fixed: at a mob's death, after its two emptied hands, a MobArmorEquipment of what it wears with its
   body slot (`creatures/worn.rs` `shown_dead`), as bds-bodyslot.txt's horse (body iron at death).
   Re-drilled on sapling (bodyslot, mountflags; sapling-mountflags.txt): each summon's two SetEntityData
@@ -394,8 +398,8 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
     UpdateAttributes and VisibleMobEffects the tick after; sapling at once (open).
   - Slowness 255 does not hold BDS's cows (bds-q3wind.txt, bds-q3crowd.txt).
 - Seen in thirteenth3s (bds-s3poi.txt): BDS's `@e[family=armorer]` matched a villager that took up
-  armoring, so a component group's `type_family` counts; sapling's selector families are by kind
-  only (sapling-api command/selector/gather.rs `families`), so it matched none (open).
+  armoring, so a component group's `type_family` counts; sapling's selector families were by kind
+  only. Fixed in thirteenth3w (villagers.md, "Unverified").
 - Repair through `minecraft:repairable` (data-driven items naming themselves), drilled 2026-11-04 on
   spears (research/captures/bds-t2espear.txt): two iron spears worn 150 and 130, one with sharpness
   II, made one worn 30 (no twentieth) that kept sharpness II, in either hotbar order; sapling gave 18

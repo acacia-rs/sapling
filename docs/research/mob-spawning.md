@@ -155,17 +155,25 @@ solid block [U], the new place only needing room for the phantom, at the cell's 
 BDS's `DespawnSystem` runs `_canDespawn` every tick [D]: no player at all, nothing goes; a
 `PersistentComponent` never goes; the soft rules all together (inactive 30 s, a roll of 800, no player
 within `min_distance`) despawn; at tick range 4, no player within `min(max_distance, 44)` despawns; and
-the simulation edge. Schema defaults [D]: inactivity 30, chance 800, all three on. sapling: a mob
-despawns only if it appeared naturally (`spawning::Natural`) and its kind has `despawn_from_distance`
-[P]; the roll is 1 in 800 [U], the distances 32/128 are the
-add-on documentation's [U], and the edge is no player's view covering its column. Mobs spawned by
-commands, eggs or plugins stay.
+the simulation edge. Schema defaults [D] (0x141b9ff90): inactivity 30, chance 800, `min_distance` 32,
+`max_distance` 128, all three on. sapling: a mob despawns only if it appeared naturally
+(`spawning::Natural`) and its kind has `despawn_from_distance` [P], and the edge is no player's view
+covering its column. Mobs spawned by commands, eggs or plugins stay.
 
-`s3despawn` (2026-11-05, seed 20261003 generated world, two runs a side): 75 s at the swamp hut at
-midnight, then spawning off and both players moved 44 off. The move took 18 and 7 mobs on BDS, 18 and
-10 on sapling. In the next 100 s BDS lost 1 of 27 and 1 of 28, of which about 16 lay past 32 (some of
-them persistent worldgen animals); sapling lost 1 of 10 (2-5 past 32) and 6 of 17 (8 past 32, 3 left).
-Sapling's roll takes far mobs sooner than BDS's; why (the roll's pace, or what ends idleness) is open.
+Only ticked mobs are looked at [D, S]: `DespawnSystem` (0x144833e30) views actors with
+`ActorTickedComponent`, which `LevelChunk::tickImpl` (0x1409f98a0) gives only to the actors of the
+chunks it ticks, so a mob out of every player's tick region neither rolls nor meets the 44 cap. Sapling
+looked at every natural mob, and the 44 cap took the frozen far ones at once; it now looks only at
+mobs in a player's tick region, centred where the player stands this tick (`spawning/despawn.rs`
+`ticked`; the view's centre lags a `/tp` by a tick, and the first sapling re-drill lost 27 of 29 mobs
+on that tick). Test `natural_mobs_out_of_every_tick_region_stay_and_go_once_ticked_again`.
+
+`s3despawn` (2026-11-05, two runs a side) had BDS lose 1 of about 16 mobs past 32 in 100 s after a move
+44 off, sapling 1 of 2-5 and 5 of 8. `w3despawn` (bds-w3despawn.txt, seed 20261003 generated world)
+settled it: 67 s at the swamp hut at midnight, spawning off, then a move 80 east. BDS's 43 mobs left
+after the move all stayed for 60 s, none of them within 44, and 39 were counted on the way back.
+Re-drilled (sapling-w3despawn.txt): 32 mobs, 30 after the move, all 30 kept for 60 s, 23 back at the
+hut (the 44 cap again, once ticked).
 
 Saved [D, S]: BDS keeps `Persistent` (its `PersistentComponent`, which `_canDespawn` asks) and
 `NaturalSpawn` with every mob; a summoned one is saved `Persistent` 1, `NaturalSpawn` 0
