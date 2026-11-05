@@ -4,6 +4,7 @@
 //! and go again by their kind's despawn rules (despawn.rs); spawn eggs (eggs.rs). BDS's numbers and
 //! what is left out: docs/research/mob-spawning.md.
 
+mod delays;
 mod despawn;
 mod eggs;
 mod gates;

@@ -62,7 +62,8 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the villages are unreadable; no raid goes on, no standing is kept");
             Vec::new()
         });
-        Level { spawn, time, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None }
+        let age = dat.age().unwrap_or(0);
+        Level { spawn, time, age, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None }
     }
 }
 
@@ -105,6 +106,7 @@ impl WorldStorage for LevelDbStorage {
             dat.set_last_opened_with(version);
         }
         dat.set_time(level.time);
+        dat.set_age(level.age);
         dat.set_weather(level.weather);
         if let Some(difficulty) = level.difficulty {
             dat.set_difficulty(difficulty);

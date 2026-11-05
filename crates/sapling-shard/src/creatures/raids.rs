@@ -10,13 +10,19 @@
 mod bar;
 mod kept;
 mod omens;
+mod patrols;
 mod raiders;
 mod village;
 mod waves;
 
-pub(super) use raiders::steer;
+pub(super) use patrols::enlist as join_patrol;
 pub(super) use kept::{village as village_uuid, village_middle};
-pub(super) use village::centre as village_centre;
+pub(crate) use village::centre as village_centre;
+
+/// Before a raider's or a patrolling pillager's move, when it hunts nobody: false for a mob in neither.
+pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
+    raiders::steer(world, entity, layer, kind) || patrols::steer(world, entity, layer)
+}
 
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;

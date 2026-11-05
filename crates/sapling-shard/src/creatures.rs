@@ -48,7 +48,7 @@ mod omens;
 mod paths;
 mod piglins;
 mod properties;
-mod raids;
+pub(crate) mod raids;
 mod rams;
 mod scooping;
 mod shooting;
