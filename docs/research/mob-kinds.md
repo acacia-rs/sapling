@@ -236,6 +236,10 @@ A snow golem on plains at noon with a zombie 8 off (`research/captures/bds-snowg
   middle. The zombie, which had taken the golem 4 ticks after it came, killed it (health 4) first.
 - Heat melts it by the pack's `hurt_on_condition` cause `temperature` (wire 26), not fire; the API's
   `DamageCause::Temperature` is that (2026-11-04; plains is too cool to melt it, so not drilled).
+- Water hurts it, and a blaze, as an enderman (`o3wet`, research/captures/bds-o3wet.txt): in a pool
+  and in the rain, 1 each 10 ticks with `HurtAnimation` 9; the golem's 4 health went in four.
+  Sapling: `creatures/harm.rs` `WATER_HURTS`, test
+  `water_and_rain_hurt_a_blaze_and_a_snow_golem_1_each_10_ticks_as_drowning`.
 
 ## Drowned with tridents (`drowned`)
 
@@ -283,6 +287,14 @@ the player kept it; a second click with it did nothing. sapling (`creatures/armo
 keeps the gear and pose with the stand (`Armor`, `Mainhand`, `Offhand`, `Pose`/`PoseIndex`, the
 names the stand's save at `1429b4d80` writes). Which slot heads, skulls and pumpkins take, and
 where the stand's old item goes on a plain swap (here: the player's hand) are [U].
+
+Burning and hits (`o3stand`, `o3stand2`, research/captures/bds-o3stand{,2}.txt): lava scorched as fire
+did (0.05 each 10 ticks). Out of it, the burn ran 160 ticks: a flinch and 1 off at each 20th but the
+last, then alight no more; burnt up, the stand went unflinched and dropped its helmet and sword, not
+itself. Its armour warded each loss by the Java rule (iron helmet: 0.05 → 0.04605, 1 → 0.94;
+diamond: 0.010025 and 0.21). A second survival hit 2 or 4 ticks after the first broke it, 6 to 20
+did not (Java's 5). Sapling: `armour_stands/burning.rs`, `hits.rs`; test
+`a_dressed_stand_burns_through_its_armour_drops_its_gear_if_burnt_up_and_goes_out_after_eight_seconds`.
 
 ## Piglins bartering (`barter`)
 
