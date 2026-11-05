@@ -80,7 +80,9 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
             (Some([_, hard]), Difficulty::Hard) => hard,
             _ => ticks,
         };
-        vitals::afflict(world, prey, effect, ticks);
+        for _ in 0..if hunts.gives_twice { 2 } else { 1 } {
+            vitals::afflict(world, prey, effect, ticks);
+        }
     }
     if bitten {
         crate::enchants::thorns(world, prey, entity);

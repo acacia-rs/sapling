@@ -75,6 +75,12 @@ impl EntityBackend for Ctx<'_> {
         entities::teleport(self.world, id, feet)
     }
 
+    fn move_entity_into(&mut self, id: EntityId, dimension: i32, feet: [f32; 3]) -> bool {
+        let layer = entities::find(self.world, id).and_then(|entity| self.world.get::<InLayer>(entity)).map(|in_layer| in_layer.0);
+        let Some(to) = layer.and_then(|layer| crate::dimensions::of(self.world, layer, dimension)) else { return false };
+        entities::teleport_into(self.world, id, to, feet)
+    }
+
     fn set_velocity(&mut self, id: EntityId, velocity: [f32; 3]) -> bool {
         entities::change(self.world, id, |body| body.motion = velocity)
     }

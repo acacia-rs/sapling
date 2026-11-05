@@ -22,6 +22,18 @@ fn sign(title: &str) -> BookEdit {
 }
 
 #[test]
+fn a_page_of_768_is_kept_and_one_of_769_closes_its_writer() {
+    // research/captures/bds-w1pages.txt.
+    let mut h = ready(GameMode::Survival, &[("minecraft:writable_book", 1, 0)], 30.0);
+    let kicked = |h: &mut common::Harness, length: usize| {
+        h.receive(1, &replace(0, &"d".repeat(length)));
+        h.shard.tick();
+        std::iter::from_fn(|| h.net.sent.try_recv().ok()).any(|sent| matches!(sent, sapling_net::Outbound::Kick { conn, .. } if conn.get() == 1))
+    };
+    assert_eq!([kicked(&mut h, 768), kicked(&mut h, 769)], [false, true]);
+}
+
+#[test]
 fn a_book_is_written_signed_and_put_on_a_lectern_whose_page_turns() {
     let mut h = ready(GameMode::Survival, &[("minecraft:writable_book", 1, 0)], 30.0);
     h.receive(1, &replace(0, "one"));

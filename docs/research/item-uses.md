@@ -65,9 +65,12 @@ went on (research/captures/bds-t2edon.txt); sapling put them on and now leaves t
   `generation` 0, `pages`, `title`, `xuid`, keys sorted; windows resent, `select_slot true`.
 - **Lengths** (raw BookEdits past the client's limits, research/captures/bds-t2ebook.txt): pages of
   256, 257 and 512 letters and titles of 17 and 40 were kept whole, as sapling keeps them. A 1000-letter
-  page got its writer disconnected (bds-t2ebook1.txt); sapling keeps it (TODO in `books.rs`). A
-  513-letter page was kept whole (2026-11-04, `t12book`, bds-t12book.txt), so the limit is past 513;
-  the next drill should halve the 514..999 range.
+  page got its writer disconnected (bds-t2ebook1.txt). A 513-letter page was kept whole (2026-11-04,
+  `t12book`, bds-t12book.txt). `w1pages` (bds-w1pages.txt): 514, 600, 700 and 768 kept whole, 769
+  closed the writer's connection (no Disconnect seen, as in t2ebook1). Fixed: `books.rs` kicks the
+  writer of a page over 768; test `a_page_of_768_is_kept_and_one_of_769_closes_its_writer`.
+  Re-drilled (sapling-w1pages.txt): the same pages kept, 769 put out, but with a Disconnect
+  (`UnexpectedPacket`), since sapling-net has no close without one.
 - **Lectern**: a click with a book on an empty lectern: windows resent (`select_slot true`),
   `item.book.put` at the block's corner, then BlockEntityData `{book, hasBook 1, page 0, totalPages}`.
   A click with the book on it opens ContainerOpen `Lectern`. LecternUpdate sets `page`, resent as

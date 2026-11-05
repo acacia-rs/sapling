@@ -29,6 +29,7 @@ use crate::experience::Experience;
 pub(crate) use armour_wear::{elytra_flies, equip_sound_name, wear_armour, wear_elytra, wear_soles, wear_thorny};
 pub(crate) use bundle_cleanup::sweep as sweep_bundles;
 pub(crate) use bundles::number as number_bundles;
+pub(crate) use bundles::{lying_shown, unnumbered};
 pub(crate) use donning::{wear_from_hand, worn_in};
 pub(crate) use wire::{stack, stacks_with, wire};
 pub(crate) use crafting::{clear_grid, grid_map_id};

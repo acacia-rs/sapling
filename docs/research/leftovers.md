@@ -186,6 +186,9 @@ and are not kept; tests in tests/integration/mounts_drilled.rs):
   diamonds by `slot.inventory 0` (which took the saddle's slot: SADDLED went off) and emeralds in
   slot 2, killed with `doMobLoot` off, left the diamonds, emeralds and chest at once and no saddle
   (made in that order by their unique ids, sent newest first; sapling sends them oldest first).
+  Left (twelfth wave): sending every new mob newest first broke four drilled orders (e1loot's tack
+  in one tick came oldest first, saddleevents, the golems, the sand), so BDS's order is no one rule by
+  id; the donkey's case needs BDS's send order traced first.
   Sapling's (sapling-t12goods.txt) left the emeralds and chest and lost the slot-0 diamonds. Fixed:
   `riding/replaced.rs` keeps goods put by `slot.inventory 0` in the pack's slot 0 (unsaddling it,
   flags as BDS's), and `riding/packs.rs` `spilled` lets go of them; test
@@ -297,7 +300,11 @@ Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
   announces the zombie already burning (its summon tick runs before `mobs::update` and `reshow`
   rebuilds the AddEntity) and then tells BREATHING and the fire in two packets; BDS announces it
   unlit and tells both in one SetEntityData after the first data. Re-drilled 2026-11-04 on `open`
-  (sapling-firstdata.txt): still so (AddEntity word ...561 lit, then ...928, ...929), not fixed.
+  (sapling-firstdata.txt): still so (AddEntity word ...561 lit, then ...928, ...929). Fixed
+  (twelfth wave): `creatures::tick` leaves a new mob's announcement as made and rebuilds it the tick
+  after, and `entities/tell.rs` `keep_last_flags` sends only the last flag word held for a new
+  entity; re-drilled (sapling-firstdata.txt): AddEntity and first data ...560, then one ...929, as
+  BDS's. Test `a_zombie_summoned_in_the_sun_is_announced_unlit_and_lit_after`.
 - Fixed: data 16's 32 is `HorseFlags::Eating` (LeviLamina `HorseFlags.h`: Saddle 4, Eating 32,
   Standing 64, OpenMouth 128), not rearing. Read in `Horse::postAiStep` (0x142a49530; the Horse
   vtable 0x14a7c72f0 is the one family vtable overriding `Actor::setStanding`, slot 0x1d0;

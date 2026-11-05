@@ -29,8 +29,10 @@ pub fn lying_stack(compound: &[u8], stack: &ItemStack, registry: &BlockRegistry)
 /// As BDS kept an orb: `experience value` Int 1, `Age` Short 141 (research/captures/bds-t2ekeep-dump.txt).
 const WORTH: &str = "experience value";
 
+/// The ticks an orb has lived.
+const AGE: &str = "Age";
+
 /// A new orb actor worth `value`.
-// TODO: its `Age` (ticks lived, a Short on BDS) is not kept.
 pub fn new_orb_actor(unique_id: i64, value: i32, position: [f32; 3], motion: [f32; 3]) -> Vec<u8> {
     let fields = [
         ("UniqueID", Value::Long(unique_id)),
@@ -39,8 +41,22 @@ pub fn new_orb_actor(unique_id: i64, value: i32, position: [f32; 3], motion: [f3
         ("Rotation", floats(&[0.0, 0.0])),
         ("Motion", floats(&motion)),
         (WORTH, Value::Int(value)),
+        (AGE, Value::Short(0)),
     ];
     written(Value::Compound(fields.into_iter().map(|(key, value)| (key.into(), value)).collect()))
+}
+
+/// The orb kept as `compound`, `age` ticks old now.
+pub fn aged_orb(compound: &[u8], age: i16) -> Result<Vec<u8>, Error> {
+    with_fields(compound, [(AGE, Value::Short(age))])
+}
+
+/// How many ticks the orb kept as `compound` has lived; 0 where it does not say.
+pub fn orb_age(compound: &[u8]) -> i16 {
+    match nbt::read::<LittleEndian>(&mut &compound[..]).ok().and_then(|read| read.value.get(AGE).cloned()) {
+        Some(Value::Short(age)) => age,
+        _ => 0,
+    }
 }
 
 /// The orb kept as `compound`, worth `value` now.
@@ -73,5 +89,6 @@ mod tests {
         let orb = new_orb_actor(78, 7, [1.5, 64.0, 2.5], [0.0; 3]);
         assert_eq!((actors(&orb).unwrap().remove(0).identifier.as_str(), orb_value(&orb)), ("minecraft:xp_orb", Some(7)));
         assert_eq!(orb_worth(&orb, 20).ok().and_then(|grown| orb_value(&grown)), Some(20));
+        assert_eq!((orb_age(&orb), aged_orb(&orb, 141).map(|aged| orb_age(&aged)).ok()), (0, Some(141)));
     }
 }

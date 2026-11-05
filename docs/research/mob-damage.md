@@ -300,6 +300,9 @@ Sapling's run: sapling-burn2.txt.
   sapling at 4 and 6 (`SAPLING_TICK_DISTANCE`, sapling-tickcircle4/6.txt): the same mobs hidden, and
   the same ones ticked but 5,3 at 6 (an edge cell above). A returning mob's first poison hit lands
   before its AddEntity on sapling (health 9 of 10), just after it on BDS (10, then 9 the same tick).
+  Left (twelfth wave): the AddEntity is built in `mobs::update` after the creatures' tick, from an
+  announcement `reshow` rebuilt that tick; matching BDS takes a viewer's newly shown mobs announced
+  before the creatures tick (an early `mobs::update` pass), which reorders every tick's showing.
   Mobs 9 and 10 chunks off stayed on sapling: the drill world's ground columns never unload.
 - Commands past the tick region (2026-11-04, `bds_command_probe tickedge` at `tick-distance` 4,
   research/captures/bds-tickedge.txt, and the four tickcircle captures' pad fills): one-block fills

@@ -4,20 +4,23 @@
 //! there are. A Sign makes the stack a written book with the client's `author`, `title` and `xuid`
 //! and `generation` 0. A tick's edits are answered with every window, the held slot selected.
 //! BDS kept pages of 256, 257, 512 and 513 letters and titles of 17 and 40 whole, as sapling does
-//! (research/captures/bds-t2ebook.txt, bds-t12book.txt).
-// TODO: a 1000-letter page got its writer disconnected on BDS (bds-t2ebook1.txt); the limit is past 513.
+//! (research/captures/bds-t2ebook.txt, bds-t12book.txt). A page of 768 was kept and one of 769 had
+//! its writer's connection closed (bds-w1pages.txt), as sapling does.
 
 use acacia_proto::nbt::{List, Value};
 use acacia_proto::packets::{BookEdit, BookEditContent};
 use bevy_ecs::prelude::*;
 use sapling_world::ItemStack;
 
-use crate::components::PacketQueues;
+use acacia_proto::types::DisconnectFailReason;
+
+use crate::components::{Conn, Net, PacketQueues};
 use crate::inventory::{self, HOTBAR, Inventory, Place};
 
 const WRITABLE: &str = "minecraft:writable_book";
 const WRITTEN: &str = "minecraft:written_book";
 const MAX_PAGES: usize = 50;
+const MAX_PAGE_LENGTH: usize = 768;
 const COMPOUND_TAG: u8 = 10;
 
 fn page(text: &str, photo: &str) -> Value {
@@ -86,11 +89,25 @@ fn edited(book: &ItemStack, edit: &BookEditContent) -> Option<ItemStack> {
     Some(ItemStack { tag: Some(with_fields(book.tag.as_ref(), vec![("pages", pages_list(pages))])), ..book.clone() })
 }
 
+fn too_long(edit: &BookEditContent) -> bool {
+    match edit {
+        BookEditContent::ReplacePage(replace) => replace.text.len() > MAX_PAGE_LENGTH,
+        BookEditContent::AddPage(add) => add.text.len() > MAX_PAGE_LENGTH,
+        _ => false,
+    }
+}
+
 /// Applies this tick's book edits to the books and quills in the hotbar slots they name.
 pub(crate) fn dispatch(world: &mut World) {
     let edits = world.resource_mut::<PacketQueues>().take::<BookEdit>();
     let mut answered = Vec::new();
     for (player, edit) in edits {
+        if too_long(&edit.content) {
+            if let Some(conn) = world.get::<Conn>(player).map(|conn| conn.0) {
+                world.resource::<Net>().0.kick_for(conn, DisconnectFailReason::UnexpectedPacket, "");
+            }
+            continue;
+        }
         let Some(slot) = usize::try_from(edit.inventory_slot).ok().filter(|slot| *slot < HOTBAR) else { continue };
         let Some(mut inventory) = world.get_mut::<Inventory>(player) else { continue };
         let book = inventory.slot(Place::Main(slot)).and_then(Option::as_ref).map(|held| held.stack.clone()).filter(|stack| stack.name == WRITABLE);

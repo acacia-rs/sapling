@@ -81,7 +81,7 @@ impl CommandSyntax for Teleport {
 
 impl Command for Teleport {
     /// Each player moved is told where to, as BDS tells them; into the dimension an `/execute in`
-    /// names, the way BDS changes a player's dimension. `~`, `^` and the nearest are counted from
+    /// names, the way BDS changes a player's dimension, and a mob's. `~`, `^` and the nearest are counted from
     /// the sender, or where an `/execute` runs it.
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let here = ctx.origin(sender);
@@ -119,7 +119,9 @@ impl Command for Teleport {
             tell_target(ctx, player.id, "commands.tp.successVictim", &[at.clone().unwrap_or_else(|| format!("{x}, {y}, {z}"))]);
         }
         for entity in &moved {
-            ctx.move_entity(entity.id, to);
+            if !dimension.is_some_and(|dimension| ctx.move_entity_into(entity.id, dimension, to)) {
+                ctx.move_entity(entity.id, to);
+            }
         }
         let names: Vec<String> = moved_players.iter().map(|player| player.name.clone()).chain(moved.iter().map(|entity| display_name(&entity))).collect();
         match (names.is_empty(), at) {

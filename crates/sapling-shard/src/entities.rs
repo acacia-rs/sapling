@@ -214,6 +214,11 @@ pub(crate) fn is_new(world: &World, entity: Entity) -> bool {
     world.get::<Born>(entity).is_some_and(|born| born.0 == world.resource::<Tick>().0)
 }
 
+/// Whether the entity appeared in the tick before this one.
+pub(crate) fn was_new(world: &World, entity: Entity) -> bool {
+    world.get::<Born>(entity).is_some_and(|born| born.0 + 1 == world.resource::<Tick>().0)
+}
+
 /// The world, kind and body of every entity that has had a tick of its own: on BDS one appearing
 /// on a plate presses it the tick after (research/captures/bds-plates.txt).
 pub(crate) fn bodies(world: &World) -> Vec<(Entity, String, Body)> {
@@ -246,6 +251,29 @@ pub(crate) fn teleport(world: &mut World, id: EntityId, feet: [f32; 3]) -> bool 
     if let (Some(packets), Some(layer)) = (packets, world.get::<InLayer>(entity).map(|layer| layer.0)) {
         tell_viewers(world, entity, layer, feet.map(|c| c.floor() as i32), packets);
     }
+    true
+}
+
+/// [`teleport`] into the world `layer`: the entity leaves its riders and its old world's
+/// screens, and is announced in the new one at `feet` (mobs.rs [`mobs::rehome`]).
+pub(crate) fn teleport_into(world: &mut World, id: EntityId, layer: Entity, feet: [f32; 3]) -> bool {
+    let Some(entity) = find(world, id) else { return false };
+    if world.get::<InLayer>(entity).is_none_or(|in_layer| in_layer.0 == layer) {
+        return teleport(world, id, feet);
+    }
+    crate::riding::forget(world, entity);
+    let Some(body) = world.get_mut::<Body>(entity).map(|mut body| {
+        body.at = feet;
+        *body
+    }) else {
+        return false;
+    };
+    // Its new viewers learn of it from its announcement, not a move.
+    if let Some(mut told) = world.get_mut::<Told>(entity) {
+        told.jump();
+        drop(told.update(id.0, feet, body.motion, body.on_ground));
+    }
+    mobs::rehome(world, entity, layer, feet);
     true
 }
 

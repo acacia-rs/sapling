@@ -93,6 +93,7 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 /// Writes every loaded column's actors anew from what the shard has (see the module).
 pub(crate) fn write_back(world: &mut World) {
     crate::tnt::keep_fuses(world);
+    crate::orbs::keep_ages(world);
     creatures::keep_state(world);
     let kept: Vec<(Entity, ChunkPos, i64, Vec<u8>)> = world
         .query::<(&InLayer, &Body, &Stored, &crate::tags::UniqueId, Option<&Kind>, Option<&creatures::Health>, Option<&creatures::Raised>)>()

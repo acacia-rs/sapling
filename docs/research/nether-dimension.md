@@ -33,7 +33,8 @@ against the test BDS copy `~/work/bds-nether` on testbox (port 19186, flat world
 ## A dimension change (bds-dims-travel.txt, -silent.txt)
 
 `/execute in nether run tp @s 0.5 70 0.5` on BDS, in one tick: RemoveEntity of every entity the player
-saw, ChangeDimension {1, (0.5, 70, 0.5) as given (feet), respawn false, loading_screen_id 0}, the
+saw, ChangeDimension {1, (0.5, 70, 0.5) as given (feet), respawn false, loading_screen_id 0} (one count for the whole run: two players' trips and a rejoin
+went 0 to 7, bds-w1screens.txt; sapling's `LoadingScreens` in dimensions.rs), the
 sleepers' LevelEventGeneric to every player; others in the overworld lose the player next tick, players of
 the Nether get AddPlayer at once. Chunks of the new dimension follow (ChunkRadiusUpdate is not sent again,
 nor SetTime, SetSpawnPosition, StopSound or PlayStatus). Once the columns near the player are sent BDS sends

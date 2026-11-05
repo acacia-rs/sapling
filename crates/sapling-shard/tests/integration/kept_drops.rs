@@ -9,7 +9,7 @@ use acacia_proto::packets::AddItemEntity;
 use common::orbs::worths;
 use common::stored::{enter_stored, floor_with};
 use common::{Harness, all, config};
-use sapling_world::{ChunkPos, World, WorldStorage, orb_value, stored_actors};
+use sapling_world::{ChunkPos, World, WorldStorage, orb_age, orb_value, stored_actors};
 
 fn orbs(sent: &[RawPacket]) -> usize {
     worths(sent).len()
@@ -54,4 +54,6 @@ fn orbs_that_joined_up_are_saved_worth_what_they_joined_into() {
     let saved: Vec<i32> = stored_actors(&column.actors).unwrap().iter().filter_map(|(.., compound)| orb_value(compound)).collect();
     assert_eq!(saved.iter().sum::<i32>(), 40, "the forty orbs' worth: {saved:?}");
     assert!(saved.len() < 40, "some joined up: {saved:?}");
+    let ages: Vec<i16> = stored_actors(&column.actors).unwrap().iter().filter(|(.., compound)| orb_value(compound).is_some()).map(|(.., compound)| orb_age(compound)).collect();
+    assert!(ages.iter().all(|age| (60..=210).contains(age)), "kept with the ticks they lived, as BDS's `Age`: {ages:?}");
 }

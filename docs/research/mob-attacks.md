@@ -342,7 +342,8 @@ Sapling's run: sapling-fights.txt. The actor under resistance on a stone floor, 
   hard spider took no target in 12 s and the easy one bit three times, so a bite is not certain.
   Sapling's re-drill (sapling-t12bites.txt): poison 300 then `Update`s to 300 on hard, wither 200
   on easy, as BDS's. Left: BDS sent each wither hit's effect twice in one tick (`Add` then `Update`,
-  later two `Update`s); sapling sends one.
+  later two `Update`s). Fixed (twelfth wave): `gives_twice` in mob-traits.tsv makes
+  `hunting/strike.rs` afflict twice; test `a_wither_skeleton_s_hit_gives_wither_twice_in_its_tick`.
 - A creeper with its prey 6 off was lit and went out; one with prey 3.5 off burst; one whose prey
   went creative went out. Sapling the same.
 - `/summon creeper ... minecraft:start_exploding_forced`: lit 3 ticks after, burst 30 after that with no
