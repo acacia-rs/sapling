@@ -317,7 +317,7 @@ Where they fall (2026-11-05, thirteenth3y, bds-strolls.txt): a walk opens with s
 10 ticks of pace building; inside it, pauses of 2 or more ticks come at the path's corners, after turns
 of 50 to 180 degrees (pigs and sheep sometimes at small ones); it ends slowing to 0.022 a tick and
 creeping to its cell's edge. So BDS stops to turn at a sharp corner where sapling turns as it walks;
-not followed.
+not followed. (Wrong: the live trace below found no corner pauses.)
 Decompiled (2026-11-05, thirteenth3ab): `MoveControl::tick` (1430b8ba0, vtable 14a7f2b00 slot 2) stops
 a walker under 0.1 squared off its wanted place and 0.25 below it. `calculateMoveSpeed` (1430b8050) adds
 a tenth of the wanted speed a tick; within 1 squared of the path's last node (`shouldSlowSpeed`
@@ -331,6 +331,18 @@ class; Linux typeinfo `14PathNavigation`, vtable 0xf241ca8, `tick` slot 3 at 0xb
 13 at 0xbd70f60; Windows has no RTTI for it). LeviLamina's header names the component's fields:
 `mTickTimeout`, `mLastStuckCheck`, `mLastStuckCheckPosition`, `mEndPathRadiusSqr`, `mTerminationThreshold`;
 a stuck check or the node-reached radius there is where a pause at a corner would come from.
+Traced live (2026-11-05, thirteenth3ad, research/captures/bds-ad3strolls-nav.txt): `strolls` on the
+Linux BDS under gdb, each mob's `PathNavigation::tick` and the place it hands MoveControl. There are no
+corner pauses on the server: at 595 node changes inside walks the step after kept its pace (turns under
+50 degrees slow to 0.097 at most; none sharper than 90 came), and the only still ticks past a walk's
+first node were bumps into other mobs. The client-side "pauses" were the short idles between two walks
+that `walks.py` joins (gaps under a second): BDS's idles between walks average 119 ticks over 121, a
+tick in 120 as sapling's, 17 of them under 20 ticks, each new walk turning to its own place after its
+slow start's still ticks. `updatePath` (0xbd70f60) is done with a node, the last too, under
+max(width / 2, 0.6) of its middle (constant 0x1098584 = 0.6; 3-D, the node's own height): BDS's walks
+were at their last wanted tick 0.6 to 0.64 off their last middle 113 times of 132, the rest cut short.
+Sapling took a cell under 0.5: ported (`ARRIVED` in `creatures/strolling.rs`, half the width if more);
+test `a_strolling_cow_is_done_with_a_cell_0_6_off_its_middle`.
 
 ## Fleeing (`flee`)
 
@@ -440,7 +452,10 @@ By night on the stone floor, the survival actor held in place:
   up to twice it while the speed is still coming up; so 30 from a stand, then 60 (bds-slain.txt 235,
   150, 127; "Walking" above). Ported in `creatures/legs.rs` (`TURN`); test
   `a_zombie_turns_to_a_survival_player_walks_up_and_hits_it_once_a_second`, changed from 214, 171, 128.
-  The head's own lag behind the body is not followed (`legs.rs` ties head to body).
+  The head's own lag behind the body is not followed (`legs.rs` ties head to body). Rechecked
+  (thirteenth3ad): in bds-y3hunt.txt's held phase (the zombie 28 off, past `within_radius`, so it took
+  and dropped its target and never walked) BDS told the zombie's head 7 times and its body never; the
+  body following 5 to 10 ticks later is not in that capture, so it needs a drill of its own.
 - A spider at midnight took no target in 4 s, so whether one keeps its prey by day was not seen.
 - `y3gear` (bds-y3gear.txt): BDS sends `MobEquipment` for the skeleton, stray, bogged, wither
   skeleton, zombified piglin, piglin, brute, pillager, vindicator, drowned and vex as each is

@@ -197,10 +197,10 @@ fn golem_targets(sent: &[acacia_proto::RawPacket], golem: u64) -> Vec<i64> {
     items.filter(|item| item.key == Key::TargetEid).filter_map(|item| if let Meta::Default(Plain::Long(id)) = item.value { Some(id) } else { None }).collect()
 }
 
-/// The golems' runtime ids, one summoned by each of `events` (`None` plainly).
-fn golems(h: &mut Harness, events: [Option<&'static str>; 2]) -> Vec<u64> {
-    for (n, event) in events.into_iter().enumerate() {
-        h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", [6.5 + 4.0 * n as f32, 65.0, 6.5], 0.0, 0.0, event).is_some()));
+/// The golems' runtime ids, one summoned at each place by its event (`None` plainly).
+fn golems(h: &mut Harness, events: [(Option<&'static str>, [f32; 3]); 2]) -> Vec<u64> {
+    for (event, at) in events {
+        h.remote.run(move |ctx| assert!(ctx.summon_as(None, "minecraft:iron_golem", at, 0.0, 0.0, event).is_some()));
     }
     let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:iron_golem").map(|added| added.runtime_id).collect()
@@ -210,8 +210,20 @@ fn golems(h: &mut Harness, events: [Option<&'static str>; 2]) -> Vec<u64> {
 fn only_the_village_golem_takes_a_player_who_hit_a_grown_villager_as_bds_shows() {
     let (mut h, id) = village(6_000, [3.5, 65.0, 0.5], "minecraft:become_unskilled");
     h.remote.run(|ctx| ctx.teleport(PlayerId(1), [0.5, 65.0, 0.5]));
-    let ids = golems(&mut h, [Some("minecraft:from_village"), None]);
+    let ids = golems(&mut h, [(Some("minecraft:from_village"), [6.5, 65.0, 6.5]), (None, [10.5, 65.0, 6.5])]);
     h.receive(1, &attack(id));
     let seen: Vec<_> = (0..10).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     assert_eq!((golem_targets(&seen, ids[0]), golem_targets(&seen, ids[1])), (vec![1], vec![]), "bds-golems.txt");
+}
+
+#[test]
+fn a_village_golem_16_or_more_from_the_hitter_does_not_take_it() {
+    // bds-ad3golem-gdb3-hits.txt: BDS's defend filter refuses a hitter 16 or more off the golem.
+    let (mut h, id) = village(6_000, [3.5, 65.0, 0.5], "minecraft:become_unskilled");
+    h.remote.run(|ctx| ctx.teleport(PlayerId(1), [0.5, 65.0, 0.5]));
+    let village = Some("minecraft:from_village");
+    let ids = golems(&mut h, [(village, [6.5, 65.0, 6.5]), (village, [16.5, 65.0, 8.5])]);
+    h.receive(1, &attack(id));
+    let seen: Vec<_> = (0..10).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert_eq!((golem_targets(&seen, ids[0]), golem_targets(&seen, ids[1])), (vec![1], vec![]));
 }
