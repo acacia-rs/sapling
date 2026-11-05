@@ -3,7 +3,8 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, RemoveEntity, SetEntityData};
+use acacia_proto::nbt::Value as NbtValue;
+use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent, LevelEventGeneric, LevelSoundEvent, RemoveEntity, SetEntityData, UpdateSubchunkBlocks};
 use acacia_proto::types::{MetadataDictionaryItemValue as Value, MetadataFlags1};
 use common::asking::ask;
 use common::{Harness, all};
@@ -149,4 +150,69 @@ fn a_bolt_over_copper_walks_it_clean_a_stage_a_walk_sparking_as_it_appears() {
     let sparks = all::<LevelEvent>(&watch(&mut h, 1)).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [3.0, 64.0, 3.0]).count();
     assert_eq!(sparks, 3, "one a stage, on the tick the bolt shows");
     assert_eq!(ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name), "minecraft:copper_block");
+}
+
+fn sparks_at(sent: &[RawPacket], [x, y, z]: [i32; 3]) -> usize {
+    all::<LevelEvent>(sent).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [x as f32, y as f32, z as f32]).count()
+}
+
+#[test]
+fn a_waxed_rod_struck_sparks_once_and_is_powered_keeping_its_stage_and_a_plain_one_comes_clean() {
+    // research/captures/bds-z2bolt.txt: one spark each; the waxed rods powered as they were, the exposed one
+    // cleaned then powered in one UpdateSubchunkBlocks; a bolt over the waxed rod did nothing.
+    let mut h = ready(Difficulty::Easy);
+    h.remote.run(|ctx| {
+        ctx.set_block([2, 65, 3], &Block::new("minecraft:waxed_lightning_rod"));
+        ctx.set_block([4, 64, 3], &Block::new("minecraft:oxidized_copper"));
+        ctx.set_block([4, 65, 3], &Block::new("minecraft:waxed_exposed_lightning_rod"));
+        ctx.set_block([6, 65, 3], &Block::new("minecraft:exposed_lightning_rod"));
+    });
+    watch(&mut h, 1);
+    for (x, name) in [(2, "minecraft:waxed_lightning_rod"), (4, "minecraft:waxed_exposed_lightning_rod"), (6, "minecraft:lightning_rod")] {
+        h.remote.run(move |ctx| assert!(ctx.spawn_entity(BOLT, [x as f32 + 0.5, 65.0, 3.5]).is_some()));
+        let sent = watch(&mut h, 2);
+        assert_eq!(sparks_at(&sent, [x, 65, 3]), 1, "{name}");
+        let rod = ask(&mut h, move |ctx| ctx.block([x, 65, 3]).unwrap());
+        assert!(rod.name == name && rod.properties.contains("powered_bit=1"), "{rod:?}");
+        let batched = all::<UpdateSubchunkBlocks>(&sent).into_iter().map(|update| update.blocks.len()).collect::<Vec<_>>();
+        assert_eq!(batched, if x == 6 { vec![2] } else { vec![] }, "{name}");
+    }
+    assert_eq!(ask(&mut h, |ctx| ctx.block([4, 64, 3]).unwrap().name), "minecraft:oxidized_copper");
+    watch(&mut h, 10);
+    h.remote.run(|ctx| assert!(ctx.spawn_entity(BOLT, [2.5, 66.0, 3.5]).is_some()));
+    let sent = watch(&mut h, 2);
+    assert_eq!(sparks_at(&sent, [2, 65, 3]), 0);
+    assert!(!ask(&mut h, |ctx| ctx.block([2, 65, 3]).unwrap().properties.contains("powered_bit=1")));
+}
+
+/// The origin and time to live of each vibration particle sent.
+fn vibrations(sent: &[RawPacket]) -> Vec<([f32; 3], f32)> {
+    let float = |value: &NbtValue| if let NbtValue::Float(f) = value { *f } else { f32::NAN };
+    all::<LevelEventGeneric>(sent)
+        .into_iter()
+        .filter(|event| event.event_id == 2027 << 1)
+        .map(|event| {
+            let field = |name: &str| event.nbt.iter().find(|nbt| nbt.name == name).map(|nbt| nbt.value.clone()).unwrap();
+            let NbtValue::Compound(origin) = field("origin") else { panic!("origin") };
+            let axis = |name: &str| origin.iter().find(|(key, _)| key == name).map_or(f32::NAN, |(_, value)| float(value));
+            ([axis("x"), axis("y"), axis("z")], float(&field("timeToLive")))
+        })
+        .collect()
+}
+
+#[test]
+fn a_bolt_is_felt_from_the_cell_under_it_or_from_where_a_struck_rod_points() {
+    // research/captures/bds-z2bolt.txt: from under a bolt over the floor, from over a rod facing down that it struck.
+    let mut h = ready(Difficulty::Easy);
+    h.remote.run(|ctx| {
+        ctx.set_block([3, 65, -3], &Block::new("minecraft:sculk_sensor"));
+        ctx.spawn_entity(BOLT, [3.5, 65.0, 0.5]);
+    });
+    assert_eq!(vibrations(&watch(&mut h, 2)), [([3.5, 64.5, 0.5], 0.15)]);
+    watch(&mut h, 50);
+    h.remote.run(|ctx| {
+        ctx.set_block([-1, 65, -3], &Block::new("minecraft:lightning_rod").with("facing_direction=0"));
+        ctx.spawn_entity(BOLT, [-0.5, 65.0, -2.5]);
+    });
+    assert_eq!(vibrations(&watch(&mut h, 2)), [([-0.5, 66.5, -2.5], 0.2)]);
 }

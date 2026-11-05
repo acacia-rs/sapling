@@ -52,15 +52,23 @@ pub(crate) fn sparks(world: &mut World, layer: Entity, cell: BlockPos) -> Strike
     Strike { hooks, start }
 }
 
-/// The strike of a bolt whose hook calls `strike` rolled: copper they reach loses its stages, rods
-/// are powered for a while, and the walk's start is felt as the strike (copper.md L6).
+/// The strike of a bolt whose hook calls `strike` rolled: copper they reach loses its stages and
+/// rods are powered for a while. Every change is listed in the order made, a sub-chunk at a time,
+/// as BDS showed them (bds-p2copper.txt).
 pub(crate) fn struck(world: &mut World, layer: Entity, strike: &Strike) {
-    for &pos in &strike.hooks {
-        if super::copper::hooked(world, layer, pos) && power(world, layer, pos, true) {
-            queued::cancel(world, layer, pos, Job::RodOff);
-            queued::after(world, layer, pos, POWERED, Job::RodOff);
+    send::logged(world, |world| {
+        for &pos in &strike.hooks {
+            if super::copper::hooked(world, layer, pos) && power(world, layer, pos, true) {
+                queued::cancel(world, layer, pos, Job::RodOff);
+                queued::after(world, layer, pos, POWERED, Job::RodOff);
+            }
         }
-    }
+    });
+}
+
+/// The strike is felt from its walk's start (copper.md L6): the cell under a bolt, or the cell a
+/// struck rod points to, as BDS's vibrations came from (bds-z2bolt.txt).
+pub(crate) fn felt(world: &mut World, layer: Entity, strike: &Strike) {
     super::vibrate_at(world, layer, strike.start, super::GameEvent::LightningStrike, false);
 }
 

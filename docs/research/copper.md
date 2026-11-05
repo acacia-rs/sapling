@@ -120,8 +120,14 @@ Server path only (client path just predicts the result):
 - Drilled (bds-p2copper.txt, a bolt at 4.5 -26 -2.5 over exposed copper): `p` is the air cell, every spark of the
   walks came in the tick the bolt appeared and every block change, in walk order, in one UpdateSubchunkBlocks a
   tick later with the thunder. Against L2, the rod sparked at each of its 3 visits though it had no stage to
-  lose. Sapling (`blocks/rods.rs` `walk`, `blocks/copper.rs` `walked`/`sparking`) draws the walks and shows the
-  sparks as the bolt appears and runs the hooks when it lands; its block changes go one at a time.
+  lose. Sapling (`blocks/copper.rs` `hooks`, `blocks/rods.rs` `sparks`) draws the walks and shows the sparks as
+  the bolt appears; `struck` runs the hooks when it lands, every change in one log, before the thunder.
+- Drilled (bds-z2bolt.txt, 2026-11-05), settling the two models the merge of groups O and P left: a waxed rod, and
+  a waxed exposed rod, struck in its cell sparked once and was powered keeping its stage (L2); a plain exposed rod
+  went clean then powered in one UpdateSubchunkBlocks; a bolt one over a waxed rod did nothing (its walk start is
+  waxed, L5). The vibration particle's origin was the middle of `s` (L6): under a bolt over the floor, and over a
+  struck rod facing down (`s` = where it points), never the bolt's cell; it came after the thunder. Sapling's kept
+  model (O's) matched; the particle and its order were added (`rods::felt`, `sculk/events.rs` `signal`).
 
 ## 5. Names
 

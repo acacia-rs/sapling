@@ -4,11 +4,12 @@
 //! the event, then cools down. A calibrated sensor powered from behind hears only the frequency
 //! of that power. A shrieker hears sensors going active, and shrieks when a player set one off
 //! (shrieks.rs).
-// TODO: nothing occludes or dampens (wool); no amethyst resonates; no vibration particle; mobs,
+// TODO: a broken wool block and steps on wool are heard; no amethyst resonates; teleports, mobs,
 // eating, damage and explosions are not heard.
 
 mod catalyst;
 mod events;
+mod occlusion;
 mod shrieks;
 
 pub(crate) use catalyst::{arrived as catalysts_arrived, mob_died};
@@ -162,11 +163,14 @@ fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEv
     }
     let now = world.resource::<Tick>().0;
     let cell = at.map(|c| c.floor() as i32);
+    if event == GameEvent::BlockPlace && occlusion::dampens(world, layer, cell) {
+        return;
+    }
     for listener in near {
         let Some((name, properties, _)) = name_at(world, layer, listener) else { continue };
         let range = if name == CALIBRATED { CALIBRATED_RANGE } else { RANGE };
         let distance = (0..3).map(|axis| ((listener[axis] - cell[axis]) as f32).powi(2)).sum::<f32>().sqrt();
-        if distance > range || !hears(world, layer, (name, properties), listener, cell, event, by_player) {
+        if distance > range || !hears(world, layer, (name, properties), listener, cell, event, by_player) || occlusion::occluded(world, layer, cell, listener) {
             continue;
         }
         let strength = (15 - (15.0 * distance / range).floor() as i32).clamp(1, 15) as u8;
@@ -176,6 +180,7 @@ fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEv
         }
         let when = now + (distance as u64).max(1);
         listeners.coming.push(Coming { when, layer, listener, frequency: event.frequency(), strength, by_player });
+        send::to_viewers(world, layer, cell, &[events::signal(cell, listener, distance as u64)]);
     }
 }
 
