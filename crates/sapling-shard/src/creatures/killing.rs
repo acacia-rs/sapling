@@ -14,6 +14,11 @@ use crate::{entities, mobs};
 pub(super) fn kill(world: &mut World, id: EntityId) -> bool {
     let Some(entity) = entities::find(world, id).filter(|entity| world.get::<Dying>(*entity).is_none() && !crate::dragon::is_dying(world, *entity)) else { return false };
     let (Some(kind), Some(body), Some(layer)) = (world.get::<entities::Kind>(entity).map(|kind| kind.0.clone()), world.get::<Body>(entity).copied(), world.get::<InLayer>(entity).map(|layer| layer.0)) else { return false };
+    // A killed boat or minecart leaves its item (research/captures/bds-i2rails.txt).
+    if crate::vehicles::is_vehicle(&kind) {
+        crate::vehicles::wreck(world, entity, true);
+        return true;
+    }
     if world.get::<Creature>(entity).is_none() || NO_DEATH.contains(&kind.as_str()) {
         mobs::remove(world, entity);
         return true;

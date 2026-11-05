@@ -158,6 +158,9 @@ ender chest and barrel actors; shulker box has its own AABB). Fields set by the 
    Java uses `isRedstoneConductor` of the block above instead (glass would not block there). Java
 3. `_detectEntityObstruction` (141f33660): any **cat (0x534b) or ocelot (0x5316) with the SITTING flag** (24)
    inside the obstruction box → cannot open. Java checks cats only (any cat, sitting or not). BDSRE / Java
+   Sapling follows it since 2026-11-05 (`containers/access.rs` `cat_sits_on`, test
+   `a_cat_sitting_on_a_chest_holds_it_shut`); not drilled (a cat made to sit on a chest by commands
+   alone is not at hand).
 4. Shulker box (vtable at 14a841d20): no component lookup; box = one full cell next to it in its `facing_direction`
    (`x/z ± 1` or `y ± 1`) with height 0.5 from that cell's bottom (`[cell, cell + (1, 0.5, 1)]` for up/sideways;
    inf for down); collision overlap → cannot open; no cat check (slot returns false). BDSRE

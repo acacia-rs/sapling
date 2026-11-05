@@ -21,6 +21,7 @@ const DROWN_HARM: f32 = 2.0;
 
 /// What hurt: `EntityEvent` names it by its number.
 pub(crate) use sapling_api::DamageCause as Cause;
+pub(crate) use falls::Ground;
 
 #[derive(Component, Clone, Copy, Debug)]
 pub(crate) struct Health {
@@ -35,8 +36,8 @@ pub(crate) struct Health {
     air: i16,
     /// Ticks running its head has been in a block.
     walled: u8,
-    /// A landing that hurts in the tick after it: what it costs, and where that tick began.
-    landed: Option<(f32, [f32; 3])>,
+    /// A landing that hurts in the tick after it: what it costs, where that tick began, and its cause.
+    landed: Option<(f32, [f32; 3], Cause)>,
     /// The points and toughness of what it wears, and what that armour's enchantments ward off.
     armour: [f32; 2],
     warding: Warding,

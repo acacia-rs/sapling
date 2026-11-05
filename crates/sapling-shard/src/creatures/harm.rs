@@ -183,11 +183,11 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         health.begin();
         let weigh = |world: &mut World, health: &mut Health, before: Health, cause: Cause| crate::damage::weigh(world, entity, health, &before, cause);
         let before = health;
-        let soften = level.map_or(1.0, |level| super::heat::softening(level, now.at));
-        if let Some((harm, from)) = health.fall_onto(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall, soften)
-            && weigh(world, &mut health, before, Cause::Fall)
+        let ground = level.map_or(super::Ground::Soft(1.0), |level| super::heat::softening(level, now.at));
+        if let Some((harm, from, cause)) = health.fall_onto(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall, ground)
+            && weigh(world, &mut health, before, cause)
         {
-            packets.push(strike(id, &health, Cause::Fall, Some(now.at)));
+            packets.push(strike(id, &health, cause, (cause == Cause::Fall).then_some(now.at)));
             packets.push(land(world, layer, id, kind, from, now, harm));
         }
         let wet = now.liquid() == Some(Liquid::Water);

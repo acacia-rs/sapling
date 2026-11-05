@@ -9,6 +9,7 @@ mod boats;
 mod cargo;
 mod carts;
 mod command_cart;
+mod detectors;
 mod pull;
 mod rails;
 

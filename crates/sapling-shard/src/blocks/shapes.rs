@@ -21,6 +21,7 @@ const ARMS: [[f32; 4]; 4] = [[0.3125, 0.6875, 0.0, 0.25], [0.75, 1.0, 0.3125, 0.
 const POST: [f32; 4] = [0.25, 0.75, 0.25, 0.75];
 /// A stair's `weirdo_direction` as a step: 0 east, 1 west, 2 south, 3 north.
 const STAIR_STEPS: [[i32; 2]; 4] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const DRIPSTONE: &str = "minecraft:pointed_dripstone";
 
 #[derive(Clone, Copy, PartialEq)]
 enum Family {
@@ -130,6 +131,21 @@ fn corner(level: &Level, pos: BlockPos, facing: [i32; 2], half: &str) -> &'stati
     "none"
 }
 
+/// A pointed dripstone's thickness by the pieces it points to and from (BDS 14660c4b0, as Java's
+/// `calculateDripstoneThickness`; two tips meet as BDS's `neighborChanged` 14660ceb0 asks).
+fn dripstone(level: &Level, [x, y, z]: BlockPos, this: &Cell) -> &'static str {
+    let hanging = get(this.properties, "hanging") == Some("1");
+    let step = if hanging { -1 } else { 1 };
+    let piece = |dy: i32| cell(level, [x, y + dy, z]).filter(|cell| cell.name == DRIPSTONE).map(|cell| (get(cell.properties, "hanging") == Some("1"), get(cell.properties, "dripstone_thickness").unwrap_or("tip")));
+    match piece(step) {
+        Some((other, thickness)) if other != hanging => if thickness != "tip" || get(this.properties, "dripstone_thickness") == Some("merge") { "merge" } else { "tip" },
+        Some((_, "tip" | "merge")) => "frustum",
+        Some(_) if piece(-step).is_some_and(|(other, _)| other == hanging) => "middle",
+        Some(_) => "base",
+        None => "tip",
+    }
+}
+
 /// The properties the neighbours of the block at `pos` decide for it; none for a block whose
 /// state does not follow them.
 fn decided(level: &Level, pos: BlockPos) -> Vec<(String, &'static str)> {
@@ -144,6 +160,9 @@ fn decided(level: &Level, pos: BlockPos) -> Vec<(String, &'static str)> {
     }
     if let Some((facing, half)) = stair(&this).filter(|_| get(this.properties, "minecraft:corner").is_some()) {
         return vec![("minecraft:corner".to_owned(), corner(level, pos, facing, half))];
+    }
+    if this.name == DRIPSTONE {
+        return vec![("dripstone_thickness".to_owned(), dripstone(level, pos, &this))];
     }
     if this.name.ends_with("fence_gate") {
         let line = if get(this.properties, "minecraft:cardinal_direction").is_some_and(|facing| facing == "north" || facing == "south") { [[1, 0], [-1, 0]] } else { [[0, 1], [0, -1]] };
@@ -166,11 +185,12 @@ fn with_all(registry: &BlockRegistry, id: u32, set: &[(String, &str)]) -> Option
 /// Walls a change can run down: a post raises one under it, so a column of walls is a chain.
 const MAX_WALL_RUN: usize = 64;
 
-/// Gives the blocks a change at `pos` can reshape (it, the four beside it, and the walls under
-/// any of them that changed) the state their neighbours now decide, for everyone who sees them.
+/// Gives the blocks a change at `pos` can reshape (it, the four beside it, the ones over and under
+/// it, and the walls under any of them that changed) the state their neighbours now decide, for
+/// everyone who sees them.
 pub(super) fn reshape_around(world: &mut World, layer: Entity, pos: BlockPos) {
     let [x, y, z] = pos;
-    let mut cells = vec![pos, [x, y, z - 1], [x + 1, y, z], [x, y, z + 1], [x - 1, y, z], [x, y - 1, z]];
+    let mut cells = vec![pos, [x, y, z - 1], [x + 1, y, z], [x, y, z + 1], [x - 1, y, z], [x, y + 1, z], [x, y - 1, z]];
     let mut runs = 0;
     while let Some(cell) = cells.pop() {
         let Some(level) = level(world, layer).filter(|level| level.in_height(cell[1]) && level.is_loaded(send::column(cell))) else { continue };

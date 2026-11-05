@@ -64,7 +64,7 @@ fn a_fall_costs_each_block_begun_past_three_as_on_bds() {
         let mut cow = Health::new(10.0, None, 0);
         let middle = 60.0 + height / 2.0;
         assert_eq!((cow.fall(at(60.0 + height), middle, false, false), cow.fall(at(middle), 60.0, true, false)), (None, None), "not in the tick it lands");
-        cow.fall(at(60.0), 60.0, true, false)
+        cow.fall(at(60.0), 60.0, true, false).map(|(harm, from, _)| (harm, from))
     };
     let from = |height: f32| at(60.0 + height / 2.0);
     assert_eq!([3.0, 3.5, 4.0, 8.0].map(cost), [None, Some((1.0, from(3.5))), Some((1.0, from(4.0))), Some((5.0, from(8.0)))]);
@@ -110,12 +110,23 @@ fn hay_slime_and_a_bed_soften_a_fall_as_on_bds() {
     // research/captures/bds-harm2.txt: 8 blocks cost 5 on stone, none on hay or slime; 8.44 onto a bed cost 1.
     let cost = |height: f32, block: &str| {
         let mut cow = Health::new(10.0, None, 0);
-        let soften = crate::creatures::heat::softens(block);
+        let soften = super::Ground::Soft(crate::creatures::heat::softens(block));
         cow.fall_onto([0.5, 60.0 + height, 0.5], 60.0, false, false, soften);
         cow.fall_onto([0.5, 60.0, 0.5], 60.0, true, false, soften);
-        cow.fall_onto([0.5, 60.0, 0.5], 60.0, true, false, soften).map(|(harm, _)| harm)
+        cow.fall_onto([0.5, 60.0, 0.5], 60.0, true, false, soften).map(|(harm, ..)| harm)
     };
     assert_eq!([cost(8.0, "minecraft:stone"), cost(8.0, "minecraft:hay_block"), cost(8.0, "minecraft:slime"), cost(8.4375, "minecraft:bed")], [Some(5.0), None, None, Some(1.0)]);
+}
+
+/// research/captures/bds-i2drip.txt: a player's fall from y -20 onto a stalagmite's tip in -26 cost 8
+/// as a stalagmite's hit; the same fall onto stone 3.
+#[test]
+fn a_stalagmite_tip_counts_two_blocks_more_twice_over() {
+    let mut player = Health::new(20.0, None, 0);
+    player.fall_onto([0.5, 65.0, 0.5], 60.0, false, false, super::Ground::Spike);
+    player.fall_onto([0.5, 60.0, 0.5], 60.0, true, false, super::Ground::Spike);
+    let landed = player.fall_onto([0.5, 60.0, 0.5], 60.0, true, false, super::Ground::Spike);
+    assert_eq!(landed.map(|(harm, _, cause)| (harm, cause)), Some((8.0, super::Cause::Stalagmite)));
 }
 
 #[test]

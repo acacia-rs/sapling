@@ -27,6 +27,7 @@ const KELP: &str = "minecraft:kelp";
 const TWISTING: &str = "minecraft:twisting_vines";
 const WEEPING: &str = "minecraft:weeping_vines";
 const SMALL_DRIPLEAF: &str = "minecraft:small_dripleaf_block";
+const DRIPSTONE: &str = "minecraft:pointed_dripstone";
 /// What a small dripleaf stands on dry; in water, the dirt list too (1466059d0, worldgen-bds-caves.md).
 const DRIPLEAF_GROUND: &[&str] = &["minecraft:clay", "minecraft:moss_block"];
 /// What lets redstone dust lie on it without a top to lie on.
@@ -79,7 +80,7 @@ const LOW_CENTRE: &[&str] = &["minecraft:soul_sand", "minecraft:mud"];
 
 /// Whether the top of the block at `pos` holds something up: under the middle of the face
 /// (BDS support "centre"), or across all of it ("edge").
-fn has_top(level: &World, [x, y, z]: BlockPos, whole: bool) -> bool {
+pub(super) fn has_top(level: &World, [x, y, z]: BlockPos, whole: bool) -> bool {
     let Some(state) = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten() else { return false };
     if !whole && (LOW_CENTRE.contains(&state.name) || NO_CENTRE.iter().any(|end| state.name.ends_with(end))) {
         return LOW_CENTRE.contains(&state.name);
@@ -141,6 +142,12 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
         WEEPING => {
             let above = [pos[0], pos[1] + 1, pos[2]];
             !is_wet(level, pos) && (name(level, above) == Some(WEEPING) || level.in_height(above[1]) && has_bottom(level, above))
+        }
+        // On more of it or a whole top (`PointedDripstoneBlock::canSurvive` 14660c830; bds-i2drip.txt).
+        DRIPSTONE if property(registry, id, "hanging") == Some("0") => {
+            let ground = below(pos);
+            let on_more = level.in_height(ground[1]) && property(registry, level.block(ground[0], ground[1], ground[2]), "hanging") == Some("0") && under == Some(DRIPSTONE);
+            on_more || has_top(level, ground, true)
         }
         _ if VINES.contains(&block) => {
             let above = [pos[0], pos[1] + 1, pos[2]];

@@ -1,11 +1,9 @@
 //! Minecarts: placed on a rail from their item, rolled along rails (rails.rs) and falling off
 //! them as any body does, pushed by those who walk into them; a detector rail is pressed under
-//! one, an activator rail throws out a minecart's rider and primes a TNT minecart, which bursts at
+//! one (detectors.rs), an activator rail throws out a minecart's rider and primes a TNT minecart, which bursts at
 //! the end of its fuse or when it falls hard (docs/research/vehicles.md "Minecarts").
 // TODO: a TNT minecart's blast is not scaled by its speed and nothing but flint and steel, an
 // activator rail and a fall sets one off; a cart's yaw does not follow its rail.
-
-use std::collections::HashMap;
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
@@ -13,7 +11,7 @@ use sapling_api::{BlockPos, Face};
 use super::rails::{self, Rail, RailKind, Roll};
 use super::{MINECART, TNT_MINECART, is_crowded, spawn};
 use crate::body::{Body, InLiquid, Physics};
-use crate::components::{InLayer, Layer, NetId, Position, Tick};
+use crate::components::{InLayer, Layer, NetId, Position};
 use crate::creatures;
 use crate::entities::{self, Kind};
 use crate::riding::{Reins, Riding};
@@ -34,8 +32,6 @@ pub(super) const SHORT_FUSE: [i32; 2] = [10, 20];
 const BLAST: f32 = 3.0;
 /// A TNT minecart falling further than this bursts as it lands.
 const HARD_FALL: f32 = 3.5;
-/// A detector rail stays pressed this long after a cart was last on it.
-const DETECTED: u64 = 20;
 /// Others push a cart from this near, by this much (BDS `legacy_minecart` push).
 const NEAR: f32 = 0.2;
 const PUSH: f32 = 0.1;
@@ -48,10 +44,6 @@ pub(super) struct Cart {
     fuse: Option<i32>,
     fallen: f32,
 }
-
-/// The detector rails carts pressed, with the last tick one was on each.
-#[derive(Resource, Default)]
-struct Pressed(HashMap<(Entity, BlockPos), u64>);
 
 pub(super) fn fit(world: &mut World, cart: Entity) {
     world.entity_mut(cart).insert(Cart::default());
@@ -90,6 +82,7 @@ fn how(world: &World, cart: Entity, kind: &str, rail: &Rail, level: &sapling_wor
 
 /// Moves each minecart a tick, and lets its rail act on it.
 pub(super) fn tick(world: &mut World) {
+    super::detectors::tick(world);
     push(world);
     let carts: Vec<(Entity, Entity, u64, String, Body)> = world.query_filtered::<(Entity, &InLayer, &NetId, &Kind, &Body), With<Cart>>().iter(world).map(|(cart, layer, id, kind, body)| (cart, layer.0, id.0, kind.0.clone(), *body)).collect();
     for (cart, layer, id, kind, body) in carts {
@@ -103,7 +96,7 @@ pub(super) fn tick(world: &mut World) {
                 let moved = *moved;
                 let Some(mut told) = world.get_mut::<Told>(cart) else { continue };
                 let packets = told.update(id, [feet[0], feet[1] + LIFT, feet[2]], motion, true);
-                act(world, cart, layer, &kind, &rail);
+                act(world, cart, &kind, &rail);
                 (moved, packets)
             }
             None => {
@@ -123,23 +116,15 @@ pub(super) fn tick(world: &mut World) {
             continue;
         }
         if let Ok(mut entity) = world.get_entity_mut(cart) {
-            entity.insert(state);
+            entity.insert((state, super::detectors::Settled));
         }
     }
-    release_detectors(world);
 }
 
-/// What the rail under a cart does to it: a detector rail is pressed; a powered activator rail
-/// throws out a minecart's riders and primes a TNT minecart.
-fn act(world: &mut World, cart: Entity, layer: Entity, kind: &str, rail: &Rail) {
+/// What the rail under a cart does to it: a powered activator rail throws out a minecart's riders
+/// and primes a TNT minecart.
+fn act(world: &mut World, cart: Entity, kind: &str, rail: &Rail) {
     match rail.kind {
-        RailKind::Detector => {
-            let now = world.resource::<Tick>().0;
-            world.get_resource_or_insert_with(Pressed::default).0.insert((layer, rail.pos), now);
-            if !rail.on {
-                set_pressed(world, layer, rail.pos, true);
-            }
-        }
         RailKind::Activator if rail.on && kind == MINECART => drop(crate::riding::evict(world, cart)),
         RailKind::Activator if rail.on && kind == super::command_cart::COMMAND_MINECART => {
             let at = world.get::<crate::body::Body>(cart).map_or([0.0; 3], |body| body.at);
@@ -147,26 +132,6 @@ fn act(world: &mut World, cart: Entity, layer: Entity, kind: &str, rail: &Rail) 
         }
         RailKind::Activator if rail.on => drop(prime(world, cart, FUSE)),
         _ => {}
-    }
-}
-
-fn set_pressed(world: &mut World, layer: Entity, [x, y, z]: BlockPos, on: bool) {
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
-    if let Some(id) = crate::blocks::with_property(level.registry(), level.block(x, y, z), "rail_data_bit", if on { "1" } else { "0" }) {
-        crate::blocks::set(world, layer, [x, y, z], id);
-    }
-}
-
-/// Lets go of the detector rails no cart was on for a while.
-fn release_detectors(world: &mut World) {
-    let now = world.resource::<Tick>().0;
-    let Some(mut pressed) = world.get_resource_mut::<Pressed>() else { return };
-    let gone: Vec<(Entity, BlockPos)> = pressed.0.iter().filter(|(_, last)| now >= **last + DETECTED).map(|(key, _)| *key).collect();
-    pressed.0.retain(|key, _| !gone.contains(key));
-    for (layer, pos) in gone {
-        if world.get::<Layer>(layer).and_then(|level| rails::rail_at(&level.world, pos)).is_some_and(|rail| rail.kind == RailKind::Detector && rail.on) {
-            set_pressed(world, layer, pos, false);
-        }
     }
 }
 

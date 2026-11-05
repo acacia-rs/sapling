@@ -4,8 +4,12 @@
 use crate::common;
 
 use acacia_proto::packets::{BlockEntityData, BlockEvent, ContainerClose, ContainerOpen, LevelSoundEvent, UpdateBlock};
+use acacia_proto::packets::EntityEventEventId as Event;
+use acacia_proto::types::MetadataFlags1 as Flags;
+use common::raising::{click_on, has_flag, showed};
+use common::shooting::spawn;
 use common::{Harness, all, click, input_at};
-use sapling_api::Block;
+use sapling_api::{Block, EntityId, Item, PlayerId, Slot};
 
 const CHEST: [i32; 3] = [1, 65, 0];
 
@@ -37,6 +41,29 @@ fn a_chest_under_a_block_does_not_open_and_one_under_a_torch_does() {
 #[test]
 fn a_shulker_box_under_a_block_a_slab_or_a_carpet_does_not_open() {
     opens_under(beside("undyed_shulker_box"), &[("stone", false), ("oak_slab", false), ("white_carpet", false), ("air", true)]);
+}
+
+/// BDS `ChestBlockActor::_detectEntityObstruction` (beds-and-containers.md section 6): a sitting
+/// cat in the lid's space holds the chest shut; standing, it does not.
+#[test]
+fn a_cat_sitting_on_a_chest_holds_it_shut() {
+    let mut h = at_a_chest();
+    let hold = |h: &mut Harness, item: Option<Item>| {
+        h.remote.run(move |ctx| assert!(ctx.set_item(PlayerId(1), Slot::Main(0), item.as_ref())));
+        h.tick(1);
+    };
+    hold(&mut h, Some(Item::new("minecraft:cod", 64)));
+    let cat = spawn(&mut h, "minecraft:cat", [1.5, 66.0, 0.5]);
+    assert!((0..40).any(|_| showed(&click_on(&mut h, cat), cat, Event::TameSuccess)), "a third of fish tame");
+    hold(&mut h, None);
+    assert_eq!(has_flag(&click_on(&mut h, cat), cat, Flags::SITTING), Some(true));
+    h.remote.run(move |ctx| assert!(ctx.move_entity(EntityId(cat), [1.5, 65.875, 0.5])));
+    h.tick(1);
+    h.tick(1);
+    assert!(!opens(&mut h), "a sitting cat on it");
+    h.receive(1, &ContainerClose { window_id: acacia_proto::types::WindowID::from_raw(0), window_type: acacia_proto::types::WindowType::Container, server: false });
+    assert_eq!(has_flag(&click_on(&mut h, cat), cat, Flags::SITTING), Some(false));
+    assert!(opens(&mut h), "a standing cat on it");
 }
 
 fn opens_under(mut h: Harness, cases: &[(&'static str, bool)]) {

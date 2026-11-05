@@ -107,7 +107,7 @@ pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, in_rain, is_full_block, touches, wound};
 pub(crate) use heat::softening;
 pub(crate) use hatching::{hatch, make_home};
-pub(crate) use health::{Cause, Health};
+pub(crate) use health::{Cause, Ground, Health};
 pub(crate) use hunting::{on_difficulty, sees};
 pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, owner_hurt, shear_in, tame_by_riding, tame_by_upgrade, tie_to_fence};
 pub(crate) use omens::{Omens, befall, infested_hurt};

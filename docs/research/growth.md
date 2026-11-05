@@ -90,6 +90,10 @@ water near, dried a step after 40 seconds at 1 and a step every 5 seconds or so 
 at 20 than a tenth of its pace at 200 would be, so farmland is not in step with the rule either,
 and sapling's three random ticks to a crop's one is right only near 200 and near 1. The
 torchflower crop did not grow in the minute and a half.
+`FarmBlock`'s random tick (147151550, its `BlockRandomTickEvent` lambda; 2026-11-05) does one step
+a tick and nothing else paces it: water within 4 across (the rows up not read), or rain over it (> 0.15), wets it
+to 7, else it dries a step, else with nothing growing on it it turns to dirt. So its gap to the rule
+is the random tick's own pace, not farmland's; sapling's 3 to a crop's 1 stands in for that.
 
 `bds_command_probe t3copper` (2026-11-04, bds-t3copper.txt) set 25 lone blocks of copper at the rule's
 100 for a minute: the median block was exposed after 19.9 s, weathered 30.8, oxidized 45.8 on BDS
