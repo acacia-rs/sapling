@@ -22,6 +22,8 @@ pub fn melt() -> Vec<String> {
     waits(&mut lines, 5);
     lines.extend(owned(["difficulty normal", "gamerule domobspawning false", "gamerule dodaylightcycle false", "time set noon", "gamemode creative @s", "gamemode creative CmdWatcher"]));
     go(&mut lines, [-6114, 100, -3508]);
+    // A loaded drill_server generated these chunks after the 8 s go() waits (sapling-s3melt.txt: outOfWorld).
+    waits(&mut lines, 30);
     lines.extend(owned(["fill -6122 99 -3516 -6106 99 -3500 stone", "summon snow_golem -6110.5 100 -3507.5", "summon snow_golem -6117.5 100 -3511.5"]));
     waits(&mut lines, 12);
     lines.extend(owned(["testfor @e[type=snow_golem]", "kill @e[type=!player]"]));
