@@ -195,3 +195,26 @@ fn quitting_removes_the_entity_and_the_list_entry() {
     let sent = h.tick_all();
     assert!(sent.to(1).is_empty() && sent.to(2).is_empty());
 }
+
+/// research/captures/bds-f1crawl.txt: put under a one-high ceiling a player crawls 0.6 high
+/// (`FlagsExtended` bit 50), told to it and its viewers the tick after; out again, it stands.
+#[test]
+fn a_player_under_a_one_high_ceiling_crawls_and_stands_once_out() {
+    use sapling_api::{Block, PlayerId};
+    let crawl = |data: &SetEntityData| data.metadata.iter().find(|item| item.key == Key::BoundingboxHeight).map(|item| (format!("{:?}", item.value), data.metadata.iter().any(|item| format!("{:?}", item.value) == "FlagsExtended(MetadataFlags2(1161084312485888))")));
+    let mut h = two_players();
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([3, 66, 0], &Block::new("stone")));
+        ctx.teleport(PlayerId(1), [3.5, 65.0, 0.5]);
+    });
+    let mut told = Vec::new();
+    for _ in 0..3 {
+        let sent = h.tick_all();
+        told.extend([1, 2].map(|conn| all::<SetEntityData>(sent.to(conn)).iter().filter_map(crawl).collect::<Vec<_>>()));
+    }
+    let down = ("Default(Float(0.6))".to_string(), true);
+    assert_eq!(told.concat(), [down.clone(), down], "{told:?}");
+    h.remote.run(|ctx| ctx.teleport(PlayerId(1), [0.5, 65.0, 0.5]));
+    let up: Vec<_> = (0..3).flat_map(|_| all::<SetEntityData>(h.tick_all().to(2)).iter().filter_map(crawl).collect::<Vec<_>>()).collect();
+    assert_eq!(up, [("Default(Float(1.8))".to_string(), false)]);
+}
