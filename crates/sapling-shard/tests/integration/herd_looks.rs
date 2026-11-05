@@ -57,6 +57,17 @@ fn summon_events_set_the_looks_bds_showed() {
     assert_eq!(looks, [[4, 0, 0, 0], [1, 3, 14, 0], [1, 3, 10, 4]]);
 }
 
+/// bds-n13herd.txt: a summoned mooshroom is announced with `MarkVariant` -1, having eaten no flower.
+#[test]
+fn a_new_mooshroom_is_announced_unfed() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:mooshroom", [2.5, 65.0, 4.5], 0.0, 0.0, None).is_some()));
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let marks: Vec<i32> = all::<AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:mooshroom").map(|added| int(added, Key::MarkVariant)).collect();
+    assert_eq!(marks, [-1]);
+}
+
 /// The pack's `entity_spawned` makes one horse in five a foal (BDS: 2 of 4 plain summons).
 #[test]
 fn a_horse_summoned_with_no_event_may_come_a_foal() {

@@ -160,3 +160,13 @@ found by their `getContainerOffset`/`getContainerSize` constants, inf):
 - **Conflict with hoppers.md** (item 6): there a hopper pulling the result adds its smelt XP x 100 to the
   furnace's stored XP (1429cfa55, 1457f60a0), which section 2's byte scan did not find (another offset base?).
   sapling follows hoppers.md: what hoppers take is owed to the next player.
+
+## Drilled 2026-11-05 (`n13burn`, bds-n13burn.txt vs sapling-n13burn.txt)
+
+- Two raw iron and a coal put in by `/replaceitem block` smelted on BDS (24 `block.furnace.lit`
+  crackles), a hopper under it taking both ingots. Broken in survival with an iron pickaxe, it
+  dropped itself (which the hopper took at once) and one orb at (3.875, -26, -3) and no ingot: the
+  owed experience is paid on a break with an empty result too. Sapling's hopper takes the dropped
+  furnace in the tick it falls, before it is announced; BDS announced it and removed it 10 ms later. Sapling did not start a furnace filled by command or hopper (only an
+  opened one), and paid a break only with a result there; both fixed (`furnaces::watch` from
+  `set_container_item` and a hopper's fill; `broken`).

@@ -17,8 +17,7 @@ use super::crafting::Craft;
 use super::forge::{self, Bench, Forge, Forged};
 use super::{ARMOR, Inventory, MAIN, MAX_COUNT, Place, bundles, described};
 use crate::components::{Mode, Outgoing, PacketQueues, PerTick, in_world_identity};
-use crate::{containers, drops, workstations};
-use crate::plugins;
+use crate::{containers, drops, plugins, workstations};
 
 /// Requests looked at per player per tick; a client sends one per click.
 const MAX_REQUESTS_PER_TICK: usize = 32;
@@ -293,6 +292,7 @@ pub(crate) fn dispatch(world: &mut World) {
     let mut budget = PerTick::new(MAX_REQUESTS_PER_TICK);
     for (entity, packet) in packets {
         let Some(player) = in_world_identity(world, entity) else { continue };
+        containers::requested_in(world, entity);
         for request in packet.requests.iter().filter(|_| budget.allow(entity)) {
             answer(world, entity,&player, request);
         }

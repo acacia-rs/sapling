@@ -1,7 +1,8 @@
 //! The thirteenth wave's group N drills (research/parity/THIRTEENTH-BRIEF.md): `/place`'s
 //! `keepJigsaws`, `ignoreStartHeight` and `liquidSettings` (`n13jig`, `n13liq`), a scoreboard
 //! holder leaving and coming back (`n13off`), and REMAINING3's player, item, command and network
-//! lines (`n13play`, `n13items`, `n13more`, `n13orb`, `n13net`, `n13names`, `n13sheet`).
+//! lines (`n13play`, `n13items`, `n13more`, `n13orb`, `n13net`, `n13names`, `n13sheet`, `n13win`,
+//! `n13herd`, `n13fw`, `n13burn`).
 
 use super::creatures::{floor, with};
 
@@ -18,6 +19,10 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "n13net" => (wire(), NET_SHOWN),
         "n13names" => (names(), NAMES_SHOWN),
         "n13sheet" => (sheet(), SHEET_SHOWN),
+        "n13win" => (windows(), WIN_SHOWN),
+        "n13herd" => (herd(), HERD_SHOWN),
+        "n13fw" => (rockets(), FW_SHOWN),
+        "n13burn" => (burns(), BURN_SHOWN),
         _ => return None,
     })
 }
@@ -76,6 +81,42 @@ fn wire() -> Vec<String> {
     lines.extend(["summon xp_orb 0.5 -26 4.5", "", "", "", "", "", "", ""].map(String::from));
     lines.extend(["gamemode creative @s", "execute in nether run tp @s 0.5 100 0.5 -90 0", "", "", "", "fill -1 99 -1 3 102 1 air", "fill -1 99 -1 3 99 1 stone", "tp @s 0.5 100 0.5 -90 0", "", "replaceitem entity @s slot.weapon.mainhand 0 water_bucket", "", "!click 2 -1 0 up", "", "", ""].map(String::from));
     with(lines, &["execute in overworld run tp @s 0.5 -26 0.5", "", "clear @s", "kill @e[type=!player]", ""])
+}
+
+const FW_SHOWN: &[&str] = &["AddEntity", "SetEntityData", "RemoveEntity", "EntityEvent", "LevelSoundEvent", "InventorySlot"];
+
+/// A tagless rocket used on the floor, in survival then in creative.
+fn rockets() -> Vec<String> {
+    let mut lines = floor();
+    for mode in ["survival", "creative"] {
+        lines.extend([format!("gamemode {mode} @s"), "replaceitem entity @s slot.weapon.mainhand 0 firework_rocket 2".into(), String::new(), "!click 2 -1 0 up".into()]);
+        lines.extend(["", "", "", "", ""].map(String::from));
+    }
+    with(lines, &["gamemode creative @s", "clear @s", "kill @e[type=!player]", ""])
+}
+
+const HERD_SHOWN: &[&str] = &["InventorySlot", "InventoryContent", "SetEntityData", "SetEntityLink", "AddEntity", "EntityEvent", "LevelSoundEvent"];
+
+/// In creative: a sheep offered four non-dyes and then red dye, wheat and a lead; a mooshroom
+/// summoned.
+fn herd() -> Vec<String> {
+    let mut lines = with(floor(), &["summon sheep 2.5 -26 0.5", "effect @e[type=sheep] slowness 999 255 true", "", ""]);
+    for held in ["ink_sac", "lapis_lazuli", "cocoa_beans", "bone_meal", "red_dye", "wheat", "lead"] {
+        lines.extend([format!("replaceitem entity @s slot.weapon.mainhand 0 {held} 3"), String::new(), "!interact sheep".into(), String::new(), String::new()]);
+    }
+    lines.extend(["summon mooshroom 4.5 -26 2.5", "", ""].map(String::from));
+    with(lines, &["clear @s", "kill @e[type=!player]", ""])
+}
+
+const WIN_SHOWN: &[&str] = &["ContainerOpen", "ContainerClose", "InventoryContent", "InventorySlot", "ItemStackResponse", "BlockEvent", "LevelSoundEvent"];
+
+/// In survival: dirt put into a chest, an ender chest opened, a shulker box put into a shulker box.
+fn windows() -> Vec<String> {
+    let mut lines = with(floor(), &["gamemode survival @s", "replaceitem entity @s slot.hotbar 0 dirt 5", "replaceitem entity @s slot.hotbar 1 blue_shulker_box 1", ""]);
+    lines.extend(["setblock 2 -26 0 chest", "", "!click 2 0 0", "", "!put 0 3 2", "", "!close", "", ""].map(String::from));
+    lines.extend(["setblock 2 -26 0 ender_chest", "", "!click 2 0 0", "", "!close", "", ""].map(String::from));
+    lines.extend(["setblock 2 -26 0 red_shulker_box", "", "!click 2 0 0", "", "!put 1 0", "", "!close", "", ""].map(String::from));
+    with(lines, &["setblock 2 -26 0 air", "gamemode creative @s", "clear @s", ""])
 }
 
 const SHEET_SHOWN: &[&str] = &["UpdateSubchunkBlocks", "UpdateBlock"];
@@ -158,4 +199,17 @@ fn offline() -> Vec<String> {
     let mut lines = with(floor(), &setup);
     lines.extend(["!rejoin", "", "", "scoreboard players list", "scoreboard players list *", "scoreboard players add @s n13 1", "scoreboard players list @s", ""].map(String::from));
     with(lines, &["scoreboard objectives remove n13", "kill @e[type=!player]", ""])
+}
+
+const BURN_SHOWN: &[&str] = &["AddEntity", "AddItemEntity", "RemoveEntity", "LevelSoundEvent", "LevelEvent"];
+
+/// A netherite ingot and dirt thrown into a lava pool; a furnace smelting two raw iron into the
+/// hopper under it, then broken in survival.
+fn burns() -> Vec<String> {
+    let mut lines = with(floor(), &["fill -1 -27 1 1 -27 5 lava", "tp @s 0.5 -26 0.5 0 30", "replaceitem entity @s slot.hotbar 0 netherite_ingot 1", "replaceitem entity @s slot.hotbar 1 dirt 1", ""]);
+    lines.extend(["!drop 0 1", "!drop 1 1", "", "", "", "", "", "fill -1 -27 1 1 -27 5 stone", "kill @e[type=item]", ""].map(String::from));
+    lines.extend(["setblock 4 -27 -3 hopper", "setblock 4 -26 -3 furnace", "replaceitem block 4 -26 -3 slot.container 0 raw_iron 2", "replaceitem block 4 -26 -3 slot.container 1 coal 1"].map(String::from));
+    lines.extend(std::iter::repeat_n(String::new(), 24));
+    lines.extend(["gamemode survival @s", "tp @s 0.5 -26 0.5 -90 0", "replaceitem entity @s slot.weapon.mainhand 0 iron_pickaxe", "", "!break 4 0 -3", "", "", "", "gamemode creative @s"].map(String::from));
+    with(lines, &["setblock 4 -27 -3 stone", "clear @s", "kill @e[type=!player]", ""])
 }

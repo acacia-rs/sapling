@@ -213,8 +213,19 @@ pub(crate) fn dispatch_closes(world: &mut World) {
     }
 }
 
-/// Every [`lid::REPEAT`] ticks from its opening, shows an open lid again: to those who came by
-/// since (research/captures/bds-shut.txt).
+/// Starts the lid's [`lid::REPEAT`] anew for the container `player` has open: BDS showed no lid
+/// again 80 ticks after an opening with a request in between, refused ones too (bds-n13win.txt).
+pub(crate) fn requested_in(world: &mut World, player: Entity) {
+    let Some(&Viewing { layer, pos, .. }) = world.get::<Viewing>(player) else { return };
+    let now = world.resource::<Tick>().0;
+    let Some(mut open) = world.get_resource_mut::<super::OpenContainers>() else { return };
+    if let Some((_, chest)) = open.chests.iter_mut().find(|((at, _), chest)| *at == layer && chest.halves.contains(&pos)) {
+        chest.opened_at = now;
+    }
+}
+
+/// Every [`lid::REPEAT`] ticks from its opening or its last request, shows an open lid again: to
+/// those who came by since (research/captures/bds-shut.txt).
 pub(crate) fn show_lids_again(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let Some(open) = world.get_resource::<super::OpenContainers>() else { return };

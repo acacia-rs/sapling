@@ -184,8 +184,11 @@ Code: `crates/sapling-shard/src/fireworks.rs`, `fireworks/{item,recipes,burst}.r
   3 wear. **Dispenser** (0x1436fe320): out of the face at `0.5 + facing*(0.5 + 0.125)`, y lowered
   0.125 for up and down; `fireworks::dispense` is the dispenser's way in.
 
-Unverified: a rocket with no tag (BDS seems to skip `init` and burst at once; sapling gives it life
-10–21); the metadata a rocket is announced with (sapling sends its compound as key 16 only, not the
+A rocket with no tag (bds-n13fw.txt, 2026-11-05, used on a block): it lived 27 and 22 ticks, as one of
+Flight 1 (bds-glide.txt's boost of 44 too), and was heard `launch` with no entity type where its first
+tick took it, a tick after AddEntity; sapling now does both. BDS put it at the click on the face, not
+the face's middle as sapling does, and removed it a tick after the burst, sapling at once [U: not
+changed]. Unverified: the metadata a rocket is announced with (sapling sends its compound as key 16 only, not the
 way or the attached id); a rocket loaded from the offhand
 only; duplicate diamonds or glowstone in a star (sapling refuses them, BDS may not); what a rocket
 does when it meets a block or an entity (BDS's hit system notifies the block; sapling stops it at

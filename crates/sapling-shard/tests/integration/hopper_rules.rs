@@ -4,8 +4,10 @@
 
 use crate::common;
 
+use acacia_proto::types::Action as BlockAction;
 use common::Harness;
-use sapling_api::{Block, Item};
+use common::shooting::ALEX;
+use sapling_api::{Block, GameMode, Item, Slot};
 
 fn comparator(rear: &str, subtract: bool) -> Block {
     Block::new("unpowered_comparator").with(format!("minecraft:cardinal_direction={rear},output_subtract_bit={}", u8::from(subtract)))
@@ -64,6 +66,35 @@ fn an_item_takes_as_long_down_a_chain_whichever_way_it_runs() {
     }
     assert!(arrived[0].is_some(), "the item came through: {arrived:?}");
     assert_eq!(arrived[0], arrived[1], "BDS lit both comparators in one evaluation: the hopper under a chest moves before the one filling it");
+}
+
+/// bds-n13burn.txt: a furnace filled by command smelts, the hopper under it takes the results, and
+/// breaking it pays what they were worth.
+#[test]
+fn a_furnace_filled_by_command_smelts_into_a_hopper_and_pays_when_broken() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    const FURNACE: [i32; 3] = [2, 65, 1];
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Survival);
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:iron_pickaxe", 1))));
+        assert!(ctx.set_block([2, 64, 1], &Block::new("hopper").with("facing_direction=0,toggle_bit=0")));
+        assert!(ctx.set_block(FURNACE, &Block::new("furnace")));
+        assert!(ctx.set_container_item(FURNACE, 0, Some(&Item::new("minecraft:raw_iron", 2))));
+        assert!(ctx.set_container_item(FURNACE, 1, Some(&Item::new("minecraft:coal", 1))));
+    });
+    for _ in 0..420 {
+        h.tick_all();
+    }
+    let hopper_slot = |h: &mut Harness, slot: usize| common::asking::ask(h, move |ctx| ctx.container_item([2, 64, 1], slot).map(|item| (item.name, item.count)));
+    assert_eq!(hopper_slot(&mut h, 0), Some(("minecraft:iron_ingot".to_owned(), 2)));
+    h.receive(1, &common::block_actions(&[(BlockAction::StartBreak, FURNACE)]));
+    (0..30).for_each(|_| drop(h.tick_all()));
+    h.receive(1, &common::block_actions(&[(BlockAction::PredictBreak, FURNACE)]));
+    let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!((1..=2).contains(&common::orbs::worths(&sent).iter().sum::<i32>()), "1.4 owed: {:?}", common::orbs::worths(&sent));
+    // The dropped furnace goes into the hopper under it, as on BDS.
+    assert_eq!(hopper_slot(&mut h, 1), Some(("minecraft:furnace".to_owned(), 1)));
 }
 
 #[test]

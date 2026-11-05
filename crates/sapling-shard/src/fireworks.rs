@@ -97,11 +97,10 @@ fn launch_with(world: &mut World, layer: Entity, at: [f32; 3], way: [f32; 3], st
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         u64::from(dice.roll(LIFE_SPREAD[0]) + dice.roll(LIFE_SPREAD[1]))
     };
-    let lasts = LIFE_PER_FLIGHT * (u64::from(item::flight(stack)) + 1) + spread;
+    // A tagless rocket flew as one of Flight 1 (research/captures/bds-n13fw.txt: 22 and 27 ticks).
+    let flight = if stack.tag.is_none() { 1 } else { item::flight(stack) };
+    let lasts = LIFE_PER_FLIGHT * (u64::from(flight) + 1) + spread;
     world.entity_mut(rocket).insert(Rocket { item: ItemStack { count: 1, ..stack.clone() }, born: now, bursts: now + lasts, way, glider });
-    let [x, y, z] = at;
-    let sound = LevelSoundEvent { sound_id: "launch".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: KIND.into(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
-    entities::after_announcing(world, layer, at.map(|c| c.floor() as i32), vec![sapling_net::encode(&sound)]);
     Some((rocket, lasts))
 }
 
@@ -125,10 +124,11 @@ pub(crate) fn dispense(world: &mut World, layer: Entity, pos: BlockPos, facing: 
     launch(world, layer, at, way, stack)
 }
 
-/// A tick of one rocket: it bursts when its time is up, else speeds on.
+/// A tick of one rocket: it bursts when its time is up, else speeds on, heard launched where its
+/// first tick takes it (bds-n13fw.txt).
 fn fly(world: &mut World, rocket: Entity, layer: Entity, id: u64, now: u64) -> Option<()> {
     let mut body = *world.get::<Body>(rocket)?;
-    let (bursts, way, glider) = world.get::<Rocket>(rocket).map(|kept| (kept.bursts, kept.way, kept.glider))?;
+    let (born, bursts, way, glider) = world.get::<Rocket>(rocket).map(|kept| (kept.born, kept.bursts, kept.way, kept.glider))?;
     if now > bursts {
         return burst::burst(world, rocket, layer);
     }
@@ -141,7 +141,11 @@ fn fly(world: &mut World, rocket: Entity, layer: Entity, id: u64, now: u64) -> O
         }
     }
     *world.get_mut::<Body>(rocket)? = body;
-    let packets = world.get_mut::<Told>(rocket)?.update(id, body.at, body.motion, false);
+    let mut packets = world.get_mut::<Told>(rocket)?.update(id, body.at, body.motion, false);
+    if now == born + 1 {
+        let [x, y, z] = body.at;
+        packets.push(sapling_net::encode(&LevelSoundEvent { sound_id: "launch".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }));
+    }
     entities::tell_viewers(world, rocket, layer, body.at.map(|c| c.floor() as i32), packets);
     Some(())
 }

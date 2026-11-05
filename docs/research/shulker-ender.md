@@ -115,5 +115,6 @@ its own container stays empty.
   no tag, which decides whether it stacks with new boxes). Recording a BDS break would settle it.
 - `facing` on player placement (clicked face vs opposite; the dispense table is the opposite face).
 - Whether the drop copies `CustomName` into the item's display name.
-- `ItemStackNetResult` value BDS returns for a shulker box put into a shulker box.
-- Ender chest `InventoryContent` container field and that `EnderChestContainer::startOpen` drives the lid.
+- Settled 2026-11-05 (bds-n13win.txt): a shulker box put into a shulker box is refused with status 55 on
+  both; the ender chest window's `InventoryContent` has `container` 0 with no dynamic id on both, and its lid
+  opens with the window.

@@ -48,7 +48,6 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
 - Love lasts 600 ticks, the rest after breeding 6000; a mob looks 8 blocks for a mate and they breed
   after 60 ticks within 3; a birth leaves 1 to 7 experience (the Java game's numbers).
 - A horse and a donkey have a mule (not in the packs; BDS's code).
-- The hearts shown on falling in love are `InLoveParticles` (26), not `LoveParticles` (21).
 - A tamed mob more than 12 blocks behind teleports 2 to 3 blocks from its owner (the Java game's).
 - A failed ride makes a mount 5 calmer (the Java game's; BDS's `attemptTemperMod`, default 5 in
   `MountTamingComponent`'s set-up 141de92d0).
@@ -56,9 +55,21 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
   ticks lets go; a knot sits a quarter block up its fence, and a knot holding nothing goes.
 - A wolf defending its owner looks 16 blocks, bites every 20 ticks within 0.8 past its box, and its
   bite throws nothing.
-- Only `<colour>_dye` dyes a sheep (not ink sacs, lapis, cocoa beans or bone meal).
-- Creative players keep the food, dye, lead and name tag they use; buckets and bowls still fill.
-- A new mooshroom's `MarkVariant` is -1; sheep the shard spawns are white; a baby's coat is not its parents'.
+- Creative players keep the name tag they use; buckets and bowls still fill.
+- Sheep the shard spawns are white; a baby's coat is not its parents'.
+
+## Drilled 2026-11-05 (`n13herd`, bds-n13herd.txt vs sapling-n13herd.txt)
+
+- Same: a sheep offered an ink sac, lapis, cocoa beans or bone meal shows nothing; red dye sets
+  `Color` 14; a creative player keeps the dye, wheat and lead (no `InventorySlot`); a lead shows
+  `LEASHED` and `LeadHolderEid`, and `lead.leash` from the sheep's middle.
+- Fixed: `lead.leash` is told as nobody's (`entity_type` "", unique id -1); a summoned mooshroom is
+  announced with `MarkVariant` -1 (it was 0 until raised, shown.rs).
+- Differs, not fixed: holding wheat near the sheep set flag bit 6 (tempted) on BDS, cleared when the
+  lead was held; sapling shows no such flag. BDS's feed sent `EatingItem` (data 22085632), then
+  `INLOVE`, then `LoveParticles` (21) every 800 ms while in love (bds-g11love-2.txt: at random gaps
+  for cows); sapling sends `InLoveParticles` (26) once. BDS sent no `OwnerEid` with the lead;
+  sapling sends -1. BDS's `lead.leash` came a tick after the metadata.
 - A stored mob in love does not show its hearts until fed again.
 
 ## Drilled (2026-11-04, `bds_command_probe n3ride`, `n3foals`)

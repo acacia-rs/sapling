@@ -93,10 +93,10 @@ pub(crate) fn was_at_work(entity: &Value) -> bool {
     FIELDS.iter().take(2).any(|field| time(entity, field) > 0)
 }
 
-/// Starts ticking the furnace at `pos` from the times its block entity kept, holding its slots;
-/// one that ticks already tells its screens all its times again.
+/// Starts ticking the furnace at `pos` (nothing else) from the times its block entity kept, holding
+/// its slots; one that ticks already tells its screens all its times again.
 pub(crate) fn watch(world: &mut World, layer: Entity, pos: BlockPos) {
-    let Some(kept) = entity(world, layer, pos) else { return };
+    let Some(kept) = entity(world, layer, pos).filter(|_| containers::block_name(world, layer, pos).and_then(smelter).is_some()) else { return };
     if !containers::pin(world, layer, pos) {
         return;
     }
@@ -167,11 +167,12 @@ pub(crate) fn taken_by_player(world: &mut World, player: Entity, layer: Entity, 
     crate::orbs::pay_player(world, player, points);
 }
 
-/// The furnace at `pos` is being broken with `slots`: its result's and owed experience lies there.
+/// The furnace at `pos` is being broken with `slots`: its result's and owed experience lies there,
+/// owed alone too (bds-n13burn.txt: an orb where a hopper had taken every result).
 pub(crate) fn broken(world: &mut World, layer: Entity, pos: BlockPos, slots: &[Option<Held>]) {
-    let Some(result) = slots.get(OUTPUT).cloned().flatten().filter(|_| slots.len() == 3) else { return };
+    let Some(result) = slots.get(OUTPUT).cloned().filter(|_| slots.len() == 3) else { return };
     let owed = owe(world, layer, pos, |_| 0);
-    let points = xp::reward(world, &result.stack, result.stack.count, owed);
+    let points = if let Some(result) = result { xp::reward(world, &result.stack, result.stack.count, owed) } else { xp::owed_points(world, owed) };
     xp::pay_at(world, layer, pos, points);
 }
 

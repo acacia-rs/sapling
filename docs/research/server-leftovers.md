@@ -105,11 +105,14 @@ player coming back short of breath its `Air` metadata in the join greeting.
   has no `/reload` or `/permission` registered. Piglin and hoglin were gone on BDS before the switch (likely
   zombified), so their peaceful rule was not judged.
 
-## Not drilled
+## Sapling console, drilled 2026-11-05 (research/captures/sapling-n13console.txt)
 
-- Sapling's console side of the above: `tools/remote-drill.sh` feeds a console to BDS only.
-- `/stop` typed in the console of a sapling server: it now logs `Server stop requested.` in place of
-  the command's answer, as BDS's console does (`console.rs`); the sapling console is not drilled.
+- Fed to the `custom_content` example's stdin (the `generated` one has no vanilla commands). `list`,
+  `save hold`/`query`/`resume` and `stop` answered with the keys whose en_US lines are BDS's (the worktree
+  lacks the ignored `command-texts.tsv`, so keys showed). `stop` logged `Server stop requested.` and the
+  process exited 0; BDS also prints `Stopping server...` and `Quit correctly`, sapling does not.
+- `save query` on the memory storage lists no files; BDS lists the world's files with their lengths.
+- `permission` and `reload` are unregistered in sapling, as above.
 
 ## Peaceful, drilled 2026-11-04 (research/captures/bds-t2epeace.txt, bds-t2epeace2.txt)
 

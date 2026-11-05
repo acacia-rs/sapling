@@ -108,7 +108,11 @@ impl Backend for Ctx<'_> {
             }
             fits
         };
-        containers::with_slots(self.world, layer, pos, put).unwrap_or(false)
+        let put = containers::with_slots(self.world, layer, pos, put).unwrap_or(false);
+        if put {
+            crate::furnaces::watch(self.world, layer, pos);
+        }
+        put
     }
 
     fn container_size(&mut self, pos: BlockPos) -> Option<usize> {

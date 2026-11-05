@@ -17,13 +17,15 @@ fn a_rocket_off_a_block_rises_bursts_within_its_life_and_is_spent() {
     h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new(ROCKET, 2)))));
     h.tick_all();
     h.receive(1, &click([2, 64, 0], 1, None));
-    let sent = watch(&mut h, 30);
+    let sent = watch(&mut h, 35);
     let rocket = added(&sent, FLYING).into_iter().next().expect("launched");
     assert!((rocket.position.x, rocket.position.y, rocket.position.z) == (2.5, 65.0, 0.5), "{:?}", rocket.position);
     assert!((rocket.velocity.y - 0.03).abs() < 0.002, "{:?}", rocket.velocity);
     let burst = all::<EntityEvent>(&sent).into_iter().any(|event| event.runtime_entity_id == rocket.runtime_id && event.event_id == EntityEventEventId::FireworkParticles);
     let gone = all::<RemoveEntity>(&sent).iter().any(|gone| gone.entity_id_self == rocket.unique_id);
-    assert!(burst && gone, "a plain rocket lives 10 to 22 ticks");
+    assert!(burst && gone, "a plain rocket lives 20 to 32 ticks (bds-n13fw.txt)");
+    let launched: Vec<_> = all::<acacia_proto::packets::LevelSoundEvent>(&sent).into_iter().filter(|sound| sound.sound_id == "launch").collect();
+    assert!(launched.len() == 1 && launched[0].entity_type.is_empty() && launched[0].position.y > 65.0, "heard where its first tick took it: {launched:?}");
     assert_eq!(held(&mut h, Slot::Main(0)).map(|item| item.count), Some(1));
 }
 

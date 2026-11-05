@@ -26,6 +26,7 @@ fn a_block_leaves_itself_or_what_its_table_names() {
     let signs = [left("standing_sign", HAND, 0), left("wall_sign", HAND, 0), left("spruce_standing_sign", HAND, 0), left("darkoak_wall_sign", HAND, 0)];
     assert_eq!(signs, [named("oak_sign", 1), named("oak_sign", 1), named("spruce_sign", 1), named("dark_oak_sign", 1)]);
     assert_eq!([left("standing_banner", HAND, 0), left("wall_banner", HAND, 0)], [named("banner", 1), named("banner", 1)]);
+    assert_eq!(left("lit_furnace", HAND, 0), named("furnace", 1));
 }
 
 #[test]

@@ -1,0 +1,11 @@
+[2m2026-11-05T08:52:29.610004Z[0m [32m INFO[0m [2msapling::server::content[0m[2m:[0m built the custom content's resource pack [3mversion[0m[2m=[0m1.37130.39396 [3mitems[0m[2m=[0m1 [3mblocks[0m[2m=[0m1
+[2m2026-11-05T08:52:29.626859Z[0m [32m INFO[0m [2msapling::server[0m[2m:[0m sapling listening [3maddr[0m[2m=[0m0.0.0.0:19717 [3mshards[0m[2m=[0m1
+[2m2026-11-05T08:52:54.629268Z[0m [32m INFO[0m [2msapling::console[0m[2m:[0m commands.players.list 0 100
+commands.players.list.names 
+[2m2026-11-05T08:52:56.629164Z[0m [32m INFO[0m [2msapling::console[0m[2m:[0m commands.save.start
+[2m2026-11-05T08:52:58.628673Z[0m [32m INFO[0m [2msapling::console[0m[2m:[0m commands.save-all.success
+[2m2026-11-05T08:53:00.628987Z[0m [32m INFO[0m [2msapling::console[0m[2m:[0m commands.save-on.success
+[2m2026-11-05T08:53:02.629395Z[0m [31mERROR[0m [2msapling::console[0m[2m:[0m commands.generic.unknown permission
+[2m2026-11-05T08:53:04.629365Z[0m [31mERROR[0m [2msapling::console[0m[2m:[0m commands.generic.unknown reload
+[2m2026-11-05T08:53:06.629024Z[0m [32m INFO[0m [2msapling::console[0m[2m:[0m Server stop requested.
+exit 0

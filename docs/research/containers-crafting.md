@@ -231,5 +231,9 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 ## Not settled here
 
 - The reach at which BDS closes a screen (A5), and the lid speed behind the close sound's delay (A3).
-- `InventoryContent`/`InventorySlot` `container` and `storage_item` for a chest window (A2, A4).
+- Settled 2026-11-05 (bds-n13win.txt vs sapling-n13win.txt): a chest, ender chest and shulker box window's
+  `InventoryContent` has `container` 0 (`AnvilInput`, no dynamic id) and an empty `storage_item`, its
+  `InventorySlot` none of either, on both. BDS sends the lid's BlockEvent after the window's first content,
+  before the player's; sapling after all of them. BDS showed no lid again 80 ticks on when a request (one
+  refused too) came in between; sapling now counts the 80 from the last request (`containers::requested_in`).
 - The multi-result sequence on 1.26 and the order of `ResultsDeprecated` entries (E4).
