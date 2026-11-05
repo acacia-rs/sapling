@@ -65,3 +65,29 @@ fn wheat_in_a_dark_room_stays_when_a_light_block_is_set_beside_it() {
     h.tick_all();
     assert_eq!(names(&mut h, vec![[0, 65, 0]]), ["wheat"]);
 }
+
+/// research/captures/bds-l2farm.txt: wet farmland under wheat, no water near, dried a step at each random
+/// tick at the rule's pace (0.0117 a tick at 20 against 0.0114), not three times as often.
+#[test]
+fn farmland_dries_a_step_at_each_random_tick_and_no_faster() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let cells: Vec<[i32; 3]> = (0..8).flat_map(|x| (-8..0).map(move |z| [x, 64, z])).collect();
+    let set = cells.clone();
+    h.remote.run(move |ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(100)));
+        for at in &set {
+            assert!(ctx.set_block(*at, &Block::new("farmland").with("moisturized_amount=7")));
+            assert!(ctx.set_block([at[0], 65, at[2]], &Block::new("wheat")));
+        }
+    });
+    for _ in 0..60 {
+        h.tick_all();
+    }
+    let (sent, got) = std::sync::mpsc::channel();
+    h.remote.run(move |ctx| sent.send(cells.iter().map(|at| ctx.block(*at).and_then(|block| block.properties.split("moisturized_amount=").nth(1)?.get(..1)?.parse::<u32>().ok()).unwrap_or(7)).collect::<Vec<_>>()).unwrap());
+    h.tick_all();
+    let steps = got.recv().unwrap().iter().map(|wet| 7 - wet).sum::<u32>() as f32 / 64.0;
+    // 60 ticks at 100 is some 3.7 random ticks a cell (chunk filled to section 8); thrice that dries most out.
+    assert!((2.5..5.0).contains(&steps), "{steps} steps a cell");
+}

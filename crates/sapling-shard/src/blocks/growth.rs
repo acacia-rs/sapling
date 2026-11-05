@@ -192,7 +192,7 @@ pub(crate) fn tick(world: &mut World) {
         };
         let Some(level) = level(world, layer) else { continue };
         let Some((_, RuleValue::Int(rule))) = level.level().rules.get(RULE) else { continue };
-        let chance = heights.chance(layer, level, pos, rule) * rules::haste(name);
+        let chance = heights.chance(layer, level, pos, rule);
         let ticks = pace::count(chance, picks.below(CHANCES) as f32 / CHANCES as f32);
         if ticks == 0 {
             continue;

@@ -73,7 +73,7 @@ Measured with `bds_command_probe grows` (`bds-grows.txt`, `sapling-grows.txt`), 
 | wet farmland, no water near | a step drier every 3 ticks or so, dirt after 1.3 seconds |
 
 Cane and cactus fit the Java game's sixteen random ticks a segment at the pace above; neither
-sent its age. Farmland dried three times as fast as that pace allows, so it is ticked more often.
+sent its age. Farmland dried three times as fast as that pace allows here, but not in `l2farm` below.
 
 ## A second row
 
@@ -111,7 +111,13 @@ torchflower crop did not grow in the minute and a half.
 `FarmBlock`'s random tick (147151550, its `BlockRandomTickEvent` lambda; 2026-11-05) does one step
 a tick and nothing else paces it: water within 4 across (the rows up not read), or rain over it (> 0.15), wets it
 to 7, else it dries a step, else with nothing growing on it it turns to dirt. So its gap to the rule
-is the random tick's own pace, not farmland's; sapling's 3 to a crop's 1 stands in for that.
+is the random tick's own pace, not farmland's; sapling's 3 to a crop's 1 stood in for that.
+`l2farm` (thirteenth2l_drill.rs, bds-l2farm.txt, 2026-11-05: 64 dry cells and 64 wet ones under
+wheat, no water near, `n` = 3 chunks, 40 s at 20 then 10 s at 200) settles it: BDS's dry farmland
+went to dirt at 0.0124 a tick at 20 and 0.095 at 200, the wet dried 0.0117 and 0.099 steps a tick
+(one step each but where two random ticks fell between sends), against the pace's 0.0114 and 0.114.
+Farmland is ticked as any block; the "every 3 ticks" at 200 above was not seen again. Sapling's 3 to
+1 removed (sapling-l2farm.txt; test `farmland_dries_a_step_at_each_random_tick_and_no_faster`).
 
 `bds_command_probe t3copper` (2026-11-04, bds-t3copper.txt) set 25 lone blocks of copper at the rule's
 100 for a minute: the median block was exposed after 19.9 s, weathered 30.8, oxidized 45.8 on BDS

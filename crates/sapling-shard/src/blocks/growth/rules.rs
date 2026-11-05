@@ -98,12 +98,6 @@ pub(super) fn is_ticked(name: &str, properties: &str) -> bool {
     }
 }
 
-/// How many random ticks the block takes for each one a crop takes: BDS's farmland dried a step
-/// every 3 ticks where its wheat, cane and ores were ticked every 9.
-pub(super) fn haste(name: &str) -> f32 {
-    if name == FARMLAND { 3.0 } else { 1.0 }
-}
-
 /// How fast the crop `name` at `pos` grows: the Java game's reckoning, by the farmland under and
 /// around it, wet or dry, and less in a field of its own kind that is not in rows.
 fn speed(level: &Level, [x, y, z]: BlockPos, name: &str) -> f32 {
