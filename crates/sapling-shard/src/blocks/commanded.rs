@@ -47,16 +47,29 @@ pub(super) fn put_bed(world: &mut World, layer: Entity, pos: BlockPos, id: u32) 
     Some(true)
 }
 
-/// Writes `block` at `pos` as [`send::put_block`] does, aged or wetted as BDS's command does.
+/// Writes `block` at `pos` as [`send::put_block`] does, aged or wetted as BDS's command does. An
+/// aged or wetted block is shown with its water as BDS shows the writes, each listed
+/// ([`send::logged`]): BDS writes an aged one twice (bds-fixset.txt, bds-bkticks.txt).
 pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
-    let block = aged(world, layer, pos, block);
+    let (block, is_aged) = aged(world, layer, pos, block);
+    // Kelp set in air got a source beside itself too (research/captures/bds-plantpop.txt).
+    let wets = is_live_fan(&block.name) || block.name == "minecraft:kelp";
+    if is_aged || wets {
+        return send::logged(world, |world| put_now(world, layer, pos, &block, is_aged, wets));
+    }
+    put_now(world, layer, pos, &block, false, false)
+}
+
+fn put_now(world: &mut World, layer: Entity, pos: BlockPos, block: &Block, is_aged: bool, wets: bool) -> Option<bool> {
     let same_comparator = block.name.ends_with("_comparator") && send::block_at(world, layer, pos).is_some_and(|old| old.name == block.name);
-    let put = send::put_block(world, layer, pos, &block)?;
+    let put = send::put_block(world, layer, pos, block)?;
     if put && same_comparator {
         super::redstone::hold_comparator(world, layer, pos);
     }
-    // Kelp set in air got a source beside itself too (research/captures/bds-plantpop.txt).
-    if put && (is_live_fan(&block.name) || block.name == "minecraft:kelp") {
+    if put && is_aged {
+        send::log_again(world, layer, pos);
+    }
+    if put && wets {
         liquid::pour(world, layer, pos, liquid::Liquid::Water, true);
     }
     if put {
@@ -104,19 +117,19 @@ fn is_live_fan(name: &str) -> bool {
 
 /// `block` with a random age where it is one BDS ages and none was named. Kelp only under water:
 /// a kelp set below glass kept age 0 (bds-fixset.txt), one in a pool two deep was aged (bds-bkticks.txt).
-fn aged(world: &mut World, layer: Entity, [x, y, z]: BlockPos, block: &Block) -> Block {
-    let Some((name, key)) = AGED.iter().find(|(name, _)| *name == block.name) else { return block.clone() };
+fn aged(world: &mut World, layer: Entity, [x, y, z]: BlockPos, block: &Block) -> (Block, bool) {
+    let Some((name, key)) = AGED.iter().find(|(name, _)| *name == block.name) else { return (block.clone(), false) };
     if block.properties.split(',').any(|pair| pair.split_once('=').is_some_and(|(named, _)| named == *key)) {
-        return block.clone();
+        return (block.clone(), false);
     }
     let wet_above = level(world, layer).is_some_and(|level| {
         let above = Face::Up.neighbour([x, y, z]);
         level.in_height(above[1]) && level.registry().get(level.block(above[0], above[1], above[2])).is_some_and(|state| state.name == "minecraft:water")
     });
     if *name == "minecraft:kelp" && !wet_above {
-        return block.clone();
+        return (block.clone(), false);
     }
     let age = world.get_resource_or_insert_with(Dice::default).roll(AGES);
     let states = [block.properties.as_str(), &format!("{key}={age}")].into_iter().filter(|part| !part.is_empty()).collect::<Vec<_>>().join(",");
-    Block::new(*name).with(states)
+    (Block::new(*name).with(states), true)
 }

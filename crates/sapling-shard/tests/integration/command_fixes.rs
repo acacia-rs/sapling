@@ -74,15 +74,23 @@ fn nether_and_cave_vines_set_by_command_take_a_random_age_unless_one_is_named() 
         })
         .collect();
     assert!(aged.iter().any(|block| !block.contains("twisting_vines_age=0")), "{aged:?}");
-    ask(&mut h, |ctx| ctx.update_block([6, 65, 2], &Block::new("minecraft:twisting_vines").with("twisting_vines_age=3")));
+    // BDS lists an aged vine twice in one UpdateSubchunkBlocks (bds-fixset.txt 25081); a named age once.
+    let (_, sent) = told(&mut h, |ctx| ctx.update_block([5, 65, 2], &Block::new("minecraft:twisting_vines")));
+    assert!(all::<UpdateBlock>(&sent).is_empty() && all::<UpdateSubchunkBlocks>(&sent).iter().map(|shown| (shown.blocks.len(), shown.extra.len())).eq([(2, 0)]));
+    let (_, sent) = told(&mut h, |ctx| ctx.update_block([6, 65, 2], &Block::new("minecraft:twisting_vines").with("twisting_vines_age=3")));
     assert!(properties(&mut h, [6, 65, 2]).contains("twisting_vines_age=3"));
+    assert!(all::<UpdateSubchunkBlocks>(&sent).is_empty() && all::<UpdateBlock>(&sent).len() == 1);
 }
 
 #[test]
 fn a_live_coral_fan_set_by_command_keeps_a_water_source_beside_itself() {
     let mut h = alex();
     let (_, sent) = told(&mut h, |ctx| ctx.update_block([4, 65, 2], &Block::new("minecraft:tube_coral_fan")));
-    assert!(all::<UpdateBlock>(&sent).iter().any(|update| update.layer == 1), "water told in layer 1");
+    // BDS: one UpdateSubchunkBlocks, the fan in layer 0 and its water as `extra` (bds-fixset.txt 15033).
+    let cells = |updates: &[acacia_proto::types::BlockUpdate]| updates.iter().map(|update| [update.position.x, update.position.y, update.position.z]).collect::<Vec<_>>();
+    let shown = all::<UpdateSubchunkBlocks>(&sent);
+    assert!(all::<UpdateBlock>(&sent).is_empty() && shown.len() == 1, "{shown:?}");
+    assert_eq!((cells(&shown[0].blocks), cells(&shown[0].extra)), (vec![[4, 65, 2]], vec![[4, 65, 2]]));
     for _ in 0..10 {
         h.tick_all();
     }
