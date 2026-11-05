@@ -18,7 +18,7 @@ fn a_rider_is_shown_before_its_mount_and_unlinked_at_once_when_it_dies() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     ask(&mut h, |ctx| ctx.set_difficulty(Difficulty::Easy));
-    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:zombie_horse", [2.5, 65.0, 4.5], 0.0, Some("minecraft:spawn_adult_with_rider")).is_some()));
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:zombie_horse", [2.5, 65.0, 4.5], 0.0, 0.0, Some("minecraft:spawn_adult_with_rider")).is_some()));
     let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     let added: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type != "minecraft:player").collect();
     assert_eq!(added.iter().map(|added| added.entity_type.as_str()).collect::<Vec<_>>(), ["minecraft:zombie", "minecraft:zombie_horse"]);
