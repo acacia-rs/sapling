@@ -88,6 +88,8 @@ fn a_generated_gateway_sends_a_player_over_its_exit_at_once() {
     (0..3).for_each(|_| sent.extend(h.tick(1)));
     let moved: Vec<[f32; 3]> = all::<MovePlayer>(&sent).into_iter().filter(|moved| moved.mode == MovePlayerMode::Teleport).map(|moved| [moved.position.x, moved.position.y - sapling_data::EYE_HEIGHT, moved.position.z]).collect();
     assert_eq!(moved, [[96.5, 49.0, 8.5], [100.5, 51.0, 0.5], [100.5, 51.0, 0.5]], "the generated exit, told twice");
+    let stopped: Vec<[f32; 3]> = all::<acacia_proto::packets::SetEntityMotion>(&sent).into_iter().map(|told| [told.velocity.x, told.velocity.y, told.velocity.z]).collect();
+    assert_eq!(stopped, [[0.0; 3]], "its speed gone before the trip (bds-h1gate.txt)");
     let shown = all::<acacia_proto::packets::UpdateBlock>(&sent);
     assert_eq!(shown.iter().map(|update| ([update.position.x, update.position.y, update.position.z], update.flags.0)).collect::<Vec<_>>(), [([96, 49, 8], 19)]);
 }

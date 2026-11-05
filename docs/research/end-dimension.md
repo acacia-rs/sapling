@@ -69,9 +69,11 @@ again as UpdateBlock flags 19 (BDS also does that every ~10 s: the beam). The ga
 (Java 40). Only in the End; ender pearls, riders and mounts are left. Block entity: `Age`, `ExitPortal` (three
 ints), `EndGatewayBadPosChecked`; no `ExactTeleport`. sapling: a gateway's `ExitPortal`, else (100, 50, 0) (the
 generated columns keep no block entity), the same two MovePlayer, the update the tick after (to the traveller too,
-whose client still holds the column), the cooldown (sapling-end-gateway.txt); no SetEntityMotion and no periodic beam.
-The SetEntityMotion's content is still unseen: `bds_command_probe h1gate` (bds-h1gate.txt, 2026-11-05) on the
-default drill world was not sent through at (1953, 66, 181).
+whose client still holds the column), the cooldown (sapling-end-gateway.txt); no periodic beam.
+The SetEntityMotion, re-drilled on seed 20261018 (`bds_command_probe h1gate`, bds-h1gate.txt, 2026-11-05; the
+default drill world has no gateway there): to the traveller only, its own runtime id, velocity zero, `tick` the
+player's last input tick (the MovePlayer's), just before the two MovePlayer. sapling sends the same
+(`portals/gateway.rs` `stop`; sapling-h1gate.txt).
 
 The gateway's block actor, decompiled 2026-11-05 (twelfth7; tick 1487fcae0, load 1487fc680, save 1487fc8d0):
 `Age` goes up by one each tick it ticks, uncapped; it is sent (block and block entity) at the end of a tick in

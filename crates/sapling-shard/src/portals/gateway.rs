@@ -7,13 +7,13 @@
 //! (gateway_load.rs) and as a trip's cooldown ends (docs/research/end-dimension.md "Gateways").
 
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{BlockEvent, BlockEventType, MovePlayerTeleportCause};
-use acacia_proto::types::BlockCoordinates;
+use acacia_proto::packets::{BlockEvent, BlockEventType, MovePlayerTeleportCause, SetEntityMotion};
+use acacia_proto::types::{BlockCoordinates, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 use sapling_world::END;
 
-use crate::components::{InLayer, Layer, Position};
+use crate::components::{InLayer, Layer, NetId, Outgoing, Position};
 use crate::movement;
 
 const GATEWAY: &str = "minecraft:end_gateway";
@@ -108,6 +108,13 @@ fn age(world: &mut World) {
     }
 }
 
+/// Tells a traveller its speed is gone, stamped with its last input tick, as BDS does before a
+/// trip's two MovePlayer (research/captures/bds-h1gate.txt).
+fn stop(world: &mut World, player: Entity) {
+    let Ok((id, motion, mut out)) = world.query::<(&NetId, &movement::Motion, &mut Outgoing)>().get_mut(world, player) else { return };
+    out.push(&SetEntityMotion { runtime_entity_id: id.0, velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 }, tick: motion.input_tick() });
+}
+
 /// Ages the gateways, shows last tick's again and those whose cooldown ends, then sends the
 /// players in a gateway through it.
 pub(crate) fn tick(world: &mut World, players: &[Entity]) {
@@ -125,6 +132,7 @@ pub(crate) fn tick(world: &mut World, players: &[Entity]) {
     for &player in players {
         let Some((layer, pos)) = gateway_at(world, player).filter(|(layer, pos)| !cooling.iter().any(|(l, p, ..)| l == layer && p == pos)) else { continue };
         let Some([x, y, z]) = world.get::<Layer>(layer).filter(|level| level.world.dimension() == END).map(|level| exit(&level.world, pos)) else { continue };
+        stop(world, player);
         movement::teleport_as(world, player, [x as f32 + 0.5, (y + 1) as f32, z as f32 + 0.5], MovePlayerTeleportCause::UnknownValue, &TOLD_AS);
         let [bx, by, bz] = pos;
         let event = sapling_net::encode(&BlockEvent { position: BlockCoordinates { x: bx, y: by, z: bz }, r#type: BlockEventType::ChangeState, data: 0 });
