@@ -6,11 +6,11 @@ use std::sync::{Arc, Mutex};
 use crate::common;
 
 use acacia_proto::nbt::Value as NbtValue;
-use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelEventGeneric, MovePlayer, UpdateBlock};
+use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelEventGeneric, MovePlayer, UpdateBlock};
 use acacia_proto::types::Vec3f;
 use acacia_proto::RawPacket;
 use common::{Harness, all, click};
-use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
+use sapling_api::{Block, GameMode, Item, Mount, PlayerId, Slot, Target};
 
 const SENSOR: [i32; 3] = [6, 65, 4];
 
@@ -75,6 +75,21 @@ fn a_camel_summoned_saddled_without_its_age_group_seats_no_one() {
     h.receive(1, &crate::riding::interact(camel.0));
     h.tick_all();
     assert!(common::asking::ask(&mut h, move |ctx| ctx.riders(camel)).is_empty());
+}
+
+#[test]
+fn a_pig_seated_in_a_boat_with_its_head_in_stone_chokes() {
+    // bds-ai1boat.txt: BDS's pig in a boat floated up under a stone roof stayed seated, held its breath
+    // and was hurt every 10 ticks; sapling's, not harmed while seated, was untouched.
+    let mut h = by_a_sensor(None);
+    let boat = common::asking::ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:boat", [1.5, 65.0, 2.5], 0.0, 0.0, None)).expect("summoned");
+    let pig = common::asking::ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:pig", [1.5, 65.0, 2.5], 0.0, 0.0, None)).expect("summoned");
+    // The boat may have pulled the pig in already (vehicles.md "Pull-in").
+    assert!(common::asking::ask(&mut h, move |ctx| ctx.vehicle_of(&Target::Entity(pig)) == Some(boat) || ctx.ride(&Target::Entity(pig), boat, Mount::RiderToVehicle)));
+    h.remote.run(|ctx| [[1, 65, 2], [1, 66, 2]].into_iter().for_each(|cell| assert!(ctx.set_block(cell, &Block::new("minecraft:stone")))));
+    let hurt = (0..30).filter(|_| all::<EntityEvent>(h.tick_all().to(1)).iter().any(|event| event.runtime_entity_id == pig.0 && event.event_id == EntityEventEventId::HurtAnimation)).count();
+    assert!(hurt >= 2, "hurt {hurt} times in 30 ticks");
+    assert!(common::asking::ask(&mut h, move |ctx| ctx.vehicle_of(&Target::Entity(pig))) == Some(boat), "still seated");
 }
 
 #[test]
