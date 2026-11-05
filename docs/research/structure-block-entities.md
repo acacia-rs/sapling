@@ -237,6 +237,12 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
     vault or trial spawner that ran.
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
   chambers' dead bush at (-446, -11, -425), is water in our blocks there (a block difference).
+  Looked at 2026-11-05 (thirteenth3w, `cells 20261003 20261003-structures[-still] -448 -12 -432 -433 -9
+  -417`): ours has water sources in a strip two wide along the chunk's west edge (x -448 and -447, y -11,
+  all 16 z) and flowing water a cell or two further east at five z, the pot's cell among them; both BDS
+  worlds, stock and tick-free, have air there and the pot. The strip enters from chunk -29, which
+  neither BDS world saved, so its source (a corridor flooded in our chunk -29, sources made by the
+  two-source rule as it spreads) needs a BDS run that saves chunk -29 to be judged.
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
   before the vault's first tick rewrites it (`spawners/vault.rs` takes the lesser of it and now + 1
   step), so left. Undrillable as a difference: the generator has no level clock to save, and a loaded
@@ -260,7 +266,9 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   between are the pieces' bottom fills (`nextInt(3)` per filled column over the whole piece), so some
   fill reads a column outside the chunk differently from BDS, though the blocks match. Not the
   stock oracle's chunk order: against the repeatable c-vi replay (`ENVS="$(tools/replay-env.sh
-  c-vi)"`, 2026-11-05) the same three differ.
+  c-vi)"`, 2026-11-05) the same three differ. The fill block test (141f7a9c0, read 2026-11-05) skips a
+  top block whose `BlockType+0x130` has bit 0x20 (the leaves property) and else takes the biome's top
+  material, as sapling's `fill_below`; so the draws' difference is in which tops are not air, not there.
 - The desert pyramid sand at (-6114, 60, -3508), fixed 2026-11-05: BDS's cellar sand (1483669e0)
   draws a seed for every suspicious sand cell in the 3x3 view that holds its block, a neighbour's
   included, so the last chunk to post-process the pyramid sets it (`Canvas::set_entity_in_view`;
