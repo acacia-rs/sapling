@@ -6,7 +6,7 @@ use crate::common;
 use std::sync::{Arc, Mutex};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, InventoryContent, LevelEvent, LevelEventEvent, UpdateAttributes};
+use acacia_proto::packets::{AddItemEntity, InventoryContent, InventorySlot, LevelEvent, LevelEventEvent, UpdateAttributes};
 use acacia_proto::nbt::Value;
 use acacia_proto::types::{Action, ItemV4Extra};
 use common::{Harness, all, block_actions, click, hash};
@@ -77,8 +77,9 @@ fn a_break_takes_the_time_the_block_and_the_tool_need() {
     // Shown at 0.2 up, or a tick later (gravity, then 2% drag) when it moved before it was announced.
     let rising = (0.2 - 0.04) * 0.98..=0.2;
     assert!(at.iter().all(|c| (0.15..=0.85).contains(c)) && rising.contains(&left[0].velocity.y), "{:?} {:?}", left[0].position, left[0].velocity);
-    let windows = all::<InventoryContent>(sent.to(1));
-    let ItemV4Extra::Default(Some(pickaxe)) = &windows[0].input[0].extra else { panic!("{:?}", windows[0].input[0]) };
+    // bds-n13play.txt: the worn tool is told as its one slot.
+    let slots = all::<InventorySlot>(sent.to(1));
+    let ItemV4Extra::Default(Some(pickaxe)) = &slots[0].item.extra else { panic!("{slots:?}") };
     assert_eq!(pickaxe.nbt.as_ref().expect("a tag").nbt.value.get("Damage"), Some(&Value::Int(1)), "the break cost the pickaxe a use");
 
     // A break that was never started, one given up, and one finished on another block.
