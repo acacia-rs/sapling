@@ -148,6 +148,8 @@ impl Command for Teleport {
             }
         }
         let names: Vec<String> = moved_players.iter().map(|player| player.name.clone()).chain(moved.iter().map(|entity| display_name(&entity))).collect();
+        // BDS counts each one moved, and the one gone to as one more (bds-s3misc.txt).
+        out.done_to((names.len() + usize::from(at.is_some())) as u32);
         match (names.is_empty(), at) {
             (true, _) => no_target(out),
             (false, Some(at)) => out.translate("commands.tp.success", vec![names.join(", "), at], true),

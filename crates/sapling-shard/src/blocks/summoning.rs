@@ -4,7 +4,7 @@
 //! (0x1415f2940) puts it: its match corner, the skull row's lowest end, plus 1 east, 2 down and 1
 //! south in world axes whatever way the T stands, then (0.5, 0.05, 0.5). The T may stand or lie any
 //! way, as BDS's matcher found one lying on the floor (bds-n2wither.txt).
-// TODO: a T lying with its skulls along x, or standing along x (wither-lightning-fireworks.md).
+// TODO: a T standing along x, or on its side (wither-lightning-fireworks.md).
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -78,10 +78,11 @@ fn souls(world: &mut World, spot: [f32; 3]) -> Vec<bytes::Bytes> {
         .collect()
 }
 
-/// BDS's wither from a T lying with its skulls along z stands a block further east than the
-/// corner rule, whichever way its stem lies (bds-g8wither.txt); the other lying ways were not seen.
+/// BDS's wither from a T lying on the floor stands a block further east than the corner rule, its
+/// skulls along z whichever way its stem lies (bds-g8wither.txt) and along x with its stem north
+/// (bds-s3wither.txt); a T on its side was not seen.
 fn lying_east(along: [i32; 3], down: [i32; 3]) -> f32 {
-    if along == [0, 0, 1] && down[0] != 0 { 1.0 } else { 0.0 }
+    if along[1] == 0 && down[1] == 0 { 1.0 } else { 0.0 }
 }
 
 #[cfg(test)]

@@ -50,11 +50,12 @@ pub(super) const NITWIT: i32 = 14;
 /// 60 and up to 40 more.
 const LOOK_EVERY: u64 = 60;
 pub(super) const LOOK_SPREAD: u32 = 40;
-/// How far a villager looks for a job site, across and up or down.
-// TODO: BDS's POI search range was not decompiled.
-const REACH: i32 = 10;
+/// How far a villager looks for a job site, across and up or down (bds-s3poi*.txt: BDS's walking
+/// villagers took sites 14 off, 15 off once of twice, never 16 or more).
+// TODO: BDS's POI search range was not decompiled; 16 across is a fit, 4 up and down a guess.
+const REACH: i32 = 16;
 const REACH_UP: i32 = 4;
-/// Job site searches per tick, shard-wide: each looks at about 4000 blocks.
+/// Job site searches per tick, shard-wide: each looks at about 10000 blocks.
 const SEARCHES_PER_TICK: u32 = 1;
 /// How near its site a villager works.
 const AT_WORK: f32 = 1.5;

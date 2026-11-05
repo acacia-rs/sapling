@@ -166,6 +166,24 @@ fn a_goat_waits_then_runs_off_stands_and_rams_a_player_for_2_and_a_long_push() {
     assert!(throws.len() == 2 && (throws[0][1] - 0.4).abs() < 1e-4 && throws[1][2].abs() > 1.0, "{throws:?}");
 }
 
+/// bds-s3witch.txt: a witch on magma, not burning, drank fire resistance (data 12) 0.85 s in.
+#[test]
+fn a_witch_on_magma_drinks_fire_resistance() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        for (x, z) in (-3..=3).flat_map(|x| (1..=7).map(move |z| (x, z))) {
+            assert!(ctx.set_block([x, 64, z], &sapling_api::Block::new("magma")));
+        }
+        assert!(ctx.spawn_entity("minecraft:witch", [0.5, 65.0, 4.5]).is_some());
+    });
+    let sent: Vec<acacia_proto::RawPacket> = (0..1200).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let held: Vec<i16> = all::<acacia_proto::packets::MobEquipment>(&sent).iter().map(|held| held.item.metadata as i16).filter(|data| *data != 0).collect();
+    assert_eq!(held.first(), Some(&12), "{held:?}");
+}
+
 #[test]
 fn a_hurt_witch_drinks_healing_in_33_ticks_and_mends() {
     // research/captures/bds-witch-drinks.txt: the potion (data 21) shown in its hand, gone 33 ticks

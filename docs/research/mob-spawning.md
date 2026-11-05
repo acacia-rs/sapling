@@ -161,6 +161,12 @@ despawns only if it appeared naturally (`spawning::Natural`) and its kind has `d
 add-on documentation's [U], and the edge is no player's view covering its column. Mobs spawned by
 commands, eggs or plugins stay.
 
+`s3despawn` (2026-11-05, seed 20261003 generated world, two runs a side): 75 s at the swamp hut at
+midnight, then spawning off and both players moved 44 off. The move took 18 and 7 mobs on BDS, 18 and
+10 on sapling. In the next 100 s BDS lost 1 of 27 and 1 of 28, of which about 16 lay past 32 (some of
+them persistent worldgen animals); sapling lost 1 of 10 (2-5 past 32) and 6 of 17 (8 past 32, 3 left).
+Sapling's roll takes far mobs sooner than BDS's; why (the roll's pace, or what ends idleness) is open.
+
 Saved [D, S]: BDS keeps `Persistent` (its `PersistentComponent`, which `_canDespawn` asks) and
 `NaturalSpawn` with every mob; a summoned one is saved `Persistent` 1, `NaturalSpawn` 0
 (bds-keepmobs.txt, bds-t2ekeep-dump.txt, the template actors of bds-t12actors). A natural one has no

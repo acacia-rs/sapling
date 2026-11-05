@@ -29,12 +29,15 @@ const RIDER: &str = "as_rider";
 const ARMED: u32 = 25;
 const OF: u32 = 400;
 /// It throws beyond `THROWS_PAST`, bites within `BITES_IN`, keeps its way between, and throws
-/// within `RANGE` every `EVERY` ticks and up to `MORE` more.
+/// within `RANGE` every `EVERY` ticks and up to `MORE` more, its first a `SIGHTED` later: BDS's
+/// throws came 48 to 84 ticks apart whatever the distance, the first 72 to 93 after it took its
+/// prey (bds-s3drowned.txt, bds-q3drowned.txt), not the pack's 20 to 60 by distance.
 const THROWS_PAST: f32 = 5.0;
 const BITES_IN: f32 = 3.0;
 const RANGE: f32 = 10.0;
-const EVERY: u64 = 20;
-const MORE: u32 = 40;
+const EVERY: u64 = 48;
+const MORE: u32 = 36;
+const SIGHTED: u64 = 20;
 /// The pack's `thrown_trident`: power 4, gravity 0.1, 8 to whom it hits.
 const TRIDENT: Shot = Shot {
     kind: "minecraft:thrown_trident",
@@ -106,6 +109,10 @@ pub(super) fn let_go(world: &mut World, drowned: Entity, by_player: bool) -> Vec
     dropped
 }
 
+fn wait(world: &mut World) -> u64 {
+    EVERY + u64::from(world.get_resource_or_insert_with(Dice::default).roll(MORE + 1))
+}
+
 /// After its move: an armed drowned's throw, a tick after its swing.
 pub(super) fn throw(world: &mut World, drowned: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
@@ -123,12 +130,11 @@ pub(super) fn throw(world: &mut World, drowned: Entity, layer: Entity, id: u64, 
     let throwing = if far > THROWS_PAST { true } else if far < BITES_IN { false } else { throwing };
     world.get_mut::<Thrower>(drowned)?.throwing = throwing;
     if throwing && ready == 0 {
-        // Java's first wait, by how far its prey is; BDS's one throw seen came 77 ticks on.
-        world.get_mut::<Thrower>(drowned)?.ready = now + EVERY + (far.min(RANGE) / RANGE * MORE as f32) as u64;
+        world.get_mut::<Thrower>(drowned)?.ready = now + SIGHTED + wait(world);
         return Some(());
     }
     if throwing && far <= RANGE && now >= ready {
-        let wait = EVERY + u64::from(world.get_resource_or_insert_with(Dice::default).roll(MORE + 1));
+        let wait = wait(world);
         let mut thrower = world.get_mut::<Thrower>(drowned)?;
         (thrower.ready, thrower.loosing) = (now + wait, Some(now + 1));
         hunting::swing(world, drowned, layer, id, body);

@@ -136,7 +136,9 @@ fn show(world: &mut World, player: Entity, id: u64, before: &[i32]) {
 fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bool {
     let before = shown(world, player);
     let (Some(id), Some(mut effects)) = (world.get::<NetId>(player).map(|id| id.0), world.get_mut::<Effects>(player)) else { return false };
-    let taken: Vec<Active> = effects.0.iter().copied().filter(|active| gone(active)).collect();
+    let mut taken: Vec<Active> = effects.0.iter().copied().filter(|active| gone(active)).collect();
+    // BDS keeps effects by id, so a clear tells them in id order (bds-q3witch.txt).
+    taken.sort_by_key(|active| active.effect.id());
     effects.0.retain(|active| !gone(active));
     effects.1 |= !taken.is_empty();
     for active in &taken {

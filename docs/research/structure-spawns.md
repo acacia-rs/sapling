@@ -181,6 +181,14 @@ otherwise. The marker cell is the template block's own cell (`Rotation::apply`),
 | end city | 14831aaa0 / 14831a670 | `Sentry` shulker; `Elytra` is an item frame block, not an actor |
 | pool elements | 145e1e2a0 / 141ef28c0 | the metadata `namespace:id[:event]`; abandoned villages' rules (1480bbe90) make `villager_v2:spawn_from_village` a `zombie_villager_v2:from_village` |
 
+The `Group of Allays` marker (its `nextInt(3)` draw too) is gated on the world's base game version
+being at least 1.19.0, the constant 14cc486c0 (static init 14105b908: `0x1000000130001`; the
+1.18.0 once read for it is its neighbour 14cc486a0, 14105b872). The mansion (1480b286a) skips it
+when `140247750` (SemVersion less-than) says the version is under the constant; the outpost
+(1483596bc) spawns when `14087de00(constant, version)`, which is less-or-equal, holds. A version
+with its "any" flag, or a constant not yet filled, spawns them. Current worlds are newer, so both
+spawn allays and draw, as sapling's do (checked 2026-11-05, thirteenth3s).
+
 Ocean ruins and shipwrecks spawn nothing (slot 5 is a no-op). Java templates' `entities` lists are
 read but never placed (141eedcf0 parses them, `placeInWorld` 141eeb8d0 skips them): the plains
 villager templates and camp cushions show nothing. A bastion's .mcstructure elements place their

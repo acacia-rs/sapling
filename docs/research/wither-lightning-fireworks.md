@@ -130,8 +130,10 @@ matcher (0x1415f2940, tried by 1415f25d0 for each forward and up) returns its se
 (callers 144bbf720). The two Ts lying along x (stems at z -2 and 2) made no wither on BDS in two runs: the
 bot's last skull went astray (`nothing to place against`), so the rule for them is not known. Fixed for
 what was seen: a T lying with its skulls along z stands its wither a block further east than the corner
-rule (`summoning::lying_east`, test `a_t_lying_with_its_skulls_along_z_calls_it_two_and_a_half_east_of_them`);
-a T lying with its skulls along x keeps the corner rule, not drilled.
+rule (`summoning::lying_east`, test `a_t_lying_with_its_skulls_along_z_calls_it_two_and_a_half_east_of_them`).
+`s3wither` (2026-11-05, bds-s3wither.txt): a T lying with its skulls along x at z 0 (x 3 to 5), its
+stem north at z -2, gave the wither at (5.5, -27.95, 1.5), the corner rule plus a block east too, so
+`lying_east` holds for any lying T (tests in wither_lying.rs; sapling-s3wither.txt the same).
 Drilled (`o3wither`, research/captures/bds-o3wither.txt): the bar's title is `entity.wither.name`, as
 sapling's. Its flight, fitted tick by tick: v = (v − 0.08)·0.98·0.6; while under its prey's height
 + 5 (its height alone once armoured), v = max(v, 0) + 0.3 − 0.6·max(v, 0); a player's height is its

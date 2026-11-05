@@ -375,12 +375,27 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
 
 ## Not drilled
 
-- Seen on the way in thirteenth3q (2026-11-05), not followed: BDS's summoned boat stands 0.2 off the
-  summon point in x and z (bds-q3seats.txt: 4.5, 4.5 to 4.7, 4.3; earlier captures alike), sapling's on
-  it. A falling suspicious block that lands breaks with `ParticleDestroy` at the cell's corner and one
-  UpdateSubchunkBlocks setting it then air (bds-q3brush.txt's first run); sapling's particle is at the
-  entity, no block sent. `tp @s @e[type=arrow,c=1]` answered `success_count` 2 on BDS, 1 on sapling
-  (bds-q3arrows.txt). Slowness 255 does not hold BDS's cows (bds-q3wind.txt, bds-q3crowd.txt).
+- Seen in thirteenth3q, followed in thirteenth3s (2026-11-05, research/captures/bds-s3misc.txt):
+  - The summoned boat: BDS moves an x or z whose fraction is between 0.3 and 0.7 by 0.2, so that
+    the 1.4-wide box spans two cells, not three (4.5, 4.5 to 4.7, 4.3; -3.5, -6.5 to -3.3, -6.3;
+    the same for yaw 0, 90, 180 and 45 and a chest boat); 2.0 and 2.3, -7.8 kept. x went up each
+    time, z down at 3.5 and 4.5 and up at 0.5, -3.5 and -6.5; the rule for the side is not found
+    and sapling's boat stays on the point (open). A number written with a point is not centred
+    (2.0 stayed 2.0); sapling centred it, fixed (`Axis::Whole`, sapling-api command/places.rs).
+  - A falling suspicious block (hanging or not) lands as `ParticleDestroy` at its cell's corner,
+    named by the block's hanging state whatever its own, then the next tick one
+    UpdateSubchunkBlocks puts it and air, and the entity goes 4 ticks after the landing, with no
+    item. Fixed (blocks/falling/flight.rs, test `suspicious_sand_breaks_where_it_lands_as_on_bds`).
+  - `tp` success counts: each one moved, plus one when the destination is an entity (3 cows to
+    the actor 4, `tp @a @s` 3, two cows 3; to coordinates the number moved). Fixed
+    (vanilla/teleport.rs).
+  - `effect clear` tells the removals in effect id order (BDS keeps them by id; bds-q3witch.txt
+    2, 11, 19, 21). Fixed (vitals/effects.rs `take`). BDS sends the actor's health and pace
+    UpdateAttributes and VisibleMobEffects the tick after; sapling at once (open).
+  - Slowness 255 does not hold BDS's cows (bds-q3wind.txt, bds-q3crowd.txt).
+- Seen in thirteenth3s (bds-s3poi.txt): BDS's `@e[family=armorer]` matched a villager that took up
+  armoring, so a component group's `type_family` counts; sapling's selector families are by kind
+  only (sapling-api command/selector/gather.rs `families`), so it matched none (open).
 - Repair through `minecraft:repairable` (data-driven items naming themselves), drilled 2026-11-04 on
   spears (research/captures/bds-t2espear.txt): two iron spears worn 150 and 130, one with sharpness
   II, made one worn 30 (no twentieth) that kept sharpness II, in either hotbar order; sapling gave 18

@@ -248,6 +248,15 @@ A drowned summoned `as_ranged_adult` in a pool 8 from the actor at midnight
 the actor and 77 ticks on swung (sapling waits Java's 20 to 60 by distance), a `thrown_trident` following a tick later at 3.94 a tick (the
 pack's power 4), heard `item.trident.throw` from the drowned. It kept its own trident; the thrown
 one stuck in the floor. One handed a trident by `replaceitem` (an earlier run) only bit.
+The throw wait (`s3drowned`, 2026-11-05, bds-s3drowned.txt, three drowned 6 to 10 off in a block of
+still water 6 deep, and bds-q3drowned.txt): BDS's swings came 48 to 84 ticks apart (60, 59, 84, 60,
+79, 60, 67 here; 48 to 72 in q3), with no link to the distance (2.1 to 11.8 at the throw), and the
+first 72 to 93 ticks after the drowned took its prey (outliers 134 and 175). The pack's
+`attack_interval` 1 to 3 s scaled by distance (Java's) gives 20 to 60. `RangedAttackGoal::tick`
+(149fe7ec0) lerps two fields by distance over the range and waits on sight and a facing check
+(141c640b0) before it shoots; the field labels are garbled, so the fit stands: a wait of 48 to 84
+after each throw, and 20 more before the first (`creatures/drowned.rs`, test
+`a_drowned_throws_48_to_84_ticks_apart`). BDS's drowned threw from 2.1 off too.
 
 `drownedloot` (`bds-drownedloot.txt`): 40 drowned summoned `as_ranged_adult` in a pool and killed by
 `damage ... entity_attack entity @s`. All 40 held a trident; 5 held a nautilus shell in the offhand
@@ -349,6 +358,11 @@ Sapling's run: sapling-kinds3.txt.
   twice in a pumpkin no `stare`, twice bare one `stare` on both sides. The pack's `looked_at` filter
   skips a player wearing one; sapling's took it before; fixed (`creatures/stares.rs`, test
   `an_enderman_takes_no_starer_in_a_carved_pumpkin`).
+  The stare's angle (`s3stare`, `s3stare2`, 2026-11-05; read with the trials where the enderman
+  stayed on its spot: one that teleports off, as most do within a few seconds, is no trial): at
+  6.06 off BDS's stared at 0.3, 1.6, 2.2, 2.8 and 3.4 degrees and not at 6.0 or 9.0; at 12.03 off at
+  0.2 and 1.8 and not at 9.7. The Java game's `1 - 0.025 / d` (5.2 degrees at 6, 3.7 at 12) and the
+  earlier 4.87 at 6 agree with all of it; sapling's stared at the same trials.
 - Endermen in the rain were hurt 1 every 10 ticks, cause 9, and teleported often. Sapling's took
   nothing; now rain hurts them as water does (`creatures/harm.rs` `WATER_HURTS`, tested in
   tests/integration/mob_heat.rs), without the teleports. The drill_server rerun still showed no
@@ -394,10 +408,13 @@ Sapling's run: sapling-kinds3.txt.
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full
-effect (`vitals/splashed.rs`); one near the break gets the Java game's `1 - d/4` of each effect's
-time, which was not drilled; mobs near it get the same (`creatures/afflictions.rs`). A witch drinks
-as above (`creatures/drinks.rs`), a check a second (BDS's delays rule out one a tick), and has the
-potion's effects; it is not slowed as it drinks.
+effect (`vitals/splashed.rs`); one near the break gets `1 - d/4` of each effect's time by the box
+grown 0.05 (drilled in t2esplash, above); mobs near it get the same (`creatures/afflictions.rs`).
+A witch drinks as above (`creatures/drinks.rs`), a check a second (BDS's delays rule out one a
+tick), and has the potion's effects. `s3witch` (2026-11-05, bds-s3witch.txt): a free witch on magma,
+not burning, drank fire resistance 0.85 s in, then healing (the pack's `on_hot_block`; sapling's
+drank nothing, fixed), and walked 0.135 a tick drinking or not: the pack's `speed_modifier` -0.25
+slows BDS's not, nor sapling's.
 
 An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
 for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player who stares at it

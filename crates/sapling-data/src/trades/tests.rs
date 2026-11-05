@@ -60,6 +60,13 @@ fn a_librarians_book_is_enchanted_and_its_emeralds_are_its_price() {
 }
 
 #[test]
+fn a_librarian_sells_curses_as_bds_does() {
+    let sold: Vec<i16> = (0..64).map(|seed| crate::enchant::table::for_trade(&mut Counting(seed)).0).collect();
+    assert!(sold.contains(&27) && sold.contains(&28), "{sold:?}");
+    assert!(!sold.iter().any(|id| [36, 37, 38].contains(id)), "{sold:?}");
+}
+
+#[test]
 fn a_fisherman_wants_the_boat_of_its_biome() {
     let table = trade_table("fisherman").unwrap();
     let boats = |mark: i32| -> Vec<String> {

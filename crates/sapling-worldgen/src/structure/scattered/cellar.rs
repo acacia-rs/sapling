@@ -84,6 +84,6 @@ fn suspicious_sand(f: &Frame, canvas: &mut Canvas, xoroshiro: &mut Xoroshiro, (x
     f.place(canvas, Block::SuspiciousSand, x, y, z);
     if canvas.get(wx, wy, wz) == Block::SuspiciousSand {
         let seed = xoroshiro.next_long() as i32;
-        canvas.set_entity(wx, wy, wz, BlockEntity::Loot { table: "loot_tables/entities/desert_pyramid_brushable_block.json", seed });
+        canvas.set_entity_in_view(wx, wy, wz, BlockEntity::Loot { table: "loot_tables/entities/desert_pyramid_brushable_block.json", seed });
     }
 }

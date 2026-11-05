@@ -1,9 +1,10 @@
 //! What a witch drinks, by its pack's `drink_potion` (research/captures/bds-witch-drinks.txt): a
 //! check a second (BDS's drank 3 and 12 seconds on, where a check a tick would have been at once)
 //! for the first potion whose case holds and whose chance comes up: water breathing under water,
-//! fire resistance on fire, healing when hurt, swiftness with prey 11 or more off. It holds the
-//! potion 33 ticks, then has its effects (`afflictions`).
-// TODO: it is not slowed as it drinks, and a viewer who comes while it drinks does not see the potion.
+//! fire resistance on fire or on magma, healing when hurt, swiftness with prey 11 or more off. It
+//! holds the potion 33 ticks, then has its effects (`afflictions`). The pack's `speed_modifier`
+//! -0.25 slowed BDS's not (bds-s3witch.txt: 0.135 a tick on, drinking or not).
+// TODO: a viewer who comes while it drinks does not see the potion.
 
 use acacia_proto::packets::MobEquipment;
 use acacia_proto::types::WindowID;
@@ -18,6 +19,7 @@ use super::{afflictions, harm};
 
 const KIND: &str = "minecraft:witch";
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
+const HOT: &[&str] = &["minecraft:magma"];
 /// Ticks between checks, and ticks a draught takes.
 const CHECKS: u64 = 20;
 const DRINKS: u64 = 33;
@@ -75,11 +77,12 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, bo
             let Some(health) = world.get::<Health>(entity).copied() else { return };
             let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);
             let under_water = world.get::<Layer>(layer).is_some_and(|layer| harm::holds(&layer.world, head, WATER));
-            let far = prey.is_some_and(|feet| (0..3).map(|axis| (feet[axis] - body.at[axis]).powi(2)).sum::<f32>().sqrt() >= FAR);
+            let below = [body.at[0], body.at[1] - 0.01, body.at[2]].map(|c| c.floor() as i32);
+            let on_hot_block = body.on_ground && world.get::<Layer>(layer).is_some_and(|layer| harm::holds(&layer.world, below, HOT));            let far = prey.is_some_and(|feet| (0..3).map(|axis| (feet[axis] - body.at[axis]).powi(2)).sum::<f32>().sqrt() >= FAR);
             let without = |effect: Effect| afflictions::level(world, entity, effect).is_none();
             let cases = [
                 (WATER_BREATHING, under_water && without(Effect::WaterBreathing)),
-                (FIRE_RESISTANCE, health.is_burning() && without(Effect::FireResistance)),
+                (FIRE_RESISTANCE, (health.is_burning() || on_hot_block) && without(Effect::FireResistance)),
                 (HEALING, health.left() < health.max()),
                 (SWIFTNESS, far && without(Effect::Speed)),
             ];

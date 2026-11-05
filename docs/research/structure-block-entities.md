@@ -258,6 +258,10 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
 - [U] 3 village chests' seeds: BDS's are draws 157 of chunk (-63, 9)'s structure MT and 306 and 459 of
   (-62, 8)'s, sapling's 158, 301 and 449, while (-62, 8)'s chest at draw 433 matches; the draws
   between are the pieces' bottom fills (`nextInt(3)` per filled column over the whole piece), so some
-  fill reads a column outside the chunk differently from BDS, though the blocks match.
-- [U] The desert pyramid sand at (-6114, 60, -3508): its seed is not the cellar Xoroshiro's draw sapling
-  makes, likely the cell another chunk's post-process placed first (`cellar.rs`).
+  fill reads a column outside the chunk differently from BDS, though the blocks match. Not the
+  stock oracle's chunk order: against the repeatable c-vi replay (`ENVS="$(tools/replay-env.sh
+  c-vi)"`, 2026-11-05) the same three differ.
+- The desert pyramid sand at (-6114, 60, -3508), fixed 2026-11-05: BDS's cellar sand (1483669e0)
+  draws a seed for every suspicious sand cell in the 3x3 view that holds its block, a neighbour's
+  included, so the last chunk to post-process the pyramid sets it (`Canvas::set_entity_in_view`;
+  `block_entity_diff 20261003 20261003-structures`: 7 of 7 same).

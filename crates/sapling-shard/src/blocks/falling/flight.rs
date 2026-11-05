@@ -142,9 +142,20 @@ fn leave_item(world: &mut World, layer: Entity, block: u32, bottom: [f32; 3]) {
 }
 
 /// Whether the cell a falling block came to rest in takes it.
-fn takes(world: &World, layer: Entity, block: u32, cell: BlockPos) -> bool {
-    let Some((registry, here)) = super::block(world, layer, cell) else { return false };
-    gives_way(registry, here) && registry.get(block).is_some_and(|state| !state.name.contains("suspicious_"))
+fn takes(world: &World, layer: Entity, cell: BlockPos) -> bool {
+    super::block(world, layer, cell).is_some_and(|(registry, here)| gives_way(registry, here))
+}
+
+fn is_brushable(world: &World, layer: Entity, block: u32) -> bool {
+    level(world, layer).and_then(|level| level.registry().get(block)).is_some_and(|state| state.name.contains("suspicious_"))
+}
+
+/// A brushable block breaks as it lands (bds-s3misc.txt): dust at its cell's corner, named by the
+/// block's default state whatever its own, then put and broken the next tick, leaving nothing.
+fn brushable_dust(world: &World, layer: Entity, block: u32, cell: BlockPos) -> Option<Bytes> {
+    let registry = level(world, layer)?.registry();
+    let default = send::resolve(registry, &sapling_api::Block::new(registry.get(block)?.name))?;
+    Some(event(LevelEventEvent::ParticleDestroy, cell.map(|c| c as f32), registry.network_hash(default) as i32))
 }
 
 /// One tick of a falling block; the cell its block was placed in, when it was.
@@ -171,6 +182,12 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
             dripstone::shatter(world, layer, block_id, cell);
             return None;
         }
+        if is_brushable(world, layer, block_id) {
+            world.entity_mut(entity).remove::<entities::Stored>();
+            let Some(here) = level(world, layer).filter(|level| level.in_height(cell[1])).map(|level| level.block(cell[0], cell[1], cell[2])) else { return None };
+            send::show_states(world, layer, &[(cell, block_id), (cell, here)]);
+            return None;
+        }
         if !send::set_quietly(world, layer, cell, block_id) {
             return None;
         }
@@ -192,7 +209,7 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
     let below_world = level(world, layer).is_some_and(|level| !level.in_height(cell_of(at)[1]) && !level.in_height(cell_of(at)[1] + 1));
     // Refused: it shatters now and goes, leaving its item, the next tick, as BDS was seen to.
     let is_dripstone = is_dripstone(world, layer, block_id);
-    if landed && !is_dripstone && !takes(world, layer, block_id, cell_of(at)) {
+    if landed && !is_dripstone && !takes(world, layer, cell_of(at)) {
         shatter(world, layer, block_id, at);
         world.get_mut::<FallingBlock>(entity)?.refused = true;
         return None;
@@ -222,6 +239,11 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         if is_dripstone {
             dripstone::hurt(world, layer, &body, harm, fell);
             packets.splice(0..0, dripstone::landed(world, layer, block_id, cell_of(at)));
+        }
+        if is_brushable(world, layer, block_id)
+            && let Some(dust) = brushable_dust(world, layer, block_id, cell_of(at))
+        {
+            packets.insert(0, dust);
         }
     }
     send::to_viewers(world, layer, cell_of(at), &packets);

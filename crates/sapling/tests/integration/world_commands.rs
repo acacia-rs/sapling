@@ -141,3 +141,25 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     bob.disconnect().await;
     server.shutdown().await;
 }
+
+/// bds-s3misc.txt: `tp` counts each one moved, and the one gone to once more; a number written with
+/// a point is not centred (a boat summoned at 2.0 stayed at 2.0).
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn tp_counts_whom_it_moves_and_centres_only_whole_numbers() {
+    let server = common::start(common::builder().handler(Operators).vanilla_commands()).await;
+    let config = || BotConfig { subscribe: PacketFilter::none().with(CommandOutput::ID), ..BotConfig::default() };
+    let mut alice = common::spawn(common::client(&server, "Alice"), config()).await;
+    let mut bob = common::spawn(common::client(&server, "Bob"), config()).await;
+    alice.wait_ticks(20).await.expect("connected");
+    let steps: &[(&str, &str)] = &[
+        ("tp @a 3 70 3", r#"commands.tp.success.coordinates ["Alice, Bob", "3.50", "70.00", "3.50"] 2"#),
+        ("tp @a @s", r#"commands.tp.success ["Alice, Bob", "Alice"] 3"#),
+        ("tp @a 3.0 70 -2.0", r#"commands.tp.success.coordinates ["Alice, Bob", "3.00", "70.00", "-2.00"] 2"#),
+    ];
+    for (line, expected) in steps {
+        assert_eq!(answer(&mut alice, line).await, *expected, "/{line}");
+    }
+    alice.disconnect().await;
+    bob.disconnect().await;
+    server.shutdown().await;
+}

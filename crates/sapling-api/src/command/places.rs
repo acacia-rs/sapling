@@ -5,12 +5,14 @@
 use super::{Args, ParamKind, Parameter, ParseError};
 use crate::{Sender, ShardCtx};
 
-/// One axis of a position: a number, `~` and an offset from the sender's own, or `^` and an offset
-/// along where the sender faces (left, up, forward; all three axes or none).
+/// One axis of a position: a number written with a point (`At`) or without (`Whole`), `~` and an
+/// offset from the sender's own, or `^` and an offset along where the sender faces (left, up,
+/// forward; all three axes or none).
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[non_exhaustive]
 pub enum Axis {
     At(f32),
+    Whole(f32),
     Off(f32),
     Local(f32),
 }
@@ -29,14 +31,15 @@ impl Axis {
     pub(crate) fn read(word: &str) -> Option<Self> {
         match word.strip_prefix('~') {
             Some(offset) => offset_of(offset).map(Self::Off),
-            None => number(word).map(Self::At),
+            None if word.contains(['.', 'e', 'E']) => number(word).map(Self::At),
+            None => number(word).map(Self::Whole),
         }
     }
 
     /// The number, `~` counted from `origin`; `^` too, which only [`Coords::resolve`] turns.
     pub fn from(self, origin: f32) -> f32 {
         match self {
-            Self::At(at) => at,
+            Self::At(at) | Self::Whole(at) => at,
             Self::Off(off) | Self::Local(off) => origin + off,
         }
     }
@@ -79,8 +82,8 @@ fn local(axes: &[Axis; 3]) -> Option<[f32; 3]> {
     Some([axes[0].local()?, axes[1].local()?, axes[2].local()?])
 }
 
-/// A point: `x y z`, where a whole number is the middle of its block across (as vanilla reads
-/// `/tp 3 64 3`).
+/// A point: `x y z`, where a number written without a point is the middle of its block across (as
+/// vanilla reads `/tp 3 64 3`; BDS put a boat summoned at `2.0 -26 2.0` at 2.0, bds-s3misc.txt).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Coords(pub [Axis; 3]);
 
@@ -88,7 +91,7 @@ impl Coords {
     /// The point, `~` counted from `origin`.
     pub fn from(&self, origin: [f32; 3]) -> [f32; 3] {
         std::array::from_fn(|axis| match self.0[axis] {
-            Axis::At(at) if axis != 1 && at.fract() == 0.0 => at + 0.5,
+            Axis::Whole(at) if axis != 1 => at + 0.5,
             other => other.from(origin[axis]),
         })
     }
