@@ -34,7 +34,7 @@ fn hand() -> Vec<String> {
     }
     lines.extend(owned(["tp @s 0.5 -26 0.5 -90 0", "fill 1 -26 -3 12 -24 3 air", "kill @e[type=item]", ""]));
     lines.extend(dispensers());
-    lines.extend(owned(["setblock 3 -26 -6 stone", "setblock 3 -24 -6 stone", "replaceitem entity @s slot.weapon.mainhand 0 oak_hanging_sign 2", "!place 3 0 -6 west", "", "!place 3 2 -6 down", ""]));
+    lines.extend(owned(["tp @s 1.5 -26 -4.5 -90 0", "setblock 3 -26 -6 stone", "setblock 3 -24 -6 stone", "replaceitem entity @s slot.weapon.mainhand 0 oak_hanging_sign 2", "!place 2 0 -1 west", "", "!place 2 2 -1 down", ""]));
     lines.extend(owned(["fill 2 -26 -6 3 -24 -6 air", "clear @s", ""]));
     for _ in 0..3 {
         lines.extend(owned(["setblock 4 -26 6 campfire", "setblock 4 -26 6 air destroy", ""]));
@@ -45,9 +45,9 @@ fn hand() -> Vec<String> {
 
 /// Blocks of redstone at x 2; at z 5 to 7 a dispenser put by hand east of each, at z -5 to -7 one set there.
 fn dispensers() -> Vec<String> {
-    let mut lines = owned(["fill 2 -26 -7 2 -26 -5 redstone_block", "fill 2 -26 5 2 -26 7 redstone_block", "replaceitem entity @s slot.weapon.mainhand 0 dispenser 4", ""]);
+    let mut lines = owned(["fill 2 -26 -7 2 -26 -5 redstone_block", "fill 2 -26 5 2 -26 7 redstone_block", "tp @s 4.5 -26 6.5 90 0", "replaceitem entity @s slot.weapon.mainhand 0 dispenser 4", ""]);
     for z in [5, 6, 7] {
-        lines.extend([format!("!place 3 -1 {z}"), String::new()]);
+        lines.extend([format!("!place -1 -1 {}", z - 6), String::new()]);
         waits(&mut lines, 1);
     }
     for z in [-5, -6, -7] {

@@ -1,7 +1,7 @@
 //! The thirteenth wave's group T drills (research/parity/THIRTEENTH-BRIEF.md), on creature_drill.rs's floor
 //! (stone at y -27, the actor at 0.5 -26 0.5 facing east). `z2bolt`: where a bolt's vibration starts, and
 //! waxed rods struck. `z2wire`: string put by hand between hooks, alone, beside string and by one hook.
-//! `z2sculk`: wool between a sensor and a set block, wool set near one, and a sensor's power into the
+//! `z2sculk`: wool between a sensor and a block put, wool and carpet put, and a sensor's power into the
 //! block it stands on. `z2hand` (thirteenth2t_hand.rs): blocks with entities put by hand.
 
 #[path = "thirteenth2t_hand.rs"]
@@ -63,29 +63,25 @@ fn wire() -> Vec<String> {
     lines
 }
 
-/// A sensor at 10 -26 -4 hears stone set at 4 -26 -4 through a wool wall at x 7, then without it; wool and
-/// stone set 2 off it; then a sensor on a stone block at 10 -25 4 with a lamp beside that block (x 11),
-/// set off by stone set at 12 -26 6.
+/// Blocks put by hand from 1.5 -26 -3.5 (a set block is heard by no sensor, as the first run showed): a
+/// sensor at 6 -26 -4 hears stone put at 2 -26 -4 through a wool wall at x 4, then stone without it, then
+/// wool and carpet put; then a sensor on a stone block at 6 -25 4 with a lamp beside that block (x 7), set
+/// off by stone put at 2 -26 3.
 fn sculk() -> Vec<String> {
     let mut lines = floor();
-    lines.extend(owned(["fill 7 -26 -6 7 -24 -2 white_wool", "setblock 10 -26 -4 sculk_sensor", ""]));
+    lines.extend(owned(["fill 4 -26 -6 4 -24 -2 white_wool", "setblock 6 -26 -4 sculk_sensor", "tp @s 1.5 -26 -3.5 -90 0", "replaceitem entity @s slot.weapon.mainhand 0 stone 8", ""]));
     waits(&mut lines, 3);
-    lines.extend(owned(["setblock 4 -26 -4 stone", ""]));
+    for (step, item) in [("!place 1 -1 0", ""), ("fill 4 -26 -6 4 -24 -2 air", ""), ("!place 1 -1 1", ""), ("!place 1 -1 2", "white_wool"), ("!place 1 -1 -1", "white_carpet")] {
+        if !item.is_empty() {
+            lines.push(format!("replaceitem entity @s slot.weapon.mainhand 0 {item} 1"));
+        }
+        lines.extend([step.to_string(), String::new()]);
+        waits(&mut lines, 3);
+    }
+    lines.extend(owned(["fill 2 -26 -6 6 -24 -2 air", "setblock 6 -26 4 stone", "setblock 7 -26 4 redstone_lamp", "setblock 6 -25 4 sculk_sensor", "tp @s 1.5 -26 3.5 -90 0", "replaceitem entity @s slot.weapon.mainhand 0 stone 8", ""]));
     waits(&mut lines, 3);
-    lines.extend(owned(["fill 7 -26 -6 7 -24 -2 air", ""]));
+    lines.extend(owned(["!place 1 -1 0", ""]));
     waits(&mut lines, 3);
-    lines.extend(owned(["setblock 4 -26 -4 air", ""]));
-    waits(&mut lines, 3);
-    lines.extend(owned(["setblock 10 -26 -2 white_wool", ""]));
-    waits(&mut lines, 3);
-    lines.extend(owned(["setblock 10 -26 -6 white_carpet", ""]));
-    waits(&mut lines, 3);
-    lines.extend(owned(["setblock 12 -26 -4 stone", ""]));
-    waits(&mut lines, 3);
-    lines.extend(owned(["fill 4 -26 -6 12 -24 -2 air", "setblock 10 -26 4 stone", "setblock 11 -26 4 redstone_lamp", "setblock 10 -25 4 sculk_sensor", ""]));
-    waits(&mut lines, 3);
-    lines.extend(owned(["setblock 12 -26 6 stone", ""]));
-    waits(&mut lines, 3);
-    lines.extend(owned(["fill 4 -26 2 12 -24 7 air", ""]));
+    lines.extend(owned(["fill 2 -26 2 7 -24 5 air", "tp @s 0.5 -26 0.5 -90 0", "clear @s", ""]));
     lines
 }
