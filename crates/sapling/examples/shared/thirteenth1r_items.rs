@@ -95,7 +95,7 @@ fn bundle() -> Vec<String> {
     with(lines, &["gamemode creative @s", "clear @s", "kill @e[type=!player]", ""])
 }
 
-const ANVIL_SHOWN: &[&str] = &["ItemStackResponse", "InventorySlot", "CommandOutput"];
+const ANVIL_SHOWN: &[&str] = &["ItemStackResponse", "InventorySlot", "CommandOutput", "AddItemEntity", "UpdateAttributes"];
 
 /// Two enchanted iron swords merged in an anvil, the first laid as the input, for four pairs; the
 /// name box holds the item's own name, as a client's does (BDS refused an empty list, status 9).
@@ -104,7 +104,7 @@ fn anvil() -> Vec<String> {
     let pairs: [(&[&str], &[&str]); 4] = [
         (&["sharpness 2"], &["sharpness 3", "unbreaking 1"]),
         (&["sharpness 3"], &["sharpness 3"]),
-        (&["sharpness 1", "looting 2"], &["smite 3", "looting 1"]),
+        (&["sharpness 1", "looting 2"], &["smite 3", "looting 3"]),
         (&["smite 3"], &["sharpness 1", "knockback 2"]),
     ];
     for (first, second) in pairs {
@@ -114,7 +114,8 @@ fn anvil() -> Vec<String> {
         lines.extend(owned(["", "!move 0 1"]));
         lines.push(hold("iron_sword"));
         lines.extend(second.iter().map(|enchant| format!("enchant @s {enchant}")));
-        lines.extend(owned(["", "!click 2 0 0", "", "!ui 1 1", "!ui 0 2", "", "!anvilcraft! 0 Iron~Sword 8", "", "!inv", "!close", ""]));
+        // The result dropped, for its tag; a refused pair taken back out of the anvil.
+        lines.extend(owned(["setblock 2 -26 0 anvil", "", "!click 2 0 0", "", "!ui 1 1", "!ui 0 2", "", "!anvilcraft 0 Iron~Sword 8", "", "!uiback 1 6", "!uiback 2 7", "!close", ""]));
     }
     with(lines, &["setblock 2 -26 0 air", "gamemode creative @s", "clear @s", ""])
 }
