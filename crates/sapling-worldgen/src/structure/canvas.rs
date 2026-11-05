@@ -191,6 +191,16 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// Files `entity` for a cell anywhere in the 3x3 view, the piece whole or not: BDS's cellar sand
+    /// (1483669e0) re-seeds a neighbour's sand it finds there, so the last chunk to run sets the seed.
+    pub fn set_entity_in_view(&mut self, x: i32, y: i32, z: i32, entity: BlockEntity) {
+        if self.bb.contains(x, y, z) {
+            self.shape.add_block_entity(ChunkShape::index((x & 15) as usize, y, (z & 15) as usize), entity);
+        } else if (self.bb.y0..=self.bb.y1).contains(&y) && self.in_view(x, z) {
+            self.past_entities.push(([x, y, z], entity));
+        }
+    }
+
     pub fn add_spawn_area(&mut self, area: crate::chunk::SpawnArea) {
         self.shape.add_spawn_area(area);
     }
