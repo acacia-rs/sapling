@@ -75,6 +75,12 @@ impl ShardCtx<'_> {
         self.backend.move_entity(id, feet)
     }
 
+    /// Turns an entity's body to `yaw` degrees; viewers are told with its next move, as `/tp`
+    /// turns a mob. False for one that is gone.
+    pub fn turn_entity(&mut self, id: EntityId, yaw: f32) -> bool {
+        self.backend.turn_entity(id, yaw)
+    }
+
     /// [`Self::move_entity`] into `dimension` of the entity's world (0 overworld, 1 Nether, 2
     /// End), as `/execute in … run tp` sends a mob. False for one that is gone or a world with no
     /// such dimension.
@@ -164,6 +170,9 @@ pub trait EntityBackend {
     fn entity(&self, id: EntityId) -> Option<EntityInfo>;
     fn entities(&self) -> Vec<EntityInfo>;
     fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool;
+    fn turn_entity(&mut self, _id: EntityId, _yaw: f32) -> bool {
+        false
+    }
     fn move_entity_into(&mut self, _id: EntityId, _dimension: i32, _feet: [f32; 3]) -> bool {
         false
     }

@@ -56,6 +56,26 @@ fn a_boat_item_places_its_wood_on_a_floor_and_four_bare_hits_break_it_back_into_
 }
 
 #[test]
+fn a_blast_hurts_a_vehicle_by_its_harm_breaking_a_near_boat_and_shaking_a_far_minecart() {
+    // research/captures/bds-c1blast.txt: a boat 6 off a TNT lost 159 and broke, a minecart 7.8 off lost 27.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_game_mode(ALEX, sapling_api::GameMode::Creative));
+    let ids = spawned(&mut h, &[("minecraft:boat", [-5.5, 65.0, 0.5]), ("minecraft:minecart", [8.3, 65.0, 0.5])]);
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:tnt", [0.5, 65.0, 0.5]).is_some()));
+    let sent = ticks(&mut h, 84);
+    let healths: Vec<(u64, i32)> = all::<acacia_proto::packets::SetEntityData>(&sent)
+        .into_iter()
+        .filter_map(|data| data.metadata.iter().find(|item| item.key == Key::Health).and_then(|item| if let Value::Default(Plain::Int(left)) = item.value { Some((data.runtime_entity_id, left)) } else { None }))
+        .collect();
+    let least = |id: sapling_api::EntityId| healths.iter().filter(|(of, _)| *of == id.0).map(|(_, left)| *left).min();
+    assert!(least(ids[0]).is_some_and(|left| left <= 0), "the boat: {healths:?}");
+    assert!(least(ids[1]).is_some_and(|left| (1..30).contains(&left)), "the minecart: {healths:?}");
+    let (boat, cart) = (ids[0], ids[1]);
+    h.remote.run(move |ctx| assert!(ctx.entity(boat).is_none() && ctx.entity(cart).is_some(), "the boat alone broke"));
+}
+
+#[test]
 fn a_minecart_goes_only_on_a_rail_at_its_middle() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

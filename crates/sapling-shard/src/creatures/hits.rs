@@ -33,6 +33,23 @@ pub(super) enum After {
     Deflected,
 }
 
+/// An arrow that hit a body: it goes the tick after, without moving, as BDS's, so one that hit in
+/// the tick it was loosed is still announced (research/captures/bds-shoot.txt, bds-n3knock.txt).
+/// Any other shot that lands in its loosing tick waits so too (BDS's golem snowball, bds-snowgolem.txt).
+#[derive(Component)]
+pub(super) struct Struck;
+
+/// A shot that hit or landed goes: the tick after where `later`, at once otherwise; whether it is
+/// still there.
+pub(super) fn gone(world: &mut World, shot: Entity, later: bool) -> Option<()> {
+    if later {
+        world.entity_mut(shot).insert(Struck);
+        return Some(());
+    }
+    crate::mobs::remove(world, shot);
+    None
+}
+
 /// Where the archer `by` stands: a player is thrown away from it, not from the shot
 /// (research/captures/bds-pillswitch2.txt: pillagers 3 west and 1 north threw it 0.4 along (3, 1)).
 fn archer_feet(world: &World, by: Entity) -> Option<[f32; 3]> {

@@ -25,7 +25,7 @@ mod stand;
 mod shield;
 mod soles;
 mod struck;
-mod told_all;
+pub(crate) mod told_all;
 mod totem;
 pub(crate) use shield::{blocks, thrown_back, wields_axe};
 pub(crate) use stand::{break_fall, fallen, falls_freely};
@@ -285,6 +285,7 @@ pub(crate) fn tire(world: &mut World, player: Entity, by: f32) {
 
 /// Lets the dead rise who asked to, hurts the living by where they stand, and lets the bodies go.
 pub(crate) fn tick(world: &mut World) {
+    omens::tick(world);
     death::rise(world);
     eating::tick(world);
     effects::tick(world);

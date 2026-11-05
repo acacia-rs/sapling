@@ -65,6 +65,11 @@ impl RecipeBook {
         self.unsaved = true;
     }
 
+    /// What it holds, in the order it learnt them.
+    pub fn known(&self) -> &[String] {
+        &self.known
+    }
+
     fn knows(&self, id: &str) -> bool {
         self.lookup.contains(id)
     }

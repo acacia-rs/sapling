@@ -5,7 +5,7 @@ use crate::common;
 
 use std::sync::{Arc, Mutex};
 
-use acacia_proto::packets::{AddEntity, LevelEvent, LevelEventEvent, SetEntityMotion};
+use acacia_proto::packets::{AddEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, SetEntityMotion};
 use common::{Harness, all};
 use sapling_api::{DamageCause, Effect, GameMode, PlayerId};
 
@@ -28,8 +28,11 @@ fn killed_with(effect: Effect) -> (Harness, Vec<acacia_proto::RawPacket>) {
 }
 
 #[test]
-fn a_wind_charged_player_bursts_at_its_eyes_as_it_dies() {
+fn a_wind_charged_player_bursts_at_its_eyes_the_tick_after_it_dies() {
     let (_, sent) = killed_with(Effect::WindCharged);
+    let died = sent.iter().position(|packet| all::<EntityEvent>(std::slice::from_ref(packet)).iter().any(|event| event.event_id == EntityEventEventId::DeathAnimation));
+    let burst_at = sent.iter().position(|packet| !all::<LevelEvent>(std::slice::from_ref(packet)).is_empty());
+    assert!(died.zip(burst_at).is_some_and(|(died, burst)| burst > died), "after the death (bds-player-omens.txt)");
     let burst = all::<LevelEvent>(&sent).into_iter().find(|event| event.event == LevelEventEvent::ParticleWindExplosion).map(|event| (event.position.y, event.data));
     let pushed = all::<SetEntityMotion>(&sent).iter().find(|motion| motion.runtime_entity_id == 1).map(|motion| motion.velocity.x);
     assert!(burst.is_some_and(|(y, data)| (y - 66.72).abs() < 1e-3 && data == 3), "burst {burst:?}");

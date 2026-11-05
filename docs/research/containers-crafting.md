@@ -17,7 +17,8 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
    behind slot 50 (E3).
 2. **Stored double chests.** sapling sends the stored compound, so a client that gets `pairlead/pairx/pairz`
    draws one large chest, while sapling opens 27 slots at the clicked half. BDS opens 54 at the lead (B).
-3. **Recipe book.** Resolved: sapling keeps and sends each player's book as BDS does (E5).
+3. **Recipe book.** Resolved: sapling keeps and sends each player's book as BDS does (E5); `/recipe`
+   reads that book (`ShardCtx::known_recipes`), so its answers know picked-up unlocks and survive a rejoin.
 4. **Barrels do not look open** (no `open_bit` block change), and **no container sounds** at all (A3, C).
 5. **Cake, honey block, honey bottle to sugar** are refused: the only three recipes with two outputs (E4).
 6. **Inventory screen `ContainerOpen` entity id**: sapling sends the player's id, BDS sends -1 (A1).

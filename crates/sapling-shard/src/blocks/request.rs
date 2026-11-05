@@ -106,7 +106,7 @@ pub(crate) fn dispatch(world: &mut World) {
         }
         TransactionTransactionData::ItemUseOnEntity(on) => {
             match on.action_type {
-                OnEntity::Attack => hits.push((from, on.entity_runtime_id)),
+                OnEntity::Attack => if crate::creatures::hit_from_near(world, from, [on.player_pos.x, on.player_pos.y, on.player_pos.z]) { hits.push((from, on.entity_runtime_id)) },
                 _ => uses.push((from, on.entity_runtime_id, [on.click_pos.x, on.click_pos.y, on.click_pos.z])),
             }
             None

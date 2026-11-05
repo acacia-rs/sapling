@@ -285,6 +285,22 @@ fn a_skeleton_stands_off_and_looses_an_arrow_every_three_seconds() {
 }
 
 #[test]
+fn a_skeletons_arrow_is_announced_moves_in_its_loosing_tick_and_goes_the_tick_after_its_hit() {
+    // research/captures/bds-shoot.txt: AddEntity, then the first move or the hit in the same tick;
+    // the arrow that hit was removed the tick after.
+    let (mut h, _) = hunted_by("minecraft:skeleton", Difficulty::Easy);
+    let ticks: Vec<Vec<RawPacket>> = (0..140).map(|_| h.tick_all().to(2).to_vec()).collect();
+    let found = ticks.iter().enumerate().find_map(|(at, sent)| all::<AddEntity>(sent).into_iter().find(|added| added.entity_type == "minecraft:arrow").map(|added| (at, added.runtime_id)));
+    let (born, arrow) = found.expect("an arrow");
+    let hurt = |sent: &[RawPacket]| all::<EntityEvent>(sent).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation);
+    let hurt_at = ticks.iter().position(|sent| hurt(sent)).expect("Alex hit");
+    let moved = all::<MoveEntityDelta>(&ticks[born]).iter().any(|moved| moved.runtime_entity_id == arrow);
+    assert!(moved || hurt_at == born, "born {born}, hit {hurt_at}");
+    let gone_at = ticks.iter().position(|sent| all::<acacia_proto::packets::RemoveEntity>(sent).iter().any(|gone| gone.entity_id_self == arrow as i64));
+    assert_eq!(gone_at, Some(hurt_at + 1));
+}
+
+#[test]
 fn an_arrow_hurts_a_mob_that_stands_in_its_way() {
     // The skeleton shoots level at Alex's eyes through a llama a block before it, as BDS's hit a
     // villager in the way (bds-e1arrow.txt); a cow is too low to meet the arrow.

@@ -215,10 +215,10 @@ pub fn add_entity(o: &AddEntityOptions<'_>) -> AddEntity {
         runtime_id: o.id,
         position: Vec3f { x, y, z },
         velocity: Vec3f { x: 0.0, y: 0.0, z: 0.0 },
-        pitch: o.pitch,
-        yaw: o.yaw,
-        head_yaw: o.yaw,
-        body_yaw: o.yaw,
+        pitch: crate::told_angle(o.pitch),
+        yaw: crate::told_angle(o.yaw),
+        head_yaw: crate::told_angle(o.yaw),
+        body_yaw: crate::told_angle(o.yaw),
         ..mob
     }
 }

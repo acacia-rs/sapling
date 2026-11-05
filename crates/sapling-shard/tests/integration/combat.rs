@@ -188,6 +188,24 @@ fn a_hit_while_falling_is_critical_for_half_again_with_its_sound_and_sparks() {
 }
 
 #[test]
+fn a_hit_is_dropped_unless_its_packet_names_eyes_within_six_of_the_players() {
+    // research/captures/bds-c1reach.txt: claimed eyes 5.8 and 5.95 above the actor's landed, 6.2 and 7 did not.
+    let mut h = ready();
+    let cow = cow(&mut h, [2.0, 65.0, 0.5]);
+    let mut landed = Vec::new();
+    for rise in [6.2, 7.0, 5.8] {
+        let mut hit = attack(cow);
+        if let acacia_proto::types::TransactionTransactionData::ItemUseOnEntity(on) = &mut hit.transaction.transaction_data {
+            on.player_pos.y += rise;
+        }
+        h.receive(1, &hit);
+        landed.push(!hurt_by(h.tick_all().to(2), cow).is_empty());
+        (0..12).for_each(|_| drop(h.tick_all()));
+    }
+    assert_eq!(landed, [false, false, true]);
+}
+
+#[test]
 fn a_hit_wears_a_sword_by_one_and_an_axe_by_two_and_shows_the_hitter_its_windows() {
     let mut h = ready();
     for (name, wear, at) in [("minecraft:wooden_sword", 1, [2.0, 65.0, 0.5]), ("minecraft:wooden_axe", 2, [0.5, 65.0, 2.0]), ("minecraft:stick", 0, [-1.0, 65.0, 0.5])] {

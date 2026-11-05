@@ -76,6 +76,11 @@ fn a_rocket_used_while_gliding_boosts_for_twice_its_life_and_rides_along() {
     assert!(boost.len() == 1 && boost[0].effect_type == MovementEffectType::GLIDEBOOST && boost[0].runtime_id == 1, "{boost:?}");
     // A rocket of no Flight lasts 10 ticks and up to 5 and 6 more.
     assert!((20..=42).contains(&boost[0].effect_duration) && boost[0].effect_duration % 2 == 0, "{}", boost[0].effect_duration);
+    // Then all of the glider's attributes and its whole data, its box a glider's (bds-glide.txt).
+    let whole = all::<UpdateAttributes>(&sent).into_iter().find(|update| update.runtime_entity_id == 1 && update.attributes.len() == 14);
+    let data = all::<SetEntityData>(&sent).into_iter().find(|data| data.runtime_entity_id == 1 && data.metadata.len() > 10);
+    let height = data.as_ref().and_then(|data| data.metadata.iter().find(|item| item.key == Key::BoundingboxHeight)).map(|item| item.value.clone());
+    assert!(whole.is_some_and(|whole| whole.tick == boost[0].tick) && matches!(height, Some(Value::Default(Plain::Float(high))) if (high - 0.6).abs() < 1e-6), "{height:?}");
     assert_eq!(added(&sent, "minecraft:fireworks_rocket").len(), 1);
     assert_eq!(held(&mut h, Slot::Main(0)).map(|item| item.count), Some(1), "one rocket spent");
 }

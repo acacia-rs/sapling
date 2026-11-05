@@ -34,7 +34,7 @@ fn announcement(id: u64, pitch: f32, body: &Body, yaw: f32, health: Option<f32>)
     let data = SetEntityData { runtime_entity_id: id, metadata: added.metadata.clone(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
     let attributes = added.attributes.iter().map(|a| PlayerAttributesItem { name: a.name.clone(), min: a.min, max: a.max, current: a.value, default_min: a.min, default_max: a.max, default: a.value, modifiers: Vec::new() }).collect();
     let attributes = UpdateAttributes { runtime_entity_id: id, attributes, tick: 0 };
-    let added = AddEntity { yaw: 0.0, head_yaw: yaw, body_yaw: yaw, ..added };
+    let added = AddEntity { yaw: 0.0, head_yaw: added.yaw, body_yaw: added.yaw, ..added };
     vec![sapling_net::encode(&added), sapling_net::encode(&data), sapling_net::encode(&attributes)]
 }
 

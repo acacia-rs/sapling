@@ -321,9 +321,12 @@ decay rate, +0x18 cursors (`{pos, charge +0xc, updateDelay +0x10, decayDelay +0x
   BDS, which changes worldgen only for a cursor at d² = 1 with charge >= 89 (not re-run against the oracle).
 
 sapling: the nearest catalyst in range takes a death (BDS: the first in dispatch order); a mob's reward is its
-`Slain` roll, else rolled at death; a player's is what it would drop. Not done: cursors are not saved with the
-catalyst (BDS saves them in the block actor), live blocks the generator never places read as bedrock, the
-"It Spreads" advancement hook (142d3c8f0) is left out.
+`Slain` roll, else rolled at death; a player's is what it would drop. Cursors are kept in the block actor
+(thirteenth2d, `blocks/sculk/catalyst/saved.rs`): BDS's save (148b48370) writes `cursors`, while any are
+left, as `{x, y, z: int, charge, update, decay, facing: short}` (148b43b20); its load (148b48710) reads at
+most 32, only into a catalyst holding none, a missing field a fresh cursor's (update 0, decay 1, facing -1).
+Not done: live blocks the generator never places read as bedrock to the spreader (it sees blocks only as
+the generator's `Block`), the "It Spreads" advancement hook (142d3c8f0) is left out.
 
 ## Drilled (2026-10-29, `bds_command_probe catalyst`, research/captures/bds-catalyst.txt)
 

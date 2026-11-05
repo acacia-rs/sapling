@@ -71,5 +71,7 @@ pub(crate) fn shoot_unowned(world: &mut World, layer: Entity, from: [f32; 3], wa
 
 fn fire(world: &mut World, layer: Entity, from: [f32; 3], motion: [f32; 3], shot: Shot, item: &ItemStack) -> bool {
     let loosed = (shot.kind == ARROW.kind).then(|| Loosed { player: None, tipped: ammo::tip(item), ..Loosed::new(Entity::PLACEHOLDER, Pickup::Anyone, Some(ItemStack { count: 1, ..item.clone() })) });
-    crate::creatures::launch(world, Launch { layer, by: Entity::PLACEHOLDER, archer: ARCHER.into(), from, motion, shot, gives: None }, loosed).is_some()
+    let Some(fired) = crate::creatures::launch(world, Launch { layer, by: Entity::PLACEHOLDER, archer: ARCHER.into(), from, motion, shot, gives: None }, loosed) else { return false };
+    crate::creatures::first_move(world, fired);
+    true
 }

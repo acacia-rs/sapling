@@ -4,10 +4,10 @@
 
 use crate::common;
 
-use acacia_proto::packets::{ChangeDimension, Respawn, SetEntityData, SetSpawnPosition, Text, TextContent};
+use acacia_proto::packets::{ChangeDimension, InventoryContent, Respawn, SetEntityData, SetSpawnPosition, Text, TextContent};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, Vec3f};
 use common::{Harness, all, click};
-use sapling_api::{Block, PlayerId};
+use sapling_api::{Block, Item, PlayerId, Slot};
 use sapling_world::{NETHER, World};
 
 const ALEX: PlayerId = PlayerId(1);
@@ -65,6 +65,7 @@ fn an_anchor_clicked_in_the_nether_is_risen_by_until_it_is_spent() {
     let spawn = all::<SetSpawnPosition>(sent.to(1));
     assert_eq!(spawn.iter().map(|spawn| (spawn.dimension, [spawn.world_position.x, spawn.world_position.y, spawn.world_position.z], spawn.player_position.y)).collect::<Vec<_>>(), [(1, ANCHOR, 70)]);
     assert!(said(sent.to(1)).iter().any(|line| line.contains("§7") && line.contains("tile.respawn_anchor.respawnSet")));
+    assert!(all::<InventoryContent>(sent.to(1)).is_empty(), "an empty hand placed nothing to take back");
     h.receive(1, &click(ANCHOR, 1, None));
     assert!(all::<SetSpawnPosition>(h.tick_all().to(1)).is_empty(), "nothing a second time");
 
@@ -79,6 +80,17 @@ fn an_anchor_clicked_in_the_nether_is_risen_by_until_it_is_spent() {
     assert_eq!(forgotten.iter().map(|spawn| (spawn.dimension, spawn.world_position.x)).collect::<Vec<_>>(), [(3, i32::MIN)]);
     assert_eq!(all::<ChangeDimension>(&sent).len(), 1, "home to the overworld");
     assert!(said(&sent).iter().any(|line| line.contains("tile.respawn_anchor.notValid") && !line.contains("§7")));
+}
+
+#[test]
+fn an_anchor_clicked_with_dirt_sets_the_spawn_and_sends_the_windows_back() {
+    // research/captures/bds-t3nether.txt: SetSpawnPosition, the words, then the four windows.
+    let mut h = by_an_anchor();
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:dirt", 4)))));
+    h.tick_all();
+    h.receive(1, &click(ANCHOR, 1, None));
+    let sent = h.tick_all();
+    assert_eq!((all::<SetSpawnPosition>(sent.to(1)).len(), all::<InventoryContent>(sent.to(1)).len()), (1, 4));
 }
 
 #[test]

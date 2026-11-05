@@ -12,7 +12,10 @@ guards. The static reading is in acacia's `docs/confirmed-actions.md` "Reach and
   - The older middle-based readings (6.4 and 12.2 taken, 7.3 and 13.2 refused) fit this too.
 - **Hits** (`ItemUseOnEntity` Attack): the eye to the target's position (a mob's feet), at most 6.7 in
   survival and 12 in creative. A cow 6.40 off was hurt; one 7.00 off got no answer.
-  - BDS also wants the packet's `fromPos` within 6.0 of where it has the player. sapling does not check this.
+  - BDS also wants the packet's `fromPos` (the eyes) within 6.0 of the eyes where it has the
+    player. Drilled 2026-11-05 (research/captures/bds-c1reach.txt, `c1reach`): with the cow 2 off,
+    a `fromPos` 5.8 and 5.95 above the eyes was hurt, 6.2 and 7.0 got no answer. sapling checks the
+    same (`creatures/attacks.rs` `hit_from_near`).
 - **Breaking** (server-authoritative): 6.7 or 12 × `server-authoritative-block-breaking-pick-range-scalar`
   (1.5 by default), from the eye to the corner.
 - **Line of sight:** BDS checks none for clicks, breaks or hits. A block or mob behind a wall is reachable.

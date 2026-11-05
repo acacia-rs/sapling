@@ -75,6 +75,12 @@ impl EntityBackend for Ctx<'_> {
         entities::teleport(self.world, id, feet)
     }
 
+    fn turn_entity(&mut self, id: EntityId, yaw: f32) -> bool {
+        let Some(entity) = entities::find(self.world, id) else { return false };
+        super::gaze::turn(self.world, entity, yaw);
+        true
+    }
+
     fn move_entity_into(&mut self, id: EntityId, dimension: i32, feet: [f32; 3]) -> bool {
         let layer = entities::find(self.world, id).and_then(|entity| self.world.get::<InLayer>(entity)).map(|in_layer| in_layer.0);
         let Some(to) = layer.and_then(|layer| crate::dimensions::of(self.world, layer, dimension)) else { return false };
@@ -158,6 +164,7 @@ impl EntityBackend for Ctx<'_> {
             MobSlot::Armor(_) | MobSlot::MainHand | MobSlot::OffHand => super::command_gear::set(self.world, mob, slot, stack),
             MobSlot::Body => crate::riding::put_body(self.world, mob, stack).then_some(()).ok_or(MobSlotRefusal::NoSlot),
             _ if crate::riding::is_mount(self.world, mob) => crate::riding::set_mount_item(self.world, mob, slot, stack),
+            MobSlot::Inventory(at) => super::villagers::put_in_pantry(self.world, mob, at, stack).unwrap_or(Err(MobSlotRefusal::NoSlot)),
             _ => Err(MobSlotRefusal::NoSlot),
         }
     }

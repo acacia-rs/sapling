@@ -4,7 +4,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{CompletedUsingItem, DeathInfo, LevelSoundEvent, MobEffect, MovePlayer, MovePlayerTeleportCause, Respawn, UpdateAttributes};
+use acacia_proto::packets::{ClientStartItemCooldown, CompletedUsingItem, DeathInfo, LevelSoundEvent, MobEffect, MovePlayer, MovePlayerTeleportCause, Respawn, UpdateAttributes};
 use acacia_proto::types::{TransactionTransactionData, TransactionUseItemActionType, Vec3f};
 use common::{Harness, all};
 use sapling_api::{DamageCause, Difficulty, Effect, Item, PlayerId, Slot};
@@ -50,6 +50,10 @@ fn a_chorus_fruit_sends_its_eater_off_and_a_stew_gives_its_flower() {
     let moved: Vec<MovePlayer> = all::<MovePlayer>(&alex).into_iter().filter(|moved| moved.teleport.as_ref().is_some_and(|told| told.cause == MovePlayerTeleportCause::ChorusFruit)).collect();
     assert_eq!(moved.len(), 1, "one teleport, told as the fruit's");
     assert_eq!((sounds(&steve), all::<CompletedUsingItem>(&alex).len()), (vec!["teleport".to_owned(), "teleport".to_owned()], 1));
+    // BDS: the cooldown as it starts only, the teleport heard after the eating (bds-foods2.txt).
+    assert_eq!(all::<ClientStartItemCooldown>(&alex).len(), 1);
+    let eaten = alex.iter().position(|packet| !all::<CompletedUsingItem>(std::slice::from_ref(packet)).is_empty()).expect("eaten");
+    assert!(sounds(&alex[..eaten]).is_empty() && sounds(&alex[eaten..]).contains(&"teleport".to_owned()), "eaten, then heard");
     h.tick_all();
 }
 

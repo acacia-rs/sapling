@@ -21,6 +21,8 @@ const MAX_HITS_PER_TICK: usize = 4;
 /// (docs/research/reach.md).
 const REACH: f32 = 6.7;
 const CREATIVE_REACH: f32 = 12.0;
+/// How far the eyes a hit's packet claims may be from the player's eyes on the server.
+const CLAIMED_REACH: f32 = 6.0;
 
 /// A mob a player killed, the experience it leaves when it goes, and the Looting it was killed with.
 #[derive(Component)]
@@ -34,6 +36,15 @@ pub(crate) fn attacked(world: &mut World, hits: Vec<(Entity, u64)>) {
             hit(world, player, id);
         }
     }
+}
+
+/// Whether the eyes a hit of `player` was sent from are within [`CLAIMED_REACH`] of its own;
+/// BDS drops the hit unanswered otherwise (docs/research/reach.md).
+pub(crate) fn hit_from_near(world: &World, player: Entity, claimed: [f32; 3]) -> bool {
+    world.get::<Position>(player).is_some_and(|at| {
+        let eyes = [at.feet[0], at.feet[1] + sapling_data::EYE_HEIGHT, at.feet[2]];
+        (0..3).map(|axis| (claimed[axis] - eyes[axis]).powi(2)).sum::<f32>() <= CLAIMED_REACH * CLAIMED_REACH
+    })
 }
 
 fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {

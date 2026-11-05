@@ -99,6 +99,44 @@ fn a_baby_villager_takes_a_bed_too() {
     assert!(came <= 0.8, "on its bed: {came}");
 }
 
+/// Two unskilled villagers by the bed and two more, each given `bread` bread in its inventory:
+/// the ticks from both falling in love to a baby, and whether it was heard `born` as a baby.
+fn love(bread: u8, most: usize) -> Option<(usize, bool)> {
+    let (mut h, first) = village(1_000, [-4.5, 65.0, 4.5], "minecraft:become_unskilled");
+    let second = common::asking::ask(&mut h, |ctx| {
+        let half = |head: u8| Block { name: "minecraft:bed".into(), properties: format!("direction=0,head_piece_bit={head},occupied_bit=0") };
+        assert!((0..2).all(|bed| ctx.set_block([-3 + 2 * bed, 65, 8], &half(0)) && ctx.set_block([-3 + 2 * bed, 65, 9], &half(1))));
+        ctx.summon_as(None, "minecraft:villager_v2", [-2.5, 65.0, 4.5], 0.0, Some("minecraft:become_unskilled")).expect("summoned").0
+    });
+    for id in [first, second] {
+        let given = common::asking::ask(&mut h, move |ctx| ctx.set_mob_item(sapling_api::EntityId(id), sapling_api::MobSlot::Inventory(0), Some(&sapling_api::Item::new("minecraft:bread", bread))));
+        assert_eq!(given, Ok(()));
+    }
+    let in_love = |sent: &[acacia_proto::RawPacket]| all::<SetEntityData>(sent).iter().any(|data| data.metadata.iter().any(|item| matches!(item.value, Meta::Flags(flags) if flags.0 & acacia_proto::types::MetadataFlags1::INLOVE.0 != 0)));
+    let mut loved = None;
+    for tick in 0..most {
+        let sent = h.tick_all().to(1).to_vec();
+        loved = loved.or(in_love(&sent).then_some(tick));
+        if all::<AddEntity>(&sent).iter().any(|added| added.entity_type == "minecraft:villager_v2") {
+            let heard = all::<acacia_proto::packets::LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "born" && sound.is_baby_mob);
+            return Some((tick - loved?, heard));
+        }
+    }
+    None
+}
+
+#[test]
+fn two_villagers_with_three_bread_each_and_a_free_bed_have_a_baby_heard_born_300_ticks_after_love() {
+    // research/captures/bds-g11love-2.txt: `INLOVE` on both for 300 ticks, then the baby and `born`.
+    assert_eq!(love(3, 12_000), Some((300, true)));
+}
+
+#[test]
+fn villagers_with_two_bread_each_have_no_baby() {
+    // research/captures/bds-g11love2.txt.
+    assert_eq!(love(2, 3000), None);
+}
+
 #[test]
 fn a_villager_flees_a_zombie() {
     let (mut h, id) = village(18_000, [20.5, 65.0, 0.5], "minecraft:become_unskilled");

@@ -68,6 +68,31 @@ fn a_client_stepping_as_the_game_does_never_parts_and_a_flyer_does() {
 }
 
 #[test]
+fn a_glide_the_server_ended_parts_from_a_client_gliding_on() {
+    let world = platform();
+    let terrain = crate::terrain::Blocks(&world, &[]);
+    let view = acacia_physics::registry_world::RegistryWorld { view: &terrain, registry: world.registry() };
+    let parted = |ended_at: Option<u64>| {
+        let (mut server, mut client) = (Simulated::default(), PlayerState::new([0.5, 120.0, 0.5]));
+        server.wear_elytra(true);
+        client.equipment.elytra = true;
+        let glide = Input { glide: true, ..Input::default() };
+        (0..30u64)
+            .filter(|&at| {
+                if Some(at) == ended_at {
+                    server.end_glide();
+                }
+                let out = tick(&mut client, &glide, &view);
+                let flags = if at == 0 { vec![InputData::StartGliding] } else { Vec::new() };
+                server.step(&world, &reported(out.position, out.delta, flags, at), out.position, out.on_ground, false, 0.01).is_some()
+            })
+            .count()
+    };
+    assert_eq!(parted(None), 0, "a glide on a flying elytra stepped as the client's");
+    assert!(parted(Some(5)) > 5, "the server's steps fall once it ended the glide");
+}
+
+#[test]
 fn a_flyer_is_corrected_then_left_alone_while_the_correction_is_in_flight() {
     let world = platform();
     let check = MovementCheck { policy: MovementPolicy::Correct, threshold: 0.5, correction_delay: 5 };

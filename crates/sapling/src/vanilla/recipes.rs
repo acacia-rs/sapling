@@ -2,8 +2,8 @@
 //! with those a new player knows, answered and sent as BDS 1.26.52 does
 //! (research/captures/bds-controls.txt, bds-controls2.txt).
 //! `give *` gives what BDS gave, in its order (`sapling_data::given_recipe_ids`, bds-t1drecipe.txt).
-// TODO: the shard keeps the real book (saved, filled by picked-up items); this one is not saved and
-// misses those, until sapling-api can read it.
+//! The shard's book (saved, filled by picked-up items) is read where the shard keeps one; `Books`
+//! only stands in for a backend without books.
 
 use std::collections::{HashMap, HashSet};
 
@@ -44,7 +44,11 @@ impl Command for Recipe {
         }
         let mut done = 0;
         for player in found {
+            let kept = ctx.known_recipes(player.id).map(|known| known.into_iter().collect::<HashSet<String>>());
             let book = ctx.state::<Books>().0.entry(player.id).or_insert_with(initial);
+            if let Some(kept) = kept {
+                *book = kept;
+            }
             let (key, sent) = match (give, recipe == ALL) {
                 (true, true) => {
                     let new: Vec<String> = sapling_data::given_recipe_ids().iter().filter(|id| book.insert((*id).clone())).cloned().collect();

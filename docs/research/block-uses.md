@@ -277,7 +277,9 @@ Captures research/captures/bds-t3uses.txt, bds-t3nether.txt against sapling-*.
 - A charged respawn anchor clicked with dirt in the Overworld burst; sapling put the dirt against it.
   Fixed: only glowstone below charge 4 is put to it (`blocks/handled.rs` `takes_click`). In the
   Nether with dirt in hand: SetSpawnPosition, `tile.respawn_anchor.respawnSet` and
-  `respawn_anchor.set_spawn` on both, the second click nothing; BDS also resent the inventory.
+  `respawn_anchor.set_spawn` on both, the second click nothing; BDS also resent the inventory
+  (bds-t3nether.txt; with an empty hand it did not, bds-anchor.txt). Fixed 2026-11-05: sapling
+  sends the four windows after the words when the hand holds something (`sleep/spawn.rs`).
 
 - Bone meal has its own drill and notes: `bone-meal.md`.
 - Fire has its own drill and notes: `fire.md`. The obsidian row above was taken with
@@ -291,8 +293,11 @@ Captures research/captures/bds-t3uses.txt, bds-t3nether.txt against sapling-*.
   clears it and throws out a snowball. Both play `item.use.on` at the middle, the hoe's naming the
   dirt left, the shovel's the snow taken (`blocks/tools.rs`). Fixed.
 - Same: note block instruments by the block under, and the other tool uses of the scene. The
-  sounds BDS plays after `/setblock` of a head, and the blocks it sends again after a frame or
-  jukebox click, are not copied.
+  blocks BDS sends again after a frame or jukebox click are not copied.
+- `/setblock` of a head (zombie, skeleton, creeper, piglin): after the block and its entity BDS plays
+  `place` at the cell's middle, its extra data the hash of the state set (zombie_head facing 1:
+  173921225, not the first state's), and no other set block of the scene plays one. Ported
+  (thirteenth2d, `blocks/set_entities.rs`; test `a_set_head_plays_its_place_sound_and_a_set_stone_none`).
 
 ## A comparator behind a jukebox
 

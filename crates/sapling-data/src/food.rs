@@ -98,8 +98,7 @@ macro_rules! gives {
 }
 
 /// What a potion of the data value `data` gives (research/captures/bds-drink.txt and
-/// bds-drink2.txt): nothing for water, the plain ones and the four of effects the shard lacks
-/// (43 to 46).
+/// bds-drink2.txt): nothing for water and the plain ones.
 pub fn potion_effects(data: i16) -> &'static [Gives] {
     match data {
         5 => gives!["night_vision" 3600 0],

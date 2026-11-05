@@ -69,12 +69,13 @@ fn bad_omen_in_a_village_brings_a_raid_whose_three_waves_on_easy_won_make_a_hero
         if let Some(slain) = slain {
             h.remote.run(move |ctx| assert!(ctx.hurt_entity(slain, 23.5, DamageCause::Generic)));
             ticks(&mut h, 12);
-            h.remote.run(move |ctx| {
+            let feet = common::asking::ask(&mut h, move |ctx| {
                 let feet = ctx.entity(slain).expect("alive").feet;
                 ctx.teleport(ALEX, [feet[0] + 0.5, feet[1], feet[2]]);
+                [feet[0] + 0.5, feet[1], feet[2]]
             });
             h.tick_all();
-            h.receive(1, &attack(slain.0));
+            h.receive(1, &common::attack_from(slain.0, feet));
         }
         // A wave's end shows no raiders left for 40 ticks before the next wait or the win; the bar
         // is re-sent once a second.

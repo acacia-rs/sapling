@@ -27,7 +27,11 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
     // BDS played no `spawn` at any of 112 summons naming an event (research/captures/bds-*.txt), nor
     // for a struck pig's or a piglin's turning (bds-n3struck.txt, bds-t2barter.txt) or a shrieker's
     // emerging warden (bds-t2warden.txt).
-    let sound = (!matches!(reason, SpawnReason::Lightning | SpawnReason::Structure) && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn");
+    // A bred baby is heard `born` (bds-g11love-2.txt, bds-llamabreed.txt).
+    let sound = match reason {
+        SpawnReason::Bred => Some("born"),
+        _ => (!matches!(reason, SpawnReason::Lightning | SpawnReason::Structure) && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn"),
+    };
     let id = born_by(world, layer, kind, feet, Birth { reason, yaw, gene, sound }, event)?;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {
@@ -134,7 +138,8 @@ fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: 
     wither::begin(world, entity, layer);
     let id = world.get::<NetId>(entity)?.0;
     // A hatched mob comes unheard (research/captures/bds-eggs.txt); its egg's sound is enough.
-    let heard = sound.filter(|_| reason != SpawnReason::Hatched).map(|sound| spawn_sound(sound, id, kind, &body));
+    let baby = event.is_some_and(|event| BABY_EVENTS.contains(&event.trim_start_matches("minecraft:")));
+    let heard = sound.filter(|_| reason != SpawnReason::Hatched).map(|sound| spawn_sound(sound, id, kind, &body, baby));
     entities::after_announcing(world, layer, [x, y, z], heard.into_iter().collect());
     let unique_id = entities::new_unique_id(world, entity)?;
     entities::keep(world, entity, layer, unique_id, strides::keep(sapling_world::new_actor(unique_id, kind, feet, [0.0; 3]), rolled));

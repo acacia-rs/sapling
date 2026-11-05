@@ -1,6 +1,7 @@
 //! Game data a client needs before it can spawn: StartGame defaults, the registry packets and the
 //! player's own state packets. All of it is recorded from BDS and patched; see README.md.
 
+mod angles;
 mod armour;
 mod block_defaults;
 mod block_loot;
@@ -39,6 +40,7 @@ mod husbandry;
 mod raised_look;
 pub mod trades;
 
+pub use angles::{angle_byte, told_angle};
 pub use block_defaults::default_properties;
 pub use block_resistance::blast_resistance;
 pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot, java_block, ripe_age};
@@ -57,7 +59,7 @@ pub use food::{Food, Gives, consumable, food, potion_effects};
 pub use mob_health::{Looks, MobTraits, mob_air, mob_breath, visible_effects, grown_flags, mob_health_update, mob_traits, Hunts, mob_charge, mob_flags_set, mob_fuse, mob_spell};
 pub use liquid_reaction::{LiquidDetection, LiquidReaction, liquid_detection};
 pub use map_colours::{MapColour, Tint, map_colour, tint_colour};
-pub use mob_loot::{Caught, Killer, drawn_table_loot, fishing_loot, has_loot_table, mob_loot, table_loot, table_loot_for};
+pub use mob_loot::{Caught, Killer, Looted, drawn_table_loot, fishing_loot, has_loot_table, mob_loot, table_loot, table_loot_for};
 pub use inventory::{block_screen,inventory_content, inventory_screen, player_hotbar};
 pub use item_entity::{add_item_entity, mob_armor, mob_hand};
 pub use items::{BUNDLE_WEIGHT, CreativeItem, STORAGE_CONTENT, Stack, creative_item, is_item, item, item_name, max_stack, no_item, set_shield_item_id, static_item_name};

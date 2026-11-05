@@ -18,7 +18,8 @@ devbox's BDS; the captures are `research/captures/bds-<drill>.txt`, sapling's `s
   rocket's life (44 for a 22-tick rocket), stamped with the input tick; the windows resent with
   PlayerHotbar `select_slot true`, one rocket spent; AddEntity `fireworks_rocket` at the glider with
   only the launch wobble for velocity, `launch` heard; it bursts at the end of its life as any rocket.
-  BDS also sent the glider's whole UpdateAttributes and SetEntityData then, which sapling does not.
+  BDS then sends the glider's whole UpdateAttributes (all 14) and SetEntityData (`BoundingboxHeight`
+  0.6), both stamped with the input tick, before the windows; sapling does the same (`gliding.rs` `boost`).
 - **Ends** (`glide2`, research/captures/bds-glide2.txt, 2026-10-29): a glider put in water was stopped
   by the server as on landing (flag off, `BoundingboxHeight` 1.8); sapling did not, and now does
   (`gliding.rs` `in_water`). One that started riding was stopped too, as in sapling. Levitation did
@@ -29,7 +30,11 @@ devbox's BDS; the captures are `research/captures/bds-<drill>.txt`, sapling's `s
   move, did neither. Flying into a wall hurt (`HurtAnimation` 21) on both; BDS's glider heard its
   own `fall.big`, and sapling's now does too (`vitals/hazards.rs` `sound_wall`). BDS took 7.62
   where sapling took 5.49: the harm is the speed lost, and the bot flew BDS's corrected path, not
-  its own. A health boost's modifier and default of 20 stayed on every health BDS told afterwards;
+  its own. sapling's own step (`simulation.rs`) never glided, as acacia-physics glides only with
+  `equipment.elytra`, which nothing set; it is now set each tick from the chest (`gliding.rs`
+  `tick_one`), and a glide the server ends falls in its steps from there (`Simulated::end_glide`).
+  Correcting the glider is the `Correct` movement policy's; the default `Observe` trusts the
+  client, so the 300 ms corrections and BDS's 7.62 stay BDS's there. A health boost's modifier and default of 20 stayed on every health BDS told afterwards;
   sapling's now do (`vitals.rs` `settle`, test `slowness_slows_a_player_by_the_modifier_bds_wrote`).
 
 ## Armour from the hand (`fx3`; `inventory/donning.rs`)

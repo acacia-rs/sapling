@@ -238,7 +238,7 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
   by the difficulty (`vitals/hunger.rs` `starved`). A durable item's data value is its wear, kept in
   its `Damage` tag (`inventory/plugin.rs`); armour in the hand goes on by a click in the air
   (`inventory/donning.rs`). `/damage` deaths are said as above (`vitals/death.rs` `told_words`);
-  the `entity` form is not parsed. A rise at the world's spawn is searched for at y 32767 first,
+  the `entity` form is parsed too (67e84e06). A rise at the world's spawn is searched for at y 32767 first,
   but found at the spawn itself, not a spot in its radius.
 - Armour stops what it stopped on BDS, by the same rule (`creatures/health.rs` `shielded`,
   `sapling-data/src/armour.rs`, `sapling_api::DamageCause::is_stopped_by_armour`); a helmet takes

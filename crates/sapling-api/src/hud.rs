@@ -138,6 +138,9 @@ pub trait TitleBackend {
         0
     }
     fn set_input_locks(&mut self, _player: PlayerId, _locks: u32) {}
+    fn known_recipes(&self, _player: PlayerId) -> Option<Vec<String>> {
+        None
+    }
     fn animate(&mut self, _players: &[PlayerId], _entities: &[crate::EntityId], _animation: &crate::Animation) {}
 }
 

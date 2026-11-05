@@ -11,7 +11,7 @@ mod catalyst;
 mod events;
 mod shrieks;
 
-pub(crate) use catalyst::mob_died;
+pub(crate) use catalyst::{arrived as catalysts_arrived, mob_died};
 pub(crate) use events::GameEvent;
 
 use std::collections::{HashMap, HashSet};
