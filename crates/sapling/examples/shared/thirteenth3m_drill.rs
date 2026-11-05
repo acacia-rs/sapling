@@ -12,6 +12,8 @@ const SHOWN: &[&str] = &[
     "AddEntity", "RemoveEntity", "AddItemEntity", "MoveEntityDelta", "SetEntityMotion", "SetEntityData", "EntityEvent", "LevelSoundEvent", "LevelEvent", "UpdateAttributes", "UpdateBlock", "TakeItemEntity", "CommandOutput",
 ];
 
+const VIEWED: &[&str] = &["AddPlayer", "AddEntity", "RemoveEntity", "SetEntityLink", "SetEntityData", "MobEquipment", "MobArmorEquipment", "UpdateAttributes", "CommandOutput"];
+
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
         "m3wither" => (wither(), SHOWN),
@@ -19,6 +21,8 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "m3struck" => (struck(), SHOWN),
         "m3reflect" => (reflect(), SHOWN),
         "m3rod" => (rod(), SHOWN),
+        "m3inblock" => (in_block(), SHOWN),
+        "m3rideview" => (ride_view(), VIEWED),
         _ => return None,
     })
 }
@@ -68,10 +72,44 @@ fn reflect() -> Vec<String> {
     with(lines, &["testfor @e[type=dragon_fireball]", "kill @e[type=!player]"])
 }
 
+/// Stone set in the feet cell of slowed cows standing at cell middles (head clear): one in the open, one
+/// with a wall cell south (+z), one walled south and north, one walled all round but east, one off the
+/// middle at x .8; each 6 apart along x at z 4.
+fn in_block() -> Vec<String> {
+    let mut lines = with(start("noon"), &["gamemode creative @s"]);
+    let walls: [&[(i32, i32)]; 5] = [&[], &[(0, 1)], &[(0, 1), (0, -1)], &[(0, 1), (0, -1), (-1, 0)], &[]];
+    for (i, sides) in walls.iter().enumerate() {
+        let x = -12 + 6 * i as i32;
+        for (dx, dz) in sides.iter() {
+            lines.push(format!("setblock {} -26 {} stone", x + dx, 4 + dz));
+        }
+        let off = if i == 4 { 0.8 } else { 0.5 };
+        lines.push(format!("summon cow {} -26 4.5", x as f32 + off));
+    }
+    lines.push("effect @e[type=cow] slowness 60 255 true".into());
+    waits(&mut lines, 2);
+    for i in 0..5 {
+        lines.push(format!("setblock {} -26 4 stone", -12 + 6 * i));
+    }
+    waits(&mut lines, 5);
+    with(lines, &["kill @e[type=!player]", "fill -14 -26 2 14 -24 6 air"])
+}
+
+/// The actor rides a boat, then a saddled pig, while the watcher goes 3000 off and comes back (a late viewer).
+fn ride_view() -> Vec<String> {
+    let mut lines = with(start("noon"), &["gamemode creative @s", "summon boat 0.5 -26 3.5", "", "ride @s start_riding @e[type=boat]"]);
+    waits(&mut lines, 2);
+    let away = ["tp CmdWatcher 3000 -26 3000", "", "", "", "tp CmdWatcher 14.5 -26 14.5", "", "", ""];
+    lines.extend(away.map(String::from));
+    lines.extend(["ride @s stop_riding", "kill @e[type=boat]", "summon pig 4.5 -26 3.5", "effect @e[type=pig] slowness 60 255 true", "replaceitem entity @e[type=pig] slot.saddle 0 saddle", "", "ride @s start_riding @e[type=pig]", "", ""].map(String::from));
+    lines.extend(away.map(String::from));
+    with(lines, &["ride @s stop_riding", "kill @e[type=!player]"])
+}
+
 fn rod() -> Vec<String> {
     let mut lines = with(normal("noon"), &["gamerule dofiretick false", "setblock 0 -26 -6 lightning_rod", "weather thunder", "replaceitem entity @s slot.hotbar 0 trident", "enchant @s channeling 1"]);
     waits(&mut lines, 6);
-    lines.extend(["tp @s 0.5 -26 0.5 facing 0.5 -25 -5.5", "", "!use", "", "", "!release"].map(String::from));
+    lines.extend(["tp @s 0.5 -26 0.5", "", "!look 0 0.6 -6", "!use", "", "", "!release"].map(String::from));
     waits(&mut lines, 5);
     with(lines, &["testfor @e[type=lightning_bolt]", "weather clear", "setblock 0 -26 -6 air", "kill @e[type=!player]", "gamerule dofiretick true"])
 }
