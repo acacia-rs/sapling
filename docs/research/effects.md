@@ -12,7 +12,9 @@ effects.
 - Given again while it is on: `Update` with what stays on. A weaker one changes nothing (speed 1
   with 20 ticks left, given speed 0 for 3 seconds: still 1, 20 ticks).
 - Over: `Remove` with duration 0. Cleared: `Remove` with the ticks that were left (562 of 600 a
-  second and a half in; once 30 with 19 left, unexplained).
+  second and a half in; once 30 with 19 left, unexplained). An effect is first counted the tick
+  after it is given (bds-r1fx.txt, 2026-11-05: speed 30 cleared a second in told 581, speed 2 a
+  second in 21, instant health gone a tick after its `Add`); sapling the same (`effects.rs` `since`).
 - Sometimes `SetEntityData` `VisibleMobEffects` beside it.
 - Ids: speed 1, instant health 6, instant damage 7, regeneration 10, hunger 17, poison 19,
   wither 20, saturation 23.
@@ -130,7 +132,10 @@ join was measured, and absorption's cushion comes back empty.
 
 `vitals/effects.rs`, `sapling::vanilla` `/effect`, plugins by `give_effect`, `remove_effect` and
 `clear_effects`. The eight effects above, by these numbers, absorption and nausea (food-effects.md; nausea is only told), resistance and fire resistance. Different: `Remove` always holds the
-ticks left; effects end unsaid when the player rises. Saturation feeds hunger alone, its level a
+ticks left. At a rise (bds-r1fx.txt, 2026-11-05) BDS told each effect `Remove`, by id, with the
+ticks it had left at the death, after the Respawn and before SetHealth: they do not count down
+while dead. sapling does the same (`effects::end_at_rise`, test
+`effects_stand_still_while_dead_and_are_told_gone_by_id_at_the_rise`). Saturation feeds hunger alone, its level a
 tick for every tick it lasts, as a stew's did on BDS (bds-foods2.txt: 6 ticks fed hunger 6 to 12,
 saturation stayed 6); `/effect` gives it, like the instant ones, for one tick. Run against sapling
 (`research/captures/sapling-effects.txt`) the drill gives the same packets, turns and answers.

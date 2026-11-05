@@ -98,8 +98,9 @@ fn walking(sent: &[acacia_proto::RawPacket]) -> Vec<f32> {
 }
 
 #[test]
-fn soul_speed_quickens_its_wearer_each_tick_on_soul_sand_and_lets_go_off_it() {
-    // research/captures/bds-soles.txt: 0.1615 retold each tick in Soul Speed III, 0.1 once off.
+fn soul_speed_quickens_its_wearer_each_tick_it_moves_on_soul_sand_and_lets_go_off_it() {
+    // research/captures/bds-soles.txt: 0.1615 retold each tick walked in Soul Speed III, 0.1 once
+    // off; bds-r1fx.txt: told once to a player standing still.
     let mut h = alex_wearing(3, "minecraft:diamond_boots", vec![(36, 3)]);
     let under = Arc::new(Mutex::new([0; 3]));
     let found = under.clone();
@@ -110,12 +111,24 @@ fn soul_speed_quickens_its_wearer_each_tick_on_soul_sand_and_lets_go_off_it() {
         assert!(ctx.set_block(cell, &Block::new("soul_sand")));
     });
     let told: Vec<_> = (0..3).flat_map(|_| walking(h.tick_all().to(1))).collect();
-    assert!(told.len() >= 2 && told.iter().all(|speed| (speed - 0.1615).abs() < 1e-6), "{told:?}");
+    assert_eq!(told, [0.1615]);
+    // A move set in a tick's handlers is stood on the tick after.
+    let walked: Vec<_> = (0..4)
+        .flat_map(|step| {
+            if step < 3 {
+                h.remote.run(move |ctx| {
+                    let [x, y, z] = ctx.position(PlayerId(1)).unwrap().feet;
+                    ctx.teleport(PlayerId(1), [x.floor() + 0.3 + 0.1 * step as f32, y, z]);
+                });
+            }
+            walking(h.tick_all().to(1))
+        })
+        .collect();
+    assert_eq!(walked, [0.1615; 3]);
     let cell = *under.lock().unwrap();
     h.remote.run(move |ctx| assert!(ctx.set_block(cell, &Block::new("stone"))));
-    // The tick the block is set in still told the quickened speed.
     let told: Vec<_> = (0..3).flat_map(|_| walking(h.tick_all().to(1))).collect();
-    assert_eq!(told, [0.1615, 0.1]);
+    assert_eq!(told, [0.1]);
 }
 
 #[test]

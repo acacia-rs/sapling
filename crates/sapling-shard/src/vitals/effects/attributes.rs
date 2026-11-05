@@ -29,9 +29,8 @@ pub(crate) struct Paced {
 }
 
 /// The player's walking speed under levels of speed and of slowness and what `paced` adds; and
-/// that speed less the freeze's share, which the server's own step adds itself.
-// TODO: an effect and the freeze or Soul Speed at once were not drilled: the adds are taken to go
-// before the effects multiply.
+/// that speed less the freeze's share, which the server's own step adds itself. The adds are listed
+/// first and go before the effects multiply (research/captures/bds-r1fx.txt).
 fn pace(id: u64, quick: Option<u8>, slow: Option<u8>, paced: Paced, tick: u64) -> (UpdateAttributes, f32) {
     let modifier = |levels: Option<u8>, id: &str, name: &str, each: f32| {
         levels.map(|levels| PlayerAttributesItemModifiersItem { id: id.into(), name: name.into(), amount: each * (f32::from(levels) + 1.0), operation: 2, operand: 2, serializable: false })
@@ -39,7 +38,7 @@ fn pace(id: u64, quick: Option<u8>, slow: Option<u8>, paced: Paced, tick: u64) -
     let adds = |amount: f32, id: &str, name: &str, serializable: bool| (amount != 0.0).then(|| PlayerAttributesItemModifiersItem { id: id.into(), name: name.into(), amount, operation: 0, operand: 2, serializable });
     let times = [modifier(quick, QUICKENS_AS, "MovementSpeed", QUICKENS), modifier(slow, SLOWS_AS, "MovementSlowdown", -SLOWS)];
     let freeze = adds(paced.freeze * acacia_physics::constants::FREEZE_SPEED_MODIFIER, FREEZES_AS, "Freeze effect", true);
-    let modifiers: Vec<_> = times.into_iter().chain([freeze, adds(paced.soles, SOLES_AS, "Sprinting speed boost", false)]).flatten().collect();
+    let modifiers: Vec<_> = [freeze, adds(paced.soles, SOLES_AS, "Sprinting speed boost", false)].into_iter().chain(times).flatten().collect();
     let speed = |base: f32| modifiers.iter().filter(|modifier| modifier.operation == 2).fold(base, |pace, modifier| pace * (1.0 + modifier.amount)).max(0.0);
     let added: f32 = modifiers.iter().filter(|modifier| modifier.operation == 0).map(|modifier| modifier.amount).sum();
     let unfrozen = speed(WALKS + paced.soles);
@@ -82,5 +81,18 @@ mod tests {
         let [(frozen, unfrozen), (soled, _)] = [Paced { freeze: 1.0, soles: 0.0 }, Paced { freeze: 0.0, soles: 0.0615 }].map(|paced| pace(1, None, None, paced, 0)).map(|(told, unfrozen)| (told.attributes[0].clone(), unfrozen));
         assert_eq!((frozen.current, frozen.modifiers[0].name.as_str(), frozen.modifiers[0].amount, unfrozen), (0.05, "Freeze effect", -0.05, WALKS));
         assert_eq!((soled.current, soled.modifiers[0].name.as_str(), soled.modifiers[0].operation), (0.1615, "Sprinting speed boost", 0));
+    }
+
+    #[test]
+    fn the_adds_are_listed_first_and_go_before_speed_and_slowness_multiply() {
+        // research/captures/bds-r1fx.txt: 0.22610001 and 0.19218501 on soul sand; 0.1395 a tick into powder snow.
+        let told = |quick, slow, paced| pace(1, quick, slow, paced, 0).0.attributes[0].clone();
+        let soled = told(Some(1), Some(0), Paced { freeze: 0.0, soles: 0.0615 });
+        let names: Vec<&str> = soled.modifiers.iter().map(|modifier| modifier.name.as_str()).collect();
+        assert!((soled.current - 0.19218501).abs() < 1e-6, "{}", soled.current);
+        assert_eq!(names, ["Sprinting speed boost", "MovementSpeed", "MovementSlowdown"]);
+        let frozen = told(Some(1), None, Paced { freeze: 1.0 / 140.0, soles: 0.0 });
+        assert!((frozen.current - 0.1395).abs() < 1e-6, "{}", frozen.current);
+        assert_eq!(frozen.modifiers[0].name, "Freeze effect");
     }
 }

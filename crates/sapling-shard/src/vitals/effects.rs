@@ -1,14 +1,15 @@
 //! Effects on a player, counted down a tick at a time and told as BDS tells them
 //! (docs/research/effects.md).
 // TODO: the effects drilled and no others; one who comes to see a player is told its
-// `VisibleMobEffects` (`announced`) and, as on BDS, no `MobEffect`; they end unsaid as the
-// player rises. Kept between visits (inventory/store.rs) are the effects and not what is left
+// `VisibleMobEffects` (`announced`) and, as on BDS, no `MobEffect`. Kept between visits (inventory/store.rs) are the effects and not what is left
 // of absorption's cushion, and what BDS tells of them at a join was not drilled.
 
 mod attributes;
+mod combat;
 
 use acacia_proto::packets::{MobEffect, MobEffectEventId};
 pub(crate) use attributes::{Paced, cushion, tell_pace, walking};
+pub(crate) use combat::{dig_speed, hits_for};
 use bevy_ecs::prelude::*;
 use sapling_api::{Effect, EffectBackend, PlayerId};
 
@@ -32,10 +33,6 @@ const HUNGERS: f32 = 0.005;
 /// What a level of speed adds of a player's walking speed, and a level of slowness takes.
 pub(crate) const QUICKENS: f32 = 0.2;
 pub(crate) const SLOWS: f32 = 0.15;
-/// A level of strength multiplies a hit by the first and adds the second; of weakness likewise
-/// (research/captures/bds-fx.txt: a fist's 1 was 3.99 at strength's second level, 0.3 weak).
-const STRENGTHENS: [f32; 2] = [1.3, 0.3];
-const WEAKENS: [f32; 2] = [0.8, 0.4];
 /// Health a level of absorption puts on top.
 const CUSHIONS: f32 = 4.0;
 
@@ -47,6 +44,9 @@ struct Active {
     particles: bool,
     /// From a beacon: BDS told it `ambient` (bds-stations.txt). Not kept.
     ambient: bool,
+    /// The tick it was given: BDS first counts it the tick after (bds-r1fx.txt: instant health
+    /// gone a tick after its `Add`, cleared ones one tick fuller than sapling's were).
+    since: u64,
 }
 
 /// The effects on a player, whether storage has yet to hear of them, and whether the player,
@@ -64,7 +64,7 @@ pub(crate) fn kept(world: &mut World, player: Entity) -> Option<Vec<[i32; 4]>> {
 
 /// The effects storage kept, for a player coming back.
 pub(crate) fn restored(kept: &[[i32; 4]]) -> Option<Effects> {
-    let active = |[id, amplifier, left, shown]: &[i32; 4]| Some(Active { effect: Effect::ALL.into_iter().find(|known| known.id() == *id)?, amplifier: *amplifier as u8, left: u32::try_from(*left).ok()?, particles: *shown != 0, ambient: false });
+    let active = |[id, amplifier, left, shown]: &[i32; 4]| Some(Active { effect: Effect::ALL.into_iter().find(|known| known.id() == *id)?, amplifier: *amplifier as u8, left: u32::try_from(*left).ok()?, particles: *shown != 0, ambient: false, since: 0 });
     let active: Vec<Active> = kept.iter().filter_map(active).collect();
     (!active.is_empty()).then(|| Effects(active, false, true))
 }
@@ -102,30 +102,6 @@ fn boost(world: &mut World, player: Entity, id: u64) {
     vitals.health.grow(super::boost::boosted_max(super::MAX, boosted));
     let told = super::boost::boosted_health(id, vitals.health.left(), super::MAX, boosted);
     tell(world, player, &told);
-}
-
-/// What a hit of `amount` by a player costs under its strength and its weakness.
-pub(crate) fn hits_for(world: &World, player: Entity, amount: f32) -> f32 {
-    let under = |amount: f32, effect: Effect, [times, plus]: [f32; 2]| match level(world, player, effect) {
-        Some(level) => {
-            let by = times.powi(i32::from(level) + 1);
-            amount * by + (by - 1.0) / plus
-        }
-        None => amount,
-    };
-    under(under(amount, Effect::Strength, STRENGTHENS), Effect::Weakness, WEAKENS).max(0.0)
-}
-
-/// What a player's haste and mining fatigue multiply its digging speed by. BDS's stone breaks
-/// (research/captures/bds-dig.txt) fit Java's 1 + 0.2 a level of haste times another 1.2 a level,
-/// and Java's 0.3 a level of fatigue times another 0.7: 1.44 and 2.76 faster, 0.21 and 0.044.
-/// Conduit power digs as haste of its level (bds-dig.txt: the same 629 crack speed); the stronger counts.
-pub(crate) fn dig_speed(world: &World, player: Entity) -> f32 {
-    let levels = |effect| level(world, player, effect).map(|level| i32::from(level) + 1);
-    let hastes = levels(Effect::Haste).max(levels(Effect::ConduitPower));
-    let haste = hastes.map_or(1.0, |n| (1.0 + 0.2 * n as f32) * 1.2f32.powi(n));
-    let fatigue = levels(Effect::MiningFatigue).map_or(1.0, |n| 0.21f32.powi(n));
-    haste * fatigue
 }
 
 /// The ids of the effects on a player that show their particles, in order.
@@ -188,14 +164,24 @@ pub(super) fn clear(world: &mut World, player: Entity) -> bool {
     take(world, player, |_| true)
 }
 
+/// Takes every effect off a player rising, told by id with the ticks left at its death, as BDS
+/// told them after its Respawn (bds-r1fx.txt); they stood still while it was dead.
+pub(super) fn end_at_rise(world: &mut World, player: Entity) {
+    if let Some(mut effects) = world.get_mut::<Effects>(player) {
+        effects.0.sort_by_key(|active| active.effect.id());
+    }
+    clear(world, player);
+    world.entity_mut(player).remove::<Effects>();
+}
+
 /// See `ShardCtx::give_effect`.
 pub(crate) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
-    give_as(world, player, Active { effect, amplifier, left: ticks, particles, ambient: false })
+    give_as(world, player, Active { effect, amplifier, left: ticks, particles, ambient: false, since: 0 })
 }
 
 /// A beacon's effect: as [`give`], told `ambient`.
 pub(crate) fn give_ambient(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8) -> bool {
-    give_as(world, player, Active { effect, amplifier, left: ticks, particles: true, ambient: true })
+    give_as(world, player, Active { effect, amplifier, left: ticks, particles: true, ambient: true, since: 0 })
 }
 
 fn give_as(world: &mut World, player: Entity, new: Active) -> bool {
@@ -203,7 +189,8 @@ fn give_as(world: &mut World, player: Entity, new: Active) -> bool {
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
     // bds-fx2.txt: darkness came without particles though the command asked for them.
     // A stew's saturation feeds every tick it lasts (bds-foods2.txt); /effect gives it one.
-    let new = Active { left: if effect.is_instant() && effect != Effect::Saturation { 1 } else { new.left }, particles: new.particles && effect != Effect::Darkness, ..new };
+    let since = world.resource::<crate::components::Tick>().0;
+    let new = Active { left: if effect.is_instant() && effect != Effect::Saturation { 1 } else { new.left }, particles: new.particles && effect != Effect::Darkness, since, ..new };
     let before = shown(world, player);
     if world.get::<Effects>(player).is_none() {
         world.entity_mut(player).insert(Effects::default());
@@ -275,12 +262,16 @@ fn act(world: &mut World, player: Entity, active: &Active) {
 pub(super) fn tick(world: &mut World) {
     for player in in_world(world) {
         greet(world, player);
+        if world.get::<Vitals>(player).is_some_and(|vitals| vitals.died.is_some()) {
+            continue;
+        }
+        let now = world.resource::<crate::components::Tick>().0;
         let Some(active) = world.get::<Effects>(player).map(|effects| effects.0.clone()).filter(|active| !active.is_empty()) else { continue };
-        for active in &active {
+        for active in active.iter().filter(|active| active.since != now) {
             act(world, player, active);
         }
         if let Some(mut effects) = world.get_mut::<Effects>(player) {
-            effects.0.iter_mut().for_each(|active| active.left = active.left.saturating_sub(1));
+            effects.0.iter_mut().filter(|active| active.since != now).for_each(|active| active.left = active.left.saturating_sub(1));
             effects.1 = true;
         }
         take(world, player, |active| active.left == 0);
