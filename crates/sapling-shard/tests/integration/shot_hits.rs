@@ -151,6 +151,18 @@ fn a_lingering_potion_of_harming_harms_a_cow_standing_in_its_cloud() {
 }
 
 #[test]
+fn a_harming_cloud_throws_a_cow_out_as_a_hit_and_harms_it_once() {
+    // research/captures/bds-y3arrow.txt: the held cow 2 off the cloud thrown 2 blocks on, harmed once in 30 s.
+    let mut h = ready(GameMode::Creative, &[("minecraft:lingering_potion", 1, 23)], 30.0);
+    let cow = spawn(&mut h, "minecraft:cow", [0.5, 65.0, 2.5]);
+    h.remote.run(move |ctx| assert!(ctx.give_entity_effect(sapling_api::EntityId(cow), sapling_api::Effect::Slowness, 400, 255)));
+    let sent = throw(&mut h, 200);
+    assert_eq!(healths(&sent), [7.0]);
+    let up = all::<SetEntityMotion>(&sent).into_iter().filter(|motion| motion.runtime_entity_id == cow).map(|motion| motion.velocity.y).fold(0.0, f32::max);
+    assert!((up - 0.3136).abs() < 1e-3, "thrown up as a hit: {up}");
+}
+
+#[test]
 fn a_rocket_with_a_star_harms_a_cow_where_it_bursts() {
     let burst = compound([("FireworkColor", Value::ByteArray(vec![1])), ("FireworkFade", Value::ByteArray(Vec::new())), ("FireworkFlicker", Value::Byte(0)), ("FireworkTrail", Value::Byte(0)), ("FireworkType", Value::Byte(0))]);
     let fireworks = compound([("Explosions", Value::List(List { tag: 10, items: vec![burst] })), ("Flight", Value::Byte(0))]);

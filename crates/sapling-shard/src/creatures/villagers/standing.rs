@@ -1,12 +1,12 @@
 //! A player's standing with a village (BDS's `Village::mPlayerStanding`, docs/research/villagers.md
 //! "Standing"): kept in [-30, 10] (`Village::modifyStanding`, 0x142a31380), a trade's level-up
 //! adds 1 as it ends (trading.rs; a plain trade adds none), a hit
-//! on an adult villager takes 1 and on a baby 3, killing a villager takes 2 more and an iron golem
-//! 5; a cure raises every standing the village keeps by 5. Two village-wide timers (`Village::tick`, 0x142a23bc0) step every good standing down every
+//! on an adult villager takes 1 and on a baby 3, by hand or by a shot, a killing hit 2 instead and
+//! on an iron golem 5; a cure raises every standing the village keeps by 5, and so does a new
+//! villager's first village (its founding reward). Two village-wide timers (`Village::tick`, 0x142a23bc0) step every good standing down every
 //! 120000 ticks and every bad one up every 12000. An iron golem takes the nearest player at -15 or
 //! lower (`getClosestBadStandingPlayer`, 0x142a30c80), if it is the village's (golems.rs). Prices take no standing.
 //! Kept with the world as BDS's `VILLAGE_<id>_PLAYERS`, the village's id sapling's (raids/kept.rs).
-// TODO: only melee hits count; BDS's founding reward is not copied.
 
 use std::collections::HashMap;
 
@@ -30,6 +30,9 @@ const KILLED_GOLEM: i32 = -5;
 /// 0x30b74) finds the overworld village about it and calls `modifyStanding(+5)` over its whole
 /// `mPlayerStanding` map (Village+0x218).
 const CURED: i32 = 5;
+/// A villager's first village gives every player it keeps a standing for its pack's
+/// `first_founding_reward` (DwellerComponent 0x141ba80b0, once, `RewardPlayersOnFirstFounding`).
+const FOUNDING: i32 = 5;
 /// The standing an iron golem turns on a player at.
 const OUTLAW: i32 = -15;
 /// Ticks between a village's steps of good standings down, and of bad ones up.
@@ -74,10 +77,10 @@ impl Village {
         *value = (*value + delta).clamp(LEAST, MOST);
     }
 
-    /// Every player it keeps a standing for gains [`CURED`], whoever cured.
-    fn cured(&mut self, now: u64) {
+    /// Every player it keeps a standing for gains `delta`, whoever brought it.
+    fn raise_all(&mut self, now: u64, delta: i32) {
         let players: Vec<PlayerKey> = self.players.keys().copied().collect();
-        players.into_iter().for_each(|player| self.change(now, player, CURED));
+        players.into_iter().for_each(|player| self.change(now, player, delta));
     }
 }
 
@@ -126,13 +129,25 @@ fn change(world: &mut World, player: Entity, layer: Entity, at: [f32; 3], delta:
 
 /// A zombie villager was cured at `at`: the village there, if any, raises every standing it keeps.
 pub(super) fn cured(world: &mut World, layer: Entity, at: [f32; 3]) {
-    let Some(middle) = village_of(world, layer, at) else { return };
+    raise_all(world, layer, at, CURED);
+}
+
+/// A villager yet to give its founding reward is at `at`: the village there, if any, raises every
+/// standing it keeps by [`FOUNDING`] (bds-y3found.txt: a hit's -1 became 4). False where there is none.
+pub(super) fn founded(world: &mut World, layer: Entity, at: [f32; 3]) -> bool {
+    raise_all(world, layer, at, FOUNDING)
+}
+
+/// The village about `at`, if any, raises every standing it keeps by `delta`; false where there is none.
+fn raise_all(world: &mut World, layer: Entity, at: [f32; 3], delta: i32) -> bool {
+    let Some(middle) = village_of(world, layer, at) else { return false };
     let now = world.resource::<Tick>().0;
     let mut standings = standings(world);
-    let Some(village) = standings.0.get_mut(&(layer, middle)) else { return };
-    village.cured(now);
+    let Some(village) = standings.0.get_mut(&(layer, middle)) else { return true };
+    village.raise_all(now, delta);
     let compound = encode(&village.players);
     keep(world, layer, middle, compound);
+    true
 }
 
 /// Writes the village's `PLAYERS` compound into its world folder's level for its next save.
@@ -171,22 +186,38 @@ pub(super) fn levelled(world: &mut World, player: Entity, trader: Entity) {
     change(world, player, layer, at, LEVELLED);
 }
 
-/// The player hit the mob `kind`, and `killed` it if so.
+/// What a player's hit on the mob `kind` does to the player's standing, if anything. A killing hit
+/// counts as the kill alone: BDS's dweller takes the hurt only while it lives (0x148487bd0 returns
+/// on health under 1), so a villager shot twice to death left -3 (bds-y3ranged.txt).
+fn hit_delta(kind: &str, baby: bool, killed: bool) -> Option<i32> {
+    match kind {
+        _ if VILLAGERS.contains(&kind) && killed => Some(KILLED_VILLAGER),
+        _ if VILLAGERS.contains(&kind) => Some(if baby { HURT_BABY } else { HURT }),
+        GOLEM if killed => Some(KILLED_GOLEM),
+        _ => None,
+    }
+}
+
+/// The player hit the mob `kind` by hand, and `killed` it if so; a grown villager's village golem
+/// turns on the player.
 pub(in crate::creatures) fn hit(world: &mut World, player: Entity, mob: Entity, layer: Entity, kind: &str, killed: bool) {
     let Some(at) = world.get::<Body>(mob).map(|body| body.at) else { return };
-    let delta = match kind {
-        _ if VILLAGERS.contains(&kind) => {
-            let baby = super::super::shown::is_baby(world, mob);
-            if !baby {
-                super::golems::defend(world, player, layer, at);
-            }
-            let hurt = if baby { HURT_BABY } else { HURT };
-            hurt + if killed { KILLED_VILLAGER } else { 0 }
-        }
-        GOLEM if killed => KILLED_GOLEM,
-        _ => return,
-    };
-    change(world, player, layer, at, delta);
+    let baby = super::super::shown::is_baby(world, mob);
+    if VILLAGERS.contains(&kind) && !baby {
+        super::golems::defend(world, player, layer, at);
+    }
+    if let Some(delta) = hit_delta(kind, baby, killed) {
+        change(world, player, layer, at, delta);
+    }
+}
+
+/// The player's shot or throw hurt the mob `kind` at `at`, and `killed` it if so: the standing as a
+/// hit's, but no golem turned on the archer (bds-y3ranged.txt: the held golem took no target).
+pub(in crate::creatures) fn shot(world: &mut World, player: Entity, mob: Entity, layer: Entity, kind: &str, at: [f32; 3], killed: bool) {
+    let baby = super::super::shown::is_baby(world, mob);
+    if let Some(delta) = hit_delta(kind, baby, killed) {
+        change(world, player, layer, at, delta);
+    }
 }
 
 /// For the iron golem `golem` at `body`, if its village's: the nearest player within `sight` in bad
@@ -230,11 +261,19 @@ mod tests {
     }
 
     #[test]
+    fn a_killing_hit_counts_as_the_kill_alone() {
+        let villager = VILLAGERS[0];
+        let shot_twice_to_death = hit_delta(villager, false, false).unwrap() + hit_delta(villager, false, true).unwrap();
+        assert_eq!(shot_twice_to_death, -3, "bds-y3ranged.txt");
+        assert_eq!([hit_delta(villager, true, false), hit_delta(villager, true, true), hit_delta(GOLEM, false, true), hit_delta(GOLEM, false, false)], [Some(HURT_BABY), Some(KILLED_VILLAGER), Some(KILLED_GOLEM), None]);
+    }
+
+    #[test]
     fn a_cure_raises_every_kept_standing_by_five() {
         let mut village = Village::new(0);
         village.change(0, 1, -12);
         village.change(0, 2, 8);
-        village.cured(0);
+        village.raise_all(0, CURED);
         assert_eq!(village.players, HashMap::from([(1, -7), (2, MOST)]));
     }
 

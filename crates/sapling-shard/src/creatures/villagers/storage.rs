@@ -1,6 +1,6 @@
 //! A trader in its actor compound, under BDS's keys (bdsre: the actor load at 0x140d26a70 and
 //! `MerchantRecipeList` at 0x1416404a0): `Variant`, `MarkVariant`, `SkinID`, `TradeTier`,
-//! `TradeExperience` and `Offers` (`Recipes`, `TierExpRequirements`).
+//! `TradeExperience`, `Offers` (`Recipes`, `TierExpRequirements`) and `RewardPlayersOnFirstFounding`.
 // TODO: a wandering trader's timer is not kept: one loaded again gets a new one.
 
 use acacia_proto::nbt::{self, LittleEndian, Nbt, Str, Value};
@@ -31,6 +31,7 @@ pub(super) fn read(compound: &[u8]) -> Option<Trader> {
         experience: int("TradeExperience"),
         deals: list("Recipes").iter().filter_map(Deal::parse).collect(),
         tiers: list("TierExpRequirements").iter().filter_map(tier_exp).collect(),
+        founding: matches!(actor.get("RewardPlayersOnFirstFounding"), Some(Value::Byte(1))),
         ..Trader::default()
     })
 }
@@ -46,6 +47,7 @@ pub(super) fn keep(world: &mut World, entity: Entity) {
         ("SkinID", Value::Int(trader.skin)),
         ("TradeTier", Value::Int(trader.tier)),
         ("TradeExperience", Value::Int(trader.experience)),
+        ("RewardPlayersOnFirstFounding", Value::Byte(i8::from(trader.founding))),
     ];
     if !trader.deals.is_empty() {
         set.push(("Offers", offers_compound(&trader.deals, &trader.tiers, false, None, layer.world.registry())));

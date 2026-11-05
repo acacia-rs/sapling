@@ -108,16 +108,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
             let at = packets.len() - 1;
             packets.splice(at..at, smash::shown(smash, from, body.at));
         }
-        let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
-        let far = (dx * dx + dz * dz).sqrt();
-        let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
-        let mut thrown = world.get_mut::<Body>(entity)?;
-        let speed = enchant::knockback(enchant::level(weapon.as_ref(), Enchant::Knockback), blow.sprinting, thrown.motion, away);
-        // Knockback resistance takes its share off the throw (research/captures/bds-knockback.txt).
-        let kept = 1.0 - sapling_data::mob_traits(&kind).resists;
-        if kept > 0.0 {
-            thrown.throw(speed.map(|c| c * kept));
-        }
+        blows::throw_from(world, entity, from, enchant::level(weapon.as_ref(), Enchant::Knockback), blow.sprinting);
         *world.get_mut::<Health>(entity)? = health;
         if smash.is_some() {
             smash::follow(world, player, entity, body.at, weapon.as_ref());

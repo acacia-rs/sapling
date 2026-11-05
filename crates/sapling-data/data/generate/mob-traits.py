@@ -109,7 +109,7 @@ HUNTS = {
     "minecraft:warden": "attack=30 speed=0.36 sees=16 provoked",
     "minecraft:wolf": "attack=3 speed=0.3 sees=16 provoked every=31",
     "minecraft:zoglin": "attack=3 varies=8 speed=0.2875 sees=16",
-    "minecraft:zombie": "attack=3 speed=0.23 sees=35",
+    "minecraft:zombie": "attack=3 speed=0.23 sees=35 within=25",
     "minecraft:zombie_pigman": "attack=9 speed=0.23 sees=35 provoked",
     "minecraft:zombie_villager": "attack=3 speed=0.23 sees=35",
     "minecraft:zombie_villager_v2": "attack=3 speed=0.23 sees=35",

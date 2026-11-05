@@ -148,7 +148,7 @@ fn pulse(world: &mut World, cloud: Entity, layer: Entity, now: u64) -> Option<()
         kept.used += spec.on_use;
         match is_player {
             true => crate::vitals::clouded(world, victim, spec.potion, [TIME_SHARE, INSTANT_SHARE], &slayer, at),
-            false => crate::creatures::clouded(world, victim, layer, spec.potion, [TIME_SHARE, INSTANT_SHARE]),
+            false => crate::creatures::clouded(world, victim, layer, spec.potion, [TIME_SHARE, INSTANT_SHARE], at),
         }
         if world.get::<Cloud>(cloud).is_some_and(|kept| radius(kept, age) < SMALLEST) {
             mobs::remove(world, cloud);

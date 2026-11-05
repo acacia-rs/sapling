@@ -99,7 +99,7 @@ minecraft:wither_skeleton	fire_immune breathes_water xp=5-5 strolls=0.25 looks=8
 minecraft:wolf	floats xp=1-3 strolls=0.3 panics=0.375 looks=6:0.02:40-80 attack=3 speed=0.3 sees=16 provoked every=31
 minecraft:xp_orb	unpushable
 minecraft:zoglin	fire_immune breathes_water resists=0.6 xp=5-5 strolls=0.25 looks=6:0.02:40-80 glances attack=3 varies=8 speed=0.2875 sees=16
-minecraft:zombie	breathes_water burns_in_sun xp=5-5 baby_xp=12-12 strolls=0.23 looks=6:0.02:40-80 glances attack=3 speed=0.23 sees=35 preys=snowgolem,irongolem,villager,wandering_trader
+minecraft:zombie	breathes_water burns_in_sun xp=5-5 baby_xp=12-12 strolls=0.23 looks=6:0.02:40-80 glances attack=3 speed=0.23 sees=35 within=25 preys=snowgolem,irongolem,villager,wandering_trader
 minecraft:zombie_horse	breathes_water burns_in_sun floats xp=1-3 strolls=0.168 looks=6:0.02:40-80 glances
 minecraft:zombie_nautilus	breathes_water burns_in_sun resists=0.3 xp=1-3 swims=0.15 roams=16x4
 minecraft:zombie_pigman	fire_immune breathes_water xp=5-5 baby_xp=12-12 strolls=0.23 looks=6:0.02:40-80 glances attack=9 speed=0.23 sees=35 provoked
