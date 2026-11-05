@@ -1,11 +1,15 @@
 """The tree half of features_data.py: a `minecraft:tree_feature` document as the Rust `Tree` of
 src/feature/tree/spec.rs. Block lists resolve tags against the blocks sapling places."""
+import re
+
 from blocks_data import BLOCKS, NotPorted, block
 
 # Vanilla block tags BDS hardcodes, as far as sapling places their blocks.
 TAGS = {
     'dirt': ['dirt', 'grass_block', 'podzol', 'coarse_dirt', 'mycelium', 'mud', 'muddy_mangrove_roots', 'dirt_with_roots',
              'moss_block', 'farmland', 'pale_moss_block'],
+    'sand': ['sand', 'red_sand', 'suspicious_sand'],
+    'gravel': ['gravel', 'suspicious_gravel'],
     'minecraft:leaves': [n for (n, _) in BLOCKS if n.endswith('_leaves') or n == 'azalea_leaves_flowered'],
 }
 STEPS = {'down': 'Step::Down', 'up': 'Step::Up', 'outward': 'Step::Outward'}
@@ -13,8 +17,8 @@ STEPS = {'down': 'Step::Down', 'up': 'Step::Up', 'outward': 'Step::Outward'}
 
 def names(value):
     if isinstance(value, dict) and 'tags' in value:
-        tag = value['tags'].removeprefix("query.any_tag('").removesuffix("')")
-        return [(n, None) for n in TAGS[tag]]
+        assert value['tags'].startswith('query.any_tag('), value
+        return [(n, None) for tag in re.findall(r"'([^']+)'", value['tags']) for n in TAGS[tag]]
     if isinstance(value, dict):
         return [(value['name'].removeprefix('minecraft:'), value.get('states'))]
     return [(value.removeprefix('minecraft:'), None)]

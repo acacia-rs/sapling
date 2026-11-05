@@ -4,14 +4,20 @@ with rules. A feature is ported when its type is and every feature it places is.
 import biome_expr
 import cave_data
 import legacy_data
+import sulfur_spring_data
 import trees_data
 from blocks_data import NotPorted, block, blocks
 
 ORDERS = {'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'}
 PORTED = {'minecraft:ore_feature', 'minecraft:scatter_feature', 'minecraft:aggregate_feature', 'minecraft:sequence_feature',
           'minecraft:weighted_random_feature', 'minecraft:single_block_feature', 'minecraft:tree_feature', 'minecraft:search_feature',
-          'minecraft:geode_feature', 'minecraft:fossil_feature', 'minecraft:horizontal_tree_decoration_feature'} | cave_data.PORTED
-_HANDWRITTEN = {**legacy_data.LEGACY, **cave_data.LEGACY}
+          'minecraft:geode_feature', 'minecraft:fossil_feature', 'minecraft:horizontal_tree_decoration_feature',
+          'minecraft:structure_template_feature'} | cave_data.PORTED
+_SPRINGS = {
+    'minecraft:sulfur_spring_trail_to_surface_feature': lambda index: (
+        f'Feature::Legacy(Legacy::SulfurTrail {{ spring: {index("minecraft:random_sulfur_spring_with_tuff_feature")} }})'),
+}
+_HANDWRITTEN = {**legacy_data.LEGACY, **cave_data.LEGACY, **_SPRINGS}
 # Features BDS builds in code (registered in 1482f4580), with the parameters it passes them.
 _SOIL = 'needs: &[Block::Water], replaces: &[Block::Dirt, Block::CoarseDirt, Block::GrassBlock]'
 # 1482f4580 sizes these from a flag (kelp/seagrass 1 or 10 tries, flowers/mushrooms/berries 64 or 1)
@@ -224,6 +230,8 @@ class Features:
             return f'Feature::Fossil(Fossil {{ ore: {block(body["ore_block"])}, max_empty_corners: {int(body["max_empty_corners"])} }})'
         if kind in cave_data.PORTED:
             return cave_data.rust(kind, body, self.index)
+        if kind == 'minecraft:structure_template_feature':
+            return template(body)
         raise NotPorted(kind)
 
     def geode(self, body):
@@ -254,6 +262,22 @@ class Features:
         return (f'Feature::SingleBlock(SingleBlock {{ blocks: &[{weighted}], may_replace: {blocks(body.get("may_replace", []))}, '
                 f'placement: {flag("enforce_placement_rules")}, survival: {flag("enforce_survivability_rules")}, '
                 f'not_on: {blocks(not_attach.get("bottom", []))}, attach: {attach(body.get("may_attach_to"))} }})')
+
+
+def template(body):
+    """Only the sulfur springs' templates (scripts/sulfur_spring_data.py), unmoved and turned at random."""
+    names = [f'minecraft:sulfur_spring_{n}' for n in sulfur_spring_data.NAMES]
+    constraints = body.get('constraints', {})
+    intersection = constraints.get('block_intersection')
+    if (body['structure_name'] not in names or body.get('adjustment_radius', 0) != 0 or 'rotation' in body
+            or set(constraints) - {'leveled', 'unburied', 'block_intersection'}
+            or (intersection or {}).get('only_check_intersection_for_motion_blocking_blocks')):
+        raise NotPorted(f'structure_template_feature {body["structure_name"]}')
+    allow = f'Some({trees_data.block_set(intersection["block_allowlist"])})' if intersection is not None else 'None'
+    flag = lambda value: str(bool(value)).lower()  # noqa: E731
+    return (f'Feature::Template(TemplateFeature {{ template: {names.index(body["structure_name"])}, '
+            f'ground_level: {int(body.get("ground_level", 0))}, rotate_around_center: {flag(body.get("rotate_around_center"))}, '
+            f'leveled: {flag("leveled" in constraints)}, unburied: {flag("unburied" in constraints)}, intersection: {allow} }})')
 
 
 def attach(value):

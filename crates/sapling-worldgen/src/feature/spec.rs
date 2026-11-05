@@ -5,6 +5,7 @@ pub use super::cave_spec::{GrowingPlant, Multiface, PartiallyExposedBlob, SculkP
 pub use super::lush::Lush;
 pub use super::pool::Pool;
 pub use super::speleothem::{DRIPSTONE, SULFUR, Speleothem};
+pub use super::sulfur_spring::TemplateFeature;
 use crate::block::Block;
 
 /// The decoration passes in BDS's registry order; `pregeneration_pass` (carvers) is not one.
@@ -148,6 +149,8 @@ pub enum Feature {
     TreeDecoration(super::tree::spec::HorizontalDecoration),
     /// `minecraft:fossil_feature` (fossil.rs).
     Fossil(Fossil),
+    /// `minecraft:structure_template_feature` (sulfur_spring.rs).
+    Template(TemplateFeature),
     /// A feature sapling does not port: places nothing, but its rule still draws its scatter,
     /// whose `math.random` comes from the generator all rules of the chunk share.
     Unported,

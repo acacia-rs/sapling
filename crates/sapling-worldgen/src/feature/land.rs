@@ -77,6 +77,7 @@ impl Legacy {
             Legacy::TwistingVines => super::nether_vines::twisting_cluster(ctx.view, ctx.random, at),
             Legacy::NetherFossil => super::nether_fossil::place(ctx, at),
             Legacy::DesertWell => super::desert_well::place(ctx, at),
+            Legacy::SulfurTrail { spring } => super::sulfur_spring::trail(ctx, at, spring),
         }
     }
 }

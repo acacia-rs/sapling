@@ -41,9 +41,41 @@ impl<T: Keyed> TickHeap<T> {
         self.0[hole] = entry;
     }
 
+    pub fn pop(&mut self) -> Option<T> {
+        if crate::platform::linux() { self.pop_libcxx() } else { self.pop_msvc() }
+    }
+
+    /// libc++'s `__pop_heap` (Floyd), the Linux BDS's: the hole goes down to a leaf of the whole heap, last
+    /// entry included, taking the left child unless the right sorts first; the last entry fills it and is
+    /// sifted up. Equal keys thus leave in another order than MSVC's.
+    fn pop_libcxx(&mut self) -> Option<T> {
+        let top = *self.0.first()?;
+        let len = self.0.len();
+        if len == 1 {
+            return self.0.pop();
+        }
+        let mut hole = 0;
+        loop {
+            let mut child = 2 * hole + 1;
+            if child + 1 < len && after(&self.0[child], &self.0[child + 1]) {
+                child += 1;
+            }
+            self.0[hole] = self.0[child];
+            hole = child;
+            if child > (len - 2) / 2 {
+                break;
+            }
+        }
+        let last = self.0.pop().expect("non-empty");
+        if hole != len - 1 {
+            self.sift_up(hole, last);
+        }
+        Some(top)
+    }
+
     /// `_Pop_heap_hole_by_index`: the hole goes down to the bottom, taking the right child unless
     /// the left sorts first, and the last entry is pushed back up from there.
-    pub fn pop(&mut self) -> Option<T> {
+    fn pop_msvc(&mut self) -> Option<T> {
         let top = *self.0.first()?;
         let last = self.0.pop().expect("non-empty");
         let count = self.0.len();
@@ -106,12 +138,14 @@ mod tests {
 
     #[test]
     fn pops_in_time_order() {
-        let mut heap = TickHeap::default();
-        for (i, time) in [5u64, 1, 4, 1, 3, 9, 0].into_iter().enumerate() {
-            heap.push(Entry(time, i));
+        for pop in [TickHeap::pop_msvc, TickHeap::pop_libcxx] {
+            let mut heap = TickHeap::default();
+            for (i, time) in [5u64, 1, 4, 1, 3, 9, 0, 2, 2, 7].into_iter().enumerate() {
+                heap.push(Entry(time, i));
+            }
+            let times: Vec<u64> = std::iter::from_fn(|| pop(&mut heap)).map(|e| e.0).collect();
+            assert_eq!(times, [0, 1, 1, 2, 2, 3, 4, 5, 7, 9]);
         }
-        let times: Vec<u64> = std::iter::from_fn(|| heap.pop()).map(|e| e.0).collect();
-        assert_eq!(times, [0, 1, 1, 3, 4, 5, 9]);
     }
 
     /// `tickPendingTicks`: every entry popped into an active heap, which is then popped in turn.

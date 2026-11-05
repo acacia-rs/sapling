@@ -72,6 +72,7 @@ impl Feature {
             Feature::Pool(pool) => pool.place(ctx, at),
             Feature::TreeDecoration(decoration) => decoration.place(ctx, at),
             Feature::Fossil(fossil) => placed(fossil.place(ctx, at)),
+            Feature::Template(template) => template.place(ctx, at),
             Feature::Unported => None,
         }
     }

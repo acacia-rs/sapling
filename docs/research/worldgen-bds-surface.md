@@ -73,6 +73,14 @@ foundation (see the overworld builder), which is why copper filler vanishes unde
   biome and feature rules are in the vanilla_1.26.50 pack's brarchives); sapling generates it since
   thirteenth2aa (surface: grass with a coarse dirt noise band; judged by the `dappled` canon). Underground: dripstone, lush, sulfur caves (c [-0.19, 0.55], e [0.45, 1.0],
   d [0.2, 0.9], w [-1.1, -0.85]), deep dark. 7594 entries = cubiomes btree262's leaves.
+- Audit against the 1.26.50 pack (2026-11-05, parity/thirteenth2ac, live Linux BDS, seed 20261003, no experiment):
+  - Biomes: `/locate biome` for every pack biome from nine origins (±12000). Every biome BDS finds is in
+    `biome/builder/tables.rs`, and all 481 answer points have sapling's biome (examples/point_biome.rs). There is
+    no gap and no remap beyond dappled forest.
+  - Rules: every pack rule that some overworld biome accepts is transcribed. The one unported feature with
+    iterations was the sulfur spring trail, now ported (worldgen-bds-caves.md, "Sulfur springs"); the legacy
+    emerald ore rule places nothing (0 iterations).
+  - Structure sets: none missing. Camps answer `/locate structure` only by variant (`abandoned_camp_dappled_forest`).
 - Ranges quantize through f64 (`Climate::quantizeCoord` 14805fad0): -0.45f is -4499, Java -4500.
 - Build (148060510): Java's, but sorts with MSVC `std::sort` (148089fd0: introsort, insertion <= 32, ninther
   > 40); comparator chains (min+max)/2 of params p..p+6 (abs when sorting buckets); < 7 children sort by

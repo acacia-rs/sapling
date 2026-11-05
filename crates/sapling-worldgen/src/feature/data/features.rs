@@ -302,46 +302,75 @@ pub static FEATURES: &[Feature] = &[
     Feature::Legacy(Legacy::PodzolArea), // 295 minecraft:podzol_area_feature
     Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(64.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::Z, Axis::Y, Axis::X], x: Coordinate::Triangle([Expr::Const(-6.0), Expr::Const(6.0)]), y: Coordinate::Triangle([Expr::Const(-2.0), Expr::Const(2.0)]), z: Coordinate::Triangle([Expr::Const(-6.0), Expr::Const(6.0)]) }, project_to_floor: false, feature: 297 }), // 296 minecraft:scatter_birch_forest_wildflowers_feature
     Feature::LegacyTree(LegacyTree::FlowerBed { bed: Block::Wildflowers0South }), // 297 minecraft:wildflowers_feature
-    Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(8.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::Z, Axis::Y, Axis::X], x: Coordinate::Triangle([Expr::Const(-6.0), Expr::Const(6.0)]), y: Coordinate::Triangle([Expr::Const(-2.0), Expr::Const(2.0)]), z: Coordinate::Triangle([Expr::Const(-6.0), Expr::Const(6.0)]) }, project_to_floor: false, feature: 297 }), // 298 minecraft:scatter_meadow_wildflowers_feature
-    Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(1.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::X, Axis::Z, Axis::Y], x: Coordinate::Fixed(Expr::Const(0.0)), y: Coordinate::Fixed(Expr::Const(32.0)), z: Coordinate::Fixed(Expr::Const(0.0)) }, project_to_floor: false, feature: 300 }), // 299 minecraft:fixup_mesa_gold_position_feature
-    Feature::Ore(Ore { count: 9, discard_on_air: 0.5, rules: &[ReplaceRule { places: Block::GoldOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateGoldOre, may_replace: &[Block::Deepslate] }] }), // 300 minecraft:gold_ore_feature
-    Feature::Ore(Ore { count: 4, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::IronOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateIronOre, may_replace: &[Block::Deepslate] }] }), // 301 minecraft:iron_ore_small_feature
-    Feature::Ore(Ore { count: 9, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::GoldOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateGoldOre, may_replace: &[Block::Deepslate] }] }), // 302 minecraft:gold_ore_extra_feature
-    Feature::Ore(Ore { count: 4, discard_on_air: 0.5, rules: &[ReplaceRule { places: Block::DiamondOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateDiamondOre, may_replace: &[Block::Deepslate] }] }), // 303 minecraft:diamond_ore_feature
-    Feature::Ore(Ore { count: 17, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::CoalOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateCoalOre, may_replace: &[Block::Deepslate] }] }), // 304 minecraft:coal_ore_upper_feature
-    Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Clay, may_replace: &[Block::Stone] }] }), // 305 minecraft:clay_ore_feature
-    Feature::Ore(Ore { count: 64, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Andesite, may_replace: &[Block::Stone] }] }), // 306 minecraft:andesite_feature
-    Feature::Ore(Ore { count: 20, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::CopperOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateCopperOre, may_replace: &[Block::Deepslate] }] }), // 307 minecraft:dripstone_caves_copper_ore_feature
-    Feature::Ore(Ore { count: 10, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::IronOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateIronOre, may_replace: &[Block::Deepslate] }] }), // 308 minecraft:iron_ore_feature
-    Feature::Ore(Ore { count: 17, discard_on_air: 0.5, rules: &[ReplaceRule { places: Block::CoalOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateCoalOre, may_replace: &[Block::Deepslate] }] }), // 309 minecraft:coal_ore_feature
-    Feature::Ore(Ore { count: 8, discard_on_air: 1.0, rules: &[ReplaceRule { places: Block::DiamondOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateDiamondOre, may_replace: &[Block::Deepslate] }] }), // 310 minecraft:diamond_ore_buried_feature
-    Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Gravel, may_replace: &[Block::Stone, Block::Deepslate] }] }), // 311 minecraft:gravel_ore_feature
-    Feature::Ore(Ore { count: 10, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::CopperOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateCopperOre, may_replace: &[Block::Deepslate] }] }), // 312 minecraft:copper_ore_feature
-    Feature::Ore(Ore { count: 12, discard_on_air: 0.7, rules: &[ReplaceRule { places: Block::DiamondOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateDiamondOre, may_replace: &[Block::Deepslate] }] }), // 313 minecraft:diamond_ore_large_feature
-    Feature::Ore(Ore { count: 64, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Diorite, may_replace: &[Block::Stone] }] }), // 314 minecraft:diorite_feature
-    Feature::Ore(Ore { count: 8, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::RedstoneOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateRedstoneOre, may_replace: &[Block::Deepslate] }] }), // 315 minecraft:redstone_ore_feature
-    Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Dirt, may_replace: &[Block::Stone] }] }), // 316 minecraft:dirt_feature
-    Feature::Ore(Ore { count: 3, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::EmeraldOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateEmeraldOre, may_replace: &[Block::Deepslate] }] }), // 317 minecraft:emerald_ore_feature
-    Feature::Ore(Ore { count: 9, discard_on_air: 0.5, rules: &[ReplaceRule { places: Block::GoldOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateGoldOre, may_replace: &[Block::Deepslate] }] }), // 318 minecraft:gold_ore_lower_feature
-    Feature::Ore(Ore { count: 64, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Granite, may_replace: &[Block::Stone] }] }), // 319 minecraft:granite_feature
-    Feature::Ore(Ore { count: 7, discard_on_air: 1.0, rules: &[ReplaceRule { places: Block::LapisOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateLapisOre, may_replace: &[Block::Deepslate] }] }), // 320 minecraft:lapis_ore_buried_feature
-    Feature::Ore(Ore { count: 7, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::LapisOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateLapisOre, may_replace: &[Block::Deepslate] }] }), // 321 minecraft:lapis_ore_feature
-    Feature::Ore(Ore { count: 64, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Tuff, may_replace: &[Block::Stone, Block::Deepslate] }] }), // 322 minecraft:tuff_feature
-    Feature::Ore(Ore { count: 12, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::SoulSand, may_replace: &[Block::Netherrack] }] }), // 323 minecraft:nether_soul_sand_underground_feature
-    Feature::Multiface(Multiface { block: Block::SculkVein1, search_range: 20, faces: &[0, 1, 2, 5, 3, 4], can_place_on: &[Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Deepslate, Block::Tuff, Block::OakPlanks, Block::SprucePlanks, Block::DarkOakPlanks], on_names: &["stone", "granite", "diorite", "andesite", "deepslate", "cobbled_deepslate", "deepslate_tiles", "cracked_deepslate_tiles", "deepslate_bricks", "cracked_deepslate_bricks", "tuff", "oak_planks", "spruce_planks", "birch_planks", "jungle_planks", "acacia_planks", "dark_oak_planks"], spread_chance: 1.0 }), // 324 minecraft:sculk_vein_feature
-    Feature::SurfaceThreshold(SurfaceThreshold { feature: 326, min_depth: 2 }), // 325 minecraft:underground_glow_lichen_feature
-    Feature::Multiface(Multiface { block: Block::GlowLichen1, search_range: 20, faces: &[1, 2, 5, 3, 4], can_place_on: &[Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::DripstoneBlock, Block::Calcite, Block::Tuff, Block::Deepslate, Block::Sulfur, Block::Cinnabar], on_names: &["stone", "granite", "diorite", "andesite", "dripstone_block", "calcite", "tuff", "deepslate", "sulfur", "cinnabar"], spread_chance: 0.5 }), // 326 minecraft:glow_lichen_feature
-    Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Deepslate, may_replace: &[Block::Stone] }] }), // 327 minecraft:deepslate_feature
-    Feature::Unported, // 328 (unported)
-    Feature::Legacy(Legacy::Pile(PileBlock::Melon)), // 329 minecraft:melon_pile_feature
-    Feature::Legacy(Legacy::Pile(PileBlock::Pumpkin)), // 330 minecraft:pumpkin_pile_feature
-    Feature::Legacy(Legacy::Pile(PileBlock::Hay)), // 331 minecraft:hay_pile_feature
-    Feature::Legacy(Legacy::Pile(PileBlock::Snow)), // 332 minecraft:snow_pile_feature
-    Feature::Legacy(Legacy::Pile(PileBlock::Ice)), // 333 minecraft:ice_pile_feature
-    Feature::SculkPatch(SculkPatch { can_place_on: &[], cursors: 10, charge: 32, attempts: 64, growth_rounds: 0, spread_rounds: 1, catalyst_chance: 0.5, extra_growths: Range(1, 3) }), // 334 minecraft:sculk_patch_feature_ancient_city
-    Feature::WeightedRandom(&[(154, 9.0), (149, 1.0)]), // 335 minecraft:random_oak_tree_from_sapling_feature
-    Feature::WeightedRandom(&[(268, 9.0), (263, 1.0)]), // 336 minecraft:random_oak_tree_with_beehive_from_sapling_feature
-    Feature::WeightedRandom(&[(174, 1.0), (170, 1.0), (176, 1.0)]), // 337 minecraft:select_poplar_tree_feature
+    Feature::SnapToSurface(SnapToSurface { feature: 299, range: 64, surface: Surface::Ceiling, allow_air: true, allow_water: false, allow_solid: false, embed: false, allowed: &[] }), // 298 minecraft:sulfur_spring_trail_to_surface_snap_to_ceiling_feature
+    Feature::Legacy(Legacy::SulfurTrail { spring: 300 }), // 299 minecraft:sulfur_spring_trail_to_surface_feature
+    Feature::WeightedRandom(&[(301, 5000.0), (306, 5000.0), (308, 5000.0), (310, 5000.0), (312, 3000.0), (315, 3000.0), (317, 3000.0), (319, 1000.0), (322, 1000.0), (324, 500.0)]), // 300 minecraft:random_sulfur_spring_with_tuff_feature
+    Feature::Aggregate(&[302, 303], EarlyOut::FirstFailure), // 301 minecraft:sulfur_spring_small_1_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 0, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 302 minecraft:sulfur_spring_small_1_feature
+    Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(64.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::Z, Axis::Y, Axis::X], x: Coordinate::Triangle([Expr::Const(-7.0), Expr::Const(7.0)]), y: Coordinate::Gaussian([Expr::Const(-3.0), Expr::Const(3.0)]), z: Coordinate::Triangle([Expr::Const(-7.0), Expr::Const(7.0)]) }, project_to_floor: true, feature: 304 }), // 303 minecraft:sulfur_spring_small_scatter_tuff_feature
+    Feature::SnapToSurface(SnapToSurface { feature: 305, range: 5, surface: Surface::Floor, allow_air: true, allow_water: false, allow_solid: false, embed: true, allowed: &[] }), // 304 minecraft:sulfur_spring_tuff_snap_to_surface_feature
+    Feature::SingleBlock(SingleBlock { blocks: &[(Block::Tuff, 1)], may_replace: &[Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta], placement: false, survival: false, not_on: &[], attach: Some(&Attach { top: &[Block::Air], bottom: &[], diagonal: &[], side: [&[], &[], &[], &[]], sides: &[], all: &[], min_sides: 1, auto_rotate: true }) }), // 305 minecraft:sulfur_spring_tuff_feature
+    Feature::Aggregate(&[307, 303], EarlyOut::FirstFailure), // 306 minecraft:sulfur_spring_small_2_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 1, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 307 minecraft:sulfur_spring_small_2_feature
+    Feature::Aggregate(&[309, 303], EarlyOut::FirstFailure), // 308 minecraft:sulfur_spring_small_3_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 2, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 309 minecraft:sulfur_spring_small_3_feature
+    Feature::Aggregate(&[311, 303], EarlyOut::FirstFailure), // 310 minecraft:sulfur_spring_small_4_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 3, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 311 minecraft:sulfur_spring_small_4_feature
+    Feature::Aggregate(&[313, 314], EarlyOut::FirstFailure), // 312 minecraft:sulfur_spring_medium_1_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 4, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 313 minecraft:sulfur_spring_medium_1_feature
+    Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(80.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::Z, Axis::Y, Axis::X], x: Coordinate::Triangle([Expr::Const(-8.0), Expr::Const(8.0)]), y: Coordinate::Gaussian([Expr::Const(-3.0), Expr::Const(3.0)]), z: Coordinate::Triangle([Expr::Const(-8.0), Expr::Const(8.0)]) }, project_to_floor: true, feature: 304 }), // 314 minecraft:sulfur_spring_medium_scatter_tuff_feature
+    Feature::Aggregate(&[316, 314], EarlyOut::FirstFailure), // 315 minecraft:sulfur_spring_medium_2_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 5, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 316 minecraft:sulfur_spring_medium_2_feature
+    Feature::Aggregate(&[318, 314], EarlyOut::FirstFailure), // 317 minecraft:sulfur_spring_medium_3_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 6, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 318 minecraft:sulfur_spring_medium_3_feature
+    Feature::Aggregate(&[320, 321], EarlyOut::FirstFailure), // 319 minecraft:sulfur_spring_large_1_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 7, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 320 minecraft:sulfur_spring_large_1_feature
+    Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(96.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::Z, Axis::Y, Axis::X], x: Coordinate::Triangle([Expr::Const(-9.0), Expr::Const(9.0)]), y: Coordinate::Gaussian([Expr::Const(-3.0), Expr::Const(3.0)]), z: Coordinate::Triangle([Expr::Const(-9.0), Expr::Const(9.0)]) }, project_to_floor: true, feature: 304 }), // 321 minecraft:sulfur_spring_large_scatter_tuff_feature
+    Feature::Aggregate(&[323, 321], EarlyOut::FirstFailure), // 322 minecraft:sulfur_spring_large_2_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 8, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 323 minecraft:sulfur_spring_large_2_feature
+    Feature::Aggregate(&[325, 326], EarlyOut::FirstFailure), // 324 minecraft:sulfur_spring_extra_large_1_with_tuff_feature
+    Feature::Template(TemplateFeature { template: 9, ground_level: 7, rotate_around_center: true, leveled: true, unburied: true, intersection: Some(&[Block::Air, Block::Dirt, Block::GrassBlock, Block::Podzol, Block::CoarseDirt, Block::Mycelium, Block::Mud, Block::MuddyMangroveRoots, Block::DirtWithRoots, Block::MossBlock, Block::PaleMossBlock, Block::Sand, Block::RedSand, Block::SuspiciousSand, Block::Gravel, Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Tuff, Block::Deepslate, Block::Calcite, Block::Sandstone, Block::RedSandstone, Block::Terracotta, Block::BrownTerracotta, Block::OrangeTerracotta, Block::LightGrayTerracotta, Block::RedTerracotta, Block::WhiteTerracotta, Block::YellowTerracotta]) }), // 325 minecraft:sulfur_spring_extra_large_1_feature
+    Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(128.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::Z, Axis::Y, Axis::X], x: Coordinate::Triangle([Expr::Const(-10.0), Expr::Const(10.0)]), y: Coordinate::Gaussian([Expr::Const(-3.0), Expr::Const(3.0)]), z: Coordinate::Triangle([Expr::Const(-10.0), Expr::Const(10.0)]) }, project_to_floor: true, feature: 304 }), // 326 minecraft:sulfur_spring_extra_large_scatter_tuff_feature
+    Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(8.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::Z, Axis::Y, Axis::X], x: Coordinate::Triangle([Expr::Const(-6.0), Expr::Const(6.0)]), y: Coordinate::Triangle([Expr::Const(-2.0), Expr::Const(2.0)]), z: Coordinate::Triangle([Expr::Const(-6.0), Expr::Const(6.0)]) }, project_to_floor: false, feature: 297 }), // 327 minecraft:scatter_meadow_wildflowers_feature
+    Feature::Scatter(Scatter { distribution: Distribution { iterations: Expr::Const(1.0), chance: Chance::Percent(Expr::Const(100.0)), order: [Axis::X, Axis::Z, Axis::Y], x: Coordinate::Fixed(Expr::Const(0.0)), y: Coordinate::Fixed(Expr::Const(32.0)), z: Coordinate::Fixed(Expr::Const(0.0)) }, project_to_floor: false, feature: 329 }), // 328 minecraft:fixup_mesa_gold_position_feature
+    Feature::Ore(Ore { count: 9, discard_on_air: 0.5, rules: &[ReplaceRule { places: Block::GoldOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateGoldOre, may_replace: &[Block::Deepslate] }] }), // 329 minecraft:gold_ore_feature
+    Feature::Ore(Ore { count: 4, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::IronOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateIronOre, may_replace: &[Block::Deepslate] }] }), // 330 minecraft:iron_ore_small_feature
+    Feature::Ore(Ore { count: 9, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::GoldOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateGoldOre, may_replace: &[Block::Deepslate] }] }), // 331 minecraft:gold_ore_extra_feature
+    Feature::Ore(Ore { count: 4, discard_on_air: 0.5, rules: &[ReplaceRule { places: Block::DiamondOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateDiamondOre, may_replace: &[Block::Deepslate] }] }), // 332 minecraft:diamond_ore_feature
+    Feature::Ore(Ore { count: 17, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::CoalOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateCoalOre, may_replace: &[Block::Deepslate] }] }), // 333 minecraft:coal_ore_upper_feature
+    Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Clay, may_replace: &[Block::Stone] }] }), // 334 minecraft:clay_ore_feature
+    Feature::Ore(Ore { count: 64, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Andesite, may_replace: &[Block::Stone] }] }), // 335 minecraft:andesite_feature
+    Feature::Ore(Ore { count: 20, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::CopperOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateCopperOre, may_replace: &[Block::Deepslate] }] }), // 336 minecraft:dripstone_caves_copper_ore_feature
+    Feature::Ore(Ore { count: 10, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::IronOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateIronOre, may_replace: &[Block::Deepslate] }] }), // 337 minecraft:iron_ore_feature
+    Feature::Ore(Ore { count: 17, discard_on_air: 0.5, rules: &[ReplaceRule { places: Block::CoalOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateCoalOre, may_replace: &[Block::Deepslate] }] }), // 338 minecraft:coal_ore_feature
+    Feature::Ore(Ore { count: 8, discard_on_air: 1.0, rules: &[ReplaceRule { places: Block::DiamondOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateDiamondOre, may_replace: &[Block::Deepslate] }] }), // 339 minecraft:diamond_ore_buried_feature
+    Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Gravel, may_replace: &[Block::Stone, Block::Deepslate] }] }), // 340 minecraft:gravel_ore_feature
+    Feature::Ore(Ore { count: 10, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::CopperOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateCopperOre, may_replace: &[Block::Deepslate] }] }), // 341 minecraft:copper_ore_feature
+    Feature::Ore(Ore { count: 12, discard_on_air: 0.7, rules: &[ReplaceRule { places: Block::DiamondOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateDiamondOre, may_replace: &[Block::Deepslate] }] }), // 342 minecraft:diamond_ore_large_feature
+    Feature::Ore(Ore { count: 64, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Diorite, may_replace: &[Block::Stone] }] }), // 343 minecraft:diorite_feature
+    Feature::Ore(Ore { count: 8, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::RedstoneOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateRedstoneOre, may_replace: &[Block::Deepslate] }] }), // 344 minecraft:redstone_ore_feature
+    Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Dirt, may_replace: &[Block::Stone] }] }), // 345 minecraft:dirt_feature
+    Feature::Ore(Ore { count: 3, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::EmeraldOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateEmeraldOre, may_replace: &[Block::Deepslate] }] }), // 346 minecraft:emerald_ore_feature
+    Feature::Ore(Ore { count: 9, discard_on_air: 0.5, rules: &[ReplaceRule { places: Block::GoldOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateGoldOre, may_replace: &[Block::Deepslate] }] }), // 347 minecraft:gold_ore_lower_feature
+    Feature::Ore(Ore { count: 64, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Granite, may_replace: &[Block::Stone] }] }), // 348 minecraft:granite_feature
+    Feature::Ore(Ore { count: 7, discard_on_air: 1.0, rules: &[ReplaceRule { places: Block::LapisOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateLapisOre, may_replace: &[Block::Deepslate] }] }), // 349 minecraft:lapis_ore_buried_feature
+    Feature::Ore(Ore { count: 7, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::LapisOre, may_replace: &[Block::Stone] }, ReplaceRule { places: Block::DeepslateLapisOre, may_replace: &[Block::Deepslate] }] }), // 350 minecraft:lapis_ore_feature
+    Feature::Ore(Ore { count: 64, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Tuff, may_replace: &[Block::Stone, Block::Deepslate] }] }), // 351 minecraft:tuff_feature
+    Feature::Ore(Ore { count: 12, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::SoulSand, may_replace: &[Block::Netherrack] }] }), // 352 minecraft:nether_soul_sand_underground_feature
+    Feature::Multiface(Multiface { block: Block::SculkVein1, search_range: 20, faces: &[0, 1, 2, 5, 3, 4], can_place_on: &[Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::Deepslate, Block::Tuff, Block::OakPlanks, Block::SprucePlanks, Block::DarkOakPlanks], on_names: &["stone", "granite", "diorite", "andesite", "deepslate", "cobbled_deepslate", "deepslate_tiles", "cracked_deepslate_tiles", "deepslate_bricks", "cracked_deepslate_bricks", "tuff", "oak_planks", "spruce_planks", "birch_planks", "jungle_planks", "acacia_planks", "dark_oak_planks"], spread_chance: 1.0 }), // 353 minecraft:sculk_vein_feature
+    Feature::SurfaceThreshold(SurfaceThreshold { feature: 355, min_depth: 2 }), // 354 minecraft:underground_glow_lichen_feature
+    Feature::Multiface(Multiface { block: Block::GlowLichen1, search_range: 20, faces: &[1, 2, 5, 3, 4], can_place_on: &[Block::Stone, Block::Granite, Block::Diorite, Block::Andesite, Block::DripstoneBlock, Block::Calcite, Block::Tuff, Block::Deepslate, Block::Sulfur, Block::Cinnabar], on_names: &["stone", "granite", "diorite", "andesite", "dripstone_block", "calcite", "tuff", "deepslate", "sulfur", "cinnabar"], spread_chance: 0.5 }), // 355 minecraft:glow_lichen_feature
+    Feature::Ore(Ore { count: 33, discard_on_air: 0.0, rules: &[ReplaceRule { places: Block::Deepslate, may_replace: &[Block::Stone] }] }), // 356 minecraft:deepslate_feature
+    Feature::Unported, // 357 (unported)
+    Feature::Legacy(Legacy::Pile(PileBlock::Melon)), // 358 minecraft:melon_pile_feature
+    Feature::Legacy(Legacy::Pile(PileBlock::Pumpkin)), // 359 minecraft:pumpkin_pile_feature
+    Feature::Legacy(Legacy::Pile(PileBlock::Hay)), // 360 minecraft:hay_pile_feature
+    Feature::Legacy(Legacy::Pile(PileBlock::Snow)), // 361 minecraft:snow_pile_feature
+    Feature::Legacy(Legacy::Pile(PileBlock::Ice)), // 362 minecraft:ice_pile_feature
+    Feature::SculkPatch(SculkPatch { can_place_on: &[], cursors: 10, charge: 32, attempts: 64, growth_rounds: 0, spread_rounds: 1, catalyst_chance: 0.5, extra_growths: Range(1, 3) }), // 363 minecraft:sculk_patch_feature_ancient_city
+    Feature::WeightedRandom(&[(154, 9.0), (149, 1.0)]), // 364 minecraft:random_oak_tree_from_sapling_feature
+    Feature::WeightedRandom(&[(268, 9.0), (263, 1.0)]), // 365 minecraft:random_oak_tree_with_beehive_from_sapling_feature
+    Feature::WeightedRandom(&[(174, 1.0), (170, 1.0), (176, 1.0)]), // 366 minecraft:select_poplar_tree_feature
 ];
 
 /// The jigsaw pools' feature elements: feature name, index.
@@ -352,13 +381,13 @@ pub static ELEMENTS: &[(&str, usize)] = &[
     ("pine_tree_feature", 222),
     ("fern_feature", 76),
     ("cactus_feature", 59),
-    ("melon_pile_feature", 329),
-    ("pumpkin_pile_feature", 330),
-    ("hay_pile_feature", 331),
-    ("snow_pile_feature", 332),
-    ("ice_pile_feature", 333),
+    ("melon_pile_feature", 358),
+    ("pumpkin_pile_feature", 359),
+    ("hay_pile_feature", 360),
+    ("snow_pile_feature", 361),
+    ("ice_pile_feature", 362),
     ("scatter_sweet_berry_bush_feature", 53),
-    ("sculk_patch_feature_ancient_city", 334),
+    ("sculk_patch_feature_ancient_city", 363),
     ("legacy:bamboo_jungle_tree_feature", 217),
     ("birch_tree_feature", 143),
     ("birch_tree_with_optional_beehive_feature", 142),
@@ -679,6 +708,35 @@ pub static NAMES: &[&str] = &[
     "minecraft:podzol_area_feature",
     "minecraft:scatter_birch_forest_wildflowers_feature",
     "minecraft:wildflowers_feature",
+    "minecraft:sulfur_spring_trail_to_surface_snap_to_ceiling_feature",
+    "minecraft:sulfur_spring_trail_to_surface_feature",
+    "minecraft:random_sulfur_spring_with_tuff_feature",
+    "minecraft:sulfur_spring_small_1_with_tuff_feature",
+    "minecraft:sulfur_spring_small_1_feature",
+    "minecraft:sulfur_spring_small_scatter_tuff_feature",
+    "minecraft:sulfur_spring_tuff_snap_to_surface_feature",
+    "minecraft:sulfur_spring_tuff_feature",
+    "minecraft:sulfur_spring_small_2_with_tuff_feature",
+    "minecraft:sulfur_spring_small_2_feature",
+    "minecraft:sulfur_spring_small_3_with_tuff_feature",
+    "minecraft:sulfur_spring_small_3_feature",
+    "minecraft:sulfur_spring_small_4_with_tuff_feature",
+    "minecraft:sulfur_spring_small_4_feature",
+    "minecraft:sulfur_spring_medium_1_with_tuff_feature",
+    "minecraft:sulfur_spring_medium_1_feature",
+    "minecraft:sulfur_spring_medium_scatter_tuff_feature",
+    "minecraft:sulfur_spring_medium_2_with_tuff_feature",
+    "minecraft:sulfur_spring_medium_2_feature",
+    "minecraft:sulfur_spring_medium_3_with_tuff_feature",
+    "minecraft:sulfur_spring_medium_3_feature",
+    "minecraft:sulfur_spring_large_1_with_tuff_feature",
+    "minecraft:sulfur_spring_large_1_feature",
+    "minecraft:sulfur_spring_large_scatter_tuff_feature",
+    "minecraft:sulfur_spring_large_2_with_tuff_feature",
+    "minecraft:sulfur_spring_large_2_feature",
+    "minecraft:sulfur_spring_extra_large_1_with_tuff_feature",
+    "minecraft:sulfur_spring_extra_large_1_feature",
+    "minecraft:sulfur_spring_extra_large_scatter_tuff_feature",
     "minecraft:scatter_meadow_wildflowers_feature",
     "minecraft:fixup_mesa_gold_position_feature",
     "minecraft:gold_ore_feature",

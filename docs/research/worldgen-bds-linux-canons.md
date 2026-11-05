@@ -41,6 +41,13 @@ split it into tries. This found the fallen poplar that BDS laid over a red shrub
   at the list front, and on rehash moves a node to the front of its bucket's run unless it continues the
   previous node's bucket. `scripts/features_to_rust.py` (`LibcxxMap`) emits `LINUX_ORDER`; with it the dappled
   canon's ore and stone blob residue (3198 cells) went to 0.
+- Load order of the loose `definitions/feature_rules`: Linux reads the folder in readdir order, not sorted. It sets
+  where the rules found only there enter the libc++ map. The order is the same in every BDS copy on this ext4
+  filesystem; it is recorded in `scripts/data/linux_loose_feature_rules.txt` (`ls -U`, which `bds_packs.load_order`
+  checks against the folder). With it the camp canon went from 10 to 3 and the sulfur caves canon from 17 to 0.
+- Tick heap pops: libc++'s `pop_heap` (Floyd's: the hole goes down to a leaf of the whole heap, taking the left
+  child on ties) where MSVC takes the right child on ties. Equal-time liquid ticks run in another order
+  (`tick_heap.rs`). This fixed the camp canon's last 3 lava cells.
 - Mth's sine table: UCRT `sinf` on Windows, glibc's on Linux (acacia-physics `sinf.rs` holds the Linux table).
   Not met in worldgen yet.
 - `std::hash<int>`: FNV-1a on Windows, identity on Linux (structure start maps, template markers). Not met yet.
@@ -50,4 +57,4 @@ The per-rule seed (boost `hash_combine` of identity values) is the same on both.
 ## The switch
 sapling generates as Windows BDS does (worlds match Windows). `sapling_worldgen::platform::follow_linux_bds()`
 switches to Linux behaviour; the oracle replay calls it when `SAPLING_ORACLE_LINUX` is set, which
-`tools/replay-canon-env.sh` reads from the canon's `env.txt`. Only the rule order follows it so far.
+`tools/replay-canon-env.sh` reads from the canon's `env.txt`. The rule order and the tick heap follow it.

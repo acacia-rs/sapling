@@ -23,6 +23,31 @@ A rule's iterations may be `Math.Random(a, b)`, drawn from the generator every r
 therefore never dropped: an unported feature becomes `Feature::Unported` and its rule still draws its scatter.
 Before this, glow lichen's `Math.Random(104, 157)` (after_underground) desynced every later Math.Random rule.
 
+## Sulfur springs (feature/sulfur_spring.rs, 2026-11-05, parity/thirteenth2ac)
+`sulfur_caves_before_surface_sulfur_spring_trail_to_surface_feature_rules` snaps to a ceiling (range 64) and runs the
+hardcoded `sulfur_spring_trail_to_surface_feature` (Windows 149d660d0, Linux 0x49c5ee0; object: name, sulfur twice, a
+32-type block list, a predicate). It is the only feature the 1.26.52 pack reaches that sapling lacked; it puts the
+springs on the surface above sulfur caves.
+- Trail: up the column from the snapped cell to the heightmap, at most 184 cells. It stops at the first cell that
+  is air (predicate 0x4fae5f0: canBeBuiltOver and not liquid), has a `Material::isSolid` block below and air or
+  water in the two cells above. There it places `random_sulfur_spring_with_tuff_feature`; a failed spring only
+  climbs on. On success it makes 20 tries per layer from start+1 to the spring at `nextInt(3)-nextInt(3)` x then z
+  around the column, setting sulfur on the listed types (dirt, sand, stone family, deepslate, tuff, the 16
+  terracottas, read live). Then a 20-step walk from the start (x, z ±2, y ±1) sets sulfur in air under a solid
+  block.
+- Springs: `structure_template_feature`s (`StructureTemplateFeature::place` 143bbc130) of the ten
+  `sulfur_spring_*` mcstructures (scripts/sulfur_spring_data.py → feature/data/sulfur_springs.rs, not templates.bin).
+  The rotation is `nextInt(4)`. `rotate_around_center` offsets by `-floor(size * 0.5)` in x and z, both turned
+  with the rotation. The constraints see the template unlowered; their cell lists are built by constructors on Linux:
+  - leveled (d281340/d2818d0): the non-air cells of the clamped `ground_level` layer, each checked one below the
+    position, need a solid-blocking, motion-blocking cell with a non-solid one above, at most 2 away.
+  - unburied (d281a60/d281fd0): above each non-air top-layer cell, air.
+  - block_intersection (d280350/d280a90): every non-void cell's world block in the allowlist; air is listed.
+  Placement (`StructureTemplate::placeInWorld` 141f52300/141f64f10, settings flags 0) lowers the template by
+  `ground_level` and sets every non-void cell, air included. A second-layer water makes the block's waterlogged twin.
+- Canon `spring` (ac2): from 1269 cells wrong or missing over the 5x5 region to 25; that 25 is river seagrass in
+  row -755, shifted by the frozen ocean iceberg mismatch in row -756 (Left). The region is 5x4 without that row: 0.
+
 ## Speleothems (feature/speleothem/)
 One class each for pointed dripstone and sulfur spikes, parameterised by base block, spike block and replaceable
 list (VanillaBlockTypeIds lists 14ccd2770: dirt, coarse dirt, stone, tuff, deepslate; 14ccd27a0: sulfur, cinnabar).
@@ -318,28 +343,13 @@ mansion's -508,998 matches in all 997 calls although the oracle has 420 lush cel
 order again.
 
 ## Left
-- Sulfur springs and the spring trail: not ported (the before-surface rule draws its scatter and places
-  nothing). Read 2026-11-04 for the port:
-  - The rule places `sulfur_spring_trail_to_surface_snap_to_ceiling_feature` (snap to a ceiling within 64),
-    which places the hardcoded `sulfur_spring_trail_to_surface_feature`, registered in 1482f4580 (object
-    149d65f70, vtable 14a98ad70, place 149d660d0) with the spring feature's name, two block globals
-    (+0x40 = +0x48 = 0x14cce1a98), a block list 0x14ccd2788 (+0x50) and a predicate (+0x58). From the snapped
-    cell it climbs at most 184 cells, below the column's heightmap, to the first cell over a solid block (and
-    the predicate) whose cell and the cells above are air or water; sinks it one or two cells while the cells
-    under it are in the list; places `random_sulfur_spring_with_tuff_feature` there. On success, for each y
-    from the start to that cell, 20 tries at `nextInt(3) - nextInt(3)` in x and z set the +0x48 block where
-    the cell is in the list; then 20 tries round the start (y `nextInt(2) - nextInt(2)`) set the +0x40 block
-    in air over a solid block. The globals and the predicate are filled at startup: name them live.
-  - The ten springs are `minecraft:structure_template_feature`s (the only users of that type), each the
-    `.mcstructure` of the same name in `vanilla_1.26.30/structures/minecraft/`, then a tuff scatter.
-    `StructureTemplateFeature::place` (143bbc130): rotation drawn by the random when the feature has none,
-    offset -floor(size / 2) with `rotate_around_center`, a spiral over (2 * adjustment_radius + 1)^2 cells
-    (one here) until every constraint passes (`leveled`, `unburied`, `block_intersection`: their vt+8 still
-    to read), ground level clamped to the height (143bbc610 warns), the template placed with palette
-    `default`, integrity 100.
-  - Judge: no canon holds a spring (every region is 0 with the trail unported) and canons need the Win32
-    debugger, so a Linux stock world of a sulfur caves region with a spring has to be made first
-    (`/locate biome minecraft:sulfur_caves`).
+- Sulfur springs: ported ("Sulfur springs" above) and judged by one spring, on grass. Not met yet: a
+  spring over water (the waterlogging branch of `placeInWorld`, settings +0x23 = 0), its potent sulfur's
+  `tick_queue_data` ticks (queued by `placeInWorld`, so decoration runs them; sapling queues none), the
+  motion-blocking-only intersection and a non-zero `adjustment_radius` (features_data.py refuses both).
+- Frozen ocean icebergs on Linux: the spring canon's chunks -748..-747,-756 have ours one or two cells higher
+  than BDS's (packed ice against water at the floor, air at the top), as if the `temperature > 0.1` lowering
+  differed (surface/frozen.rs). Its river seagrass shifted into row -755, which the spring region leaves out.
 - Multi-direction lichen spreads and lichen/vein faces (thread-local in BDS): the oracle no longer grades face
   states of either (worldgen-bds-features.md, "Feature residue"). Given a run's thread draws they are exact
   (every canon, 2026-11-04); without them BDS has no one answer to match (worldgen-bds-order.md, "One engine").

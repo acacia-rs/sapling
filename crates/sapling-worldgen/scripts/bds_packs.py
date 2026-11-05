@@ -82,9 +82,10 @@ def documents(bds, kind):
     return found
 
 
-def load_order(bds, kind):
+def load_order(bds, kind, loose=None):
     """`kind` documents in the order BDS loads them: each `vanilla*` pack newest first in brarchive entry order,
-    then `definitions/<kind>` by name."""
+    then `definitions/<kind>` by name, or in the order of the file names `loose` lists (the Linux BDS reads the
+    folder in readdir order)."""
     packs_dir = os.path.join(bds, 'behavior_packs')
     packs = sorted((p for p in os.listdir(packs_dir) if p == 'vanilla' or p.startswith('vanilla_')), key=_version, reverse=True)
     for pack in packs:
@@ -92,10 +93,14 @@ def load_order(bds, kind):
         if os.path.exists(path):
             for _, raw in brarchive(path):
                 yield jsonc(raw)
-    loose = os.path.join(bds, 'definitions', kind)
-    if os.path.isdir(loose):
-        for name in sorted(os.listdir(loose)):
-            yield jsonc(open(os.path.join(loose, name), 'rb').read())
+    folder = os.path.join(bds, 'definitions', kind)
+    if os.path.isdir(folder):
+        names = sorted(os.listdir(folder))
+        if loose is not None:
+            assert sorted(loose) == names, f'{folder} holds other files than the recorded order lists'
+            names = loose
+        for name in names:
+            yield jsonc(open(os.path.join(folder, name), 'rb').read())
 
 
 def biomes(bds):
