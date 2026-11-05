@@ -136,3 +136,30 @@ async fn server_commands_answer_as_bds_answers() {
     server.shutdown().await;
     let _ = std::fs::remove_dir_all(&root);
 }
+
+/// What the log wrote, kept for the test.
+#[derive(Clone, Default)]
+struct Logged(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
+
+impl std::io::Write for Logged {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        self.0.lock().unwrap().extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_server_shutting_down_logs_bds_s_stopping_and_quit_lines() {
+    let logged = Logged::default();
+    let writer = logged.clone();
+    let _logging = tracing::subscriber::set_default(tracing_subscriber::fmt().with_ansi(false).with_writer(move || writer.clone()).finish());
+    let server = common::start(common::builder()).await;
+    server.shutdown().await;
+    let text = String::from_utf8(logged.0.lock().unwrap().clone()).unwrap();
+    let at = |line: &str| text.find(line).unwrap_or_else(|| panic!("no {line:?} in {text}"));
+    assert!(at("Stopping server...") < at("Quit correctly"));
+}
