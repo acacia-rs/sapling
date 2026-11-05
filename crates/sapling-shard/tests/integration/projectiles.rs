@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{LevelSoundEvent, TakeItemEntity};
+use acacia_proto::packets::{LevelSoundEvent, SetEntityMotion, TakeItemEntity};
 use acacia_proto::types::{MetadataDictionaryItemValue, MetadataFlags1};
 use acacia_proto::RawPacket;
 use common::shooting::{ALEX, added, draw, face, healths, held, ready, spawn, throw, watch};
@@ -36,6 +36,23 @@ fn a_half_drawn_bow_costs_a_cow_three_and_spends_an_arrow() {
     // A draw of 10 ticks looses at 1.25: twice its speed, rounded up.
     assert_eq!(healths(&sent), [7.0]);
     assert_eq!(arrows_held(&mut h), Some(1));
+}
+
+/// research/captures/bds-r1shots.txt: AddEntity, `bow`, then the arrow's `disappeared` a block
+/// above where it starts; `reappeared` from its middle two ticks on.
+#[test]
+fn a_loosed_arrow_is_announced_before_the_bow_is_heard_and_disappears_until_its_second_tick() {
+    let mut h = ready(GameMode::Survival, &[BOW, ARROWS], 5.0);
+    let sent = draw(&mut h, 20, 5);
+    let arrow = added(&sent, "minecraft:arrow");
+    let id = arrow[0].unique_id;
+    let at = |name: &str| sent.iter().position(|packet| packet.decode::<LevelSoundEvent>().is_ok_and(|sound| sound.sound_id == name)).unwrap_or_else(|| panic!("{name} heard"));
+    let announced = sent.iter().position(|packet| packet.is::<acacia_proto::packets::AddEntity>()).expect("announced");
+    assert!(announced < at("bow") && at("bow") < at("disappeared") && at("disappeared") < at("reappeared"));
+    let sounds = all::<LevelSoundEvent>(&sent);
+    let gone = sounds.iter().find(|sound| sound.sound_id == "disappeared").unwrap();
+    assert_eq!((gone.entity_type.as_str(), gone.entity_unique_id, gone.position.y), ("minecraft:arrow", id, arrow[0].position.y + 1.0));
+    assert!(sounds.iter().any(|sound| sound.sound_id == "reappeared" && sound.entity_unique_id == id));
 }
 
 #[test]
@@ -154,6 +171,22 @@ fn a_riptide_throws_only_in_the_rain_still_falling() {
     assert!(thrown(draw(&mut h, 10, 2)), "the rain still falling 50 ticks after it cleared");
     watch(&mut h, 60);
     assert!(!thrown(draw(&mut h, 10, 2)), "the rain gone");
+}
+
+/// bds-r1shots.txt: BDS heard `item.trident.riptide_3` and sent the thrower no SetEntityMotion; the
+/// client launches itself.
+#[test]
+fn a_riptide_launch_sends_its_thrower_no_motion() {
+    let mut h = ready(GameMode::Creative, &[], 0.0);
+    let trident = Item { enchantments: vec![(30, 3)], ..Item::new("minecraft:trident", 1) };
+    h.remote.run(move |ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&trident)));
+        ctx.set_weather(Weather::Rain, None);
+    });
+    watch(&mut h, 100);
+    let sent = draw(&mut h, 10, 2);
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "item.trident.riptide_3"), "launched");
+    assert!(all::<SetEntityMotion>(&sent).is_empty());
 }
 
 /// `LightningRodBlock`'s projectile hit (Linux 0xc538e10): in a thunderstorm a Channeling trident on

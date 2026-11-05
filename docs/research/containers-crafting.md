@@ -18,14 +18,18 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
    `a_stored_double_chest_opens_its_54_slots_at_the_lead_from_either_half`.
 3. **Recipe book.** Resolved: sapling keeps and sends each player's book as BDS does (E5); `/recipe`
    reads that book (`ShardCtx::known_recipes`), so its answers know picked-up unlocks and survive a rejoin.
-4. **Barrels do not look open** (no `open_bit` block change), and **no container sounds** at all (A3, C).
+4. Resolved: a barrel shows `open_bit`, and chests, barrels and ender chests are heard opening and
+   shutting as late as BDS (A3, C; `containers/lid.rs`, research/captures/bds-shut.txt).
 5. Resolved: cake, honey block and honey bottle to sugar, the two-output recipes, give their leftovers as
    BDS (E4); test `a_cake_is_made_with_its_three_buckets_given_back`.
 6. Resolved: the inventory screen's `ContainerOpen` entity id is -1 as BDS's (`inventory/equipment.rs` `NO_ENTITY`).
-7. Furnaces, stonecutters, smithing tables, hoppers, shulker and ender chests do not open (D, F, G, C).
-8. Not visible to an honest client: no grid check for `CraftRecipe` (E1), no reach check (A5), a blocked
-   chest still opens (A1). An open lid's `BlockEvent` is sent again every 80 ticks, as BDS's tick does, so
-   a later arrival sees it then (`containers/screens.rs`).
+7. Resolved: furnaces, stonecutters, smithing tables, hoppers, shulker boxes and ender chests open
+   (`containers/screens.rs`, `furnaces`, workstations).
+8. Resolved: `CraftRecipe` is checked against the grid's layout (E1, `inventory/crafting.rs`); a chest held
+   down from above, a shulker box without lid room or a chest a cat sits on stays shut (A1,
+   `containers/access.rs` `is_blocked`); BDS keeps a screen open 64 blocks off, as sapling
+   (A5, research/captures/bds-reach-close.txt). An open lid's `BlockEvent` is sent again every 80 ticks, as
+   BDS's tick does, so a later arrival sees it then (`containers/screens.rs`).
 
 ## A. Chest open and close
 

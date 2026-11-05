@@ -209,6 +209,13 @@ capture contradicted the first version of this section).
   (Air 300 down a tick at a time; the cow bobbing -28.3 to -28.39); but BDS's mob summoned into water sank by the
   water's rule from its first tick (0.02, 0.036, 0.0488), where sapling's took one tick by the air's (0.0784).
   Fixed (`body.rs` `stepped`). BDS also lowered a cow summoned with its head in the stone roof to fit under it.
+  `bds_command_probe uuspawn` (bds-uuspawn.txt, on a stone floor, not in water) shows a push out of single blocks
+  rather than a fit: a cow summoned 0.3 into a roof stayed (the floor under it), a zombie 0.3 into a wall came out
+  to touch it (7.9 → 7.7; a pig 13.8 → 13.55, a zombie 13.9 → 13.7, a cow z -4.3 → -3.55), a zombie summoned at
+  y -26.5 went up to the floor and 0.8 south (z 2.5 → 3.3), leaving it under its 2x2 roof, and a zombie in a
+  one-wide shaft under a roof block went 0.8 south into the shaft's wall (z 1.5 → 2.3), out of the roof block
+  alone. Not ported: which block and direction BDS takes (south won each tie seen) is not pinned; sapling
+  announces a summoned mob where it was summoned.
 
 ## 5. Buoyancy (`minecraft:buoyant`): why xp orbs float
 

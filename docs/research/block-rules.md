@@ -1,5 +1,10 @@
 # sapling block rules vs vanilla (2026-10-05)
 
+Stale verdicts (2026-11-05): the WRONG/MISSING marks below describe sapling as of 2026-10-05 and most are fixed
+since (doors use the turned table, a ladder is refused on a top or bottom face, item-named blocks place through
+`blocks/items.rs`, the support rules live in `blocks/ground.rs`). Read the code before trusting a mark; the
+vanilla rules themselves stand.
+
 Tags: **BDS** = bdsre decompile of `acacia/.testserver/bds/bedrock_server.exe` (label/VA given; `?` labels are ported
 hints, the constants were read from the pseudo-C). **BOX** = collision boxes per state in
 `acacia-server/crates/acacia-world/data/blocks.bin` (property names and values are the registry's own). **REC** =

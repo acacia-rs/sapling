@@ -12,6 +12,7 @@ use sapling_world::ItemStack;
 mod in_way;
 mod pitch;
 mod ray;
+pub(super) mod vanish;
 
 use super::arrows::{Lands, Shot};
 use super::hits::{self, After};
@@ -165,6 +166,7 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
         mobs::remove(world, arrow);
         return None;
     }
+    vanish::reappear(world, arrow, layer, id, now - born, &body);
     let level = &world.get::<Layer>(layer)?.world;
     let wet = super::holds(level, body.at.map(|c| c.floor() as i32), WATER);
     let drag = if wet { shot.wet_drag } else { shot.drag };

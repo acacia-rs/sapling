@@ -300,8 +300,19 @@ frequency 8. A sensor's `power.on`/`power.off` plays after its UpdateBlock, as o
   Left out: the warning level's decay (Java's one each 12000 ticks is kept), sharing levels with players
   within 16 not drilled.
 - Entity listeners (warden 148f8bfd0 owner 2 range 16, allay owner 3), `VibrationListenerSystem` 1484556e0.
-- Amethyst resonance details, client particles (`animateTick` 148b44ff0), save/load tags
-  (`VibrationListener`, `QueuedResponseThreatLevel`; 14487a960/14487ac80, 14487d3f0/14487d530).
+- Amethyst resonance details, client particles (`animateTick` 148b44ff0). bds-uusculk.txt had
+  the amethyst gone before any sensor heard anything (a `/setblock` is no game event), so it shows
+  no resonance; a drill needs a player's event with the amethyst in place.
+- Save tags (14487a960/14487ac80, 14487d3f0/14487d530; the BDS world dumped with
+  `block_entity_dump` after `bds_command_probe uusculk`): ids `SculkSensor`,
+  `CalibratedSculkSensor`, `SculkShrieker`; `BlockEntityVersion` 0 and `VibrationListener`
+  `{selector: {}, event: <type>}`, `event` the last game event heard (22 for a sensor that heard a
+  teleported player, 58 for the shrieker), absent before any. `VibrationListener::save` (1411b3940)
+  also writes `selector.tick` (-2) and `selector.context`, and `ticks`/`pending` for a vibration on
+  its way (x, y, z, `distance`, `vibration`, `projectile`, `source`); the shrieker writes
+  `QueuedResponseThreatLevel` before it when one is queued. Sapling writes the block actor as
+  placed and keeps `event` (`blocks/sculk/saved.rs`); a vibration on its way and the threat level
+  are not kept.
 
 ## Catalyst
 

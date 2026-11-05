@@ -341,10 +341,10 @@ world is plains, too warm for snow.
   seven of twelve grew on both sides, the aged sapling unshown on BDS (now on sapling too).
 - Farmland getting wet, a pumpkin's facing and the ground its fruit takes: the same on both sides
   (bds-p2grow.txt).
-- Copper is not in step with the rule; fire and lit ore sapling times by themselves
-  (`blocks/fire.rs`, `blocks/ores.rs`). Sapling's wild plants were not drilled against BDS's
-  timing; a vine's sideways growth onto the top of a block (Java's last case) has no Bedrock state
-  and is left out.
+- Copper ages on random ticks (`blocks/growth/copper.rs`); a lit ore goes out on a random tick
+  (`blocks/ores.rs`, `growth/rules.rs`), and fire steps on the world's random-tick queue
+  (`blocks/fire.rs`, `random_queue.rs`), all on the pace above. A vine's sideways growth onto the top of
+  a block (Java's last case) has no Bedrock state and is left out.
 - Each crop's own odds are drilled: all four ripen at one pace ("Light" above, `croprates`).
 - Wild plants' timing, compared 2026-11-05 (thirteenth2l; `sapling-plants.txt`, and `l2shroom`:
   twelve dark rooms, a brown mushroom each, 60 s at 200, `bds-l2shroom.txt`, `sapling-l2shroom.txt`):

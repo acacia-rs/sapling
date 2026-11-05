@@ -23,7 +23,28 @@ pub(super) fn locate(generator: &OverworldGenerator, name: &str, x: i32, z: i32)
     }
 }
 
+/// `/place structure` takes only the data-driven kinds: BDS refused `village`, `ancient_city` and
+/// `mineshaft` (research/captures/bds-place.txt, bds-t1dplace.txt) and placed trail ruins and trial chambers.
+// TODO: BDS also places an abandoned camp by its variant's name (`abandoned_camp_forest`).
 pub(super) fn structure(generator: &OverworldGenerator, name: &str, start: ChunkPos, start_y: Option<i32>, load: &ShapeLoader<'_>) -> Result<StructureWrites, PlaceFailure> {
-    let kind = kind(name).ok_or(PlaceFailure::Unknown)?;
+    let kind = kind(name).filter(|kind| matches!(kind, StructureKind::TrailRuins | StructureKind::TrialChambers)).ok_or(PlaceFailure::Unknown)?;
     generator.place_structure_at(kind, (start.x, start.z), start_y, load)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use sapling_worldgen::ChunkShape;
+
+    use super::*;
+
+    #[test]
+    fn place_structure_takes_trail_ruins_and_trial_chambers_but_no_hardcoded_kind() {
+        let generator = OverworldGenerator::new(20261003);
+        let air = |_: i32, _: i32| Arc::new(ChunkShape::empty());
+        let unknown = |name: &str| matches!(structure(&generator, name, ChunkPos::new(0, 0), Some(-20), &air), Err(PlaceFailure::Unknown));
+        assert!(["minecraft:village", "minecraft:ancient_city", "minecraft:mineshaft", "minecraft:no_such_structure"].into_iter().all(unknown));
+        assert!(!unknown("minecraft:trail_ruins") && !unknown("minecraft:trial_chambers"));
+    }
 }

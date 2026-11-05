@@ -53,12 +53,10 @@ pub(super) fn let_go(world: &mut World, player: Entity, stack: &ItemStack, ticks
     let lasts = shots::shooter_lasts(TRIDENT).unwrap_or(u16::MAX);
     let riptide = enchant::level(tag, Enchant::Riptide);
     if riptide > 0 {
+        // The client launches itself: BDS sent no SetEntityMotion, only its own movement's corrections (bds-r1shots.txt).
         if !is_wet(world, player) {
             return;
         }
-        let Some(position) = world.get::<Position>(player).copied() else { return };
-        let push = super::aim::look(&position, 0.0).map(|c| c * enchant::riptide(riptide));
-        crate::vitals::pushed(world, player, push);
         if !creative {
             inventory::wear_hand_by(world, player, 1, lasts);
         }
@@ -71,13 +69,11 @@ pub(super) fn let_go(world: &mut World, player: Entity, stack: &ItemStack, ticks
     let Some(thrown) = super::held(world, player).filter(|held| held.name == TRIDENT) else { return };
     let pickup = if creative { Pickup::Creative } else { Pickup::Anyone };
     let loosed = Loosed { impaling: enchant::level(tag, Enchant::Impaling), loyalty: enchant::level(tag, Enchant::Loyalty), ..Loosed::new(player, pickup, Some(thrown)) };
-    if super::loose(world, player, THROWN, TRIDENT_SPEED, 0.0, 1.0, 0.0, loosed).is_none() {
-        return;
-    }
+    let Some(trident) = super::loose(world, player, THROWN, TRIDENT_SPEED, 0.0, 1.0, 0.0, loosed) else { return };
     if !creative {
         super::set_hand(world, player, None);
     }
-    super::heard_plain(world, player, THROWN.sound);
+    super::heard_shooting(world, player, THROWN.sound, &[trident], false);
 }
 
 /// Tridents with Loyalty that are done come back.

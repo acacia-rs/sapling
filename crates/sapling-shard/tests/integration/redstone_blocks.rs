@@ -122,3 +122,23 @@ fn a_sculk_sensor_hears_a_trapdoor_and_powers_by_its_distance_then_cools_down() 
     ticks(&mut h, 45);
     assert!(properties(&mut h, [6, 65, -2]).contains("sculk_sensor_phase=0"), "active, cooled down and idle again");
 }
+
+/// A BDS world dumped after `bds_command_probe uusculk`: an idle sensor's block actor holds an
+/// empty `selector`; one that heard something keeps the event's type, idle again or not.
+#[test]
+fn a_sculk_sensor_keeps_the_last_event_it_heard_in_its_block_actor_as_bds_saves_it() {
+    let mut h = ready(vec![([2, 65, -2], Block::new("trapdoor")), ([6, 65, -2], Block::new("sculk_sensor")), ([14, 65, 8], Block::new("sculk_sensor"))]);
+    let listener = |h: &mut Harness, pos: [i32; 3]| {
+        let nbt = common::asking::ask(h, move |ctx| ctx.block_entity(pos).and_then(|data| data.get::<acacia_proto::nbt::Value>().cloned())).expect("a block actor");
+        assert!(matches!(nbt.get("id"), Some(acacia_proto::nbt::Value::String(id)) if id.as_str() == "SculkSensor"));
+        assert_eq!(nbt.get("BlockEntityVersion"), Some(&acacia_proto::nbt::Value::Int(0)));
+        nbt.get("VibrationListener").cloned().expect("its listener")
+    };
+    h.receive(1, &click([2, 65, -2], 1, None));
+    ticks(&mut h, 50);
+    let heard = listener(&mut h, [6, 65, -2]);
+    assert_eq!(heard.get("event"), Some(&acacia_proto::nbt::Value::Int(8)), "block_open");
+    assert!(heard.get("selector").is_some());
+    let idle = listener(&mut h, [14, 65, 8]);
+    assert_eq!((idle.get("event"), idle.get("selector")), (None, Some(&acacia_proto::nbt::Value::Compound(Vec::new()))));
+}
