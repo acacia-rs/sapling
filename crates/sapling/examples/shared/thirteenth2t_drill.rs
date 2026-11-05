@@ -2,10 +2,13 @@
 //! (stone at y -27, the actor at 0.5 -26 0.5 facing east). `z2bolt`: where a bolt's vibration starts, and
 //! waxed rods struck. `z2wire`: string put by hand between hooks, alone, beside string and by one hook.
 //! `z2sculk`: wool between a sensor and a block put, wool and carpet put, and a sensor's power into the
-//! block it stands on. `z2hand` (thirteenth2t_hand.rs): blocks with entities put by hand.
+//! block it stands on. `z2hand` (thirteenth2t_hand.rs): blocks with entities put by hand. `z2open`
+//! (thirteenth2t_open.rs): group P's open sub-items.
 
 #[path = "thirteenth2t_hand.rs"]
 mod hand;
+#[path = "thirteenth2t_open.rs"]
+mod open;
 
 use super::creatures::{floor, waits};
 
@@ -17,7 +20,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "z2bolt" => (bolt(), BOLT_SHOWN),
         "z2wire" => (wire(), WIRE_SHOWN),
         "z2sculk" => (sculk(), BOLT_SHOWN),
-        _ => return hand::drill(name),
+        _ => return hand::drill(name).or_else(|| open::drill(name)),
     })
 }
 
