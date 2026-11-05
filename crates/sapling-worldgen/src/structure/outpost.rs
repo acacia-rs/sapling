@@ -22,6 +22,14 @@ const FEATURES: [&str; 7] = [
     "feature_tent2",
 ];
 
+/// The markers' mobs in spawning order: the cage's, the pillagers', the captains', the allays'.
+const MOBS: [(&str, &str); 4] = [
+    ("minecraft:iron_golem", "minecraft:entity_spawned"),
+    ("minecraft:pillager", "minecraft:entity_spawned"),
+    ("minecraft:pillager", "minecraft:spawn_as_illager_captain"),
+    ("minecraft:allay", "minecraft:entity_spawned"),
+];
+
 pub struct Piece {
     template: &'static Template,
     origin: (i32, i32),
@@ -76,8 +84,10 @@ impl Piece {
     }
 
     /// Places the piece at `y` within the canvas's chunk; `seed` is the chunk's structure seed and
-    /// `random` its structure generator, which the template's chests and then the `topChest` marker
-    /// (handler 148359310: the chest below it, re-seeded) draw loot seeds from.
+    /// `random` its structure generator, which the template's chests and then the markers draw from
+    /// (handler 148359310): `topChest` re-seeds the chest below it, a group of allays draws its
+    /// size. The markers' mobs follow (`postProcessMobsAt` 1483599e0): golems, pillagers, captains,
+    /// allays, each at its marker's corner, persistent.
     /// No block is ignored (settings +0x10 is null): air is placed and takes an integrity draw.
     pub fn post_process(&self, canvas: &mut Canvas, y: i32, seed: u32, random: &mut Mt19937) {
         let mut placement = Placement::new(self.rotation, canvas.bb);
@@ -85,12 +95,33 @@ impl Piece {
         placement.seed = seed;
         let origin = (self.origin.0, y, self.origin.1);
         placement.place(canvas, self.template, origin).draw_seeds(canvas, random);
-        for (index, _) in self.template.markers.iter().filter(|(_, m)| m == "topChest") {
+        let mut mobs: [Vec<(i32, i32, i32)>; 4] = Default::default();
+        // File order, not the map's (markers_at): the tower's nine markers rehash it, and only the spawn order would differ.
+        for (index, marker) in &self.template.markers {
             let (dx, dy, dz) = self.rotation.apply(self.template.blocks[*index].pos);
-            let (x, y, z) = (origin.0 + dx, origin.1 + dy - 1, origin.2 + dz);
-            if canvas.bb.contains(x, y + 1, z) && canvas.get(x, y, z).name() == "chest" {
-                canvas.set_entity(x, y, z, BlockEntity::Loot { table: "loot_tables/chests/pillager_outpost.json", seed: random.next_int_unbounded() });
+            let (x, y, z) = (origin.0 + dx, origin.1 + dy, origin.2 + dz);
+            if !canvas.bb.contains(x, y, z) {
+                continue;
             }
+            let list = match marker.as_str() {
+                "cage" => 0,
+                "pillager" => 1,
+                "captain" => 2,
+                "Group of Allays" => 3,
+                "topChest" if canvas.get(x, y - 1, z).name() == "chest" => {
+                    canvas.set_entity(x, y - 1, z, BlockEntity::Loot { table: "loot_tables/chests/pillager_outpost.json", seed: random.next_int_unbounded() });
+                    continue;
+                }
+                _ => continue,
+            };
+            canvas.set(x, y, z, Block::Air);
+            // The cage's golem stands a cell east in a piece turned once (the list's x + 1).
+            let cell = (x + (list == 0 && self.rotation == Rotation::Clockwise90) as i32, y, z);
+            let count = if list == 3 { random.next_int(3) as usize + 1 } else { 1 };
+            mobs[list].extend(std::iter::repeat_n(cell, count));
+        }
+        for (cells, (kind, event)) in mobs.into_iter().zip(MOBS) {
+            cells.into_iter().for_each(|cell| canvas.add_actor(kind, event, cell));
         }
     }
 }

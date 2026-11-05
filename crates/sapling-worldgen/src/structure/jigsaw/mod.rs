@@ -4,6 +4,7 @@
 //! packs' v2 ones in pools_v2.txt, and the assemblers that grow pieces from them.
 //! docs/research/worldgen-bds-jigsaw.md.
 
+mod actors;
 mod assemble;
 mod draw;
 mod element;

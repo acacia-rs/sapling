@@ -81,6 +81,14 @@ fn a_lit_floor_spawns_nothing() {
     assert_eq!(monsters(&mut h), []);
 }
 
+/// Block light 2 passes the pack rules' brightness 0 to 7, not Monster's own check (mob-spawning.md "Own spawn checks").
+#[test]
+fn a_dimly_lit_floor_spawns_no_monster() {
+    let mut h = at_midnight("minecraft:magma");
+    run(&mut h, 400);
+    assert_eq!(monsters(&mut h), []);
+}
+
 #[test]
 fn peaceful_and_do_mob_spawning_off_spawn_nothing() {
     let mut h = at_midnight("minecraft:stone");
@@ -162,8 +170,9 @@ fn a_natural_mob_a_player_names_stays_when_the_player_goes() {
     assert_eq!(left, [named.id]);
 }
 
-/// Stored glowstone at y 63 under the chunks -3 to 2 each way, too bright for natural monsters, but
-/// stone under chunk (0, 0), a piece of `structure` whole (docs/research/structure-spawns.md).
+/// Stored water at y 63 under the chunks -3 to 2 each way, where no land monster stands (glowstone
+/// would light the piece past Monster's block light 0), but stone under chunk (0, 0), a piece of
+/// `structure` whole (docs/research/structure-spawns.md).
 fn stored_piece(structure: &str) -> Arc<MemoryStorage> {
     let registry = BlockRegistry::vanilla();
     let floor = |name| registry.states_of(name).next().unwrap().0;
@@ -171,7 +180,7 @@ fn stored_piece(structure: &str) -> Arc<MemoryStorage> {
     let area = |bounds, whole| SpawnArea { structure: structure.into(), bounds, whole, y_offset: Some(-3) };
     for (cx, cz) in (-3..3).flat_map(|cx| (-3..3).map(move |cz| (cx, cz))) {
         let mut chunk = Chunk::empty(cx, cz, Dimension::overworld(registry.air_id()));
-        let block = floor(if (cx, cz) == (0, 0) { "minecraft:stone" } else { "minecraft:glowstone" });
+        let block = floor(if (cx, cz) == (0, 0) { "minecraft:stone" } else { "minecraft:water" });
         (0..16).for_each(|x| (0..16).for_each(|z| chunk.set(x, 63, z, 0, block)));
         let mut column = StoredColumn::of(chunk);
         if (cx, cz) == (0, 0) {

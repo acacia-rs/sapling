@@ -40,7 +40,21 @@ pub(crate) fn arrive(world: &mut World) {
                 Ok(stored) => stored.into_iter().for_each(|(actor, unique_id, compound)| bring_in(world, layer, home, actor, unique_id, compound)),
                 Err(error) => tracing::warn!(x = home.x, z = home.z, %error, "a column's actors are unreadable; showing none of them"),
             }
+            make_template_actors(world, layer, home);
         }
+    }
+}
+
+/// Makes the mobs generation placed in the column (an outpost's pillagers), persistent as any stored
+/// mob; with `doMobSpawning` off they are dropped, as BDS (bds-t12actors.txt).
+fn make_template_actors(world: &mut World, layer: Entity, home: ChunkPos) {
+    let Some(made) = world.get_mut::<Layer>(layer).map(|mut level| level.world.take_template_actors(home)) else { return };
+    if !crate::rules::on(world, layer, "doMobSpawning") {
+        return;
+    }
+    for actor in made {
+        let event = Some(actor.event).filter(|event| *event != "minecraft:entity_spawned");
+        creatures::spawn_as(world, layer, actor.kind, actor.feet, sapling_api::SpawnReason::Structure, 0.0, event);
     }
 }
 

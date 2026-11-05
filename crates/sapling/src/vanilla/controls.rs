@@ -1,12 +1,9 @@
 //! `/inputpermission`, `/mobevent` and `/daylock` (`/alwaysday`), answered as BDS 1.26.52 does
 //! (research/captures/bds-controls.txt, bds-controls2.txt, bds-screen.txt).
-// TODO: `/mobevent` only keeps its switches: sapling spawns no patrols, wandering traders or
-// dragons of its own for them to stop.
-
-use std::collections::HashMap;
+// TODO: the patrol spawner reads the switches; sapling spawns no wandering traders or dragons of its own for them.
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Input, Overload, ParamKind, Parameter, ParameterSpec, ParseError, RawPart, RawText, Selector};
-use sapling_api::{Command, Output, Permission, RuleValue, Sender, ShardCtx};
+use sapling_api::{ALL_MOB_EVENTS, Command, MOB_EVENTS as EVENTS, MobEvents, Output, Permission, RuleValue, Sender, ShardCtx};
 
 use super::{no_target, players};
 
@@ -96,13 +93,7 @@ impl Command for InputPermission {
     }
 }
 
-/// The events `/mobevent` switches, and the entity each answer names.
-const EVENTS: [(&str, &str); 3] = [("minecraft:pillager_patrols_event", "pillager"), ("minecraft:wandering_trader_event", "wandering_trader"), ("minecraft:ender_dragon_event", "ender_dragon")];
-const ALL_EVENTS: &str = "events_enabled";
-
-/// Which `/mobevent` switches are off; every one starts on.
-#[derive(Default)]
-struct MobEvents(HashMap<&'static str, bool>);
+const ALL_EVENTS: &str = ALL_MOB_EVENTS;
 
 /// `/mobevent <event> [value]`: shows or sets one of the switches.
 pub(crate) struct MobEvent {
@@ -129,10 +120,10 @@ impl CommandSyntax for MobEvent {
 
 impl Command for MobEvent {
     fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, out: &mut Output) {
-        let switches = &mut ctx.state::<MobEvents>().0;
-        let now = self.value.unwrap_or_else(|| *switches.get(self.event).unwrap_or(&true));
+        let switches = ctx.state::<MobEvents>();
+        let now = self.value.unwrap_or_else(|| switches.is_on(self.event));
         if let Some(value) = self.value {
-            switches.insert(self.event, value);
+            switches.set(self.event, value);
         }
         let told = match (self.value.is_some(), now) {
             (false, true) => "IsTrue",

@@ -105,7 +105,7 @@ impl Piece {
             let world = |x: i32, y: i32, z: i32| canvas.get(x, y, z);
             placement.blocks_in(template, self.origin, &world).collect()
         };
-        for ((x, y, z), block, index) in blocks {
+        for &((x, y, z), block, index) in &blocks {
             placement.label(template, index);
             canvas.set(x, y, z, block);
             // A chest's block actor (type 2, trapped ones too; not a barrel's) takes one draw of the chunk's generator
@@ -115,6 +115,7 @@ impl Piece {
                 canvas.set_entity(x, y, z, entity);
             }
         }
+        super::actors::add(canvas, template, &blocks, self.element.name.starts_with("abandoned_"));
         placement.update_pass(canvas, template, self.origin);
         trace::label(|| format!("{} foundation", template.name));
         if post & 1 != 0 {

@@ -74,6 +74,8 @@ pub enum SpawnReason {
     Raid,
     /// Hatched from a block: a turtle egg's turtles, frogspawn's tadpoles, a sniffer egg's sniffer.
     Hatched,
+    /// Placed with the structure that generated its column: an outpost's pillagers.
+    Structure,
 }
 
 /// A mob is about to appear. Cancelled, it does not. Mobs coming back with their column from

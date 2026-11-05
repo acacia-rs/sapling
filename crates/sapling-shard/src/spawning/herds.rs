@@ -161,11 +161,11 @@ fn pick_herd(herds: &[HerdEvents], roll: f32) -> Option<&HerdEvents> {
     herds.get(((roll * herds.len() as f32) as usize).min(herds.len().saturating_sub(1)))
 }
 
-/// A mob of `kind` with its feet `at`, if it fits in `place`, that despawns, as `event` makes it;
-/// whether one came.
+/// A mob of `kind` with its feet `at`, if it fits in `place` and passes its class's own check,
+/// that despawns, as `event` makes it; whether one came.
 pub(super) fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found, at: [f32; 3], event: Option<&str>) -> bool {
     let Some([_, height]) = sapling_data::mob_size(kind) else { return false };
-    if !world.get::<Layer>(layer).is_some_and(|level| spots::has_room(&level.world, place.cell, height)) {
+    if !world.get::<Layer>(layer).is_some_and(|level| spots::has_room(&level.world, place.cell, height)) || !gates::own_check(world, layer, kind, at, place.cell) {
         return false;
     }
     let Some(id) = crate::creatures::spawn_as(world, layer, kind, at, SpawnReason::Natural, 0.0, event) else { return false };

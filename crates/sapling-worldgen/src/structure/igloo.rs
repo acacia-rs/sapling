@@ -53,4 +53,12 @@ pub fn place(canvas: &mut Canvas, random: &mut Mt19937, start: (i32, i32)) {
             canvas.set_entity(x, y, z, BlockEntity::Loot { table: "loot_tables/chests/igloo_chest.json", seed: random.next_int_unbounded() });
         }
     }
+    // 14836f7f0 spawns the villager, then the zombie villager, mid-cell; BDS names v1 kinds, which it shows as their successors.
+    for (marker, kind) in [("Villager", "minecraft:villager_v2"), ("Zombie Villager", "minecraft:zombie_villager_v2")] {
+        for (index, _) in bottom.markers.iter().filter(|(_, m)| m == marker) {
+            let (dx, dy, dz) = rotation.apply(bottom.blocks[*index].pos);
+            let feet = [(at.0 + dx) as f32 + 0.5, (at.1 + dy) as f32, (at.2 + dz) as f32 + 0.5];
+            canvas.add_actor_at(kind, "minecraft:entity_spawned", feet);
+        }
+    }
 }

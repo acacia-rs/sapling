@@ -35,6 +35,8 @@ mod scattered;
 mod shipwreck;
 mod spawn_areas;
 #[cfg(test)]
+mod actor_tests;
+#[cfg(test)]
 mod spawn_area_tests;
 mod stage;
 mod start_cache;

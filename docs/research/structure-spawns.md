@@ -129,9 +129,66 @@ sapling, on the same middles. The fortress pass's whole cells now keep to x 232 
 against BDS's 33 and 29) and keeps fewer (2 and 6 against 8 and 9); sapling's natural zombie pigmen
 come three to a herd where BDS's came alone. Neither is decompiled.
 
+Again after the twelfth wave's group 12 (template actors, the pigman's and Monster's own checks,
+pillagers then still under the block-light test:
+mob-spawning.md "Own spawn checks"; research/captures/sapling-t9spawns-t12{,run2}.txt against the
+BDS pair above). First shown in the Nether box, blazes, wither skeletons and skeletons: BDS 26 and
+18, sapling 22 and 10 (were 7 and 9); kept at the end BDS 7 and 5, sapling 0 and 6. Zombie pigmen:
+BDS 17 and 17, every one alone on its cell; sapling 27 and 8, every one alone (were 27 and 23 in
+herds of 2 and 3). The outpost's testfor: BDS 10 and 12, sapling 15 and 9, the 8 its template
+placed among them, at the cells BDS showed. Left: BDS's skeletons (5 and 11 shown), none in
+sapling's runs [U: the fortress list's weight 2 of 28 gives few; BDS's may be soul sand valley's].
+
 Sapling ports the pass with natural spawning's dice; test
 `witches_appear_in_a_hut_piece_where_nothing_else_does`. The entries' conditions, caps and
 persistence: "The lists and caps" above.
+
+## Template actors
+
+Decompiled [D]: each template piece runs `postProcess` (vtable slot 4), which places the template
+and hands each data marker in the chunk's box to the piece's handler, then `postProcessMobsAt`
+(slot 5), which spawns what the handler filed if it is inside the box. Every mob comes persistent
+(`PersistentComponent`), at the corner of its marker's cell (cvtsi2ss x, y, z) unless said
+otherwise. The marker cell is the template block's own cell (`Rotation::apply`), as the blocks.
+
+| structure | handler / mobs | markers |
+| --- | --- | --- |
+| outpost | 148359310 / 1483599e0 | `cage` iron golem (x + 1 in a piece turned once), `pillager`, `captain` (event `spawn_as_illager_captain`), `Group of Allays` nextInt(3) + 1 allays; each cell set to air; `topChest` seeds the chest below |
+| mansion | 1480b2360 / 1480b2a00 | `Mage` evoker, `Warrior` vindicator (cells left as they are), `Group of Allays` as the outpost's; spawned evokers, vindicators, allays |
+| igloo | 14836fd90 / 14836f7f0 | `Villager`, `Zombie Villager` (v1 actor types, shown as their successors) at the cell's middle, villager first; basement only |
+| end city | 14831aaa0 / 14831a670 | `Sentry` shulker; `Elytra` is an item frame block, not an actor |
+| pool elements | 145e1e2a0 / 141ef28c0 | the metadata `namespace:id[:event]`; abandoned villages' rules (1480bbe90) make `villager_v2:spawn_from_village` a `zombie_villager_v2:from_village` |
+
+Ocean ruins and shipwrecks spawn nothing (slot 5 is a no-op). Java templates' `entities` lists are
+read but never placed (141eedcf0 parses them, `placeInWorld` 141eeb8d0 skips them): the plains
+villager templates and camp cushions show nothing. A bastion's .mcstructure elements place their
+saved entities in a second pass (145e1c910, `StructureTemplate::placeInWorld` 141f52300 with
+blocks ignored), full NBT through `ActorFactory` 141ce8200, no event and no added persistence.
+
+Drilled [L] (`t12actors`, `t12actors2`, twelfth12_drill.rs, seed 20261003 default world;
+research/captures/bds-t12actors{,2}.txt; the BDS world dumped with `actor_dump --all`): with
+`doMobSpawning` off BDS placed none of them; with it on, by the outpost at (1896, -1112) the 7
+pillagers and the captain on the tower and the cage's golem; in the village at (1752, -1016) 6
+villagers, 3 cats and a golem; in the mansion at (-8184, 15944) 3 evokers and 9 vindicators in
+view; in the bastion at (-328, 248) 22 piglins, 13 brutes and 14 hoglins. All Persistent 1,
+NaturalSpawn 0 (the evokers too, though 1480b2a00 drops its add result).
+
+Sapling: sapling-worldgen files them as `TemplateActor`s on the chunk (`ChunkShape::actors`,
+`Canvas::add_actor`); the column carries them until the shard makes them on arrival
+(actors.rs `make_template_actors`, `SpawnReason::Structure`, no spawn sound), after which they are
+kept as any mob and never made again. With `doMobSpawning` off they are dropped. Tests
+`outpost_tower_places_its_pillagers_where_bds_did`,
+`village_markers_place_villagers_cats_and_a_golem_where_bds_did`,
+`mansion_markers_place_its_illagers_where_bds_did` (structure/actor_tests.rs: every BDS cell
+matched), `a_template_mob_comes_once_with_its_column_and_stays_with_it`. Live, sapling's
+`t12actors2` (research/captures/sapling-t12actors2.txt, the drill since waiting on a barrier pad
+and standing longer, as sapling generates slower) showed the outpost's 8 and its golem, the
+village's 6 villagers, 3 cats and golem, each at BDS's first-sight cell, and the mansion's 2
+evokers and 6 vindicators it had loaded, at BDS's cells too. Left: the bastion's
+entities (they need the templates' entity NBT in templates.bin and the transform of 141ce8200
+fitted against the dump); five mansion mobs sapling places in chunk x -511 that BDS showed none of
+[U]; the igloo and end city (none located on the seed) are undrilled; an abandoned village's golem
+rule was not decoded (sapling drops the golem) [U].
 
 ## Patrols
 
@@ -147,25 +204,57 @@ goes into the conditions; `canSpawnInConditions` refuses unless the world's age 
 20) is past it, and below the world age minimum (seconds). Once the herd's spot passed: with a delay
 and a chance under 100, `nextInt(100) > chance` refuses and restarts the wait (so 21 in 100 pass);
 anything spawned restarts it too (141d3f5e0: now + least + `nextInt(most - least)`, only for an
-existing record). The village filter (lambda 14391c620) asks, for each player within `distance` of
-the spot, the village manager near the player with the tolerance; one found refuses. The record's
-first value is not known [U]: sapling starts a wait the first time a rule asks.
+existing record). The record's first value [D]: the `ActorSpawnRuleGroup` constructor (141d3b7f0)
+files each delay id with its least delay (rule +0xa0) as the end, an absolute world age in seconds,
+so the first wait ends at 600 s, which the 6000 s age gate already covers. No save path was found
+(no key, no loader filling the map): every load starts the waits again [U for an unlabelled one].
+
+The village filter (lambda 14391c620) [D]: for each player whose distance to the spot is within
+`distance`, `VillageManager` slot 1 (142a3c120) asks each village's bounds (Village +0x1a0 to
++0x1b4) grown by the tolerance (32) on all six sides, y too; one holding the player refuses. A
+village's bounds are its first claimed point's box, ±32 across and ±12 up (142a28650), widened by
+the recompute (142a22280) to take in each later claimed point (the point alone).
+
+`mobevents` [D]: 14085b130 writes the leveldb key `mobevents`, a compound of bytes
+`minecraft:pillager_patrols_event`, `minecraft:wandering_trader_event`,
+`minecraft:ender_dragon_event` and `events_enabled` (names from 140859ed0); defaults not read.
 
 Sapling: spawn-rules.py writes `event=`, `age=`, `delay=least~most:chance:id`, `village=` fields
 (`sapling_data::Gates`, spawn_rules/gates.rs; `kind<event>` permutes split by `kind_and_event`);
 sapling-shard spawning/delays.rs asks them in the cluster; the world's age is `Level::age`
 (level.dat `currentTick`, advanced every tick). The herd's first member gets
-`promote_to_patrol_captain`, the rest `spawn_as_patrol_follower`. Left: every `/mobevent` is taken
-as on (the switches live in the sapling crate); waits are not saved; a village is sapling's bell or
-bed within 48 of the player (raids/village.rs), without BDS's bounds and tolerance. Tests
-`a_patrols_gates_read`, `a_patrol_waits_for_the_worlds_age_then_its_delay_and_its_chance`.
+`promote_to_patrol_captain`, the rest `spawn_as_patrol_follower`. The `/mobevent` switches are
+`sapling_api::MobEvents` in plugin state, which the cluster reads (an event runs while it and
+`events_enabled` are on); the first wait ends at age 600 s and waits are not saved, as BDS; the
+village filter is raids/village.rs `within_bounds`: the bells and beds within 48 of a held
+village's middle, their box grown by ±32 / ±12 / ±32 and the tolerance [U: BDS's claimed points,
+the first one's box]. Left: the switches are not saved under `mobevents`. Tests
+`a_patrols_gates_read`, `a_patrol_waits_for_the_worlds_age_then_its_delay_and_its_chance`,
+`a_mob_event_switched_off_spawns_nothing`.
 
 Movement (pillager `patrol_captain` / `patrol_follower` groups) [P]: the captain
 `move_to_random_block` (block_distance 512, within_radius 8, speed 0.55), its `hold_ground`
 (prio 5, min_radius 10) acting on a target only; a follower `follow_target_captain`
-(follow_distance 5, within_radius 64, speed 0.8). Sapling: creatures/raids/patrols.rs, the
-captain's block a uniform square of ±512 (MoveToRandomBlockGoal not decompiled [U]); test
-`a_patrol_captain_wanders_and_its_followers_keep_up`. Patrol groups are not saved.
+(follow_distance 5, within_radius 64, speed 0.8).
+
+`MoveToRandomBlockGoal` [D] (vtable 14a9301b0, built 148881870; speed +0x58, within_radius² +0x5c,
+block_distance +0x60): canUse (148838db0) asks RandomPos (14597a590, 14597ab80) for ten tries of x
+and z `nextInt(2r + 1) - r`, y `nextInt(17) - 8`, the best walk value winning, a uniform square of
+±512; the target's y becomes its column's height, and a target whose block above or itself fails
+a block check is dropped. Its tick (1488393e0) waits while a path runs and ends within the radius;
+farther than an attribute's value (0x14cd00528 +0x7c, taken as follow range 64, compared squared
+[U]) it heads for its position plus the unit direction times half that value, in whole blocks; a
+move of under a block twice running steps 10 along the main axis, `nextInt(2)` turning it; after 4
+stalls it rests 400 ticks. Navigation walks each leg, hence the compass and diagonal lines.
+`TargetCaptainID` is kept (`Mob::readAdditionalSaveData` 1429b4e60); the follow goal's leader is
+an `is_illager_captain` (lambda 140e292a0).
+
+Sapling: creatures/raids/patrols.rs, the block a uniform square of ±512, 32-block legs ending on a
+whole cell, each walked cornerwise until level on one axis, then straight; the group kept in the
+stored `definitions` (`+patrol_captain`, `+patrol_follower`). A follower takes the nearest captain
+within 64 each tick, not a kept id. Left: the stall sidestep and rest; the target's height and
+block checks. Tests `a_patrol_captain_wanders_and_its_followers_keep_up`,
+`a_kept_patrol_captain_walks_on_and_keeps_its_group`, `a_captain_walks_a_leg_cornerwise_then_straight`.
 
 Drilled [L] (`t9patrol`, `t9patrol2`, `t9patrol3` on the flat world, sapling
 `SAPLING_DRILL_WORLD=open`; research/captures/{bds,sapling}-t9patrol*.txt): a summoned captain and two

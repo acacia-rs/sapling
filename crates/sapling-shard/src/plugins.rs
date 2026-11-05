@@ -14,6 +14,11 @@ use crate::handlers::Ctx;
 #[derive(Resource, Default)]
 pub(crate) struct PluginState(pub HashMap<TypeId, State>);
 
+/// The state of type `T` a command or plugin keeps, if any was made yet.
+pub(crate) fn state<T: 'static>(world: &World) -> Option<&T> {
+    world.get_resource::<PluginState>()?.0.get(&TypeId::of::<T>())?.downcast_ref()
+}
+
 /// The shard's listeners and tasks, taken out while they run: what a listener's own doing raises
 /// is not offered to them again, so a listener cannot set itself off. Locked because a resource
 /// must be `Sync` and a listener is only `Send`.

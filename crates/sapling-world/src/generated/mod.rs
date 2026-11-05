@@ -114,7 +114,8 @@ impl<S: WorldStorage> Generated<S> {
         let block_entities = generated_block_entities(pos.x, pos.z, &shape);
         let areas: Vec<sapling_leveldb::SpawnArea> = shape.spawn_areas().iter().map(|a| sapling_leveldb::SpawnArea { structure: a.structure.into(), bounds: a.bounds, whole: a.whole, y_offset: Some(a.y_offset) }).collect();
         let spawn_areas = sapling_leveldb::encode_spawn_areas(&areas);
-        StoredColumn { pending_ticks, block_entities, spawn_areas, ..StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim)) }
+        let template_actors = shape.actors().to_vec();
+        StoredColumn { pending_ticks, block_entities, spawn_areas, template_actors, ..StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim)) }
     }
 }
 

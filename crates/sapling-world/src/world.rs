@@ -122,6 +122,11 @@ impl World {
         self.column_mut(pos).map(|column| column.set_actors(actors)).is_some()
     }
 
+    /// The mobs generation placed in a loaded column, handed out once (`StoredColumn::template_actors`).
+    pub fn take_template_actors(&mut self, pos: ChunkPos) -> Vec<sapling_worldgen::TemplateActor> {
+        self.column_mut(pos).map(Column::take_template_actors).unwrap_or_default()
+    }
+
     /// The loaded columns that hold actors.
     pub fn columns_with_actors(&self) -> Vec<ChunkPos> {
         self.columns.iter().filter(|(_, column)| !column.actors().is_empty()).map(|(pos, _)| *pos).collect()

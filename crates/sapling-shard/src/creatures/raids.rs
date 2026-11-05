@@ -15,9 +15,9 @@ mod raiders;
 mod village;
 mod waves;
 
-pub(super) use patrols::enlist as join_patrol;
+pub(super) use patrols::{adopt as adopt_patrol, enlist as join_patrol, keep as keep_patrols};
 pub(super) use kept::{village as village_uuid, village_middle};
-pub(crate) use village::centre as village_centre;
+pub(crate) use village::{centre as village_centre, within_bounds as within_village_bounds};
 
 /// Before a raider's or a patrolling pillager's move, when it hunts nobody: false for a mob in neither.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
