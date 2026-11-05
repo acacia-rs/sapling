@@ -55,7 +55,7 @@ least, +0xba most; +0xbc/+0xbd/+0xbe == 2 surface/underground/water spawner; +0x
 +0xc4; +0xc6/+0xc8 brightness and +0xca weather adjust if +0xcc). It sets `mPersistence` (+0x184) 0
 for every entry: no structure mob is persistent, as sapling's `Natural`.
 
-| structure | entry (weight, herd) | spawner | own caps | brightness |
+| structure | entry (rules weight, unread by the pass; herd) | spawner | own caps | brightness |
 | --- | --- | --- | --- | --- |
 | fortress | zombie_pigman 5, magma_cube 3, blaze 10, skeleton 2, wither_skeleton 8 (2-3) | underground | - | - |
 | monument | guardian 1 (2-4) | water, underground | 0 / 40 | - |
@@ -80,7 +80,7 @@ each member wants its category at most its cap on that side. The category is the
 file's `population_control` (141d3f2d0): pillagers count as `pillager`, caps 8 / 8, not `monster`.
 Mobs count by the surface flag they spawned with (`_updateBaseTypeCount` 1415ee820, actor vt+0x180),
 not where they stand (sapling `herds::Surfaced`). Sapling: `spawning/structures/lists.rs`, tests
-`fortress_entries_go_by_their_weights`, `witches_want_the_dark_and_pillagers_only_the_shade`,
+`fortress_entries_are_picked_alike`, `witches_want_the_dark_and_pillagers_only_the_shade`,
 `an_outpost_keeps_to_its_pillager_caps`.
 
 Drilled [L] (`t3spawns`, twelfth3_drill.rs, research/captures/bds-t3spawns.txt; BDS on a default seed 20261003
@@ -140,7 +140,12 @@ placed among them, at the cells BDS showed. Left: BDS's skeletons (5 and 11 show
 sapling's runs [U]. Rechecked 2026-11-05: 141f82140 registers the skeleton (0x110b22) at weight 2,
 herd 0x30002 (2 to 3), and the wither skeleton (0x110b30) at 8, as `lists.rs`; BDS's skeletons stood
 on whole cells, so the structure pass made them (16 against 12 wither skeletons over the two runs),
-which weight 2 of 28 does not explain.
+which weight 2 of 28 does not explain. Settled [D] (thirteenth3j): the list item's own weight
+(+0 of each 0xd8 entry, rbp+0x520 to +0x880 in 141f82140) is 1 for all five, and the pass's pick
+(1415eebf0: `nextInt(total)`, then the +0s walked) reads only that; the 5, 3, 10, 2, 8 sit in the
+unpacked rules (+8) and go unread. So each kind is one in five; BDS's structure-pass kinds over both
+runs (whole cells): blaze 16, zombie pigman 9, magma cube 9, skeleton 16, wither skeleton 12.
+Sapling's `pick` is now even.
 
 Sapling ports the pass with natural spawning's dice; test
 `witches_appear_in_a_hut_piece_where_nothing_else_does`. The entries' conditions, caps and

@@ -1,5 +1,5 @@
 //! The structures' own spawn lists, as `StructureFeature` registers them (141f82140; each entry a
-//! weight, an actor type and a packed `MobSpawnRules` that 143906b20 unpacks). See
+//! list weight of 1, an actor type and a packed `MobSpawnRules` that 143906b20 unpacks). See
 //! docs/research/structure-spawns.md "The lists".
 
 use sapling_data::Medium;
@@ -8,7 +8,6 @@ use sapling_data::Medium;
 pub(super) struct Entry {
     pub kind: &'static str,
     pub event: Option<&'static str>,
-    pub weight: u32,
     pub herd: (u32, u32),
     /// The `population_control` of the kind's spawn rule file: the category its caps count in.
     pub category: &'static str,
@@ -31,22 +30,22 @@ pub(super) enum Checks {
     Dark,
 }
 
-const fn entry(kind: &'static str, weight: u32, least: u32, most: u32, surface: bool, checks: Checks) -> Entry {
-    Entry { kind, event: None, weight, herd: (least, most), category: "monster", surface, medium: Medium::Air, own_caps: None, checks }
+const fn entry(kind: &'static str, least: u32, most: u32, surface: bool, checks: Checks) -> Entry {
+    Entry { kind, event: None, herd: (least, most), category: "monster", surface, medium: Medium::Air, own_caps: None, checks }
 }
 
 const FORTRESS: &[Entry] = &[
-    entry("minecraft:zombie_pigman", 5, 2, 3, false, Checks::None),
-    entry("minecraft:magma_cube", 3, 2, 3, false, Checks::None),
-    entry("minecraft:blaze", 10, 2, 3, false, Checks::Walks),
-    entry("minecraft:skeleton", 2, 2, 3, false, Checks::Dark),
-    entry("minecraft:wither_skeleton", 8, 2, 3, false, Checks::Dark),
+    entry("minecraft:zombie_pigman", 2, 3, false, Checks::None),
+    entry("minecraft:magma_cube", 2, 3, false, Checks::None),
+    entry("minecraft:blaze", 2, 3, false, Checks::Walks),
+    entry("minecraft:skeleton", 2, 3, false, Checks::Dark),
+    entry("minecraft:wither_skeleton", 2, 3, false, Checks::Dark),
 ];
-const MONUMENT: &[Entry] = &[Entry { medium: Medium::Water, own_caps: Some([0, 40]), ..entry("minecraft:guardian", 1, 2, 4, false, Checks::None) }];
-const SWAMP_HUT: &[Entry] = &[entry("minecraft:witch", 1, 1, 1, true, Checks::Dark)];
+const MONUMENT: &[Entry] = &[Entry { medium: Medium::Water, own_caps: Some([0, 40]), ..entry("minecraft:guardian", 2, 4, false, Checks::None) }];
+const SWAMP_HUT: &[Entry] = &[entry("minecraft:witch", 1, 1, true, Checks::Dark)];
 const OUTPOST: &[Entry] = &[
-    Entry { category: "pillager", own_caps: Some([7, 7]), ..entry("minecraft:pillager", 1, 1, 2, true, Checks::Walks) },
-    Entry { event: Some("minecraft:spawn_as_illager_captain"), category: "pillager", own_caps: Some([1, 1]), ..entry("minecraft:pillager", 1, 1, 1, true, Checks::Walks) },
+    Entry { category: "pillager", own_caps: Some([7, 7]), ..entry("minecraft:pillager", 1, 2, true, Checks::Walks) },
+    Entry { event: Some("minecraft:spawn_as_illager_captain"), category: "pillager", own_caps: Some([1, 1]), ..entry("minecraft:pillager", 1, 1, true, Checks::Walks) },
 ];
 
 pub(super) fn list(structure: &str) -> Option<&'static [Entry]> {
@@ -64,17 +63,10 @@ pub(in crate::spawning) fn category(kind: &str) -> Option<&'static str> {
     [FORTRESS, MONUMENT, SWAMP_HUT, OUTPOST].iter().flat_map(|list| list.iter()).find(|entry| entry.kind == kind).map(|entry| entry.category)
 }
 
-/// An entry of `entries` by their weights, by `roll` from 0 to 1 (BDS's `nextInt(total)`).
+/// An entry of `entries` by `roll` from 0 to 1, all alike: the pass's pick weights each list item 1
+/// (1415eebf0); the registered weights live in the unpacked rules, which it does not ask.
 pub(super) fn pick(entries: &'static [Entry], roll: f32) -> &'static Entry {
-    let total: u32 = entries.iter().map(|entry| entry.weight).sum();
-    let mut left = ((roll * total as f32) as u32).min(total.saturating_sub(1));
-    for entry in entries {
-        if left < entry.weight {
-            return entry;
-        }
-        left -= entry.weight;
-    }
-    &entries[0]
+    &entries[((roll * entries.len() as f32) as usize).min(entries.len() - 1)]
 }
 
 impl Checks {
@@ -95,8 +87,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fortress_entries_go_by_their_weights() {
-        let picked: Vec<&str> = [0.0, 0.17, 0.2, 0.28, 0.3, 0.63, 0.7, 0.72, 0.99].map(|roll| pick(FORTRESS, roll).kind).to_vec();
+    fn fortress_entries_are_picked_alike() {
+        let picked: Vec<&str> = [0.0, 0.19, 0.2, 0.39, 0.4, 0.59, 0.6, 0.8, 0.99].map(|roll| pick(FORTRESS, roll).kind).to_vec();
         let kinds = ["zombie_pigman", "zombie_pigman", "magma_cube", "magma_cube", "blaze", "blaze", "skeleton", "wither_skeleton", "wither_skeleton"];
         assert_eq!(picked, kinds.map(|kind| format!("minecraft:{kind}")));
     }
