@@ -21,7 +21,9 @@ mod fxhash;
 pub mod mth;
 pub mod nether;
 pub mod noise;
+pub mod platform;
 pub mod random;
+pub mod sculk;
 pub mod shaper;
 pub mod structure;
 mod structure_queries;
@@ -41,12 +43,6 @@ pub use nether::NetherGenerator;
 pub use feature::grow::{is_feature, place_feature};
 pub use feature::flowers::meal_flower;
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
-
-/// BDS's `SculkSpreader` for a live world: a sculk catalyst's cursors (docs/research/sculk.md, "Catalyst").
-pub mod sculk {
-    pub use crate::feature::sculk::{Cursor, SculkWorld, Sound, Spreader, add_cursors, update_cursors};
-    pub use crate::feature::spreader::Cells;
-}
 #[doc(hidden)]
 pub use structured::StructureWrites;
 pub use structured::replay::{ReplayWrite, StructureStep};

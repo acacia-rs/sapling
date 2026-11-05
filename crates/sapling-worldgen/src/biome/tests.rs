@@ -8,7 +8,8 @@ use super::ids::bedrock_id;
 fn entries_are_the_java_leaves() {
     let mut ours: Vec<(u32, [[i64; 2]; 6])> = overworld_entries()
         .iter()
-        .map(|e| (e.biome, std::array::from_fn(|i| [e.space[i].0, e.space[i].1])))
+        // Java has plains where Bedrock's MIDDLE_VARIANT[1][0] is the dappled forest (195).
+        .map(|e| (if e.biome == 195 { 1 } else { e.biome }, std::array::from_fn(|i| [e.space[i].0, e.space[i].1])))
         .collect();
     // cubiomes quantizes in f32 (-0.45 to -4500), BDS through f64 (-4499): compare to the nearest 5.
     let snap = |v: i64| -> i64 { (v as f64 / 5.0).round() as i64 * 5 };

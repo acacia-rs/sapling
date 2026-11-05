@@ -65,7 +65,7 @@ region (100 rings), each ring's boundary x-major; the first start found wins, no
 3772 locates for seed 20261003 (grid every 1024/2048 blocks over +-8192, and 1.6M out). `examples/locate_check`:
 every legacy answer is one of our starts (2712/2712 + 314 mineshafts + 106 strongholds); our ported search gives
 BDS's answer in 2706/2712; the six misses are villages on plains near rivers that BDS rejects and our point
-biomes accept (cause: a dappled forest sample sapling does not generate, "Plains villages near rivers" below). v2: answers are the start piece position, a
+biomes accept (cause: a dappled forest sample sapling did not generate; fixed in thirteenth2aa, "Plains villages near rivers" below). v2: answers are the start piece position, a
 chunk off; trial chambers 310/314 near a start of ours (296/314 searches agree), trail ruins 271/314 (212/314):
 their biome test needs the jigsaw start piece. Unit tests: `structure::tests`.
 
@@ -265,6 +265,8 @@ where ours is plains; the first sample of the other three misses ((-270, -390), 
 too.
 The biome comes from `MIDDLE_VARIANT[1][0]` (worldgen-bds-surface.md), which sapling resolves to nothing; the
 village rejection follows from porting the biome (surface, feature rules, abandoned camps), not from /locate.
+With the dappled forest ported (thirteenth2aa) the same 289-locate grid on a fresh BDS gives 289 of 289 starts
+ours and 289 of 289 locates the same (`examples/locate_check 20261003 <idx> <log> village`).
 
 ## Structure post-process order (2026-10-09, live)
 `structurePostProcessChunk` takes the same `PostprocessingManager::tryLock` on its 3x3 as decoration does

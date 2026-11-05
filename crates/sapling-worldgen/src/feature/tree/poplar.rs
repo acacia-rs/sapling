@@ -1,6 +1,5 @@
 //! `poplar_trunk` (`placeTrunk` 1438f4e80) and `poplar_canopy` (`placeCanopy` 1438f43a0, layer
-//! 1438f4c10), read off the decompile: no oracle world grows a poplar, so the port is draw for
-//! draw by construction and unverified (docs/research/worldgen-bds-trees.md, "Poplars").
+//! 1438f4c10), read off the decompile; judged by the dappled canon (docs/research/worldgen-bds-trees.md, "Poplars").
 
 use super::common::allows;
 use super::spec::{PoplarCanopy, PoplarTrunk, Tree};

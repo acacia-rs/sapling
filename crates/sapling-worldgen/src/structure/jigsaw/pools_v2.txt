@@ -693,7 +693,7 @@ b trial_chambers trial_chambers/spawner/contents/small_melee=trial_chambers/spaw
 s abandoned_camp abandoned_camp_bamboo_jungle 1 abandoned_camp/tent/bamboo_jungle 3 116 10 48
 s abandoned_camp abandoned_camp_birch_forest 1 abandoned_camp/tent/birch_forest 3 116 10 27,155
 s abandoned_camp abandoned_camp_cherry_grove 1 abandoned_camp/tent/cherry_grove 3 116 10 192
-s abandoned_camp abandoned_camp_dappled_forest 1 abandoned_camp/tent/dappled_forest 3 116 10 -
+s abandoned_camp abandoned_camp_dappled_forest 1 abandoned_camp/tent/dappled_forest 3 116 10 195
 s abandoned_camp abandoned_camp_flower_forest 1 abandoned_camp/tent/flower_forest 3 116 10 132
 s abandoned_camp abandoned_camp_forest 1 abandoned_camp/tent/forest 3 116 10 4
 s abandoned_camp abandoned_camp_meadow 1 abandoned_camp/tent/meadow 3 116 10 186

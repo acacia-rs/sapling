@@ -20,7 +20,15 @@ fn passable(view: &View, [x, y, z]: [i32; 3]) -> bool {
         || block.is_snow_layer()
         || matches!(
             block,
-            Block::ShortGrass | Block::TallGrass | Block::TallGrassTop | Block::Fern | Block::LargeFern | Block::LargeFernTop | Block::Deadbush | Block::SnowLayer
+            Block::ShortGrass
+                | Block::TallGrass
+                | Block::TallGrassTop
+                | Block::Fern
+                | Block::LargeFern
+                | Block::LargeFernTop
+                | Block::Deadbush
+                | Block::SnowLayer
+                | Block::RedShrub
         )
         || (Block::LeafLitter0South..=Block::LeafLitter3East).contains(&block)
 }

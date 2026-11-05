@@ -79,6 +79,10 @@ its area and adds it again; a retried tile generates its chunks twice and is no 
 The structure stage replays from the same kind of run (`scripts/data/dbg_struct.json`,
 `SAPLING_ORACLE_STRUCTURE_ORDER`): `tools/replay-world.sh` sends the run to testbox and
 `tools/replay-oracle.sh` measures a region against it.
+On the Linux BDS the same patches apply to `bedrock_server` (`bds_still.py`, `bds_seed0.py` read ELF or PE) and
+`bds_dbg_run.sh` runs it under gdb (`WORLDGEN_EXE` names the patched copy) with `scripts/data/dbg_canon_linux.json`,
+which logs both orders at once. Such a canon carries `env.txt` with `SAPLING_ORACLE_LINUX=1`: see
+docs/research/worldgen-bds-linux-canons.md.
 
 Rebuild one with the `run.sh` line above and the seed and regions from this table. The `sapling-worldgen` oracle
 test and examples read them from `$SAPLING_ORACLE_WORLDS` (default: `worlds/oracle` of the checkout), so a worktree

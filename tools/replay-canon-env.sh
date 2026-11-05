@@ -8,5 +8,6 @@ IFS='|' read -r canon _ _ _ _ dir _ <<<"$line"
 at="\$HOME/oracle-canon/${dir:-$canon}"
 structure="\$(test -f $at/structure-order.txt && echo SAPLING_ORACLE_STRUCTURE_ORDER=$at/structure-order.txt)"
 [ -n "${NO_STRUCTURE:-}" ] && structure=""
-# <dir>/env.txt: further variables of that run (SAPLING_ORACLE_DEAD_CORAL=<CoralColor>: BDS draws it from the clock).
+# <dir>/env.txt: further variables of that run (SAPLING_ORACLE_DEAD_CORAL=<CoralColor>: BDS draws it from the clock;
+# SAPLING_ORACLE_LINUX=1: made on the Linux BDS).
 echo "SAPLING_ORACLE_WORLDS=$at SAPLING_ORACLE_ORDER=$at/order.txt SAPLING_ORACLE_THREAD_SEED=0 $structure \$(cat $at/env.txt 2>/dev/null)"

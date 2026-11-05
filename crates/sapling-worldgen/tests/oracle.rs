@@ -224,6 +224,13 @@ fn blocks_match_bds_trees() {
     compare(20261003, "20261003-trees", &regions);
 }
 
+/// Regions whose only oracle is a one-worker Linux canon (tools/replay-canons.txt), picked by BDS's `/locate biome`.
+#[test]
+#[ignore = "needs worlds/oracle; slow"]
+fn blocks_match_bds_canons() {
+    compare(20261003, "20261003-canons", &[Region::new("dappled forest", -262, -390, -259, -387)]);
+}
+
 /// Regions around one start of each kind (`/locate` answers from near the origin).
 #[test]
 #[ignore = "needs worlds/oracle; slow"]

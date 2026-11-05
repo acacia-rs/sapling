@@ -70,8 +70,8 @@ foundation (see the overworld builder), which is why copper filler vanishes unde
   valleys inline), Bedrock ids in u16 tables on the stack, version-gated: 1.21.60+ plateau table (pale garden in
   `PLATEAU[2][4]`), swamp/mangrove split in valleys; `MIDDLE_VARIANT[1][0]` = 195 (dappled forest) is generated
   with no experiment on (live Linux BDS 1.26.52.3, 2026-11-05: `/locate biome minecraft:dappled_forest` answers;
-  biome and feature rules are in the vanilla_1.26.50 pack's brarchives); sapling still resolves it to nothing,
-  see worldgen-bds-structures.md "Plains villages near rivers". Underground: dripstone, lush, sulfur caves (c [-0.19, 0.55], e [0.45, 1.0],
+  biome and feature rules are in the vanilla_1.26.50 pack's brarchives); sapling generates it since
+  thirteenth2aa (surface: grass with a coarse dirt noise band; judged by the `dappled` canon). Underground: dripstone, lush, sulfur caves (c [-0.19, 0.55], e [0.45, 1.0],
   d [0.2, 0.9], w [-1.1, -0.85]), deep dark. 7594 entries = cubiomes btree262's leaves.
 - Ranges quantize through f64 (`Climate::quantizeCoord` 14805fad0): -0.45f is -4499, Java -4500.
 - Build (148060510): Java's, but sorts with MSVC `std::sort` (148089fd0: introsort, insertion <= 32, ninther

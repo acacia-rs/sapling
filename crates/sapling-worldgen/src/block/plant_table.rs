@@ -18,6 +18,7 @@ with_end_blocks! {
     Peony => "peony" "upper_block_bit=0",
     PeonyTop => "peony" "upper_block_bit=1",
     Bush => "bush" "",
+    RedShrub => "red_shrub" "",
     FireflyBush => "firefly_bush" "",
     ShortDryGrass => "short_dry_grass" "",
     TallDryGrass => "tall_dry_grass" "",
