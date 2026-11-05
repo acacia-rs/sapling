@@ -47,6 +47,8 @@ pub(crate) struct Body {
     jostled: [f32; 2],
     /// Whether its motion is told as it moves, not after the next tick's drag (a frog's leap).
     flung: bool,
+    /// Whether it has had a tick: in its first a mob goes by the liquid it is in (bds-r1water.txt).
+    stepped: bool,
 }
 
 /// A box in world coordinates: its lowest and highest corners.
@@ -54,7 +56,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false }
     }
 
     /// Has a mob crowding this one push it by `by` across in its next tick, after the drag.
@@ -142,7 +144,7 @@ impl Body {
         physics_view(level, |view| overlapped(view, &self.aabb())).is_empty()
     }
 
-    /// One tick: gravity, the move, then drag; on the ground, friction and the bounce. In water or
+    /// One tick: gravity, the move, then drag; on the ground, friction and no fall left. In water or
     /// lava, by the body's [`InLiquid`] rule, judged where the tick starts; a mob by
     /// [`Body::mob_step`]. `random` is drawn on for an orb's waves and its throw out of lava. The
     /// motion it moved by.
@@ -159,9 +161,10 @@ impl Body {
     fn own_step(&mut self, level: &Level, physics: &Physics, random: &mut impl FnMut() -> f32) -> [f32; 3] {
         let found = liquid::acting(level, self, physics.liquid);
         let before = std::mem::replace(&mut self.liquid, found);
+        let first = !std::mem::replace(&mut self.stepped, true);
         match (physics.liquid, found) {
             // A mob goes by what was found a tick before (research/captures/bds-water.txt, the armour stand).
-            (InLiquid::Sinks | InLiquid::Swims, _) => return self.mob_step(level, physics, before),
+            (InLiquid::Sinks | InLiquid::Swims, _) => return self.mob_step(level, physics, if first { found } else { before }),
             (InLiquid::Floats, Some(liquid)) => liquid::lift(self, liquid),
             (InLiquid::Buoyant, Some(Liquid::Water)) => {
                 liquid::buoy(level, self, random);
@@ -179,7 +182,7 @@ impl Body {
         }
         self.motion[1] *= physics.fall_drag;
         if landed {
-            self.motion[1] *= physics.bounce;
+            self.motion[1] = 0.0;
         }
         wanted
     }
@@ -259,7 +262,7 @@ impl Body {
     }
 
     /// Moves by `motion` as far as the blocks let it; motion into a block is stopped, except
-    /// downward, which the bounce answers. Whether it came down onto something.
+    /// downward, which the caller settles. Whether it came down onto something.
     fn slide(&mut self, level: &Level, motion: [f32; 3]) -> bool {
         physics_view(level, |view| self.slide_in(view, motion))
     }

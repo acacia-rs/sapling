@@ -79,8 +79,8 @@ pub(crate) fn release(world: &mut World, player: Entity) {
     }
 }
 
-/// A tick of what players loose: a draw whose item left the hand is over, stuck shots are picked
-/// up, tridents come back.
+/// A tick of what players loose: a draw whose item left the hand is over, crossbows load, stuck
+/// shots are picked up, tridents come back.
 pub(crate) fn tick(world: &mut World) {
     let drawing: Vec<(Entity, String)> = world.query::<(Entity, &Drawing)>().iter(world).map(|(player, drawing)| (player, drawing.item.clone())).collect();
     for (player, item) in drawing {
@@ -89,6 +89,7 @@ pub(crate) fn tick(world: &mut World) {
             eating::show(world, player, false);
         }
     }
+    crossbows::tick(world);
     pickup::tick(world);
     tridents::tick(world);
 }
@@ -125,18 +126,28 @@ fn loose(world: &mut World, player: Entity, shot: Shot, power: f32, tilt: f32, u
     crate::creatures::launch(world, Launch { layer, by: player, archer, from, motion, shot, gives: None }, Some(loosed))
 }
 
-/// `sound` heard from the player, where BDS hears a player's (the middle of its box).
+/// `sound` heard from the player, where BDS hears a player's (the middle of its box), told as the
+/// player's own, as BDS tells a throw.
 fn heard(world: &mut World, player: Entity, sound: &str) {
+    heard_as(world, player, sound, true);
+}
+
+/// [`heard`] told as no one's, as BDS tells a bow's, a crossbow's and a trident's (bds-r1shots.txt).
+fn heard_plain(world: &mut World, player: Entity, sound: &str) {
+    heard_as(world, player, sound, false);
+}
+
+fn heard_as(world: &mut World, player: Entity, sound: &str, as_player: bool) {
     let (Some(layer), Some(position), Some(id)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).copied(), world.get::<NetId>(player).map(|id| id.0)) else { return };
     let [x, y, z] = position.feet;
     let packet = acacia_proto::packets::LevelSoundEvent {
         sound_id: sound.into(),
         position: acacia_proto::types::Vec3f { x, y: y + 0.9, z },
         extra_data: -1,
-        entity_type: "minecraft:player".into(),
+        entity_type: if as_player { "minecraft:player".into() } else { String::new() },
         is_baby_mob: false,
         is_global: false,
-        entity_unique_id: id as i64,
+        entity_unique_id: if as_player { id as i64 } else { -1 },
         fire_at_position: None,
     };
     crate::view::to_viewers(world, layer, position.feet.map(|c| c.floor() as i32), &[sapling_net::encode(&packet)]);

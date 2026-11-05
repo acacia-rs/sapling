@@ -14,8 +14,6 @@ pub(crate) struct Physics {
     pub fall_drag: f32,
     /// Horizontal motion kept on the ground: a normal block's friction 0.6 x 0.98.
     pub ground_drag: f32,
-    /// What the vertical motion is multiplied by on the ground.
-    pub bounce: f32,
     pub liquid: InLiquid,
     /// Whether lava sets it on fire.
     pub burns: bool,
@@ -31,20 +29,21 @@ pub(crate) struct Physics {
 const SWIM_DRAG: f32 = 0.8;
 
 impl Physics {
-    /// Experience orbs, which bounce (BDS `ExperienceOrb::normalTick`), and float.
-    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: DEFAULT_BLOCK_FRICTION * 0.98, bounce: -0.5, liquid: InLiquid::Buoyant, burns: false, passes: false, water_drag: SWIM_DRAG, flutter: 1.0 };
+    /// Experience orbs, which float. BDS's `* -0.5` bounce follows the move zeroing a landing's
+    /// fall, so it never lifts one (bds-n13net.txt: motion y -0.0 on landing).
+    pub const ORB: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: DEFAULT_BLOCK_FRICTION * 0.98, liquid: InLiquid::Buoyant, burns: false, passes: false, water_drag: SWIM_DRAG, flutter: 1.0 };
     /// Items, which do not (BDS `ItemActor::postNormalTick`, docs/research/items.md).
-    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: DEFAULT_BLOCK_FRICTION * 0.98, bounce: 0.0, liquid: InLiquid::Floats, burns: true, passes: false, water_drag: SWIM_DRAG, flutter: 1.0 };
+    pub const ITEM: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: DEFAULT_BLOCK_FRICTION * 0.98, liquid: InLiquid::Floats, burns: true, passes: false, water_drag: SWIM_DRAG, flutter: 1.0 };
     pub const FIREPROOF_ITEM: Physics = Physics { burns: false, ..Physics::ITEM };
     /// A falling block, which stops where it lands (BDS `FallingBlockActor::normalTick`).
-    pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.0, bounce: 0.0, liquid: InLiquid::Ignores, burns: false, passes: false, water_drag: SWIM_DRAG, flutter: 1.0 };
+    pub const FALLING_BLOCK: Physics = Physics { gravity: 0.04, air_drag: 0.98, fall_drag: 0.98, ground_drag: 0.0, liquid: InLiquid::Ignores, burns: false, passes: false, water_drag: SWIM_DRAG, flutter: 1.0 };
     /// Primed TNT, which slides on where it lands (research/captures/bds-tnt.txt).
     pub const TNT: Physics = Physics { ground_drag: 0.686, ..Physics::FALLING_BLOCK };
     /// A mob that does not walk, as BDS moved an armour stand: its speed is worked out before the
     /// move (research/captures/bds-water.txt). The drag across, 0.91 in the air and 0.6 x 0.91 on
     /// the ground, is the Java game's (`LivingEntity.travel`).
     /// What lava and fire do to one: creatures/harm.rs.
-    pub const MOB: Physics = Physics { gravity: NORMAL_GRAVITY, air_drag: DEFAULT_AIR_FRICTION, fall_drag: NORMAL_GRAVITY_MULTIPLIER, ground_drag: DEFAULT_GROUND_DRAG, bounce: 0.0, liquid: InLiquid::Sinks, burns: false, passes: false, water_drag: SWIM_DRAG, flutter: 1.0 };
+    pub const MOB: Physics = Physics { gravity: NORMAL_GRAVITY, air_drag: DEFAULT_AIR_FRICTION, fall_drag: NORMAL_GRAVITY_MULTIPLIER, ground_drag: DEFAULT_GROUND_DRAG, liquid: InLiquid::Sinks, burns: false, passes: false, water_drag: SWIM_DRAG, flutter: 1.0 };
     /// A chicken, whose fall through the air from its second tick keeps 0.6 of what gravity and
     /// drag make it: 0.0784, 0.0931, 0.1018 a tick down to 0.1142 (research/captures/bds-bodies.txt).
     pub const CHICKEN: Physics = Physics { flutter: 0.6, ..Physics::MOB };

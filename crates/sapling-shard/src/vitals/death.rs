@@ -218,9 +218,9 @@ pub(super) fn rise(world: &mut World) {
         let Some(who) = world.get::<Identity>(player).map(|identity| identity.0.clone()) else { continue };
         let spawn = crate::plugins::offer(world, RespawnEvent::new(who, spawn)).feet;
         leave_now(world, player, layer);
-        world.entity_mut(player).remove::<super::effects::Effects>();
         *world.get_mut::<Vitals>(player).expect("read above") = Vitals::default();
         world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: eyes(spawn), state: READY, runtime_entity_id: 0 });
+        super::effects::end_at_rise(world, player);
         if let Some(anchor) = anchor {
             crate::sleep::sound_anchor_spent(world, layer, anchor);
         }

@@ -281,17 +281,6 @@ impl Server {
     pub fn lan(&self) -> Option<Advert> {
         self.listener.lan()
     }
-
-    /// Stops the game, disconnects every player and closes the socket.
-    pub async fn shutdown(self) {
-        let Server { listener, mut shards, entry, watching, .. } = self;
-        drop(watching);
-        // The entry shard last: the others hand it their players' items as they stop.
-        let last = shards.remove(entry);
-        // Joining the game threads can take a tick; keep that off the async runtime.
-        let _ = tokio::task::spawn_blocking(move || shards.into_iter().chain([last]).for_each(ShardHandle::stop)).await;
-        listener.closed().await;
-    }
 }
 
 #[cfg(test)]

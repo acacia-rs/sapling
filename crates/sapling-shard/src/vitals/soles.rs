@@ -1,7 +1,8 @@
 //! Soul Speed: boots with it quicken a player on soul sand and soul soil. BDS adds `0.03 · (1 +
 //! 0.35 · level)` to its walking speed as a "Sprinting speed boost" modifier, retold every tick it
-//! stands there, and tells the plain speed once it steps off (research/captures/bds-soles.txt,
-//! `bds_command_probe soles`: 0.1615 in Soul Speed III). A survival player's boots wear there
+//! moves there, and tells the plain speed once it steps off (research/captures/bds-soles.txt,
+//! `bds_command_probe soles`: 0.1615 in Soul Speed III; standing still, bds-r1fx.txt, told once
+//! and kept while it sank into the sand). A survival player's boots wear there
 //! (`inventory::wear_soles`); BDS sent no soul particles (bds-t2esoles.txt), its client makes them.
 
 use bevy_ecs::prelude::*;
@@ -20,21 +21,23 @@ fn quickens(level: u8) -> f32 {
     if level == 0 { 0.0 } else { SPEED * (1.0 + PER_LEVEL * f32::from(level)) }
 }
 
-/// Whether a player stands on soul sand or soul soil.
+/// Whether a player stands on soul sand or soul soil, or is just above it: the sinking that
+/// follows a step on is no step off.
 pub(super) fn on_soul(level: &Level, position: Position) -> bool {
     let [x, y, z] = position.feet;
-    position.on_ground && holds(level, [x.floor() as i32, (y - 0.5).floor() as i32, z.floor() as i32], SOULED)
+    holds(level, [x.floor() as i32, (y - 0.5).floor() as i32, z.floor() as i32], SOULED)
 }
 
-/// A tick of a player's walk, on soul sand in boots with Soul Speed at `level` or off it (`None`).
-pub(super) fn tread(world: &mut World, player: Entity, level: Option<u8>) {
+/// A tick of a player's walk, on soul sand in boots with Soul Speed at `level` or off it (`None`),
+/// `moved` or still.
+pub(super) fn tread(world: &mut World, player: Entity, level: Option<u8>, moved: bool) {
     let soles = level.map_or(0.0, quickens);
     let survives = world.get::<crate::components::Mode>(player).is_some_and(|mode| matches!(mode.0, sapling_api::GameMode::Survival | sapling_api::GameMode::Adventure));
     if soles != 0.0 && survives {
         crate::inventory::wear_soles(world, player);
     }
     let was = world.get::<Paced>(player).map_or(0.0, |paced| paced.soles);
-    let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| soles != 0.0 || was != 0.0) else { return };
+    let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| soles != was || (soles != 0.0 && moved)) else { return };
     world.entity_mut(player).insert_if_new(Paced::default());
     world.get_mut::<Paced>(player).expect("put above").soles = soles;
     tell_pace(world, player, id);

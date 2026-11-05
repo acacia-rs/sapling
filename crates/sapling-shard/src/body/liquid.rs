@@ -288,7 +288,7 @@ mod tests {
         // Lava halves its speed and pulls 0.02: BDS's stand went from -0.51696 a tick to -0.27848,
         // and on to -0.04.
         // The first tick goes by the air's rule, a tick late, to -0.51696.
-        let mob = after(Body::new([0.5, 64.0, 0.5], [0.0, -0.44751, 0.0], [0.5, 1.975]), "minecraft:lava", &Physics::MOB, 2);
+        let mob = after(Body { stepped: true, ..Body::new([0.5, 64.0, 0.5], [0.0, -0.44751, 0.0], [0.5, 1.975]) }, "minecraft:lava", &Physics::MOB, 2);
         assert!((mob.motion[1] + 0.27848).abs() < 1e-4, "{mob:?}");
         let sunk = after(Body::new([0.5, 64.5, 0.5], [0.0; 3], [0.5, 1.975]), "minecraft:lava", &Physics::MOB, 30);
         assert!((sunk.motion[1] + 0.04).abs() < 1e-3, "{sunk:?}");

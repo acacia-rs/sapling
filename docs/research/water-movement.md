@@ -204,7 +204,11 @@ capture contradicted the first version of this section).
 - `getLiquidBlock` (vt+0x28) and `getMaterial` slots: from the LeviLamina vtable order, not from a callee read.
 - Which blocks have Water material besides `water` / `flowing_water` (bubble column assumed Bubble).
 - Mob breathing offsets; the gravity-gate optional component in `MobWaterGravity`; ClimbOutOfLiquid gating;
-  mob air gravity/drag.
+  mob air gravity/drag. Drilled 2026-11-05 (`bds_command_probe r1water`, bds-r1water.txt): a cow, pig, zombie and
+  skeleton in a pool and a cow and zombie in a one-wide shaft sank, floated and ran out of air as sapling's did
+  (Air 300 down a tick at a time; the cow bobbing -28.3 to -28.39); but BDS's mob summoned into water sank by the
+  water's rule from its first tick (0.02, 0.036, 0.0488), where sapling's took one tick by the air's (0.0784).
+  Fixed (`body.rs` `stepped`). BDS also lowered a cow summoned with its head in the stone roof to fit under it.
 
 ## 5. Buoyancy (`minecraft:buoyant`): why xp orbs float
 

@@ -41,9 +41,10 @@ impl World {
     }
 
     /// 145808020: from 16 above `found` down in steps of two, the first cell within 16 across where the
-    /// biome is wanted in it or the cell over it, both air; `found` when none is.
+    /// biome is wanted in it or the cell over it, both air in a loaded column; `found` when none is
+    /// (bds-locate.txt: the deep dark answered on its lattice cell, unloaded, at 32 -43 -128).
     fn open_cell_near(&self, found: [i32; 3], matches: &dyn Fn([i32; 3]) -> bool) -> [i32; 3] {
-        let air = |[x, y, z]: [i32; 3]| self.block(x, y, z) == self.dim.air;
+        let air = |[x, y, z]: [i32; 3]| self.is_loaded(crate::ChunkPos::of_block(x, z)) && self.block(x, y, z) == self.dim.air;
         let low = (-FINE).max(self.dim.min_y + 1 - found[1]);
         let mut dy = FINE;
         while low < dy {

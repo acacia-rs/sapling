@@ -3,7 +3,6 @@
 //! rain, it throws its holder instead. Impaling goes with it (creatures/hits.rs). One with Loyalty
 //! that hit something or stuck comes back to its thrower once it is in the same world, flying
 //! through blocks, and is given back as it is picked up.
-// TODO: Loyalty's pull and Riptide's throw are the Java game's (enchant/archery.rs); no sounds of either.
 
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
@@ -20,9 +19,16 @@ use crate::{entities, inventory};
 
 pub(super) const TRIDENT: &str = "minecraft:trident";
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
-/// A returning trident is caught this near its thrower's eyes, and slows by this a tick.
+/// A returning trident is caught this near its thrower's eyes, and slows by this a tick; it is
+/// lifted besides by this share a level of its height under them (bds-r1shots.txt, Java's numbers).
 const CAUGHT: f32 = 1.5;
 const SLOWS: f32 = 0.95;
+const LIFTS: f32 = 0.015;
+
+/// Ticks a trident has flown home: BDS told `item.trident.return`, at the thrower's eyes, with its
+/// second (bds-r1shots.txt).
+#[derive(Component)]
+struct Homeward(u32);
 const PLAYER_HEIGHT: f32 = 1.8;
 
 pub(super) fn may_ready(_world: &World, _player: Entity, stack: &ItemStack) -> bool {
@@ -56,7 +62,7 @@ pub(super) fn let_go(world: &mut World, player: Entity, stack: &ItemStack, ticks
         if !creative {
             inventory::wear_hand_by(world, player, 1, lasts);
         }
-        super::heard(world, player, "item.trident.riptide_1");
+        super::heard_plain(world, player, &format!("item.trident.riptide_{}", riptide.clamp(1, 3)));
         return;
     }
     if !creative {
@@ -71,7 +77,7 @@ pub(super) fn let_go(world: &mut World, player: Entity, stack: &ItemStack, ticks
     if !creative {
         super::set_hand(world, player, None);
     }
-    super::heard(world, player, THROWN.sound);
+    super::heard_plain(world, player, THROWN.sound);
 }
 
 /// Tridents with Loyalty that are done come back.
@@ -109,7 +115,14 @@ fn come_back(world: &mut World, trident: Entity, player: Entity, layer: Entity, 
         super::pickup::take(world, trident, layer, body.at, id, player, player_id, item);
         return Some(());
     }
+    let homeward = world.get::<Homeward>(trident).map_or(0, |ticks| ticks.0);
+    world.entity_mut(trident).insert(Homeward(homeward + 1));
+    if homeward == 1 {
+        let heard = crate::creatures::sound("item.trident.return", eyes, "");
+        crate::blocks::to_viewers(world, layer, eyes.map(|c| c.floor() as i32), &[heard]);
+    }
     let pull = enchant::loyalty_pull(loosed.loyalty);
+    body.at[1] += toward[1] * LIFTS * f32::from(loosed.loyalty);
     body.motion = std::array::from_fn(|axis| body.motion[axis] * SLOWS + toward[axis] / far * pull);
     body.at = std::array::from_fn(|axis| body.at[axis] + body.motion[axis]);
     *world.get_mut::<Body>(trident)? = body;

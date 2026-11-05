@@ -18,6 +18,8 @@ pub(crate) struct Raised {
     pub looked_since: u64,
     /// The mob it courts and the ticks they spent near.
     pub partner: Option<(Entity, u32)>,
+    /// The tick it was fed into love; one loaded in love shows no hearts (husbandry.md).
+    pub loved_at: Option<u64>,
     /// What it fights for its owner, and the tick it may next bite.
     pub foe: Option<(Entity, u64)>,
     /// The tick it next lays its egg or scute in, once one was rolled.

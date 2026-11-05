@@ -212,7 +212,7 @@ impl Request<'_> {
             return;
         }
         // BDS resent nothing after a tool's use took (research/captures/bds-p2tools.txt).
-        if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held)) {
+        if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, at, held)) {
             return;
         }
         if held.as_ref().is_some_and(|held| self.stack(&site, pos, face, held)) {

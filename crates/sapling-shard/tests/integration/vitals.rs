@@ -227,7 +227,7 @@ fn effects_heal_poison_and_wear_off_as_on_bds() {
 
 #[test]
 fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
-    use acacia_proto::packets::{CompletedUsingItem, MobEffect, MobEffectEventId};
+    use acacia_proto::packets::{CompletedUsingItem, LevelSoundEvent, MobEffect, MobEffectEventId};
     use acacia_proto::types::{TransactionTransactionData, TransactionUseItemActionType};
     use sapling_api::Effect;
     let mut h = ready();
@@ -243,6 +243,7 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     };
     let swallow = |h: &mut Harness, food: &str| swallow_this(h, Item::new(food, 1));
     let shown = |sent: &[RawPacket]| all::<MobEffect>(sent).into_iter().map(|effect| (effect.event_id, effect.effect_id, effect.duration)).collect::<Vec<_>>();
+    let heard = |sent: &[RawPacket]| all::<LevelSoundEvent>(sent).into_iter().map(|sound| sound.sound_id).collect::<Vec<_>>();
     let cushion = |sent: &[RawPacket]| all::<UpdateAttributes>(sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:absorption").map(|attribute| attribute.current).collect::<Vec<_>>();
     // A second of the strongest hunger empties six of it.
     h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::Hunger, 20, 255, false)));
@@ -259,11 +260,13 @@ fn a_spider_eye_poisons_a_golden_apple_cushions_and_milk_ends_both() {
     let sent = swallow(&mut h, "minecraft:milk_bucket");
     let gone: Vec<i32> = all::<MobEffect>(&sent).into_iter().filter(|effect| effect.event_id == MobEffectEventId::Remove).map(|effect| effect.effect_id).collect();
     assert!(gone.contains(&10) && gone.contains(&22) && cushion(&sent) == [0.0], "{gone:?}");
+    // Milk drunk is heard as nothing (bds-r1buckets.txt).
+    assert_eq!(heard(&sent), Vec::<String>::new(), "left: milk heard");
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:bucket".to_owned())));
     assert!(all::<CompletedUsingItem>(h.tick_all().to(1)).is_empty());
     // A potion of strong regeneration (data 30), research/captures/bds-drink.txt.
     let sent = swallow_this(&mut h, Item { damage: 30, ..Item::new("minecraft:potion", 1) });
-    assert_eq!(shown(&sent), [(MobEffectEventId::Add, 10, 450)]);
+    assert_eq!((shown(&sent), heard(&sent)), (vec![(MobEffectEventId::Add, 10, 450)], vec!["bottle.empty".to_owned()]));
     let fed = all::<UpdateAttributes>(&sent).iter().flat_map(|update| &update.attributes).any(|attribute| attribute.name == "minecraft:player.hunger");
     assert!(!fed, "a potion tells no hunger");
     h.remote.run(|ctx| assert_eq!(ctx.item(ALEX, Slot::Main(0)).map(|item| item.name), Some("minecraft:glass_bottle".to_owned())));

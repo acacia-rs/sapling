@@ -231,11 +231,13 @@ Block behaviours (BlockType vt+0x190):
 - `Random` vt+8 is `nextInt(bound)` and vt+0x28 `nextFloat` (inferred from use).
 - Names of hash globals 14ccf9950 (air), 14ccdb710 (fire), 14cce2cf8 (tnt), 14ccdafe8 (lava), 14ccdd3a0, the dirt
   list 14ccdb858, tag 14ccdb7d0, recipe tag 14cde8268, game events 14cc89850 / 14cc8a91c / 14cc8a9ec.
-- Arrow pickup flag (142a7d140 not read); arrow uncertainty: whether `uncertainty_multiplier` × difficulty is
-  subtracted before comp+0x1a0. sapling uses 16 less 4 × difficulty (one easy-world arrow left 3σ off at 12).
-  BDS's arrow left at power 1.1 and its snowball with no spread (bds-p2shoot.txt); snowballs, eggs, potions and
-  bottles get none (`shots/dispensed.rs`). The snowball's hit: six `ParticleProjectileHit` data 15 where it
-  landed, then LevelSoundEvent `undefined` there a tick later (`creatures/landing.rs`).
+- Arrows, drilled 2026-11-05 (bds-r1disp.txt, twelve shots on easy; bds-f1pickup.txt): they left at 1.11 a
+  tick on average with 0.175 of spread on each axis, so power 1.1 and an uncertainty of about 21 (±2.5); sapling
+  takes 22 on every difficulty (`shots/dispensed.rs`). Only easy was drilled, so whether difficulty changes it
+  is open. Players took them (pickup by anyone).
+- BDS's snowball left with no spread (bds-p2shoot.txt); snowballs, eggs, potions and bottles get none. The
+  snowball's hit: six `ParticleProjectileHit` data 15 where it landed, then LevelSoundEvent `undefined` there a
+  tick later (`creatures/landing.rs`).
 - Wind charge's dispense path (assumed ComponentItem projectile).
 - Spawn egg exact position for up/down and the 5% branch; shears details; `Item::dispense` special at 141a88af0.
 - Crafter toggle-slot server handling (empty slot required? sound?), interact 14713f470.

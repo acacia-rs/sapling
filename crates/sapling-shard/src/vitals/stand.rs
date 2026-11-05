@@ -113,8 +113,8 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     // A teleport is no fall: until the client follows it, the height starts anew.
     let (carried, sprinting, jumps) = world.get_mut::<Motion>(player).map_or((false, false, 0), |mut motion| (motion.awaits_teleport(), motion.pose.sprinting, std::mem::take(&mut motion.jumps)));
     let freezes = frost::chill(world, player, in_snow);
-    soles::tread(world, player, on_soul.then_some(warding.soul_speed));
     let from = vitals.was.replace(position.feet).unwrap_or(position.feet);
+    soles::tread(world, player, on_soul.then_some(warding.soul_speed), from != position.feet);
     let run = (position.feet[0] - from[0]).hypot(position.feet[2] - from[2]);
     let ran = if sprinting && position.on_ground && !carried && run <= LONGEST_STEP { run } else { 0.0 };
     // In water a move costs its length, the rise and fall too once the eyes are under.

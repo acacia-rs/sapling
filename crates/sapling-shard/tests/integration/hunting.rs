@@ -258,7 +258,8 @@ fn a_creeper_lights_its_fuse_three_blocks_off_and_bursts_as_on_bds() {
     let hurt = 20.0 - health(&sent)[0];
     assert!((7.9..8.6).contains(&hurt), "{hurt}");
     let thrown: Vec<_> = all::<SetEntityMotion>(&sent).into_iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| motion.velocity).collect();
-    assert!(thrown.len() == 1 && thrown[0].y > 0.55 && thrown[0].z < -0.7, "the hit's throw and the blast's: {thrown:?}");
+    // bds-boom.txt: the knock alone (0.4 up), then the knock and the blast's push together.
+    assert!(thrown.len() == 2 && thrown[0].y == 0.4 && thrown[1].y > 0.55 && thrown[1].z < -0.7, "left: the hit's throw, then with the blast's: {thrown:?}");
     h.remote.run(move |ctx| {
         assert!(ctx.entity(EntityId(creeper)).is_none());
         let broken: Vec<[i32; 3]> = (-3..=3).flat_map(|x| (-1..=6).map(move |z| [x, 64, z])).filter(|at| ctx.block(*at).is_some_and(|block| block.name == "minecraft:air")).collect();

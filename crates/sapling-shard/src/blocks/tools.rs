@@ -167,9 +167,9 @@ const END_CRYSTAL: &str = "minecraft:end_crystal";
 const CHARGE_SOUND: i32 = 78642;
 
 impl Request<'_> {
-    /// A click with `held` in the hand on the block at `pos`: false when it does nothing to it.
-    /// A hoe and a shovel want air over the ground they work.
-    pub(super) fn use_tool(&mut self, site: &Site, pos: BlockPos, face: Face, held: &str) -> bool {
+    /// A click at `at` (within the block) with `held` in the hand on the block at `pos`: false when
+    /// it does nothing to it. A hoe and a shovel want air over the ground they work.
+    pub(super) fn use_tool(&mut self, site: &Site, pos: BlockPos, face: Face, at: [f32; 3], held: &str) -> bool {
         if super::cauldrons::use_on(self.world, self.entity, site.layer, pos, face, site.mode == GameMode::Creative) {
             return true;
         }
@@ -209,7 +209,7 @@ impl Request<'_> {
             }
             return true;
         }
-        if held == crate::fireworks::ROCKET && crate::fireworks::launch_held(self.world, self.entity, pos, face) {
+        if held == crate::fireworks::ROCKET && crate::fireworks::launch_held(self.world, self.entity, pos, at) {
             if site.mode != GameMode::Creative {
                 inventory::change(self.world, self.entity, |inventory| inventory.take(inventory::Place::Main(inventory.selected.into()), 1).is_ok());
             }

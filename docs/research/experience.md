@@ -69,7 +69,9 @@ Tags as in `containers-crafting.md` (REC, DATA, BDSRE, BDSRE-old, mem, inf). Not
    overflow), this.age = min(ages), other removed. (Java 1.17+ uses id % 40.)
 3. **Physics**: motion.y -= 0.04; in lava (block at floor(pos)): motion = ((r-r)*0.2, 0.2, (r-r)*0.2) and
    `LevelSoundEvent` 27 `Fizz`; `move(motion)`; friction 0.98 in air, on ground `blockFriction*0.98`
-   (0.588 for normal blocks); motion.y *= 0.98, and on ground motion.y *= -0.5 (bounce).
+   (0.588 for normal blocks); motion.y *= 0.98, and on ground motion.y *= -0.5 (bounce). The move has
+   already zeroed a landing's fall, so the bounce lifts nothing: BDS told motion y -0.0 as its orb landed
+   and it stayed down (bds-n13net.txt). sapling sets the fall to 0 on landing (body.rs `own_step`).
 4. **Target**: nearest player (passing a virtual filter, 14188aea0) with **distance^2 < 64** (8 blocks,
    from orb pos to player StateVector pos) (lambda 14188b1a0). Searched only when
    `tick - 20 - (uniqueId % 100) > lastSearch`, and then only if there is no target or it is > 8 away.
@@ -135,10 +137,9 @@ Tags as in `containers-crafting.md` (REC, DATA, BDSRE, BDSRE-old, mem, inf). Not
 
 ## Not settled
 
-1. A slowing orb on the ground (bds-n13net.txt, 2026-11-05). In the air BDS sends a MoveEntityDelta each tick and
-   a SetEntityMotion at the summon, about every sixth tick and on landing, as sapling does (sapling-n13net.txt).
-   Crawling on the ground, BDS's deltas thin out as it slows (gaps of 1, 2, 3, then 6 ticks, none once still);
-   sapling sends one each tick it moves. The rule was not found.
+1. Settled 2026-11-05: a slowing orb's deltas on the ground (bds-n13net.txt) thin by the usual move rule
+   (research/bds-actor-move-sync.md; sync.rs `Told::update`). sapling's orb sent one each tick because it
+   bounced on landing (section 3) and its homing crawl moved over 0.01 a tick.
 2. Whether the player-side entity touch loop also calls `playerTouch` (pickup without homing), and what
    the player flag at +0x210 bit 0 is.
 3. What filter 14188aea0 applies (spectators / dead players excluded?).

@@ -30,6 +30,32 @@ fn a_rocket_off_a_block_rises_bursts_within_its_life_and_is_spent() {
 }
 
 #[test]
+fn a_rocket_starts_at_the_point_clicked_shows_moving_and_goes_a_tick_after_its_burst() {
+    use acacia_proto::packets::SetEntityData;
+    use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataFlags1, TransactionTransactionData, Vec3f};
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new(ROCKET, 2)))));
+    h.tick_all();
+    let mut used = click([2, 64, 0], 1, None);
+    if let TransactionTransactionData::ItemUse(data) = &mut used.transaction.transaction_data {
+        data.click_pos = Vec3f { x: 0.75, y: 1.0, z: 0.875 };
+    }
+    h.receive(1, &used);
+    let ticks: Vec<Vec<acacia_proto::RawPacket>> = (0..35).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let sent = ticks.concat();
+    let rocket = added(&sent, FLYING).into_iter().next().expect("launched");
+    assert_eq!((rocket.position.x, rocket.position.y, rocket.position.z), (2.75, 65.0, 0.875), "at the point clicked (bds-n13fw.txt)");
+    let moving = |data: &SetEntityData| data.metadata.iter().any(|item| matches!(item.value, Value::Flags(flags) if flags.0 & MetadataFlags1::MOVING.0 != 0));
+    assert!(all::<SetEntityData>(&sent).iter().any(|data| data.runtime_entity_id == rocket.runtime_id && moving(data)), "MOVING with its launch");
+    let tick_of = |found: &dyn Fn(&[acacia_proto::RawPacket]) -> bool| ticks.iter().position(|tick| found(tick));
+    let burst = tick_of(&|tick| all::<EntityEvent>(tick).iter().any(|event| event.runtime_entity_id == rocket.runtime_id && event.event_id == EntityEventEventId::FireworkParticles)).expect("bursts");
+    let gone = tick_of(&|tick| all::<RemoveEntity>(tick).iter().any(|gone| gone.entity_id_self == rocket.unique_id)).expect("goes");
+    assert_eq!(gone, burst + 1, "removed the tick after its burst");
+    assert!(all::<SetEntityData>(&ticks[burst]).iter().any(|data| data.metadata.iter().any(|item| item.key == Key::MinecartDisplayBlock)), "its item told with the burst");
+}
+
+#[test]
 fn a_crossbow_loads_a_rocket_from_the_offhand_and_shoots_it_along_the_look() {
     let mut h = shooting::ready(GameMode::Survival, &[("minecraft:crossbow", 1, 0)], 0.0);
     h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Offhand, Some(&Item::new(ROCKET, 1)))));

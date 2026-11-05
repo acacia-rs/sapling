@@ -50,5 +50,5 @@ pub(super) fn loose(world: &mut World, player: Entity, stack: &ItemStack, ticks:
         }
         crate::inventory::wear_hand_by(world, player, 1, shots::shooter_lasts(BOW).unwrap_or(u16::MAX));
     }
-    super::heard(world, player, "bow");
+    super::heard_plain(world, player, "bow");
 }

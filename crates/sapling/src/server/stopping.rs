@@ -3,6 +3,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use sapling_shard::ShardHandle;
 use tokio::sync::Notify;
 
 use crate::Server;
@@ -42,5 +43,19 @@ impl Server {
     /// Whether `/stop` ran.
     pub fn is_stop_requested(&self) -> bool {
         self.stop.asked()
+    }
+
+    /// Stops the game, disconnects every player and closes the socket, logging BDS's
+    /// `Stopping server...` and `Quit correctly` (research/captures/bds-console-cmds.txt).
+    pub async fn shutdown(self) {
+        tracing::info!("Stopping server...");
+        let Server { listener, mut shards, entry, watching, .. } = self;
+        drop(watching);
+        // The entry shard last: the others hand it their players' items as they stop.
+        let last = shards.remove(entry);
+        // Joining the game threads can take a tick; keep that off the async runtime.
+        let _ = tokio::task::spawn_blocking(move || shards.into_iter().chain([last]).for_each(ShardHandle::stop)).await;
+        listener.closed().await;
+        tracing::info!("Quit correctly");
     }
 }

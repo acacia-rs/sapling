@@ -176,6 +176,19 @@ fn a_channeling_trident_on_a_rod_calls_a_bolt_onto_it_in_a_storm() {
     assert!(!all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "item.trident.thunder"));
 }
 
+/// bds-r1shots.txt: a crossbow held in use was heard loading 4, 14 and 24 ticks in, each sound no
+/// one's, and was loaded at 25 with `ChargedItem`, before it was let go.
+#[test]
+fn a_crossbow_held_loads_by_itself_with_bds_s_sounds() {
+    use acacia_proto::packets::{EntityEvent, EntityEventEventId};
+    let mut h = ready(GameMode::Survival, &[("minecraft:crossbow", 1, 0), ARROWS], 0.0);
+    h.receive(1, &common::shooting::click_air());
+    let ticks: Vec<Vec<RawPacket>> = (0..30).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let when = |name: &str| ticks.iter().position(|sent| all::<LevelSoundEvent>(sent).iter().any(|sound| sound.sound_id == name && sound.entity_type.is_empty() && sound.entity_unique_id == -1));
+    let charged = ticks.iter().position(|sent| all::<EntityEvent>(sent).iter().any(|event| event.event_id == EntityEventEventId::ChargedItem));
+    assert_eq!([when("crossbow.loading.start"), when("crossbow.loading.middle"), when("crossbow.loading.end"), charged], [Some(4), Some(14), Some(24), Some(25)]);
+}
+
 #[test]
 fn a_trident_with_loyalty_comes_back_to_the_hand() {
     let (mut h, _) = stored(vec![enchanted("minecraft:trident", &[(31, 3)], 0)], Vec::new());
@@ -185,4 +198,7 @@ fn a_trident_with_loyalty_comes_back_to_the_hand() {
     assert_eq!(healths(&sent).first(), Some(&2.0));
     assert_eq!(all::<TakeItemEntity>(&sent).len(), 1, "caught");
     assert_eq!(held(&mut h, Slot::Main(0)).map(|trident| trident.name), Some("minecraft:trident".into()));
+    let feet = common::asking::ask(&mut h, |ctx| ctx.position(PlayerId(1)).expect("Alex").feet);
+    let back: Vec<[f32; 3]> = all::<LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "item.trident.return").map(|sound| [sound.position.x, sound.position.y, sound.position.z]).collect();
+    assert_eq!(back, [[feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]]], "heard once at the eyes (bds-r1shots.txt)");
 }

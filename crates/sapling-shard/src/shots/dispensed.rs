@@ -3,13 +3,11 @@
 //! out of its face a little upwards, at a power and spread of each kind's.
 
 use bevy_ecs::prelude::*;
-use sapling_api::Difficulty;
 use sapling_world::ItemStack;
 
 use super::ammo;
 use super::kinds::{BOTTLE, EGG, LINGERING, PLAYER_ARROW, SNOWBALL, SPLASH, WIND};
 use crate::blocks::Dice;
-use crate::components::Settings;
 use crate::creatures::{ARROW, FIREBALL, Lands, Launch, Loosed, Pickup, Shot};
 
 /// A shot's gaussian spread for each point of uncertainty.
@@ -20,15 +18,12 @@ const RAISED: f32 = 0.1;
 const CHARGE_SPREAD: f32 = 0.05;
 const ARCHER: &str = "dispenser";
 
-/// An arrow's uncertainty before difficulty, and what each step of difficulty takes off it.
-const ARROW_UNCERTAINTY: [f32; 2] = [16.0, 4.0];
-
-/// The shot `item` makes out of a dispenser, its power and uncertainty at `difficulty` (the pack's
-/// entity JSON: BDS's arrow left at 1.1 and its snowball dead straight, research/captures/bds-p2shoot.txt).
-fn kind_of(item: &ItemStack, difficulty: Difficulty) -> Option<(Shot, f32, f32)> {
+/// The shot `item` makes out of a dispenser, its power and uncertainty: arrows 1.1 and 22, fitted to
+/// bds-r1disp.txt; snowballs dead straight (bds-p2shoot.txt). See docs/research/dispensers.md.
+fn kind_of(item: &ItemStack) -> Option<(Shot, f32, f32)> {
     let potion = |shot: Shot| Some((shot, 0.5, 0.0));
     match item.name.as_str() {
-        name if name == ARROW.kind || name == "minecraft:spectral_arrow" => Some((PLAYER_ARROW, 1.1, ARROW_UNCERTAINTY[0] - ARROW_UNCERTAINTY[1] * difficulty as u8 as f32)),
+        name if name == ARROW.kind || name == "minecraft:spectral_arrow" => Some((PLAYER_ARROW, 1.1, 22.0)),
         "minecraft:snowball" => Some((SNOWBALL, 1.5, 0.0)),
         "minecraft:egg" | "minecraft:blue_egg" | "minecraft:brown_egg" => Some((EGG, 1.5, 0.0)),
         "minecraft:splash_potion" => potion(Shot { lands: Lands::Splash(item.damage), ..SPLASH }),
@@ -42,7 +37,7 @@ fn kind_of(item: &ItemStack, difficulty: Difficulty) -> Option<(Shot, f32, f32)>
 
 /// Shoots `item` from `from` along the unit way `way`; false for what a dispenser does not shoot.
 pub(crate) fn shoot(world: &mut World, layer: Entity, from: [f32; 3], way: [f32; 3], item: &ItemStack) -> bool {
-    let Some((shot, power, uncertainty)) = kind_of(item, world.resource::<Settings>().0.difficulty) else { return false };
+    let Some((shot, power, uncertainty)) = kind_of(item) else { return false };
     let motion = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         if shot.kind == FIREBALL.kind {
@@ -60,7 +55,7 @@ pub(crate) fn shoot(world: &mut World, layer: Entity, from: [f32; 3], way: [f32;
 /// `Spawner::spawnProjectile` (14118d160) does for an ominous item spawner: at the power and
 /// `uncertainty_base` of the shot's entity JSON, unraised (bds-u1omen.txt). False for what it does not shoot.
 pub(crate) fn shoot_unowned(world: &mut World, layer: Entity, from: [f32; 3], way: [f32; 3], item: &ItemStack) -> bool {
-    let Some((shot, ..)) = kind_of(item, Difficulty::Peaceful) else { return false };
+    let Some((shot, ..)) = kind_of(item) else { return false };
     let (power, uncertainty) = match item.name.as_str() {
         "minecraft:fire_charge" => (1.3, 10.0),
         "minecraft:wind_charge" => (1.5, 1.0),

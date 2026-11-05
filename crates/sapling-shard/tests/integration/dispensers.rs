@@ -104,6 +104,21 @@ fn a_dropper_puts_into_the_chest_it_faces_and_an_empty_one_clicks_and_fails() {
     assert_eq!(sounds(&failed), ["block.click.fail"]);
 }
 
+/// bds-r1disp.txt: twelve arrows out of a dispenser left at 1.11 a tick on average, each axis
+/// spread by 0.175 (power 1.1; sapling's had left at 1.56, as a player's bow's full draw).
+#[test]
+fn a_dispensers_arrows_leave_at_bds_s_speed() {
+    let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:arrow", 8)], vec![]);
+    let mut sent = Vec::new();
+    for _ in 0..8 {
+        sent.extend(power(&mut h, true, 6));
+        sent.extend(power(&mut h, false, 6));
+    }
+    let speeds: Vec<f32> = all::<acacia_proto::packets::AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:arrow").map(|arrow| arrow.velocity.x.hypot(arrow.velocity.y).hypot(arrow.velocity.z)).collect();
+    let mean = speeds.iter().sum::<f32>() / speeds.len() as f32;
+    assert!(speeds.len() == 8 && (0.95..1.3).contains(&mean), "{speeds:?}");
+}
+
 #[test]
 fn a_dispenser_shoots_an_arrow_and_a_snowball_and_primes_tnt() {
     let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:arrow", 1)], vec![]);

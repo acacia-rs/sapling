@@ -3,6 +3,7 @@
 //! (docs/research/block-uses.md, "Blasts").
 // TODO: a fuse stays lit for a prey out of sight; no arrows, orbs or falling blocks are thrown; Blast Protection spares no mob's throw.
 
+mod reached;
 pub(super) mod rays;
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
@@ -10,8 +11,9 @@ use acacia_proto::types::{MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_api::{Difficulty, ExplosionEvent};
 
-use super::harm;
 use super::health::{Cause, Health};
+use reached::{blast_mob, harm_by, throw_primed};
+pub(super) use reached::{impact, towards};
 use crate::blocks;
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings};
@@ -73,11 +75,6 @@ fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
     (0..3).map(|axis| (a[axis] - b[axis]).powi(2)).sum::<f32>().sqrt()
 }
 
-/// What a blast reaching `reach` costs a mob or vehicle it meets by `impact` (bds-blasts.txt, bds-c1blast.txt).
-fn harm_by(impact: f32, reach: f32) -> f32 {
-    (impact * impact + impact) / 2.0 * HARM * reach + 1.0
-}
-
 /// How much of a body standing at `feet`, `size` wide and high, sees a blast at `at`.
 fn seen(world: &World, layer: Entity, at: [f32; 3], feet: [f32; 3], [wide, high]: [f32; 2]) -> f32 {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return 1.0 };
@@ -123,6 +120,13 @@ pub(crate) fn explode(world: &mut World, source: Option<Entity>, layer: Entity, 
     blow(world, source, layer, at, power, wreck, Rule::Plain);
 }
 
+/// As [`explode`], primed TNT's or a TNT minecart's: measured from the feet and the same on every
+/// difficulty (bds-r1ench.txt: TNT 1.81 from the feet cost 7.769 of 60 on easy under Resistance IV,
+/// impact 0.774, and threw towards the eyes by that).
+pub(crate) fn explode_primed(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
+    blow(world, Some(source), layer, at, power, wreck, Rule::Primed);
+}
+
 /// As [`explode`], a ghast's fireball's blast, by its own rule ([`reaches`]).
 pub(super) fn explode_fireball(world: &mut World, source: Entity, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck) {
     blow(world, Some(source), layer, at, power, wreck, Rule::Fireball);
@@ -136,6 +140,7 @@ pub(crate) fn explode_burning(world: &mut World, layer: Entity, at: [f32; 3], po
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Rule {
     Plain,
+    Primed,
     Fireball,
     Burning,
 }
@@ -222,63 +227,6 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
     }
     if rule == Rule::Burning {
         set_fires(world, layer, &[cells, free].concat());
-    }
-}
-
-/// How hard a blast at `at` that reaches `reach` hits a mob at `feet`, `size` wide and high:
-/// BDS measures to its feet and takes half its width off (`Explosion::explode`).
-pub(super) fn impact(world: &World, layer: Entity, at: [f32; 3], feet: [f32; 3], size: [f32; 2], reach: f32) -> Option<f32> {
-    let far = (distance(feet, at) - size[0] / 2.0).max(0.0);
-    (far <= reach).then(|| (1.0 - far / reach) * seen(world, layer, at, feet, size))
-}
-
-/// The way from `from` to `to`, `long` long.
-pub(super) fn towards(from: [f32; 3], to: [f32; 3], long: f32) -> [f32; 3] {
-    let far = distance(from, to);
-    if far < 1e-4 { [0.0; 3] } else { std::array::from_fn(|axis| (to[axis] - from[axis]) / far * long) }
-}
-
-/// A mob in a blast at `at`: hurt by at least 1 however hidden, thrown off as by a hit from the
-/// blast and, unless no hit throws it, towards its eyes by the blast's impact (bds-blasts.txt).
-fn blast_mob(world: &mut World, layer: Entity, mob: Entity, id: u64, its: &Body, at: [f32; 3], reach: f32) {
-    let Some(impact) = impact(world, layer, at, its.at, its.size, reach) else { return };
-    let harm = harm_by(impact, reach);
-    let hurt = crate::damage::ask(world, mob, harm, Cause::EntityExplosion, None).and_then(|harm| {
-        let mut health = world.get::<Health>(mob).copied()?;
-        // Resistance that takes all of it still hurts and throws (the drill's pigs had it).
-        let resisted = !health.is_guarded() && health.left() > 0.0;
-        (health.hurt(harm) || resisted).then(|| {
-            *world.get_mut::<Health>(mob).expect("read above") = health;
-            entities::tell_viewers(world, mob, layer, its.at.map(|c| c.floor() as i32), vec![harm::strike(id, &health, Cause::EntityExplosion, None)]);
-        })
-    });
-    let kind = world.get::<entities::Kind>(mob).map(|kind| kind.0.clone()).unwrap_or_default();
-    if sapling_data::mob_traits(&kind).steadfast {
-        return;
-    }
-    let knock = match hurt {
-        Some(()) => {
-            let [x, _, z] = towards([at[0], 0.0, at[2]], [its.at[0], 0.0, its.at[2]], KNOCK);
-            [x, KNOCK, z]
-        }
-        None => [0.0; 3],
-    };
-    let push = towards(at, [its.at[0], its.at[1] + its.size[1] * EYES, its.at[2]], impact);
-    if let Some(mut body) = world.get_mut::<Body>(mob) {
-        body.throw(std::array::from_fn(|axis| knock[axis] + push[axis]));
-    }
-}
-
-/// Primed TNT in a blast at `at` that reaches `reach` is pushed away by its impact.
-fn throw_primed(world: &mut World, layer: Entity, at: [f32; 3], reach: f32) {
-    let primed: Vec<(Entity, Body)> = world.query_filtered::<(Entity, &InLayer, &Body), With<crate::tnt::Primed>>().iter(world).filter(|(_, in_layer, _)| in_layer.0 == layer).map(|(entity, _, body)| (entity, *body)).collect();
-    for (entity, its) in primed {
-        if let Some(impact) = impact(world, layer, at, its.at, its.size, reach) {
-            let push = towards(at, its.at, impact);
-            if let Some(mut body) = world.get_mut::<Body>(entity) {
-                body.motion = std::array::from_fn(|axis| body.motion[axis] + push[axis]);
-            }
-        }
     }
 }
 

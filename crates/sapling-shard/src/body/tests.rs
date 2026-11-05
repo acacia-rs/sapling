@@ -25,6 +25,22 @@ fn a_body_falls_onto_the_floor_and_rests_on_it() {
 }
 
 #[test]
+fn an_orb_lands_with_no_fall_left_and_crawls_on_without_bouncing() {
+    let level = level();
+    let mut orb = Body::new([0.5, 66.0, 0.5], [0.0, 0.3, 0.15], [0.25, 0.25]);
+    let mut landed = None;
+    for tick in 0..40 {
+        _ = orb.step(&level, &Physics::ORB, &mut || 0.5);
+        if orb.on_ground && landed.is_none() {
+            landed = Some(tick);
+            assert_eq!(orb.motion[1], 0.0, "BDS told motion y -0.0 as its orb landed (bds-n13net.txt)");
+        }
+        assert!(landed.is_none() || orb.on_ground, "stays down from tick {landed:?}, at {tick}");
+    }
+    assert!(landed.is_some() && orb.motion[2] > 0.0, "it slides on, slowing");
+}
+
+#[test]
 fn falling_takes_the_games_ticks_and_speed() {
     // 0.04 a tick, 2% drag: three blocks take 13 ticks from rest; BDS's sand, announced a
     // tick into its fall, landed 12 after that.
@@ -77,6 +93,18 @@ fn swimmers_and_bats_settle_at_their_kinds_speed() {
         let speed = body.motion[0] + body.motion[1];
         assert!((speed - settles).abs() < 1e-3, "{speed} for {settles}: {body:?}");
     }
+}
+
+#[test]
+fn a_mob_made_in_water_sinks_by_the_waters_rule_from_its_first_tick() {
+    // bds-r1water.txt: a zombie summoned in water went down 0.02, 0.036, 0.0488 (sapling 0.0784 first).
+    let mut level = Level::void();
+    let (stone, water) = (level.block_id("minecraft:stone").unwrap(), level.block_id("minecraft:water").unwrap());
+    level.fill([-2, 59, -2], [2, 59, 2], stone);
+    level.fill([-2, 60, -2], [2, 64, 2], water);
+    let mut zombie = Body::new([0.5, 61.0, 0.5], [0.0; 3], [0.6, 1.95]);
+    let moved: Vec<f32> = (0..3).map(|_| zombie.step(&level, &Physics::MOB, &mut || 0.5)[1]).collect();
+    assert!(moved.iter().zip([-0.02, -0.036, -0.0488]).all(|(got, bds)| (got - bds).abs() < 1e-4), "{moved:?}");
 }
 
 #[test]

@@ -2,14 +2,15 @@
 //! (`FireworkParticles`); one with n stars hurts every player and mob within 5 that it sees
 //! (5 + 2n) times the root of its share of the way in, by `Fireworks`.
 
-use acacia_proto::packets::{EntityEvent, EntityEventEventId};
+use acacia_proto::packets::{EntityEvent, EntityEventEventId, SetEntityData};
+use acacia_proto::types::EntityProperties;
 use bevy_ecs::prelude::*;
 
 use super::{Rocket, item};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, in_world};
 use crate::creatures::{Cause, Health};
-use crate::{entities, mobs, vitals};
+use crate::{entities, vitals};
 
 const HARM: f32 = 5.0;
 const HARM_A_STAR: f32 = 2.0;
@@ -34,12 +35,17 @@ fn middles(world: &mut World, layer: Entity) -> Vec<(Entity, [f32; 3], bool)> {
     all
 }
 
-/// The rocket bursts and goes.
+/// The rocket bursts, shown with its item told again as BDS did (bds-n13fw.txt); it goes a tick later.
 pub(super) fn burst(world: &mut World, rocket: Entity, layer: Entity) -> Option<()> {
     let (id, at) = (world.get::<NetId>(rocket)?.0, world.get::<Body>(rocket)?.at);
-    let stars = world.get::<Rocket>(rocket).map(|kept| item::explosions(&kept.item).len())?;
+    let kept = world.get::<Rocket>(rocket)?.item.clone();
+    let stars = item::explosions(&kept).len();
     let show = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::FireworkParticles, data: 0, fire_at_position: None };
-    entities::tell_viewers(world, rocket, layer, at.map(|c| c.floor() as i32), vec![sapling_net::encode(&show)]);
+    let mut told = vec![sapling_net::encode(&show)];
+    if let Some(item) = super::display_item(world, layer, &kept) {
+        told.push(sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }));
+    }
+    entities::tell_viewers(world, rocket, layer, at.map(|c| c.floor() as i32), told);
     if stars > 0 {
         let near: Vec<(Entity, f32, bool)> = middles(world, layer)
             .into_iter()
@@ -54,7 +60,6 @@ pub(super) fn burst(world: &mut World, rocket: Entity, layer: Entity) -> Option<
             }
         }
     }
-    mobs::remove(world, rocket);
     None
 }
 

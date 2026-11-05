@@ -44,31 +44,58 @@ fn may_love(world: &World, entity: Entity, kind: &str, item: &str) -> bool {
     rules.breed.contains(&item) && !raised.is_baby() && !super::nesting::is_nesting(world, entity) && raised.kept.in_love == 0 && raised.kept.breed_cooldown == 0 && (!rules.breed_tame || raised.is_tamed()) && (!rules.breed_healthy || healthy)
 }
 
-/// The mob is fed `item` by `player`: it falls in love if it may. False where it may not.
+/// The mob is fed `item` by `player`: it falls in love if it may, shown eating the item's id and
+/// aux at once and in love from the next tick (bds-n13herd.txt). False where it may not.
 pub(super) fn fall_in_love(world: &mut World, entity: Entity, kind: &str, item: &str, player: Entity) -> bool {
     if !may_love(world, entity, kind, item) {
         return false;
     }
     let cause = world.get::<Marks>(player).map_or(0, |marks| marks.unique_id);
+    let now = world.resource::<crate::components::Tick>().0;
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {
-        (raised.kept.in_love, raised.kept.love_cause) = (LOVE, cause);
+        (raised.kept.in_love, raised.kept.love_cause, raised.loved_at) = (LOVE, cause, Some(now));
     }
-    shown::flag(world, entity, Flags::INLOVE, true);
-    shown::event(world, entity, EntityEventEventId::InLoveParticles, 0);
+    let eaten = world.get::<Inventory>(player).map(|inventory| crate::inventory::wire(inventory.in_hand(), false));
+    if let Some(eaten) = eaten {
+        shown::event(world, entity, EntityEventEventId::EatingItem, i32::from(eaten.network_id) << 16 | eaten.metadata as i32);
+    }
     true
 }
 
-/// A tick of the mob's love and its rest after breeding.
-pub(super) fn tick(world: &mut World, entity: Entity, _kind: &str, _now: u64) {
+/// A tick of the mob's love and its rest after breeding: `INLOVE` shows the tick after its feed
+/// and `LoveParticles` every [`HEARTS`] ticks from the ninth (bds-n13herd.txt, bds-n3foals.txt).
+pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
+    show_tempted(world, entity, kind);
     let Some(mut raised) = world.get_mut::<Raised>(entity) else { return };
     raised.kept.breed_cooldown = (raised.kept.breed_cooldown - 1).max(0);
     if raised.kept.in_love == 0 {
         return;
     }
     raised.kept.in_love -= 1;
+    let since = raised.loved_at.map(|fed| now.saturating_sub(fed));
     if raised.kept.in_love == 0 {
-        raised.partner = None;
+        (raised.partner, raised.loved_at) = (None, None);
         shown::flag(world, entity, Flags::INLOVE, false);
+        return;
+    }
+    match since {
+        Some(1) => shown::flag(world, entity, Flags::INLOVE, true),
+        Some(since) if since > 1 && since % HEARTS == HEARTS_FROM % HEARTS => shown::event(world, entity, EntityEventEventId::LoveParticles, 0),
+        _ => {}
+    }
+}
+
+/// Hearts show every this many ticks, the first this many after the feed.
+const HEARTS: u64 = 16;
+const HEARTS_FROM: u64 = 9;
+
+/// Shows `TEMPTED` while a player near holds its food (bds-n13herd.txt: set the tick after wheat was
+/// held, kept in love, cleared once a lead was held).
+fn show_tempted(world: &mut World, entity: Entity, kind: &str) {
+    let tempted = tempter(world, entity, kind).is_some();
+    let shown = world.get::<crate::sync::Told>(entity).and_then(crate::sync::Told::mob_flags).is_some_and(|flags| flags.0 & Flags::TEMPTED.0 != 0);
+    if tempted != shown {
+        shown::flag(world, entity, Flags::TEMPTED, tempted);
     }
 }
 
@@ -119,7 +146,7 @@ fn breed(world: &mut World, parent: Entity, mate: Entity, layer: Entity, kind: &
     let baby_kind = MIXED.iter().find(|(a, b, _)| (*a == kind && *b == mate_kind) || (*b == kind && *a == mate_kind)).map_or(kind, |(_, _, baby)| *baby).to_owned();
     for one in [parent, mate] {
         if let Some(mut raised) = world.get_mut::<Raised>(one) {
-            (raised.kept.in_love, raised.kept.breed_cooldown, raised.partner) = (0, COOLDOWN, None);
+            (raised.kept.in_love, raised.kept.breed_cooldown, raised.partner, raised.loved_at) = (0, COOLDOWN, None, None);
         }
         shown::flag(world, one, Flags::INLOVE, false);
     }
@@ -150,14 +177,19 @@ fn leave_experience(world: &mut World, layer: Entity, at: [f32; 3]) {
     }
 }
 
-/// Before the move of a mob that follows food: it walks to the nearest player near holding some.
-pub(super) fn tempted(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
-    let Some(rules) = sapling_data::husbandry(kind).filter(|rules| !rules.tempt.is_empty()) else { return false };
-    let Some(body) = world.get::<Body>(entity).copied() else { return false };
+/// The feet of the nearest player in the mob's world within [`TEMPTS`] holding food it follows.
+fn tempter(world: &World, entity: Entity, kind: &str) -> Option<[f32; 3]> {
+    let rules = sapling_data::husbandry(kind).filter(|rules| !rules.tempt.is_empty())?;
+    let (body, layer) = (world.get::<Body>(entity)?, world.get::<InLayer>(entity)?.0);
     let holds = |player: Entity| world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).is_some_and(|held| rules.tempt.contains(&held.stack.name.as_str()));
     let near = in_world(world).into_iter().filter(|player| world.get::<InLayer>(*player).is_some_and(|in_layer| in_layer.0 == layer) && holds(*player));
     let feet = near.filter_map(|player| world.get::<Position>(player).map(|position| position.feet)).filter(|feet| distance(body.at, *feet) <= TEMPTS);
-    let Some(to) = feet.min_by(|a, b| distance(body.at, *a).total_cmp(&distance(body.at, *b))) else { return false };
+    feet.min_by(|a, b| distance(body.at, *a).total_cmp(&distance(body.at, *b)))
+}
+
+/// Before the move of a mob that follows food: it walks to the nearest player near holding some.
+pub(super) fn tempted(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
+    let (Some(rules), Some(to), Some(body)) = (sapling_data::husbandry(kind), tempter(world, entity, kind), world.get::<Body>(entity).copied()) else { return false };
     super::super::legs::walk(world, entity, layer, &body, [to[0], to[2]], rules.walks * rules.tempt_speed, TEMPTED_NEAR);
     true
 }

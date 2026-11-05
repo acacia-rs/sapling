@@ -105,6 +105,20 @@ effects for `max(1, duration / 8)` (0x142410e20).
 Each kind's numbers are in `sapling_data::shots` and `enchant/archery.rs`. Flight, hits and landings
 are in `creatures/flight.rs`, `hits.rs` and `landing.rs`. Using an item is in `shots/`.
 
+Drilled 2026-11-05 (`bds_command_probe r1shots`, `r1stuck`; research/captures/bds-r1shots.txt, bds-r1stuck.txt):
+- A stuck arrow nobody took went 60 s after it was shot, survival's and creative's alike (1200 ticks).
+- A Loyalty III trident lay 5 ticks after it landed (`item.trident.hit_ground` there), then came home by Java's
+  numbers: the motion kept 0.95 and pulled 0.05 a level along the way to the eyes, the position lifted besides by
+  0.015 a level of the height to the eyes (`ThrownTrident.tick`); `item.trident.return` was told at the thrower's
+  eyes with the second tick home. sapling: `shots/tridents.rs`.
+- Sounds, each with no entity type and unique id -1, at the feet + 0.9: `bow`, `crossbow.loading.start`,
+  `.middle`, `.end`, `crossbow.shoot`, `item.trident.throw`, and Riptide's `item.trident.riptide_<level>`
+  (`riptide_3` at level III).
+- A crossbow held in use was heard `crossbow.loading.start`, `.middle` and `.end` 4, 14 and 24 ticks in and was
+  loaded the tick after, `ChargedItem` to the player and its watcher, before it was let go. sapling counts the use
+  from 1 and sounds at a fifth, three fifths and the whole of the load (Quick Charge's fractions assumed), then
+  loads (`shots/crossbows.rs` `tick`).
+
 A stuck arrow or trident that a player may pick up is kept with its column, with the fields
 `player`, `isCreative`, `auxValue` and `Trident` (sapling-leveldb `actors/stuck.rs`). Any other stuck
 shot goes after 1200 ticks.
@@ -115,7 +129,6 @@ These are the Java game's, a guess, or not found in the decompile:
 
 - the Multishot spread of 10 degrees;
 - where a shot leaves from: 0.1 under the eyes;
-- the 1200-tick despawn of a stuck arrow;
 - BDS's short pickup delay (Actor +0x1bc): drilled 2026-11-05 (bds-f1pickup.txt), a stuck arrow was
   taken 8 ticks after it lay still, as the 7-tick shake ran out; sapling waits the same since
   (`creatures/stuck.rs` `shaking`). The same drill's dispenser arrow bounced off the creative
@@ -124,10 +137,8 @@ These are the Java game's, a guess, or not found in the decompile:
 - the lingering cloud's shrinking over its life (its pulse and shares were read: items.md, "Area
   effect clouds");
 - a player's arrow throwing a mob 0.4, as a melee hit does;
-- Loyalty's return pull (0.05 a level) and Riptide's launch (`3 × (1 + level) / 4`);
+- Riptide's launch (`3 × (1 + level) / 4`);
 - the `chargedItem` tag of a loaded crossbow;
-- the sound names `crossbow.loading.end`, `crossbow.shoot`, `item.trident.throw` and
-  `item.trident.riptide_1`;
 - most effect colours, which are Java's (sapling-data `shots.rs`);
 - the five chick-hatching numbers, the snowball's 3 against a blaze and the bottle's 3 to 10 are the
   pack's, but were not seen in play.
