@@ -1,7 +1,7 @@
 //! What BDS did to a structure load's cells once all were in (docs/research/structure-blocks.md, "After a
 //! load"; research/captures/bds-e3turn.txt): fences and walls join what is there, glow lichen and resin
-//! drop the faces with nothing solid behind, and torches, activator rails and cocoa that lack support show
-//! breaking and go a tick later with their items.
+//! drop the faces with nothing solid behind, and torches, activator rails, cocoa and hanging signs that lack
+//! support show breaking and go a tick later with their items.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
@@ -11,7 +11,7 @@ use super::{lacks_support, loosened};
 
 /// What BDS's load took out unheld; levers, plain and golden rails, comparators, petals, leaf litter and
 /// big dripleaves it kept wherever `lacks_support` would refuse them (bds-e3turn.txt).
-const POPS: [&str; 3] = ["torch", ":activator_rail", ":cocoa"];
+const POPS: [&str; 4] = ["torch", ":activator_rail", ":cocoa", "_hanging_sign"];
 const CLINGS: [&str; 2] = ["minecraft:glow_lichen", "minecraft:resin_clump"];
 /// Each `multi_face_direction_bits` bit's face, as facing.rs places them.
 const BITS: [(Face, u32); 6] = [(Face::Down, 1), (Face::Up, 2), (Face::South, 4), (Face::West, 8), (Face::North, 16), (Face::East, 32)];

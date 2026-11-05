@@ -11,6 +11,7 @@ mod armour_wear;
 mod attacks;
 mod bees;
 mod blaze_griefing;
+mod block_holds;
 mod block_leftovers;
 mod block_rules;
 mod block_use;

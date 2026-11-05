@@ -58,6 +58,10 @@ fn depended(registry: &BlockRegistry, id: u32, face: Face) -> bool {
     if state.name.ends_with("lantern") {
         return face == if is("hanging", "1") { Face::Down } else { Face::Up };
     }
+    if state.name == "minecraft:small_dripleaf_block" {
+        // Its lower half went with the upper (research/captures/bds-t5holds.txt); its ground is ground.rs's.
+        return face == Face::Down && is("upper_block_bit", "0");
+    }
     ends(state.name, HANGS) && is("facing_direction", FACES[index]) || face == Face::Up && ends(state.name, STANDS) && !ground::has_rule(state.name)
 }
 
@@ -67,9 +71,10 @@ fn depended(registry: &BlockRegistry, id: u32, face: Face) -> bool {
 pub(super) fn lacks_support(world: &World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(level) = level(world, layer) else { return false };
     let registry = level.registry();
+    let own_half = doors::second_cell(registry, id, pos).map(|(cell, _)| cell);
     !ground::may_stand(level, pos, id) || Face::ALL.iter().filter(|face| depended(registry, id, **face)).any(|face| {
         let [x, y, z] = [0, 1, 2].map(|axis| pos[axis] - face.offset()[axis]);
-        !(level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| state.is_solid()))
+        own_half != Some([x, y, z]) && !(level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| state.is_solid()))
     })
 }
 

@@ -26,6 +26,9 @@ const REEDS: &str = "minecraft:reeds";
 const KELP: &str = "minecraft:kelp";
 const TWISTING: &str = "minecraft:twisting_vines";
 const WEEPING: &str = "minecraft:weeping_vines";
+const SMALL_DRIPLEAF: &str = "minecraft:small_dripleaf_block";
+/// What a small dripleaf stands on dry; in water, the dirt list too (1466059d0, worldgen-bds-caves.md).
+const DRIPLEAF_GROUND: &[&str] = &["minecraft:clay", "minecraft:moss_block"];
 /// What lets redstone dust lie on it without a top to lie on.
 const LIT_FROM_BELOW: &[&str] = &["minecraft:glowstone", "minecraft:redstone_lamp", "minecraft:lit_redstone_lamp"];
 const DIODES: &[&str] = &["minecraft:unpowered_repeater", "minecraft:powered_repeater", "minecraft:unpowered_comparator", "minecraft:powered_comparator"];
@@ -113,7 +116,14 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
         _ if DIODES.contains(&block) => has_top(level, below(pos), false),
         _ if RAILS.contains(&block) => {
             let rises = property(registry, id, "rail_direction").and_then(|shape| RISES_TO.iter().find(|(rising, _)| *rising == shape));
-            has_top(level, below(pos), false) && rises.is_none_or(|(_, [dx, dz])| has_top(level, [pos[0] + dx, pos[1] - 1, pos[2] + dz], false))
+            // The cell risen to, at the rail's own height (`BaseRailBlock` 142cd5660).
+            has_top(level, below(pos), false) && rises.is_none_or(|(_, [dx, dz])| has_top(level, [pos[0] + dx, pos[1], pos[2] + dz], false))
+        }
+        SMALL_DRIPLEAF if property(registry, id, "upper_block_bit") == Some("1") => under == Some(SMALL_DRIPLEAF),
+        SMALL_DRIPLEAF => under.is_some_and(|under| DRIPLEAF_GROUND.contains(&under) || is_water(level, pos) && VEGETATION.contains(&under)),
+        _ if block.ends_with("_hanging_sign") && property(registry, id, "hanging") == Some("1") => {
+            let above = [pos[0], pos[1] + 1, pos[2]];
+            level.in_height(above[1]) && has_bottom(level, above)
         }
         "minecraft:cocoa" => {
             let side = property(registry, id, "direction").and_then(|direction| COCOA_LOG.get(direction.parse::<usize>().ok()?));
@@ -162,7 +172,7 @@ pub(super) fn is_wrongly_lit(level: &World, [x, y, z]: BlockPos, id: u32) -> boo
 
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {
-    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire", "minecraft:frog_spawn", KELP, TWISTING, WEEPING];
+    const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire", "minecraft:frog_spawn", KELP, TWISTING, WEEPING, SMALL_DRIPLEAF];
     [CROPS, DIODES, RAILS, VINES, OTHERS].iter().any(|list| list.contains(&name))
 }
 

@@ -1,6 +1,6 @@
 //! What BDS's `/setblock` (and so `ShardCtx::update_block`) writes beyond the block named
 //! (research/captures/bds-fixset.txt, bds-bkticks.txt): a bed is laid whole with its head in the
-//! named cell; nether vines, cave vines and kelp under water take a random age; a live coral fan
+//! named cell, a small dripleaf with its upper half; coral plants and fans play `place`; nether vines, cave vines and kelp under water take a random age; a live coral fan
 //! or kelp keeps a water source beside itself, which then runs; a comparator set again in its own
 //! block type gives out what it gave (redstone/kept.rs).
 
@@ -61,8 +61,29 @@ pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block
     }
     if put {
         super::daylight::left_for_the_second(world, layer, pos);
+        super::coral::heard(world, layer, pos);
     }
     Some(put)
+}
+
+/// A small dripleaf's lower half `id` put at `pos` with its upper half over it, whatever was there,
+/// both shown in one UpdateSubchunkBlocks, the upper first (research/captures/bds-e3turn.txt). `None`
+/// for any other block, `Some(false)` where it already stands.
+pub(super) fn put_dripleaf(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<bool> {
+    let level = level(world, layer)?;
+    let registry = level.registry();
+    let is_lower = registry.get(id).is_some_and(|state| state.name == "minecraft:small_dripleaf_block" && state.property("upper_block_bit") == Some("0"));
+    let above = Face::Up.neighbour(pos);
+    let upper = doors::with(registry, id, "upper_block_bit", "1").filter(|_| is_lower && level.in_height(above[1]))?;
+    if level.block(pos[0], pos[1], pos[2]) == id {
+        return Some(false);
+    }
+    if !send::set_quietly(world, layer, pos, id) {
+        return None;
+    }
+    send::set_quietly(world, layer, above, upper);
+    send::show_together(world, layer, &[(above, send::FLAGS), (pos, send::FLAGS)]);
+    Some(true)
 }
 
 /// Whether `pos` holds half a bed, whose other half then shows its break dust at its corner: BDS

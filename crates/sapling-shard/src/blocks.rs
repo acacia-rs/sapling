@@ -185,7 +185,7 @@ pub(super) fn put_settled(world: &mut World, layer: Entity, pos: BlockPos, block
         (Some(registry), Some((put, id))) if put != id => Some(send::describe(registry, put)),
         _ => None,
     };
-    let door = put_as.and_then(|(put, _)| doors::put_whole(world, layer, pos, put).or_else(|| commanded::put_bed(world, layer, pos, put)));
+    let door = put_as.and_then(|(put, _)| doors::put_whole(world, layer, pos, put).or_else(|| commanded::put_bed(world, layer, pos, put)).or_else(|| commanded::put_dripleaf(world, layer, pos, put)));
     let put = door.or_else(|| commanded::put(world, layer, pos, swapped.as_ref().unwrap_or(block)));
     if put == Some(true) {
         updates::settle(world, layer, pos);

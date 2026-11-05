@@ -12,7 +12,7 @@ use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
 mod sections;
 
-pub(crate) use sections::{batched, hold, hold_break, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
+pub(crate) use sections::{after_blocks, batched, hold, hold_break, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
 
 use crate::components::{InLayer, Layer, Outgoing};
 
