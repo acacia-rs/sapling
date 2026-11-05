@@ -186,6 +186,10 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    pub fn add_spawn_area(&mut self, area: crate::chunk::SpawnArea) {
+        self.shape.add_spawn_area(area);
+    }
+
     fn write_past(&mut self, x: i32, y: i32, z: i32, block: Block) {
         self.unclipped.push(([x, y, z], block));
         self.written.insert((x, y, z), block);

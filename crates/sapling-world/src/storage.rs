@@ -24,11 +24,13 @@ pub struct StoredColumn {
     pub actors: Vec<u8>,
     /// The block ticks waiting in it, as one compound (`sapling_leveldb::pending_ticks`).
     pub pending_ticks: Vec<u8>,
+    /// Its structures' spawn areas, one record (`sapling_leveldb::decode_spawn_areas`).
+    pub spawn_areas: Vec<u8>,
 }
 
 impl StoredColumn {
     pub fn of(chunk: Chunk) -> Self {
-        Self { chunk, block_entities: Vec::new(), actors: Vec::new(), pending_ticks: Vec::new() }
+        Self { chunk, block_entities: Vec::new(), actors: Vec::new(), pending_ticks: Vec::new(), spawn_areas: Vec::new() }
     }
 }
 

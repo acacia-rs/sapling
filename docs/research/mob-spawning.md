@@ -27,7 +27,7 @@ Rule components and how they are read:
   biome's minimum snow level above 0 ("Snow cover" below).
 
 Left out: `pillager_patrol` (needs patrol events, world age, villages) and the guardian (ocean
-monuments, BDS's structure spawns); the slime and the phantom have their code gates (below); herd events (babies,
+monuments: structure spawns, docs/research/structure-spawns.md); the slime and the phantom have their code gates (below); herd events (babies,
 horse and fish variants, riders), `disallow_spawns_in_bubble`; blazes, wither skeletons, cats and
 pillagers have no natural conditions (structures spawn them).
 
@@ -137,19 +137,8 @@ test `a_natural_mob_a_player_names_stays_when_the_player_goes`. Picked-up items 
 
 ## Left
 
-- Structure spawns [D, not built]: `BedrockSpawner::tick` (1415eebf0) asks the chunk's hardcoded
-  spawn areas (1438cfcd0) at the attempt's cell; with none it runs the cluster above, with one it
-  spawns from the area's own list (fortress, monument, witch hut, pillager outpost), the same caps
-  asked per member, the members persistent when the area's flag says. Sapling cannot: its worlds
-  carry no spawn areas (BDS writes them per chunk with the structures; neither sapling-world reads
-  them nor sapling-worldgen writes them), so building it starts with that record. Looked at
-  2026-11-04: the areas come from `StructureFeature::addHardcodedSpawnAreas` (its lambda 141f08120,
-  vtable 14a784210), kept per chunk as what is taken to be LevelDB tag 57 (a count, then per area six
-  ints, a box, and a type byte: 1 fortress, 2 witch hut, 3 monument, 5 outpost, read off the lambda,
-  not off a saved world). Not ported: it needs sapling-worldgen to emit each structure's box with its
-  start, sapling-leveldb to write and read the record, and the spawner to ask it; the tag and the type
-  numbers want a BDS world's chunk dump first.
-- Patrols: `pillager_patrol` needs the patrol spawner, world age and village checks; not read.
+- Structure spawns and patrols: docs/research/structure-spawns.md (built 2026-11-05: the saved
+  record is chunk tag 0x77 with structure names, not tag 57 with type bytes; patrols not built).
 - Herd events (spawner blocks: docs/research/spawners.md): undrillable live, natural spawning takes a
   random spot and time (husbandry.md "Herds of babies").
 - `doMobSpawning` and peaceful (2026-11-04, `e1spawn`, bds-e1spawn.txt): with the rule off a monster

@@ -132,6 +132,16 @@ impl World {
         self.column(pos).map_or(&[], Column::pending_ticks)
     }
 
+    /// The structure spawn areas a loaded column was stored or generated with (`StoredColumn::spawn_areas`);
+    /// none where its record is unreadable.
+    pub fn spawn_areas(&self, pos: ChunkPos) -> Vec<sapling_leveldb::SpawnArea> {
+        let record = self.column(pos).map_or(&[][..], Column::spawn_areas);
+        if record.is_empty() {
+            return Vec::new();
+        }
+        sapling_leveldb::decode_spawn_areas(record).unwrap_or_default()
+    }
+
     /// Replaces a loaded column's waiting block ticks, to be saved with it; false where none is loaded.
     pub fn set_pending_ticks(&mut self, pos: ChunkPos, ticks: Vec<u8>) -> bool {
         self.column_mut(pos).map(|column| column.set_pending_ticks(ticks)).is_some()

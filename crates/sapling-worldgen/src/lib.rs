@@ -51,6 +51,7 @@ pub use structured::replay::{ReplayWrite, StructureStep};
 pub use structure::{PlaceFailure, StructureKind};
 pub use surface::temperature;
 pub use terrain::{CellKind, ChunkShape, HEIGHT, MIN_Y};
+pub use chunk::SpawnArea;
 
 use cache::SourceCache;
 use carver::Carvers;

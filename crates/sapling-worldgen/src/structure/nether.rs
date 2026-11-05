@@ -8,7 +8,7 @@ use std::sync::Arc;
 use super::bastion::{self, Bastion};
 use super::canvas::{Canvas, Spawners};
 use super::fortress::{self, Fortress};
-use super::ruined_portal;
+use super::{ruined_portal, spawn_areas};
 use super::placement::{Grid, Spread};
 use super::stage::Placed;
 use super::start_cache::StartCache;
@@ -130,6 +130,7 @@ impl NetherStructures {
         let mut random = Mt19937::new(seed);
         for fortress in &reaching.fortresses {
             fortress.post_process(&mut canvas, &mut random);
+            spawn_areas::file(&mut canvas, spawn_areas::FORTRESS, fortress.bb, fortress.pieces.iter().map(|p| p.frame.bb));
             touched = (touched.0.min(fortress.bb.y0 - 1), touched.1.max(fortress.bb.y1 + 1));
         }
         let seeds = LargeFeatureSeed::new(self.level_seed);

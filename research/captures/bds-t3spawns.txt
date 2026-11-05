@@ -1,0 +1,715 @@
+## /difficulty normal
+     48 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["NORMAL"]
+## /gamerule domobspawning true
+   1003 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "true"]
+   1284 actor   AddEntity AddEntity { unique_id: -4294967285, runtime_id: 11, entity_type: "minecraft:cow", position: Vec3f { x: 25.49, y: 72.0, z: 245.49 }
+## /gamerule dodaylightcycle false
+   2010 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["dodaylightcycle", "false"]
+## /time set 6000
+   3003 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["6000"]
+## /tp @s 3843 101 -1785
+   4014 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"3843.50, 101.00, -1784.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4014 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "3843.50", "101.00", "-1784.50"]
+   4083 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967286 }
+   4083 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967285 }
+   4083 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967290 }
+   4083 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967287 }
+   4083 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967293 }
+   4083 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967289 }
+   4083 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967294 }
+   4632 actor   AddEntity AddEntity { unique_id: -4294967283, runtime_id: 13, entity_type: "minecraft:cat", position: Vec3f { x: 3842.5, y: 72.0, z: -1818.5 }
+   4633 actor   AddEntity AddEntity { unique_id: -4294967284, runtime_id: 12, entity_type: "minecraft:witch", position: Vec3f { x: 3842.5, y: 72.0, z: -1818.5 }
+## /tp CmdWatcher 3843 101 -1785
+   5014 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "3843.50", "101.00", "-1784.50"]
+## /
+## /
+## /
+   8684 actor   AddEntity AddEntity { unique_id: -4294967281, runtime_id: 15, entity_type: "minecraft:sheep", position: Vec3f { x: 3821.49, y: 70.0, z: -1780.51 }
+   8684 actor   AddEntity AddEntity { unique_id: -4294967282, runtime_id: 14, entity_type: "minecraft:sheep", position: Vec3f { x: 3821.49, y: 70.0, z: -1780.51 }
+   8832 actor   AddEntity AddEntity { unique_id: -4294967280, runtime_id: 16, entity_type: "minecraft:pig", position: Vec3f { x: 3823.49, y: 72.0, z: -1772.51 }
+   8832 actor   AddEntity AddEntity { unique_id: -4294967279, runtime_id: 17, entity_type: "minecraft:creeper", position: Vec3f { x: 3823.49, y: 44.0, z: -1772.51 }
+## /
+## /
+  10032 actor   AddEntity AddEntity { unique_id: -4294967278, runtime_id: 18, entity_type: "minecraft:pig", position: Vec3f { x: 3812.49, y: 65.0, z: -1787.51 }
+## /
+## /
+## /
+  13880 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967279 }
+## /
+## /
+## /fill 3841 100 -1787 3845 100 -1783 barrier
+  16020 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["25"]
+## /tp @s 3843.5 101 -1785.5
+  17032 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"3843.50, 101.00, -1785.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  17032 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "3843.50", "101.00", "-1785.50"]
+## /tp CmdWatcher 3843.5 101 -1785.5
+  18030 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "3843.50", "101.00", "-1785.50"]
+  18232 actor   AddEntity AddEntity { unique_id: -4294967277, runtime_id: 19, entity_type: "minecraft:creeper", position: Vec3f { x: 3843.49, y: 61.0, z: -1778.51 }
+## /
+## /
+## /
+## /
+## /
+  23234 actor   AddEntity AddEntity { unique_id: -4294967274, runtime_id: 22, entity_type: "minecraft:zombie", position: Vec3f { x: 3842.49, y: 77.0, z: -1750.51 }
+  23234 actor   AddEntity AddEntity { unique_id: -4294967275, runtime_id: 21, entity_type: "minecraft:zombie", position: Vec3f { x: 3842.49, y: 77.0, z: -1750.51 }
+  23234 actor   AddEntity AddEntity { unique_id: -4294967276, runtime_id: 20, entity_type: "minecraft:zombie", position: Vec3f { x: 3842.49, y: 77.0, z: -1750.51 }
+## /
+## /
+## /
+## /
+## /
+## /
+  29834 actor   AddEntity AddEntity { unique_id: -4294967273, runtime_id: 23, entity_type: "minecraft:skeleton", position: Vec3f { x: 3839.49, y: 76.0, z: -1762.51 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  40782 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967280 }
+## /
+  41485 actor   AddEntity AddEntity { unique_id: -4294967272, runtime_id: 24, entity_type: "minecraft:chicken", position: Vec3f { x: 3830.49, y: 73.0, z: -1785.51 }
+## /
+## /
+## /
+  44133 actor   AddEntity AddEntity { unique_id: -4294967271, runtime_id: 25, entity_type: "minecraft:creeper", position: Vec3f { x: 3857.49, y: 72.0, z: -1791.51 }
+  45040 actor   AddEntity AddEntity { unique_id: -4294967269, runtime_id: 27, entity_type: "minecraft:zombie", position: Vec3f { x: 3849.49, y: 67.0, z: -1778.51 }
+  45040 actor   AddEntity AddEntity { unique_id: -4294967270, runtime_id: 26, entity_type: "minecraft:zombie", position: Vec3f { x: 3849.49, y: 67.0, z: -1778.51 }
+## /
+## /
+## /
+## /
+  48282 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967278 }
+## /
+## /
+## /
+  51633 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967282 }
+## /
+  52834 actor   AddEntity AddEntity { unique_id: -4294967267, runtime_id: 29, entity_type: "minecraft:cow", position: Vec3f { x: 3820.49, y: 70.0, z: -1777.51 }
+  52835 actor   AddEntity AddEntity { unique_id: -4294967268, runtime_id: 28, entity_type: "minecraft:cow", position: Vec3f { x: 3820.49, y: 70.0, z: -1777.51 }
+## /
+  53532 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967276 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  68434 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967274 }
+## /
+## /
+## /
+## /
+  72483 actor   AddEntity AddEntity { unique_id: -4294967263, runtime_id: 33, entity_type: "minecraft:zombie_villager_v2", position: Vec3f { x: 3844.49, y: 75.0, z: -1751.51 }
+  72484 actor   AddEntity AddEntity { unique_id: -4294967266, runtime_id: 30, entity_type: "minecraft:zombie", position: Vec3f { x: 3844.49, y: 75.0, z: -1751.51 }
+  72484 actor   AddEntity AddEntity { unique_id: -4294967264, runtime_id: 32, entity_type: "minecraft:zombie_villager_v2", position: Vec3f { x: 3844.49, y: 75.0, z: -1751.51 }
+  72485 actor   AddEntity AddEntity { unique_id: -4294967265, runtime_id: 31, entity_type: "minecraft:zombie_villager_v2", position: Vec3f { x: 3844.49, y: 75.0, z: -1751.51 }
+## /
+## /
+  74285 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967263 }
+  74481 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967266 }
+  74682 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967265 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  87732 actor   AddEntity AddEntity { unique_id: -4294967260, runtime_id: 36, entity_type: "minecraft:zombie", position: Vec3f { x: 3849.49, y: 73.0, z: -1755.51 }
+  87733 actor   AddEntity AddEntity { unique_id: -4294967261, runtime_id: 35, entity_type: "minecraft:zombie", position: Vec3f { x: 3849.49, y: 73.0, z: -1755.51 }
+  87734 actor   AddEntity AddEntity { unique_id: -4294967262, runtime_id: 34, entity_type: "minecraft:zombie", position: Vec3f { x: 3849.49, y: 73.0, z: -1755.51 }
+## /
+## /
+## /
+  90788 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967261 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  98933 actor   AddEntity AddEntity { unique_id: -4294967259, runtime_id: 37, entity_type: "minecraft:enderman", position: Vec3f { x: 3852.49, y: 72.0, z: -1757.51 }
+## /
+## /
+## /
+## /
+## /
+## /
+ 104332 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967269 }
+## /
+ 105584 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967271 }
+## /
+ 106133 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967272 }
+ 106533 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967270 }
+ 106734 actor   AddEntity AddEntity { unique_id: -4294967258, runtime_id: 38, entity_type: "minecraft:pig", position: Vec3f { x: 3829.49, y: 73.0, z: -1800.51 }
+## /
+## /
+## /
+## /
+## /
+ 111283 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967260 }
+## /
+## /
+## /
+ 115133 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967277 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 133380 actor   AddEntity AddEntity { unique_id: -4294967257, runtime_id: 39, entity_type: "minecraft:creeper", position: Vec3f { x: 3857.49, y: 72.0, z: -1791.51 }
+## /
+ 134734 actor   AddEntity AddEntity { unique_id: -4294967256, runtime_id: 40, entity_type: "minecraft:creeper", position: Vec3f { x: 3854.49, y: 73.0, z: -1756.51 }
+ 134880 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967262 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 143529 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967264 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 165233 actor   AddEntity AddEntity { unique_id: -4294967255, runtime_id: 41, entity_type: "minecraft:skeleton", position: Vec3f { x: 3851.49, y: 73.0, z: -1762.51 }
+## /
+## /
+## /
+## /time set 18000
+ 169213 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["18000"]
+ 169734 actor   AddEntity AddEntity { unique_id: -4294967251, runtime_id: 45, entity_type: "minecraft:zombie", position: Vec3f { x: 3835.49, y: 78.0, z: -1760.51 }
+ 169735 actor   AddEntity AddEntity { unique_id: -4294967252, runtime_id: 44, entity_type: "minecraft:zombie", position: Vec3f { x: 3835.49, y: 78.0, z: -1760.51 }
+ 169735 actor   AddEntity AddEntity { unique_id: -4294967254, runtime_id: 42, entity_type: "minecraft:skeleton", position: Vec3f { x: 3835.49, y: 85.0, z: -1760.51 }
+ 169736 actor   AddEntity AddEntity { unique_id: -4294967253, runtime_id: 43, entity_type: "minecraft:zombie", position: Vec3f { x: 3835.49, y: 78.0, z: -1760.51 }
+## /testfor @e[type=witch]
+ 170214 actor   CommandOutput success_count=1 data=None commands.testfor.success success=true ["Witch"]
+ 171183 actor   AddEntity AddEntity { unique_id: -4294967249, runtime_id: 47, entity_type: "minecraft:zombie_villager_v2", position: Vec3f { x: 3850.49, y: 71.0, z: -1770.51 }
+ 171184 actor   AddEntity AddEntity { unique_id: -4294967250, runtime_id: 46, entity_type: "minecraft:zombie", position: Vec3f { x: 3850.49, y: 71.0, z: -1770.51 }
+## /
+ 171382 actor   AddEntity AddEntity { unique_id: -4294967248, runtime_id: 48, entity_type: "minecraft:skeleton", position: Vec3f { x: 3850.49, y: 71.0, z: -1770.51 }
+## /
+ 172632 actor   AddEntity AddEntity { unique_id: -4294967246, runtime_id: 50, entity_type: "minecraft:spider", position: Vec3f { x: 3849.49, y: 89.0, z: -1749.51 }
+ 172633 actor   AddEntity AddEntity { unique_id: -4294967247, runtime_id: 49, entity_type: "minecraft:creeper", position: Vec3f { x: 3874.49, y: 88.0, z: -1780.51 }
+ 173083 actor   AddEntity AddEntity { unique_id: -4294967245, runtime_id: 51, entity_type: "minecraft:witch", position: Vec3f { x: 3828.49, y: 71.0, z: -1772.51 }
+## /
+ 173734 actor   AddEntity AddEntity { unique_id: -4294967244, runtime_id: 52, entity_type: "minecraft:skeleton", position: Vec3f { x: 3848.49, y: 89.0, z: -1749.51 }
+ 173734 actor   AddEntity AddEntity { unique_id: -4294967243, runtime_id: 53, entity_type: "minecraft:skeleton", position: Vec3f { x: 3848.49, y: 89.0, z: -1749.51 }
+## /
+## /
+ 175784 actor   AddEntity AddEntity { unique_id: -4294967242, runtime_id: 54, entity_type: "minecraft:skeleton", position: Vec3f { x: 3824.49, y: 72.0, z: -1802.51 }
+## /
+## /
+ 177984 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967257 }
+## /
+## /
+## /
+## /
+ 181782 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967246 }
+## /
+## /
+## /
+ 184934 actor   AddEntity AddEntity { unique_id: -4294967241, runtime_id: 55, entity_type: "minecraft:creeper", position: Vec3f { x: 3842.49, y: 76.0, z: -1754.51 }
+## /
+ 185734 actor   AddEntity AddEntity { unique_id: -4294967240, runtime_id: 56, entity_type: "minecraft:zombie", position: Vec3f { x: 3820.49, y: 71.0, z: -1771.51 }
+## /
+## /
+## /
+ 188830 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967256 }
+## /
+ 189233 actor   AddEntity AddEntity { unique_id: -4294967238, runtime_id: 58, entity_type: "minecraft:zombie", position: Vec3f { x: 3850.49, y: 73.0, z: -1762.51 }
+ 189234 actor   AddEntity AddEntity { unique_id: -4294967239, runtime_id: 57, entity_type: "minecraft:zombie", position: Vec3f { x: 3850.49, y: 73.0, z: -1762.51 }
+## /
+ 190283 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967240 }
+ 190433 actor   AddEntity AddEntity { unique_id: -4294967237, runtime_id: 59, entity_type: "minecraft:skeleton", position: Vec3f { x: 3815.49, y: 70.0, z: -1785.51 }
+## /
+## /
+## /
+## /
+ 194533 actor   AddEntity AddEntity { unique_id: -4294967236, runtime_id: 60, entity_type: "minecraft:skeleton", position: Vec3f { x: 3851.49, y: 73.0, z: -1758.51 }
+## /
+## /
+## /
+ 197484 actor   AddEntity AddEntity { unique_id: -4294967235, runtime_id: 61, entity_type: "minecraft:creeper", position: Vec3f { x: 3852.49, y: 71.0, z: -1778.51 }
+## /
+## /
+ 199583 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967258 }
+## /
+## /
+ 202084 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967245 }
+ 202186 actor   AddEntity AddEntity { unique_id: -4294967234, runtime_id: 62, entity_type: "minecraft:bogged", position: Vec3f { x: 3859.49, y: 85.0, z: -1806.51 }
+## /
+ 202784 actor   AddEntity AddEntity { unique_id: -4294967233, runtime_id: 63, entity_type: "minecraft:creeper", position: Vec3f { x: 3823.49, y: 66.0, z: -1773.51 }
+## /
+ 203933 actor   AddEntity AddEntity { unique_id: -4294967232, runtime_id: 64, entity_type: "minecraft:creeper", position: Vec3f { x: 3847.49, y: 66.0, z: -1777.51 }
+## /
+ 204733 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967238 }
+ 204733 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967249 }
+## /
+## /
+## /
+## /
+## /
+ 209381 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967250 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 216584 actor   AddEntity AddEntity { unique_id: -4294967229, runtime_id: 67, entity_type: "minecraft:zombie", position: Vec3f { x: 3847.49, y: 95.0, z: -1742.51 }
+ 216585 actor   AddEntity AddEntity { unique_id: -4294967230, runtime_id: 66, entity_type: "minecraft:zombie", position: Vec3f { x: 3847.49, y: 95.0, z: -1742.51 }
+ 216586 actor   AddEntity AddEntity { unique_id: -4294967231, runtime_id: 65, entity_type: "minecraft:zombie", position: Vec3f { x: 3847.49, y: 95.0, z: -1742.51 }
+## /
+## /
+ 218934 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967231 }
+ 218982 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967248 }
+## /
+ 219283 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967230 }
+ 219383 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967237 }
+ 219734 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967229 }
+ 219784 actor   AddEntity AddEntity { unique_id: -4294967228, runtime_id: 68, entity_type: "minecraft:skeleton", position: Vec3f { x: 3875.49, y: 92.0, z: -1793.51 }
+ 219983 actor   AddEntity AddEntity { unique_id: -4294967227, runtime_id: 69, entity_type: "minecraft:creeper", position: Vec3f { x: 3849.49, y: 67.0, z: -1780.51 }
+## /
+ 220340 actor   AddEntity AddEntity { unique_id: -4294967226, runtime_id: 70, entity_type: "minecraft:frog", position: Vec3f { x: 3821.49, y: 70.0, z: -1778.51 }
+## /
+## /
+ 222733 actor   AddEntity AddEntity { unique_id: -4294967225, runtime_id: 71, entity_type: "minecraft:creeper", position: Vec3f { x: 3851.49, y: 72.0, z: -1767.51 }
+## /
+## /
+ 225082 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967241 }
+## /
+ 225532 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967281 }
+## /
+## /
+## /
+ 228883 actor   AddEntity AddEntity { unique_id: -4294967223, runtime_id: 73, entity_type: "minecraft:zombie", position: Vec3f { x: 3850.49, y: 73.0, z: -1761.51 }
+ 228884 actor   AddEntity AddEntity { unique_id: -4294967224, runtime_id: 72, entity_type: "minecraft:zombie", position: Vec3f { x: 3850.49, y: 73.0, z: -1761.51 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 240583 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967233 }
+## /
+## /
+## /
+ 243533 actor   AddEntity AddEntity { unique_id: -4294967222, runtime_id: 74, entity_type: "minecraft:creeper", position: Vec3f { x: 3840.49, y: 79.0, z: -1748.51 }
+## /
+## /
+## /
+## /
+## /
+## /
+ 249634 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967228 }
+ 249634 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967235 }
+ 250284 actor   AddEntity AddEntity { unique_id: -4294967221, runtime_id: 75, entity_type: "minecraft:skeleton", position: Vec3f { x: 3858.49, y: 85.0, z: -1805.51 }
+## /
+## /
+ 251583 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967239 }
+## /
+## /
+## /
+ 254782 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967226 }
+ 254833 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967232 }
+## /
+## /
+## /
+## /
+ 258437 actor   AddEntity AddEntity { unique_id: -4294967220, runtime_id: 76, entity_type: "minecraft:zombie", position: Vec3f { x: 3871.49, y: 84.0, z: -1796.51 }
+ 258438 actor   AddEntity AddEntity { unique_id: -4294967218, runtime_id: 78, entity_type: "minecraft:zombie", position: Vec3f { x: 3871.49, y: 84.0, z: -1796.51 }
+ 258438 actor   AddEntity AddEntity { unique_id: -4294967219, runtime_id: 77, entity_type: "minecraft:zombie", position: Vec3f { x: 3871.49, y: 84.0, z: -1796.51 }
+## /
+## /
+## /
+ 261984 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967225 }
+## /
+## /
+ 263430 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967236 }
+ 263580 actor   AddEntity AddEntity { unique_id: -4294967217, runtime_id: 79, entity_type: "minecraft:creeper", position: Vec3f { x: 3844.49, y: 75.0, z: -1756.51 }
+## /
+ 264679 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967223 }
+ 264989 actor   AddEntity AddEntity { unique_id: -4294967216, runtime_id: 80, entity_type: "minecraft:creeper", position: Vec3f { x: 3853.49, y: 73.0, z: -1759.51 }
+## /
+## /
+## /
+## /
+## /
+## /
+ 270681 actor   AddEntity AddEntity { unique_id: -4294967215, runtime_id: 81, entity_type: "minecraft:zombie", position: Vec3f { x: 3872.49, y: 86.0, z: -1793.51 }
+## /
+## /
+## /
+ 273383 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967224 }
+## /
+## /
+ 275882 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967227 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 285333 actor   AddEntity AddEntity { unique_id: -4294967214, runtime_id: 82, entity_type: "minecraft:creeper", position: Vec3f { x: 3841.49, y: 76.0, z: -1756.51 }
+## /
+## /
+## /
+ 288682 actor   AddEntity AddEntity { unique_id: -4294967213, runtime_id: 83, entity_type: "minecraft:creeper", position: Vec3f { x: 3853.49, y: 74.0, z: -1764.51 }
+## /
+## /
+ 291033 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967259 }
+## /
+## /
+## /
+ 293980 actor   AddEntity AddEntity { unique_id: -4294967212, runtime_id: 84, entity_type: "minecraft:frog", position: Vec3f { x: 3853.49, y: 82.0, z: -1806.51 }
+ 293981 actor   AddEntity AddEntity { unique_id: -4294967211, runtime_id: 85, entity_type: "minecraft:frog", position: Vec3f { x: 3853.49, y: 82.0, z: -1806.51 }
+## /
+## /
+ 295633 actor   AddEntity AddEntity { unique_id: -4294967210, runtime_id: 86, entity_type: "minecraft:creeper", position: Vec3f { x: 3848.49, y: 73.0, z: -1754.51 }
+## /
+## /
+## /
+## /
+## /
+ 300938 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967215 }
+ 301133 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967210 }
+## /
+## /
+ 303281 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967217 }
+## /
+## /
+## /
+## /
+ 306984 actor   AddEntity AddEntity { unique_id: -4294967208, runtime_id: 88, entity_type: "minecraft:skeleton", position: Vec3f { x: 3862.49, y: 70.0, z: -1797.51 }
+ 306984 actor   AddEntity AddEntity { unique_id: -4294967209, runtime_id: 87, entity_type: "minecraft:skeleton", position: Vec3f { x: 3862.49, y: 70.0, z: -1797.51 }
+## /
+## /
+ 309283 actor   AddEntity AddEntity { unique_id: -4294967207, runtime_id: 89, entity_type: "minecraft:zombie", position: Vec3f { x: 3853.49, y: 72.0, z: -1778.51 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /testfor @e[type=witch]
+ 321375 actor   CommandOutput success_count=1 data=None commands.testfor.success success=true ["Witch"]
+ 321737 actor   AddEntity AddEntity { unique_id: -4294967206, runtime_id: 90, entity_type: "minecraft:creeper", position: Vec3f { x: 3849.49, y: 93.0, z: -1743.51 }
+## /time set 6000
+ 322374 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["6000"]
+## /tp @s 1880 171 -1095
+ 323372 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"1880.50, 171.00, -1094.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 323372 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "1880.50", "171.00", "-1094.50"]
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967207 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967208 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967206 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967209 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967212 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967213 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967214 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967216 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967220 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967221 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967222 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967234 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967242 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967244 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967251 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967252 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967284 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967254 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967218 }
+ 323432 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967267 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967219 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967268 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967275 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967243 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967273 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967247 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967283 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967253 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967211 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967290 }
+ 323433 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967255 }
+## /tp CmdWatcher 1880 171 -1095
+ 324374 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "1880.50", "171.00", "-1094.50"]
+ 324489 actor   AddEntity AddEntity { unique_id: -4294967198, runtime_id: 98, entity_type: "minecraft:pillager", position: Vec3f { x: 1881.0, y: 142.0, z: -1131.0 }
+ 324489 actor   AddEntity AddEntity { unique_id: -4294967199, runtime_id: 97, entity_type: "minecraft:pillager", position: Vec3f { x: 1881.0, y: 142.0, z: -1123.0 }
+ 324489 actor   AddEntity AddEntity { unique_id: -4294967200, runtime_id: 96, entity_type: "minecraft:pillager", position: Vec3f { x: 1884.0, y: 134.0, z: -1124.0 }
+ 324489 actor   AddEntity AddEntity { unique_id: -4294967201, runtime_id: 95, entity_type: "minecraft:pillager", position: Vec3f { x: 1881.0, y: 129.0, z: -1127.0 }
+ 324490 actor   AddEntity AddEntity { unique_id: -4294967202, runtime_id: 94, entity_type: "minecraft:pillager", position: Vec3f { x: 1878.3, y: 134.0, z: -1124.0 }
+ 324490 actor   AddEntity AddEntity { unique_id: -4294967203, runtime_id: 93, entity_type: "minecraft:pillager", position: Vec3f { x: 1881.0, y: 134.0, z: -1127.0 }
+ 324490 actor   AddEntity AddEntity { unique_id: -4294967204, runtime_id: 92, entity_type: "minecraft:pillager", position: Vec3f { x: 1880.0, y: 138.0, z: -1127.0 }
+ 324490 actor   AddEntity AddEntity { unique_id: -4294967205, runtime_id: 91, entity_type: "minecraft:pillager", position: Vec3f { x: 1878.3, y: 134.0, z: -1129.7 }
+## /
+ 325584 actor   AddEntity AddEntity { unique_id: -4294967196, runtime_id: 100, entity_type: "minecraft:sheep", position: Vec3f { x: 1884.49, y: 113.0, z: -1060.51 }
+ 325585 actor   AddEntity AddEntity { unique_id: -4294967197, runtime_id: 99, entity_type: "minecraft:sheep", position: Vec3f { x: 1884.49, y: 113.0, z: -1060.51 }
+## /
+ 326733 actor   AddEntity AddEntity { unique_id: -4294967194, runtime_id: 102, entity_type: "minecraft:rabbit", position: Vec3f { x: 1876.49, y: 112.0, z: -1061.51 }
+ 326733 actor   AddEntity AddEntity { unique_id: -4294967195, runtime_id: 101, entity_type: "minecraft:rabbit", position: Vec3f { x: 1876.49, y: 112.0, z: -1061.51 }
+ 327333 actor   AddEntity AddEntity { unique_id: -4294967190, runtime_id: 106, entity_type: "minecraft:pillager", position: Vec3f { x: 1888.0, y: 130.0, z: -1128.0 }
+ 327333 actor   AddEntity AddEntity { unique_id: -4294967191, runtime_id: 105, entity_type: "minecraft:zombie", position: Vec3f { x: 1891.49, y: 118.0, z: -1129.51 }
+ 327334 actor   AddEntity AddEntity { unique_id: -4294967193, runtime_id: 103, entity_type: "minecraft:zombie", position: Vec3f { x: 1891.49, y: 118.0, z: -1129.51 }
+ 327334 actor   AddEntity AddEntity { unique_id: -4294967192, runtime_id: 104, entity_type: "minecraft:zombie", position: Vec3f { x: 1891.49, y: 118.0, z: -1129.51 }
+## /
+## /
+## /
+ 330183 actor   AddEntity AddEntity { unique_id: -4294967189, runtime_id: 107, entity_type: "minecraft:creeper", position: Vec3f { x: 1857.49, y: 121.0, z: -1109.51 }
+## /
+## /
+ 331585 actor   AddEntity AddEntity { unique_id: -4294967188, runtime_id: 108, entity_type: "minecraft:creeper", position: Vec3f { x: 1882.49, y: 96.0, z: -1101.51 }
+ 331733 actor   AddEntity AddEntity { unique_id: -4294967187, runtime_id: 109, entity_type: "minecraft:pillager", position: Vec3f { x: 1868.0, y: 131.0, z: -1116.0 }
+## /
+## /
+ 334330 actor   AddEntity AddEntity { unique_id: -4294967186, runtime_id: 110, entity_type: "minecraft:spider", position: Vec3f { x: 1884.49, y: 92.0, z: -1117.51 }
+## /
+## /fill 1878 170 -1097 1882 170 -1093 barrier
+ 335393 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["25"]
+ 335487 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967193 }
+ 336336 actor   AddEntity AddEntity { unique_id: -4294967185, runtime_id: 111, entity_type: "minecraft:pillager", position: Vec3f { x: 1868.0, y: 131.0, z: -1116.0 }
+## /tp @s 1880.5 171 -1095.5
+ 336393 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"1880.50, 171.00, -1095.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 336394 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "1880.50", "171.00", "-1095.50"]
+## /tp CmdWatcher 1880.5 171 -1095.5
+ 337384 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "1880.50", "171.00", "-1095.50"]
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967185 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967186 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967187 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967188 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967189 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967190 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967191 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967194 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967195 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967196 }
+ 337484 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967192 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 385834 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967201 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 393431 actor   RemoveEntity RemoveEntity { entity_id_self: -4294967202 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 471830 actor   AddEntity AddEntity { unique_id: -4294967182, runtime_id: 114, entity_type: "minecraft:polar_bear", position: Vec3f { x: 1884.49, y: 149.0, z: -1126.51 }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /testfor @e[type=pillager]
+ 488555 actor   CommandOutput success_count=6 data=None commands.testfor.success success=true ["Pillager, Pillager, Pillager, Pillager, Pillager, Pillager"]

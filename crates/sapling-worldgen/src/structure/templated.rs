@@ -8,7 +8,7 @@ use std::sync::Arc;
 use super::canvas::Canvas;
 use super::kind::MONUMENT;
 use super::probe::Probe;
-use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, outpost, ruined_portal, shipwreck};
+use super::{BoundingBox, StructureKind, Structures, igloo, ocean_ruin, outpost, ruined_portal, shipwreck, spawn_areas};
 use super::start_cache::StartCache;
 use crate::density::Density;
 use crate::random::{LargeFeatureSeed, Mt19937};
@@ -117,7 +117,8 @@ impl Structures {
             .map(|o| o.pieces.iter().filter(|p| p.bb.intersects(&column)).filter_map(|p| p.height(canvas).map(|y| (p, y))).collect())
             .collect();
         let mut random = Mt19937::new(seed);
-        for pieces in placed {
+        for (outpost, pieces) in outposts.iter().zip(placed) {
+            spawn_areas::file(canvas, spawn_areas::OUTPOST, outpost.whole_box(), pieces.iter().map(|&(piece, y)| piece.placed_box(y)));
             for &(piece, y) in &pieces {
                 piece.post_process(canvas, y, seed, &mut random);
             }

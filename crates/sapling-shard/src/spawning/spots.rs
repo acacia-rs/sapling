@@ -64,6 +64,15 @@ pub(super) fn levels(world: &World, layer: Entity, x: i32, z: i32) -> Vec<Found>
     found
 }
 
+/// The first spot from `cell` down in its block column of `layer`, a water one only if `water`.
+pub(super) fn under(world: &World, layer: Entity, [x, y, z]: [i32; 3], water: bool) -> Option<Found> {
+    let level = &world.get::<Layer>(layer)?.world;
+    let top = level.top_solid(x, z)?;
+    let (darken, storms) = (crate::light::darken(world, layer), crate::weather::storms(world, layer));
+    let y = (level.heights().start + 1..=y.min(level.heights().end - 1)).rev().find(|&y| medium(level, [x, y, z]).is_some_and(|m| water || m != Medium::Water))?;
+    describe(level, [x, y, z], medium(level, [x, y, z])?, top, darken, storms)
+}
+
 fn describe(level: &Level, [x, y, z]: [i32; 3], medium: Medium, top: i32, darken: u8, storms: bool) -> Option<Found> {
     let brightness = level.brightness_at(x, y, z, darken)?;
     let weathered = if storms { level.brightness_at(x, y, z, STORM_DARKEN)? } else { brightness };

@@ -9,7 +9,8 @@ use sapling_api::{Difficulty, SpawnReason};
 use sapling_data::{HerdEvents, SpawnRule, spawn_category, spawn_rules};
 use sapling_world::ChunkPos;
 
-use super::{gates, phantoms};
+use super::{gates, phantoms, structures};
+use sapling_data::Medium;
 use super::spots::{self, Found};
 use super::{Natural, SpawnDice, Watcher};
 use crate::body::Body;
@@ -20,18 +21,18 @@ use crate::entities::{self, Kind};
 /// How far round a cluster's chunk, in chunks, the mobs counted against its caps are (`_updateBaseTypeCount`).
 const COUNTED: i32 = 4;
 /// The most spawnable mobs a world holds before none more appear.
-const ALL: usize = 200;
+pub(super) const ALL: usize = 200;
 
 /// A category's caps of mobs about a cluster on the surface and underground: the base `Dimension`
 /// constructor's (141878200, +0x104 and +0x120), so every dimension's (mob-spawning.md "Caps").
-const CAPS: &[(&str, usize, usize)] = &[("animal", 4, 4), ("monster", 8, 16), ("water_animal", 36, 36), ("ambient", 0, 2)];
+pub(super) const CAPS: &[(&str, usize, usize)] = &[("animal", 4, 4), ("monster", 8, 16), ("water_animal", 36, 36), ("ambient", 0, 2)];
 /// The herd events a natural mob is made by here (sapling_data::HerdEvents): babies of fox, axolotl
 /// and polar bear herds.
 // TODO: the other herd events (horse coats, tropical fish looks, drowned and husk riders) need the
 // event fired on a spawned mob; a summon's event replaces `entity_spawned` instead.
 const FIRED: [&str; 1] = ["minecraft:entity_born"];
 
-fn difficulty(world: &World) -> u8 {
+pub(super) fn difficulty(world: &World) -> u8 {
     match world.resource::<Settings>().0.difficulty {
         Difficulty::Peaceful => 0,
         Difficulty::Easy => 1,
@@ -47,13 +48,13 @@ pub(super) fn fraction(world: &mut World) -> f32 {
 
 /// The mobs about a cluster, by category and by kind, each split by surface (`[surface, underground]`).
 #[derive(Default)]
-struct Counts {
-    categories: HashMap<&'static str, [usize; 2]>,
+pub(super) struct Counts {
+    pub categories: HashMap<&'static str, [usize; 2]>,
     kinds: HashMap<String, [usize; 2]>,
-    all: usize,
+    pub all: usize,
 }
 
-fn count(world: &mut World, layer: Entity, around: ChunkPos) -> Counts {
+pub(super) fn count(world: &mut World, layer: Entity, around: ChunkPos) -> Counts {
     let mut mobs = world.query_filtered::<(&InLayer, &Kind, &Body), With<Creature>>();
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return Counts::default() };
     let mut counts = Counts::default();
@@ -65,7 +66,7 @@ fn count(world: &mut World, layer: Entity, around: ChunkPos) -> Counts {
             continue;
         }
         let place = usize::from(level.top_solid(x, z).is_some_and(|top| y <= top));
-        if let Some(category) = spawn_category(&kind.0) {
+        if let Some(category) = spawn_category(&kind.0).or_else(|| structures::category(&kind.0)) {
             counts.categories.entry(category).or_default()[place] += 1;
         }
         counts.kinds.entry(kind.0.clone()).or_default()[place] += 1;
@@ -73,11 +74,18 @@ fn count(world: &mut World, layer: Entity, around: ChunkPos) -> Counts {
     counts
 }
 
-/// An attempt in `chunk` of `layer`: a cluster at each level of one of its columns.
+/// An attempt in `chunk` of `layer`: a cluster at each level of one of its columns but those in a
+/// structure's piece, then the structure pass (structures.rs) if the column has a spot.
 pub(super) fn attempt(world: &mut World, layer: Entity, chunk: ChunkPos, watchers: &[Watcher]) {
     let [dx, dz] = [fraction(world), fraction(world)].map(|roll| (roll * 16.0) as i32);
-    for found in spots::levels(world, layer, chunk.x * 16 + dx, chunk.z * 16 + dz) {
-        cluster(world, layer, &found, watchers);
+    let levels = spots::levels(world, layer, chunk.x * 16 + dx, chunk.z * 16 + dz);
+    for found in &levels {
+        if !structures::in_piece(world, layer, found) {
+            cluster(world, layer, found, watchers);
+        }
+    }
+    if let Some(top) = levels.first() {
+        structures::attempt(world, layer, chunk, top.medium == Medium::Water);
     }
 }
 
@@ -104,7 +112,7 @@ fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]
         let kind = rule.permuted(fraction(world));
         let place = if kind == phantoms::PHANTOM { phantoms::place(world, layer, found) } else { Some(*found) };
         let event = herd.and_then(|herd| herd.events_of(member).find(|event| FIRED.contains(event)));
-        if place.is_some_and(|place| spawn(world, layer, kind, &place, event)) {
+        if place.is_some_and(|place| spawn(world, layer, kind, &place, place.feet(), event)) {
             held += 1;
             member += 1;
         }
@@ -114,7 +122,7 @@ fn cluster(world: &mut World, layer: Entity, found: &Found, watchers: &[Watcher]
 
 /// A herd's size between `least` and `most` by `roll` from 0 to 1, BDS's `least + roundf(roll² (most - least))`
 /// (`_spawnMobCluster` 1415ed230), so small herds are the likelier.
-fn herd_size((least, most): (u32, u32), roll: f32) -> u32 {
+pub(super) fn herd_size((least, most): (u32, u32), roll: f32) -> u32 {
     least + (roll * roll * most.saturating_sub(least) as f32).round() as u32
 }
 
@@ -136,13 +144,14 @@ fn pick_herd(herds: &[HerdEvents], roll: f32) -> Option<&HerdEvents> {
     herds.get(((roll * herds.len() as f32) as usize).min(herds.len().saturating_sub(1)))
 }
 
-/// A mob of `kind` at `place`, where it fits, that despawns, as `event` makes it; whether one came.
-fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found, event: Option<&str>) -> bool {
+/// A mob of `kind` with its feet `at`, if it fits in `place`, that despawns, as `event` makes it;
+/// whether one came.
+pub(super) fn spawn(world: &mut World, layer: Entity, kind: &str, place: &Found, at: [f32; 3], event: Option<&str>) -> bool {
     let Some([_, height]) = sapling_data::mob_size(kind) else { return false };
     if !world.get::<Layer>(layer).is_some_and(|level| spots::has_room(&level.world, place.cell, height)) {
         return false;
     }
-    let Some(id) = crate::creatures::spawn_as(world, layer, kind, place.feet(), SpawnReason::Natural, 0.0, event) else { return false };
+    let Some(id) = crate::creatures::spawn_as(world, layer, kind, at, SpawnReason::Natural, 0.0, event) else { return false };
     if let Some(entity) = entities::find(world, id) {
         world.entity_mut(entity).insert(Natural);
     }

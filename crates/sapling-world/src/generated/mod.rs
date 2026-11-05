@@ -112,7 +112,9 @@ impl<S: WorldStorage> Generated<S> {
         let (shape, biomes) = self.generator.chunk(pos);
         let pending_ticks = ticks::pending_ticks(pos, &shape, &self.generator.game_ticks(pos), &self.ids, BlockRegistry::vanilla());
         let block_entities = generated_block_entities(pos.x, pos.z, &shape);
-        StoredColumn { pending_ticks, block_entities, ..StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim)) }
+        let areas: Vec<sapling_leveldb::SpawnArea> = shape.spawn_areas().iter().map(|a| sapling_leveldb::SpawnArea { structure: a.structure.into(), bounds: a.bounds, whole: a.whole, y_offset: Some(a.y_offset) }).collect();
+        let spawn_areas = sapling_leveldb::encode_spawn_areas(&areas);
+        StoredColumn { pending_ticks, block_entities, spawn_areas, ..StoredColumn::of(generated_chunk(pos.x, pos.z, &shape, &biomes, &self.ids, self.dim)) }
     }
 }
 
