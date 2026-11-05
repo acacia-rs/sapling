@@ -30,7 +30,7 @@ It is not dead reckoning. Two separate rules apply:
 if sync.byte9 == 0: return                                   // unknown flag, likely "initialised"
 cur = build(actor)        // 142d9aa80: runtime id, flags{onGround=1, teleported=2}, pos (StateVector pos),
                           // rot bytes: [0x18]=pitch, [0x19]=yaw, [0x1a]=head yaw (0 unless actor+0x210 & 2)
-                          // byte = int(wrap(deg+180)-180)/360*256
+                          // byte = int(wrap(deg+180)-180)/360*256, see "Turn bytes" below
 force = has ForceSendMotionPacketComponent
 if force or changed(cur, last, motion=StateVector.posDelta):   // 142d9af10
     send_delta(force)                                          // 1413e6960
@@ -129,6 +129,18 @@ The captured cases:
 Gotcha for viewers: a delta's fields are compared against the last packet sent to anyone. A rate-limited
 viewer can therefore miss a field change that only the near viewer received (e.g. `x: None` while x moved).
 BDS accepts the drift until the next change of that field.
+
+## Turn bytes
+
+Drilled 2026-11-05 (`bds_command_probe g8rot`, research/captures/bds-g8rot.txt): armour stands teleported
+to yaws -29.5, -31, 330.5, 329, -200, 200, 29.5, -0.7, -359.3, 539.3, -180.5 were told 236, 234, 236, 234,
+113, 143, 20, 0, 0, 127, 127: the turn wrapped to -180..180, then cut toward zero, as the build reads above.
+Sapling cut after wrapping to 0..360, a byte under BDS for every negative turn (-0.7 was 255, not 0); fixed
+in `sync::angle_byte` for every `Told` (unit test `turns_are_told_wrapped_and_cut_toward_zero_as_on_bds`),
+which closed the eye of ender's last misses (end-dimension.md). Left: sapling's `/tp` of a mob or armour
+stand moves it without its yaw (sapling-g8rot.txt: no turn told), and BDS tells the teleported body's turn
+and its head's a tick or two apart; BDS's AddEntity of a summoned stand carries the yaw as its byte
+(30 is announced 29.53125), sapling's the float.
 
 ## Unknown
 
