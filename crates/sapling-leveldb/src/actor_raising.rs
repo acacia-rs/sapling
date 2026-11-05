@@ -78,15 +78,22 @@ pub fn raised_actor(compound: &[u8], raising: &Raising) -> Result<Vec<u8>, Error
         ("Color", Value::Byte(raising.colour)),
         ("Color2", Value::Byte(raising.colour2)),
         ("MarkVariant", Value::Int(raising.mark_variant)),
-        ("Persistent", byte(raising.persistent)),
         ("NaturalSpawn", byte(raising.natural)),
         ("LeasherID", Value::Long(raising.leasher.unwrap_or(NONE))),
     ];
     let kept = with_fields(compound, fields)?;
+    let kept = if raising.persistent { with_fields(&kept, [("Persistent", byte(true))])? } else { unpersisted(&kept)? };
     match raising.name.is_empty() {
         true => Ok(kept),
         false => with_fields(&kept, [("CustomName", Value::String(raising.name.clone().into()))]),
     }
+}
+
+/// `compound` without `Persistent`: BDS writes the key only for a persistent mob (research/captures/bds-h3keep.txt's world).
+fn unpersisted(compound: &[u8]) -> Result<Vec<u8>, Error> {
+    let Value::Compound(mut fields) = nbt::read::<LittleEndian>(&mut &compound[..])?.value else { return Err(Error::Actor("an actor that is no compound")) };
+    fields.retain(|(name, _)| name != "Persistent");
+    Ok(written(Value::Compound(fields)))
 }
 
 /// The component groups a stored actor's `definitions` list as on (`+`), without the sign.
@@ -130,6 +137,8 @@ mod tests {
         let read = actors(&raised).unwrap().remove(0);
         assert_eq!((read.baby, read.name.as_str(), read.color, read.unique_id), (true, "Rex", 14, -7));
         assert!(read.states.contains(&crate::State::Tamed) && read.states.contains(&crate::State::Sitting));
+        let natural = raised_actor(&raised, &Raising { natural: true, ..Raising::default() }).unwrap();
+        assert!(!natural.windows(10).any(|key| key == b"Persistent") && raising(&natural).unwrap().natural);
     }
 
     #[test]

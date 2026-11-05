@@ -14,6 +14,7 @@ mod persistence;
 mod phantoms;
 mod spots;
 mod structures;
+mod switches;
 
 use std::collections::BTreeSet;
 
@@ -30,6 +31,7 @@ pub(crate) use eggs::{hatch, kind_of as egg_kind};
 pub(crate) use peaceful::{removed_in_peaceful, tick as remove_in_peaceful};
 pub(crate) use persistence::{adopt as adopt_natural, mark as mark_persistence};
 pub(crate) use phantoms::Rested;
+pub(crate) use switches::{adopt as adopt_mob_events, keep_all as keep_mob_events};
 
 const MOB_SPAWNING: &str = "doMobSpawning";
 /// Each ticked chunk makes an attempt with this chance in [`ODDS`] a tick.

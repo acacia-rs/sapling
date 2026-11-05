@@ -1,4 +1,4 @@
-//! A world folder's time, difficulty, weather and mobs, end to end: a bot joins a server opened on a copy
+//! A world folder's time, difficulty, weather, `/mobevent` switches and mobs, end to end: a bot joins a server opened on a copy
 //! of the sapling-leveldb fixture with a horse stored in it, and the folder is read back after
 //! the server shut down.
 
@@ -15,7 +15,7 @@ use acacia_bot::{BotConfig, BotEvent};
 use bytes::BytesMut;
 use common::{GROUND, SPAWN, fixture};
 use sapling::{Difficulty, Handler, RuleValue, ShardCtx, World};
-use sapling_api::Weather;
+use sapling_api::{MobEvents, Weather};
 use sapling_leveldb::{ChunkKey, LevelDbWorld, actors};
 
 const HORSE: [f32; 3] = [SPAWN.0 as f32 + 2.5, GROUND as f32 + 1.0, SPAWN.1 as f32 + 0.5];
@@ -48,9 +48,13 @@ fn folder_with_a_horse() -> PathBuf {
     let key = spawn_column();
     let column = world.load_column(key).unwrap().unwrap();
     world.store_column(key, &column.chunk, &column.block_entities, &horse(), &column.pending_ticks).unwrap();
+    sapling_leveldb::store_mob_events(world.db(), &[(TRADERS.to_owned(), false)]).unwrap();
     world.flush(world.level()).unwrap();
     copy
 }
+
+const TRADERS: &str = "minecraft:wandering_trader_event";
+const PATROLS: &str = "minecraft:pillager_patrols_event";
 
 fn spawn_column() -> ChunkKey {
     ChunkKey::new(SPAWN.0 >> 4, SPAWN.1 >> 4, 0)
@@ -73,6 +77,9 @@ impl Handler for Dusk {
             ctx.set_weather(Weather::Rain, Some(RAIN));
             assert!(ctx.set_game_rule("doMobSpawning", RuleValue::Bool(false)));
             ctx.set_difficulty(Difficulty::Hard);
+            let switches = ctx.state::<MobEvents>();
+            assert!(!switches.is_on(TRADERS), "the folder's switch is read");
+            switches.set(PATROLS, false);
         }
     }
 }
@@ -126,6 +133,8 @@ async fn a_folder_brings_its_time_and_mobs_and_takes_the_time_back() {
     assert_eq!((weather.rain_level, weather.lightning_level, weather.rain_time, after.level().difficulty()), (1.0, 0.0, weather.lightning_time, Some(3)));
     assert!((RAIN as i32 - 2_000..RAIN as i32).contains(&weather.rain_time), "{weather:?}");
     assert_eq!(after.level().int("serverChunkTickRange"), Some(4), "the fixture's 12 gives way to the server's tick distance");
+    let switches = sapling_leveldb::load_mob_events(after.db()).unwrap().expect("the switches are saved");
+    assert_eq!(switches.iter().map(|(name, on)| (name.as_str(), *on)).collect::<Vec<_>>(), [("events_enabled", true), ("minecraft:ender_dragon_event", true), (PATROLS, false), (TRADERS, false)]);
     let home = spawn_column();
     let around = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| ChunkKey::new(home.x + dx, home.z + dz, 0)));
     let stored: Vec<_> = around.filter_map(|key| after.load_column(key).unwrap()).flat_map(|column| actors(&column.actors).unwrap()).collect();

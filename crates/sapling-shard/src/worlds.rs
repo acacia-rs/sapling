@@ -83,6 +83,7 @@ pub(crate) fn add(world: &mut World, name: &str, level: sapling_world::World, sp
     }
     let layer = world.spawn((Layer { world: level, spawn }, Named(name.to_owned()))).id();
     world.resource_mut::<Atlas>().here.insert(name.to_owned(), layer);
+    crate::spawning::adopt_mob_events(world, layer);
     let peers = world.resource::<Peers>();
     peers.tell_others(|| ShardMsg::WorldAdded { name: name.to_owned(), shard: peers.index });
     Some(layer)

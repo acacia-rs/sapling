@@ -115,11 +115,19 @@ vtables through the factory registrar 141e9b120) after the pack's rules and the 
   floor block), slime 142999ca0 (with the lambda above); the warden's and two others return true
   (1400a2880).
 
+Which kinds take Monster's check [D] (2026-11-05): the vtables whose slot 145 is 14298fc00, tied to
+ActorTypes through the factories 141e9b120 registers. Monster's own vtable (14a7b7ba0) serves the
+zoglin, warden, breeze and creaking; the others are the skeleton class (skeleton, stray, wither
+skeleton, bogged, parched), spiders and cave spiders, creeper, enderman, witch, vindicator, evoker,
+vex, ravager, wither and ender dragon, each with Monster's `isDarkEnoughToSpawn` (slot 174, +0x570).
+The piglin and brute, pillager, blaze, ghast and magma cube take Monster's check with an
+`isDarkEnoughToSpawn` returning true (1400a2880): no darkness test. The phantom is not among them
+(its own check, "Phantoms").
+
 Sapling: spawning/gates.rs `own_check`, from herds.rs `spawn`, so for the structure pass too: the
 pigman's and the guardians' checks, and block light 0 outside the Nether for the monster category
-but slimes, pigmen, silverfish, endermites, shulkers, wardens, and pillagers and blazes (which the
-structure lists' decompile found asking only a walk target, structures/lists.rs `Checks`); which
-other kinds are Monster subclasses was not read (phantoms are taken as one) [U]. Tests
+but the kinds above without the darkness test and those with their own check (`OWN_CHECKS`; the
+phantom was taken as a Monster, the warden as exempt, before). Tests
 `a_dimly_lit_floor_spawns_no_monster`, `guardians_appear_and_stay_in_a_monument`.
 
 The cap before each member [D] (2026-11-05): both readings were right, for different passes.
@@ -155,10 +163,11 @@ commands, eggs or plugins stay.
 
 Saved [D, S]: BDS keeps `Persistent` (its `PersistentComponent`, which `_canDespawn` asks) and
 `NaturalSpawn` with every mob; a summoned one is saved `Persistent` 1, `NaturalSpawn` 0
-(bds-keepmobs.txt, bds-t2ekeep-dump.txt, the template actors of bds-t12actors). Sapling
-(`spawning/persistence.rs`, 2026-11-05) saves a `Natural` mob `Persistent` 0, `NaturalSpawn` 1 and
-any other `Persistent` 1, and a mob read back with `NaturalSpawn` 1 and `Persistent` 0 is `Natural`
-again; one saved with no `NaturalSpawn` (sapling's worlds before) stays, as it did. Tests
+(bds-keepmobs.txt, bds-t2ekeep-dump.txt, the template actors of bds-t12actors). A natural one has no
+`Persistent` key and `NaturalSpawn` 1 (`h3keep`, 2026-11-05: the world dumped after 90 s at the swamp
+hut at midnight, 31 natural mobs so, the summoned zombie and the hut's witch `Persistent` 1,
+`NaturalSpawn` 0). Sapling (`spawning/persistence.rs`) saves a `Natural` mob so and any other
+`Persistent` 1, and a mob read back with `NaturalSpawn` 1 and no `Persistent` is `Natural` again; one saved with no `NaturalSpawn` (sapling's worlds before) stays, as it did. Tests
 `a_mob_saved_as_natural_comes_back_despawning_and_a_persistent_one_stays`,
 `natural_mobs_are_saved_not_persistent_and_summoned_ones_persistent`.
 

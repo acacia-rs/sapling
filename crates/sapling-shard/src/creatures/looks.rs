@@ -4,7 +4,8 @@
 //! (`MarkVariant` 0-5), and base and pattern colours (`Color`, `Color2`, 0-14), and its
 //! `become_<name>` sets all four. A summon's event replaces `entity_spawned` (BDS's
 //! `make_black` horse came black with no markings); a herd's is fired after it, so a herd's horses
-//! share a coat and keep their rolled markings (docs/research/husbandry.md "Herds").
+//! share a coat and keep their rolled markings (docs/research/husbandry.md "Herds"). A cat's
+//! `spawn_midnight_cat` (the swamp hut's) makes it black.
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::AddEntity;
@@ -18,6 +19,9 @@ use crate::blocks::Dice;
 
 const HORSE: &str = "minecraft:horse";
 const FISH: &str = "minecraft:tropicalfish";
+const CAT: &str = "minecraft:cat";
+/// The swamp hut's cat (`spawn_midnight_cat`), as BDS showed it (bds-h3keep.txt).
+const BLACK_CAT: i32 = 9;
 const COATS: [&str; 7] = ["white", "creamy", "chestnut", "brown", "black", "gray", "darkbrown"];
 const MARKINGS: u32 = 5;
 const SHAPES: u32 = 2;
@@ -73,6 +77,7 @@ pub(super) fn fired(kind: &str, event: &str, look: Look) -> Option<Look> {
             Some(Look([coat as i32, look.0[1], look.0[2], look.0[3]]))
         }
         FISH => FISH_LOOKS.iter().find(|(fish, _)| name(event).strip_prefix("become_") == Some(fish)).map(|(_, look)| Look(*look)),
+        CAT if name(event) == "spawn_midnight_cat" => Some(Look([BLACK_CAT, 0, 0, 0])),
         _ => None,
     }
 }
@@ -114,5 +119,6 @@ mod tests {
         assert_eq!(fired(FISH, "minecraft:become_clownfish", Look::default()), Some(Look([0, 0, 1, 0])));
         assert_eq!(fired(FISH, "minecraft:become_red_snapper", Look([0, 5, 2, 2])), Some(Look([1, 3, 14, 0])));
         assert_eq!(fired(HORSE, "minecraft:spawn_adult", Look::default()), None);
+        assert_eq!(fired(CAT, "minecraft:spawn_midnight_cat", Look::default()), Some(Look([9, 0, 0, 0])));
     }
 }

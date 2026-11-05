@@ -27,6 +27,7 @@ pub(crate) fn write_back_all(world: &mut World) {
     blocks::write_back_ticks(world);
     scoreboard::keep_all(world);
     crate::maps::keep_all(world);
+    crate::spawning::keep_mob_events(world);
     let config = &world.resource::<Settings>().0;
     let (difficulty, tick_distance) = (config.difficulty as i32, config.tick_distance);
     for mut layer in world.query::<&mut Layer>().iter_mut(world) {

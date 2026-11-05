@@ -137,7 +137,10 @@ BDS pair above). First shown in the Nether box, blazes, wither skeletons and ske
 BDS 17 and 17, every one alone on its cell; sapling 27 and 8, every one alone (were 27 and 23 in
 herds of 2 and 3). The outpost's testfor: BDS 10 and 12, sapling 15 and 9, the 8 its template
 placed among them, at the cells BDS showed. Left: BDS's skeletons (5 and 11 shown), none in
-sapling's runs [U: the fortress list's weight 2 of 28 gives few; BDS's may be soul sand valley's].
+sapling's runs [U]. Rechecked 2026-11-05: 141f82140 registers the skeleton (0x110b22) at weight 2,
+herd 0x30002 (2 to 3), and the wither skeleton (0x110b30) at 8, as `lists.rs`; BDS's skeletons stood
+on whole cells, so the structure pass made them (16 against 12 wither skeletons over the two runs),
+which weight 2 of 28 does not explain.
 
 Sapling ports the pass with natural spawning's dice; test
 `witches_appear_in_a_hut_piece_where_nothing_else_does`. The entries' conditions, caps and
@@ -155,6 +158,7 @@ otherwise. The marker cell is the template block's own cell (`Rotation::apply`),
 | --- | --- | --- |
 | outpost | 148359310 / 1483599e0 | `cage` iron golem (x + 1 in a piece turned once), `pillager`, `captain` (event `spawn_as_illager_captain`), `Group of Allays` nextInt(3) + 1 allays; each cell set to air; `topChest` seeds the chest below |
 | mansion | 1480b2360 / 1480b2a00 | `Mage` evoker, `Warrior` vindicator (cells left as they are), `Group of Allays` as the outpost's; spawned evokers, vindicators, allays |
+| swamp hut | 14836de70 / 14836f380 | no marker: once per piece (flag +0xe8), a `witch` then a `cat` (event `spawn_midnight_cat`, shown `Variant` 9) at `getWorldX/Z(2, 5)` + 0.5, box y0 + 2, whatever the box; both persistent |
 | igloo | 14836fd90 / 14836f7f0 | `Villager`, `Zombie Villager` (v1 actor types, shown as their successors) at the cell's middle, villager first; basement only |
 | end city | 14831aaa0 / 14831a670 | `Sentry` shulker; `Elytra` is an item frame block, not an actor |
 | pool elements | 145e1e2a0 / 141ef28c0 | the metadata `namespace:id[:event]`; abandoned villages' rules (1480bbe90) make `villager_v2:spawn_from_village` a `zombie_villager_v2:from_village` |
@@ -187,8 +191,22 @@ village's 6 villagers, 3 cats and golem, each at BDS's first-sight cell, and the
 evokers and 6 vindicators it had loaded, at BDS's cells too. Left: the bastion's
 entities (they need the templates' entity NBT in templates.bin and the transform of 141ce8200
 fitted against the dump); five mansion mobs sapling places in chunk x -511 that BDS showed none of
-[U]; the igloo and end city (none located on the seed) are undrilled; an abandoned village's golem
-rule was not decoded (sapling drops the golem) [U].
+[U] (2026-11-05, `t12actors2` rerun, research/captures/bds-t12actors2-run2.txt, and its world dumped: chunks -511 and -510 saved, natural
+mobs at x -8170 and -8158, no illager east of x -8189; the five are evokers at (-8174, 139, 15899)
+and (-8171, 130, 15899), vindicators at (-8172, 129, 15906), (-8171, 139, 15900) and
+(-8170, 129, 15906). 1480b2a00 keeps each list on the piece and spawns only what lies in the box it
+is handed, keeping the rest; the caller's box was not read); the igloo and end city (none located
+on the seed) are undrilled.
+
+Abandoned villages' golems [D]: 1480bbe90 registers `minecraft:abandoned_golems` with the same
+actor rule processor (vtable 14a89ad80) as `abandoned_mobs`, matching
+`minecraft:iron_golem:minecraft:from_village` with an empty result: the golem is dropped, as
+sapling does.
+
+The swamp hut's witch and black cat (row above; research/captures/bds-h3keep.txt, both at
+(3842.5, 72, -1818.5) at first sight, the dump Persistent 1, NaturalSpawn 0): sapling-worldgen's
+hut.rs files both, the cat's event setting `Variant` 9 (creatures/looks.rs); test
+`swamp_hut_places_its_witch_and_black_cat_where_bds_did`.
 
 ## Patrols
 
@@ -217,7 +235,8 @@ the recompute (142a22280) to take in each later claimed point (the point alone).
 
 `mobevents` [D]: 14085b130 writes the leveldb key `mobevents`, a compound of bytes
 `minecraft:pillager_patrols_event`, `minecraft:wandering_trader_event`,
-`minecraft:ender_dragon_event` and `events_enabled` (names from 140859ed0); defaults not read.
+`minecraft:ender_dragon_event` and `events_enabled` (names from 140859ed0). A BDS world saved after
+`t12actors2` (2026-11-05) held all four, 1 each, sorted by name.
 
 Sapling: spawn-rules.py writes `event=`, `age=`, `delay=least~most:chance:id`, `village=` fields
 (`sapling_data::Gates`, spawn_rules/gates.rs; `kind<event>` permutes split by `kind_and_event`);
@@ -228,8 +247,10 @@ sapling-shard spawning/delays.rs asks them in the cluster; the world's age is `L
 `events_enabled` are on); the first wait ends at age 600 s and waits are not saved, as BDS; the
 village filter is raids/village.rs `within_bounds`: the bells and beds within 48 of a held
 village's middle, their box grown by ±32 / ±12 / ±32 and the tolerance [U: BDS's claimed points,
-the first one's box]. Left: the switches are not saved under `mobevents`. Tests
-`a_patrols_gates_read`, `a_patrol_waits_for_the_worlds_age_then_its_delay_and_its_chance`,
+the first one's box]. The switches are saved under `mobevents`, all four (sapling-leveldb
+mob_events.rs; `Level::mob_events`), and the first world added that kept some sets them
+(sapling-shard spawning/switches.rs). Tests `a_patrols_gates_read`,
+`a_folder_brings_its_time_and_mobs_and_takes_the_time_back`, `a_patrol_waits_for_the_worlds_age_then_its_delay_and_its_chance`,
 `a_mob_event_switched_off_spawns_nothing`.
 
 Movement (pillager `patrol_captain` / `patrol_follower` groups) [P]: the captain

@@ -1,5 +1,5 @@
 //! The swamp hut (`SwamplandHut::postProcess` 14836de70): Java's hut one block taller, walls up
-//! to y 4 and the roof at 5.
+//! to y 4 and the roof at 5; its witch and cat (docs/research/structure-spawns.md "Template actors").
 
 use super::{STAIRS_DATA, stairs};
 use crate::block::Block;
@@ -66,6 +66,11 @@ pub fn post_process(f: &Frame, canvas: &mut Canvas, random: &mut Mt19937) {
     for (x, z) in [(1, 2), (5, 2), (1, 7), (5, 7)] {
         f.fill_column_down(canvas, log, x, -1, z);
     }
+    // postProcessMobsAt (14836f380): a witch, then a black cat, mid-cell over (2, 2, 5); BDS spawns them once with the first chunk processed.
+    let (x, y, z) = f.world(2, 2, 5);
+    let feet = [x as f32 + 0.5, y as f32, z as f32 + 0.5];
+    canvas.add_actor_at("minecraft:witch", "minecraft:entity_spawned", feet);
+    canvas.add_actor_at("minecraft:cat", "minecraft:spawn_midnight_cat", feet);
 }
 
 #[cfg(test)]

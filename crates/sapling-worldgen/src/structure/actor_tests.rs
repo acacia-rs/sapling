@@ -45,6 +45,13 @@ fn village_markers_place_villagers_cats_and_a_golem_where_bds_did() {
 }
 
 #[test]
+fn swamp_hut_places_its_witch_and_black_cat_where_bds_did() {
+    // research/captures/bds-h3keep.txt: both at (3842.5, 72, -1818.5) at first sight.
+    let bds = vec![("cat", "spawn_midnight_cat", [3842, 72, -1819]), ("witch", "entity_spawned", [3842, 72, -1819])];
+    assert_eq!(actors((239, 241), (-115, -113)), bds);
+}
+
+#[test]
 fn mansion_markers_place_its_illagers_where_bds_did() {
     let vindicator = |feet| ("vindicator", "entity_spawned", feet);
     let evoker = |feet| ("evocation_illager", "entity_spawned", feet);

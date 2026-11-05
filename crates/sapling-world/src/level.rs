@@ -55,6 +55,8 @@ pub struct Level {
     pub difficulty: Option<i32>,
     /// `serverChunkTickRange`: the shard's `tick-distance`, written back as BDS writes it.
     pub chunk_tick_range: Option<i32>,
+    /// The `/mobevent` switches by name (`mobevents`), as read and as the shard hands them back.
+    pub mob_events: Option<Vec<(String, bool)>>,
 }
 
 impl Default for Level {
@@ -80,6 +82,7 @@ impl Default for Level {
             weather: WeatherRecord { rain_level: 0.0, rain_time: FIRST_SPELL, lightning_level: 0.0, lightning_time: FIRST_SPELL },
             difficulty: None,
             chunk_tick_range: None,
+            mob_events: None,
         }
     }
 }

@@ -63,7 +63,11 @@ impl LevelDbStorage {
             Vec::new()
         });
         let age = dat.age().unwrap_or(0);
-        Level { spawn, time, age, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None }
+        let mob_events = sapling_leveldb::load_mob_events(self.0.db()).unwrap_or_else(|error| {
+            tracing::warn!(%error, "the mob event switches are unreadable; every one is on");
+            None
+        });
+        Level { spawn, time, age, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None, mob_events }
     }
 }
 
@@ -124,6 +128,9 @@ impl WorldStorage for LevelDbStorage {
         }
         if let Some(fight) = &level.dragon_fight {
             self.0.store_dragon_fight(fight)?;
+        }
+        if let Some(switches) = &level.mob_events {
+            sapling_leveldb::store_mob_events(self.0.db(), switches)?;
         }
         let structures: Vec<(String, Vec<u8>)> = level.structures.iter().map(|(name, bytes)| (name.clone(), bytes.clone())).collect();
         self.0.store_structures(&structures)?;

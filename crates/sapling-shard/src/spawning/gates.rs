@@ -15,9 +15,12 @@ use crate::creatures::Creature;
 const SLIME: &str = "minecraft:slime";
 const PIGMAN: &str = "minecraft:zombie_pigman";
 const GUARDIANS: [&str; 2] = ["minecraft:guardian", "minecraft:elder_guardian"];
-/// Monsters whose class overrides Monster's check, so skips its darkness test; the pillager's and
-/// the blaze's ask only a walk target (structures/lists.rs `Checks::Walks`).
-const OWN_CHECKS: [&str; 8] = [SLIME, PIGMAN, "minecraft:silverfish", "minecraft:endermite", "minecraft:shulker", "minecraft:warden", "minecraft:pillager", "minecraft:blaze"];
+/// Monsters that skip Monster's darkness test: their class overrides its check, or its
+/// `isDarkEnoughToSpawn` (vtable +0x570) with one returning true (docs/research/mob-spawning.md "Own spawn checks").
+const OWN_CHECKS: [&str; 12] = [
+    SLIME, PIGMAN, "minecraft:silverfish", "minecraft:endermite", "minecraft:shulker", "minecraft:phantom", "minecraft:pillager", "minecraft:blaze", "minecraft:piglin", "minecraft:piglin_brute",
+    "minecraft:ghast", "minecraft:magma_cube",
+];
 const SEA_LEVEL: i32 = 63;
 /// Below this a slime appears only in a slime chunk.
 const SLIME_CHUNK_TOP: i32 = 39;
