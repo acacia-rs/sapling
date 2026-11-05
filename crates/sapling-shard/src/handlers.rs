@@ -122,6 +122,7 @@ pub(crate) fn dispatch(world: &mut World) {
     orbs::touch(world);
     orbs::tick(world);
     crate::riding::drive(world);
+    crate::mobs::moved::show_moved(world);
     creatures::tick(world);
     crate::paintings::tick(world);
     crate::vehicles::tick(world);

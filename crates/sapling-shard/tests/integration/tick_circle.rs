@@ -4,11 +4,44 @@
 
 use crate::common;
 
-use acacia_proto::packets::{AddEntity, RemoveEntity, RequestChunkRadius};
+use acacia_proto::Packet;
+use acacia_proto::manual::Uuid;
+use acacia_proto::packets::{AddEntity, CommandRequest, MoveEntityDelta, RemoveEntity, RequestChunkRadius};
+use acacia_proto::types::CommandOrigin;
 use common::asking::ask;
 use common::{Harness, all, config, platform};
-use sapling_api::{Block, PlayerId, RuleValue};
+use sapling_api::{Block, Command, Output, PlayerId, RuleValue, Sender, ShardCtx};
 use sapling_shard::ShardConfig;
+
+/// `/fetch`: every cow to 0.5 90 0.5.
+#[derive(Command)]
+#[command(crate = "sapling_api")]
+struct Fetch;
+
+impl Command for Fetch {
+    fn run(self, ctx: &mut ShardCtx<'_>, _: &Sender, _: &mut Output) {
+        for cow in ctx.entities().into_iter().filter(|entity| entity.kind == "minecraft:cow") {
+            ctx.move_entity(cow.id, [0.5, 90.0, 0.5]);
+        }
+    }
+}
+
+#[test]
+fn a_mob_moved_into_view_by_a_command_is_shown_before_it_ticks_as_on_bds() {
+    let mut h = Harness::with(ShardConfig { tick_distance: 6, max_view_radius: 8, ..config() }, platform());
+    h.shard.add_command::<Fetch>();
+    h.enter(1, "Alex");
+    h.receive(1, &RequestChunkRadius { chunk_radius: 8, max_radius: 8 });
+    (0..20).for_each(|_| drop(h.tick(1)));
+    ask(&mut h, |ctx| ctx.spawn_entity("minecraft:cow", [56.5, 90.0, 56.5])).expect("a cow");
+    (0..3).for_each(|_| drop(h.tick(1)));
+    // bds-tickcircle6.txt: a poisoned mob brought back was announced whole, then hurt in that tick.
+    let origin = CommandOrigin { r#type: "player".into(), uuid: Uuid([1; 16]), request_id: "req".into(), player_entity_id: 0 };
+    h.receive(1, &CommandRequest { command: "/fetch".into(), origin, internal: false, version: "latest".into() });
+    let sent = h.tick(1);
+    let added = sent.iter().position(|packet| packet.id == AddEntity::ID).expect("shown");
+    assert!(!all::<MoveEntityDelta>(&sent[added..]).is_empty(), "its fall told after its announcement");
+}
 
 #[test]
 fn random_ticks_run_only_in_the_tick_region_and_kept_columns_as_on_bds() {

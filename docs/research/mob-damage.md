@@ -300,9 +300,14 @@ Sapling's run: sapling-burn2.txt.
   sapling at 4 and 6 (`SAPLING_TICK_DISTANCE`, sapling-tickcircle4/6.txt): the same mobs hidden, and
   the same ones ticked but 5,3 at 6 (an edge cell above). A returning mob's first poison hit lands
   before its AddEntity on sapling (health 9 of 10), just after it on BDS (10, then 9 the same tick).
-  Left (twelfth wave): the AddEntity is built in `mobs::update` after the creatures' tick, from an
-  announcement `reshow` rebuilt that tick; matching BDS takes a viewer's newly shown mobs announced
-  before the creatures tick (an early `mobs::update` pass), which reorders every tick's showing.
+  Fixed (2026-11-05, twelfth wave): a mob moved by `/tp` (any `move_entity`) is filed and shown to
+  the players newly covering it just before the creatures' tick (`mobs/moved.rs`), so it is
+  announced as it was and hurt after, the order BDS's capture has (CommandOutput, AddEntity, then
+  the poison's UpdateAttributes); mobs that came into view any other way are still shown by
+  `mobs::update`, so no other drilled order moves. Test
+  `a_mob_moved_into_view_by_a_command_is_shown_before_it_ticks_as_on_bds`; re-drilled
+  (`tickcircle` at 6, sapling-tickcircle6.txt): the six mobs brought back from past the tick
+  region now show CommandOutput, AddEntity, then the poison's UpdateAttributes, as BDS's.
   Mobs 9 and 10 chunks off stayed on sapling: the drill world's ground columns never unload.
 - Commands past the tick region (2026-11-04, `bds_command_probe tickedge` at `tick-distance` 4,
   research/captures/bds-tickedge.txt, and the four tickcircle captures' pad fills): one-block fills
