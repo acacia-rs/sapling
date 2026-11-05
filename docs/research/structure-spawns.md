@@ -145,7 +145,9 @@ which weight 2 of 28 does not explain. Settled [D] (thirteenth3j): the list item
 (1415eebf0: `nextInt(total)`, then the +0s walked) reads only that; the 5, 3, 10, 2, 8 sit in the
 unpacked rules (+8) and go unread. So each kind is one in five; BDS's structure-pass kinds over both
 runs (whole cells): blaze 16, zombie pigman 9, magma cube 9, skeleton 16, wither skeleton 12.
-Sapling's `pick` is now even.
+Sapling's `pick` is now even. Re-drilled (research/captures/sapling-t9spawns-j{1,2}.txt; unique ids
+on whole cells over the fortress, blaze / magma cube / skeleton / wither skeleton / zombie pigman):
+BDS 8/3/11/7/4 and 8/6/5/5/5 (33, 29), sapling 8/6/3/4/6 and 9/9/10/3/4 (27, 35).
 
 Sapling ports the pass with natural spawning's dice; test
 `witches_appear_in_a_hut_piece_where_nothing_else_does`. The entries' conditions, caps and
@@ -198,7 +200,7 @@ village's 6 villagers, 3 cats and golem, each at BDS's first-sight cell, and the
 evokers and 6 vindicators it had loaded, at BDS's cells too. Left: the bastion's
 entities (they need the templates' entity NBT in templates.bin and the transform of 141ce8200
 fitted against the dump); five mansion mobs sapling places in chunk x -511 that BDS showed none of
-[U] (2026-11-05, `t12actors2` rerun, research/captures/bds-t12actors2-run2.txt, and its world dumped: chunks -511 and -510 saved, natural
+(explained below, "When they come") (2026-11-05, `t12actors2` rerun, research/captures/bds-t12actors2-run2.txt, and its world dumped: chunks -511 and -510 saved, natural
 mobs at x -8170 and -8158, no illager east of x -8189; the five are evokers at (-8174, 139, 15899)
 and (-8171, 130, 15899), vindicators at (-8172, 129, 15906), (-8171, 139, 15900) and
 (-8170, 129, 15906). 1480b2a00 keeps each list on the piece and spawns only what lies in the box it
@@ -216,7 +218,10 @@ stay in memory, so mobs waiting in an unloaded column keep waiting, and none sur
 The five chunk -511 mobs [L]: `jxmansion` (thirteenth3j_drill.rs) with
 `client-side-chunk-generation-enabled=true` showed none (research/captures/bds-jxmansion.txt):
 client generation leaves the server's neighbours of chunks (-511, 993/994) unloaded. With it false
-BDS made all five at sapling's cells (research/captures/bds-jxmansion-servergen.txt).
+BDS made all five at sapling's cells (research/captures/bds-jxmansion-servergen.txt): 5 evokers,
+12 vindicators by the end, all shown 12 s in. Sapling's `jxmansion` (research/captures/sapling-jxmansion.txt,
+the testbox loaded, the shard behind its tick, the pad's fill out of the world) showed its first at
+62 s and 2 and 8 by the end, each at a BDS cell: its generation, not the rule, kept the rest back.
 
 Abandoned villages' golems [D]: 1480bbe90 registers `minecraft:abandoned_golems` with the same
 actor rule processor (vtable 14a89ad80) as `abandoned_mobs`, matching
