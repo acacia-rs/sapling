@@ -81,3 +81,27 @@ async fn client_commands_answer_as_bds_answered() {
         assert_eq!(answer(&mut alice, line).await, *expected, "/{line}");
     }
 }
+
+/// research/captures/bds-e2rails.txt: `/loot spawn 1.25 -26 -5.5` dropped at 1, -25.875, -6.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn loot_spawns_at_the_corner_of_its_cell_an_eighth_up() {
+    use acacia_bot::proto::packets::AddItemEntity;
+    let server = common::start(common::builder().handler(Operators).vanilla_commands()).await;
+    let config = BotConfig { subscribe: PacketFilter::none().with(AddItemEntity::ID), ..BotConfig::default() };
+    let mut alice = common::spawn(common::client(&server, "Alice"), config).await;
+    alice.wait_ticks(20).await.expect("connected");
+    alice.client().command("tp @s 0.5 100 0.5");
+    alice.wait_ticks(10).await.expect("moved");
+    alice.client().command("loot spawn 1.25 100.5 -5.5 loot \"chests/simple_dungeon\"");
+    let dropped = tokio::time::timeout(WAIT, async {
+        loop {
+            match alice.next().await {
+                Some(BotEvent::Packet(raw)) if raw.id == AddItemEntity::ID => return raw.decode::<AddItemEntity>().expect("decodes").position,
+                Some(_) => {}
+                None => panic!("the connection is gone"),
+            }
+        }
+    });
+    let at = dropped.await.expect("an item in time");
+    assert_eq!([at.x, at.y, at.z], [1.0, 100.125, -6.0]);
+}

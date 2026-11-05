@@ -124,7 +124,12 @@ were not found in any of these; sapling does what is listed there.
 - A minecart's stored `Pos`: kept where the wire puts it, as a boat's (a boat on y -26 was kept at
   -25.625, as shown; research/captures/bds-t2ekeep-dump.txt; `actors.rs` `compound_now`).
 - A placed minecart's height on its rail (box bottom on the rail block's floor here; BDS spawns at y + 0.5 then snaps).
-- Detector rail timing (Java's), hopper minecart pick-up range, the activator lock of a hopper minecart (not done).
+- Detector rail timing, hopper minecart pick-up range: drilled 2026-11-05 (`bds_command_probe e2rails`,
+  thirteenth2e_drill.rs). BDS pressed the rail a tick after the summon (sapling in the summon's tick) and let
+  go some 100 ticks after on both, which does not tell "recheck every 20" from "20 after last seen". The
+  range was not measured: `/loot spawn` drops at its cell's corner an eighth up (fixed in `loot/placed.rs`),
+  so every item lay at x 1.0. The activator lock is real: a hopper minecart on a powered activator rail
+  took nothing, and its item some 3 ticks after the power went (fixed, `vehicles/cargo.rs` `take_up`).
 - What raises a boat's underwater counter (not done); boat fall breaking (none found).
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
 - The horse screen: done without a capture, see mob-life.md "Mount inventories".

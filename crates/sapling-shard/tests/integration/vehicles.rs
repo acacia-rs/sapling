@@ -5,7 +5,7 @@ use crate::common;
 use crate::riding::{interact, spawned};
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, ContainerOpen, LevelEvent, LevelEventEvent};
+use acacia_proto::packets::{AddEntity, AddItemEntity, ContainerOpen, LevelEvent, LevelEventEvent, RemoveEntity};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, WindowType};
 use common::{Harness, all, attack, click};
 use sapling_api::{Block, Item, PlayerId, Slot};
@@ -127,4 +127,33 @@ fn flint_and_steel_primes_a_tnt_minecart_which_bursts_eighty_ticks_on() {
     assert!(burst.is_some_and(|tick| (79..=81).contains(&tick)), "{burst:?}");
     h.remote.run(move |ctx| assert!(ctx.entity(cart).is_none()));
     h.tick(1);
+}
+
+/// research/captures/bds-e2rails.txt: the cart took its item a few ticks after the power went.
+#[test]
+fn a_hopper_minecart_on_a_powered_activator_rail_takes_nothing_until_the_power_goes() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([3, 64, 0], &Block::new("redstone_block")) && ctx.set_block([3, 65, 0], &Block::new("activator_rail")));
+        // Walls keep the item, thrown loose, in the cart's reach.
+        for wall in [[2, 65, 0], [4, 65, 0], [3, 65, -1], [3, 65, 1]] {
+            assert!(ctx.set_block(wall, &Block::new("stone")));
+        }
+    });
+    ticks(&mut h, 2);
+    spawned(&mut h, &[("minecraft:hopper_minecart", [3.5, 65.0, 0.5])]);
+    h.remote.run(|ctx| assert!(ctx.drop_item(&Item::new("minecraft:stone", 1), [3.5, 65.2, 0.5])));
+    let item_gone = |sent: Vec<RawPacket>| !all::<RemoveEntity>(&sent).is_empty();
+    let powered = |h: &mut Harness, on: bool| {
+        h.remote.run(move |ctx| assert!(ctx.block([3, 65, 0]).is_some_and(|rail| rail.properties.contains(if on { "rail_data_bit=1" } else { "rail_data_bit=0" })), "powered {on}"));
+        ticks(h, 1)
+    };
+    assert!(!item_gone(ticks(&mut h, 40)), "locked while powered");
+    assert!(!item_gone(powered(&mut h, true)));
+    h.remote.run(|ctx| assert!(ctx.set_block([3, 64, 0], &Block::new("stone"))));
+    let mut sent = ticks(&mut h, 2);
+    sent.extend(powered(&mut h, false));
+    sent.extend(ticks(&mut h, 10));
+    assert!(item_gone(sent), "taken once the power went");
 }

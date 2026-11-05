@@ -1,8 +1,7 @@
 //! What chest boats and chest and hopper minecarts carry (docs/research/vehicles.md "Cargo"):
 //! slots kept on the vehicle and in its stored `ChestItems`, shown on a screen naming the
 //! vehicle, spilled when it breaks; a hopper minecart takes up the items it rolls over.
-// TODO: hoppers neither fill nor empty vehicles, comparators do not read them, and an
-// activator rail does not lock a hopper minecart.
+// TODO: hoppers neither fill nor empty vehicles, and comparators do not read them.
 
 use acacia_proto::types::WindowType;
 use bevy_ecs::prelude::*;
@@ -95,13 +94,18 @@ pub(super) fn spill(world: &mut World, vehicle: Entity) {
     }
 }
 
-/// Lets each hopper minecart take up the first item lying in its reach that fits, when due.
+/// Lets each hopper minecart take up the first item lying in its reach that fits, when due; one
+/// on a powered activator rail is locked (research/captures/bds-e2rails.txt).
 pub(super) fn take_up(world: &mut World) {
     if world.resource::<Tick>().0 % HOPPER_EVERY != 0 {
         return;
     }
     let carts: Vec<(Entity, Entity, Body)> = world.query::<(Entity, &Kind, &InLayer, &Body)>().iter(world).filter(|(_, kind, ..)| kind.0 == HOPPER).map(|(cart, _, layer, body)| (cart, layer.0, *body)).collect();
     for (cart, layer, body) in carts {
+        let Some(level) = world.get::<crate::components::Layer>(layer).map(|layer| &layer.world) else { continue };
+        if super::rails::rail_under(level, body.at).is_some_and(|rail| rail.kind == super::rails::RailKind::Activator && rail.on) {
+            continue;
+        }
         let Some(mut slots) = cargo(world, cart) else { continue };
         let [x, y, z] = body.at;
         let (min, max) = ([x - HOPPER_REACH, y - HOPPER_REACH, z - HOPPER_REACH], [x + HOPPER_REACH, y + body.size[1], z + HOPPER_REACH]);

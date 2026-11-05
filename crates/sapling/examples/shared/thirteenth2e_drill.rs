@@ -11,8 +11,25 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "e2clock" => (clock(), CLOCK_SHOWN),
         "e2stale" => (stale(), CLOCK_SHOWN),
         "e2rails" => (rails(), RAILS_SHOWN),
+        "e2lids" => (lids(), LIDS_SHOWN),
         _ => return None,
     })
+}
+
+const LIDS_SHOWN: &[&str] = &["ContainerOpen", "ContainerClose", "BlockEvent", "CommandOutput", "UpdateBlock"];
+
+/// Shulker boxes clicked open: one with stone over it, one with a bottom slab over it, one under a
+/// carpet, one with nothing over it.
+fn lids() -> Vec<String> {
+    let mut lines = floor();
+    for (z, over) in [(-2, "stone"), (0, "oak_slab"), (2, "white_carpet"), (4, "air")] {
+        lines.extend([format!("setblock 2 -26 {z} shulker_box"), format!("setblock 2 -25 {z} {over}")]);
+    }
+    waits(&mut lines, 1);
+    for z in [-2, 0, 2, 4] {
+        lines.extend([format!("!click 2 0 {z} west"), String::new(), "!close".to_string(), String::new()]);
+    }
+    lines
 }
 
 const RAILS_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "CommandOutput", "AddEntity", "AddItemEntity", "RemoveEntity", "TakeItemActor", "MoveEntityDelta", "MoveEntityAbsolute"];
