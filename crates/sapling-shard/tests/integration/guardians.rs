@@ -82,7 +82,10 @@ fn a_guardian_takes_a_squid_and_lands_its_laser_on_it() {
     let ticks = watch(&mut h, 120);
     let squid = ticks.iter().flat_map(|sent| all::<AddEntity>(sent)).find(|added| added.entity_type == "minecraft:squid").expect("shown").runtime_id as i64;
     let took = first(&ticks, |sent| targets(sent, guardian) == [squid]).expect("it takes the squid");
+    let squid_flashes = |sent: &[RawPacket]| all::<EntityEvent>(sent).iter().any(|event| event.runtime_entity_id == squid as u64 && event.event_id == EntityEventEventId::HurtAnimation);
+    // It lands 89 ticks on. Its health shows that tick or the next, by which of the two mobs ticks first.
+    let landed = first(&ticks[took..], squid_flashes);
+    assert_eq!(landed, Some(89));
     let squid_health = |sent: &[RawPacket]| all::<UpdateAttributes>(sent).into_iter().any(|update| update.runtime_entity_id == squid as u64);
-    // It lands 89 ticks on; a mob's health is shown the tick after its hit.
-    assert_eq!(first(&ticks[took..], squid_health), Some(90));
+    assert!(matches!(first(&ticks[took..], squid_health), Some(89 | 90)));
 }
