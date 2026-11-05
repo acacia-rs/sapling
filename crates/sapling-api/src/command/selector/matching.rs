@@ -39,6 +39,12 @@ impl Candidate {
     }
 }
 
+/// Whether an entity of `kind` is of the `asked` one: BDS's `type=villager` takes its `villager_v2`s
+/// too (research/captures/bds-e1arrow.txt), as `/summon` takes the old names for them.
+fn is_kind(kind: &str, asked: &str) -> bool {
+    kind.eq_ignore_ascii_case(asked) || kind.strip_suffix("_v2").is_some_and(|older| matches!(older, "minecraft:villager" | "minecraft:zombie_villager") && older.eq_ignore_ascii_case(asked))
+}
+
 /// Whether `candidate` passes `filters`, distances and volumes counted from `origin`.
 pub(super) fn passes(filters: &Filters, candidate: &Candidate, origin: [f32; 3]) -> bool {
     let all = |tests: &[super::Not<String>], holds: &dyn Fn(&str) -> bool| tests.iter().all(|test| test.passes(holds(&test.value)));
@@ -49,7 +55,7 @@ pub(super) fn passes(filters: &Filters, candidate: &Candidate, origin: [f32; 3])
     filters.distance.holds(candidate.distance(origin))
         && in_volume(filters.volume, origin, candidate.feet)
         && all(&filters.names, &|name| candidate.name.eq_ignore_ascii_case(name))
-        && all(&filters.types, &|kind| candidate.kind.eq_ignore_ascii_case(kind))
+        && all(&filters.types, &|kind| is_kind(&candidate.kind, kind))
         && all(&filters.families, &|family| candidate.families.iter().any(|held| held == family))
         && all(&filters.tags, &tagged)
         && player_only(!filters.modes.is_empty(), &mode)
