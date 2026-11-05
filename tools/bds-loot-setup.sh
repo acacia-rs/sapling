@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Makes a BDS copy for bds_loot_probe: a behavior pack holding loot/row.mcstructure (tools/loot_structures.py),
-# applied to its world. Run on testbox: bash tools/bds-loot-setup.sh [from dir] [to dir] [port]
+# applied to its world. Run on testbox: bash tools/bds-loot-setup.sh [from dir] [to dir] [port] [3 chest seeds]
 # (default ~/work/bds-mechanisms, ~/work/bds-loot, 19292). Drill it with KEEP_WORLD=1, as a fresh
 # world would lose its pack list.
 set -euo pipefail
@@ -14,7 +14,7 @@ bp=$to/behavior_packs/loot_bp
 rm -rf "$bp"
 mkdir -p "$bp"
 printf '{"format_version":2,"header":{"name":"loot_bp","description":"sapling loot probe","uuid":"7c1e0a52-5d2f-4b47-9a43-34c0e2b1f101","version":[1,0,0],"min_engine_version":[1,21,0]},"modules":[{"type":"data","uuid":"7c1e0a52-5d2f-4b47-9a43-34c0e2b1f102","version":[1,0,0]}]}\n' >"$bp/manifest.json"
-python3 "$here/loot_structures.py" "$bp"
+python3 "$here/loot_structures.py" "$bp" "${@:4}"
 world=$to/worlds/loot
 rm -rf "$world"
 mkdir -p "$world"

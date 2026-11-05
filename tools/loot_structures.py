@@ -1,8 +1,9 @@
 """Writes `loot/row.mcstructure`: a row of seeded loot blocks for bds_loot_probe (tools/bds-loot-setup.sh).
 
-usage: python3 tools/loot_structures.py <behavior pack dir>
-Cells along +x (the rest structure void): 0, 2, 4 chests of simple_dungeon.json seed 357601146 (opened,
-fed to a hopper, read by a comparator), 6 a decorated pot, 8 suspicious sand, 10 suspicious gravel.
+usage: python3 tools/loot_structures.py <behavior pack dir> [seed seed seed]
+Cells along +x (the rest structure void): 0, 2, 4 chests of simple_dungeon.json seed 357601146, or the
+seeds given (opened, fed to a hopper, read by a comparator), 6 a decorated pot, 8 suspicious sand, 10
+suspicious gravel.
 """
 import os
 import struct
@@ -70,10 +71,12 @@ def main():
         block("suspicious_gravel", brushed_progress=int_(0), hanging=byte(1)),
     ]
     cells = {0: 1, 2: 1, 4: 1, 6: 2, 8: 3, 10: 4}
+    seeds = [int(seed) for seed in sys.argv[2:5]] or [DUNGEON[1]] * 3
+    chest = lambda seed: loot("Chest", DUNGEON[0], seed, Findable=byte(0), Items=tags(10, []))
     data = {
-        0: loot("Chest", *DUNGEON, Findable=byte(0), Items=tags(10, [])),
-        2: loot("Chest", *DUNGEON, Findable=byte(0), Items=tags(10, [])),
-        4: loot("Chest", *DUNGEON, Findable=byte(0), Items=tags(10, [])),
+        0: chest(seeds[0]),
+        2: chest(seeds[1]),
+        4: chest(seeds[2]),
         6: loot("DecoratedPot", *POT, animation=byte(0), item=empty_item),
         8: loot("BrushableBlock", *SAND, brush_count=int_(0), brush_direction=byte(6), type=string("minecraft:suspicious_sand")),
         10: loot("BrushableBlock", *GRAVEL, brush_count=int_(0), brush_direction=byte(6), type=string("minecraft:suspicious_gravel")),

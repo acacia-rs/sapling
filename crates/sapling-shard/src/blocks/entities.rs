@@ -134,7 +134,7 @@ fn pot_loot(kept: &Value) -> Vec<ItemStack> {
     if id != "DecoratedPot" {
         return Vec::new();
     }
-    crate::containers::loot::rolled(table, seed, vec![0]).into_iter().map(|(_, (name, count))| ItemStack { name, count: count.min(64) as u8, damage: 0, block: None, tag: None }).collect()
+    crate::containers::loot::rolled(table, seed, vec![0]).into_iter().map(|(_, looted)| ItemStack { name: looted.name, count: looted.count.min(64) as u8, damage: looted.data, block: None, tag: looted.tag }).collect()
 }
 
 /// Gives `items`, which a broken block leaves, what its entity `kept` that they carry: a bed's

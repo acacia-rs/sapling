@@ -7,8 +7,9 @@
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Item};
+use sapling_data::Looted;
 use sapling_data::enchant::Draws;
-use sapling_world::{container_items, with_container_items};
+use sapling_world::{ItemStack, container_items, with_container_items};
 use sapling_worldgen::random::Mt19937;
 
 use crate::blocks::{Dice, keep_entity};
@@ -42,17 +43,30 @@ pub(super) fn unpack(world: &mut World, layer: Entity, pos: BlockPos, slots: usi
     let mut items = container_items(&nbt);
     let free: Vec<u8> = (0..slots.min(usize::from(u8::MAX)) as u8).filter(|slot| !items.iter().any(|(at, _)| at == slot)).collect();
     let registry = level.registry();
-    items.extend(rolled(&table, seed, free).into_iter().filter_map(|(slot, (name, count))| Some((slot, crate::inventory::stored(&Item::new(name, count.min(64) as u8), registry)?))));
+    items.extend(rolled(&table, seed, free).into_iter().filter_map(|(slot, looted)| Some((slot, kept_stack(looted, registry)?))));
     let Value::Compound(mut fields) = with_container_items(&nbt, &items, registry) else { return };
     fields.retain(|(key, _)| key != TABLE && key != SEED);
     keep_entity(world, layer, pos, &Value::Compound(fields));
 }
 
+/// A rolled stack as a world keeps it, its data and tag with it.
+pub(crate) fn kept_stack(looted: Looted, registry: &sapling_world::BlockRegistry) -> Option<ItemStack> {
+    let item = Item { damage: looted.data, ..Item::new(looted.name, looted.count.min(64) as u8) };
+    let mut stack = crate::inventory::stored(&item, registry)?;
+    stack.tag = looted.tag.or(stack.tag);
+    Some(stack)
+}
+
 /// What `table` rolled with `seed` puts in the `free` slots, by slot.
-pub(crate) fn rolled(table: &str, seed: u32, free: Vec<u8>) -> Vec<(u8, (String, u32))> {
+pub(crate) fn rolled(table: &str, seed: u32, free: Vec<u8>) -> Vec<(u8, Looted)> {
     let mut random = Mt19937::new(seed);
     let rolled = sapling_data::drawn_table_loot(table, &mut Bedrock(&mut random));
     fill(rolled, free, &mut random)
+}
+
+/// What `table` draws with `seed`, unplaced.
+pub(crate) fn drawn(table: &str, seed: u32) -> Vec<Looted> {
+    sapling_data::drawn_table_loot(table, &mut Bedrock(&mut Mt19937::new(seed)))
 }
 
 /// MSVC's `std::shuffle` on BDS's generator: each later element swapped with one at or before it.
@@ -68,15 +82,16 @@ fn shuffle<T>(list: &mut [T], random: &mut Mt19937) {
 /// again), one of them at a time split in two, each part of more than one set aside again on a coin;
 /// then every stack shuffled and put in the slots from the back of the list. Stacks past the last
 /// free slot are left out.
-fn fill(rolled: Vec<(String, u32)>, mut free: Vec<u8>, random: &mut Mt19937) -> Vec<(u8, (String, u32))> {
+fn fill(rolled: Vec<Looted>, mut free: Vec<u8>, random: &mut Mt19937) -> Vec<(u8, Looted)> {
     shuffle(&mut free, random);
-    let (mut split, mut stacks): (Vec<_>, Vec<_>) = rolled.into_iter().filter(|(_, count)| *count > 0).partition(|(_, count)| *count > 1);
+    let (mut split, mut stacks): (Vec<_>, Vec<_>) = rolled.into_iter().filter(|looted| looted.count > 0).partition(|looted| looted.count > 1);
     if free.len() > stacks.len() {
         while !split.is_empty() {
-            let (name, count) = split.remove(random.next_int(split.len() as i32) as usize);
-            let part = random.next_int((count >> 1) as i32) as u32 + 1;
-            for count in [count - part, part] {
-                if count > 1 && random.next_boolean() { split.push((name.clone(), count)) } else { stacks.push((name.clone(), count)) }
+            let looted = split.remove(random.next_int(split.len() as i32) as usize);
+            let part = random.next_int((looted.count >> 1) as i32) as u32 + 1;
+            for count in [looted.count - part, part] {
+                let piece = Looted { count, ..looted.clone() };
+                if count > 1 && random.next_boolean() { split.push(piece) } else { stacks.push(piece) }
             }
         }
     }

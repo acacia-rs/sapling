@@ -21,6 +21,7 @@ mod fireball;
 mod parts;
 mod podium;
 mod random;
+mod relinks;
 mod respawn;
 mod spawn;
 mod spikes;
@@ -34,6 +35,8 @@ use crate::body::Body;
 use crate::components::{InLayer, Layer, Position, in_world};
 
 pub(crate) use boss_bar::show as show_boss_bar;
+pub(crate) use gateways::{open_far as open_far_gateway, relink as relink_gateway};
+pub(crate) use relinks::{exit_of as gateway_exit, shown as gateway_shown};
 pub(crate) use crystals::{Crystal, KIND as CRYSTAL, blast_particles, burst, from_storage as crystal_from_storage, place as place_crystal};
 pub(crate) use hooks::{blasted, body_harm, describe, dies, hurt, is_dying, part_reach, takes_blast};
 pub(crate) use spawn::{Dragon, KIND as DRAGON, adopt};

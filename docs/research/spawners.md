@@ -172,12 +172,14 @@ Left out:
 Decompiled 2026-11-05 (twelfth7; TrialSpawner tick 1411923a0, spawn 141197c30, spot 141199cf0, item roll
 1411990f0, entity tick 1429fa630); captures bds-u1omen.txt. Ported 2026-11-05 (twelfth10,
 `spawners/trial/ominous_items.rs`; test `spawners::trial`); re-drilled, sapling-u1omen.txt drops its spawners
-with the same packets, a lingering potion shot at (0, -0.5, 0) and an arrow with spread. Not ported: the coin
-for the wave's mobs (players only), the kept per-position MT19937 roll (each drop rolls the table's two pools
-anew), and the spawn box check.
+with the same packets, a lingering potion shot at (0, -0.5, 0) and an arrow with spread. The coin for the
+wave's mobs, the kept per-position MT19937 roll and the spawn box check ported 2026-11-05 (thirteenth2d,
+undrilled: the coin and the picks are on the spawner blocks' dice, not BDS's level random). [U] a mob's
+head attach point (sapling: 0.85 of its height).
 
 - When: an active spawner with `ominous` set, at `level.currentTick % 160 == 0` (the world's tick, not the
-  spawner's), one at most; it needs a detected player alive, not creative, within `required_player_range`.
+  spawner's), one at most; it needs a detected player alive, not creative, its head attach point closer than
+  `required_player_range` to the spawner's centre (strict `<`).
 - Over whom: a level-random coin picks the current mobs if any, else the detected players (the same filter);
   `nextInt(n)` one. From its head attach point A, E = A + (0, nextInt(4) + 2, 0); a block clip A to E: on a
   hit the spot is the hit cell's middle one lower, else E raw. Fails in A's cell or its box. [U] the first

@@ -55,6 +55,13 @@ impl Search {
 
     /// Steps the search over loaded columns, asking for the next; `Some` once it has all it reads.
     pub fn step(&mut self, level: &mut Level, near: BlockPos) -> Option<Found> {
+        let at = self.point(level)?;
+        settle(level, self.chunk(), at, near)
+    }
+
+    /// Walks over loaded columns, asking for the next; `Some` with `findExitPosition`'s point once
+    /// the walk is over.
+    pub fn point(&mut self, level: &mut Level) -> Option<[f64; 2]> {
         loop {
             let chunk = self.chunk();
             if !level.request_urgent(chunk) {
@@ -72,7 +79,7 @@ impl Search {
                     self.phase = Phase::Found;
                     continue;
                 }
-                Phase::Found => return settle(level, chunk, self.at, near),
+                Phase::Found => return Some(self.at),
             };
             self.left -= 1;
             self.at = [self.at[0] + self.dir[0] * go, self.at[1] + self.dir[1] * go];
@@ -87,7 +94,7 @@ fn is_empty(level: &Level, [x, z]: [f64; 2]) -> bool {
 }
 
 /// Whether every column within `chunks` round `at`'s chunk can be read, asking for those not loaded.
-fn loaded(level: &mut Level, at: BlockPos, chunks: i32) -> bool {
+pub(super) fn loaded(level: &mut Level, at: BlockPos, chunks: i32) -> bool {
     let middle = ChunkPos::of_block(at[0], at[2]);
     let wanted = (-chunks..=chunks).flat_map(|dx| (-chunks..=chunks).map(move |dz| ChunkPos::new(middle.x + dx, middle.z + dz)));
     wanted.fold(true, |all, column| level.request_urgent(column) && all)

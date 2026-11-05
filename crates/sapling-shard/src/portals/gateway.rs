@@ -3,12 +3,12 @@
 //! teleported at once to its exit, a block up and in the middle of the cell, told twice with the
 //! gateway's block event; the next tick the gateway and its entity are shown again. While its
 //! column ticks a gateway's `Age` goes up by one a tick, uncapped, and it is shown again at Age 1
-//! and 200 (bds-u1gate.txt) and as a trip's cooldown ends (docs/research/end-dimension.md "Gateways").
-// TODO: exit finding for gateways with none, and relinks (end-dimension.md "Gateways").
+//! and 200 (bds-u1gate.txt), in its first tick since its column came from storage
+//! (gateway_load.rs) and as a trip's cooldown ends (docs/research/end-dimension.md "Gateways").
 
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{BlockEvent, BlockEventType, MovePlayerTeleportCause, UpdateBlock};
-use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags};
+use acacia_proto::packets::{BlockEvent, BlockEventType, MovePlayerTeleportCause};
+use acacia_proto::types::BlockCoordinates;
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 use sapling_world::END;
@@ -22,8 +22,6 @@ const ENTITY: &str = "EndGateway";
 const WORLDGEN_EXIT: BlockPos = [100, 50, 0];
 /// The source entity types of BDS's two MovePlayer for one trip.
 const TOLD_AS: [i64; 2] = [1, 0];
-/// What BDS shows the gateway again with: neighbours, network and its sixteen bit.
-const SHOWN_AGAIN: UpdateBlockFlags = UpdateBlockFlags(19);
 /// The ages a gateway is shown again at: a generated one counts as changed until its first tick.
 const SHOWN_AT: [i32; 2] = [1, 200];
 
@@ -46,16 +44,10 @@ fn gateway_at(world: &World, player: Entity) -> Option<(Entity, BlockPos)> {
     found.map(|pos| (layer, pos))
 }
 
-/// Where a gateway sends: its block entity's `ExitPortal`, else the generated gateways' exit.
+/// Where a gateway sends: its block entity's `ExitPortal` ((0, 0, 0) without one, as BDS's), else
+/// the generated gateways' exit.
 fn exit(level: &sapling_world::World, pos: BlockPos) -> BlockPos {
-    let kept = level.block_entity(pos).and_then(|entity| match entity.nbt.get("ExitPortal") {
-        Some(Value::List(list)) => match list.items.as_slice() {
-            [Value::Int(x), Value::Int(y), Value::Int(z)] => Some([*x, *y, *z]),
-            _ => None,
-        },
-        _ => None,
-    });
-    kept.unwrap_or(WORLDGEN_EXIT)
+    level.block_entity(pos).map_or(WORLDGEN_EXIT, |entity| crate::dragon::gateway_exit(&entity.nbt).unwrap_or([0; 3]))
 }
 
 /// Sends `packets` about the gateway at `pos` to its viewers, and to `traveller` too, whose client
@@ -73,10 +65,7 @@ fn tell(world: &mut World, layer: Entity, pos: BlockPos, traveller: Option<Entit
 
 /// Shows the gateway at `pos` again, block and entity.
 fn show(world: &mut World, layer: Entity, pos: BlockPos, traveller: Option<Entity>) {
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
-    let [x, y, z] = pos;
-    let mut packets = vec![sapling_net::encode(&UpdateBlock { position: BlockCoordinates { x, y, z }, block_runtime_id: level.registry().network_hash(level.block(x, y, z)), flags: SHOWN_AGAIN, layer: 0 })];
-    packets.extend(level.block_entity(pos).map(|entity| crate::blocks::block_entity_data(pos, entity)));
+    let Some(packets) = world.get::<Layer>(layer).map(|layer| crate::dragon::gateway_shown(&layer.world, pos)) else { return };
     tell(world, layer, pos, traveller, &packets);
 }
 
@@ -109,7 +98,7 @@ fn age(world: &mut World) {
             if let Some(mut level) = world.get_mut::<Layer>(layer) {
                 level.world.set_block_entity(pos, &nbt);
             }
-            if SHOWN_AT.contains(&age) {
+            if super::gateway_load::first_tick(world, layer, pos, &nbt) || SHOWN_AT.contains(&age) {
                 due.push((layer, pos));
             }
         }
@@ -122,6 +111,7 @@ fn age(world: &mut World) {
 /// Ages the gateways, shows last tick's again and those whose cooldown ends, then sends the
 /// players in a gateway through it.
 pub(crate) fn tick(world: &mut World, players: &[Entity]) {
+    super::gateway_load::forget_gone(world);
     age(world);
     let used = world.get_resource_mut::<Used>().map(|mut used| std::mem::take(&mut used.0)).unwrap_or_default();
     let now = world.resource::<crate::components::Tick>().0;

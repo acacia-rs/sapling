@@ -2,8 +2,10 @@
 //! makes the nearest bloom and gives it its experience, which it no longer drops, as charge
 //! where it died. Each tick the catalyst's `SculkSpreader` moves the charge (the generator's own
 //! port, `sapling_worldgen::sculk`, run over the live world), laying veins, turning blocks to sculk
-//! and growing sensors and shriekers.
-// TODO: cursors are not saved with the catalyst, and blocks the generator never places read as bedrock.
+//! and growing sensors and shriekers. Its cursors are kept in its block actor (saved.rs).
+// TODO: blocks the generator never places read as bedrock to the spreader.
+
+mod saved;
 
 use std::collections::BTreeMap;
 
@@ -18,6 +20,7 @@ use sapling_worldgen::sculk::{self, Cells, Cursor, SculkWorld, Sound, Spreader};
 
 use super::super::queued::{self, Job};
 use super::super::{Dice, level, send, with_property};
+pub(crate) use saved::arrived;
 
 pub(super) const CATALYST: &str = "minecraft:sculk_catalyst";
 const SHRIEKER: &str = "minecraft:sculk_shrieker";
@@ -102,26 +105,32 @@ pub(super) fn wilt(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     send::set(world, layer, [x, y, z], wilted);
 }
 
-/// Every catalyst's cursors take a round (`SculkCatalystBlockActor::tick` 144879bc0). A catalyst
-/// gone from a loaded column takes its cursors with it.
+/// Every catalyst's cursors take a round (`SculkCatalystBlockActor::tick` 144879bc0), kept in its
+/// block actor. A catalyst gone from a loaded column takes its cursors with it.
 pub(super) fn tick(world: &mut World) {
     let Some(mut catalysts) = world.remove_resource::<Catalysts>() else { return };
     let mut spent = Vec::new();
     for (&(layer, pos), cursors) in catalysts.cursors.iter_mut() {
         let loaded = level(world, layer).is_some_and(|level| level.is_loaded(send::column(pos)));
-        if loaded && !is_catalyst(world, layer, pos) {
+        let here = loaded && is_catalyst(world, layer, pos);
+        if loaded && !here {
             cursors.clear();
         }
-        if loaded && !cursors.is_empty() {
+        if here && !cursors.is_empty() {
             sculk::update_cursors(&mut Live { world: &mut *world, layer }, &Spreader::LEVEL, cursors, pos, &mut catalysts.random, true);
+        }
+        if here {
+            saved::keep(world, layer, pos, cursors);
         }
         if cursors.is_empty() {
             spent.push((layer, pos));
         }
     }
     spent.iter().for_each(|key| _ = catalysts.cursors.remove(key));
-    for (key, cell, points) in std::mem::take(&mut catalysts.fresh) {
-        sculk::add_cursors(catalysts.cursors.entry(key).or_default(), cell, points);
+    for ((layer, pos), cell, points) in std::mem::take(&mut catalysts.fresh) {
+        let cursors = catalysts.cursors.entry((layer, pos)).or_default();
+        sculk::add_cursors(cursors, cell, points);
+        saved::keep(world, layer, pos, cursors);
     }
     world.insert_resource(catalysts);
 }
