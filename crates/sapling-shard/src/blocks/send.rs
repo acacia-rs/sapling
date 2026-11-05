@@ -72,7 +72,7 @@ pub(crate) use crate::view::to_viewers;
 /// Makes `entity` what the block at `pos` holds and shows it to those who see the block, after its
 /// block where an open batch holds it ([`show_held`]).
 pub(crate) fn keep_entity(world: &mut World, layer: Entity, pos: BlockPos, entity: &Value) {
-    if keep_entity_quietly(world, layer, pos, entity) && !sections::holds(world, layer, pos) {
+    if keep_entity_quietly(world, layer, pos, entity) && !sections::holds(world, layer, pos) && !super::cloned::defers_entity(world, layer, pos) {
         let shown: Vec<_> = world.get::<Layer>(layer).and_then(|level| level.world.block_entity(pos).map(|entity| block_entity_data(pos, entity))).into_iter().collect();
         to_viewers(world, layer, pos, &shown);
     }

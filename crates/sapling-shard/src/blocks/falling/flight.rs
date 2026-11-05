@@ -236,7 +236,11 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         let hash = level(world, layer).map_or(0, |level| level.registry().network_hash(block_id));
         mobs::reannounce(world, entity, announcement(id, &body, hash));
     }
-    if landed {
+    // BDS tells the health of whom it landed on after the landing's events (bds-v2drip.txt, bds-z2open.txt).
+    let (_, hurt) = crate::vitals::health_held(world, |world| {
+        if !landed {
+            return;
+        }
         let is_anvil = block(world, layer, cell_of(at)).and_then(|(registry, _)| registry.get(block_id)).is_some_and(|state| state.name.ends_with("anvil"));
         // BDS sends the sound before the landing move, after the hurt it did.
         if is_anvil {
@@ -252,8 +256,9 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         {
             packets.insert(0, dust);
         }
-    }
+    });
     send::to_viewers(world, layer, cell_of(at), &packets);
+    crate::vitals::tell_held_health(world, hurt);
     None
 }
 

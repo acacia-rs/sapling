@@ -65,9 +65,16 @@ impl BlockEntity {
             Some(Value::String(id)) if id == "TrialSpawner" => Value::Compound(kept("spawn_data").map(|data| field("spawn_data", data)).into_iter().collect()),
             Some(Value::String(id)) if id == "Vault" => {
                 let range = self.nbt.get("config").and_then(|config| config.get("deactivation_range")).cloned().unwrap_or(Value::Float(4.5));
+                // Its shared data's players and display item (research/captures/bds-x2ran.txt).
+                let shared = self.nbt.get("shared_data");
+                let item = shared.and_then(|shared| shared.get("display_item"));
                 let nothing = ["Count", "Damage", "Name", "WasPickedUp"].into_iter().zip([Value::Byte(0), Value::Short(0), Value::String(Str::default()), Value::Byte(0)]);
-                let shown = Value::Compound(nothing.map(|(key, value)| field(key, value)).collect());
-                Value::Compound(vec![field("connected_particle_range", range), field("connected_players", Value::List(List { tag: 0, items: Vec::new() })), field("display_item", shown)])
+                let shown = Value::Compound(nothing.map(|(key, value)| field(key, item.and_then(|item| item.get(key)).cloned().unwrap_or(value))).collect());
+                let players = match shared.and_then(|shared| shared.get("connected_players")) {
+                    Some(Value::List(list)) if !list.items.is_empty() => Value::List(list.clone()),
+                    _ => Value::List(List { tag: 0, items: Vec::new() }),
+                };
+                Value::Compound(vec![field("connected_particle_range", range), field("connected_players", players), field("display_item", shown)])
             }
             Some(Value::String(id)) if id == "Crafter" => Value::Compound(vec![
                 field("crafting_ticks_remaining", kept("crafting_ticks_remaining").unwrap_or(Value::Int(0))),

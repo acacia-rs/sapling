@@ -151,8 +151,12 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
 - A bed clicked at its foot in the Nether, again (bds-v2nether.txt): the foot's dust at its corner with the foot's
   hash, then the blast at the head's middle, on both. Not matched: BDS lists the bed's two cells in the blast's
   UpdateSubchunkBlocks and sends the blast's `LevelEventGeneric` 4052 (origin and every cell blown) after the
-  `ParticleExplosion`; sapling shows the two halves gone in UpdateBlocks before the blast and sends no 4052 for a
-  bed (it sends the crystal's form only, `dragon/crystals.rs`).
+  `ParticleExplosion`; sapling showed the two halves gone in UpdateBlocks before the blast and sent no 4052 for a
+  bed (it sent the crystal's form only, `dragon/crystals.rs`). Fixed 2026-11-05 (thirteenth2x, bds-x2bed.txt,
+  bds-x2boom.txt): every blast sends 4052 right after its flash (`creatures::blast_particles`: origin, `pos<i>`
+  of each cell broken, fire blasts every cell listed, `radius`, `size`, tags in name order); a bed's head then
+  foot and an anchor are cleared inside the blast's log, so they lead their sub-chunk's UpdateSubchunkBlocks; a
+  fire blast lists every unlit cell again as air (bds-p2last.txt). Tests in block_leftovers.rs, thirteenth2x.rs.
 - Found, not followed: 3 s after an `execute in nether` teleport of the drill's bot, sapling's `/fill` there
   answered `outOfWorld` and the bot had no position (a loaded run; 7 s after, it filled); BDS's filled at 3 s.
 

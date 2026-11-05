@@ -26,6 +26,8 @@ mod shield;
 mod soles;
 mod struck;
 pub(crate) mod told_all;
+mod told_health;
+pub(crate) use told_health::{held as health_held, tell_held as tell_held_health};
 mod totem;
 pub(crate) use shield::{Guard, blocks, shown_bits, thrown_back, wields_axe};
 pub(crate) use stand::{break_fall, breathes_water, fallen, falls_freely};
@@ -155,8 +157,7 @@ pub(crate) fn flash_guarded(world: &mut World, player: Entity, cause: Cause) {
 /// Tells the health and the burning where they changed, and lets a player with no health die of `cause`.
 fn settle(world: &mut World, player: Entity, cause: Cause) {
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
-    let (left, burning, most, ticks) = (vitals.health.left(), vitals.health.is_burning(), vitals.health.max(), vitals.health.burning());
-    let changed = std::mem::replace(&mut vitals.told, left) != left;
+    let (left, burning, ticks) = (vitals.health.left(), vitals.health.is_burning(), vitals.health.burning());
     let cushion = vitals.health.cushion();
     let padded = std::mem::replace(&mut vitals.padded, cushion) != cushion;
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
@@ -168,12 +169,7 @@ fn settle(world: &mut World, player: Entity, cause: Cause) {
     if padded {
         tell(world, player, &effects::cushion(id, cushion, tick));
     }
-    if changed {
-        // BDS kept the boost's modifier on every later health it told (bds-u1fly.txt).
-        let boosted = effects::level(world, player, sapling_api::Effect::HealthBoost);
-        let told = if boosted.is_some() { boost::boosted_health(id, left, MAX, boosted) } else { sapling_data::mob_health_update(id, left, most) };
-        tell(world, player, &told);
-    }
+    told_health::tell_changed(world, player);
     let lit = burning && world.get::<Motion>(player).is_some_and(|motion| !motion.pose.burning);
     let burning = burning && !(lit && !crate::hand_events::may_burn(world, player, ticks));
     if lit && !burning && let Some(mut vitals) = world.get_mut::<Vitals>(player) {

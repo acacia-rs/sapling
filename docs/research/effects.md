@@ -37,6 +37,9 @@ third level with 60, 48, 36, 24 and 12.
   that amount; plain 0.1 again when it is over.
 - The hunger's mending goes on under poison.
 - A player in creative is given poison, told of it, and not hurt.
+- A hurt player put in creative and given instant health is told its healed health at once
+  (bds-v2drip.txt, 2026-11-05); sapling told it only on going back to survival, fixed
+  (`vitals/stand.rs` tells a changed health while unhurt; test in thirteenth2x.rs).
 - Resistance (`more`, research/captures/bds-more.txt): a hit of 10 took 8 at the first level and
   2 at the fourth, as an entity's attack, magic, a fall or no cause alike: a fifth off a level.
 - Fire resistance: `/damage` as `fire`, `lava`, `fire_tick` or `magma` answers

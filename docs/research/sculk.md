@@ -257,7 +257,10 @@ Particle (1411b5340)
   else (`sculk::teleported`, from `Backend::teleport` and `EntityBackend::move_entity`).
 - Chorus fruit eaten with hunger full: BDS ate it (sapling refused, its `always` was unset; fixed in
   `sapling_data::food`) and was heard from the eyes' cell it ate at (`eat`, frequency 8), sent as the teleport and
-  the burp were. Sapling posts `Eat` there as the food is eaten (`vitals/eating.rs`). Whether the chorus teleport's
+  the burp were. Sapling posts `Eat` there as the food is eaten (`vitals/eating.rs`). A drink is heard the same
+way (bds-x2drink.txt, 2026-11-05: a water bottle, honey and milk each sent the sensor a vibration from the eyes'
+cell as finished, after `bottle.empty`); sapling posts `Eat` for drinks too, after the bottle's sound, both
+frequency 8. Found, not followed: sapling plays a sensor's `power.on`/`power.off` before its UpdateBlock, BDS after. Whether the chorus teleport's
   arrival is heard is not known: BDS's landed out of the sensor's range.
 
 ## Unverified

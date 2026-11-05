@@ -170,7 +170,6 @@ fn summon(world: &mut World, layer: Entity, crystals: &[Entity]) {
         let Some(at) = world.get::<Body>(crystal).map(|body| body.at) else { continue };
         world.entity_mut(crystal).remove::<Crystal>();
         explode(world, Some(crystal), layer, at, CRYSTAL_BLAST, Wreck::Nothing);
-        crate::blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[crystals::blast_particles(at, CRYSTAL_BLAST)]);
     }
     super::keep(world, layer);
 }

@@ -52,6 +52,31 @@ fn a_key_unlocks_the_vault_once_per_player_and_it_ejects_its_reward() {
 }
 
 #[test]
+fn an_active_vault_shows_its_players_and_item_with_its_block_each_second_and_unlocks_heard_after() {
+    // research/captures/bds-x2ran.txt: block and entity (`connected_players`, `display_item`) each second;
+    // on a key, the block, its entity, then `vault.insert_item` at the cell's corner.
+    use acacia_proto::RawPacket;
+    use acacia_proto::packets::{BlockEntityData, LevelSoundEvent};
+    let mut h = beside_a_vault();
+    run(&mut h, 25);
+    let sent: Vec<RawPacket> = (0..21).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let shown: Vec<Value> = crate::common::all::<BlockEntityData>(&sent).into_iter().map(|data| data.nbt.decode().unwrap().value).collect();
+    let players = |entity: &Value| matches!(entity.get("connected_players"), Some(Value::List(list)) if !list.items.is_empty());
+    let item = |entity: &Value| entity.get("display_item").and_then(|item| item.get("Name")).is_some_and(|name| *name != Value::String("".into()));
+    assert!(!shown.is_empty() && shown.iter().all(|entity| players(entity) && item(entity)), "{shown:?}");
+    assert!(!crate::common::block_changes(&sent).is_empty(), "its block shown again");
+    held(&mut h, "minecraft:trial_key", 2);
+    h.receive(1, &click(VAULT, 1, None));
+    let sent = h.tick_all().to(1).to_vec();
+    let at = |found: &dyn Fn(&[RawPacket]) -> bool| sent.iter().position(|packet| found(std::slice::from_ref(packet)));
+    let (block, entity) = (at(&|one| !crate::common::block_changes(one).is_empty()), at(&|one| !crate::common::all::<BlockEntityData>(one).is_empty()));
+    let sound = crate::common::all::<LevelSoundEvent>(&sent).into_iter().find(|sound| sound.sound_id == "vault.insert_item").expect("heard");
+    let heard = at(&|one| crate::common::all::<LevelSoundEvent>(one).iter().any(|sound| sound.sound_id == "vault.insert_item"));
+    assert!(block.is_some() && block < entity && entity < heard, "{block:?} {entity:?} {heard:?}");
+    assert_eq!([sound.position.x, sound.position.y, sound.position.z], VAULT.map(|c| c as f32));
+}
+
+#[test]
 fn the_wrong_item_is_refused_aloud_and_kept() {
     let mut h = beside_a_vault();
     run(&mut h, 25);
