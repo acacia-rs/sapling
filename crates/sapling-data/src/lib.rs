@@ -47,6 +47,7 @@ pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot
 pub use clock::{clock_state, world_clocks};
 pub use command_texts::command_text;
 pub use custom_blocks::{block_states, custom_block, register_block};
+pub use custom_blocks::conditions::collision_in;
 pub use custom_items::{register_block_item, register_item};
 pub use names::{entity_display_name, item_display_name};
 pub use command_names::{block_tile_key, command_takes_block, command_takes_feature_rule, command_takes_item};

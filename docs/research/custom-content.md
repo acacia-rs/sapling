@@ -51,5 +51,8 @@ Only a real client can confirm these; none were checked against BDS or a client:
 - armour rendering of a wearable custom item; the cooldown bar
 - that a client accepts `hidden_in_commands` 2, `molangVersion` 13 and the creative group placement for custom entries
 - the client's own break time and selection box for a custom block
-- permutations' collision boxes (the server's physics reads the block's base box only, `blocks/custom.rs` `collision_box`)
+- permutations' collision boxes: since thirteenth2e the server's physics takes the box of the last permutation whose
+  condition holds for the state (`sapling_data::collision_in`, `q.block_state(...)` Molang; `blocks/custom.rs`
+  `collision_box`, test `an_item_lands_on_the_box_of_a_custom_block_s_permutation`); that a client collides alike
+  is not checked
 - a cooldown is not enforced server-side; eating a custom food was checked only in data
