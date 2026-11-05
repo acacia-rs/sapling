@@ -312,7 +312,7 @@ cells (`paths::route`) and walks middle to middle (`creatures/strolling.rs`; tes
 `a_strolling_cow_goes_round_a_wall_to_a_place_behind_it`). Re-drilled (research/captures/sapling-m3strolls.txt,
 `walks.py`, cows, pigs, sheep): path 8.1, 7.7, 8.9 blocks against BDS's 7.8, 8.6, 10.5 (before 6.5, 8.3,
 6.2) and 107, 74, 118 ticks against 116, 90, 152. Still different: in-walk pauses, 2 to 5 ticks a walk
-against BDS's 10 to 12; their cause is not known.
+against BDS's 10 to 12; their cause is not known (not reached in thirteenth3o).
 
 ## Fleeing (`flee`)
 

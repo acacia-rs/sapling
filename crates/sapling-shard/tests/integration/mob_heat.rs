@@ -93,6 +93,29 @@ fn rain_hurts_an_enderman_1_each_10_ticks_as_drowning() {
 }
 
 #[test]
+fn water_and_rain_hurt_a_blaze_and_a_snow_golem_1_each_10_ticks_as_drowning() {
+    // research/captures/bds-o3wet.txt: in a pool and in the rain, hurt (data 9) every 10 ticks; a snow
+    // golem's 4 health went in four.
+    for (kind, health) in [("minecraft:blaze", 17.0), ("minecraft:snow_golem", 1.0)] {
+        let mut h = ready();
+        // Peaceful takes monsters away.
+        h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Easy));
+        penned(&mut h, 6, "stone", Block::new("water"), kind);
+        // A lid, and water to it: BDS's were held in theirs by slowness.
+        h.remote.run(|ctx| assert!(ctx.set_block([6, 66, 0], &Block::new("water")) && ctx.set_block([6, 67, 0], &Block::new("stone"))));
+        assert_eq!(told(&ticks(&mut h, 25)), (health, vec![9, 9, 9]), "{kind} in water");
+    }
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_weather(Weather::Rain, None);
+    });
+    ticks(&mut h, 20);
+    penned(&mut h, 6, "stone", Block::air(), "minecraft:blaze");
+    assert_eq!(told(&ticks(&mut h, 25)), (17.0, vec![9, 9, 9]), "a blaze in the rain");
+}
+
+#[test]
 fn an_enderman_in_rain_teleports_on_and_on() {
     // research/captures/bds-enderrain.txt: the rain set in and first hurt it 20 ticks after
     // `/weather rain`, then seven teleports in 7 ticks.

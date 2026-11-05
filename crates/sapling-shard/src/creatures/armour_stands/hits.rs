@@ -3,7 +3,7 @@
 //! tick at a time and its `HurtDirection` turning over; a second hit soon after, or one creative
 //! hit, breaks it with `ParticleDestroyArmorStand` and `SoundArmorStandBreak` at its feet. A
 //! survival break drops the stand 1.125 above its feet and its gear about its box.
-// TODO: how soon "soon" is was not drilled between 0 ticks (broke) and 40 (did not); 5 is Java's.
+// "Soon" is Java's 5 ticks: BDS's broke at a second hit 2 and 4 ticks on, not 6 (bds-o3stand2.txt).
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -77,8 +77,13 @@ pub(in crate::creatures) fn struck(world: &mut World, stand: Entity, kind: &str,
 
 /// The stand item, then what it held and wore.
 fn drop_all(world: &mut World, stand: Entity, layer: Entity, [x, y, z]: [f32; 3]) {
-    let Gear { slots, .. } = gear_of(world, stand);
     drops::toss(world, layer, ItemStack { name: STAND.into(), count: 1, damage: 0, block: None, tag: None }, [x, y + DROP_ABOVE, z]);
+    drop_gear(world, stand, layer, [x, y, z]);
+}
+
+/// What it held and wore, about its box.
+pub(super) fn drop_gear(world: &mut World, stand: Entity, layer: Entity, [x, y, z]: [f32; 3]) {
+    let Gear { slots, .. } = gear_of(world, stand);
     for stack in slots.into_iter().flatten() {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         let at = [x + (dice.fraction() * 2.0 - 1.0) * GEAR_ACROSS, y + dice.fraction() * HEIGHT, z + (dice.fraction() * 2.0 - 1.0) * GEAR_ACROSS];

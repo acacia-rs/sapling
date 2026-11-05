@@ -27,7 +27,7 @@ mod soles;
 mod struck;
 pub(crate) mod told_all;
 mod totem;
-pub(crate) use shield::{blocks, thrown_back, wields_axe};
+pub(crate) use shield::{Guard, blocks, shown_bits, thrown_back, wields_axe};
 pub(crate) use stand::{break_fall, breathes_water, fallen, falls_freely};
 #[cfg(test)]
 pub(crate) use splashed::shared_strength;

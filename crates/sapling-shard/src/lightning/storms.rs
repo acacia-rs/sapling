@@ -91,7 +91,7 @@ pub(super) fn tick(world: &mut World) {
             let picked = [x, y, z];
             let rod = super::rods::drawn_to(world, layer, picked);
             let at = rod.or_else(|| animal(world, layer, column)).unwrap_or(picked.map(|c| c as f32));
-            if world.get::<Layer>(layer).is_some_and(|layer| rains_on(&layer.world, at.map(|c| c.floor() as i32))) {
+            if rod.is_some() || world.get::<Layer>(layer).is_some_and(|layer| rains_on(&layer.world, at.map(|c| c.floor() as i32))) {
                 super::strike(world, layer, at, true);
                 if rod.is_none() && traps(world, layer) {
                     crate::creatures::set_trap(world, layer, at.map(f32::floor));

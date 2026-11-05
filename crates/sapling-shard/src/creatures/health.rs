@@ -133,9 +133,7 @@ impl Health {
 
     /// [`Health::shielded`] with `pierced` taken off the share the armour stops (a mace's Breach).
     pub(crate) fn shielded_but(&self, amount: f32, pierced: f32) -> f32 {
-        let [points, toughness] = self.armour;
-        let stops = (points - amount / (2.0 + toughness / 4.0)).clamp(points * 0.2, 20.0) / 25.0;
-        amount * (1.0 - (stops - pierced).max(0.0))
+        amount * (1.0 - (armour_stops(amount, self.armour) - pierced).max(0.0))
     }
 
     /// Whether a hit of `amount` would land now, before armour: outside the guard, or harder than
@@ -285,6 +283,11 @@ impl Health {
     pub(crate) fn gasp(&mut self, dry: bool) -> bool {
         dry && self.air == 0 && self.hurt(SMOTHER_HARM)
     }
+}
+
+/// The share of a hit of `amount` that armour of these points and toughness stops.
+pub(crate) fn armour_stops(amount: f32, [points, toughness]: [f32; 2]) -> f32 {
+    (points - amount / (2.0 + toughness / 4.0)).clamp(points * 0.2, 20.0) / 25.0
 }
 
 mod falls;

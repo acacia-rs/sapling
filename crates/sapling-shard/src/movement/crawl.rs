@@ -13,6 +13,7 @@ use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, Stage};
 use crate::riding::Riding;
 use crate::sleep::Sleeping;
 use crate::visibility::ToViewers;
+use crate::vitals::{self, Guard};
 
 const CRAWLING_HEIGHT: f32 = 0.6;
 const WIDTH: f32 = 0.6;
@@ -24,11 +25,11 @@ const SLACK: f32 = 1e-3;
 #[derive(Component)]
 pub(crate) struct Crawling;
 
-type Crawler<'a> = (Entity, &'a NetId, &'a Stage, &'a Position, &'a Motion, &'a InLayer, &'a Mode, &'a mut Outgoing, Has<Crawling>, Has<Riding>, Has<Sleeping>);
+type Crawler<'a> = (Entity, &'a NetId, &'a Stage, &'a Position, &'a Motion, &'a InLayer, &'a Mode, &'a mut Outgoing, Has<Crawling>, Has<Riding>, Has<Sleeping>, Option<&'a Guard>);
 
 /// Lays down each player whose box of its pose meets a block, and stands up each crawler with room.
 pub(crate) fn crawl(mut commands: Commands, mut to_viewers: ResMut<ToViewers>, layers: Query<&Layer>, mut players: Query<Crawler>) {
-    for (entity, id, stage, position, motion, in_layer, mode, mut out, crawling, riding, sleeping) in &mut players {
+    for (entity, id, stage, position, motion, in_layer, mode, mut out, crawling, riding, sleeping, guard) in &mut players {
         let Ok(layer) = layers.get(in_layer.0) else { continue };
         let upright = *stage == Stage::InWorld && !riding && !sleeping && mode.0 != GameMode::Spectator && !motion.pose.gliding && !motion.pose.swimming;
         let low = upright && !fits(&layer.world, position.feet, motion.pose.height());
@@ -40,7 +41,8 @@ pub(crate) fn crawl(mut commands: Commands, mut to_viewers: ResMut<ToViewers>, l
         } else {
             commands.entity(entity).remove::<Crawling>();
         }
-        let shown = shown(id.0, if low { CRAWLING_HEIGHT } else { motion.pose.height() }, low, motion.input_tick);
+        let bits = (if low { CRAWLING } else { 0 }) | vitals::shown_bits(guard);
+        let shown = shown(id.0, if low { CRAWLING_HEIGHT } else { motion.pose.height() }, bits, motion.input_tick);
         out.push(&shown);
         to_viewers.push(entity, &shown);
     }
@@ -54,8 +56,8 @@ fn fits(level: &sapling_world::World, [x, y, z]: [f32; 3], height: f32) -> bool 
     boxes.is_empty()
 }
 
-fn shown(id: u64, height: f32, crawling: bool, tick: u64) -> SetEntityData {
-    let flags = sapling_data::player_flags_extended().0 | if crawling { CRAWLING } else { 0 };
+fn shown(id: u64, height: f32, bits: i64, tick: u64) -> SetEntityData {
+    let flags = sapling_data::player_flags_extended().0 | bits;
     let metadata = vec![
         MetadataDictionaryItem { key: Key::BoundingboxHeight, r#type: Type::Float, legacy_type: 3, value: Value::Default(Plain::Float(height)) },
         MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(flags)) },

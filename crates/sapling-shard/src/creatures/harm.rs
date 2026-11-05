@@ -18,9 +18,9 @@ use crate::{entities, late_sounds, splash};
 
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
 /// Kinds that rain and water hurt, 1 a hit as drowning: BDS's endermen in the rain
-/// (research/captures/bds-kinds3.txt).
-// TODO: the pack's blaze and snow golem too, not drilled; a wet enderman's teleports.
-const WATER_HURTS: [&str; 1] = ["minecraft:enderman"];
+/// (research/captures/bds-kinds3.txt), blazes and snow golems in water and rain (bds-o3wet.txt).
+// TODO: a wet enderman's teleports.
+const WATER_HURTS: [&str; 3] = ["minecraft:enderman", "minecraft:blaze", "minecraft:snow_golem"];
 /// A fall that costs more than this sounds big.
 const BIG_FALL: f32 = 4.0;
 /// A fall is heard the tick after it hurts.

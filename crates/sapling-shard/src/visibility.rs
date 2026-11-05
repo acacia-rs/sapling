@@ -6,7 +6,7 @@
 use std::collections::{HashMap, HashSet};
 
 use acacia_proto::packets::RemoveEntity;
-use acacia_proto::types::MetadataDictionaryItemKey as Key;
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataFlags2};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_data::AddPlayerOptions;
@@ -22,6 +22,7 @@ use crate::movement::Motion;
 use crate::roster::Profile;
 use crate::view::View;
 use crate::vitals::effects::{self, Effects};
+use crate::vitals::{self, Guard};
 
 /// The other players this player's client has as entities.
 #[derive(Component, Default)]
@@ -38,12 +39,12 @@ impl ToViewers {
 }
 
 type Viewer<'a> = (Entity, &'a Stage, &'a InLayer, &'a View, &'a mut Sees, &'a mut Outgoing, Option<&'a Hidden>);
-type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>, Option<&'a Effects>, Option<&'a Linked>);
-type Shown<'a> = (&'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>, Option<&'a Effects>, Option<&'a Linked>);
+type Seen<'a> = (Entity, &'a Stage, &'a InLayer, &'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>, Option<&'a Effects>, Option<&'a Linked>, Option<&'a Guard>);
+type Shown<'a> = (&'a NetId, &'a Identity, &'a Position, &'a Motion, &'a Profile, &'a Inventory, Option<&'a Labels>, Option<&'a Effects>, Option<&'a Linked>, Option<&'a Guard>);
 
 /// The player as a new viewer needs it: seated and followed by its link if it rides
 /// (riding/announced.rs), with what it holds, then what it wears, then the labels plugins gave it.
-fn spawn_packets((id, identity, position, motion, profile, inventory, labels, effects, linked): Shown) -> Vec<Bytes> {
+fn spawn_packets((id, identity, position, motion, profile, inventory, labels, effects, linked, guard): Shown) -> Vec<Bytes> {
     let mut player = sapling_data::add_player(&AddPlayerOptions {
         held: inventory::in_hand(inventory),
         uuid: profile.uuid,
@@ -59,6 +60,9 @@ fn spawn_packets((id, identity, position, motion, profile, inventory, labels, ef
     });
     if let Some(item) = player.metadata.iter_mut().find(|item| item.key == Key::VisibleMobEffects) {
         *item = effects::announced(id.0, effects);
+    }
+    if let Some(item) = player.metadata.iter_mut().find(|item| item.key == Key::FlagsExtended) {
+        item.value = Value::FlagsExtended(MetadataFlags2(sapling_data::player_flags_extended().0 | vitals::shown_bits(guard)));
     }
     for item in linked.map_or(&[][..], |linked| &linked.seat) {
         match player.metadata.iter_mut().find(|old| old.key == item.key) {
@@ -88,8 +92,8 @@ pub(crate) fn update(mut viewers: Query<Viewer>, seen: Query<Seen>) {
         let mut covered: Vec<(u64, Entity)> = grid.covered(in_layer.0, view).copied().filter(|(_, other)| *other != viewer && !Hidden::hides(hidden, *other)).collect();
         covered.sort_unstable();
         for (_, other) in covered.iter().filter(|(_, other)| !sees.0.contains(other)) {
-            if let Ok((_, _, _, id, identity, position, motion, profile, inventory, labels, effects, linked)) = seen.get(*other) {
-                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets((id, identity, position, motion, profile, inventory, labels, effects, linked))));
+            if let Ok((_, _, _, id, identity, position, motion, profile, inventory, labels, effects, linked, guard)) = seen.get(*other) {
+                out.0.extend_from_slice(spawns.entry(*other).or_insert_with(|| spawn_packets((id, identity, position, motion, profile, inventory, labels, effects, linked, guard))));
             }
         }
         let now: HashSet<Entity> = covered.into_iter().map(|(_, other)| other).collect();
