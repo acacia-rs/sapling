@@ -37,12 +37,18 @@ fn met(at: [f32; 3], motion: [f32; 3], axis: usize) -> BlockPos {
 /// TNT another `burning` one met is lit (`TntBlock.onProjectileHit`). `sticks` for an arrow or trident.
 /// A mob's shot lights nothing while `mobGriefing` is off (a blaze's lit none on BDS, bds-u1blaze.txt).
 /// `at` is where its ray met the face across `axis` (B25). False where the block lets the shot
-/// lie on its face unheld: TNT it lit, primed only next tick (bds-g10flame.txt).
+/// lie on its face unheld: TNT it lit, primed only next tick (bds-g10flame.txt). A Channeling
+/// trident (`shot`, loosed `by`) on a lightning rod calls a bolt (lightning.rs `channel_to_rod`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], axis: usize, sticks: bool, burning: bool, by_mob: bool) -> bool {
+pub(crate) fn shot_stopped(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], motion: [f32; 3], axis: usize, sticks: bool, burning: bool, shot: Entity, by: Entity) -> bool {
     let pos = met(at, motion, axis);
     super::shot_blocks::shot(world, layer, pos, kind, motion);
     super::dripleaf::shot(world, layer, pos);
+    let on_rod = level(world, layer).filter(|level| level.in_height(pos[1])).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).is_some_and(|state| state.name.ends_with("lightning_rod"));
+    if on_rod && crate::creatures::channels(world, shot) {
+        crate::lightning::channel_to_rod(world, layer, pos);
+    }
+    let by_mob = world.get::<crate::creatures::Creature>(by).is_some();
     let lights = !by_mob || crate::rules::on(world, layer, GRIEFING);
     if kind == FIREBALL {
         let mut before = pos;

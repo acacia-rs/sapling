@@ -207,8 +207,7 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
     let stopped = met_block.is_some();
     let mut holds = true;
     if let Some((_, face)) = met_block {
-        let by_mob = world.get::<super::Creature>(by).is_some();
-        holds = crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, face, shot.sticks, shot.burns > 0, by_mob);
+        holds = crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, face, shot.sticks, shot.burns > 0, arrow, by);
         let by_player = world.get::<crate::components::Identity>(by).is_some();
         crate::blocks::vibrate(world, layer, body.at, crate::blocks::GameEvent::ProjectileLand, by_player);
     }

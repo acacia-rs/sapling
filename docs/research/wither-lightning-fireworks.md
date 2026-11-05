@@ -62,7 +62,12 @@ the bow with the enchanting table's draw at that cost and shows the helmet's emp
 told in its `AddEntity`, helmet then bow, then the link, as BDS. A stored trap keeps its
 `minecraft:skeleton_trap` group and is a trap again when loaded, and a charged creeper its
 `minecraft:charged_creeper` group, shown charged again (tests in `kept_groups.rs`).
-Left out: a trident hitting a rod, items struck.
+A trident hitting a rod [D] (`LightningRodBlock` slot 15, `onProjectileHit`, Linux 0xc538e10, the
+slot the target, bell and dripstone blocks override too): the projectile's Channeling flag (+0x1b1),
+then the weather at the cell above and the sky over the rod, then a bolt at its middle (x + 0.5,
+y + 1, z + 0.5) and a sound, as Java's `LightningRodBlock.onProjectileHit`. Sapling: `blocks/target.rs`
+`shot_stopped`, `lightning.rs` `channel_to_rod` (with `item.trident.thunder`, as the hit on an entity);
+test `a_channeling_trident_on_a_rod_calls_a_bolt_over_it_in_a_storm`; not drilled. Left out: items struck.
 
 ## The wither
 
@@ -143,6 +148,15 @@ skull block's numbers); sapling sends them so (`blocks/summoning.rs` `souls`). L
 `ShieldHealth`, `firerate` and `lastHealthInterval` (the charge, `Phase`, armour and `maxHealth` are
 kept: research/captures/bds-keepmobs.txt; a summoned wither charges as a built one, at its difficulty's
 share of the pack's 600), the soul particles of building.
+Decompiled (thirteenth3j) [D]: `WitherBoss` load 142f97350 / save 142f96ca0 keep `ShieldHealth` at
++0x474, `firerate` +0x4f0, `lastHealthInterval` +0x518, `SpawningFrames` +0x4e8, `Phase` +0x4c8,
+`maxHealth`. Its hurt (142f96660, vtable slot 247): off easy, once health drops below
+`lastHealthInterval` less the step at +0x514, `firerate` halves and the interval moves down; the
+half-health turn sets `firerate` back to 20 and doubles +0x510. The tick (142f933e0) reloads the
+middle head's wait (+0x52c) and the side heads' (+0x4ec) from `firerate`. No code past load and
+save reads `ShieldHealth` in the wither's own functions [U: what it guards]. Sapling still saves
+none of the three: its volleys follow the drilled rests (`heads.rs` `RESTS`), which saw no halving
+on normal, so the decompiled halving and the drill disagree [U] until a hurt-by-sixths drill.
 
 ## Fireworks
 

@@ -27,9 +27,9 @@ before version 10. Test: `bds_records_read_and_write_back_byte_for_byte`.
 Sapling files these in the column's own post-process (`spawn_areas::file`) and saves them with
 generated columns (`StoredColumn::spawn_areas`); test `spawn_area_tests.rs` against the records.
 No block changes: `tools/replay-all.sh` 0 wrong, 0 missing (2026-11-05).
-Left: whole-only columns of an outpost (a column its box meets and no piece does) have no
-post-process in sapling, so no record; only whole boxes are there, which these four structures do not
-spawn from. Outpost pieces past the start chunk find their height by the run's post-process order, as
+Whole-only columns of an outpost (its box meets them, no piece does) keep a record of the whole
+box alone, as BDS's (research/captures/bds-jxoutpost.txt's world: chunks (116, -73) and (117, -73));
+test `outpost_columns_no_piece_meets_keep_the_whole_box`. Outpost pieces past the start chunk find their height by the run's post-process order, as
 their blocks do. Data-driven structures (trial chambers, abandoned camps, ...) are not filed.
 
 ## The spawner [D]

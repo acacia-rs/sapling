@@ -126,9 +126,18 @@ fn flash(world: &mut World, bolt: Entity, layer: Entity) -> Option<()> {
 /// where the sky is open over it.
 pub(crate) fn channel(world: &mut World, layer: Entity, feet: [f32; 3]) {
     let cell = feet.map(|c| c.floor() as i32);
+    channel_at(world, layer, cell, cell.map(|c| c as f32));
+}
+
+/// A trident with Channeling met the lightning rod at `rod`: the same, with the bolt at the middle of
+/// the cell above it (`LightningRodBlock` slot 15, Linux 0xc538e10).
+pub(crate) fn channel_to_rod(world: &mut World, layer: Entity, [x, y, z]: [i32; 3]) {
+    channel_at(world, layer, [x, y + 1, z], [x as f32 + 0.5, (y + 1) as f32, z as f32 + 0.5]);
+}
+
+fn channel_at(world: &mut World, layer: Entity, cell: [i32; 3], at: [f32; 3]) {
     let open = world.get::<Layer>(layer).is_some_and(|level| level.world.surface(cell[0], cell[2]).is_none_or(|top| top < cell[1]));
     if thunders(world, layer) && open {
-        let at = cell.map(|c| c as f32);
         strike(world, layer, at, true);
         entities::after_announcing(world, layer, cell, vec![sound("item.trident.thunder", at)]);
     }
