@@ -168,7 +168,8 @@ const FISH_SHOWN: &[&str] = &["AddEntity", "AddItemEntity", "SetEntityData", "Se
 /// In survival a Lure III rod cast into a pool and reeled at a bite, twice; then cast at a slowed
 /// pig and reeled.
 fn fish() -> Vec<String> {
-    let mut lines = with(floor(), &["fill 2 -31 -3 8 -27 3 stone", "fill 3 -30 -2 7 -27 2 water", "gamemode survival @s"]);
+    // The watcher out of the way: a hook hooks the first body it meets.
+    let mut lines = with(floor(), &["tp @a[name=CmdWatcher] -2.5 -26 4.5", "fill 2 -31 -3 8 -27 3 stone", "fill 3 -30 -2 7 -27 2 water", "gamemode survival @s"]);
     lines.extend([hold("fishing_rod"), "enchant @s lure 3".into()]);
     lines.extend(owned(["tp @s 0.5 -26 0.5 -90 0", "!look 4.5 -0.5 0", ""]));
     lines.extend(owned(["!fish 45", "", "", "!fish 45", "", "", "summon pig 4.5 -26 -5.5", "effect @e[type=pig] slowness 999 255 true", "", "!look 4 0.5 -6", "", "!use", "", "", "!use", "", ""]));
