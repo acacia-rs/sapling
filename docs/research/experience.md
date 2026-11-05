@@ -58,6 +58,8 @@ Tags as in `containers-crafting.md` (REC, DATA, BDSRE, BDSRE-old, mem, inf). Not
 - Removal (pickup, age, merge): `Actor::remove` (vtable +0x58) -> `RemoveEntity` (mem for the packet).
 - **No `TakeItemEntity`** for orbs: `playerTouch` never builds one (BDSRE).
 - Save tags of an orb (BDSRE 142f9e100): `Age` (short), `experience value` (int, with the space).
+  sapling saves its orbs' ages too and reads them back (`orbs::keep_ages`, sapling-leveldb
+  `aged_orb`), so a reloaded orb despawns on time; test `orbs_that_joined_up_...` in kept_drops.rs.
 
 ## 3. Orb tick and pickup: `ExperienceOrb::normalTick` 142f9d480, `playerTouch` 142f9e210
 

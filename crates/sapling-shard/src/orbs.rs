@@ -113,9 +113,20 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, at: [f32; 3], uniqu
     let Some(value) = sapling_world::orb_value(&compound) else { return false };
     let body = Body::new(at, [0.0; 3], [SIZE; 2]);
     let Some(entity) = entities::spawn(world, layer, KIND, body, at, |id| Some(announce(id, value, &body))) else { return false };
-    world.entity_mut(entity).insert(Orb { value, age: 0, last_search: 0, target: None });
+    let age = u32::try_from(sapling_world::orb_age(&compound)).unwrap_or(0);
+    world.entity_mut(entity).insert(Orb { value, age, last_search: 0, target: None });
     entities::keep(world, entity, layer, unique_id, compound);
     true
+}
+
+/// Writes each kept orb's age into what the world folder keeps of it, as BDS saves `Age`
+/// (research/captures/bds-t2ekeep-dump.txt: 141).
+pub(crate) fn keep_ages(world: &mut World) {
+    let orbs: Vec<(Entity, u32)> = world.query_filtered::<(Entity, &Orb), With<entities::Stored>>().iter(world).map(|(entity, orb)| (entity, orb.age)).collect();
+    for (entity, age) in orbs {
+        let age = i16::try_from(age).unwrap_or(i16::MAX);
+        entities::restore(world, entity, |compound, _| sapling_world::aged_orb(compound, age).ok());
+    }
 }
 
 /// Whether `player` may take an orb this tick, and if so, that it has.
