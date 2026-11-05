@@ -4,7 +4,9 @@
 //! (where its skulls are aimed). `y3hunt`: a zombie behind a wall it had seen the actor across, one
 //! with a hole in its way, one 28 off, a spider taking the actor by night as day comes, a held zombie
 //! turning its head. `y3gear`: armed kinds summoned, what they are shown holding. `y3arrow`: a cow
-//! shot and one hit (their throws), a lingering potion's cloud shrinking. On village_drill.rs's
+//! shot and one hit (their throws), a lingering potion's cloud shrinking. `y3dragon`: a held ender
+//! dragon in a lingering cloud. On the flat ground: `y3trial`, trial spawners' detection (eyes, walls);
+//! `y3omen`, ominous ones' item spawners. On village_drill.rs's
 //! flat ground, each left for the saved `VILLAGE_*_PLAYERS` to be read: `y3found` (none acting),
 //! `y3baby` (a baby villager hit ten times by a village golem), `y3ranged` (a villager shot dead by
 //! the actor by a village golem), `y3cure` (a villager hit once, then a zombie villager cured).
@@ -17,12 +19,17 @@ const SHOWN: &[&str] = &[
     "AddEntity", "RemoveEntity", "MoveEntityDelta", "SetEntityMotion", "SetEntityData", "EntityEvent", "LevelSoundEvent", "LevelEvent", "MobEquipment", "MobArmorEquipment", "CommandOutput", "MoveEntityAbsolute", "MovePlayer",
 ];
 
+const TRIAL_SHOWN: &[&str] = &["AddEntity", "RemoveEntity", "AddItemEntity", "UpdateBlock", "BlockEntityData", "LevelEvent", "LevelSoundEvent", "SetEntityData", "CommandOutput", "MovePlayer"];
+
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
         "y3wither" => (wither(), SHOWN),
         "y3hunt" => (hunt(), SHOWN),
         "y3gear" => (gear(), SHOWN),
         "y3arrow" => (arrow(), SHOWN),
+        "y3dragon" => (dragon(), &["AddEntity", "RemoveEntity", "EntityEvent", "UpdateAttributes", "SetEntityData", "CommandOutput", "LevelEvent"]),
+        "y3trial" => (trial(), TRIAL_SHOWN),
+        "y3omen" => (omen(), TRIAL_SHOWN),
         "y3found" => (found(), VILLAGE_SHOWN),
         "y3baby" => (baby(), VILLAGE_SHOWN),
         "y3ranged" => (ranged(), VILLAGE_SHOWN),
@@ -97,6 +104,57 @@ fn arrow() -> Vec<String> {
     lines.extend(owned(["replaceitem entity @s slot.weapon.mainhand 0 lingering_potion 1 23", "summon cow 0.5 -26 -4.5", "effect @e[type=cow] slowness 120 255 true", "!look 0 -1 -4", "!use", "!release"]));
     waits(&mut lines, 32);
     with(lines, &["kill @e[type=!player]", "gamemode creative @s", "clear @s"])
+}
+
+/// An ender dragon held on the floor by a repeating command block, a held cow beside it, a lingering
+/// potion of harming thrown between them; watched 20 s.
+fn dragon() -> Vec<String> {
+    let mut lines = with(start("noon"), &["gamemode creative @s", "gamerule mobgriefing false", "tp @s 0.5 -26 0.5 180 0", "setblock 3 -26 3 repeating_command_block", "summon ender_dragon 0.5 -26 -8.5"]);
+    lines.extend(owned(["!cmdblock 3 0 3 1 0 0 0 0 0 tp @e[type=ender_dragon] 0.5 -26 -8.5", "summon cow 2.5 -26 -6.5", "effect @e[type=cow] slowness 120 255 true", "", "replaceitem entity @s slot.weapon.mainhand 0 lingering_potion 1 23", "!look 1 -1.5 -6", "!use", "!release"]));
+    waits(&mut lines, 20);
+    with(lines, &["setblock 3 -26 3 air", "kill @e[type=!player]", "gamerule mobgriefing true", "clear @s"])
+}
+
+/// A trial spawner with a zombie at `[x, y, z]`, its egg used from a barrier 4 west.
+fn spawner(lines: &mut Vec<String>, [x, y, z]: [i32; 3], ominous: bool) {
+    let state = if ominous { " [\"ominous\"=true]" } else { "" };
+    lines.extend([
+        "gamemode creative @s".to_owned(), format!("tp @s {}.5 {y} {z}.5", x - 4), String::new(), format!("setblock {} {} {z} barrier", x - 4, y - 1), format!("fill {} {y} {} {} {} {} air", x - 3, z - 1, x - 1, y + 2, z + 1),
+        format!("setblock {x} {y} {z} trial_spawner{state}"), "replaceitem entity @s slot.weapon.mainhand 0 zombie_spawn_egg".to_owned(), String::new(), "!click 4 0 0 west".to_owned(), String::new(), "clear @s".to_owned(),
+    ]);
+}
+
+/// [`spawner`] at (`x`, `y`, 0) with `more` set round it, then the actor survival at `stand` for 8 s.
+fn trial_site(lines: &mut Vec<String>, x: i32, y: i32, more: &[&str], stand: &str) {
+    spawner(lines, [x, y, 0], false);
+    lines.extend(more.iter().map(|line| line.to_string()));
+    lines.extend([format!("tp @s {stand}"), "gamemode survival @s".to_owned()]);
+    waits(lines, 8);
+    lines.extend(["gamemode creative @s".to_owned(), "kill @e[type=zombie]".to_owned()]);
+}
+
+/// Trial spawners each tested alone, 40 apart on the flat ground: one 15 over the actor's feet (its
+/// eyes 13.9 under it, range 14), one 8 off behind a stone wall, one behind glass, one in the open.
+fn trial() -> Vec<String> {
+    let mut lines = owned(["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "effect @s resistance 600 255 true", "clear @s"]);
+    trial_site(&mut lines, 60, -45, &[], "60.5 -60 0.5");
+    trial_site(&mut lines, 100, -60, &["fill 99 -60 4 101 -57 4 stone"], "100.5 -60 8.5");
+    trial_site(&mut lines, 140, -60, &["fill 139 -60 4 141 -57 4 glass"], "140.5 -60 8.5");
+    trial_site(&mut lines, 180, -60, &[], "180.5 -60 8.5");
+    with(lines, &["gamemode creative @s", "kill @e[type=!player]", "effect @s clear", "tp @s 0.5 -26 0.5"])
+}
+
+/// Eight ominous trial spawners in two rows 6 apart, the actor among them for 60 s: what each item
+/// spawner carries (its `MinecartDisplayBlock`) and what it throws.
+fn omen() -> Vec<String> {
+    let mut lines = owned(["kill @e[type=!player]", "gamerule domobspawning false", "difficulty easy", "time set noon", "effect @s resistance 600 255 true", "clear @s"]);
+    for site in 0..8 {
+        spawner(&mut lines, [220 + 6 * (site % 4), -60, 12 * (site / 4)], true);
+    }
+    lines.push("tp @s 229.5 -60 6.5".into());
+    lines.push("gamemode survival @s".into());
+    waits(&mut lines, 60);
+    with(lines, &["gamemode creative @s", "kill @e[type=!player]", "effect @s clear", "tp @s 0.5 -26 0.5"])
 }
 
 const GOLEM: &str = "summon iron_golem 10.5 -60 -6.5 0 0 minecraft:from_village";

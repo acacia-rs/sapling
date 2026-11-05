@@ -59,7 +59,7 @@ cd "$bds"
   until grep -qE 'WORLDGEN done|Quit correctly' "$log" || [ $SECONDS -ge $deadline ]; do sleep 1; done
   echo stop
   until grep -q 'Quit correctly' "$log" || [ $SECONDS -ge $deadline ]; do sleep 1; done
-} | timeout "$limit" ./bedrock_server.exe >"$log" 2>&1 || true
+} | LD_LIBRARY_PATH=. timeout "$limit" "./bedrock_server$([ -f bedrock_server.exe ] && echo .exe)" >"$log" 2>&1 || true
 elapsed=$((SECONDS - start))
 
 grep -E 'WORLDGEN (done|.*(error|retry))|ERROR' "$log" | grep -vE 'TRANSPORT|NetherNet|nethernet|how_to|=====|ERROR\] *$' | cut -c1-300 | head -n 40 || true
