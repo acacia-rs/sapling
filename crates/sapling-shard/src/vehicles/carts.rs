@@ -87,16 +87,23 @@ pub(super) fn tick(world: &mut World) {
     super::bumps::push(world);
     let carts: Vec<(Entity, Entity, u64, String, Body)> = world.query_filtered::<(Entity, &InLayer, &NetId, &Kind, &Body), With<Cart>>().iter(world).map(|(cart, layer, id, kind, body)| (cart, layer.0, id.0, kind.0.clone(), *body)).collect();
     for (cart, layer, id, kind, body) in carts {
+        let parting = world.entity_mut(cart).take::<super::bumps::Parting>();
         let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
         let on = rails::rail_under(level, body.at);
         let (body, packets) = match on {
             Some(rail) => {
                 let (mut feet, mut motion) = rails::roll(&rail, body.at, body.motion, &how(world, cart, &kind, &rail, level));
-                if rail.shape <= 1 {
-                    (feet, motion) = super::bumps::walled(level, &body, feet, motion);
+                if rail.shape <= 5 {
+                    // Up a slope the box moves as if on its top, clear of the slope's own block (Java `moveAlongTrack`).
+                    let bottom = if rail.shape <= 1 { feet[1] } else { rail.pos[1] as f32 + 1.0 };
+                    (feet, motion) = super::bumps::walled(level, &body, feet, bottom, motion);
+                    feet[1] = rails::height(&rail, [feet[0], feet[2]]);
                 }
                 if let Some(stopped) = super::bumps::blocked(world, cart, layer, &body, feet) {
                     (feet, motion) = (stopped, [0.0; 3]);
+                }
+                if let Some(super::bumps::Parting([px, pz])) = parting {
+                    (feet[0], feet[2], motion) = (feet[0] + px, feet[2] + pz, [0.0; 3]);
                 }
                 let Some(mut moved) = world.get_mut::<Body>(cart) else { continue };
                 (moved.at, moved.motion, moved.on_ground) = (feet, motion, true);
