@@ -13,7 +13,7 @@ pub(crate) mod effects;
 pub(crate) mod frost;
 pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, give as give_effect, give_ambient, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
+pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, resists_all, set_alight, shot, thorned, winded};
 mod hazards;
 mod hunger;
 mod kept;
@@ -28,7 +28,7 @@ mod struck;
 pub(crate) mod told_all;
 mod totem;
 pub(crate) use shield::{blocks, thrown_back, wields_axe};
-pub(crate) use stand::{break_fall, fallen, falls_freely};
+pub(crate) use stand::{break_fall, breathes_water, fallen, falls_freely};
 #[cfg(test)]
 pub(crate) use splashed::shared_strength;
 pub(crate) use splashed::{clouded, health_left, is_under, splashed};

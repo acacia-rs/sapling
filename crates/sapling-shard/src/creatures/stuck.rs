@@ -45,7 +45,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, kind: &str, at: [f3
         Some(vec![sapling_net::encode(&sapling_data::add_entity(&options))])
     }) else { return false };
     let now = world.resource::<Tick>().0;
-    world.entity_mut(arrow).insert((Arrow { archer: String::new(), by: arrow, gives: None, shot, born: now, stuck: Some(now), summoned: false }, Loosed { player: None, pickup, item, tipped, ..Loosed::new(arrow, pickup, None) }));
+    world.entity_mut(arrow).insert((Arrow { archer: String::new(), by: arrow, gives: None, shot, born: now, stuck: Some(now), summoned: false, bounced_off: None }, Loosed { player: None, pickup, item, tipped, ..Loosed::new(arrow, pickup, None) }));
     entities::keep(world, arrow, layer, unique_id, compound);
     true
 }

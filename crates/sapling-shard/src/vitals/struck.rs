@@ -89,6 +89,10 @@ pub(crate) fn is_fireproof(world: &World, player: Entity) -> bool {
     world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.is_fireproof())
 }
 
+pub(crate) fn resists_all(world: &World, player: Entity) -> bool {
+    world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.resists_all())
+}
+
 /// Sets a player that fire can hurt on fire for `ticks`.
 pub(crate) fn set_alight(world: &mut World, player: Entity, ticks: u16) {
     if let Some(mut vitals) = world.get_mut::<Vitals>(player).filter(|vitals| !vitals.health.is_fireproof()) {

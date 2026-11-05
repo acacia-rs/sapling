@@ -74,6 +74,15 @@ pub(crate) fn break_fall(world: &mut World, player: Entity) {
     }
 }
 
+fn gilled(world: &World, player: Entity) -> bool {
+    [sapling_api::Effect::WaterBreathing, sapling_api::Effect::ConduitPower].into_iter().any(|effect| effects::level(world, player, effect).is_some())
+}
+
+/// Whether water does not choke a player: water breathing, conduit power or Respiration worn.
+pub(crate) fn breathes_water(world: &World, player: Entity) -> bool {
+    gilled(world, player) || crate::enchants::warding(world, player).respiration > 0
+}
+
 /// What a player no harm comes to does where it stands: in creative it lights redstone ore under it, as
 /// BDS's did (bds-orestand.txt); a spectator nothing.
 pub(super) fn stand_unhurt(world: &mut World, player: Entity, layer: Entity) {
@@ -87,7 +96,7 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     dress(world, player);
     let warding = crate::enchants::warding(world, player);
     // bds-fx2.txt: under conduit power a drowning player's air filled again as out of water.
-    let gilled = [sapling_api::Effect::WaterBreathing, sapling_api::Effect::ConduitPower].into_iter().any(|effect| effects::level(world, player, effect).is_some());
+    let gilled = gilled(world, player);
     let into_wall = hazards::into_wall(world, player);
     let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get::<Vitals>(player).copied()) else { return };
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };

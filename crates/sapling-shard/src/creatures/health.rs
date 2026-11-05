@@ -110,6 +110,11 @@ impl Health {
         self.fireproof
     }
 
+    /// Whether its resistance takes a hit whole.
+    pub(crate) fn resists_all(&self) -> bool {
+        self.takes == 0.0
+    }
+
     pub(crate) fn wear(&mut self, armour: [f32; 2], warding: Warding) {
         (self.armour, self.warding) = (armour, warding);
     }

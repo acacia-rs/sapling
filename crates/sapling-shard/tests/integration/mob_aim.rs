@@ -1,14 +1,15 @@
-//! A skeleton's aim and spread, against research/captures/bds-e1arrow.txt (mob-attacks.md "In the way").
+//! A skeleton's aim and spread, against research/captures/bds-e1arrow.txt (mob-attacks.md "In the way"),
+//! and its arrow off a player who takes nothing (bds-n3knock.txt, bds-pillswitch2.txt).
 
 use crate::common;
 
-use acacia_proto::packets::AddEntity;
+use acacia_proto::RawPacket;
+use acacia_proto::packets::{AddEntity, RemoveEntity, SetEntityMotion};
 use common::{Harness, all};
 use sapling_api::{Difficulty, Effect, GameMode, PlayerId};
 
-/// The arrows a skeleton 6 north of Alex (who takes no harm) looses in 520 ticks on `difficulty`:
-/// each one's launch made one long.
-fn aims(difficulty: Difficulty) -> Vec<[f32; 3]> {
+/// Alex, who takes no harm, with a skeleton 6 north of it on `difficulty`, Steve watching.
+fn shot_at(difficulty: Difficulty) -> Harness {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.enter(2, "Steve");
@@ -20,6 +21,12 @@ fn aims(difficulty: Difficulty) -> Vec<[f32; 3]> {
         assert!(ctx.give_effect(PlayerId(1), Effect::Resistance, 1000, 4, false));
         assert!(ctx.spawn_entity("minecraft:skeleton", [0.5, 65.0, 6.5]).is_some());
     });
+    h
+}
+
+/// The arrows the skeleton looses in 520 ticks on `difficulty`: each one's launch made one long.
+fn aims(difficulty: Difficulty) -> Vec<[f32; 3]> {
+    let mut h = shot_at(difficulty);
     let arrows: Vec<AddEntity> = (0..520).flat_map(|_| all::<AddEntity>(h.tick_all().to(2))).filter(|added| added.entity_type == "minecraft:arrow").collect();
     arrows
         .iter()
@@ -44,4 +51,16 @@ fn a_skeleton_aims_level_at_its_preys_eyes_and_spreads_less_on_harder_levels() {
     // 0.0075 x 12 a part on easy, x 4 on hard; across is x and up y, the prey due south.
     let (easy_off, hard_off) = (rms(easy.iter().flat_map(|aim| [aim[0], aim[1]])), rms(hard.iter().flat_map(|aim| [aim[0], aim[1]])));
     assert!(mean_rise.abs() < 0.07 && (0.05..0.14).contains(&easy_off) && hard_off < 0.05, "{mean_rise} {easy_off} {hard_off}");
+}
+
+#[test]
+fn an_arrow_off_a_player_who_takes_nothing_bounces_back_a_tenth_as_fast_and_stays() {
+    let mut h = shot_at(Difficulty::Hard);
+    let ticks: Vec<Vec<RawPacket>> = (0..300).map(|_| h.tick_all().to(2).to_vec()).collect();
+    let arrows: Vec<(u64, f32)> = ticks.iter().flat_map(|sent| all::<AddEntity>(sent)).filter(|added| added.entity_type == "minecraft:arrow").map(|added| (added.runtime_id, added.velocity.z)).collect();
+    let back = ticks.iter().enumerate().find_map(|(at, sent)| all::<SetEntityMotion>(sent).into_iter().find_map(|told| arrows.iter().find(|(id, _)| *id == told.runtime_entity_id && told.velocity.z > 0.0).map(|(id, speed)| (at, *id, *speed, told.velocity.z))));
+    let (bounced_at, arrow, speed, back) = back.unwrap_or_else(|| panic!("one of {} arrows bounced back", arrows.len()));
+    assert!(speed < -1.0 && back < -speed * 0.11, "{speed} {back}");
+    let gone = ticks[bounced_at..bounced_at + 3].iter().any(|sent| all::<RemoveEntity>(sent).iter().any(|gone| gone.entity_id_self == arrow as i64));
+    assert!(!gone, "BDS's arrow flies on after its bounce");
 }
