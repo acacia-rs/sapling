@@ -28,6 +28,30 @@ pub(crate) enum GameEvent {
 }
 
 impl GameEvent {
+    /// BDS's type number for it, which a listener's block actor keeps (sculk.md's table).
+    pub(crate) fn type_id(self) -> i32 {
+        match self {
+            GameEvent::BlockClose => 4,
+            GameEvent::BlockDestroy => 6,
+            GameEvent::BlockOpen => 8,
+            GameEvent::BlockPlace => 9,
+            GameEvent::ContainerClose => 11,
+            GameEvent::ContainerOpen => 12,
+            GameEvent::DispenseFail => 13,
+            GameEvent::Step => 22,
+            GameEvent::Explode => 27,
+            GameEvent::FluidPickup => 29,
+            GameEvent::FluidPlace => 30,
+            GameEvent::LightningStrike => 34,
+            GameEvent::NotePlay => 36,
+            GameEvent::PrimeFuse => 39,
+            GameEvent::ProjectileLand => 40,
+            GameEvent::ProjectileShoot => 41,
+            GameEvent::SculkTouch => 57,
+            GameEvent::TendrilsClicking => 58,
+        }
+    }
+
     /// What a comparator reads off a sensor that heard it; 0 for what no sensor hears.
     pub(crate) fn frequency(self) -> u8 {
         match self {

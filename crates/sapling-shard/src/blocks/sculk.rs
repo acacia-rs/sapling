@@ -9,6 +9,7 @@
 
 mod catalyst;
 mod events;
+mod saved;
 mod shrieks;
 
 pub(crate) use catalyst::{arrived as catalysts_arrived, mob_died};
@@ -45,6 +46,7 @@ struct Coming {
     when: u64,
     layer: Entity,
     listener: BlockPos,
+    event: GameEvent,
     frequency: u8,
     strength: u8,
     by_player: bool,
@@ -89,6 +91,7 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str
     let column = listeners.listeners.entry((layer, send::column(pos))).or_default();
     if is_listener(now) {
         column.insert(pos);
+        saved::placed(world, layer, pos, now);
     } else {
         column.remove(&pos);
         listeners.heard.remove(&(layer, pos));
@@ -175,7 +178,7 @@ fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEv
             continue;
         }
         let when = now + (distance as u64).max(1);
-        listeners.coming.push(Coming { when, layer, listener, frequency: event.frequency(), strength, by_player });
+        listeners.coming.push(Coming { when, layer, listener, event, frequency: event.frequency(), strength, by_player });
     }
 }
 
@@ -219,7 +222,10 @@ pub(crate) fn tick(world: &mut World) {
     listeners.coming = waiting;
     for coming in due {
         match name_at(world, coming.layer, coming.listener) {
-            Some((SHRIEKER, ..)) => shrieks::shriek(world, coming.layer, coming.listener, None),
+            Some((SHRIEKER, ..)) => {
+                saved::heard(world, coming.layer, coming.listener, SHRIEKER, coming.event);
+                shrieks::shriek(world, coming.layer, coming.listener, None);
+            }
             Some((name, ..)) if is_sensor(name) => activate(world, coming),
             _ => {}
         }
@@ -239,11 +245,12 @@ fn play(world: &mut World, layer: Entity, pos: BlockPos, sound: &str) {
 }
 
 /// A vibration reached an idle sensor: it goes active, powered by how near it was (S9-S10).
-fn activate(world: &mut World, Coming { layer, listener, frequency, strength, by_player, .. }: Coming) {
+fn activate(world: &mut World, Coming { layer, listener, event, frequency, strength, by_player, .. }: Coming) {
     let Some((name, properties, _)) = name_at(world, layer, listener) else { return };
     if number(properties, PHASE).unwrap_or(IDLE) != IDLE {
         return;
     }
+    saved::heard(world, layer, listener, name, event);
     set_number(world, layer, listener, PHASE, LISTENING);
     redstone::emit(world, layer, listener, strength);
     world.get_resource_or_insert_with(Listeners::default).heard.insert((layer, listener), frequency);
