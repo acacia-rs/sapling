@@ -117,7 +117,9 @@ counts are random); sapling also tells each new mob `VisibleMobEffects` 0, which
 
 A player dying under an omen effect (research/captures/sapling-player-omens.txt against
 bds-player-omens.txt): the same wind burst, cobwebs and slimes, at the drill world's own floor;
-sapling sends the burst's particle a tick before the push, BDS with it.
+sapling sends the burst's particle a tick before the push, BDS with it. Later sapling captures had
+them together but in the death's tick; BDS's burst, webs and slimes all came the tick after the
+death. Fixed 2026-11-05: a player's omens wait a tick (`vitals/omens.rs` `Due`).
 
 Effects wait in storage with a player's items (`ActiveEffects`, `sapling-leveldb/src/player.rs`)
 and are told to it as added when it is back; neither the record's names nor what BDS tells at a

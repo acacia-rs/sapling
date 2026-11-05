@@ -25,7 +25,7 @@ const ORDER: [&str; 14] = [
 ];
 
 /// The player's every attribute now; `None` for one without vitals.
-pub(super) fn all_attributes(world: &World, player: Entity) -> Option<UpdateAttributes> {
+pub(crate) fn all_attributes(world: &World, player: Entity) -> Option<UpdateAttributes> {
     let (id, tick, vitals) = (world.get::<NetId>(player)?, world.resource::<Tick>().0, world.get::<Vitals>(player)?);
     let still = STILL.map(|(name, min, max, value)| PlayerAttributesItem { min, max, current: value, default_min: min, default_max: max, default: value, name: name.into(), modifiers: Vec::new() });
     let mut known: Vec<PlayerAttributesItem> = boost::boosted_health(id.0, vitals.health.left(), MAX, effects::level(world, player, Effect::HealthBoost)).attributes;
