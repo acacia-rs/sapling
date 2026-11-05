@@ -160,6 +160,12 @@ impl ShardCtx<'_> {
     pub fn families(&self, kind: &str) -> Vec<String> {
         self.backend.families(kind)
     }
+
+    /// The families entity `id` of `kind` is in now: [`Self::families`], or those of a component
+    /// group that replaces them (a villager's profession: `@e[family=armorer]` finds an armorer).
+    pub fn entity_families(&self, id: EntityId, kind: &str) -> Vec<String> {
+        self.backend.entity_families(id, kind)
+    }
 }
 
 /// The entities side of [`crate::Backend`].
@@ -210,6 +216,9 @@ pub trait EntityBackend {
     }
     fn families(&self, _kind: &str) -> Vec<String> {
         Vec::new()
+    }
+    fn entity_families(&self, _id: EntityId, kind: &str) -> Vec<String> {
+        self.families(kind)
     }
     fn set_mob_item(&mut self, _id: EntityId, _slot: crate::MobSlot, _item: Option<&crate::Item>) -> Result<(), crate::MobSlotRefusal> {
         Err(crate::MobSlotRefusal::NoSlot)

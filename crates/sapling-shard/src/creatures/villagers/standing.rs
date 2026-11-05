@@ -2,12 +2,11 @@
 //! "Standing"): kept in [-30, 10] (`Village::modifyStanding`, 0x142a31380), a trade's level-up
 //! adds 1 as it ends (trading.rs; a plain trade adds none), a hit
 //! on an adult villager takes 1 and on a baby 3, killing a villager takes 2 more and an iron golem
-//! 5. Two village-wide timers (`Village::tick`, 0x142a23bc0) step every good standing down every
+//! 5; a cure raises every standing the village keeps by 5. Two village-wide timers (`Village::tick`, 0x142a23bc0) step every good standing down every
 //! 120000 ticks and every bad one up every 12000. An iron golem takes the nearest player at -15 or
 //! lower (`getClosestBadStandingPlayer`, 0x142a30c80), if it is the village's (golems.rs). Prices take no standing.
 //! Kept with the world as BDS's `VILLAGE_<id>_PLAYERS`, the village's id sapling's (raids/kept.rs).
-// TODO: only melee hits count; BDS's other changes (0x142445c80 +5 on curing, the founding reward)
-// are not copied.
+// TODO: only melee hits count; BDS's founding reward is not copied.
 
 use std::collections::HashMap;
 
@@ -27,6 +26,10 @@ const HURT: i32 = -1;
 const HURT_BABY: i32 = -3;
 const KILLED_VILLAGER: i32 = -2;
 const KILLED_GOLEM: i32 = -5;
+/// A zombie villager's cure: the conversion (0x142445c80, for zombie villager types 0x30b2c and
+/// 0x30b74) finds the overworld village about it and calls `modifyStanding(+5)` over its whole
+/// `mPlayerStanding` map (Village+0x218).
+const CURED: i32 = 5;
 /// The standing an iron golem turns on a player at.
 const OUTLAW: i32 = -15;
 /// Ticks between a village's steps of good standings down, and of bad ones up.
@@ -70,6 +73,12 @@ impl Village {
         let value = self.players.entry(player).or_default();
         *value = (*value + delta).clamp(LEAST, MOST);
     }
+
+    /// Every player it keeps a standing for gains [`CURED`], whoever cured.
+    fn cured(&mut self, now: u64) {
+        let players: Vec<PlayerKey> = self.players.keys().copied().collect();
+        players.into_iter().for_each(|player| self.change(now, player, CURED));
+    }
 }
 
 /// Each village's standings, by world and village middle.
@@ -112,6 +121,22 @@ fn change(world: &mut World, player: Entity, layer: Entity, at: [f32; 3], delta:
     let village = standings.0.entry((layer, middle)).or_insert_with(|| Village::new(now));
     village.change(now, key, delta);
     let compound = encode(&village.players);
+    keep(world, layer, middle, compound);
+}
+
+/// A zombie villager was cured at `at`: the village there, if any, raises every standing it keeps.
+pub(super) fn cured(world: &mut World, layer: Entity, at: [f32; 3]) {
+    let Some(middle) = village_of(world, layer, at) else { return };
+    let now = world.resource::<Tick>().0;
+    let mut standings = standings(world);
+    let Some(village) = standings.0.get_mut(&(layer, middle)) else { return };
+    village.cured(now);
+    let compound = encode(&village.players);
+    keep(world, layer, middle, compound);
+}
+
+/// Writes the village's `PLAYERS` compound into its world folder's level for its next save.
+fn keep(world: &mut World, layer: Entity, middle: [i32; 3], compound: Vec<u8>) {
     let Some(mut kept) = world.get_mut::<Layer>(layer) else { return };
     let uuid = super::super::raids::village_uuid(middle.map(|c| c as f32));
     let villages = &mut kept.world.level_mut().villages;
@@ -202,6 +227,15 @@ mod tests {
             (village.players[&good], village.players[&bad])
         };
         assert_eq!([at(11_999), at(12_000), at(119_999), at(120_000), at(10_000_000)], [(10, -30), (10, -29), (10, -21), (9, -20), (0, 0)]);
+    }
+
+    #[test]
+    fn a_cure_raises_every_kept_standing_by_five() {
+        let mut village = Village::new(0);
+        village.change(0, 1, -12);
+        village.change(0, 2, 8);
+        village.cured(0);
+        assert_eq!(village.players, HashMap::from([(1, -7), (2, MOST)]));
     }
 
     #[test]

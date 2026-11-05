@@ -10,6 +10,7 @@
 mod beds;
 mod conversion;
 mod deals;
+pub(super) mod families;
 mod fear;
 mod golem_spawns;
 mod golems;

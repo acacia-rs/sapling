@@ -100,6 +100,24 @@ fn an_unemployed_villager_takes_the_job_site_beside_it() {
     assert_eq!(after, [] as [i32; 0], "it keeps its profession without its site (bds-n1drop.txt)");
 }
 
+/// bds-s3poi.txt: BDS's `@e[family=armorer]` found the villager that took up armoring, its
+/// profession's component group's `type_family` (villager, blacksmith, armorer, mob).
+#[test]
+fn a_villager_that_takes_up_armoring_is_of_the_armorer_family() {
+    let (mut h, _, id) = villager(&[([6, 64, 3], FURNACE)], [3.5, 64.0, 3.5], "minecraft:become_unskilled");
+    let families = |h: &mut Harness| {
+        let found = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let out = found.clone();
+        h.remote.run(move |ctx| *out.lock().unwrap() = ctx.entity_families(sapling_api::EntityId(id), "minecraft:villager_v2"));
+        h.tick(1);
+        let found = found.lock().unwrap().clone();
+        found
+    };
+    assert_eq!(families(&mut h), ["villager", "peasant", "unskilled", "mob"]);
+    (0..150).for_each(|_| drop(h.tick(1)));
+    assert_eq!(families(&mut h), ["villager", "blacksmith", "armorer", "mob"]);
+}
+
 /// bds-s3poi3.txt: BDS's villagers took a blast furnace 14 off, 15 off once of twice, never 16 or more.
 #[test]
 fn a_villager_takes_a_job_site_14_off_but_not_40() {
@@ -143,6 +161,22 @@ fn an_armorer_trades_coal_for_emeralds_and_reaches_apprentice_at_ten_experience(
     assert_eq!([compound.get("Variant"), compound.get("TradeTier"), compound.get("TradeExperience")], [Some(&Value::Int(8)), Some(&Value::Int(1)), Some(&Value::Int(10))]);
     let Some(Value::List(recipes)) = compound.get("Offers").and_then(|offers| offers.get("Recipes")) else { panic!("no offers kept") };
     assert_eq!(int(&recipes.items[0], "uses"), 5);
+}
+
+/// bds-s3books.txt: each ware of BDS's offers lists its fields in name order (`Block`, `Count`,
+/// `Damage`, `Name`, `WasPickedUp`); sapling's put `Name` first.
+#[test]
+fn an_offers_wares_list_their_fields_in_name_order() {
+    let (mut h, _, id) = villager(&[], [2.5, 64.0, 0.5], "minecraft:become_armorer");
+    let (_, offers) = open(&mut h, id);
+    let wares = offers.iter().flat_map(|offer| ["buyA", "buyB", "sell"].into_iter().filter_map(|key| offer.get(key)));
+    for ware in wares {
+        let Value::Compound(fields) = ware else { panic!("a ware: {ware:?}") };
+        let keys: Vec<String> = fields.iter().map(|(key, _)| key.to_string()).collect();
+        let mut sorted = keys.clone();
+        sorted.sort();
+        assert_eq!(keys, sorted);
+    }
 }
 
 /// bds-n1drop.txt: a summoned armorer's first data says `Variant` 8; sapling's said 0 after it.

@@ -160,6 +160,11 @@ impl EntityBackend for Ctx<'_> {
         sapling_data::mob_families(kind).into_iter().map(str::to_owned).collect()
     }
 
+    fn entity_families(&self, id: EntityId, kind: &str) -> Vec<String> {
+        let grouped = entities::find(self.world, id).and_then(|mob| super::villagers::families::of(self.world, mob));
+        grouped.map_or_else(|| self.families(kind), |families| families.into_iter().map(str::to_owned).collect())
+    }
+
     fn set_mob_item(&mut self, id: EntityId, slot: MobSlot, item: Option<&sapling_api::Item>) -> Result<(), MobSlotRefusal> {
         let mob = entities::find(self.world, id).ok_or(MobSlotRefusal::NoSlot)?;
         let stack = match item {
