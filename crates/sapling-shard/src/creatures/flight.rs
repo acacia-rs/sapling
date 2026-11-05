@@ -169,7 +169,7 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
     let behind: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - motion[axis]);
     let (mut passed, spent) = world.get::<Loosed>(arrow).map_or((Vec::new(), false), |loosed| (loosed.pierced.clone(), loosed.spent));
     passed.extend(world.get::<Arrow>(arrow).and_then(|arrow| arrow.bounced_off));
-    let met = if spent { None } else { first_met(world, layer, by, body.at, motion, shot.size, &passed, shot.lands == Lands::Hurts) };
+    let met = if spent { None } else { first_met(world, layer, by, body.at, motion, shot.size, &passed, shot.lands == Lands::Hurts, shot.kind == super::arrows::ARROW.kind) };
     let bounced = met.is_some_and(|(_, struck, _)| super::stuck::bounces_off(world, struck, body.at, motion));
     let mut stays = bounced;
     if bounced {
