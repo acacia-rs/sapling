@@ -192,8 +192,10 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     }
     entities::keep(world, entity, layer, unique_id, compound);
     villagers::arm(world, entity, layer, &kind, true, None);
+    super::skeleton_traps::arm(world, entity, &kind, None);
     crate::riding::give_strength(world, entity, &kind, None);
     reshow(world, entity);
+    super::struck::adopt(world, entity);
     crate::riding::adopt(world, entity);
     true
 }

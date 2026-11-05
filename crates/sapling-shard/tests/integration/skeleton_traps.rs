@@ -4,7 +4,7 @@
 
 use crate::common;
 
-use acacia_proto::packets::{AddEntity, SetEntityLink};
+use acacia_proto::packets::{AddEntity, MobArmorEquipment, MobEquipment, SetEntityLink};
 use common::asking::ask;
 use common::{Harness, all};
 use sapling_api::{Difficulty, GameMode, PlayerId};
@@ -26,5 +26,10 @@ fn a_trap_springs_four_riders_for_a_creative_player_within_ten() {
     assert!(kinds.iter().any(|(id, _)| *id == far), "the far trap waits");
     assert!(!kinds.iter().any(|(id, _)| *id == near), "the sprung trap is gone");
     assert!(all::<AddEntity>(&sent).iter().any(|added| added.entity_type == "minecraft:lightning_bolt"), "a bolt");
-    assert_eq!(all::<SetEntityLink>(&sent).iter().filter(|link| link.link.r#type == 1).map(|link| link.link.rider_entity_id).collect::<std::collections::HashSet<_>>().len(), 4, "each skeleton rides");
+    let riders: std::collections::HashSet<i64> = all::<SetEntityLink>(&sent).iter().filter(|link| link.link.r#type == 1).map(|link| link.link.rider_entity_id).collect();
+    assert_eq!(riders.len(), 4, "each skeleton rides");
+    // bds-u1trap.txt: each rider holds its (enchanted) bow and wears its helmet.
+    let bows = all::<MobEquipment>(&sent).iter().filter(|held| riders.contains(&(held.runtime_entity_id as i64)) && held.item.network_id != 0).count();
+    let helmets = all::<MobArmorEquipment>(&sent).iter().filter(|worn| riders.contains(&(worn.runtime_entity_id as i64)) && worn.helmet.network_id != 0).count();
+    assert_eq!((bows, helmets), (4, 4));
 }
