@@ -242,9 +242,10 @@ tests/integration/mob_packets.rs):
   it, none killed, 21 to 17. Ported: an entity a world folder kept is shown newest first, those
   made in the world still by id (`mobs.rs` `FromFolder`; test `a_world_folders_cows_are_shown_newest_first`).
   w3despawn's order across chunks is still not followed. Sapling's `/summon` took no name tag after
-  the event (sapling-ad3reload.txt: a syntax error); it does now (test in world_commands.rs). Left:
-  a selector's `name=` matches no entity in sapling (sapling-api `selector/gather.rs` gives entities
-  no name; BDS's `kill @e[type=cow,name=cow1]` killed it and answered `["cow1"]`).
+  the event (sapling-ad3reload.txt: a syntax error); it does now (test in world_commands.rs). A
+  selector's `name=` matched no entity in sapling (`selector/gather.rs` gave entities no name), where
+  BDS's `kill @e[type=cow,name=cow1]` killed it and answered `["cow1"]`. Fixed (b4ef51bd): entities
+  are matched by their name tag (`ShardCtx::name_tag`), `name=` and `name=!` (test in world_commands.rs).
 - Fixed: at a mob's death, after its two emptied hands, a MobArmorEquipment of what it wears with its
   body slot (`creatures/worn.rs` `shown_dead`), as bds-bodyslot.txt's horse (body iron at death).
   Re-drilled on sapling (bodyslot, mountflags; sapling-mountflags.txt): each summon's two SetEntityData

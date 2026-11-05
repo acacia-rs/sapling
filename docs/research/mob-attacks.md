@@ -452,7 +452,10 @@ By night on the stone floor, the survival actor held in place:
   up to twice it while the speed is still coming up; so 30 from a stand, then 60 (bds-slain.txt 235,
   150, 127; "Walking" above). Ported in `creatures/legs.rs` (`TURN`); test
   `a_zombie_turns_to_a_survival_player_walks_up_and_hits_it_once_a_second`, changed from 214, 171, 128.
-  The head's own lag behind the body is not followed (`legs.rs` ties head to body).
+  The head's own lag behind the body is not followed (`legs.rs` ties head to body). Rechecked
+  (thirteenth3ad): in bds-y3hunt.txt's held phase (the zombie 28 off, past `within_radius`, so it took
+  and dropped its target and never walked) BDS told the zombie's head 7 times and its body never; the
+  body following 5 to 10 ticks later is not in that capture, so it needs a drill of its own.
 - A spider at midnight took no target in 4 s, so whether one keeps its prey by day was not seen.
 - `y3gear` (bds-y3gear.txt): BDS sends `MobEquipment` for the skeleton, stray, bogged, wither
   skeleton, zombified piglin, piglin, brute, pillager, vindicator, drowned and vex as each is
