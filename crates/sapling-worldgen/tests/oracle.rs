@@ -228,7 +228,7 @@ fn blocks_match_bds_trees() {
 #[test]
 #[ignore = "needs worlds/oracle; slow"]
 fn blocks_match_bds_canons() {
-    compare(20261003, "20261003-canons", &[Region::new("dappled forest", -262, -390, -259, -387)]);
+    compare(20261003, "20261003-canons", &[Region::new("dappled forest", -262, -390, -259, -387), Region::new("trial chamber ores", -28, -27, -28, -27)]);
 }
 
 /// Regions around one start of each kind (`/locate` answers from near the origin).

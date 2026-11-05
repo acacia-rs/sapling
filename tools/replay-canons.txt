@@ -48,6 +48,7 @@ city6|20261003-structures|blocks_match_bds_structures|ancient city|-74 75 -66 83
 mansion4|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1002|ma4
 # Linux one-worker runs (scripts/data/dbg_canon_linux.json on a bds_still + bds_seed0 copy); regions in blocks_match_bds_canons:
 dappled|20261003-canons|blocks_match_bds_canons|dappled forest|-262 -390 -259 -387|aa1
+tcores|20261003-canons|blocks_match_bds_canons|trial chamber ores|-28 -27 -28 -27|ad3tc
 # Superseded or second runs of a region, still on testbox (tools/replay.sh <name> <canon> ... takes them):
 # replay7's probe runs (c7: mansion tree, far lichens and depth; c8: monument seagrass, origin's bubble chunks, far's tunnel query):
 #mansion7|20261003-structures|blocks_match_bds_structures|mansion|-516 992 -508 1002|c7

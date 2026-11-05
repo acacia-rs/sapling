@@ -325,6 +325,12 @@ a tenth of the wanted speed a tick; within 1 squared of the path's last node (`s
 with speed squared). Ported: `LAST_SLOWEST` in `creatures/strolling.rs`; test
 `a_strolling_cow_slows_to_half_its_speed_on_its_last_block`. The corner pauses are not in MoveControl:
 the mid-walk turns of 21 of 256 keep their speed, so they come from the path follower; not found.
+Located, not read (2026-11-05, thirteenth3ad): `NavigationSystem::tick` (142f1c490) calls, per mob not
+riding, `NavigationComponent`'s `mNavigation` (+0x50) virtual +0x10, `PathNavigation::tick` (the walker's
+class; Linux typeinfo `14PathNavigation`, vtable 0xf241ca8, `tick` slot 3 at 0xbd6fa40, `updatePath` slot
+13 at 0xbd70f60; Windows has no RTTI for it). LeviLamina's header names the component's fields:
+`mTickTimeout`, `mLastStuckCheck`, `mLastStuckCheckPosition`, `mEndPathRadiusSqr`, `mTerminationThreshold`;
+a stuck check or the node-reached radius there is where a pause at a corner would come from.
 
 ## Fleeing (`flee`)
 
