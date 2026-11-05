@@ -230,7 +230,8 @@ fn retell(world: &mut World, vehicle: Entity) {
     after.extend(seat_packets(world, vehicle, Told::Whole));
     for (index, rider) in riders.iter().enumerate() {
         let Some(id) = world.get::<NetId>(*rider) else { continue };
-        after.push(packets::link(vehicle_id, id.0, if index == 0 { LinkKind::Driver } else { LinkKind::Passenger }, true));
+        // BDS sent no seating link `immediate` in any capture (118 of type 1, 6 of type 2).
+        after.push(packets::link(vehicle_id, id.0, if index == 0 { LinkKind::Driver } else { LinkKind::Passenger }, false));
     }
     mobs::show_after(world, vehicle, after);
     let kept: Vec<i64> = riders.iter().filter_map(|rider| world.get::<crate::tags::UniqueId>(*rider).map(|id| id.0)).collect();
