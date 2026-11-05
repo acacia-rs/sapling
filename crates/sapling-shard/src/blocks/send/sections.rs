@@ -109,6 +109,17 @@ pub(crate) fn log_again(world: &mut World, layer: Entity, pos: BlockPos) {
     log(world, layer, pos, 0, id);
 }
 
+/// Lists the `flowing_` block of the liquid `id` in layer 1 at `pos` where a log is open, shown but not
+/// written: BDS sets a liquid poured beside a block flowing in its tick (bds-bkticks.txt, bds-bubbles.txt).
+pub(crate) fn log_flowing(world: &mut World, layer: Entity, pos: BlockPos, id: u32) {
+    let Some(registry) = world.get::<Layer>(layer).map(|level| level.world.registry()) else { return };
+    let Some(state) = registry.get(id) else { return };
+    let flowing = state.name.strip_prefix("minecraft:").and_then(|name| registry.find(&format!("minecraft:flowing_{name}"), &format!("liquid_depth={}", state.liquid_depth)));
+    if let Some(flowing) = flowing {
+        log(world, layer, pos, 1, flowing);
+    }
+}
+
 fn show_logged(world: &mut World) {
     let Some(log) = world.get_resource_mut::<Logged>().and_then(|mut log| log.0.take()) else { return };
     let mut sections: Vec<((Entity, BlockPos), Vec<(BlockPos, u32, u32)>)> = Vec::new();

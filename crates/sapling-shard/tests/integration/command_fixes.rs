@@ -86,11 +86,13 @@ fn nether_and_cave_vines_set_by_command_take_a_random_age_unless_one_is_named() 
 fn a_live_coral_fan_set_by_command_keeps_a_water_source_beside_itself() {
     let mut h = alex();
     let (_, sent) = told(&mut h, |ctx| ctx.update_block([4, 65, 2], &Block::new("minecraft:tube_coral_fan")));
-    // BDS: one UpdateSubchunkBlocks, the fan in layer 0 and its water as `extra` (bds-fixset.txt 15033).
+    // BDS: one UpdateSubchunkBlocks, the fan in layer 0 and its water as `extra`, then as `flowing_water`
+    // (bds-fixset.txt 15033, bds-bkticks.txt 11035).
     let cells = |updates: &[acacia_proto::types::BlockUpdate]| updates.iter().map(|update| [update.position.x, update.position.y, update.position.z]).collect::<Vec<_>>();
     let shown = all::<UpdateSubchunkBlocks>(&sent);
     assert!(all::<UpdateBlock>(&sent).is_empty() && shown.len() == 1, "{shown:?}");
-    assert_eq!((cells(&shown[0].blocks), cells(&shown[0].extra)), (vec![[4, 65, 2]], vec![[4, 65, 2]]));
+    assert_eq!((cells(&shown[0].blocks), cells(&shown[0].extra)), (vec![[4, 65, 2]], vec![[4, 65, 2]; 2]));
+    assert_ne!(shown[0].extra[0].runtime_id, shown[0].extra[1].runtime_id, "water, then flowing_water");
     for _ in 0..10 {
         h.tick_all();
     }

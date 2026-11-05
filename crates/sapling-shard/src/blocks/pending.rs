@@ -29,10 +29,9 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 /// Writes what waits into every loaded column (see the module).
 pub(crate) fn write_back(world: &mut World) {
     let now = world.resource::<Tick>().0;
-    let mut waiting = liquid::waiting(world);
+    let mut waiting = queued::waiting(world);
     waiting.extend(falling::waiting(world));
     waiting.extend(fire::waiting(world));
-    waiting.extend(queued::waiting(world));
     waiting.sort_unstable_by_key(|&(_, [x, y, z], due)| (due, x, y, z));
     let mut by_column: HashMap<(Entity, ChunkPos), Vec<(BlockPos, u64)>> = HashMap::new();
     for &(layer, pos, due) in &waiting {
@@ -58,7 +57,6 @@ pub(crate) fn write_back(world: &mut World) {
     let gone: HashSet<(Entity, ChunkPos)> = by_column.into_keys().filter(is_gone).collect();
     if !gone.is_empty() {
         let saved = |layer: Entity, pos: BlockPos| gone.contains(&(layer, column_of(pos)));
-        liquid::forget(world, &saved);
         falling::forget(world, &saved);
         fire::forget(world, &saved);
         queued::forget(world, &saved);

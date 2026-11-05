@@ -15,9 +15,8 @@ use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 use sapling_data::LiquidReaction;
 
-use super::chunk_ticks::ChunkTicks;
+use super::queued::{self, Ticked};
 use super::{level, send, waterlog};
-use crate::components::Tick;
 
 /// Cells looked at for one change, hardening included.
 const MAX_DISTURBED: usize = 4096;
@@ -101,36 +100,20 @@ pub(super) fn is_hot(world: &World, layer: Entity) -> bool {
     level(world, layer).is_some_and(|level| level.dimension() == NETHER)
 }
 
-/// The cells whose liquid is due to move, in their columns' block tick queues (chunk_ticks.rs),
-/// each with the liquid it was queued for.
-#[derive(Resource, Default)]
-pub(crate) struct Flows(ChunkTicks<Liquid>);
-
-/// Queues `liquid` at `pos` to move in `delay` ticks; a neighbour's change does not queue it
-/// twice for the same tick (BDS `LiquidBlock::neighborChanged`), anything else does.
+/// Queues `liquid` at `pos` to move in `delay` ticks, in its column's block tick queue (queued.rs);
+/// a neighbour's change does not queue it twice for the same tick (BDS `LiquidBlock::neighborChanged`),
+/// anything else does.
 fn schedule(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, delay: u64, by_neighbour: bool) {
-    let due = world.resource::<Tick>().0 + delay;
-    let mut flows = world.get_resource_or_insert_with(Flows::default);
-    if !by_neighbour || !flows.0.has(layer, pos, Some(due), |queued| *queued == liquid) {
-        flows.0.add(layer, pos, due, liquid);
-    }
-}
-
-/// What waits to move, for its column to keep (pending.rs): each cell and when it is due.
-pub(super) fn waiting(world: &World) -> Vec<(Entity, BlockPos, u64)> {
-    world.get_resource::<Flows>().map(|flows| flows.0.waiting().into_iter().map(|(layer, pos, due, _)| (layer, pos, due)).collect()).unwrap_or_default()
-}
-
-/// Drops what waits where `saved` says its column kept it and is gone.
-pub(super) fn forget(world: &mut World, saved: &dyn Fn(Entity, BlockPos) -> bool) {
-    if let Some(mut flows) = world.get_resource_mut::<Flows>() {
-        flows.0.forget(saved);
+    let due = queued::clock(world, layer, pos) + delay;
+    let ticked = Ticked::Flow(liquid);
+    if !by_neighbour || !queued::has(world, layer, pos, Some(due), ticked) {
+        queued::add(world, layer, pos, due, ticked);
     }
 }
 
 /// Queues `liquid` at `pos` to move in `delay` ticks, as its column kept it.
 pub(super) fn again(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, delay: u64) {
-    schedule(world, layer, pos, liquid, delay.max(1), true);
+    queued::again(world, layer, pos, delay, Ticked::Flow(liquid));
 }
 
 /// After a liquid moved into or out of `pos`: the liquid there and beside it is queued to move,
@@ -194,6 +177,9 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, depth: O
 pub(super) fn pour(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid, waterlogs: bool) -> bool {
     let Some(id) = level(world, layer).and_then(|level| level.registry().find(liquid.name(), "liquid_depth=0")) else { return false };
     let poured = if waterlogs { send::set_liquid(world, layer, pos, id) } else { send::set(world, layer, pos, id) };
+    if poured && waterlogs {
+        send::log_flowing(world, layer, pos, id);
+    }
     if poured {
         disturb(world, layer, pos);
     }
@@ -216,25 +202,11 @@ pub(super) fn take(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     disturb(world, layer, [x, y, z]);
 }
 
-/// Moves the liquid that is due, column by column where its column ticks
-/// ([`crate::ticking::Region::ticks`]); a cell whose liquid is no longer the one queued stays.
-pub(crate) fn tick(world: &mut World) {
-    let now = world.resource::<Tick>().0;
-    let Some(columns) = world.get_resource_mut::<Flows>().map(|mut flows| flows.0.columns_due(now)).filter(|columns| !columns.is_empty()) else { return };
-    let region = crate::ticking::Region::of(world);
-    for (layer, column) in columns {
-        if !region.ticks(world, layer, column) {
-            continue;
-        }
-        let moving = world.resource_mut::<Flows>().0.take(layer, column, now);
-        // A world with `sapling:liquidFlow` off drops its flows: its liquids stand as they are.
-        if !crate::rules::on(world, layer, sapling_data::LIQUID_FLOW) {
-            continue;
-        }
-        for (pos, liquid) in moving {
-            if matches!(cell(world, layer, pos), Cell::Liquid(now_there, _) if now_there == liquid) {
-                flow::flow(world, layer, pos);
-            }
-        }
+/// The queued tick of `liquid` at `pos` (queued.rs): it moves, unless the cell's liquid is no longer
+/// the one queued or the world has `sapling:liquidFlow` off (its liquids stand as they are).
+pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos, liquid: Liquid) {
+    let holds = matches!(cell(world, layer, pos), Cell::Liquid(now_there, _) if now_there == liquid);
+    if holds && crate::rules::on(world, layer, sapling_data::LIQUID_FLOW) {
+        flow::flow(world, layer, pos);
     }
 }

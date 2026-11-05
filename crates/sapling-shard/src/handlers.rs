@@ -73,7 +73,6 @@ pub(crate) fn dispatch(world: &mut World) {
     blocks::batched(world, blocks::run_queued);
     crate::structures::animate(world);
     blocks::batched(world, blocks::hear_vibrations);
-    blocks::batched(world, blocks::flow_liquids);
     blocks::dispatch(world);
     blocks::dispatch_sign_edits(world);
     blocks::portals::settle(world);
