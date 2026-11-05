@@ -1,5 +1,5 @@
 //! The wither's three heads, as BDS's aimed (`_performRangedAttack`, `setAlternativeTarget`): the
-//! middle one shoots its prey in volleys of four 20 ticks apart, the fourth a blue one; off easy each side
+//! middle one shoots its prey in volleys of four at its fire rate, the fourth a blue one; off easy each side
 //! one takes a player at random within 30 across and 8 up or down that it sees, shoots it and
 //! looks again 40 to 59 ticks on, or after 15 looks with none shoots a blue skull at random near.
 // TODO: the middle head holds still while it moves; the side heads' wait
@@ -10,6 +10,7 @@ use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryIt
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
+use super::super::health::Health;
 use super::super::{hunting, legs};
 use super::{KIND, Wither, skulls};
 use crate::blocks::Dice;
@@ -18,9 +19,11 @@ use crate::components::{InLayer, NetId, Position, Settings, Tick, in_world};
 
 const FIRE_RATE: u64 = 20;
 const BLUE_EVERY: u32 = 4;
-/// After each volley's blue skull the middle head waits 3 to 7 of its [`FIRE_RATE`]s
-/// (bds-t2wither.txt, bds-witherdash.txt: 60 to 140 ticks, in steps of 20).
-const RESTS: [u64; 2] = [3, 5];
+/// After each volley's blue skull the middle head waits 41 to 140 ticks, rounded up to its fire
+/// rate (bds-t2wither.txt, bds-witherdash.txt: 60 to 140 in steps of 20; bds-m3wither.txt at 5: 85 to 110).
+const RESTS: [u64; 2] = [41, 100];
+/// Its health is cut in this many steps, each halving the fire rate off easy.
+const STEPS: f32 = 6.0;
 const SIGHT: f32 = 70.0;
 const REACH: [f32; 2] = [30.0, 8.0];
 const TRIES: usize = 10;
@@ -42,6 +45,38 @@ pub(super) struct Heads {
     next: [u64; 3],
     targets: [Option<Entity>; 3],
     idle: u32,
+    pub(super) rate: Rate,
+}
+
+/// The middle head's ticks between shots (`firerate`) and the health it next halves under
+/// (`lastHealthInterval`, its max health until hurt).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct Rate {
+    pub(super) every: u64,
+    pub(super) under: Option<i32>,
+}
+
+impl Default for Rate {
+    fn default() -> Self {
+        Rate { every: FIRE_RATE, under: None }
+    }
+}
+
+impl Rate {
+    /// At half health its fire rate is 20 again (142f96660).
+    pub(super) fn rearm(&mut self) {
+        self.every = FIRE_RATE;
+    }
+
+    /// Off easy, health under the last step less a sixth of its max halves the fire rate and moves
+    /// the step down, once a hurt (`WitherBoss` hurt 142f96660; bds-m3wither.txt: 20, 10 under 375, 5 under 300 of 450).
+    fn step(&mut self, health: &Health, difficulty: Difficulty) {
+        let under = self.under.unwrap_or(health.max() as i32);
+        let next = under - (health.max() / STEPS) as i32;
+        if difficulty != Difficulty::Easy && (health.left() as i32) < next {
+            (self.every, self.under) = ((self.every / 2).max(1), Some(next));
+        }
+    }
 }
 
 /// A sound of the wither's at `at`.
@@ -91,6 +126,14 @@ pub(super) fn prey(world: &mut World, wither: Entity, layer: Entity, body: &Body
     [player, mob].into_iter().flatten().min_by(|a, b| far(a.1).total_cmp(&far(b.1)))
 }
 
+/// Its fire rate halves for the health it lost since the last tick.
+pub(super) fn pace(world: &mut World, wither: Entity) {
+    let (Some(health), difficulty) = (world.get::<Health>(wither).copied(), world.resource::<Settings>().0.difficulty) else { return };
+    if let Some(mut kept) = world.get_mut::<Wither>(wither) {
+        kept.heads.rate.step(&health, difficulty);
+    }
+}
+
 /// A tick of the heads: each shoots when its time comes, and viewers are told whom each looks at.
 pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
     let now = world.resource::<Tick>().0;
@@ -104,8 +147,9 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
         heads.shots += 1;
         let blue = heads.shots % BLUE_EVERY == 0;
         skulls::fire(world, layer, wither, mouth(body, yaw, 0), aim(feet), blue);
-        let rest = if blue { RESTS[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll(RESTS[1] as u32)) } else { 1 };
-        heads.next[0] = now + FIRE_RATE * rest;
+        let every = heads.rate.every;
+        let rest = if blue { (RESTS[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll(RESTS[1] as u32))).div_ceil(every) * every } else { every };
+        heads.next[0] = now + rest;
     }
     for head in 1..3 {
         if !fights || now < heads.next[head] {
