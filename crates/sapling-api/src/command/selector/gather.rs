@@ -49,7 +49,7 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
     for entity in entities {
         let candidate = Candidate {
             kind: entity.kind.clone(),
-            name: String::new(),
+            name: if filters.names.is_empty() { String::new() } else { ctx.name_tag(entity.id).unwrap_or_default() },
             feet: entity.feet,
             rotation: [entity.yaw, entity.pitch],
             families: if filters.families.is_empty() { Vec::new() } else { ctx.entity_families(entity.id, &entity.kind) },

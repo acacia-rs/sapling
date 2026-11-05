@@ -131,8 +131,11 @@ async fn world_and_item_commands_answer_as_bds_answered() {
         assert_eq!(answer(&mut alice, "summon cow ~ ~ ~3").await, "commands.summon.success [] 1");
     }
     assert_eq!(answer(&mut alice, "damage @e[type=cow] 1 entity_attack entity @s").await, r#"commands.damage.success ["Cow, Cow"] 2"#);
-    // bds-ad3reload.txt: a name tag after the event.
+    // bds-ad3reload.txt: a name tag after the event, which `name=` finds and the answer names.
     assert_eq!(answer(&mut alice, "summon cow ~ ~ ~3 0 0 minecraft:entity_spawned cow1").await, "commands.summon.success [] 1");
+    assert_eq!(answer(&mut alice, "kill @e[type=cow,name=!cow1]").await, r#"commands.kill.successful ["Cow, Cow"] 2"#);
+    assert_eq!(answer(&mut alice, "kill @e[type=cow,name=cow1]").await, r#"commands.kill.successful ["cow1"] 1"#);
+    assert_eq!(answer(&mut alice, "kill @e[name=cow1]").await, "commands.generic.noTargetMatch [] 0");
     let seed = answer(&mut alice, "seed").await;
     assert!(seed.starts_with("commands.seed.success [") && seed.ends_with("] 1"), "{seed}");
     let version = answer(&mut alice, "version").await;

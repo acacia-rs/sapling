@@ -143,7 +143,9 @@ impl Command for Kill {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let (people, named) = targets(ctx, sender, self.target.as_ref());
         let mut killed: Vec<String> = people.into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
-        killed.extend(named.iter().filter(|entity| ctx.kill_entity(entity.id)).map(|entity| display_name(&entity)));
+        // bds-ad3reload.txt: a named cow is answered by its name.
+        let names: Vec<String> = named.iter().map(|entity| ctx.name_tag(entity.id).unwrap_or_else(|| display_name(entity))).collect();
+        killed.extend(named.iter().zip(names).filter(|(entity, _)| ctx.kill_entity(entity.id)).map(|(_, name)| name));
         match killed.is_empty() {
             true => no_target(out),
             false => {

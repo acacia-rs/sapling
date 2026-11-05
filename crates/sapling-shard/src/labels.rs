@@ -68,6 +68,12 @@ pub(crate) fn packet(labels: Option<&Labels>, id: u64) -> Option<Bytes> {
 }
 
 /// Sets one label of `entity` (`None`: the game's own back) and tells who sees it.
+/// The name shown over `entity`: a plugin's, else the game's own; `None` where that is empty.
+pub(crate) fn name(world: &World, entity: Entity) -> Option<String> {
+    let set = world.get::<Labels>(entity).and_then(|labels| labels.name.clone());
+    set.or_else(|| Some(own_name(world, entity))).filter(|name| !name.is_empty())
+}
+
 pub(crate) fn set(world: &mut World, entity: Entity, label: Label, text: Option<&str>) {
     let Some(id) = crate::ui::net_id(world, entity) else { return };
     let mut labels = world.get_mut::<Labels>(entity);

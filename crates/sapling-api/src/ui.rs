@@ -69,6 +69,9 @@ pub trait UiBackend {
     fn set_hidden(&mut self, _viewer: PlayerId, _actor: Actor, _hidden: bool) -> bool {
         false
     }
+    fn name_tag(&mut self, _actor: Actor) -> Option<String> {
+        None
+    }
     fn add_floating_text(&mut self, _at: [f32; 3], _text: &str) -> Option<EntityId> {
         None
     }
