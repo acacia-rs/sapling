@@ -189,9 +189,13 @@ impl Structures {
     pub(super) fn place_v2(&self, canvas: &mut Canvas, structures: &[(Option<StructureKind>, Arc<Vec<Piece>>)]) {
         let column = canvas.bb;
         let mut random = Xoroshiro::decoration(self.seed, column.x0 >> 4, column.z0 >> 4);
-        for piece in structures.iter().flat_map(|(_, s)| s.iter()).filter(|p| p.bb.intersects(&column)) {
-            piece.post_process_java(canvas, self.seed, &mut random);
+        for (kind, pieces) in structures {
+            canvas.dry = *kind == Some(StructureKind::TrialChambers);
+            for piece in pieces.iter().filter(|p| p.bb.intersects(&column)) {
+                piece.post_process_java(canvas, self.seed, &mut random);
+            }
         }
+        canvas.dry = false;
     }
 }
 
@@ -218,5 +222,18 @@ fn v2_structure(kind: StructureKind, pieces: &[Piece]) -> &'static str {
             let variant = data().sets["abandoned_camp"].iter().find(|e| start.strip_prefix(e.pool.as_str()).is_some_and(|rest| rest.starts_with('/')));
             variant.map_or("minecraft:abandoned_camp", |e| e.name.as_str())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /// Seed 20261003's chunk (-28, -27) against a BDS world that saved chunk -29 (20261003-y3tc): the
+    /// copper grates over its west corridor, set into an aquifer, hold no water to flood it.
+    #[test]
+    fn trial_chamber_blocks_set_into_water_keep_none() {
+        let shape = crate::OverworldGenerator::new(20261003).chunk_blocks(-28, -27);
+        assert_eq!(shape.block(2, -11, 7).name(), "flower_pot", "the dead bush pot at -446 -11 -425");
+        let wet: Vec<_> = (0..16).flat_map(|z| [0, 1].map(|x| (x, z))).filter(|&(x, z)| shape.block(x, -11, z).name() == "water").collect();
+        assert!(wet.is_empty(), "BDS's corridor is dry: {wet:?}");
     }
 }

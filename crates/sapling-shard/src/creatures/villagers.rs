@@ -41,7 +41,7 @@ pub(super) use conversion::{hasten_cures, infect, kept_through_turning, turned};
 pub(crate) use fear::alarm;
 pub(super) use golem_spawns::tick as spawn_golems;
 pub(super) use pantry::put as put_in_pantry;
-pub(super) use standing::{hit as hurt_standing, outlaw};
+pub(super) use standing::{hit as hurt_standing, outlaw, shot as shot_standing};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};
 
 const VILLAGER: &str = "minecraft:villager_v2";
@@ -83,6 +83,8 @@ pub(crate) struct Trader {
     leaves_at: Option<u64>,
     customer: Option<Entity>,
     level_up: Option<trading::LevelUp>,
+    /// `RewardPlayersOnFirstFounding`: a new villager's first village is yet to reward (standing.rs).
+    founding: bool,
 }
 
 impl Trader {
@@ -155,6 +157,7 @@ pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     if kept.is_none() {
         trader.mark = world.get::<Layer>(layer).map_or(0, |layer| jobs::mark_at(&layer.world, feet));
         trader.skin = dice.roll(SKINS) as i32;
+        trader.founding = villager;
         match villager {
             true => jobs::take_up(&mut trader, jobs::first_profession(event, &mut dice), &mut dice),
             false => trader.stock(Some(wandering::TABLE), &mut dice),
@@ -190,6 +193,13 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity) -> bool {
         return wandering::tick(world, entity, layer, now);
     }
     trading::level_up(world, entity);
+    let founding = world.get::<Trader>(entity).filter(|trader| trader.founding).and(world.get::<Body>(entity)).map(|body| body.at);
+    if founding.is_some_and(|at| standing::founded(world, layer, at)) {
+        if let Some(mut trader) = world.get_mut::<Trader>(entity) {
+            trader.founding = false;
+        }
+        storage::keep(world, entity);
+    }
     if now >= next_look {
         let baby = super::shown::is_baby(world, entity);
         jobs::look(world, entity, layer, now, baby);

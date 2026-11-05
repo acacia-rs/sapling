@@ -122,6 +122,9 @@ pub struct Hunts {
     /// It shoots only while its prey is this near (`ranged_attack`'s `attack_radius`), where that
     /// was drilled (research/captures/bds-pillrange.txt); else at any distance.
     pub fires: Option<f32>,
+    /// Prey farther than this is let go the tick after it is taken (`nearest_attackable_target`'s
+    /// `within_radius`; research/captures/bds-y3hunt.txt), where that was drilled.
+    pub within: Option<f32>,
 }
 
 impl Hunts {
@@ -147,7 +150,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
     let hits: Option<Vec<&str>> = value("hits=").map(|given| given.split(':').collect());
     let gives = hits.as_ref().and_then(|parts| Some((*parts.first()?, parts.get(1)?.parse().ok()?)));
     let gives_easy_hard = hits.as_ref().and_then(|parts| Some([parts.get(2)?.parse().ok()?, parts.get(3)?.parse().ok()?]));
-    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, gives_easy_hard, gives_twice: has("gives_twice"), explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), varies: number("varies="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once"), preys: value("preys="), searches: number("searches=").map(|ticks| ticks as u32), stops: number("stops=").map(|ticks| ticks as u32), reselects: has("reselects"), fires: number("fires=") });
+    let hunts = number("attack=").zip(number("speed=")).zip(number("sees=")).map(|((attack, speed), sees)| Hunts { attack, speed, sees, gives, gives_easy_hard, gives_twice: has("gives_twice"), explodes: number("explodes="), shoots: number("shoots=").map(|ticks| ticks as u32), provoked: has("provoked"), closes: has("closes"), fights: value("fights="), upto: number("upto="), varies: number("varies="), every: number("every=").map(|ticks| ticks as u32), by_dark: has("by_dark"), aims: number("aims=").map(|ticks| ticks as u32), volley: value("volley=").and_then(|volley| volley.split_once('x')).and_then(|(shots, gap)| Some((shots.parse().ok()?, gap.parse().ok()?))), shot: value("shot="), calms: number("calms=").map(|ticks| ticks as u32), once: has("once"), preys: value("preys="), searches: number("searches=").map(|ticks| ticks as u32), stops: number("stops=").map(|ticks| ticks as u32), reselects: has("reselects"), fires: number("fires="), within: number("within=") });
     let roams = value("roams=").and_then(|roams| roams.split_once('x')).and_then(|(across, up)| Some([across.parse().ok()?, up.parse().ok()?]));
     let swims = number("swims=").zip(roams);
     let looks = value("looks=").and_then(|looks| {

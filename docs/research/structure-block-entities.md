@@ -264,6 +264,14 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   worlds, stock and tick-free, have air there and the pot. The strip enters from chunk -29, which
   neither BDS world saved, so its source (a corridor flooded in our chunk -29, sources made by the
   two-source rule as it spreads) needs a BDS run that saves chunk -29 to be judged.
+  Judged 2026-11-05 (thirteenth3y) on `20261003-y3tc` (BDS 1.26.52.3, server-side generation, regions
+  -30, -28, -27 and -26 saved): BDS's corridor is dry with its pot and tripwires. Ours waterlogged the
+  waxed copper grates at y 0 (x -454 and -453, z -423 to -420) that the chamber sets into an aquifer;
+  their water fell to y -4 and ran east into the corridor. BDS's grates hold none: trial chambers
+  ignore waterlogging, as Java's `liquid_settings` `ignore_waterlogging`. Fixed: `Canvas::dry` for
+  trial chamber pieces (test `trial_chamber_blocks_set_into_water_keep_none`); `cells` over x -460 to
+  -433, y -14 to 2 then differs only in two ore blobs (gold at x -436 to -434, y -6 to -4; copper at y 20
+  earlier), not looked into.
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
   before the vault's first tick rewrites it (`spawners/vault.rs` takes the lesser of it and now + 1
   step), so left. Undrillable as a difference: the generator has no level clock to save, and a loaded

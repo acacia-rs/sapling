@@ -75,6 +75,9 @@ pub struct Canvas<'a> {
     pub shaft_fences: HashSet<(i32, i32, i32)>,
     /// Jigsaw pieces file their jigsaws as `BlockEntity::Jigsaw` (a placement on demand).
     pub keep_jigsaws: bool,
+    /// The piece being placed ignores waterlogging (trial chambers, Java's `liquid_settings`): its
+    /// blocks set into water keep none.
+    pub dry: bool,
 }
 
 impl<'a> Canvas<'a> {
@@ -96,6 +99,7 @@ impl<'a> Canvas<'a> {
             written: HashMap::default(),
             shaft_fences: HashSet::new(),
             keep_jigsaws: false,
+            dry: false,
         }
     }
 
@@ -165,7 +169,7 @@ impl<'a> Canvas<'a> {
         if self.bb.contains(x, y, z) {
             let before = self.shape.block((x & 15) as usize, y, (z & 15) as usize);
             // A block that can hold water keeps the water it is set into (an igloo cellar's bars in a flooded cave).
-            let block = if before == Block::Water { super::template::soaked(block) } else { block };
+            let block = if before == Block::Water && !self.dry { super::template::soaked(block) } else { block };
             self.record.note((x, y, z), before, block);
             self.shape.set_block((x & 15) as usize, y, (z & 15) as usize, block);
             super::trace::write([x, y, z], block);

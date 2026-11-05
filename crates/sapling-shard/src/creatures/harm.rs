@@ -44,6 +44,7 @@ pub(super) fn wound_by(world: &mut World, mob: Entity, layer: Entity, cost: f32,
     if took {
         *world.get_mut::<Health>(mob)? = health;
         entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), vec![strike(id, &health, cause, None)]);
+        by.inspect(|player| super::villagers::shot_standing(world, *player, mob, layer, &kind, body.at, health.left() <= 0.0));
         if health.left() <= 0.0 {
             if let Some(player) = by {
                 super::raids::slain(world, player, mob);

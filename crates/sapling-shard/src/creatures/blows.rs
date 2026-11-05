@@ -45,6 +45,21 @@ pub(super) fn sparks(blow: Blow, id: u64) -> Option<Animate> {
     blow.critical.then_some(Animate { action_id: AnimateActionId::CriticalHit, runtime_entity_id: id, data: CRITICAL_DATA, has_swing_source: false, swing_source: None })
 }
 
+/// Throws the mob away from `from` across as a hit does, with Knockback at `level` and a sprint
+/// adding theirs, less its knockback resistance's share (research/captures/bds-knockback.txt).
+pub(super) fn throw_from(world: &mut World, mob: Entity, from: [f32; 3], level: u8, sprinting: bool) {
+    let Some(kind) = world.get::<crate::entities::Kind>(mob).map(|kind| kind.0.clone()) else { return };
+    let Some(mut body) = world.get_mut::<crate::body::Body>(mob) else { return };
+    let (dx, dz) = (body.at[0] - from[0], body.at[2] - from[2]);
+    let far = (dx * dx + dz * dz).sqrt();
+    let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
+    let speed = sapling_data::enchant::knockback(level, sprinting, body.motion, away);
+    let kept = 1.0 - sapling_data::mob_traits(&kind).resists;
+    if kept > 0.0 {
+        body.throw(speed.map(|c| c * kept));
+    }
+}
+
 /// A blow wears what the hitter holds, landed or not, unless the hitter is in creative: a sword by
 /// one, another tool by two (research/captures/bds-swing-wear.txt: a wooden sword's 57 went to 58,
 /// an axe's and a pickaxe's to 59, a sword's twice in two hits in one tick). BDS showed the hitter

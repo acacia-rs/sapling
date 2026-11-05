@@ -134,9 +134,12 @@ These are the Java game's, a guess, or not found in the decompile:
   (`creatures/stuck.rs` `shaking`). The same drill's dispenser arrow bounced off the creative
   watcher, so an arrow now meets creative players (`flight/in_way.rs`);
 - the wind charge cooldown (10), and the cooldowns of snowballs, eggs and potions (none);
-- the lingering cloud's shrinking over its life (its pulse and shares were read: items.md, "Area
-  effect clouds");
-- a player's arrow throwing a mob 0.4, as a melee hit does;
+- the lingering cloud's shrinking over its life: drilled 2026-11-05 (`y3arrow`, bds-y3arrow.txt), it
+  does not shrink with time (radius 3.0, 0.5 off for each one given, gone 600 ticks on); items.md,
+  "Area effect clouds";
+- a player's arrow throwing a mob 0.4, as a melee hit does: drilled (bds-y3arrow.txt), a held cow shot
+  was sent (0, 0.4, -0.4) at once and (0, 0.3136, -0.2184) the tick after, the hand's hit the second
+  alone, as sapling's (`hits.rs` `throw_at_once`, `attacks.rs`);
 - Riptide's launch (`3 × (1 + level) / 4`);
 - the `chargedItem` tag of a loaded crossbow;
 - most effect colours, which are Java's (sapling-data `shots.rs`);

@@ -242,5 +242,14 @@ by the actor among a cow, a spider and a zombified piglin.
   (`creatures::takes_potion`), spiders refusing poison as the undead do.
 - A creative player was reached as a survival one (sapling left creative out; fixed).
 
-Not drilled: the ender dragon left out of every cloud (sapling `clouds.rs` `UNAFFECTED`): it needs the End
-fight (L).
+Drilled 2026-11-05 (`y3arrow`, bds-y3arrow.txt): a held cow 2 off a lingering harming cloud was harmed
+once and thrown as by a hit, 0.4 away from the cloud and 0.4 up (sent the tick after as 0.3136 up), out
+of its reach, so it took nothing more in the cloud's 30 s. Sapling's cloud harmed it in place every 40
+ticks; fixed (`afflictions/potions.rs` `breathed_on`, `blows::throw_from`; test
+`a_harming_cloud_throws_a_cow_out_as_a_hit_and_harms_it_once`).
+
+The ender dragon left out of every cloud (sapling `clouds.rs` `UNAFFECTED`), drilled 2026-11-05
+(`y3dragon`, bds-y3dragon.txt): a summoned dragon put on the harming cloud's spot every tick by a
+repeating command block for 22 s took no harm (health 200), and the cloud lost no radius to it for 15 s
+(2.0 from the cow and actor's pickups until 45 s), where a mob given anything takes 0.5 off: left out,
+as sapling's.

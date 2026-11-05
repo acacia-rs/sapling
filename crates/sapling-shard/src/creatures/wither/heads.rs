@@ -1,9 +1,9 @@
 //! The wither's three heads, as BDS's aimed (`_performRangedAttack`, `setAlternativeTarget`): the
 //! middle one shoots its prey in volleys of four at its fire rate, the fourth a blue one; off easy each side
 //! one takes a player at random within 30 across and 8 up or down that it sees, shoots it and
-//! looks again 40 to 59 ticks on, or after 15 looks with none shoots a blue skull at random near.
-// TODO: the middle head holds still while it moves; the side heads' wait
-// between looks with no one in reach is the Java game's.
+//! looks again 40 to 59 ticks on, else again 10 to 19 ticks on; head 1's 17th look in a row with none
+//! shoots a blue skull at random near.
+// TODO: the middle head holds still while it moves; BDS's skulls spread about their aim (bds-y3wither.txt).
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -36,8 +36,7 @@ const STRAY: [f32; 2] = [10.0, 5.0];
 const MIDDLE_UP: f32 = 3.0;
 const SIDE_UP: f32 = 2.2;
 const ASIDE: f32 = 1.3;
-/// A skull is aimed this far under the eyes of whom it is shot at.
-const UNDER_EYES: f32 = 0.5;
+const MOB_EYES: f32 = 0.85;
 
 #[derive(Default)]
 pub(super) struct Heads {
@@ -94,8 +93,15 @@ fn mouth(body: &Body, yaw: f32, head: usize) -> [f32; 3] {
     [body.at[0] + angle.cos() * ASIDE, body.at[1] + SIDE_UP, body.at[2] + angle.sin() * ASIDE]
 }
 
-fn aim(feet: [f32; 3]) -> [f32; 3] {
-    [feet[0], feet[1] + sapling_data::EYE_HEIGHT - UNDER_EYES, feet[2]]
+/// Where a skull at `target` is aimed: its position (a player's eyes, a mob's feet) plus half its eye
+/// height, as Java's `getEyeHeight() * 0.5` over BDS's positions (bds-y3wither.txt: 38 skulls passed the
+/// standing actor 2.41 over its feet on average, 2.43 by this rule; a mob's eyes taken at its height's 0.85).
+fn aim(world: &World, target: Entity, feet: [f32; 3]) -> [f32; 3] {
+    let up = match world.get::<Body>(target).filter(|_| world.get::<Position>(target).is_none()) {
+        Some(body) => body.size[1] * MOB_EYES * 0.5,
+        None => sapling_data::EYE_HEIGHT * 1.5,
+    };
+    [feet[0], feet[1] + up, feet[2]]
 }
 
 /// A player of `layer` at random within a side head's reach that it sees.
@@ -143,10 +149,11 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
     let before = heads.targets;
     let prey = prey(world, wither, layer, body);
     heads.targets[0] = prey.map(|(player, _)| player);
-    if let Some((_, feet)) = prey.filter(|_| now >= heads.next[0]) {
+    if let Some((target, feet)) = prey.filter(|_| now >= heads.next[0]) {
         heads.shots += 1;
         let blue = heads.shots % BLUE_EVERY == 0;
-        skulls::fire(world, layer, wither, mouth(body, yaw, 0), aim(feet), blue);
+        let to = aim(world, target, feet);
+        skulls::fire(world, layer, wither, mouth(body, yaw, 0), to, blue);
         let every = heads.rate.every;
         let rest = if blue { (RESTS[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll(RESTS[1] as u32))).div_ceil(every) * every } else { every };
         heads.next[0] = now + rest;
@@ -157,15 +164,22 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
         }
         match pick(world, layer, body) {
             Some((player, feet)) => {
-                skulls::fire(world, layer, wither, mouth(body, yaw, head), aim(feet), false);
+                let to = aim(world, player, feet);
+                skulls::fire(world, layer, wither, mouth(body, yaw, head), to, false);
                 heads.targets[head] = Some(player);
-                heads.idle = 0;
+                if head == 1 {
+                    heads.idle = 0;
+                }
                 heads.next[head] = now + AGAIN[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll(AGAIN[1] as u32));
             }
             None => {
                 heads.targets[head] = None;
-                heads.idle += 1;
-                if head == 1 && heads.idle > IDLE {
+                // Head 1's own count, shooting on its 17th idle look (bds-y3wither.txt: 231 to 264 ticks apart).
+                let idle = if head == 1 { heads.idle } else { 0 };
+                if head == 1 {
+                    heads.idle += 1;
+                }
+                if idle > IDLE {
                     heads.idle = 0;
                     let to = {
                         let mut dice = world.get_resource_or_insert_with(Dice::default);
