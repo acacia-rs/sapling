@@ -95,10 +95,26 @@ fn two_carts_summoned_overlapping_push_each_other_apart() {
             [after[0][0] - before[0][0], after[1][0] - before[1][0]]
         })
         .collect();
-    assert!(start[1][0] - start[0][0] > 0.4, "apart from the first tick: {start:?}");
+    assert!((start[1][0] - start[0][0] - 0.4).abs() < 1e-5, "not pushed in their first tick: {start:?}");
     for [west, east] in moved {
         assert!((west + 0.0599).abs() < 0.002 && (east - 0.0599).abs() < 0.002, "{west} {east}");
     }
+}
+
+/// bds-l2carts.txt: a cart summoned 0.4 from one at rest snapped onto its rail in its first tick, and both
+/// were first pushed in the tick after, 0.0576 each.
+#[test]
+fn a_new_cart_is_pushed_only_from_the_tick_after_its_first() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    rail_line(&mut h);
+    let first = spawned(&mut h, &[("minecraft:minecart", [4.5, 65.0, 0.5])])[0];
+    (0..20).for_each(|_| _ = h.tick(1));
+    let second = spawned(&mut h, &[("minecraft:minecart", [4.9, 65.0, 0.5])])[0];
+    let first_tick = feet(&mut h, vec![first, second]);
+    let next = feet(&mut h, vec![first, second]);
+    assert!((first_tick[0][0] - 4.5).abs() < 1e-5 && (first_tick[1][0] - 4.9).abs() < 1e-5 && (first_tick[1][1] - 65.15).abs() < 1e-4, "{first_tick:?}");
+    assert!((first_tick[0][0] - next[0][0] - 0.0576).abs() < 1e-4 && (next[1][0] - first_tick[1][0] - 0.0576).abs() < 1e-4, "{next:?}");
 }
 
 /// bds-l2carts.txt: a cart summoned 0.4 from one at rest pushed it exactly as hard as it was pushed, the

@@ -37,9 +37,11 @@ fn collide(this: &mut Body, other: &mut Body) {
     (other.motion[0], other.motion[2]) = (other.motion[0] * KEPT + mx + px, other.motion[2] * KEPT + mz + pz);
 }
 
-/// Each pair of touching carts in a world pushes apart, once from each side.
+/// Each pair of touching carts in a world pushes apart, once from each side; a cart in its first tick
+/// neither pushes nor is pushed (BDS's summoned one moved a tick after its AddEntity, bds-l2carts.txt).
 pub(super) fn push(world: &mut World) {
-    let carts: Vec<(Entity, Entity, Body)> = world.query_filtered::<(Entity, &InLayer, &Body), With<Cart>>().iter(world).map(|(cart, layer, body)| (cart, layer.0, *body)).collect();
+    let carts: Vec<(Entity, Entity, Body)> =
+        world.query_filtered::<(Entity, &InLayer, &Body), (With<Cart>, With<super::detectors::Settled>)>().iter(world).map(|(cart, layer, body)| (cart, layer.0, *body)).collect();
     let mut bodies: Vec<Body> = carts.iter().map(|(_, _, body)| *body).collect();
     for i in 0..carts.len() {
         for j in i + 1..carts.len() {

@@ -192,8 +192,12 @@ were not found in any of these; sapling does what is listed there.
   onto the rail (the downhill rule read the raw old y); now measured from the old spot on the rail's
   line, as Java's `getPos` (`vehicles/rails.rs` `roll`).
 - Left: two carts summoned 0.4 apart on BDS moved 0.1056 each the tick they parted (0.0599 on
-  sapling) and slowed as if a tick of drag more; they ended 0.065 short of sapling's. A new cart is
-  first pushed the tick after its AddEntity on BDS, in that tick on sapling.
+  sapling) and slowed as if a tick of drag more; they ended 0.065 short of sapling's. The parting
+  tick's step is the overlap left (0.98 - 0.8744), each cart moving out of the other's box, as if BDS
+  pushed overlapping carts apart by position; not ported.
+- A new cart is first pushed the tick after its AddEntity on BDS (both carts held that tick), in that
+  tick on sapling; fixed 2026-11-05 (`vehicles/bumps.rs` push skips carts not yet `Settled`, test
+  `a_new_cart_is_pushed_only_from_the_tick_after_its_first`).
 - **Stored `Pos`**: BDS kept a minecart on a rail at y -26 at -25.5, where it was shown
   (bds-l2carts-dump.txt), as sapling does (`actors.rs` `compound_now`, the wire's lift 0.35).
 
