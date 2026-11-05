@@ -97,7 +97,8 @@ fn bundle() -> Vec<String> {
 
 const ANVIL_SHOWN: &[&str] = &["ItemStackResponse", "InventorySlot", "CommandOutput"];
 
-/// Two enchanted iron swords merged in an anvil, the first laid as the input, for four pairs.
+/// Two enchanted iron swords merged in an anvil, the first laid as the input, for four pairs; the
+/// name box holds the item's own name, as a client's does (BDS refused an empty list, status 9).
 fn anvil() -> Vec<String> {
     let mut lines = with(floor(), &["setblock 2 -26 0 anvil", "gamemode survival @s", ""]);
     let pairs: [(&[&str], &[&str]); 4] = [
@@ -113,7 +114,7 @@ fn anvil() -> Vec<String> {
         lines.extend(owned(["", "!move 0 1"]));
         lines.push(hold("iron_sword"));
         lines.extend(second.iter().map(|enchant| format!("enchant @s {enchant}")));
-        lines.extend(owned(["", "!click 2 0 0", "", "!ui 1 1", "!ui 0 2", "", "!anvilcraft! 0 _ 8", "", "!inv", "!close", ""]));
+        lines.extend(owned(["", "!click 2 0 0", "", "!ui 1 1", "!ui 0 2", "", "!anvilcraft! 0 Iron~Sword 8", "", "!inv", "!close", ""]));
     }
     with(lines, &["setblock 2 -26 0 air", "gamemode creative @s", "clear @s", ""])
 }
