@@ -42,6 +42,8 @@ pub(crate) struct Arrow {
     pub(super) stuck: Option<u64>,
     /// By `/summon`: it stays put the tick it came.
     pub(super) summoned: bool,
+    /// The body it bounced off, which it meets no more (BDS's flew out of it, bds-n3knock.txt).
+    pub(super) bounced_off: Option<Entity>,
 }
 
 /// A shot launched and not yet moved: BDS's first move is its launch speed, drag and weight taken
@@ -133,7 +135,7 @@ pub(crate) fn launch(world: &mut World, launch: Launch, loosed: Option<Loosed>) 
     };
     let born = world.resource::<Tick>().0;
     let arrow = entities::spawn_mob(world, layer, shot.kind, Body::new(from, motion, shot.size), from, announce)?;
-    world.entity_mut(arrow).insert((Arrow { archer, by, gives, shot, born, stuck: None, summoned: false }, Unflown));
+    world.entity_mut(arrow).insert((Arrow { archer, by, gives, shot, born, stuck: None, summoned: false, bounced_off: None }, Unflown));
     if let Some(loosed) = loosed {
         world.entity_mut(arrow).insert(loosed);
     }
@@ -165,9 +167,11 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
     let unflown = world.entity_mut(arrow).take::<Unflown>().is_some();
     let mut motion = if unflown { body.motion } else { [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag] };
     let behind: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - motion[axis]);
-    let (passed, spent) = world.get::<Loosed>(arrow).map_or((Vec::new(), false), |loosed| (loosed.pierced.clone(), loosed.spent));
-    let met = if spent { None } else { first_met(world, layer, by, body.at, motion, shot.size, &passed, shot.lands == Lands::Hurts) };
+    let (mut passed, spent) = world.get::<Loosed>(arrow).map_or((Vec::new(), false), |loosed| (loosed.pierced.clone(), loosed.spent));
+    passed.extend(world.get::<Arrow>(arrow).and_then(|arrow| arrow.bounced_off));
+    let met = if spent { None } else { first_met(world, layer, by, body.at, motion, shot.size, &passed, shot.lands == Lands::Hurts, shot.kind == super::arrows::ARROW.kind) };
     let bounced = met.is_some_and(|(_, struck, _)| super::stuck::bounces_off(world, struck, body.at, motion));
+    let mut stays = bounced;
     if bounced {
         motion = motion.map(|c| c * -0.1);
         crate::late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound(shot.heard[0], body.at, ""));
@@ -187,13 +191,18 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
                 body.at = at;
                 motion = motion.map(|c| c * -0.1);
             }
+            After::Bounced => {
+                (body.at, stays) = (at, true);
+                world.get_mut::<Arrow>(arrow)?.bounced_off = Some(struck);
+                motion = motion.map(|c| c * -0.1);
+            }
         }
     }
     let before = body.at;
     body.motion = motion;
-    // Bounced, BDS's shot stays where it was this tick (bds-g10flame.txt).
-    let met_block = if bounced { None } else { ray::first_block(&world.get::<Layer>(layer)?.world, before, motion) };
-    let part = if bounced { 0.0 } else { met_block.map_or(1.0, |(part, _)| part) };
+    // Bounced, BDS's shot stays where it was this tick (bds-g10flame.txt, bds-n3knock.txt).
+    let met_block = if stays { None } else { ray::first_block(&world.get::<Layer>(layer)?.world, before, motion) };
+    let part = if stays { 0.0 } else { met_block.map_or(1.0, |(part, _)| part) };
     body.at = std::array::from_fn(|axis| before[axis] + motion[axis] * part);
     let stopped = met_block.is_some();
     let mut holds = true;

@@ -17,7 +17,10 @@ const FOOT: [i32; 3] = [1, 65, 0];
 const HEAD: [i32; 3] = [1, 65, 1];
 
 fn with_a_bed() -> Harness {
-    let mut h = Harness::new();
+    bed_in(Harness::new())
+}
+
+fn bed_in(mut h: Harness) -> Harness {
     h.enter(1, "Alex");
     h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:bed", 1)))));
     h.tick(1);
@@ -54,6 +57,23 @@ fn a_bed_by_day_only_moves_the_spawn() {
     let lines = said(&sent);
     assert!(lines.iter().any(|line| line.contains("tile.bed.respawnSet")) && lines.iter().any(|line| line.contains("tile.bed.noSleep")), "{lines:?}");
     assert!(!lies_down(&sent));
+}
+
+/// BDS refuses a bed with water in its head silently, before it sets the spawn (beds-and-containers.md, 2).
+#[test]
+fn a_flooded_bed_refuses_its_sleeper_without_a_word() {
+    let mut level = common::platform();
+    let water = level.block_id("minecraft:water").unwrap();
+    assert!(level.set_liquid(HEAD[0], HEAD[1], HEAD[2], water));
+    let mut h = bed_in(Harness::with(common::config(), level));
+    h.remote.run(|ctx| {
+        assert_eq!(ctx.block(HEAD).map(|block| block.name), Some("minecraft:bed".into()));
+        ctx.set_time(13_000);
+    });
+    h.tick(1);
+    h.receive(1, &click(HEAD, 1, None));
+    let sent = h.tick(1);
+    assert!(!lies_down(&sent) && said(&sent).is_empty() && all::<SetSpawnPosition>(&sent).is_empty(), "{:?}", said(&sent));
 }
 
 /// research/captures/bds-wake.txt: lying down corrects the client's prediction; a teleport wakes

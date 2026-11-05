@@ -60,6 +60,18 @@ fn a_survival_arrow_is_picked_up_again_and_a_creative_one_given_nobody() {
     assert_eq!(arrows_held(&mut h), Some(2), "neither spent nor given");
 }
 
+/// research/captures/bds-f1pickup.txt: a stuck arrow is to be had 8 ticks after it lay still.
+#[test]
+fn a_stuck_arrow_is_picked_up_once_it_stops_shaking() {
+    use acacia_proto::packets::SetEntityMotion;
+    let mut h = ready(GameMode::Survival, &[BOW, ARROWS], 80.0);
+    let loosed = draw(&mut h, 10, 0);
+    let ticks: Vec<Vec<RawPacket>> = std::iter::once(loosed).chain((0..20).map(|_| h.tick_all().to(1).to_vec())).collect();
+    let stopped = ticks.iter().position(|sent| all::<SetEntityMotion>(sent).iter().any(|told| [told.velocity.x, told.velocity.y, told.velocity.z] == [0.0; 3]));
+    let taken = ticks.iter().position(|sent| !all::<TakeItemEntity>(sent).is_empty());
+    assert_eq!(taken.zip(stopped).map(|(taken, stopped)| taken - stopped), Some(8), "lay still at {stopped:?}, taken at {taken:?}");
+}
+
 /// Steve with `main` in a stored world of `actors`, survival.
 fn stored(main: Vec<Option<ItemStack>>, actors: Vec<u8>) -> (Harness, std::sync::Arc<sapling_world::MemoryStorage>) {
     let storage = floor_with(actors);

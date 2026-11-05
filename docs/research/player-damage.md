@@ -252,5 +252,8 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
   12.608 / 16.4 / 11.6, the search at y 32767 and the void's rhythm and depth match.
   `bedspawn` matches (sapling-bedspawn.txt). `anchor` could not be set up on sapling: its relative
   `/fill` in the Nether filled nothing (sapling-anchor.txt); tests hold the anchor (anchors.rs).
-- Not built: lying down under a block. A player rises by the bed or Nether anchor it
+- Crawling under a block (bds-f1crawl.txt): teleported under a one-high ceiling, BDS told the player
+  and its viewers, the tick after, `BoundingboxHeight` 0.6 and `FlagsExtended` bit 50; out again,
+  1.8 and the bit cleared; the eyes told stayed at 1.62. Built 2026-11-05 (`movement/crawl.rs`).
+  A player rises by the bed or Nether anchor it
   last clicked while it stands (`sleep/spawn.rs` `spawn_of`), and either waits in storage with the player's items, as does its last death (`vitals/last_death.rs`). Health, hunger, breath (`Air`) and burning (`Fire`) wait in storage with a player's items (`vitals/kept.rs`), as do effects (`vitals/effects.rs`); one who left dead comes back whole.

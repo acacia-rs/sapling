@@ -109,7 +109,10 @@ These are the Java game's, a guess, or not found in the decompile:
 - the Multishot spread of 10 degrees;
 - where a shot leaves from: 0.1 under the eyes;
 - the 1200-tick despawn of a stuck arrow;
-- BDS's short pickup delay (Actor +0x1bc), which sapling does not have;
+- BDS's short pickup delay (Actor +0x1bc): drilled 2026-11-05 (bds-f1pickup.txt), a stuck arrow was
+  taken 8 ticks after it lay still, as the 7-tick shake ran out; sapling waits the same since
+  (`creatures/stuck.rs` `shaking`). The same drill's dispenser arrow bounced off the creative
+  watcher, so an arrow now meets creative players (`flight/in_way.rs`);
 - the wind charge cooldown (10), and the cooldowns of snowballs, eggs and potions (none);
 - the lingering cloud's shrinking over its life (its pulse and shares were read: items.md, "Area
   effect clouds");

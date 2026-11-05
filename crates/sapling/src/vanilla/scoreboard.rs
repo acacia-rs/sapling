@@ -1,6 +1,5 @@
 //! `/scoreboard`, read as BDS's eleven overloads read it and answering as BDS did
 //! (research/captures/bds-scoreboard.txt, bds-scoreboard2.txt): objectives.rs and players.rs.
-// A number past i32 is a syntax error here; BDS answered `commands.generic.num.invalid`.
 
 mod objectives;
 mod players;
@@ -26,6 +25,8 @@ pub(crate) enum Scoreboard {
     Random { target: Selector, objective: String, min: i32, max: i32 },
     Change { change: Change, target: Selector, objective: String, count: i32 },
     Operation { target: Selector, objective: String, operation: ScoreOperation, source: Selector, source_objective: String },
+    /// A whole number past i32, which BDS refuses by name (research/captures/bds-f1cmds.txt).
+    NumInvalid(String),
 }
 
 fn param(name: &str, kind: ParamKind, optional: bool) -> ParameterSpec {
@@ -110,10 +111,21 @@ fn players_part(args: &mut Args<'_>) -> Result<Scoreboard, ParseError> {
         }
         ("random", _) => Scoreboard::Random { target, objective, min: i32::parse(args)?, max: i32::parse(args)? },
         ("operation", _) => {
-            let operation = parse_choice(args, &ScoreOperation::SYMBOLS)?;
+            let (at, sign) = (args.mark(), args.peek().and_then(|word| word.chars().next()));
+            // BDS reads an operator a sign at a time: `^=` fails at `^` (bds-f1cmds.txt).
+            let operation = parse_choice(args, &ScoreOperation::SYMBOLS).map_err(|error| match sign {
+                Some(sign) if !sign.is_alphanumeric() => args.error_span(at, at + sign.len_utf8()),
+                _ => error,
+            })?;
             Scoreboard::Operation { target, objective, operation, source: Selector::parse(args)?, source_objective: String::parse(args)? }
         }
-        (_, Some(change)) => Scoreboard::Change { change, target, objective, count: i32::parse(args)? },
+        (_, Some(change)) => match args.peek().filter(|word| word.parse::<i32>().is_err() && word.parse::<i64>().is_ok()) {
+            Some(word) => {
+                args.word()?;
+                Scoreboard::NumInvalid(word.to_owned())
+            }
+            None => Scoreboard::Change { change, target, objective, count: i32::parse(args)? },
+        },
         _ => return Err(args.error_at(mark)),
     })
 }
@@ -146,6 +158,7 @@ impl Command for Scoreboard {
             Self::Random { target, objective, min, max } => players::random(ctx, sender, out, &target, &objective, [min, max]),
             Self::Change { change, target, objective, count } => players::change(ctx, sender, out, change, &target, &objective, count),
             Self::Operation { target, objective, operation, source, source_objective } => players::operation(ctx, sender, out, (&target, &objective), operation, (&source, &source_objective)),
+            Self::NumInvalid(word) => out.translate("commands.generic.num.invalid", vec![word], false),
         }
     }
 }

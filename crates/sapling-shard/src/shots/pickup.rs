@@ -26,6 +26,9 @@ pub(super) fn tick(world: &mut World) {
         .filter_map(|player| Some((player, world.get::<InLayer>(player)?.0, world.get::<Position>(player)?.feet, world.get::<NetId>(player)?.0, world.get::<Mode>(player)?.0)))
         .collect();
     for (shot, layer, at, id, loosed) in lying {
+        if crate::creatures::shot_shaking(world, shot) {
+            continue;
+        }
         let near = players.iter().filter(|(_, on, feet, ..)| *on == layer && drops::within_pickup(*feet, at, SIZE));
         let taker = near.copied().find(|(player, _, _, _, mode)| match (mode, loosed.pickup) {
             (GameMode::Creative, _) => true,

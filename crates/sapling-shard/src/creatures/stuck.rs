@@ -45,7 +45,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, kind: &str, at: [f3
         Some(vec![sapling_net::encode(&sapling_data::add_entity(&options))])
     }) else { return false };
     let now = world.resource::<Tick>().0;
-    world.entity_mut(arrow).insert((Arrow { archer: String::new(), by: arrow, gives: None, shot, born: now, stuck: Some(now), summoned: false }, Loosed { player: None, pickup, item, tipped, ..Loosed::new(arrow, pickup, None) }));
+    world.entity_mut(arrow).insert((Arrow { archer: String::new(), by: arrow, gives: None, shot, born: now, stuck: Some(now), summoned: false, bounced_off: None }, Loosed { player: None, pickup, item, tipped, ..Loosed::new(arrow, pickup, None) }));
     entities::keep(world, arrow, layer, unique_id, compound);
     true
 }
@@ -55,6 +55,14 @@ pub(crate) fn lying(world: &mut World) -> Vec<(Entity, Entity, [f32; 3], u64, Lo
     let mut shots = world.query::<(Entity, &InLayer, &Body, &NetId, &Loosed, &Arrow)>();
     let lies = |loosed: &Loosed, arrow: &Arrow| loosed.pickup != Pickup::Never && !loosed.returning && arrow.stuck.is_some();
     shots.iter(world).filter(|(.., loosed, arrow)| lies(loosed, arrow)).map(|(arrow, layer, body, id, loosed, _)| (arrow, layer.0, body.at, id.0, loosed.clone())).collect()
+}
+
+/// Whether the stuck shot `arrow` still shakes from its hit and is not to be had: BDS's creative
+/// watcher took one 8 ticks after it lay still (research/captures/bds-f1pickup.txt).
+pub(crate) fn shaking(world: &World, arrow: Entity) -> bool {
+    const SHAKING: u64 = 8;
+    let now = world.resource::<Tick>().0;
+    world.get::<Arrow>(arrow).and_then(|arrow| arrow.stuck).is_some_and(|stuck| now < stuck + SHAKING)
 }
 
 /// Whether nothing holds the stuck shot `arrow` any more: no block's collision box touches it, as

@@ -31,6 +31,8 @@ pub(super) enum After {
     Back,
     /// A shield turned it away, a tenth as fast (research/captures/bds-shield.txt).
     Deflected,
+    /// It took nothing off whom it met and bounces back a tenth as fast, staying where it met it this tick.
+    Bounced,
 }
 
 /// An arrow that hit a body: it goes the tick after, without moving, as BDS's, so one that hit in
@@ -70,10 +72,16 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
         }
         return After::Deflected;
     }
-    let landed = match is_player {
+    let (landed, refused) = match is_player {
         // One proof against fire lost nothing to a fireball on BDS (bds-blaze.txt).
-        true => !(loosed.is_none() && shot.burns > 0 && vitals::is_fireproof(world, struck)) && vitals::shot(world, struck, cost, &archer, archer_feet(world, by).unwrap_or(from), shot.throws, push),
-        false => harm::wound_by(world, struck, layer, cost, Cause::Projectile, loosed.as_ref().and_then(|loosed| loosed.player)) == Some(true),
+        true => {
+            let landed = !(loosed.is_none() && shot.burns > 0 && vitals::is_fireproof(world, struck)) && vitals::shot(world, struck, cost, &archer, archer_feet(world, by).unwrap_or(from), shot.throws, push);
+            (landed, !landed || vitals::resists_all(world, struck))
+        }
+        false => {
+            let wound = harm::wound_by(world, struck, layer, cost, Cause::Projectile, loosed.as_ref().and_then(|loosed| loosed.player));
+            (wound == Some(true), wound == Some(false) || world.get::<Health>(struck).is_some_and(Health::resists_all))
+        }
     };
     if landed {
         afflict(world, struck, is_player, gives, loosed.as_ref().and_then(|loosed| loosed.tipped), from);
@@ -88,6 +96,10 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
     }
     if shot.sticks {
         late_sounds::play_later(world, 1, layer, at.map(|c| c.floor() as i32), flight::sound(shot.heard[0], at, ""));
+    }
+    // Off one that took nothing (a resistance V player or villager, a guard) BDS's arrow bounces back (bds-n3knock.txt, bds-pillswitch2.txt).
+    if refused && shot.kind == super::arrows::ARROW.kind {
+        return After::Bounced;
     }
     let Some(mut loosed) = world.get_mut::<Loosed>(arrow) else { return After::Gone };
     if shot.kind != super::arrows::ARROW.kind {

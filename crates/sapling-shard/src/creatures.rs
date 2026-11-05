@@ -98,7 +98,7 @@ pub(crate) use armour_stands::use_on as dress_stand;
 pub(crate) use skeleton_traps::set_trap;
 pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot, first_move};
 pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, launch, sound, summon as summon_shot};
-pub(crate) use stuck::{from_storage as shot_from_storage, lying as lying_shots, unstick};
+pub(crate) use stuck::{from_storage as shot_from_storage, lying as lying_shots, shaking as shot_shaking, unstick};
 pub(crate) use attacks::{attacked, hit_from_near};
 pub(crate) use bees::{bees_in, hive_broken};
 pub(crate) use creaking::{heart_noticed, hearts_arrived};

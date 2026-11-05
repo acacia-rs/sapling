@@ -76,6 +76,7 @@ impl Shard {
             chunks::poll_and_relight_worlds,
             actors::arrive,
             movement::player_input,
+            movement::crawl,
             border::keep_inside,
             chunks::send_chunks,
             chunks::sub_chunk_requests,

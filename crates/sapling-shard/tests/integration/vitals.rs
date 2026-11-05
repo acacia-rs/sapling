@@ -149,7 +149,8 @@ fn a_hungry_player_eats_the_apple_in_its_hand_in_32_ticks() {
     assert!(all::<CompletedUsingItem>(h.tick_all().to(1)).is_empty(), "a full hunger eats nothing");
     (0..330).for_each(|_| drop(h.tick_all()));
     h.receive(1, &click);
-    let sent: Vec<RawPacket> = (0..33).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    // The burp comes the tick after the eating, as BDS's (bds-foods3.txt).
+    let sent: Vec<RawPacket> = (0..34).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     assert!(all::<CompletedUsingItem>(&sent).iter().all(|used| used.used_item_id > 100), "the item, not its stack");
     assert_eq!((all::<CompletedUsingItem>(&sent).len(), all::<LevelSoundEvent>(&sent).iter().filter(|sound| sound.sound_id == "burp").count()), (1, 1));
     let fed = |name: &str| all::<UpdateAttributes>(&sent).iter().flat_map(|update| &update.attributes).filter(|attribute| attribute.name == name).map(|attribute| attribute.current).next_back();

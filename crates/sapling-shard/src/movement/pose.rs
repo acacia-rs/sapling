@@ -47,7 +47,7 @@ impl Pose {
         flags
     }
 
-    fn height(self) -> f32 {
+    pub(super) fn height(self) -> f32 {
         match self {
             _ if self.gliding => GLIDING_HEIGHT,
             _ if self.sneaking => SNEAKING_HEIGHT,

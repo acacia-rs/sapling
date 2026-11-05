@@ -1,6 +1,6 @@
 //! A chorus fruit eaten sends its eater somewhere near, as BDS did (research/captures/bds-foods2.txt):
-//! a MovePlayer of cause `ChorusFruit` before the use is complete, then `teleport` heard at the
-//! eyes where it was and where it came. The spot is the Java game's: 16 tries in the box 8 about
+//! a MovePlayer of cause `ChorusFruit` before the use is complete, then, the tick after, `teleport`
+//! heard at the eyes where it was and where it came. The spot is the Java game's: 16 tries in the box 8 about
 //! the feet, each let down onto the first block below.
 
 use acacia_proto::packets::{LevelSoundEvent, MovePlayerTeleportCause};
@@ -8,7 +8,6 @@ use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
-use super::tell;
 use crate::blocks::Dice;
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position};
@@ -36,6 +35,7 @@ pub(super) fn scatter(world: &mut World, player: Entity) {
     crate::movement::teleport_as(world, player, to, MovePlayerTeleportCause::ChorusFruit, &[SOURCE]);
     for [x, y, z] in [from, to] {
         let position = Vec3f { x, y: y + EYE_HEIGHT, z };
-        tell(world, player, &LevelSoundEvent { sound_id: "teleport".into(), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None });
+        let sound = LevelSoundEvent { sound_id: "teleport".into(), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+        crate::late_sounds::play_later(world, 1, layer, [x, y, z].map(|c| c.floor() as i32), sapling_net::encode(&sound));
     }
 }

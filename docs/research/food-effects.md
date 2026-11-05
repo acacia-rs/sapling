@@ -88,7 +88,9 @@ Drilled 2026-10-29 (`research/captures/bds-foods.txt`, `bds-foods2.txt`, `bds-fo
   after a potion, and every attribute as a potion or milk was started, which BDS did not
   (bds-drink.txt, bds-sick.txt). Fixed 2026-11-05: a food that feeds nothing tells no attributes
   (`vitals/eating.rs` `feeds`), and the fruit scatters after the eating is told, the cooldown
-  told at the start only. The teleport still comes in the eating tick, not the next.
+  told at the start only. Fixed 2026-11-05 (thirteenth wave): the fruit's MovePlayer comes before
+  `CompletedUsingItem`, its teleport sounds the tick after, and every food's burp a tick after the
+  eating is told (bds-foods3.txt); a stack eaten from keeps the rest under a new stack id.
 
 ## Splash and lingering potions (`clouds`, `clouds2`)
 

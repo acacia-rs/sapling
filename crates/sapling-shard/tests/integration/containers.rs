@@ -183,6 +183,24 @@ fn chest_entity([x, y, z]: [i32; 3], partner: [i32; 3], leads: bool) -> Value {
 }
 
 #[test]
+fn a_stored_double_chest_opens_its_54_slots_at_the_lead_from_either_half() {
+    // containers-crafting.md B: BDS opens the pair at its lead half.
+    let chest = Block::new("minecraft:chest").with("minecraft:cardinal_direction=north");
+    let mut h = setup(false, Vec::new(), vec![(HERE, chest.clone()), (THERE, chest)]);
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block_entity(HERE, &sapling_api::BlockEntityData::new(chest_entity(HERE, THERE, true))));
+        assert!(ctx.set_block_entity(THERE, &sapling_api::BlockEntityData::new(chest_entity(THERE, HERE, false))));
+    });
+    h.tick_all();
+    h.receive(1, &click(THERE, 1, None));
+    let sent = h.tick_all().to(1).to_vec();
+    let opened = all::<ContainerOpen>(&sent).pop().expect("it opens");
+    assert_eq!([opened.coordinates.x, opened.coordinates.y, opened.coordinates.z], HERE);
+    let shown = all::<InventoryContent>(&sent).into_iter().find(|content| content.window_id.to_raw() == opened.window_id.to_raw()).expect("its slots");
+    assert_eq!(shown.input.len(), 54);
+}
+
+#[test]
 fn a_chest_whose_other_half_is_set_away_stands_alone_a_tick_later() {
     // research/captures/bds-t3chests.txt: the half left shown again, without its pair, a tick on.
     let chest = Block::new("minecraft:chest").with("minecraft:cardinal_direction=north");

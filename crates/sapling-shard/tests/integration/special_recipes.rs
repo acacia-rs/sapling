@@ -26,12 +26,12 @@ const BOOK_CLONING: &str = "d1ca6b84-338e-4f2f-9c6b-76cc8b4bd98d";
 const EXTENDING: &str = "d392b075-4ba1-40ae-8789-af868d56f6ce";
 const REPAIR: &str = "00000000-0000-0000-0000-000000000001";
 
-fn stack(name: &str, count: u8, damage: i16, tag: Option<Value>) -> Option<ItemStack> {
+pub(crate) fn stack(name: &str, count: u8, damage: i16, tag: Option<Value>) -> Option<ItemStack> {
     Some(ItemStack { name: name.into(), count, damage, block: None, tag })
 }
 
 /// Steve holding `main`, next to a crafting table, its screen open if `at_table`.
-fn steve(main: Vec<Option<ItemStack>>, at_table: bool) -> (Harness, Arc<MemoryStorage>) {
+pub(crate) fn steve(main: Vec<Option<ItemStack>>, at_table: bool) -> (Harness, Arc<MemoryStorage>) {
     let storage = floor_holding(Vec::new(), &[(TABLE, "minecraft:crafting_table")]);
     storage.store_player(&acacia_auth::login::offline_identity("Steve"), &PlayerData { main, ..PlayerData::default() }).unwrap();
     let mut h = Harness::with(config(), World::with_storage(storage.clone()));
@@ -44,7 +44,7 @@ fn steve(main: Vec<Option<ItemStack>>, at_table: bool) -> (Harness, Arc<MemorySt
     (h, storage)
 }
 
-fn kept(mut h: Harness, storage: &MemoryStorage) -> PlayerData {
+pub(crate) fn kept(mut h: Harness, storage: &MemoryStorage) -> PlayerData {
     h.leave(1);
     h.shard.tick();
     h.shard.save_worlds();
@@ -52,7 +52,7 @@ fn kept(mut h: Harness, storage: &MemoryStorage) -> PlayerData {
 }
 
 /// Lays hotbar slot `from` into grid slot `cell`, one item.
-fn lay(h: &mut Harness, from: u8, cell: u8) {
+pub(crate) fn lay(h: &mut Harness, from: u8, cell: u8) {
     h.receive(1, &request(-1, vec![place(1, slot(Container::Hotbar, from, 0), slot(Container::CraftingInput, cell, 0))]));
     assert_eq!(answer(&h.tick(1)).0, Status::Ok);
 }

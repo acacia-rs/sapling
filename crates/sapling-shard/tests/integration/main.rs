@@ -52,6 +52,7 @@ mod fireworks;
 mod books;
 mod generated_ticks;
 mod gliding;
+mod grid_crafts;
 mod instruments;
 mod item_buckets;
 mod fishing;

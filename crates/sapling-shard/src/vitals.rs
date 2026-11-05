@@ -2,8 +2,7 @@
 //! from it each tick, by the rules mobs are hurt by (creatures/health.rs), told as BDS tells a
 //! player's (docs/research/player-damage.md). Dying and rising: death.rs; mending and
 //! starving: hunger.rs; effects: effects.rs.
-// TODO: a block over the head alone does not
-// make a player crawl; the breathing flag is not told.
+// TODO: the breathing flag is not told. Crawling under a block: movement/crawl.rs.
 
 pub(crate) mod boost;
 mod chorus;
@@ -13,7 +12,7 @@ pub(crate) mod effects;
 pub(crate) mod frost;
 pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, give as give_effect, give_ambient, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, set_alight, shot, thorned, winded};
+pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, resists_all, set_alight, shot, thorned, winded};
 mod hazards;
 mod hunger;
 mod kept;
@@ -28,7 +27,7 @@ mod struck;
 pub(crate) mod told_all;
 mod totem;
 pub(crate) use shield::{blocks, thrown_back, wields_axe};
-pub(crate) use stand::{break_fall, fallen, falls_freely};
+pub(crate) use stand::{break_fall, breathes_water, fallen, falls_freely};
 #[cfg(test)]
 pub(crate) use splashed::shared_strength;
 pub(crate) use splashed::{clouded, health_left, is_under, splashed};

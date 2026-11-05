@@ -139,6 +139,9 @@ and a flat world locates no stronghold); sapling's side on `drill_server` with `
   values equal BDS's bit for bit (sapling-eye-throw.txt). Every move is told, on_ground true, the last not.
 - End (`normalTick` 142fa0450), on the 81st tick: kept, RemoveEntity and an `ender_eye` item tossed up at the
   eye (y + 0.125, 0.2 up); broken, LevelEvent 2003 (data 10) and 1041 at the eye, RemoveEntity the tick after.
+  The kept eye's RemoveEntity comes before the item's AddItemEntity in the same tick, and each throw
+  leaves the rest of the stack under a new stack id (bds-eye-throw.txt: 1, 2, 3); the toss is random on
+  both. Sapling matches since 2026-11-05 (`mobs/gone.rs`, `inventory/wear.rs` `take_one_in_hand`).
 - Turning (fixed 2026-11-05, twelfth wave): each tick, before the motion turns, pitch and yaw go a fifth
   of the way (wrapped to +-180) to atan2(motion y, motion z) and atan2(motion x, motion z), x 57.295776
   (14469ee30; the pitch over z, not the horizontal length, is BDS's). Told as every entity's turn is

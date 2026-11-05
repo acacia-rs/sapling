@@ -12,6 +12,7 @@ use super::{Vitals, effects, is_mortal, tell};
 use crate::blocks::Dice;
 use crate::components::{InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick};
 use crate::inventory::{self, Inventory};
+use crate::late_sounds;
 use crate::movement::{self, Motion};
 
 /// A burp is heard from this far under the eyes.
@@ -154,7 +155,10 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
         (false, _) => CompletedUsingItemUseMethod::Eat,
     };
     let used = CompletedUsingItem { used_item_id: meal.id, use_method };
-    let chorus = holds_chorus(world, player);
+    // Chorus fruit's cooldown was told as it started; BDS's MovePlayer comes before the eating is told (bds-foods2.txt, bds-foods3.txt).
+    if holds_chorus(world, player) {
+        super::chorus::scatter(world, player);
+    }
     // BDS tells the effects first.
     afflict(world, player, &meal.food);
     world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&used);
@@ -168,17 +172,16 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
         tell(world, player, &hunger.told(id, now));
     }
     show(world, player, false);
-    // Chorus fruit's cooldown was told as it started; it scatters after the eating is told (bds-foods2.txt).
-    if chorus {
-        super::chorus::scatter(world, player);
-    }
-    let Some([x, y, z]) = world.get::<Position>(player).map(|position| position.feet) else { return };
+    let (Some(feet), Some(layer)) = (world.get::<Position>(player).map(|position| position.feet), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
     if meal.food.drunk {
         drained(world, player, meal.food.ominous);
         return;
     }
+    // BDS's burp comes the tick after the eating is told (bds-foods3.txt, bds-small.txt).
+    let [x, y, z] = feet;
     let position = Vec3f { x, y: y + EYE_HEIGHT - MOUTH, z };
-    tell(world, player, &LevelSoundEvent { sound_id: "burp".into(), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None });
+    let burp = LevelSoundEvent { sound_id: "burp".into(), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    late_sounds::play_later(world, 1, layer, feet.map(|c| c.floor() as i32), sapling_net::encode(&burp));
 }
 
 /// A tick of every meal: the client's bites are shown to those who see it, a meal whose food

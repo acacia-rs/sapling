@@ -3,6 +3,7 @@
 // TODO: corrections from the server's own step (simulation.rs observes only); until then only
 // teleport-sized steps are refused.
 
+mod crawl;
 mod placing;
 mod pose;
 mod wet;
@@ -22,6 +23,7 @@ use crate::riding::{Reins, Riding};
 use crate::simulation::{self, Own, Ruling, Simulated};
 use crate::visibility::ToViewers;
 use crate::vitals::Vitals;
+pub(crate) use crawl::crawl;
 pub(crate) use placing::{correct, correct_unmoving, push, reset, teleport, teleport_as, teleport_onto_ground};
 pub(crate) use pose::{Pose, pose_packet, whole_packet};
 
