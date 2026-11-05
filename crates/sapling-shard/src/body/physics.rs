@@ -53,6 +53,8 @@ impl Physics {
     /// A ghast, which nothing pulls down and which keeps 0.91 of its speed every way
     /// (research/captures/bds-ghast-findings.md).
     pub const FLYER: Physics = Physics { gravity: 0.0, air_drag: 0.91, fall_drag: 0.91, ground_drag: 0.91, ..Physics::MOB };
+    /// A wither, which keeps 0.91 of its speed across; its rise and fall are its own (creatures/wither/flight.rs).
+    pub const WITHER: Physics = Physics { fall_drag: 1.0, ..Physics::FLYER };
     /// A dolphin, which swims in water and is a mob out of it (research/captures/bds-dolphin-findings.md).
     pub const SWIMMER: Physics = Physics { liquid: InLiquid::Swims, ..Physics::MOB };
     /// A fish, which out of water falls 0.1 a tick faster, keeps all of its fall and keeps 0.91 of

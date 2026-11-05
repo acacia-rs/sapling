@@ -9,6 +9,7 @@
 
 mod dash;
 mod dying;
+mod flight;
 mod heads;
 mod skulls;
 mod wreck;
@@ -50,10 +51,6 @@ const BAR_REACH: f32 = 55.0;
 const LONELY: f32 = 50.0;
 const SECOND: u64 = 20;
 const TITLE: &str = "entity.wither.name";
-/// It flies at its prey at this speed across, keeping off it this far across and this far over it.
-const SPEED: f32 = 0.3;
-const KEEPS_OFF: f32 = 3.0;
-const KEEPS_OVER: f32 = 5.0;
 
 /// A wither's own state.
 #[derive(Component, Default)]
@@ -160,7 +157,12 @@ fn tell(world: &mut World, wither: Entity, layer: Entity, items: Vec<(Key, Plain
 fn blow_up(world: &mut World, wither: Entity, layer: Entity, at: [f32; 3]) {
     let griefs = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING));
     world.entity_mut(wither).insert(Blasting);
+    let still = world.get::<Body>(wither).copied();
     blast::explode(world, None, layer, at, BLAST, if griefs { blast::Wreck::Decays } else { blast::Wreck::Nothing });
+    // Nor does it throw it: BDS's rose 0.3 the tick after its charge's blast (bds-m3wither.txt 30083).
+    if let (Some(still), Some(mut body)) = (still, world.get_mut::<Body>(wither)) {
+        *body = still;
+    }
     world.entity_mut(wither).remove::<Blasting>();
 }
 
@@ -202,23 +204,11 @@ fn armour(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
     }
 }
 
-/// Flies at its prey's head height and over, closing in across till it is near.
-fn fly(world: &mut World, wither: Entity, body: &Body, prey: Option<[f32; 3]>) {
-    let Some(mut moving) = world.get_mut::<Body>(wither) else { return };
-    let [mut x, mut y, mut z] = [moving.motion[0], moving.motion[1] * 0.6, moving.motion[2]];
-    if let Some(prey) = prey {
-        if body.at[1] < prey[1] + KEEPS_OVER {
-            y = y.max(0.0);
-            y += SPEED - y * 0.6;
-        }
-        let across = [prey[0] - body.at[0], prey[2] - body.at[2]];
-        let long = across[0].hypot(across[1]);
-        if long > KEEPS_OFF {
-            x += across[0] / long * SPEED - x * 0.6;
-            z += across[1] / long * SPEED - z * 0.6;
-        }
+/// Sets its speed up or down for this tick's move.
+fn lift(world: &mut World, wither: Entity, rise: f32) {
+    if let Some(mut moving) = world.get_mut::<Body>(wither) {
+        moving.motion[1] = rise;
     }
-    moving.motion = [x, y, z];
 }
 
 /// Before its move: charging, stunned or hunting. Whether it is a wither.
@@ -237,17 +227,26 @@ pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
         if let Some(mut kept) = world.get_mut::<Wither>(wither) {
             kept.stunned -= 1;
         }
+        let falls = flight::rise(world, &body, None, true);
+        lift(world, wither, falls);
         return true;
     }
-    let prey = heads::prey(world, wither, layer, &body).map(|(_, feet)| feet);
+    let armoured = world.get::<Wither>(wither).is_some_and(|kept| kept.armoured);
+    let hunted = heads::prey(world, wither, layer, &body);
+    let rise = flight::rise(world, &body, hunted, armoured);
+    let prey = hunted.map(|(_, feet)| feet);
     let mut dash = world.get_mut::<Wither>(wither).map(|mut kept| std::mem::take(&mut kept.dash)).unwrap_or_default();
     let dashing = dash::steer(world, wither, layer, &mut dash, &body, prey);
     if let Some(mut kept) = world.get_mut::<Wither>(wither) {
         kept.dash = dash;
     }
     if !dashing {
-        fly(world, wither, &body, prey);
+        let [x, z] = flight::close_in(&body, prey);
+        if let Some(mut moving) = world.get_mut::<Body>(wither) {
+            (moving.motion[0], moving.motion[2]) = (x, z);
+        }
     }
+    lift(world, wither, rise);
     heads::tick(world, wither, layer, &body);
     true
 }

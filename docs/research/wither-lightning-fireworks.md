@@ -43,7 +43,16 @@ Code: `crates/sapling-shard/src/lightning.rs`, `lightning/{storms,rods}.rs`, `cr
   middle of the rod's own cell at the rod's y (0.5, -26, -5.5 for a rod at 0, -26, -6), the rod powered,
   one spark, no `item.trident.thunder`. Sapling does so (`lightning.rs` `call_down`, `channel_to_rod`;
   tests `a_bolt_takes_away_the_items_and_orbs_in_reach_netherite_too`,
-  `a_channeling_trident_on_a_rod_calls_a_bolt_onto_it_in_a_storm`) but shows a rod's six sparks.
+  `a_channeling_trident_on_a_rod_calls_a_bolt_onto_it_in_a_storm`).
+- **Sparks, drilled** (2026-11-05, `o3rod`, research/captures/bds-o3rod.txt): a bolt in a rod's cell
+  gave 1 spark, one block over it 3 to 7, two over none. Each block the hook and the copper walks
+  land on that hooks sparks once at its corner, in the bolt's `AddEntity` tick: the rod always
+  (waxed too), copper only if its stage was above 0. A storm's bolt drawn to a rod goes into the
+  rod's own cell (bds-m3rod.txt 38781). Sapling: `blocks/copper.rs` `hooks`, `blocks/rods.rs`
+  `sparks`/`struck`; tests `a_bolt_in_a_rods_cell_sparks_once_powers_it_eight_ticks_and_scrapes_the_copper_it_stands_on`,
+  `a_bolt_over_a_rod_powers_it_with_a_spark_for_each_of_its_walks_calls`.
+- **Bolt life, drilled** (`o3rod`): 13 bolts lived 10 to 32 ticks, median 19; the rule above,
+  simulated, gives 8 to 41, median 19. Sapling follows the rule.
 
 Unverified: an unwaxed rod that is oxidised seems to be scraped instead of powered (its vtable's
 slot 16 jumps to the copper routine; not tried live); the `Animal` kinds sapling lists; the sky
@@ -123,8 +132,14 @@ bot's last skull went astray (`nothing to place against`), so the rule for them 
 what was seen: a T lying with its skulls along z stands its wither a block further east than the corner
 rule (`summoning::lying_east`, test `a_t_lying_with_its_skulls_along_z_calls_it_two_and_a_half_east_of_them`);
 a T lying with its skulls along x keeps the corner rule, not drilled.
-Unverified: the bar's title (`entity.wither.name` here); the side heads' wait between idle looks (Java's 10 + rand 10); aiming at the target's eyes
-less 0.5; its flight (Java's way of keeping 5 over its prey at 0.3 a tick; BDS sets movement 0.6).
+Drilled (`o3wither`, research/captures/bds-o3wither.txt): the bar's title is `entity.wither.name`, as
+sapling's. Its flight, fitted tick by tick: v = (v − 0.08)·0.98·0.6; while under its prey's height
++ 5 (its height alone once armoured), v = max(v, 0) + 0.3 − 0.6·max(v, 0); a player's height is its
+eyes, a mob's its feet. It settles rising 0.3677 a tick and bobs 0.3, 0.1294, 0.029; its own
+charge's blast does not throw it. Sapling: `creatures/wither/flight.rs`, test
+`it_rises_to_five_over_its_preys_eyes_and_bobs_there`. Unverified: the side heads' wait between idle
+looks (Java's 10 + rand 10); aiming at the target's eyes less 0.5 (skulls passed the actor between
+-25.6 and -23.9, its eyes at -24.4, too spread by knockback and two targets to tell).
 Its 200-tick death is built as BDS's in `witherdeath` (research/captures/bds-witherdeath.txt,
 creatures/wither/dying.rs): `WitherInvulnerableTicks` 199 down to 1; `WitherAerialAttack` (a Short)
 flips at 15 ticks and then whenever the last gap less one divides the tick (28, 39, 48, 55, 60, 63,
@@ -168,8 +183,8 @@ is a sixth of `maxHealth` (75) and `lastHealthInterval` starts at `maxHealth`; t
 stayed 80 to 120 ticks whatever the rate. Saved: `ShieldHealth` 30 always, `firerate` and
 `lastHealthInterval` as they stood (20 and 450 unhurt), `Phase` 1 until armoured, then 0. Sapling does the
 same (`wither/heads.rs` `Rate`; sapling-leveldb actor_state.rs `WitherRecord`; test
-`off_easy_each_sixth_of_its_health_lost_halves_its_fire_rate_and_is_saved`). Seen, not fixed: sapling's
-wither hovered higher (skulls from y -6 against BDS's -16 to -18 over the actor at -26).
+`off_easy_each_sixth_of_its_health_lost_halves_its_fire_rate_and_is_saved`). Sapling's wither hovered
+higher (skulls from y -6 against BDS's -16 to -18 over the actor at -26); fixed by the flight above.
 
 ## Fireworks
 

@@ -1,8 +1,8 @@
 //! Copper's four stages of weathering and its wax, read off and written into a block's name, for
 //! the axe, honeycomb, the random tick (growth/copper.rs) and lightning (docs/research/copper.md).
 
-use acacia_proto::packets::{LevelEvent, LevelEventEvent};
-use acacia_proto::types::Vec3f;
+use std::collections::HashMap;
+
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 use sapling_world::BlockRegistry;
@@ -11,6 +11,7 @@ use super::{Dice, doors, level, send};
 
 /// Cells a lightning walk tries for its next step before it ends.
 const WALK_TRIES: usize = 10;
+const ROD: &str = "lightning_rod";
 
 const STAGES: [&str; 4] = ["", "exposed_", "weathered_", "oxidized_"];
 pub(crate) const OXIDIZED: usize = 3;
@@ -90,37 +91,66 @@ fn copper_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<Copper
     of_state(level.registry(), level.block(x, y, z))
 }
 
-/// Unwaxed copper at `pos` goes back one stage, with sparks unless it is a rod; whether it is
-/// unwaxed copper at all (BDS 148b39420, 148b5c410).
-fn spark(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    let Some(copper) = copper_at(world, layer, pos).filter(|copper| !copper.waxed) else { return false };
-    if copper.stage > 0 && turn(world, layer, pos, Copper { stage: copper.stage - 1, ..copper }) && copper.base != "lightning_rod" {
-        let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
-        let sparks = LevelEvent { event: LevelEventEvent::ParticleElectricSpark, position, data: 0 };
-        send::to_viewers(world, layer, pos, &[sapling_net::encode(&sparks)]);
+/// Whether lightning's hook does something at `at`, a stage it loses counted in `stages`: a rod is
+/// powered whatever its stage or wax, other unwaxed copper while it has a stage to lose; each shows a
+/// spark (BDS 148b39420, 148b5c410 by way of the rod's hit 148b5b4f0).
+fn hooks_at(world: &World, layer: Entity, at: BlockPos, stages: &mut HashMap<BlockPos, usize>) -> bool {
+    let Some(copper) = copper_at(world, layer, at) else { return false };
+    let rod = copper.base == ROD;
+    if copper.waxed {
+        return rod;
     }
-    true
+    let stage = stages.entry(at).or_insert(copper.stage);
+    let had = *stage > 0;
+    *stage = stage.saturating_sub(1);
+    rod || had
 }
 
-/// Lightning's hook, for the bolt's cell `pos` and the block a rod there stands on, `start`: each
-/// loses a stage, then 3 to 5 walks from `start` clean copper around it (docs/research/copper.md, L1-L5).
-pub(crate) fn struck(world: &mut World, layer: Entity, pos: BlockPos, start: BlockPos) {
-    spark(world, layer, pos);
+/// Lightning's hook calls for a bolt in `cell`, rolled now (docs/research/copper.md, L3-L5): `cell`
+/// itself, then, if `start` is unwaxed copper, 3 to 5 walks from it, each hooking it and stepping up
+/// to 1 to 8 times onto unwaxed copper about. The cells hooked, a cell once for each call.
+pub(crate) fn hooks(world: &mut World, layer: Entity, cell: BlockPos, start: BlockPos) -> Vec<BlockPos> {
+    let mut stages = HashMap::new();
+    let mut hooked: Vec<BlockPos> = Vec::new();
+    let mut call = |world: &World, at: BlockPos, stages: &mut HashMap<BlockPos, usize>| {
+        if hooks_at(world, layer, at, stages) {
+            hooked.push(at);
+        }
+    };
+    call(world, cell, &mut stages);
     if !copper_at(world, layer, start).is_some_and(|copper| !copper.waxed) {
-        return;
+        return hooked;
     }
     let walks = 3 + world.get_resource_or_insert_with(Dice::default).roll(3);
     for _ in 0..walks {
-        spark(world, layer, start);
+        call(world, start, &mut stages);
         let steps = 1 + world.get_resource_or_insert_with(Dice::default).roll(8);
         let mut at = start;
         for _ in 0..steps {
-            let mut tries = (0..WALK_TRIES).map(|_| neighbour(world, at)).collect::<Vec<_>>().into_iter();
-            let Some(next) = tries.find(|cell| copper_at(world, layer, *cell).is_some_and(|copper| !copper.waxed)) else { break };
-            spark(world, layer, next);
+            let mut next = None;
+            for _ in 0..WALK_TRIES {
+                let tried = neighbour(world, at);
+                if copper_at(world, layer, tried).is_some_and(|copper| !copper.waxed) {
+                    next = Some(tried);
+                    break;
+                }
+            }
+            let Some(next) = next else { break };
+            call(world, next, &mut stages);
             at = next;
         }
     }
+    hooked
+}
+
+/// A hook call coming down on `pos`: unwaxed copper there loses a stage, quietly (its spark was shown
+/// with [`hooks`]); whether it is a rod, to be powered.
+pub(crate) fn hooked(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let Some(copper) = copper_at(world, layer, pos) else { return false };
+    if !copper.waxed && copper.stage > 0 {
+        turn(world, layer, pos, Copper { stage: copper.stage - 1, ..copper });
+    }
+    copper.base == ROD
 }
 
 /// A cell at most one off `at` along each axis, drawn x, y then z.

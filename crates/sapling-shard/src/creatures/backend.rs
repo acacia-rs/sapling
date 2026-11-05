@@ -58,7 +58,7 @@ impl EntityBackend for Ctx<'_> {
             return Some(EntityId(self.world.get::<NetId>(primed)?.0));
         }
         if kind == crate::lightning::KIND {
-            let bolt = crate::lightning::call_down(self.world, layer, feet, true, None)?;
+            let bolt = crate::lightning::call_down(self.world, layer, feet, true)?;
             return Some(EntityId(self.world.get::<NetId>(bolt)?.0));
         }
         if crate::vehicles::is_vehicle(kind) {

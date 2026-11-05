@@ -194,6 +194,25 @@ fn armoured_it_dashes_straight_at_its_prey_and_through() {
     assert!(fast.windows(2).all(|pair| pair[1] == pair[0] + 1) && (195..=199).contains(&fast[0]), "{fast:?}");
 }
 
+/// Against research/captures/bds-m3wither.txt: 0.3 then up to 0.3677 a tick, then bobbing about 5 over the eyes.
+#[test]
+fn it_rises_to_five_over_its_preys_eyes_and_bobs_there() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Normal));
+    let id = ask(&mut h, |ctx| ctx.spawn_entity(WITHER, [0.5, 65.0, 12.5]).unwrap());
+    h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, sapling_api::Effect::Resistance, 1000, 4, false)));
+    watch(&mut h, CHARGE - 10);
+    let eyes = ask(&mut h, |ctx| ctx.position(ALEX).unwrap().feet[1]) + 1.62;
+    let ys: Vec<f32> = (0..130).map(|_| ask(&mut h, move |ctx| ctx.entity(id).map_or(0.0, |wither| wither.feet[1]))).collect();
+    let steps: Vec<f32> = ys.windows(2).map(|pair| pair[1] - pair[0]).collect();
+    let first = steps.iter().position(|step| *step > 0.0).expect("it rises");
+    assert!((steps[first] - 0.3).abs() < 1e-3 && (steps[first + 4] - 0.3675).abs() < 2e-3, "{steps:?}");
+    // BDS's bob under the mark: 0.3, then 0.1294 and 0.029 as gravity takes it (bds-m3wither.txt 31483-31584).
+    assert!(steps.windows(3).any(|three| (three[0] - 0.3).abs() < 1e-3 && (three[1] - 0.1294).abs() < 1e-3 && (three[2] - 0.029).abs() < 1e-3), "{steps:?}");
+    assert!(ys[70..].iter().all(|y| (y - (eyes + 5.0)).abs() < 0.6), "{ys:?} over {eyes}");
+}
+
 #[test]
 fn its_heads_shoot_skulls_at_a_player_in_sight() {
     let mut h = Harness::new();

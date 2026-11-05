@@ -94,23 +94,46 @@ fn a_pig_becomes_a_zombified_piglin_and_a_creeper_is_charged_unhurt() {
     assert!(powered, "the creeper is told it is charged");
 }
 
-#[test]
-fn a_struck_rod_is_powered_eight_ticks_and_scrapes_the_copper_it_stands_on() {
-    let mut h = ready(Difficulty::Normal);
-    h.remote.run(|ctx| {
-        ctx.set_block([3, 64, 3], &Block::new("minecraft:oxidized_copper"));
+/// A rod on `under` at 3 65 3 and a bolt summoned at `bolt`; the sparks at the rod's corner.
+fn rod_struck(h: &mut Harness, under: &'static str, bolt: [f32; 3]) -> usize {
+    h.remote.run(move |ctx| {
+        ctx.set_block([3, 64, 3], &Block::new(under));
         ctx.set_block([3, 65, 3], &Block::new("minecraft:lightning_rod").with("facing_direction=1,powered_bit=0"));
-        // On the rod's top: a bolt strikes the block under it (research/captures/bds-rsdevices.txt).
-        ctx.spawn_entity(BOLT, [3.5, 66.0, 3.5]);
+        ctx.spawn_entity(BOLT, bolt);
     });
-    let sparks = all::<LevelEvent>(&watch(&mut h, 1)).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [3.0, 65.0, 3.0]).count();
-    assert_eq!(sparks, 6, "BDS's sparks at the rod's corner");
-    // The rod powered a tick after the sparks, as the bolt landed (bds-rsdevices.txt 69133, 69180).
+    all::<LevelEvent>(&watch(h, 1)).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [3.0, 65.0, 3.0]).count()
+}
+
+fn powered(h: &mut Harness) -> bool {
+    let rod = ask(h, |ctx| ctx.block([3, 65, 3]).unwrap());
+    rod.name == "minecraft:lightning_rod" && rod.properties.contains("powered_bit=1")
+}
+
+#[test]
+fn a_bolt_in_a_rods_cell_sparks_once_powers_it_eight_ticks_and_scrapes_the_copper_it_stands_on() {
+    // research/captures/bds-o3rod.txt: one spark as it appears, the rod powered as it lands a tick on.
+    let mut h = ready(Difficulty::Easy);
+    assert_eq!(rod_struck(&mut h, "minecraft:stone", [3.5, 65.0, 3.5]), 1);
     watch(&mut h, 1);
-    let rod = ask(&mut h, |ctx| ctx.block([3, 65, 3]).unwrap());
-    assert!(rod.name == "minecraft:lightning_rod" && rod.properties.contains("powered_bit=1"), "{rod:?}");
-    let copper = ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name);
-    assert_ne!(copper, "minecraft:oxidized_copper", "scraped at least a stage");
+    assert!(powered(&mut h));
     watch(&mut h, 8);
-    assert!(ask(&mut h, |ctx| ctx.block([3, 65, 3]).unwrap()).properties.contains("powered_bit=0"));
+    assert!(!powered(&mut h));
+    assert!(rod_struck(&mut h, "minecraft:oxidized_copper", [3.5, 65.0, 3.5]) >= 1);
+    watch(&mut h, 1);
+    let copper = ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name);
+    assert_eq!(copper, "minecraft:copper_block", "3 to 5 walks from the rod's support, a stage each");
+}
+
+#[test]
+fn a_bolt_over_a_rod_powers_it_with_a_spark_for_each_of_its_walks_calls() {
+    // research/captures/bds-o3rod.txt, bds-rsdevices.txt: 7, 3, 3, 6 and 6 sparks; none from two over.
+    let mut h = ready(Difficulty::Easy);
+    let sparks = rod_struck(&mut h, "minecraft:stone", [3.5, 66.0, 3.5]);
+    assert!(sparks >= 3, "{sparks}");
+    watch(&mut h, 1);
+    assert!(powered(&mut h));
+    watch(&mut h, 10);
+    assert_eq!(rod_struck(&mut h, "minecraft:stone", [3.5, 67.0, 3.5]), 0);
+    watch(&mut h, 1);
+    assert!(!powered(&mut h));
 }

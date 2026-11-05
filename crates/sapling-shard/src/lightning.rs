@@ -14,7 +14,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Difficulty};
 use sapling_data::AddEntityOptions;
 
-use crate::blocks::Dice;
+use crate::blocks::{Dice, LightningStrike};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::{entities, mobs, vitals};
@@ -34,16 +34,20 @@ pub(crate) const BURNS: u16 = 160;
 const MORE_FIRES: usize = 4;
 const FIRE_RULE: &str = "doFireTick";
 
-/// A bolt: its life, the flashes it has left, whether it hurts, and the block it is still to land
-/// on (`call_down`) in a tick after the one it was `born` in.
+/// A bolt: its life, the flashes it has left, whether it hurts, and whether it is still to land
+/// (`call_down`) in a tick after the one it was `born` in.
 #[derive(Component, Clone, Copy)]
 struct Bolt {
     life: i32,
     flashes: u32,
     harms: bool,
-    lands: Option<BlockPos>,
+    lands: bool,
     born: u64,
 }
+
+/// What a bolt still to land will do to the blocks about it.
+#[derive(Component)]
+struct Lands(LightningStrike);
 
 fn sound(name: &str, [x, y, z]: [f32; 3]) -> bytes::Bytes {
     let sound = LevelSoundEvent { sound_id: name.into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: KIND.into(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
@@ -59,23 +63,22 @@ pub(crate) fn thunders(world: &World, layer: Entity) -> bool {
 /// A storm's bolt comes down on `at` in `layer` and lands at once, hurting where it reaches if it
 /// `harms`; the bolt.
 pub(crate) fn strike(world: &mut World, layer: Entity, at: [f32; 3], harms: bool) -> Option<Entity> {
-    let bolt = spawn(world, layer, at, harms, None)?;
-    crate::blocks::lightning_sparks(world, layer, under(at));
-    land(world, layer, bolt, at, under(at), harms);
+    let bolt = spawn(world, layer, at, harms, false)?;
+    let strike = crate::blocks::lightning_sparks(world, layer, cell(at));
+    land(world, layer, bolt, at, &strike, harms);
     Some(bolt)
 }
 
-/// A summoned or Channeling bolt: shown now with a rod's sparks, it lands on `struck` (by default the
-/// block under it) in its first tick, a tick later, as BDS's (research/captures/bds-m3struck.txt,
-/// bds-m3rod.txt, bds-rsdevices.txt).
-pub(crate) fn call_down(world: &mut World, layer: Entity, at: [f32; 3], harms: bool, struck: Option<BlockPos>) -> Option<Entity> {
-    let struck = struck.unwrap_or_else(|| under(at));
-    let bolt = spawn(world, layer, at, harms, Some(struck))?;
-    crate::blocks::lightning_sparks(world, layer, struck);
+/// A summoned or Channeling bolt: shown now with its sparks, it lands in its first tick, a tick later,
+/// as BDS's (research/captures/bds-m3struck.txt, bds-m3rod.txt, bds-rsdevices.txt, bds-o3rod.txt).
+pub(crate) fn call_down(world: &mut World, layer: Entity, at: [f32; 3], harms: bool) -> Option<Entity> {
+    let bolt = spawn(world, layer, at, harms, true)?;
+    let strike = crate::blocks::lightning_sparks(world, layer, cell(at));
+    world.entity_mut(bolt).insert(Lands(strike));
     Some(bolt)
 }
 
-fn spawn(world: &mut World, layer: Entity, at: [f32; 3], harms: bool, lands: Option<BlockPos>) -> Option<Entity> {
+fn spawn(world: &mut World, layer: Entity, at: [f32; 3], harms: bool, lands: bool) -> Option<Entity> {
     let announce = |id: u64| {
         let options = AddEntityOptions { id, identifier: KIND, feet: at, yaw: 0.0, pitch: 0.0, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1(0), health: None, name: "" };
         Some(vec![sapling_net::encode(&sapling_data::add_entity(&options))])
@@ -87,16 +90,16 @@ fn spawn(world: &mut World, layer: Entity, at: [f32; 3], harms: bool, lands: Opt
     Some(bolt)
 }
 
-/// The block under the bolt, as the Java game's `getStrikePosition`: one summoned on a rod's top
-/// powered it on BDS (research/captures/bds-rsdevices.txt).
-fn under(at: [f32; 3]) -> BlockPos {
-    [at[0].floor() as i32, (f64::from(at[1]) - 1e-6).floor() as i32, at[2].floor() as i32]
+/// The bolt's own cell, whose block its strike reaches first (docs/research/copper.md L3; a bolt in
+/// a rod's cell powers it, research/captures/bds-o3rod.txt).
+fn cell(at: [f32; 3]) -> BlockPos {
+    at.map(|c| c.floor() as i32)
 }
 
-fn land(world: &mut World, layer: Entity, bolt: Entity, at: [f32; 3], struck: BlockPos, harms: bool) {
-    let cell = at.map(|c| c.floor() as i32);
+fn land(world: &mut World, layer: Entity, bolt: Entity, at: [f32; 3], strike: &LightningStrike, harms: bool) {
+    let cell = cell(at);
     entities::tell_viewers(world, bolt, layer, cell, vec![sound("thunder", at), sound("explode", at)]);
-    crate::blocks::lightning_struck(world, layer, struck);
+    crate::blocks::lightning_struck(world, layer, strike);
     kindle(world, layer, cell, harms, MORE_FIRES);
     if harms {
         hurt(world, layer, at);
@@ -143,12 +146,13 @@ fn hurt(world: &mut World, layer: Entity, at: [f32; 3]) {
 /// A tick of a bolt: its life runs down, it flashes again while it has flashes, and goes.
 fn flash(world: &mut World, bolt: Entity, layer: Entity) -> Option<()> {
     let (Bolt { life, flashes, harms, lands, born }, at) = (*world.get::<Bolt>(bolt)?, world.get::<Body>(bolt)?.at);
-    if lands.is_some() && world.resource::<Tick>().0 <= born {
+    if lands && world.resource::<Tick>().0 <= born {
         return Some(());
     }
-    if let Some(struck) = lands {
-        world.get_mut::<Bolt>(bolt)?.lands = None;
-        land(world, layer, bolt, at, struck, harms);
+    if lands {
+        world.get_mut::<Bolt>(bolt)?.lands = false;
+        let strike = world.entity_mut(bolt).take::<Lands>().map(|lands| lands.0).unwrap_or_default();
+        land(world, layer, bolt, at, &strike, harms);
     }
     if life < 1 && flashes == 0 {
         mobs::remove(world, bolt);
@@ -160,7 +164,7 @@ fn flash(world: &mut World, bolt: Entity, layer: Entity) -> Option<()> {
         kindle(world, layer, at.map(|c| c.floor() as i32), harms, 0);
     }
     let next = if reflashes { (1, flashes - 1) } else { (life - 1, flashes) };
-    *world.get_mut::<Bolt>(bolt)? = Bolt { life: next.0, flashes: next.1, harms, lands: None, born };
+    *world.get_mut::<Bolt>(bolt)? = Bolt { life: next.0, flashes: next.1, harms, lands: false, born };
     Some(())
 }
 
@@ -169,7 +173,7 @@ fn flash(world: &mut World, bolt: Entity, layer: Entity) -> Option<()> {
 pub(crate) fn channel(world: &mut World, layer: Entity, feet: [f32; 3]) {
     let cell = feet.map(|c| c.floor() as i32);
     let at = cell.map(|c| c as f32);
-    if channel_at(world, layer, cell, at, None) {
+    if channel_at(world, layer, cell, at) {
         entities::after_announcing(world, layer, cell, vec![sound("item.trident.thunder", at)]);
     }
 }
@@ -179,13 +183,13 @@ pub(crate) fn channel(world: &mut World, layer: Entity, feet: [f32; 3]) {
 /// (research/captures/bds-m3rod.txt; `LightningRodBlock` slot 15, Linux 0xc538e10).
 pub(crate) fn channel_to_rod(world: &mut World, layer: Entity, rod: [i32; 3]) {
     let at = [rod[0] as f32 + 0.5, rod[1] as f32, rod[2] as f32 + 0.5];
-    channel_at(world, layer, [rod[0], rod[1] + 1, rod[2]], at, Some(rod));
+    channel_at(world, layer, [rod[0], rod[1] + 1, rod[2]], at);
 }
 
 /// Whether a bolt came down: while it thunders, with nothing above `sky`.
-fn channel_at(world: &mut World, layer: Entity, sky: [i32; 3], at: [f32; 3], struck: Option<BlockPos>) -> bool {
+fn channel_at(world: &mut World, layer: Entity, sky: [i32; 3], at: [f32; 3]) -> bool {
     let open = world.get::<Layer>(layer).is_some_and(|level| level.world.surface(sky[0], sky[2]).is_none_or(|top| top < sky[1]));
-    thunders(world, layer) && open && call_down(world, layer, at, true, struck).is_some()
+    thunders(world, layer) && open && call_down(world, layer, at, true).is_some()
 }
 
 /// Storms strike, bolts flash and go.
