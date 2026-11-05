@@ -35,6 +35,15 @@ Code: `crates/sapling-shard/src/lightning.rs`, `lightning/{storms,rods}.rs`, `cr
 - **Channeling** (ProjectileComponent `mChanneling` +0x1b9, 0x1423fe9f0): a trident that hits an
   entity while it thunders, the entity's column open, calls a bolt at floor(its position) and plays
   184 `item.trident.thunder`.
+- **Its first tick, drilled** (2026-11-05, thirteenth3m_drill.rs): a summoned bolt (`m3struck`,
+  bds-rsdevices.txt) or a Channeling one (`m3rod`, bds-t2efire.txt) is added with a rod's sparks, and
+  thunder, the strike, the harm and the rod's power come a tick later; a storm's bolt does it all in the
+  tick it appears. Every item (netherite and the nether star too) and orb in the hurting box went in the
+  strike tick, before the thunder (`m3struck`). A Channeling trident on a rod (`m3rod`): the bolt at the
+  middle of the rod's own cell at the rod's y (0.5, -26, -5.5 for a rod at 0, -26, -6), the rod powered,
+  one spark, no `item.trident.thunder`. Sapling does so (`lightning.rs` `call_down`, `channel_to_rod`;
+  tests `a_bolt_takes_away_the_items_and_orbs_in_reach_netherite_too`,
+  `a_channeling_trident_on_a_rod_calls_a_bolt_onto_it_in_a_storm`) but shows a rod's six sparks.
 
 Unverified: an unwaxed rod that is oxidised seems to be scraped instead of powered (its vtable's
 slot 16 jumps to the copper routine; not tried live); the `Animal` kinds sapling lists; the sky
@@ -64,10 +73,9 @@ told in its `AddEntity`, helmet then bow, then the link, as BDS. A stored trap k
 `minecraft:charged_creeper` group, shown charged again (tests in `kept_groups.rs`).
 A trident hitting a rod [D] (`LightningRodBlock` slot 15, `onProjectileHit`, Linux 0xc538e10, the
 slot the target, bell and dripstone blocks override too): the projectile's Channeling flag (+0x1b1),
-then the weather at the cell above and the sky over the rod, then a bolt at its middle (x + 0.5,
-y + 1, z + 0.5) and a sound, as Java's `LightningRodBlock.onProjectileHit`. Sapling: `blocks/target.rs`
-`shot_stopped`, `lightning.rs` `channel_to_rod` (with `item.trident.thunder`, as the hit on an entity);
-test `a_channeling_trident_on_a_rod_calls_a_bolt_over_it_in_a_storm`; not drilled. Left out: items struck.
+then the weather at the cell above and the sky over the rod, then a bolt; read as Java's (x + 0.5,
+y + 1, z + 0.5) with a sound, but drilled in the rod's own cell and silent ("Its first tick, drilled"
+above). Sapling: `blocks/target.rs` `shot_stopped`, `lightning.rs` `channel_to_rod`.
 
 ## The wither
 
@@ -144,19 +152,24 @@ units (`blast::rays::Capped`; not drilled). Built, BDS showed 120 `ParticleProje
 (data 15) the tick the T went, before its blocks' updates and the wither's `AddEntity`, each at the
 wither's spot plus a fraction across x and z and 2 below to 1.9 above (bds-gxwither.txt; the Java
 skull block's numbers); sapling sends them so (`blocks/summoning.rs` `souls`). Left out: the
-15 it costs whom it meets (not seen, the actor warded),
-`ShieldHealth`, `firerate` and `lastHealthInterval` (the charge, `Phase`, armour and `maxHealth` are
-kept: research/captures/bds-keepmobs.txt; a summoned wither charges as a built one, at its difficulty's
-share of the pack's 600), the soul particles of building.
+15 it costs whom it meets (not seen: `m3wither`'s cow phase ended at 275.76 of 450, above half, so no
+dash came), the soul particles of building.
 Decompiled (thirteenth3j) [D]: `WitherBoss` load 142f97350 / save 142f96ca0 keep `ShieldHealth` at
 +0x474, `firerate` +0x4f0, `lastHealthInterval` +0x518, `SpawningFrames` +0x4e8, `Phase` +0x4c8,
 `maxHealth`. Its hurt (142f96660, vtable slot 247): off easy, once health drops below
 `lastHealthInterval` less the step at +0x514, `firerate` halves and the interval moves down; the
 half-health turn sets `firerate` back to 20 and doubles +0x510. The tick (142f933e0) reloads the
 middle head's wait (+0x52c) and the side heads' (+0x4ec) from `firerate`. No code past load and
-save reads `ShieldHealth` in the wither's own functions [U: what it guards]. Sapling still saves
-none of the three: its volleys follow the drilled rests (`heads.rs` `RESTS`), which saw no halving
-on normal, so the decompiled halving and the drill disagree [U] until a hurt-by-sixths drill.
+save reads `ShieldHealth` in the wither's own functions [U: what it guards].
+Drilled (2026-11-05, `m3wither` and `m3wither0`, thirteenth3m_drill.rs, research/captures/bds-m3wither{,0}.txt,
+the worlds dumped with `actor_dump`): `t2wither` ran on easy (warden_drill.rs `start`), hence no halving.
+On normal, hurt 10 every 3 s from 450, the volley spacing went 20 → 10 below 375 → 5 below 300: the step
+is a sixth of `maxHealth` (75) and `lastHealthInterval` starts at `maxHealth`; the rests after a blue skull
+stayed 80 to 120 ticks whatever the rate. Saved: `ShieldHealth` 30 always, `firerate` and
+`lastHealthInterval` as they stood (20 and 450 unhurt), `Phase` 1 until armoured, then 0. Sapling does the
+same (`wither/heads.rs` `Rate`; sapling-leveldb actor_state.rs `WitherRecord`; test
+`off_easy_each_sixth_of_its_health_lost_halves_its_fire_rate_and_is_saved`). Seen, not fixed: sapling's
+wither hovered higher (skulls from y -6 against BDS's -16 to -18 over the actor at -26).
 
 ## Fireworks
 

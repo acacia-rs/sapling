@@ -23,6 +23,9 @@ before version 10. Test: `bds_records_read_and_write_back_byte_for_byte`.
 | pillager_outpost | -3 | the pieces' columns, y 63 to 319 | each placed piece; tower and overgrowth twice |
 | monument | 0 | the building | the building |
 | fortress | 0 | the start box | the pieces meeting the column |
+| igloo | 0 | the top's unturned box at y 64 | the same box one below its average ground (Java 1.12's `offsetToAverageGroundLevel(-1)`), not where the template stands |
+| desert_pyramid, jungle_pyramid | 0 | the start box, unmoved (y 64) | the placed pyramid |
+| trial_chambers, trail_ruins, abandoned_camp_<variant> | (data-driven) | the pieces' union | each piece meeting the column |
 
 Sapling files these in the column's own post-process (`spawn_areas::file`) and saves them with
 generated columns (`StoredColumn::spawn_areas`); test `spawn_area_tests.rs` against the records.
@@ -30,7 +33,15 @@ No block changes: `tools/replay-all.sh` 0 wrong, 0 missing (2026-11-05).
 Whole-only columns of an outpost (its box meets them, no piece does) keep a record of the whole
 box alone, as BDS's (research/captures/bds-jxoutpost.txt's world: chunks (116, -73) and (117, -73));
 test `outpost_columns_no_piece_meets_keep_the_whole_box`. Outpost pieces past the start chunk find their height by the run's post-process order, as
-their blocks do. Data-driven structures (trial chambers, abandoned camps, ...) are not filed.
+their blocks do.
+Data-driven and the other hardcoded structures, read 2026-11-05 off the oracle world
+~/oracle-worlds/20261003-structures (`records <world> tag=119`, 2282 areas): a data-driven structure
+files its whole box in every column it meets, a piece or not (trial chambers' y -45 to 15 alone in
+chunk (3, 17)); a camp under its variant's id (`minecraft:abandoned_camp_meadow`); data-driven areas
+come before hardcoded ones in a column (chunk (81, 6): trial chambers ids 1 to 6, the jungle pyramid
+8 and 9; BDS skipped 7, sapling numbers on). Sapling files them so (`data_driven.rs` `file_v2`, first
+in the post-process; `igloo.rs`; `stage.rs`); tests in `spawn_area_tests.rs`. `tools/replay-all.sh`
+still 0 wrong, 0 missing.
 
 ## The spawner [D]
 

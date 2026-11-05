@@ -306,6 +306,13 @@ Fixed: `creatures/strolling.rs` tries ten places (`TRIES`); test
 (sapling-strollstart.txt, sapling-strolls.txt): cows 1 in 103, pigs 99, zombies 116, sheep 140. Still
 different: sapling's walks are 5.9 to 7.7 blocks and 79 to 104 ticks, with fewer pauses, as it walks
 straight at its place where BDS follows a path (the TODO in strolling.rs).
+Paths (2026-11-05, thirteenth3m): BDS's walks go cell middle to cell middle of a grid path, zigzagging up
+to 4.5 off the straight line, each middle left at about 0.5 from it. Sapling now routes a stroll over
+cells (`paths::route`) and walks middle to middle (`creatures/strolling.rs`; test
+`a_strolling_cow_goes_round_a_wall_to_a_place_behind_it`). Re-drilled (research/captures/sapling-m3strolls.txt,
+`walks.py`, cows, pigs, sheep): path 8.1, 7.7, 8.9 blocks against BDS's 7.8, 8.6, 10.5 (before 6.5, 8.3,
+6.2) and 107, 74, 118 ticks against 116, 90, 152. Still different: in-walk pauses, 2 to 5 ticks a walk
+against BDS's 10 to 12; their cause is not known.
 
 ## Fleeing (`flee`)
 
