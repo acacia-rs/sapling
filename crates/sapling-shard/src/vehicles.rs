@@ -4,6 +4,7 @@
 //! into them (pull.rs). Who rides them is riding.rs's.
 // TODO: lava and fire do not break them.
 
+mod blasts;
 mod boats;
 mod cargo;
 mod carts;
@@ -27,6 +28,7 @@ use crate::inventory::Inventory;
 use crate::movement::Motion;
 use crate::sync::Told;
 
+pub(crate) use blasts::blasted;
 pub(crate) use cargo::{Cargo, cargo, load_cargo};
 pub(crate) use command_cart::set_command as set_cart_command;
 
@@ -163,6 +165,7 @@ pub(crate) fn tick(world: &mut World) {
             crate::inventory::open_own(world, player);
         }
     }
+    blasts::tick(world);
     boats::tick(world);
     carts::tick(world);
     cargo::take_up(world);
@@ -195,8 +198,17 @@ pub(crate) fn used_on(world: &mut World, player: Entity, vehicle: Entity) -> boo
 /// A player hit `vehicle` for `damage`: it shakes, and breaks once its integrity is gone, at
 /// once for a creative player, who gets nothing of it.
 pub(crate) fn hit(world: &mut World, player: Entity, vehicle: Entity, damage: f32) {
-    let (Some(mut state), Some(kind), Some(id)) = (world.get::<Vehicle>(vehicle).copied(), world.get::<Kind>(vehicle).map(|kind| kind.0.clone()), world.get::<NetId>(vehicle).map(|id| id.0)) else { return };
     let creative = world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative);
+    let Some(left) = shake(world, vehicle, damage) else { return };
+    if creative || left <= 0 {
+        wreck(world, vehicle, !creative);
+    }
+}
+
+/// Takes `damage` off the vehicle's integrity, a boat's ten times over and a minecart's eight, and
+/// shows it shaking; what integrity is left.
+fn shake(world: &mut World, vehicle: Entity, damage: f32) -> Option<i32> {
+    let (mut state, kind, id) = (world.get::<Vehicle>(vehicle).copied()?, world.get::<Kind>(vehicle)?.0.clone(), world.get::<NetId>(vehicle)?.0);
     let per_damage = if is_boat(&kind) { BOAT_HIT } else { CART_HIT };
     (state.side, state.hurt) = (-state.side, HURT_TICKS);
     state.integrity -= (damage * per_damage) as i32;
@@ -206,29 +218,7 @@ pub(crate) fn hit(world: &mut World, player: Entity, vehicle: Entity, damage: f3
         let cell = body.at.map(|c| c.floor() as i32);
         entities::tell_viewers(world, vehicle, layer, cell, vec![sapling_net::encode(&shown)]);
     }
-    if creative || state.integrity <= 0 {
-        wreck(world, vehicle, !creative);
-    }
-}
-
-/// A blast at `at` broke the vehicles within `reach` of it; a TNT minecart is primed instead, on a
-/// short fuse.
-// TODO: BDS hurts a vehicle by the blast's damage; here one in reach breaks.
-pub(crate) fn blasted(world: &mut World, layer: Entity, at: [f32; 3], reach: f32) {
-    let near: Vec<(Entity, bool)> = world
-        .query::<(Entity, &InLayer, &Body, &Kind, &Vehicle)>()
-        .iter(world)
-        .filter(|(_, in_layer, body, ..)| in_layer.0 == layer && (0..3).map(|axis| (body.at[axis] - at[axis]).powi(2)).sum::<f32>() < reach * reach)
-        .map(|(vehicle, _, _, kind, _)| (vehicle, kind.0 == TNT_MINECART))
-        .collect();
-    for (vehicle, is_tnt) in near {
-        if is_tnt {
-            let short = carts::SHORT_FUSE[0] + world.get_resource_or_insert_with(crate::blocks::Dice::default).roll(carts::SHORT_FUSE[1] as u32) as i32;
-            carts::prime(world, vehicle, short);
-        } else {
-            wreck(world, vehicle, true);
-        }
-    }
+    Some(state.integrity)
 }
 
 /// The item a vehicle of `kind` in `variant` breaks into, and that places it.

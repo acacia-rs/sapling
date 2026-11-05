@@ -108,6 +108,12 @@ were not found in any of these; sapling does what is listed there.
 - Detector rail: on while a cart is on it, released 20 ticks after.
 - TNT minecart: power 3, fuse 80; flint and steel primes; a fall > 3.5 bursts it at once; a blast primes it on
   10 + rand(20).
+- Any other vehicle in a blast is hurt by the mob rule (drilled 2026-11-05, research/captures/bds-c1blast.txt,
+  `c1blast`: a minecart and a boat at 6.0 to 7.8 off a TNT): harm = (i²+i)/2·7·8+1, with
+  i = (1 − (distance − width/2)/8)·seen, from the TNT's feet + 0.06. A minecart loses harm×8 of its
+  integrity, a boat harm×10 (truncated); HurtDirection flips as for a hit and it breaks at ≤ 0, its item
+  and RemoveEntity the tick after. The fit is within 3 in total; the TNT had hopped ±0.2. sapling does
+  the same (`vehicles.rs` `blasted`, `creatures/blast.rs` `harm_by`).
 - Pull-in (BDSRE 14241fde0, from the push collision): a mob narrower than 1.375, not riding, with a free seat.
 
 ## Drilled 2026-11-04 (research/captures/bds-t2eboats.txt)

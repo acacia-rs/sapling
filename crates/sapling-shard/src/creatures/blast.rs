@@ -1,8 +1,7 @@
 //! Mobs that blow up, as BDS's creeper did (docs/research/mob-attacks.md, "Creepers"): lit near
 //! its prey, it burns a fuse down and bursts, hurting and throwing who is near and breaking blocks
 //! (docs/research/block-uses.md, "Blasts").
-// TODO: a fuse does not go out for a prey out of sight; a blast throws no arrows, orbs or falling
-// blocks; Blast Protection does not lessen a mob's throw.
+// TODO: a fuse stays lit for a prey out of sight; no arrows, orbs or falling blocks are thrown; Blast Protection spares no mob's throw.
 
 mod rays;
 
@@ -35,9 +34,7 @@ const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
 #[derive(Component)]
 pub(super) struct Fuse(i32, bool);
 
-pub(super) fn is_lit(world: &World, entity: Entity) -> bool {
-    world.get::<Fuse>(entity).is_some()
-}
+pub(super) fn is_lit(world: &World, entity: Entity) -> bool { world.get::<Fuse>(entity).is_some() }
 
 fn tell(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, left: i32) {
     let told = sapling_data::mob_fuse(id, entities::mob_flags(world, entity, kind, MetadataFlags1::IGNITED, true), left);
@@ -74,6 +71,11 @@ pub(super) fn put_out(world: &mut World, entity: Entity, layer: Entity, id: u64,
 
 fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
     (0..3).map(|axis| (a[axis] - b[axis]).powi(2)).sum::<f32>().sqrt()
+}
+
+/// What a blast reaching `reach` costs a mob or vehicle it meets by `impact` (bds-blasts.txt, bds-c1blast.txt).
+fn harm_by(impact: f32, reach: f32) -> f32 {
+    (impact * impact + impact) / 2.0 * HARM * reach + 1.0
 }
 
 /// How much of a body standing at `feet`, `size` wide and high, sees a blast at `at`.
@@ -197,7 +199,7 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
             mobs::remove(world, item);
         }
     }
-    crate::vehicles::blasted(world, layer, at, reach);
+    crate::vehicles::blasted(world, layer, |world, feet, size| impact(world, layer, at, feet, size, reach).map(|impact| harm_by(impact, reach)));
     throw_primed(world, layer, at, reach);
     let mut mobs = world.query::<(Entity, &InLayer, &Body, &Health, &NetId)>();
     let near: Vec<(Entity, u64, Body)> = mobs.iter(world).filter(|(_, in_layer, ..)| in_layer.0 == layer).map(|(mob, _, body, _, id)| (mob, id.0, *body)).collect();
@@ -238,7 +240,7 @@ fn towards(from: [f32; 3], to: [f32; 3], long: f32) -> [f32; 3] {
 /// blast and, unless no hit throws it, towards its eyes by the blast's impact (bds-blasts.txt).
 fn blast_mob(world: &mut World, layer: Entity, mob: Entity, id: u64, its: &Body, at: [f32; 3], reach: f32) {
     let Some(impact) = impact(world, layer, at, its.at, its.size, reach) else { return };
-    let harm = (impact * impact + impact) / 2.0 * HARM * reach + 1.0;
+    let harm = harm_by(impact, reach);
     let hurt = crate::damage::ask(world, mob, harm, Cause::EntityExplosion, None).and_then(|harm| {
         let mut health = world.get::<Health>(mob).copied()?;
         // Resistance that takes all of it still hurts and throws (the drill's pigs had it).
