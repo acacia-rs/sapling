@@ -47,6 +47,8 @@ impl GameEvent {
             GameEvent::ContainerClose => 11,
             GameEvent::ContainerOpen => 12,
             GameEvent::DispenseFail => 13,
+            // TODO: a drink shares Eat, so it saves 15 where BDS saves drink's 14.
+            GameEvent::Eat => 15,
             GameEvent::Step => 22,
             GameEvent::Explode => 27,
             GameEvent::FluidPickup => 29,
@@ -58,6 +60,7 @@ impl GameEvent {
             GameEvent::ProjectileShoot => 41,
             GameEvent::SculkTouch => 57,
             GameEvent::TendrilsClicking => 58,
+            GameEvent::Teleport => 64,
         }
     }
 
