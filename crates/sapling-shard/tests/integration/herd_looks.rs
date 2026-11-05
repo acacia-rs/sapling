@@ -43,7 +43,7 @@ fn a_horse_summoned_with_no_event_may_come_a_foal() {
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
         for n in 0..30 {
-            assert!(ctx.summon_as(None, "minecraft:horse", [(n % 6) as f32 * 2.0 + 2.5, 65.0, (n / 6) as f32 * 2.0 + 4.5], 0.0, None).is_some());
+            assert!(ctx.summon_as(None, "minecraft:horse", [(n % 6) as f32 * 2.0 + 2.5, 65.0, (n / 6) as f32 * 2.0 + 4.5], 0.0, 0.0, None).is_some());
         }
     });
     let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
