@@ -123,6 +123,7 @@ pub(super) fn shoot(world: &mut World, player: Entity, stack: &ItemStack) -> boo
     if rocket {
         shoot_rockets(world, player, &arrow, &turns);
     }
+    let mut arrows = Vec::new();
     for turn in turns.iter().filter(|_| !rocket) {
         let pickup = match (*turn == 0.0, creative) {
             (true, false) => Pickup::Anyone,
@@ -130,13 +131,17 @@ pub(super) fn shoot(world: &mut World, player: Entity, stack: &ItemStack) -> boo
             _ => Pickup::Never,
         };
         let loosed = Loosed { critical: true, tipped: ammo::tip(&arrow), pierces, ..Loosed::new(player, pickup, Some(arrow.clone())) };
-        super::loose(world, player, PLAYER_ARROW, CROSSBOW_SPEED, 0.0, 1.0, *turn, loosed);
+        arrows.extend(super::loose(world, player, PLAYER_ARROW, CROSSBOW_SPEED, 0.0, 1.0, *turn, loosed));
     }
     super::set_hand(world, player, Some(charged(stack, None)));
     if !creative {
         let uses = if turns.len() > 1 || rocket { MULTISHOT_WEAR } else { 1 };
         crate::inventory::wear_hand_by(world, player, uses, shots::shooter_lasts(CROSSBOW).unwrap_or(u16::MAX));
     }
-    super::heard_plain(world, player, "crossbow.shoot");
+    if arrows.is_empty() {
+        super::heard_plain(world, player, "crossbow.shoot");
+    } else {
+        super::heard_shooting(world, player, "crossbow.shoot", &arrows, true);
+    }
     true
 }
