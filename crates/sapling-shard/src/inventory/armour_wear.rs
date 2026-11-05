@@ -103,7 +103,7 @@ fn wear(world: &mut World, player: Entity, uses: impl Fn(usize, &Held) -> i32, m
         inventory.armor[0].as_mut().expect("worn").id = id;
         out.push(&InventorySlot { window_id: WindowIDVarint::Armor, slot: 0, container: None, storage_item: None, item: wire(&inventory.armor[0], true) });
         let helmet = inventory.armor[0].as_ref().map(|held| held.stack.name.clone());
-        helmet.into_iter().for_each(|helmet| equip_sound(world, player, &helmet));
+        helmet.into_iter().for_each(|helmet| equip_sound(world, player, &helmet, 0));
     }
 }
 
@@ -156,15 +156,31 @@ pub(crate) fn worn(inventory: &Inventory) -> Vec<Option<(i32, String)>> {
 /// a fall on it (research/captures/bds-armour.txt, bds-wear.txt).
 pub(crate) fn equipped(world: &mut World, player: Entity, before: &[Option<(i32, String)>]) {
     let Some(now) = world.get::<Inventory>(player).map(worn) else { return };
-    for (now, before) in now.iter().zip(before) {
+    for (slot, (now, before)) in now.iter().zip(before).enumerate() {
         if let Some((_, piece)) = now.as_ref().filter(|_| now != before) {
-            equip_sound(world, player, piece);
+            equip_sound(world, player, piece, slot);
         }
     }
 }
 
-/// `armor.equip_<material>` of an armour piece; `None` for anything else.
-// TODO: chainmail, gold, turtle and elytra are named as the client's sounds are, not drilled.
+/// Puts `stack` in the armour slot `piece` and shows the player that slot alone, as BDS's
+/// `/replaceitem` did (research/captures/bds-n13items.txt); heard as any piece put on.
+pub(super) fn put_on(world: &mut World, player: Entity, piece: usize, stack: Option<sapling_world::ItemStack>) -> bool {
+    let mut query = world.query::<(&mut Inventory, &mut Outgoing)>();
+    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return false };
+    let before = worn(&inventory);
+    if !inventory.put(super::Place::Armor(piece), stack) {
+        return false;
+    }
+    if inventory.sent {
+        out.push(&InventorySlot { window_id: WindowIDVarint::Armor, slot: piece as _, container: None, storage_item: None, item: wire(&inventory.armor[piece], true) });
+        equipped(world, player, &before);
+    }
+    true
+}
+
+/// `armor.equip_<material>` of an armour piece; `None` for anything else. BDS named a turtle
+/// shell's leather's (research/captures/bds-n13items.txt).
 pub(crate) fn equip_sound_name(piece: &str) -> Option<String> {
     if piece != ELYTRA {
         sapling_data::armour_lasts(piece)?;
@@ -174,17 +190,22 @@ pub(crate) fn equip_sound_name(piece: &str) -> Option<String> {
         Some(material @ ("leather" | "iron" | "diamond" | "netherite")) => material,
         Some("chainmail") => "chain",
         Some("golden") => "gold",
+        Some("turtle") => "leather",
         _ if plain == "elytra" => "elytra",
         _ => "generic",
     };
     Some(format!("armor.equip_{material}"))
 }
 
-/// `armor.equip_<material>` at the player's eyes, to it and its viewers.
-fn equip_sound(world: &mut World, player: Entity, piece: &str) {
+/// How far over the feet each armour slot's equip sound is: BDS's head 0.1 under the eyes, chest
+/// and legs 0.9, feet 0 (bds-armour.txt, bds-t2ewear.txt, bds-n13items.txt).
+const SOUND_HEIGHTS: [f32; 4] = [sapling_data::EYE_HEIGHT - 0.1, 0.9, 0.9, 0.0];
+
+/// `armor.equip_<material>` at the armour `slot`'s height, to the player and its viewers.
+fn equip_sound(world: &mut World, player: Entity, piece: &str, slot: usize) {
     let Some(sound_id) = equip_sound_name(piece) else { return };
     let (Some(id), Some([x, y, z])) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet)) else { return };
-    let position = Vec3f { x, y: y + sapling_data::EYE_HEIGHT, z };
+    let position = Vec3f { x, y: y + SOUND_HEIGHTS.get(slot).copied().unwrap_or(sapling_data::EYE_HEIGHT), z };
     let sound = LevelSoundEvent { sound_id, position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
     crate::vitals::tell(world, player, &sound);
 }

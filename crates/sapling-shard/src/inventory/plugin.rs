@@ -126,5 +126,8 @@ pub(crate) fn set_item(world: &mut World, player: Entity, slot: Slot, item: Opti
         },
         None => None,
     };
+    if let Place::Armor(piece) = place(slot) {
+        return super::armour_wear::put_on(world, player, piece, stack);
+    }
     change(world, player, |inventory| inventory.put(place(slot), stack)) == Some(true)
 }

@@ -185,6 +185,26 @@ Drilled 2026-11-04 (research/captures/bds-t2ewear.txt, bds-t2ebreath.txt):
 - A bed used in the Nether blew up on both; BDS's player was also burning in that scene, so the
   amounts were not compared.
 
+Drilled 2026-11-05 (research/captures/bds-n13play.txt, bds-n13more.txt, bds-n13items.txt):
+- A Nether bed 4 blocks off, no armour, Resistance IV: 6.872 on easy, normal and hard alike, hurt
+  cause 10 (`block_explosion`). That is the blast rule measured from the feet (34.36 before
+  Resistance), plus 1, with no difficulty scaling. sapling took the eyes and scaled it (3.54,
+  6.68, 10.03, cause 11); fixed (`creatures/blast.rs` `reaches`, `Rule::Burning`).
+- Exhaustion: a fall, a zombie's hits and burning in fire cost none; breaking dirt and short grass
+  0.005 each, a hit on a cow 0.1; sapling the same (sapling-n13play.txt).
+- Wear: an iron sword lost 1 to a hit on a cow and 2 to breaking dirt, an iron pickaxe 2 and 1
+  (3 each). A hit's wear was not sent; the break's came as one `InventorySlot` of the hand slot,
+  where sapling sent the whole inventory; fixed (`inventory/wear.rs` `wear_tool_in_hand`).
+- Leather at 79 of 80 stayed on under `/damage 4 entity_attack` and broke in the bed's blast,
+  heard as `break` at the eyes, on both.
+- Equip sounds: chainmail `armor.equip_chain`, golden `armor.equip_gold`, turtle shell
+  `armor.equip_leather` (sapling said `equip_generic`; fixed), elytra `armor.equip_elytra`; all
+  pieces at the slot's height over the feet: head 1.52, chest and legs 0.9, feet 0 (sapling the
+  eyes; fixed, `inventory/armour_wear.rs` `SOUND_HEIGHTS`). `/replaceitem` into an armour slot
+  sends that slot alone as `InventorySlot` (sapling the whole inventory; fixed, `put_on`).
+- Donning over a worn piece (iron under diamond, iron under an elytra, iron with Binding under
+  diamond, all in creative): the worn piece went to the hand on both.
+
 ## Another player's hit (`pvp`)
 
 The actor hit the watcher, both in survival and on one spot (`research/captures/bds-pvp.txt`):
@@ -245,8 +265,8 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
   its quarter. What it stops wears it as measured (`inventory/armour_wear.rs`); how long a piece
   lasts is the Java game's number, and one that breaks goes silently.
 - Eating is built (`vitals/eating.rs`, `sapling-data/src/food.rs`): the bot ate an apple and a steak on
-  sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Only the apple's values are
-  drilled; the others are the Java game's. What else a food does and leaves: food-effects.md.
+  sapling in the same 32 ticks and packets (research/captures/sapling-eat.txt). Every food's values are
+  drilled since (bds-foods.txt, bds-foods2.txt; food-effects.md), as are what else a food does and leaves.
 - Run against sapling (research/captures/sapling-hurt2.txt, sapling-deaths.txt, sapling-void.txt,
   sapling-fx3.txt) after the fixes the causes, words, the helmet's 165, the enchanted armour's
   12.608 / 16.4 / 11.6, the search at y 32767 and the void's rhythm and depth match.

@@ -105,19 +105,38 @@ pub(crate) fn wear_at(world: &mut World, player: Entity, place: Place, uses: i32
 /// whether the whole use counts.
 pub(crate) fn wear_tool_in_hand(world: &mut World, player: Entity) {
     let Some(tool) = world.get::<Inventory>(player).and_then(|inventory| Tool::from_identifier(&inventory.in_hand().as_ref()?.stack.name)) else { return };
-    let uses = if tool.kind == ToolKind::Sword { 2 } else { 1 };
-    wear_hand_by(world, player, uses, tool.max_durability());
+    let uses = counted(world, player, if tool.kind == ToolKind::Sword { 2 } else { 1 });
+    if uses == 0 {
+        return;
+    }
+    let mut query = world.query::<(&mut Inventory, &mut crate::components::Outgoing)>();
+    let Ok((mut inventory, mut out)) = query.get_mut(world, player) else { return };
+    let broke = inventory.wear_hand(uses, tool.max_durability());
+    // BDS showed the hand's slot alone after a break (research/captures/bds-n13play.txt).
+    if inventory.sent {
+        let slot = usize::from(inventory.selected) % HOTBAR;
+        out.push(&acacia_proto::packets::InventorySlot { window_id: acacia_proto::types::WindowIDVarint::Inventory, slot: slot as _, container: None, storage_item: None, item: super::wire(&inventory.main[slot], true) });
+    }
+    if broke {
+        sound_broken(world, player);
+    }
+}
+
+/// The uses of `uses` that count against the player's hand: none where Unbreaking spares it,
+/// else what plugins leave of them.
+fn counted(world: &mut World, player: Entity, uses: i32) -> i32 {
+    let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return 0 };
+    let (chance, stack) = (wear_chance(held, false), held.stack.clone());
+    if chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
+        return 0;
+    }
+    crate::hand_events::wear(world, player, &stack, uses)
 }
 
 /// Counts `uses` against what the player holds, which lasts `lasts` of them, unless Unbreaking
 /// spares it; shows the client the result, and one that broke is heard.
 pub(crate) fn wear_hand_by(world: &mut World, player: Entity, uses: i32, lasts: u16) {
-    let Some(held) = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()) else { return };
-    let (chance, stack) = (wear_chance(held, false), held.stack.clone());
-    if chance < 100 && world.get_resource_or_insert_with(Dice::default).roll(100) >= chance {
-        return;
-    }
-    let uses = crate::hand_events::wear(world, player, &stack, uses);
+    let uses = counted(world, player, uses);
     if uses > 0 && change(world, player, |inventory| inventory.wear_hand(uses, lasts)) == Some(true) {
         sound_broken(world, player);
     }

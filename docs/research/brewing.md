@@ -43,4 +43,4 @@ any face but up, potions and glass bottles, only into an empty slot. A hopper be
 
 ## sapling gaps
 
-- Finish order on the wire: sapling tells slot 0 before 1-3.
+- Finish order on the wire: settled, sapling tells slots 1-3, then 0, as bds-brew.txt (`brewing.rs` `step`).
