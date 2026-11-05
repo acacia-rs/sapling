@@ -49,12 +49,12 @@ pub(super) fn put_bed(world: &mut World, layer: Entity, pos: BlockPos, id: u32) 
     Some(true)
 }
 
-/// Writes `block` at `pos` as [`send::put_block`] does, aged or wetted as BDS's command does. An
-/// aged or wetted block is shown with its water as BDS shows the writes, each listed
-/// ([`send::logged`]): BDS writes an aged one twice (bds-fixset.txt, bds-bkticks.txt).
+/// Writes `block` at `pos` as [`send::put_block`] does, aged, joined or wetted as BDS's command does.
+/// Such a block is shown with its water as BDS shows the writes, each listed ([`send::logged`]): BDS
+/// writes an aged or joined one twice (bds-fixset.txt, bds-bkticks.txt, bds-x2clone.txt).
 pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
-    let (block, is_aged) = match standing_torch(world, layer, pos, block) {
-        Some(torch) => (torch, true),
+    let (block, is_aged) = match standing_torch(world, layer, pos, block).or_else(|| joined(world, layer, pos, block)) {
+        Some(written_twice) => (written_twice, true),
         None => aged(world, layer, pos, block),
     };
     // Kelp set in air got a source beside itself too (research/captures/bds-plantpop.txt).
@@ -148,6 +148,15 @@ fn standing_torch(world: &World, layer: Entity, [x, y, z]: BlockPos, block: &Blo
     let level = level(world, layer).filter(|level| block.name == "minecraft:torch" && bare && level.in_height(y - 1))?;
     level.registry().get(level.block(x, y - 1, z)).filter(|under| under.is_solid())?;
     Some(Block::new(block.name.as_str()).with(format!("{TORCH_FACING}=top")))
+}
+
+/// A fence or pane its neighbours join, in the state they decide: BDS listed a fence set between stones
+/// twice, joined both times, where a lone one went out once (bds-x2clone.txt, bds-p2place.txt).
+fn joined(world: &World, layer: Entity, pos: BlockPos, block: &Block) -> Option<Block> {
+    let level = level(world, layer)?;
+    let id = send::resolve(level.registry(), block)?;
+    let joined = super::shapes::joined_state(level, pos, id)?;
+    Some(send::describe(level.registry(), joined))
 }
 
 fn with_age(world: &mut World, name: &str, key: &str, properties: &str) -> Block {

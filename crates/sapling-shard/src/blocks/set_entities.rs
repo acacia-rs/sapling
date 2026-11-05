@@ -105,7 +105,12 @@ pub(super) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &s
         _ = level.world.set_block_entity(pos, &made);
     }
     let Some(entity) = level.world.block_entity(pos).map(|entity| super::send::block_entity_data(pos, entity)) else { return };
-    if !super::send::batch_holds(world, layer, pos) {
+    // BDS's set vault was active the next tick (bds-x2ran.txt), not at the next sweep.
+    if crate::spawners::is_spawner(&made) {
+        crate::spawners::watch(world, layer, pos);
+    }
+    // A clone shows its copies' entities after their blocks, as they were copied (cloned.rs).
+    if !super::send::batch_holds(world, layer, pos) && !super::cloned::defers_entity(world, layer, pos) {
         super::send::to_viewers(world, layer, pos, &[entity]);
     }
     if SKULLS.contains(&block) {

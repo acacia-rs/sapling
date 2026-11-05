@@ -240,6 +240,20 @@ fn enter(world: &mut World, layer: Entity, pos: BlockPos, vault: &mut Vault, to:
     sound
 }
 
+/// A block entity as `/clone` copies it: a vault's copy is connected to nobody until its next update,
+/// as BDS's showed (research/captures/bds-x2ran.txt); any other as it was.
+pub(crate) fn cloned(entity: &Value) -> Value {
+    let Value::Compound(fields) = entity else { return entity.clone() };
+    let mut fields = Fields(fields.clone());
+    if fields.string("id") != Some(super::VAULT) {
+        return entity.clone();
+    }
+    let mut shared = fields.inner("shared_data");
+    shared.set("connected_players", longs(&[]));
+    fields.set("shared_data", shared.into_value());
+    fields.into_value()
+}
+
 /// Where BDS tells a vault's sounds and animations: its cell's corner.
 fn corner(pos: BlockPos) -> [f32; 3] {
     pos.map(|c| c as f32)

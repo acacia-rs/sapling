@@ -46,7 +46,7 @@ pub(crate) fn copy(world: &mut World, layer: Entity, cleared: &[BlockPos], copie
         for (copy, &liquid) in copies.iter().zip(&liquids) {
             super::update_block(world, layer, copy.to, copy.block);
             if let Some(entity) = copy.entity {
-                keep(world, copy.to, entity);
+                keep(world, copy.to, &crate::spawners::cloned(entity));
             }
             if !send::set_liquid(world, layer, copy.to, liquid) {
                 send::log_liquid(world, layer, copy.to);

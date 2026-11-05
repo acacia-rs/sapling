@@ -178,10 +178,11 @@ at `+0.5 +1 +0.5`; the cloned spawner's entity (`spawn_data` alone, shown twice)
 - An active or ejecting vault shows its block and entity again each second, the entity with
   `connected_players` and the shown `display_item` from its `shared_data` (sapling showed `[]` and an empty
   item always: `sapling-leveldb` `BlockEntity::updated`). Test in spawners/vault.rs.
-Left: BDS activated the vault the tick after its set with the creative actor and watcher near (sapling a second
-on); its unlocking shows the block at the click and again with the entity two ticks on; the ejected count
-(4 against 3) is the loot roll's; a cloned vault shows `connected_players` `[]` on BDS (sapling copies the
-source's) and goes inactive a second on.
+- Fixed (thirteenth2z): a set vault is watched when its entity is made (`blocks/set_entities.rs` `furnish`), so it
+  is active the next tick as on BDS, not at the 100-tick sweep; a cloned vault's entity has `connected_players`
+  `[]` (`spawners::cloned`) and is shown only after the clone's blocks. Tests in integration/thirteenth2z.rs.
+Left: its unlocking shows the block at the click and again with the entity two ticks on; the ejected count
+(4 against 3) is the loot roll's; a cloned vault goes inactive a second on.
 
 ## Ominous item spawners
 

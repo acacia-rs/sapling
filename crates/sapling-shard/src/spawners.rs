@@ -18,6 +18,7 @@ use crate::blocks::Dice;
 use crate::components::{InLayer, Layer, Mode, Position, Stage, Tick};
 use crate::tags::Marks;
 use fields::Fields;
+pub(crate) use vault::cloned;
 
 const MOB_SPAWNER: &str = "MobSpawner";
 const TRIAL_SPAWNER: &str = "TrialSpawner";

@@ -157,8 +157,7 @@ fn decided(level: &Level, pos: BlockPos) -> Vec<(String, &'static str)> {
         if family == Family::Wall {
             return wall(level, pos);
         }
-        let joined = |step: [i32; 2]| beside(step).is_some_and(|cell| joins(family, &cell, step));
-        return SIDES.iter().map(|(side, step)| (format!("minecraft:connection_{side}"), if joined(*step) { "1" } else { "0" })).collect();
+        return connections(level, pos, family);
     }
     if let Some((facing, half)) = stair(&this).filter(|_| get(this.properties, "minecraft:corner").is_some()) {
         return vec![("minecraft:corner".to_owned(), corner(level, pos, facing, half))];
@@ -172,6 +171,20 @@ fn decided(level: &Level, pos: BlockPos) -> Vec<(String, &'static str)> {
         return vec![("in_wall_bit".to_owned(), if in_wall { "1" } else { "0" })];
     }
     Vec::new()
+}
+
+/// The sides a fence or pane of `family` at `pos` joins.
+fn connections(level: &Level, pos: BlockPos, family: Family) -> Vec<(String, &'static str)> {
+    let joined = |[dx, dz]: [i32; 2]| cell(level, [pos[0] + dx, pos[1], pos[2] + dz]).is_some_and(|cell| joins(family, &cell, [dx, dz]));
+    SIDES.iter().map(|(side, step)| (format!("minecraft:connection_{side}"), if joined(*step) { "1" } else { "0" })).collect()
+}
+
+/// The state a fence or pane `id` put at `pos` takes from its neighbours, where that differs from `id`.
+pub(super) fn joined_state(level: &Level, pos: BlockPos, id: u32) -> Option<u32> {
+    let state = level.registry().get(id)?;
+    let this = Cell { name: state.name, properties: state.properties, boxes: state.boxes, is_full: state.is_full_cube() };
+    let family = family(&this).filter(|family| *family != Family::Wall)?;
+    with_all(level.registry(), id, &connections(level, pos, family)).filter(|joined| *joined != id)
 }
 
 /// The state `id` with each of `set` changed.

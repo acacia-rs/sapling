@@ -260,7 +260,8 @@ Particle (1411b5340)
   the burp were. Sapling posts `Eat` there as the food is eaten (`vitals/eating.rs`). A drink is heard the same
 way (bds-x2drink.txt, 2026-11-05: a water bottle, honey and milk each sent the sensor a vibration from the eyes'
 cell as finished, after `bottle.empty`); sapling posts `Eat` for drinks too, after the bottle's sound, both
-frequency 8. Found, not followed: sapling plays a sensor's `power.on`/`power.off` before its UpdateBlock, BDS after. Whether the chorus teleport's
+frequency 8. A sensor's `power.on`/`power.off` plays after its UpdateBlock, as on BDS (fixed thirteenth2z: `blocks/sculk.rs`
+`play` holds it behind the batch's blocks). Whether the chorus teleport's
   arrival is heard is not known: BDS's landed out of the sensor's range.
 
 ## Unverified
