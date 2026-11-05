@@ -79,13 +79,27 @@ pub(super) fn glide_asked(input: &[InputData]) -> Option<bool> {
     })
 }
 
+/// The player `name`'s whole data in `pose`, as BDS told a glider its rocket boosted
+/// (research/captures/bds-glide.txt).
+pub(crate) fn whole_packet(id: u64, name: &str, pose: Pose, tick: u64) -> SetEntityData {
+    let mut metadata = sapling_data::player_metadata(name, pose.flags());
+    // The join's template has no box; BDS's whole data has it after the container's slots.
+    metadata.retain(|item| !matches!(item.key, Key::BoundingboxWidth | Key::BoundingboxHeight));
+    let at = metadata.iter().position(|item| item.key == Key::ContainerExtraSlotsPerStrength).map_or(metadata.len(), |at| at + 1);
+    metadata.splice(at..at, [float(Key::BoundingboxWidth, 0.6), box_height(pose)]);
+    SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick }
+}
+
+fn float(key: Key, value: f32) -> MetadataDictionaryItem {
+    MetadataDictionaryItem { key, r#type: MetadataDictionaryItemType::Float, legacy_type: 3, value: Value::Default(MetadataDictionaryItemValueDefault::Float(value)) }
+}
+
+fn box_height(pose: Pose) -> MetadataDictionaryItem {
+    float(Key::BoundingboxHeight, pose.height())
+}
+
 pub(crate) fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
-    let height = MetadataDictionaryItem {
-        key: Key::BoundingboxHeight,
-        r#type: MetadataDictionaryItemType::Float,
-        legacy_type: 3,
-        value: Value::Default(MetadataDictionaryItemValueDefault::Float(pose.height())),
-    };
+    let height = box_height(pose);
     let flags = sapling_data::player_metadata("", pose.flags()).into_iter().filter(|item| item.key == Key::Flags);
     SetEntityData { runtime_entity_id: id, metadata: flags.chain([height]).collect(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick }
 }

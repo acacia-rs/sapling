@@ -88,6 +88,17 @@ impl Simulated {
         self.fresh = true;
     }
 
+    /// Whether the player wears an elytra that flies: without one no glide is stepped.
+    pub fn wear_elytra(&mut self, flies: bool) {
+        self.state.equipment.elytra = flies;
+    }
+
+    /// The server ended or refused the glide (gliding.rs): its steps fall from here, whatever the
+    /// client goes on doing, as BDS's did (docs/research/item-uses.md "Elytra").
+    pub fn end_glide(&mut self) {
+        self.gliding = false;
+    }
+
     /// A throw the server sent: the client moves by it on its next input.
     pub fn knock(&mut self, velocity: [f32; 3]) {
         self.state.queue_knockback(velocity);

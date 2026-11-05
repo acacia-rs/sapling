@@ -7,13 +7,14 @@
 //! elytra by one; a rocket used while gliding boosts the glider for twice the rocket's life
 //! (`MovementEffect`), as the client predicts from its use.
 
-use acacia_proto::packets::MovementEffect;
+use acacia_proto::packets::{MovementEffect, UpdateAttributes};
 use acacia_proto::types::MovementEffectType;
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
 
-use crate::components::{InLayer, Layer, Mode, NetId, Outgoing, Position, Stage};
+use crate::components::{Identity, InLayer, Layer, Mode, NetId, Outgoing, Position, Stage};
 use crate::movement::{self, Motion};
+use crate::simulation::Simulated;
 use crate::{fireworks, inventory};
 
 /// Ticks of gliding between two wears of the elytra.
@@ -68,10 +69,17 @@ fn set(world: &mut World, player: Entity, gliding: bool) {
         true => drop(world.entity_mut(player).insert(Glide::default())),
         false => drop(world.entity_mut(player).remove::<Glide>()),
     }
+    if let Some(mut simulated) = world.get_mut::<Simulated>(player).filter(|_| !gliding) {
+        simulated.end_glide();
+    }
 }
 
 /// One tick of one player: what its inputs asked, what ends its glide, and the elytra's wear.
 fn tick_one(world: &mut World, player: Entity) {
+    let flies = world.get::<inventory::Inventory>(player).is_some_and(inventory::elytra_flies);
+    if let Some(mut simulated) = world.get_mut::<Simulated>(player) {
+        simulated.wear_elytra(flies);
+    }
     let Some(asked) = world.get_mut::<Motion>(player).map(|mut motion| motion.glide_asked.take()) else { return };
     let gliding = is_gliding(world, player);
     match (gliding, asked) {
@@ -112,8 +120,14 @@ pub(crate) fn boost(world: &mut World, player: Entity) -> bool {
     let (Some(layer), Some(id), Some(tick)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<NetId>(player).map(|id| id.0), world.get::<Motion>(player).map(Motion::input_tick)) else { return false };
     let Some(lasts) = fireworks::boost(world, layer, player, &stack) else { return true };
     let effect = MovementEffect { runtime_id: id, effect_type: MovementEffectType::GLIDEBOOST, effect_duration: (lasts * 2) as u32, tick };
+    let attributes = crate::vitals::told_all::all_attributes(world, player).map(|all| UpdateAttributes { tick, ..all });
+    let name = world.get::<Identity>(player).map(|identity| identity.0.name.clone()).unwrap_or_default();
+    let data = world.get::<Motion>(player).map(|motion| movement::whole_packet(id, &name, motion.pose, tick));
     if let Some(mut out) = world.get_mut::<Outgoing>(player) {
         out.push(&effect);
+        // BDS then tells the glider all of its attributes and data (bds-glide.txt).
+        attributes.iter().for_each(|all| out.push(all));
+        data.iter().for_each(|data| out.push(data));
     }
     if world.get::<Mode>(player).is_some_and(|mode| mode.0 != GameMode::Creative) {
         if let Some(mut inventory) = world.get_mut::<inventory::Inventory>(player) {
