@@ -51,13 +51,17 @@ pub(crate) fn count_idle(world: &mut World, mob: Entity, layer: Entity, kind: &s
 }
 
 /// Takes away the natural mobs that are due to go; a player within its near distance ends a mob's idleness.
+/// Only ticked mobs are looked at: BDS's `DespawnSystem` (0x144833e30) views `ActorTickedComponent`, so a
+/// mob whose column is out of every tick region stays, idle count and all (bds-w3despawn.txt).
 pub(crate) fn tick(world: &mut World) {
     let watchers = watchers(world);
-    let capped = crate::ticking::tick_distance(world) <= CAPPED_TICK_RANGE;
+    let reach = crate::ticking::tick_distance(world);
+    let capped = reach <= CAPPED_TICK_RANGE;
     let natural: Vec<(Entity, Entity, String, [f32; 3], u32)> = world
         .query_filtered::<(Entity, &InLayer, &Kind, &Body, &Health), With<Natural>>()
         .iter(world)
         .map(|(entity, layer, kind, body, health)| (entity, layer.0, kind.0.clone(), body.at, health.idle()))
+        .filter(|(_, layer, _, at, _)| ticked(world, &watchers, *layer, *at, reach))
         .collect();
     let mut gone = Vec::new();
     let mut stirred = Vec::new();
@@ -86,6 +90,14 @@ pub(crate) fn tick(world: &mut World) {
     for entity in gone {
         mobs::remove(world, entity);
     }
+}
+
+/// Whether the mob's column is in a player's tick region or kept. Centred on where the players stand
+/// now: a `/tp` this tick has not moved their views yet (`chunks::send_chunks` runs next tick).
+fn ticked(world: &World, watchers: &[Watcher], layer: Entity, at: [f32; 3], reach: i32) -> bool {
+    let column = ChunkPos::of_block(at[0].floor() as i32, at[2].floor() as i32);
+    let near = |watcher: &Watcher| watcher.layer == layer && crate::ticking::in_tick_region(column.x - watcher.chunk().x, column.z - watcher.chunk().z, reach);
+    watchers.iter().any(near) || world.get::<crate::kept::Kept>(layer).is_some_and(|kept| kept.holds(column))
 }
 
 fn nearest(watchers: &[Watcher], layer: Entity, at: [f32; 3]) -> f32 {

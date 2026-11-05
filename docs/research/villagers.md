@@ -61,8 +61,9 @@ untraded villager's profession at its next look (the Java rule); it now keeps it
   five) or `entity.wandering_trader.name`, `new_trading_ui` and `economic_trades` true. The trader's
   `TradingPlayerEid` becomes the player's unique id and back to 0 at the close; it says `haggle`.
 - The offer list holds every tier's offers from the first rolling, locked ones with their `tier`. Each
-  recipe: `buyA`, `buyB`, `sell` (`Name`, `Count`, `Damage`, `Block` for a block item, `WasPickedUp` 0;
-  a wanted item without a data value has `Damage` 32767, any), `buyCountA`, `buyCountB`, `demand`,
+  recipe: `buyA`, `buyB`, `sell` (`Block` for a block item, `Count`, `Damage`, `Name`, `WasPickedUp` 0,
+  `tag`: in name order, as BDS's compounds keep their keys, bds-s3books.txt; a wanted item without a
+  data value has `Damage` 32767, any), `buyCountA`, `buyCountB`, `demand`,
   `maxUses`, `netId`, `priceMultiplierA`, `priceMultiplierB`, `rewardExp` (byte), `tier`, `traderExp`,
   `uses`; beside `Recipes`, `TierExpRequirements` (`[{"0": 0}, {"1": 10}, ...]`).
 - A trade: `CraftRecipe` naming the `netId`, `Consume` of `buyCountA` from `Trade2Ingredient1` (slot 4)
@@ -152,6 +153,12 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   corrected 2026-11-04: 14194d9b0 is the legacy `villager` v1's `LegacyTradeableComponent`]. A player's hit on a villager takes 1, or 3 from a baby
   [BDS DwellerComponent hurt 141ba6be0]. A villager killed by a player takes 2 more; an iron golem 5
   [BDS DwellerComponent death 141ba6460].
+- A cure gives 5 to every player the village keeps a standing for, the curer only if it has one
+  [BDS conversion 0x142445c80, read 2026-11-05: for a converting zombie villager (types 0x30b2c, 0x30b74)
+  it finds the overworld village about the actor and calls `modifyStanding(+5)` over the whole
+  `mPlayerStanding` map, Village+0x218, as `modifyStanding` 0x142a31380 reads it]. Sapling:
+  `standing.rs` `cured`, from `conversion.rs` `turned`; test `a_cure_raises_every_kept_standing_by_five`.
+  Not drilled.
 - Two village-wide timers step good standings down by one every 120000 ticks and bad ones up every
   12000, by as many steps as periods passed [BDS `Village::tick` 142a23bc0,
   `mGoodStandingDecayTimer`/`mBadStandingDecayTimer`].
@@ -239,7 +246,11 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   bds-s3poi*.txt): a free unskilled villager 1 off a bell with a bed 3 off took a blast furnace 7, 9,
   11, 13 and 14 off the bell (twice) within 15 s, 15 off once of twice, and none 16, 20, 26 or 32 off
   in 60 s, so 16 across is a fit; the up and down reach stays a guess. BDS's `family=armorer`
-  matched the armorer; sapling's families are by kind only (open).
+  matched the armorer: a profession's component group adds its `type_family`. Sapling's selectors
+  now ask the mob (`EntityBackend::entity_families`, `villagers/jobs.rs` `FAMILIES` from the pack:
+  villager, the trade's group (peasant, blacksmith, artisan, priest or none), the profession, mob;
+  a zombie villager its own, `zombie_villager`, zombie, undead, monster, mob); test
+  `a_villager_that_takes_up_armoring_is_of_the_armorer_family`.
 - The wandering trader leaves after 2400 or 3600 seconds (its `minecraft:timer`, taken as seconds) or
   once sold out, when no player is within 24 blocks; its timer is not kept by the actor compound.
 

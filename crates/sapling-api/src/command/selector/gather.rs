@@ -52,7 +52,7 @@ pub(super) fn candidates(ctx: &mut ShardCtx<'_>, sender: &Sender, base: Base, fi
             name: String::new(),
             feet: entity.feet,
             rotation: [entity.yaw, entity.pitch],
-            families: families(ctx, filters, &entity.kind),
+            families: if filters.families.is_empty() { Vec::new() } else { ctx.entity_families(entity.id, &entity.kind) },
             tags: tags(ctx, filters, Tagged::Entity(entity.id)),
             scores: scores(ctx, filters, ScoreHolder::Entity(entity.id)),
             mode: None,

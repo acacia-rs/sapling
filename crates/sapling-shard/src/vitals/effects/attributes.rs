@@ -62,7 +62,7 @@ pub(crate) fn tell_pace(world: &mut World, player: Entity, id: u64) {
     if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
         simulated.set_speed(unfrozen);
     }
-    super::tell(world, player, &told);
+    crate::vitals::tell(world, player, &told);
 }
 
 /// The health on top of a player's own.

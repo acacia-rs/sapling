@@ -81,9 +81,11 @@ impl Deal {
     /// The offer's compound, as the trading screen (`net_id` its recipe id) or the actor keeps it.
     pub fn compound(&self, net_id: Option<u32>, hero: Option<u8>, registry: &BlockRegistry) -> Value {
         let [a, b] = self.prices(hero);
+        // BDS's compounds keep their keys sorted (bds-s3books.txt: Block, Count, Damage, Name, WasPickedUp, tag).
         let item = |ware: &Ware| {
             let mut fields = stack(ware, registry).fields(registry);
             fields.push(("WasPickedUp".into(), Value::Byte(0)));
+            fields.sort_by(|(a, _), (b, _)| a.as_str().cmp(b.as_str()));
             Value::Compound(fields)
         };
         let int = |key: &str, value: i32| (Str::from(key), Value::Int(value));

@@ -134,6 +134,9 @@ pub(in crate::creatures) fn kept_through_turning(world: &World, mob: Entity) -> 
 /// A cured zombie villager's villager is what it was before: its offers and how far it got.
 pub(in crate::creatures) fn turned(world: &mut World, villager: Entity, kept: Option<Trader>) {
     let Some(was) = kept else { return };
+    if let (Some(layer), Some(body)) = (world.get::<InLayer>(villager).map(|layer| layer.0), world.get::<crate::body::Body>(villager)) {
+        super::standing::cured(world, layer, body.at);
+    }
     let Some(mut trader) = world.get::<Trader>(villager).cloned() else { return };
     (trader.profession, trader.mark, trader.skin, trader.tier, trader.experience) = (was.profession, was.mark, was.skin, was.tier, was.experience);
     (trader.deals, trader.tiers) = (was.deals, was.tiers);
