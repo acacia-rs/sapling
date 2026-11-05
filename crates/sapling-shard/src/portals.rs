@@ -12,6 +12,7 @@ mod draws;
 pub(crate) mod end;
 mod exit;
 mod gateway;
+mod gateway_load;
 mod records;
 
 use bevy_ecs::prelude::*;
@@ -26,6 +27,7 @@ use crate::dimensions::{self, Arriving, Trip};
 
 pub(crate) use arrive::arrive;
 pub(crate) use exit::risen_home;
+pub(crate) use gateway_load::arrived as gateways_arrived;
 
 /// A player's cooldown after a trip, held at this while it stays in a portal.
 const COOLDOWN: u32 = 10;

@@ -43,6 +43,7 @@ mod drowned;
 mod emotes;
 mod enchantments;
 mod end;
+mod end_gateway_loads;
 mod entities;
 mod entity_properties;
 mod eyes;
