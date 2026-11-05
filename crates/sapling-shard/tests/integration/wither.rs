@@ -101,6 +101,30 @@ fn a_t_lying_on_the_floor_calls_one_too() {
     assert!(all::<AddEntity>(&sent).iter().any(|added| added.entity_type == WITHER));
 }
 
+/// research/captures/bds-g8wither.txt: skulls along z at x 4, the stem west at x 2, gave the
+/// wither at (6.5, -27.95, 0.5); here the same T a block east and 91 up.
+#[test]
+fn a_t_lying_with_its_skulls_along_z_calls_it_two_and_a_half_east_of_them() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(move |ctx| {
+        ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        for pos in [[3, 65, 0], [4, 65, -1], [4, 65, 0], [4, 65, 1]] {
+            ctx.set_block(pos, &Block::new("minecraft:soul_sand"));
+        }
+        for pos in [[5, 65, -1], [5, 65, 0]] {
+            ctx.set_block(pos, &Block::new(SKULL));
+        }
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new(SKULL, 1))));
+    });
+    h.tick_all();
+    h.receive(1, &click([5, 64, 1], 1, Some(SKULL)));
+    let sent = watch(&mut h, 3);
+    let wither = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == WITHER).expect("a wither");
+    assert!((wither.position.x, wither.position.z) == (7.5, 0.5) && (wither.position.y - 63.05).abs() < 1e-3, "{:?}", wither.position);
+}
+
 /// Against research/captures/bds-witherdeath.txt.
 #[test]
 fn killed_it_counts_down_200_ticks_flashing_faster_then_bursts_and_leaves_a_nether_star() {

@@ -92,6 +92,17 @@ T, foot (2,-26,0), at (6.5,-27.95,0.5), in the ground. BDS's matcher (0x1415f294
 match corner, the skull row's lowest cell on each axis, plus (1.5, -1.95, 1.5) in world axes whatever
 way the T stands; sapling does so since 2026-11-04 (`blocks/summoning.rs`). That fits the upright T; the
 lying one's wither was announced a block further east than the rule gives (left: pushed out of the floor?).
+Re-drilled 2026-11-05 (twelfth wave, `bds_command_probe g8wither`, research/captures/bds-g8wither.txt,
+sapling-g8wither.txt): skulls along z at x 4 with the stem at x 2 and with it at x 6 both gave the wither at
+(6.5, -27.95, 0.5), so it is no push out of the floor (the stem at 6 leaves that cell air) and not the
+skull row's corner plus (1.5, -1.95, 1.5) (sapling 5.5); the upright T gave (4.5, -25.95, 0.5) again. The
+matcher (0x1415f2940, tried by 1415f25d0 for each forward and up) returns its search origin + ((width - 1)
+/ 2, -(height - 1), (width - 1) / 2) in world axes; the origin it is handed for a lying T was not traced
+(callers 144bbf720). The two Ts lying along x (stems at z -2 and 2) made no wither on BDS in two runs: the
+bot's last skull went astray (`nothing to place against`), so the rule for them is not known. Fixed for
+what was seen: a T lying with its skulls along z stands its wither a block further east than the corner
+rule (`summoning::lying_east`, test `a_t_lying_with_its_skulls_along_z_calls_it_two_and_a_half_east_of_them`);
+a T lying with its skulls along x keeps the corner rule, not drilled.
 Unverified: the bar's title (`entity.wither.name` here); the side heads' wait between idle looks (Java's 10 + rand 10); aiming at the target's eyes
 less 0.5; its flight (Java's way of keeping 5 over its prey at 0.3 a tick; BDS sets movement 0.6).
 Its 200-tick death is built as BDS's in `witherdeath` (research/captures/bds-witherdeath.txt,
