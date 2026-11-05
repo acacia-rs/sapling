@@ -12,15 +12,15 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 
 ## sapling gaps ranked by how likely a real client notices
 
-1. **Shift-click crafts that make more than 64 are refused.** `Craft::start` wants `each * times <= 64`
-   (`sapling-shard/src/inventory/crafting.rs:26`); 17+ logs into planks fails. BDS keeps the surplus pending
-   behind slot 50 (E3).
-2. **Stored double chests.** sapling sends the stored compound, so a client that gets `pairlead/pairx/pairz`
-   draws one large chest, while sapling opens 27 slots at the clicked half. BDS opens 54 at the lead (B).
+1. Resolved: a shift-click craft past 64 keeps the surplus pending behind slot 50, as BDS (E3); test
+   `seventeen_logs_shift_crafted_make_68_planks_the_surplus_waiting_behind_the_output`.
+2. Resolved: a stored double chest opens its 54 slots at the lead from either half, as BDS (B); test
+   `a_stored_double_chest_opens_its_54_slots_at_the_lead_from_either_half`.
 3. **Recipe book.** Resolved: sapling keeps and sends each player's book as BDS does (E5); `/recipe`
    reads that book (`ShardCtx::known_recipes`), so its answers know picked-up unlocks and survive a rejoin.
 4. **Barrels do not look open** (no `open_bit` block change), and **no container sounds** at all (A3, C).
-5. **Cake, honey block, honey bottle to sugar** are refused: the only three recipes with two outputs (E4).
+5. Resolved: cake, honey block and honey bottle to sugar, the two-output recipes, give their leftovers as
+   BDS (E4); test `a_cake_is_made_with_its_three_buckets_given_back`.
 6. **Inventory screen `ContainerOpen` entity id**: sapling sends the player's id, BDS sends -1 (A1).
 7. Furnaces, stonecutters, smithing tables, hoppers, shulker and ender chests do not open (D, F, G, C).
 8. Not visible to an honest client: no grid check for `CraftRecipe` (E1), no reach check (A5), the lid's

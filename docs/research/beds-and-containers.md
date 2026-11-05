@@ -170,8 +170,10 @@ ender chest and barrel actors; shulker box has its own AABB). Fields set by the 
 
 ## sapling gaps (vs `crates/sapling-shard/src`)
 
-- Sleeping (`sleep.rs`, `sleep/rest.rs`, `sleep/stand.rs`) does 1-4 but the water check (2.2.1) and the
-  straw bed. `bds_command_probe rest` (research/captures/bds-rest.txt) confirmed: a zombie 6 off the bed
+- Sleeping (`sleep.rs`, `sleep/lie.rs`, `sleep/rest.rs`, `sleep/stand.rs`) does 1-4 but the straw bed;
+  the water check (2.2.1) since 2026-11-05: water in the head's liquid layer refuses one without
+  water breathing, conduit power or respiration, silently, before the spawn is set.
+  `bds_command_probe rest` (research/captures/bds-rest.txt) confirmed: a zombie 6 off the bed
   refuses (`tile.bed.notSafe`, after the spawn is set), one 9 off does not, a zombified piglin 3 off refuses;
   a storm at noon lets one sleep, but 8 s of it skipped nothing (sapling skips only a night); and the
   stand-up cell is `findStandUpPosition`'s, whose tables (14a7d6220, 14a7d62b0) turn about the bed's

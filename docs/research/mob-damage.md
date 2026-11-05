@@ -462,6 +462,11 @@ Captures research/captures/bds-n3*.txt and sapling-n3*.txt (examples/shared/nint
   nothing makes its mob flinch (`harm::flinch`); test
   `a_snowball_costs_a_blaze_three_and_an_egg_harms_a_cow_nothing`. Re-drilled: sapling's cows the
   same, but sapling sends the moved speed in the hit's tick, BDS the tick after.
+- **An arrow off one who takes nothing** (the actor under resistance V; bds-pillswitch2.txt's guarded
+  villager): BDS's arrow bounces back at motion x -0.1, stays at the hit point that tick, tells the
+  next motion with the 0.99 drag, plays `bow.hit` the tick after and flies on, not removed. Fixed
+  2026-11-05 (`creatures/hits.rs` `After::Bounced`, `flight.rs` `bounced_off`); test
+  `an_arrow_off_a_player_who_takes_nothing_bounces_back_a_tenth_as_fast_and_stays`.
 - **Breath** (n3breath, a cow 8 s under a stone lid, then let out): its `Air` counted down 1 a tick
   from 300 and went straight back to 300 the tick the water was gone. Same as sapling. Drowning
   hurt every 10 ticks from 15 s on both.

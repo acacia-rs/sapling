@@ -309,7 +309,9 @@ and tnt.rs):
     removes it at the next tick (`creatures/flight.rs`). Re-drilled (sapling-shoot.txt,
     sapling-e1arrow.txt): AddEntity, the first move and SetEntityMotion in one tick, a point-blank
     arrow announced with its hit and gone the tick after, as BDS. Small fireballs, llama spit and
-    witch potions still move first a tick after (BDS: the loosing tick).
+    witch potions: re-drilled 2026-11-05 (blaze, provoke2, witch), each moves and is told its
+    motion in its loosing tick, as BDS's. Still left: BDS announces a dispenser's arrow after its
+    first move (AddEntity at the moved spot, n3knock, f1pickup) and its speed, yaw and pitch differ.
 
 Drilled 2026-11-04, seventh wave (examples/shared/seventh1_drill.rs):
 
