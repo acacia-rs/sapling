@@ -109,6 +109,18 @@ fn goal(world: &mut World, layer: Entity, eyes: [f32; 3], kept: Goal, looks: Opt
     Goal::Idle
 }
 
+/// The entity's body is turned to `yaw` (a `/tp` with a turn): a mob's legs and gaze start over
+/// from it, its head following a tick later (bds-g8rot.txt).
+pub(super) fn turn(world: &mut World, entity: Entity, yaw: f32) {
+    if let Some(mut legs) = world.get_mut::<Legs>(entity) {
+        legs.yaw = yaw;
+    }
+    world.entity_mut(entity).remove::<Gaze>();
+    if let Some(mut told) = world.get_mut::<Told>(entity) {
+        told.turn_body(yaw);
+    }
+}
+
 /// After its legs were steered: the mob of `kind`, left to itself, turns its head and pitches, and
 /// its body comes round.
 pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {

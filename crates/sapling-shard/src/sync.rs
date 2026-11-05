@@ -33,11 +33,7 @@ pub(crate) fn flags_packet(id: u64, word: Flags) -> Bytes {
     sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![flags_item(word)], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
 }
 
-/// The byte BDS tells a turn of `degrees` in: wrapped to -180..180, then cut toward zero
-/// (research/captures/bds-g8rot.txt: -29.5 and 330.5 are 236, -0.7 is 0, 200 is 143).
-pub(crate) fn angle_byte(degrees: f32) -> u8 {
-    (((degrees + 180.0).rem_euclid(360.0) - 180.0) / 1.40625) as i32 as u8
-}
+pub(crate) use sapling_data::angle_byte;
 
 fn length(v: [f32; 3]) -> f32 {
     v.iter().map(|axis| axis * axis).sum::<f32>().sqrt()
@@ -52,6 +48,8 @@ pub(crate) struct Told {
     /// Its body's and its head's turn as viewers know them, and as they are now.
     turned: [u8; 2],
     turn: [u8; 2],
+    /// Its head comes round to its body after the next update (a teleport's turn).
+    head_follows: bool,
     /// Its pitch as viewers know it and as it is now; `None` for an entity whose pitch is not told.
     pitched: Option<[u8; 2]>,
     /// Its next move is a teleport, which BDS sends forced.
@@ -108,7 +106,7 @@ impl Shown {
 impl Told {
     /// An entity just announced at `at`; its announced motion does not count.
     pub fn new(at: [f32; 3]) -> Self {
-        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], pitched: None, jumped: false, every_move: false, pending: None, paced: Paced::default(), grounded: None }
+        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], head_follows: false, pitched: None, jumped: false, every_move: false, pending: None, paced: Paced::default(), grounded: None }
     }
 
     /// This tick's move, not yet handed to viewers.
@@ -222,6 +220,19 @@ impl Told {
         self.turn = [yaw, head].map(angle_byte);
     }
 
+    /// Viewers knew it turned `yaw` and `head` at its announcement.
+    pub fn announced_facing(&mut self, yaw: f32, head: f32) {
+        self.face(yaw, head);
+        self.turned = self.turn;
+    }
+
+    /// Its body now faces `yaw`: viewers are told with its next [`Told::update`] and of its head
+    /// following with the one after, as BDS told teleported armour stands (bds-g8rot.txt).
+    pub fn turn_body(&mut self, yaw: f32) {
+        self.turn[0] = angle_byte(yaw);
+        self.head_follows = true;
+    }
+
     /// Its body's yaw and its pitch as they are now, in degrees from -180 to 180, to the
     /// 1.4 degrees viewers are told them in.
     pub fn facing(&self) -> [f32; 2] {
@@ -269,6 +280,9 @@ impl Told {
             packets.push(bytes.clone());
             let at_once = jumped || self.grounded != Some(on_ground);
             self.pending = Some(Pending { delta, bytes, at_once, before });
+        }
+        if std::mem::take(&mut self.head_follows) {
+            self.turn[1] = self.turn[0];
         }
         let change = length(std::array::from_fn(|axis| motion[axis] - self.motion[axis]));
         let stopped = motion == [0.0; 3] && self.motion != [0.0; 3];

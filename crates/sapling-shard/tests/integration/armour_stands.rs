@@ -3,7 +3,7 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, MobArmorEquipment, RemoveEntity, SetEntityData};
+use acacia_proto::packets::{AddEntity, AddItemEntity, LevelEvent, LevelEventEvent, LevelSoundEvent, MobArmorEquipment, MoveEntityDelta, RemoveEntity, SetEntityData};
 use acacia_proto::types::{InputData, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, TransactionTransactionData};
 use common::asking::ask;
 use common::raising::use_on;
@@ -153,4 +153,24 @@ fn a_stand_taken_from_the_fire_burns_one_a_second_till_it_is_gone() {
     assert_eq!(healths(&told, stand), [5.95, 4.95, 3.95, 2.95, 1.95, 0.95]);
     assert_eq!(all::<RemoveEntity>(&told).len(), 1);
     assert!(all::<AddItemEntity>(&told).is_empty());
+}
+
+#[test]
+fn a_stand_turned_by_a_teleport_is_told_its_body_then_its_head_as_on_bds() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:armor_stand", STAND, 30.0, None).is_some()));
+    let shown: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let added = all::<AddEntity>(&shown).into_iter().find(|added| added.entity_type == "minecraft:armor_stand").expect("shown");
+    // research/captures/bds-g8rot.txt: summoned at 30, announced on its byte.
+    assert_eq!([added.yaw, added.head_yaw, added.body_yaw], [29.53125; 3]);
+    let turns = |h: &mut Harness, yaw: f32| -> Vec<(Option<u8>, Option<u8>, bool)> {
+        let id = sapling_api::EntityId(added.runtime_id);
+        h.remote.run(move |ctx| assert!(ctx.turn_entity(id, yaw) && ctx.move_entity(id, STAND)));
+        let told: Vec<RawPacket> = (0..4).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+        all::<MoveEntityDelta>(&told).into_iter().filter(|delta| delta.runtime_entity_id == added.runtime_id).map(|delta| (delta.rot_y, delta.rot_z, delta.force_move)).collect()
+    };
+    assert_eq!(turns(&mut h, -29.5), [(Some(236), None, true), (None, Some(236), false)], "the body forced, the head a tick on");
+    assert_eq!(turns(&mut h, 29.5), [(Some(20), None, true), (None, Some(20), false)]);
+    assert_eq!(turns(&mut h, 30.5), [(Some(21), None, true)], "a head a byte off is not told");
 }

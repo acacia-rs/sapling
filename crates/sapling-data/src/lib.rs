@@ -1,6 +1,7 @@
 //! Game data a client needs before it can spawn: StartGame defaults, the registry packets and the
 //! player's own state packets. All of it is recorded from BDS and patched; see README.md.
 
+mod angles;
 mod armour;
 mod block_defaults;
 mod block_loot;
@@ -39,6 +40,7 @@ mod husbandry;
 mod raised_look;
 pub mod trades;
 
+pub use angles::{angle_byte, told_angle};
 pub use block_defaults::default_properties;
 pub use block_resistance::blast_resistance;
 pub use block_loot::{BlockLoot, Fortune, LootRow, StateTest, Tooling, block_loot, java_block, ripe_age};

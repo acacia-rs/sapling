@@ -23,8 +23,18 @@ enum Destination {
 
 #[derive(Clone)]
 enum Looks {
-    Along([f32; 2]),
+    /// Yaw and pitch, each `true` when counted from the sender's (`~`).
+    Along([(f32, bool); 2]),
     Facing(Coords),
+}
+
+/// The sender's yaw and pitch, which `~` turns count from (bds-g8rot.txt: a stand sent to `~-60` by
+/// an actor facing 0 was told -59.06).
+fn rotation(ctx: &ShardCtx<'_>, sender: &Sender) -> [f32; 2] {
+    match sender {
+        Sender::Executed(executed) => executed.rotation,
+        _ => sender.player().and_then(|player| ctx.position(player.id)).map_or([0.0; 2], |position| [position.yaw, position.pitch]),
+    }
 }
 
 /// The yaw and pitch of a player at `feet` whose eyes look at `point`.
@@ -65,12 +75,20 @@ impl CommandSyntax for Teleport {
                     args.word()?;
                     return Ok(Self { target, to, looks: Some(Looks::Facing(Coords::parse(args)?)) });
                 }
-                let angle = |args: &mut Args<'_>| -> Result<Option<f32>, ParseError> {
+                let angle = |args: &mut Args<'_>| -> Result<Option<(f32, bool)>, ParseError> {
                     let mark = args.mark();
-                    if args.is_empty() { Ok(None) } else { args.word()?.parse().map(Some).map_err(|_| args.error_at(mark)) }
+                    if args.is_empty() {
+                        return Ok(None);
+                    }
+                    let word = args.word()?.to_owned();
+                    let (number, relative) = word.strip_prefix('~').map_or((word.as_str(), false), |rest| (rest, true));
+                    match (number, relative) {
+                        ("", true) => Ok(Some((0.0, true))),
+                        _ => number.parse().map(|angle| Some((angle, relative))).map_err(|_| args.error_at(mark)),
+                    }
                 };
                 let looks = match (angle(args)?, angle(args)?) {
-                    (Some(yaw), pitch) => Some(Looks::Along([yaw, pitch.unwrap_or(0.0)])),
+                    (Some(yaw), pitch) => Some(Looks::Along([yaw, pitch.unwrap_or((0.0, false))])),
                     _ => None,
                 };
                 Self { target, to, looks }
@@ -104,7 +122,10 @@ impl Command for Teleport {
             }
         };
         let looks = match &self.looks {
-            Some(Looks::Along(looks)) => Some(*looks),
+            Some(Looks::Along(looks)) => {
+                let from = rotation(ctx, sender);
+                Some(std::array::from_fn(|side| looks[side].0 + if looks[side].1 { from[side] } else { 0.0 }))
+            }
             Some(Looks::Facing(point)) => Some(facing(to, point.resolve(ctx, sender))),
             None => None,
         };
@@ -119,6 +140,9 @@ impl Command for Teleport {
             tell_target(ctx, player.id, "commands.tp.successVictim", &[at.clone().unwrap_or_else(|| format!("{x}, {y}, {z}"))]);
         }
         for entity in &moved {
+            if let Some([yaw, _]) = looks {
+                ctx.turn_entity(entity.id, yaw);
+            }
             if !dimension.is_some_and(|dimension| ctx.move_entity_into(entity.id, dimension, to)) {
                 ctx.move_entity(entity.id, to);
             }
@@ -150,7 +174,9 @@ mod tests {
             Some(Looks::Facing(_)) => Some(None),
             None => None,
         };
-        assert_eq!([looks("~ ~ ~4 -90 10"), looks("@s ~ ~ ~4 45"), looks("~ ~ ~4"), looks("@s ~ ~ ~1.5 facing ~ ~1 ~")], [Some(Some([-90.0, 10.0])), Some(Some([45.0, 0.0])), None, Some(None)]);
+        let fixed = |yaw, pitch| Some(Some([(yaw, false), (pitch, false)]));
+        assert_eq!([looks("~ ~ ~4 -90 10"), looks("@s ~ ~ ~4 45"), looks("~ ~ ~4"), looks("@s ~ ~ ~1.5 facing ~ ~1 ~")], [fixed(-90.0, 10.0), fixed(45.0, 0.0), None, Some(None)]);
+        assert_eq!(looks("@s 1 2 3 ~-60 ~"), Some(Some([(-60.0, true), (0.0, true)])), "a turn counted from the sender's");
     }
 
     #[test]

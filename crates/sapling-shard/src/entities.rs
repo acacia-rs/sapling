@@ -122,13 +122,17 @@ pub(crate) fn spawn_mob(world: &mut World, layer: Entity, kind: &str, body: Body
     let mut announced = None;
     let entity = spawn(world, layer, kind, body, wire, |id| {
         let packets = announce(id)?;
-        announced = packets.first().and_then(|first| RawPacket::parse(first.clone()).ok()?.decode::<AddEntity>().ok()).and_then(|added| {
-            added.metadata.into_iter().find_map(|item| if let MetadataDictionaryItemValue::Flags(flags) = item.value { Some(flags) } else { None })
+        announced = packets.first().and_then(|first| RawPacket::parse(first.clone()).ok()?.decode::<AddEntity>().ok()).map(|added| {
+            let flags = added.metadata.into_iter().find_map(|item| if let MetadataDictionaryItemValue::Flags(flags) = item.value { Some(flags) } else { None });
+            (flags, [added.body_yaw, added.head_yaw])
         });
         Some(packets)
     })?;
-    if let (Some(announced), Some(mut told)) = (announced, world.get_mut::<Told>(entity)) {
-        told.flag_mob(announced);
+    if let (Some((flags, [yaw, head])), Some(mut told)) = (announced, world.get_mut::<Told>(entity)) {
+        told.announced_facing(yaw, head);
+        if let Some(flags) = flags {
+            told.flag_mob(flags);
+        }
     }
     Some(entity)
 }

@@ -216,6 +216,12 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   cure giving none is the same. The price rule (0x14163f4d0, called per offer by 141bd2dd0) does add
   `pm × discount` from the economy component's cured and nearby fields, clamped by their maxima; what
   sets them was not traced.
+  The "creeping" held villager of that drill (checked 2026-11-05, group 11) was not slowness 255
+  failing: the slowness came a second after the summon, and sapling's armorer had set off for its blast
+  furnace 0.35 s in (MOVING on, then off at 0.8 s; nothing after the slowness). BDS's summoned villagers
+  first move 0.1 to 3.7 s in (64 villagers over bds-f3golem, n1golems, n1golems20, n1drop, n1restock,
+  f3convert, g8cured, f3breed), sapling's mostly 0.04 to 3.4 s: the same, by chance on which side of the
+  slowness line one fell.
 
 ## Unverified (sapling's choice where BDS was not seen)
 
