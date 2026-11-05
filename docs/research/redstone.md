@@ -289,8 +289,8 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
     already out. Relit, it flips 16 times counting the relight, and the last one, out, plays `fizz`.
   - A block put beside it 120 ticks after it burnt out relights it at the next evaluation; one taken away 18
     ticks after does nothing (R21: the count must first pass 32, 17 evaluations on).
-  - The lamp past the dust stays lit through the flips. After the first burnout it went out 18 ticks after the
-    dust lost its signal, not 4 as after the later ones; sapling puts it out after 4 every time.
+  - The lamp past the dust stays lit through the flips. After the first burnout it went out 6 ticks after the
+    dust lost its signal (not 18, as first written), 4 after the later ones; sapling the same (see `n2tnt`).
 - `n2tnt` (2026-11-04, research/captures/bds-n2tnt.txt, `tntexplodes` off):
   - Dust pointing into TNT and into a bottom stair, a lamp behind each: neither lamp lit, and the TNT was not
     lit either: with `tntexplodes` off BDS's TNT stays a block under a signal, as its dispenser drops TNT then.
@@ -308,6 +308,12 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
     sapling-e3lamp.txt lights both lamps in the first flip's batch and puts them out 8 ticks after the last;
     test `a_torch_clock_holds_its_lamps_lit_from_its_first_flip_till_8_ticks_after_its_last`. The 18 after
     the first burnout (`n2bclock`) was not re-drilled.
+  - Re-drilled 2026-11-05 (`burnout`, research/captures/bds-burnout.txt against sapling-burnout.txt, with the
+    fixed lamp): the same on both. The lamp past the dust went out 6 ticks after the dust's last 0 (8 after the
+    torch's last flip) after the first burnout, and 4 after the dust's last 0 after each relight; 15 flips put
+    lit, 16 relit, with `fizz`, on both. The "18 ticks" was a misreading: bds-redstone-burnout.txt has the same
+    6 (dust 0 at 16637, lamp out at 16941). Left as it is: the torch's first flip came 3 ticks after the
+    command on this BDS run, 2 on the old run and on sapling, which is the 2-tick evaluation's phase.
 
 ## Repeaters (2026-10-09, `bds_command_probe repeater-facing` and `repeaters`, research/captures/bds-redstone-repeaters.txt)
 
