@@ -105,6 +105,11 @@ pub(super) fn dress(added: &mut AddEntity, properties: Option<&Properties>) {
 /// Sets the mob's property `name` to `value` (its number) and tells its viewers, with `metadata`
 /// BDS sent beside the change; nothing when the property already holds it.
 pub(crate) fn set(world: &mut World, entity: Entity, name: &str, value: i32, metadata: Vec<MetadataDictionaryItem>) {
+    set_after(world, entity, name, value, metadata, 0);
+}
+
+/// [`set`] at once, its viewers told `after` ticks on.
+pub(super) fn set_after(world: &mut World, entity: Entity, name: &str, value: i32, metadata: Vec<MetadataDictionaryItem>, after: u64) {
     let Some(kind) = world.get::<Kind>(entity).map(|kind| kind.0.clone()) else { return };
     let Some(property) = sapling_data::entity_property(&kind, name) else { return };
     let index = property.index;
@@ -123,7 +128,11 @@ pub(crate) fn set(world: &mut World, entity: Entity, name: &str, value: i32, met
     let (Some(id), Some(layer), Some(body)) = (world.get::<NetId>(entity).map(|id| id.0), world.get::<InLayer>(entity).map(|layer| layer.0), world.get::<Body>(entity).copied()) else { return };
     let properties = EntityProperties { ints: vec![EntityPropertiesIntsItem { index, value }], floats: Vec::new() };
     let packet = sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata, properties, tick: 0 });
-    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![packet]);
+    let cell = body.at.map(|c| c.floor() as i32);
+    match after {
+        0 => entities::tell_viewers(world, entity, layer, cell, vec![packet]),
+        _ => crate::late_sounds::play_later(world, after, layer, cell, packet),
+    }
     super::shown::reshow(world, entity);
 }
 

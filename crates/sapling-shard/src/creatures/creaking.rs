@@ -127,7 +127,8 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         world.get_mut::<Creaking>(entity).expect("read above").frozen = Some(now);
         let mut told = vec![flags_extended(CALM | OBSERVED)];
         told.extend(woke.then(|| properties::ambient_sound("undefined")));
-        properties::set(world, entity, heart::STATE, OBSERVED_STATE, told);
+        // Woken, BDS told it a tick on, after `activate` (bds-gxcreak.txt).
+        properties::set_after(world, entity, heart::STATE, OBSERVED_STATE, told, u64::from(woke));
     }
     if (now - since).is_multiple_of(STARES) {
         late_sounds::play_later(world, 1, layer, cell, hunting::sound("stare", id, kind, &body, HEAD));

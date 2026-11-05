@@ -25,9 +25,11 @@ fn a_creaking_whose_prey_turns_creative_deactivates() {
         ctx.set_game_mode(ALEX, GameMode::Survival);
         assert!(ctx.spawn_entity("minecraft:creaking", [0.5, 65.0, -6.5]).is_some());
     });
-    let hunted: Vec<RawPacket> = (0..40).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let ticks: Vec<Vec<RawPacket>> = (0..40).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let hunted: Vec<RawPacket> = ticks.concat();
     let creaking = all::<AddEntity>(&hunted).into_iter().find(|added| added.entity_type == "minecraft:creaking").expect("shown").runtime_id;
-    assert!(states(&hunted, creaking).contains(&1), "active on its prey: {:?}", states(&hunted, creaking));
+    let active = ticks.iter().position(|sent| states(sent, creaking).contains(&1)).expect("active on its prey");
+    assert!(all::<LevelSoundEvent>(&ticks[active]).iter().any(|sound| sound.sound_id == "activate"), "told active with its `activate`, a tick after taking its prey");
     h.remote.run(|ctx| ctx.set_game_mode(ALEX, GameMode::Creative));
     let lost: Vec<RawPacket> = (0..5).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     assert!(all::<LevelSoundEvent>(&lost).iter().any(|sound| sound.sound_id == "deactivate"), "deactivate heard");
