@@ -56,6 +56,8 @@ pub(crate) enum Job {
     Unpaired,
     /// TNT a burning shot met is primed (tnt.rs).
     Ignite,
+    /// Potent sulfur erupts, or settles back (sulfur.rs).
+    PotentSulfur,
 }
 
 /// What a queued tick is for.
@@ -162,6 +164,7 @@ pub(super) fn job_of(name: &str, properties: &str) -> Option<Job> {
         "lectern" => Job::Lectern,
         "big_dripleaf" if !properties.split(',').any(|pair| pair == "big_dripleaf_tilt=none") => Job::Dripleaf,
         "command_block" | "repeating_command_block" | "chain_command_block" => Job::Command,
+        "potent_sulfur" => Job::PotentSulfur,
         name if super::coral::is_live(&format!("minecraft:{name}")) => Job::Coral,
         name if super::eggs::is_egg(&format!("minecraft:{name}")) => Job::Hatch,
         _ => return None,
@@ -233,5 +236,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, ticked: Ticked) {
         Job::Loosened => super::updates::loosened::popped(world, layer, pos),
         Job::Unpaired => crate::containers::stand_alone(world, layer, pos),
         Job::Ignite => crate::tnt::ignited(world, layer, pos),
+        Job::PotentSulfur => super::sulfur::ticked(world, layer, pos),
     }
 }

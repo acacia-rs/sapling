@@ -1,0 +1,87 @@
+## drill starts at 1793900632895
+## /gamemode creative @a
+     38 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     38 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     38 actor   CommandOutput success_count=2 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"] | commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+     38 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     38 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.other\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"},{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /tp @a -12001 72 -12029
+   1012 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-12000.50, 72.00, -12028.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1013 actor   CommandOutput success_count=2 data=None commands.tp.success.coordinates success=true ["CmdActor, CmdWatcher", "-12000.50", "72.00", "-12028.50"]
+   1013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-12000.50, 72.00, -12028.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"-12000.50\"},{\"text\":\"72.00\"},{\"text\":\"-12028.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1042 actor   RemoveEntity RemoveEntity { entity_id_self: -8589934590 }
+   1052 watcher RemoveEntity RemoveEntity { entity_id_self: -8589934591 }
+   1633 actor   LevelSoundEvent LevelSoundEvent { sound_id: "land", position: Vec3f { x: -12000.5, y: 69.390915, z: -12028.5 }, extra_data: -595350462, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: -8589934590, fire_at_position: None }
+   1643 watcher LevelSoundEvent LevelSoundEvent { sound_id: "land", position: Vec3f { x: -12000.5, y: 69.390915, z: -12028.5 }, extra_data: -595350462, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: -8589934591, fire_at_position: None }
+## /testforblock -12004 67 -12032 potent_sulfur ["potent_sulfur_state"="dormant"]
+   2015 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.data success=false ["-12004", "67", "-12032"]
+## /testforblock -12004 67 -12032 potent_sulfur ["potent_sulfur_state"="wet"]
+   3014 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.data success=false ["-12004", "67", "-12032"]
+## /testforblock -12004 67 -12032 potent_sulfur ["potent_sulfur_state"="erupting"]
+   4012 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.data success=false ["-12004", "67", "-12032"]
+## /testforblock -12004 68 -12032 ice
+   5016 actor   CommandOutput success_count=1 data=None commands.testforblock.success success=true ["-12004", "68", "-12032"]
+   5016 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.testforblock.success\",\"with\":{\"rawtext\":[{\"text\":\"-12004\"},{\"text\":\"68\"},{\"text\":\"-12032\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /testforblock -12004 68 -12032 water
+   6018 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.tile success=false ["-12004", "68", "-12032", "%tile.ice.name", "%tile.water.name"]
+   6083 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1, paused: false }] }) }
+   6083 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  18886 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1, paused: false }] }) }
+  18886 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  31683 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1, paused: false }] }) }
+  31683 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+  44483 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1, paused: false }] }) }
+  44483 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1, paused: false }] }) }
+## /
+## /
+## /testforblock -12004 67 -12032 potent_sulfur ["potent_sulfur_state"="dormant"]
+  47067 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.data success=false ["-12004", "67", "-12032"]
+## /testforblock -12004 67 -12032 potent_sulfur ["potent_sulfur_state"="wet"]
+  48068 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.data success=false ["-12004", "67", "-12032"]
+## /testforblock -12004 67 -12032 potent_sulfur ["potent_sulfur_state"="erupting"]
+  49067 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.data success=false ["-12004", "67", "-12032"]
+## /testforblock -12004 68 -12032 ice
+  50062 actor   CommandOutput success_count=1 data=None commands.testforblock.success success=true ["-12004", "68", "-12032"]
+  50062 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.testforblock.success\",\"with\":{\"rawtext\":[{\"text\":\"-12004\"},{\"text\":\"68\"},{\"text\":\"-12032\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /testforblock -12004 68 -12032 water
+  51070 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.tile success=false ["-12004", "68", "-12032", "%tile.ice.name", "%tile.water.name"]
+probe exit 0

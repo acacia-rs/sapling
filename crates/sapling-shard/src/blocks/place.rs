@@ -87,10 +87,8 @@ impl Request<'_> {
             out.0.split_off(from)
         });
         if site.mode == GameMode::Creative {
-            // BDS showed its placer the clicked and the placed cell, each with those above and below.
-            let column = |cell: BlockPos| [cell, Face::Up.neighbour(cell), Face::Down.neighbour(cell)];
             inventory::show_windows(self.world, self.entity, false);
-            placed.inspect(|&pos| send::show_to(self.world, self.entity, &[column(against), column(pos)].concat()));
+            placed.inspect(|&pos| send::show_about_click(self.world, self.entity, against, pos));
             inventory::show_windows(self.world, self.entity, true);
             inventory::show_hand(self.world, self.entity);
         } else {

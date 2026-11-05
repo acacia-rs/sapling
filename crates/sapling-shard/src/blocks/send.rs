@@ -242,6 +242,29 @@ pub(crate) fn show_to(world: &mut World, player: Entity, positions: &[BlockPos])
     }
 }
 
+/// [`show_to`] of the cells BDS shows its user about a use on a block: the clicked cell and `other` (the
+/// clicked face's neighbour, or where a place went), each with the cells above and below.
+pub(crate) fn show_about_click(world: &mut World, player: Entity, clicked: BlockPos, other: BlockPos) {
+    let column = |[x, y, z]: BlockPos| [[x, y, z], [x, y + 1, z], [x, y - 1, z]];
+    show_to(world, player, &[column(clicked), column(other)].concat());
+}
+
+/// Runs `use_block`, then [`show_about_click`] ahead of what it sent `player`: BDS answers its user before
+/// the change reaches anyone, the cells as they are after it (bds-af2vault.txt).
+pub(crate) fn about_click_first<R>(world: &mut World, player: Entity, clicked: BlockPos, other: BlockPos, use_block: impl FnOnce(&mut World) -> R) -> R {
+    let mark = world.get::<Outgoing>(player).map_or(0, |out| out.0.len());
+    let used = use_block(world);
+    let sent = world.get_mut::<Outgoing>(player).map(|mut out| {
+        let from = mark.min(out.0.len());
+        out.0.split_off(from)
+    });
+    show_about_click(world, player, clicked, other);
+    if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+        out.0.extend(sent.into_iter().flatten());
+    }
+    used
+}
+
 /// Shows one player both layers of each position as the world has them, undoing what its client
 /// predicted there. Positions the world does not hold are skipped: the client has nothing there.
 pub(crate) fn resync(world: &mut World, player: Entity, positions: &[BlockPos]) {

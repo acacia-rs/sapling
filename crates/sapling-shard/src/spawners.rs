@@ -12,7 +12,7 @@ use std::collections::HashSet;
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, GameMode};
+use sapling_api::{BlockPos, Face, GameMode};
 
 use crate::blocks::Dice;
 use crate::components::{InLayer, Layer, Mode, Position, Stage, Tick};
@@ -138,15 +138,15 @@ pub(crate) fn tick(world: &mut World) {
     }
 }
 
-/// A click with `held` on the block at `pos` by `player`: a spawn egg sets a spawner's kind, a key
-/// opens a vault. `Some(spent)` when it did, `spent` when the item is used up outside creative.
-pub(crate) fn use_item(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, held: &str) -> Option<bool> {
+/// A click with `held` on `face` of the block at `pos` by `player`: a spawn egg sets a spawner's kind, a
+/// key opens a vault. `Some(spent)` when it did, `spent` when the item is used up outside creative.
+pub(crate) fn use_item(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, face: Face, held: &str) -> Option<bool> {
     let level = &world.get::<Layer>(layer)?.world;
     let name = level.registry().get(level.block(pos[0], pos[1], pos[2]))?.name;
     match name {
         "minecraft:mob_spawner" => monster::use_egg(world, layer, pos, held),
         "minecraft:trial_spawner" => trial::use_egg(world, layer, pos, held),
-        "minecraft:vault" => vault::use_key(world, player, layer, pos, held),
+        "minecraft:vault" => vault::use_key(world, player, layer, pos, face.neighbour(pos), held),
         _ => None,
     }
 }

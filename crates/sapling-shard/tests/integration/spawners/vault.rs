@@ -1,7 +1,7 @@
 use super::*;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateSubchunkBlocks};
+use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock, UpdateSubchunkBlocks};
 
 const VAULT: [i32; 3] = [2, 65, 0];
 
@@ -88,6 +88,43 @@ fn the_wrong_item_is_refused_aloud_and_kept() {
     let sent = h.tick_all();
     assert!(sounds(&sent).contains(&"vault.insert_item_fail".to_owned()), "{:?}", sounds(&sent));
     assert_eq!((state(&mut h), ask(&mut h, |ctx| ctx.item(ALEX, Slot::Main(0)).map(|held| held.count))), ("active".to_owned(), Some(1)));
+}
+
+/// Each UpdateBlock Alex was sent: its index among the packets, cell, layer and state.
+fn updates(sent: &[RawPacket]) -> Vec<(usize, [i32; 3], u32, u32)> {
+    let one = std::slice::from_ref::<RawPacket>;
+    let of = |(i, packet): (usize, &RawPacket)| common::all::<UpdateBlock>(one(packet)).into_iter().map(move |update| (i, [update.position.x, update.position.y, update.position.z], update.layer, update.block_runtime_id));
+    sent.iter().enumerate().flat_map(of).collect()
+}
+
+#[test]
+fn a_key_shows_its_user_the_cells_about_the_click_first_and_a_refusal_shows_none() {
+    // research/captures/bds-af2vault.txt: at the key its user is sent layer 0 of the vault and the cells above and
+    // below it, then of the clicked face's neighbour and those above and below that, the vault already unlocking,
+    // before its block, entity and insert_item go out; a stick is only heard.
+    let mut h = beside_a_vault();
+    run(&mut h, 25);
+    let up = |dy: i32| [VAULT[0], VAULT[1] + dy, VAULT[2]];
+    held(&mut h, "minecraft:stick", 1);
+    h.receive(1, &click(VAULT, 1, None));
+    let refused = h.tick_all().to(1).to_vec();
+    assert!(sounds_of(&refused).contains(&"vault.insert_item_fail".to_owned()));
+    assert!(updates(&refused).iter().all(|&(_, at, ..)| at != up(1)), "{:?}", updates(&refused));
+    held(&mut h, "minecraft:trial_key", 2);
+    h.receive(1, &click(VAULT, 1, None));
+    let sent = h.tick_all().to(1).to_vec();
+    let unlocking = hash(&mut h);
+    let shown = updates(&sent);
+    let cells = [up(0), up(1), up(-1), up(1), up(2), up(0)];
+    let first = shown.windows(6).find(|run| run.iter().map(|&(_, at, ..)| at).eq(cells)).expect("the six cells");
+    assert!(first.iter().all(|&(_, _, layer, _)| layer == 0) && first[0].3 == unlocking, "{first:?}");
+    let heard = sent.iter().position(|packet| sounds_of(std::slice::from_ref(packet)).contains(&"vault.insert_item".to_owned()));
+    assert!(heard.is_some_and(|heard| heard > first[5].0), "{heard:?}");
+    assert!(shown.iter().filter(|&&(_, at, _, id)| at == VAULT && id == unlocking).all(|&(i, ..)| i >= first[0].0), "nothing unlocking before them");
+}
+
+fn sounds_of(sent: &[RawPacket]) -> Vec<String> {
+    common::all::<LevelSoundEvent>(sent).into_iter().map(|sound| sound.sound_id).collect()
 }
 
 /// research/captures/bds-placing2.txt: BDS woke a vault put down by hand beside its placer.

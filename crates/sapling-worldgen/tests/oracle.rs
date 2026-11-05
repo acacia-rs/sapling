@@ -238,6 +238,7 @@ fn blocks_match_bds_canons() {
             Region::new("sulfur spring", -752, -755, -748, -751),
             Region::new("frozen river icebergs", -753, -756, -747, -756),
             Region::new("trial chamber ores", -28, -27, -28, -27),
+            Region::new("sulfur springs medium_1 small_2", -882, -634, -878, -626),
         ],
     );
 }

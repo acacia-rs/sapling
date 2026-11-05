@@ -101,6 +101,35 @@ stopped by TNT lights it (Java `TntBlock.onProjectileHit`). Fire lighting TNT, T
 nothing, blasts throwing entities and primed TNT saved with its column were already built (fire.md,
 block-uses.md "TNT").
 
+## Potent sulfur (`blocks/sulfur.rs`, 2026-11-05, parity/thirteenth2af)
+
+Read from the Linux 1.26.52 `bedrock_server` (objdump) and checked under gdb (`BDS_GDB`, drills `af2load`,
+`af2spring`; captures research/captures/bds-af2*.txt). `potent_sulfur_state` by number: dry 0, wet 1, dormant 2,
+erupting 3, continuous 4. Water here is a water source (material water, `liquid_depth` 0: b5c4ac0) as the block, or
+in the liquid layer of a block with an empty collision box.
+- Tick (0xcf57af0): `want = compute(cur)`; if `want != cur` set it, else dormant becomes erupting and erupting
+  dormant. compute (0xcf57e50): no water above: dry; a lava source below: continuous; magma below: dormant (erupting
+  stays erupting); else wet.
+- Set (0xcf57f80): a changed state is set with flags 3. Entering erupting or continuous from another state fires a
+  game event (f5e9d48) and, when the cell over the water column (up to 4 high, 0xcf59030) holds no liquid source in
+  either layer and has no collision box (0xcf59340), LevelSoundEvent `geyser_eruption_start`
+  (`geyser_continuous_eruption_start`) at the cell's middle, data -1. Leaving them fires f5e9d50. Then, changed or not,
+  dormant queues its next eruption and erupting its end.
+- Wait: `trunc(lerp(min, max, u) * 20)` ticks, seconds by water height (1 also for 0; table 0x1c7debc): erupting 1-2,
+  2-3, 3-4, 4-5; dormant 15-30, 25-40, 35-50, 45-60. `u` is the cell's positional xoroshiro from the level seed
+  (`RandomSeed`), upgraded with `0x6a09e66739a12823` where Java uses its silver ratio, then `Mth.getSeed` (x wrapped in
+  int): the first float for dormant, the second for erupting. gdb on seed 0xb55efc8fb0f7e382, cell 6 -21 13 under
+  one water: 399 and 37 every time (unit test in sulfur.rs). Every tick that lands re-queues, so a template's three
+  ticks give three overlapping cycles.
+- Loading: BDS keeps queued ticks on the level's clock. The ac2 canon (level `currentTick` 192) has the spring's
+  three ticks at 85, 309 and 369 from 0: under gdb the first ran as the WORLDGEN kick loaded the chunk, the other two
+  together when the drill's players arrived, so the cell was dry (ice over it) before anyone saw it. Sapling's
+  `blocks/pending.rs` now dates kept ticks by `Level::age` (tests `water_a_kept_tick_is_due_by_the_level_s_clock`,
+  `a_generated_spring_s_potent_sulfur_dries_under_its_ice_when_its_tick_runs`, `..._ticks_are_kept_on_save`).
+- Not ported: the place and neighbour rules (0xcf57860, 0xcf57c80: BDS shows a set potent sulfur dry or wet by what is
+  over it, even one set `dormant`, and turns it wet when water is set over it; they set without queueing), the two
+  game events (vibrations), `GeyserBoostSystem` (an erupting geyser lifts entities) and the client's plume.
+
 ## Parity drill (2026-10-29, `bds_command_probe bkticks` and `bknether`)
 
 Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.

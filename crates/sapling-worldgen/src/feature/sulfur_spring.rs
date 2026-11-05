@@ -121,6 +121,7 @@ impl TemplateFeature {
         }
         let [ox, oz] = turn(offset, rotation);
         let origin = [at[0] + ox, at[1] - ground, at[2] + oz];
+        super::trace::line(|| format!("  sulfur spring {} at {at:?} rotation {rotation} on {}", TEMPLATES[self.template].0, view.block(at[0], at[1] - 1, at[2]).name()));
         place_cells(ctx.view, template, origin, rotation);
         Some(at)
     }
