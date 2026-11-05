@@ -56,12 +56,12 @@ fn barter() -> Vec<String> {
 }
 
 fn fellows() -> Vec<String> {
-    let mut lines = with(aside(), &["difficulty normal", "fill 1 -26 10 5 -23 14 stone", "fill 3 -26 12 3 -25 12 air", "effect @s resistance 120 255 true"]);
-    lines.extend(["summon piglin 3.5 -26 12.5 0 0 minecraft:spawn_adult", "summon piglin 3.5 -26 0.5 0 0 minecraft:spawn_adult", &held("piglin"), "gamemode survival @s"].map(String::from));
+    let mut lines = with(aside(), &["difficulty normal", "fill 1 -27 10 5 -23 14 stone", "fill 3 -26 12 3 -25 12 air", "effect @s resistance 120 255 true"]);
+    lines.extend(["summon piglin 3.5 -26 12.5 0 0 minecraft:spawn_adult", "summon piglin -4.5 -26 6.5 0 0 minecraft:spawn_adult", "summon piglin 3.5 -26 0.5 0 0 minecraft:spawn_adult", &held("piglin"), "gamemode survival @s"].map(String::from));
     waits(&mut lines, 4);
     lines.extend(["!hit piglin".into()]);
     waits(&mut lines, 5);
-    with(lines, &["gamemode creative @s", "kill @e[type=!player]", "fill 1 -26 10 5 -23 14 air", "difficulty easy"])
+    with(lines, &["gamemode creative @s", "kill @e[type=!player]", "fill 1 -27 10 5 -23 14 air", "difficulty easy"])
 }
 
 fn creak() -> Vec<String> {
