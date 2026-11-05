@@ -286,6 +286,10 @@ not ported [I].
       fixed (`growth/snowfall.rs`, test `water_freezes_and_snow_lies_where_it_is_cold_while_it_snows`). By the
       torch BDS left 9 cells water, sapling 4: they fit a water cell lit one under the air above it on BDS and two
       under on sapling (its water's light filter of 2), which is the light engine's, not freezing's, and left.
+      Looked again 2026-11-05 (thirteenth2e): `Weather::shouldFreeze` (14119e860) reads the water cell's own
+      block light (1415f7530, byte 1) under 10, so the gap is the block light reaching the water. The filter
+      can't just drop to 1: data3d heightmaps count `light_filter > 0` and other readers share it. BDS's
+      relighter (SubChunkRelighter) has no label to break on; left until the light engine is ported.
       The sun melts nothing in ice plains; a warm biome's melt is above.
   - Sapling's drill world has ground at y 60 to 63 over the drills (`drill_server.rs`), so a scene that needs daylight
     at y -26 clears it first.
