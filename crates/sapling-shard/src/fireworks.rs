@@ -41,8 +41,8 @@ const PUSH: f32 = 0.03;
 /// It starts off its way by up to about this much each way.
 const WOBBLE: f32 = 0.001;
 
-/// A flying rocket: what it was made as, the tick it bursts, the way it flies, and the glider
-/// it boosts, whose place it keeps.
+/// A flying rocket: what it was made as, the tick it bursts, the way it flies, the glider it
+/// boosts, whose place it keeps, the flags it was announced with, and whether it has burst.
 #[derive(Component)]
 struct Rocket {
     item: ItemStack,
@@ -50,6 +50,8 @@ struct Rocket {
     bursts: u64,
     way: [f32; 3],
     glider: Option<Entity>,
+    flags: i64,
+    burst: bool,
 }
 
 /// The item a rocket (or an ominous item spawner) is shown carrying: its stack's compound, as the network writes NBT.
@@ -81,9 +83,13 @@ fn launch_with(world: &mut World, layer: Entity, at: [f32; 3], way: [f32; 3], st
         std::array::from_fn(|axis| (dice.fraction() + dice.fraction() - 1.0) * WOBBLE + way[axis] * PUSH)
     };
     let [yaw, pitch] = crate::creatures::facing(motion);
+    let options = AddEntityOptions { id: 0, identifier: KIND, feet: at, yaw, pitch, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1(0), health: None, name: "" };
+    let flags = sapling_data::add_entity(&options).metadata.iter().find_map(|item| match item.value {
+        MetaValue::Flags(flags) => Some(flags.0),
+        _ => None,
+    });
     let announce = |id: u64| {
-        let options = AddEntityOptions { id, identifier: KIND, feet: at, yaw, pitch, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1(0), health: None, name: "" };
-        let mut added = sapling_data::add_entity(&options);
+        let mut added = sapling_data::add_entity(&AddEntityOptions { id, ..options });
         added.velocity = Vec3f { x: motion[0], y: motion[1], z: motion[2] };
         if let Some(item) = shown {
             added.metadata.retain(|kept| kept.key != item.key);
@@ -100,17 +106,16 @@ fn launch_with(world: &mut World, layer: Entity, at: [f32; 3], way: [f32; 3], st
     // A tagless rocket flew as one of Flight 1 (research/captures/bds-n13fw.txt: 22 and 27 ticks).
     let flight = if stack.tag.is_none() { 1 } else { item::flight(stack) };
     let lasts = LIFE_PER_FLIGHT * (u64::from(flight) + 1) + spread;
-    world.entity_mut(rocket).insert(Rocket { item: ItemStack { count: 1, ..stack.clone() }, born: now, bursts: now + lasts, way, glider });
+    world.entity_mut(rocket).insert(Rocket { item: ItemStack { count: 1, ..stack.clone() }, born: now, bursts: now + lasts, way, glider, flags: flags.unwrap_or(0), burst: false });
     Some((rocket, lasts))
 }
 
-/// A player's click on `face` of the block at `pos` launches the rocket in its hand up from the
-/// face; false where it holds none or none could go.
-pub(crate) fn launch_held(world: &mut World, player: Entity, pos: BlockPos, face: Face) -> bool {
+/// A player's click at `click` (within the block) on the block at `pos` launches the rocket in
+/// its hand up from the point clicked (bds-n13fw.txt); false where it holds none or none could go.
+pub(crate) fn launch_held(world: &mut World, player: Entity, pos: BlockPos, click: [f32; 3]) -> bool {
     let held = world.get::<inventory::Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).map(|held| held.stack.clone());
     let (Some(stack), Some(layer)) = (held.filter(|stack| stack.name == ROCKET), world.get::<InLayer>(player).map(|layer| layer.0)) else { return false };
-    let normal = face.offset().map(|c| c as f32);
-    let at: [f32; 3] = std::array::from_fn(|axis| pos[axis] as f32 + 0.5 + normal[axis] * 0.5);
+    let at: [f32; 3] = std::array::from_fn(|axis| pos[axis] as f32 + click[axis]);
     launch(world, layer, at, [0.0, 1.0, 0.0], &stack).is_some()
 }
 
@@ -124,17 +129,25 @@ pub(crate) fn dispense(world: &mut World, layer: Entity, pos: BlockPos, facing: 
     launch(world, layer, at, way, stack)
 }
 
-/// A tick of one rocket: it bursts when its time is up, else speeds on, heard launched where its
-/// first tick takes it (bds-n13fw.txt).
+/// A tick of one rocket: it goes the tick after it burst, bursts when its time is up, else speeds
+/// on, heard launched and shown `MOVING` where its first tick takes it (bds-n13fw.txt).
 fn fly(world: &mut World, rocket: Entity, layer: Entity, id: u64, now: u64) -> Option<()> {
     let mut body = *world.get::<Body>(rocket)?;
-    let (born, bursts, way, glider) = world.get::<Rocket>(rocket).map(|kept| (kept.born, kept.bursts, kept.way, kept.glider))?;
+    let (born, bursts, way, glider, flags, burst) = world.get::<Rocket>(rocket).map(|kept| (kept.born, kept.bursts, kept.way, kept.glider, kept.flags, kept.burst))?;
+    if burst {
+        crate::mobs::remove(world, rocket);
+        return None;
+    }
     if now > bursts {
+        world.get_mut::<Rocket>(rocket)?.burst = true;
         return burst::burst(world, rocket, layer);
     }
     match glider.and_then(|glider| Some((world.get::<crate::components::Position>(glider)?.feet, world.get::<crate::movement::Motion>(glider)?.delta))) {
         Some((feet, delta)) => (body.at, body.motion) = (feet, delta),
-        None if glider.is_some() => return burst::burst(world, rocket, layer),
+        None if glider.is_some() => {
+            world.get_mut::<Rocket>(rocket)?.burst = true;
+            return burst::burst(world, rocket, layer);
+        }
         None => {
             body.motion = std::array::from_fn(|axis| body.motion[axis] * SPEEDS_UP + way[axis] * PUSH);
             body.shove(&world.get::<Layer>(layer)?.world, body.motion);
@@ -145,6 +158,7 @@ fn fly(world: &mut World, rocket: Entity, layer: Entity, id: u64, now: u64) -> O
     if now == born + 1 {
         let [x, y, z] = body.at;
         packets.push(sapling_net::encode(&LevelSoundEvent { sound_id: "launch".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }));
+        packets.push(crate::sync::flags_packet(id, MetadataFlags1(flags | MetadataFlags1::MOVING.0)));
     }
     entities::tell_viewers(world, rocket, layer, body.at.map(|c| c.floor() as i32), packets);
     Some(())
