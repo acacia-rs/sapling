@@ -81,7 +81,7 @@ untraded villager's profession at its next look (the Java rule); it now keeps it
   `buyCountA = count − hero + trunc(pm × discount) + max(0, floor(demand × count × pm))`, from 1 to a
   stack; `hero = max(1, floor(count × (0.3 + 0.0625 × amplifier)))` with Hero of the Village (effect 29);
   `discount` the cured discounts (`economy_trade_table` `cured_discount` [-25,-20], `nearby_cured_discount`
-  -20, capped by their `max_*`), which sapling lacks (its cure, Zombie villagers below, gives none).
+  -20, capped by their `max_*`), which sapling lacks; a drilled cure gave none on BDS either (`g8cured`, Zombie villagers below).
 - Restock (`resupplyTrades`, 0x141bb0e90, run as `minecraft:trade_resupply` is added): per offer
   `demand = max(0, demand + 2 × uses − maxUses)`, `uses = 0`. `behavior.work` (`active_time` 250,
   `goal_cooldown` 200, `can_work_in_rain` false; the farmer's `work_composter` too) fires
@@ -208,6 +208,14 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   tick later `remedy` from their middle (feet + 0.95, of no entity); they became villagers 181.9 s,
   211.1 s and 178.4 s on, the last with a bed and iron bars beside it (under the 180 s floor: the
   assist), each `unfect` at its middle in the `AddEntity` tick. Not drilled on sapling (300 s scene).
+  The cure's discounts, `g8cured` (2026-11-05, twelfth wave; bds-g8cured.txt, sapling-g8cured.txt): an
+  armorer's offers read, it killed by a zombie on hard, its zombie villager cured by the actor beside a
+  bed and iron bars (BDS 274 s, sapling 221 s), the cured villager's offers read again: on BDS every
+  `buyCountA` was what it was before (iron leggings 7, diamond leggings 25, diamond helmet 23), and the
+  neighbour 4 blocks off kept its prices too. No cured or nearby-cured discount showed, so sapling's
+  cure giving none is the same. The price rule (0x14163f4d0, called per offer by 141bd2dd0) does add
+  `pm × discount` from the economy component's cured and nearby fields, clamped by their maxima; what
+  sets them was not traced.
 
 ## Unverified (sapling's choice where BDS was not seen)
 
@@ -263,6 +271,14 @@ bed-goer not matched (strolls are random on both).
   three-bed village, 24 bread dropped at their feet: BDS had a baby 96 s after the drop (at 0.5, 1.5),
   sapling none in the 104 s watched. Neither side showed the bread as an item entity to the actor, so
   what set BDS's pair off is not known; not fixed.
+  Rechecked 2026-11-05 (twelfth wave, group 8): sapling's villagers pick up no items and have no
+  inventory, `behavior.share_items` or `behavior.make_love`, so no pair can breed; BDS's `MakeLoveGoal`
+  has no RTTI or label (`bdsre str make_love` finds only its definition's glue, 1488b2450), so its
+  canUse (food held, free beds, timing) was not read. Not ported: one BDS baby gives no rule to fit.
+- Farmers farming, cartographers' explorer maps (map items that locate a structure), entity vibration
+  listeners (the allay's; the warden's hearing is in creatures/warden/hearing.rs) and fear's random spot
+  search (`RandomPos::getPosAvoid` 14597bd90, several runs a case to fit) were not reached in the
+  twelfth wave's group 8 (2026-11-05); the schedule walks' counts are strolls, random on both sides.
 - Job-site range: `f3poi` above (a held villager took none).
 - A baby's hurt standing (-3) moved no BDS golem within 30 s, not explained.
 - Standing from ranged kills, the +5 of 0x142445c80 (curing) and the founding reward; the aggressor a
@@ -272,8 +288,8 @@ bed-goer not matched (strolls are random on both).
 
 ## Left out
 
-Gossip (Bedrock has none: its discounts are the cured ones of `economy_trade_table`, which sapling's
-cure does not give yet), villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
+Gossip (Bedrock has none: its discounts are the cured ones of `economy_trade_table`, which a drilled
+cure did not give on BDS, `g8cured`), villages as BDS's dweller-claimed POIs, mingling partners, babies growing up and villager breeding (husbandry's: `villagers::arm` with `minecraft:entity_born`
 makes a baby's unskilled trader), explorer maps (their trades are never
 offered), the llamas' leashes and their going with their trader, a villager picking up and sharing food,
 farmers farming, cats spawning, the old trading screen.
