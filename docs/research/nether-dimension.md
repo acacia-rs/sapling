@@ -159,5 +159,10 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
 - Section order where it is not last-touched-first (-collide.txt x 1935): what puts the second section
   ahead. A breakpoint on `onBlockChanged` would show the real touch order. A lit 21x21 frame is written
   flood-like in BDS, and column by column in sapling, so its four sections and cells differ in order
-  (bds-portal-sections.txt; the frames along x did not light there). A broken sheet's sections go out
-  first-touched-first, unmeasured.
+  (bds-portal-sections.txt; the frames along x did not light there).
+- A broken sheet (bds-n13sheet.txt, 2026-11-05: a 2x14 sheet over x 15-16 and y -26..-13, a side of the
+  frame at (14, -20) set to air): BDS sent the frame cell inside the sheet's batch, not alone, and the four
+  sections last touched first: (16,-32), (16,-16), (0,-16), then (0,-32) with the frame cell ahead of its
+  column; cells top down. sapling-n13sheet.txt sends the frame cell first as UpdateBlock (the command's own
+  write), then (0,-16), (16,-16), (0,-32), (16,-32). Matching needs the command's write held to the tick's
+  batch; not done. A frame corner set to air broke nothing on either.

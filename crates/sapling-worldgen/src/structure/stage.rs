@@ -51,6 +51,7 @@ impl Structures {
         }
         let mut canvas = Canvas::new(shape, chunk, neighbours.placed).with_features(features);
         super::data_driven::file_v2(&mut canvas, v2);
+        canvas.keep_jigsaws = neighbours.keep_jigsaws;
         let seeds = LargeFeatureSeed::new(self.level_seed);
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = || Mt19937::new(seed);

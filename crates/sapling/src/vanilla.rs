@@ -92,9 +92,15 @@ impl ServerBuilder {
 }
 
 /// Old names of items that BDS's `/give` still takes, and what they name now: each gave the
-/// item its new name gives (research/captures/bds-item-names.txt).
+/// item its new name gives (research/captures/bds-item-names.txt, bds-n13names.txt).
 // TODO: those that were tried; BDS knows more.
-const OLD_ITEM_NAMES: [(&str, &str); 31] = [
+const OLD_ITEM_NAMES: [(&str, &str); 37] = [
+    ("scute", "turtle_scute"),
+    ("horsearmorgold", "golden_horse_armor"),
+    ("horsearmordiamond", "diamond_horse_armor"),
+    ("lodestonecompass", "lodestone_compass"),
+    ("record_cat", "music_disc_cat"),
+    ("map", "filled_map"),
     ("chain", "iron_chain"),
     ("sign", "oak_sign"),
     ("boat", "oak_boat"),
@@ -211,5 +217,13 @@ mod tests {
     fn a_v2_kind_takes_its_listed_kind_s_name() {
         let named = |kind: &str| display_name(&EntityInfo::new(EntityId(1), kind.into(), [0.0; 3], [0.0; 3], true));
         assert_eq!([named("minecraft:villager_v2"), named("minecraft:zombie_villager_v2"), named("minecraft:evocation_illager")], ["Villager", "Zombie Villager", "Evoker"]);
+    }
+
+    #[test]
+    fn old_names_give_what_bds_gave() {
+        // bds-n13names.txt
+        assert_eq!(["scute", "horsearmorgold", "record_cat", "map", "frame"].map(item_named), ["minecraft:turtle_scute", "minecraft:golden_horse_armor", "minecraft:music_disc_cat", "minecraft:filled_map", "minecraft:frame"]);
+        let set = |name: &str| blocks::block(name, None).name;
+        assert_eq!(["double_plant", "coral_fan_dead", "skull", "wood", "invisibleBedrock"].map(set), ["sunflower", "dead_tube_coral_fan", "skeleton_skull", "oak_wood", "invisible_bedrock"].map(|name| sapling_api::Block::new(name).name));
     }
 }

@@ -87,17 +87,18 @@ fn seen(world: &World, layer: Entity, at: [f32; 3], feet: [f32; 3], [wide, high]
 
 /// What a blast of `power` at `at` does to a player whose eyes are at `eyes`, `seen` of it seeing
 /// the blast: what it costs on this difficulty, nothing on peaceful, and the speed it throws at.
-/// A ghast's fireball's (`fireball`) goes by how far the body's `feet` are, costs no 1 more and is
-/// the same on every difficulty (research/captures/bds-ghast-findings.md).
-fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], feet: [f32; 3], power: f32, seen: f32, fireball: bool) -> Option<(f32, [f32; 3])> {
+/// A ghast's fireball's goes by how far the body's `feet` are, costs no 1 more and is the same on
+/// every difficulty (research/captures/bds-ghast-findings.md); a bed's or anchor's goes by the feet
+/// too and is the same on every difficulty (bds-n13more.txt: 6.872 on all three, Resistance IV).
+fn reaches(world: &World, at: [f32; 3], eyes: [f32; 3], feet: [f32; 3], power: f32, seen: f32, rule: Rule) -> Option<(f32, [f32; 3])> {
     let away: [f32; 3] = std::array::from_fn(|axis| eyes[axis] - at[axis]);
     let far = distance(eyes, at);
-    let measured = if fireball { distance(feet, at) } else { far };
+    let measured = if rule == Rule::Plain { far } else { distance(feet, at) };
     let impact = (1.0 - measured / (2.0 * power)) * seen;
-    let harm = (impact * impact + impact) / 2.0 * HARM * 2.0 * power + if fireball { 0.0 } else { 1.0 };
+    let harm = (impact * impact + impact) / 2.0 * HARM * 2.0 * power + if rule == Rule::Fireball { 0.0 } else { 1.0 };
     let harm = match world.resource::<Settings>().0.difficulty {
         Difficulty::Peaceful => 0.0,
-        _ if fireball => harm,
+        _ if rule != Rule::Plain => harm,
         Difficulty::Easy => harm.min(harm / 2.0 + 1.0),
         Difficulty::Normal => harm,
         Difficulty::Hard => harm * 1.5,
@@ -155,7 +156,6 @@ fn set_fires(world: &mut World, layer: Entity, cells: &[[i32; 3]]) {
 
 fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, rule: Rule) {
     crate::blocks::vibrate(world, layer, at, crate::blocks::GameEvent::Explode, false);
-    let fireball = rule == Rule::Fireball;
     let (cells, free) = if wreck != Wreck::Nothing { rays::broken(world, source, layer, at, power) } else { Default::default() };
     let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
         let kind = source.and_then(|source| world.get::<entities::Kind>(source)).map(|kind| kind.0.clone());
@@ -187,8 +187,10 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
     for (player, feet) in players {
         let eyes = [feet[0], feet[1] + sapling_data::EYE_HEIGHT, feet[2]];
         let seen = seen(world, layer, at, feet, PLAYER_SIZE);
-        if let Some((harm, thrown)) = reaches(world, at, eyes, feet, power, seen, fireball) {
-            vitals::blasted(world, player, harm, at, thrown);
+        if let Some((harm, thrown)) = reaches(world, at, eyes, feet, power, seen, rule) {
+            // BDS's player hurt by a bed's blast was told cause 10, block_explosion (bds-n13more.txt).
+            let cause = if rule == Rule::Burning { Cause::BlockExplosion } else { Cause::EntityExplosion };
+            vitals::blasted(world, player, harm, at, thrown, cause);
         }
     }
     // Items lying in it are gone, as the stacks BDS's first TNT left were with its second.

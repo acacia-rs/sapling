@@ -74,6 +74,14 @@ pub(super) fn sound_from(world: &mut World, entity: Entity, name: &str, up: f32)
     tell(world, entity, vec![sapling_net::encode(&sound)]);
 }
 
+/// The sound `name` from the middle of the mob, told as nobody's (bds-n13herd.txt: `lead.leash`).
+pub(super) fn sound_unattributed(world: &mut World, entity: Entity, name: &str) {
+    let Some((_, _, _, body)) = of(world, entity) else { return };
+    let position = Vec3f { x: body.at[0], y: body.at[1] + body.size[1] * 0.5, z: body.at[2] };
+    let sound = LevelSoundEvent { sound_id: name.into(), position, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
+    tell(world, entity, vec![sapling_net::encode(&sound)]);
+}
+
 /// The mob grew up or was born: its flags, scale and box.
 pub(super) fn age(world: &mut World, entity: Entity) {
     let Some((_, id, kind, _)) = of(world, entity) else { return };

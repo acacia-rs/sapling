@@ -84,6 +84,7 @@ fn put_now(world: &mut World, layer: Entity, pos: BlockPos, block: &Block, is_ag
 /// A small dripleaf's lower half `id` put at `pos` with its upper half over it, whatever was there,
 /// both shown in one UpdateSubchunkBlocks, the upper first (research/captures/bds-e3turn.txt). `None`
 /// for any other block, `Some(false)` where it already stands.
+// TODO: BDS's `/setblock` of a sunflower wrote its upper half too (bds-n13names.txt); its packets were not shown.
 pub(super) fn put_dripleaf(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> Option<bool> {
     let level = level(world, layer)?;
     let registry = level.registry();

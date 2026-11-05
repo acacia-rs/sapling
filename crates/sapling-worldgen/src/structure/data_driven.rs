@@ -142,14 +142,18 @@ impl Structures {
     }
 
     /// The pieces of `kind` started in `at` without its biome test; camps still pick their variant
-    /// by biome, so None when none fits.
-    pub(super) fn forced_v2(&self, density: &Density, kind: StructureKind, at: (i32, i32)) -> Option<Arc<Vec<Piece>>> {
+    /// by biome, so None when none fits. With `start_y` (`/place structure`'s `ignoreStartHeight`)
+    /// the start piece stands at that height, unprojected, in place of the kind's own.
+    pub(super) fn forced_v2(&self, density: &Density, kind: StructureKind, at: (i32, i32), start_y: Option<i32>) -> Option<Arc<Vec<Piece>>> {
         let start = match kind {
             StructureKind::TrailRuins => TRAIL_RUINS,
             StructureKind::TrialChambers => TRIAL_CHAMBERS,
             _ => self.v2_start(density, kind, at)?,
         };
-        Some(self.v2_assembled(density, kind, at, || start))
+        let Some(y) = start_y else { return Some(self.v2_assembled(density, kind, at, || start)) };
+        let raw = RawHeights::new(density);
+        let start = V2Start { height: StartHeight::Constant(y), project: false, ..start };
+        Some(Arc::new(start.assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z))))
     }
 
     /// For probes: the template blocks of v2 pieces in `chunk` as (position, template name, unturned block, rotation, turned block).

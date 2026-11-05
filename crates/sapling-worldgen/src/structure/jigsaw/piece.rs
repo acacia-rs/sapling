@@ -7,7 +7,7 @@ use super::super::BoundingBox;
 use super::super::adjust::Junction;
 use super::super::canvas::Canvas;
 use super::super::trace;
-use super::super::template::{JavaPlacement, Placement, Rotation, Rule, apply, named, pass_cells};
+use super::super::template::{JavaPlacement, Placement, Rotation, named, pass_cells};
 use super::assemble::middle;
 use super::element::{Element, ElementKind, Projection};
 use crate::block::Block;
@@ -69,7 +69,7 @@ impl Piece {
         self.bb.move_y(dy);
     }
 
-    fn from_pivot(&self, (x, y, z): (i32, i32, i32)) -> (i32, i32, i32) {
+    pub(super) fn from_pivot(&self, (x, y, z): (i32, i32, i32)) -> (i32, i32, i32) {
         (x - self.pivot.0, y - self.pivot.1, z - self.pivot.2)
     }
 
@@ -93,7 +93,7 @@ impl Piece {
         for jigsaw in self.element.jigsaws(self.origin, self.rotation) {
             let (x, y, z) = jigsaw.pos;
             if canvas.bb.contains(x, y, z) {
-                canvas.set(x, y, z, jigsaw_block(rules, jigsaw.final_state, canvas.get(x, y, z), self.from_pivot((x, y, z)), seed));
+                self.set_jigsaw(canvas, rules, &jigsaw, (x, y, z), seed);
             }
         }
         let mut placement = Placement::new(self.rotation, canvas.bb);
@@ -149,6 +149,7 @@ impl Piece {
             canvas.place_feature(name, &mut element_random([x, y, z]), [x, y, z]);
             return;
         }
+        // TODO: a legacy element (a village pool's) placed by `/place jigsaw` writes nothing; BDS placed town centres (bds-k1jig.txt).
         let ElementKind::Template { template, rules, java: Some(capped), .. } = &self.element.kind else { return };
         trace::label(|| format!("{} {:?} at {:?}", template.name, self.rotation, self.origin));
         let placement = JavaPlacement { rotation: self.rotation, rules, capped, level_seed };
@@ -162,6 +163,9 @@ impl Piece {
                     canvas.set_entity(x, y, z, seed.map_or(entity, |seed| entity.seeded(seed)));
                 }
             }
+        }
+        if canvas.keep_jigsaws {
+            self.keep_jigsaws(canvas);
         }
         trace::label(|| format!("{} update pass", template.name));
         canvas.update_pass(pass_cells(self.rotation, false, template.size, self.origin), false);
@@ -179,7 +183,7 @@ impl Piece {
             let (x, y, z) = jigsaw.pos;
             if canvas.bb.contains(x, 0, z) {
                 let at = heights(x, z) + y - base - 1;
-                canvas.set(x, at, z, jigsaw_block(rules, jigsaw.final_state, canvas.get(x, at, z), self.from_pivot((x, at, z)), seed));
+                self.set_jigsaw(canvas, rules, &jigsaw, (x, at, z), seed);
             }
         }
         let blocks: Vec<_> = {
@@ -242,13 +246,6 @@ impl Piece {
             }
         }
     }
-}
-
-/// A jigsaw's final state through the element's rules, each jigsaw on a generator of its own
-/// seeded like the template's: the jigsaws of one chunk all draw the same floats
-/// (docs/research/worldgen-bds-jigsaw.md, "Elements and processors").
-fn jigsaw_block(rules: &[Rule], final_state: Block, world: Block, from_pivot: (i32, i32, i32), seed: u32) -> Block {
-    apply(rules, final_state, world, from_pivot, &mut Mt19937::new(seed))
 }
 
 /// Ancient city pieces (141edf3a0 / 3b0): no fill, deepslate plugs.

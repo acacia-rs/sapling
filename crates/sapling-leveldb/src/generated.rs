@@ -124,6 +124,15 @@ pub fn generated_bell(pos: [i32; 3]) -> Value {
     entity("Bell", pos, vec![("Direction", Value::Int(0)), ("Ringing", Value::Byte(0)), ("Ticks", Value::Int(0))])
 }
 
+/// A jigsaw `/place` kept (`keepJigsaws`) as BDS showed it (research/captures/bds-k1jig.txt):
+/// `[name, target, pool, joint, final_state]` and `[selection, placement]` priorities.
+pub fn generated_jigsaw(pos: [i32; 3], [name, target, pool, joint, final_state]: [&str; 5], [selection, placement]: [i32; 2]) -> Value {
+    let strings = [("final_state", final_state), ("joint", joint), ("name", name), ("target", target), ("target_pool", pool)];
+    let mut fields: Vec<_> = strings.into_iter().map(|(key, text)| (key, string(text))).collect();
+    fields.extend([("placement_priority", Value::Int(placement)), ("selection_priority", Value::Int(selection))]);
+    entity("JigsawBlock", pos, fields)
+}
+
 /// A cauldron of water or empty with the potion `potion` in it (-1 none); generation leaves its
 /// `PotionType` -1 even with a potion (`SwamplandHut::postProcess` 14836de70 sets the id alone).
 pub fn generated_cauldron(pos: [i32; 3], potion: i16) -> Value {
@@ -201,6 +210,9 @@ mod tests {
         assert_eq!(keys(&generated_cauldron([0, 0, 0], -1))[..4], ["BlockEntityVersion", "Items", "PotionId", "PotionType"]);
         assert_eq!(keys(&generated_flower_pot([0, 0, 0], "minecraft:red_mushroom")), ["BlockEntityVersion", "PlantBlock", "id", "x", "y", "z"]);
         assert_eq!(keys(&generated_end_gateway([0, 0, 0], [100, 50, 0])), ["Age", "BlockEntityVersion", "EndGatewayBadPosChecked", "ExitPortal", "id", "x", "y", "z"]);
+        let jigsaw = generated_jigsaw([0, 0, 0], ["minecraft:street", "minecraft:street", "minecraft:village/plains/streets", "rollable", "minecraft:air"], [0, 0]);
+        let fields = ["BlockEntityVersion", "final_state", "id", "joint", "name", "placement_priority", "selection_priority", "target", "target_pool", "x", "y", "z"];
+        assert_eq!(keys(&jigsaw), fields);
         let cactus = generated_flower_pot([0, 0, 0], "minecraft:cactus");
         assert_eq!(cactus.get("PlantBlock").and_then(|plant| plant.get("states")).and_then(|states| states.get("age")), Some(&Value::Int(0)));
     }

@@ -181,9 +181,9 @@ impl<S: WorldStorage> WorldStorage for Generated<S> {
         Some(generator.shape_height(x, z))
     }
 
-    fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
-        let Generator::Overworld(generator) = &self.generator else { return self.inner.structure_writes(name, start, load) };
-        Some(on_demand::structure(generator, name, start, load))
+    fn structure_writes(&self, name: &str, start: ChunkPos, start_y: Option<i32>, load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
+        let Generator::Overworld(generator) = &self.generator else { return self.inner.structure_writes(name, start, start_y, load) };
+        Some(on_demand::structure(generator, name, start, start_y, load))
     }
 
     fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {

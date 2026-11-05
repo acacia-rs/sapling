@@ -31,7 +31,8 @@ const SPILL_INSET: f32 = 0.15;
 /// What a block leaves is tossed up this fast, and this far either way across.
 const SPILL_UP: f32 = 0.2;
 const SPILL_ACROSS: f32 = 0.1;
-/// A throw starts this far under the eye, at this speed along the look, give or take this much.
+/// A throw's box starts this far under the eye (BDS's dropped stacks were shown 1.245 over the
+/// feet, research/captures/bds-n13items.txt), at this speed along the look, give or take this much.
 const THROW_BELOW_EYE: f32 = 0.5;
 const THROW_SPEED: f32 = 0.3;
 const THROW_SPREAD: f32 = 0.02;
@@ -141,7 +142,7 @@ pub(crate) fn throw(world: &mut World, player: Entity, stack: ItemStack) {
     let (angle, spread) = { let mut dice = dice(world); (dice.fraction() * std::f32::consts::TAU, dice.fraction() * THROW_SPREAD) };
     let motion = [-sin_yaw * cos_pitch * THROW_SPEED + angle.cos() * spread, -sin_pitch * THROW_SPEED, cos_yaw * cos_pitch * THROW_SPEED + angle.sin() * spread];
     let feet = position.feet;
-    let at = [feet[0], feet[1] + sapling_data::EYE_HEIGHT - THROW_BELOW_EYE - SIZE / 2.0, feet[2]];
+    let at = [feet[0], feet[1] + sapling_data::EYE_HEIGHT - THROW_BELOW_EYE, feet[2]];
     let from = world.resource::<Tick>().0 + PICKUP_DELAY;
     lay(world, layer, stack, at, motion, from);
 }

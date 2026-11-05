@@ -18,10 +18,14 @@ pub(super) fn has_states(there: &Block, states: &str) -> bool {
 
 /// Old names of blocks that BDS's commands still take, and what they name now: each was set by
 /// its old name on BDS and found under its new one (research/captures/bds-loot2.txt,
-/// bds-names.txt).
-// TODO: those that were tried; `double_plant`, `coral_fan_dead`, `skull` and `wood` were taken
-// too, but what they set was gone or wet before it was asked for.
-const OLD_NAMES: [(&str, &str); 34] = [
+/// bds-names.txt, bds-n13names.txt).
+// TODO: those that were tried; BDS knows more.
+const OLD_NAMES: [(&str, &str); 39] = [
+    ("double_plant", "sunflower"),
+    ("coral_fan_dead", "dead_tube_coral_fan"),
+    ("skull", "skeleton_skull"),
+    ("wood", "oak_wood"),
+    ("invisiblebedrock", "invisible_bedrock"),
     ("stonebrick", "stone_bricks"),
     ("grass", "grass_block"),
     ("planks", "oak_planks"),
@@ -58,8 +62,10 @@ const OLD_NAMES: [(&str, &str); 34] = [
     ("light_block", "light_block_0"),
 ];
 
+/// The block a command names; an old name in any case (BDS set `invisibleBedrock`, bds-n13names.txt).
 pub(super) fn block(name: &str, states: Option<&States>) -> Block {
-    let plain = name.strip_prefix("minecraft:").unwrap_or(name);
+    let lower = name.to_ascii_lowercase();
+    let plain = lower.strip_prefix("minecraft:").unwrap_or(&lower);
     let block = Block::new(OLD_NAMES.iter().find(|(old, _)| *old == plain).map_or(name, |(_, new)| new));
     match states {
         Some(states) => block.with(states.0.clone()),
@@ -111,6 +117,15 @@ pub(crate) struct TestForBlock {
     states: Option<States>,
 }
 
+/// The `tile.` key BDS names a block by; one its table lists only by an old name by that name's
+/// (`%tile.invisibleBedrock.name`, bds-n13names.txt).
+fn tile_key(name: &str) -> String {
+    let plain = name.rsplit(':').next().unwrap_or(name);
+    let old = OLD_NAMES.iter().find(|(_, new)| *new == plain).map(|(old, _)| format!("minecraft:{old}"));
+    let key = sapling_data::block_tile_key(name).or_else(|| old.as_deref().and_then(sapling_data::block_tile_key));
+    key.map_or_else(|| format!("%tile.{plain}.name"), str::to_owned)
+}
+
 impl Command for TestForBlock {
     /// BDS names the place in each answer, and both blocks where the kind is another
     /// (research/captures/bds-defaults.txt), each by its `tile.` key (`sapling_data::block_tile_key`).
@@ -123,9 +138,8 @@ impl Command for TestForBlock {
         let place = || pos.map(|c| c.to_string()).to_vec();
         let wanted = block(&self.block.0, self.states.as_ref());
         let there = ctx.block(pos).unwrap_or_else(|| Block::new(Block::AIR));
-        let key = |name: &str| sapling_data::block_tile_key(name).map_or_else(|| format!("%tile.{}.name", name.rsplit(':').next().unwrap_or(name)), str::to_owned);
         if there.name != wanted.name {
-            return out.translate("commands.testforblock.failed.tile", [place(), vec![key(&there.name), key(&wanted.name)]].concat(), false);
+            return out.translate("commands.testforblock.failed.tile", [place(), vec![tile_key(&there.name), tile_key(&wanted.name)]].concat(), false);
         }
         match self.states.as_ref().is_none_or(|states| has_states(&there, &states.0)) {
             true => out.translate("commands.testforblock.success", place(), true),

@@ -1,9 +1,9 @@
 //! Generated block entities (spawners, loot containers, trial spawners, vaults, beds, bells,
-//! cauldrons, flower pots, a mansion's chests, end gateways) as BDS saves them.
+//! cauldrons, flower pots, a mansion's chests, end gateways, kept jigsaws) as BDS saves them.
 
 use acacia_proto::nbt::{self, LittleEndian, Nbt, Value};
 use bytes::BytesMut;
-use sapling_leveldb::{generated_bed, generated_bell, generated_cauldron, generated_chest, generated_end_gateway, generated_flower_pot, generated_loot, generated_pot, generated_spawner, generated_trial_spawner, generated_vault};
+use sapling_leveldb::{generated_bed, generated_bell, generated_cauldron, generated_chest, generated_end_gateway, generated_flower_pot, generated_jigsaw, generated_loot, generated_pot, generated_spawner, generated_trial_spawner, generated_vault};
 use sapling_worldgen::{BlockEntity, ChunkShape};
 
 /// `entity` of the block `block` (its name) at world position `pos`.
@@ -20,6 +20,10 @@ pub(crate) fn block_entity_nbt(pos: [i32; 3], block: &str, entity: BlockEntity) 
         BlockEntity::FlowerPot(plant) => generated_flower_pot(pos, plant),
         BlockEntity::Chest(items) => generated_chest(pos, items),
         BlockEntity::EndGateway(exit) => generated_end_gateway(pos, exit),
+        BlockEntity::Jigsaw { name, target, pool, rollable, final_state, selection_priority, placement_priority, .. } => {
+            let joint = if rollable { "rollable" } else { "aligned" };
+            generated_jigsaw(pos, [name, target, pool, joint, &format!("minecraft:{}", final_state.name())], [selection_priority, placement_priority])
+        }
     })
 }
 

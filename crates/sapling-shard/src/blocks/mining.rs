@@ -201,4 +201,13 @@ mod tests {
         let stone = BlockRegistry::vanilla().states_of("minecraft:stone").next().expect("stone").1.mining;
         assert_eq!([1.44, 0.21].map(|effects| break_ticks(&stone, None, 0, effects)), [Some(105), Some(715)]);
     }
+
+    #[test]
+    fn a_lit_furnace_is_harvested_with_a_pickaxe() {
+        let pickaxe = sapling_api::Item::new("minecraft:iron_pickaxe", 1);
+        for name in ["minecraft:furnace", "minecraft:lit_furnace"] {
+            let mining = BlockRegistry::vanilla().states_of(name).next().expect(name).1.mining;
+            assert!(breaker_of(Some(&pickaxe), &mining).harvests, "{name}: {mining:?}");
+        }
+    }
 }

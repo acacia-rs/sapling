@@ -137,3 +137,22 @@ async fn scores_and_tags_answer_and_show_as_on_bds() {
     }
     server.shutdown().await;
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_player_gone_is_listed_by_bds_offline_name() {
+    let server = common::start(crate::common::builder().handler(Operators).vanilla_commands()).await;
+    let subscribe = [CommandOutput::ID, Text::ID].into_iter().fold(PacketFilter::none(), PacketFilter::with);
+    let config = || BotConfig { subscribe: subscribe.clone(), ..BotConfig::default() };
+    let mut alice = common::spawn(common::client(&server, "Alice"), config()).await;
+    let mut bob = common::spawn(common::client(&server, "Bob"), config()).await;
+    alice.wait_ticks(20).await.expect("connected");
+    run(&mut alice, "scoreboard objectives add obj dummy").await;
+    run(&mut bob, "scoreboard players set @s obj 5").await;
+    bob.disconnect().await;
+    alice.wait_ticks(20).await.expect("connected");
+    // bds-n13off.txt: `%` before the key in the names line only.
+    assert_eq!(run(&mut alice, "scoreboard players list").await, [r#"answer §a%commands.scoreboard.players.list.count ["1"] | %%s ["%commands.scoreboard.players.offlinePlayerName"] 1"#]);
+    assert_eq!(run(&mut alice, "scoreboard players list *").await, [r#"answer §a%commands.scoreboard.players.list.player.count ["1", "commands.scoreboard.players.offlinePlayerName"] | commands.scoreboard.players.list.player.entry ["5", "obj", "obj"] 1"#]);
+    alice.disconnect().await;
+    server.shutdown().await;
+}

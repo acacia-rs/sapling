@@ -1,6 +1,6 @@
 //! A player's hunger: what mending costs it and what an empty one costs the player, as BDS was
-//! seen to (docs/research/player-damage.md, "Mending" and "Starving").
-// TODO: mining and being hurt tire nobody (not drilled).
+//! seen to (docs/research/player-damage.md, "Mending" and "Starving"). A break tires 0.005 and
+//! a hit 0.1; being hurt by a fall, a zombie or fire tired BDS's player nothing (bds-n13play.txt).
 
 use acacia_proto::packets::UpdateAttributes;
 use acacia_proto::types::PlayerAttributesItem;

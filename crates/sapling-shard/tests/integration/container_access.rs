@@ -121,6 +121,21 @@ fn a_barrel_turns_a_tick_after_it_opens_and_its_lid_is_shown_again_80_ticks_on()
     assert_eq!(lids, [0, 80]);
 }
 
+/// research/captures/bds-n13win.txt: a request, refused too, starts the 80 ticks anew.
+#[test]
+fn a_request_puts_off_showing_an_open_lid_again() {
+    let mut h = at_a_chest();
+    h.receive(1, &click(CHEST, 1, None));
+    let mut lids: Vec<usize> = Vec::new();
+    for at in 0..=130 {
+        if at == 40 {
+            h.receive(1, &common::requests::request(-3, Vec::new()));
+        }
+        lids.extend(Some(at).filter(|_| !all::<BlockEvent>(&h.tick(1)).is_empty()));
+    }
+    assert_eq!(lids, [0, 120]);
+}
+
 /// research/captures/bds-chest-moves.txt: an opened chest's slots are followed by the player's
 /// windows, its held slot and the slots again, and those once more a tick on.
 #[test]

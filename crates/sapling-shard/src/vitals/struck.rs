@@ -100,19 +100,19 @@ pub(crate) fn set_alight(world: &mut World, player: Entity, ticks: u16) {
     }
 }
 
-/// A blast at `from` hurts a player for `amount` and throws it: as a hit does, and by `push`
-/// besides. False where it took nothing.
-pub(crate) fn blasted(world: &mut World, player: Entity, amount: f32, from: [f32; 3], push: [f32; 3]) -> bool {
+/// A blast at `from` hurts a player for `amount` as `cause` and throws it: as a hit does, and by
+/// `push` besides. False where it took nothing.
+pub(crate) fn blasted(world: &mut World, player: Entity, amount: f32, from: [f32; 3], push: [f32; 3], cause: Cause) -> bool {
     // BDS's TNT threw a creative player, by the blast alone.
     if let (Some(GameMode::Creative), Some(id)) = (world.get::<Mode>(player).map(|mode| mode.0), world.get::<NetId>(player).map(|id| id.0)) {
         throw(world, player, id, push);
         return false;
     }
-    if amount > 0.0 && super::shield::blocks(world, player, from, amount, Cause::EntityExplosion, false) {
+    if amount > 0.0 && super::shield::blocks(world, player, from, amount, cause, false) {
         pushed(world, player, push);
         return false;
     }
-    amount > 0.0 && hit_from(world, player, amount, from, push, Cause::EntityExplosion)
+    amount > 0.0 && hit_from(world, player, amount, from, push, cause)
 }
 
 /// A shot of `kind` (a mob's, or "player:" and a player's name) that flew from `from` hurts a

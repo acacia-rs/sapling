@@ -58,7 +58,7 @@ impl OverworldGenerator {
         let spawners = || stage.earlier_sources(chunk, rank, 2).iter().flat_map(|source| (**source).as_ref().map_or_else(Spawners::new, |s| s.spawners().clone())).collect();
         let shaft_order = |starts: &mut [(i32, i32)]| self.shaft_order(chunk, starts);
         let temple_height = |start: (i32, i32)| stage.earlier_sources(chunk, rank, 1).iter().find_map(|source| (**source).as_ref()?.temple_height(start));
-        let neighbours = structure::Neighbours { placed: &block, spawners: &spawners, generated_tops: tops, shaft_order: &shaft_order, temple_height: &temple_height, pyramid_from_start: matches!(self.structure_order, Order::Canonical) };
+        let neighbours = structure::Neighbours { placed: &block, spawners: &spawners, generated_tops: tops, shaft_order: &shaft_order, temple_height: &temple_height, pyramid_from_start: matches!(self.structure_order, Order::Canonical), keep_jigsaws: stage.keeps_jigsaws() };
         // Pieces' features read the same state; a feature's region is the 3x3.
         let load = |x: i32, z: i32| if around.holds((x, z)) { around.get((x, z)).shape.clone() } else { stage.stage_carved((x, z)) };
         let biome = |[x, y, z]: [i32; 3]| Some(self.chunk_biomes(x >> 4, z >> 4).biome((x & 15) as usize, y, (z & 15) as usize));

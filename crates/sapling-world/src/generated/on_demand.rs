@@ -23,7 +23,7 @@ pub(super) fn locate(generator: &OverworldGenerator, name: &str, x: i32, z: i32)
     }
 }
 
-pub(super) fn structure(generator: &OverworldGenerator, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Result<StructureWrites, PlaceFailure> {
+pub(super) fn structure(generator: &OverworldGenerator, name: &str, start: ChunkPos, start_y: Option<i32>, load: &ShapeLoader<'_>) -> Result<StructureWrites, PlaceFailure> {
     let kind = kind(name).ok_or(PlaceFailure::Unknown)?;
-    generator.place_structure(kind, (start.x, start.z), load)
+    generator.place_structure_at(kind, (start.x, start.z), start_y, load)
 }

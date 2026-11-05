@@ -6,6 +6,10 @@
 use crate::command::{Args, Parameter, Selected, Selector};
 use crate::{EntityId, Player, PlayerId, Sender, ShardCtx};
 
+/// How BDS names a player with scores who is not online; `/scoreboard players list` alone
+/// prefixes it `%` (research/captures/bds-n13off.txt).
+pub const OFFLINE_PLAYER: &str = "commands.scoreboard.players.offlinePlayerName";
+
 /// Who holds a score.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ScoreHolder {

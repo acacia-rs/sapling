@@ -80,7 +80,6 @@ enum What {
 pub(crate) struct Place {
     what: What,
     at: Option<BlockCoords>,
-    // TODO: keepJigsaws (BDS kept a town centre's 32 jigsaw blocks), ignoreStartHeight and liquidSettings are taken, not followed.
     options: PlaceOptions,
 }
 
@@ -141,10 +140,15 @@ impl CommandSyntax for Place {
                 let Some(flag) = Option::<bool>::parse(args)? else { break };
                 flags.push(flag);
             }
-            options = PlaceOptions::with_entities(flags.get(names - 1).copied().unwrap_or(true));
+            let flag = |index: usize, default: bool| flags.get(index).copied().unwrap_or(default);
+            options = PlaceOptions::with_entities(flag(names - 1, true)).keeping_jigsaws(flag(names - 2, false)).ignoring_start_height(names == 3 && flag(0, false));
             let mark = args.mark();
-            if !args.is_empty() && !LIQUID_SETTINGS.contains(&args.word()?) {
-                return Err(args.error_at(mark));
+            if !args.is_empty() {
+                let word = args.word()?.to_owned();
+                let Some(liquids) = LIQUID_SETTINGS.iter().position(|setting| *setting == word) else {
+                    return Err(args.error_at(mark));
+                };
+                options = options.ignoring_waterlogging(liquids == 1);
             }
         }
         args.finish()?;

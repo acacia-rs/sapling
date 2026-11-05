@@ -1,6 +1,6 @@
 //! The scoreboard calls of a [`sapling_api::ShardCtx`], on the board of the world in scope.
 
-use sapling_api::{Display, DisplaySlot, EntityId, Objective, ScoreHolder, ScoreboardBackend};
+use sapling_api::{Display, DisplaySlot, EntityId, OFFLINE_PLAYER as OFFLINE, Objective, ScoreHolder, ScoreboardBackend};
 use sapling_world::ScoreIdentity;
 
 use super::{Board, board, board_mut};
@@ -8,9 +8,6 @@ use crate::components::{Identity, Layer, NetId};
 use crate::handlers::Ctx;
 use crate::tags::{Marks, UniqueId};
 use crate::{dimensions, entities, worlds};
-
-/// How BDS names a player with scores who is not online (unverified: never seen in a capture).
-const OFFLINE: &str = "commands.scoreboard.players.offlinePlayerName";
 
 impl Ctx<'_> {
     /// Reads the board of the world in scope; one not made yet is read from its level's record.

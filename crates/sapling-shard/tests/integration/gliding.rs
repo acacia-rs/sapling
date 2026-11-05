@@ -74,8 +74,8 @@ fn a_rocket_used_while_gliding_boosts_for_twice_its_life_and_rides_along() {
     let sent = h.tick_all().to(1).to_vec();
     let boost = all::<MovementEffect>(&sent);
     assert!(boost.len() == 1 && boost[0].effect_type == MovementEffectType::GLIDEBOOST && boost[0].runtime_id == 1, "{boost:?}");
-    // A rocket of no Flight lasts 10 ticks and up to 5 and 6 more.
-    assert!((20..=42).contains(&boost[0].effect_duration) && boost[0].effect_duration % 2 == 0, "{}", boost[0].effect_duration);
+    // A tagless rocket lasts as one of Flight 1, 20 ticks and up to 5 and 6 more (bds-glide.txt: 44).
+    assert!((40..=62).contains(&boost[0].effect_duration) && boost[0].effect_duration % 2 == 0, "{}", boost[0].effect_duration);
     // Then all of the glider's attributes and its whole data, its box a glider's (bds-glide.txt).
     let whole = all::<UpdateAttributes>(&sent).into_iter().find(|update| update.runtime_entity_id == 1 && update.attributes.len() == 14);
     let data = all::<SetEntityData>(&sent).into_iter().find(|data| data.runtime_entity_id == 1 && data.metadata.len() > 10);

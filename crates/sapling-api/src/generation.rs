@@ -24,17 +24,38 @@ pub struct PlaceOptions {
     /// Whether the mobs its templates name (a village's iron golem) are made: BDS's
     /// `includeEntities`, true unless given false (research/captures/bds-k1jig.txt).
     pub include_entities: bool,
+    /// Whether its jigsaw blocks stay, with their block entities, in place of their final states:
+    /// BDS's `keepJigsaws`, false unless given true (bds-k1jig.txt).
+    pub keep_jigsaws: bool,
+    /// `/place structure`'s `ignoreStartHeight`: a data-driven structure's start piece stands at
+    /// the position's height, not its own (bds-n13jig.txt).
+    pub ignore_start_height: bool,
+    /// `liquidSettings` `ignore_waterlogging`: what it places keeps no water in layer 1, where
+    /// `apply_waterlogging` (the default) waterlogs what it places in water (bds-n13liq.txt).
+    pub ignore_waterlogging: bool,
 }
 
 impl Default for PlaceOptions {
     fn default() -> Self {
-        Self { include_entities: true }
+        Self { include_entities: true, keep_jigsaws: false, ignore_start_height: false, ignore_waterlogging: false }
     }
 }
 
 impl PlaceOptions {
     pub fn with_entities(include_entities: bool) -> Self {
-        Self { include_entities }
+        Self { include_entities, ..Self::default() }
+    }
+
+    pub fn keeping_jigsaws(self, keep_jigsaws: bool) -> Self {
+        Self { keep_jigsaws, ..self }
+    }
+
+    pub fn ignoring_start_height(self, ignore_start_height: bool) -> Self {
+        Self { ignore_start_height, ..self }
+    }
+
+    pub fn ignoring_waterlogging(self, ignore_waterlogging: bool) -> Self {
+        Self { ignore_waterlogging, ..self }
     }
 }
 

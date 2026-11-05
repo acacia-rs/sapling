@@ -127,6 +127,10 @@ pub(crate) trait Stage {
     fn warm_structures(&self);
     /// The chunk's post-process, reading `around` as the earlier ones left it; None without starts.
     fn post_process(&self, chunk: (i32, i32)) -> Option<Source>;
+    /// Jigsaw pieces file the jigsaws `keepJigsaws` would keep (`Canvas::keep_jigsaws`).
+    fn keeps_jigsaws(&self) -> bool {
+        false
+    }
 
     /// `shape`, the chunk after its carvers, becomes the chunk after the structure stage.
     fn place_structures(&self, shape: &mut ChunkShape, chunk_x: i32, chunk_z: i32) {

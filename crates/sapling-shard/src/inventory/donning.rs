@@ -1,6 +1,6 @@
 //! Armour put on from the hand by a click in the air, as BDS's (research/captures/bds-fx3.txt):
-//! the piece goes to its slot and the hand takes what was there; heard as any piece put on.
-// TODO: only drilled onto an empty slot.
+//! the piece goes to its slot and the hand takes what was there, a worn piece too, Binding or not
+//! (bds-n13items.txt, in creative); heard as any piece put on.
 
 use bevy_ecs::prelude::*;
 

@@ -60,7 +60,8 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, prop
         yaw,
         pitch,
         variant,
-        mark_variant: kept.map_or(0, |kept| kept.mark_variant),
+        // A new mob is announced before it is raised (birth.rs); a mooshroom's -1 shows then too.
+        mark_variant: kept.map_or_else(|| Raised::newcomer(kind).kept.mark_variant, |kept| kept.mark_variant),
         color: kept.map_or(0, |kept| kept.colour),
         baby: raised.is_some_and(Raised::is_baby),
         flags: MetadataFlags1(fire | saddle | raised.map_or(0, |raised| raised.flags().0)),

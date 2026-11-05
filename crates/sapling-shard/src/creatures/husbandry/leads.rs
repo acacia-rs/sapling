@@ -53,7 +53,7 @@ pub(super) fn leash(world: &mut World, entity: Entity, kind: &str, player: Entit
         return false;
     }
     tie(world, entity, player);
-    shown::sound(world, entity, "lead.leash");
+    shown::sound_unattributed(world, entity, "lead.leash");
     true
 }
 

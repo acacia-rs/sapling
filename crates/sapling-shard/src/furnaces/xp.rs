@@ -90,7 +90,12 @@ pub(super) fn stored(entity: &Value) -> i32 {
 
 /// The experience for `count` of `item`, and what was owed (hundredths), as whole points.
 pub(super) fn reward(world: &mut World, item: &ItemStack, count: u8, owed: i32) -> i32 {
-    round_random(world, f32::from(count) * per_item(&item.name)) + round_random(world, owed as f32 / 100.0)
+    round_random(world, f32::from(count) * per_item(&item.name)) + owed_points(world, owed)
+}
+
+/// What was owed (hundredths), as whole points.
+pub(super) fn owed_points(world: &mut World, owed: i32) -> i32 {
+    round_random(world, owed as f32 / 100.0)
 }
 
 /// What a hopper taking `item` out leaves owed, in hundredths.

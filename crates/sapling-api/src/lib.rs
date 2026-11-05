@@ -111,7 +111,7 @@ pub use world_notice::{EntityDespawnEvent, LiquidDecayEvent, SoundEvent, WorldCl
 pub use block_event::{CropTrampleEvent, LeavesDecayEvent, LiquidHardenEvent, PortalCreateEvent, RedstoneUpdateEvent};
 pub use player::{Difficulty, GameMode, Permission, Player, PlayerId, Position};
 pub use tags::{TagBackend, Tagged};
-pub use scoreboard::{Display, DisplaySlot, Objective, ScoreHolder, ScoreOperation, ScoreboardBackend, SortOrder};
+pub use scoreboard::{Display, DisplaySlot, Objective, OFFLINE_PLAYER, ScoreHolder, ScoreOperation, ScoreboardBackend, SortOrder};
 pub use sapling_macros::{Command, CommandEnum, Form};
 
 /// The game's events, one method each, all optional: a plugin as one value. Each method is filed

@@ -188,7 +188,9 @@ inferred) with flags 3 and stop. Differs from Java (which climbs upward).
 - `isLiquidClipItem` slot identity (147a95cf0) inferred from behaviour; `Player::useItem` in creative assumed not to
   consume (moot: creative skips the replace); `Player::add` failure for the empty bucket is ignored (not decompiled).
 - Which classes' `isLavaBlocking` return true; `mThickness` values per block; per-material `blocksMotion`/`solid`.
-- Level vt+0x7e8 (8 smoke particles) and whether a server sends them.
+- Level vt+0x7e8 (8 smoke particles): not sent. Water poured in the Nether (bds-n13net.txt, 2026-11-05) came
+  as one LevelSoundEvent `fizz` at the cell's centre and no particle packet, as on sapling (sapling-n13net.txt);
+  the game events are not on the wire either.
 - Game events posted (14cc8a91c on fill, 14cc8a9fc on empty; likely fluid_pickup / fluid_place) not named.
 - `_emptyBucket` also fizzes if contents is `flowing_water` into a `mSuperHot` material: not reached by buckets.
 - `BucketItem::use` (ClickAir), dispenser, cauldrons, fish/axolotl/tadpole/sulfur, powder snow, milk: not covered.

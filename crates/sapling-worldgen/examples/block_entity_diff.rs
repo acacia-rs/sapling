@@ -27,6 +27,7 @@ fn ours(entity: &BlockEntity) -> (String, Option<i32>) {
         BlockEntity::FlowerPot(plant) => (format!("flower pot {plant}"), None),
         BlockEntity::Chest(items) => (format!("chest [{}]", items.split(';').filter(|item| !item.is_empty()).map(|item| item.split(' ').take(3).collect::<Vec<_>>().join(" ")).collect::<Vec<_>>().join(", ")), None),
         BlockEntity::EndGateway(exit) => (format!("gateway {exit:?}"), None),
+        BlockEntity::Jigsaw { name, .. } => (format!("jigsaw {name}"), None),
     }
 }
 
