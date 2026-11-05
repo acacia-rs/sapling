@@ -24,4 +24,8 @@ fn lines_read_as_bds_read_them() {
     assert_eq!(parsed("scoreboard objectives setdisplay belowname obj ascending").err(), syntax("wname obj ", "ascending", ""));
     assert_eq!(parsed("scoreboard players set @s obj banana").err(), syntax("et @s obj ", "banana", ""));
     assert_eq!(parsed("scoreboard players test @s a").err(), syntax(" test @s a", "", ""));
+    // research/captures/bds-f1cmds.txt
+    assert!(matches!(parsed("scoreboard players set @s f1 3000000000"), Ok(Scoreboard::NumInvalid(word)) if word == "3000000000"));
+    assert!(matches!(parsed("scoreboard players add @s f1 -2147483649"), Ok(Scoreboard::NumInvalid(word)) if word == "-2147483649"));
+    assert_eq!(parsed("scoreboard players operation @s f1 ^= @s f1").err(), syntax("ion @s f1 ", "^", "= @s f1"));
 }

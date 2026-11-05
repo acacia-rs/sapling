@@ -66,5 +66,6 @@ overloads (11 for `/scoreboard`, 2 for `/tag`).
   `commands.scoreboard.players.score.notFound` [obj, name].
 - Offline players' names (`commands.scoreboard.players.offlinePlayerName`) and their wire ids.
 - `/titleraw` `*` score parts; whether `/tag` names a single entity by its type.
-- Numbers past i32: BDS answers `commands.generic.num.invalid` [word]; sapling a syntax error.
-- The `operation` syntax error token for `^=` (BDS points at `^`).
+- Numbers past i32 and `^=`: drilled 2026-11-05 (bds-f1cmds.txt): `set`/`add` past i32 answer
+  `commands.generic.num.invalid` [word], and `^=` is a syntax error at `^` ("ion @s f1 ", "^",
+  "= @s f1"); sapling answers the same since.
