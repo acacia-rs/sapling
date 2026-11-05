@@ -160,6 +160,12 @@ direction 14cd24f50, facing_direction 14cd26368, lit 14cd25b50, sculk_sensor_pha
   - with shears: set powered_bit 0, post the shear game event 14cc8a934;
   - otherwise: set powered_bit 1.
   Then notify the hooks. Nothing sets disarmed_bit here. [decompile]
+- Drilled (bds-z2wire.txt, 2026-11-05): string put by hand or set by command takes `connection_<side>` 1 toward
+  each wire beside it and each hook facing it, and `suspended_bit` 1 (on stone); a wire beside it is rewritten to
+  join it. Put between two hooks, one UpdateSubchunkBlocks listed the wire, both hooks attached (far hook first)
+  and the wire attached twice; each hook played `attach` at its own cell + (0.5, 0.1, 0.5). Sapling set no bits,
+  left the client an unattached wire (it showed the state written before the hooks rewrote it) and played one
+  sound at the cell's middle. Fixed (`blocks/tripwire.rs` `shape`, `send::write` returns the cell as it stands).
 
 ## Target (vt 14a8eead0; onProjectileHit 1471f22a0, core 1471f2530, tick 1471f20b0, setupRedstoneComponent 1471f2200)
 

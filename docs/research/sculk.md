@@ -237,13 +237,25 @@ Particle (1411b5340)
   `speed: 20.0f`, `timeToLive: dist / 20` (float, seconds). Sent through the dimension to players near the source
   block pos. No separate "clicking" sound: Bedrock uses the power on/off sounds (S8, S11).
 
+## Drilled 2026-11-05 (`bds_command_probe z2sculk`, `z2bolt`)
+
+- A `/setblock` is heard by no sensor; blocks put by hand are (bds-z2sculk.txt). Stone put behind a wool wall
+  (x 4, 3 high, 5 wide) between it and a sensor 4 away was not heard; with the wall gone it was. White carpet put
+  2 from the sensor was not heard (wool put could not be reached). Sapling heard through wool and heard carpet;
+  fixed (`blocks/sculk/occlusion.rs`: S4's six lines, wool occludes; wool and carpet put dampen). A broken wool
+  block and steps on wool are still heard (TODO in `sculk.rs`).
+- S21's particle: origin the source cell's middle, target the sensor's, `timeToLive` = whole blocks / 20, sent to
+  both players as the vibration sets off (bds-z2bolt.txt; also 0.8, 0.55 in older captures). Sapling sent none;
+  added (`sculk/events.rs` `signal`).
+- A sensor on a stone block lit a lamp beside that block (the strong power below; settles the arg-order question
+  below). BDS's `/tp` was heard (teleport, frequency 14) at the arrival cell; sapling posts no teleport event
+  (found, not followed).
+
 ## Unverified
 
 - Names of state globals 14cd24340 (`active`) and 14cd24220 (`can_summon`): inferred from use, string not traced.
-- Which blocks carry `CanOccludeVibrations` / `CanDamperVibrations` (Java: wool occludes; wool and carpet dampen)
-  and which entities get `VibrationDamperComponent` (entity JSON).
-- Arg order of 14257d0e0 (the `0` read as direction down); the strong-power-below claim rests on that and
-  `redstone.md` R11.
+- Which entities get `VibrationDamperComponent` (entity JSON); blocks beyond wool and carpet that occlude or dampen.
+- Arg order of 14257d0e0: drilled as down (a sensor powers the block under it, bds-z2sculk.txt).
 - `getInputStrength` returns -1 on one path (component missing); effect on S12 not checked.
 - Order of block-actor ticks vs. events within a tick (T0+1 assumption in S10); chunk ticking requirement timing.
 - 142255db0 meaning in `tryShriek`; `_canRespond` beyond the `can_summon` read (difficulty, gamerule).
