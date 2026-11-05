@@ -188,7 +188,20 @@ and are not kept; tests in tests/integration/mounts_drilled.rs):
   (made in that order by their unique ids, sent newest first; sapling sends them oldest first).
   Left (twelfth wave): sending every new mob newest first broke four drilled orders (e1loot's tack
   in one tick came oldest first, saddleevents, the golems, the sand), so BDS's order is no one rule by
-  id; the donkey's case needs BDS's send order traced first.
+  id; the donkey's case needs BDS's send order traced first. Traced as far as the captures go
+  (2026-11-05, twelfth wave), runtime ids made against the order sent: t12goods' donkey 18, 19, 20
+  sent 20, 19, 18; e1loot's horse with the rule on (saddle 19, armour 20, leather 21) sent 21, 20,
+  19; saddleevents' two pigs (porkchop 25 then saddle 26; 31, 32) sent saddle first; only e1loot's
+  horse with the rule off (saddle 16, armour 17) sent 16, 17, the armour in the next batch, with
+  the horse's own SetEntityData. Their SetEntityData and moves after come in yet other orders
+  (20, 18, 19; 17, 16), and no MSVC unordered_map of runtime or unique ids (FNV-1a, 8 to 512
+  buckets, the insert-in-front rule) gives the AddItemEntity orders. So drops made together are
+  sent newest first but for that one pair, which points to the rule-off armour being made in a
+  later step than the saddle. The sender is a virtual `Actor::tryCreateAddActorPacket`
+  (140d2cc70, vtable +0xb8), reached only through vtables; its caller was not found. Left: a
+  breakpoint there on a Windows BDS would name the step; until then sapling keeps its by-id order
+  (its own making order differs from BDS's), which gives e1loot's, saddleevents', the golems' and
+  the sand's sends.
   Sapling's (sapling-t12goods.txt) left the emeralds and chest and lost the slot-0 diamonds. Fixed:
   `riding/replaced.rs` keeps goods put by `slot.inventory 0` in the pack's slot 0 (unsaddling it,
   flags as BDS's), and `riding/packs.rs` `spilled` lets go of them; test

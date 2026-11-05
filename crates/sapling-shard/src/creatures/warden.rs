@@ -104,9 +104,17 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str, event: Option<&
     world.entity_mut(entity).insert(Warden { stage, calm_since: now, ..Warden::default() });
 }
 
-/// A shrieker's fourth warning calls one up emerging at `feet`.
+/// A shrieker's fourth warning calls one up emerging at `feet`, told after it is shown: `agitated`
+/// at its feet of no entity, then `listening` at its head (research/captures/bds-t2warden.txt).
 pub(crate) fn summon_emerging(world: &mut World, layer: Entity, feet: [f32; 3]) -> bool {
-    super::birth::spawn_as(world, layer, KIND, feet, sapling_api::SpawnReason::Summoned, 0.0, Some(EMERGING_EVENT)).is_some()
+    let Some(id) = super::birth::spawn_as(world, layer, KIND, feet, sapling_api::SpawnReason::Summoned, 0.0, Some(EMERGING_EVENT)) else { return false };
+    let Some((warden, body)) = entities::find(world, id).and_then(|warden| Some((warden, *world.get::<Body>(warden)?))) else { return true };
+    let id = id.0;
+    let [x, y, z] = feet;
+    let agitated = crate::blocks::noise("agitated", acacia_proto::types::Vec3f { x, y, z }, -1);
+    let listening = hunting::sound("listening", id, KIND, &body, HEAD);
+    entities::tell_viewers(world, warden, layer, feet.map(|c| c.floor() as i32), vec![agitated, listening]);
+    true
 }
 
 /// Whether one is within `reach` of `at` in `layer`.

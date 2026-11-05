@@ -138,8 +138,12 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
 
 ## Left
 
-- Spectators in portals (the End: end-dimension.md), and BDS's
-  per-tick UpdateSubchunkBlocks batching of other block changes.
+- Spectators in portals (the End: end-dimension.md). BDS's per-tick UpdateSubchunkBlocks batching of
+  other block changes is ported where drilled (checked 2026-11-05, twelfth wave): random ticks, flows
+  and circuits each tick (`blocks::batched`), fills and plugin batches (`send/sections.rs`), pistons
+  (flags 19, c8670476); captures still showing UpdateBlock on sapling where BDS batched
+  (sapling-crops.txt, -concrete.txt, -bonemeal.txt, -conductors.txt) date from 2026-10-08 to 10-11,
+  before the batches (3e338ec4, 2026-10-24). The section order is left (below).
 - Section order where it is not last-touched-first (-collide.txt x 1935): what puts the second section
   ahead. A breakpoint on `onBlockChanged` would show the real touch order. A lit 21x21 frame is written
   flood-like in BDS, and column by column in sapling, so its four sections and cells differ in order

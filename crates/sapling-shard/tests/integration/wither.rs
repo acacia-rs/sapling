@@ -233,3 +233,27 @@ fn a_skull_that_meets_a_mob_blows_up_on_it() {
     let blasts = all::<LevelEvent>(&sent).iter().filter(|event| event.event == LevelEventEvent::ParticleExplosion).count();
     assert!(hurt && blasts >= 1, "{hurt} {blasts}");
 }
+
+#[test]
+fn its_middle_head_takes_a_living_mob_but_no_undead_one() {
+    // research/captures/bds-t2wither.txt: the actor warded, the middle head's target the held cow.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Normal);
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.spawn_entity(WITHER, [0.5, 66.0, 8.5]).is_some());
+    });
+    // After its charge's blast; the zombie nearer.
+    let mut sent = watch(&mut h, CHARGE + 5);
+    h.remote.run(|ctx| {
+        for (kind, at) in [("minecraft:zombie", [6.5, 65.0, 0.5]), ("minecraft:cow", [-10.5, 65.0, 0.5])] {
+            let mob = ctx.spawn_entity(kind, at).expect("a mob");
+            assert!(ctx.give_entity_effect(mob, sapling_api::Effect::Slowness, 2000, 255));
+        }
+    });
+    sent.extend(watch(&mut h, 20));
+    let id = |kind: &str| all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == kind).expect("shown").runtime_id;
+    let targets = told(&sent, id(WITHER), Key::WitherTarget1);
+    assert_eq!(targets.iter().copied().find(|target| *target > 0), Some(id("minecraft:cow") as i64), "{targets:?} {:?}", told(&sent, id(WITHER), Key::WitherTarget2));
+}

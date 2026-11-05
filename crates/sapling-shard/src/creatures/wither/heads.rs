@@ -2,7 +2,7 @@
 //! middle one shoots its prey in volleys of four 20 ticks apart, the fourth a blue one; off easy each side
 //! one takes a player at random within 30 across and 8 up or down that it sees, shoots it and
 //! looks again 40 to 59 ticks on, or after 15 looks with none shoots a blue skull at random near.
-// TODO: the middle head takes mobs too, and holds still while it moves; the side heads' wait
+// TODO: the middle head holds still while it moves; the side heads' wait
 // between looks with no one in reach is the Java game's.
 
 use acacia_proto::packets::LevelSoundEvent;
@@ -76,6 +76,21 @@ fn pick(world: &mut World, layer: Entity, body: &Body) -> Option<(Entity, [f32; 
     })
 }
 
+/// Its prey, as its pack's `nearest_attackable_target` takes it: the nearest it sees within 70 of
+/// the players and the living mobs neither undead nor inanimate (bds-t2wither.txt: a held cow).
+pub(super) fn prey(world: &mut World, wither: Entity, layer: Entity, body: &Body) -> Option<(Entity, [f32; 3])> {
+    let player = hunting::nearest(world, layer, body, SIGHT);
+    let far = |feet: [f32; 3]| (0..3).map(|axis| (feet[axis] - body.at[axis]).powi(2)).sum::<f32>();
+    let mobs: Vec<(Entity, [f32; 3])> = world
+        .query_filtered::<(Entity, &InLayer, &Body, &crate::entities::Kind), (With<super::super::Creature>, Without<super::super::Dying>)>()
+        .iter(world)
+        .filter(|(mob, on, at, kind)| *mob != wither && on.0 == layer && far(at.at) <= SIGHT * SIGHT && !sapling_data::is_undead(&kind.0) && !sapling_data::has_family(&kind.0, "inanimate"))
+        .map(|(mob, _, at, _)| (mob, at.at))
+        .collect();
+    let mob = mobs.into_iter().filter(|(_, feet)| hunting::in_sight(world, layer, body, *feet)).min_by(|a, b| far(a.1).total_cmp(&far(b.1)));
+    [player, mob].into_iter().flatten().min_by(|a, b| far(a.1).total_cmp(&far(b.1)))
+}
+
 /// A tick of the heads: each shoots when its time comes, and viewers are told whom each looks at.
 pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
     let now = world.resource::<Tick>().0;
@@ -83,7 +98,7 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
     let yaw = world.get::<legs::Legs>(wither).map_or(0.0, |legs| legs.yaw);
     let Some(mut heads) = world.get_mut::<Wither>(wither).map(|mut kept| std::mem::take(&mut kept.heads)) else { return };
     let before = heads.targets;
-    let prey = hunting::nearest(world, layer, body, SIGHT);
+    let prey = prey(world, wither, layer, body);
     heads.targets[0] = prey.map(|(player, _)| player);
     if let Some((_, feet)) = prey.filter(|_| now >= heads.next[0]) {
         heads.shots += 1;

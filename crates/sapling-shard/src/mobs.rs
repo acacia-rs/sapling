@@ -20,6 +20,8 @@ use crate::hidden::Hidden;
 use crate::labels::Labels;
 use crate::view::View;
 
+pub(crate) mod moved;
+
 const ITEM: &str = "minecraft:item";
 
 /// A stored actor, in the column it was stored with.

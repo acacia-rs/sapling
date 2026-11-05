@@ -3,7 +3,6 @@
 //! special recipe the request names decide it: an empty map copies it (two of it), paper zooms it
 //! out to its next zoom level's id, a glass pane locks it under a fresh id (damage 6); recipe 0 with
 //! a name and nothing added renames it. A name given with any of them renames the result too.
-// TODO: BDS locked maps under an id outside the unique-id run (255902174); sapling takes a fresh one.
 
 use acacia_proto::nbt::Value;
 use sapling_data::Made;
