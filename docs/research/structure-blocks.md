@@ -58,10 +58,13 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
   the same draw with its low 32 bits as they are: 0 picked the same cells twice and `n` is the cells of 0
   moved on by `n`. Sapling hashed the digits and drew 0 from the tick; fixed (`structures/place.rs`, test
   `a_structure_block_s_numeric_seed_is_taken_as_it_is`).
+- No seed (or `""`) draws one per load (bds-q3integ2.txt, 2026-11-05: the actor's and the watcher's
+  `execute as @a ... structure load ... 50` in one tick placed different cells; three loads 3 s apart
+  differed too, bds-q3integ.txt). Sapling seeded from the tick, so one tick's loads matched; fixed
+  (`structures/place.rs`, test `two_unseeded_half_loads_in_one_tick_place_different_cells`).
 
 ## Not copied or not drilled
 
-- A `/structure load` with no seed (sapling: the tick).
 - After a load (bds-e3turn.txt, 2026-11-04: 64 turning blocks at 90, 180, 270 and mirrored, written as
   sapling writes them, 756 cells alike) BDS lets the loaded blocks react to their neighbours: what lacks
   support goes with its item (redstone torches, cocoa, activator rails, hanging signs), glow lichen and

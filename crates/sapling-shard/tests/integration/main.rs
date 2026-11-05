@@ -156,6 +156,8 @@ mod shot_hits;
 mod shot_pitch;
 mod baby_hunt;
 mod wind_gust;
+mod stare_pumpkin;
+mod unseeded_load;
 mod shown_effects;
 mod shriekers;
 mod skeleton_traps;
