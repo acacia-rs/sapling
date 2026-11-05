@@ -137,6 +137,7 @@ impl Request<'_> {
             if !liquid::pour(self.world, site.layer, target, liquid, waterlogs) {
                 return false;
             }
+            super::poured(self.world, site.layer, target);
             let fish = mob.and_then(|bucket| crate::creatures::bucketed_kind(&bucket.name)).is_some_and(|kind| !matches!(kind, "minecraft:axolotl" | "minecraft:tadpole"));
             let sound = match (is_water, fish) {
                 (true, true) => "bucket.empty.fish",

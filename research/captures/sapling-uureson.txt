@@ -1,0 +1,161 @@
+## drill starts at 1793914355748
+## /kill @e[type=!player]
+     20 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1021 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   1021 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1021 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /weather clear
+   2023 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   2023 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+## /difficulty easy
+   3021 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["EASY"]
+   3021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"EASY\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative @s
+   4021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4021 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4021 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   4220 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   4221 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /gamemode creative CmdWatcher
+   5020 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5020 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.other\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"},{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5020 actor   CommandOutput success_count=1 data=None commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+## /effect @s clear
+   6020 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive.all success=false ["CmdActor"]
+## /clear @s
+   7072 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /fill -8 -27 -8 16 -27 8 stone
+   8132 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"425\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   8135 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["425"]
+## /fill -8 -26 -8 16 -16 8 air
+   9099 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s 0.5 -26 0.5 -90 0
+  10057 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10057 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10057 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+## /tp CmdWatcher 0.5 -26 0.5
+  11058 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11058 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11058 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+## /
+## /tp CmdWatcher -6.5 -26 -6.5
+  13056 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-6.50, -26.00, -6.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13057 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"-6.50\"},{\"text\":\"-26.00\"},{\"text\":\"-6.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13057 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "-6.50", "-26.00", "-6.50"]
+## /tp @s -6.5 -26 -5.5
+  14057 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-6.50\"},{\"text\":\"-26.00\"},{\"text\":\"-5.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14057 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-6.50, -26.00, -5.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14057 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-6.50", "-26.00", "-5.50"]
+## /
+## /setblock 4 -26 0 sculk_sensor
+  16057 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4149802680, flags: UpdateBlockFlags(3), layer: 0 }
+  16057 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16057 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4149802680, flags: UpdateBlockFlags(3), layer: 0 }
+  16057 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 5 -26 0 amethyst_block
+  17056 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  17056 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: -26, z: 0 }, block_runtime_id: 3463019504, flags: UpdateBlockFlags(3), layer: 0 }
+  17056 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  17057 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  17057 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: -26, z: 0 }, block_runtime_id: 3463019504, flags: UpdateBlockFlags(3), layer: 0 }
+  17057 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /setblock 12 -26 0 sculk_sensor
+  18057 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 12, y: -26, z: 0 }, block_runtime_id: 4149802680, flags: UpdateBlockFlags(3), layer: 0 }
+  18057 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  18057 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 12, y: -26, z: 0 }, block_runtime_id: 4149802680, flags: UpdateBlockFlags(3), layer: 0 }
+  18057 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /
+## /
+## /
+## /tp @s 0.5 -26 0.5
+  22117 actor   LevelEventGeneric LevelEventGeneric { event_id: 4054, nbt: [Nbt { name: "origin", value: Compound([("type", String("vec3")), ("x", Float(0.5)), ("y", Float(-25.5)), ("z", Float(0.5))]) }, Nbt { name: "speed", value: Float(20.0) }, Nbt { name: "target", value: Compound([("type", String("vec3")), ("x", Float(4.5)), ("y", Float(-25.5)), ("z", Float(0.5))]) }, Nbt { name: "timeToLive", value: Float(0.2) }] }
+  22117 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22117 watcher LevelEventGeneric LevelEventGeneric { event_id: 4054, nbt: [Nbt { name: "origin", value: Compound([("type", String("vec3")), ("x", Float(0.5)), ("y", Float(-25.5)), ("z", Float(0.5))]) }, Nbt { name: "speed", value: Float(20.0) }, Nbt { name: "target", value: Compound([("type", String("vec3")), ("x", Float(4.5)), ("y", Float(-25.5)), ("z", Float(0.5))]) }, Nbt { name: "timeToLive", value: Float(0.2) }] }
+  22118 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+  22118 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22312 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4088327857, flags: UpdateBlockFlags(3), layer: 0 }
+  22312 watcher LevelSoundEvent LevelSoundEvent { sound_id: "power.on.sculk_sensor", position: Vec3f { x: 4.0, y: -26.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  22313 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4088327857, flags: UpdateBlockFlags(3), layer: 0 }
+  22313 actor   LevelSoundEvent LevelSoundEvent { sound_id: "power.on.sculk_sensor", position: Vec3f { x: 4.0, y: -26.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  23807 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4026853034, flags: UpdateBlockFlags(3), layer: 0 }
+  23807 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4026853034, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+  24311 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4149802680, flags: UpdateBlockFlags(3), layer: 0 }
+  24311 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4149802680, flags: UpdateBlockFlags(3), layer: 0 }
+  24311 actor   LevelSoundEvent LevelSoundEvent { sound_id: "power.off.sculk_sensor", position: Vec3f { x: 4.0, y: -26.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24311 watcher LevelSoundEvent LevelSoundEvent { sound_id: "power.off.sculk_sensor", position: Vec3f { x: 4.0, y: -26.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /
+## /tp @s -6.5 -26 -5.5
+  28107 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-6.50\"},{\"text\":\"-26.00\"},{\"text\":\"-5.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28108 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-6.50, -26.00, -5.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28108 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-6.50", "-26.00", "-5.50"]
+## /
+  29855 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  29855 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /setblock 5 -26 0 air
+  30107 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  30107 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 5, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  30107 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  30107 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /
+## /tp @s 0.5 -26 0.5
+  35108 watcher LevelEventGeneric LevelEventGeneric { event_id: 4054, nbt: [Nbt { name: "origin", value: Compound([("type", String("vec3")), ("x", Float(0.5)), ("y", Float(-25.5)), ("z", Float(0.5))]) }, Nbt { name: "speed", value: Float(20.0) }, Nbt { name: "target", value: Compound([("type", String("vec3")), ("x", Float(4.5)), ("y", Float(-25.5)), ("z", Float(0.5))]) }, Nbt { name: "timeToLive", value: Float(0.2) }] }
+  35108 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35109 actor   LevelEventGeneric LevelEventGeneric { event_id: 4054, nbt: [Nbt { name: "origin", value: Compound([("type", String("vec3")), ("x", Float(0.5)), ("y", Float(-25.5)), ("z", Float(0.5))]) }, Nbt { name: "speed", value: Float(20.0) }, Nbt { name: "target", value: Compound([("type", String("vec3")), ("x", Float(4.5)), ("y", Float(-25.5)), ("z", Float(0.5))]) }, Nbt { name: "timeToLive", value: Float(0.2) }] }
+  35109 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35109 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+  35308 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4088327857, flags: UpdateBlockFlags(3), layer: 0 }
+  35308 watcher LevelSoundEvent LevelSoundEvent { sound_id: "power.on.sculk_sensor", position: Vec3f { x: 4.0, y: -26.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  35309 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4088327857, flags: UpdateBlockFlags(3), layer: 0 }
+  35309 actor   LevelSoundEvent LevelSoundEvent { sound_id: "power.on.sculk_sensor", position: Vec3f { x: 4.0, y: -26.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+  36809 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4026853034, flags: UpdateBlockFlags(3), layer: 0 }
+  36810 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4026853034, flags: UpdateBlockFlags(3), layer: 0 }
+## /
+  37310 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4149802680, flags: UpdateBlockFlags(3), layer: 0 }
+  37311 watcher LevelSoundEvent LevelSoundEvent { sound_id: "power.off.sculk_sensor", position: Vec3f { x: 4.0, y: -26.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  37313 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 4149802680, flags: UpdateBlockFlags(3), layer: 0 }
+  37313 actor   LevelSoundEvent LevelSoundEvent { sound_id: "power.off.sculk_sensor", position: Vec3f { x: 4.0, y: -26.0, z: 0.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /
+## /tp @s -6.5 -26 -5.5
+  41110 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"-6.50\"},{\"text\":\"-26.00\"},{\"text\":\"-5.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41110 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-6.50, -26.00, -5.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  41110 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "-6.50", "-26.00", "-5.50"]
+## /
+  42656 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  42656 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /setblock 4 -26 0 air
+  43159 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  43159 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  43159 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 4, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  43159 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /
+## /
+## /
+## /
+## /setblock 12 -26 0 air
+  48157 watcher UpdateBlock UpdateBlock { position: BlockCoordinates { x: 12, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  48157 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  48158 actor   UpdateBlock UpdateBlock { position: BlockCoordinates { x: 12, y: -26, z: 0 }, block_runtime_id: 3690217760, flags: UpdateBlockFlags(3), layer: 0 }
+  48158 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+## /tp @s 0.5 -26 0.5
+  49157 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  49157 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  49157 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+## /tp CmdWatcher 0.5 -26 0.5
+  50158 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50158 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  50158 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+## /
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1
