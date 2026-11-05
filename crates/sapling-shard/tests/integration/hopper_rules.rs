@@ -139,3 +139,23 @@ fn a_comparator_set_again_in_its_own_type_keeps_its_output() {
     }
     assert!(lit(&mut h, [5, 65, 2]), "its side input gone, it reads its new mode");
 }
+
+/// research/captures/bds-p2hopper.txt: BDS's hopper took loot lying on its cell's edge, drifting off it,
+/// within 2 ticks: its box, not its middle, reaches over the hopper.
+#[test]
+fn a_hopper_takes_an_item_whose_middle_is_off_it_but_whose_box_is_over_it() {
+    const HOPPER: [i32; 3] = [6, 65, -3];
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block(HOPPER, &Block::new("hopper").with("facing_direction=0,toggle_bit=0")));
+        assert!(ctx.drop_item(&Item::new("minecraft:feather", 1), [5.95, 66.2, -2.5]));
+    });
+    let taken = (0..2).any(|_| {
+        let (sent, got) = std::sync::mpsc::channel();
+        h.remote.run(move |ctx| sent.send(ctx.container_item(HOPPER, 0).is_some()).expect("the test waits"));
+        h.tick_all();
+        got.recv().expect("ran")
+    });
+    assert!(taken, "the hopper took the feather");
+}

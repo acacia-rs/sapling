@@ -117,6 +117,11 @@ Server path only (client path just predicts the result):
 - L6 Then `postGameEvent(region, bolt, GameEvent@14cc89898, s)` whether or not copper was found.
 - Differences from Java: the start block is not reset to unaffected in one go but takes one step per walk (3..5
   steps, so it ends unaffected anyway); the struck cell itself also gets the hook; the walk's sparks come from L1.
+- Drilled (bds-p2copper.txt, a bolt at 4.5 -26 -2.5 over exposed copper): `p` is the air cell, every spark of the
+  walks came in the tick the bolt appeared and every block change, in walk order, in one UpdateSubchunkBlocks a
+  tick later with the thunder. Against L2, the rod sparked at each of its 3 visits though it had no stage to
+  lose. Sapling (`blocks/rods.rs` `walk`, `blocks/copper.rs` `walked`/`sparking`) draws the walks and shows the
+  sparks as the bolt appears and runs the hooks when it lands; its block changes go one at a time.
 
 ## 5. Names
 

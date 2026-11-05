@@ -33,8 +33,9 @@ fn opens(h: &mut Harness) -> bool {
 }
 
 #[test]
-fn a_chest_under_a_block_does_not_open_and_one_under_a_torch_does() {
-    opens_under(at_a_chest(), &[("stone", false), ("oak_slab", false), ("torch", true), ("air", true)]);
+fn a_chest_under_a_block_does_not_open_and_one_under_a_torch_or_a_hopper_does() {
+    // A hopper's `chest_obstruction` is `never` (research/captures/bds-p2hopper.txt).
+    opens_under(at_a_chest(), &[("stone", false), ("oak_slab", false), ("torch", true), ("hopper", true), ("air", true)]);
 }
 
 /// research/captures/bds-e2lids.txt: a box set facing up opened under nothing but air.

@@ -183,9 +183,17 @@ pub(crate) fn let_go(world: &mut World, layer: Entity, stack: ItemStack, [x, y, 
 
 /// The items lying in `layer` inside the box from `min` to `max`, oldest first.
 pub(crate) fn lying_in(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
-    let inside = |at: &[f32; 3]| (0..3).all(|axis| (min[axis]..=max[axis]).contains(&at[axis]));
+    lying_where(world, layer, |body| (0..3).all(|axis| (min[axis]..=max[axis]).contains(&body.at[axis])))
+}
+
+/// The items lying in `layer` whose box overlaps the box from `min` to `max`, oldest first.
+pub(crate) fn lying_touching(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
+    lying_where(world, layer, |body| body.bounds().0.iter().zip(body.bounds().1).enumerate().all(|(axis, (low, high))| *low < max[axis] && high > min[axis]))
+}
+
+fn lying_where(world: &mut World, layer: Entity, wanted: impl Fn(&Body) -> bool) -> Vec<(Entity, ItemStack)> {
     let mut lying = world.query::<(Entity, &Dropped, &Body, &InLayer, &NetId)>();
-    let mut found: Vec<_> = lying.iter(world).filter(|(_, _, body, in_layer, _)| in_layer.0 == layer && inside(&body.at)).map(|(entity, item, _, _, id)| (id.0, entity, item.stack.clone())).collect();
+    let mut found: Vec<_> = lying.iter(world).filter(|(_, _, body, in_layer, _)| in_layer.0 == layer && wanted(body)).map(|(entity, item, _, _, id)| (id.0, entity, item.stack.clone())).collect();
     found.sort_unstable_by_key(|(id, ..)| *id);
     found.into_iter().map(|(_, entity, stack)| (entity, stack)).collect()
 }

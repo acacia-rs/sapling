@@ -90,37 +90,58 @@ fn copper_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<Copper
     of_state(level.registry(), level.block(x, y, z))
 }
 
-/// Unwaxed copper at `pos` goes back one stage, with sparks unless it is a rod; whether it is
-/// unwaxed copper at all (BDS 148b39420, 148b5c410).
-fn spark(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    let Some(copper) = copper_at(world, layer, pos).filter(|copper| !copper.waxed) else { return false };
-    if copper.stage > 0 && turn(world, layer, pos, Copper { stage: copper.stage - 1, ..copper }) && copper.base != "lightning_rod" {
-        let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
-        let sparks = LevelEvent { event: LevelEventEvent::ParticleElectricSpark, position, data: 0 };
-        send::to_viewers(world, layer, pos, &[sapling_net::encode(&sparks)]);
-    }
-    true
+fn is_bare(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    copper_at(world, layer, pos).is_some_and(|copper| !copper.waxed)
 }
 
-/// Lightning's hook, for the bolt's cell `pos` and the block a rod there stands on, `start`: each
-/// loses a stage, then 3 to 5 walks from `start` clean copper around it (docs/research/copper.md, L1-L5).
-pub(crate) fn struck(world: &mut World, layer: Entity, pos: BlockPos, start: BlockPos) {
-    spark(world, layer, pos);
-    if !copper_at(world, layer, start).is_some_and(|copper| !copper.waxed) {
-        return;
+/// Unwaxed copper at `pos` goes back one stage (BDS 148b39420, 148b5c410).
+pub(super) fn clean(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some(copper) = copper_at(world, layer, pos).filter(|copper| !copper.waxed && copper.stage > 0) {
+        turn(world, layer, pos, Copper { stage: copper.stage - 1, ..copper });
+    }
+}
+
+/// The cells lightning's hook runs on, in order, for a bolt on `pos` whose walks start at `start`: `pos`,
+/// then 3 to 5 walks from `start` over unwaxed copper (docs/research/copper.md, L3-L5).
+pub(super) fn walked(world: &mut World, layer: Entity, pos: BlockPos, start: BlockPos) -> Vec<BlockPos> {
+    let mut visits = vec![pos];
+    if !is_bare(world, layer, start) {
+        return visits;
     }
     let walks = 3 + world.get_resource_or_insert_with(Dice::default).roll(3);
     for _ in 0..walks {
-        spark(world, layer, start);
+        visits.push(start);
         let steps = 1 + world.get_resource_or_insert_with(Dice::default).roll(8);
         let mut at = start;
         for _ in 0..steps {
-            let mut tries = (0..WALK_TRIES).map(|_| neighbour(world, at)).collect::<Vec<_>>().into_iter();
-            let Some(next) = tries.find(|cell| copper_at(world, layer, *cell).is_some_and(|copper| !copper.waxed)) else { break };
-            spark(world, layer, next);
+            let Some(next) = (0..WALK_TRIES).find_map(|_| Some(neighbour(world, at)).filter(|cell| is_bare(world, layer, *cell))) else { break };
+            visits.push(next);
             at = next;
         }
     }
+    visits
+}
+
+/// Which of the hook's `visits` spark, each at its cell's corner: a rod every time, other unwaxed copper
+/// while it has a stage left to lose (research/captures/bds-p2copper.txt).
+pub(super) fn sparking(world: &World, layer: Entity, visits: &[BlockPos]) -> Vec<BlockPos> {
+    let mut lost: Vec<BlockPos> = Vec::new();
+    let mut sparks = Vec::new();
+    for &pos in visits {
+        let Some(copper) = copper_at(world, layer, pos).filter(|copper| !copper.waxed) else { continue };
+        let stages_left = copper.stage - lost.iter().filter(|cell| **cell == pos).count().min(copper.stage);
+        if copper.base == "lightning_rod" || stages_left > 0 {
+            sparks.push(pos);
+        }
+        lost.push(pos);
+    }
+    sparks
+}
+
+/// Lightning's spark at the corner of `pos`.
+pub(super) fn spark_at(pos: BlockPos) -> bytes::Bytes {
+    let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
+    sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleElectricSpark, position, data: 0 })
 }
 
 /// A cell at most one off `at` along each axis, drawn x, y then z.

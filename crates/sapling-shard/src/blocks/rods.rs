@@ -1,8 +1,6 @@
 //! Lightning rods as redstone sources: a strike powers one for a while (docs/research/redstone-
 //! blocks.md, "Lightning rod"). The strike itself is the lightning's (`struck`).
 
-use acacia_proto::packets::{LevelEvent, LevelEventEvent};
-use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 
@@ -11,8 +9,6 @@ use super::{level, send, with_property};
 
 /// Ticks a struck rod stays powered.
 const POWERED: u64 = 8;
-/// The sparks BDS showed at a struck rod's corner, before powering it (research/captures/bds-rsdevices.txt).
-const SPARKS: usize = 6;
 
 fn is_rod(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<u32> {
     let level = level(world, layer).filter(|level| level.in_height(y))?;
@@ -27,32 +23,35 @@ fn power(world: &mut World, layer: Entity, pos: BlockPos, on: bool) -> bool {
     true
 }
 
-/// The sparks of a bolt coming down on the rod at `pos`, as the bolt appears (a summoned one's
-/// strike is a tick later, bds-rsdevices.txt).
-pub(crate) fn sparks(world: &mut World, layer: Entity, pos: BlockPos) {
-    if is_rod(world, layer, pos).is_some() {
-        let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 };
-        let spark = sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleElectricSpark, position, data: 0 });
-        send::to_viewers(world, layer, pos, &vec![spark; SPARKS]);
-    }
-}
-
-/// The hook for lightning striking the cell `pos` (the block under the bolt): a rod there is
-/// powered, and copper there and from the block below or the rod's own block on is cleaned
-/// (docs/research/copper.md, L3-L4). Whether it was a rod.
-pub(crate) fn struck(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    let is_rod = power(world, layer, pos, true);
-    let start = match is_rod.then(|| facing(world, layer, pos)).flatten() {
+/// The cells lightning's hook is to run on for a bolt on `pos` (copper.rs `walked`), from the block under
+/// it or, for a rod, the one it stands on; their sparks are shown now, as the bolt appears, its strike
+/// coming a tick later for a summoned one (research/captures/bds-rsdevices.txt, bds-p2copper.txt).
+pub(crate) fn walk(world: &mut World, layer: Entity, pos: BlockPos) -> Vec<BlockPos> {
+    let start = match is_rod(world, layer, pos).and_then(|_| facing(world, layer, pos)) {
         Some(face) => super::opposite(face).neighbour(pos),
         None => Face::Down.neighbour(pos),
     };
-    if is_rod {
-        queued::cancel(world, layer, pos, Job::RodOff);
-        queued::after(world, layer, pos, POWERED, Job::RodOff);
+    let visits = super::copper::walked(world, layer, pos, start);
+    let sparks: Vec<_> = super::copper::sparking(world, layer, &visits).into_iter().map(super::copper::spark_at).collect();
+    if !sparks.is_empty() {
+        send::to_viewers(world, layer, pos, &sparks);
     }
-    super::copper::struck(world, layer, pos, start);
-    super::vibrate_at(world, layer, pos, super::GameEvent::LightningStrike, false);
-    is_rod
+    visits
+}
+
+/// Lightning's hook on each of `visits` ([`walk`]), the bolt's own cell first: a rod is powered, copper
+/// loses a stage (docs/research/copper.md, L1-L5).
+pub(crate) fn struck(world: &mut World, layer: Entity, visits: &[BlockPos]) {
+    for &pos in visits {
+        if power(world, layer, pos, true) {
+            queued::cancel(world, layer, pos, Job::RodOff);
+            queued::after(world, layer, pos, POWERED, Job::RodOff);
+        }
+        super::copper::clean(world, layer, pos);
+    }
+    if let Some(&pos) = visits.first() {
+        super::vibrate_at(world, layer, pos, super::GameEvent::LightningStrike, false);
+    }
 }
 
 fn facing(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<Face> {

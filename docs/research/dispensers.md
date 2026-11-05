@@ -232,8 +232,10 @@ Block behaviours (BlockType vt+0x190):
 - Names of hash globals 14ccf9950 (air), 14ccdb710 (fire), 14cce2cf8 (tnt), 14ccdafe8 (lava), 14ccdd3a0, the dirt
   list 14ccdb858, tag 14ccdb7d0, recipe tag 14cde8268, game events 14cc89850 / 14cc8a91c / 14cc8a9ec.
 - Arrow pickup flag (142a7d140 not read); arrow uncertainty: whether `uncertainty_multiplier` × difficulty is
-  subtracted before comp+0x1a0; snowball/egg default uncertainty. sapling uses 8 for arrows (16 less 4 × normal
-  difficulty) and Java's 6 for snowballs, eggs, potions and bottles (`shots/dispensed.rs`).
+  subtracted before comp+0x1a0. sapling uses 16 less 4 × difficulty (one easy-world arrow left 3σ off at 12).
+  BDS's arrow left at power 1.1 and its snowball with no spread (bds-p2shoot.txt); snowballs, eggs, potions and
+  bottles get none (`shots/dispensed.rs`). The snowball's hit: six `ParticleProjectileHit` data 15 where it
+  landed, then LevelSoundEvent `undefined` there a tick later (`creatures/landing.rs`).
 - Wind charge's dispense path (assumed ComponentItem projectile).
 - Spawn egg exact position for up/down and the 5% branch; shears details; `Item::dispense` special at 141a88af0.
 - Crafter toggle-slot server handling (empty slot required? sound?), interact 14713f470.

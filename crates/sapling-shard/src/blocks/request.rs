@@ -211,7 +211,11 @@ impl Request<'_> {
         if held.as_ref().is_some_and(|held| crate::vehicles::place(self.world, self.entity, site.layer, pos, face, at, held)) {
             return;
         }
-        if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held) || self.stack(&site, pos, face, held)) {
+        // BDS resent nothing after a tool's use took (research/captures/bds-p2tools.txt).
+        if held.as_ref().is_some_and(|held| self.use_tool(&site, pos, face, held)) {
+            return;
+        }
+        if held.as_ref().is_some_and(|held| self.stack(&site, pos, face, held)) {
             return self.resync(&[pos, target]);
         }
         if held.is_some_and(|held| self.use_bucket(&site, pos, face, &held)) {

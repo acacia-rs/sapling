@@ -94,23 +94,37 @@ fn a_pig_becomes_a_zombified_piglin_and_a_creeper_is_charged_unhurt() {
     assert!(powered, "the creeper is told it is charged");
 }
 
+fn sparks_at(sent: &[RawPacket], corner: [f32; 3]) -> usize {
+    all::<LevelEvent>(sent).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == corner).count()
+}
+
 #[test]
-fn a_struck_rod_is_powered_eight_ticks_and_scrapes_the_copper_it_stands_on() {
+fn a_struck_rod_is_powered_eight_ticks_and_sparks_each_time_a_walk_comes_by() {
     let mut h = ready(Difficulty::Normal);
     h.remote.run(|ctx| {
         ctx.set_block([3, 64, 3], &Block::new("minecraft:oxidized_copper"));
         ctx.set_block([3, 65, 3], &Block::new("minecraft:lightning_rod").with("facing_direction=1,powered_bit=0"));
-        // On the rod's top: a bolt strikes the block under it (research/captures/bds-rsdevices.txt).
+        // On the rod's top: the walks start at the rod under the bolt's cell (research/captures/bds-rsdevices.txt).
         ctx.spawn_entity(BOLT, [3.5, 66.0, 3.5]);
     });
-    let sparks = all::<LevelEvent>(&watch(&mut h, 1)).into_iter().filter(|event| event.event == LevelEventEvent::ParticleElectricSpark && [event.position.x, event.position.y, event.position.z] == [3.0, 65.0, 3.0]).count();
-    assert_eq!(sparks, 6, "BDS's sparks at the rod's corner");
+    // BDS's 6 and 3 were walks coming by at random (bds-rsdevices.txt, bds-p2copper.txt): at least one a walk.
+    assert!(sparks_at(&watch(&mut h, 1), [3.0, 65.0, 3.0]) >= 3, "a spark at the rod's corner for each walk");
     // The rod powered a tick after the sparks, as the bolt landed (bds-rsdevices.txt 69133, 69180).
     watch(&mut h, 1);
     let rod = ask(&mut h, |ctx| ctx.block([3, 65, 3]).unwrap());
     assert!(rod.name == "minecraft:lightning_rod" && rod.properties.contains("powered_bit=1"), "{rod:?}");
-    let copper = ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name);
-    assert_ne!(copper, "minecraft:oxidized_copper", "scraped at least a stage");
     watch(&mut h, 8);
     assert!(ask(&mut h, |ctx| ctx.block([3, 65, 3]).unwrap()).properties.contains("powered_bit=0"));
+}
+
+#[test]
+fn a_bolt_over_copper_walks_it_clean_a_stage_a_walk_sparking_as_it_appears() {
+    // research/captures/bds-p2copper.txt: the bolt's cell is air, the copper under it took a stage a walk.
+    let mut h = ready(Difficulty::Normal);
+    h.remote.run(|ctx| {
+        ctx.set_block([3, 64, 3], &Block::new("minecraft:oxidized_copper"));
+        ctx.spawn_entity(BOLT, [3.5, 65.0, 3.5]);
+    });
+    assert_eq!(sparks_at(&watch(&mut h, 1), [3.0, 64.0, 3.0]), 3, "one a stage, on the tick the bolt shows");
+    assert_eq!(ask(&mut h, |ctx| ctx.block([3, 64, 3]).unwrap().name), "minecraft:copper_block");
 }

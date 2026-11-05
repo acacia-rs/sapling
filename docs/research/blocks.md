@@ -146,5 +146,7 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
 ## Not drilled
 
 - Fire from a bed's blast cell by cell (BDS's fire pass not read).
-- Big dripleaf: the 0.6875 height and the shot (arrows are inert in sapling's drill); a stem's leaf
-  under a player (BDS's did not re-tilt; sapling's player fell through it, its head breaking).
+- Big dripleaf: the 0.6875 height; a stem's leaf under a player (BDS's did not re-tilt; sapling's player fell
+  through it, its head breaking). The shot (bds-p2shoot.txt): a dispenser's arrow struck the leaf's cell side
+  at 0.43 of its height, under the leaf, tilting it full; sapling's shots meet a leaf not tipped right over as
+  a whole cell (`creatures/flight/ray.rs`), and it is back up after 100 ticks on both.

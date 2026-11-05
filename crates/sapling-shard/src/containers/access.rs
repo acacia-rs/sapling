@@ -20,12 +20,19 @@ const LID_MAX: [f32; 3] = [15.0 / 16.0, 0.5, 15.0 / 16.0];
 const LIDDED: &[&str] = &["minecraft:chest", "minecraft:trapped_chest", "minecraft:ender_chest"];
 const SITTERS: [&str; 2] = ["minecraft:cat", "minecraft:ocelot"];
 
+/// Whether a block never holds a lid down whatever its shape (`minecraft:chest_obstruction` `never`): a
+/// hopper, as BDS opened a chest under one (research/captures/bds-p2hopper.txt), and the pack's concrete
+/// and wool stairs.
+fn never_obstructs(name: &str) -> bool {
+    name == "minecraft:hopper" || name.ends_with("_concrete_stairs") || name.ends_with("_wool_stairs")
+}
+
 /// Whether something in the cell `offset` from `[x, y, z]` collides with the space `lid_min..lid_max`
-/// in that cell.
-fn lid_is_held_down(world: &World, layer: Entity, [x, y, z]: BlockPos, offset: BlockPos, (lid_min, lid_max): ([f32; 3], [f32; 3])) -> bool {
+/// in that cell; a chest's lid (`by_rule`) asks the block's obstruction rule first.
+fn lid_is_held_down(world: &World, layer: Entity, [x, y, z]: BlockPos, offset: BlockPos, (lid_min, lid_max): ([f32; 3], [f32; 3]), by_rule: bool) -> bool {
     let [x, y, z] = [x + offset[0], y + offset[1], z + offset[2]];
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world).filter(|level| level.in_height(y)) else { return false };
-    let Some(next) = level.registry().get(level.block(x, y, z)) else { return false };
+    let Some(next) = level.registry().get(level.block(x, y, z)).filter(|next| !(by_rule && never_obstructs(next.name))) else { return false };
     let overlaps = |min: [f32; 3], max: [f32; 3]| (0..3).all(|axis| min[axis] < lid_max[axis] && max[axis] > lid_min[axis]);
     next.boxes.iter().any(|shape| overlaps(shape.min, shape.max))
 }
@@ -65,9 +72,9 @@ fn shulker_lid(world: &World, layer: Entity, pos: BlockPos) -> BlockPos {
 /// always open.
 pub(super) fn is_blocked(world: &mut World, layer: Entity, pos: BlockPos, block: &str) -> bool {
     if super::is_shulker_box(block) {
-        return lid_is_held_down(world, layer, pos, shulker_lid(world, layer, pos), ([0.0; 3], [1.0, 0.5, 1.0]));
+        return lid_is_held_down(world, layer, pos, shulker_lid(world, layer, pos), ([0.0; 3], [1.0, 0.5, 1.0]), false);
     }
-    LIDDED.contains(&block) && pairs::halves(world, layer, pos).into_iter().any(|half| lid_is_held_down(world, layer, half, [0, 1, 0], (LID_MIN, LID_MAX)) || cat_sits_on(world, layer, half))
+    LIDDED.contains(&block) && pairs::halves(world, layer, pos).into_iter().any(|half| lid_is_held_down(world, layer, half, [0, 1, 0], (LID_MIN, LID_MAX), true) || cat_sits_on(world, layer, half))
 }
 
 /// Whether the block `viewing` shows is still there.

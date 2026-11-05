@@ -183,9 +183,8 @@ pub(super) fn feed(world: &mut World, layer: Entity, pos: BlockPos, creative: bo
             return false;
         }
         particle(world, layer, pos);
-        for (cell, id) in grown {
-            send::set(world, layer, cell, id);
-        }
+        // A sub-chunk's plants in one UpdateSubchunkBlocks (research/captures/bds-p2meal.txt).
+        send::set_sectioned(world, layer, &grown);
         return true;
     }
     let roll = world.get_resource_or_insert_with(Dice::default).fraction();

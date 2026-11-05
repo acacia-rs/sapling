@@ -86,7 +86,9 @@ impl Click {
             },
             // A hopper's spout points into the clicked block.
             "facing_direction" if block.ends_with("hopper") => ["0", "0", "3", "2", "5", "4"][self.face as usize],
-            "facing_direction" if ends(&["end_rod", "lightning_rod"]) => ["0", "1", "2", "3", "4", "5"][self.face as usize],
+            // An end rod's sideways values name the face it stands on (research/captures/bds-p2place.txt).
+            "facing_direction" if block.ends_with("end_rod") => ["0", "1", "3", "2", "5", "4"][self.face as usize],
+            "facing_direction" if block.ends_with("lightning_rod") => ["0", "1", "2", "3", "4", "5"][self.face as usize],
             // A bed's head lies the way its placer looks.
             "direction" if block.ends_with(":bed") => ["0", "1", "2", "3"][self.quarter()],
             "direction" if ends(&["loom", "beehive", "bee_nest", ":bell", "grindstone", "decorated_pot", "chiseled_bookshelf"]) => ["2", "3", "0", "1"][self.quarter()],
@@ -122,6 +124,8 @@ impl Click {
             // Named for the side the torch leans away from: the block it hangs on.
             "torch_facing_direction" => ["top", "top", "south", "north", "east", "west"][self.face as usize],
             "facing_direction" if on_a_face => ["0", "1", "2", "3", "4", "5"][self.face as usize],
+            // A tripwire hook faces off the clicked face (research/captures/bds-p2trip.txt).
+            "direction" if block.ends_with("tripwire_hook") => ["0", "0", "2", "0", "1", "3"][self.face as usize],
             "direction" if block.ends_with("trapdoor") => ["3", "0", "2", "1"][self.quarter()],
             "pillar_axis" => match self.face {
                 Face::Down | Face::Up => "y",

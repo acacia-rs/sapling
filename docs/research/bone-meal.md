@@ -46,7 +46,8 @@ end gets the flower's own kind, a poppy and a dandelion turning into each other 
 (`blocks/bonemeal/scatter.rs`, the flower from `sapling_worldgen::meal_flower`), tests
 `bonemeal::grass_plants_only_where_its_walks_reach_over_grass`,
 `a_flower_spreads_its_kind_up_to_three_cells_over_grass`. Sapling's scatter was tries within two
-(one for a flower).
+(one for a flower). BDS sent what came up in one UpdateSubchunkBlocks a sub-chunk (bds-p2meal.txt), as sapling
+now does (`send::set_sectioned`).
 
 ## In survival
 

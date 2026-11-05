@@ -414,7 +414,8 @@ kind with `panics=`, runs for 70 ticks from place to place within 5 blocks at th
 
 A creeper is lit, burns and bursts so (`creatures/blast.rs`): its blast hurts and throws players
 by the rule above, hurts mobs, and breaks blocks along the Java game's rays, which break that one
-stone. What a block withstands is guessed from its hardness; the fuse goes out when its prey
+stone. What a block withstands is BDS's own resistance (`block-resistance.tsv`, read off a live BDS,
+and its drops as `Explosion::explode`'s, d719a4e7); the fuse goes out when its prey
 is 6 off or gone, as the pack says, which was not drilled.
 
 A skeleton stands within 10 blocks of its prey and looses an arrow every 61 ticks

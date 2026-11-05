@@ -43,7 +43,7 @@ Code: `crates/sapling-shard/src/lightning.rs`, `lightning/{storms,rods}.rs`, `cr
   middle of the rod's own cell at the rod's y (0.5, -26, -5.5 for a rod at 0, -26, -6), the rod powered,
   one spark, no `item.trident.thunder`. Sapling does so (`lightning.rs` `call_down`, `channel_to_rod`;
   tests `a_bolt_takes_away_the_items_and_orbs_in_reach_netherite_too`,
-  `a_channeling_trident_on_a_rod_calls_a_bolt_onto_it_in_a_storm`) but shows a rod's six sparks.
+  `a_channeling_trident_on_a_rod_calls_a_bolt_onto_it_in_a_storm`); the sparks are copper.md's walks.
 
 Unverified: an unwaxed rod that is oxidised seems to be scraped instead of powered (its vtable's
 slot 16 jumps to the copper routine; not tried live); the `Animal` kinds sapling lists; the sky

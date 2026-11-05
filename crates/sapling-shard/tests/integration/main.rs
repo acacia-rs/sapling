@@ -174,6 +174,7 @@ mod summon_looks;
 mod summoned_shots;
 mod survival;
 mod template_actors;
+mod thirteenth2p_blocks;
 mod throws;
 mod tick_circle;
 mod tnt;

@@ -268,7 +268,11 @@ powered order, as JAVA `RailBlock.updateState` (rail_line.rs, rails.rs `switch`)
 ## Open checks (one bot session on BDS: place, read back)
 
 1. Which blocks carry tags `dirt`/`sand` (sugar cane on podzol, mycelium, moss, mud, suspicious sand?).
-2. Default connection rules: fence beside leaves, glass, stairs back, slab, chest; pane beside wall; wall beside fence.
-3. Rails/wire/repeater on a fence top, glass, top slab, hopper (Center vs Edge vs Any).
-4. Cave vines placed state (`growing_plant_age` random?) and whether glow berries go under a slab.
+2. Default connection rules: pane beside wall. Drilled (bds-p2place.txt): a fence joins glass and a stairs' back,
+   not leaves, a bottom slab, a chest or a stairs' side; a wall does not join a fence (`blocks/shapes.rs`).
+3. Drilled (bds-p2place.txt): rails, wire and a repeater go on glass, a top slab and a hopper, not a fence top
+   (`blocks/ground.rs` LOW_CENTRE). A poppy or short grass on stone pops at a neighbour's change (bds-p2fall.txt).
+4. Drilled (bds-p2place.txt): glow berries, weeping and twisting vines put by hand take a random age (BDS's 0 to
+   25) and are listed twice in one UpdateSubchunkBlocks (`blocks/commanded.rs` `aged_by_hand`); glow berries do
+   not go under a top slab. An end rod's sideways `facing_direction` names the face it stands on (`facing.rs`).
 5. Stairs corner recomputed when a neighbour changes later (trait update), not only at placement.

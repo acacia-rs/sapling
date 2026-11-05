@@ -34,14 +34,14 @@ pub(crate) const BURNS: u16 = 160;
 const MORE_FIRES: usize = 4;
 const FIRE_RULE: &str = "doFireTick";
 
-/// A bolt: its life, the flashes it has left, whether it hurts, and the block it is still to land
-/// on (`call_down`) in a tick after the one it was `born` in.
-#[derive(Component, Clone, Copy)]
+/// A bolt: its life, the flashes it has left, whether it hurts, and the cells its strike is still to
+/// reach (`call_down`) in a tick after the one it was `born` in.
+#[derive(Component, Clone)]
 struct Bolt {
     life: i32,
     flashes: u32,
     harms: bool,
-    lands: Option<BlockPos>,
+    lands: Option<Vec<BlockPos>>,
     born: u64,
 }
 
@@ -59,23 +59,23 @@ pub(crate) fn thunders(world: &World, layer: Entity) -> bool {
 /// A storm's bolt comes down on `at` in `layer` and lands at once, hurting where it reaches if it
 /// `harms`; the bolt.
 pub(crate) fn strike(world: &mut World, layer: Entity, at: [f32; 3], harms: bool) -> Option<Entity> {
-    let bolt = spawn(world, layer, at, harms, None)?;
-    crate::blocks::lightning_sparks(world, layer, under(at));
-    land(world, layer, bolt, at, under(at), harms);
+    let bolt = spawn(world, layer, at, harms)?;
+    let visits = crate::blocks::lightning_walk(world, layer, cell_of(at));
+    land(world, layer, bolt, at, &visits, harms);
     Some(bolt)
 }
 
-/// A summoned or Channeling bolt: shown now with a rod's sparks, it lands on `struck` (by default the
-/// block under it) in its first tick, a tick later, as BDS's (research/captures/bds-m3struck.txt,
-/// bds-m3rod.txt, bds-rsdevices.txt).
+/// A summoned or Channeling bolt: shown now with its copper's sparks, it lands on `struck` (by default
+/// its own cell) in its first tick, a tick later, as BDS's (research/captures/bds-m3struck.txt,
+/// bds-m3rod.txt, bds-rsdevices.txt, bds-p2copper.txt).
 pub(crate) fn call_down(world: &mut World, layer: Entity, at: [f32; 3], harms: bool, struck: Option<BlockPos>) -> Option<Entity> {
-    let struck = struck.unwrap_or_else(|| under(at));
-    let bolt = spawn(world, layer, at, harms, Some(struck))?;
-    crate::blocks::lightning_sparks(world, layer, struck);
+    let bolt = spawn(world, layer, at, harms)?;
+    let visits = crate::blocks::lightning_walk(world, layer, struck.unwrap_or_else(|| cell_of(at)));
+    world.get_mut::<Bolt>(bolt)?.lands = Some(visits);
     Some(bolt)
 }
 
-fn spawn(world: &mut World, layer: Entity, at: [f32; 3], harms: bool, lands: Option<BlockPos>) -> Option<Entity> {
+fn spawn(world: &mut World, layer: Entity, at: [f32; 3], harms: bool) -> Option<Entity> {
     let announce = |id: u64| {
         let options = AddEntityOptions { id, identifier: KIND, feet: at, yaw: 0.0, pitch: 0.0, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1(0), health: None, name: "" };
         Some(vec![sapling_net::encode(&sapling_data::add_entity(&options))])
@@ -83,20 +83,20 @@ fn spawn(world: &mut World, layer: Entity, at: [f32; 3], harms: bool, lands: Opt
     let bolt = entities::spawn(world, layer, KIND, Body::new(at, [0.0; 3], [0.0, 0.0]), at, announce)?;
     let flashes = world.get_resource_or_insert_with(Dice::default).roll(FLASHES) + 1;
     let born = world.resource::<Tick>().0;
-    world.entity_mut(bolt).insert(Bolt { life: LIFE, flashes, harms, lands, born });
+    world.entity_mut(bolt).insert(Bolt { life: LIFE, flashes, harms, lands: None, born });
     Some(bolt)
 }
 
-/// The block under the bolt, as the Java game's `getStrikePosition`: one summoned on a rod's top
-/// powered it on BDS (research/captures/bds-rsdevices.txt).
-fn under(at: [f32; 3]) -> BlockPos {
-    [at[0].floor() as i32, (f64::from(at[1]) - 1e-6).floor() as i32, at[2].floor() as i32]
+/// The bolt's own cell, where BDS runs its strike (docs/research/copper.md, L3): one summoned on a rod's
+/// top reaches the rod by the walk from the cell under it.
+fn cell_of(at: [f32; 3]) -> BlockPos {
+    at.map(|c| c.floor() as i32)
 }
 
-fn land(world: &mut World, layer: Entity, bolt: Entity, at: [f32; 3], struck: BlockPos, harms: bool) {
-    let cell = at.map(|c| c.floor() as i32);
+fn land(world: &mut World, layer: Entity, bolt: Entity, at: [f32; 3], visits: &[BlockPos], harms: bool) {
+    let cell = cell_of(at);
     entities::tell_viewers(world, bolt, layer, cell, vec![sound("thunder", at), sound("explode", at)]);
-    crate::blocks::lightning_struck(world, layer, struck);
+    crate::blocks::lightning_struck(world, layer, visits);
     kindle(world, layer, cell, harms, MORE_FIRES);
     if harms {
         hurt(world, layer, at);
@@ -142,13 +142,13 @@ fn hurt(world: &mut World, layer: Entity, at: [f32; 3]) {
 
 /// A tick of a bolt: its life runs down, it flashes again while it has flashes, and goes.
 fn flash(world: &mut World, bolt: Entity, layer: Entity) -> Option<()> {
-    let (Bolt { life, flashes, harms, lands, born }, at) = (*world.get::<Bolt>(bolt)?, world.get::<Body>(bolt)?.at);
+    let (Bolt { life, flashes, harms, lands, born }, at) = (world.get::<Bolt>(bolt)?.clone(), world.get::<Body>(bolt)?.at);
     if lands.is_some() && world.resource::<Tick>().0 <= born {
         return Some(());
     }
-    if let Some(struck) = lands {
+    if let Some(visits) = lands {
         world.get_mut::<Bolt>(bolt)?.lands = None;
-        land(world, layer, bolt, at, struck, harms);
+        land(world, layer, bolt, at, &visits, harms);
     }
     if life < 1 && flashes == 0 {
         mobs::remove(world, bolt);

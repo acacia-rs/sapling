@@ -225,9 +225,11 @@ direction 14cd24f50, facing_direction 14cd26368, lit 14cd25b50, sculk_sensor_pha
 
 ## Parity drill (2026-10-29, research/captures/bds-rsdevices.txt)
 
-- A bolt summoned on a rod's top strikes the rod (the cell under the bolt, Java `getStrikePosition`), and
-  storms draw bolts to the top of a rod; six `ParticleElectricSpark` at the rod's corner, data 0, before it
-  powers (B29). Fixed in `lightning.rs`, `lightning/rods.rs`, `blocks/rods.rs`.
+- A bolt summoned on a rod's top reaches the rod by copper.md's walks (L3-L5: its own cell is the air above,
+  the walks start at the rod), and storms draw bolts to the top of a rod; a `ParticleElectricSpark` at the
+  rod's corner, data 0, each time a walk comes by (6 here, 3 in bds-p2copper.txt), as the bolt appears, the
+  power a tick later (B29). Fixed in `lightning.rs`, `lightning/rods.rs`, `blocks/rods.rs`, `blocks/copper.rs`.
+- A tripwire hook put on a block's west face has `direction` 1, east 3 (bds-p2trip.txt; `blocks/facing.rs`).
 - A copper bulb toggling plays `block.copper_bulb.turn_on`/`turn_off` at the cell's corner after the block
   (B34). Fixed in `blocks/bulbs.rs`.
 - Same: note blocks, jukebox, target, crafter and dispenser power as written above.

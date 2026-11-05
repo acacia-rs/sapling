@@ -3,7 +3,7 @@
 //! (shots/clouds.rs); a snowball throws whom it hits and costs a blaze 3; an egg throws whom it hits
 //! and may hatch chicks; a pearl takes its thrower there; a bottle o' enchanting lets out
 //! experience; a wind charge bursts (charges.rs).
-// TODO: a snowball's and an egg's particles are not shown.
+// TODO: an egg's particles are not shown.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -24,6 +24,8 @@ use crate::{entities, late_sounds, view, vitals};
 const BLAZE: &str = "minecraft:blaze";
 const CHICKEN: &str = "minecraft:chicken";
 const ENDERMITE: &str = "minecraft:endermite";
+const SNOW_PUFF: i32 = 15;
+const SNOW_PUFFS: usize = 6;
 /// A player's wind charge (its pack's `explode`): power 1.2 reaching twice that, thrown 1.22 times
 /// as hard, 1 off whom it hit.
 // TODO: the reach and the throw are the Java game's explosion rule over the pack's numbers.
@@ -47,6 +49,7 @@ pub(super) fn land(world: &mut World, shot: Entity, layer: Entity, at: [f32; 3],
                 let hurts = world.get::<entities::Kind>(struck).is_some_and(|kind| kind.0 == BLAZE);
                 knock(world, struck, is_player, layer, from, if hurts { shots::SNOWBALL_BLAZE } else { 0.0 }, thrower);
             }
+            burst_of_snow(world, layer, at);
         }
         Lands::Egg => {
             if let Some((struck, is_player)) = struck {
@@ -98,6 +101,16 @@ fn splash(world: &mut World, layer: Entity, at: [f32; 3], colour: i32) {
     let cell = at.map(|c| c.floor() as i32);
     view::to_viewers(world, layer, cell, &[sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleSplash, position: Vec3f { x, y, z }, data: colour })]);
     late_sounds::play_later(world, 1, layer, cell, flight::sound("glass", at, ""));
+}
+
+/// A snowball's puffs where it lands and the `undefined` sound a tick later, as BDS sent them
+/// (research/captures/bds-p2shoot.txt).
+fn burst_of_snow(world: &mut World, layer: Entity, at: [f32; 3]) {
+    let [x, y, z] = at;
+    let cell = at.map(|c| c.floor() as i32);
+    let puff = sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleProjectileHit, position: Vec3f { x, y, z }, data: SNOW_PUFF });
+    view::to_viewers(world, layer, cell, &vec![puff; SNOW_PUFFS]);
+    late_sounds::play_later(world, 1, layer, cell, flight::sound("undefined", at, ""));
 }
 
 /// Something thrown that hurts little throws whom it hit as a hit from `from` does, costing it `harm`.

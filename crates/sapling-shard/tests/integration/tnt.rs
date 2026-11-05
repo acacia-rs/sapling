@@ -99,6 +99,24 @@ fn a_blast_lights_the_tnt_it_reaches_and_a_summoned_one_is_primed() {
     assert_eq!((primed, bursts), (2, 2));
 }
 
+/// research/captures/bds-p2tnt.txt: eight TNT a blast lit burnt 16 to 37 ticks, the pack's `from_explosion`
+/// fuse of 0.5 to 2 seconds, not the Java game's 10 to 29.
+#[test]
+fn tnt_a_blast_lights_burns_half_a_second_to_two() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        for [x, z] in [[1, 4], [5, 4], [3, 2], [3, 6], [1, 2], [5, 6], [1, 6], [5, 2]] {
+            ctx.set_block([x, 65, z], &Block::new("minecraft:tnt"));
+        }
+        assert!(ctx.spawn_entity("minecraft:tnt", [3.5, 65.0, 4.5]).is_some());
+    });
+    let sent: Vec<RawPacket> = (0..90).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    // As announced at -1, its first data one less than its fuse (bds-firstdata.txt).
+    let lit: Vec<i32> = all::<AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:tnt").skip(1).filter_map(|added| fuses(&sent, added.runtime_id).first().map(|left| left + 1)).collect();
+    assert!(lit.len() == 8 && lit.iter().all(|fuse| (10..=40).contains(fuse)) && lit.iter().any(|fuse| *fuse > 29), "{lit:?}");
+}
+
 #[test]
 fn tnt_summoned_under_water_makes_no_splash() {
     // research/captures/bds-bkblocks.txt: none at its first tick in the water, nor after.

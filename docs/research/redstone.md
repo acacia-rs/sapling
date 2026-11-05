@@ -391,7 +391,10 @@ No decompile: all of this is from the captures.
   change in one evaluation, a tick or two after the click. Off, the dust goes out at the next
   evaluation and both lamps four ticks after it, as lamps do; the button lets go 22 ticks after the click.
   Sapling gives them no lag either.
-- A piston moving one and a plate stepped on: "Parity drill". Not drilled: a change while it is on.
+- A piston moving one and a plate stepped on: "Parity drill".
+- A change while it is on or about to turn on is not noticed (bds-p2rs.txt): two observers watching each other
+  pulse every 6 ticks, as in Java's order (an observer turning on tells its neighbours first, then sets its own
+  turn off; one with a turn to come takes no notice). Sapling was 4 (`redstone/observers.rs`, fixed).
 
 ## Pistons (2026-10-09, `bds_command_probe piston-facing` and `pistons`, research/captures/bds-redstone-pistons.txt)
 

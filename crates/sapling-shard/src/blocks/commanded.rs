@@ -18,8 +18,9 @@ const AGED: [(&str, &str); 4] = [
     ("minecraft:cave_vines", "growing_plant_age"),
     ("minecraft:kelp", "kelp_age"),
 ];
-/// The ages drawn: the Java game's `nextInt(25)`; BDS's nine seen were 2 to 17.
-const AGES: u32 = 25;
+/// The ages drawn, 0 to 25: BDS's commanded ones were 2 to 17, its hand-placed glow berries 0 to 25
+/// (research/captures/bds-p2place.txt).
+const AGES: u32 = 26;
 
 /// A bed `id` laid with its head at `pos` and its foot behind it, where that cell is air, both
 /// shown in one UpdateSubchunkBlocks. `None` for any other block or a bed with no room.
@@ -131,7 +132,19 @@ fn aged(world: &mut World, layer: Entity, [x, y, z]: BlockPos, block: &Block) ->
     if *name == "minecraft:kelp" && !wet_above {
         return (block.clone(), false);
     }
+    (with_age(world, name, key, &block.properties), true)
+}
+
+fn with_age(world: &mut World, name: &str, key: &str, properties: &str) -> Block {
     let age = world.get_resource_or_insert_with(Dice::default).roll(AGES);
-    let states = [block.properties.as_str(), &format!("{key}={age}")].into_iter().filter(|part| !part.is_empty()).collect::<Vec<_>>().join(",");
-    (Block::new(*name).with(states), true)
+    let kept = properties.split(',').filter(|pair| !pair.is_empty() && pair.split_once('=').is_none_or(|(named, _)| named != key));
+    let states = kept.map(str::to_owned).chain([format!("{key}={age}")]).collect::<Vec<_>>().join(",");
+    Block::new(name).with(states)
+}
+
+/// `block` placed by hand with a random age, where it is one BDS ages: its glow berries, weeping and
+/// twisting vines all took one (research/captures/bds-p2place.txt). `None` for any other block.
+pub(super) fn aged_by_hand(world: &mut World, block: &Block) -> Option<Block> {
+    let (name, key) = AGED.iter().find(|(name, _)| *name == block.name)?;
+    Some(with_age(world, name, key, &block.properties))
 }
