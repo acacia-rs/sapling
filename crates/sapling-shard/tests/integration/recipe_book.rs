@@ -48,6 +48,8 @@ fn held_items_unlock_their_recipes_and_the_book_is_kept() {
 
     assert_eq!(lists(&give(&mut h, "minecraft:oak_log", 1)), newly(&["minecraft:furnace_log", "minecraft:oak_planks", "minecraft:oak_wood"]));
     assert!(lists(&give(&mut h, "minecraft:oak_log", 1)).is_empty(), "nothing new");
+    // `/recipe` reads this book, picked-up unlocks and all.
+    h.remote.run(|ctx| assert!(ctx.known_recipes(STEVE).is_some_and(|known| known.iter().any(|id| id == "minecraft:oak_planks"))));
     // Taken by `/recipe`, a recipe comes back with the next log onto the stack.
     h.remote.run(|ctx| ctx.screen_action(STEVE, &ScreenAction::Recipes { ids: vec!["minecraft:oak_planks".into()], change: RecipeChange::Forgotten }));
     h.tick(1);

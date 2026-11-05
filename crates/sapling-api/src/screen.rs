@@ -94,6 +94,12 @@ impl ShardCtx<'_> {
         self.backend.screen_action(player, action);
     }
 
+    /// The recipes a player's book holds, in the order it learnt them; `None` where the shard
+    /// keeps no book for it.
+    pub fn known_recipes(&self, player: PlayerId) -> Option<Vec<String>> {
+        self.backend.known_recipes(player)
+    }
+
     /// Whether a player may use `input`; every input is allowed until `/inputpermission` stops it.
     pub fn input_allowed(&self, player: PlayerId, input: Input) -> bool {
         self.backend.input_locks(player) & input.lock() == 0

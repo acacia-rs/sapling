@@ -176,6 +176,10 @@ impl TitleBackend for Ctx<'_> {
         self.locked_inputs(player)
     }
 
+    fn known_recipes(&self, player: PlayerId) -> Option<Vec<String>> {
+        self.world.get::<crate::inventory::RecipeBook>(self.entity(player)?).map(|book| book.known().to_vec())
+    }
+
     fn set_input_locks(&mut self, player: PlayerId, locks: u32) {
         self.lock_inputs(player, locks);
     }
