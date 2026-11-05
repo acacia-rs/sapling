@@ -126,8 +126,17 @@ vehicles work) take no player as a vehicle.
   `property_inheritance` string or hash user to read. `u1inherit` (bds-u1inherit.txt, 2026-11-04,
   an ice plains world with cows summoned in the End and teleported over) gave no pair: the End's
   cows came out cold too, as sapling's, and no calf came in 15 s (the pens' slowness 255 kept the
-  loving pairs apart). A rerun wants a Nether cow beside a cold one and no slowness; sapling's
-  `/execute ... in overworld run tp` of a mob answered success and left it in the End. Sapling
-  picks a parent at random.
+  loving pairs apart; the bot also feeds only within 2.8 of its eyes and in sight, so it fed one
+  of eight). Sapling's `/execute ... in overworld run tp` of a mob answered success and left it in
+  the End: fixed (2026-11-05, `entities::teleport_into`, `ShardCtx::move_entity_into`; BDS took the
+  mob off the old dimension's screens and announced it at its new place, under a new runtime id
+  and the same unique id, where sapling keeps both; test
+  `a_mob_sent_into_another_dimension_leaves_one_screen_for_the_other`). `w1inherit`
+  (bds-w1inherit.txt, sapling-w1inherit.txt, the flat plains world): two cows summoned in the
+  Nether came warm, two in the End cold, the overworld's temperate, on both. Each pair was fed
+  before the pens closed. BDS made three calves in 25 s: warm x cold gave cold (the pair is known
+  by when the parents' love particles stopped), then a cold and a temperate one. Sapling made
+  four: warm, temperate, temperate, cold. Every calf took one parent's climate on both sides,
+  which fits sapling's random pick of a parent; three calves cannot show the odds.
 - Herds of babies from natural spawning (above); cats', parrots' and foxes' own goals (Left out).
 - The exact distance a lead snaps at, between 6.6 and 15.5.

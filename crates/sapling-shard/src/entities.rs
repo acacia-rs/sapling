@@ -249,6 +249,29 @@ pub(crate) fn teleport(world: &mut World, id: EntityId, feet: [f32; 3]) -> bool 
     true
 }
 
+/// [`teleport`] into the world `layer`: the entity leaves its riders and its old world's
+/// screens, and is announced in the new one at `feet` (mobs.rs [`mobs::rehome`]).
+pub(crate) fn teleport_into(world: &mut World, id: EntityId, layer: Entity, feet: [f32; 3]) -> bool {
+    let Some(entity) = find(world, id) else { return false };
+    if world.get::<InLayer>(entity).is_none_or(|in_layer| in_layer.0 == layer) {
+        return teleport(world, id, feet);
+    }
+    crate::riding::forget(world, entity);
+    let Some(body) = world.get_mut::<Body>(entity).map(|mut body| {
+        body.at = feet;
+        *body
+    }) else {
+        return false;
+    };
+    // Its new viewers learn of it from its announcement, not a move.
+    if let Some(mut told) = world.get_mut::<Told>(entity) {
+        told.jump();
+        drop(told.update(id.0, feet, body.motion, body.on_ground));
+    }
+    mobs::rehome(world, entity, layer, feet);
+    true
+}
+
 pub(crate) fn remove(world: &mut World, id: EntityId) -> bool {
     let Some(entity) = find(world, id).or_else(|| crate::labels::floating(world, id)) else { return false };
     mobs::remove(world, entity);

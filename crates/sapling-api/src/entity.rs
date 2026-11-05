@@ -75,6 +75,13 @@ impl ShardCtx<'_> {
         self.backend.move_entity(id, feet)
     }
 
+    /// [`Self::move_entity`] into `dimension` of the entity's world (0 overworld, 1 Nether, 2
+    /// End), as `/execute in … run tp` sends a mob. False for one that is gone or a world with no
+    /// such dimension.
+    pub fn move_entity_into(&mut self, id: EntityId, dimension: i32, feet: [f32; 3]) -> bool {
+        self.backend.move_entity_into(id, dimension, feet)
+    }
+
     /// Sets how fast an entity moves, in blocks a tick; gravity and drag go on from there.
     pub fn set_velocity(&mut self, id: EntityId, velocity: [f32; 3]) -> bool {
         self.backend.set_velocity(id, velocity)
@@ -157,6 +164,9 @@ pub trait EntityBackend {
     fn entity(&self, id: EntityId) -> Option<EntityInfo>;
     fn entities(&self) -> Vec<EntityInfo>;
     fn move_entity(&mut self, id: EntityId, feet: [f32; 3]) -> bool;
+    fn move_entity_into(&mut self, _id: EntityId, _dimension: i32, _feet: [f32; 3]) -> bool {
+        false
+    }
     fn set_velocity(&mut self, id: EntityId, velocity: [f32; 3]) -> bool;
     fn remove_entity(&mut self, id: EntityId) -> bool;
     fn kill_entity(&mut self, id: EntityId) -> bool;

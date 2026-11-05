@@ -4,7 +4,7 @@
 use crate::common;
 
 use acacia_proto::Packet;
-use acacia_proto::packets::{AddPlayer, ChangeDimension, CorrectPlayerMovePrediction, LevelChunk, LevelEventGeneric, PlayerAction, RemoveEntity};
+use acacia_proto::packets::{AddEntity, AddPlayer, ChangeDimension, CorrectPlayerMovePrediction, LevelChunk, LevelEventGeneric, PlayerAction, RemoveEntity};
 use acacia_proto::types::{Action, BlockCoordinates};
 use common::{Harness, all, ids, input_at};
 use sapling_api::{PlayerId, RuleValue};
@@ -102,6 +102,33 @@ fn a_dimension_shares_its_overworlds_time_and_rules() {
     h.tick_all();
     (0..5).for_each(|_| drop(h.tick_all()));
     h.remote.run(|ctx| assert_eq!(ctx.within("default:nether", |ctx| ctx.time()), Some(1000), "a stopped clock stops in both"));
+    h.tick_all();
+}
+
+/// BDS's cow sent from the End by `/execute in overworld run tp` left the End's screens and was
+/// announced in the overworld where it was sent (research/captures/bds-u1inherit.txt).
+#[test]
+fn a_mob_sent_into_another_dimension_leaves_one_screen_for_the_other() {
+    let mut h = two_players();
+    h.remote.run(|ctx| assert!(ctx.travel(ALEX, NETHER, [0.5, 70.0, 0.5])));
+    h.tick_all();
+    h.receive(1, &input_at([0.5, 70.0, 0.5]));
+    until_ready(&mut h);
+    h.receive(1, &ack());
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:cow", [2.5, 65.0, 0.5]).is_some()));
+    let sent: Vec<_> = (0..3).map(|_| h.tick_all()).collect();
+    assert!(sent.iter().all(|sent| all::<AddEntity>(sent.to(1)).is_empty()), "none in Alex's Nether");
+    let cow = sent.iter().flat_map(|sent| all::<AddEntity>(sent.to(2))).next().expect("first in Steve's overworld").runtime_id;
+    h.remote.run(move |ctx| assert!(ctx.move_entity_into(sapling_api::EntityId(cow), NETHER, [1.5, 70.0, 1.5])));
+    let sent = h.tick_all();
+    assert_eq!(all::<RemoveEntity>(sent.to(2)), [RemoveEntity { entity_id_self: cow as i64 }]);
+    let added = all::<AddEntity>(sent.to(1));
+    assert_eq!(added.iter().map(|added| (added.runtime_id, [added.position.x, added.position.y, added.position.z])).collect::<Vec<_>>(), [(cow, [1.5, 70.0, 1.5])]);
+    h.remote.run(move |ctx| {
+        assert_eq!(ctx.entity(sapling_api::EntityId(cow)).map(|cow| cow.feet[0]), Some(1.5));
+        assert!(!ctx.move_entity_into(sapling_api::EntityId(cow), 2, [0.5, 70.0, 0.5]), "no End here");
+    });
     h.tick_all();
 }
 

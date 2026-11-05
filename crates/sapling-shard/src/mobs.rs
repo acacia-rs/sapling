@@ -188,6 +188,38 @@ pub(crate) fn show_after(world: &mut World, mob: Entity, after: Vec<Bytes>) {
     }
 }
 
+/// Moves the entity into the world `layer` at `feet`: it goes from the screens of its old world
+/// and is announced there, as BDS shows a mob sent by `/execute in … run tp`
+/// (research/captures/bds-u1inherit.txt).
+pub(crate) fn rehome(world: &mut World, mob: Entity, layer: Entity, feet: [f32; 3]) {
+    let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
+    let Some((old, id, from)) = world.query::<(&Mob, &NetId, &InLayer)>().get(world, mob).ok().map(|(mob, id, layer)| (mob.home, id.0, layer.0)) else { return };
+    world.entity_mut(mob).insert(InLayer(layer));
+    if let Some(mut shown) = world.get_mut::<Mob>(mob) {
+        shown.home = home;
+        if let Some(first) = shown.announcement.first_mut() {
+            *first = placed(first, feet);
+        }
+    }
+    let mut grid = world.resource_mut::<MobGrid>();
+    grid.grid.remove(from, old, &(mob, id));
+    grid.grid.insert(layer, home, (mob, id));
+    grid.changes += 1;
+}
+
+/// An entity's or item's announcement with its place moved to `feet`; others as they are.
+fn placed(first: &Bytes, feet: [f32; 3]) -> Bytes {
+    let [x, y, z] = feet;
+    let Ok(raw) = RawPacket::parse(first.clone()) else { return first.clone() };
+    if let Ok(added) = raw.decode::<AddEntity>() {
+        return sapling_net::encode(&AddEntity { position: acacia_proto::types::Vec3f { x, y, z }, ..added });
+    }
+    match raw.decode::<AddItemEntity>() {
+        Ok(added) => sapling_net::encode(&AddItemEntity { position: acacia_proto::types::Vec3f { x, y, z }, ..added }),
+        Err(_) => first.clone(),
+    }
+}
+
 /// Files the entity under the column of `at` when it moved into another: it is shown to those
 /// who see that one, and unloaded with it.
 pub(crate) fn follow(world: &mut World, mob: Entity, at: [f32; 3]) {
