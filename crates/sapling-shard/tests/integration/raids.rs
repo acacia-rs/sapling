@@ -154,9 +154,13 @@ fn a_wave_s_raiders_stand_apart_on_cell_corners() {
     h.remote.run(|ctx| assert!(ctx.give_effect(ALEX, Effect::BadOmen, 6000, 0, true)));
     ticks(&mut h, 602);
     let mut sent = Vec::new();
+    // Asked in the tick whose packets are kept: `raiders` would drop the tick it asks in.
     assert!((0..400).any(|_| {
+        let seen = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let out = seen.clone();
+        h.remote.run(move |ctx| out.store(ctx.entities().iter().any(|entity| RAIDERS.contains(&entity.kind.as_str())), std::sync::atomic::Ordering::Relaxed));
         sent.extend(ticks(&mut h, 1));
-        !raiders(&mut h).is_empty()
+        seen.load(std::sync::atomic::Ordering::Relaxed)
     }), "the first wave");
     let spots: Vec<[f32; 3]> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:pillager").map(|added| [added.position.x, added.position.y, added.position.z]).collect();
     assert_eq!(spots.len(), 4);

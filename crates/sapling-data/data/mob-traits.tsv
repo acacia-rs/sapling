@@ -93,7 +93,7 @@ minecraft:vindicator	floats xp=5-5 strolls=0.35 looks=8:0.02:20-40 attack=13 spe
 minecraft:wandering_trader	floats strolls=0.3 panics=0.3 looks=8:0.02:20-40 glances
 minecraft:warden	fire_immune floats steadfast xp=5-5 strolls=0.15 glances attack=30 speed=0.36 sees=16 provoked
 minecraft:wind_charge_projectile	unpushable
-minecraft:witch	floats xp=5-5 strolls=0.25 looks=16:0.02:20-40 glances attack=0 speed=0.25 sees=10 shoots=60 shot=splash_potion preys=snowgolem,irongolem
+minecraft:witch	floats xp=5-5 strolls=0.25 looks=16:0.02:20-40 glances attack=0 speed=0.25 sees=10 shoots=61 shot=splash_potion preys=snowgolem,irongolem
 minecraft:wither	fire_immune breathes_water floats xp=50-50 strolls=0.25 looks=8:0.02:20-40 glances
 minecraft:wither_skeleton	fire_immune breathes_water xp=5-5 strolls=0.25 looks=8:0.02:20-40 glances attack=9 speed=0.3125 sees=16 hits=wither:200 gives_twice
 minecraft:wolf	floats xp=1-3 strolls=0.3 panics=0.375 looks=6:0.02:40-80 attack=3 speed=0.3 sees=16 provoked every=31

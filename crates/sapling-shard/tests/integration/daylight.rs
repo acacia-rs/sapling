@@ -113,7 +113,7 @@ fn a_drowned_an_endermite_a_piglin_brute_and_a_ravager_hit_for_what_bds_s_did() 
 
 #[test]
 fn a_witch_throws_poison_at_a_healthy_player_then_harming_each_three_seconds() {
-    // research/captures/bds-witch.txt: 25 then 23, 60 ticks apart; poison in full, harming 6.
+    // research/captures/bds-witch.txt: 25 then 23, 61 ticks apart (4 gaps of 3044-3053 ms); poison in full, harming 6.
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
@@ -134,9 +134,9 @@ fn a_witch_throws_poison_at_a_healthy_player_then_harming_each_three_seconds() {
         effects.extend(all::<acacia_proto::packets::MobEffect>(&sent).iter().filter(|effect| effect.runtime_entity_id == 1 && effect.event_id == acacia_proto::packets::MobEffectEventId::Add).map(|effect| (effect.effect_id, effect.duration)));
         health.extend(all::<acacia_proto::packets::UpdateAttributes>(&sent).iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| &update.attributes).filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current));
     }
-    assert!(thrown.len() == 2 && thrown[0].1 == Some(25) && thrown[1].1 == Some(23) && thrown[1].0 - thrown[0].0 == 60 && (60..80).contains(&thrown[0].0), "{thrown:?}");
+    assert!(thrown.len() == 2 && thrown[0].1 == Some(25) && thrown[1].1 == Some(23) && thrown[1].0 - thrown[0].0 == 61 && (60..80).contains(&thrown[0].0), "{thrown:?}");
     assert!(effects.contains(&(19, 900)), "{effects:?}");
-    assert!(health.windows(2).any(|pair| (pair[0] - pair[1] - 6.0).abs() < 1e-3), "{health:?}");
+    assert!(health.windows(2).any(|pair| (pair[0] - pair[1] - 6.0).abs() < 1e-3), "left: {health:?} {thrown:?}");
 }
 
 #[test]
