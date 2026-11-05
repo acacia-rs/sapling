@@ -1,0 +1,17 @@
+     0 ResourcePacksInfo { must_accept: false, has_addons: false, has_scripts: false, disable_vibrant_visuals: false, world_template: ResourcePacksInfoWorldTemplate { uuid: Uuid([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), version: "0.0.0" }, texture_packs: [] }
+     0 ResourcePackStack { must_accept: false, resource_packs: [], game_version: "*", experiments: [], experiments_previously_used: false, has_editor_packs: false }
+     0 StartGame hardcore=true
+     1 /function name:type 17 (Valid)
+     1 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionAdd[add] function:type 17 (Valid) time:type 1 (Valid) DelayMode?:DelayMode[replace|append]
+     1 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionAdd[add] function:type 17 (Valid) time:type 0 (Suffixed) DelayMode?:DelayMode[replace|append]
+     1 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionAdd[add] function:type 17 (Valid) time:type 1 (Suffixed) DelayMode?:DelayMode[replace|append]
+     1 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionAdd[add] function:type 17 (Valid) time:type 2 (Suffixed) DelayMode?:DelayMode[replace|append]
+     1 /schedule mode:ScheduleActionDelay[delay] condition:RequestActionClear[clear] function:type 17 (Valid)
+     1 /schedule mode:ScheduleActionClear[clear] function:type 17 (Valid)
+     1 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionAdd[add] from:type 64 (Valid) to:type 64 (Valid) function:type 17 (Valid)
+     1 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionAdd[add] type:CircleArea[circle] center:type 64 (Valid) radius:type 1 (Valid) function:type 17 (Valid)
+     1 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionAdd[add] type:TickingArea[tickingarea] name:type 56 (Valid) function:type 17 (Valid)
+     1 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionClear[clear] cleartype:TickingAreaName[tickingarea] name:type 56 (Valid) function?:type 17 (Valid)
+     1 /schedule mode:ScheduleActionOnAreaLoaded[on_area_loaded] condition:RequestActionClear[clear] cleartype:FunctionName[function] function:type 17 (Valid)
+     1 /scriptevent messageId:type 56 (Valid) message:type 68 (Valid)
+probe exit 0
