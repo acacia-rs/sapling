@@ -242,7 +242,20 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
     sapling's batch showed the new entity, the copied one, the block and the entity again, and now the
     block then the entity (`send::keep_entity` and `set_entities::furnish` leave a held cell's entity to
     `show_held`). Not matched: the doubled listing and the second entity. Neither the vault nor the
-    spawner ran a wave in the drill (the vault stayed inactive, the spawner spawned nothing in 60 s).
+    spawner ran a wave in the drill (the vault stayed inactive, the spawner spawned nothing in 60 s):
+    a trial spawner needs `doMobSpawning` on, which the drill floor turns off.
+  - Clone shape (2026-11-05, bds-x2clone.txt; BDS's clone fcn 14160c130): a move's emptied source
+    first, then each copy's block (when it changed) with its source's layer 1 as `extra` (air, or a
+    fence's water, listed changed or not), then every copy listed again, in one UpdateSubchunkBlocks a
+    sub-chunk; each copy's entity is shown twice after (chest, shulker box, vault, trial spawner).
+    Sapling's `/clone` now goes through `ShardCtx::copy_blocks` (`blocks/cloned.rs`); test in
+    thirteenth2x.rs. A waterlogged block's water counts in the answer (a fence over water: `["2"]`).
+    Re-drilled (sapling-x2clone.txt): every clone's packets as BDS's. Found, not followed: a fence
+    `/setblock` over water is listed twice in one UpdateSubchunkBlocks with its final connections on
+    BDS; sapling sends two UpdateBlocks, unjoined then joined.
+  - A vault and a trial spawner that ran (bds-x2ran.txt, mob spawning on): their cloned entities as
+    BDS's but for the vault's `connected_players`; what each showed while running: spawners.md
+    "Parity drill (2026-11-05)".
   `block_entity_diff 20261003 20261003-structures`: 46 of 47 pots same; the one missing, a trial
   chambers' dead bush at (-446, -11, -425), is water in our blocks there (a block difference).
 - A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
