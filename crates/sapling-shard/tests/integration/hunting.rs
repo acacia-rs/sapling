@@ -125,7 +125,7 @@ fn each_kind_hunts_at_its_speed_with_its_hit_and_what_the_hit_gives() {
     use acacia_proto::packets::MobEffect;
     // research/captures/bds-kinds.txt, on easy: a husk's 3 and its hunger, a spider's 2 from
     // further off, a vindicator's 8 and its axe, a wither skeleton's 4, its sword and its wither, a silverfish's whole 1.
-    let cases = [("minecraft:husk", 17.5, 0.114_189, vec![(17, 600)]), ("minecraft:spider", 18.0, 0.194_273, vec![]), ("minecraft:vindicator", 12.5, 0.264_427, vec![]), ("minecraft:wither_skeleton", 14.5, 0.210_799, vec![(20, 200)]), ("minecraft:silverfish", 19.0, 0.134_912, vec![])];
+    let cases = [("minecraft:husk", 17.5, 0.114_189, vec![(17, 600)]), ("minecraft:spider", 18.0, 0.194_273, vec![]), ("minecraft:vindicator", 12.5, 0.264_427, vec![]), ("minecraft:wither_skeleton", 14.5, 0.210_799, vec![(20, 200), (20, 200)]), ("minecraft:silverfish", 19.0, 0.134_912, vec![])];
     for (kind, left, speed, given) in cases {
         let (mut h, mob) = hunted_by(kind, Difficulty::Easy);
         // A spider looks for prey one tick in 100 (research/captures/bds-targets2.txt).
@@ -152,6 +152,16 @@ fn a_cave_spider_s_bite_poisons_for_seven_seconds_none_on_easy_and_fifteen_on_ha
         let effects: Vec<(i32, i32)> = all::<MobEffect>(&sent).into_iter().map(|effect| (effect.effect_id, effect.duration)).take(1).collect();
         assert_eq!(effects, [(19, ticks)], "{difficulty:?}");
     }
+}
+
+#[test]
+fn a_wither_skeleton_s_hit_gives_wither_twice_in_its_tick() {
+    use acacia_proto::packets::MobEffect;
+    // research/captures/bds-t12bites.txt and bds-kinds.txt: `Add` then `Update`, both 200.
+    let (mut h, _) = hunted_by("minecraft:wither_skeleton", Difficulty::Normal);
+    let (_, sent) = until_hit(&mut h, 600);
+    let effects: Vec<String> = all::<MobEffect>(&sent).into_iter().filter(|effect| effect.effect_id == 20).map(|effect| format!("{:?} {}", effect.event_id, effect.duration)).collect();
+    assert_eq!(effects, ["Add 200", "Update 200"]);
 }
 
 #[test]
