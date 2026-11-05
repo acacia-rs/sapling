@@ -200,3 +200,32 @@ fn a_late_viewer_gets_a_player_rider_seated_then_its_link_then_the_boat() {
     assert!(at(AddEntity::ID).is_some_and(|added| added > alex + 1), "the boat after");
     assert_eq!(links(&seen).len(), 1, "told once");
 }
+
+/// The `FlagsExtended` of player `id` in each `SetEntityData` sent and `AddPlayer`, as bits 8 and 9.
+fn guard_bits(sent: &[RawPacket], id: u64) -> Vec<i64> {
+    use acacia_proto::types::MetadataDictionaryItemValue as Meta;
+    let of = |metadata: &[acacia_proto::types::MetadataDictionaryItem]| metadata.iter().find_map(|item| if let Meta::FlagsExtended(flags) = &item.value { Some(flags.0 >> 8 & 3) } else { None });
+    let data = all::<SetEntityData>(sent).into_iter().filter(|data| data.runtime_entity_id == id).filter_map(|data| of(&data.metadata));
+    data.chain(all::<AddPlayer>(sent).into_iter().filter(|added| added.runtime_id == id).filter_map(|added| of(&added.metadata))).collect()
+}
+
+/// research/captures/bds-m3rideview.txt: a ride start set bits 8 and 9 (the shield's raised and
+/// moving), its end cleared 8, and 9 stayed, in a later viewer's `AddPlayer` too.
+#[test]
+fn a_rider_is_shown_with_its_shield_bits_and_the_moving_one_stays_after() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let boat = spawned(&mut h, &[("minecraft:boat", [2.5, 65.0, 0.5])])[0];
+    h.enter(2, "Bob");
+    h.tick_all();
+    h.receive(1, &interact(boat.0));
+    let seen: Vec<RawPacket> = (0..2).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    assert_eq!(guard_bits(&seen, 1), [3]);
+    h.receive(1, &Interact { action_id: InteractActionId::LeaveVehicle, target_entity_id: boat.0, has_position: false, position: None });
+    let seen: Vec<RawPacket> = (0..4).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
+    let bits = guard_bits(&seen, 1);
+    assert!(bits.first() == Some(&2) && bits.iter().all(|bits| *bits == 2), "{bits:?}");
+    let late = h.enter(3, "Cleo").to(3).to_vec();
+    let late: Vec<RawPacket> = late.into_iter().chain((0..3).flat_map(|_| h.tick_all().to(3).to_vec())).collect();
+    assert_eq!(guard_bits(&late, 1), [2]);
+}

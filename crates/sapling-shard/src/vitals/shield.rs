@@ -4,7 +4,7 @@
 //! than the hit; a mob whose hit it turned is thrown back, and an axe's hit puts it down.
 //! The shield is shown anew as it goes up, its `blocking_tick` the tick it went up, and as it goes
 //! down with 0 (bds-shield.txt); BDS's tick is its world's, sapling's the shard's.
-// TODO: a riding player's is up too; a blocked mob's hit or shot also stood the blocker up from
+// TODO: a riding player's shield turns hits away too (only its bits are shown); a blocked mob's hit or shot also stood the blocker up from
 // its sneak on BDS; Thorns and fireworks are turned away there too.
 
 use acacia_proto::packets::{InventorySlot, LevelSoundEvent, SetEntityData};
@@ -40,12 +40,31 @@ const KEEPS: f32 = 0.5;
 const UP_BY: f32 = 1.2;
 
 /// A player's shield: whether it is up and since when, until when the going up or down shows,
-/// until when an axe keeps it down.
+/// until when an axe keeps it down; whether it rides, and whether its ride's going-down bit stays.
 #[derive(Component, Default)]
 pub(crate) struct Guard {
     raised: Option<u64>,
     moving_until: u64,
     down_until: u64,
+    rides: bool,
+    lingers: bool,
+}
+
+/// The shield's bits of `FlagsExtended` a new viewer is shown. A rider is shown raised and moving,
+/// shield or none, and the moving bit stays after it gets off (research/captures/bds-m3rideview.txt).
+pub(crate) fn shown_bits(guard: Option<&Guard>) -> i64 {
+    let Some(guard) = guard else { return 0 };
+    let raised = if guard.rides || guard.raised.is_some() { RAISED } else { 0 };
+    raised | if guard.rides || guard.lingers { MOVING } else { 0 }
+}
+
+/// Tells of a ride begun or ended; whether it did.
+fn tell_ride(world: &mut World, player: Entity, id: u64, now: u64) -> bool {
+    let riding = world.get::<crate::riding::Riding>(player).is_some();
+    let Some(mut guard) = world.get_mut::<Guard>(player).filter(|guard| guard.rides != riding) else { return false };
+    (guard.rides, guard.lingers) = (riding, !riding);
+    tell(world, player, &extended(id, if riding { RAISED | MOVING } else { MOVING }, now));
+    true
 }
 
 /// Where a player holds a shield: the off hand first.
@@ -70,8 +89,14 @@ pub(super) fn tick(world: &mut World) {
         if world.get::<Guard>(player).is_none() {
             world.entity_mut(player).insert(Guard::default());
         }
+        if tell_ride(world, player, id, now) {
+            continue;
+        }
         let alive = !is_dead(world, player);
         let mut guard = world.get_mut::<Guard>(player).expect("put above");
+        if guard.rides {
+            continue;
+        }
         let raised = sneaking && holds && alive && now >= guard.down_until;
         let told = if raised != guard.raised.is_some() {
             (guard.raised, guard.moving_until) = (raised.then_some(now), now + MOVES);
@@ -82,6 +107,9 @@ pub(super) fn tick(world: &mut World) {
             None
         };
         let raised_bit = if raised { RAISED } else { 0 };
+        if told.is_some() {
+            guard.lingers = false;
+        }
         if let Some(moving) = told {
             if moving == MOVING {
                 show_shield(world, player, if raised { now as i64 } else { 0 });

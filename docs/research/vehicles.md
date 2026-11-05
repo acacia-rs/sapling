@@ -137,9 +137,12 @@ were not found in any of these; sapling does what is listed there.
   at once by its `SetEntityLink`, then the boat's `AddEntity` with the link in `links`, nothing after it.
   Sapling sent the boat, then the seat's `SetEntityData`, then the link; now as BDS (`riding/announced.rs`
   files a player rider's seat and link as a mob's, `visibility.rs` `spawn_packets`; test
-  `a_late_viewer_gets_a_player_rider_seated_then_its_link_then_the_boat`). Seen, not fixed: BDS's
-  `AddPlayer` and its ride start set `FlagsExtended` bits 8 and 9 (bit 9 stays after the dismount);
-  sapling sets neither. `/ride` onto a saddled pig failed on both.
+  `a_late_viewer_gets_a_player_rider_seated_then_its_link_then_the_boat`). BDS's ride start sets
+  `FlagsExtended` bits 8 and 9 (acacia's shield `RAISED` and `MOVING`), told to the rider and its
+  viewers; the dismount tells bit 9 alone, which stays, a later `AddPlayer` too. Sapling does so
+  (`vitals/shield.rs` `tell_ride`, `shown_bits`, also in `visibility.rs` and `movement/crawl.rs`; test
+  `a_rider_is_shown_with_its_shield_bits_and_the_moving_one_stays_after`). `/ride` onto a saddled pig
+  failed on both.
 - A minecart's stored `Pos`: kept where the wire puts it, as a boat's (a boat on y -26 was kept at
   -25.625, as shown; research/captures/bds-t2ekeep-dump.txt; `actors.rs` `compound_now`).
 - A cart at rest on a slope: BDS's (bds-i2rails.txt, summoned mid-slope) stayed at the rail's y + 0.5
