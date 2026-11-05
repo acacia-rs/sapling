@@ -1,7 +1,7 @@
 //! The eye of ender thrown to find a stronghold, as BDS throws it (docs/research/end-dimension.md,
 //! "The eye of ender"): `EnderEyeItem::use` 1436f6b50, `signalTo` 142f9f750, the flight
 //! `EyeOfEnderPreNormalTickSystem` 14469ee30 and the end `normalTick` 142fa0450.
-// TODO: BDS pushes the eye out of a player's box and turns it with its flight; sapling does neither.
+// TODO: BDS pushes the eye out of a player's box (bds-eye-near.txt); sapling does not.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::{MetadataFlags1, Vec3f};
@@ -34,6 +34,21 @@ pub(crate) struct Eye {
     target: [f32; 3],
     life: u32,
     survives: bool,
+    /// Its pitch and yaw, in degrees.
+    turned: [f32; 2],
+}
+
+/// The pitch and yaw an eye turned `turned` takes as it moves by `motion`: a fifth of the way to
+/// the motion's, BDS's pitch from the motion's y over its z (`EyeOfEnderPreNormalTickSystem`
+/// 14469ee30; bds-eye-throw.txt's rot_x and rot_y fit it to a byte).
+fn turn(turned: [f32; 2], [x, y, z]: [f32; 3]) -> [f32; 2] {
+    let toward = [y.atan2(z), x.atan2(z)].map(|radians| radians * 57.295_776);
+    std::array::from_fn(|side| (((toward[side] - turned[side]) + 180.0).rem_euclid(360.0) - 180.0) * 0.2 + turned[side])
+}
+
+/// `degrees` cut to the byte BDS tells, toward zero (a yaw of -29.5 is 235, not `Told`'s 234).
+fn on_wire(degrees: f32) -> f32 {
+    (degrees * 256.0 / 360.0).trunc() * 360.0 / 256.0
 }
 
 /// Where an eye at `from` flies for the stronghold block `stronghold`.
@@ -85,9 +100,10 @@ pub(crate) fn throw(world: &mut World, player: Entity) -> bool {
         Some(vec![sapling_net::encode(&sapling_data::add_entity(&options))])
     };
     let Some(eye) = entities::spawn(world, layer, KIND, Body::new(from, [0.0; 3], SIZE), from, announce) else { return false };
-    world.entity_mut(eye).insert(Eye { target: aim(from, stronghold), life: 0, survives });
+    world.entity_mut(eye).insert(Eye { target: aim(from, stronghold), life: 0, survives, turned: [0.0; 2] });
     if let Some(mut told) = world.get_mut::<Told>(eye) {
         told.tell_every_move();
+        told.pitch(0.0);
     }
     let (sin, cos) = position.yaw.to_radians().sin_cos();
     let [x, y, z] = [position.feet[0] - sin * SOUND_AHEAD, eyes[1] - SOUND_BELOW_EYES, position.feet[2] + cos * SOUND_AHEAD];
@@ -103,6 +119,7 @@ pub(crate) fn tick(world: &mut World) {
     for (eye, layer, id) in eyes {
         let (Some(body), Some(state)) = (world.get::<Body>(eye).copied(), world.get::<Eye>(eye)) else { continue };
         let (target, life, survives) = (state.target, state.life, state.survives);
+        let turned = turn(state.turned, body.motion);
         let (at, motion) = step(body.at, body.motion, target);
         if let Some(mut body) = world.get_mut::<Body>(eye) {
             (body.at, body.motion) = (at, motion);
@@ -114,9 +131,18 @@ pub(crate) fn tick(world: &mut World) {
         }
         if let Some(mut state) = world.get_mut::<Eye>(eye) {
             state.life += 1;
+            state.turned = turned;
         }
         // BDS tells the eye's viewers it stands on the ground.
-        let packets = world.get_mut::<Told>(eye).map(|mut told| told.update(id, at, motion, true)).unwrap_or_default();
+        let packets = world
+            .get_mut::<Told>(eye)
+            .map(|mut told| {
+                let [pitch, yaw] = turned.map(on_wire);
+                told.pitch(pitch);
+                told.face(yaw, 0.0);
+                told.update(id, at, motion, true)
+            })
+            .unwrap_or_default();
         entities::tell_viewers(world, eye, layer, at.map(|c| c.floor() as i32), packets);
     }
 }
@@ -153,5 +179,19 @@ mod tests {
         let near = |a: [f32; 3], b: [f32; 3]| (0..3).all(|axis| (a[axis] - b[axis]).abs() < 2e-5);
         assert!(near(path[1], [0.985_103_1, 153.135_01, 0.973_96]), "{:?}", path[1]);
         assert!(near(path[80], [-4.959_399_7, 161.121_86, -9.415_638]), "{:?}", path[80]);
+    }
+
+    /// The same throw's first told turns, (rot_x, rot_y) of its MoveEntityDeltas.
+    #[test]
+    fn the_eye_turns_as_bds_tells_it() {
+        let from = [1.0, 153.12001, 1.0];
+        let target = super::aim(from, [-1454, 32, -2542]);
+        let (mut flight, mut turned, mut told) = ((from, [0.0; 3]), [0.0; 2], Vec::new());
+        for _ in 0..6 {
+            turned = super::turn(turned, flight.1);
+            flight = super::step(flight.0, flight.1, target);
+            told.push(turned.map(|degrees| (super::on_wire(degrees).rem_euclid(360.0) * 256.0 / 360.0) as u8));
+        }
+        assert_eq!(told[1..], [[21, 235], [38, 218], [52, 204], [63, 193], [71, 185]]);
     }
 }

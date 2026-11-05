@@ -107,8 +107,14 @@ and a flat world locates no stronghold); sapling's side on `drill_server` with `
   values equal BDS's bit for bit (sapling-eye-throw.txt). Every move is told, on_ground true, the last not.
 - End (`normalTick` 142fa0450), on the 81st tick: kept, RemoveEntity and an `ender_eye` item tossed up at the
   eye (y + 0.125, 0.2 up); broken, LevelEvent 2003 (data 10) and 1041 at the eye, RemoveEntity the tick after.
+- Turning (fixed 2026-11-05, twelfth wave): each tick, before the motion turns, pitch and yaw go a fifth
+  of the way (wrapped to +-180) to atan2(motion y, motion z) and atan2(motion x, motion z), x 57.295776
+  (14469ee30; the pitch over z, not the horizontal length, is BDS's). Told as bytes cut toward zero
+  (-29.5 degrees is 235), unlike `Told`'s cut after wrapping to 0..360. Against bds-eye-throw.txt's 78
+  moves: yaw within a byte in 71, pitch in 70, the misses in the last ticks' small erratic motions.
+  `eyes::turn`, test `the_eye_turns_as_bds_tells_it`.
 - Left different: BDS pushes the eye out of its thrower's box (bds-eye-near.txt's fall through the player left
-  the fit in x/z) and turns it (rot_x/rot_y of its deltas); sapling's item comes before the RemoveEntity, its
+  the fit in x/z); sapling's item comes before the RemoveEntity, its
   stack ids do not count up, its item's toss is the shard's dice.
 
 ## The dragon fight (bds-dragon-*.txt)
