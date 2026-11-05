@@ -149,6 +149,9 @@ pub(crate) fn put_one(world: &mut World, layer: Entity, target: BlockPos, face: 
     if moved && kind.is_hopper() && was_empty {
         delay_receiver(world, layer, target);
     }
+    if moved && kind.is_brewing_stand() {
+        crate::brewing::watch(world, layer, target);
+    }
     moved
 }
 
