@@ -57,12 +57,13 @@ impl Stage for OnDemand<'_> {
     }
 }
 
-/// What a structure placed on demand writes: the blocks it changed, by chunk, and the block
-/// entities of what it placed, at world positions.
+/// What a structure placed on demand writes: the blocks it changed, by chunk, the block
+/// entities of what it placed, at world positions, and the mobs its templates name.
 #[derive(Debug, Default, PartialEq)]
 pub struct StructureWrites {
     pub blocks: Vec<([i32; 3], Block)>,
     pub entities: Vec<([i32; 3], BlockEntity)>,
+    pub actors: Vec<crate::chunk::TemplateActor>,
 }
 
 impl OnDemand<'_> {
@@ -87,6 +88,7 @@ impl OnDemand<'_> {
                 }
             }
             writes.entities.extend(after.block_entities().into_iter().map(|([x, y, z], entity)| ([chunk.0 * 16 + x, y, chunk.1 * 16 + z], entity)));
+            writes.actors.extend_from_slice(after.actors());
         }
         writes
     }

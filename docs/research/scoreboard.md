@@ -60,12 +60,12 @@ overloads (11 for `/scoreboard`, 2 for `/tag`).
 
 ## Unverified
 
-- Order of `players list` names and of a holder's objectives (BDS: hash order); sapling lists
-  holders newest first and objectives in creation order.
-- A holder with scores but none on the tested objective (`test`): sapling answers
-  `commands.scoreboard.players.score.notFound` [obj, name].
+- Drilled 2026-11-05 (bds-k1cmds.txt), all as sapling answers: `players list` named four holders
+  newest first; `test` on a holder with scores but none on the objective is `score.notFound`
+  [obj, name], on one with none at all `list.player.empty` [name]; a `/titleraw` `*` score part
+  reads the viewer's score; `/tag pig` is `noTargetMatch` (a type name is no selector).
+- Order of a holder's objectives past two (sapling: creation order).
 - Offline players' names (`commands.scoreboard.players.offlinePlayerName`) and their wire ids.
-- `/titleraw` `*` score parts; whether `/tag` names a single entity by its type.
 - Numbers past i32 and `^=`: drilled 2026-11-05 (bds-f1cmds.txt): `set`/`add` past i32 answer
   `commands.generic.num.invalid` [word], and `^=` is a syntax error at `^` ("ion @s f1 ", "^",
   "= @s f1"); sapling answers the same since.

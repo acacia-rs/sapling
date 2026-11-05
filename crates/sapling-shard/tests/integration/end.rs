@@ -88,8 +88,38 @@ fn a_generated_gateway_sends_a_player_over_its_exit_at_once() {
     (0..3).for_each(|_| sent.extend(h.tick(1)));
     let moved: Vec<[f32; 3]> = all::<MovePlayer>(&sent).into_iter().filter(|moved| moved.mode == MovePlayerMode::Teleport).map(|moved| [moved.position.x, moved.position.y - sapling_data::EYE_HEIGHT, moved.position.z]).collect();
     assert_eq!(moved, [[96.5, 49.0, 8.5], [100.5, 51.0, 0.5], [100.5, 51.0, 0.5]], "the generated exit, told twice");
+    let stopped: Vec<[f32; 3]> = all::<acacia_proto::packets::SetEntityMotion>(&sent).into_iter().map(|told| [told.velocity.x, told.velocity.y, told.velocity.z]).collect();
+    assert_eq!(stopped, [[0.0; 3]], "its speed gone before the trip (bds-h1gate.txt)");
     let shown = all::<acacia_proto::packets::UpdateBlock>(&sent);
     assert_eq!(shown.iter().map(|update| ([update.position.x, update.position.y, update.position.z], update.flags.0)).collect::<Vec<_>>(), [([96, 49, 8], 19)]);
+}
+
+#[test]
+fn a_gateway_sends_a_mob_through_but_not_a_rider() {
+    use sapling_api::{Mount, Target};
+    let mut h = Harness::new();
+    assert!(h.shard.add_dimension("default", gated()));
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| assert!(ctx.travel(ALEX, END, [96.5, 49.0, 2.5])));
+    (0..5).for_each(|_| drop(h.tick_all()));
+    h.receive(1, &dimension_ack());
+    h.tick_all();
+    use common::asking::ask;
+    let summoned = ask(&mut h, |ctx| {
+        ctx.within("default:the_end", |ctx| {
+            ctx.set_block([90, 49, 8], &Block::new("minecraft:end_gateway"));
+            let boat = ctx.summon(ALEX, "minecraft:boat", [90.5, 49.0, 8.5]).unwrap();
+            let rider = ctx.summon(ALEX, "minecraft:pig", [90.5, 49.0, 6.5]).unwrap();
+            let seated = ctx.ride(&Target::Entity(rider), boat, Mount::RiderToVehicle);
+            (ctx.summon(ALEX, "minecraft:pig", [96.5, 49.0, 8.5]).unwrap(), rider, seated)
+        })
+    });
+    let (pig, rider, seated) = summoned.expect("the End");
+    assert!(seated);
+    (0..2).for_each(|_| drop(h.tick_all()));
+    let (pig, rider) = ask(&mut h, move |ctx| (ctx.entity(pig).unwrap().feet, ctx.entity(rider).unwrap().feet));
+    assert!((pig[0] - 100.5).abs() < 0.3 && (pig[2] - 0.5).abs() < 0.3, "bds-k1gate.txt: a summoned pig went through at once: {pig:?}");
+    assert!((rider[0] - 90.5).abs() < 0.5 && (rider[2] - 8.5).abs() < 0.5, "bds-k1gate.txt: a rider stays: {rider:?}");
 }
 
 /// [`end`] with a generated gateway at (96, 49, 8): its block entity as BDS's generation leaves it.

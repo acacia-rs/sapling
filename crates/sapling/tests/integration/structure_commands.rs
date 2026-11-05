@@ -71,6 +71,9 @@ async fn structure_ticking_place_and_locate_answer_as_bds_answered() {
         ("place featurerule minecraft:plains_surface_flowers_feature", "commands.place.invalidposition.error [] 0"),
         ("place jigsaw minecraft:trail_ruins/tower minecraft:road_anchor 30", "commands.place.maxdepth.error [] 0"),
         ("place jigsaw minecraft:no_such_pool minecraft:bottom 3", "commands.place.generation.error [] 0"),
+        // bds-k1jig.txt: either name without its namespace.
+        ("place jigsaw trail_ruins/tower minecraft:road_anchor 3", "commands.place.generation.error [] 0"),
+        ("place jigsaw minecraft:trail_ruins/tower road_anchor 3 ~ ~ ~ false true", "commands.place.generation.error [] 0"),
         ("locate biome plains", r#"commands.generic.syntax ["ate biome ", "plains", ""] 0"#),
         ("locate structure village", "commands.locate.structure.fail.nostructurefound [] 0"),
     ];

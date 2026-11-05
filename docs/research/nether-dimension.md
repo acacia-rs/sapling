@@ -148,7 +148,9 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
 
 ## Left
 
-- Spectators in portals (the End: end-dimension.md). BDS's per-tick UpdateSubchunkBlocks batching of
+- Spectators in portals: drilled (bds-k1spec.txt, 2026-11-05): a spectator 8 s in a lit nether portal
+  and 4 s in an end portal went nowhere; the same player in creative went through the nether portal.
+  sapling skips spectators before both (`portals.rs` `tick`). BDS's per-tick UpdateSubchunkBlocks batching of
   other block changes is ported where drilled (checked 2026-11-05, twelfth wave): random ticks, flows
   and circuits each tick (`blocks::batched`), fills and plugin batches (`send/sections.rs`), pistons
   (flags 19, c8670476); captures still showing UpdateBlock on sapling where BDS batched
