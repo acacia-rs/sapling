@@ -38,6 +38,7 @@ const RENAMED: &[(&str, &str)] = &[
     ("waterlily", "lily_pad"),
     ("brick_block", "bricks"),
     ("trip_wire", "tripwire"),
+    ("small_dripleaf_block", "small_dripleaf"),
     ("noteblock", "note_block"),
     ("stonecutter_block", "stonecutter"),
     ("slime", "slime_block"),

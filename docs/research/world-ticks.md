@@ -42,6 +42,13 @@ Drilled (bds-e3coralmany.txt): four plants set alone died after 87, 141, 58 and 
 in a block died 5 to 6 ticks on, nudged by their neighbours' writes. A fan or plant losing its ground
 (the tick's `canSurvive`) is left to sapling's support rules.
 
+Sounds (bds-e3coral.txt, bds-e3coralmany.txt, bds-bkticks.txt, bds-t3turn.txt, bds-t5holds.txt): a coral
+plant or fan, live or dead, plays `place` naming its own state at its middle when it is set or filled by
+command, wet or dry, and when it dies (the dead state); a `/fill`'s and a death batch's sounds come after
+their UpdateSubchunkBlocks. A coral block plays nothing, set or dying. Sapling: `coral::heard`, from
+`commanded::put` and `coral::die`, held past an open batch (`send::after_blocks`); test
+`coral_plants_and_fans_set_or_dying_play_place_and_coral_blocks_do_not`. Was: sapling silent.
+
 ## Nether vines (`blocks/growth/kelp.rs`)
 
 Weeping and twisting vines subscribe to the queued tick and not to the random tick, as kelp does, so they
@@ -143,7 +150,6 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
 
 ## Not drilled
 
-- BDS plays `place` with the dead block's id when coral dies; sapling's `coral::die` writes it with no sound.
 - A coral fan placed by hand into water: the `g3fan` place was refused on BDS (NotVisible).
 - Burning arrows lighting TNT, drilled since (bds-u1fire.txt, bds-u1blaze.txt, 2026-11-04): a player's
   flame arrow primed TNT it struck on both servers (`SoundIgnite` at the block's middle, then the TNT);

@@ -103,6 +103,24 @@ pub(crate) fn show_held(world: &mut World) {
             to_viewers(world, layer, pos, &[particles]);
         }
     }
+    let sounds = world.get_resource_mut::<HeldSounds>().map(|mut sounds| std::mem::take(&mut sounds.0)).unwrap_or_default();
+    for (layer, pos, sound) in sounds {
+        to_viewers(world, layer, pos, &[sound]);
+    }
+}
+
+/// Sounds kept to play after the open batch's blocks.
+#[derive(Resource, Default)]
+pub(crate) struct HeldSounds(Vec<(Entity, BlockPos, Bytes)>);
+
+/// Plays `sound` at `pos` now, or after the open batch's blocks, as BDS played dying coral's after
+/// their UpdateSubchunkBlocks (research/captures/bds-e3coralmany.txt).
+pub(crate) fn after_blocks(world: &mut World, layer: Entity, pos: BlockPos, sound: Bytes) {
+    if world.get_resource::<Held>().is_some_and(|held| held.0.is_some()) {
+        world.get_resource_or_insert_with(HeldSounds::default).0.push((layer, pos, sound));
+    } else {
+        to_viewers(world, layer, pos, &[sound]);
+    }
 }
 
 fn show_held_blocks(world: &mut World) {

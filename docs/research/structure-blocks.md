@@ -76,6 +76,30 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
   sides sent): 31 differed before, 9 after, all BDS taking out what sapling keeps: four hanging signs, three
   small dripleaves and two ascending activator rails (rail_direction 2 and 5).
   A small dripleaf `/setblock` on stone broke a tick later on BDS (sapling kept it).
+  Settled 2026-11-05 (twelfth5, `t5holds`, bds-t5holds.txt). Of the four loads BDS sent (its two others,
+  90 mirrored on x and 0 mirrored on z, showed no cells), the last diff had 11 cells: four hanging signs,
+  four small dripleaves, three rising activator rails. None was the load's own rule:
+  - Dripleaves: BDS's structure held air there, the dripleaf having gone before the save. A `/setblock`
+    of a lower half writes its upper over whatever is above (here stone), both in one
+    UpdateSubchunkBlocks, the upper first; off its ground both show breaking at once and go a tick later
+    in one UpdateSubchunkBlocks, leaving nothing (shears only). It stood on clay, moss and dirt under
+    water; not on stone or dry dirt (`mayPlace` 1466059d0). An upper half set alone stayed, and went at a
+    neighbour's change; taking the upper off a standing one took the lower a tick later. Sapling
+    (`commanded::put_dripleaf`, ground.rs, updates/unheld.rs; its loot was its own item, now Java's
+    `small_dripleaf`, shears only).
+  - Rising rails: a rail needs the cell it rises to at its own height (`BaseRailBlock` 142cd5660: x±1 or
+    z±1 with the rail's y); sapling asked the cell under that one. A loaded rail rising out of the
+    structure meets air. Drilled: rising to stone it stayed, went with the stone; rising to air it went as
+    set.
+  - Hanging signs: `hanging` ones need a bottom to hang from above (a chain or fence holds one, a top
+    slab not, nothing not), asked at a neighbour's change, not as set (a sign set in air stayed till its
+    neighbour changed); a wall one (`hanging` 0) set in air stayed. Sapling: ground.rs, and the load's
+    after-update pops them (`loaded.rs`).
+  Re-drilled on sapling (sapling-e3turn.txt, 2026-11-05): the last state of all 756 cells both sides sent
+  alike. Tests `a_rising_rail_needs_the_cell_it_rises_to_at_its_own_height`,
+  `a_hanging_sign_goes_at_a_change_beside_it_without_a_bottom_above_to_hang_from`,
+  `a_small_dripleaf_set_on_stone_comes_whole_and_goes_whole_and_its_lower_half_goes_with_the_upper`
+  (block_holds.rs); sapling-t5holds.txt's sounds, particles and items match BDS's, block for block.
 
 - Placement and the editor by creative operators only, as for command blocks (a survival click and place were
   refused on BDS too).

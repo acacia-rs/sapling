@@ -117,7 +117,22 @@ pub(super) fn die(world: &mut World, layer: Entity, pos: BlockPos) {
     let [x, y, z] = pos;
     let dead = format!("minecraft:dead_{}", &name["minecraft:".len()..]);
     let Some(id) = level.registry().get(level.block(x, y, z)).and_then(|state| level.registry().find(&dead, state.properties)) else { return };
-    send::set(world, layer, pos, id);
+    if send::set(world, layer, pos, id) {
+        heard(world, layer, pos);
+    }
+}
+
+/// Plays `place` naming the coral plant or fan, live or dead, written at `pos`, as BDS does for one
+/// set by command or dying; a coral block is written silently (research/captures/bds-bkticks.txt,
+/// bds-e3coral.txt, bds-t5holds.txt).
+pub(super) fn heard(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(level) = level(world, layer).filter(|level| level.in_height(pos[1])) else { return };
+    let id = level.block(pos[0], pos[1], pos[2]);
+    let Some(name) = level.registry().get(id).map(|state| state.name.replacen("dead_", "", 1)) else { return };
+    if matches!(form(&name), Some(Form::Plant | Form::Fan)) {
+        let sound = send::sound("place", level.registry(), pos, id);
+        send::after_blocks(world, layer, pos, sound);
+    }
 }
 
 #[cfg(test)]

@@ -1,0 +1,218 @@
+## drill starts at 1793838907510
+## /fill ~2 ~-1 ~4 ~12 ~-1 ~12 stone
+     49 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"99\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     50 watcher UpdateSubchunkBlocks 2 -61 4 stone[]; 2 -61 5 stone[]; 2 -61 6 stone[]; 2 -61 7 stone[]; 2 -61 8 stone[]; 2 -61 9 stone[]; 2 -61 10 stone[]; 2 -61 11 stone[]; 2 -61 12 stone[]; 3 -61 4 stone[]; 3 -61 5 stone[]; 3 -61 6 stone[]; 3 -61 7 stone[]; 3 -61 8 stone[]; 3 -61 9 stone[]; 3 -61 10 stone[]; 3 -61 11 stone[]; 3 -61 12 stone[]; 4 -61 4 stone[]; 4 -61 5 stone[]; 4 -61 6 stone[]; 4 -61 7 stone[]; 4 -61 8 stone[]; 4 -61 9 stone[]; 4 -61 10 stone[]; 4 -61 11 stone[]; 4 -61 12 stone[]; 5 -61 4 stone[]; 5 -61 5 stone[]; 5 -61 6 stone[]; 5 -61 7 stone[]; 5 -61 8 stone[]; 5 -61 9 stone[]; 5 -61 10 stone[]; 5 -61 11 stone[]; 5 -61 12 stone[]; 6 -61 4 stone[]; 6 -61 5 stone[]; 6 -61 6 stone[]; 6 -61 7 stone[]; 6 -61 8 stone[]; 6 -61 9 stone[]; 6 -61 10 stone[]; 6 -61 11 stone[]; 6 -61 12 stone[]; 7 -61 4 stone[]; 7 -61 5 stone[]; 7 -61 6 stone[]; 7 -61 7 stone[]; 7 -61 8 stone[]; 7 -61 9 stone[]; 7 -61 10 stone[]; 7 -61 11 stone[]; 7 -61 12 stone[]; 8 -61 4 stone[]; 8 -61 5 stone[]; 8 -61 6 stone[]; 8 -61 7 stone[]; 8 -61 8 stone[]; 8 -61 9 stone[]; 8 -61 10 stone[]; 8 -61 11 stone[]; 8 -61 12 stone[]; 9 -61 4 stone[]; 9 -61 5 stone[]; 9 -61 6 stone[]; 9 -61 7 stone[]; 9 -61 8 stone[]; 9 -61 9 stone[]; 9 -61 10 stone[]; 9 -61 11 stone[]; 9 -61 12 stone[]; 10 -61 4 stone[]; 10 -61 5 stone[]; 10 -61 6 stone[]; 10 -61 7 stone[]; 10 -61 8 stone[]; 10 -61 9 stone[]; 10 -61 10 stone[]; 10 -61 11 stone[]; 10 -61 12 stone[]; 11 -61 4 stone[]; 11 -61 5 stone[]; 11 -61 6 stone[]; 11 -61 7 stone[]; 11 -61 8 stone[]; 11 -61 9 stone[]; 11 -61 10 stone[]; 11 -61 11 stone[]; 11 -61 12 stone[]; 12 -61 4 stone[]; 12 -61 5 stone[]; 12 -61 6 stone[]; 12 -61 7 stone[]; 12 -61 8 stone[]; 12 -61 9 stone[]; 12 -61 10 stone[]; 12 -61 11 stone[]; 12 -61 12 stone[] | extra: 
+     50 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["99"]
+     50 actor   UpdateSubchunkBlocks 2 -61 4 stone[]; 2 -61 5 stone[]; 2 -61 6 stone[]; 2 -61 7 stone[]; 2 -61 8 stone[]; 2 -61 9 stone[]; 2 -61 10 stone[]; 2 -61 11 stone[]; 2 -61 12 stone[]; 3 -61 4 stone[]; 3 -61 5 stone[]; 3 -61 6 stone[]; 3 -61 7 stone[]; 3 -61 8 stone[]; 3 -61 9 stone[]; 3 -61 10 stone[]; 3 -61 11 stone[]; 3 -61 12 stone[]; 4 -61 4 stone[]; 4 -61 5 stone[]; 4 -61 6 stone[]; 4 -61 7 stone[]; 4 -61 8 stone[]; 4 -61 9 stone[]; 4 -61 10 stone[]; 4 -61 11 stone[]; 4 -61 12 stone[]; 5 -61 4 stone[]; 5 -61 5 stone[]; 5 -61 6 stone[]; 5 -61 7 stone[]; 5 -61 8 stone[]; 5 -61 9 stone[]; 5 -61 10 stone[]; 5 -61 11 stone[]; 5 -61 12 stone[]; 6 -61 4 stone[]; 6 -61 5 stone[]; 6 -61 6 stone[]; 6 -61 7 stone[]; 6 -61 8 stone[]; 6 -61 9 stone[]; 6 -61 10 stone[]; 6 -61 11 stone[]; 6 -61 12 stone[]; 7 -61 4 stone[]; 7 -61 5 stone[]; 7 -61 6 stone[]; 7 -61 7 stone[]; 7 -61 8 stone[]; 7 -61 9 stone[]; 7 -61 10 stone[]; 7 -61 11 stone[]; 7 -61 12 stone[]; 8 -61 4 stone[]; 8 -61 5 stone[]; 8 -61 6 stone[]; 8 -61 7 stone[]; 8 -61 8 stone[]; 8 -61 9 stone[]; 8 -61 10 stone[]; 8 -61 11 stone[]; 8 -61 12 stone[]; 9 -61 4 stone[]; 9 -61 5 stone[]; 9 -61 6 stone[]; 9 -61 7 stone[]; 9 -61 8 stone[]; 9 -61 9 stone[]; 9 -61 10 stone[]; 9 -61 11 stone[]; 9 -61 12 stone[]; 10 -61 4 stone[]; 10 -61 5 stone[]; 10 -61 6 stone[]; 10 -61 7 stone[]; 10 -61 8 stone[]; 10 -61 9 stone[]; 10 -61 10 stone[]; 10 -61 11 stone[]; 10 -61 12 stone[]; 11 -61 4 stone[]; 11 -61 5 stone[]; 11 -61 6 stone[]; 11 -61 7 stone[]; 11 -61 8 stone[]; 11 -61 9 stone[]; 11 -61 10 stone[]; 11 -61 11 stone[]; 11 -61 12 stone[]; 12 -61 4 stone[]; 12 -61 5 stone[]; 12 -61 6 stone[]; 12 -61 7 stone[]; 12 -61 8 stone[]; 12 -61 9 stone[]; 12 -61 10 stone[]; 12 -61 11 stone[]; 12 -61 12 stone[] | extra: 
+## /fill ~2 ~ ~4 ~12 ~4 ~12 air
+   2512 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+   2684 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 9.49, y: -58.895, z: -25.745 }, extra_data: -1, entity_type: "minecraft:sheep", is_baby_mob: false, is_global: false, entity_unique_id: -4294967285, fire_at_position: None }
+   2684 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 9.49, y: -58.895, z: -25.745 }, extra_data: -1, entity_type: "minecraft:sheep", is_baby_mob: false, is_global: false, entity_unique_id: -4294967285, fire_at_position: None }
+   4483 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 0.49, y: -58.895, z: -41.745 }, extra_data: -1, entity_type: "minecraft:cow", is_baby_mob: false, is_global: false, entity_unique_id: -4294967284, fire_at_position: None }
+   4483 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 0.49, y: -58.895, z: -41.745 }, extra_data: -1, entity_type: "minecraft:cow", is_baby_mob: false, is_global: false, entity_unique_id: -4294967284, fire_at_position: None }
+   4834 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 29.49, y: -59.116, z: -22.51 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967283, fire_at_position: None }
+   4834 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 29.49, y: -59.116, z: -22.51 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967283, fire_at_position: None }
+## /setblock ~6 ~ ~8 stone
+   5013 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   5013 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5033 actor   UpdateBlock 6 -60 8 layer 0 stone[]
+   5033 watcher UpdateBlock 6 -60 8 layer 0 stone[]
+   5184 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 359, paused: false }] }) }
+   5184 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 359, paused: false }] }) }
+## /setblock ~7 ~1 ~8 stone
+   7514 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+   7514 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   7533 actor   UpdateBlock 7 -59 8 layer 0 stone[]
+   7533 watcher UpdateBlock 7 -59 8 layer 0 stone[]
+   8184 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 26.49, y: -59.116, z: -27.51 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967282, fire_at_position: None }
+   8184 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 26.49, y: -59.116, z: -27.51 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967282, fire_at_position: None }
+## /setblock ~6 ~1 ~8 redstone_wire
+  10015 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  10015 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10033 actor   UpdateBlock 6 -59 8 layer 0 redstone_wire[redstone_signal=0]
+  10033 watcher UpdateBlock 6 -59 8 layer 0 redstone_wire[redstone_signal=0]
+  10484 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 9.49, y: -58.895, z: -32.745 }, extra_data: -1, entity_type: "minecraft:cow", is_baby_mob: false, is_global: false, entity_unique_id: -4294967281, fire_at_position: None }
+  10484 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 9.49, y: -58.895, z: -32.745 }, extra_data: -1, entity_type: "minecraft:cow", is_baby_mob: false, is_global: false, entity_unique_id: -4294967281, fire_at_position: None }
+  12084 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 22.49, y: -58.232, z: -23.51 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967280, fire_at_position: None }
+  12084 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 22.49, y: -58.232, z: -23.51 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967280, fire_at_position: None }
+## /setblock ~5 ~1 ~8 redstone_lamp
+  12514 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  12514 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  12534 actor   UpdateBlock 5 -59 8 layer 0 redstone_lamp[]
+  12534 watcher UpdateBlock 5 -59 8 layer 0 redstone_lamp[]
+## /setblock ~7 ~ ~8 redstone_torch ["torch_facing_direction"="west"]
+  15015 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  15015 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  15034 actor   UpdateBlock 7 -60 8 layer 0 redstone_torch[torch_facing_direction=west]
+  15034 watcher UpdateBlock 7 -60 8 layer 0 redstone_torch[torch_facing_direction=west]
+  15184 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 5 -59 8 lit_redstone_lamp[]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15185 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 5 -59 8 lit_redstone_lamp[]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15283 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  15284 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  15380 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15380 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15479 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  15479 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  15587 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15587 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15683 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  15683 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  15779 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15779 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15883 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  15883 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  15984 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  15984 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  16079 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  16079 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  16182 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  16183 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  16280 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  16280 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  16384 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  16384 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  16480 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  16480 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  16587 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  16587 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  16684 watcher UpdateBlock 6 -59 8 layer 0 redstone_wire[redstone_signal=0]
+  16684 actor   UpdateBlock 6 -59 8 layer 0 redstone_wire[redstone_signal=0]
+  16983 actor   UpdateBlock 5 -59 8 layer 0 redstone_lamp[]
+  16983 watcher UpdateBlock 5 -59 8 layer 0 redstone_lamp[]
+## /testforblock ~7 ~ ~8 redstone_torch
+  17516 actor   CommandOutput success_count=0 data=None commands.testforblock.failed.tile success=false ["7", "-60", "8", "%tile.unlit_redstone_torch.name", "%tile.redstone_torch.name"]
+  17984 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 615, paused: false }] }) }
+  17984 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 615, paused: false }] }) }
+## /testforblock ~7 ~ ~8 unlit_redstone_torch
+  20013 actor   CommandOutput success_count=1 data=None commands.testforblock.success success=true ["7", "-60", "8"]
+  20014 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.testforblock.success\",\"with\":{\"rawtext\":[{\"text\":\"7\"},{\"text\":\"-60\"},{\"text\":\"8\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22384 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: -0.51, y: -59.235, z: 42.255 }, extra_data: -1, entity_type: "minecraft:pig", is_baby_mob: false, is_global: false, entity_unique_id: -4294967279, fire_at_position: None }
+  22384 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: -0.51, y: -59.235, z: 42.255 }, extra_data: -1, entity_type: "minecraft:pig", is_baby_mob: false, is_global: false, entity_unique_id: -4294967279, fire_at_position: None }
+## /setblock ~8 ~ ~8 stone
+  22517 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  22518 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  22533 actor   UpdateBlock 8 -60 8 layer 0 stone[]
+  22533 watcher UpdateBlock 8 -60 8 layer 0 stone[]
+  22683 actor   UpdateSubchunkBlocks 5 -59 8 lit_redstone_lamp[]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  22683 watcher UpdateSubchunkBlocks 5 -59 8 lit_redstone_lamp[]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  22784 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  22784 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  22882 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  22883 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  22983 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  22983 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23082 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23082 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23184 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23184 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23283 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23283 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23383 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23383 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23485 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23485 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23583 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23583 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23679 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23679 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23784 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23784 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23880 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23880 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  23980 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  23980 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  24083 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  24083 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  24183 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  24183 actor   LevelSoundEvent LevelSoundEvent { sound_id: "fizz", position: Vec3f { x: 7.0, y: -60.0, z: 8.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24184 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  24184 watcher LevelSoundEvent LevelSoundEvent { sound_id: "fizz", position: Vec3f { x: 7.0, y: -60.0, z: 8.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  24282 actor   UpdateBlock 6 -59 8 layer 0 redstone_wire[redstone_signal=0]
+  24282 watcher UpdateBlock 6 -59 8 layer 0 redstone_wire[redstone_signal=0]
+  24484 watcher UpdateBlock 5 -59 8 layer 0 redstone_lamp[]
+  24484 actor   UpdateBlock 5 -59 8 layer 0 redstone_lamp[]
+## /setblock ~8 ~ ~8 air
+  25019 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  25019 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  25033 actor   UpdateBlock 8 -60 8 layer 0 air[]
+  25033 watcher UpdateBlock 8 -60 8 layer 0 air[]
+  26684 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 7.49, y: -59.32, z: -34.0 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: -4294967278, fire_at_position: None }
+  26684 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 7.49, y: -59.32, z: -34.0 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: -4294967277, fire_at_position: None }
+  26685 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 7.49, y: -59.32, z: -34.0 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: -4294967278, fire_at_position: None }
+  26685 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: 7.49, y: -59.32, z: -34.0 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: -4294967277, fire_at_position: None }
+## /testforblock ~7 ~ ~8 unlit_redstone_torch
+  27524 actor   CommandOutput success_count=1 data=None commands.testforblock.success success=true ["7", "-60", "8"]
+  27525 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.testforblock.success\",\"with\":{\"rawtext\":[{\"text\":\"7\"},{\"text\":\"-60\"},{\"text\":\"8\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /testforblock ~7 ~ ~8 unlit_redstone_torch
+  30024 actor   CommandOutput success_count=1 data=None commands.testforblock.success success=true ["7", "-60", "8"]
+  30024 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.testforblock.success\",\"with\":{\"rawtext\":[{\"text\":\"7\"},{\"text\":\"-60\"},{\"text\":\"8\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30639 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: -21.51, y: -59.32, z: 39.0 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: -4294967276, fire_at_position: None }
+  30639 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: -21.51, y: -59.32, z: 39.0 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: -4294967276, fire_at_position: None }
+  30639 watcher LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: -21.51, y: -59.32, z: 39.0 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: -4294967275, fire_at_position: None }
+  30639 actor   LevelSoundEvent LevelSoundEvent { sound_id: "spawn", position: Vec3f { x: -21.51, y: -59.32, z: 39.0 }, extra_data: -1, entity_type: "minecraft:chicken", is_baby_mob: false, is_global: false, entity_unique_id: -4294967275, fire_at_position: None }
+  30780 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 871, paused: false }] }) }
+  30780 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 871, paused: false }] }) }
+  32034 actor   LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: -0.9566016, y: -58.54, z: 0.24481988 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  32034 actor   LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: -0.9566016, y: -58.54, z: 0.24481988 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  32034 watcher LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: -0.9566016, y: -58.54, z: 0.24481988 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  32034 watcher LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: -0.9566016, y: -58.54, z: 0.24481988 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+## /setblock ~7 ~ ~9 stone
+  32523 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  32524 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  32533 actor   UpdateBlock 7 -60 9 layer 0 stone[]
+  32533 watcher UpdateBlock 7 -60 9 layer 0 stone[]
+  32683 actor   UpdateSubchunkBlocks 5 -59 8 lit_redstone_lamp[]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  32683 watcher UpdateSubchunkBlocks 5 -59 8 lit_redstone_lamp[]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  32783 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  32783 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  32883 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  32884 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  32984 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  32984 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33084 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33084 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33186 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33186 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33284 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33284 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33384 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33384 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33484 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33484 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33584 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33584 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33688 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33689 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33779 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33780 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33882 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33882 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  33983 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33983 actor   LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: -0.97754765, y: -57.71082, z: 1.1991446 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  33983 actor   LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: -0.97754765, y: -57.71082, z: 1.1991446 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  33983 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  33983 watcher LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: -0.97754765, y: -57.71082, z: 1.1991446 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  33983 watcher LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: -0.97754765, y: -57.71082, z: 1.1991446 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  34082 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  34082 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=0]; 7 -60 8 redstone_torch[torch_facing_direction=west] | extra: 
+  34183 actor   UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  34183 actor   LevelSoundEvent LevelSoundEvent { sound_id: "fizz", position: Vec3f { x: 7.0, y: -60.0, z: 8.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  34183 watcher UpdateSubchunkBlocks 6 -59 8 redstone_wire[redstone_signal=15]; 7 -60 8 unlit_redstone_torch[torch_facing_direction=west] | extra: 
+  34183 watcher LevelSoundEvent LevelSoundEvent { sound_id: "fizz", position: Vec3f { x: 7.0, y: -60.0, z: 8.0 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  34288 actor   UpdateBlock 6 -59 8 layer 0 redstone_wire[redstone_signal=0]
+  34289 watcher UpdateBlock 6 -59 8 layer 0 redstone_wire[redstone_signal=0]
+  34483 watcher UpdateBlock 5 -59 8 layer 0 redstone_lamp[]
+  34483 actor   UpdateBlock 5 -59 8 layer 0 redstone_lamp[]
+## /setblock ~7 ~ ~9 air
+  35213 actor   CommandOutput success_count=1 data=None commands.setblock.success success=true []
+  35213 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.setblock.success\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  35234 actor   UpdateBlock 7 -60 9 layer 0 air[]
+  35234 watcher UpdateBlock 7 -60 9 layer 0 air[]
+  37329 actor   LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: 0.46155602, y: -57.958668, z: 1.9695402 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  37329 actor   LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: 0.46155602, y: -57.958668, z: 1.9695402 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  37329 watcher LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: 0.46155602, y: -57.958668, z: 1.9695402 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+  37329 watcher LevelSoundEvent LevelSoundEvent { sound_id: "attack", position: Vec3f { x: 0.46155602, y: -57.958668, z: 1.9695402 }, extra_data: -1, entity_type: "minecraft:slime", is_baby_mob: false, is_global: false, entity_unique_id: -4294967286, fire_at_position: None }
+## /testforblock ~7 ~ ~8 unlit_redstone_torch
+  37713 actor   CommandOutput success_count=1 data=None commands.testforblock.success success=true ["7", "-60", "8"]
+  37714 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.testforblock.success\",\"with\":{\"rawtext\":[{\"text\":\"7\"},{\"text\":\"-60\"},{\"text\":\"8\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+probe exit 0
