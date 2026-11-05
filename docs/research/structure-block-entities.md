@@ -315,6 +315,19 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   c-vi)"`, 2026-11-05) the same three differ. The fill block test (141f7a9c0, read 2026-11-05) skips a
   top block whose `BlockType+0x130` has bit 0x20 (the leaves property) and else takes the biome's top
   material, as sapling's `fill_below`; so the draws' difference is in which tops are not air, not there.
+  Traced 2026-11-05 (thirteenth3ah): a Linux canon run of -66,4..-59,11 under gdb with a breakpoint on
+  the fill's `nextInt(3)` (Linux 0xd2bda58: BlockPos at rsp+0x10, the chunk box at r12), against
+  sapling's c-vi replay printing each fill (a temporary trace in `jigsaw/piece.rs` `fill_bottom`). The
+  Linux run's post order is not Windows' (so its counts are no check on the Windows canon), but the
+  rule shows. BDS's fill reads the out-of-chunk columns of a piece as they stand. Before the owning
+  chunk posts, terrain is there and is filled (piece (-996, 86, 141)..(-990, 90, 146): row z 146,
+  x -996..-993, lies in chunk (-63, 9) and was drawn from the posts of (-62, 9), (-63, 8) and (-62, 8)).
+  Once the owning chunk has placed the piece's air there, the column is skipped. Sapling read air at
+  those four cells from every chunk, so (-62, 8) drew 4 fewer, and read grass at (-990, 86, 146)
+  (chunk (-62, 9)) from (-63, 8) and (-63, 9) but air from (-62, 8). In (-63, 9) it also filled
+  (-1013, 86, 148..154) (chunk (-64, 9)), which BDS never did (6 more). So sapling's view of a
+  neighbour's not-yet-posted column during a post is the thing to fix. It is not the fill or the
+  block test. Not reached: where sapling's canvas gets those cells (`structure/` post view).
 - The desert pyramid sand at (-6114, 60, -3508), fixed 2026-11-05: BDS's cellar sand (1483669e0)
   draws a seed for every suspicious sand cell in the 3x3 view that holds its block, a neighbour's
   included, so the last chunk to post-process the pyramid sets it (`Canvas::set_entity_in_view`;
