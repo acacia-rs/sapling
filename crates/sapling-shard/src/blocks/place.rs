@@ -114,6 +114,8 @@ impl Request<'_> {
         let id = doors::hinged(level, facing::oriented(registry, id, click), pos, click.quarter());
         let id = items::attached(registry, id, level.block(against[0], against[1], against[2]), site.sneaking);
         let id = super::ground::settled(level, pos, id);
+        let feet = self.world.get::<Position>(self.entity).map_or(pos, |position| position.feet.map(|c| c.floor() as i32));
+        let id = super::coral::placed(level, pos, id, feet);
         let id = super::structure_blocks::as_placed(registry, id);
         let gives = |cell: BlockPos| level.in_height(cell[1]) && level.is_loaded(send::column(cell)) && gives_way(registry, level.block(cell[0], cell[1], cell[2]));
         let stands = |cell: BlockPos| registry.get(level.block(cell[0], cell[1] - 1, cell[2])).is_some_and(|state| !state.is_air());

@@ -71,6 +71,12 @@ at most 64 cells (water, flowing water, bubble columns,
 waterlogged water; kelp and seagrass break), and turns wet. A wet sponge written in the Nether dries at
 once, with event 3501 0.875 up its cell (drilled, below; dragonfly's `Sponge.UseOnBlock`, Java `WetSpongeBlock`).
 
+The delay, read 2026-11-04: the place event (14660fbe0) soaks at once; `neighborChanged` (1466107c0, vtable
+slot 74) queues a tick of delay 1, and the queued tick (146610180) soaks if dry or dries in the Nether.
+`g3fan` (bds-g3fan.txt): water set beside a dry sponge, and a sponge set into water, were soaked in the same
+game tick as the command's write, event 2021 sent with the water's UpdateBlock. Sapling's this-tick queue
+already gives that; nothing changed.
+
 ## Lectern (`blocks/lectern.rs`)
 
 A hit (StartBreak) on a lectern with a book drops the book over it and clears `book`, `hasBook`, `page`,
@@ -137,8 +143,15 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
 
 ## Not drilled
 
-- The sponge's queued tick's delay.
-- A dry coral fan placed by hand is dead at once on BDS, `coral_fan_direction=1` from four diagonal
-  clicks (bds-e3coral.txt); sapling places it live with 0, its placement rule (fan slots 144/257,
-  14713d2e0, 14713d500) not read. BDS also plays `place` with the dead block's id when coral dies.
+- BDS plays `place` with the dead block's id when coral dies; sapling's `coral::die` writes it with no sound.
+- A coral fan placed by hand into water: the `g3fan` place was refused on BDS (NotVisible).
+
+## Coral fan by hand
+
+`g3fan` (2026-11-04, bds-g3fan.txt with bds-e3coral.txt's four, nine places): a fan placed dry was
+`dead_*_coral_fan` at once, its place sound the dead id. `coral_fan_direction` fit PocketMine's
+`CoralFan::place`: from the placer's feet cell to the fan, `atan2(dz, dx)` strictly between 45 and 135
+degrees (the fan south of the feet) gives 0, anything else 1; west, north, east and the four
+diagonals all gave 1. Sapling: `coral::placed` from `place.rs`; test
+`a_coral_fan_placed_dry_by_hand_is_dead_and_lies_by_where_it_is_from_the_placer`.
 - Burning arrows lighting TNT; whether BDS also asks `mobGriefing` for a mob's shot.
