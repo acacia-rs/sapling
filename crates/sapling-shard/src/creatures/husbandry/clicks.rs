@@ -37,7 +37,7 @@ pub(super) fn name(world: &mut World, entity: Entity, name: String) {
 
 /// The player clicked the mob or knot `entity`; false where nothing here took the click.
 pub(crate) fn interact(world: &mut World, player: Entity, entity: Entity) -> bool {
-    if knots::undo(world, entity) {
+    if knots::undo(world, player, entity) {
         return true;
     }
     if world.get::<Raised>(entity).is_none() {

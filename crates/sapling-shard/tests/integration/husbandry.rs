@@ -5,7 +5,7 @@ use crate::common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{AddEntity, AddItemEntity, EntityEvent, EntityEventEventId as Event};
+use acacia_proto::packets::{AddEntity, AddItemEntity, EntityEvent, EntityEventEventId as Event, LevelSoundEvent, RemoveEntity};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1 as Flags};
 use common::raising::{click_on, feet_of, has_flag, plain_in, set_in, showed};
 use common::shooting::{ALEX, added, held, ready, spawn, watch};
@@ -101,22 +101,42 @@ fn a_lead_ties_a_cow_to_its_holder_or_a_fence_knot_and_snaps_far_away() {
     let cow = spawn(&mut h, COW, [2.5, 65.0, 0.5]);
     let tied = [click_on(&mut h, cow), watch(&mut h, 1)].concat();
     assert_eq!(has_flag(&tied, cow, Flags::LEASHED), Some(true));
-    assert!(matches!(set_in(&tied, cow, Key::LeadHolderEid), Some(Plain::Long(holder)) if holder >= 0), "its holder shown");
+    let player = set_in(&tied, cow, Key::LeadHolderEid);
+    assert!(matches!(player, Some(Plain::Long(holder)) if holder >= 0), "its holder shown");
     assert_eq!(held(&mut h, Slot::Main(0)).map(|lead| lead.count), Some(1));
 
     h.receive(1, &click([2, 65, 2], 1, None));
     let knotted = watch(&mut h, 2);
     let knot = added(&knotted, "minecraft:leash_knot");
     assert_eq!(knot.len(), 1, "a knot on the fence");
+    assert_eq!(knot[0].position.y, 65.25, "0.25 above the fence's floor (bds-uuknot.txt)");
     assert_eq!(set_in(&knotted, cow, Key::LeadHolderEid), Some(Plain::Long(knot[0].runtime_id as i64)));
+    // bds-uuknot.txt: a click on the knot handed the cow back to the player, heard `lead.leash`
+    // from its middle; no lead dropped, and the knot went the tick after, heard from its feet.
     let undone = [click_on(&mut h, knot[0].runtime_id), watch(&mut h, 2)].concat();
-    assert_eq!(has_flag(&undone, cow, Flags::LEASHED), Some(false), "a click on the knot lets go");
-    assert!(!all::<AddItemEntity>(&undone).is_empty(), "the lead dropped");
+    assert_eq!(set_in(&undone, cow, Key::LeadHolderEid), player, "the player holds the cow again");
+    assert!(all::<AddItemEntity>(&undone).is_empty(), "no lead dropped");
+    let sounds = all::<LevelSoundEvent>(&undone);
+    assert!(sounds.iter().any(|sound| sound.sound_id == "lead.leash" && sound.entity_unique_id == -1 && sound.position.y == 65.9));
+    assert!(sounds.iter().any(|sound| sound.sound_id == "leashknot.break" && sound.entity_unique_id == -1 && sound.position.y == 65.25));
+    assert!(all::<RemoveEntity>(&undone).iter().any(|gone| gone.entity_id_self == knot[0].unique_id), "the knot went");
 
-    click_on(&mut h, cow);
     h.remote.run(|ctx| ctx.teleport(ALEX, [-7.5, 65.0, -7.5]));
     let snapped = watch(&mut h, 20);
-    assert_eq!(has_flag(&snapped, cow, Flags::LEASHED), Some(false), "past 10 blocks the lead snaps");
+    assert_eq!(has_flag(&snapped, cow, Flags::LEASHED), Some(false), "past 11 blocks the lead snaps");
+    let heard = all::<LevelSoundEvent>(&snapped).into_iter().find(|sound| sound.sound_id == "lead.break").expect("heard snapping");
+    assert_eq!((heard.entity_unique_id, heard.position.x, heard.position.y), (-1, -7.5, 65.9), "from the holder's middle, as no one's (bds-uuknot.txt)");
+}
+
+/// bds-uuknot.txt: BDS kept a slowed cow's lead with its holder 11 blocks off; sapling's snapped past 10.
+#[test]
+fn a_lead_holds_a_cow_past_ten_blocks() {
+    let mut h = ready(GameMode::Survival, &[("minecraft:lead", 1, 0)], 0.0);
+    let cow = spawn(&mut h, COW, [2.5, 65.0, 0.5]);
+    click_on(&mut h, cow);
+    h.remote.run(|ctx| ctx.teleport(ALEX, [13.3, 65.0, 0.5]));
+    let kept = watch(&mut h, 3);
+    assert_ne!(has_flag(&kept, cow, Flags::LEASHED), Some(false), "still on its lead");
 }
 
 #[test]

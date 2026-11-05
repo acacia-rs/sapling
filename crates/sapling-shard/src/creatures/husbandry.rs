@@ -28,7 +28,7 @@ pub(super) use ageing::be_born;
 pub(super) use tadpoles::frog_variant;
 pub(crate) use clicks::interact;
 pub(crate) use guarding::{owner_hit, owner_hurt};
-pub(crate) use knots::{KNOT, from_storage as knot_from_storage, tie_to_fence, undo as undo_knot};
+pub(crate) use knots::{KNOT, from_storage as knot_from_storage, knock_down as knock_down_knot, tie_to_fence};
 pub(crate) use owners::{is_owner, tame_by_event, tame_by_riding, tame_by_upgrade};
 pub(crate) use products::shear_in;
 pub(crate) use shown::links_packet;
