@@ -52,14 +52,8 @@ The data put the threshold between 0.000998 and 0.001001, which matches the cons
 
 ## Versus sapling
 
-`sapling-shard/src/sync.rs` `flags` sets MOVING = "the previous tick started in the air". BDS
-instead uses "the previous tick's position change squared > 0.001". The two differ in these cases:
-
-- **Slow movers in the air or water clear.** Examples: an item settling in water, an orb drifting
-  at ~0.03/tick, and the top of a bob.
-- **Fast movers on the ground stay set.** Example: an item sliding on the ground.
-- **The landing tick itself counts.** It clears at landing+2 for an item only because the landing
-  tick still moved more than 0.0316. An armor stand whose landing move is small (0.014) clears at
-  landing+1.
-- **A spawn tick with no movement gives no flag.** The armor stand did not move in its spawn tick,
-  so it was set at spawn+2.
+Since ef0b0124 sapling uses BDS's rule: `sapling-shard/src/sync.rs` `MOVING` (0.001) sets the
+flag when the previous tick's position change squared is over it, for items and mobs alike
+(`Told`). Before that, sapling set MOVING when the previous tick started in the air, which differed
+for slow movers in the air or water, fast movers on the ground, the landing tick and a spawn tick
+with no movement.

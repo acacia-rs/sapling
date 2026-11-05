@@ -173,7 +173,15 @@ were not found in any of these; sapling does what is listed there.
 - BDS took a reached item a tick after the `/tp`, sapling in the `/tp`'s tick (its commands run
   before the carts' tick); fixed 2026-11-05: a moved item waits out the tick (`vehicles/cargo.rs`
   `MovedBy`, test `a_hopper_minecart_takes_an_item_moved_into_its_reach_a_tick_after_the_move`).
-- What raises a boat's underwater counter (not done); boat fall breaking (none found).
+- What raises a boat's underwater counter (not done): in bds-uuboat.txt a pig's and the actor's
+  boats under water poured over them floated up and kept their riders 5 and 8 s, so the counter
+  was never reached; a held-down boat and a paddling rider are still to drill.
+- Boat fall breaking: none, as sapling (bds-uuboat.txt: boats summoned 20 and 6 blocks up landed
+  whole, no item).
+- A summoned boat on the ground (bds-uuboat.txt) is shown 0.375 up (-26 → -25.625) and shifted in
+  x and z by a rule not found: (4.5, 4.5) → (4.7, 4.3), (2, 2) → (2.7, 2.7), (6.3, 2.8) stayed,
+  (9.5, 4.5) → (9.7, 4.7) at yaw 90, (12.5, 4.5) → (12.7, 4.7), (14.5, 0.5) → (14.7, 0.7); boats
+  summoned in the air or in water stayed where summoned. Sapling's sit on the summon point.
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
 - The horse screen: done without a capture, see mob-life.md "Mount inventories".
 

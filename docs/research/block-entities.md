@@ -1,5 +1,9 @@
 # Block entities of item-placed blocks (2026-10-06)
 
+Stale verdicts (2026-11-05): the "sapling today" column predates the fixes (banners, pots, signs and skulls are
+placed and dropped through `blocks/items.rs`, `blocks/entities.rs` and `blocks/loot`, with tests in
+`blocks/loot/tests.rs`). Read the code before trusting a mark; BDS's rules themselves stand.
+
 Signs, hanging signs, skulls, banners, flower pots, cauldrons, brewing stands, campfires: what the item places, the
 block entity BDS keeps, what breaking leaves, and the brewing stand's screen. Conventions as block-rules.md.
 
