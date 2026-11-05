@@ -52,6 +52,7 @@ mod spec;
 mod speleothem;
 pub(crate) mod spreader;
 mod springs;
+mod sulfur_spring;
 mod thread;
 mod ticks;
 pub(crate) mod trace;

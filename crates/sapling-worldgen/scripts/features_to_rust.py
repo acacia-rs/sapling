@@ -27,6 +27,10 @@ SAPLING_FEATURES = [f'minecraft:{name}_feature' for name in (
     'cherry_tree', 'cherry_tree_with_beehive', 'pale_oak_tree', 'select_poplar_tree', 'mangrove_tree', 'mangrove_tree_with_beenest',
     'tall_mangrove_tree', 'tall_mangrove_tree_with_beenest', 'azalea_tree')]
 
+# The canon BDS's readdir order of definitions/feature_rules (`ls -U`), which the Linux BDS loads in: it decides
+# where the rules found only there sit in LINUX_ORDER (worldgen-bds-linux-canons.md).
+LINUX_LOOSE = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'linux_loose_feature_rules.txt')).read().split()
+
 PASSES = ['first_pass', 'before_underground_pass', 'underground_pass', 'after_underground_pass', 'before_surface_pass',
           'surface_pass', 'after_surface_pass', 'before_sky_pass', 'sky_pass', 'after_sky_pass', 'final_pass']
 
@@ -140,13 +144,13 @@ class LibcxxMap:
         return True
 
 
-def rule_order(bds, kind=MsvcMap):
+def rule_order(bds, kind=MsvcMap, loose=None):
     """Rules as BDS attaches them to a biome: its store is an unordered_map of pass to an unordered_map of
     identifier (HashedString) to rule, filled in load order with the first of an identifier kept; attaching walks
     passes, then each pass's rules, in map order. Within a pass the decoration order is the inner map's, `kind`
-    (MsvcMap on Windows, LibcxxMap on Linux)."""
+    (MsvcMap on Windows, LibcxxMap on Linux). `loose`: the order of `definitions/feature_rules` (bds_packs.load_order)."""
     store = {}
-    for doc in load_order(bds, 'feature_rules'):
+    for doc in load_order(bds, 'feature_rules', loose):
         rule = doc['minecraft:feature_rules']
         inner = store.setdefault(rule['conditions']['placement_pass'], (kind(), {}))
         if inner[0].insert(rule['description']['identifier']):
@@ -188,7 +192,7 @@ def main():
         lines.append(f'    Rule {{ name: "{name}", pass: Pass::{pass_rust}, biomes: {biome_set(biome_filter, tags_by_id)}, '
                      f'feature: {features.index(places) if places else features.unported()}, distribution: {distribution(dist)} }},')
     index = {r[1]: i for i, r in enumerate(ordered)}
-    linux = [index[d['description']['identifier']] for d in rule_order(bds, LibcxxMap) if d['description']['identifier'] in index]
+    linux = [index[d['description']['identifier']] for d in rule_order(bds, LibcxxMap, LINUX_LOOSE) if d['description']['identifier'] in index]
     linux.sort(key=lambda i: ordered[i][0])
     lines += ['];', '', '/// `RULES` by index in the Linux BDS\'s order (libc++ maps; `OverworldGenerator::follow_linux_bds`).',
               'pub static LINUX_ORDER: &[u16] = &[', '    ' + ', '.join(map(str, linux)) + ',']

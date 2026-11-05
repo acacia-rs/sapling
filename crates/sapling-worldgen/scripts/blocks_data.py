@@ -56,10 +56,12 @@ def _cardinal(states):
 
 def blocks(values):
     """A block list that may name blocks sapling never generates (dropped: nothing can match them)."""
+    from trees_data import names  # here: trees_data imports this module
     out = []
     for value in values if isinstance(values, list) else [values]:
-        try:
-            out.append(block(value))
-        except NotPorted:
-            pass
+        for one in [name for name, _ in names(value)] if isinstance(value, dict) and 'tags' in value else [value]:
+            try:
+                out.append(block(one))
+            except NotPorted:
+                pass
     return '&[' + ', '.join(out) + ']'

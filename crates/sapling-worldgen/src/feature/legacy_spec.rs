@@ -59,6 +59,8 @@ pub enum Legacy {
     NetherFossil,
     /// `DesertWellFeature` (desert_well.rs).
     DesertWell,
+    /// `sulfur_spring_trail_to_surface_feature`, placing the feature `spring` (sulfur_spring.rs).
+    SulfurTrail { spring: usize },
 }
 
 /// The block of a village pile feature (`hay_pile_feature` and the others, vtable 14a9258d0).

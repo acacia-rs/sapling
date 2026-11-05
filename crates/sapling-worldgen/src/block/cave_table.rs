@@ -8,6 +8,8 @@ macro_rules! with_cave_blocks {
             Sulfur => "sulfur" "",
             Cinnabar => "cinnabar" "",
             PotentSulfur => "potent_sulfur" "potent_sulfur_state=wet",
+            PotentSulfurDormant => "potent_sulfur" "potent_sulfur_state=dormant",
+            PotentSulfurErupting => "potent_sulfur" "potent_sulfur_state=erupting",
             DripstoneBlock => "dripstone_block" "",
             Magma => "magma" "",
             MobSpawner => "mob_spawner" "",

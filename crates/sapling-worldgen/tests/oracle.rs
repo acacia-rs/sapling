@@ -228,7 +228,16 @@ fn blocks_match_bds_trees() {
 #[test]
 #[ignore = "needs worlds/oracle; slow"]
 fn blocks_match_bds_canons() {
-    compare(20261003, "20261003-canons", &[Region::new("dappled forest", -262, -390, -259, -387)]);
+    compare(
+        20261003,
+        "20261003-canons",
+        &[
+            Region::new("dappled forest", -262, -390, -259, -387),
+            Region::new("dappled camp", 53, 79, 57, 83),
+            Region::new("sulfur caves", -554, 510, -547, 517),
+            Region::new("sulfur spring", -752, -754, -748, -751),
+        ],
+    );
 }
 
 /// Regions around one start of each kind (`/locate` answers from near the origin).
