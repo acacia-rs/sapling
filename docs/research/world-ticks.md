@@ -127,10 +127,10 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
 - Fixed: water run in beside twisting, weeping or cave vines breaks them (`ParticleDestroy` as it enters
   layer 1, the vine's loot, the water then `liquid_depth=1` in layer 0); sapling's stood in it
   (`blocks/liquid.rs` `set`, bds-plantpop2.txt).
-- Packet shape, not matched: BDS shows a commanded block written twice in a tick as one UpdateSubchunkBlocks
-  listing each write (an aged vine twice; kelp or a coral fan with its water as both `water` and
-  `flowing_water` in the extra layer); sapling sends an UpdateBlock a layer. Matching it needs a log of every
-  write in the tick, with layer 1, which sapling's batches (`send/sections.rs`) do not keep.
+- Packet shape: BDS shows a commanded block written twice in a tick as one UpdateSubchunkBlocks listing each
+  write (an aged vine twice; kelp or a coral fan with its water as both `water` and `flowing_water` in the extra
+  layer). Sapling logs a commanded put that ages or wets (`send/sections.rs` `logged`) and sends the same,
+  with `water` alone in the extra layer (sapling has no `flowing_water` state there).
 - Undrillable here: arrows (`/summon arrow` is inert in sapling's drill).
 
 ## Parity drill (2026-11-04, `bds_command_probe t3odds`, `t3sponge`, `t3uses`)
@@ -166,8 +166,8 @@ Captures research/captures/bds-bkticks.txt, bds-bknether.txt against sapling-*.
   TNT, goes -0.1 times its motion without moving; it flies back from the tick after. A block's hit
   (`bow.hit`, then an arrow's `ArrowShake` 7) is told the tick after it sticks. An arrow whose block is set to
   air lies a tick more, then falls from rest and sticks below. Ported (`flight.rs`, `stuck.rs`,
-  `flight/in_way.rs`; tests `shot_blocks`); re-drilled the same (sapling-g10flame.txt) but for one tick:
-  sapling primes the TNT in the tick the arrow meets it, BDS the tick after.
+  `flight/in_way.rs`; tests `shot_blocks`); the TNT is primed the tick after the arrow meets it, as BDS
+  (`tnt.rs` `light_next_tick`).
 
 ## Coral fan by hand
 

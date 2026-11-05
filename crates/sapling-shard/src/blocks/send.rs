@@ -3,39 +3,26 @@
 
 use acacia_proto::nbt::{Nbt, Value};
 pub(crate) use acacia_proto::packets::UpdateBlockSyncedTransitionType as Transition;
-use acacia_proto::packets::{BlockEntityData, LevelEvent, LevelEventEvent, LevelSoundEvent, UpdateBlock, UpdateBlockSynced};
-use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags, Vec3f};
+use acacia_proto::packets::{BlockEntityData, UpdateBlock, UpdateBlockSynced};
+use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
-use sapling_api::{Block, BlockPos, Face};
+use sapling_api::{Block, BlockPos};
 use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
+mod effects;
 mod sections;
 
-pub(crate) use sections::{after_blocks, batched, hold, hold_break, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
+pub(crate) use effects::{destroy_particles, noise, place_sound, punch_particles, sound, sound_at};
+pub(crate) use sections::{after_blocks, batched, hold, hold_break, log_again, logged, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
 
 use crate::components::{InLayer, Layer, Outgoing};
 
 /// BDS sets these two on every UpdateBlock it sends.
 pub(crate) const FLAGS: UpdateBlockFlags = UpdateBlockFlags(UpdateBlockFlags::NEIGHBORS.0 | UpdateBlockFlags::NETWORK.0);
-/// `entity_unique_id` of a sound no entity made.
-const NO_ENTITY: i64 = -1;
-const PUNCH: [LevelEventEvent; 6] = [
-    LevelEventEvent::ParticlePunchBlockDown,
-    LevelEventEvent::ParticlePunchBlockUp,
-    LevelEventEvent::ParticlePunchBlockNorth,
-    LevelEventEvent::ParticlePunchBlockSouth,
-    LevelEventEvent::ParticlePunchBlockWest,
-    LevelEventEvent::ParticlePunchBlockEast,
-];
 
 pub(crate) fn column([x, _, z]: BlockPos) -> ChunkPos {
     ChunkPos::of_block(x, z)
-}
-
-fn centre(pos: BlockPos) -> Vec3f {
-    let [x, y, z] = pos.map(|c| c as f32 + 0.5);
-    Vec3f { x, y, z }
 }
 
 /// A block state as plugins name it.
@@ -80,46 +67,6 @@ pub(crate) fn block_entity_data([x, y, z]: BlockPos, entity: &BlockEntity) -> By
     sapling_net::encode(&BlockEntityData { position: BlockCoordinates { x, y, z }, nbt: Nbt { name: String::new(), value: entity.updated() }.into() })
 }
 
-/// The burst of fragments when a block of `id` breaks.
-pub(crate) fn destroy_particles(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
-    sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleDestroy, position: centre(pos), data: sapling_world::block_hash(registry, id) as i32 })
-}
-
-/// The few fragments a hit knocks off `face`.
-pub(crate) fn punch_particles(registry: &BlockRegistry, pos: BlockPos, face: Face, id: u32) -> Bytes {
-    sapling_net::encode(&LevelEvent { event: PUNCH[face as usize], position: centre(pos), data: sapling_world::block_hash(registry, id) as i32 })
-}
-
-/// The sound of the block `id` placed: BDS names the block's first state, not the one placed.
-pub(crate) fn place_sound(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
-    let first = registry.get(id).and_then(|state| registry.states_of(state.name).next()).map_or(id, |(first, _)| first);
-    sound("place", registry, pos, first)
-}
-
-/// The sound `name` of the block `id`, which tells the client what the block is made of.
-pub(crate) fn sound(name: &str, registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
-    sound_at(name, registry, centre(pos), id)
-}
-
-/// [`sound`] from a point other than the block's centre.
-pub(crate) fn sound_at(name: &str, registry: &BlockRegistry, position: Vec3f, id: u32) -> Bytes {
-    noise(name, position, sapling_world::block_hash(registry, id) as i32)
-}
-
-/// The sound `name` at `position`, with what it says of itself in `extra_data` (-1: nothing).
-pub(crate) fn noise(name: &str, position: Vec3f, extra_data: i32) -> Bytes {
-    sapling_net::encode(&LevelSoundEvent {
-        sound_id: name.into(),
-        position,
-        extra_data,
-        entity_type: String::new(),
-        is_baby_mob: false,
-        is_global: false,
-        entity_unique_id: NO_ENTITY,
-        fire_at_position: None,
-    })
-}
-
 pub(crate) use crate::view::to_viewers;
 
 /// Makes `entity` what the block at `pos` holds and shows it to those who see the block.
@@ -145,7 +92,7 @@ pub(crate) fn keep_entity_quietly(world: &mut World, layer: Entity, pos: BlockPo
 /// outside the world's height and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(id) = write(world, layer, pos, id) else { return false };
-    if sections::held(world, layer, pos) {
+    if sections::log(world, layer, pos, 0, id) || sections::held(world, layer, pos) {
         return true;
     }
     let Some(packet) = world.get::<Layer>(layer).map(|level| update(level.world.registry(), pos, id, 0)) else { return false };
@@ -272,6 +219,10 @@ pub(crate) fn set_liquid(world: &mut World, layer: Entity, pos: BlockPos, id: u3
     if !level.world.in_height(y) || level.world.liquid(x, y, z) == id || !level.world.set_liquid(x, y, z, id) {
         return false;
     }
+    if sections::log(world, layer, pos, 1, id) {
+        return true;
+    }
+    let Some(level) = world.get::<Layer>(layer) else { return false };
     let packet = update(level.world.registry(), pos, id, 1);
     to_viewers(world, layer, pos, &[packet]);
     true

@@ -4,11 +4,11 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, ItemRegistry};
+use acacia_proto::packets::{AddItemEntity, ItemRegistry, MoveEntityDelta};
 use acacia_proto::types::Action as BlockAction;
 use common::asking::ask;
 use common::{Harness, all, block_actions, block_changes, click};
-use sapling_api::{Block, BlockDrop, CustomBlock, Item, PlayerId, StateValues};
+use sapling_api::{Block, BlockBox, BlockDrop, CustomBlock, Item, PlayerId, StateValues};
 
 const ALEX: PlayerId = PlayerId(1);
 const LAMP: &str = "shard_test:lamp";
@@ -57,4 +57,22 @@ fn a_custom_block_is_set_shown_placed_broken_and_dropped() {
     let broken: Vec<RawPacket> = (0..3).flat_map(|_| h.tick(1)).collect();
     assert_eq!(ask(&mut h, |ctx| ctx.block([1, 64, 0])).map(|block| block.name), Some("minecraft:air".to_owned()));
     assert!(all::<AddItemEntity>(&broken).iter().any(|drop| drop.item.network_id == item), "it drops itself");
+}
+
+#[test]
+fn an_item_lands_on_a_custom_block_s_own_collision_box() {
+    let step = CustomBlock::new("shard_test:step", "Step", Vec::new()).collision(Some(BlockBox::new([0.0; 3], [16.0, 8.0, 16.0])));
+    assert!(sapling_shard::register_custom_block(&step));
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        // A 3x3 of them: a drop's throw carries it sideways.
+        for (x, z) in (3..=5).flat_map(|x| (3..=5).map(move |z| (x, z))) {
+            assert!(ctx.set_block([x, 65, z], &Block::new("shard_test:step")));
+        }
+        assert!(ctx.drop_item(&Item::new("minecraft:dirt", 1), [4.5, 67.0, 4.5]));
+    });
+    let fell: Vec<RawPacket> = (0..40).flat_map(|_| h.tick(1)).collect();
+    let heights: Vec<f32> = all::<MoveEntityDelta>(&fell).iter().filter_map(|delta| delta.y).collect();
+    assert!(heights.last().is_some_and(|y| (65.5..65.8).contains(y)), "on the half-high box, not a full cube: {heights:?}");
 }

@@ -93,6 +93,21 @@ fn a_hopper_beside_a_brewing_stand_fills_its_empty_bottle_place_only() {
     assert_eq!(counts(&open(&mut h, 1, THERE).1)[0], 4);
 }
 
+#[test]
+fn a_stand_nobody_looks_into_starts_the_brew_a_hopper_brought_at_once() {
+    let mut h = setup(false, Vec::new(), vec![(HERE, Block::new("brewing_stand")), ([1, 66, 0], Block::new("hopper").with("facing_direction=0,toggle_bit=0"))]);
+    h.remote.run(|ctx| {
+        assert!(ctx.set_container_item(HERE, 1, Some(&Item::new("minecraft:potion", 1))) && ctx.set_container_item(HERE, 4, Some(&Item::new("minecraft:blaze_powder", 1))));
+        assert!(ctx.set_container_item([1, 66, 0], 0, Some(&Item::new("minecraft:nether_wart", 1))));
+    });
+    // A wait for the ticking sweep (every 100 ticks) would finish it past these 420.
+    ticks(&mut h, 420);
+    let (sent, got) = std::sync::mpsc::channel();
+    h.remote.run(move |ctx| sent.send(ctx.container_item(HERE, 1).map(|item| item.damage)).unwrap());
+    h.tick_all();
+    assert_eq!(got.recv().unwrap(), Some(4), "an awkward potion");
+}
+
 /// The `Items` an item carries in its tag, as (slot, count).
 fn held_items(item: &ItemV4) -> Vec<(i8, i8)> {
     let ItemV4Extra::Default(Some(extra)) = &item.extra else { return Vec::new() };

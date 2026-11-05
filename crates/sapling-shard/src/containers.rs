@@ -78,6 +78,10 @@ impl Kind {
         self.entity == HOPPER.entity
     }
 
+    pub fn is_brewing_stand(self) -> bool {
+        self.entity == STAND.entity
+    }
+
     /// Whether a hopper may put `item` into `slot`, `empty` or not, through the container's face
     /// `face` (BDS `canPushInItem`; docs/research/hoppers.md, "Container rules").
     pub fn takes_from_hopper(self, slot: usize, face: Face, empty: bool, item: &ItemStack) -> bool {
