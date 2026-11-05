@@ -99,6 +99,8 @@ impl Placing {
         for &index in cells {
             blocks::neighbours_changed(world, layer, self.cell(index));
         }
+        let loaded: Vec<BlockPos> = written.iter().map(|&(index, _)| self.cell(index)).collect();
+        blocks::settle_loaded(world, layer, &loaded);
     }
 
     /// Brings in the template's entities, where the load includes them.

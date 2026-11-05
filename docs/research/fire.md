@@ -66,7 +66,9 @@ falling behind (both runs were `LAGGED`) gave the ore fewer ticks than BDS's. Th
 for 1200 ticks twelve times, put out 4 to 8 (binomial). `bds_command_probe orepace` (three rounds of
 63 s at 1): BDS 7, 9 and 10 of 12, sapling at `TICK_SCALE` 1 4, 5 and 6 (`bds-orepace.txt`,
 `sapling-orepace.txt`). Pooled over firepace, ores and orepace BDS's lit ore lives some 1400 ticks at 1
-against sapling's 1800; that gap is two standard errors and was left. A fire aging must not count as a new fire, or it
+against sapling's 1800; that gap is two standard errors. Settled 2026-11-04 by the decompile: a
+cell's pace is 1638 to 2048 ticks by its chunk's height, 2048 in a flat drill chunk (growth.md, "The
+random tick's pace"); sapling now follows it, fire's spread with it. A fire aging must not count as a new fire, or it
 ticks again a step on: before that fix fire over stone went in 3.0 s at 4.
 
 What burns is told by tag and name with the Java game's numbers (`burns` in `blocks/fire.rs`).

@@ -214,7 +214,7 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
     let mut sources: Vec<(BlockPos, Part)> = circuit.sources.iter().map(|pos| (*pos, as_kept(pos, part(*pos)))).collect();
     let mut restrengthened = false;
     let shown = search::search(&sources, &mut part);
-    let (mut due, mut held) = (Vec::new(), false);
+    let (mut due, mut held, mut half_pulses) = (Vec::new(), false, false);
     for (pos, source) in &mut sources {
         if matches!(source, Part::Torch { .. } | Part::Repeater { .. } | Part::Comparator { .. }) && !ticks(*pos) {
             held = true;
@@ -256,9 +256,13 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
                 other => other,
             };
         }
+        // Only the second search, the users', takes a half pulse as lit (research/captures/bds-e3lamp.txt).
+        if let Part::Torch { support, .. } = *source && circuit.torches.get(pos).is_some_and(TorchState::is_half_pulse) {
+            (half_pulses, *source) = (true, Part::Torch { lit: true, support });
+        }
     }
-    let looks_again = !due.is_empty() || restrengthened || circuit.repeaters.values().any(RepeaterState::is_waiting);
-    let flipped = (!due.is_empty() || restrengthened).then(|| search::search(&sources, &mut part));
+    let looks_again = !due.is_empty() || restrengthened || half_pulses || circuit.repeaters.values().any(RepeaterState::is_waiting);
+    let flipped = (!due.is_empty() || restrengthened || half_pulses).then(|| search::search(&sources, &mut part));
     let used = flipped.as_ref().unwrap_or(&shown);
 
     let cells: HashSet<BlockPos> = shown.at.keys().chain(used.at.keys()).chain(circuit.power.keys()).chain(&fresh).copied().collect();

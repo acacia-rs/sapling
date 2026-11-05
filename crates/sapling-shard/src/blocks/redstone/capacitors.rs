@@ -26,6 +26,12 @@ impl TorchState {
         }
     }
 
+    /// Whether lamps, doors and the like take it as lit whatever its block: BDS's half pulse (R20), from
+    /// its first evaluation powering itself to the one after it went out for good.
+    pub(super) fn is_half_pulse(&self) -> bool {
+        self.looped && (1..=BURNOUT).contains(&self.count)
+    }
+
     /// Whether the torch at `pos` is lit after this evaluation, and whether it fizzes going out:
     /// `input` is the power into its block and the source of it.
     pub(super) fn next(&mut self, pos: BlockPos, lit: bool, input: Option<(u8, BlockPos)>, now: u64) -> (bool, bool) {

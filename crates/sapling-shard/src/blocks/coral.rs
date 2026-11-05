@@ -63,6 +63,22 @@ fn is_wet(level: &Level, pos: BlockPos) -> bool {
     holds_water(level, pos) || Face::ALL.into_iter().any(|face| holds_water(level, face.neighbour(pos)))
 }
 
+/// What a coral fan put by hand at `pos` becomes, the placer's feet in cell `feet`: dead where its cell
+/// holds no water, and `coral_fan_direction` 0 only where `atan2(dz, dx)` from the feet to it lies
+/// between 45 and 135 degrees; PocketMine's `CoralFan::place`, which all nine of BDS's hand-placed fans
+/// fit (research/captures/bds-g3fan.txt, bds-e3coral.txt). Anything else is `id` as it is.
+pub(super) fn placed(level: &Level, pos: BlockPos, id: u32, feet: BlockPos) -> u32 {
+    let registry = level.registry();
+    let Some(state) = registry.get(id).filter(|state| state.name.ends_with("_coral_fan")) else { return id };
+    let name = match is_live(state.name) && !holds_water(level, pos) {
+        true => format!("minecraft:dead_{}", &state.name["minecraft:".len()..]),
+        false => state.name.to_owned(),
+    };
+    let angle = ((pos[2] - feet[2]) as f32).atan2((pos[0] - feet[0]) as f32).to_degrees();
+    let direction = if angle > 45.0 && angle < 135.0 { 0 } else { 1 };
+    registry.find(&name, &format!("coral_fan_direction={direction}")).unwrap_or(id)
+}
+
 fn long_wait(world: &mut World) -> u64 {
     WAIT + u64::from(world.get_resource_or_insert_with(Dice::default).roll(WAIT_SPREAD))
 }

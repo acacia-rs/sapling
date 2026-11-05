@@ -19,6 +19,25 @@ every 57 ticks is one random tick a block every 1900 ticks for each unit of the 
 pace. So BDS grows wheat by the Java game's odds, and picks some 2.3 cells of a sixteen-cube a
 tick for each unit of `randomtickspeed`.
 
+## The random tick's pace
+
+Read 2026-11-04 from `LevelChunk::tickImpl` (0x1409f98a0; the 2.5 at 1409fbe49, the loop at
+1409fbfef). Each ticking chunk takes `n`, its highest section not air in both layers plus one, and
+makes `floor(2.5 n) * randomTickSpeed` picks a tick. A pick draws a global LCG (0x14caa09f0,
+`s = 3s + 0x3c6ef35f`, `r = |s >> 2|`): x = `r & 15`, z = `(r >> 8) & 15`, y = `(r >> 16) % 16n`
+up from the chunk's bottom, and ticks the block in both layers. The LCG is even over a long run
+(simulated). A cell's odds a tick are `floor(2.5 n) * rule / 4096 n`: one random tick every 2048
+ticks per unit at n = 1, 1638 at 2, 1755 at 3, 1653 at 23. The old flat 1800 was the 20% gap below:
+BDS's flat drill chunks are n = 1.
+
+`g3rate` (bds-g3rate.txt against sapling-g3rate.txt; 256 lit ores at y -60 in four chunks made
+n = 1, 2, 3 and 23 by a stone set high, three rounds of 12 s at 50, censored exponential fit) gave
+ticks per random tick at rule 1 of 2147, 1781, 1830 and 1719 on BDS and 1999, 1549, 1734 and 1613
+on sapling, against 2048, 1638, 1755 and 1653: each side two or three standard errors off the
+formula, in opposite directions, and both following its shape. Sapling (`blocks/growth/pace.rs`) gives
+each chunk its own odds from `World::filled_sections`; test
+`a_chunk_with_blocks_above_its_lowest_section_ticks_a_cell_a_quarter_more_often_as_on_bds`.
+
 ## The rest of what random ticks do
 
 Measured with `bds_command_probe grows` (`bds-grows.txt`, `sapling-grows.txt`), again at
@@ -81,7 +100,8 @@ against sapling-e3pace.txt, 28 blocks at 100 for a minute, means of those that g
 standard error of each other but for oxidized, cut at 60 s; the same odds, nothing changed. Lit
 redstone ore in the same run (200 cells) went out after 795 vs 815 ticks at rule 1 (124 vs 126 out in
 90 s), 75 vs 60 at 20 and 20.3 vs 16.7 at 100: sapling's random ticks some 20% quicker at the high rules,
-two to three standard errors; not chased (the random-tick queue's draw, `blocks/random_queue.rs`).
+two to three standard errors. Settled 2026-11-04: sapling ticked every chunk as BDS's tallest
+("The random tick's pace").
 
 ## Leaves
 

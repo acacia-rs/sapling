@@ -181,6 +181,11 @@ impl World {
         self.column(ChunkPos::of_block(x, z))?.top(x, z, |id| self.registry.get(id).is_some_and(|s| s.is_solid()))
     }
 
+    /// [`Column::filled_sections`] of the column at `pos`; 0 where it is not loaded.
+    pub fn filled_sections(&self, pos: ChunkPos) -> usize {
+        self.column(pos).map_or(0, Column::filled_sections)
+    }
+
     /// Sets a layer-0 block by runtime id; false when the column is not loaded or storage
     /// could not read it. Positions outside the dimension's height are ignored.
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, id: u32) -> bool {

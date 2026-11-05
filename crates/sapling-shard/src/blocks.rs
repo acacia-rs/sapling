@@ -119,6 +119,7 @@ use request::{Request, Site, site};
 pub(crate) use send::{batched, block_at, hold, keep_entity, noise, put_block, resolve, set, set_liquid, set_many, set_network_only, set_quietly, set_sectioned, show_held, show_states, show_whole, sound, to_viewers};
 pub(crate) use liquid::neighbours_changed;
 pub(crate) use updates::break_block;
+pub(crate) use updates::loaded::settle as settle_loaded;
 pub(crate) use crafter::{crafter_slot, dispatch_toggles as dispatch_crafter_toggles};
 pub(crate) use queued::tick as run_queued;
 pub(crate) use lectern::turn_pages as turn_lectern_pages;

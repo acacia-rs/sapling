@@ -185,6 +185,28 @@ fn a_torch_powering_itself_flips_15_times_and_stays_out_then_relights_and_fizzes
 }
 
 #[test]
+fn a_torch_clock_holds_its_lamps_lit_from_its_first_flip_till_8_ticks_after_its_last() {
+    // As research/captures/bds-e3lamp.txt: a torch on a stone's east side, dust from it round into the stone,
+    // a lamp over the torch and one under the dust; BDS's lamps take the flipping torch as lit (a half pulse).
+    let mut h = ready();
+    let torch = [-5, 65, -6];
+    let (over, under) = ([-5, 66, -6], [-4, 64, -5]);
+    let mut clock: Vec<([i32; 3], &str, &str)> = vec![([-6, 65, -6], "stone", ""), (over, "redstone_lamp", ""), (under, "redstone_lamp", "")];
+    clock.extend([[-4, 65, -6], [-4, 65, -5], [-4, 65, -4], [-5, 65, -4], [-6, 65, -4], [-6, 65, -5]].map(|pos| (pos, "redstone_wire", "")));
+    put(&mut h, &clock);
+    watch(&mut h, 4);
+    put(&mut h, &[(torch, "redstone_torch", "torch_facing_direction=west")]);
+    let ticks = watch(&mut h, 60);
+    let unlit = state("minecraft:unlit_redstone_torch", "torch_facing_direction=west");
+    let flips: Vec<usize> = ticks.iter().enumerate().filter(|(_, sent)| block_changes(sent).iter().any(|(pos, block)| *pos == torch && (*block == unlit || *block == state("minecraft:redstone_torch", "torch_facing_direction=west")))).map(|(tick, _)| tick).collect();
+    let (first, last) = (flips[1], *flips.last().expect("flips"));
+    for lamp in [over, under] {
+        assert_eq!(when(&ticks, lamp, hash("minecraft:lit_redstone_lamp")), Some(first), "{lamp:?} lit with the first flip: {flips:?}");
+        assert_eq!(when(&ticks, lamp, hash("minecraft:redstone_lamp")), Some(last + 8), "{lamp:?} out 8 ticks after the last flip");
+    }
+}
+
+#[test]
 fn a_circuit_a_stored_column_holds_works_once_the_column_is_loaded() {
     let dust_line = [([2, 64, 3], "minecraft:redstone_block"), ([3, 64, 3], "minecraft:redstone_wire"), ([4, 64, 3], "minecraft:redstone_lamp")];
     let storage = common::stored::floor_holding(Vec::new(), &dust_line);

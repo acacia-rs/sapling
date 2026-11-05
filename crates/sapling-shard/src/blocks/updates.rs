@@ -12,6 +12,7 @@ use super::falling::{self, Change};
 use super::growth::vines;
 use super::{doors, ground, level, liquid, loot, send, shapes, with_property};
 
+pub(super) mod loaded;
 pub(super) mod loosened;
 pub(super) mod unheld;
 

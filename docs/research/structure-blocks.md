@@ -66,7 +66,15 @@ How BDS keeps and uses structure blocks, and what sapling copies (`crates/saplin
   sapling writes them, 756 cells alike) BDS lets the loaded blocks react to their neighbours: what lacks
   support goes with its item (redstone torches, cocoa, activator rails, hanging signs), glow lichen and
   resin lose unheld faces, fences and walls join only what is there, the first write of a fence already
-  short of later cells. Sapling keeps the template's states (`structures/place.rs` wakes only liquids).
+  short of later cells. On BDS the breaking showed in the load's tick and the blocks went, with their
+  items, at the next, with the lichen's lost faces. Sapling (2026-11-05, `blocks/updates/loaded.rs`, test
+  `a_loaded_structure_s_blocks_react_to_what_is_around_them_as_on_bds`): fences and walls reshape to their
+  neighbours, glow lichen and resin keep only faces with something solid behind (none: it goes), and a
+  torch, activator rail or cocoa that `lacks_support` shows breaking and goes a tick later. BDS kept levers,
+  plain and golden rails, comparators, petals, leaf litter and big dripleaves that `lacks_support` would
+  refuse, so only those three pop. Re-drilled (sapling-e3turn.txt, last state of the 1108 loaded cells both
+  sides sent): 31 differed before, 9 after, all BDS taking out what sapling keeps: four hanging signs, three
+  small dripleaves and two ascending activator rails (rail_direction 2 and 5).
   A small dripleaf `/setblock` on stone broke a tick later on BDS (sapling kept it).
 
 - Placement and the editor by creative operators only, as for command blocks (a survival click and place were

@@ -169,6 +169,21 @@ fn a_sponge_reaches_seven_cells_along_a_channel() {
 }
 
 #[test]
+fn a_coral_fan_placed_dry_by_hand_is_dead_and_lies_by_where_it_is_from_the_placer() {
+    // research/captures/bds-g3fan.txt: south of the feet direction 0, anywhere else 1.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative));
+    h.tick(1);
+    for cell in [[0, 64, 2], [-2, 64, 0]] {
+        h.receive(1, &common::click(cell, 1, Some("minecraft:tube_coral_fan")));
+        h.tick(1);
+    }
+    let fans = names(&mut h, vec![[0, 65, 2], [-2, 65, 0]]);
+    assert_eq!(fans, ["minecraft:dead_tube_coral_fan[coral_fan_direction=0]", "minecraft:dead_tube_coral_fan[coral_fan_direction=1]"]);
+}
+
+#[test]
 fn budding_amethyst_grows_buds_into_clusters() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

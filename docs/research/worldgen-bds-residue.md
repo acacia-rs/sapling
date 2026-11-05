@@ -509,7 +509,9 @@ What was looked at and is not a port difference:
 - Vein spreads at a hashed direction: worse (worldgen-bds-caves.md, "Sculk").
 
 Left, deterministic and unported: 117 snow layers over short grass beside the snowy-plains igloo (snow keeps the
-plant in the second layer), grindstone, skull, shelf and end rod support by state.
+plant in the second layer), grindstone, skull, shelf and end rod support by state. Both gone by 2026-11-05:
+support by state in c2d1b050 (`block/support.rs`), and `tools/replay-all.sh g3 c-ig c-is` gives both igloo
+regions wrong 0 missing 0.
 
 ## Tools added
 - `examples/city_sculk` (city cells by who turned them to sculk, vein counts), `examples/template_states` (v2
