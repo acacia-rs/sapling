@@ -541,7 +541,9 @@ Captures research/captures/bds-<scene>.txt against sapling-<scene>.txt.
 - A repeater's click plays nothing; a comparator's plays `power.off` going to subtract and `power.on`
   back, naming the state before (`blocks/doors.rs`). Fixed.
 - An inverted daylight detector gives 15 less the light without the sun's angle, and a new detector
-  reads at the next tick (`blocks/daylight.rs`). Not drilled on sapling: its drill world is roofed.
+  reads at the next tick (`blocks/daylight.rs`). Drilled on sapling 2026-11-05 in the open world
+  (`SAPLING_DRILL_WORLD=open`, sapling-rsplace.txt): placed by hand it read 15 a tick later, and 0
+  inside out, as BDS's.
 - A comparator set by `/setblock` over one of its own block type (`powered_comparator` over
   `powered_comparator`, whatever the mode) keeps its output until an input changes; over the other type,
   or after air, it is evaluated (bds-e8cmpset.txt; glass above does not wake it). Fixed
