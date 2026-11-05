@@ -187,6 +187,11 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   villager or golem, 141ba6be0) and, when that is a player, swaps it for the nearest player at -15 or
   lower (0x142a30c80, no distance limit); why that took nobody here is not known. Sapling's golem takes
   a player at -15 by standing alone, so it would turn on the baby's hitter: left open.
+  `ab3golem` (2026-11-05, bds-ab3golem.txt, sapling-ab3golem.txt): the same ten hits with the golem
+  left free (no slowness). BDS's golem took slimes that spawned about the floor as targets, then none
+  through and after the hits; so its slowness was not what kept it off. Past the player swap the goal
+  filters and calls canAttack (14903c720) with a must_reach path test (14903f1c0); not traced. Sapling's
+  golem took no target either, so the two agree on this scene.
 - Prices take no standing: `economy_trade_table` reads only the cured, nearby-cured and hero discounts
   [BDS definition 141ba86e0].
 

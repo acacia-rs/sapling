@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, MoveEntityDelta};
+use acacia_proto::packets::{AddEntity, MobEquipment, MoveEntityDelta};
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain};
 use common::raising::plain_in;
 use common::{Harness, all};
@@ -47,4 +47,29 @@ fn a_mob_named_as_it_is_summoned_is_announced_with_its_name() {
     });
     let added = all::<AddEntity>(&sent).into_iter().find(|added| added.runtime_id == zombie.0).expect("announced");
     assert_eq!(plain_in(&added.metadata, Key::Nametag), Some(Plain::String("Rider".into())));
+}
+
+/// BDS showed each armed kind's hand right after its summon, its pack's equipment table rolled
+/// (research/captures/bds-y3gear.txt); the zombie and the husk held nothing.
+#[test]
+fn armed_kinds_are_shown_holding_their_equipment_tables_weapon_as_they_are_summoned() {
+    let kinds = [
+        ("skeleton", Some("minecraft:bow")),
+        ("stray", Some("minecraft:bow")),
+        ("bogged", Some("minecraft:bow")),
+        ("wither_skeleton", Some("minecraft:stone_sword")),
+        ("piglin_brute", Some("minecraft:golden_axe")),
+        ("pillager", Some("minecraft:crossbow")),
+        ("vindicator", Some("minecraft:iron_axe")),
+        ("zombie", None),
+        ("husk", None),
+    ];
+    for (kind, weapon) in kinds {
+        let (mob, sent) = made(move |ctx| ctx.summon_as(None, &format!("minecraft:{kind}"), [2.5, 65.0, 2.5], 0.0, 0.0, None));
+        let held: Vec<_> = all::<MobEquipment>(&sent).into_iter().filter(|held| held.runtime_entity_id == mob.0).map(|held| sapling_data::item_name(held.item.network_id.into())).collect();
+        assert_eq!(held, weapon.map(Some).into_iter().collect::<Vec<_>>(), "{kind}");
+    }
+    let (pigman, sent) = made(|ctx| ctx.summon_as(None, "minecraft:zombie_pigman", [2.5, 65.0, 2.5], 0.0, 0.0, None));
+    let held = all::<MobEquipment>(&sent).into_iter().find(|held| held.runtime_entity_id == pigman.0).and_then(|held| sapling_data::item_name(held.item.network_id.into()));
+    assert!(matches!(held, Some("minecraft:golden_sword" | "minecraft:golden_spear")), "{held:?}");
 }

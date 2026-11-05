@@ -59,6 +59,7 @@ mod shown;
 mod skeleton_traps;
 mod slimes;
 mod smash;
+mod spawn_gear;
 mod snow_golems;
 mod spells;
 mod splashes;

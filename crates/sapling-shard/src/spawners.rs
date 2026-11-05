@@ -75,14 +75,15 @@ fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
     (0..3).map(|axis| (a[axis] - b[axis]).powi(2)).sum::<f32>().sqrt()
 }
 
-/// Whether no block with collision but glass, nor the cells `from` and `to` are in, lies between them
-/// (BDS saw through glass, not stone: docs/research/spawners.md "Unverified").
+/// Whether no block with collision but glass, panes and bars (the Java game's empty visual shapes),
+/// nor the cells `from` and `to` are in, lies between them (BDS saw through those, not stone or
+/// leaves: docs/research/spawners.md "Unverified").
 fn in_sight(world: &World, layer: Entity, from: [f32; 3], to: [f32; 3]) -> bool {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
     let ends = [from, to].map(|end| end.map(|c| c.floor() as i32));
     let steps = (distance(from, to) * SIGHT_STEPS).ceil().max(1.0) as usize;
     (0..=steps).map(|step| std::array::from_fn::<i32, 3, _>(|axis| (from[axis] + (to[axis] - from[axis]) * step as f32 / steps as f32).floor() as i32)).filter(|cell| !ends.contains(cell)).all(|[x, y, z]| {
-        !level.in_height(y) || level.registry().get(level.block(x, y, z)).is_none_or(|state| !state.is_solid() || state.name.ends_with("glass"))
+        !level.in_height(y) || level.registry().get(level.block(x, y, z)).is_none_or(|state| !state.is_solid() || ["glass", "glass_pane", "_bars"].iter().any(|end| state.name.ends_with(end)))
     })
 }
 

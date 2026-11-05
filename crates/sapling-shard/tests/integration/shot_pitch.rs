@@ -22,8 +22,14 @@ fn a_skeletons_arrow_is_told_pitching_down_as_it_flies() {
         assert!(ctx.spawn_entity("minecraft:skeleton", [0.5, 74.0, 6.5]).is_some());
     });
     let sent: Vec<RawPacket> = (0..240).flat_map(|_| h.tick_all().to(2).to_vec()).collect();
-    let arrow = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:arrow").expect("an arrow");
-    let pitches: Vec<i8> = all::<MoveEntityDelta>(&sent).iter().filter(|moved| moved.runtime_entity_id == arrow.runtime_id).filter_map(|moved| moved.rot_x).map(|byte| byte as i8).collect();
-    assert!(pitches.len() >= 2, "announced at {}, then {pitches:?}", arrow.pitch);
-    assert!(pitches.windows(2).all(|pair| pair[1] < pair[0]) && (pitches[0] as f32) * 1.40625 < arrow.pitch, "announced at {}, then {pitches:?}", arrow.pitch);
+    // Every arrow told turning at least twice; one that met something at once is never turned.
+    let arrows = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:arrow");
+    let turned: Vec<(f32, Vec<i8>)> = arrows
+        .map(|arrow| (arrow.pitch, all::<MoveEntityDelta>(&sent).iter().filter(|moved| moved.runtime_entity_id == arrow.runtime_id).filter_map(|moved| moved.rot_x).map(|byte| byte as i8).collect::<Vec<_>>()))
+        .filter(|(_, pitches)| pitches.len() >= 2)
+        .collect();
+    assert!(!turned.is_empty(), "no arrow was told turning twice");
+    for (announced, pitches) in turned {
+        assert!(pitches.windows(2).all(|pair| pair[1] < pair[0]) && (pitches[0] as f32) * 1.40625 < announced, "announced at {announced}, then {pitches:?}");
+    }
 }

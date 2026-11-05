@@ -147,6 +147,11 @@ stream, which fits head 1 alone counting its own idle looks, 10 to 19 ticks apar
 a mean 2.41 over its feet (median 2.11, sd 1.15): the aim is half the eye height over its eyes (1.62 +
 0.81 = 2.43), a mob's half its height x 0.85. Sapling: `creatures/wither/heads.rs`, tests in
 wither_heads.rs. Left: BDS's skulls spread about that aim at random, sapling's fly straight.
+Ported 2026-11-05 (thirteenth3ab): both skulls' pack `minecraft:projectile` gives `uncertainty_base`
+7.5 and `uncertainty_multiplier` 1, so each part of the one-long aim is off by a normal throw of 0.0075 x
+(7.5 less 1 a difficulty level), as mobs' arrows (`creatures/arrows.rs` `spread`; ProjectileComponent::shoot
+1424020c0); `wither/skulls.rs`. Test `skulls_are_aimed_half_the_eye_height_over_a_players_eyes_and_spread_about_it`
+(was one skull within 0.05 of 2.43, which the capture's sd 1.15 rules out). Not re-drilled.
 Its 200-tick death is built as BDS's in `witherdeath` (research/captures/bds-witherdeath.txt,
 creatures/wither/dying.rs): `WitherInvulnerableTicks` 199 down to 1; `WitherAerialAttack` (a Short)
 flips at 15 ticks and then whenever the last gap less one divides the tick (28, 39, 48, 55, 60, 63,

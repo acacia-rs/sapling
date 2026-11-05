@@ -19,7 +19,7 @@ const SHOWN: &[&str] = &[
     "AddEntity", "RemoveEntity", "MoveEntityDelta", "SetEntityMotion", "SetEntityData", "EntityEvent", "LevelSoundEvent", "LevelEvent", "MobEquipment", "MobArmorEquipment", "CommandOutput", "MoveEntityAbsolute", "MovePlayer",
 ];
 
-const TRIAL_SHOWN: &[&str] = &["AddEntity", "RemoveEntity", "AddItemEntity", "UpdateBlock", "BlockEntityData", "LevelEvent", "LevelSoundEvent", "SetEntityData", "CommandOutput", "MovePlayer"];
+pub(crate) const TRIAL_SHOWN: &[&str] =&["AddEntity", "RemoveEntity", "AddItemEntity", "UpdateBlock", "BlockEntityData", "LevelEvent", "LevelSoundEvent", "SetEntityData", "CommandOutput", "MovePlayer"];
 
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
@@ -116,8 +116,8 @@ fn dragon() -> Vec<String> {
 }
 
 /// Trial spawners stop with `doMobSpawning` off, on BDS as in sapling (spawners/trial.rs).
-const TRIAL_START: [&str; 6] = ["kill @e[type=!player]", "gamerule domobspawning true", "difficulty easy", "time set noon", "effect @s resistance 600 255 true", "clear @s"];
-const TRIAL_END: [&str; 5] = ["gamemode creative @s", "kill @e[type=!player]", "gamerule domobspawning false", "effect @s clear", "tp @s 0.5 -26 0.5"];
+pub(crate) const TRIAL_START: [&str; 6] =["kill @e[type=!player]", "gamerule domobspawning true", "difficulty easy", "time set noon", "effect @s resistance 600 255 true", "clear @s"];
+pub(crate) const TRIAL_END: [&str; 5] =["gamemode creative @s", "kill @e[type=!player]", "gamerule domobspawning false", "effect @s clear", "tp @s 0.5 -26 0.5"];
 
 /// A trial spawner with a zombie at `[x, y, z]`, its egg used from a barrier 4 west.
 fn spawner(lines: &mut Vec<String>, [x, y, z]: [i32; 3], ominous: bool) {
@@ -129,7 +129,7 @@ fn spawner(lines: &mut Vec<String>, [x, y, z]: [i32; 3], ominous: bool) {
 }
 
 /// [`spawner`] at (`x`, `y`, 0) with `more` set round it, then the actor survival at `stand` for 8 s.
-fn trial_site(lines: &mut Vec<String>, x: i32, y: i32, more: &[&str], stand: &str) {
+pub(crate) fn trial_site(lines: &mut Vec<String>, x: i32, y: i32, more: &[&str], stand: &str) {
     spawner(lines, [x, y, 0], false);
     lines.extend(more.iter().map(|line| line.to_string()));
     lines.extend([format!("tp @s {stand}"), "gamemode survival @s".to_owned()]);

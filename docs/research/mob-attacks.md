@@ -318,6 +318,13 @@ Where they fall (2026-11-05, thirteenth3y, bds-strolls.txt): a walk opens with s
 of 50 to 180 degrees (pigs and sheep sometimes at small ones); it ends slowing to 0.022 a tick and
 creeping to its cell's edge. So BDS stops to turn at a sharp corner where sapling turns as it walks;
 not followed.
+Decompiled (2026-11-05, thirteenth3ab): `MoveControl::tick` (1430b8ba0, vtable 14a7f2b00 slot 2) stops
+a walker under 0.1 squared off its wanted place and 0.25 below it. `calculateMoveSpeed` (1430b8050) adds
+a tenth of the wanted speed a tick; within 1 squared of the path's last node (`shouldSlowSpeed`
+1430b90d0) the wanted speed is `max(speed x d^2, speed / 2)`, the ends' 0.086 to 0.022 (stride goes
+with speed squared). Ported: `LAST_SLOWEST` in `creatures/strolling.rs`; test
+`a_strolling_cow_slows_to_half_its_speed_on_its_last_block`. The corner pauses are not in MoveControl:
+the mid-walk turns of 21 of 256 keep their speed, so they come from the path follower; not found.
 
 ## Fleeing (`flee`)
 
@@ -422,11 +429,24 @@ By night on the stone floor, the survival actor held in place:
   `a_zombie_28_off_takes_its_prey_at_each_look_and_lets_it_go_a_tick_later`.
 - A held zombie with the actor stepping round it turned its head 21 of 256 a tick (30 degrees, the
   Java game's look-at speed) and its body after, lagging 5 to 10 ticks; sapling turns both 60 a tick.
-  Not followed (`legs.rs` ties head to body).
+  Decompiled (thirteenth3ab): `calculateYRotation` (1430b8350) turns by `movement.basic`'s
+  `max_turn` (30 for every walker in the pack, the wither 180), raised to `max_turn x target / speed`
+  up to twice it while the speed is still coming up; so 30 from a stand, then 60 (bds-slain.txt 235,
+  150, 127; "Walking" above). Ported in `creatures/legs.rs` (`TURN`); test
+  `a_zombie_turns_to_a_survival_player_walks_up_and_hits_it_once_a_second`, changed from 214, 171, 128.
+  The head's own lag behind the body is not followed (`legs.rs` ties head to body).
 - A spider at midnight took no target in 4 s, so whether one keeps its prey by day was not seen.
 - `y3gear` (bds-y3gear.txt): BDS sends `MobEquipment` for the skeleton, stray, bogged, wither
   skeleton, zombified piglin, piglin, brute, pillager, vindicator, drowned and vex as each is
-  summoned; none for the zombie, husk or evoker.
+  summoned; none for the zombie, husk or evoker. Sapling sent none but the piglin's (twice) and the
+  vex's (sapling-y3gear.txt; its drowned came unarmed, by `drowned.rs`'s odds): the pack's `minecraft:equipment` tables (skeleton_gear,
+  wither_skeleton_gear, zombie_pigman_gear, piglin_brute_gear, pillager_gear, vindicator_gear) were
+  rolled only for riders. Fixed: `creatures/spawn_gear.rs` rolls them at every birth; test
+  `armed_kinds_are_shown_holding_their_equipment_tables_weapon_as_they_are_summoned`. Left (TODO
+  there): armour pools under `random_difficulty_chance`, `enchant_random_gear`, and dropping the gear.
+  Re-drilled (sapling-y3gear.txt): each kind now shows BDS's item ids; still different, the piglin
+  (BDS: a crossbow, its `spawn_adult` picks the ranged or melee unit at even odds) showed nothing, as
+  sapling arms no summoned piglin; its drowned came unarmed again (odds).
 
 ## Not drilled
 

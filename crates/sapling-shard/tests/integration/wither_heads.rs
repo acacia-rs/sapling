@@ -38,17 +38,26 @@ fn with_nobody_to_shoot_one_side_head_shoots_a_blue_skull_on_its_17th_idle_look(
 }
 
 #[test]
-fn a_skull_is_aimed_half_the_eye_height_over_a_players_eyes() {
-    // BDS: 38 skulls passed the standing actor 2.41 over its feet on average (1.62 x 1.5 = 2.43).
+fn skulls_are_aimed_half_the_eye_height_over_a_players_eyes_and_spread_about_it() {
+    // BDS: 38 skulls passed the standing actor 2.41 over its feet on average (1.62 x 1.5 = 2.43),
+    // spread with sd 1.15 (the pack's uncertainty 7.5 less 1 a level); one skull is not the mean.
     let mut h = summoned(GameMode::Survival);
-    let (shot, feet) = (0..200)
-        .find_map(|_| {
-            let feet = ask(&mut h, |ctx| ctx.position(ALEX).unwrap().feet);
-            all::<AddEntity>(h.tick_all().to(1)).into_iter().find(|added| added.entity_type == "minecraft:wither_skull").map(|added| (added, feet))
-        })
-        .expect("a skull");
-    let ([px, py, pz], [vx, vy, vz]) = ([shot.position.x, shot.position.y, shot.position.z], [shot.velocity.x, shot.velocity.y, shot.velocity.z]);
-    let along = ((feet[0] - px) * vx + (feet[2] - pz) * vz) / (vx * vx + vz * vz);
-    let over = py + vy * along - feet[1];
-    assert!((over - 2.43).abs() < 0.05, "{over}");
+    let mut overs = Vec::new();
+    for _ in 0..3000 {
+        let feet = ask(&mut h, |ctx| ctx.position(ALEX).unwrap().feet);
+        for shot in all::<AddEntity>(h.tick_all().to(1)).into_iter().filter(|added| added.entity_type == "minecraft:wither_skull") {
+            let ([px, py, pz], [vx, vy, vz]) = ([shot.position.x, shot.position.y, shot.position.z], [shot.velocity.x, shot.velocity.y, shot.velocity.z]);
+            let along = ((feet[0] - px) * vx + (feet[2] - pz) * vz) / (vx * vx + vz * vz);
+            overs.push(py + vy * along - feet[1]);
+        }
+        if overs.len() >= 80 {
+            break;
+        }
+    }
+    assert!(overs.len() >= 80, "{overs:?}");
+    let mean = overs.iter().sum::<f32>() / overs.len() as f32;
+    let sd = (overs.iter().map(|over| (over - mean).powi(2)).sum::<f32>() / overs.len() as f32).sqrt();
+    // Within 2.5 standard errors of an sd up to 1.5.
+    assert!((mean - 2.43).abs() < 0.42, "mean {mean} of {overs:?}");
+    assert!((0.15..2.0).contains(&sd), "sd {sd} of {overs:?}");
 }

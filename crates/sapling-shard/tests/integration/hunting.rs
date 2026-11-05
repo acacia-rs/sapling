@@ -65,7 +65,8 @@ fn a_zombie_turns_to_a_survival_player_walks_up_and_hits_it_once_a_second() {
     assert_eq!((targets(&sent), health(&sent)), (vec![1], vec![17.5]), "3 is 2.5 on easy");
     assert_eq!(sounds(&sent), [("mob.warning".to_owned(), 65.0 + 0.85 * 1.9)]);
     let turns: Vec<u8> = all::<MoveEntityDelta>(&sent).into_iter().filter_map(|moved| moved.rot_y).collect();
-    assert_eq!(turns[..3], [214, 171, 128], "round to the south");
+    // bds-slain.txt: 30 degrees from a stand, then 60 while its legs come up to speed (235, 150, 127).
+    assert_eq!(turns[..4], [235, 192, 150, 127], "round to the south");
     let events: Vec<_> = all::<EntityEvent>(&sent).into_iter().map(|event| (event.runtime_entity_id, event.event_id, event.data)).collect();
     assert_eq!(events, [(zombie, EntityEventEventId::ArmSwing, 0), (1, EntityEventEventId::HurtAnimation, 2)]);
     let thrown: Vec<_> = all::<SetEntityMotion>(&sent).into_iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| (motion.velocity.x, motion.velocity.y, motion.velocity.z)).collect();
