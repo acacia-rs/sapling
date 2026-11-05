@@ -65,6 +65,7 @@ fn describe(event: BotEvent) -> Option<String> {
         Text::ID => match raw.decode::<Text>().expect("decodes").content {
             TextContent::Announcement(said) => format!("said {}", said.message),
             TextContent::JsonWhisper(json) => format!("json {}", json.message.trim_end()),
+            TextContent::Json(json) => format!("echo {}", json.message.trim_end()),
             TextContent::Raw(raw) => format!("raw {}", raw.message),
             _ => return None,
         },
@@ -177,8 +178,8 @@ async fn a_client_downloads_the_packs_and_an_operator_runs_functions() {
 
     let queued = run(&mut alice, "schedule delay add probe/later 10").await;
     assert!(queued[0].starts_with(r#"answer commands.schedule.delay.functionQueued ["probe/later", "10", "#), "{queued:?}");
-    let ran = until(&mut alice, |line| line.starts_with("json")).await;
-    let echo = r#"json {"rawtext":[{"text":"§7§o["},{"translate":"commands.origin.server"},{"text":": "},{"translate":"commands.schedule.functionRan","with":{"rawtext":[{"text":"1"},{"text":"probe/later"}]}},{"text":"]"}]}"#;
+    let ran = until(&mut alice, |line| line.starts_with("echo")).await;
+    let echo = r#"echo {"rawtext":[{"text":"§7§o["},{"translate":"commands.origin.server"},{"text":": "},{"translate":"commands.schedule.functionRan","with":{"rawtext":[{"text":"1"},{"text":"probe/later"}]}},{"text":"]"}]}"#;
     assert_eq!(ran, ["said [Server] later", echo]);
     assert_eq!(run(&mut alice, "schedule delay clear probe/later").await, [r#"answer commands.schedule.clear.failure ["probe/later"] 0"#]);
 

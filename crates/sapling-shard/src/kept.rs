@@ -85,6 +85,11 @@ impl TickingBackend for Ctx<'_> {
         areas_of(self.world, worlds::current(self.world))
     }
 
+    fn ticking_areas_everywhere(&self) -> Vec<(i32, TickingArea)> {
+        let Some(home) = self.world.get::<Layer>(dimensions::home(self.world, worlds::current(self.world))) else { return Vec::new() };
+        home.world.level().ticking_areas.iter().map(|record| (record.dimension, area(record))).collect()
+    }
+
     fn add_ticking_area(&mut self, area: TickingArea) -> bool {
         let (layer, tick) = (worlds::current(self.world), self.world.resource::<Tick>().0);
         let Some((mut home, dimension)) = records(self.world, layer) else { return false };

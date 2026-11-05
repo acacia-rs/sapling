@@ -37,7 +37,7 @@ pub(crate) use forge::{Bargain, Bench, CARTOGRAPHY_INPUT, Chart, Forged, enchant
 pub(crate) use equipment::{announce, in_hand, open_own, screens, select, show_hand, spawn_packets};
 pub(crate) use give::{give_and_pop, leave_in_hand, swap_held, swap_held_for, use_up_held};
 pub(crate) use picking::dispatch as dispatch_picks;
-pub(crate) use plugin::{described, item_at, set_item, stored};
+pub(crate) use plugin::{described, hand_allows, item_at, set_item, stored};
 pub(crate) use recipe_book::{RecipeBook, send_book, unlock as unlock_recipes};
 pub(crate) use requests::dispatch;
 pub(crate) use store::{keep_here, load, save, save_all, save_changed, send_own};

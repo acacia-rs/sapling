@@ -27,7 +27,7 @@ fn an_arrow_resting_on_a_wooden_button_holds_it_in_and_a_stone_one_stays_out() {
             assert!(ctx.update_block(pos, &Block::new(name).with("button_pressed_bit=0,facing_direction=1")));
         }
         for x in [2.5, 5.5] {
-            assert!(ctx.summon_as(None, "minecraft:arrow", [x, 68.0, 0.5], 0.0, None).is_some());
+            assert!(ctx.summon_as(None, "minecraft:arrow", [x, 68.0, 0.5], 0.0, 0.0, None).is_some());
         }
     });
     ticks(&mut h, 40);

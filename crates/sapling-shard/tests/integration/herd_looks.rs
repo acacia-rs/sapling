@@ -26,7 +26,7 @@ fn summon_events_set_the_looks_bds_showed() {
     let summons = [("minecraft:horse", "minecraft:make_black"), ("minecraft:tropicalfish", "minecraft:become_red_snapper"), ("minecraft:tropicalfish", "minecraft:become_dog_fish")];
     h.remote.run(move |ctx| {
         for (n, (kind, event)) in summons.into_iter().enumerate() {
-            assert!(ctx.summon_as(None, kind, [n as f32 * 3.0 + 2.5, 65.0, 4.5], 0.0, Some(event)).is_some(), "{kind}");
+            assert!(ctx.summon_as(None, kind, [n as f32 * 3.0 + 2.5, 65.0, 4.5], 0.0, 0.0, Some(event)).is_some(), "{kind}");
         }
     });
     let sent: Vec<_> = (0..5).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
@@ -60,7 +60,7 @@ fn rider_events_make_their_riders_and_mounts() {
     let summons = [("minecraft:zombie_horse", "minecraft:spawn_adult_with_rider"), ("minecraft:camel_husk", "minecraft:spawn_with_rider"), ("minecraft:drowned", "minecraft:as_rider")];
     h.remote.run(move |ctx| {
         for (n, (kind, event)) in summons.into_iter().enumerate() {
-            assert!(ctx.summon_as(None, kind, [n as f32 * 4.0 + 2.5, 65.0, 4.5], 0.0, Some(event)).is_some(), "{kind}");
+            assert!(ctx.summon_as(None, kind, [n as f32 * 4.0 + 2.5, 65.0, 4.5], 0.0, 0.0, Some(event)).is_some(), "{kind}");
         }
     });
     let sent: Vec<_> = (0..5).flat_map(|_| h.tick_all().to(1).to_vec()).collect();

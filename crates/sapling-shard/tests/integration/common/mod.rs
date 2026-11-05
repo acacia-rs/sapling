@@ -79,11 +79,13 @@ pub struct Harness {
     log: Log,
 }
 
-/// A void world with a 16x16 stone platform at y 64 around the origin.
+/// A void world with a 16x16 stone platform at y 64 around the origin, whose dead rise at its
+/// spawn itself (`spawnRadius` 0).
 pub fn platform() -> World {
     let mut level = World::void();
     let stone = level.block_id("minecraft:stone").unwrap();
     level.fill([-8, 64, -8], [7, 64, 7], stone);
+    level.level_mut().rules.set("spawnRadius", sapling_data::RuleValue::Int(0));
     level
 }
 

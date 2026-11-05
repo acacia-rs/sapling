@@ -1,7 +1,7 @@
 //! `/camera` and `/camerashake`, answered and sent as BDS 1.26.52 does
-//! (research/captures/bds-screen.txt).
-// TODO: the other `/camera` forms (attach_to_entity, spline, target_entity, view and entity
-// offsets) are not built.
+//! (research/captures/bds-screen.txt); the other forms are forms.rs.
+
+mod forms;
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selected, Selector};
 use sapling_api::{Camera as Set, Command, CommandEnum, Output, Permission, Player, ScreenAction, Sender, ShardCtx};
@@ -24,12 +24,24 @@ enum Facing {
     Entity(Selector),
 }
 
+struct Setting {
+    preset: String,
+    ease: Option<(u8, f32)>,
+    position: Option<Coords>,
+    rotation: Option<[f32; 2]>,
+    facing: Option<Facing>,
+    default: bool,
+    view_offset: Option<[f32; 2]>,
+    entity_offset: Option<[f32; 3]>,
+}
+
 enum Action {
-    Set { preset: String, ease: Option<(u8, f32)>, position: Option<Coords>, rotation: Option<[f32; 2]>, facing: Option<Facing>, default: bool },
+    Set(Setting),
     Clear,
     Fade { times: Option<[f32; 3]>, colour: Option<[f32; 3]> },
     FovSet { degrees: f32, ease: Option<(u8, f32)> },
     FovClear,
+    Other(forms::Form),
 }
 
 pub(crate) struct Camera {
@@ -46,22 +58,23 @@ fn ease(args: &mut Args<'_>) -> Result<(u8, f32), ParseError> {
 }
 
 fn set(args: &mut Args<'_>) -> Result<Action, ParseError> {
-    let preset = args.word()?.to_owned();
-    let (mut ease_with, mut position, mut rotation, mut facing, mut default) = (None, None, None, None, false);
+    let mut set = Setting { preset: args.word()?.to_owned(), ease: None, position: None, rotation: None, facing: None, default: false, view_offset: None, entity_offset: None };
     while let Some(word) = args.peek().map(str::to_ascii_lowercase) {
         let mark = args.mark();
         args.word()?;
         match word.as_str() {
-            "ease" => ease_with = Some(ease(args)?),
-            "pos" => position = Some(Coords::parse(args)?),
-            "rot" => rotation = Some([f32::parse(args)?, f32::parse(args)?]),
-            "facing" if args.peek().is_some_and(|next| next.starts_with('@') || !next.starts_with(['~', '^', '-', '.']) && next.parse::<f32>().is_err()) => facing = Some(Facing::Entity(Selector::parse(args)?)),
-            "facing" => facing = Some(Facing::At(Coords::parse(args)?)),
-            "default" => default = true,
+            "ease" => set.ease = Some(ease(args)?),
+            "pos" => set.position = Some(Coords::parse(args)?),
+            "rot" => set.rotation = Some([f32::parse(args)?, f32::parse(args)?]),
+            "facing" if args.peek().is_some_and(|next| next.starts_with('@') || !next.starts_with(['~', '^', '-', '.']) && next.parse::<f32>().is_err()) => set.facing = Some(Facing::Entity(Selector::parse(args)?)),
+            "facing" => set.facing = Some(Facing::At(Coords::parse(args)?)),
+            "default" => set.default = true,
+            "view_offset" => set.view_offset = Some([f32::parse(args)?, f32::parse(args)?]),
+            "entity_offset" => set.entity_offset = Some([f32::parse(args)?, f32::parse(args)?, f32::parse(args)?]),
             _ => return Err(args.error_at(mark)),
         }
     }
-    Ok(Action::Set { preset, ease: ease_with, position, rotation, facing, default })
+    Ok(Action::Set(set))
 }
 
 fn fade(args: &mut Args<'_>) -> Result<Action, ParseError> {
@@ -91,7 +104,8 @@ impl CommandSyntax for Camera {
     fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
         let players = Selector::parse(args)?;
         let mark = args.mark();
-        let action = match args.word()?.to_ascii_lowercase().as_str() {
+        let word = args.word()?.to_ascii_lowercase();
+        let action = match word.as_str() {
             "set" => set(args)?,
             "clear" => Action::Clear,
             "fade" => fade(args)?,
@@ -101,7 +115,7 @@ impl CommandSyntax for Camera {
                 Action::FovSet { degrees, ease }
             }
             "fov_clear" => Action::FovClear,
-            _ => return Err(args.error_at(mark)),
+            other => Action::Other(forms::parse(other, args)?.ok_or_else(|| args.error_at(mark))?),
         };
         args.finish()?;
         Ok(Self { players, action })
@@ -125,20 +139,35 @@ impl Command for Camera {
             return no_target(out);
         }
         let action = match self.action {
-            Action::Set { preset, ease, position, rotation, facing, default } => {
-                let Some(preset) = PRESETS.iter().position(|known| *known == preset) else { return out.translate("commands.camera.unknown.preset", Vec::new(), false) };
-                if rotation.is_some_and(|[pitch, _]| !(-90.0..=90.0).contains(&pitch)) {
+            Action::Set(set) => {
+                let Some(preset) = PRESETS.iter().position(|known| *known == set.preset).map(|preset| preset as u32) else { return out.translate("commands.camera.unknown.preset", Vec::new(), false) };
+                let eased = set.ease.is_some_and(|(_, seconds)| seconds > 0.0);
+                if let Some(refused) = forms::refused_set(preset, eased, None, None) {
+                    return out.translate(refused, Vec::new(), false);
+                }
+                if set.rotation.is_some_and(|[pitch, _]| !(-90.0..=90.0).contains(&pitch)) {
                     return out.translate("commands.camera.invalid.pitch", Vec::new(), false);
                 }
-                let facing = match facing {
+                if let Some(refused) = forms::refused_set(preset, false, set.view_offset, set.entity_offset) {
+                    return out.translate(refused, Vec::new(), false);
+                }
+                let facing = match set.facing {
                     Some(Facing::At(coords)) => Some(coords.resolve(ctx, sender)),
                     Some(Facing::Entity(selector)) => middle(ctx, sender, &selector),
                     None => None,
                 };
-                let position = position.map(|coords| coords.resolve(ctx, sender));
-                Some(ScreenAction::Camera(Set { preset: preset as u32, ease, position, rotation, facing, default }))
+                let position = set.position.map(|coords| coords.resolve(ctx, sender));
+                forms::remember(ctx, &found, Some(preset));
+                Some(ScreenAction::Camera(Set { preset, ease: set.ease, position, rotation: set.rotation, facing, default: set.default, view_offset: set.view_offset, entity_offset: set.entity_offset }))
             }
-            Action::Clear => Some(ScreenAction::ClearCamera),
+            Action::Clear => {
+                forms::remember(ctx, &found, None);
+                Some(ScreenAction::ClearCamera)
+            }
+            Action::Other(form) => match forms::action(ctx, sender, &found, form) {
+                Ok(action) => action,
+                Err(refused) => return out.translate(refused, Vec::new(), false),
+            },
             Action::Fade { times, colour } => {
                 if times.is_some_and(|times| times.iter().any(|seconds| !(0.0..=MOST_FADE).contains(seconds))) {
                     return out.translate("commands.camera.invalid.time", Vec::new(), false);

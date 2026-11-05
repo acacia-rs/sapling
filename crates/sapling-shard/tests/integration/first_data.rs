@@ -12,7 +12,7 @@ use common::{Harness, all};
 use sapling_api::{DamageCause, EntityId, Item, MobSlot};
 
 fn summon(h: &mut Harness, kind: &'static str, event: Option<&'static str>) -> EntityId {
-    ask(h, move |ctx| ctx.summon_as(None, kind, [2.5, 65.0, 2.5], 0.0, event)).expect(kind)
+    ask(h, move |ctx| ctx.summon_as(None, kind, [2.5, 65.0, 2.5], 0.0, 0.0, event)).expect(kind)
 }
 
 fn ticks(h: &mut Harness, n: usize) -> Vec<RawPacket> {

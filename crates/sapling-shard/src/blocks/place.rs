@@ -109,6 +109,7 @@ impl Request<'_> {
         let level = level(self.world, site.layer)?;
         let registry = level.registry();
         let into_clicked = gives_way(registry, level.block(against[0], against[1], against[2]));
+        let clicked_name = registry.get(level.block(against[0], against[1], against[2])).map_or("", |state| state.name).to_owned();
         let pos = if into_clicked { against } else { click.face.neighbour(against) };
         let is_free = level.in_height(pos[1]) && level.is_loaded(send::column(pos)) && gives_way(registry, level.block(pos[0], pos[1], pos[2]));
         let id = doors::hinged(level, facing::oriented(registry, id, click), pos, click.quarter());
@@ -136,7 +137,8 @@ impl Request<'_> {
         let allowed = if super::command_blocks::Kind::of(&block.name).is_some() || block.name == "minecraft:structure_block" {
             super::command_blocks::may_edit(self.world, self.entity)
         } else {
-            site.mode == GameMode::Creative || site.mode == GameMode::Survival && from_hand
+            let adventure_may = site.mode == GameMode::Adventure && inventory::hand_allows(self.world, self.entity, false, &clicked_name);
+            site.mode == GameMode::Creative || (site.mode == GameMode::Survival || adventure_may) && from_hand
         };
         let event = crate::plugins::offer(self.world, PlaceEvent::new(self.player.clone(), pos, against, click.face, block, allowed));
         let placed = !event.is_cancelled() && self.put(site, pos, click, &event.block);

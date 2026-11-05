@@ -19,6 +19,7 @@ mod kept;
 mod last_death;
 pub(crate) use last_death::{LastDeath, greeting as last_death_greeting};
 mod omens;
+mod rise_spot;
 mod splashed;
 mod stand;
 mod shield;

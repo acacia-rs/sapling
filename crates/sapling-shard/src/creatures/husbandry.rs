@@ -120,6 +120,15 @@ fn become_cow(world: &mut World, entity: Entity) {
     crate::mobs::remove(world, entity);
 }
 
+/// Names the mob as a name tag does; false for an entity with no raising (no mob).
+pub(crate) fn give_name(world: &mut World, entity: Entity, name: String) -> bool {
+    if world.get::<Raised>(entity).is_none() {
+        return false;
+    }
+    clicks::name(world, entity, name);
+    true
+}
+
 /// The mob stays: a name tag, a lead or an owner keeps it from despawning.
 fn keep_for_good(world: &mut World, entity: Entity) {
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {

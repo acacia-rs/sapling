@@ -71,6 +71,7 @@ fn a_fall_costs_a_player_each_block_past_three_a_tick_after_it_lands() {
 fn lava_kills_a_player_who_leaves_what_it_held_and_rises_whole_at_the_spawn() {
     let mut h = ready();
     h.remote.run(|ctx| {
+        assert!(ctx.set_game_rule("spawnRadius", sapling_api::RuleValue::Int(10)));
         assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:stone", 5))));
         ctx.teleport(ALEX, [5.5, 65.0, 5.5]);
         assert!(ctx.set_block([5, 65, 5], &Block::new("lava")));
@@ -97,7 +98,10 @@ fn lava_kills_a_player_who_leaves_what_it_held_and_rises_whole_at_the_spawn() {
     assert_eq!(all::<Respawn>(risen).into_iter().map(|respawn| (respawn.state, respawn.position.y)).collect::<Vec<_>>(), [(0, 32767.0), (1, 65.0 + sapling_data::EYE_HEIGHT)], "searched, then found (bds-deaths.txt)");
     assert_eq!((all::<SetHealth>(risen).len(), health(risen), events(sent.to(2))), (1, vec![20.0], vec![(EntityEventEventId::Respawn, 0)]));
     h.remote.run(|ctx| {
-        assert_eq!((ctx.health(ALEX), ctx.position(ALEX).map(|position| position.feet), Some(ctx.spawn())), (Some(20.0), Some(ctx.spawn()), Some(ctx.spawn())));
+        let ([x, y, z], spawn) = (ctx.position(ALEX).expect("risen").feet, ctx.spawn());
+        let off = [x - spawn[0], z - spawn[2]];
+        assert!(off[0] * off[0] + off[1] * off[1] <= 100.0 && y == spawn[1] && x - x.floor() == 0.5, "a column within spawnRadius 10: {:?}", [x, y, z]);
+        assert_eq!(ctx.health(ALEX), Some(20.0));
         assert!(ctx.kill_player(ALEX) && !ctx.kill_player(ALEX));
     });
     assert_eq!(all::<DeathInfo>(h.tick_all().to(1)).pop().map(|info| info.cause), Some("death.attack.generic".to_owned()));

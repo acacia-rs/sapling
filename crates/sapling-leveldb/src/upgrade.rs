@@ -89,6 +89,37 @@ pub fn legacy_name(id: u16) -> Option<&'static str> {
     NAMES.get(&id).map(String::as_str)
 }
 
+/// Every current block that shares the pre-1.13 id of the current block `name` (namespaced), by
+/// meta, as `can_destroy` widens a name (`stone` takes granite, `dirt` coarse dirt); `name`
+/// alone where it has no such id.
+pub fn legacy_group(name: &str) -> Vec<String> {
+    GROUPS.get(name).cloned().unwrap_or_else(|| vec![name.to_owned()])
+}
+
+static GROUPS: LazyLock<HashMap<String, Vec<String>>> = LazyLock::new(|| {
+    let mut keys: Vec<&(String, i16)> = LEGACY.keys().collect();
+    keys.sort();
+    let mut by_old: Vec<(&str, Vec<String>)> = Vec::new();
+    for (old, meta) in keys {
+        let Some((current, _)) = from_legacy(old, *meta) else { continue };
+        match by_old.last_mut() {
+            Some((last, names)) if *last == old.as_str() => {
+                if !names.contains(&current) {
+                    names.push(current);
+                }
+            }
+            _ => by_old.push((old.as_str(), vec![current])),
+        }
+    }
+    let mut groups = HashMap::new();
+    for (_, names) in by_old {
+        for name in &names {
+            groups.entry(name.clone()).or_insert_with(|| names.clone());
+        }
+    }
+    groups
+});
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -122,5 +153,14 @@ mod tests {
         let (name, states) = from_legacy("minecraft:log", 2).expect("a birch log");
         assert_eq!((name.as_str(), states.get("pillar_axis")), ("minecraft:birch_log", Some(&string("y"))));
         assert_eq!(from_legacy("minecraft:stone", 99).map(|(name, _)| name), Some("minecraft:stone".to_owned()), "an unknown meta is meta 0's");
+    }
+
+    #[test]
+    fn a_name_widens_to_its_legacy_ids_blocks_as_bds_widened_can_destroy() {
+        let names = |name: &str| legacy_group(name).into_iter().map(|name| name.trim_start_matches("minecraft:").to_owned()).collect::<Vec<_>>();
+        assert_eq!(names("minecraft:dirt"), ["dirt", "coarse_dirt"]);
+        assert_eq!(names("minecraft:granite"), ["stone", "granite", "polished_granite", "diorite", "polished_diorite", "andesite", "polished_andesite"]);
+        assert_eq!(names("minecraft:grass_block"), ["grass_block"]);
+        assert_eq!(names("minecraft:crafter"), ["crafter"]);
     }
 }

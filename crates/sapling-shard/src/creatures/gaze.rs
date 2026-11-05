@@ -52,6 +52,7 @@ pub(super) struct Gaze {
     still: u32,
     yaw: f32,
     at: [f32; 3],
+    pitch: f32,
 }
 
 fn apart(from: f32, to: f32) -> f32 {
@@ -121,16 +122,28 @@ pub(super) fn turn(world: &mut World, entity: Entity, yaw: f32) {
     }
 }
 
+/// The mob `id`, new this tick, is pitched `pitch` in its announcement.
+pub(super) fn pitch_new(world: &mut World, id: sapling_api::EntityId, pitch: f32) {
+    let Some(entity) = crate::entities::find(world, id).filter(|_| pitch != 0.0) else { return };
+    if let Some(mut told) = world.get_mut::<Told>(entity) {
+        told.pitch(pitch);
+    }
+    super::shown::reshow(world, entity);
+}
+
 /// After its legs were steered: the mob of `kind`, left to itself, turns its head and pitches, and
 /// its body comes round.
 pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
     let traits = sapling_data::mob_traits(kind);
     let Some(yaw) = world.get::<Legs>(entity).map(|legs| legs.yaw).filter(|_| traits.looks.is_some() || traits.glances) else { return };
     let Some(&gaze) = world.get::<Gaze>(entity) else {
-        world.entity_mut(entity).insert(Gaze { head: yaw, body: yaw, goal: Goal::Idle, settled: yaw, still: 0, yaw, at: body.at });
-        // The first pitch is the one viewers were told at its announcement.
+        // The announced pitch first; a summoned one comes back level from the first tick (bds-h1summon.txt).
+        let announced = world.get::<Told>(entity).map_or(0.0, |told| told.facing()[1]);
+        let pitch = towards(announced, 0.0, HEAD_TURN);
+        world.entity_mut(entity).insert(Gaze { head: yaw, body: yaw, goal: Goal::Idle, settled: yaw, still: 0, yaw, at: body.at, pitch });
         if let Some(mut told) = world.get_mut::<Told>(entity) {
-            told.pitch(0.0);
+            told.pitch(announced);
+            told.pitch(pitch);
         }
         return;
     };
@@ -144,8 +157,8 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, kind: &str,
             let wanted = towards(gaze.body, (-dx).atan2(dz).to_degrees(), HEAD_LEASH);
             (towards(gaze.head, wanted, HEAD_TURN), -dy.atan2(dx.hypot(dz)).to_degrees())
         }
-        Goal::Side(side, _) => (towards(gaze.body, side, HEAD_LEASH), 0.0),
-        Goal::Idle => (towards(gaze.head, gaze.body, HEAD_TURN), 0.0),
+        Goal::Side(side, _) => (towards(gaze.body, side, HEAD_LEASH), towards(gaze.pitch, 0.0, HEAD_TURN)),
+        Goal::Idle => (towards(gaze.head, gaze.body, HEAD_TURN), towards(gaze.pitch, 0.0, HEAD_TURN)),
     };
     let walked = (body.at[0] - gaze.at[0]).powi(2) + (body.at[2] - gaze.at[2]).powi(2) > WALKS;
     let (settled, still, turned) = if walked {
@@ -157,7 +170,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, kind: &str,
         let leash = HEAD_LEASH * (1.0 - still.saturating_sub(SETTLES) as f32 / SETTLES as f32).max(0.0);
         (gaze.settled, still, towards(head, gaze.body, leash))
     };
-    world.entity_mut(entity).insert(Gaze { head, body: turned, goal, settled, still, yaw, at: body.at });
+    world.entity_mut(entity).insert(Gaze { head, body: turned, goal, settled, still, yaw, at: body.at, pitch });
     if let Some(mut told) = world.get_mut::<Told>(entity) {
         told.face(yaw, head);
         told.pitch(pitch);

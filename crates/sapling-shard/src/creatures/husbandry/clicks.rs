@@ -28,7 +28,10 @@ pub(super) fn name(world: &mut World, entity: Entity, name: String) {
     let Some(mut raised) = world.get_mut::<Raised>(entity) else { return };
     raised.kept.name = name;
     keep_for_good(world, entity);
-    shown::name(world, entity);
+    // A mob new this tick is announced with its name.
+    if !crate::entities::is_new(world, entity) {
+        shown::name(world, entity);
+    }
     crate::creatures::reshow(world, entity);
 }
 

@@ -119,30 +119,46 @@ pub fn max_stack(name: &str) -> u8 {
 }
 
 fn extra(name: &str, tag: Option<&nbt::Value>) -> ItemV4Extra {
-    let shown = tag.map(shown_tag);
+    let [can_place_on, can_destroy] = BLOCK_LISTS.map(|key| block_list(tag, key));
+    let shown = tag.and_then(shown_tag);
     let tag = shown.as_deref();
     // Never the empty extra a reader takes for "none": BDS always writes one, tag or not.
     let nbt = || Nbt { name: String::new(), value: tag.cloned().unwrap_or(nbt::Value::Compound(Vec::new())) };
     if name == SHIELD {
         let has_nbt = if tag.is_some() { ShieldHasNbt::True } else { ShieldHasNbt::False };
         let nbt = tag.map(|_| ShieldNbt { version: NBT_VERSION, nbt: nbt() });
-        return ItemV4Extra::ShieldItemID(Some(ShieldExtra { has_nbt, nbt, can_place_on: Vec::new(), can_destroy: Vec::new(), blocking_tick: 0 }));
+        return ItemV4Extra::ShieldItemID(Some(ShieldExtra { has_nbt, nbt, can_place_on, can_destroy, blocking_tick: 0 }));
     }
     let has_nbt = if tag.is_some() { HasNbt::True } else { HasNbt::False };
     let nbt = tag.map(|_| ExtraNbt { version: NBT_VERSION, nbt: nbt() });
-    ItemV4Extra::Default(Some(Extra { has_nbt, nbt, can_place_on: Vec::new(), can_destroy: Vec::new() }))
+    ItemV4Extra::Default(Some(Extra { has_nbt, nbt, can_place_on, can_destroy }))
 }
 
-/// A tag as clients see it: a bundle's contents stay on the server, which shows them as a
-/// container of their own (research/captures/bds-bundles.txt). A lying bundle's tag, made to be
-/// shown with its [`BUNDLE_WEIGHT`] and empty slots (bds-t2ebundle.txt), goes as it is.
-fn shown_tag(tag: &nbt::Value) -> std::borrow::Cow<'_, nbt::Value> {
-    match tag {
-        nbt::Value::Compound(fields) if fields.iter().any(|(key, _)| key == STORAGE_CONTENT) && !fields.iter().any(|(key, _)| key == BUNDLE_WEIGHT) => {
-            std::borrow::Cow::Owned(nbt::Value::Compound(fields.iter().filter(|(key, _)| key != STORAGE_CONTENT).cloned().collect()))
-        }
-        other => std::borrow::Cow::Borrowed(other),
+/// The tag keys sapling keeps a stack's `can_place_on` and `can_destroy` blocks under, which go on
+/// the wire as lists of their own (see `sapling_leveldb::CAN_PLACE_ON`).
+const BLOCK_LISTS: [&str; 2] = ["CanPlaceOn", "CanDestroy"];
+
+fn block_list(tag: Option<&nbt::Value>, key: &str) -> Vec<String> {
+    match tag.and_then(|tag| tag.get(key)) {
+        Some(nbt::Value::List(list)) => list.items.iter().filter_map(|item| if let nbt::Value::String(name) = item { Some(name.to_string()) } else { None }).collect(),
+        _ => Vec::new(),
     }
+}
+
+/// A tag as clients see it, `None` where nothing is left: a bundle's contents stay on the server,
+/// which shows them as a container of their own (research/captures/bds-bundles.txt), and the block
+/// lists go apart. A lying bundle's tag, made to be shown with its [`BUNDLE_WEIGHT`] and empty
+/// slots (bds-t2ebundle.txt), goes as it is.
+fn shown_tag(tag: &nbt::Value) -> Option<std::borrow::Cow<'_, nbt::Value>> {
+    let nbt::Value::Compound(fields) = tag else { return Some(std::borrow::Cow::Borrowed(tag)) };
+    let bundle = fields.iter().any(|(key, _)| key == STORAGE_CONTENT) && !fields.iter().any(|(key, _)| key == BUNDLE_WEIGHT);
+    let hidden = |key: &str| BLOCK_LISTS.contains(&key) || bundle && key == STORAGE_CONTENT;
+    if !fields.iter().any(|(key, _)| hidden(key.as_str())) {
+        return Some(std::borrow::Cow::Borrowed(tag));
+    }
+    let kept: Vec<_> = fields.iter().filter(|(key, _)| !hidden(key.as_str())).cloned().collect();
+    // A bundle's emptied tag still goes; one that held only block lists does not.
+    (bundle || !kept.is_empty()).then(|| std::borrow::Cow::Owned(nbt::Value::Compound(kept)))
 }
 
 /// Where a bundle's tag keeps what it holds, as BDS saves it.

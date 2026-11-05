@@ -31,6 +31,7 @@ pub use folder::WorldFolder;
 pub use generated::{Generated, PlacedStructure};
 pub use light::FULL_LIGHT;
 pub use sapling_leveldb::{LevelDat, SpawnArea, WeatherRecord, encode_spawn_areas};
+pub use sapling_leveldb::{CAN_DESTROY, CAN_PLACE_ON, legacy_group};
 pub use players::PlayerLoad;
 pub use sapling_leveldb::{Raising, actor_groups, raised_actor, raising, regrouped_actor};
 pub use sapling_leveldb::{actor_attributes, actor_pose, attributed_actor, geared_actor, handed_actor};

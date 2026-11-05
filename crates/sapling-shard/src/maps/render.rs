@@ -40,11 +40,22 @@ pub(super) fn shaded(rgb: [f32; 3], by: f32) -> u32 {
     0xFF00_0000 | b << 16 | g << 8 | r
 }
 
-/// A block's colour where it stands, each channel 0 to 255, and whether it is water's.
-fn tinted(colour: MapColour, biome: u32) -> ([f32; 3], bool) {
+const GRASS_SAMPLES: [[i32; 2]; 5] = [[-8, -8], [8, -8], [-8, 8], [8, 8], [0, 0]];
+const FOLIAGE_SAMPLES: [[i32; 2]; 8] = [[-4, -4], [0, -4], [4, -4], [-4, 0], [4, 0], [-4, 4], [0, 4], [4, 4]];
+const WATER_SAMPLES: [[i32; 2]; 9] = [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+
+/// A block's colour where it stands, each channel 0 to 255, and whether it is water's: its tint
+/// the average of the biomes' at its method's offsets (docs/research/maps.md "Tints").
+fn tinted(colour: MapColour, biome_at: impl Fn([i32; 2]) -> u32) -> ([f32; 3], bool) {
     let Some(tint) = colour.tint else { return (colour.rgb, false) };
-    let by = tint_colour(biome, tint);
-    (std::array::from_fn(|i| colour.rgb[i] / 255.0 * (by[i] / 255.0) * 255.0), tint == Tint::Water)
+    let samples: &[[i32; 2]] = match tint {
+        Tint::Grass => &GRASS_SAMPLES,
+        Tint::Water => &WATER_SAMPLES,
+        _ => &FOLIAGE_SAMPLES,
+    };
+    let sum = samples.iter().map(|offset| tint_colour(biome_at(*offset), tint)).fold([0.0; 3], |sum, by| std::array::from_fn(|i| sum[i] + by[i]));
+    let share = 1.0 / (samples.len() as f32 * 255.0);
+    (std::array::from_fn(|i| colour.rgb[i] / 255.0 * (sum[i] * share).clamp(0.0, 1.0) * 255.0), tint == Tint::Water)
 }
 
 /// The most common colour of one pixel's square and its height, or `None` where nothing is loaded.
@@ -65,7 +76,7 @@ fn sample(world: &sapling_world::World, colours: &[Option<MapColour>], [wx, wz]:
             let Some(y) = world.top_where(x, z, coloured) else { continue };
             let Some(colour) = colours[world.block(x, y, z) as usize] else { continue };
             height += y / (scale * scale);
-            let found = tinted(colour, world.biome(x, y, z).unwrap_or_default());
+            let found = tinted(colour, |[ox, oz]| world.biome(x + ox, y, z + oz).unwrap_or_default());
             match counted.iter_mut().find(|(seen, _)| seen.0.map(f32::to_bits) == found.0.map(f32::to_bits)) {
                 Some((_, count)) => *count += 1,
                 None => counted.push((found, 1)),
@@ -114,11 +125,21 @@ mod tests {
     #[test]
     fn pixels_shade_as_bds_drew_them() {
         let grass = map_colour("minecraft:grass_block").unwrap();
-        let (rgb, _) = tinted(grass, 1);
+        let (rgb, _) = tinted(grass, |_| 1);
         assert_eq!(shaded(rgb, NORMAL), 0xFF4B_A27D);
         assert_eq!(shaded(rgb, LOW), 0xFF3E_8467);
-        let water = tinted(map_colour("minecraft:water").unwrap(), 1);
+        let water = tinted(map_colour("minecraft:water").unwrap(), |_| 1);
         assert_eq!(shaded(water.0, HIGH), 0xFFF5_5A1E);
         assert!(water.1);
+    }
+
+    #[test]
+    fn a_tint_averages_the_biomes_at_its_methods_offsets() {
+        let grass = map_colour("minecraft:grass_block").unwrap();
+        let [one, other] = [tint_colour(1, Tint::Grass), tint_colour(6, Tint::Grass)];
+        let (rgb, _) = tinted(grass, |offset| if offset == [0, 0] { 6 } else { 1 });
+        let expected: [f32; 3] = std::array::from_fn(|i| grass.rgb[i] / 255.0 * ((0.0 + one[i] + one[i] + one[i] + one[i] + other[i]) * (1.0 / 1275.0)) * 255.0);
+        assert_eq!(rgb, expected);
+        assert_ne!(one, other, "plains and swamp grass differ");
     }
 }

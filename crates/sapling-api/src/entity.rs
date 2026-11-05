@@ -52,11 +52,18 @@ impl ShardCtx<'_> {
         self.backend.summon(by, kind, feet)
     }
 
-    /// [`ShardCtx::summon`] (by the console where `by` is `None`) facing `yaw`, and made as its kind's
-    /// spawn `event` makes one where the shard knows it (`minecraft:panda_aggressive`), as
+    /// [`ShardCtx::summon`] (by the console where `by` is `None`) facing `yaw` and pitched `pitch`
+    /// (a mob's head comes back level by itself), and made as its kind's spawn `event` makes one
+    /// where the shard knows it (`minecraft:panda_aggressive`), as
     /// `/summon <kind> <position> <yaw> <pitch> <event>` does.
-    pub fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], yaw: f32, event: Option<&str>) -> Option<EntityId> {
-        self.backend.summon_as(by, kind, feet, yaw, event)
+    pub fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], yaw: f32, pitch: f32, event: Option<&str>) -> Option<EntityId> {
+        self.backend.summon_as(by, kind, feet, yaw, pitch, event)
+    }
+
+    /// Names a mob as a name tag does: the name is shown over it, kept with it, and it no longer
+    /// despawns. False for one that is gone or no mob.
+    pub fn name_entity(&mut self, id: EntityId, name: &str) -> bool {
+        self.backend.name_entity(id, name)
     }
 
     /// An entity of this shard; `None` once it is gone.
@@ -161,11 +168,14 @@ pub trait EntityBackend {
     fn summon(&mut self, _by: PlayerId, kind: &str, feet: [f32; 3]) -> Option<EntityId> {
         self.spawn_entity(kind, feet)
     }
-    fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], _yaw: f32, _event: Option<&str>) -> Option<EntityId> {
+    fn summon_as(&mut self, by: Option<PlayerId>, kind: &str, feet: [f32; 3], _yaw: f32, _pitch: f32, _event: Option<&str>) -> Option<EntityId> {
         match by {
             Some(by) => self.summon(by, kind, feet),
             None => self.spawn_entity(kind, feet),
         }
+    }
+    fn name_entity(&mut self, _id: EntityId, _name: &str) -> bool {
+        false
     }
     fn entity(&self, id: EntityId) -> Option<EntityInfo>;
     fn entities(&self) -> Vec<EntityInfo>;

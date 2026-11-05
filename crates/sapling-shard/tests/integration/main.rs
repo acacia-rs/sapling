@@ -167,6 +167,8 @@ mod stored_mobs;
 mod strides;
 mod structure_blocks;
 mod structures;
+mod adventure_lists;
+mod summon_looks;
 mod summoned_shots;
 mod survival;
 mod template_actors;

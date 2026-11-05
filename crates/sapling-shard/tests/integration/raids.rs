@@ -193,7 +193,7 @@ fn raiders_make_for_the_village_kill_its_villager_and_celebrate_its_fall() {
 #[test]
 fn a_captain_wears_the_ominous_banner_and_drops_it() {
     let mut h = village();
-    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:pillager", [20.5, 65.0, 20.5], 0.0, Some("minecraft:spawn_as_illager_captain")).is_some()));
+    h.remote.run(|ctx| assert!(ctx.summon_as(None, "minecraft:pillager", [20.5, 65.0, 20.5], 0.0, 0.0, Some("minecraft:spawn_as_illager_captain")).is_some()));
     let sent = ticks(&mut h, 3);
     let captain = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:pillager").expect("shown").runtime_id;
     let worn: Vec<i16> = all::<MobArmorEquipment>(&sent).into_iter().filter(|worn| worn.runtime_entity_id == captain).map(|worn| worn.chestplate.network_id).collect();

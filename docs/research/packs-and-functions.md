@@ -49,11 +49,14 @@ the pack negotiation and the commands' syntax), `research/captures/bds-functions
 - The message is at most 2048 (`0x800`, which `messageSizeExceed` shows); the drill bot was
   disconnected sending 2047, so the edge itself was not seen (bds-t1dloot.txt).
 
+## /schedule details (bds-h1sched.txt)
+
+- With no mode BDS replaces: two adds then one run; `append` runs both.
+- The due tick is `time query gametime` plus the delay (688 → 728); sapling's gametime is its
+  shard tick, so the same rule.
+- The scheduled-run echo is a Json line (not `/tellraw`'s JsonWhisper): `ShardCtx::show_raw`.
+
 ## Unverified
 
-- `/schedule` default mode when neither `replace` nor `append` is given: sapling replaces; the
-  capture's replace/append runs did not show two queued copies running.
-- The due tick parameter: BDS's level tick; sapling gives the shard's tick.
-- The scheduled-run echo is sent as JsonWhisper (`tell_raw`), BDS sends Json; same text.
 - Encrypted packs (content keys, `contents.json`) were not recorded; the key is passed through.
 - CDN urls: not recorded; sapling passes the configured url and still serves chunks if asked.

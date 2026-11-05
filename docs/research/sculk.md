@@ -339,7 +339,8 @@ A catalyst in a stone floor and deaths by `/kill` at midnight on easy:
 - The charge starts in the cell of the mob's feet (y -26 over the floor at -27) and is first moved, and shown
   (2037, or 2038 when spent), the tick after the death; sapling moved it in the death's tick (fixed: a death's
   cursors join the catalyst's after its tick, `catalyst.rs` `fresh`). BDS shows the spread's blocks and sounds a
-  tick after the 2037/2038 of the same move; sapling sends them together.
+  tick after the 2037/2038 of the same move; so does sapling since 2026-11-05 (`catalyst.rs` `later`,
+  written at once, shown the next tick).
 - sapling's `/summon … minecraft:entity_born` made a grown cow, whose death left a cursor (fixed: `entity_born`,
   `as_baby` and `spawn_baby` make a baby, `creatures/birth.rs`). With that, research/captures/sapling-catalyst.txt
   matches but for the cows' random rewards and walks.

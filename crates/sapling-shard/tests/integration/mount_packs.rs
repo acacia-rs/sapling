@@ -158,7 +158,7 @@ fn a_chested_donkey_without_mob_loot_spills_the_goods_put_over_its_saddle_then_t
     let slot = made.clone();
     h.remote.run(move |ctx| {
         assert!(ctx.set_game_rule("doMobLoot", sapling_api::RuleValue::Bool(false)));
-        *slot.lock().unwrap() = ctx.summon_as(None, "minecraft:donkey", [2.5, 65.0, 0.5], 0.0, Some("minecraft:spawn_tame_adult"));
+        *slot.lock().unwrap() = ctx.summon_as(None, "minecraft:donkey", [2.5, 65.0, 0.5], 0.0, 0.0, Some("minecraft:spawn_tame_adult"));
     });
     ticks(&mut h, 2);
     let donkey = made.lock().unwrap().expect("a donkey");
@@ -180,7 +180,7 @@ fn a_donkey_summoned_tame_opens_to_a_sneaking_click_even_holding_a_chest() {
     h.enter(1, "Alex");
     let made = Arc::new(Mutex::new(None));
     let slot = made.clone();
-    h.remote.run(move |ctx| *slot.lock().unwrap() = ctx.summon_as(None, "minecraft:donkey", [2.5, 65.0, 0.5], 0.0, Some("minecraft:spawn_tame_adult")));
+    h.remote.run(move |ctx| *slot.lock().unwrap() = ctx.summon_as(None, "minecraft:donkey", [2.5, 65.0, 0.5], 0.0, 0.0, Some("minecraft:spawn_tame_adult")));
     ticks(&mut h, 2);
     let donkey = made.lock().unwrap().expect("a donkey");
     h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:chest", 1)))));

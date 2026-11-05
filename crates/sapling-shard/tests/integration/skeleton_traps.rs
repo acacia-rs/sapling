@@ -17,8 +17,8 @@ fn a_trap_springs_four_riders_for_a_creative_player_within_ten() {
         ctx.set_difficulty(Difficulty::Easy);
         ctx.set_game_mode(PlayerId(1), GameMode::Creative);
     });
-    let far = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:skeleton_horse", [20.5, 65.0, 0.5], 0.0, Some("minecraft:set_trap"))).expect("summoned");
-    let near = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:skeleton_horse", [6.5, 65.0, 0.5], 0.0, Some("minecraft:set_trap"))).expect("summoned");
+    let far = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:skeleton_horse", [20.5, 65.0, 0.5], 0.0, 0.0, Some("minecraft:set_trap"))).expect("summoned");
+    let near = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:skeleton_horse", [6.5, 65.0, 0.5], 0.0, 0.0, Some("minecraft:set_trap"))).expect("summoned");
     let sent: Vec<_> = (0..5).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     let kinds = ask(&mut h, |ctx| ctx.entities().into_iter().map(|entity| (entity.id, entity.kind)).collect::<Vec<_>>());
     let count = |kind: &str| kinds.iter().filter(|(_, of)| of == kind).count();

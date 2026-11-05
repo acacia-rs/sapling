@@ -214,7 +214,7 @@ pub(super) fn rise(world: &mut World) {
             let cell = Vec3f { x: x.floor(), y, z: z.floor() };
             world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&Respawn { position: cell, state: SEARCHING, runtime_entity_id: 0 });
         }
-        let spawn = own.unwrap_or(spawn);
+        let spawn = own.unwrap_or_else(|| super::rise_spot::rise_spot(world, layer, spawn));
         let Some(who) = world.get::<Identity>(player).map(|identity| identity.0.clone()) else { continue };
         let spawn = crate::plugins::offer(world, RespawnEvent::new(who, spawn)).feet;
         leave_now(world, player, layer);

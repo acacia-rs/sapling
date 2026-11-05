@@ -25,6 +25,12 @@ impl ShardCtx<'_> {
     pub fn tell_raw(&mut self, to: PlayerId, text: &RawText) {
         self.backend.tell_raw(to, &text.to_json());
     }
+
+    /// Shows `to` a line of rawtext as the server's own, as BDS echoes a command (a Json line,
+    /// where `/tellraw`'s is a whisper).
+    pub fn show_raw(&mut self, to: PlayerId, text: &RawText) {
+        self.backend.show_raw(to, &text.to_json());
+    }
 }
 
 /// The chat side of [`crate::Backend`].
@@ -34,6 +40,9 @@ pub trait ChatBackend {
     fn emote(&mut self, from: &str, message: &str);
     /// `json` is rawtext as BDS writes it, newline and all.
     fn tell_raw(&mut self, to: PlayerId, json: &str);
+    fn show_raw(&mut self, to: PlayerId, json: &str) {
+        self.tell_raw(to, json);
+    }
 }
 
 #[cfg(test)]

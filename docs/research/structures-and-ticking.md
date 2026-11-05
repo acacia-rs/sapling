@@ -74,6 +74,10 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   `sapling/src/vanilla/tickingarea.rs`. Bounds are shown widened to whole chunks; a circle by its
   centre chunk's middle and radius. Lists join lines with "\n"; what a change touched is listed
   with each line ended by "\n", then `inuse` [count, "10"].
+- The `inuse` count is every dimension's areas (a Nether and an overworld area: `["2", "10"]` from
+  either). `list all-dimensions` is one line per dimension, `%dimension.dimensionName<n>: ` then
+  its areas, all one output line; BDS listed the Nether (added first) before the overworld, which
+  sapling follows as the order areas came (which BDS keeps is not settled) [bds-h1cmds.txt].
 - Stored in the level (`sapling-leveldb/src/ticking_areas.rs`) and kept loaded with nobody near
   (`sapling-shard/src/kept.rs`), as are a plugin's forced chunks.
 - Bedrock keeps no spawn chunks: a repeating command block's clock stopped within a second of the

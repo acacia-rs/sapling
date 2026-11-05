@@ -34,6 +34,7 @@ pub(crate) struct ReplaceItem {
     item_wrong: ParseError,
     amount: Option<i32>,
     data: Option<i32>,
+    components: Option<String>,
 }
 
 /// The next word, which must be `word` (in any case).
@@ -69,6 +70,7 @@ impl CommandSyntax for ReplaceItem {
                 ParameterSpec { name: "itemName".into(), kind: ParamKind::String, optional: false },
                 ParameterSpec::of::<Option<i32>>("amount"),
                 ParameterSpec::of::<Option<i32>>("data"),
+                ParameterSpec { kind: ParamKind::Json, ..ParameterSpec::of::<Option<i32>>("components") },
             ]
         };
         let block = [ParameterSpec::literal("replaceitem", "block"), ParameterSpec::of::<BlockCoords>("position"), ParameterSpec::literal("replaceitem", SLOT_TYPE)];
@@ -107,8 +109,9 @@ impl CommandSyntax for ReplaceItem {
         let item_wrong = args.error_at(mark);
         let amount = Option::<i32>::parse(args)?;
         let data = Option::<i32>::parse(args)?;
+        let components = if args.is_empty() { None } else { Some(args.json()?.to_owned()) };
         args.finish()?;
-        Ok(Self { target, slot, item, item_wrong, amount, data })
+        Ok(Self { target, slot, item, item_wrong, amount, data, components })
     }
 }
 
@@ -147,7 +150,12 @@ impl Command for ReplaceItem {
         }
         let name = super::item_named(&self.item.0);
         let data = self.data.unwrap_or(0) as i16;
-        let item = (name != "minecraft:air").then(|| Item { damage: data, ..Item::new(&name, count.clamp(1, MOST) as u8) });
+        let mut item = (name != "minecraft:air").then(|| Item { damage: data, ..Item::new(&name, count.clamp(1, MOST) as u8) });
+        if let (Some(item), Some(json)) = (item.as_mut(), self.components.as_deref()) {
+            if let Err((line, parameters)) = super::items::set_components(item, json) {
+                return out.translate(line, parameters, false);
+            }
+        }
         match &self.target {
             Target::Block(position) => {
                 let pos = position.resolve(ctx, sender);

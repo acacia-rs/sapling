@@ -45,6 +45,12 @@ impl ShardCtx<'_> {
         self.backend.ticking_areas()
     }
 
+    /// The ticking areas of every dimension of the world in scope, each with its dimension, in
+    /// the order they were added.
+    pub fn ticking_areas_everywhere(&self) -> Vec<(i32, TickingArea)> {
+        self.backend.ticking_areas_everywhere()
+    }
+
     /// Adds a ticking area to the world in scope; false where it already holds
     /// [`MOST_TICKING_AREAS`].
     pub fn add_ticking_area(&mut self, area: TickingArea) -> bool {
@@ -82,6 +88,7 @@ impl ShardCtx<'_> {
 /// The ticking side of [`crate::Backend`].
 pub trait TickingBackend {
     fn ticking_areas(&self) -> Vec<TickingArea>;
+    fn ticking_areas_everywhere(&self) -> Vec<(i32, TickingArea)>;
     fn add_ticking_area(&mut self, area: TickingArea) -> bool;
     fn remove_ticking_areas(&mut self, pick: &dyn Fn(&TickingArea) -> bool) -> Vec<TickingArea>;
     fn set_ticking_preload(&mut self, pick: &dyn Fn(&TickingArea) -> bool, preload: bool) -> usize;
@@ -95,6 +102,9 @@ pub trait TickingBackend {
 #[cfg(test)]
 impl TickingBackend for crate::testing::Fake {
     fn ticking_areas(&self) -> Vec<TickingArea> {
+        Vec::new()
+    }
+    fn ticking_areas_everywhere(&self) -> Vec<(i32, TickingArea)> {
         Vec::new()
     }
     fn add_ticking_area(&mut self, _: TickingArea) -> bool {

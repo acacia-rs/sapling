@@ -3,7 +3,7 @@
 use acacia_proto::nbt::{List, Str, Value};
 use bevy_ecs::prelude::*;
 use sapling_api::{Item, ItemLock, Slot};
-use sapling_world::ItemStack;
+use sapling_world::{CAN_DESTROY, CAN_PLACE_ON, ItemStack};
 
 use super::{Inventory, Place, change};
 
@@ -12,8 +12,9 @@ pub(super) const KEEP_ON_DEATH: &str = "minecraft:keep_on_death";
 /// 1 locks a stack in its slot, 2 in the inventory (research/captures/bds-itemcmds.txt).
 const ITEM_LOCK: &str = "minecraft:item_lock";
 const DAMAGE: &str = "Damage";
-/// `TAG_Compound`, the element tag of `ench`.
+/// `TAG_Compound`, the element tag of `ench`, and `TAG_String`, of the block lists.
 const COMPOUND: u8 = 10;
+const STRING: u8 = 8;
 
 fn place(slot: Slot) -> Place {
     match slot {
@@ -51,7 +52,7 @@ fn wears(name: &str) -> bool {
 
 fn tag(item: &Item, previous: Option<&Value>) -> Option<Value> {
     let mut fields: Vec<(Str, Value)> = match previous {
-        Some(Value::Compound(fields)) => fields.iter().filter(|(key, _)| ![ENCH, KEEP_ON_DEATH, ITEM_LOCK, DAMAGE].contains(&key.as_str())).cloned().collect(),
+        Some(Value::Compound(fields)) => fields.iter().filter(|(key, _)| ![ENCH, KEEP_ON_DEATH, ITEM_LOCK, DAMAGE, CAN_PLACE_ON, CAN_DESTROY].contains(&key.as_str())).cloned().collect(),
         _ => Vec::new(),
     };
     let enchantment = |&(id, level): &(i16, i16)| Value::Compound(vec![(Str::from("id"), Value::Short(id)), (Str::from("lvl"), Value::Short(level))]);
@@ -63,6 +64,9 @@ fn tag(item: &Item, previous: Option<&Value>) -> Option<Value> {
     }
     if let Some(lock) = item.lock {
         fields.push((Str::from(ITEM_LOCK), Value::Byte(if lock == ItemLock::InSlot { 1 } else { 2 })));
+    }
+    for (key, blocks) in [(CAN_PLACE_ON, &item.can_place_on), (CAN_DESTROY, &item.can_destroy)].into_iter().filter(|(_, blocks)| !blocks.is_empty()) {
+        fields.push((Str::from(key), Value::List(List { tag: STRING, items: blocks.iter().map(|block| Value::String(block.as_str().into())).collect() })));
     }
     // BDS's `/give` and `/replaceitem` banners carry `{Type: 0}` (research/captures/bds-banners.txt, bds-item-names.txt).
     if item.name == "minecraft:banner" && !fields.iter().any(|(key, _)| key.as_str() == "Type") {
@@ -85,7 +89,23 @@ pub(crate) fn described(stack: &ItemStack) -> Item {
     };
     let keep_on_death = matches!(field(KEEP_ON_DEATH), Some(Value::Byte(1)));
     let damage = if wears(&stack.name) { super::wear::damage(&stack.tag) as i16 } else { stack.damage };
-    Item { damage, enchantments, keep_on_death, lock, ..Item::new(stack.name.clone(), stack.count) }
+    let (can_place_on, can_destroy) = (blocks_in(stack, CAN_PLACE_ON), blocks_in(stack, CAN_DESTROY));
+    Item { damage, enchantments, keep_on_death, lock, can_place_on, can_destroy, ..Item::new(stack.name.clone(), stack.count) }
+}
+
+/// Whether the stack in the player's hand lets it, in adventure mode, place on (`destroy` false)
+/// or break (`destroy` true) the block `name`.
+pub(crate) fn hand_allows(world: &World, player: Entity, destroy: bool, name: &str) -> bool {
+    let key = if destroy { CAN_DESTROY } else { CAN_PLACE_ON };
+    world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref()).is_some_and(|held| blocks_in(&held.stack, key).iter().any(|block| block == name))
+}
+
+/// The block names a stack's list `key` holds ([`CAN_PLACE_ON`] or [`CAN_DESTROY`]).
+pub(crate) fn blocks_in(stack: &ItemStack, key: &str) -> Vec<String> {
+    match stack.tag.as_ref().and_then(|tag| tag.get(key)) {
+        Some(Value::List(list)) => list.items.iter().filter_map(|item| if let Value::String(name) = item { Some(name.to_string()) } else { None }).collect(),
+        _ => Vec::new(),
+    }
 }
 
 /// What a slot holds, for a plugin.

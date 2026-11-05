@@ -1,6 +1,6 @@
 //! `/ride`, answering as BDS did (research/captures/bds-ride.txt): riders and rides are named in
-//! the answer, and a stop or an eviction that changed nothing says nothing.
-// TODO: a summoned rider's or ride's name tag is taken and not given.
+//! the answer, and a stop or an eviction that changed nothing says nothing. A summoned rider or ride
+//! faces yaw 0 and stays though it is refused (bds-h1summon.txt, bds-ride.txt).
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector, parse_choice};
 use sapling_api::{Command, EntityId, Mount, Output, Permission, Sender, ShardCtx, Target};
@@ -31,6 +31,7 @@ enum Action {
 pub(crate) struct Ride {
     target: Selector,
     action: Action,
+    name: Option<String>,
 }
 
 fn param(name: &str, kind: ParamKind, optional: bool) -> ParameterSpec {
@@ -93,10 +94,9 @@ impl CommandSyntax for Ride {
                 Action::SummonRide { kind, rule, event: optional(args)? }
             }
         };
-        // The name tag.
-        let _ = optional(args)?;
+        let name = optional(args)?;
         args.finish()?;
-        Ok(Self { target, action })
+        Ok(Self { target, action, name })
     }
 }
 
@@ -136,8 +136,8 @@ impl Command for Ride {
                     out.translate("commands.ride.evictRiders.success", names(&evicted), true);
                 }
             }
-            Action::SummonRider { kind, event } => summon_riders(ctx, out, &found, &namespaced(&kind), event.as_deref()),
-            Action::SummonRide { kind, rule, event } => summon_rides(ctx, out, &found, &namespaced(&kind), rule, event.as_deref()),
+            Action::SummonRider { kind, event } => summon_riders(ctx, out, &found, &namespaced(&kind), event.as_deref(), self.name.as_deref()),
+            Action::SummonRide { kind, rule, event } => summon_rides(ctx, out, &found, &namespaced(&kind), rule, event.as_deref(), self.name.as_deref()),
         }
     }
 }
@@ -182,22 +182,21 @@ fn start(ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output, riders: &[(T
     }
 }
 
-/// A new rider of `kind` for each ride, which is taken away again where the ride refuses it.
-fn summon_riders(ctx: &mut ShardCtx<'_>, out: &mut Output, rides: &[(Target, String, [f32; 3], f32)], kind: &str, event: Option<&str>) {
+/// A new rider of `kind`, named `tag`, for each ride, where the ride is; one the ride refuses stays.
+fn summon_riders(ctx: &mut ShardCtx<'_>, out: &mut Output, rides: &[(Target, String, [f32; 3], f32)], kind: &str, event: Option<&str>, tag: Option<&str>) {
     let (mut done, mut failed) = (Vec::new(), Vec::new());
-    for (ride, name, at, yaw) in rides {
+    for (ride, name, at, _) in rides {
         let Target::Entity(vehicle) = ride else {
             failed.push(name.clone());
             continue;
         };
-        let rider = (ctx.seats_left(*vehicle) > 0).then(|| ctx.summon_as(None, kind, *at, *yaw, event)).flatten();
+        let rider = (ctx.seats_left(*vehicle) > 0).then(|| ctx.summon_as(None, kind, *at, 0.0, 0.0, event)).flatten();
+        if let (Some(rider), Some(tag)) = (rider, tag) {
+            ctx.name_entity(rider, tag);
+        }
         match rider {
             Some(rider) if ctx.ride(&Target::Entity(rider), *vehicle, Mount::RiderToVehicle) => done.push(name.clone()),
-            Some(rider) => {
-                ctx.remove_entity(rider);
-                failed.push(name.clone());
-            }
-            None => failed.push(name.clone()),
+            _ => failed.push(name.clone()),
         }
     }
     match done.is_empty() {
@@ -206,30 +205,35 @@ fn summon_riders(ctx: &mut ShardCtx<'_>, out: &mut Output, rides: &[(Target, Str
     }
 }
 
-/// A new ride of `kind` under each rider; one that already rides is skipped, or taken off first
-/// with `reassign_rides`.
-fn summon_rides(ctx: &mut ShardCtx<'_>, out: &mut Output, riders: &[(Target, String, [f32; 3], f32)], kind: &str, rule: RideRule, event: Option<&str>) {
-    let (mut done, mut skipped, mut failed) = (Vec::new(), Vec::new(), Vec::new());
-    for (rider, name, at, yaw) in riders {
+/// A new ride of `kind` under each rider, at a player's eyes, named `tag` once ridden; one that
+/// already rides is skipped, or taken off first with `reassign_rides`. A refused ride stays unnamed.
+fn summon_rides(ctx: &mut ShardCtx<'_>, out: &mut Output, riders: &[(Target, String, [f32; 3], f32)], kind: &str, rule: RideRule, event: Option<&str>, tag: Option<&str>) {
+    let (mut done, mut skipped, mut failed, mut refused) = (Vec::new(), Vec::new(), Vec::new(), false);
+    for (rider, name, at, _) in riders {
         if ctx.vehicle_of(rider).is_some() && rule != RideRule::ReassignRides {
             skipped.push(name.clone());
             continue;
         }
-        let Some(vehicle): Option<EntityId> = ctx.summon_as(None, kind, *at, *yaw, event) else {
+        let eyes = if matches!(rider, Target::Player(_)) { sapling_data::EYE_HEIGHT } else { 0.0 };
+        let Some(vehicle): Option<EntityId> = ctx.summon_as(None, kind, [at[0], at[1] + eyes, at[2]], 0.0, 0.0, event) else {
             failed.push(name.clone());
             continue;
         };
-        if ctx.ride(rider, vehicle, Mount::RiderToVehicle) {
-            done.push(name.clone());
-        } else {
-            ctx.remove_entity(vehicle);
-            failed.push(name.clone());
+        if !ctx.ride(rider, vehicle, Mount::RiderToVehicle) {
+            refused = true;
+            continue;
         }
+        if let Some(tag) = tag {
+            ctx.name_entity(vehicle, tag);
+        }
+        done.push(name.clone());
     }
     if !done.is_empty() {
         out.translate("commands.ride.summonRide.success", names(&done), true);
     } else if !skipped.is_empty() {
         out.translate("commands.ride.summonRide.skipped", names(&skipped), true);
+    } else if refused {
+        out.translate("commands.ride.summonRide.notRideable", Vec::new(), false);
     } else {
         out.translate("commands.ride.summonRide.failed", names(&failed), false);
     }

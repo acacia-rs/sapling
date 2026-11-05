@@ -40,7 +40,7 @@ fn a_summoned_mount_shows_the_inventory_and_box_its_event_gives() {
     ];
     for (index, (kind, event, inventory, size, tamed)) in cases.into_iter().enumerate() {
         let z = index as f32 * 4.0 + 0.5;
-        h.remote.run(move |ctx| _ = ctx.summon_as(None, kind, [4.5, 65.0, z], 0.0, Some(event)));
+        h.remote.run(move |ctx| _ = ctx.summon_as(None, kind, [4.5, 65.0, z], 0.0, 0.0, Some(event)));
         let sent = h.tick(1);
         let added = all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == kind).expect("announced");
         let shown = (container(&added.metadata), [float(&added.metadata, Key::BoundingboxWidth), float(&added.metadata, Key::BoundingboxHeight)]);

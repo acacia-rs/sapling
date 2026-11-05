@@ -198,12 +198,13 @@ impl Request<'_> {
         let Some((registry, id)) = self.block(&site, pos) else { return };
         let Some(hardness) = super::custom::breakable(registry, id).filter(|_| site.mode != GameMode::Spectator) else { return };
         let (packet, block) = (send::punch_particles(registry, pos, face, id), send::describe(registry, id));
+        let mines = mining::mines(self.world, self.entity, site.mode, &block.name);
         if !crate::hand_events::may_start_break(self.world, self.entity, pos, block) {
             return;
         }
-        match site.mode {
-            GameMode::Survival => mining::start(self.world, self.entity, site.layer, pos, &hardness, packet),
-            _ => send::to_viewers(self.world, site.layer, pos, &[packet]),
+        match mines {
+            true => mining::start(self.world, self.entity, site.layer, pos, &hardness, packet),
+            false => send::to_viewers(self.world, site.layer, pos, &[packet]),
         }
     }
 
@@ -225,24 +226,25 @@ impl Request<'_> {
         let name = block.name.clone();
         let by = mining::breaker(self.world, self.entity, &mining);
         let (mut drops, mut tags) = (Vec::new(), loot::Tags::default());
-        if site.mode == GameMode::Survival {
+        let mines = mining::mines(self.world, self.entity, site.mode, &name);
+        if mines {
             drops = loot::thrown(self.world, &block.name, &block.properties, &by);
             tags = loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
         } else if site.mode == GameMode::Creative && name == super::entities::POT {
             // Its loot and stack, not the pot (research/captures/bds-loot-probe2.txt).
             tags = loot::add_entity_loot(self.world, site.layer, pos, &mut drops);
         }
-        let allowed = site.mode == GameMode::Creative || site.mode == GameMode::Survival && took_its_time;
+        let allowed = site.mode == GameMode::Creative || mines && took_its_time;
         let event = plugins::offer(self.world,BreakEvent::new(self.player.clone(), pos, block, drops, allowed));
         let bees = crate::creatures::bees_in(self.world, site.layer, pos);
         match !event.is_cancelled() && self.remove(&site, pos) {
             true => {
                 crate::creatures::hive_broken(self.world, site.layer, pos, &name, bees, by.silk_touch);
                 loot::spill_tagged(self.world, site.layer, pos, &event.drops, &mut tags);
-                if site.mode == GameMode::Survival {
+                if mines {
                     after_break::leave(self.world, site.layer, pos, &name, &by);
                 }
-                if site.mode == GameMode::Survival && mining.hardness > 0.0 {
+                if mines && mining.hardness > 0.0 {
                     crate::inventory::wear_tool_in_hand(self.world, self.entity);
                 }
                 if by.harvests {
