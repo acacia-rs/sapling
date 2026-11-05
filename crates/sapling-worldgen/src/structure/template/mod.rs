@@ -170,4 +170,6 @@ fn templates_keep_their_block_entities() {
     // The oracle's template pots: a mansion's legacy items by their data, a desert village's dead bush.
     let plants = ["allium", "white_tulip", "red_tulip", "oxeye_daisy", "deadbush", "cactus"].map(|plant| format!("minecraft:{plant}"));
     assert!(plants.iter().all(|plant| has(&|e| matches!(e, BlockEntity::FlowerPot(p) if *p == plant.as_str()))));
+    // The oracle mansion's chests: two of eight allium in slots 8 to 18, the rest empty.
+    assert!(has(&|e| matches!(e, BlockEntity::Chest(items) if items.starts_with("8 1 minecraft:allium block;10 1"))) && has(&|e| *e == BlockEntity::Chest("")));
 }

@@ -1,6 +1,6 @@
 //! `block_entity_diff <seed> <world> [max chunks]`: every overworld chunk where BDS saved a
 //! block entity the generator makes (spawners, loot, trial spawners, vaults, pots, beds, bells,
-//! cauldrons) against ours,
+//! cauldrons, chests without loot) against ours,
 //! tallied per kind and table as `same`, `seed` (only the loot seed differs), `other`, `missing`
 //! (BDS only) and `extra` (ours only); the first `other`, `missing` and `extra` are printed.
 //! `<world>` is a folder under `$SAPLING_ORACLE_WORLDS` (e.g. 20261003-structures). `SEEDS=<text>`
@@ -25,6 +25,7 @@ fn ours(entity: &BlockEntity) -> (String, Option<i32>) {
         BlockEntity::Bell => ("bell".into(), None),
         BlockEntity::Cauldron(potion) => (format!("cauldron {potion}"), None),
         BlockEntity::FlowerPot(plant) => (format!("flower pot {plant}"), None),
+        BlockEntity::Chest(items) => (format!("chest [{}]", items.split(';').filter(|item| !item.is_empty()).map(|item| item.split(' ').take(3).collect::<Vec<_>>().join(" ")).collect::<Vec<_>>().join(", ")), None),
     }
 }
 
@@ -33,6 +34,16 @@ fn text(value: Option<&Value>) -> Option<String> {
         Some(Value::String(s)) => Some(s.to_string()),
         _ => None,
     }
+}
+
+/// A chest's items as `slot count name`.
+fn chest_items(nbt: &Value) -> Vec<String> {
+    let Some(Value::List(items)) = nbt.get("Items") else { return Vec::new() };
+    let number = |item: &Value, key: &str| match item.get(key) {
+        Some(Value::Byte(n)) => *n as i32,
+        _ => -1,
+    };
+    items.items.iter().map(|item| format!("{} {} {}", number(item, "Slot"), number(item, "Count"), text(item.get("Name")).unwrap_or_default())).collect()
 }
 
 fn theirs(nbt: &Value) -> Option<(String, Option<i32>)> {
@@ -53,6 +64,7 @@ fn theirs(nbt: &Value) -> Option<(String, Option<i32>)> {
         "Bell" => ("bell".into(), None),
         "Cauldron" => (format!("cauldron {}", match nbt.get("PotionId") { Some(Value::Short(id)) => *id, _ => -2 }), None),
         "FlowerPot" => (format!("flower pot {}", text(nbt.get("PlantBlock").and_then(|plant| plant.get("name"))).unwrap_or_default()), None),
+        "Chest" if string("LootTable").is_none() => (format!("chest [{}]", chest_items(nbt).join(", ")), None),
         _ => (format!("loot {}", string("LootTable")?), seed),
     })
 }

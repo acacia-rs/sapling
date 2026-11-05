@@ -43,6 +43,8 @@ LEGACY_PLANTS = {
     'minecraft:cactus': ['cactus'],
 }
 POTTED = {'dead_bush': 'deadbush'}
+# A legacy item's Java enchantment id as Bedrock's (the mansion's efficiency axe).
+LEGACY_ENCHANTS = {32: 15}
 
 
 def version(pack):
@@ -173,10 +175,21 @@ def flower_pot_plant(block, nbt):
     return None
 
 
-def block_entity(key, nbt):
+def chest_item(item):
+    """A template chest's item as `slot count name`, then `block` for a block item (saved with its block) and
+    `ench=<id>:<level>` per enchantment, by Bedrock's names and ids."""
+    name, data = item['id'], item.get('Damage', 0)
+    plant = LEGACY_PLANTS.get(name)
+    assert plant or data == 0, item
+    words = [str(item['Slot']), str(item['Count']), 'minecraft:' + plant[data] if plant else name] + (['block'] if plant else [])
+    return ' '.join(words + [f"ench={LEGACY_ENCHANTS[e['id']]}:{e['lvl']}" for e in item.get('tag', {}).get('ench', [])])
+
+
+def block_entity(key, nbt, family):
     """What BDS keeps of a template block's entity (docs/research/structure-block-entities.md): a kind, then its
     strings. `loot` table; `pot` table, four sherds (empty when plain); `trial` normal and ominous configs;
-    `vault` table, key item; `spawner` mob; `bed` colour; `bell`; `cauldron`; `flower_pot` plant. None for the rest. Beds, bells and
+    `vault` table, key item; `spawner` mob; `bed` colour; `bell`; `cauldron`; `flower_pot` plant; `chest` its
+    items (`chest_item`s joined by `;`), a mansion's chest without loot. None for the rest. Beds, bells and
     cauldrons are named by their block (`key`): Java saves no entity for a cauldron, and a bed's colour is its name."""
     kind = nbt.get('id', '').removeprefix('minecraft:')
     block = key.partition('[')[0].removeprefix('minecraft:')
@@ -192,6 +205,8 @@ def block_entity(key, nbt):
     plant = flower_pot_plant(block, nbt)
     if plant:
         return ['flower_pot', plant]
+    if family == 'mansion' and kind == 'Chest' and not nbt.get('LootTable'):
+        return ['chest', ';'.join(chest_item(item) for item in nbt.get('Items', []))]
     if kind in ('chest', 'trapped_chest', 'barrel', 'dispenser') and nbt.get('LootTable'):
         return ['loot', table(nbt['LootTable'])]
     if kind == 'decorated_pot' or block == 'decorated_pot':
@@ -305,7 +320,7 @@ def main():
                 specials.append((i, 2, [], None))
             elif key.startswith('minecraft:vine[') and 'up=true' in key:
                 specials.append((i, 3, [], None))
-            entity = block_entity(key, nbt)
+            entity = block_entity(key, nbt, family)
             if entity:
                 specials.append((i, 4, entity, None))
         out += struct.pack('<H', len(specials))
