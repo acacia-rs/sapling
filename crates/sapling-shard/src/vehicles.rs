@@ -6,6 +6,7 @@
 
 mod blasts;
 mod boats;
+mod bumps;
 mod cargo;
 mod carts;
 mod command_cart;
@@ -30,7 +31,7 @@ use crate::movement::Motion;
 use crate::sync::Told;
 
 pub(crate) use blasts::blasted;
-pub(crate) use cargo::{Cargo, cargo, load_cargo};
+pub(crate) use cargo::{Cargo, cargo, load_cargo, moved_by_command};
 pub(crate) use command_cart::set_command as set_cart_command;
 
 /// Riders who asked for their inventory while riding a vehicle with goods: that opens instead

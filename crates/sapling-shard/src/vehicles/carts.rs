@@ -84,13 +84,20 @@ fn how(world: &World, cart: Entity, kind: &str, rail: &Rail, level: &sapling_wor
 pub(super) fn tick(world: &mut World) {
     super::detectors::tick(world);
     push(world);
+    super::bumps::push(world);
     let carts: Vec<(Entity, Entity, u64, String, Body)> = world.query_filtered::<(Entity, &InLayer, &NetId, &Kind, &Body), With<Cart>>().iter(world).map(|(cart, layer, id, kind, body)| (cart, layer.0, id.0, kind.0.clone(), *body)).collect();
     for (cart, layer, id, kind, body) in carts {
         let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
         let on = rails::rail_under(level, body.at);
         let (body, packets) = match on {
             Some(rail) => {
-                let (feet, motion) = rails::roll(&rail, body.at, body.motion, &how(world, cart, &kind, &rail, level));
+                let (mut feet, mut motion) = rails::roll(&rail, body.at, body.motion, &how(world, cart, &kind, &rail, level));
+                if rail.shape <= 1 {
+                    (feet, motion) = super::bumps::walled(level, &body, feet, motion);
+                }
+                if let Some(stopped) = super::bumps::blocked(world, cart, layer, &body, feet) {
+                    (feet, motion) = (stopped, [0.0; 3]);
+                }
                 let Some(mut moved) = world.get_mut::<Body>(cart) else { continue };
                 (moved.at, moved.motion, moved.on_ground) = (feet, motion, true);
                 let moved = *moved;

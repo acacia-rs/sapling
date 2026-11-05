@@ -173,6 +173,9 @@ fn set_shape(world: &mut World, layer: Entity, pos: BlockPos, shape: u8) {
 
 /// Shapes the rail just placed at `pos` to the rails around it, and turns those that can to it.
 pub(super) fn join_placed(world: &mut World, layer: Entity, pos: BlockPos) {
+    if level(world, layer).and_then(|level| Rail::at(level, pos)).is_none() {
+        return;
+    }
     let powered = super::power_at(world, layer, pos) > 0;
     join(world, layer, pos, powered);
 }

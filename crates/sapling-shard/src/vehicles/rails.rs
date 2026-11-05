@@ -2,8 +2,6 @@
 //! (docs/research/vehicles.md "Rail physics"): slopes pull, the motion is turned along the rail
 //! and capped, a powered rail speeds a cart up and an unpowered one brakes it, the move is capped
 //! a tick, and a cart gains speed going down.
-// TODO: two carts do not push each other, and a cart at rest on a slope rolls (one on BDS stayed:
-// research/captures/bds-i2rails.txt).
 
 use sapling_api::BlockPos;
 use sapling_world::World as Level;
@@ -150,7 +148,8 @@ pub(super) fn roll(rail: &Rail, feet: [f32; 3], motion: [f32; 3], how: &Roll) ->
     let x = x0 + lx * along + (vx * share).clamp(-MOVE_CAP, MOVE_CAP);
     let z = z0 + lz * along + (vz * share).clamp(-MOVE_CAP, MOVE_CAP);
     let y = by + RIDE + rise(rail.shape, [x - bx, z - bz]);
-    let dropped = feet[1] - y;
+    // Measured from the old spot put on the rail's line (Java `getPos`): a summoned cart's snap up gains nothing.
+    let dropped = by + RIDE + rise(rail.shape, [x0 + lx * along - bx, z0 + lz * along - bz]) - y;
     if dropped != 0.0 && speed > 0.0 {
         let gained = (vx.hypot(vz) + dropped * DOWNHILL).max(0.0) / vx.hypot(vz).max(f32::EPSILON);
         (vx, vz) = (vx * gained, vz * gained);

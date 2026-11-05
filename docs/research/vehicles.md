@@ -127,10 +127,6 @@ were not found in any of these; sapling does what is listed there.
 
 - The links' `immediate`/`rider_initiated` for a non-click mount; type 2 for a second rider.
 - The add link's order against `SetEntityData` for later viewers: sapling sends seats and links after AddEntity.
-- A minecart's stored `Pos`: kept where the wire puts it, as a boat's (a boat on y -26 was kept at
-  -25.625, as shown; research/captures/bds-t2ekeep-dump.txt; `actors.rs` `compound_now`).
-- A cart at rest on a slope: BDS's (bds-i2rails.txt, summoned mid-slope) stayed at the rail's y + 0.5
-  and never rolled; sapling's rolls down (the slope pull of step 2 from rest). Left open.
 - Detector rail timing, hopper minecart pick-up range: first drilled 2026-11-05 (`e2rails`,
   thirteenth2e_drill.rs); the activator lock is real: a hopper minecart on a powered activator rail took
   nothing, and its item some 3 ticks after the power went (fixed, `vehicles/cargo.rs` `take_up`). The
@@ -158,11 +154,35 @@ were not found in any of these; sapling does what is listed there.
   over a cart on y -26 (middle -25.5) and none from -23.5 up; items 0.55 to 0.95 east on the floor.
   Sapling's reach was its box, and its middle 0.15 low; fixed (`vehicles/cargo.rs` `reaches`).
   Floor items slide after `/tp`, so the east edge is only bounded (taken at 1.30 and 1.45, sliding).
-- Left: BDS took a reached item a tick after the `/tp`, sapling in the `/tp`'s tick (its commands run
-  before the carts' tick).
+- BDS took a reached item a tick after the `/tp`, sapling in the `/tp`'s tick (its commands run
+  before the carts' tick); fixed 2026-11-05: a moved item waits out the tick (`vehicles/cargo.rs`
+  `MovedBy`, test `a_hopper_minecart_takes_an_item_moved_into_its_reach_a_tick_after_the_move`).
 - What raises a boat's underwater counter (not done); boat fall breaking (none found).
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
 - The horse screen: done without a capture, see mob-life.md "Mount inventories".
+
+## Carts on carts (drilled 2026-11-05, `bds_command_probe l2carts`, thirteenth2l_drill.rs)
+
+- **The slope that stayed** (bds-i2rails.txt): BDS's cart "at rest on a slope" sat on a rail that
+  was no slope. A `/setblock` slope with `/fill`ed rails beside it was turned flat as a placed rail
+  joins (Java `RailState`); sapling kept the set shape. Fixed: a commanded rail joins its neighbours
+  (`blocks/commanded.rs`, `blocks/rails.rs` `join_placed`); the cart stays.
+- **Against a block**: a cart at 0.4 a tick along a flat rail stopped at 12.51 against a stone at 13,
+  motion zeroed; sapling's rolled through and climbed it. Fixed (`vehicles/bumps.rs` `walled`); slopes
+  are left unchecked.
+- **Cart into cart**: one rolling at 0.4 into one at rest stopped at its side (centres 0.98 apart),
+  motion zeroed; touching carts then push apart as Java's `applyEntityCollision` for two minecarts,
+  each pair twice a tick: each keeps 0.2 of its motion, takes their mean and ±0.05·min(1, 1/d) along
+  their line, then rail drag ×0.96: 0.0576 the first tick, 0.0599 while they touch. Matches to 1e-4
+  (`vehicles/bumps.rs`, tests `carts_drilled.rs`). The common part of their motion grows 1.38× a
+  tick while they touch, so any unevenness shows: sapling's summoned cart lost 0.0075 to its snap up
+  onto the rail (the downhill rule read the raw old y); now measured from the old spot on the rail's
+  line, as Java's `getPos` (`vehicles/rails.rs` `roll`).
+- Left: two carts summoned 0.4 apart on BDS moved 0.1056 each the tick they parted (0.0599 on
+  sapling) and slowed as if a tick of drag more; they ended 0.065 short of sapling's. A new cart is
+  first pushed the tick after its AddEntity on BDS, in that tick on sapling.
+- **Stored `Pos`**: BDS kept a minecart on a rail at y -26 at -25.5, where it was shown
+  (bds-l2carts-dump.txt), as sapling does (`actors.rs` `compound_now`, the wire's lift 0.35).
 
 ## Drilled (2026-11-04, `bds_command_probe n3stick`, `n3exit`; examples/shared/ninth3_drill.rs)
 

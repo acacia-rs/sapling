@@ -2,7 +2,7 @@
 //! (research/captures/bds-fixset.txt, bds-bkticks.txt): a bed is laid whole with its head in the
 //! named cell, a small dripleaf with its upper half; coral plants and fans play `place`; nether vines, cave vines and kelp under water take a random age; a live coral fan
 //! or kelp keeps a water source beside itself, which then runs; a comparator set again in its own
-//! block type gives out what it gave (redstone/kept.rs).
+//! block type gives out what it gave (redstone/kept.rs); a rail joins the rails around it as a placed one does.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -75,6 +75,8 @@ fn put_now(world: &mut World, layer: Entity, pos: BlockPos, block: &Block, is_ag
     if put {
         super::daylight::left_for_the_second(world, layer, pos);
         super::coral::heard(world, layer, pos);
+        // BDS's /fill turned a set slope flat beside the rails it joined (bds-i2rails.txt, bds-l2carts.txt).
+        super::rails::join_placed(world, layer, pos);
     }
     Some(put)
 }

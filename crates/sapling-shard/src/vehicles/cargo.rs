@@ -22,6 +22,19 @@ const HOPPER_REACH: f32 = 0.25;
 #[derive(Component, Clone)]
 pub(crate) struct Cargo(Vec<Option<Held>>);
 
+/// The tick a command last moved an item in: BDS's hopper minecart took a `/tp`'d item a tick after the
+/// move, where sapling's commands run before the carts' tick (bds-i2reach.txt).
+#[derive(Component, Clone, Copy)]
+pub(crate) struct MovedBy(u64);
+
+/// Marks `entity` moved by a command or plugin this tick.
+pub(crate) fn moved_by_command(world: &mut World, entity: Entity) {
+    let tick = world.resource::<crate::components::Tick>().0;
+    if let Ok(mut entity) = world.get_entity_mut(entity) {
+        entity.insert(MovedBy(tick));
+    }
+}
+
 /// How many slots a vehicle of `kind` has, and the screen they show on.
 fn hold(kind: &str) -> Option<(usize, WindowType)> {
     Some(match kind {
@@ -113,12 +126,17 @@ fn reaches(low: [f32; 3], high: [f32; 3]) -> [([f32; 3], [f32; 3]); 3] {
 
 /// The items whose box overlaps `min..max`, oldest first.
 fn items_touching(world: &mut World, layer: Entity, min: [f32; 3], max: [f32; 3]) -> Vec<(Entity, ItemStack)> {
-    let mut lying = world.query::<(Entity, &drops::Dropped, &Body, &InLayer, &NetId)>();
+    let tick = world.resource::<crate::components::Tick>().0;
+    let mut lying = world.query::<(Entity, &drops::Dropped, &Body, &InLayer, &NetId, Option<&MovedBy>)>();
     let overlaps = |body: &Body| {
         let (low, high) = body.bounds();
         (0..3).all(|axis| low[axis] < max[axis] && high[axis] > min[axis])
     };
-    let mut found: Vec<_> = lying.iter(world).filter(|(_, _, body, on, _)| on.0 == layer && overlaps(body)).map(|(item, dropped, _, _, id)| (id.0, item, dropped.stack().clone())).collect();
+    let mut found: Vec<_> = lying
+        .iter(world)
+        .filter(|(_, _, body, on, _, moved)| on.0 == layer && overlaps(body) && moved.is_none_or(|moved| moved.0 != tick))
+        .map(|(item, dropped, _, _, id, _)| (id.0, item, dropped.stack().clone()))
+        .collect();
     found.sort_unstable_by_key(|(id, ..)| *id);
     found.into_iter().map(|(_, item, stack)| (item, stack)).collect()
 }

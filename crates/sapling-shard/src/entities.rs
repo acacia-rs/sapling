@@ -256,6 +256,7 @@ pub(crate) fn teleport(world: &mut World, id: EntityId, feet: [f32; 3]) -> bool 
         tell_viewers(world, entity, layer, feet.map(|c| c.floor() as i32), packets);
     }
     mobs::moved::moved(world, entity);
+    crate::vehicles::moved_by_command(world, entity);
     true
 }
 

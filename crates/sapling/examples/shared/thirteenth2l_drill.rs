@@ -10,8 +10,27 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
         "l2pace" => (pace(), SHOWN),
         "l2farm" => (farmland(), SHOWN),
+        "l2carts" => (carts(), CARTS_SHOWN),
         _ => return None,
     })
+}
+
+const CARTS_SHOWN: &[&str] = &["UpdateBlock", "UpdateSubchunkBlocks", "CommandOutput", "AddEntity", "RemoveEntity", "MoveEntityDelta", "MoveEntityAbsolute", "SetEntityMotion"];
+
+/// Rails east along z -2, -4, -6 and -8 from x 2: at z -2 a cart summoned mid-slope (rising west to a
+/// stone); at z -4 one sped east by three powered rails into a slope rising east; at z -6 two summoned
+/// 0.4 apart; at z -8 one sped east into one at rest. The carts are left in the world for its folder.
+fn carts() -> Vec<String> {
+    let mut lines = floor();
+    lines.extend(["setblock 1 -26 -2 stone", "setblock 2 -26 -2 rail [\"rail_direction\"=3]", "fill 3 -26 -2 8 -26 -2 rail [\"rail_direction\"=1]"].map(String::from));
+    for z in [-4, -8] {
+        lines.extend([format!("setblock 1 -26 {z} stone"), format!("fill 2 -27 {z} 4 -27 {z} redstone_block"), format!("fill 2 -26 {z} 4 -26 {z} golden_rail [\"rail_direction\"=1]"), format!("fill 5 -26 {z} 11 -26 {z} rail [\"rail_direction\"=1]")]);
+    }
+    lines.extend(["setblock 12 -26 -4 rail [\"rail_direction\"=2]", "setblock 13 -26 -4 stone", "fill 12 -26 -8 14 -26 -8 rail [\"rail_direction\"=1]", "fill 2 -26 -6 12 -26 -6 rail [\"rail_direction\"=1]", ""].map(String::from));
+    lines.extend(["summon minecart 2.5 -26 -1.5", "summon minecart 4.5 -26 -5.5", "summon minecart 4.9 -26 -5.5", "summon minecart 10.5 -26 -7.5", ""].map(String::from));
+    lines.extend(["summon minecart 2.5 -26 -3.5", "summon minecart 2.5 -26 -7.5"].map(String::from));
+    waits(&mut lines, 20);
+    lines
 }
 
 /// Farmland with no water near, at `randomtickspeed` 20 for 40 s then 200 for 10 s: 64 dry cells in chunk 0,0

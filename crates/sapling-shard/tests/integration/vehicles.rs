@@ -177,3 +177,27 @@ fn a_hopper_minecart_on_a_powered_activator_rail_takes_nothing_until_the_power_g
     sent.extend(ticks(&mut h, 10));
     assert!(item_gone(sent), "taken once the power went");
 }
+
+/// research/captures/bds-i2reach.txt: BDS's hopper minecart took a `/tp`'d item the tick after the move.
+#[test]
+fn a_hopper_minecart_takes_an_item_moved_into_its_reach_a_tick_after_the_move() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        for ground in [[3, 64, 0], [8, 64, 0]] {
+            _ = ctx.set_block(ground, &Block::new("stone"));
+        }
+        assert!(ctx.set_block([3, 65, 0], &Block::new("rail")));
+        assert!(ctx.drop_item(&Item::new("minecraft:stone", 1), [8.5, 65.2, 0.5]));
+    });
+    ticks(&mut h, 2);
+    spawned(&mut h, &[("minecraft:hopper_minecart", [3.5, 65.0, 0.5])]);
+    ticks(&mut h, 20);
+    h.remote.run(|ctx| {
+        let item = ctx.entities().into_iter().find(|entity| entity.kind == "minecraft:item").expect("the item").id;
+        assert!(ctx.move_entity(item, [3.5, 65.0, 0.5]));
+    });
+    let moved = ticks(&mut h, 1);
+    assert!(all::<RemoveEntity>(&moved).is_empty(), "not in the move's tick");
+    assert!(!all::<RemoveEntity>(&ticks(&mut h, 1)).is_empty(), "the tick after");
+}
