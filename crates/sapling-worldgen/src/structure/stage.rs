@@ -50,6 +50,7 @@ impl Structures {
             mineshafts.sort_by_key(|m| order.iter().position(|start| *start == m.start));
         }
         let mut canvas = Canvas::new(shape, chunk, neighbours.placed).with_features(features);
+        canvas.keep_jigsaws = neighbours.keep_jigsaws;
         let seeds = LargeFeatureSeed::new(self.level_seed);
         let seed = seeds.chunk(chunk.0, chunk.1);
         let chunk_random = || Mt19937::new(seed);

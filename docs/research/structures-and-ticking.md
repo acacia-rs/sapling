@@ -71,8 +71,23 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   `vanilla/worldgen.rs`). A town centre one deep (seed 20261018, y -60): one iron golem made with
   `doMobSpawning` off, none with `includeEntities` false (sapling: the templates' marker mobs, made
   unless it is false, `generation.rs` `write`; test `a_placed_village_names_its_marker_mobs`);
-  `keepJigsaws` true left 32 jigsaw blocks (a fill replacing them counted 32), false none (sapling
-  never keeps them). No villager in a town centre.
+  `keepJigsaws` true left 32 jigsaw blocks (a fill replacing them counted 32), false none. No
+  villager in a town centre.
+- `keepJigsaws` (bds-n13jig.txt): each kept jigsaw is `jigsaw[facing_direction=F,rotation=0]`
+  (up 1, sides 2-5; rotation always 0) with a `JigsawBlock` entity: `final_state`, `joint`
+  (`rollable`), `name`, `target`, `target_pool`, `selection_priority`, `placement_priority`.
+  sapling files them as `BlockEntity::Jigsaw` in on-demand placements only
+  (`StructureWrites::jigsaws`, `jigsaw/kept.rs`) and writes them when asked (sapling-world
+  `PlacedStructure::of`). A village pool through `/place jigsaw` writes nothing on sapling: its
+  elements are legacy templates the v2 placer skips (TODO in `jigsaw/piece.rs`).
+- `ignoreStartHeight` (bds-n13jig.txt): trail ruins from y -50 spanned -57..-35, from -40
+  -51..-25 (top 15 over the given y); without it they stood at their own height, buried at the
+  floor. sapling: v2 kinds start at the given y (`place_structure_at`; test
+  `ignore_start_height_stands_trail_ruins_at_the_given_height`).
+- `liquidSettings` (bds-n13liq.txt, plains houses into water pools): `apply_waterlogging` left
+  water in layer 1 under the waterloggable blocks placed (stairs, slabs, fences, panes, doors),
+  `ignore_waterlogging` none. sapling: apply is what any write does (`blocks/waterlog.rs`);
+  ignore clears layer 1 under every placed block (`sapling-shard/src/generation.rs` `write`).
 
 ## /tickingarea
 
@@ -120,9 +135,8 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   unseen. `structure` names beyond those drilled: sapling takes `/locate`'s names, `village` too,
   where BDS's `ancient_city` and `mineshaft` were `invalidstructure.error` and
   `abandoned_camp_meadow` a `generation.error`; a structure is drawn only over loaded columns
-  (`chunknotloaded.error`, where BDS placed one 9000 blocks off); `ignoreStartHeight`,
-  `keepJigsaws` and `liquidSettings` are taken, not followed (keeping jigsaws needs worldgen to
-  write jigsaw blocks with their entities); `includeEntities` is followed for `/place structure`
+  (`chunknotloaded.error`, where BDS placed one 9000 blocks off); `ignoreStartHeight` for kinds
+  other than the v2 ones; `includeEntities` is followed for `/place structure`
   as for jigsaws, undrilled there; the depth limit is taken as 20 (1..20; 0 and 30 refused).
   Block entities are placed with their loot tables (`StructureWrites::entities`); what BDS's
   chests held is unseen by command.

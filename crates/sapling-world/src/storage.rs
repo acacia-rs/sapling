@@ -93,8 +93,9 @@ pub trait WorldStorage: Send + Sync + 'static {
         None
     }
     /// The blocks the generator's structure `name` places when it starts in chunk `start`, over
-    /// the shapes `load` gives; `None` where storage generates no structures.
-    fn structure_writes(&self, _name: &str, _start: ChunkPos, _load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
+    /// the shapes `load` gives, its start piece at `start_y` where given (`ignoreStartHeight`);
+    /// `None` where storage generates no structures.
+    fn structure_writes(&self, _name: &str, _start: ChunkPos, _start_y: Option<i32>, _load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         None
     }
     /// [`WorldStorage::structure_writes`] for the jigsaw pool `pool`, as `/place jigsaw` assembles it.
@@ -147,8 +148,8 @@ impl<S: WorldStorage + ?Sized> WorldStorage for std::sync::Arc<S> {
     fn generated_height(&self, x: i32, z: i32) -> Option<i32> {
         (**self).generated_height(x, z)
     }
-    fn structure_writes(&self, name: &str, start: ChunkPos, load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
-        (**self).structure_writes(name, start, load)
+    fn structure_writes(&self, name: &str, start: ChunkPos, start_y: Option<i32>, load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
+        (**self).structure_writes(name, start, start_y, load)
     }
     fn jigsaw_writes(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], load: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
         (**self).jigsaw_writes(pool, target, max_depth, at, load)

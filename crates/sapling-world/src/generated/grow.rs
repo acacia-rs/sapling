@@ -1,12 +1,12 @@
 //! A worldgen feature placed over the loaded columns, as a sapling grows its tree
 //! (`sapling_worldgen::place_feature`), and the generator's structures placed the same way.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, OnceLock};
 
 use acacia_proto::nbt::Value;
 use acacia_world::BlockRegistry;
-use sapling_worldgen::{Block, ChunkShape, HEIGHT, MIN_Y, PlaceFailure, StructureWrites};
+use sapling_worldgen::{Block, BlockEntity, ChunkShape, HEIGHT, MIN_Y, PlaceFailure, StructureWrites};
 
 use super::convert::BlockIds;
 use super::entities::block_entity_nbt;
@@ -39,11 +39,25 @@ pub struct PlacedStructure {
 }
 
 impl PlacedStructure {
-    fn of(writes: StructureWrites, ids: &Ids) -> Self {
-        let blocks: HashMap<[i32; 3], Block> = writes.blocks.iter().copied().collect();
-        let block = |at: [i32; 3]| blocks.get(&at).map_or("", |b| b.name());
-        let entities = writes.entities.iter().filter_map(|&(at, entity)| Some((at, block_entity_nbt(at, block(at), entity)?))).collect();
-        Self { blocks: writes.blocks.iter().map(|&(pos, block)| (pos, ids.forward.id(block))).collect(), entities, actors: writes.actors }
+    /// With `kept` (`keepJigsaws`), its jigsaws written over what they would leave, in that registry's ids.
+    fn of(writes: StructureWrites, ids: &Ids, kept: Option<&BlockRegistry>) -> Self {
+        let named: HashMap<[i32; 3], Block> = writes.blocks.iter().copied().collect();
+        let block = |at: [i32; 3]| named.get(&at).map_or("", |b| b.name());
+        let mut entities: Vec<_> = writes.entities.iter().filter_map(|&(at, entity)| Some((at, block_entity_nbt(at, block(at), entity)?))).collect();
+        let mut jigsaws = Vec::new();
+        for &(at, entity) in writes.jigsaws.iter().filter(|_| kept.is_some()) {
+            let BlockEntity::Jigsaw { facing, .. } = entity else { continue };
+            // BDS's kept jigsaws all came with rotation 0, villages' vertical ones too (bds-k1jig.txt).
+            let id = kept.and_then(|registry| registry.find("minecraft:jigsaw", &format!("facing_direction={facing},rotation=0")));
+            if let (Some(id), Some(nbt)) = (id, block_entity_nbt(at, "jigsaw", entity)) {
+                jigsaws.push((at, id));
+                entities.push((at, nbt));
+            }
+        }
+        let replaced: HashSet<[i32; 3]> = jigsaws.iter().map(|(at, _)| *at).collect();
+        let mut blocks: Vec<_> = writes.blocks.iter().filter(|(pos, _)| !replaced.contains(pos)).map(|&(pos, block)| (pos, ids.forward.id(block))).collect();
+        blocks.extend(jigsaws);
+        Self { blocks, entities, actors: writes.actors }
     }
 }
 
@@ -60,20 +74,21 @@ impl World {
     }
 
     /// The generator's structure `name` drawn over the loaded columns as though it started in
-    /// chunk `start`; `None` without a generator.
-    pub fn place_structure(&self, name: &str, start: ChunkPos) -> Option<Result<PlacedStructure, PlaceFailure>> {
+    /// chunk `start`, its start piece at `start_y` where given (`ignoreStartHeight`) and its jigsaw
+    /// blocks kept with `keep_jigsaws`; `None` without a generator.
+    pub fn place_structure(&self, name: &str, start: ChunkPos, start_y: Option<i32>, keep_jigsaws: bool) -> Option<Result<PlacedStructure, PlaceFailure>> {
         let ids = ids(&self.registry);
         let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
-        let writes = self.loader.as_ref()?.storage().structure_writes(name, start, &load)?;
-        Some(writes.map(|writes| PlacedStructure::of(writes, ids)))
+        let writes = self.loader.as_ref()?.storage().structure_writes(name, start, start_y, &load)?;
+        Some(writes.map(|writes| PlacedStructure::of(writes, ids, keep_jigsaws.then_some(&self.registry))))
     }
 
     /// [`World::place_structure`] for a jigsaw pool assembled from `at`, as `/place jigsaw` does.
-    pub fn place_jigsaw(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3]) -> Option<Result<PlacedStructure, PlaceFailure>> {
+    pub fn place_jigsaw(&self, pool: &str, target: &str, max_depth: u32, at: [i32; 3], keep_jigsaws: bool) -> Option<Result<PlacedStructure, PlaceFailure>> {
         let ids = ids(&self.registry);
         let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
         let writes = self.loader.as_ref()?.storage().jigsaw_writes(pool, target, max_depth, at, &load)?;
-        Some(writes.map(|writes| PlacedStructure::of(writes, ids)))
+        Some(writes.map(|writes| PlacedStructure::of(writes, ids, keep_jigsaws.then_some(&self.registry))))
     }
 
     /// The block at a cell as the generator names it, its layer-1 water included; `None` for a

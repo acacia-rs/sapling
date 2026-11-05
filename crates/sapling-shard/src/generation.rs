@@ -11,7 +11,7 @@ use crate::components::Layer;
 use crate::handlers::Ctx;
 use crate::worlds;
 
-/// Writes what the generator placed, then the block entities of what it placed and, with
+/// Writes what the generator placed (without layer-1 water under `options.ignore_waterlogging`), then the block entities of what it placed and, with
 /// `options.include_entities`, its mobs, or says why it placed nothing.
 // BDS made a town centre's golem with `doMobSpawning` off (bds-k1jig.txt), unlike a generated column's.
 fn write(world: &mut World, layer: Entity, placed: Option<Result<PlacedStructure, PlaceFailure>>, options: PlaceOptions) -> Result<(), PlaceError> {
@@ -26,6 +26,9 @@ fn write(world: &mut World, layer: Entity, placed: Option<Result<PlacedStructure
         return Err(PlaceError::Unloaded);
     }
     blocks::set_many(world, layer, &placed.blocks);
+    for (pos, _) in placed.blocks.iter().filter(|_| options.ignore_waterlogging) {
+        blocks::clear_liquid(world, layer, *pos);
+    }
     for (pos, entity) in &placed.entities {
         blocks::keep_entity(world, layer, *pos, entity);
     }
@@ -52,14 +55,14 @@ impl GenerationBackend for Ctx<'_> {
     fn place_structure(&mut self, name: &str, at: BlockPos, options: PlaceOptions) -> Result<(), PlaceError> {
         let layer = worlds::current(self.world);
         let level = &self.world.get::<Layer>(layer).ok_or(PlaceError::NoGenerator)?.world;
-        let placed = level.place_structure(name, ChunkPos::of_block(at[0], at[2]));
+        let placed = level.place_structure(name, ChunkPos::of_block(at[0], at[2]), options.ignore_start_height.then_some(at[1]), options.keep_jigsaws);
         write(self.world, layer, placed, options)
     }
 
     fn place_jigsaw(&mut self, pool: &str, target: &str, max_depth: u32, at: BlockPos, options: PlaceOptions) -> Result<(), PlaceError> {
         let layer = worlds::current(self.world);
         let level = &self.world.get::<Layer>(layer).ok_or(PlaceError::NoGenerator)?.world;
-        let placed = level.place_jigsaw(pool, target, max_depth, at);
+        let placed = level.place_jigsaw(pool, target, max_depth, at, options.keep_jigsaws);
         write(self.world, layer, placed, options)
     }
 

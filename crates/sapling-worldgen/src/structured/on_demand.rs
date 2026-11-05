@@ -49,6 +49,10 @@ impl Stage for OnDemand<'_> {
 
     fn warm_structures(&self) {}
 
+    fn keeps_jigsaws(&self) -> bool {
+        true
+    }
+
     fn post_process(&self, chunk: (i32, i32)) -> Option<Source> {
         let rank = self.structure_rank(chunk)?;
         // TODO: the loaded chunk's own heights stand in for its pre-worldgen heightmap (villages' terrain matching).
@@ -58,12 +62,14 @@ impl Stage for OnDemand<'_> {
 }
 
 /// What a structure placed on demand writes: the blocks it changed, by chunk, the block
-/// entities of what it placed, at world positions, and the mobs its templates name.
+/// entities of what it placed, at world positions, the mobs its templates name, and the jigsaws
+/// `keepJigsaws` would keep (`BlockEntity::Jigsaw`), which nothing writes unless asked.
 #[derive(Debug, Default, PartialEq)]
 pub struct StructureWrites {
     pub blocks: Vec<([i32; 3], Block)>,
     pub entities: Vec<([i32; 3], BlockEntity)>,
     pub actors: Vec<crate::chunk::TemplateActor>,
+    pub jigsaws: Vec<([i32; 3], BlockEntity)>,
 }
 
 impl OnDemand<'_> {
@@ -87,7 +93,10 @@ impl OnDemand<'_> {
                     }
                 }
             }
-            writes.entities.extend(after.block_entities().into_iter().map(|([x, y, z], entity)| ([chunk.0 * 16 + x, y, chunk.1 * 16 + z], entity)));
+            for ([x, y, z], entity) in after.block_entities() {
+                let filed = if matches!(entity, BlockEntity::Jigsaw { .. }) { &mut writes.jigsaws } else { &mut writes.entities };
+                filed.push(([chunk.0 * 16 + x, y, chunk.1 * 16 + z], entity));
+            }
             writes.actors.extend_from_slice(after.actors());
         }
         writes
@@ -101,7 +110,13 @@ impl OverworldGenerator {
     /// position and block, every chunk's writes. Err(Unsupported) for kinds this cannot run on
     /// demand; Err(Failed) when the start's own checks fail there (no room, wrong height...).
     pub fn place_structure(&self, kind: StructureKind, start: (i32, i32), load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<StructureWrites, PlaceFailure> {
-        let forced = self.structures.forced(&self.density, kind, start)?;
+        self.place_structure_at(kind, start, None, load)
+    }
+
+    /// [`Self::place_structure`] with `ignoreStartHeight`'s height for a v2 kind's start piece
+    /// (BDS's trail ruins' tower topped out 15 over it, bds-n13jig.txt).
+    pub fn place_structure_at(&self, kind: StructureKind, start: (i32, i32), start_y: Option<i32>, load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<StructureWrites, PlaceFailure> {
+        let forced = self.structures.forced(&self.density, kind, start, start_y)?;
         Ok(self.draw(forced, start, load))
     }
 

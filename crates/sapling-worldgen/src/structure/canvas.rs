@@ -42,6 +42,8 @@ pub struct Neighbours<'a> {
     /// The canonical order's exception: a pyramid no chunk has placed yet takes its height from its
     /// start chunk's columns, as if that chunk ran first of its four.
     pub pyramid_from_start: bool,
+    /// `Canvas::keep_jigsaws` for this post-process.
+    pub keep_jigsaws: bool,
 }
 
 pub struct Canvas<'a> {
@@ -71,6 +73,8 @@ pub struct Canvas<'a> {
     /// Fences this post-process's mineshaft pieces placed: still the piece's unjoined fence block
     /// to BDS, which `canBeReplaced` keeps (a stronghold library's railing is not).
     pub shaft_fences: HashSet<(i32, i32, i32)>,
+    /// Jigsaw pieces file their jigsaws as `BlockEntity::Jigsaw` (a placement on demand).
+    pub keep_jigsaws: bool,
 }
 
 impl<'a> Canvas<'a> {
@@ -91,6 +95,7 @@ impl<'a> Canvas<'a> {
             past_entities: Vec::new(),
             written: HashMap::default(),
             shaft_fences: HashSet::new(),
+            keep_jigsaws: false,
         }
     }
 

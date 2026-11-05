@@ -51,8 +51,9 @@ impl Forced {
 
 impl Structures {
     /// `kind` started in `start` whatever the grid and biome filter say; the variant a biome picks
-    /// (village type, temple kind, warm ruins) still comes from the start's biome.
-    pub(crate) fn forced(&self, density: &Density, kind: StructureKind, start: (i32, i32)) -> Result<Forced, PlaceFailure> {
+    /// (village type, temple kind, warm ruins) still comes from the start's biome. `start_y` puts
+    /// a v2 kind's start piece at that height (`ignoreStartHeight`); the other kinds take their own.
+    pub(crate) fn forced(&self, density: &Density, kind: StructureKind, start: (i32, i32), start_y: Option<i32>) -> Result<Forced, PlaceFailure> {
         let probe = Probe { density };
         let none = Reaching::default;
         match kind {
@@ -107,7 +108,7 @@ impl Structures {
                 Forced::spanning(Reaching { cities: vec![city], ..none() }, bb)
             }
             StructureKind::TrialChambers | StructureKind::TrailRuins | StructureKind::AbandonedCamp => {
-                let pieces = self.forced_v2(density, kind, start).ok_or(PlaceFailure::Failed)?;
+                let pieces = self.forced_v2(density, kind, start, start_y).ok_or(PlaceFailure::Failed)?;
                 Forced::jigsaw(pieces)
             }
         }

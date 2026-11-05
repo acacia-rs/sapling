@@ -29,6 +29,19 @@ pub enum BlockEntity {
     Chest(&'static str),
     /// An end gateway, never ticked, and the block its travellers go over.
     EndGateway([i32; 3]),
+    /// A jigsaw that `/place`'s `keepJigsaws` would keep (BDS's `JigsawBlock`, bds-k1jig.txt), filed only
+    /// by a placement on demand over the block it left there, `over`; `facing` is Bedrock's `facing_direction`.
+    Jigsaw {
+        facing: u8,
+        name: &'static str,
+        target: &'static str,
+        pool: &'static str,
+        rollable: bool,
+        final_state: crate::block::Block,
+        over: crate::block::Block,
+        selection_priority: i32,
+        placement_priority: i32,
+    },
 }
 
 impl BlockEntity {
@@ -57,6 +70,7 @@ impl BlockEntity {
             Self::FlowerPot(_) => name == "flower_pot",
             Self::Chest(_) => matches!(name, "chest" | "trapped_chest"),
             Self::EndGateway(_) => name == "end_gateway",
+            Self::Jigsaw { over, .. } => name == over.name(),
         }
     }
 }

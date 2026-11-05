@@ -84,6 +84,28 @@ fn a_placed_village_names_its_marker_mobs() {
 }
 
 #[test]
+fn a_placed_town_centre_files_the_jigsaws_keep_jigsaws_keeps() {
+    // bds-k1jig.txt: BDS kept a town centre's jigsaws as JigsawBlocks, up ones facing 1, sides 2-5.
+    let generator = OverworldGenerator::new(SEED);
+    let town = generator.place_jigsaw("minecraft:village/plains/town_centers", "minecraft:bottom", 1, [8, 65, 8], &flat).unwrap();
+    let writes = generator.place_jigsaw("minecraft:trail_ruins/tower", "minecraft:road_anchor", 7, [8, 40, 8], &flat).unwrap();
+    assert!(!writes.jigsaws.is_empty() && writes.entities.iter().all(|(_, entity)| !matches!(entity, BlockEntity::Jigsaw { .. })), "{} blocks; town {} {}", writes.blocks.len(), town.blocks.len(), town.jigsaws.len());
+    for (at, jigsaw) in &writes.jigsaws {
+        let BlockEntity::Jigsaw { facing, name, .. } = jigsaw else { panic!("{jigsaw:?} at {at:?}") };
+        assert!(*facing < 6 && name.starts_with("minecraft:"), "{jigsaw:?} at {at:?}");
+    }
+}
+
+#[test]
+fn ignore_start_height_stands_trail_ruins_at_the_given_height() {
+    // bds-n13jig.txt: from y -50 and -40 BDS's ruins topped out at -35 and -25, from their own height buried at the floor.
+    let generator = OverworldGenerator::new(SEED);
+    let top = |start_y| generator.place_structure_at(StructureKind::TrailRuins, (0, 0), start_y, &flat).unwrap().blocks.iter().map(|([_, y, _], _)| *y).max();
+    assert_eq!(top(Some(-20)), Some(-5));
+    assert_ne!(top(None), top(Some(-20)));
+}
+
+#[test]
 fn place_structure_fails_a_temple_in_the_ocean() {
     // The monument BDS located (structure/tests.rs): deep ocean, no temple kind there.
     let generator = OverworldGenerator::new(SEED);

@@ -61,7 +61,7 @@ pub use portals::{PortalRecord, decode_portals, encode_portals};
 pub use dragon_fight::{DragonFightRecord, decode_dragon_fight, encode_dragon_fight};
 pub use block_entities::{BlockEntity, block_entities, with_block_entity, without_block_entity};
 pub use container::{container_items, new_block_entity, with_container_items};
-pub use generated::{generated_bed, generated_bell, generated_cauldron, generated_chest, generated_end_gateway, generated_flower_pot, generated_loot, generated_pot, generated_spawner, generated_trial_spawner, generated_vault};
+pub use generated::{generated_bed, generated_bell, generated_cauldron, generated_chest, generated_end_gateway, generated_flower_pot, generated_jigsaw, generated_loot, generated_pot, generated_spawner, generated_trial_spawner, generated_vault};
 pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
