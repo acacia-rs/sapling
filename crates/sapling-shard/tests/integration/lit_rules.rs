@@ -186,11 +186,15 @@ fn water_freezes_and_snow_lies_where_it_is_cold_while_it_snows() {
     h.remote.run(move |ctx| {
         let count = |y: i32, xs: std::ops::Range<i32>, name: &str| xs.flat_map(|x| (0..16).map(move |z| [x, y, z])).filter(|at| ctx.block(*at).is_some_and(|block| block.name == name)).count();
         let piled = (8..16).flat_map(|x| (0..16).map(move |z| [x, 64, z])).filter(|at| ctx.block(*at).is_some_and(|block| block.properties.contains("height=") && !block.properties.contains("height=0"))).count();
-        sent.send((count(63, 0..8, "minecraft:ice"), count(64, 8..16, "minecraft:snow_layer"), piled)).expect("the test waits");
+        let layers = |x: i32, z: i32| ctx.block([x, 64, z]).and_then(|block| block.properties.split(',').find_map(|pair| pair.strip_prefix("height=")?.parse::<i32>().ok())).map_or(0, |height| height + 1);
+        let far = |dx: i32, dz: i32| (8..16 - dx).flat_map(|x| (0..16 - dz).map(move |z| (x, z))).filter(|(x, z)| (layers(*x, *z) - layers(x + dx, z + dz)).abs() > 1).count();
+        sent.send((count(63, 0..8, "minecraft:ice"), count(64, 8..16, "minecraft:snow_layer"), piled, far(1, 0), far(0, 1))).expect("the test waits");
     });
     h.tick(1);
-    let (ice, snow, piled) = got.recv().expect("ran");
+    let (ice, snow, piled, far_x, far_z) = got.recv().expect("ran");
     assert!(ice > 20 && snow > 20, "ice {ice}, snow {snow}");
     // bds-u1cold.txt: ice plains' snow piled to 8 layers in 70 s at speed 30.
     assert!(piled > 20, "piled {piled}");
+    // There too, a layer falls on the lower north or south neighbour: z-neighbours stay within a layer.
+    assert!(far_x > 10 && far_z * 5 < far_x, "pairs over a layer apart: along x {far_x}, along z {far_z}");
 }

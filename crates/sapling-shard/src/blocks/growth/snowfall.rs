@@ -71,16 +71,49 @@ fn fallen(level: &Level, x: i32, z: i32, freezes: bool, snows: bool) -> Option<(
     if !snows {
         return None;
     }
-    let lies = |pos: BlockPos| level.is_cold(pos[0], pos[1], pos[2]) && block_light(level, pos) < SNOW_DIM;
-    if let Some(height) = snow_height(level, ground) {
-        let depth = height + 1 + if snow_height(level, [x, top - 1, z]) == Some(FULL) { LAYERS } else { 0 };
-        return (height < FULL && depth < most_layers(level, ground) && lies(ground)).then(|| registry.find(SNOW, &format!("covered_bit=0,height={}", height + 1)).map(|snow| (ground, snow))).flatten();
+    let at = if snow_height(level, ground).is_some_and(|height| height < FULL) { ground } else { over };
+    let at = smoothed(level, at, room(level, at)?);
+    match snow_height(level, at) {
+        Some(height) => registry.find(SNOW, &format!("covered_bit=0,height={}", height + 1)),
+        None => send::resolve(registry, &Block::new(SNOW)),
     }
-    let is_air = level.in_height(top + 1) && level.block(x, top + 1, z) == registry.air_id();
-    if is_air && holds_snow(level, level.block(x, top, z)) && lies(over) {
-        return send::resolve(registry, &Block::new(SNOW)).map(|snow| (over, snow));
+    .map(|snow| (at, snow))
+}
+
+/// The layers the cell at `pos` would hold with one more fallen into it, or `None` where none can lie
+/// (`Weather::canPlaceTopSnow` 14119d880): cold, dim, a snow layer under the biome's most, or air over
+/// ground that holds snow or over a whole layer.
+fn room(level: &Level, [x, y, z]: BlockPos) -> Option<u8> {
+    if !level.in_height(y) || !level.in_height(y - 1) || !level.is_cold(x, y, z) || block_light(level, [x, y, z]) >= SNOW_DIM {
+        return None;
     }
-    None
+    let most = most_layers(level, [x, y, z]);
+    if let Some(height) = snow_height(level, [x, y, z]) {
+        let depth = height + 1 + if snow_height(level, [x, y - 1, z]) == Some(FULL) { LAYERS } else { 0 };
+        return (height < FULL && depth < most).then_some(height + 2);
+    }
+    if level.block(x, y, z) != level.registry().air_id() {
+        return None;
+    }
+    match snow_height(level, [x, y - 1, z]) {
+        Some(FULL) => (LAYERS < most).then_some(1),
+        Some(_) => None,
+        None => holds_snow(level, level.block(x, y - 1, z)).then_some(1),
+    }
+}
+
+/// Where a layer meant for `at`, which would then hold `layers`, falls: on the cell north or south of it
+/// (only those) that would hold fewer, the fewest, north first on a tie; across a chunk's edge only if
+/// under half (`Weather` 14119dec0; bds-u1cold.txt: z-neighbours within a chunk were nearly all within a layer).
+fn smoothed(level: &Level, at: BlockPos, layers: u8) -> BlockPos {
+    let mut best = (at, layers);
+    for side in [[at[0], at[1], at[2] - 1], [at[0], at[1], at[2] + 1]] {
+        let Some(there) = room(level, side) else { continue };
+        if there < best.1 && (side[2] >> 4 == at[2] >> 4 || there < layers / 2) {
+            best = (side, there);
+        }
+    }
+    best.0
 }
 
 /// The `height` of the snow layer at `pos`, 0 for one layer.

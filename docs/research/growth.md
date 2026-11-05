@@ -284,8 +284,19 @@ top times eight in BDS's vanilla biome definitions (`behavior_packs/vanilla/__br
 one layer for most cold biomes (`[0.0, 0.125]`), two for frozen oceans and rivers, cold beaches,
 stone beaches and the taigas, four for the cold taigas, eight for ice plains, twelve for ice
 mountains and ice spikes. Sapling counts the layers in the cell and a full layer under it
-(`growth/snowfall.rs`); BDS's smoothing, which may put the layer on a lower neighbour instead, is
-not ported [I].
+(`growth/snowfall.rs`).
+
+Smoothing (14119dec0, called from `LevelChunk::tick` with it on) [D]: a layer meant for a cell
+that would then hold h layers goes instead to the cell north (z - 1) or south (z + 1) of it at
+the same y, whichever would hold fewer than h and fewest (north on a tie), and across a chunk's
+edge only if fewer than h / 2; never east or west. A fresh layer (h 1) never moves. Checked on
+bds-u1cold.txt's final field (2026-11-05, thirteenth2l): of z-neighbours in one chunk 1.6% were
+over a layer apart, of x-neighbours 23%, of z-neighbours across a chunk's edge 46%. Sapling
+since (`snowfall.rs` `smoothed`, assert in `water_freezes_and_snow_lies_where_it_is_cold_while_it_snows`),
+sapling-u1cold.txt: 2.6%, 30% and 51% (its snow stopped 7 s sooner, the drill's waits being wall time). The same cell rule also lays a layer on air over a whole
+layer where the biome piles past 8 (ice spikes, ice mountains), which sapling did not.
+Left: BDS moves a replaceable plant at the cell into the second layer under the snow; sapling
+lays snow only into air.
 
 - Light, drilled 2026-10-29 with `lightgrow`, `lightpoke` and `croprates` (`examples/shared/growth_drill.rs`;
   `research/captures/bds-lightgrow.txt`, `bds-lightpoke.txt`, `bds-croprates.txt`). The scenes use sealed rooms lit
