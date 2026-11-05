@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("{ms:>6} ResourcePackChunkData pack_id={} index={} progress={} len={}", chunk.pack_id, chunk.chunk_index, chunk.progress, chunk.payload.len());
                 chunks.entry(chunk.pack_id).or_default().push((chunk.chunk_index, chunk.progress, chunk.payload.to_vec()));
             }
-            packets::StartGame::ID => println!("{ms:>6} StartGame"),
+            packets::StartGame::ID => println!("{ms:>6} StartGame hardcore={}", packet.decode::<packets::StartGame>()?.hardcore),
             packets::AvailableCommands::ID => {
                 let list = packet.decode::<packets::AvailableCommands>()?;
                 for command in list.command_data.iter().filter(|c| SHOWN_COMMANDS.contains(&c.name.as_str())) {

@@ -65,7 +65,7 @@ fn effects() -> Vec<String> {
     with(lines, &["gamemode creative @s", "effect @s clear", "clear @s", ""])
 }
 
-const ENCH_SHOWN: &[&str] = &["SetEntityMotion", "UpdateAttributes", "SetHealth", "EntityEvent", "MovePlayer", "CorrectPlayerMovePrediction", "CommandOutput", "InventorySlot", "MobArmorEquipment"];
+const ENCH_SHOWN: &[&str] = &["LevelEvent", "SetEntityMotion", "UpdateAttributes", "SetHealth", "EntityEvent", "MovePlayer", "CorrectPlayerMovePrediction", "CommandOutput", "InventorySlot", "MobArmorEquipment"];
 
 /// A slowed cow hit by a plain sword and by Knockback I and II; the actor beside a TNT bare and in
 /// Blast Protection IV; `/damage` of 10 by four causes bare, in diamond, and in diamond with

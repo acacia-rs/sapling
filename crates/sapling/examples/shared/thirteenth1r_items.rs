@@ -90,7 +90,7 @@ const BUNDLE_SHOWN: &[&str] = &["ContainerRegistryCleanup", "MobEquipment", "Inv
 /// In survival a bundle holding dirt given to an allay; forty seconds for the cleanups.
 fn bundle() -> Vec<String> {
     let mut lines = with(floor(), &["gamemode survival @s", "replaceitem entity @s slot.hotbar 0 bundle 1", "replaceitem entity @s slot.hotbar 1 dirt 4", "", "!bundleput 1 2 0", "", "!bundletag"]);
-    lines.extend(owned(["summon allay 2.5 -26 0.5", "", "!interact allay", "", "!bundletag"]));
+    lines.extend(owned(["summon allay 2.5 -26 0.5", "", "tp @e[type=allay] 1.5 -26 0.5", "!interact allay", "", "!bundletag"]));
     waits(&mut lines, 40);
     with(lines, &["gamemode creative @s", "clear @s", "kill @e[type=!player]", ""])
 }
