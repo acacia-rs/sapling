@@ -114,8 +114,9 @@ fn anvil() -> Vec<String> {
         lines.extend(owned(["", "!move 0 1"]));
         lines.push(hold("iron_sword"));
         lines.extend(second.iter().map(|enchant| format!("enchant @s {enchant}")));
-        // The result dropped, for its tag; a refused pair taken back out of the anvil.
-        lines.extend(owned(["setblock 2 -26 0 anvil", "", "!click 2 0 0", "", "!ui 1 1", "!ui 0 2", "", "!anvilcraft 0 Iron~Sword 8", "", "!uiback 1 6", "!uiback 2 7", "!close", ""]));
+        // The result dropped, for its tag; a refused pair goes back to the inventory as the anvil
+        // closes (taking back a consumed slot got the actor kicked).
+        lines.extend(owned(["setblock 2 -26 0 anvil", "", "!click 2 0 0", "", "!ui 1 1", "!ui 0 2", "", "!anvilcraft 0 Iron~Sword 8", "", "!close", "", "kill @e[type=item]"]));
     }
     with(lines, &["setblock 2 -26 0 air", "gamemode creative @s", "clear @s", ""])
 }
