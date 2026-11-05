@@ -375,6 +375,12 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
 
 ## Not drilled
 
+- Seen on the way in thirteenth3q (2026-11-05), not followed: BDS's summoned boat stands 0.2 off the
+  summon point in x and z (bds-q3seats.txt: 4.5, 4.5 to 4.7, 4.3; earlier captures alike), sapling's on
+  it. A falling suspicious block that lands breaks with `ParticleDestroy` at the cell's corner and one
+  UpdateSubchunkBlocks setting it then air (bds-q3brush.txt's first run); sapling's particle is at the
+  entity, no block sent. `tp @s @e[type=arrow,c=1]` answered `success_count` 2 on BDS, 1 on sapling
+  (bds-q3arrows.txt). Slowness 255 does not hold BDS's cows (bds-q3wind.txt, bds-q3crowd.txt).
 - Repair through `minecraft:repairable` (data-driven items naming themselves), drilled 2026-11-04 on
   spears (research/captures/bds-t2espear.txt): two iron spears worn 150 and 130, one with sharpness
   II, made one worn 30 (no twentieth) that kept sharpness II, in either hotbar order; sapling gave 18
