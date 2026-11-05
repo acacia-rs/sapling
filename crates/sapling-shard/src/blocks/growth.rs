@@ -12,6 +12,7 @@ mod chorus;
 mod copper;
 mod cover;
 mod kelp;
+mod pace;
 mod rules;
 mod sampled;
 mod snowfall;
@@ -32,9 +33,6 @@ pub(super) use kelp::meal as meal_kelp;
 pub(crate) use snowfall::holds_snow;
 
 const RULE: &str = "randomTickSpeed";
-/// Ticks between a cell's random ticks for each unit of the rule: BDS's lit ores lasted 1760 on
-/// average and its wheat grew at the pace 1900 gives.
-const EVERY: f32 = 1800.0;
 const CHANCES: u32 = 1 << 20;
 const DIRT: &str = "minecraft:dirt";
 const FARMLAND: &str = "minecraft:farmland";
@@ -131,15 +129,20 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
 fn draw_ticks(world: &mut World, region: &Region, picks: &mut Picks) {
     for layer in sampled::layers(world) {
         let Some((_, RuleValue::Int(rule))) = level(world, layer).and_then(|level| level.level().rules.get(RULE)) else { continue };
-        let chance = rule.max(0) as f32 / EVERY;
-        for pos in sampled::picked(world, layer, chance, picks) {
+        let (most, mut heights) = (pace::most(rule), pace::Heights::default());
+        // Drawn at the most any chunk gives, each kept by its own chunk's share of that.
+        for pos in sampled::picked(world, layer, most, picks) {
             if !region.ticks_block(world, layer, pos) {
                 continue;
             }
-            let Some(name) = level(world, layer).and_then(|level| sampled_at(level, pos)) else {
+            let Some(level) = level(world, layer) else { continue };
+            let Some(name) = sampled_at(level, pos) else {
                 sampled::forget(world, layer, pos);
                 continue;
             };
+            if (picks.below(CHANCES) as f32) >= heights.chance(layer, level, pos, rule) / most * CHANCES as f32 {
+                continue;
+            }
             match name {
                 "minecraft:pointed_dripstone" => super::drips::ticked(world, layer, pos, &mut || picks.below(1 << 24) as f32 / (1 << 24) as f32),
                 "minecraft:lava" | "minecraft:flowing_lava" => super::fire::kindled_by_lava(world, layer, pos, &mut |sides| picks.below(sides)),
@@ -178,7 +181,7 @@ pub(crate) fn tick(world: &mut World) {
         return;
     };
     let (mut changed, mut done): (Vec<(Entity, BlockPos, bool, Vec<rules::Change>)>, Vec<(Entity, BlockPos)>) = (Vec::new(), Vec::new());
-    let mut saplings = Vec::new();
+    let (mut saplings, mut heights) = (Vec::new(), pace::Heights::default());
     for (layer, pos) in growing {
         if !region.ticks_block(world, layer, pos) {
             continue;
@@ -189,7 +192,7 @@ pub(crate) fn tick(world: &mut World) {
         };
         let Some(level) = level(world, layer) else { continue };
         let Some((_, RuleValue::Int(rule))) = level.level().rules.get(RULE) else { continue };
-        let chance = rule.max(0) as f32 * rules::haste(name) / EVERY;
+        let chance = heights.chance(layer, level, pos, rule) * rules::haste(name);
         if (picks.below(CHANCES) as f32) >= chance * CHANCES as f32 {
             continue;
         }

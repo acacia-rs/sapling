@@ -103,3 +103,22 @@ fn block_ticks_and_circuits_wait_out_of_the_tick_region_and_catch_up_as_on_bds()
     ask(&mut h, |ctx| ctx.teleport(PlayerId(1), [56.5, 65.0, 0.5]));
     assert_eq!(looked(&mut h), [[true; 3]; 4]);
 }
+
+#[test]
+fn a_chunk_with_blocks_above_its_lowest_section_ticks_a_cell_a_quarter_more_often_as_on_bds() {
+    // research/captures/bds-g3rate.txt: lit ore in a chunk filled to one section (two picks a tick in 4096
+    // cells) against one filled to two (five in 8192).
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let layers = |[x, z]: [i32; 2]| (-64..-60).flat_map(move |y| (0..16).flat_map(move |dx| (0..16).map(move |dz| [x + dx, y, z + dz])));
+    let (low, high) = ([16, 0], [0, 16]);
+    ask(&mut h, move |ctx| {
+        assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(100)) && ctx.set_block([8, -40, 24], &Block::new("minecraft:stone")));
+        assert!(layers(low).chain(layers(high)).all(|pos| ctx.set_block(pos, &Block::new("minecraft:lit_redstone_ore"))));
+    });
+    (0..10).for_each(|_| drop(h.tick(1)));
+    let out = ask(&mut h, move |ctx| [low, high].map(|chunk| layers(chunk).filter(|pos| ctx.block(*pos).is_some_and(|block| block.name == "minecraft:redstone_ore")).count()));
+    // Each ore's chance a tick, from the share of 1024 still lit: 100 / 2048 against 100 / 1638.
+    let [low, high] = out.map(|out| -(1.0 - out as f64 / 1024.0).ln());
+    assert!(high / low > 1.12 && high / low < 1.4 && low > 0.4 && low < 0.7, "{out:?} out");
+}

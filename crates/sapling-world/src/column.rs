@@ -219,6 +219,12 @@ impl Column {
         })
     }
 
+    /// The sections from the bottom up to the highest that holds anything but air in either layer.
+    pub fn filled_sections(&self) -> usize {
+        let air = self.chunk.dimension().air;
+        (0..self.chunk.section_count()).rev().find(|&section| self.chunk.section_uniform(section) != Some(air)).map_or(0, |section| section + 1)
+    }
+
     /// Encodes everything a client can ask of this column.
     pub fn warm(&self, registry: &BlockRegistry) {
         self.level_chunk(false);
