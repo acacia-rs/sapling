@@ -162,7 +162,7 @@ pub(crate) fn burn(world: &mut World) {
         if left < 0 {
             let [x, y, z] = body.at;
             let wreck = wreck(world, layer);
-            creatures::explode(world, Some(entity), layer, [x, y + HEART, z], POWER, wreck);
+            creatures::explode_primed(world, entity, layer, [x, y + HEART, z], POWER, wreck);
             continue;
         }
         world.entity_mut(entity).insert(Primed(left));

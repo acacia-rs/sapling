@@ -236,8 +236,19 @@ fn hit_from(world: &mut World, player: Entity, amount: f32, from: [f32; 3], push
     let Some(amount) = ask(world, player, amount, cause) else { return false };
     let (dx, dz) = (feet[0] - from[0], feet[2] - from[2]);
     let far = dx.hypot(dz).max(1e-4);
-    if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount && (!matches!(cause, Cause::Projectile) || vitals.health.lands(amount))) {
-        throw(world, player, id, [dx / far * THROW + push[0], THROW + push[1], dz / far * THROW + push[2]]);
+    let knock = [dx / far * THROW, THROW, dz / far * THROW];
+    let throws = world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > amount && (!matches!(cause, Cause::Projectile) || vitals.health.lands(amount)));
+    // BDS told a blast's knock alone, then the hurt, then the knock with the push (bds-boom.txt, bds-r1ench.txt).
+    let blast = matches!(cause, Cause::EntityExplosion | Cause::BlockExplosion);
+    if throws && blast {
+        throw(world, player, id, knock);
     }
-    land(world, player, amount, cause)
+    if throws && !blast {
+        throw(world, player, id, std::array::from_fn(|axis| knock[axis] + push[axis]));
+    }
+    let landed = land(world, player, amount, cause);
+    if throws && blast {
+        throw(world, player, id, std::array::from_fn(|axis| knock[axis] + push[axis]));
+    }
+    landed
 }

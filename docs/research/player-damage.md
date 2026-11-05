@@ -190,6 +190,14 @@ Drilled 2026-11-05 (research/captures/bds-n13play.txt, bds-n13more.txt, bds-n13i
   cause 10 (`block_explosion`). That is the blast rule measured from the feet (34.36 before
   Resistance), plus 1, with no difficulty scaling. sapling took the eyes and scaled it (3.54,
   6.68, 10.03, cause 11); fixed (`creatures/blast.rs` `reaches`, `Rule::Burning`).
+- Primed TNT 2 blocks off on easy, Resistance IV, health 60 (bds-r1ench.txt): 7.106, the blast rule
+  unhalved (impact 0.717); Blast Protection IV took about a third off the harm and nothing off the
+  throw. Every blast on BDS told the hit's 0.4 knock alone, then `HurtAnimation`, then knock and push
+  (bds-boom.txt, bds-ghast.txt, bds-o3wither.txt); sapling told one motion after the hurt and halved
+  TNT on easy. Fixed (`blast.rs` `explode_primed`, `struck.rs` `hit_from`). Left: sapling's impact
+  came out 0.663 against BDS's 0.717 at what looked the same spot; the drill now shows the blast's
+  `LevelEvent` to place it. Knockback I and II on a cow, and `/damage` of 10 by four causes bare, in
+  diamond and in Protection IV diamond, were the same on both.
 - Exhaustion: a fall, a zombie's hits and burning in fire cost none; breaking dirt and short grass
   0.005 each, a hit on a cow 0.1; sapling the same (sapling-n13play.txt).
 - Wear: an iron sword lost 1 to a hit on a cow and 2 to breaking dirt, an iron pickaxe 2 and 1

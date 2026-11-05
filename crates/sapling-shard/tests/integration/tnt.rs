@@ -180,3 +180,39 @@ fn a_fire_charge_from_a_dispenser_sets_fire_before_the_tnt_it_hits() {
     assert!(all::<AddEntity>(&sent).iter().all(|added| added.entity_type != "minecraft:tnt"), "primed");
     assert_eq!(common::asking::ask(&mut h, |ctx| ctx.block([5, 65, 3]).map(|block| block.name)).as_deref(), Some("minecraft:fire"));
 }
+
+/// What a summoned TNT five blocks off costs a survival player in Resistance IV on `difficulty`,
+/// and what it tells of the throw: its motions, and whether the hurt came between them.
+fn tnt_hurts(difficulty: Difficulty) -> (f32, Vec<[f32; 3]>, bool) {
+    use acacia_proto::packets::{EntityEvent, EntityEventEventId};
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(move |ctx| {
+        ctx.set_difficulty(difficulty);
+        ctx.set_game_mode(PlayerId(1), GameMode::Survival);
+        assert!(ctx.give_effect(PlayerId(1), sapling_api::Effect::Resistance, 1200, 3, false));
+        let [x, y, z] = ctx.position(PlayerId(1)).unwrap().feet;
+        // Far enough that the blast's harm before Resistance is under the player's health: no throw past that.
+        assert!(ctx.summon_as(None, "minecraft:tnt", [x + 5.0, y, z], 0.0, 0.0, None).is_some());
+    });
+    let sent: Vec<RawPacket> = (0..82).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let thrown: Vec<[f32; 3]> = all::<SetEntityMotion>(&sent).iter().filter(|motion| motion.runtime_entity_id == 1).map(|motion| [motion.velocity.x, motion.velocity.y, motion.velocity.z]).collect();
+    let order: Vec<&str> = sent.iter().filter_map(|raw| {
+        let motion = all::<SetEntityMotion>(std::slice::from_ref(raw)).iter().any(|motion| motion.runtime_entity_id == 1);
+        let hurt = all::<EntityEvent>(std::slice::from_ref(raw)).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation);
+        if motion { Some("motion") } else if hurt { Some("hurt") } else { None }
+    }).collect();
+    let health = common::asking::ask(&mut h, |ctx| ctx.health(PlayerId(1))).expect("alive");
+    (20.0 - health, thrown, order == ["motion", "hurt", "motion"])
+}
+
+#[test]
+fn primed_tnt_costs_a_player_the_same_on_easy_and_tells_its_knock_before_the_hurt() {
+    // bds-r1ench.txt: 7.106 of 60 on easy in Resistance IV, the blast rule unhalved; SetEntityMotion
+    // (-0.4, 0.4) alone, HurtAnimation, then the knock with the push (-0.986, 0.815).
+    let (easy, thrown, ordered) = tnt_hurts(Difficulty::Easy);
+    let (normal, ..) = tnt_hurts(Difficulty::Normal);
+    // The hop's random drift moves the blast a little; easy's halving would cost about half.
+    assert!(easy > 0.0 && easy / normal > 0.8, "left: {easy} {normal}");
+    assert!(ordered && thrown.len() == 2 && (thrown[0][1] - 0.4).abs() < 1e-6 && thrown[1][1] > 0.4, "left: {ordered} {thrown:?}");
+}
