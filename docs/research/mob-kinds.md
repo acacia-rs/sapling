@@ -344,7 +344,11 @@ Sapling's run: sapling-kinds3.txt.
   `(int)(share × ticks + 0.5)` is over 20. Fixed (`vitals/splashed.rs`, test
   `bds_watchers_were_harmed_and_healed_by_their_share`).
 - An enderman stared at from 6 off, with and without a carved pumpkin, took no target in either
-  run, so the pumpkin was not judged. BDS flipped its `MOVING` flag throughout.
+  run, so the pumpkin was not judged. BDS flipped its `MOVING` flag throughout. `q3stare`
+  (2026-11-05, bds-q3stare.txt against sapling-q3stare.txt, foes_drill.rs's look at the head 6 off):
+  twice in a pumpkin no `stare`, twice bare one `stare` on both sides. The pack's `looked_at` filter
+  skips a player wearing one; sapling's took it before; fixed (`creatures/stares.rs`, test
+  `an_enderman_takes_no_starer_in_a_carved_pumpkin`).
 - Endermen in the rain were hurt 1 every 10 ticks, cause 9, and teleported often. Sapling's took
   nothing; now rain hurts them as water does (`creatures/harm.rs` `WATER_HURTS`, tested in
   tests/integration/mob_heat.rs), without the teleports. The drill_server rerun still showed no
@@ -360,6 +364,14 @@ Sapling's run: sapling-kinds3.txt.
   keeps prey within; BDS's strolled east and stayed within about 15. Whether BDS keeps a target out to
   `follow_range` (64) was not seen, so the keep range was left as it is (sapling-evoker.txt,
   bds-evoker.txt, `TargetEid` and `MoveEntityDelta` over time).
+  Eight evokers held 8.5 to 9 off the warded actor, vexes killed each second (`q3evoker`, 2026-11-05,
+  bds-q3evoker.txt against sapling-q3evoker.txt): BDS's first casts were 3 summonings and 5 lines (the
+  same casting colours as sapling's), so a first-cast summoning is BDS's too (sapling's 1 of 8). After
+  that BDS's never cast one spell twice running: every later cast was the other kind, 14 to 28 s after a
+  line began and 22 s after a summoning (its 5 s plus the pack's 17 s cooldown); sapling's cast a line
+  each 7 s (25 lines, 9 summonings against BDS's 9 and 7). bds-evoker.txt's lone evoker had cast lines
+  7 s apart, so the rule depends on something this drill changed (eight casters, or their vexes dying);
+  not fitted.
   The commanded vex (checked 2026-11-05, twelfth wave): this BDS's vex pack has `charge_attack`
   (priority 4) and no `vex_random_move` or `vex_copy_owner_target`, the same for a summoned and an
   evoker's vex, so the difference is in the goal's code, likely an owner test. The goal has no RTTI
@@ -393,8 +405,7 @@ for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player
 cone). It teleports at random a tick in 100 in the dark and in 20 in the sun (the component's dark
 default and its pack's `light_teleport_chance`; BDS's came 5.2 seconds apart at midnight), and
 water it touches costs it 1 by drowning, with a `splash`, and sends it off that tick. It does not
-teleport from beside its prey, rain hurts it without sending it off, a carved pumpkin does not hide a stare,
-and its `ANGRY` flag is not shown.
+teleport from beside its prey, rain hurts it without sending it off, and its `ANGRY` flag is not shown.
 
 A goat rams players and mobs as above (`creatures/rams.rs`), the nearest of either it sees,
 charging at most 8 blocks; a mob it meets is hurt and thrown at once by half a hit's throw and the

@@ -1,17 +1,20 @@
 //! An enderman stared at, as BDS's was (research/captures/bds-stare-findings.md): a survival
 //! player within 64 whose look is within the Java game's `1 - 0.025 / d` of its head for 5 ticks
-//! is taken as its prey, with `stare`, and it teleports.
-// TODO: a carved pumpkin worn does not hide the look; the 4.9 to 9.4 degrees drilled at 6 off do
-// not tell the Java game's rule from a field of view scaled by distance.
+//! is taken as its prey, with `stare`, and it teleports. One wearing a carved pumpkin is not (the
+//! pack's `looked_at` filter).
+// TODO: the 4.9 to 9.4 degrees drilled at 6 off do not tell the Java game's rule from a field of
+// view scaled by distance.
 
 use bevy_ecs::prelude::*;
 
 use crate::body::Body;
 use crate::components::{InLayer, Position, Tick, in_world};
+use crate::inventory::Inventory;
 use crate::{late_sounds, vitals};
 use super::{hunting, teleports};
 
 const KIND: &str = "minecraft:enderman";
+const PUMPKIN: &str = "minecraft:carved_pumpkin";
 /// Its head is this far up it, and it is looked at from up to this far.
 const HEAD: f32 = 2.465;
 const SEES: f32 = 64.0;
@@ -40,6 +43,11 @@ fn looks_at(position: &Position, head: [f32; 3]) -> bool {
     far > 1e-4 && far <= SEES && (0..3).map(|axis| look[axis] * towards[axis] / far).sum::<f32>() > 1.0 - SLACK / far
 }
 
+/// Whether the player wears a carved pumpkin.
+fn hidden(world: &World, player: Entity) -> bool {
+    world.get::<Inventory>(player).and_then(|inventory| inventory.worn_names().next().flatten().map(|name| name == PUMPKIN)).unwrap_or(false)
+}
+
 /// Before its move: an enderman with no prey notes who stares at it, and takes one who held the
 /// stare long enough.
 pub(super) fn watch(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {
@@ -51,6 +59,7 @@ pub(super) fn watch(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     let starer = in_world(world).into_iter().find(|player| {
         world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer)
             && vitals::is_mortal(world, *player)
+            && !hidden(world, *player)
             && world.get::<Position>(*player).is_some_and(|position| looks_at(position, head) && hunting::in_sight(world, layer, body, position.feet))
     });
     let held = world.get::<Stared>(entity).and_then(|stared| stared.by).filter(|(by, _)| Some(*by) == starer);
