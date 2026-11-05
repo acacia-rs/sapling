@@ -139,9 +139,14 @@ sapling's. Its flight, fitted tick by tick: v = (v − 0.08)·0.98·0.6; while u
 + 5 (its height alone once armoured), v = max(v, 0) + 0.3 − 0.6·max(v, 0); a player's height is its
 eyes, a mob's its feet. It settles rising 0.3677 a tick and bobs 0.3, 0.1294, 0.029; its own
 charge's blast does not throw it. Sapling: `creatures/wither/flight.rs`, test
-`it_rises_to_five_over_its_preys_eyes_and_bobs_there`. Unverified: the side heads' wait between idle
-looks (Java's 10 + rand 10); aiming at the target's eyes less 0.5 (skulls passed the actor between
--25.6 and -23.9, its eyes at -24.4, too spread by knockback and two targets to tell).
+`it_rises_to_five_over_its_preys_eyes_and_bobs_there`.
+Drilled 2026-11-05 (`y3wither`, research/captures/bds-y3wither.txt: 75 s with nobody to shoot, then a
+survival actor held in place 50 s): the idle blue skulls came 231, 242, 264 and 243 ticks apart in one
+stream, which fits head 1 alone counting its own idle looks, 10 to 19 ticks apart, and shooting on the
+17th; sapling's heads had shared one count and shot far more often. 38 skulls passed the standing actor
+a mean 2.41 over its feet (median 2.11, sd 1.15): the aim is half the eye height over its eyes (1.62 +
+0.81 = 2.43), a mob's half its height x 0.85. Sapling: `creatures/wither/heads.rs`, tests in
+wither_heads.rs. Left: BDS's skulls spread about that aim at random, sapling's fly straight.
 Its 200-tick death is built as BDS's in `witherdeath` (research/captures/bds-witherdeath.txt,
 creatures/wither/dying.rs): `WitherInvulnerableTicks` 199 down to 1; `WitherAerialAttack` (a Short)
 flips at 15 ticks and then whenever the last gap less one divides the tick (28, 39, 48, 55, 60, 63,

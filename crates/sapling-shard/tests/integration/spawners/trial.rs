@@ -27,6 +27,22 @@ fn a_wave_comes_for_the_player_three_at_once_and_six_in_all() {
     assert_eq!(int(&entity_at(&mut h, SPAWNER), "total_mobs_spawned"), 3);
 }
 
+/// The spawner shut in a shell of `wall`, and its state after a scan.
+fn walled_in(wall: &'static str) -> String {
+    let mut h = chamber();
+    let [x, y, z] = SPAWNER;
+    let shell: Vec<[i32; 3]> = (-1..=1).flat_map(|dx| (-1..=1).flat_map(move |dy| (-1..=1).map(move |dz| [x + dx, y + dy, z + dz]))).filter(|cell| *cell != SPAWNER).collect();
+    assert!(ask(&mut h, move |ctx| shell.iter().all(|cell| ctx.set_block(*cell, &Block::new(wall)))));
+    run(&mut h, 25);
+    state(&mut h)
+}
+
+#[test]
+fn a_spawner_sees_its_player_through_glass_but_not_stone() {
+    assert_eq!(walled_in("minecraft:glass"), "2", "bds-y3trial.txt: the spawner behind glass took the player");
+    assert_eq!(walled_in("minecraft:stone"), "1", "and the one behind stone did not");
+}
+
 #[test]
 fn a_wave_beaten_ejects_a_reward_and_cools_down() {
     let mut h = chamber();

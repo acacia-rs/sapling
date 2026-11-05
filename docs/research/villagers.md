@@ -151,14 +151,28 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   0x142a31380].
 - A trade adds none; a trade's level-up adds 1 as it ends (Trading above) [BDS 0x141ba8d80;
   corrected 2026-11-04: 14194d9b0 is the legacy `villager` v1's `LegacyTradeableComponent`]. A player's hit on a villager takes 1, or 3 from a baby
-  [BDS DwellerComponent hurt 141ba6be0]. A villager killed by a player takes 2 more; an iron golem 5
-  [BDS DwellerComponent death 141ba6460].
+  [BDS DwellerComponent hurt 141ba6be0]. A villager killed by a player takes 2 instead (below, "Shots");
+  an iron golem 5 [BDS DwellerComponent death 141ba6460].
 - A cure gives 5 to every player the village keeps a standing for, the curer only if it has one
   [BDS conversion 0x142445c80, read 2026-11-05: for a converting zombie villager (types 0x30b2c, 0x30b74)
   it finds the overworld village about the actor and calls `modifyStanding(+5)` over the whole
   `mPlayerStanding` map, Village+0x218, as `modifyStanding` 0x142a31380 reads it]. Sapling:
   `standing.rs` `cured`, from `conversion.rs` `turned`; test `a_cure_raises_every_kept_standing_by_five`.
-  Not drilled.
+- A new villager's first village gives every player it keeps a standing for the pack's
+  `first_founding_reward` 5, once (`RewardPlayersOnFirstFounding`) [BDS DwellerComponent 0x141ba80b0, an
+  inhabitant joining with the flag set]. Drilled 2026-11-05 (`y3found`, dumped with `records`): a hit's
+  -1, then a villager summoned, left 4; with nobody hit first the village kept no player. Sapling:
+  `standing.rs` `founded`, from `villagers.rs` `tick`, the flag kept in the actor compound
+  (`storage.rs`); test `a_new_villagers_first_village_raises_every_kept_standing_by_five`.
+- The cure's +5, drilled (`y3cure`, first scene): a hit's -1, a new villager (its +5), that villager
+  killed by a zombie and its zombie villager cured kept 10, which takes the cure's 5 and the cured
+  villager's own founding reward (−1 + 15, held at 10); sapling's cured villager is new and rewards too.
+- Shots (`y3ranged`): a held villager shot twice to death left -3, the first arrow's -1 and the kill's
+  -2: a shot counts as a hit, and a killing hit counts as the kill alone (the dweller's hurt handler,
+  0x148487bd0, returns once health is under 1). Sapling counted -1 more for a killing hit, and nothing for
+  shots; fixed (`standing.rs` `hit_delta`, `shot`, from `harm.rs` `wound_by`; tests
+  `a_killing_hit_counts_as_the_kill_alone`, `an_arrow_on_a_villager_costs_its_archer_standing_as_a_hit`).
+  The held golem 9 off took no target.
 - Two village-wide timers step good standings down by one every 120000 ticks and bad ones up every
   12000, by as many steps as periods passed [BDS `Village::tick` 142a23bc0,
   `mGoodStandingDecayTimer`/`mBadStandingDecayTimer`].
@@ -167,6 +181,12 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   of the village defends: one spawned with `minecraft:from_village` (its `village_created` group) took
   a player at its first hit on a grown villager; a `from_player` golem and a plain one never did; ten
   hits on a baby moved none [bds-golems.txt]. Sapling marks golems by that spawn event (`golems.rs`).
+  Ten hits on a baby again (`y3baby`, 2026-11-05) left the player at -30 (dumped), and the held village
+  golem 13 off still took no target in 30 s. The goal (0x148a38fd0) draws its chance, takes the nearest
+  aggressor of the village's lists (0x142a30b10; the dweller's hurt handler adds any attacker of a
+  villager or golem, 141ba6be0) and, when that is a player, swaps it for the nearest player at -15 or
+  lower (0x142a30c80, no distance limit); why that took nobody here is not known. Sapling's golem takes
+  a player at -15 by standing alone, so it would turn on the baby's hitter: left open.
 - Prices take no standing: `economy_trade_table` reads only the cured, nearby-cured and hero discounts
   [BDS definition 141ba86e0].
 

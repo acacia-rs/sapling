@@ -313,6 +313,11 @@ cells (`paths::route`) and walks middle to middle (`creatures/strolling.rs`; tes
 `walks.py`, cows, pigs, sheep): path 8.1, 7.7, 8.9 blocks against BDS's 7.8, 8.6, 10.5 (before 6.5, 8.3,
 6.2) and 107, 74, 118 ticks against 116, 90, 152. Still different: in-walk pauses, 2 to 5 ticks a walk
 against BDS's 10 to 12; their cause is not known (not reached in thirteenth3o).
+Where they fall (2026-11-05, thirteenth3y, bds-strolls.txt): a walk opens with still ticks and then
+10 ticks of pace building; inside it, pauses of 2 or more ticks come at the path's corners, after turns
+of 50 to 180 degrees (pigs and sheep sometimes at small ones); it ends slowing to 0.022 a tick and
+creeping to its cell's edge. So BDS stops to turn at a sharp corner where sapling turns as it walks;
+not followed.
 
 ## Fleeing (`flee`)
 
@@ -405,11 +410,27 @@ A zombie 12 north of the survival actor by night, 15 s for each way (sapling-e1p
   its speed against water's drag of 0.8).
 - A cobblestone wall with a wooden door: it never came through and strolled off; sapling the same.
 
+## Reach, holes and walls (2026-11-05, `y3hunt`, research/captures/bds-y3hunt.txt)
+
+By night on the stone floor, the survival actor held in place:
+
+- A zombie that saw the actor, then had a stone wall two high and the floor's width put between
+  them, kept its target the 14 s to the kill. Sapling keeps seen prey whatever comes between: same.
+- A one-deep hole three wide across its way: it walked in and jumped out the far side, as sapling's.
+- A zombie held 28 off: `TargetEid` set every 10 ticks and 0 the tick after, the pack's
+  `within_radius` 25. Fixed: `within=` in `mob-traits.tsv` (zombie 25), `Hunts.within`; test
+  `a_zombie_28_off_takes_its_prey_at_each_look_and_lets_it_go_a_tick_later`.
+- A held zombie with the actor stepping round it turned its head 21 of 256 a tick (30 degrees, the
+  Java game's look-at speed) and its body after, lagging 5 to 10 ticks; sapling turns both 60 a tick.
+  Not followed (`legs.rs` ties head to body).
+- A spider at midnight took no target in 4 s, so whether one keeps its prey by day was not seen.
+- `y3gear` (bds-y3gear.txt): BDS sends `MobEquipment` for the skeleton, stray, bogged, wither
+  skeleton, zombified piglin, piglin, brute, pillager, vindicator, drowned and vex as each is
+  summoned; none for the zombie, husk or evoker.
+
 ## Not drilled
 
-A hole in the way, whether prey that goes behind a wall is kept, the kinds not named here, what a blast
-leaves of the blocks it breaks and of softer ground, and what `within_radius` 25 does: a zombie on
-open grass 30 off took and dropped its target every 10 ticks, one on the stone floor kept it.
+The kinds not named here, and what a blast leaves of the blocks it breaks and of softer ground.
 
 ## Sapling
 
@@ -512,9 +533,8 @@ Where the floor between is not free it goes by the shortest way over whole cells
 passed by the same cells and the first hits came 4.1 s and 6.5 s after. Strolling and fleeing
 mobs do not look for a way.
 
-Different: it keeps prey it has seen
-whatever comes between, sends a mob's speed as it is before the drag, turns 60
-degrees a tick with its head, stops when its box touches the
+Different: it sends a mob's speed as it is before the drag, turns 60
+degrees a tick with its head (BDS 30, its body after: "Reach, holes and walls"), stops when its box touches the
 player's since players and mobs do not push each other, shows no mob holding
 its weapon, lets a spider hunt by day, hunts nobody on peaceful
 (where BDS has no monsters), and tells every viewer every move.

@@ -145,6 +145,14 @@ Left out:
 
 - A player's position as its eyes for every range check here; the 3615 charged-detection event; that a
   trial spawner's line of sight is a clip through any block with collision (BDS: a real ray clip, max 200).
+  Drilled 2026-11-05 (`y3trial`, bds-y3trial.txt; the trial spawner idles with `doMobSpawning` off on BDS
+  too, as `spawners/trial.rs` has it): a spawner 15 over the actor's feet, its eyes 13.9 under it, took
+  the actor (`ParticleTrialSpawnerDetection` data 1), so range is from the eyes; one 8 off behind a stone
+  wall did not in 8 s; one behind glass and one in the open did, 6 ticks after the survival switch.
+  `y3omen` (bds-y3omen.txt): eight ominous spawners told their detection as event 3615 (the wire's
+  `ParticleWolfArmorBreak`) at their corners. Sapling (sapling-y3trial.txt) matched at the eyes, stone and
+  open sites but not behind glass. Fixed: glass (any block named `*glass`) no longer blocks the sight, as
+  Java's visual-shape clip; panes, leaves and the other see-through blocks were not drilled.
 - The eject velocity's odd x/z term BDS's trial spawner adds (left out); the vault's per-axis spread. One BDS
   reward (bds-t3trial.txt): item at x+0.5, y+1.0, z+0.5, moving (0.028, 0.156, 0.010), `eject_item` there
   with extra data -718719502. Sapling's wave there never ended (its zombies did not burn by day, BDS's did)
@@ -199,5 +207,7 @@ head attach point (sapling: 0.85 of its height).
   which shoots (`ProjectileComponent::shoot` 1424020c0) at the entity JSON's `power` and `uncertainty_base`:
   motion = power (way + 0.0075 uncertainty g) per axis, g normal, not renormalised: arrow 1.1 and 16 (both
   bds-u1omen.txt arrows within 2.5 sigma), lingering potion 0.5 and none (its `angle_offset` unused),
-  fire charge 1.3 and 10, wind charge 1.5 and 1 (`shots/dispensed.rs` `shoot_unowned`). [U] whether a stack of
-  charges throws one.
+  fire charge 1.3 and 10, wind charge 1.5 and 1 (`shots/dispensed.rs` `shoot_unowned`). Whether a stack of
+  charges throws one: drilled 2026-11-05 (`y3omen`, bds-y3omen.txt, eight ominous spawners for 60 s): all
+  ten item spawners showed `MinecartDisplayBlock` `Count` 1 (nine lingering potions, one arrow), and each
+  threw one shot and was gone, as sapling's `ominous_items.rs` (one of the kept stack).

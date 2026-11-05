@@ -41,9 +41,11 @@ What of BDS's villagers sapling has not checked or does not copy; split from vil
   not a drill of something built. The walks were seen in passing: in the `g11love` runs both sides'
   pairs strolled 10 to 35 apart within a minute (their `MoveEntityDelta`s).
 - Job-site range: `f3poi` (villagers.md "Unverified"; a held villager took none).
-- A baby's hurt standing (-3) moved no BDS golem within 30 s, not explained.
-- Standing from ranged kills and the founding reward (curing's +5: villagers.md "Standing"); the aggressor a
-  golem defends against. Standing is kept as BDS's `VILLAGE_<id>_PLAYERS` (`Players`, each `ID` long and
+- A baby's hurt standing (-3, ten hits to -30) moved no BDS golem within 30 s, not explained
+  (villagers.md "Standing": the defend goal's code path read, the cause not found).
+- The aggressor a golem defends against: any attacker of a villager or golem goes on the village's
+  list (villagers.md "Standing"); only a player's hand hit on a grown villager is copied (`golems.rs`),
+  not a mob attacker's. Ranged kills, the founding reward and the cure's +5: done (villagers.md). Standing is kept as BDS's `VILLAGE_<id>_PLAYERS` (`Players`, each `ID` long and
   `S` int; 0x142a2c140), the id sapling's village uuid and `ID` the low half of the player's uuid (sapling
   players keep no `ActorUniqueID`).
 
