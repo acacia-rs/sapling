@@ -139,12 +139,17 @@ fn villagers_with_two_bread_each_have_no_baby() {
 
 #[test]
 fn a_villager_flees_a_zombie() {
-    // 3 off: BDS's villagers fled a zombie 3 off, not one 4 off (bds-an1fear.txt).
+    // At night too; the flee spot may lie aside, so judge the gain in distance (thirteenth1an's fled_from).
     let (mut h, id) = village(18_000, [20.5, 65.0, 0.5], "minecraft:become_unskilled");
-    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:zombie", [17.5, 65.0, 0.5]).is_some()));
+    let zombie = [17.5, 65.0, 0.5];
+    common::asking::ask(&mut h, move |ctx| {
+        let mob = ctx.spawn_entity("minecraft:zombie", zombie).expect("zombie");
+        assert!(ctx.give_entity_effect(mob, sapling_api::Effect::Slowness, 2000, 255));
+    });
     (0..40).for_each(|_| drop(h.tick_all()));
     let feet = feet_of(&mut h, id);
-    assert!(feet[0] > 21.5, "it ran from the zombie: {feet:?}");
+    let gained = (feet[0] - zombie[0]).hypot(feet[2] - zombie[2]) - 3.0;
+    assert!(gained > 0.5, "it ran from the zombie: {feet:?}");
 }
 
 #[test]
