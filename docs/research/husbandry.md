@@ -172,7 +172,35 @@ Allays handed items (bds-ak1allay.txt, ported in husbandry/allays.rs): a click w
 not sneaking, on an allay with an empty hand gives it one of the stack (MobEquipment, the hand keeps the
 rest, same tick); the next tick `item_given` and its flags with `ACTION` and `OwnerEid`. A click with
 something on one that holds something does nothing; `ambient.tame` came about 1.2 s later and it
-dropped its item when killed (not ported, nor its collecting and giving back).
+dropped its item when killed (not ported).
+
+Allays collecting and giving back (thirteenth3ap 2026-11-07, bds-ap3give.txt and bds-ap3note.txt; ported
+in husbandry/allays/collecting.rs and giving.rs, tests integration/thirteenth3ap.rs). The pack's
+priorities: pickup_items 2 (max_dist and search_height 32, goal_radius 2.2, speed 6, same items as in
+hand), give to a note block 3, give to its owner 4 (both run speed 8), stay near the note block 5 (from
+16 off until 4), follow_owner 6, random_hover 9; inventory one slot.
+- The tick after matching dirt lay 9 off it flew at it (push 6 x 0.0098 on the hover's ramp, about 0.43
+  a tick) and took it once its move left it within 2.2: `TakeItemEntity` to the allay, its hand
+  unchanged. It left cobblestone alone and took every matching item lying near before giving.
+- It then flew at its owner's eyes (8 x, about 0.58 a tick) and, before its move within 3 of them,
+  threw one item a tick: shown 0.6654 over its feet, moving along the line to the eyes a block up at 0.2
+  across and 0.3 up (decompiled 0x5745670). The player took it 6 to 9 ticks later. After each throw it
+  took nothing up for 3 s (`pickup_item_delay`).
+- `item_thrown` came on some throws only (5 of 14 in the last note run, 1 of 9 in the first): the throw
+  plays it when a 64-bit value it reads is a multiple of 7 and then a roll is under 0.9 (0x5745670);
+  the value was not identified. Sapling takes its tick for it, so its sounds fall on other throws.
+- A note block played within 16 (its vibration listener) drew the dirt instead of the owner, thrown at
+  the block's centre a block up from within 3; 3 to 3.7 s on it took the same dirt up again and threw
+  it back, over and over, until about 30 s after the note (the goal's `+0x54` seconds, 0x5743700; the
+  first throw to the owner came 34.3 s after it, sapling's 33.8 s). Played again, the next dirt went
+  there again. Within 16 it did not fly to the block with nothing to give.
+- Sapling's flight is straight, with no path: aimed at an item itself it sank to the floor and stuck on
+  the note block's side, so it aims at the middle of the item's cell (BDS's took items from 0.6 to 0.8
+  over the floor). Its random hover ignores slowness, so the drills put it back before handing it dirt.
+  The last runs (research/captures/bds-ap3give.txt, bds-ap3note.txt, sapling-ap3give.txt,
+  sapling-ap3note.txt) match in order: take, throw, retake 3.3 to 3.5 s on, give to the owner after the note.
+- Not ported: its `follow_owner` (it hovers about where it was), `ambient.tame`, what it carries
+  kept with the world.
 
 ## Parrots on shoulders (`parrots`, not built)
 

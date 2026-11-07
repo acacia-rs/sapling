@@ -321,6 +321,9 @@ frequency 8. A sensor's `power.on`/`power.off` plays after its UpdateBlock, as o
   Left out: the warning level's decay (Java's one each 12000 ticks is kept), sharing levels with players
   within 16 not drilled.
 - Entity listeners (warden 148f8bfd0 owner 2 range 16, allay owner 3), `VibrationListenerSystem` 1484556e0.
+  Ported 2026-11-07 for the allay's one use (thirteenth3ap): a note block played within 16 of it, no
+  wool between, is kept 30 s for its giving (husbandry.md "Allays collecting and giving back";
+  `sculk::vibrate` calls `creatures::allays_hear_note`). Its travel delay is not modelled.
 - Amethyst resonance client particles (`animateTick` 148b44ff0). Resonance itself is drilled and
   ported (see "Drilled 2026-11-05, group AI").
 - Save tags (14487a960/14487ac80, 14487d3f0/14487d530; the BDS world dumped with

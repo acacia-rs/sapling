@@ -177,6 +177,13 @@ pub(crate) fn eject(world: &mut World, layer: Entity, stack: ItemStack, centre: 
     lay(world, layer, stack, [centre[0], centre[1] - SIZE / 2.0, centre[2]], motion, from);
 }
 
+/// A mob's throw of `stack` to someone, from `centre` (the middle of its box) at `motion`, picked up
+/// at once: BDS's player took an allay's 6 ticks after it came (research/captures/bds-ap3give.txt).
+pub(crate) fn hand_over(world: &mut World, layer: Entity, stack: ItemStack, centre: [f32; 3], motion: [f32; 3]) {
+    let from = world.resource::<Tick>().0;
+    lay(world, layer, stack, [centre[0], centre[1] - SIZE / 2.0, centre[2]], motion, from);
+}
+
 /// A hook's catch: `stack` flies from the hook at `at` (the bottom of its box) at `motion`.
 pub(crate) fn reeled(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3]) {
     let from = world.resource::<Tick>().0 + SPILL_DELAY;
