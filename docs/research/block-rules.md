@@ -143,6 +143,20 @@ functions below, which fixes the numbering.
 12. Add orientations: bed (two cells), hopper, glazed terracotta, barrel, loom/beehive, end rod, skull/banner/shulker, rails; lever/wall banner/tripwire hook/item frame support; pressure plates; double slabs; item-to-block table.
 13. Falling-block entity instead of the instant drop (known TODO); concrete powder hardening in water.
 
+## `/fill` neighbour updates (drilled 2026-11-05, group AI: `ai1fill`, `ai1liquid`; thirteenth1ai_drill.rs)
+
+BDS writes every cell of a fill, then notifies neighbours; sapling notifies as it writes each cell.
+- Water (bds-ai1liquid.txt): a lone `/setblock` or one-cell `/fill` of water did not flow in 3 s on
+  either side (a written cell wakes its neighbours, not itself). A 3-cell line flowed from all three on
+  BDS; sapling's last cell never flowed, because its neighbours were notified before it became water.
+- Sand: BDS sent several air writes and landings in one tick as one UpdateSubchunkBlocks; sapling sent
+  an UpdateBlockSynced per cell. Rails: the same final shapes, but BDS's batch lists each cell's
+  writes in order (placement, then joins, with repeats), where sapling lists final states. Redstone dust:
+  powered about 3 ticks after the answer on BDS, 2 on sapling (perhaps the flush phase).
+- Design, not ported: for a fill, collect the written cells, write all of them, then run `settle` for
+  each in fill order. That needs group AG's batch hooks (blocks/sulfur.rs, handlers/backend.rs,
+  send/sections), which are not on master yet.
+
 Open checks for one bot session on BDS (place, read the state back): piston facing numbers, dispenser/piston up-down rule
 (position vs pitch), trapdoor placed on a side face, end rod values, snow-layer replace height, lever sound ids on the wire,
 door sound packet, which blocks count as support.

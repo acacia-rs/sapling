@@ -1,0 +1,85 @@
+## drill starts at 1793915210501
+## /gamerule domobspawning false
+     18 watcher GameRulesChanged doMobSpawning=Bool(false)
+     18 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+     18 actor   GameRulesChanged doMobSpawning=Bool(false)
+     18 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+## /
+## /place structure minecraft:abandoned_camp_bamboo_jungle -576 -60 200
+   2024 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_birch_forest -512 -60 200
+   4070 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+   4870 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   4870 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /
+## /place structure minecraft:abandoned_camp_cherry_grove -448 -60 200
+   6069 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_dappled_forest -384 -60 200
+   8069 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_flower_forest -320 -60 200
+  10067 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_forest -256 -60 200
+  12070 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_meadow -192 -60 200
+  14067 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_birch_forest_mutated -128 -60 200
+  16070 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+  17666 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  17667 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+## /place structure minecraft:abandoned_camp_mega_taiga -64 -60 200
+  18071 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_redwood_taiga_mutated 0 -60 200
+  20068 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_pale_garden 64 -60 200
+  22120 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_savanna 128 -60 200
+  24123 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_cold_taiga 192 -60 200
+  26118 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_jungle_edge 256 -60 200
+  28119 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_swampland 320 -60 200
+  30117 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+  30466 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  30467 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /place structure minecraft:abandoned_camp_taiga 384 -60 200
+  32119 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_extreme_hills_plus_trees 448 -60 200
+  34119 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_mesa_plateau_stone 512 -60 200
+  36117 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_forest 9000 -60 9000
+  38117 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place structure minecraft:abandoned_camp_meadow 9000 -60 9200
+  40117 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place jigsaw minecraft:trail_ruins/tower minecraft:road_anchor 3 -300 -60 -300
+  42170 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+  43270 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  43270 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /place jigsaw minecraft:trail_ruins/tower minecraft:bottom 3 -300 -60 -300
+  44167 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+## /place jigsaw minecraft:trail_ruins/tower minecraft:no_such_target 3 -300 -60 -300
+  46169 actor   CommandOutput success_count=0 data=None commands.place.generation.error success=false []
+## /
+probe exit 0

@@ -221,9 +221,18 @@ pub(crate) fn tick(world: &mut World) {
             crate::spawning::count_idle(world, entity, layer, &kind);
         }
         // A rider is carried to its seat, a vehicle its driver's client moves put where it says (riding.rs).
-        // TODO: a riding mob neither thinks nor is harmed.
-        let ridden = world.get::<crate::riding::Riding>(entity).is_some() || crate::riding::is_driven(world, entity);
-        let Some(start) = world.get::<Body>(entity).copied().filter(|_| !ridden) else { continue };
+        // A seated mob is still harmed where its seat is: BDS's pig in a boat under a roof held its
+        // breath and choked (research/captures/bds-ai1boat.txt). TODO: a riding mob does not think.
+        let seated = world.get::<crate::riding::Riding>(entity).is_some();
+        let ridden = seated || crate::riding::is_driven(world, entity);
+        let Some(start) = world.get::<Body>(entity).copied().filter(|_| !ridden) else {
+            if let Some(body) = world.get::<Body>(entity).copied().filter(|_| seated)
+                && harm::tick(world, entity, layer, id, &kind, &body, &body, world.get::<Dying>(entity).is_some())
+            {
+                die(world, entity, layer, &kind, &body);
+            }
+            continue;
+        };
         // With `sapling:mobAi` off a mob still falls, is pushed and is hurt, but decides nothing.
         let thinks = world.get::<Dying>(entity).is_none() && crate::rules::on(world, layer, sapling_data::MOB_AI);
         if thinks {

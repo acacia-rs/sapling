@@ -4,16 +4,18 @@
 //! the event, then cools down. A calibrated sensor powered from behind hears only the frequency
 //! of that power. A shrieker hears sensors going active, and shrieks when a player set one off
 //! (shrieks.rs).
-// TODO: a broken wool block and steps on wool are heard; no amethyst resonates; mobs, drinking,
-// damage and explosions are not heard.
+// TODO: wool broken or walked on is heard; mobs, drinking, damage and explosions are not.
 
 mod catalyst;
+mod deferred;
 mod events;
 mod occlusion;
+mod resonance;
 mod saved;
 mod shrieks;
 
 pub(crate) use catalyst::{arrived as catalysts_arrived, mob_died};
+pub(crate) use deferred::{poured, teleported};
 pub(crate) use events::GameEvent;
 
 use std::collections::{HashMap, HashSet};
@@ -192,14 +194,6 @@ pub(crate) fn vibrate_at(world: &mut World, layer: Entity, pos: BlockPos, event:
     vibrate(world, layer, pos.map(|c| c as f32 + 0.5), event, by_player);
 }
 
-/// An entity `/tp` moved from `from` to `to` is heard at the cell it arrives in; one put where it
-/// stood is not (research/captures/bds-v2tp.txt).
-pub(crate) fn teleported(world: &mut World, layer: Entity, from: [f32; 3], to: [f32; 3], by_player: bool) {
-    if from != to {
-        vibrate(world, layer, to, GameEvent::Teleport, by_player);
-    }
-}
-
 /// A player walked from `from` to `to` (feet): a step is heard every 1/0.6 blocks walked on the
 /// ground, but not sneaking; a sensor walked on is touched, sneaking or not (S14).
 pub(crate) fn walked(world: &mut World, player: Entity, layer: Entity, from: [f32; 3], to: [f32; 3], on_ground: bool, sneaking: bool) {
@@ -229,10 +223,13 @@ pub(crate) fn walked(world: &mut World, player: Entity, layer: Entity, from: [f3
 pub(crate) fn tick(world: &mut World) {
     catalyst::tick(world);
     shrieks::stood_on(world);
+    deferred::post(world);
     let now = world.resource::<Tick>().0;
     let Some(mut listeners) = world.get_resource_mut::<Listeners>().filter(|listeners| !listeners.coming.is_empty()) else { return };
     let (due, waiting): (Vec<Coming>, Vec<Coming>) = std::mem::take(&mut listeners.coming).into_iter().partition(|coming| coming.when <= now);
+    let soon: Vec<(Entity, BlockPos)> = waiting.iter().filter(|coming| coming.when == now + 1).map(|coming| (coming.layer, coming.listener)).collect();
     listeners.coming = waiting;
+    resonance::ring(world, &soon);
     for coming in due {
         match name_at(world, coming.layer, coming.listener) {
             Some((SHRIEKER, ..)) => {
@@ -265,6 +262,7 @@ fn activate(world: &mut World, Coming { layer, listener, event, frequency, stren
         return;
     }
     saved::heard(world, layer, listener, name, event);
+    let amethysts = resonance::beside(world, layer, listener);
     set_number(world, layer, listener, PHASE, LISTENING);
     redstone::emit(world, layer, listener, strength);
     world.get_resource_or_insert_with(Listeners::default).heard.insert((layer, listener), frequency);
@@ -273,6 +271,7 @@ fn activate(world: &mut World, Coming { layer, listener, event, frequency, stren
     queued::cancel(world, layer, listener, Job::Sculk);
     queued::after(world, layer, listener, if name == CALIBRATED { CALIBRATED_ACTIVE } else { ACTIVE }, Job::Sculk);
     vibrate_at(world, layer, listener, GameEvent::TendrilsClicking, by_player);
+    resonance::post(world, layer, &amethysts, frequency, by_player);
 }
 
 /// A sensor's or shrieker's time in its phase is up: an active sensor cools down, a cooling one

@@ -111,7 +111,7 @@ pub(crate) fn used_on(world: &mut World, player: Entity, target: Entity) -> bool
         return false;
     }
     let wild = !tamed(world, target) && sapling_data::husbandry(&kind).is_some_and(|rules| rules.temper.is_some());
-    if super::seat(world, player, target).is_err() {
+    if super::inventory::unrideable(world, target, &kind) || super::seat(world, player, target).is_err() {
         return false;
     }
     if wild {

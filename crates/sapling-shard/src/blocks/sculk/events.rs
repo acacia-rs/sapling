@@ -34,6 +34,8 @@ pub(crate) enum GameEvent {
     Explode,
     /// A sensor went active: what shriekers hear, and nothing else does.
     TendrilsClicking,
+    /// An amethyst block beside a sensor going active passes on the frequency it heard (`resonate_<n>`).
+    Resonate(u8),
 }
 
 impl GameEvent {
@@ -61,6 +63,7 @@ impl GameEvent {
             GameEvent::SculkTouch => 57,
             GameEvent::TendrilsClicking => 58,
             GameEvent::Teleport => 64,
+            GameEvent::Resonate(frequency) => 41 + i32::from(frequency),
         }
     }
 
@@ -78,6 +81,7 @@ impl GameEvent {
             GameEvent::LightningStrike | GameEvent::Teleport => 14,
             GameEvent::Explode => 15,
             GameEvent::TendrilsClicking => 0,
+            GameEvent::Resonate(frequency) => frequency,
         }
     }
 }

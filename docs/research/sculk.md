@@ -264,6 +264,23 @@ frequency 8. A sensor's `power.on`/`power.off` plays after its UpdateBlock, as o
 `play` holds it behind the batch's blocks). Whether the chorus teleport's
   arrival is heard is not known: BDS's landed out of the sensor's range.
 
+## Drilled 2026-11-05, group AI (`bds_command_probe ai1vib`, `uureson`; thirteenth1ai_drill.rs)
+
+- When the particle goes: a sensor always went active the particle's tick plus its distance. The
+  particle came a tick after the event for `/tp` (five samples, bds-ai1vib.txt, bds-v2tp.txt,
+  bds-uusculk.txt) and for a player's poured water bucket (heard as `fluid_place` from the poured
+  cell); the same tick for a hand place and break, drinks and lightning. Sapling sent the tp's the
+  same tick and posted nothing for a player's bucket; both now go through `sculk/deferred.rs`, posted
+  at the next tick's sculk step (tests in tests/integration/thirteenth1ai.rs).
+- Resonance (bds-uureson.txt): with an amethyst block beside a sensor that a tp set off, BDS sent
+  LevelEvent 1067 (data 500) at the amethyst's corner a tick before the sensor's phase change, then
+  with the change a particle from the amethyst's middle to a second sensor 7 off it (13 off the tp),
+  which went active 7 ticks later. With the amethyst gone only the first reacted. Ported
+  (`sculk/resonance.rs`: `ring` for sensors due next tick, `post` of `Resonate(n)`, type 41 + n, as
+  the sensor goes active). A vibration posted 1 off after the sculk step rings no amethyst (unseen).
+  Re-drilled (sapling-uureson.txt): the same ticks, but in sapling the amethyst's particle comes before
+  the sensor's UpdateBlock (BDS: after it and `power.on`), because particles skip the batch.
+
 ## Unverified
 
 - Names of state globals 14cd24340 (`active`) and 14cd24220 (`can_summon`): inferred from use, string not traced.
@@ -300,9 +317,8 @@ frequency 8. A sensor's `power.on`/`power.off` plays after its UpdateBlock, as o
   Left out: the warning level's decay (Java's one each 12000 ticks is kept), sharing levels with players
   within 16 not drilled.
 - Entity listeners (warden 148f8bfd0 owner 2 range 16, allay owner 3), `VibrationListenerSystem` 1484556e0.
-- Amethyst resonance details, client particles (`animateTick` 148b44ff0). bds-uusculk.txt had
-  the amethyst gone before any sensor heard anything (a `/setblock` is no game event), so it shows
-  no resonance; a drill needs a player's event with the amethyst in place.
+- Amethyst resonance client particles (`animateTick` 148b44ff0). Resonance itself is drilled and
+  ported (see "Drilled 2026-11-05, group AI").
 - Save tags (14487a960/14487ac80, 14487d3f0/14487d530; the BDS world dumped with
   `block_entity_dump` after `bds_command_probe uusculk`): ids `SculkSensor`,
   `CalibratedSculkSensor`, `SculkShrieker`; `BlockEntityVersion` 0 and `VibrationListener`

@@ -96,6 +96,12 @@ pub(crate) fn arrive(world: &mut World, mob: Entity, kind: &str, event: &str) {
     }
 }
 
+/// Whether `mob` is a camel without its age group, whose `rideable` is in `camel_adult` too: BDS
+/// seated no one on a `camel_saddled` one (research/captures/bds-ai1ride.txt).
+pub(super) fn unrideable(world: &World, mob: Entity, kind: &str) -> bool {
+    CAMELS.contains(&kind) && world.get::<Raised>(mob).is_some_and(|raised| raised.ungrouped)
+}
+
 /// Tames each grown zombie horse [`Upgrading`] since an earlier tick.
 pub(crate) fn upgrade(world: &mut World) {
     let now = world.resource::<Tick>().0;
