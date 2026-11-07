@@ -34,7 +34,7 @@ What of BDS's villagers sapling has not checked or does not copy; split from vil
 - The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick, which matched the
   drilled sleep and wake ticks.
 - Farmers farming, cartographers' explorer maps (map items that locate a structure) and entity
-  vibration listeners (the allay's; the warden's hearing is in creatures/warden/hearing.rs) were not
+  vibration listeners (the allay's, claimed by thirteenth1ak's allay module on 2026-11-07; the warden's hearing is in creatures/warden/hearing.rs) were not
   reached in the twelfth wave's group 8 (2026-11-05); the schedule walks' counts are strolls, random on
   both sides. Group 11 (2026-11-05) spent its runs on breeding and fear and did not reach them either:
   each is a port with no sapling side yet (no farming goal, map item or vibration listener for mobs),

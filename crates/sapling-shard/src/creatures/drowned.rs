@@ -65,6 +65,8 @@ pub(super) struct Thrower {
     ready: u64,
     /// The tick its swing's trident flies.
     loosing: Option<u64>,
+    /// What it lets go of, chosen as it dies ([`choose_drops`]).
+    drops: Vec<ItemStack>,
 }
 
 /// A drowned that comes: armed with a trident, shown in its hand, by the pack's odds or its spawn `event`.
@@ -94,19 +96,27 @@ pub(super) fn held(world: &World, drowned: Entity, id: u64) -> Vec<Bytes> {
     hands.into_iter().flatten().filter_map(|(name, offhand)| sapling_data::mob_hand(id, &stack(name), offhand)).map(|held| sapling_net::encode(&held)).collect()
 }
 
-/// What a dead armed drowned lets go of: its shell, and by chance its trident if a player killed
-/// it, worn as Java's `Mob::dropCustomDeathLoot` wears a dropped item.
-pub(super) fn let_go(world: &mut World, drowned: Entity, by_player: bool) -> Vec<ItemStack> {
-    let Some(shell) = world.get::<Thrower>(drowned).map(|thrower| thrower.shell) else { return Vec::new() };
+/// Chooses, as an armed drowned dies, what it will let go of ([`let_go`]): its shell, and by chance
+/// its trident if a player killed it, worn as Java's `Mob::dropCustomDeathLoot` wears a dropped
+/// item. The trident it keeps, which BDS showed back in its hand at death (bds-drownedloot.txt).
+pub(super) fn choose_drops(world: &mut World, drowned: Entity, by_player: bool) -> Option<ItemStack> {
+    let shell = world.get::<Thrower>(drowned)?.shell;
     let mut dice = world.get_resource_or_insert_with(Dice::default);
-    let mut dropped: Vec<ItemStack> = shell.then(|| ItemStack { name: "minecraft:nautilus_shell".into(), count: 1, damage: 0, block: None, tag: None }).into_iter().collect();
-    if by_player && dice.fraction() < DROPS_TRIDENT {
+    let item = |name: &str, tag| ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag };
+    let mut dropped: Vec<ItemStack> = shell.then(|| item("minecraft:nautilus_shell", None)).into_iter().collect();
+    let trident_goes = by_player && dice.fraction() < DROPS_TRIDENT;
+    if trident_goes {
         let spread = 1 + dice.roll(TRIDENT_LASTS - 3);
         let worn = TRIDENT_LASTS - dice.roll(spread);
-        let tag = Value::Compound(vec![("Damage".into(), Value::Int(worn as i32))]);
-        dropped.push(ItemStack { name: "minecraft:trident".into(), count: 1, damage: 0, block: None, tag: Some(tag) });
+        dropped.push(item("minecraft:trident", Some(Value::Compound(vec![("Damage".into(), Value::Int(worn as i32))]))));
     }
-    dropped
+    world.get_mut::<Thrower>(drowned)?.drops = dropped;
+    (!trident_goes).then(|| item("minecraft:trident", None))
+}
+
+/// What [`choose_drops`] chose for the dead drowned to let go of.
+pub(super) fn let_go(world: &mut World, drowned: Entity) -> Vec<ItemStack> {
+    world.get_mut::<Thrower>(drowned).map(|mut thrower| std::mem::take(&mut thrower.drops)).unwrap_or_default()
 }
 
 fn wait(world: &mut World) -> u64 {
@@ -151,7 +161,13 @@ mod tests {
     fn a_dead_drowned_drops_its_shell_and_a_quarter_of_the_time_its_worn_trident() {
         let mut world = World::new();
         let drowned = world.spawn(Thrower { shell: true, ..Thrower::default() }).id();
-        let deaths: Vec<Vec<ItemStack>> = (0..400).map(|_| let_go(&mut world, drowned, true)).collect();
+        let mut die = |by_player| {
+            let kept = choose_drops(&mut world, drowned, by_player);
+            let dropped = let_go(&mut world, drowned);
+            assert_eq!(kept.is_some(), !dropped.iter().any(|stack| stack.name == "minecraft:trident"), "kept or dropped, not both");
+            dropped
+        };
+        let deaths: Vec<Vec<ItemStack>> = (0..400).map(|_| die(true)).collect();
         assert!(deaths.iter().all(|dropped| dropped[0].name == "minecraft:nautilus_shell"));
         let worn = |stack: &ItemStack| match stack.tag.as_ref()?.get("Damage") {
             Some(Value::Int(worn)) => Some(*worn),
@@ -160,6 +176,6 @@ mod tests {
         let tridents: Vec<i32> = deaths.iter().filter_map(|dropped| worn(dropped.get(1)?)).collect();
         assert!((70..130).contains(&tridents.len()), "{}", tridents.len());
         assert!(tridents.iter().all(|worn| (4..=250).contains(worn)));
-        assert_eq!(let_go(&mut world, drowned, false).len(), 1, "only a player's kill drops the trident");
+        assert_eq!(die(false).len(), 1, "only a player's kill drops the trident");
     }
 }

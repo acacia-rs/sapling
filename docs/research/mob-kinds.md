@@ -378,6 +378,16 @@ Sapling's run: sapling-kinds3.txt.
   keeps prey within; BDS's strolled east and stayed within about 15. Whether BDS keeps a target out to
   `follow_range` (64) was not seen, so the keep range was left as it is (sapling-evoker.txt,
   bds-evoker.txt, `TargetEid` and `MoveEntityDelta` over time).
+- Commanded vexes, traced 2026-11-07 (thirteenth3am, bds-g11vex-2.txt, four summoned vexes):
+  open, not fixed. Two (20, 22) stayed above the stone floor (y -17..-11), 6 to 15 off with clear
+  sight, and took no target in 35 s. The other two took one only after drifting below the floor
+  (y about -20). They took it on a 10-tick scan, dropped it the next tick and flickered so (vex 21
+  first at 19377 ms); vex 23 charged at 30322 ms, at y -22.66. The pack has `must_see` true,
+  `max_dist` 70, no `within_radius`, `charge_attack` at priority 4 and no random move, yet the
+  vexes drifted smoothly. A vex with no evoker owner seems to keep a target only from inside
+  blocks, which no rule found here explains. Sapling's commanded vex keeps its target and charges
+  (`vexes.rs`); left as it is until the target keep is found (a debugger on the charge goal,
+  148958560, which has no RTTI).
   Eight evokers held 8.5 to 9 off the warded actor, vexes killed each second (`q3evoker`, 2026-11-05,
   bds-q3evoker.txt against sapling-q3evoker.txt): BDS's first casts were 3 summonings and 5 lines (the
   same casting colours as sapling's), so a first-cast summoning is BDS's too (sapling's 1 of 8). After

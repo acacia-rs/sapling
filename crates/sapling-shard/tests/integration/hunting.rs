@@ -91,10 +91,16 @@ fn a_zombie_turns_to_a_survival_player_walks_up_and_hits_it_once_a_second() {
 #[test]
 fn a_hunter_eases_in_over_its_last_block_to_its_prey() {
     let (mut h, husk) = hunted_by("minecraft:husk", Difficulty::Easy);
-    let mut zs = Vec::new();
+    let (mut zs, mut offs, mut x) = (Vec::new(), Vec::new(), 0.5_f32);
     for _ in 0..80 {
         let sent = h.tick_all().to(2).to_vec();
-        zs.extend(all::<MoveEntityDelta>(&sent).iter().filter(|moved| moved.runtime_entity_id == husk).filter_map(|moved| moved.z));
+        for moved in all::<MoveEntityDelta>(&sent).iter().filter(|moved| moved.runtime_entity_id == husk) {
+            x = moved.x.unwrap_or(x);
+            if let Some(z) = moved.z {
+                zs.push(z);
+                offs.push((x - 0.5).hypot(z - 0.5));
+            }
+        }
     }
     let steps: Vec<f32> = zs.windows(2).map(|pair| pair[0] - pair[1]).collect();
     let full = steps.iter().position(|step| *step > 0.11).expect("full pace");
@@ -103,6 +109,12 @@ fn a_hunter_eases_in_over_its_last_block_to_its_prey() {
     assert!((eased..eased + 4).all(|i| (steps[i] - model(i)).abs() < 0.002), "{:?} from {:?}", &steps[eased..eased + 4], &zs[eased.saturating_sub(2)..]);
     let rest = zs.iter().copied().fold(f32::MAX, f32::min) - 0.5;
     assert!((0.5..0.58).contains(&rest), "stood {rest} off: {zs:?}");
+    // bds-ah3stop2.txt: its last push began 0.5955 off, the walk before it 0.6321 off: the path
+    // ended under 0.6, a tick behind.
+    // (Later sends skip ticks, so only the first walk inside is judged.)
+    let inside = (eased..offs.len()).find(|&i| offs[i] < 0.6).expect("inside");
+    let pushed = |i: usize| steps[i] > steps[i - 1] * 0.546 + 0.002;
+    assert!(pushed(inside) && !pushed(inside + 1), "{:?} by {:?}", &offs[inside - 1..inside + 3], &steps[inside - 1..inside + 2]);
 }
 
 #[test]
