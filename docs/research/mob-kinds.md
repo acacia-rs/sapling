@@ -403,6 +403,20 @@ Sapling's run: sapling-kinds3.txt.
   taken (the pack's `must_see`, with the actor's view of it blocked by the stone floor, is the likeliest)
   was not settled in three BDS runs (bds-vex.txt, bds-g11vex.txt, bds-g11vex-2.txt). Sapling's
   commanded vex keeps its target and charges within seconds. Left, as more runs are needed to fit it.
+  Settled 2026-11-07 (thirteenth3ap, g11vex rerun under gdb on the Linux BDS: bds-ap3vexgdb.txt with
+  bds-ap3vexgdb-hits.txt and bds-ap3vexrange-hits.txt): the drill's actor fell to the flat ground (y
+  -60) before its floor at -20 was laid (`gamemode survival` came first), so the vexes above the floor
+  could not see it through the stone and the ones that drifted under it could, 35 to 40 off. Sight is
+  the ordinary ray (`Sensing` 0x7266e30, `Actor::canSee` 0xb2fb860, from the vex's eyes to the
+  player's position, which is its eyes). `NearestAttackableTargetGoal` (RTTI on Linux; canUse 0xbdd62f0,
+  findTarget slot 13 0xbdd7710, target test 0xbdd87a0) takes prey within `max_dist` 70 on its 10-tick
+  scan; `TargetGoal::canContinueToUse` (0xbdd6e10) drops it when its position is farther from the vex's
+  feet than the follow range attribute, 16.0 here (the pack sets none; read live at 0xbdd6fd7). So it
+  flickered past 16 and was kept once vex 23 sank within 16. `ChargeAttackGoal` canUse (0x5769460: a
+  held target, a chance, farther than its minimum) never fired on a take tick: 50-odd one-tick takes and
+  no charge. Fixed: vex `within=16` (mob-traits), `within` measured from a player's eyes, and a vex
+  starts a charge only at prey it took before this tick (`vexes.rs`); test
+  `a_commanded_vex_past_16_takes_its_prey_at_each_look_lets_it_go_a_tick_later_and_never_charges`.
 
 ## Namespaced summon events (2026-11-05, thirteenth3ah)
 
@@ -450,8 +464,8 @@ fewer than 8 vexes are within 16, summons three (`creatures/vexes.rs`, `Physics:
 by the Java game's vex goals: a tick in 7 a charge at prey more than 2 off, 5.5 on easy where
 their boxes meet, else a wander up to 7 off where it came; they waste from 30 to 119 seconds on.
 It steps away from nobody and its fangs bite no mob; a fang stands on full blocks only. A vex
-spawned by command charges here within seconds, where BDS's charged in one of three 30 s runs
-(`bds-g11vex-2.txt`; see "The commanded vex" above).
+lets prey farther than 16 go the tick after it takes it and charges only prey it kept a tick
+(see "The commanded vex" above, settled 2026-11-07).
 
 A dolphin swims as above (`creatures/dolphins.rs`, `Physics::SWIMMER`, `InLiquid::Swims`) to
 spots of water up to 10 off, or at its hitter, which it bites as other hunters do (`provoked`,
