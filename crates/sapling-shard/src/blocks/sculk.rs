@@ -185,7 +185,13 @@ fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEv
         }
         let when = now + (distance as u64).max(1);
         listeners.coming.push(Coming { when, layer, listener, event, frequency: event.frequency(), strength, by_player });
-        send::to_viewers(world, layer, cell, &[events::signal(cell, listener, distance as u64)]);
+        let signal = events::signal(cell, listener, distance as u64);
+        // An amethyst's flies after the ringing sensor's new phase, as BDS sent it (bds-uureson.txt).
+        if matches!(event, GameEvent::Resonate(_)) {
+            send::after_blocks(world, layer, cell, signal);
+        } else {
+            send::to_viewers(world, layer, cell, &[signal]);
+        }
     }
 }
 

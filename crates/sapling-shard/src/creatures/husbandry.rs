@@ -5,6 +5,7 @@
 //! keeps of all this is its [`Raised`], written back with its compound (`sapling_world::Raising`).
 
 mod ageing;
+mod allays;
 mod breeding;
 mod clicks;
 mod guarding;
@@ -87,6 +88,7 @@ pub(crate) fn tick(world: &mut World) {
         leads::hold(world, entity, now);
     }
     knots::tick(world);
+    allays::tick(world);
 }
 
 /// The compound the mob is kept as, with its raising now.

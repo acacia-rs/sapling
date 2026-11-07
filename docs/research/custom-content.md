@@ -56,3 +56,6 @@ Only a real client can confirm these; none were checked against BDS or a client:
   `collision_box`, test `an_item_lands_on_the_box_of_a_custom_block_s_permutation`); that a client collides alike
   is not checked
 - a cooldown is not enforced server-side; eating a custom food was checked only in data
+  (2026-11-07, group AK: tools/ak-snack-pack.sh gives a BDS copy `ak:snack`, drill `ak1snack`; BDS
+  took `/replaceitem` of it, but the drill bot's `!eat` never used it, so BDS sent no bite, cooldown or
+  hunger change to judge by: needs a bot that uses a custom food)

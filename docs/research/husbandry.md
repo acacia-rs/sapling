@@ -156,11 +156,23 @@ sapling-h3herds.txt):
 ## Left out
 
 Riding (the vehicles work reads `Raised::saddled`/`chested`), cats' and parrots' own behaviours
-(sitting on chests and shoulders, gifts; parrots below), turtles' scutes, breeding of villagers,
+(sitting on chests and shoulders, gifts; parrots below), breeding of villagers,
 foxes' trust (`entity_born` gives `trusting_fox`: `minecraft:trust` and a `defend_trusted_target`
 within 25; BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strings at 141171c40 and
 141172080): each needs goals sapling's mobs do not have (sitting on blocks, gift loot, trusted
 targets). Bees and axolotls in buckets are ported (creatures/bees.rs, creatures/scooping.rs).
+
+Turtle scutes (bds-ak1scute.txt, ported): a baby turtle grown up (at its tenth seagrass there) drops its
+`minecraft:ageable` `drop_items` (`turtle_shell_piece`, named `turtle_scute` now), one, from its feet +
+0.125 tossed 0.2 up, before the grown scale's SetEntityData in that tick (husbandry.tsv `sheds`,
+husbandry/products.rs `shed`; sapling's AddItemEntity comes after the scale, new entities being
+announced at the tick's end).
+
+Allays handed items (bds-ak1allay.txt, ported in husbandry/allays.rs): a click with anything but a lead,
+not sneaking, on an allay with an empty hand gives it one of the stack (MobEquipment, the hand keeps the
+rest, same tick); the next tick `item_given` and its flags with `ACTION` and `OwnerEid`. A click with
+something on one that holds something does nothing; `ambient.tame` came about 1.2 s later and it
+dropped its item when killed (not ported, nor its collecting and giving back).
 
 ## Parrots on shoulders (`parrots`, not built)
 

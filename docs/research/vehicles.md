@@ -187,7 +187,10 @@ were not found in any of these; sapling does what is listed there.
   BDS took the bot's walk and 10-tick charged jump with one vehicle correction at the mount, as sapling
   takes the client's moves, so its steering is the client's. A `camel_saddled` camel seated no one on
   BDS (its `rideable` is in `camel_adult`, which that event does not add); sapling seated the bot,
-  fixed (`riding/inventory.rs` `unrideable`). Camel steering on a grown camel is still undrilled.
+  fixed (`riding/inventory.rs` `unrideable`). A grown camel (ak1camel, saddled by `/replaceitem`, walked
+  south 3 s) is steered server-side on BDS (its rider gets its MoveEntityDelta) at 0.198 blocks a tick;
+  sapling's walked it at 0.0175 (rein 0.09 through the legs' squared stride), now 0.303 to match
+  (riding/mounts.rs `CAMEL_SPEED`). The 10-tick charge after `!stop` dashed on neither.
 - Underwater counter, drilled 2026-11-05 (group AI, `ai1boat`): a pig in a boat in a pool under a
   stone roof floated up to the roof (boat -26.08 on both) and stayed seated 12 s on BDS, never thrown
   out; with its head in the roof it held its breath (Air 1 a tick) and was hurt every 10 ticks. Sapling
@@ -260,3 +263,12 @@ were not found in any of these; sapling does what is listed there.
   seat; and BDS's correction kept the rider 0.16 to 0.23 above the floor where sapling puts it on
   the floor. Off a harnessed happy ghast (slowed) BDS put the rider on top of it (`on_top_center`);
   sapling has no seat layout for the ghast.
+  Re-drilled 2026-11-07 (group AK, `ak1exit`, eleven still pigs with blocks north and south; the
+  ninth wave's "no correction" and ladder readings came from its negative-x cells, `{x}.5` being the
+  wrong cell there): BDS let the rider off north into a ladder's cell for every facing, onto a
+  campfire north (feet at its 0.4375 top), and into lava north, or south past stone with lava south,
+  0.23 above the floor; with stone north and a campfire south it sent no correction. Fixed: a cell
+  blocks only through boxes under the rider's middle (exit.rs `top`), so a ladder on the side no
+  longer sends it south; re-drilled (sapling-ak1exit.txt) every spot matches but two (exit.rs TODO):
+  by lava sapling's rider is on the floor, BDS's 0.23 up, and with stone north and a campfire south
+  sapling steps it onto the campfire.

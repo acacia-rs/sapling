@@ -44,6 +44,15 @@ fn push(from: &Body, to: &Body, grace: f32) -> Option<[f32; 2]> {
     Some([-dx * scale, -dz * scale])
 }
 
+/// The push across the players of `layer` give a pushable thing that is no mob (an eye of ender) at `body`.
+pub(crate) fn pushed_by_players(world: &World, layer: Entity, body: &Body) -> [f32; 2] {
+    in_world(world)
+        .into_iter()
+        .filter(|player| world.get::<InLayer>(*player).is_some_and(|at| at.0 == layer) && world.get::<Mode>(*player).is_some_and(|mode| mode.0 != GameMode::Spectator) && world.get::<crate::riding::Riding>(*player).is_none())
+        .filter_map(|player| push(&Body::new(world.get::<Position>(player)?.feet, [0.0; 3], PLAYER_SIZE), body, GRACE))
+        .fold([0.0; 2], |sum, [px, pz]| [sum[0] - px, sum[1] - pz])
+}
+
 /// Pushes apart every two mobs that crowd each other, before any of them moves.
 pub(super) fn tick(world: &mut World) {
     // Not a rider or what is driven, which their seats and drivers move, nor a vex or the dragon.
@@ -104,5 +113,14 @@ mod tests {
         assert!((2.0 * px - 0.0707).abs() < 1e-4, "{px}");
         assert_eq!(push(&cow(4.5), &cow(4.505), GRACE), None, "on one spot");
         assert!(push(&cow(4.5), &cow(5.495), GRACE).is_some() && push(&cow(4.5), &cow(6.061), GRACE).is_none(), "0.995 apart and 1.561");
+    }
+
+    #[test]
+    fn a_player_pushes_an_eye_of_ender_as_bds_did() {
+        // bds-eye-near.txt: the eye's ninth told move took (0.0191, 0.0633) more than its flight from here.
+        let player = Body::new([-1449.5, 36.0, -2539.5], [0.0; 3], PLAYER_SIZE);
+        let eye = Body::new([-1449.3789, 37.471_317, -2539.0999], [0.0; 3], [0.25, 0.25]);
+        let [px, pz] = push(&player, &eye, GRACE).unwrap();
+        assert!((-px - 0.01906).abs() < 2e-4 && (-pz - 0.06332).abs() < 2e-4, "{px} {pz}");
     }
 }

@@ -17,7 +17,7 @@ RENAMES = {
     "muttonRaw": "mutton", "muttonCooked": "cooked_mutton", "appleEnchanted": "enchanted_golden_apple", "appleenchanted": "enchanted_golden_apple",
     "fish": "cod", "clownfish": "tropical_fish", "cooked_fish": "cooked_cod", "horsearmorleather": "leather_horse_armor",
     "horsearmoriron": "iron_horse_armor", "horsearmorgold": "golden_horse_armor", "horsearmordiamond": "diamond_horse_armor",
-    "carrotOnAStick": "carrot_on_a_stick",
+    "carrotOnAStick": "carrot_on_a_stick", "turtle_shell_piece": "turtle_scute",
 }
 # `minecraft:ageable`'s growth for an item that names none (Bedrock's add-on documentation).
 GROWTH = 0.1
@@ -79,6 +79,8 @@ def row(entity):
         fields.append(f"grows={int(ageable.get('duration', 1200) * 20)}")
         if feed:
             fields.append("grow=" + ",".join(feed))
+        if ageable.get("drop_items"):
+            fields.append("sheds=" + ",".join(item(i) for i in listed(ageable["drop_items"])))
     tameable = found(entity, "minecraft:tameable")
     if tameable:
         fields.append("tame=" + ",".join(item(i) for i in listed(tameable.get("tame_items", []))))

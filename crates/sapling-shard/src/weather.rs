@@ -5,8 +5,8 @@
 //! is on, turning each when its count runs out and drawing how long the new spell lasts. A player
 //! is told whenever what it was last told differs from its world's sky, so one who joins or
 //! changes worlds is too.
-// TODO: BDS draws the spells from the level's random, here from a hash of the tick; snow falls
-// on no block.
+// BDS draws spells from its entropy-seeded level random (no run repeats); here a tick hash, same ranges.
+// Snow lying from weather: blocks/growth/snowfall.rs.
 // Lightning: lightning.rs.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};

@@ -165,6 +165,13 @@ and a flat world locates no stronghold); sapling's side on `drill_server` with `
   whose numbers for a legacy `minecraft:pushable` were not read. Fits of that rule to the capture
   (strength 0.005 to 0.3, the box grown 0 to 0.3, before or after the flight's turn, into the motion or
   the position) left 0.06 off at best, so it is not ported; sapling's eye passes through the player.
+  Settled 2026-11-07 (group AK, scratchpad fit of each told move against the flight from the last one):
+  the residuals are pushes into the motion from the eye's own place, a player's mob push exactly
+  (`creatures/crowding.rs`: Java's rule at 0.1, the player's box grown 0.2), coming 2, 1 and 0 times in
+  three ticks (ticks 8-15 of the throw: 0.0585/0.1181, 0.0191/0.0633, none, ...). The player pushes once
+  per input it moves by, and the bot's inputs reach BDS unevenly; that cannot be matched, so sapling pushes
+  once a tick, which is BDS's mean (`eyes::tick` via `creatures::pushed_by_players`, test
+  `a_player_pushes_an_eye_of_ender_as_bds_did`).
 - Left different: sapling's item comes before the RemoveEntity, its stack ids do not count up, its item's
   toss is the shard's dice.
 

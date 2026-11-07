@@ -3,7 +3,7 @@
 //! go to every player in one ContainerRegistryCleanup, the newest first. One thrown down, cleared or
 //! replaced went at the next sweep, 0.3 to 12 s after (a lying bundle has no number,
 //! bundles.rs [`super::unnumbered`]); one in a chest stayed its 34 s there (bds-t2ebundle.txt).
-// TODO: a mob's bundle counts as gone (bds-r1bundle.txt: an allay's, 7.3 s on); no mob here takes one.
+//! A bundle an allay took (creatures/husbandry/allays.rs) counts as gone, as BDS's went 7.3 s on (bds-r1bundle.txt).
 
 use std::collections::BTreeSet;
 

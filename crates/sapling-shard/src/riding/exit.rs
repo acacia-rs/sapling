@@ -1,8 +1,8 @@
 //! Where a rider steps off to, as BDS puts a passenger leaving a vehicle with the default
 //! `dismount_mode` (matched live for a pig and a boat: acacia's docs/research/riding-fishing-elytra.md):
 //! the first free spot of 24 around the vehicle's cell, by the way it moves, at the seat's x and z.
-// TODO: BDS corrected no exit next to lava or a campfire, put the rider 0.16-0.23 above the floor
-// and off a ladder's side oddly (docs/research/vehicles.md "Exit spots"); `on_top_center` is not modelled.
+// TODO: BDS put a rider let off into lava 0.23 up and sent none south onto a campfire with stone
+// north (docs/research/vehicles.md "Exit spots"); `on_top_center` is not modelled.
 
 use acacia_physics::{Aabb, WorldView};
 use bevy_ecs::prelude::*;
@@ -34,22 +34,25 @@ fn around([dx, dz]: [f32; 2]) -> [[f32; 2]; 8] {
     [s, neg(s), add(s, f, -1.0), add(neg(s), f, -1.0), add(s, f, 1.0), add(f, s, -1.0), neg(f), f]
 }
 
-/// The height of the cell's highest collision box above its base.
-fn top(view: &impl WorldView, cell: [i32; 3]) -> Option<f32> {
+/// The height above the cell's base of its highest collision box under a body `half` wide at `at`
+/// (x and z): a ladder on the cell's side is not under one in its middle, as BDS let a rider off
+/// into a ladder's cell (research/captures/bds-ak1exit.txt).
+fn top(view: &impl WorldView, cell: [i32; 3], at: [f32; 3], half: f32) -> Option<f32> {
     let mut boxes = Vec::new();
     view.block_collisions(cell, &mut boxes);
-    boxes.iter().map(|b| b.max[1]).reduce(f32::max)
+    let under = |b: &Aabb| [0, 2].iter().all(|&axis| b.min[axis] < at[axis] - cell[axis] as f32 + half && b.max[axis] > at[axis] - cell[axis] as f32 - half);
+    boxes.iter().filter(|b| under(b)).map(|b| b.max[1]).reduce(f32::max)
 }
 
 /// The floor in the cell of `at` when a rider of `size` fits standing on it there.
 fn free_floor(view: &impl WorldView, at: [f32; 3], [width, height]: [f32; 2]) -> Option<f32> {
     let cell = at.map(|c| c.floor() as i32);
-    let floor = match top(view, cell) {
+    let half = width.min(1.0) / 2.0;
+    let floor = match top(view, cell, at, half) {
         Some(top) if top > 0.0 && top < 1.0 => top,
         Some(_) => return None,
-        None => Some(top(view, [cell[0], cell[1] - 1, cell[2]])? - 1.0).filter(|below| *below >= 0.0)?,
+        None => Some(top(view, [cell[0], cell[1] - 1, cell[2]], at, half)? - 1.0).filter(|below| *below >= 0.0)?,
     };
-    let half = width.min(1.0) / 2.0;
     let body = Aabb { min: [at[0] - half, at[1] + floor, at[2] - half], max: [at[0] + half, at[1] + floor + height, at[2] + half] };
     let mut hits = Vec::new();
     view.collisions(&body, &mut hits);
@@ -101,5 +104,9 @@ mod tests {
         assert_eq!(feet, [0.5, 64.0 + LIFT, -0.5], "left of a vehicle facing -x: -z");
         let walled = physics_view(&level, |view| exit_feet(view, [0.5, 64.35, 0.5], [0.5, 64.35, 0.5], [0.3, 0.0], PLAYER_SIZE)).unwrap();
         assert_eq!(walled, [0.5, 64.0 + LIFT, 1.5], "moving +x: +z first");
+        let ladder = level.registry().find("minecraft:ladder", "facing_direction=2").unwrap();
+        level.set_block(0, 64, -1, ladder);
+        let by_ladder = physics_view(&level, |view| exit_feet(view, [0.5, 64.35, 0.5], [0.5, 64.35, 0.5], [0.0; 2], PLAYER_SIZE)).unwrap();
+        assert_eq!(by_ladder, [0.5, 64.0 + LIFT, -0.5], "into a ladder's cell, as BDS (bds-ak1exit.txt)");
     }
 }
