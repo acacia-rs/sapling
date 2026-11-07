@@ -36,9 +36,39 @@ pub(crate) enum GameEvent {
     Explode,
     /// A sensor went active: what shriekers hear, and nothing else does.
     TendrilsClicking,
+    /// An amethyst block beside a sensor going active passes on the frequency it heard (`resonate_<n>`).
+    Resonate(u8),
 }
 
 impl GameEvent {
+    /// BDS's type number for it, which a listener's block actor keeps (sculk.md's table).
+    pub(crate) fn type_id(self) -> i32 {
+        match self {
+            GameEvent::BlockClose => 4,
+            GameEvent::BlockDestroy => 6,
+            GameEvent::BlockOpen => 8,
+            GameEvent::BlockPlace => 9,
+            GameEvent::ContainerClose => 11,
+            GameEvent::ContainerOpen => 12,
+            GameEvent::DispenseFail => 13,
+            // TODO: a drink shares Eat, so it saves 15 where BDS saves drink's 14.
+            GameEvent::Eat => 15,
+            GameEvent::Step => 22,
+            GameEvent::Explode => 27,
+            GameEvent::FluidPickup => 29,
+            GameEvent::FluidPlace => 30,
+            GameEvent::LightningStrike => 34,
+            GameEvent::NotePlay => 36,
+            GameEvent::PrimeFuse => 39,
+            GameEvent::ProjectileLand => 40,
+            GameEvent::ProjectileShoot => 41,
+            GameEvent::SculkTouch => 57,
+            GameEvent::TendrilsClicking => 58,
+            GameEvent::Teleport => 64,
+            GameEvent::Resonate(frequency) => 41 + i32::from(frequency),
+        }
+    }
+
     /// What a comparator reads off a sensor that heard it; 0 for what no sensor hears.
     pub(crate) fn frequency(self) -> u8 {
         match self {
@@ -53,6 +83,7 @@ impl GameEvent {
             GameEvent::LightningStrike | GameEvent::Teleport => 14,
             GameEvent::Explode => 15,
             GameEvent::TendrilsClicking => 0,
+            GameEvent::Resonate(frequency) => frequency,
         }
     }
 }

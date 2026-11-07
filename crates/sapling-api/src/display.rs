@@ -11,6 +11,12 @@ impl ShardCtx<'_> {
         self.backend.set_label(actor.into(), Label::NameTag, text)
     }
 
+    /// The name over a player's or an entity's head: a plugin's, else its own (a mob's from a
+    /// name tag or `/summon`); `None` for one that is not there or a mob with no name.
+    pub fn name_tag(&mut self, actor: impl Into<Actor>) -> Option<String> {
+        self.backend.name_tag(actor.into())
+    }
+
     /// Puts `text` under the name of a player or an entity; `None` takes it off. False for one
     /// that is not there.
     pub fn set_score_tag(&mut self, actor: impl Into<Actor>, text: Option<&str>) -> bool {

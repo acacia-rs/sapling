@@ -60,11 +60,11 @@ fn a_water_bucket_scoops_a_cod_and_lets_it_out_with_the_water() {
 fn an_axolotl_bucket_lets_its_mob_out_before_it_is_heard_pouring_plain_water() {
     use acacia_proto::Packet;
     use acacia_proto::packets::AddEntity;
-    // research/captures/bds-r1buckets.txt: AddEntity, then bucket.empty.water.
+    // research/captures/bds-r1buckets.txt (97337): AddEntity, the axolotl's `spawn`, then bucket.empty.water.
     let mut h = ready(GameMode::Survival, &[("minecraft:axolotl_bucket", 1, 0)], 30.0);
     h.receive(1, &click([0, 64, 3], 1, None));
     let poured = h.tick_all().to(1).to_vec();
-    assert_eq!(sounds(&poured), ["bucket.empty.water"], "left: sounds");
+    assert_eq!(sounds(&poured), ["spawn", "bucket.empty.water"], "left: sounds");
     let order: Vec<u32> = poured.iter().map(|p| p.id).filter(|&id| id == AddEntity::ID || id == LevelSoundEvent::ID).collect();
-    assert_eq!(order, [AddEntity::ID, LevelSoundEvent::ID], "left: order");
+    assert_eq!(order, [AddEntity::ID, LevelSoundEvent::ID, LevelSoundEvent::ID], "left: order");
 }

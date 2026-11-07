@@ -404,6 +404,14 @@ Sapling's run: sapling-kinds3.txt.
   was not settled in three BDS runs (bds-vex.txt, bds-g11vex.txt, bds-g11vex-2.txt). Sapling's
   commanded vex keeps its target and charges within seconds. Left, as more runs are needed to fit it.
 
+## Namespaced summon events (2026-11-05, thirteenth3ah)
+
+`/summon slime <pos> <yaw> <pitch> minecraft:spawn_medium` runs no event on BDS: the slime kept its base
+components (a 2.08 box, no `area_attack`, `Variant` 1) and never hurt the actor (bds-q3crowd.txt);
+`spawn_medium` made a medium one (bds-ah3slime.txt). `minecraft:spawn_adult` on a piglin left it bare,
+as an event its pack lacks. Not followed: sapling strips `minecraft:` (`slimes/sizes.rs` `of_event`) and
+makes a medium slime either way.
+
 ## Sapling
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),

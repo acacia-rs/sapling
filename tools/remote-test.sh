@@ -8,6 +8,9 @@
 set -uo pipefail
 source "$(dirname "$0")/remote-sync.sh"
 args=$(printf '%q ' "$@")
-retry ssh $opts $host "cd $remote || exit; rm -f test.log test.done; { nohup flock -o target/.busy sh -c 'ACACIA_TICK_SCALE=${TICK_SCALE:-2} ACACIA_HUMAN_SCALE=${HUMAN_SCALE:-0.1} $cargo test $args >test.log 2>&1; echo \$? >test.done' </dev/null >/dev/null 2>&1 & }" || exit 1
+printf '%s\n' "ACACIA_TICK_SCALE=${TICK_SCALE:-2} ACACIA_HUMAN_SCALE=${HUMAN_SCALE:-0.1} $cargo test $args" | retry ssh $opts $host "cat > $remote/test.sh" || exit 1
+# TIMEOUT (default 5400 s) and STALL (default 900 s without output) kill a hung run (exit 124/125): see testbox-guard.sh.
+# 2026-11-05 a hung test held the shared build lane for 8 hours before this guard.
+retry ssh $opts $host "cd $remote || exit; rm -f test.log test.done; { nohup flock -o target/.busy sh tools/testbox-guard.sh test.sh test.log test.done ${TIMEOUT:-5400} ${STALL:-900} </dev/null >/dev/null 2>&1 & }" || exit 1
 await test.done
 retry ssh $opts $host "cd $remote; grep -E '^(error|warning)|^\s+--> |test result|FAILED|panicked|left:|right:' test.log | head -60; echo exit: \$(cat test.done)"

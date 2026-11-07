@@ -186,6 +186,7 @@ mod survival;
 mod template_actors;
 mod thirteenth2p_blocks;
 mod thirteenth2t_blocks;
+mod thirteenth1ai;
 mod thirteenth2v_blocks;
 mod thirteenth2x;
 mod thirteenth2z;

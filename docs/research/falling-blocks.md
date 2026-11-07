@@ -210,48 +210,13 @@ Snow layer (`TopSnowBlock`):
    actor, then RemoveActor.
 6. **Sapling.** See the next section.
 
-## What sapling needs (6)
+## Sapling
 
-Today `updates.rs::fall` writes air and then the block in the lowest free cell, in the same step.
-
-`sapling_data::add_entity` with `identifier: "minecraft:falling_block"` already does most of the AddActor:
-
-- `variant: registry.network_hash(id) as i32` writes `Variant` (key 2, Int), which is the only item BDS sets from
-  the block.
-- `falling_block` is not in `Mobs.bin`, so the packet comes from `plain()`. That gives flags `HAS_COLLISION |
-  AFFECTED_BY_GRAVITY`, plus `Color`, `Nametag`, `Scale` 1 and `MarkVariant`, which are harmless.
-
-What is missing or wrong:
-
-- **Hitbox.** `plain()` uses 0.9 x 0.9. A falling block is 0.98 x 0.98 (Java; DF and PM use the same). Pass the
-  size in, or record one BDS falling block into `Mobs.bin` and drop the guesswork.
-- **Position.** `feet` goes onto the wire unchanged. Send the cell centre at spawn, `(x+0.5, y+0.5, z+0.5)`, as BDS
-  does. If sapling keeps feet internally, the network position is about `feet + 0.49` (DF/Nukkit base offset,
-  unverified on BDS).
-- **Flags.** BDS adds `HAS_COLLISION` a tick later. Sending it from the start is fine for a client.
-- **Movement packets.** sapling has none. Nothing in `sapling-shard` or `sapling-data` builds MoveActorDelta,
-  MoveActorAbsolute or SetActorMotion, and `mobs.rs` treats every actor as a statue: an announcement made once and
-  replayed to new viewers. A falling block needs a per-tick entity:
-  - simulate it on the server (the three lines above);
-  - send each viewer a MoveActorDelta (or MoveActorAbsolute) of the new position and a SetActorMotion of the
-    velocity every tick;
-  - when it lands, the UpdateBlock and on-land packets, then RemoveActor 3 ticks later. Removal can reuse
-    `mobs::remove`.
-
-  It also needs a current announcement for late viewers (the position at the time they see it), not the spawn
-  one frozen in `Mob::announcement`.
-- **Refused landing drops.** Use the block's own item (`asItemInstance`; gravel drops gravel, never flint), not
-  `loot::thrown`. Snow layers drop 1 snowball. Use `mobs::spawn_item` at the actor position, plus
-  `send::destroy_particles` with the block's id.
-
-## Differences from sapling's current rules
-
-- `gives_way` decides where sapling's blocks stop. BDS uses `isFreeToFall` only to *start* a fall; after that,
-  physics and `tryToPlace` decide. The start test includes snow layers of any height, corals and coral fans, and
-  Plant material. It does not include generic "replaceable".
-- Stack order: the bottom block falls first, then each next one a tick later. sapling's queue drops a whole tower
-  in one step.
-- Snow layers fall but do not slide or break on torches. Suspicious sand and gravel break on landing with no drop.
+Built since this section was written (`sapling-shard/src/blocks/falling.rs`, `falling/flight.rs`): the block
+becomes a falling entity simulated per tick, told by MoveEntityDelta and SetEntityMotion, placed on landing or
+left as its own item (a snow layer as a snowball, a suspicious block as nothing), and removed after; the wire
+matches BDS value for value (bds-n13net.txt, "On the wire" below). The start test takes snow layers and corals
+besides `gives_way`; the lists are names, not block data (TODO in falling.rs).
 
 ## Saved actor
 

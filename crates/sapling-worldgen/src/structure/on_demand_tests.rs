@@ -47,6 +47,14 @@ fn place_jigsaw_rejects_an_unknown_pool_or_target() {
 }
 
 #[test]
+fn place_jigsaw_joins_a_tower_only_at_its_road_anchor() {
+    // research/captures/bds-ai1camps.txt: `road_anchor` placed, `bottom` and an unknown target a generation error.
+    let generator = OverworldGenerator::new(SEED);
+    let at = |target: &str| generator.place_jigsaw("minecraft:trail_ruins/tower", target, 3, [8, 40, 8], &flat).map(|_| ());
+    assert_eq!([at("minecraft:road_anchor"), at("minecraft:bottom"), at("minecraft:no_such_target")], [Ok(()), Err(PlaceFailure::Failed), Err(PlaceFailure::Failed)]);
+}
+
+#[test]
 fn place_structure_draws_trail_ruins_and_a_village() {
     let generator = OverworldGenerator::new(SEED);
     for (kind, chunk) in [(StructureKind::TrailRuins, (0, 0)), (StructureKind::Village, (-62, 8))] {

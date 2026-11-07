@@ -47,6 +47,11 @@ impl UiBackend for Ctx<'_> {
         true
     }
 
+    fn name_tag(&mut self, actor: Actor) -> Option<String> {
+        let entity = self.actor(actor)?;
+        crate::labels::name(self.world, entity)
+    }
+
     fn set_hidden(&mut self, viewer: PlayerId, actor: Actor, hidden: bool) -> bool {
         let (Some(viewer), Some(target)) = (self.entity(viewer), self.actor(actor)) else { return false };
         crate::hidden::set(self.world, viewer, target, hidden);

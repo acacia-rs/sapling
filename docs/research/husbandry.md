@@ -51,8 +51,9 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
 - A tamed mob more than 12 blocks behind teleports 2 to 3 blocks from its owner (the Java game's).
 - A failed ride makes a mount 5 calmer (the Java game's; BDS's `attemptTemperMod`, default 5 in
   `MountTamingComponent`'s set-up 141de92d0).
-- A lead pulls past 4 blocks, drags past 6 and snaps past 10; a holder not found again for 100
-  ticks lets go; a knot sits a quarter block up its fence, and a knot holding nothing goes.
+- A lead pulls past 4 blocks, drags past 6 and snaps past 11 (see "A lead" below); a holder not
+  found again for 100 ticks lets go; a knot sits a quarter block up its fence, and a knot holding
+  nothing goes.
 - A wolf defending its owner looks 16 blocks, bites every 20 ticks within 0.8 past its box, and its
   bite throws nothing.
 - Creative players keep the name tag they use; buckets and bowls still fill.
@@ -71,6 +72,11 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
   for cows); sapling sends `InLoveParticles` (26) once. BDS sent no `OwnerEid` with the lead;
   sapling sends -1. BDS's `lead.leash` came a tick after the metadata.
 - A stored mob in love does not show its hearts until fed again.
+- Tempt (`ah3tempt`, bds-ah3tempt.txt): cows 5, 9, 11 and 14 off the actor holding wheat all came at
+  once at 0.2108 a tick. Each kept walking 2.27 off and stopped walking 2.22 off, coming to rest 1.81
+  to 1.97 off. Sapling followed only within 10 and stopped walking under 2.5. Fixed: within 16 (the far
+  bound not reached), stopping under 2.25 (`husbandry/breeding.rs`). Re-drilled, sapling's cows came to
+  rest within 0.001 of BDS's. Test `a_cow_10_6_off_follows_wheat_and_stops_about_2_off`.
 
 ## Drilled (2026-11-04, `bds_command_probe n3ride`, `n3foals`)
 
@@ -93,8 +99,17 @@ owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give 
 - **A lead** (bds-n3ride.txt, a cow led by a player teleported 3 blocks further each 3 s): it held
   6.6 blocks off and the cow walked up to 0.5 to 3.5 of the holder; it snapped (the lead dropped
   where the cow stood) the tick after the holder was put 15.5 off. Consistent with the pack's
-  defaults (soft 4, hard 6, max 10) that sapling uses; the exact snap distance between 6.6 and 15.5
-  was not pinned.
+  defaults (soft 4, hard 6, max 10); the exact snap distance between 6.6 and 15.5 was not pinned.
+- **Leads and knots** (bds-uuknot.txt, `bds_command_probe uuknot`, a slowed cow at x -6.5 and its
+  holder teleported from 1 block off to 7-15 off): the lead held at 11 blocks (the cow was pulled
+  along) and snapped at 11.99, so sapling snaps past 11. A snap is heard `lead.break` as no one's
+  from the holder's middle (feet + 0.9); the lead drops at the cow. A knot's feet are 0.25 above
+  its fence's floor, `leashknot.place` from its middle and `leashknot.break` from its feet, both
+  as no one's. The cow tied to a knot dying took the knot away in the same tick. A click on the
+  knot handed the cow back to the player (`LeadHolderEid` the player's, `lead.leash` from the
+  player's middle, no lead dropped) and the knot went the tick after. Sapling does all of these
+  (`creatures/husbandry/knots.rs`, `leads.rs`); a kept knot from a world folder still waits 100
+  ticks for its mobs. What a hit on a knot does was not drilled.
 
 ## Herds (ported from the packs)
 
@@ -182,4 +197,4 @@ vehicles work) take no player as a vehicle.
   four: warm, temperate, temperate, cold. Every calf took one parent's climate on both sides,
   which fits sapling's random pick of a parent; three calves cannot show the odds.
 - Herds from natural spawning (above); cats', parrots' and foxes' own goals (Left out).
-- The exact distance a lead snaps at, between 6.6 and 15.5.
+- The exact distance a lead snaps at, between 11 and 11.99 (bds-uuknot.txt).

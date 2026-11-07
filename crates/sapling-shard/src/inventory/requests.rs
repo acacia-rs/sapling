@@ -263,6 +263,7 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     match (applied, answer) {
         (Some(applied), Some(answer)) => {
             containers::store(world, entity, container);
+            workstations::answering(world, entity, applied.forged.as_ref());
             if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
                 out.push(&answer);
                 shown_bundle.iter().for_each(|slot| out.push(slot));

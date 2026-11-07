@@ -1,5 +1,10 @@
 # sapling block rules vs vanilla (2026-10-05)
 
+Stale verdicts (2026-11-05): the WRONG/MISSING marks below describe sapling as of 2026-10-05 and most are fixed
+since (doors use the turned table, a ladder is refused on a top or bottom face, item-named blocks place through
+`blocks/items.rs`, the support rules live in `blocks/ground.rs`). Read the code before trusting a mark; the
+vanilla rules themselves stand.
+
 Tags: **BDS** = bdsre decompile of `acacia/.testserver/bds/bedrock_server.exe` (label/VA given; `?` labels are ported
 hints, the constants were read from the pseudo-C). **BOX** = collision boxes per state in
 `acacia-server/crates/acacia-world/data/blocks.bin` (property names and values are the registry's own). **REC** =
@@ -137,6 +142,20 @@ functions below, which fixes the numbering.
 11. Add falling: anvils, `suspicious_sand`; replaceables: `soul_fire`, `light_block_*`, `structure_void`, nether roots/sprouts, `glow_lichen`, `leaf_litter`, `hanging_roots`, dry grass, `bush`.
 12. Add orientations: bed (two cells), hopper, glazed terracotta, barrel, loom/beehive, end rod, skull/banner/shulker, rails; lever/wall banner/tripwire hook/item frame support; pressure plates; double slabs; item-to-block table.
 13. Falling-block entity instead of the instant drop (known TODO); concrete powder hardening in water.
+
+## `/fill` neighbour updates (drilled 2026-11-05, group AI: `ai1fill`, `ai1liquid`; thirteenth1ai_drill.rs)
+
+BDS writes every cell of a fill, then notifies neighbours; sapling notifies as it writes each cell.
+- Water (bds-ai1liquid.txt): a lone `/setblock` or one-cell `/fill` of water did not flow in 3 s on
+  either side (a written cell wakes its neighbours, not itself). A 3-cell line flowed from all three on
+  BDS; sapling's last cell never flowed, because its neighbours were notified before it became water.
+- Sand: BDS sent several air writes and landings in one tick as one UpdateSubchunkBlocks; sapling sent
+  an UpdateBlockSynced per cell. Rails: the same final shapes, but BDS's batch lists each cell's
+  writes in order (placement, then joins, with repeats), where sapling lists final states. Redstone dust:
+  powered about 3 ticks after the answer on BDS, 2 on sapling (perhaps the flush phase).
+- Design, not ported: for a fill, collect the written cells, write all of them, then run `settle` for
+  each in fill order. That needs group AG's batch hooks (blocks/sulfur.rs, handlers/backend.rs,
+  send/sections), which are not on master yet.
 
 Open checks for one bot session on BDS (place, read the state back): piston facing numbers, dispenser/piston up-down rule
 (position vs pitch), trapdoor placed on a side face, end rod values, snow-layer replace height, lever sound ids on the wire,

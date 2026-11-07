@@ -62,4 +62,17 @@ pub(crate) fn release(world: &mut World, layer: Entity, bucket: &ItemStack, cell
     let Ok(compound) = placed_actor(&kept, unique_id, feet, [0.0, 0.0]) else { return };
     let Some((actor, unique_id, compound)) = stored_actors(&compound).ok().and_then(|mut read| read.pop()) else { return };
     crate::actors::bring_in(world, layer, ChunkPos::of_block(cell[0], cell[2]), actor, unique_id, compound);
+    if matches!(kind, "minecraft:axolotl" | "minecraft:tadpole") {
+        heard_spawning(world, layer, unique_id, cell);
+    }
+}
+
+/// The let-out mob kept under `unique_id` is heard `spawn` once announced, as BDS's axolotl and
+/// tadpole were (bds-r1buckets.txt); a let-out cod was heard no `spawn` (bds-glide2.txt).
+fn heard_spawning(world: &mut World, layer: Entity, unique_id: Option<i64>, cell: BlockPos) {
+    let Some(unique_id) = unique_id else { return };
+    let Some(entity) = world.query::<(Entity, &crate::tags::UniqueId)>().iter(world).find(|(_, id)| id.0 == unique_id).map(|(entity, _)| entity) else { return };
+    let (Some(id), Some(kind), Some(body)) = (world.get::<crate::components::NetId>(entity).map(|id| id.0), world.get::<Kind>(entity).map(|kind| kind.0.clone()), world.get::<Body>(entity).copied()) else { return };
+    let heard = super::shown::spawn_sound("spawn", id, &kind, &body, super::is_baby(world, entity));
+    crate::entities::after_announcing(world, layer, cell, vec![heard]);
 }

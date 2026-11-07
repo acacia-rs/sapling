@@ -129,8 +129,8 @@ pub(crate) use lectern::turn_pages as turn_lectern_pages;
 pub(crate) use conduits::tick as wake_conduits;
 pub(crate) use pending::{arrived as ticks_arrived, write_back as write_back_ticks, write_back_before_saving as write_back_ticks_before_saving};
 pub(crate) use rods::{Strike as LightningStrike, felt as lightning_felt, sparks as lightning_sparks, struck as lightning_struck};
-pub(crate) use sculk::{GameEvent, catalysts_arrived, mob_died, teleported, tick as hear_vibrations, vibrate, vibrate_at, walked};
 pub(crate) use sulfur::{defer_neighbours as defer_sulfur_neighbours, plume as geyser_plume, run_deferred as run_deferred_sulfur_neighbours};
+pub(crate) use sculk::{GameEvent, catalysts_arrived, mob_died, poured, teleported, tick as hear_vibrations, vibrate, vibrate_at, walked};
 pub(crate) use target::shot_stopped;
 pub(crate) use tripwire::tick as trip_wires;
 

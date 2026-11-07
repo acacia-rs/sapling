@@ -77,6 +77,15 @@ pub(crate) fn bench(world: &World, player: Entity) -> Option<Bench> {
     })
 }
 
+/// What a craft does before its request is answered: an anvil wears, heard before the answer as on
+/// BDS (research/captures/bds-r1anvil.txt).
+pub(crate) fn answering(world: &mut World, player: Entity, forged: Option<&Forged>) {
+    if let (Some(Forged::Repaired), Some((Workstation::Anvil, layer, pos))) = (forged, containers::workstation(world, player)) {
+        let creative = world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative);
+        anvil::wear(world, layer, pos, creative);
+    }
+}
+
 /// What follows a request a player made, done: what its craft (`forged`) leaves the world to do,
 /// and the enchanting table's offers for what now lies in it.
 pub(crate) fn answered(world: &mut World, player: Entity, forged: Option<Forged>) {
@@ -90,14 +99,12 @@ pub(crate) fn answered(world: &mut World, player: Entity, forged: Option<Forged>
         }
         return;
     };
-    let creative = world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative);
     match forged {
         Some(Forged::Enchanted) => {
             if let Some(mut inventory) = world.get_mut::<Inventory>(player) {
                 (inventory.enchant_seed, inventory.unsaved) = (new_seed(), true);
             }
         }
-        Some(Forged::Repaired) => anvil::wear(world, layer, pos, creative),
         Some(Forged::Beaconed(effects)) => crate::beacons::pay(world, layer, pos, effects),
         Some(Forged::Charted { from, to, zoomed }) => crate::maps::charted(world, layer, from, to, zoomed),
         Some(Forged::Ground([least, most])) => {
@@ -107,18 +114,24 @@ pub(crate) fn answered(world: &mut World, player: Entity, forged: Option<Forged>
         _ => {}
     }
     if forged.is_some() {
-        show_level(world, player);
+        show_level(world, player, workstation == Workstation::Anvil);
     }
     if workstation == Workstation::Enchanting {
         enchanting::offer(world, player, layer, pos);
     }
 }
 
-/// Shows a player its level, which a craft may have cost.
-fn show_level(world: &mut World, player: Entity) {
+/// Shows a player its level, which a craft may have cost; an anvil's tells the level alone
+/// (research/captures/bds-r1anvil.txt).
+fn show_level(world: &mut World, player: Entity, alone: bool) {
     let tick = world.resource::<Tick>().0;
     let mut query = world.query::<(&NetId, &Inventory, &mut Outgoing)>();
     if let Ok((id, inventory, mut out)) = query.get_mut(world, player) {
-        out.push(&experience::attributes(id, &inventory.experience, true, tick));
+        let mut told = experience::attributes(id, &inventory.experience, true, tick);
+        if alone {
+            told.attributes.retain(|attribute| attribute.name == experience::LEVEL);
+            told.attributes.truncate(1);
+        }
+        out.push(&told);
     }
 }

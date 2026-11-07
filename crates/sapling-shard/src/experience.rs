@@ -50,6 +50,8 @@ impl Experience {
     }
 }
 
+pub(crate) const LEVEL: &str = "minecraft:player.level";
+
 /// What the client is told of a player's experience at `tick`: the level too when `with_level`.
 pub(crate) fn attributes(id: &NetId, experience: &Experience, with_level: bool, tick: u64) -> acacia_proto::packets::UpdateAttributes {
     sapling_data::experience_attributes(id.0, Some(experience.level).filter(|_| with_level), experience.progress, tick)

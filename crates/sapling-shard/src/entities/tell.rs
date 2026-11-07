@@ -27,9 +27,23 @@ pub(crate) fn after_announcing_of(world: &mut World, entity: Entity, layer: Enti
     world.get_resource_or_insert_with(AfterAnnouncing::default).0.push((layer, cell, Some(entity), packets));
 }
 
-/// Sends new entities' first data and what was held back for the tick's announcements; runs
-/// after them (mobs.rs).
+/// What is heard as entities appear, told right after the tick's announcements, before their first
+/// data: a shot's sound and `disappeared` (research/captures/bds-r1shots.txt).
+#[derive(Resource, Default)]
+struct OnAnnouncing(Vec<(Entity, [i32; 3], Vec<Bytes>)>);
+
+/// Has `packets` sent to the viewers of `cell` as soon as this tick's new entities are announced.
+pub(crate) fn on_announcing(world: &mut World, layer: Entity, cell: [i32; 3], packets: Vec<Bytes>) {
+    world.get_resource_or_insert_with(OnAnnouncing::default).0.push((layer, cell, packets));
+}
+
+/// Sends what is heard as new entities appear, their first data and what was held back for the
+/// tick's announcements; runs after them (mobs.rs).
 pub(crate) fn send_held_moves(world: &mut World) {
+    let heard = world.get_resource_mut::<OnAnnouncing>().map(|mut heard| std::mem::take(&mut heard.0)).unwrap_or_default();
+    for (layer, cell, packets) in heard {
+        view::to_viewers(world, layer, cell, &packets);
+    }
     super::first_data::send(world);
     let Some(mut held) = world.get_resource_mut::<AfterAnnouncing>().map(|mut held| std::mem::take(&mut held.0)) else { return };
     keep_last_flags(&mut held);

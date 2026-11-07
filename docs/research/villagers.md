@@ -200,8 +200,17 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   no reach flags; its result is canUse's) refused it 23 times and took it twice. Both times the golem
   took the player as its target (`TargetEid` -4294967295 at 58.4 s and 86.2 s), between slimes it
   took. So BDS's golem does turn on the baby's hitter, seldom: canAttack's refusals, not the
-  standing, keep it off; which of canAttack's tests refuses (must_reach's path, 14903f1c0, likely) is
-  not traced. The earlier run's no target was these odds. Sapling's never took the player: left.
+  standing, keep it off. The earlier run's no target was these odds.
+  One level deeper (thirteenth3ad, bds-ad3golem-gdb3-hits.txt): canAttack's refusal is its first
+  test, the target goals' shared targetable check (goal vtable +0x60, Linux 0xbdd87a0, filter tail
+  0xbdd83b0), never the reach path. It refuses a dead or removed target, an invulnerable player
+  (ability 8: the creative watcher, every time) and then any target whose filter it fails; the
+  defend goal has one filter, the pack's `is_family` mob or player with the default `max_dist` 16,
+  tested as squared distance from the golem strictly under 16². All 27 defend calls on the actor
+  failed that: the golem had wandered 30-42 off. So the hitter is taken only by a golem within 16.
+  Sapling's has both tests (`hunting::seen` and `standing::outlaw`: mortal, within the golem's
+  `sees` 16, at most 16 rather than under) and, in a rerun with temporary logging, took the actor at
+  -15 from 11 off; the same rule.
 - Prices take no standing: `economy_trade_table` reads only the cured, nearby-cured and hero discounts
   [BDS definition 141ba86e0].
 

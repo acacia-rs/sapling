@@ -17,6 +17,7 @@ mod throws;
 mod tridents;
 
 use bevy_ecs::prelude::*;
+use bytes::Bytes;
 use sapling_api::GameMode;
 use sapling_world::ItemStack;
 
@@ -138,7 +139,27 @@ fn heard_plain(world: &mut World, player: Entity, sound: &str) {
 }
 
 fn heard_as(world: &mut World, player: Entity, sound: &str, as_player: bool) {
-    let (Some(layer), Some(position), Some(id)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).copied(), world.get::<NetId>(player).map(|id| id.0)) else { return };
+    if let Some((layer, cell, heard)) = sound_of(world, player, sound, as_player) {
+        crate::view::to_viewers(world, layer, cell, &[heard]);
+    }
+}
+
+/// [`heard_plain`] as the player's `shots` appear, after their announcement, each also heard
+/// `disappeared`: after the sound, or before it when `sound_last` (bds-r1shots.txt).
+fn heard_shooting(world: &mut World, player: Entity, sound: &str, shots: &[Entity], sound_last: bool) {
+    let Some((layer, cell, heard)) = sound_of(world, player, sound, false) else { return };
+    let mut packets: Vec<Bytes> = shots.iter().filter_map(|shot| crate::creatures::vanish_shot(world, *shot)).collect();
+    if sound_last {
+        packets.push(heard);
+    } else {
+        packets.insert(0, heard);
+    }
+    crate::entities::on_announcing(world, layer, cell, packets);
+}
+
+/// `sound` from the player's middle, its world and cell.
+fn sound_of(world: &World, player: Entity, sound: &str, as_player: bool) -> Option<(Entity, [i32; 3], Bytes)> {
+    let (Some(layer), Some(position), Some(id)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).copied(), world.get::<NetId>(player).map(|id| id.0)) else { return None };
     let [x, y, z] = position.feet;
     let packet = acacia_proto::packets::LevelSoundEvent {
         sound_id: sound.into(),
@@ -150,7 +171,7 @@ fn heard_as(world: &mut World, player: Entity, sound: &str, as_player: bool) {
         entity_unique_id: if as_player { id as i64 } else { -1 },
         fire_at_position: None,
     };
-    crate::view::to_viewers(world, layer, position.feet.map(|c| c.floor() as i32), &[sapling_net::encode(&packet)]);
+    Some((layer, position.feet.map(|c| c.floor() as i32), sapling_net::encode(&packet)))
 }
 
 /// Puts `stack` in the hand the player holds, or empties it.

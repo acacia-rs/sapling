@@ -7,7 +7,8 @@ use crate::common;
 use std::sync::Arc;
 
 use acacia_proto::nbt::{List, Value};
-use acacia_proto::packets::{AddEntity, AddItemEntity, BlockEntityData, ContainerOpen, InventoryContent, MobEffect, PlayerEnchantOptions};
+use acacia_proto::Packet;
+use acacia_proto::packets::{AddEntity, AddItemEntity, BlockEntityData, ContainerOpen, InventoryContent, ItemStackResponse, LevelEvent, MobEffect, PlayerEnchantOptions, UpdateAttributes};
 use acacia_proto::types::{
     Action as BlockAction, ContainerSlotType as Container, ItemV4Extra, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentBeaconPayment as Payment,
     ItemStackRequestActionsItemContentCraftGrindstoneRequest as Grind, ItemStackRequestActionsItemContentCraftLoomRequest as Loom, ItemStackRequestActionsItemContentDestroy as Destroy,
@@ -154,6 +155,25 @@ fn an_anvil_repairs_with_material_renames_and_refuses_what_is_too_expensive() {
     let name = kept.main[2].as_ref().and_then(|sword| sword.tag.as_ref()?.get("display")?.get("Name").cloned());
     assert_eq!(name, Some(Value::String("Edge".into())));
     assert_eq!(field(&kept.main[2], "RepairCost"), Some(&Value::Int(39)), "a rename alone adds no work");
+}
+
+/// research/captures/bds-r1anvil.txt: BDS's anvil was heard (`SoundAnvilUse`) before the answer,
+/// then told the level it cost alone.
+#[test]
+fn an_anvil_is_heard_before_its_answer_and_tells_the_level_alone() {
+    let pickaxe = stack("minecraft:iron_pickaxe", 1, tag(&[], &[("Damage", 200)]));
+    let data = PlayerData { main: vec![pickaxe, stack("minecraft:iron_ingot", 4, None)], level: 10, ..PlayerData::default() };
+    let (mut h, _storage, _) = at("minecraft:anvil", &[], data);
+    put(&mut h, 0, 1, Container::AnvilInput, 1);
+    put(&mut h, 1, 4, Container::AnvilMaterial, 2);
+    h.receive(1, &request(-3, vec![Action::Optional(Optional { recipe_network_id: 0, filtered_string_index: 0 }), consume(4, slot(Container::AnvilMaterial, 2, 0)), consume(1, slot(Container::AnvilInput, 1, 0)), out(1, 0)]));
+    let sent = h.tick(1);
+    assert_eq!(answer(&sent).0, Status::Ok);
+    let at_id = |id: u32| sent.iter().position(|packet| packet.id == id);
+    let (heard, answered) = (at_id(LevelEvent::ID).expect("heard"), at_id(ItemStackResponse::ID).expect("answered"));
+    assert!(heard < answered, "the anvil before the answer");
+    let told: Vec<(String, f32)> = all::<UpdateAttributes>(&sent).iter().flat_map(|told| told.attributes.iter().map(|attribute| (attribute.name.clone(), attribute.current))).collect();
+    assert_eq!(told, [("minecraft:player.level".to_owned(), 6.0)]);
 }
 
 #[test]

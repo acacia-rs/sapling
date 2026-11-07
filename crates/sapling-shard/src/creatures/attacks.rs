@@ -54,7 +54,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     let (layer, from) = (world.get::<InLayer>(player)?.0, world.get::<Position>(player)?.feet);
     let eye = [from[0], from[1] + sapling_data::EYE_HEIGHT, from[2]];
     let reach = if world.get::<Mode>(player)?.0 == GameMode::Creative { CREATIVE_REACH } else { REACH };
-    if entities::find(world, EntityId(id)).is_some_and(|knot| super::husbandry::undo_knot(world, knot)) {
+    if entities::find(world, EntityId(id)).is_some_and(|knot| super::husbandry::knock_down_knot(world, knot)) {
         return Some(());
     }
     if let Some(crystal) = entities::find(world, EntityId(id)).filter(|entity| world.get::<crate::dragon::Crystal>(*entity).is_some()) {
