@@ -14,12 +14,13 @@ fn grows(kind: &str) -> u32 {
     sapling_data::husbandry(kind).and_then(|raised| raised.grows).unwrap_or(GROWS)
 }
 
-/// The mob's box as its age makes it: a baby's is the grown box at the baby's scale.
+/// The mob's box as its age makes it: the announced box at its scale (a calf's the cow's box at
+/// 0.5, a baby villager's its own 0.98 by 1.96 at 0.5).
 pub(super) fn fit_body(world: &mut World, entity: Entity, kind: &str) {
     let baby = world.get::<Raised>(entity).is_some_and(Raised::is_baby);
-    let (Some(grown), Some((_, scale))) = (sapling_data::mob_size(kind), sapling_data::mob_look(kind, baby)) else { return };
+    let Some((shown, scale)) = sapling_data::mob_look(kind, baby) else { return };
     if let Some(mut body) = world.get_mut::<Body>(entity) {
-        body.size = grown.map(|side| side * scale);
+        body.size = shown.map(|side| side * scale);
     }
 }
 
@@ -64,6 +65,7 @@ fn grow_up(world: &mut World, entity: Entity, kind: &str) {
         regroup(world, entity, swap);
     }
     super::super::properties::grew_up(world, entity, kind);
+    super::super::villagers::grew_up(world, entity);
     super::super::reshow(world, entity);
 }
 

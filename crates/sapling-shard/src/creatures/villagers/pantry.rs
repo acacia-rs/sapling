@@ -55,8 +55,11 @@ impl Pantry {
     }
 }
 
-/// The food a villager picks up (its pack's `shareables`, `behavior_non_peasant`).
-pub(super) const FOODS: [&str; 4] = ["minecraft:bread", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot"];
+/// What a villager picks up (its pack's `shareables`: the food, and a peasant's seeds and wheat,
+/// which BDS's farmer took up as it reaped, bds-an1farm.txt).
+pub(super) const FOODS: [&str; 7] = [
+    "minecraft:bread", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot", "minecraft:wheat_seeds", "minecraft:beetroot_seeds", "minecraft:wheat",
+];
 /// `behavior.pickup_items`: items within `max_dist` 3, walked to at 0.5 of its 0.5.
 const SEES: f32 = 3.0;
 const FETCHES: f32 = 0.25;
@@ -74,7 +77,7 @@ pub(super) fn fetch(world: &mut World, entity: Entity, layer: Entity, body: &Bod
     let lying = drops::lying_in(world, layer, body.at.map(|c| c - SEES), body.at.map(|c| c + SEES));
     let nearest = lying
         .into_iter()
-        .filter(|(_, stack)| FOODS.contains(&stack.name.as_str()))
+        .filter(|(item, stack)| FOODS.contains(&stack.name.as_str()) && drops::mobs_may_take(world, *item))
         .filter_map(|(item, stack)| world.get::<Body>(item).map(|lies| (item, stack, lies.at)))
         .filter(|(.., at)| near(*at) <= SEES)
         .min_by(|a, b| near(a.2).total_cmp(&near(b.2)));

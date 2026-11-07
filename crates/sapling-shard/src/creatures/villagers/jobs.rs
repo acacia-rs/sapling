@@ -172,6 +172,7 @@ pub(super) fn look(world: &mut World, entity: Entity, layer: Entity, now: u64, b
     world.insert_resource(dice);
     world.insert_resource(claimed);
     world.entity_mut(entity).insert(trader);
+    super::deals::chart(world, entity, layer);
     if !changed.is_empty() {
         tell(world, entity, changed);
     }

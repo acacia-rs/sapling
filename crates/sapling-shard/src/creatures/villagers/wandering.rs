@@ -1,7 +1,7 @@
 //! The wandering trader: its table, the two trader llamas it comes with (bds-trade2.txt: at its
 //! feet half a block up, with a `plop`), and the time it leaves at: its pack's `minecraft:timer`
 //! of 2400 or 3600 seconds, after which it goes once no player is within 24 blocks.
-// TODO: the llamas are not leashed to it and stay when it goes.
+// TODO: what becomes of its llamas when it goes; their leads now break after their grace.
 
 use bevy_ecs::prelude::*;
 use sapling_api::SpawnReason;
@@ -20,13 +20,17 @@ const NO_PLAYER_WITHIN: f32 = 24.0;
 /// Ticks between a trader's looks for players once its time is up.
 const LOOK_EVERY: u64 = 20;
 
-/// Sets the trader's time to leave; a `new` one comes with its llamas.
-pub(super) fn arrive(world: &mut World, layer: Entity, trader: &mut Trader, feet: [f32; 3], new: bool) {
+/// Sets the trader's time to leave; a `new` one comes with its llamas on its leads (its pack's
+/// `should_leash`; bds-trade2.txt: their `LeadHolderEid` the trader's from their announcement).
+pub(super) fn arrive(world: &mut World, entity: Entity, layer: Entity, trader: &mut Trader, feet: [f32; 3], new: bool) {
     let stays = STAYS[world.get_resource_or_insert_with(Dice::default).roll(STAYS.len() as u32) as usize];
     trader.leaves_at = Some(world.resource::<Tick>().0 + stays);
     if new {
         for _ in 0..LLAMAS {
-            super::super::spawn(world, layer, LLAMA, [feet[0], feet[1] + 0.5, feet[2]], SpawnReason::Summoned);
+            let llama = super::super::spawn(world, layer, LLAMA, [feet[0], feet[1] + 0.5, feet[2]], SpawnReason::Summoned).and_then(|id| crate::entities::find(world, id));
+            if let Some(llama) = llama {
+                super::super::husbandry::tie_lead(world, llama, entity);
+            }
         }
     }
 }

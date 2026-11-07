@@ -37,8 +37,8 @@ fn distance(a: [f32; 3], b: [f32; 3]) -> f32 {
 
 /// A village: its villagers, how many hold a bed, and how many worked within a day.
 #[derive(Default)]
-struct Village {
-    villagers: usize,
+pub(super) struct Village {
+    pub(super) villagers: usize,
     bedded: usize,
     worked: usize,
 }
@@ -49,6 +49,16 @@ pub(in crate::creatures) fn tick(world: &mut World) {
     if !now.is_multiple_of(LOOKS) || world.resource::<Settings>().0.difficulty == Difficulty::Peaceful {
         return;
     }
+    for ((layer, middle), village) in villages(world) {
+        if crate::rules::on(world, layer, "doMobSpawning") && wants_golem(world, layer, middle, &village) && draws(world) {
+            spawn_around(world, layer, middle, GOLEM, "minecraft:from_village");
+        }
+    }
+}
+
+/// Every village by its world and middle cell, with its villagers counted.
+pub(super) fn villages(world: &mut World) -> HashMap<(Entity, [i32; 3]), Village> {
+    let now = world.resource::<Tick>().0;
     let villagers: Vec<(Entity, [f32; 3], bool, Option<u64>)> = world
         .query::<(&InLayer, &Body, &Trader)>()
         .iter(world)
@@ -63,11 +73,7 @@ pub(in crate::creatures) fn tick(world: &mut World) {
         village.bedded += usize::from(bedded);
         village.worked += usize::from(worked.is_some_and(|worked| worked + WORKED_WITHIN > now));
     }
-    for ((layer, middle), village) in villages {
-        if crate::rules::on(world, layer, "doMobSpawning") && wants_golem(world, layer, middle, &village) && draws(world) {
-            spawn(world, layer, middle);
-        }
-    }
+    villages
 }
 
 /// Whether any of the [`LOOKS`] ticks' 1 in [`ODDS`] draws came up.
@@ -86,8 +92,8 @@ fn wants_golem(world: &mut World, layer: Entity, middle: [i32; 3], village: &Vil
     village.bedded >= LEAST_BEDDED.max(village.villagers) && village.worked as f32 >= village.villagers as f32 * 0.75 && golems < village.villagers / 10
 }
 
-/// A village golem at the first standable cell of [`TRIES`] drawn about `middle`.
-fn spawn(world: &mut World, layer: Entity, middle: [i32; 3]) {
+/// A mob of `kind` spawned by `event` at the first standable cell of [`TRIES`] drawn about `middle`.
+pub(super) fn spawn_around(world: &mut World, layer: Entity, middle: [i32; 3], kind: &str, event: &str) -> Option<sapling_api::EntityId> {
     let mut dice = world.remove_resource::<Dice>().unwrap_or_default();
     let cell = world.get::<Layer>(layer).and_then(|kept| {
         (0..TRIES).find_map(|_| {
@@ -97,7 +103,6 @@ fn spawn(world: &mut World, layer: Entity, middle: [i32; 3]) {
         })
     });
     world.insert_resource(dice);
-    if let Some([x, y, z]) = cell {
-        super::super::spawn_as(world, layer, GOLEM, [x as f32 + 0.5, y as f32, z as f32 + 0.5], SpawnReason::Natural, 0.0, Some("minecraft:from_village"));
-    }
+    let [x, y, z] = cell?;
+    super::super::spawn_as(world, layer, kind, [x as f32 + 0.5, y as f32, z as f32 + 0.5], SpawnReason::Natural, 0.0, Some(event))
 }

@@ -3,6 +3,7 @@
 //! `select` is not below its size), then each item one of its alternatives for the trader's type,
 //! its count in its range, and what its functions make of it. A drawn trade with an item no
 //! alternative of which the type offers makes no offer (docs/research/villagers.md "Offers").
+//! An explorer map comes without its `map_uuid`: the shard makes its map (villagers/deals.rs).
 
 use acacia_proto::nbt::Value as Nbt;
 
@@ -73,7 +74,7 @@ fn between(draws: &mut dyn Draws, [low, high]: [i32; 2]) -> i32 {
 }
 
 fn offered(item: &Item, mark: i32) -> bool {
-    item.marks.as_ref().is_none_or(|marks| marks.contains(&mark)) && !item.functions.contains(&Function::ExplorationMap)
+    item.marks.as_ref().is_none_or(|marks| marks.contains(&mark))
 }
 
 /// Whether every item of `trade` has an alternative a trader of type `mark` offers.
@@ -108,7 +109,10 @@ fn ware(choice: &[Item], mark: i32, wanted: bool, draws: &mut dyn Draws) -> Opti
             }
             Function::RandomAux(values) => ware.damage = between(draws, values.map(i32::from)) as i16,
             Function::RandomDye => ware.tag = Some(Nbt::Compound(vec![("customColor".into(), Nbt::Int(random_dye(draws) as i32))])),
-            Function::ExplorationMap => return None,
+            Function::ExplorationMap(damage) => {
+                ware.damage = damage;
+                ware.tag = Some(Nbt::Compound(vec![("map_display_players".into(), Nbt::Byte(1)), ("map_regenerate".into(), Nbt::Byte(1))]));
+            }
         }
     }
     Some((ware, price))

@@ -51,6 +51,8 @@ pub struct Husbandry {
     pub tempt_speed: f32,
     /// Its `minecraft:movement`, the middle of a range a kind rolls in.
     pub walks: f32,
+    /// The box and scale its born groups give (`minecraft:collision_box`, `minecraft:scale`).
+    pub baby_look: Option<([f32; 2], f32)>,
     pub on_born: Swap,
     pub on_grow: Swap,
     pub on_tame: Swap,
@@ -73,6 +75,12 @@ fn pairs<T: std::str::FromStr>(value: &'static str) -> Vec<(&'static str, T)> {
 fn range(value: &str) -> Option<(i32, i32)> {
     let (least, most) = value.split_once('-')?;
     Some((least.parse().ok()?, most.parse().ok()?))
+}
+
+fn look(value: &str) -> Option<([f32; 2], f32)> {
+    let numbers: Vec<f32> = value.split(',').filter_map(|number| number.parse().ok()).collect();
+    let &[width, height, scale] = numbers.as_slice() else { return None };
+    Some(([width, height], scale))
 }
 
 fn swap(value: &'static str) -> Swap {
@@ -107,6 +115,7 @@ fn parse(fields: &'static str) -> Husbandry {
             "tempt" => found.tempt = list(value),
             "tempt_speed" => found.tempt_speed = value.parse().unwrap_or(1.0),
             "walks" => found.walks = value.parse().unwrap_or(0.0),
+            "baby_look" => found.baby_look = look(value),
             "on_born" => found.on_born = swap(value),
             "on_grow" => found.on_grow = swap(value),
             "on_tame" => found.on_tame = swap(value),
