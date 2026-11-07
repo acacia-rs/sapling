@@ -40,6 +40,8 @@ pub(super) enum Nesting {
     Pregnant { homeward: bool },
     /// Home: the sand it found to lay on, and the tick its digging there ends.
     Laying { nest: Option<BlockPos>, until: Option<u64> },
+    /// Done digging: its `eggs` sparkled, laid the next tick.
+    Laid { nest: BlockPos, eggs: usize },
 }
 
 /// The cell a turtle calls home.
@@ -123,7 +125,12 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
             crate::blocks::turtle_dig(world, layer, nest);
             Nesting::Laying { nest: Some(nest), until: Some(now + DIGS_FOR) }
         }
-        Nesting::Laying { nest: Some(nest), until: Some(until) } if now >= until => return lay(world, entity, layer, nest),
+        Nesting::Laying { nest: Some(nest), until: Some(until) } if now >= until => {
+            let eggs = 1 + world.get_resource_or_insert_with(Dice::default).roll(MOST_EGGS) as usize;
+            crate::blocks::foretell_turtle_eggs(world, layer, nest, eggs);
+            Nesting::Laid { nest, eggs }
+        }
+        Nesting::Laid { nest, eggs } => return lay(world, entity, layer, nest, eggs),
         Nesting::Laying { nest: Some(nest), until: Some(until) } if (until - now).is_multiple_of(DUST_EVERY) => {
             crate::blocks::turtle_dig(world, layer, nest);
             return;
@@ -133,8 +140,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
     world.entity_mut(entity).insert(next);
 }
 
-fn lay(world: &mut World, entity: Entity, layer: Entity, nest: BlockPos) {
-    let eggs = 1 + world.get_resource_or_insert_with(Dice::default).roll(MOST_EGGS) as usize;
+fn lay(world: &mut World, entity: Entity, layer: Entity, nest: BlockPos, eggs: usize) {
     if crate::blocks::lay_turtle_eggs(world, layer, nest, eggs) {
         // BDS's came 0.34 over a turtle's feet, 0.85 of its 0.4 (research/captures/bds-nesting.txt).
         shown::sound_from(world, entity, "lay_egg", 0.85);

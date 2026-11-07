@@ -44,9 +44,14 @@ fn eggs(level: &Level, pos: BlockPos) -> usize {
     value_of(level, pos, "turtle_egg_count").and_then(|count| COUNTS.iter().position(|eggs| *eggs == count)).unwrap_or(0) + 1
 }
 
-/// A turtle egg came at `pos`.
+/// Nests whose eggs already sparkled the tick before they were laid (nests.rs `foretell`).
+#[derive(Resource, Default)]
+pub(super) struct Foretold(pub(super) Vec<(Entity, BlockPos)>);
+
+/// A turtle egg came at `pos`: it sparkles, unless its laying was foretold.
 pub(super) fn placed(world: &mut World, layer: Entity, pos: BlockPos) {
-    if let Some(sparkle) = level(world, layer).filter(|level| on_sand(level, pos)).map(|level| sparkle(level, pos)) {
+    let foretold = world.get_resource_mut::<Foretold>().and_then(|mut told| told.0.iter().position(|nest| *nest == (layer, pos)).map(|at| told.0.swap_remove(at))).is_some();
+    if let Some(sparkle) = level(world, layer).filter(|level| !foretold && on_sand(level, pos)).map(|level| sparkle(level, pos)) {
         send::to_viewers(world, layer, pos, &[sparkle]);
     }
     again(world, layer, pos, FIRST_TICK);
