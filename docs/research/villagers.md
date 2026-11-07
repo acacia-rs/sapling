@@ -93,9 +93,15 @@ untraded villager's profession at its next look (the Java rule); it now keeps it
   with a used offer; now at the first arrival.
 - The draw (`_generateTrades`, 0x141bac370): a group with `0 < num < size` draws `num` times; the n-th
   draw rolls nextInt(sum of the weights from place n on), walks from place n, and swaps the trade it
-  lands on into place n; offers come in draw order. The biome filter applies after the draw, per
-  alternative: a drawn trade none of whose alternatives the type may offer makes no offer. Each item's
-  alternative is nextInt(alternatives); wants before gives.
+  lands on into place n; offers come in draw order. The biome filter, per alternative, was read as
+  applying after the draw, a drawn trade none of whose alternatives the type may offer making no offer.
+  Corrected 2026-11-07 (group AN, bds-an1maps.txt): a plains cartographer's tier 1 offered two of the
+  three trades of eight its type may offer, and tier 3 two of three, where an unfiltered draw finds
+  two such one time in nine each; sapling's drew from all eight and its first drill showed no tier 1 or
+  tier 3 offer. Sapling now draws from the offered trades only (`trades/roll.rs` `pick`; test
+  `a_plains_cartographer_draws_only_from_the_trades_its_type_offers`). Only the cartographer's and the
+  fisherman's tables filter by type. Each item's alternative is nextInt(alternatives); wants before
+  gives.
 - `random_dye` (0x14752e880): `colour[perm[nextInt(16)]]`, perm
   `[15,7,8,0,3,1,14,11,10,2,6,12,4,5,13,9]` over the dye colours black 0 to white 15 (white `F0F0F0`); a
   second dye when nextFloat() < 0.3, a third when another < 0.2; channels averaged as f32 (c/255 summed,
@@ -144,6 +150,21 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   bell a villager rings in a raid marks none [BDS 0x141f1c400, its callers 141f1c130, 142ce0770,
   142cdf7c0 pass 1, `Village::tick` 142a23bc0 passes 0].
 - Goals in order: trading customer, hide, flee, then the schedule [pack priorities: hide 0, avoid 4].
+- The avoid goal's reach (2026-11-07, group AN; `an1fear`, bds-an1fear.txt: still zombies, slowness
+  255, 3 to 6 blocks west of villagers in the open, two rounds of 12 pairs; their `MoveEntityDelta`
+  tracks): 6 of 8 villagers 3 off moved within 0.4 to 1.5 s (the other two 12 and 15 s); none 4 off
+  before 2.85 s; 5 and 6 off moved as strollers do. `canUse` (14190daa0) looks with `findNearest`
+  (14190d490) in its box grown by the goal's `max_dist` (default 3; each type's `max_dist` 8 only
+  filters), takes the first fitting mob, needs sight (140d4f980, no view cone), then
+  `RandomPos::getPosAvoid` (14597bd90 → 14597ab80: 16 across, 7 up, 10 tries, the first standable
+  spot no nearer the threat) and a path. Ported (`villagers/fear.rs`: the box, the spot drawn within a
+  half turn of straight away, followed until reached or the threat is 10 off; test
+  `a_villager_flees_a_still_zombie_3_off_but_not_one_5_off`). A spot may lie aside: sapling's
+  villager 3 off a zombie to its west fled to 10 north. Sapling's drill (sapling-an1fear.txt): 6 of 8
+  villagers 3 off moved within 0.6 s (the other two 8 and 12.5 s), as BDS's; those 4 to 6 off set off
+  as strollers do, some within 0.6 s (sapling's strolls start 0.04 to 3.4 s in, villagers.md "Zombie
+  villagers"), where BDS's 4 off waited 2.85 s or more.
+  Summons at whole x stand on the block's middle: `summon … 17 …` puts the mob at 17.5.
 
 ## Standing
 
@@ -309,6 +330,10 @@ zombie came, where one of BDS's stayed through it. Answers named `Villager V2` w
 per check: BDS `0 1 1 1 2 1 2 3 3 3 3 3 2 1 1 1 1 1`, sapling before `1 3 3 3 3 3 3 3 3 3 3 3 2 2 2 1 1 1`,
 after `0 0 0 0 0 0 0 2 2 2 2 2 1 1 1 1 0 0`: no early rush to bed; BDS's single early sleeper and its third
 bed-goer not matched (strolls are random on both).
+A second BDS run (2026-11-07, group AN; bds-village-an1.txt): by the beds `0 0 0 0 0 0 1 3 3 2 4 4 2 2 1 1 1 1`,
+within 8 of (0, 2) `1 0 0 1 2 2 2 2 2 2 2 2 2 2 2`: no early sleeper this time, so the first run's was
+chance. Sapling the same day (sapling-village-an1.txt): `0 0 0 0 0 1 0 3 3 3 3 3 1 0 1 1 1 1`, within 8
+`2 2 2 1 2 2 2 2 2 1 1 1 1 1 1`: within the two BDS runs.
 
 ## Breeding
 
@@ -330,18 +355,63 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
   `born` at the baby's head with `is_baby_mob` (also for animals' bred babies, `bds-llamabreed.txt`).
   Each parent eats what made it willing and rests 6000 ticks (Java's; not drilled).
 - Pickup (`villagers/pantry.rs`): a grown villager walks to food within 3 and takes the whole stack at
-  once (`TakeItemEntity`; `g11breed-2` took 24 bread 0.45 s after the drop). Sharing (`share_items`:
-  BDS threw 3 bread each 1.5 s, which the thrower mostly took back) is not built.
+  once (`TakeItemEntity`; `g11breed-2` took 24 bread 0.45 s after the drop). Sharing: below.
 - Sapling drilled (`SAPLING_DRILL_WORLD=lowflat`): both given 3 bred in one of three runs
   (sapling-g11love-6.txt: `INLOVE` 20.2 s after the feed, 300 ticks, the baby heard `born`; -7, -8 none,
   their pair strolled apart), as BDS's one in three; 24 dropped was taken 0.2 s after the drop with no
   baby (sapling-g11breed-2.txt), as BDS's `g11breed`. A first try searched free beds only within the
   job reach (10) and never bred: the pairs strolled out of it.
-- Left: the baby is announced at the grown box and scale 1 and loses its `BABY` flag bit the next tick,
-  where BDS's comes at scale 0.5 (box 0.98 by 1.96); `summon villager … minecraft:entity_born` does the
-  same (sapling-village.txt). `data/Mobs.bin` has no baby `villager_v2` recording, so `mob_look` has none,
-  and `born` is heard at a grown head (1.62 up; BDS 0.83).
+- The baby's look (fixed 2026-11-07, group AN): BDS shows it at scale 0.5 with box 0.98 by 1.96, and
+  its collision box is that box scaled. `data/Mobs.bin` has no baby `villager_v2` recording, so
+  `husbandry.py` now writes each kind's born look (`baby_look`, from the born groups' `minecraft:scale`
+  and `collision_box`), which `mob_look` falls back to; the announcement carries it
+  (`creatures/shown.rs` `dress_baby_look`). `born` and `spawn` are heard at the scaled box's 0.85
+  (villager 0.833, llama 0.795, as BDS). Test
+  `a_baby_villager_is_announced_at_half_scale_with_its_own_box_and_stays_a_baby`.
+- Sharing (`behavior.share_items`, group AN; bds-g11share.txt): a villager holding more than its
+  `surplus_amount` of a food (bread 6; carrot, potato, beetroot 24) walks to a villager within 3 that
+  wants it and throws it want − held (bread 3) every 30 ticks, the item 0.15 to 0.18 out toward it and
+  1.4616 up, moving 0.08 across and 0.0585 up; the thrower may take it back 9 ticks on (the mobs'
+  pickup wait). Ported (`villagers/sharing.rs`, `drops::hand_on`; test
+  `a_villager_with_bread_to_spare_throws_three_to_one_with_none`). Sapling's `g11share` drill
+  (sapling-g11share-an1.txt) showed nothing: its pair had strolled 8 apart before the bread came,
+  where BDS's had stayed 1 apart.
+- Growing up (pack `ageable_grow_up`, 1200 s): nitwit 1 in 10, else unskilled. Ported
+  (`villagers/growing.rs`). Not seen on BDS: `an1grow`'s probe lost its watcher at 584 s.
 - Test: `two_villagers_with_three_bread_each_and_a_free_bed_have_a_baby_heard_born_300_ticks_after_love`.
+
+## Farmers, cats, explorer maps, trader llamas (group AN, 2026-11-07)
+
+- Farming (`behavior.harvest_farm_block`; bds-an1farm.txt: a farmer by a 7 by 7 field of ripe wheat
+  with 16 seeds): it broke a ripe crop (`ParticleDestroy` at the cell's middle), the seeds and wheat
+  dropped and were taken up at once, and `place` came at the farmland's middle two ticks later; one
+  crop every 0.7 to 1.5 s. Ported (`villagers/farming.rs`: in working hours a farmer walks to the
+  nearest ripe crop or bare farmland within 16 across and 1 up, breaks and sows; pantry.rs takes seeds
+  and wheat). Sapling's drill (sapling-an1farm.txt): 49 crops broken and 48 sown, as BDS's, over 74 s
+  (BDS 55 s; sapling's server lagged). Left: BDS dropped each seed and wheat as its own item (136, all
+  of count 1 but one), sapling stacks of 1 to 4 (98), REMAINING3 "Crop drops".
+- Cats (`Village::tick` 0x142a23bc0): every 1200 ticks with mob spawning on, a village of n dwellers
+  counts the cats within 48 of its middle and brings one where there are fewer than 5 and fewer than
+  n / 4, placed as its golems are (10 tries, 8 across, 6 up), with `spawn_from_village` (a baby 1 in 4)
+  or, on every eighth day and one in two, `spawn_midnight_cat`. bds-an1grow.txt (8 grown and a baby):
+  cats at 45.1, 105.1 and 165.1 s, the count at most 2 (one strayed between 111 and 143 s). Ported
+  (`villagers/cat_spawns.rs`; test `a_village_of_four_brings_a_cat`). Sapling's drill
+  (sapling-an1grow.txt): 2 cats about a minute apart, then 2 for the rest of the run; its baby did not
+  grow up within the run (the server lagged behind 88 slimes, REMAINING3 "Slime spawning").
+- Explorer maps (bds-an1maps.txt): a plains cartographer offered at tier 1 a taiga (`filled_map` 8) and
+  a savanna village map (10), at tier 2 a monument (3) and a trial chambers map (14), at tier 4 a
+  mansion map (4), each 8 to 14 emeralds and a compass, tagged `map_display_players` 1,
+  `map_regenerate` 1 and a `map_uuid` five ids from the last: the maps are made as the offers are
+  rolled. The bought map was scale 2 centred on the cartographer's 512 square (192, 192), with no
+  marks in the flat world. The other destinations' damages follow BDS's `item.map.exploration.*`
+  names (snowy 7, plains 9, desert 11, jungle 12, swamp 13). Ported (`trades/roll.rs`,
+  `villagers/deals.rs` `chart`; test `a_cartographer_offers_explorer_maps_each_with_its_own_map`).
+  Before, a drawn map trade made no offer, so sapling's cartographers had fewer.
+- Trader llamas (bds-trade2.txt): both come with `LeadHolderEid` the trader's and `LEASHED` from their
+  announcement (its pack's `should_leash`). Ported (`villagers/wandering.rs` `arrive`,
+  `husbandry/leads.rs`: a lead holder is found again by any kept entity's `UniqueID`; test
+  `a_wandering_traders_llamas_come_on_its_leads`). BDS sends unique ids there, sapling runtime ids,
+  which are its unique ids too.
 
 ## Not drilled and left out
 

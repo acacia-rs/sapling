@@ -4,8 +4,9 @@ What of BDS's villagers sapling has not checked or does not copy; split from vil
 
 ## Not drilled
 
-- Gathering and the other schedule goals' walks beyond the home and bed counts above; standing's
-  numbers (no packet shows them).
+- Gathering and the other schedule goals' walks beyond the bed and middle counts (villagers.md, the
+  `village` and `village-an1` runs: sapling within the two BDS runs, 2026-11-07); standing's numbers (no packet
+  shows them).
 - Fear in the open: `n1fear` (bds-n1fear.txt, sapling-n1fear.txt, 2026-11-04) held a zombie still in
   the open by two villagers: BDS's both stayed within 8 of it for 15 s, one within 4 for 9 s; sapling's
   fled (0 or 1 within 8). Not fixed: as with the glass cage, BDS's `behavior.avoid_mob_type` did not
@@ -33,7 +34,10 @@ What of BDS's villagers sapling has not checked or does not copy; split from vil
   15 s in each case, so the one-run gap was chance: the same as BDS within the spread, left as it is.
 - The schedule's re-check delay (`max_delay_secs`, up to 10 s); here every tick, which matched the
   drilled sleep and wake ticks.
-- Farmers farming, cartographers' explorer maps (map items that locate a structure) and entity
+- Fear in the open, settled 2026-11-07 (group AN, villagers.md "Fear"): the goal looks only 3 beyond
+  its box, so a still zombie 4 or more off is not fled.
+- Farmers farming and explorer maps: done 2026-11-07 (villagers.md "Farmers, cats, explorer maps,
+  trader llamas"); the maps' structure is not located (their map shows no mark). Entity
   vibration listeners (the allay's; the warden's hearing is in creatures/warden/hearing.rs) were not
   reached in the twelfth wave's group 8 (2026-11-05); the schedule walks' counts are strolls, random on
   both sides. Group 11 (2026-11-05) spent its runs on breeding and fear and did not reach them either:
@@ -52,7 +56,9 @@ What of BDS's villagers sapling has not checked or does not copy; split from vil
 ## Left out
 
 Gossip (Bedrock has none: its discounts are the cured ones of `economy_trade_table`, which a drilled
-cure did not give on BDS, `g8cured`), villages as BDS's dweller-claimed POIs, mingling partners, babies
-growing up, explorer maps (their trades are never offered), the llamas' leashes and their going with
-their trader, a villager sharing food (`behavior.share_items`; villagers.md "Breeding"), farmers
-farming, cats spawning, the old trading screen, a villager's pantry kept in its actor compound.
+cure did not give on BDS, `g8cured`), villages as BDS's dweller-claimed POIs (sapling's villages are
+its beds, bells and job sites as it finds them; VillageManager unlabelled), mingling partners (gather
+walks to the middle; BDS's pairing not seen in any capture), the explorer map's located structure,
+what becomes of trader llamas when their trader goes (their leads break after 100 ticks in sapling),
+the old trading screen, a villager's pantry kept in its actor compound. Done 2026-11-07 (group AN):
+growing up, sharing food, farmers farming, cats spawning, explorer map offers, the llamas' leads.

@@ -111,8 +111,29 @@ fn drawn_trades_come_in_the_order_drawn() {
     let group = table.tiers[0].groups.iter().find(|group| group.select > 1 && (group.select as usize) < group.trades.len()).expect("a group drawn from");
     let weights: i32 = group.trades.iter().map(|trade| trade.weight as i32).sum();
     // The first draw lands on the last trade, which then leads.
-    let picked = roll::pick(&group.trades, group.select, &mut Scripted(vec![weights - 1; group.select as usize], Vec::new()));
+    let picked = roll::pick(&group.trades, group.select, &mut Scripted(vec![weights - 1; group.select as usize], Vec::new()), &|_| true);
     assert_eq!(picked[0], group.trades.len() - 1, "{picked:?}");
     assert_eq!(picked.len(), group.select as usize);
-    assert_eq!(roll::pick(&group.trades, 0, &mut Scripted(Vec::new(), Vec::new())).len(), group.trades.len(), "select 0 keeps all");
+    assert_eq!(roll::pick(&group.trades, 0, &mut Scripted(Vec::new(), Vec::new()), &|_| true).len(), group.trades.len(), "select 0 keeps all");
+}
+
+#[test]
+fn a_plains_cartographer_draws_only_from_the_trades_its_type_offers() {
+    // research/captures/bds-an1maps.txt: two offers at tier 1 and at tier 3, each of the three its type may offer.
+    let table = trade_table("cartographer").unwrap();
+    struct Stepping(i32);
+    impl Draws for Stepping {
+        fn int(&mut self, bound: i32) -> i32 {
+            self.0 += 7;
+            if bound < 1 { 0 } else { self.0 % bound }
+        }
+
+        fn float(&mut self) -> f32 {
+            0.5
+        }
+    }
+    for seed in 0..20 {
+        let mut draws = Stepping(seed);
+        assert_eq!([1, 3].map(|tier| roll::roll(table, tier, 0, &mut draws).len()), [2, 2], "seed {seed}");
+    }
 }
