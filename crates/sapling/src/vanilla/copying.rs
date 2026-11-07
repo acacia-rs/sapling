@@ -107,7 +107,7 @@ impl Command for CloneCommand {
             return out.translate("commands.clone.noOverlap", Vec::new(), false);
         }
         let copied: Vec<(BlockPos, Block, Option<BlockEntityData>)> = source
-            .cells()
+            .cells_x_fastest()
             .filter_map(|pos| Some((pos, ctx.block(pos)?, ctx.block_entity(pos))))
             // A chest half goes only with its other half (bds-t3chests.txt: a half alone `failed`).
             .filter(|(pos, ..)| ctx.paired_with(*pos).is_none_or(|other| source.contains(other)))

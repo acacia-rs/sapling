@@ -17,7 +17,7 @@ mod synced;
 pub(crate) use synced::{synced_together, tell_synced};
 
 pub(crate) use effects::{destroy_particles, noise, place_sound, punch_particles, sound, sound_at};
-pub(crate) use sections::{after_blocks, batched, hold, hold_break, holds as batch_holds, log_again, log_flowing, log_liquid, logged, logged_apart, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
+pub(crate) use sections::{after_blocks, batched, hold, hold_break, holds as batch_holds, listed, log_again, log_flowing, log_liquid, logged, logged_apart, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
 
 use crate::components::{InLayer, Layer, Outgoing};
 

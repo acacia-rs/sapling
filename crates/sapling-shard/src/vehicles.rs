@@ -121,8 +121,15 @@ fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], yaw: f32,
     Some(entity)
 }
 
-/// Summons a vehicle of `kind` (the `/summon`, `/ride` and API way) at `feet`.
+/// Summons a vehicle of `kind` (the `/summon`, `/ride` and API way) at `feet`. A boat's `feet` are its
+/// wire point, as BDS's summon takes them: its box goes in under them, then out of the blocks it is in
+/// (body/spawn_push.rs; bds-ao2boat.txt: one summoned on the floor at x 4.5 went to 4.7, 0.375 up).
 pub(crate) fn summon(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], yaw: f32) -> Option<sapling_api::EntityId> {
+    let size = sapling_data::mob_size(kind).filter(|_| is_boat(kind));
+    let feet = match (size, world.get::<crate::components::Layer>(layer)) {
+        (Some(size), Some(level)) => crate::body::pushed_out(&level.world, [feet[0], feet[1] - boats::LIFT, feet[2]], size),
+        _ => feet,
+    };
     let vehicle = spawn(world, layer, kind, feet, yaw, 0, None)?;
     Some(sapling_api::EntityId(world.get::<NetId>(vehicle)?.0))
 }

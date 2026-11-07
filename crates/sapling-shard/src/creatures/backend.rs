@@ -31,7 +31,9 @@ impl EntityBackend for Ctx<'_> {
             _ if crate::vehicles::is_vehicle(kind) => (crate::vehicles::summon(self.world, worlds::current(self.world), kind, feet, yaw)?, false),
             true => (self.spawn_entity(kind, feet)?, false),
             false => {
-                let summoned = super::birth::summoned(self.world, worlds::current(self.world), kind, feet, yaw, event)?;
+                let layer = worlds::current(self.world);
+                let feet = super::summoned::placed(self.world, layer, kind, feet);
+                let summoned = super::birth::summoned(self.world, layer, kind, feet, yaw, event)?;
                 super::gaze::pitch_new(self.world, summoned, pitch);
                 (summoned, true)
             }

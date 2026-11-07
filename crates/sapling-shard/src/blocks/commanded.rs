@@ -53,6 +53,9 @@ pub(super) fn put_bed(world: &mut World, layer: Entity, pos: BlockPos, id: u32) 
 /// Such a block is shown with its water as BDS shows the writes, each listed ([`send::logged`]): BDS
 /// writes an aged or joined one twice (bds-fixset.txt, bds-bkticks.txt, bds-x2clone.txt).
 pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
+    if super::rails::is_rail_name(&block.name) {
+        return send::listed(world, |world| put_now(world, layer, pos, block, false, false));
+    }
     let (block, is_aged) = match standing_torch(world, layer, pos, block).or_else(|| joined(world, layer, pos, block)) {
         Some(written_twice) => (written_twice, true),
         None => aged(world, layer, pos, block),
@@ -67,7 +70,8 @@ pub(super) fn put(world: &mut World, layer: Entity, pos: BlockPos, block: &Block
 
 fn put_now(world: &mut World, layer: Entity, pos: BlockPos, block: &Block, is_aged: bool, wets: bool) -> Option<bool> {
     let same_comparator = block.name.ends_with("_comparator") && send::block_at(world, layer, pos).is_some_and(|old| old.name == block.name);
-    let put = send::put_block(world, layer, pos, block)?;
+    let is_rail = super::rails::is_rail_name(&block.name);
+    let put = if is_rail { put_unlisted(world, layer, pos, block)? } else { send::put_block(world, layer, pos, block)? };
     if put && same_comparator {
         super::redstone::hold_comparator(world, layer, pos);
     }
@@ -83,7 +87,18 @@ fn put_now(world: &mut World, layer: Entity, pos: BlockPos, block: &Block, is_ag
         // BDS's /fill turned a set slope flat beside the rails it joined (bds-i2rails.txt, bds-l2carts.txt).
         super::rails::join_placed(world, layer, pos);
     }
+    if put && is_rail {
+        send::log_again(world, layer, pos);
+    }
     Some(put)
+}
+
+/// A rail written unlisted: BDS lists its write after the writes of its join, as it then stands
+/// (bds-ao2rails.txt: `3 rail[8]; 3 -6 rail[0]` for a rail that joined a pair's end and kept its shape).
+fn put_unlisted(world: &mut World, layer: Entity, pos: BlockPos, block: &Block) -> Option<bool> {
+    let id = send::resolve(level(world, layer)?.registry(), block)?;
+    send::block_at(world, layer, pos)?;
+    Some(send::set_quietly(world, layer, pos, id))
 }
 
 /// A small dripleaf's lower half `id` put at `pos` with its upper half over it, whatever was there,
