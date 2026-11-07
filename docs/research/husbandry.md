@@ -161,6 +161,11 @@ foxes' trust (`entity_born` gives `trusting_fox`: `minecraft:trust` and a `defen
 within 25; BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strings at 141171c40 and
 141172080): each needs goals sapling's mobs do not have (sitting on blocks, gift loot, trusted
 targets). Bees and axolotls in buckets are ported (creatures/bees.rs, creatures/scooping.rs).
+Traced in thirteenth2ao (pack only, not drilled): `cat_tame` adds `ocelot_sit_on_block`,
+`pet_sleep_with_owner` and `drop_item_for` (the gift: day time 0.74999-0.8, chance 0.7, loot
+`cat_gift`), none of which sapling has (its cats only toggle `sittable` on a click); a fox's trust only
+matters to its `avoid_mob_type` of players (trusted or sneaking ones left out), and sapling's foxes
+avoid no player at all, so trust needs that avoidance ported first; parrots, below.
 
 Turtle scutes (bds-ak1scute.txt, ported): a baby turtle grown up (at its tenth seagrass there) drops its
 `minecraft:ageable` `drop_items` (`turtle_shell_piece`, named `turtle_scute` now), one, from its feet +
