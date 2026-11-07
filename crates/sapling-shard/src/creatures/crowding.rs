@@ -3,7 +3,7 @@
 //! boxes meet push each other apart across by the Java game's rule, from where they stand, and the
 //! push joins their next move after the drag (`Body::jostle`). Two within 0.01 of one spot push
 //! not at all, so mobs summoned onto one spot stay together until one walks. A player pushes mobs
-//! as a mob does, but not a slime or magma cube, and is not pushed (its client moves it), and kinds the packs make unpushable
+//! as a mob does, but not a slime, magma cube or the wither, and is not pushed (its client moves it), and kinds the packs make unpushable
 //! neither push nor are pushed: BDS's cow beside an armour stand or a shulker stood still
 //! (research/captures/bds-jostle.txt).
 
@@ -55,8 +55,10 @@ pub(super) fn tick(world: &mut World) {
         .collect();
     let mut bodies: Vec<_> = bodies.into_iter().filter(|(entity, ..)| !crate::riding::is_driven(world, *entity)).collect();
     let mobs = bodies.len();
-    // bds-ah3slime.txt: a medium slime 0.08 and 0.14 off the still actor's box stood until it hopped.
-    let hoppers: Vec<Entity> = bodies.iter().map(|(entity, ..)| *entity).filter(|entity| world.get::<entities::Kind>(*entity).is_some_and(|kind| sapling_data::mob_traits(&kind.0).hunts.and_then(|hunts| hunts.fights) == Some("hops"))).collect();
+    // bds-ah3slime.txt: a medium slime 0.08 and 0.14 off the still actor's box stood until it hopped;
+    // bds-witherdash.txt: the wither dashed past the actor at 2 a tick, never slowed.
+    let unpushed = |kind: &str| kind == super::wither::KIND || sapling_data::mob_traits(kind).hunts.and_then(|hunts| hunts.fights) == Some("hops");
+    let not_by_players: Vec<Entity> = bodies.iter().map(|(entity, ..)| *entity).filter(|entity| world.get::<entities::Kind>(*entity).is_some_and(|kind| unpushed(&kind.0))).collect();
     bodies.extend(in_world(world).into_iter().filter_map(|player| {
         if world.get::<Mode>(player)?.0 == GameMode::Spectator || world.get::<crate::riding::Riding>(player).is_some() {
             return None;
@@ -74,7 +76,7 @@ pub(super) fn tick(world: &mut World) {
         let near = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| [x + dx, z + dz])).filter_map(|at| squares.get(&(*layer, at))).flatten();
         for &other in near.filter(|other| **other > index) {
             let (other_entity, _, other_body) = &bodies[other];
-            if other >= mobs && hoppers.contains(entity) {
+            if other >= mobs && not_by_players.contains(entity) {
                 continue;
             }
             if let Some([px, pz]) = push(body, other_body, GRACE) {
