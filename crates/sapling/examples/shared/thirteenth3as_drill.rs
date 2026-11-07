@@ -22,13 +22,15 @@ const SHOWN: &[&str] = &[
 ];
 
 fn ghast() -> Vec<String> {
-    let mut lines = with(floor(), &["tp CmdWatcher 8.5 -26 -6.5", "tp @s 0.5 -26 0.5 0 0", "summon happy_ghast 0.5 -26 4.5 0 0 minecraft:spawn_adult", "effect @e[type=happy_ghast] slowness 60 255 true", ""]);
-    lines.extend(["ride @s start_riding @e[type=happy_ghast,c=1] teleport_rider", "", "replaceitem entity @s slot.weapon.mainhand 0 white_harness", "", "!interact happy_ghast", "", ""].map(String::from));
-    lines.extend(["!look 0 1.6 8", "!mount happy_ghast", "", "", "ride CmdWatcher start_riding @e[type=happy_ghast,c=1] teleport_rider", "", ""].map(String::from));
+    // The bot reaches a mob it has no hitbox for as a player-sized box at its feet: the ghast floats over the actor.
+    const OVER: &str = "tp @e[type=happy_ghast] 0.5 -22 0.5";
+    let mut lines = with(floor(), &["tp CmdWatcher 8.5 -26 -6.5", "tp @s 0.5 -26 0.5 0 0", "summon happy_ghast 0.5 -22 0.5 0 0 minecraft:spawn_adult", "effect @e[type=happy_ghast] slowness 60 255 true", OVER, ""]);
+    lines.extend(["ride @s start_riding @e[type=happy_ghast,c=1] teleport_rider", "", "replaceitem entity @s slot.weapon.mainhand 0 white_harness", OVER, "", "!interact happy_ghast", "", ""].map(String::from));
+    lines.extend(["!look 0 1.6 8", OVER, "", "!mount happy_ghast", "", "", "ride CmdWatcher start_riding @e[type=happy_ghast,c=1] teleport_rider", "", ""].map(String::from));
     lines.extend(["effect @e[type=happy_ghast] clear", "", "!walk", "", "", "!stop", "", "!jump", "", "!stop", "", ""].map(String::from));
     lines.extend(["ride CmdWatcher stop_riding", "", "", "!dismount", "", ""].map(String::from));
     waits(&mut lines, 4);
-    lines.extend(["tp @s 0.5 -26 0.5", "", "", "replaceitem entity @s slot.weapon.mainhand 0 shears", "effect @e[type=happy_ghast] slowness 60 255 true", "tp @e[type=happy_ghast] 0.5 -26 4.5", "", "!interact happy_ghast", "", ""].map(String::from));
+    lines.extend(["tp @s 0.5 -26 0.5", "", "", "replaceitem entity @s slot.weapon.mainhand 0 shears", "effect @e[type=happy_ghast] slowness 60 255 true", OVER, "", "!interact happy_ghast", "", ""].map(String::from));
     with(lines, &["kill @e[type=!player]", "clear @s", "tp @s 0.5 -26 0.5", "tp CmdWatcher 0.5 -26 0.5", ""])
 }
 
