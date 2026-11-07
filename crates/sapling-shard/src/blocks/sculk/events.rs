@@ -44,6 +44,7 @@ impl GameEvent {
     /// BDS's type number for it, which a listener's block actor keeps (sculk.md's table).
     pub(crate) fn type_id(self) -> i32 {
         match self {
+            GameEvent::BlockAttach => 2,
             GameEvent::BlockClose => 4,
             GameEvent::BlockDestroy => 6,
             GameEvent::BlockOpen => 8,
