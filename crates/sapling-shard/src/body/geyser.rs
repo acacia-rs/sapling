@@ -13,16 +13,21 @@ const LIFT: f32 = 0.2;
 
 /// Speeds the body up if it is over an erupting geyser.
 pub(super) fn lift(level: &Level, body: &mut Body) {
+    body.motion[1] += boost(level, body, body.motion[1]);
+}
+
+/// What an erupting geyser under the body adds to its speed up `rising`: BDS's system runs after a
+/// mob's move and drag, so a mob moves by it a tick later (body.rs `mob_step`; bds-ag2boost.txt: the
+/// pig's first rise in the eruption's tick is unboosted, its told speed 0.2856 already boosted).
+pub(super) fn boost(level: &Level, body: &Body, rising: f32) -> f32 {
     let (low, high) = body.bounds();
     let [x, z] = [0, 2].map(|axis| ((high[axis] - low[axis]) * 0.5 + low[axis]).floor() as i32);
     let feet = low[1].floor() as i32;
     let registry = level.registry();
     let solid = |y: i32| level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| !state.boxes.is_empty());
-    let Some(y) = (0..=DOWN).map(|down| feet - down).find(|&y| solid(y)) else { return };
-    let Some((speed, reach)) = crate::blocks::geyser_plume(level, [x, y, z]) else { return };
-    if low[1] < (y + reach) as f32 && body.motion[1] < speed {
-        body.motion[1] += LIFT;
-    }
+    let Some(y) = (0..=DOWN).map(|down| feet - down).find(|&y| solid(y)) else { return 0.0 };
+    let Some((speed, reach)) = crate::blocks::geyser_plume(level, [x, y, z]) else { return 0.0 };
+    if low[1] < (y + reach) as f32 && rising < speed { LIFT } else { 0.0 }
 }
 
 #[cfg(test)]

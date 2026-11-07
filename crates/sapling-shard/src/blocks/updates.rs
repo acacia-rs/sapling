@@ -128,7 +128,7 @@ pub(crate) fn break_block(world: &mut World, layer: Entity, pos: BlockPos) -> bo
         return false;
     }
     pop(world, layer, pos);
-    settle(world, layer, pos);
+    settle_or_keep(world, layer, pos);
     true
 }
 
@@ -154,6 +154,33 @@ fn loosen(world: &mut World, layer: Entity, pos: BlockPos, changed: BlockPos) ->
         None => return false,
     }
     true
+}
+
+/// Cells changed while a plugin's batch is open, settled once it closes: BDS's `/fill` writes every
+/// cell before any neighbour hears of it (docs/research/block-rules.md, "`/fill` neighbour updates").
+#[derive(Resource, Default)]
+struct Unsettled(Option<Vec<(Entity, BlockPos)>>);
+
+/// Keeps the cells [`settle_or_keep`] is given until [`settle_kept`]; false where already keeping.
+pub(crate) fn keep_unsettled(world: &mut World) -> bool {
+    let mut unsettled = world.get_resource_or_insert_with(Unsettled::default);
+    unsettled.0.is_none() && unsettled.0.replace(Vec::new()).is_none()
+}
+
+/// Stops keeping and settles each cell kept, in the order written.
+pub(crate) fn settle_kept(world: &mut World) {
+    let kept = world.get_resource_mut::<Unsettled>().and_then(|mut unsettled| unsettled.0.take()).unwrap_or_default();
+    for (layer, pos) in kept {
+        settle(world, layer, pos);
+    }
+}
+
+/// [`settle`] now, or once the open batch closes where [`keep_unsettled`] keeps the cells.
+pub(super) fn settle_or_keep(world: &mut World, layer: Entity, pos: BlockPos) {
+    match world.get_resource_mut::<Unsettled>().and_then(|unsettled| unsettled.into_inner().0.as_mut()) {
+        Some(kept) => kept.push((layer, pos)),
+        None => settle(world, layer, pos),
+    }
 }
 
 /// Lets everything that the change at `pos` unsettled fall or break, and what that unsettles.

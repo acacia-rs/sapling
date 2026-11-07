@@ -3,7 +3,7 @@
 
 use acacia_proto::nbt::{Nbt, Value};
 pub(crate) use acacia_proto::packets::UpdateBlockSyncedTransitionType as Transition;
-use acacia_proto::packets::{BlockEntityData, UpdateBlock, UpdateBlockSynced};
+use acacia_proto::packets::{BlockEntityData, UpdateBlock};
 use acacia_proto::types::{BlockCoordinates, UpdateBlockFlags};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -12,6 +12,9 @@ use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
 mod effects;
 mod sections;
+mod synced;
+
+pub(crate) use synced::{synced_together, tell_synced};
 
 pub(crate) use effects::{destroy_particles, noise, place_sound, punch_particles, sound, sound_at};
 pub(crate) use sections::{after_blocks, batched, hold, hold_break, holds as batch_holds, log_again, log_flowing, log_liquid, logged, logged_apart, set_many, set_sectioned, show_held, show_moved, show_states, show_together};
@@ -165,17 +168,6 @@ pub(crate) fn show_whole(world: &mut World, layer: Entity, pos: BlockPos) {
     let mut packets = vec![update(level.registry(), pos, level.block(pos[0], pos[1], pos[2]), 0)];
     packets.extend(level.block_entity(pos).map(|entity| block_entity_data(pos, entity)));
     to_viewers(world, layer, pos, &packets);
-}
-
-/// Shows everyone who sees `pos` its block as the entity `entity` took it (`Create`: a falling
-/// block leaving it) or left it (`Destroy`: one landing), as BDS does in UpdateBlockSynced.
-pub(crate) fn tell_synced(world: &mut World, layer: Entity, pos: BlockPos, entity: u64, transition: Transition) {
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
-    let [x, y, z] = pos;
-    let block_runtime_id = sapling_world::block_hash(level.registry(), level.block(x, y, z));
-    let packet = UpdateBlockSynced { position: BlockCoordinates { x, y, z }, block_runtime_id, flags: FLAGS, layer: 0, entity_unique_id: entity, transition_type: transition };
-    let packet = sapling_net::encode(&packet);
-    to_viewers(world, layer, pos, &[packet]);
 }
 
 /// The block at `pos` of a layer's world; `None` where it is not loaded or does not reach.

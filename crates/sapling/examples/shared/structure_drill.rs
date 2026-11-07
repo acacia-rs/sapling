@@ -227,7 +227,9 @@ pub fn hardcore(setup: bool) -> Vec<String> {
 pub fn block_names(packet: &RawPacket) -> Option<String> {
     let registry = BlockRegistry::vanilla();
     let name = |hash: u32| registry.runtime_id_from_hash(hash).and_then(|id| registry.get(id)).map_or("?".into(), |s| format!("{}[{}]", s.name.trim_start_matches("minecraft:"), s.properties));
-    let cells = |blocks: &[BlockUpdate]| blocks.iter().map(|b| format!("{} {} {} {}", b.position.x, b.position.y, b.position.z, name(b.runtime_id))).collect::<Vec<_>>().join("; ");
+    // A cell an entity took or left (a falling block) names it: `sync <id> <transition>`.
+    let synced = |b: &BlockUpdate| if b.entity_unique_id == i64::MIN { String::new() } else { format!(" sync {} {:?}", b.entity_unique_id, b.transition_type) };
+    let cells = |blocks: &[BlockUpdate]| blocks.iter().map(|b| format!("{} {} {} {}{}", b.position.x, b.position.y, b.position.z, name(b.runtime_id), synced(b))).collect::<Vec<_>>().join("; ");
     if packet.id == UpdateBlock::ID {
         let update = packet.decode::<UpdateBlock>().ok()?;
         let p = &update.position;

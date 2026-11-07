@@ -162,8 +162,10 @@ impl<'a> ShardCtx<'a> {
     }
 
     /// Runs `change` with the blocks it sets held back from screens, and then shows them together
-    /// as BDS shows a `/fill`: a sub-chunk where more than one changed in one packet. Worth it for
-    /// many blocks at once; what `change` returns.
+    /// as BDS shows a `/fill`: a sub-chunk where more than one changed in one packet. What is around
+    /// the cells [`ShardCtx::update_block`] and [`ShardCtx::break_block`] changed reacts once all are
+    /// written, in the order written, as around a `/fill`'s. Worth it for many blocks at once; what
+    /// `change` returns.
     pub fn batch_blocks<T>(&mut self, change: impl FnOnce(&mut Self) -> T) -> T {
         let opened = self.backend.hold_blocks();
         let done = change(self);

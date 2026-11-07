@@ -6,6 +6,7 @@
 mod bubbles;
 mod geyser;
 mod liquid;
+mod moves;
 mod physics;
 mod stuck;
 
@@ -50,6 +51,8 @@ pub(crate) struct Body {
     flung: bool,
     /// Whether it has had a tick: in its first a mob goes by the liquid it is in (bds-r1water.txt).
     stepped: bool,
+    /// The speed up an erupting geyser gave a mob after its last move, which its next tick adds (geyser.rs).
+    geysered: f32,
 }
 
 /// A box in world coordinates: its lowest and highest corners.
@@ -57,45 +60,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false }
-    }
-
-    /// Has a mob crowding this one push it by `by` across in its next tick, after the drag.
-    pub fn jostle(&mut self, by: [f32; 2]) {
-        self.jostled = [self.jostled[0] + by[0], self.jostled[1] + by[1]];
-    }
-
-    /// Throws a mob at `speed`: its next tick moves it by that, and the tick after slows it as
-    /// one that left the ground it is on now (research/captures/bds-hit.txt).
-    pub fn throw(&mut self, speed: [f32; 3]) {
-        (self.thrown, self.flung) = (Some(speed), false);
-    }
-
-    /// As [`Body::throw`], its motion told as it is, with no drag to come (a frog's leap: BDS
-    /// told it so every tick, research/captures/bds-amphibians.txt).
-    pub fn fling(&mut self, speed: [f32; 3]) {
-        (self.thrown, self.flung) = (Some(speed), true);
-    }
-
-    /// As [`Body::throw`], its first move `lift` higher, as a breeze leaps.
-    pub fn launch(&mut self, speed: [f32; 3], lift: f32) {
-        (self.thrown, self.lift) = (Some(speed), lift);
-    }
-
-    /// Has a mob walk: its next tick adds `speed` across, after the drag, and with `rise` goes up
-    /// that fast (research/captures/bds-bite.txt, bds-chase.txt).
-    pub fn walk(&mut self, speed: [f32; 2], rise: Option<f32>) {
-        (self.walking, self.leaping) = ([speed[0], 0.0, speed[1]], rise);
-    }
-
-    /// Has a swimming mob's next tick add `speed` up, after the drag, on top of its walk.
-    pub fn swim_up(&mut self, speed: f32) {
-        self.walking[1] += speed;
-    }
-
-    /// Has a flying mob's next tick add `speed`, every way, after the drag.
-    pub fn fly(&mut self, speed: [f32; 3]) {
-        self.walking = speed;
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false, geysered: 0.0 }
     }
 
     /// Moves it by `by` as far as the blocks let it, its own motion kept.
@@ -210,16 +175,18 @@ impl Body {
         }
         self.flung = false;
         self.drag(physics, liquid, stood);
+        self.motion[1] += std::mem::take(&mut self.geysered);
         self.motion = std::array::from_fn(|axis| self.motion[axis] + walking[axis]);
         if let Some(rise) = leaping {
             self.motion[1] = rise;
         }
-        bubbles::push(level, self);
+        bubbles::push_columns(level, self);
         let wanted = self.motion;
         self.on_ground = self.travel(level, physics, wanted);
         if self.on_ground {
             self.motion[1] = 0.0;
         }
+        self.geysered = geyser::boost(level, self, self.held_motion(physics)[1]);
         wanted
     }
 
@@ -250,6 +217,7 @@ impl Body {
         }
         let mut held = *self;
         held.drag(physics, self.liquid, self.stood);
+        held.motion[1] += self.geysered;
         held.motion
     }
 
