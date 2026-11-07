@@ -1,7 +1,7 @@
 //! The eye of ender thrown to find a stronghold, as BDS throws it (docs/research/end-dimension.md,
 //! "The eye of ender"): `EnderEyeItem::use` 1436f6b50, `signalTo` 142f9f750, the flight
 //! `EyeOfEnderPreNormalTickSystem` 14469ee30 and the end `normalTick` 142fa0450.
-// TODO: BDS pushes the eye out of a player's box (bds-eye-near.txt); sapling does not.
+//! A player pushes it as it pushes a mob (`creatures::pushed_by_players`; fit to bds-eye-near.txt).
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::{MetadataFlags1, Vec3f};
@@ -113,9 +113,11 @@ pub(crate) fn tick(world: &mut World) {
     let eyes: Vec<(Entity, Entity, u64)> = world.query_filtered::<(Entity, &InLayer, &NetId), With<Eye>>().iter(world).map(|(eye, layer, id)| (eye, layer.0, id.0)).collect();
     for (eye, layer, id) in eyes {
         let (Some(body), Some(state)) = (world.get::<Body>(eye).copied(), world.get::<Eye>(eye)) else { continue };
-        let (target, life, survives) = (state.target, state.life, state.survives);
-        let turned = turn(state.turned, body.motion);
-        let (at, motion) = step(body.at, body.motion, target);
+        let (target, life, survives, was_turned) = (state.target, state.life, state.survives, state.turned);
+        let [px, pz] = crate::creatures::pushed_by_players(world, layer, &body);
+        let pushed = [body.motion[0] + px, body.motion[1], body.motion[2] + pz];
+        let turned = turn(was_turned, pushed);
+        let (at, motion) = step(body.at, pushed, target);
         if let Some(mut body) = world.get_mut::<Body>(eye) {
             (body.at, body.motion) = (at, motion);
         }

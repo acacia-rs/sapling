@@ -8,7 +8,7 @@ use crate::common;
 use acacia_proto::nbt::Value as NbtValue;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelEventGeneric, MovePlayer, UpdateBlock};
 use acacia_proto::types::Vec3f;
-use acacia_proto::RawPacket;
+use acacia_proto::{Packet, RawPacket};
 use common::{Harness, all, click};
 use sapling_api::{Block, GameMode, Item, Mount, PlayerId, Slot, Target};
 
@@ -111,6 +111,11 @@ fn an_amethyst_beside_a_sensor_going_active_passes_its_frequency_to_a_sensor_out
         let out = phases.clone();
         h.remote.run(move |ctx| *out.lock().unwrap() = Some([SENSOR, FAR].map(|pos| ctx.block(pos).expect("loaded").properties == "sculk_sensor_phase=1")));
         let sent = h.tick_all().to(1).to_vec();
+        if vibrations(&sent).contains(&[7.5, 65.5, 4.5]) {
+            let ids: Vec<u32> = sent.iter().map(|packet| packet.id).collect();
+            let flew = sent.iter().position(|packet| packet.id == LevelEventGeneric::ID && vibrations(std::slice::from_ref(packet)).contains(&[7.5, 65.5, 4.5]));
+            assert!(ids.iter().position(|id| *id == UpdateBlock::ID).expect("the sensor's new phase") < flew.unwrap(), "the amethyst's vibration after the sensor's UpdateBlock (BDS): {ids:?}");
+        }
         let rang: Vec<Vec3f> = all::<LevelEvent>(&sent).into_iter().filter(|event| event.event == LevelEventEvent::Unknown(1067)).map(|event| event.position).collect();
         ticks.push((rang, phases.lock().unwrap().take().expect("the handler ran")));
     }

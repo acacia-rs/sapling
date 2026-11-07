@@ -53,6 +53,8 @@ fn grow_up(world: &mut World, entity: Entity, kind: &str) {
     if super::tadpoles::grow_up(world, entity, kind) {
         return;
     }
+    // TODO: BDS showed the scute before the grown scale; a new item is announced at the tick's end here.
+    super::products::shed(world, entity, kind);
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {
         raised.kept.baby = None;
     }

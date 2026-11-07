@@ -9,7 +9,7 @@ use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
 
 use super::products::{self, spend};
-use super::{Raised, ageing, breeding, keep_for_good, knots, leads, owners, shown};
+use super::{Raised, ageing, allays, breeding, keep_for_good, knots, leads, owners, shown};
 use crate::creatures::{Creature, Health};
 use crate::entities::Kind;
 use crate::inventory::Inventory;
@@ -37,7 +37,7 @@ pub(super) fn name(world: &mut World, entity: Entity, name: String) {
 
 /// The player clicked the mob or knot `entity`; false where nothing here took the click.
 pub(crate) fn interact(world: &mut World, player: Entity, entity: Entity) -> bool {
-    if knots::undo(world, player, entity) {
+    if knots::undo(world, player, entity) || allays::hand(world, player, entity) {
         return true;
     }
     if world.get::<Raised>(entity).is_none() {

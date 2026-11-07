@@ -385,6 +385,9 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
   Fixed 2026-11-04 (`husbandry/nesting.rs`): a pregnant turtle away from home stands until it sets
   off, then walks straight to 0.3 of its home's middle (BDS's ended about 0.3 off); test
   `a_pregnant_turtle_taken_away_stands_then_walks_straight_home`. Stomping odds stay undrilled.
+  Clutches (thirteenth AK, ak1clutch: twelve adult turtles fed on penned sand, 220 s): BDS laid none,
+  so the 1-4 count and nest pick still rest on bds-nesting.txt's two clutches (3 and 2 eggs, each in
+  the layer's own cell, ParticleTurtleEgg a tick before the UpdateBlock).
 - Frogs (n3frogs, eight on open stone for 90 s): BDS's waits from a landing to the next leap were
   7.3 to 9.2 s (a frog's first, 5.0 to 6.7); sapling's 7.1 to 9.0.
 

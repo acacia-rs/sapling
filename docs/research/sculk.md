@@ -280,6 +280,8 @@ frequency 8. A sensor's `power.on`/`power.off` plays after its UpdateBlock, as o
   the sensor goes active). A vibration posted 1 off after the sculk step rings no amethyst (unseen).
   Re-drilled (sapling-uureson.txt): the same ticks, but in sapling the amethyst's particle comes before
   the sensor's UpdateBlock (BDS: after it and `power.on`), because particles skip the batch.
+  Fixed 2026-11-07 (group AK): a resonance's particle goes after the open batch's blocks
+  (`send::after_blocks` in sculk.rs `vibrate`); test in thirteenth1ai.rs.
 
 ## Unverified
 

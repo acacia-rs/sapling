@@ -46,7 +46,8 @@ const STEERED: [Steered; 2] = [
     Steered { kind: "minecraft:strider", stick: "minecraft:warped_fungus_on_a_stick", speed: 0.16 * 1.45, boost_ticks: 320, boost_wear: 1, lasts: 100 },
 ];
 const CAMEL: &str = "minecraft:camel";
-const CAMEL_SPEED: f32 = 0.09;
+/// Fit to BDS's ridden grown camel, 0.198 blocks a tick walking (research/captures/bds-ak1camel.txt).
+const CAMEL_SPEED: f32 = 0.303;
 
 /// A mob's armour or carpet in its inventory's slot 1, what its body slot shows, and the tick its
 /// boost ends. Putting on armour fills both; `slot.armor.body` the body alone (riding/body.rs).

@@ -25,6 +25,8 @@ pub struct Husbandry {
     /// The ticks a baby takes to grow up, and what feeding it each item takes off, as a share of them.
     pub grows: Option<u32>,
     pub grow: Vec<(&'static str, f32)>,
+    /// What a baby drops as it grows up (`minecraft:ageable`'s `drop_items`: a turtle's scute).
+    pub sheds: Vec<&'static str>,
     /// What tames a wild one (`minecraft:tameable`), and the chance each feeding does.
     pub tame: Vec<&'static str>,
     pub tame_chance: f32,
@@ -89,6 +91,7 @@ fn parse(fields: &'static str) -> Husbandry {
             "breed_healthy" => found.breed_healthy = true,
             "grows" => found.grows = value.parse().ok(),
             "grow" => found.grow = pairs(value),
+            "sheds" => found.sheds = list(value),
             "tame" => found.tame = list(value),
             "tame_chance" => found.tame_chance = value.parse().unwrap_or(1.0),
             "tame_health" => found.tame_health = value.parse().ok(),

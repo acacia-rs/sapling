@@ -49,6 +49,16 @@ fn give(world: &mut World, entity: Entity, item: String, count: u8) {
     crate::drops::toss(world, layer, stack(item, count), [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]]);
 }
 
+/// What its kind's babies drop as they grow up, tossed from its feet: BDS's turtle's scute came
+/// 0.125 over them, the item box's middle (research/captures/bds-ak1scute.txt).
+pub(super) fn shed(world: &mut World, entity: Entity, kind: &str) {
+    let Some(sheds) = sapling_data::husbandry(kind).map(|rules| &rules.sheds).filter(|sheds| !sheds.is_empty()) else { return };
+    let Some((layer, _, _, body)) = shown::of(world, entity) else { return };
+    for item in sheds {
+        crate::drops::toss(world, layer, stack((*item).to_owned(), 1), [body.at[0], body.at[1] + 0.125, body.at[2]]);
+    }
+}
+
 /// The mob drops `item` with a plop, as an egg is laid.
 pub(super) fn drop_egg(world: &mut World, entity: Entity, item: &str) {
     give(world, entity, item.to_owned(), 1);

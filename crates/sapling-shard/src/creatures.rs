@@ -24,6 +24,7 @@ mod bullets;
 mod charges;
 mod creaking;
 mod crowding;
+pub(crate) use crowding::pushed_by_players;
 mod death;
 mod duels;
 mod enchanted;
