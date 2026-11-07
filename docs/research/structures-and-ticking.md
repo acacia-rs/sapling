@@ -140,6 +140,13 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   as for jigsaws, undrilled there; the depth limit is taken as 20 (1..20; 0 and 30 refused).
   Block entities are placed with their loot tables (`StructureWrites::entities`); what BDS's
   chests held is unseen by command.
+- Drilled 2026-11-05, group AI (`ai1camps`, bds-ai1camps.txt): on the flat drill world, every one of
+  the 18 `abandoned_camp_<variant>` names gave `generation.error` on BDS, at 200 and at 9000 (unloaded)
+  alike, so neither variant names nor unloaded columns can be told apart there. `/place jigsaw
+  minecraft:trail_ruins/tower` placed at target `road_anchor` and refused `bottom` and an unknown
+  target. Sapling's generator does the same (`on_demand_tests.rs`
+  `place_jigsaw_joins_a_tower_only_at_its_road_anchor`); its flat drill world has no generator, so
+  the live drill refused all three.
 - Ticking-area ids are made by sapling (BDS's are random UUIDs).
 - Hardcore: StartGame's flag on BDS, and whether a hardcore world made fresh (cheats off) refuses
   `/difficulty` by another rule than cheats.
