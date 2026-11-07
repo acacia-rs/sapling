@@ -46,6 +46,10 @@ fn ends(pos: BlockPos, shape: u8) -> Vec<BlockPos> {
     }
 }
 
+pub(super) fn is_rail_name(name: &str) -> bool {
+    RAILS.iter().any(|rail| rail.strip_prefix("minecraft:") == Some(name) || *rail == name)
+}
+
 fn is_rail(level: &Level, [x, y, z]: BlockPos) -> bool {
     level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| RAILS.contains(&state.name))
 }

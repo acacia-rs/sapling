@@ -14,7 +14,7 @@ use crate::sync::Told;
 use crate::terrain::physics_view;
 
 /// The wire puts a boat this far above its box's bottom.
-const LIFT: f32 = 0.375;
+pub(super) const LIFT: f32 = 0.375;
 /// A boat faces this far round from the player who placed it.
 const ACROSS: f32 = 90.0;
 

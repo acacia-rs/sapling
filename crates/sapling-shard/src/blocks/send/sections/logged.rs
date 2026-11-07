@@ -21,6 +21,23 @@ pub(crate) fn logged<R>(world: &mut World, writes: impl FnOnce(&mut World) -> R)
     log_writes(world, held, writes)
 }
 
+/// [`logged`], but inside an open batch each write goes into it as made, with the block it wrote, where
+/// the batch otherwise lists a cell once as it ends: BDS's `/fill` of rails lists every write
+/// (research/captures/bds-ao2rails.txt). A layer-1 write goes in as its cell.
+pub(crate) fn listed<R>(world: &mut World, writes: impl FnOnce(&mut World) -> R) -> R {
+    let held = world.get_resource::<Held>().is_some_and(|held| held.0.is_some());
+    if !held || is_open(world) {
+        return logged(world, writes);
+    }
+    world.get_resource_or_insert_with(Logged::default).0 = Some(Vec::new());
+    let result = writes(world);
+    let log = world.get_resource_mut::<Logged>().and_then(|mut log| log.0.take()).unwrap_or_default();
+    if let Some((_, cells)) = world.get_resource_mut::<Held>().and_then(|held| held.into_inner().0.as_mut()) {
+        cells.extend(log.into_iter().map(|(layer, pos, layer_index, id)| (layer, pos, (layer_index == 0).then_some(id))));
+    }
+    result
+}
+
 /// [`logged`] in a packet of its own even inside an open batch, for writes with a layer-1 entry a
 /// batch cannot show (a bubble column's water).
 pub(crate) fn logged_apart<R>(world: &mut World, writes: impl FnOnce(&mut World) -> R) -> R {

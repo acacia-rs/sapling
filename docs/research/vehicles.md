@@ -179,9 +179,12 @@ were not found in any of these; sapling does what is listed there.
 - Boat fall breaking: none, as sapling (bds-uuboat.txt: boats summoned 20 and 6 blocks up landed
   whole, no item).
 - A summoned boat on the ground (bds-uuboat.txt) is shown 0.375 up (-26 → -25.625) and shifted in
-  x and z by a rule not found: (4.5, 4.5) → (4.7, 4.3), (2, 2) → (2.7, 2.7), (6.3, 2.8) stayed,
-  (9.5, 4.5) → (9.7, 4.7) at yaw 90, (12.5, 4.5) → (12.7, 4.7), (14.5, 0.5) → (14.7, 0.7); boats
-  summoned in the air or in water stayed where summoned. Sapling's sit on the summon point.
+  x and z: (4.5, 4.5) → (4.7, 4.3), (2, 2) → (2.7, 2.7), (6.3, 2.8) stayed, (9.5, 4.5) → (9.7, 4.7);
+  boats summoned in the air or in water stayed where summoned. Rule fitted (thirteenth2ao,
+  bds-ao2boat.txt, 30 boats at x and z fractions .35 to .65, heights -26.5 to -20): the summon y is
+  the boat's wire point, its box 0.375 lower, then pushed out of blocks as a summoned mob (see
+  water-movement.md "Summoned into blocks"); vehicles.rs `summon`, body/spawn_push.rs. Sapling now
+  matches 28 of 30; open: (-0.5, 4.5) and a lone (4.5, 4.5) went to z 4.3 where the fit gives 4.7.
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
   Drilled 2026-11-05 (group AI, `ai1ride`, bds-ai1ride.txt): a tamed, saddled horse is client-predicted;
   BDS took the bot's walk and 10-tick charged jump with one vehicle correction at the mount, as sapling
@@ -197,8 +200,7 @@ were not found in any of these; sapling does what is listed there.
   harmed no seated mob; fixed (`creatures.rs`: a seated mob gets its harm tick at its seat).
 - Single summons on the ground (bds-ai1boat.txt): (4.5, 4.5) → (4.7, 4.3), (2, 2) → (2.7, 2.7),
   (9.5, 4.5) → (9.7, 4.7), (3.5, -2.5) → (3.7, -2.3), (8, -3) → (8.7, -2.3); (6.3, 2.8), (12.25, 0.75),
-  (10.9, 5.9) stayed. Each shift puts an edge of the 1.4 box on a block line, but only from whole and
-  half coordinates; the rule is still open.
+  (10.9, 5.9) stayed. Each shift puts an edge of the 1.4 box on a block line; rule above.
 - The horse screen: done without a capture, see mob-life.md "Mount inventories".
 
 ## Carts on carts (drilled 2026-11-05, `bds_command_probe l2carts`, thirteenth2l_drill.rs)

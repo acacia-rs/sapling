@@ -31,6 +31,12 @@ impl Region {
         (low[0]..=high[0]).flat_map(move |x| (low[1]..=high[1]).flat_map(move |y| (low[2]..=high[2]).map(move |z| [x, y, z])))
     }
 
+    /// Its cells in BDS's clone order: z outermost, then y, x fastest (bds-ao2rails.txt).
+    pub fn cells_x_fastest(self) -> impl Iterator<Item = BlockPos> {
+        let [low, high] = [self.low, self.high];
+        (low[2]..=high[2]).flat_map(move |z| (low[1]..=high[1]).flat_map(move |y| (low[0]..=high[0]).map(move |x| [x, y, z])))
+    }
+
     /// The same box with its low corner at `low`.
     pub fn moved_to(&self, low: BlockPos) -> Self {
         Self { low, high: std::array::from_fn(|axis| low[axis] + self.high[axis] - self.low[axis]) }
@@ -187,5 +193,7 @@ mod tests {
         assert_eq!(region.cells().filter(|pos| !region.is_edge(*pos)).collect::<Vec<_>>(), Vec::<BlockPos>::new());
         assert_eq!(Region::between([0, 0, 0], [2, 2, 2]).cells().filter(|pos| !Region::between([0, 0, 0], [2, 2, 2]).is_edge(*pos)).collect::<Vec<_>>(), [[1, 1, 1]]);
         assert!(region.overlaps(&region.moved_to([3, 2, 5])) && !region.overlaps(&region.moved_to([4, 0, 4])));
+        let walked: Vec<BlockPos> = Region::between([2, 0, 6], [3, 1, 7]).cells_x_fastest().take(5).collect();
+        assert_eq!(walked, [[2, 0, 6], [3, 0, 6], [2, 1, 6], [3, 1, 6], [2, 0, 7]]);
     }
 }

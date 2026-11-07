@@ -42,6 +42,15 @@ pub(super) fn show(world: &mut World, player: Entity, kind: &str) {
     crate::vitals::tell(world, player, &event);
 }
 
+/// Where a mob `/summon`ed at `feet` goes: its grown box pushed out of the blocks it was put in
+/// (body/spawn_push.rs; bds-ao2push.txt: a zombie under a roof block went 0.8 out beside it).
+pub(super) fn placed(world: &World, layer: Entity, kind: &str, feet: [f32; 3]) -> [f32; 3] {
+    match (sapling_data::mob_size(kind), world.get::<crate::components::Layer>(layer)) {
+        (Some(size), Some(level)) => crate::body::pushed_out_standing(&level.world, feet, size),
+        _ => feet,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
