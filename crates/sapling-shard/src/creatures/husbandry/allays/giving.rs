@@ -64,7 +64,8 @@ pub(super) fn steer(world: &mut World, allay: Entity, layer: Entity, body: &Body
     let now = world.resource::<Tick>().0;
     let Some(errands) = world.get::<Errands>(allay) else { return false };
     let note = errands.note.filter(|(heard_in, _, heard)| *heard_in == layer && now < heard + REMEMBERS).map(|(_, cell, _)| centre(cell));
-    let owner = errands.owner.and_then(|owner| world.get::<InLayer>(owner).filter(|in_layer| in_layer.0 == layer).and(world.get::<Position>(owner)));
+    let owner = world.get::<super::super::Raised>(allay).and_then(|raised| raised.kept.owner).and_then(|owner| super::super::shown::player_of(world, owner));
+    let owner = owner.and_then(|owner| world.get::<InLayer>(owner).filter(|in_layer| in_layer.0 == layer).and(world.get::<Position>(owner)));
     let owner = owner.map(|position| [position.feet[0], position.feet[1] + sapling_data::EYE_HEIGHT, position.feet[2]]);
     let (carries, staying) = (errands.carried.is_some(), errands.staying);
     if let Some(to) = note.or(owner).filter(|_| carries) {

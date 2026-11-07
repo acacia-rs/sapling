@@ -56,6 +56,8 @@ pub(super) fn seat_items(seat: &Seat, position: [f32; 3], whole: bool) -> Vec<It
         return metadata;
     }
     match seat.lock {
+        // A shoulder, held facing the player's way: the lock alone (research/captures/bds-as3parrot.txt).
+        Some(lock) if lock == 0.0 => metadata.push(item(Key::RiderRotationLocked, Plain::Byte(1))),
         Some(lock) => {
             metadata.extend([item(Key::RiderRotationLocked, Plain::Byte(1)), item(Key::RiderMaxRotation, Plain::Float(lock)), item(Key::RiderMinRotation, Plain::Byte(1))]);
             if seat.turn != 0.0 {
@@ -63,6 +65,13 @@ pub(super) fn seat_items(seat: &Seat, position: [f32; 3], whole: bool) -> Vec<It
             }
         }
         None => metadata.push(item(Key::RiderMaxRotation, Plain::Float(FREE_TURN))),
+    }
+    if let Some([radius, smoothing]) = seat.camera {
+        // A happy ghast's seat: its camera after the free turn (research/captures/bds-as3ghast.txt).
+        metadata.extend([
+            Item { key: Key::SeatThirdPersonCameraRadius, r#type: Type::Float, legacy_type: 3, value: Value::SeatThirdPersonCameraRadius(radius) },
+            Item { key: Key::SeatCameraRelaxDistanceSmoothing, r#type: Type::Float, legacy_type: 3, value: Value::SeatCameraRelaxDistanceSmoothing(smoothing) },
+        ]);
     }
     metadata
 }
@@ -95,11 +104,11 @@ mod tests {
 
     #[test]
     fn a_boat_seat_tells_bds_s_five_items_and_a_cart_seat_two() {
-        let boat = Seat { position: [0.0, -0.2, 0.0], lock: Some(90.0), turn: -90.0 };
+        let boat = Seat { position: [0.0, -0.2, 0.0], lock: Some(90.0), turn: -90.0, camera: None };
         let told = RawPacket::parse(seat(1, &boat, [0.0, 1.02001, 0.0], true)).unwrap().decode::<SetEntityData>().unwrap();
         let keys: Vec<Key> = told.metadata.iter().map(|item| item.key.clone()).collect();
         assert_eq!(keys, [Key::RiderSeatPosition, Key::RiderRotationLocked, Key::RiderMaxRotation, Key::RiderMinRotation, Key::RiderSeatRotationOffset]);
-        let cart = Seat { position: [0.0, -0.2, 0.0], lock: None, turn: 0.0 };
+        let cart = Seat { position: [0.0, -0.2, 0.0], lock: None, turn: 0.0, camera: None };
         assert_eq!(RawPacket::parse(seat(1, &cart, [0.0; 3], true)).unwrap().decode::<SetEntityData>().unwrap().metadata.len(), 2);
     }
 }

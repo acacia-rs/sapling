@@ -13,6 +13,7 @@ mod drive;
 mod evented;
 mod exit;
 mod grazing;
+mod harness;
 mod inventory;
 mod mounts;
 mod mouth;
@@ -22,6 +23,7 @@ mod rearing;
 mod replaced;
 mod seats;
 mod strength;
+mod told;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -79,6 +81,10 @@ pub(crate) fn wire_lift(kind: &str) -> f32 {
 
 /// Where the wire puts the vehicle, and the way it faces.
 fn vehicle_wire(world: &World, vehicle: Entity) -> Option<([f32; 3], f32)> {
+    if let Some(position) = world.get::<crate::components::Position>(vehicle).filter(|_| world.get::<Identity>(vehicle).is_some()) {
+        let [x, y, z] = position.feet;
+        return Some(([x, y + sapling_data::EYE_HEIGHT, z], position.yaw));
+    }
     let (body, kind) = (world.get::<Body>(vehicle)?, world.get::<Kind>(vehicle)?);
     let [x, y, z] = body.at;
     let yaw = world.get::<Shown>(vehicle).map_or(0.0, |shown| shown.facing()[0]);
@@ -97,9 +103,9 @@ pub(crate) enum Refusal {
 
 /// Whether `rider` may take a seat on `vehicle` now.
 pub(crate) fn can_seat(world: &World, rider: Entity, vehicle: Entity) -> Result<(), Refusal> {
-    let (Some(kind), Some(rider_kind)) = (world.get::<Kind>(vehicle), kind_of(world, rider)) else { return Err(Refusal::NotRideable) };
-    let layout = layout(&kind.0).filter(|layout| layout.takes(&rider_kind)).ok_or(Refusal::NotRideable)?;
-    if layout.saddled && !mounts::saddled(world, vehicle) {
+    let (Some(kind), Some(rider_kind)) = (kind_of(world, vehicle), kind_of(world, rider)) else { return Err(Refusal::NotRideable) };
+    let layout = layout(&kind).filter(|layout| layout.takes(&rider_kind)).ok_or(Refusal::NotRideable)?;
+    if layout.saddled && !mounts::saddled(world, vehicle) || layout.tamed_riders && !world.get::<crate::creatures::Raised>(rider).is_some_and(|raised| raised.is_tamed()) {
         return Err(Refusal::NotRideable);
     }
     let mut above = Some(vehicle);
@@ -118,7 +124,7 @@ pub(crate) fn can_seat(world: &World, rider: Entity, vehicle: Entity) -> Result<
 
 /// How many more riders `vehicle` takes.
 pub(crate) fn seats_left(world: &World, vehicle: Entity) -> usize {
-    let Some(layout) = world.get::<Kind>(vehicle).and_then(|kind| layout(&kind.0)) else { return 0 };
+    let Some(layout) = kind_of(world, vehicle).and_then(|kind| layout(&kind)) else { return 0 };
     layout.capacity().saturating_sub(world.get::<Seats>(vehicle).map_or(0, |seats| seats.0.len()))
 }
 
@@ -128,7 +134,7 @@ pub(crate) fn seat(world: &mut World, rider: Entity, vehicle: Entity) -> Result<
     if world.get::<Riding>(rider).is_some() {
         unseat(world, rider, false);
     }
-    let (Some(rider_id), Some(vehicle_id)) = (world.get::<NetId>(rider).map(|id| id.0), world.get::<NetId>(vehicle).map(|id| id.0)) else { return Err(Refusal::NotRideable) };
+    let (Some(_), Some(vehicle_id)) = (world.get::<NetId>(rider), world.get::<NetId>(vehicle).map(|id| id.0)) else { return Err(Refusal::NotRideable) };
     let mut seats = world.get::<Seats>(vehicle).cloned().unwrap_or_default();
     seats.0.push(rider);
     let index = seats.0.len() - 1;
@@ -137,11 +143,21 @@ pub(crate) fn seat(world: &mut World, rider: Entity, vehicle: Entity) -> Result<
     if world.get::<Identity>(rider).is_some() {
         world.entity_mut(rider).insert(Reins::default());
     }
-    let mut told = seat_packets(world, vehicle, Told::Newcomer(rider));
-    if let (Some((at, _)), Some(kind)) = (vehicle_wire(world, vehicle), world.get::<Kind>(vehicle).map(|kind| kind.0.clone())) {
-        told.push(packets::sound("mount", vehicle_id, &kind, at));
+    let mut told = told::seat_packets(world, vehicle, told::Change::Newcomer(rider));
+    let mount = vehicle_wire(world, vehicle).zip(kind_of(world, vehicle)).map(|((at, _), kind)| packets::sound("mount", vehicle_id, &kind, at));
+    // Every rider's link again, as BDS told a boat's, a happy ghast's and a player's shoulders'
+    // (research/captures/bds-ride.txt, bds-as3ghast.txt, bds-as3parrot.txt).
+    let links = told::links(world, vehicle);
+    let ghast = harness::riders_now(world, vehicle, index + 1, true);
+    if world.get::<Identity>(vehicle).is_some() {
+        told.extend(links);
+        told.extend(mount);
+    } else {
+        told.extend(mount);
+        told.extend(ghast.as_ref().map(|(sound, _)| sound.clone()));
+        told.extend(links);
+        told.extend(ghast.map(|(_, interval)| interval));
     }
-    told.push(packets::link(vehicle_id, rider_id, if index == 0 { LinkKind::Driver } else { LinkKind::Passenger }, false));
     tell(world, vehicle, rider, told);
     retell(world, vehicle);
     carry::place(world, vehicle);
@@ -151,23 +167,33 @@ pub(crate) fn seat(world: &mut World, rider: Entity, vehicle: Entity) -> Result<
 /// Takes `rider` off what it rides; with `step_off` it is put where vanilla's riders step off to
 /// (exit.rs). False for one that rides nothing.
 pub(crate) fn unseat(world: &mut World, rider: Entity, step_off: bool) -> bool {
-    unseat_told(world, rider, step_off, false)
+    unseat_told(world, rider, step_off, false, true)
 }
 
-/// [`unseat`], its link told `immediate` when the rider is going (BDS 1457bd1f0, vehicles.md).
-fn unseat_told(world: &mut World, rider: Entity, step_off: bool, immediate: bool) -> bool {
+/// [`unseat`], its link told `immediate` when the rider is going (BDS 1457bd1f0, vehicles.md);
+/// with `relink` those left are linked again, as BDS did when one got off a happy ghast
+/// (bds-as3ghast.txt), and not when all were let off (bds-ride.txt).
+fn unseat_told(world: &mut World, rider: Entity, step_off: bool, immediate: bool, relink: bool) -> bool {
     let Some(Riding { vehicle, id: vehicle_id }) = world.get::<Riding>(rider).copied() else { return false };
     world.entity_mut(rider).remove::<(Riding, Reins)>();
     let rider_id = world.get::<NetId>(rider).map_or(0, |id| id.0);
+    let mut index = 0;
     let left = world.get_mut::<Seats>(vehicle).map(|mut seats| {
+        index = seats.0.iter().position(|seated| *seated == rider).unwrap_or(0);
         seats.0.retain(|seated| *seated != rider);
-        seats.0.is_empty()
+        seats.0.len()
     });
-    if left == Some(true) {
+    if left == Some(0) {
         world.entity_mut(vehicle).remove::<Seats>();
     }
     let mut told = vec![packets::link(vehicle_id, rider_id, LinkKind::Off, immediate)];
-    told.extend(seat_packets(world, vehicle, Told::Moved));
+    if relink {
+        told.extend(told::links(world, vehicle));
+    }
+    told.extend(told::seat_packets(world, vehicle, told::Change::Left(index)));
+    if let Some((sound, interval)) = left.and_then(|left| harness::riders_now(world, vehicle, left, false)) {
+        told.extend([sound, interval]);
+    }
     tell(world, vehicle, rider, told);
     announced::unfile(world, rider);
     retell(world, vehicle);
@@ -180,49 +206,25 @@ fn unseat_told(world: &mut World, rider: Entity, step_off: bool, immediate: bool
 /// Takes every rider off `vehicle`, each stepping off; how many there were.
 pub(crate) fn evict(world: &mut World, vehicle: Entity) -> usize {
     let riders = world.get::<Seats>(vehicle).map(|seats| seats.0.clone()).unwrap_or_default();
-    riders.iter().filter(|rider| unseat(world, **rider, true)).count()
+    riders.iter().filter(|rider| unseat_told(world, **rider, true, false, false)).count()
 }
 
 /// Lets an entity or player that is going leave its seat and lets its riders off.
 pub(crate) fn forget(world: &mut World, entity: Entity) {
-    unseat_told(world, entity, false, true);
+    unseat_told(world, entity, false, true, true);
     evict(world, entity);
-}
-
-/// Who of `vehicle`'s riders is told its seat: everyone in it.
-#[derive(Clone, Copy, PartialEq)]
-enum Told {
-    /// One just seated, with all of BDS's items; the others' moved seats as positions alone.
-    Newcomer(Entity),
-    /// Each one's seat moved: positions alone.
-    Moved,
-}
-
-/// The seats of `vehicle`'s riders (their wire positions in the vehicle's frame).
-fn seat_packets(world: &World, vehicle: Entity, told: Told) -> Vec<Bytes> {
-    let (Some(kind), Some(riders)) = (world.get::<Kind>(vehicle), world.get::<Seats>(vehicle)) else { return Vec::new() };
-    let Some(layout) = layout(&kind.0) else { return Vec::new() };
-    let count = riders.0.len();
-    let mut packets = Vec::new();
-    for (index, rider) in riders.0.iter().enumerate() {
-        let (Some(seat), Some(id), Some(rider_kind)) = (layout.seat(count, index), world.get::<NetId>(*rider), kind_of(world, *rider)) else { continue };
-        let whole = told == Told::Newcomer(*rider);
-        if whole || count > 1 || told == Told::Moved {
-            packets.push(packets::seat(id.0, &seat, seats::offset(&seat, &rider_kind, 0.0), whole));
-        }
-    }
-    packets
 }
 
 /// Sends `packets` to those who see `vehicle`.
 /// A vehicle that appeared this tick is shown with its riders (`retell`); a rider that did waits
 /// for its own announcement.
 fn tell(world: &mut World, vehicle: Entity, rider: Entity, packets: Vec<Bytes>) {
-    let (Some(layer), Some(body)) = (world.get::<InLayer>(vehicle).map(|layer| layer.0), world.get::<Body>(vehicle)) else { return };
+    let at = world.get::<Body>(vehicle).map(|body| body.at).or_else(|| vehicle_wire(world, vehicle).map(|(at, _)| at));
+    let (Some(layer), Some(at)) = (world.get::<InLayer>(vehicle).map(|layer| layer.0), at) else { return };
     if crate::entities::is_new(world, vehicle) {
         return;
     }
-    let cell = body.at.map(|c| c.floor() as i32);
+    let cell = at.map(|c| c.floor() as i32);
     crate::entities::tell_viewers(world, rider, layer, cell, packets);
 }
 

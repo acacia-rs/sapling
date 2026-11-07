@@ -14,6 +14,7 @@ mod leads;
 mod nesting;
 mod owners;
 mod products;
+mod shoulders;
 mod shown;
 mod sniffing;
 mod state;
@@ -69,6 +70,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     owners::stays(world, entity)
         || leads::pull(world, entity, layer)
         || allays::steer(world, entity, layer, kind)
+        || shoulders::steer(world, entity, layer, kind)
         || nesting::steer(world, entity, layer, kind)
         || sniffing::steer(world, entity, layer, kind)
         || guarding::chase(world, entity, layer, kind)
@@ -94,6 +96,7 @@ pub(crate) fn tick(world: &mut World) {
     }
     knots::tick(world);
     allays::tick(world);
+    shoulders::tick(world);
 }
 
 /// The compound the mob is kept as, with its raising now.

@@ -67,6 +67,11 @@ pub(super) fn ridden(world: &mut World, entity: Entity, layer: Entity, kind: &st
         crate::riding::Rein::Free => return false,
         crate::riding::Rein::Held => rest(world, entity),
         crate::riding::Rein::Walk(to, speed) => walk(world, entity, layer, body, to, speed, 0.0),
+        crate::riding::Rein::Fly(push) => {
+            if let Some(mut body) = world.get_mut::<Body>(entity) {
+                body.fly(push);
+            }
+        }
     }
     true
 }
