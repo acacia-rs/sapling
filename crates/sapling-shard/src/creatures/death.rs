@@ -136,7 +136,9 @@ fn remains(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> Vec<
 fn let_gear_go(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
     let looting = world.get::<attacks::Slain>(entity).map(|slain| slain.1);
     let [x, y, z] = body.at;
-    for stack in super::spawn_gear::let_go(world, entity, kind, looting) {
+    let mut stacks = super::spawn_gear::let_go(world, entity, kind, looting);
+    stacks.extend(super::piglins::picked_gold(world, entity));
+    for stack in stacks {
         drops::toss(world, layer, stack, [x, y + GEAR_LIFT, z]);
     }
 }

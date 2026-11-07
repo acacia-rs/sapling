@@ -1,6 +1,6 @@
 //! Mobs with nothing to do stroll: now and then one walks to a place nearby; one a player hit
 //! runs from place to place for a while (docs/research/mob-attacks.md, "Strolling", "Fleeing").
-// How often: docs/research/mob-attacks.md "Strolling". TODO: none follows food. One the sun burns does not stroll out of the shade it stands in, as BDS's zombie
+// How often: docs/research/mob-attacks.md "Strolling"; one tempted by food follows it instead (husbandry/breeding.rs `tempted`). One the sun burns does not stroll out of the shade it stands in, as BDS's zombie
 // under a roof did not (research/captures/bds-sun.txt), but one in the sun looks for no shade.
 
 use bevy_ecs::prelude::*;

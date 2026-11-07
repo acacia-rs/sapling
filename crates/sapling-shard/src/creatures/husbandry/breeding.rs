@@ -32,9 +32,11 @@ const EXPERIENCE: u32 = 7;
 const LAYS_EGG: [(&str, &str); 1] = [("minecraft:sniffer", "minecraft:sniffer_egg")];
 /// A horse and a donkey have a mule.
 const MIXED: [(&str, &str, &str); 1] = [("minecraft:horse", "minecraft:donkey", "minecraft:mule")];
-/// A player this near holding its food is followed.
-const TEMPTS: f32 = 10.0;
-const TEMPTED_NEAR: f32 = 2.5;
+/// A player this near holding its food is followed, up to [`TEMPTED_NEAR`] off: BDS's cows 5 to 14 off
+/// all came, went on 2.27 off and stopped 2.22 off (research/captures/bds-ah3tempt.txt; the far
+/// bound, 16 here, was not reached).
+const TEMPTS: f32 = 16.0;
+const TEMPTED_NEAR: f32 = 2.25;
 
 /// Whether the grown mob may fall in love on `item` now.
 fn may_love(world: &World, entity: Entity, kind: &str, item: &str) -> bool {

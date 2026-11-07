@@ -14,7 +14,7 @@
 
 mod pickup;
 
-pub(super) use pickup::steer;
+pub(super) use pickup::{picked_gold, steer};
 
 use acacia_proto::packets::MobEquipment;
 use acacia_proto::types::WindowID;

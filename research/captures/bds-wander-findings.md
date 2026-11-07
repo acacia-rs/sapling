@@ -83,6 +83,13 @@ are the mobs' entity files in the vanilla behaviour pack (`mob-traits.py`).
   two cows, 0.107 at 0.285, 0.151 at 0.573, 0.1995 at 0.995. The cows it left were pushed the
   other way, 0.0354 each. They still pushed 0.995 apart, past their 0.9-wide boxes, and no more at
   1.561: sapling counts boxes 0.2 wider (an untested pick between the two).
+- 2026-11-05 (`ah3crowd`, `ah3crowd2`): cow pairs pushed at box gaps 0.05 to 0.15 and not at 0.25. A
+  cow summoned 0 to 0.19 off the still actor's box was pushed away, one 0.21 or 0.24 off was not, so a
+  player's box meets 0.2 wider too (sapling had players meet only boxes that overlap; fixed in
+  `creatures/crowding.rs`). `ah3slime`: a medium slime 0.08 or 0.14 off the actor was never pushed and
+  stood until it hopped (sapling now leaves slimes and magma cubes to it; the magma cube is not drilled).
+  The slime 0.08 off hurt the actor 2 ticks after it came on BDS and on sapling now; none 0.14 off or
+  more hurt it before hopping on either side, so the 0.15 touch bound is not contradicted.
 
 ## Sapling's run of the same drills (2026-10-27, tools/remote-drills.sh)
 
