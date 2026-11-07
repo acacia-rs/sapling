@@ -179,12 +179,13 @@ fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEv
             continue;
         }
         let strength = (15 - (15.0 * distance / range).floor() as i32).clamp(1, 15) as u8;
-        if world.resource::<Listeners>().coming.iter().any(|coming| (coming.layer, coming.listener) == (layer, listener)) {
+        let mut listeners = world.resource_mut::<Listeners>();
+        if listeners.coming.iter().any(|coming| (coming.layer, coming.listener) == (layer, listener)) {
             continue;
         }
         let when = now + (distance as u64).max(1);
+        listeners.coming.push(Coming { when, layer, listener, event, frequency: event.frequency(), strength, by_player });
         send::after_blocks(world, layer, cell, events::signal(cell, listener, distance as u64));
-        world.resource_mut::<Listeners>().coming.push(Coming { when, layer, listener, event, frequency: event.frequency(), strength, by_player });
     }
 }
 
