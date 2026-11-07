@@ -130,7 +130,21 @@ def row(entity):
             added = swaps(entity, EVENTS["on_grow"])[0]
         if removed or added:
             fields.append(f"{name}=" + ",".join(["-" + g for g in removed] + ["+" + g for g in added]))
+        if name == "on_born":
+            fields += baby_look(entity, added)
     return " ".join(fields)
+
+
+def baby_look(entity, born):
+    """`baby_look=width,height,scale`: the box and scale the born groups give, for babies with no recorded announcement."""
+    groups = [entity.get("component_groups", {}).get(g, {}) for g in born]
+    scale = next((held["minecraft:scale"].get("value") for held in groups if "minecraft:scale" in held), None)
+    if scale is None:
+        return []
+    box = next((held["minecraft:collision_box"] for held in groups if "minecraft:collision_box" in held), None) or entity.get("components", {}).get("minecraft:collision_box")
+    if not box:
+        return []
+    return [f"baby_look={box.get('width', 1)},{box.get('height', 1)},{scale}"]
 
 
 def main():

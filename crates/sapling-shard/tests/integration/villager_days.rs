@@ -19,7 +19,7 @@ const HEAD: [i32; 3] = [-5, 65, 9];
 
 /// Stone, a bell, a bed and Alex; the time of day `time`, and a villager summoned at `feet` by
 /// `event`: its id.
-fn village(time: i64, feet: [f32; 3], event: &'static str) -> (Harness, u64) {
+pub(crate) fn village(time: i64, feet: [f32; 3], event: &'static str) -> (Harness, u64) {
     let mut level = World::void();
     let stone = level.block_id("minecraft:stone").unwrap();
     level.fill([-32, 64, -32], [31, 64, 31], stone);
@@ -139,8 +139,9 @@ fn villagers_with_two_bread_each_have_no_baby() {
 
 #[test]
 fn a_villager_flees_a_zombie() {
+    // 3 off: BDS's villagers fled a zombie 3 off, not one 4 off (bds-an1fear.txt).
     let (mut h, id) = village(18_000, [20.5, 65.0, 0.5], "minecraft:become_unskilled");
-    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:zombie", [16.5, 65.0, 0.5]).is_some()));
+    h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:zombie", [17.5, 65.0, 0.5]).is_some()));
     (0..40).for_each(|_| drop(h.tick_all()));
     let feet = feet_of(&mut h, id);
     assert!(feet[0] > 21.5, "it ran from the zombie: {feet:?}");

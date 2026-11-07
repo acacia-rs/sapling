@@ -29,9 +29,9 @@ fn holder_at(world: &World, holder: Entity) -> Option<([f32; 3], Entity)> {
     world.get::<Position>(holder).map(|position| position.feet).or_else(|| world.get::<Body>(holder).map(|body| body.at)).map(|at| (at, layer))
 }
 
-/// The player or knot kept under `unique_id`.
+/// The player, knot or wandering trader kept under `unique_id`.
 fn find_holder(world: &mut World, unique_id: i64) -> Option<Entity> {
-    shown::player_of(world, unique_id).or_else(|| world.query::<(Entity, &UniqueId, &super::knots::Knot)>().iter(world).find(|(_, id, _)| id.0 == unique_id).map(|(entity, ..)| entity))
+    shown::player_of(world, unique_id).or_else(|| world.query_filtered::<(Entity, &UniqueId), With<Body>>().iter(world).find(|(_, id)| id.0 == unique_id).map(|(entity, _)| entity))
 }
 
 /// The holder's `UniqueID`: a player's, or a kept entity's.
@@ -40,7 +40,7 @@ pub(super) fn unique_id_of(world: &World, holder: Entity) -> Option<i64> {
 }
 
 /// `holder` holds the mob's lead now.
-pub(super) fn tie(world: &mut World, entity: Entity, holder: Entity) {
+pub(in crate::creatures) fn tie(world: &mut World, entity: Entity, holder: Entity) {
     let Some(unique_id) = unique_id_of(world, holder) else { return };
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {
         (raised.kept.leasher, raised.holder, raised.looked_since) = (Some(unique_id), Some(holder), 0);

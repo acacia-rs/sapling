@@ -156,6 +156,15 @@ pub(crate) fn throw(world: &mut World, player: Entity, stack: ItemStack) {
     }
 }
 
+/// Throws `stack` with its box's bottom at `at`, moving at `motion`, as a mob hands an item on:
+/// mobs wait for it as for a player's throw.
+pub(crate) fn hand_on(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], motion: [f32; 3]) {
+    let now = world.resource::<Tick>().0;
+    if let Some(item) = lay(world, layer, stack, at, motion, now + PICKUP_DELAY) {
+        world.entity_mut(item).insert(MobsWait(now + MOBS_WAIT));
+    }
+}
+
 /// Whether a mob may take the lying `item` up yet.
 pub(crate) fn mobs_may_take(world: &World, item: Entity) -> bool {
     world.get::<MobsWait>(item).is_none_or(|wait| world.resource::<Tick>().0 >= wait.0)

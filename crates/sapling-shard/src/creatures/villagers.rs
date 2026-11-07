@@ -4,20 +4,24 @@
 //! llamas and the timer it leaves by (wandering.rs).
 //! A villager keeps its pack's day (schedule.rs), sleeps in a bed it claims (beds.rs), flees what
 //! it fears and hides at a bell (fear.rs); a player's standing with its village (standing.rs); its
-//! village's iron golems (golems.rs, golem_spawns.rs). It picks up food (pantry.rs) and breeds by it
-//! (love.rs).
+//! village's iron golems (golems.rs, golem_spawns.rs) and cats (cat_spawns.rs). It picks up food
+//! (pantry.rs), breeds by it (love.rs) and shares it (sharing.rs); a baby grows up (growing.rs).
 
 mod beds;
+mod cat_spawns;
 mod conversion;
 mod deals;
 pub(super) mod families;
+mod farming;
 mod fear;
 mod golem_spawns;
 mod golems;
+mod growing;
 mod jobs;
 mod love;
 mod pantry;
 mod schedule;
+mod sharing;
 mod standing;
 mod storage;
 mod trading;
@@ -39,7 +43,9 @@ use deals::Deal;
 
 pub(super) use conversion::{hasten_cures, infect, kept_through_turning, turned};
 pub(crate) use fear::alarm;
+pub(super) use cat_spawns::tick as spawn_cats;
 pub(super) use golem_spawns::tick as spawn_golems;
+pub(super) use growing::grew_up;
 pub(super) use pantry::put as put_in_pantry;
 pub(super) use standing::{hit as hurt_standing, outlaw, shot as shot_standing};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};
@@ -169,11 +175,12 @@ pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     trader.next_look = now + 1 + u64::from(dice.roll(jobs::LOOK_SPREAD));
     world.insert_resource(dice);
     if kind == WANDERING_TRADER {
-        wandering::arrive(world, layer, &mut trader, feet, kept.is_none());
+        wandering::arrive(world, entity, layer, &mut trader, feet, kept.is_none());
     }
     // A new trader's first data holds what it is, or it would undo the metadata told after it.
     let first = world.get::<NetId>(entity).map(|id| shown(id.0, &trader).metadata);
     world.entity_mut(entity).insert(trader);
+    deals::chart(world, entity, layer);
     if let Some(first) = first {
         entities::show_first(world, entity, first);
     }
@@ -219,11 +226,12 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
     if activity != Some(schedule::Activity::Bed) {
         beds::lie(world, entity, false);
     }
-    if fear::hides(world, entity, layer, &body) || fear::flees(world, entity, layer, &body) || (villager && (pantry::fetch(world, entity, layer, &body) || love::court(world, entity, layer, &body))) {
+    let fed = |world: &mut World| pantry::fetch(world, entity, layer, &body) || love::court(world, entity, layer, &body) || sharing::share(world, entity, layer, &body);
+    if fear::hides(world, entity, layer, &body) || fear::flees(world, entity, layer, &body) || (villager && fed(world)) {
         return true;
     }
     match activity {
-        Some(schedule::Activity::Work) | None => jobs::work(world, entity, layer),
+        Some(schedule::Activity::Work) | None => farming::farm(world, entity, layer, &body) || jobs::work(world, entity, layer),
         Some(activity) => schedule::steer(world, entity, layer, activity),
     }
 }

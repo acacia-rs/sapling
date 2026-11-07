@@ -28,6 +28,7 @@ use crate::entities::Stored;
 pub(super) use ageing::be_born;
 pub(super) use allays::take_up as after_move;
 pub(crate) use allays::hear_note as allays_hear_note;
+pub(super) use leads::tie as tie_lead;
 pub(super) use tadpoles::frog_variant;
 pub(crate) use clicks::interact;
 pub(crate) use guarding::{owner_hit, owner_hurt};

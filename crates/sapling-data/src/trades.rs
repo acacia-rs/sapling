@@ -63,9 +63,26 @@ enum Function {
     EnchantBook { base: i32, random: i32, per_level: i32, per_level_random: i32 },
     RandomAux([i16; 2]),
     RandomDye,
-    /// A map to a structure, which sapling cannot locate: its trade is never offered.
-    ExplorationMap,
+    /// An explorer map, as the `filled_map` damage its destination takes (roll.rs).
+    ExplorationMap(i16),
 }
+
+/// The `filled_map` damage of each explorer map's destination: BDS's cartographer offered
+/// monument 3, mansion 4, trial chambers 14, savanna village 10 and taiga village 8
+/// (research/captures/bds-an1maps.txt); the villages, jungle and swamp between follow the order of
+/// BDS's `item.map.exploration.*` names.
+const EXPLORER_MAPS: [(&str, i16); 10] = [
+    ("monument", 3),
+    ("mansion", 4),
+    ("village_snowy", 7),
+    ("village_taiga", 8),
+    ("village_plains", 9),
+    ("village_savanna", 10),
+    ("village_desert", 11),
+    ("jungle_temple", 12),
+    ("swamp_hut", 13),
+    ("trial_chambers", 14),
+];
 
 static TABLES: LazyLock<HashMap<String, Table>> = LazyLock::new(|| {
     let all: Value = serde_json::from_str(include_str!("../data/trades.json")).expect("trades.json is JSON");
@@ -103,7 +120,7 @@ fn function(value: &Value) -> Option<Function> {
         },
         "random_aux_value" => Function::RandomAux(pair(&value["values"]).map(|aux| aux as i16)),
         "random_dye" => Function::RandomDye,
-        "exploration_map" => Function::ExplorationMap,
+        "exploration_map" => Function::ExplorationMap(EXPLORER_MAPS.iter().find(|(to, _)| Some(*to) == value["destination"].as_str())?.1),
         _ => return None,
     })
 }

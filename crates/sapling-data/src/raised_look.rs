@@ -15,8 +15,11 @@ fn float(identifier: &str, baby: bool, key: Key) -> Option<f32> {
 
 /// The box (width, height) and scale a baby or grown mob of `identifier` was announced with; the
 /// box it collides with is the one scaled. `None` for a kind with no such recording.
+/// A baby of a kind recorded only grown has the box and scale its pack's born groups give (a
+/// baby villager's 0.98 by 1.96 at 0.5, bds-g11share.txt).
 pub fn mob_look(identifier: &str, baby: bool) -> Option<([f32; 2], f32)> {
-    Some(([float(identifier, baby, Key::BoundingboxWidth)?, float(identifier, baby, Key::BoundingboxHeight)?], float(identifier, baby, Key::Scale).unwrap_or(1.0)))
+    let recorded = || Some(([float(identifier, baby, Key::BoundingboxWidth)?, float(identifier, baby, Key::BoundingboxHeight)?], float(identifier, baby, Key::Scale).unwrap_or(1.0)));
+    recorded().or_else(|| crate::husbandry(identifier).filter(|_| baby).and_then(|raised| raised.baby_look))
 }
 
 /// The `minecraft:movement` a baby or grown mob of `identifier` was announced with.
@@ -77,5 +80,6 @@ mod tests {
         let grown = mob_age_set(5, MetadataFlags1(0), cow.1, cow.0);
         assert_eq!((grown.runtime_entity_id, grown.metadata.len()), (5, 4));
         assert!(mob_look("sapling:nothing_recorded", true).is_none());
+        assert_eq!(mob_look("minecraft:villager_v2", true), Some(([0.98, 1.96], 0.5)));
     }
 }
