@@ -42,7 +42,8 @@ pub(crate) fn copy(world: &mut World, layer: Entity, cleared: &[BlockPos], copie
     send::logged(world, |world| {
         // Settled once all are written, as a `/fill`'s (updates.rs `Unsettled`; bds-al2fill.txt).
         let keeps = super::updates::keep_unsettled(world);
-        for &pos in cleared {
+        let cleared = world.get::<Layer>(layer).map(|level| emptying_order(&level.world, cleared)).unwrap_or_default();
+        for pos in cleared {
             super::update_block(world, layer, pos, &Block::air());
         }
         for (copy, &liquid) in copies.iter().zip(&liquids) {
@@ -68,4 +69,20 @@ pub(crate) fn copy(world: &mut World, layer: Entity, cleared: &[BlockPos], copie
         send::to_viewers(world, at, pos, &vec![shown; times]);
     }
     counted
+}
+
+/// The order BDS empties a move's source in, Java `CloneCommands`'s: a cell of no full block and no
+/// block entity goes to the front (water: last to first, bds-al2fill.txt), the rest to the back in order
+/// (wool: first to last, bds-ao2rails.txt).
+fn emptying_order(level: &sapling_world::World, cleared: &[BlockPos]) -> Vec<BlockPos> {
+    let mut order = std::collections::VecDeque::new();
+    for &[x, y, z] in cleared {
+        let full = level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube());
+        if full || level.block_entity([x, y, z]).is_some() {
+            order.push_back([x, y, z]);
+        } else {
+            order.push_front([x, y, z]);
+        }
+    }
+    order.into()
 }

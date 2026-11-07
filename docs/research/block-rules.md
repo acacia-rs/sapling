@@ -160,13 +160,20 @@ BDS writes every cell of a fill, then notifies neighbours; sapling notified as i
 - `/clone`, a structure load and `/clone ... move` (bds-al2fill.txt, sapling-al2fill.txt): three water
   cells cloned out of a glass ring flowed from all three on both. Structure loads already wrote every
   cell before `neighbours_changed` (structures/place.rs). A move lists its source air cells last to
-  first on BDS (4, 3, 2), first to last on sapling (open, packet order only).
+  first on BDS (4, 3, 2). Fixed (thirteenth2ao, bds-ao2rails.txt): BDS walks a clone z outermost, then
+  y, x fastest (sapling/vanilla/regions.rs `cells_x_fastest`), and empties a move's source as Java's
+  deque does: a cell with no full block and no block entity (the water) to the front, others to the
+  back (blocks/cloned.rs `emptying_order`), so water empties last to first, wool first to last.
 - Sand: falls started in one tick go out together, one UpdateSubchunkBlocks a sub-chunk with sync
   entries (send/synced.rs `synced_together`; a lone cell stays an UpdateBlockSynced). BDS writes the
   sync entity id as raw unsigned bits into a field acacia reads as zigzag (raw 3, 4, 5 read -2, 2, -3);
   sapling writes `as_written(id)` so the wire bytes match.
-- Rails: open. BDS lists each write with its repeats (a rail shapes as it is placed); sapling lists
-  final states, the same shapes.
+- Rails: fixed (thirteenth2ao, bds-ao2rails.txt; a fill line, set pairs, a fill joining set rails). A
+  rail's command write is listed after its own placement finishes, with its state then; the writes that
+  placement makes (its own reshape when it changes, then each neighbour that turns) are listed at their
+  own time, an unchanged write not at all: a rail set north of a pair's end lists `3 -5 rail[8]; 3 -6
+  rail[0]`. Sapling: blocks/commanded.rs puts rails through `send::listed`, which logs each write into
+  the open batch (send/sections/logged.rs). Tests: tests/integration/thirteenth2ao.rs.
 
 Open checks for one bot session on BDS (place, read the state back): piston facing numbers, dispenser/piston up-down rule
 (position vs pitch), trapdoor placed on a side face, end rod values, snow-layer replace height, lever sound ids on the wire,

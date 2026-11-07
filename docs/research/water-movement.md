@@ -214,8 +214,14 @@ capture contradicted the first version of this section).
   to touch it (7.9 → 7.7; a pig 13.8 → 13.55, a zombie 13.9 → 13.7, a cow z -4.3 → -3.55), a zombie summoned at
   y -26.5 went up to the floor and 0.8 south (z 2.5 → 3.3), leaving it under its 2x2 roof, and a zombie in a
   one-wide shaft under a roof block went 0.8 south into the shaft's wall (z 1.5 → 2.3), out of the roof block
-  alone. Not ported: which block and direction BDS takes (south won each tie seen) is not pinned; sapling
-  announces a summoned mob where it was summoned.
+  alone.
+- **Summoned into blocks** (thirteenth2ao, bds-ao2push.txt, bds-ao2boat.txt; fitted to 45 of 47 summons with
+  bds-uuspawn.txt, the C++ not found: bdsre's summon path 143a0b220 → 1403d5c10 adds only a cart's 0.35, and
+  `MoveTowardsClosestSpace` is the player's alone): each block box the mob's box overlaps where summoned,
+  taken by x, then z, then y, and only while it still overlaps, pushes the box out through that box's nearest
+  face, ties going +x, -x, +z, -z, +y, -y; a mob pushed down into a block then stands on its top (a cow, horse
+  and llama 0.3 to 0.87 into a roof showed at the floor). Ported: body/spawn_push.rs, used by
+  creatures/summoned.rs `placed` and vehicles.rs `summon` (boats); every ao2push mob now lands as BDS's.
 
 ## 5. Buoyancy (`minecraft:buoyant`): why xp orbs float
 

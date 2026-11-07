@@ -8,12 +8,14 @@ mod geyser;
 mod liquid;
 mod moves;
 mod physics;
+mod spawn_push;
 mod stuck;
 
 use acacia_physics::{Aabb, WorldView, collide_box};
 use bevy_ecs::prelude::Component;
 pub(crate) use liquid::{InLiquid, Liquid, in_liquid, liquid_in, surface};
 pub(crate) use physics::Physics;
+pub(crate) use spawn_push::{pushed_out, pushed_out_standing};
 use sapling_api::BlockPos;
 use sapling_world::World as Level;
 

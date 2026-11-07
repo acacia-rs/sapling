@@ -10,7 +10,7 @@ use bytes::Bytes;
 use sapling_api::BlockPos;
 
 pub(super) use logged::log;
-pub(crate) use logged::{log_again, log_flowing, log_liquid, logged, logged_apart};
+pub(crate) use logged::{listed, log_again, log_flowing, log_liquid, logged, logged_apart};
 
 use super::{FLAGS, block_entity_data, to_viewers, update_flagged, write};
 use crate::components::Layer;
@@ -52,9 +52,10 @@ pub(crate) fn show_states(world: &mut World, layer: Entity, cells: &[(BlockPos, 
     show_sections(world, layer, sections, false);
 }
 
-/// The cells [`super::set`] wrote while a batch was open, and the flags they are shown with.
+/// The cells [`super::set`] wrote while a batch was open, and the flags they are shown with; a cell
+/// with a block was listed by [`listed`] with the block it was written.
 #[derive(Resource, Default)]
-pub(crate) struct Held(Option<(UpdateBlockFlags, Vec<(Entity, BlockPos)>)>);
+pub(crate) struct Held(Option<(UpdateBlockFlags, Vec<(Entity, BlockPos, Option<u32>)>)>);
 
 /// Opens a batch whose blocks are shown with `flags`: [`super::set`] keeps what it shows until
 /// [`show_held`]. False where one is open already, which then takes these changes in too.
@@ -76,13 +77,13 @@ pub(crate) fn batched(world: &mut World, system: impl FnOnce(&mut World)) {
 /// Whether a batch is open, which then keeps the cell [`super::set`] wrote to show later.
 pub(super) fn held(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     let Some((_, cells)) = world.get_resource_mut::<Held>().and_then(|held| held.into_inner().0.as_mut()) else { return false };
-    cells.push((layer, pos));
+    cells.push((layer, pos, None));
     true
 }
 
 /// Whether the open batch holds `pos`, whose entity [`show_held`] then shows after its block.
 pub(crate) fn holds(world: &World, layer: Entity, pos: BlockPos) -> bool {
-    world.get_resource::<Held>().and_then(|held| held.0.as_ref()).is_some_and(|(_, cells)| cells.contains(&(layer, pos)))
+    world.get_resource::<Held>().and_then(|held| held.0.as_ref()).is_some_and(|(_, cells)| cells.iter().any(|&(at, cell, _)| (at, cell) == (layer, pos)))
 }
 
 /// Cells seen breaking while a batch was open, and the block seen there.
@@ -140,23 +141,25 @@ pub(crate) fn after_blocks(world: &mut World, layer: Entity, pos: BlockPos, soun
 
 fn show_held_blocks(world: &mut World) {
     let Some((flags, cells)) = world.get_resource_mut::<Held>().and_then(|mut held| held.0.take()) else { return };
-    let mut layers: Vec<Entity> = cells.iter().map(|(layer, _)| *layer).collect();
+    let mut layers: Vec<Entity> = cells.iter().map(|(layer, ..)| *layer).collect();
     layers.dedup();
     for layer in layers {
         let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
         let mut seen = std::collections::HashSet::new();
         let mut entities: Vec<(BlockPos, Bytes)> = Vec::new();
         let mut shown = Vec::new();
-        for &(_, pos) in cells.iter().filter(|(at, _)| *at == layer) {
-            if seen.insert(pos) {
-                shown.push(pos);
+        for &(_, pos, listed) in cells.iter().filter(|(at, ..)| *at == layer) {
+            if let Some(id) = listed {
+                shown.push((pos, id));
+            } else if seen.insert(pos) {
+                shown.push((pos, level.block(pos[0], pos[1], pos[2])));
                 // BDS showed no entity with a dispenser or dropper its circuit triggered (bds-z2hand.txt).
                 let unshown = ["Dispenser", "Dropper"].map(|id| acacia_proto::nbt::Value::String(id.into()));
                 let entity = level.block_entity(pos).filter(|entity| !entity.nbt.get("id").is_some_and(|id| unshown.contains(id)));
                 entities.extend(entity.map(|entity| (pos, block_entity_data(pos, entity))));
             }
         }
-        let mut sections = by_section(shown.iter().map(|&pos| (pos, level.block(pos[0], pos[1], pos[2]), flags.0)));
+        let mut sections = by_section(shown.iter().map(|&(pos, id)| (pos, id, flags.0)));
         sections.sort_by_key(|(_, cells)| cells.len() > 1);
         show_sections(world, layer, sections, true);
         for (pos, packet) in entities {

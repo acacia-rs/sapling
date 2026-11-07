@@ -387,7 +387,12 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
   `a_pregnant_turtle_taken_away_stands_then_walks_straight_home`. Stomping odds stay undrilled.
   Clutches (thirteenth AK, ak1clutch: twelve adult turtles fed on penned sand, 220 s): BDS laid none,
   so the 1-4 count and nest pick still rest on bds-nesting.txt's two clutches (3 and 2 eggs, each in
-  the layer's own cell, ParticleTurtleEgg a tick before the UpdateBlock).
+  the layer's own cell, ParticleTurtleEgg a tick before the UpdateBlock). The bot feeds only within
+  reach (about 2.8 of its eyes): ak1clutch's turtles were never bred. Re-drilled (thirteenth2ao,
+  `nesting`, bds-ao2nest.txt and sapling-ao2nest.txt, 180 s): BDS laid 1, 1, 1 (32, 38, 174 s after
+  breeding), sapling 2, 3, 4, 1 (16 to 57 s); every clutch on both sides in the layer's own cell, the
+  particle naming the same egg block. Five BDS clutches 1 to 3, consistent with `nextInt(4) + 1`. Still
+  differs: sapling sends the particle in the UpdateBlock's tick, BDS a tick before (flush order).
 - Frogs (n3frogs, eight on open stone for 90 s): BDS's waits from a landing to the next leap were
   7.3 to 9.2 s (a frog's first, 5.0 to 6.7); sapling's 7.1 to 9.0.
 
@@ -396,9 +401,8 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
 - Seen in thirteenth3q, followed in thirteenth3s (2026-11-05, research/captures/bds-s3misc.txt):
   - The summoned boat: BDS moves an x or z whose fraction is between 0.3 and 0.7 by 0.2, so that
     the 1.4-wide box spans two cells, not three (4.5, 4.5 to 4.7, 4.3; -3.5, -6.5 to -3.3, -6.3;
-    the same for yaw 0, 90, 180 and 45 and a chest boat); 2.0 and 2.3, -7.8 kept. x went up each
-    time, z down at 3.5 and 4.5 and up at 0.5, -3.5 and -6.5; the rule for the side is not found
-    and sapling's boat stays on the point (open). A number written with a point is not centred
+    the same for yaw 0, 90, 180 and 45 and a chest boat); 2.0 and 2.3, -7.8 kept. Rule fitted and
+    ported in thirteenth2ao (vehicles.md). A number written with a point is not centred
     (2.0 stayed 2.0); sapling centred it, fixed (`Axis::Whole`, sapling-api command/places.rs).
   - A falling suspicious block (hanging or not) lands as `ParticleDestroy` at its cell's corner,
     named by the block's hanging state whatever its own, then the next tick one
@@ -429,7 +433,7 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
   - `slot.inventory 0` is the first tack slot (a horse's saddle, a llama's carpet), so an item there
     unsaddles; the flags are sent only when they change.
   - The flags, the summon's sound and a chested mount's slots past the tack: drilled 2026-11-03, below.
-- Turtles: the 1 to 4 egg count (two clutches seen), the nearest-sand pick and the nest search's
+- Turtles: the 1 to 4 egg count (five BDS clutches seen, 1 to 3), the nearest-sand pick and the nest search's
   20-tick look. Two runs (n3eggs) failed to show a clutch: eight turtles summoned with `go_lay_egg`
   on sand pens held up by stone, and one in a lane with sand 2 west and 3 east, laid nothing in 50 s;
   four pregnant turtles taken home (n3home) walked back but laid nothing in the 60 s after.
