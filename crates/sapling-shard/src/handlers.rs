@@ -71,6 +71,7 @@ pub(crate) fn dispatch(world: &mut World) {
     blocks::tilt_dripleaves(world);
     blocks::batched(world, blocks::trip_wires);
     blocks::batched(world, blocks::run_queued);
+    blocks::rumble_geysers(world);
     crate::structures::animate(world);
     blocks::batched(world, blocks::hear_vibrations);
     blocks::dispatch(world);

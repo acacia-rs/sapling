@@ -40,6 +40,8 @@ pub(crate) fn copy(world: &mut World, layer: Entity, cleared: &[BlockPos], copie
     let counted = (copies.len() + liquids.iter().filter(|&&liquid| liquid != air).count()) as u32;
     world.get_resource_or_insert_with(Cloning::default).0 = Some(Vec::new());
     send::logged(world, |world| {
+        // Settled once all are written, as a `/fill`'s (updates.rs `Unsettled`; bds-al2fill.txt).
+        let keeps = super::updates::keep_unsettled(world);
         for &pos in cleared {
             super::update_block(world, layer, pos, &Block::air());
         }
@@ -54,6 +56,9 @@ pub(crate) fn copy(world: &mut World, layer: Entity, cleared: &[BlockPos], copie
         }
         for copy in copies {
             send::log_again(world, layer, copy.to);
+        }
+        if keeps {
+            super::updates::settle_kept(world);
         }
     });
     let deferred = world.get_resource_mut::<Cloning>().and_then(|mut cloning| cloning.0.take()).unwrap_or_default();

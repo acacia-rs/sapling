@@ -40,6 +40,11 @@ fn column(level: &Level, body: &Body) -> Option<(bool, bool)> {
 /// in, if one.
 pub(super) fn push(level: &Level, body: &mut Body) {
     super::geyser::lift(level, body);
+    push_columns(level, body);
+}
+
+/// Changes the body's speed up by the bubble column it is in, if one.
+pub(super) fn push_columns(level: &Level, body: &mut Body) {
     let Some((drags_down, above)) = column(level, body) else { return };
     let vy = &mut body.motion[1];
     *vy = match (drags_down, above) {

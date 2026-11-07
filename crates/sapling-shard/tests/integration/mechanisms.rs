@@ -6,8 +6,9 @@ use crate::common;
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{
     AddEntity, AddItemEntity, LevelSoundEvent, MoveEntityDelta, RemoveEntity, UpdateBlock, UpdateBlockSynced, UpdateBlockSyncedTransitionType as Transition,
+    UpdateSubchunkBlocks,
 };
-use acacia_proto::types::{Action, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
+use acacia_proto::types::{Action, BlockUpdateTransitionType as Listed, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use common::{Harness, all, block_actions, block_changes, click, hash, input_at};
 use sapling_api::{Block, GameMode, Item, PlayerId, Slot};
 
@@ -213,9 +214,12 @@ fn sand_falls_as_an_entity_and_breaks_up_on_a_torch() {
     let (sand, air) = (hash("minecraft:sand"), hash("minecraft:air"));
     assert_eq!(column_changes(&sent, 3), [(67, air), (68, air), (65, sand)], "the stone, the sand leaving, the sand landing");
     assert_eq!(column_changes(&sent, 4), [(67, air), (68, air)], "the second never lands");
-    // As BDS: the cell a falling block leaves and the one it lands in name it.
+    // As BDS: the cell a falling block leaves and the one it lands in name it; two leaving one sub-chunk in
+    // a tick are told together (research/captures/bds-al2fill.txt).
+    let together: Vec<_> = all::<UpdateSubchunkBlocks>(&sent).iter().flat_map(|batch| batch.blocks.clone()).filter(|u| u.transition_type == Listed::Create).map(|u| (u.position.x, u.position.y)).collect();
+    assert_eq!(together, [(3, 68), (4, 68)]);
     let synced: Vec<_> = all::<UpdateBlockSynced>(&sent).iter().map(|u| (u.position.x, u.position.y, u.transition_type.clone())).collect();
-    assert_eq!(synced, [(3, 68, Transition::Create), (4, 68, Transition::Create), (3, 65, Transition::Destroy)]);
+    assert_eq!(synced, [(3, 65, Transition::Destroy)]);
     let falling: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|entity| entity.entity_type == "minecraft:falling_block").collect();
     assert_eq!(falling.len(), 2);
     let variant = falling[0].metadata.iter().find(|item| item.key == Key::Variant).map(|item| item.value.clone());

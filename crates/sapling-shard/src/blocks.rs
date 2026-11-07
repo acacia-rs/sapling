@@ -121,7 +121,7 @@ pub(crate) use request::{BlockInputs, dispatch};
 use request::{Request, Site, site};
 pub(crate) use send::{about_click_first, batched, block_at, block_entity_data, clear_liquid, hold, keep_entity, log_again, logged, noise, put_block, resolve, set, set_liquid, set_many, set_network_only, set_quietly, set_sectioned, show_held, show_states, show_whole, sound, to_viewers};
 pub(crate) use liquid::neighbours_changed;
-pub(crate) use updates::break_block;
+pub(crate) use updates::{break_block, keep_unsettled, settle_kept};
 pub(crate) use updates::loaded::settle as settle_loaded;
 pub(crate) use crafter::{crafter_slot, dispatch_toggles as dispatch_crafter_toggles};
 pub(crate) use queued::{Job, after as queue_job, tick as run_queued};
@@ -129,7 +129,7 @@ pub(crate) use lectern::turn_pages as turn_lectern_pages;
 pub(crate) use conduits::tick as wake_conduits;
 pub(crate) use pending::{arrived as ticks_arrived, write_back as write_back_ticks, write_back_before_saving as write_back_ticks_before_saving};
 pub(crate) use rods::{Strike as LightningStrike, felt as lightning_felt, sparks as lightning_sparks, struck as lightning_struck};
-pub(crate) use sulfur::{defer_neighbours as defer_sulfur_neighbours, plume as geyser_plume, run_deferred as run_deferred_sulfur_neighbours};
+pub(crate) use sulfur::{plume as geyser_plume, rumble as rumble_geysers};
 pub(crate) use sculk::{GameEvent, catalysts_arrived, mob_died, poured, teleported, tick as hear_vibrations, vibrate, vibrate_at, walked};
 pub(crate) use target::shot_stopped;
 pub(crate) use tripwire::tick as trip_wires;
@@ -200,14 +200,15 @@ fn put_settled_now(world: &mut World, layer: Entity, pos: BlockPos, block: &Bloc
     let door = put_as.and_then(|(put, _)| doors::put_whole(world, layer, pos, put).or_else(|| commanded::put_bed(world, layer, pos, put)).or_else(|| commanded::put_dripleaf(world, layer, pos, put)));
     let put = door.or_else(|| commanded::put(world, layer, pos, swapped.as_ref().unwrap_or(block)));
     if put == Some(true) {
-        updates::settle(world, layer, pos);
+        updates::settle_or_keep(world, layer, pos);
     }
     put.is_some()
 }
 
-/// Moves falling blocks and starts the falls that are due, then settles what they changed.
+/// Moves falling blocks and starts the falls that are due, the cells they took and left shown a
+/// sub-chunk at a time, then settles what they changed.
 pub(crate) fn fall_blocks(world: &mut World) {
-    for (layer, pos) in falling::tick(world) {
+    for (layer, pos) in send::synced_together(world, falling::tick) {
         updates::settle(world, layer, pos);
     }
 }

@@ -279,9 +279,11 @@ frequency 8. A sensor's `power.on`/`power.off` plays after its UpdateBlock, as o
   (`sculk/resonance.rs`: `ring` for sensors due next tick, `post` of `Resonate(n)`, type 41 + n, as
   the sensor goes active). A vibration posted 1 off after the sculk step rings no amethyst (unseen).
   Re-drilled (sapling-uureson.txt): the same ticks, but in sapling the amethyst's particle comes before
-  the sensor's UpdateBlock (BDS: after it and `power.on`), because particles skip the batch.
-  Fixed 2026-11-07 (group AK): a resonance's particle goes after the open batch's blocks
-  (`send::after_blocks` in sculk.rs `vibrate`); test in thirteenth1ai.rs.
+  the sensor's UpdateBlock (BDS: after it and `power.on`), because particles skip the batch. Fixed by
+  group AG's `send::after_blocks` (39b1fcd1) for every signal: re-drilled in thirteenth2al, power.on then the
+  particle, as BDS; AK's order check is in thirteenth1ai.rs.
+- Flight a tick after: covered by `sculk/deferred.rs` (tp, bucket) and, since thirteenth2al, a potent
+  sulfur a command started or ended (world-ticks.md, potent sulfur "Vibrations").
 
 ## Unverified
 

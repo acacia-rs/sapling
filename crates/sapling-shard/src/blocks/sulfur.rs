@@ -11,6 +11,7 @@ use sapling_worldgen::random::Xoroshiro;
 use super::queued::{self, Job};
 use super::sculk::GameEvent;
 use super::{level, send, with_property};
+use crate::components::Tick;
 
 const SULFUR: &str = "minecraft:potent_sulfur";
 const STATE: &str = "potent_sulfur_state";
@@ -100,8 +101,9 @@ fn wait(seed: i64, [x, y, z]: BlockPos, height: usize, state: usize) -> u64 {
 
 /// Sets the cell to `state` (0xcf57f80): an eruption's start and end send out `block_attach` and
 /// `block_destroy` vibrations, the start is heard with water over it open to the top; dormant or
-/// erupting queues its next turn even when the state is already so.
-fn set(world: &mut World, layer: Entity, pos: BlockPos, now: usize, state: usize) {
+/// erupting queues its next turn even when the state is already so. The vibrations of its own tick's
+/// turn fly at once; those of a change around it the next tick (bds-ag2geyser.txt, bds-ag2lava.txt).
+fn set(world: &mut World, layer: Entity, pos: BlockPos, now: usize, state: usize, ticked: bool) {
     let Some(level) = level(world, layer) else { return };
     let (height, open) = (water_height(level, pos), open_height(level, pos));
     if state != now {
@@ -115,13 +117,57 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, now: usize, state: usize
         }
         if (state >= ERUPTING) != (now >= ERUPTING) {
             let event = if state >= ERUPTING { GameEvent::BlockAttach } else { GameEvent::BlockDestroy };
-            super::sculk::vibrate_at(world, layer, pos, event, false);
+            if ticked {
+                super::sculk::vibrate_at(world, layer, pos, event, false);
+            } else {
+                super::sculk::vibrate_next_tick(world, layer, pos, event);
+            }
+        }
+        if state == CONTINUOUS {
+            let due = world.resource::<Tick>().0 + RUMBLE_FIRST;
+            let mut rumbling = world.get_resource_or_insert_with(Rumbling::default);
+            rumbling.0.retain(|&(at, cell, _)| (at, cell) != (layer, pos));
+            rumbling.0.push((layer, pos, due));
         }
     }
     if state == DORMANT || state == ERUPTING {
         let seed = world.get::<crate::components::Layer>(crate::dimensions::home(world, layer)).map_or(0, |home| home.world.level().seed);
         queued::after(world, layer, pos, wait(seed, pos, height, state), Job::PotentSulfur);
     }
+}
+
+/// Ticks from a geyser going continuous to its first `geyser_continuous_eruption_active`, and between
+/// the next: three starts in bds-ag2lava.txt each first heard 41 ticks on, then every 40. BDS's sender
+/// is not found (world-ticks.md "Potent sulfur").
+const RUMBLE_FIRST: u64 = 41;
+const RUMBLE_EVERY: u64 = 40;
+
+/// Continuous geysers and the tick each next rumbles.
+#[derive(Resource, Default)]
+struct Rumbling(Vec<(Entity, BlockPos, u64)>);
+
+/// Plays `geyser_continuous_eruption_active` over each geyser that is due and still continuous, at the
+/// top of its water and open to the top as the start's sound is; forgets those no longer continuous.
+pub(crate) fn rumble(world: &mut World) {
+    let now = world.resource::<Tick>().0;
+    let Some(mut rumbling) = world.get_resource_mut::<Rumbling>().filter(|rumbling| rumbling.0.iter().any(|&(.., due)| due <= now)) else { return };
+    let geysers = std::mem::take(&mut rumbling.0);
+    let mut kept = Vec::with_capacity(geysers.len());
+    for (layer, pos, due) in geysers {
+        let found = level(world, layer).filter(|level| state_at(level, pos) == Some(CONTINUOUS)).map(|level| (open_height(level, pos) > 0, water_height(level, pos)));
+        let Some((open, height)) = found else { continue };
+        if due > now {
+            kept.push((layer, pos, due));
+            continue;
+        }
+        if open {
+            let [x, y, z] = pos;
+            let top = Vec3f { x: x as f32 + 0.5, y: (y + height as i32 + 1) as f32, z: z as f32 + 0.5 };
+            send::after_blocks(world, layer, pos, send::noise("geyser_continuous_eruption_active", top, -1));
+        }
+        kept.push((layer, pos, due + RUMBLE_EVERY));
+    }
+    world.resource_mut::<Rumbling>().0.extend(kept);
 }
 
 /// The potent sulfur at `pos` takes what its surroundings ask for, or, asked for what it is, turns from
@@ -135,7 +181,7 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
         ERUPTING => DORMANT,
         _ => return,
     };
-    set(world, layer, pos, now, next);
+    set(world, layer, pos, now, next, true);
 }
 
 /// Whether putting `name` at `pos` may change a potent sulfur: it is one, or one is beside it.
@@ -153,35 +199,13 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str
     let Some(level) = level(world, layer) else { return };
     let Some(state) = state_at(level, pos) else { return };
     let asked = wanted(level, pos, state);
-    set(world, layer, pos, state, asked);
-}
-
-/// Changed cells kept while a plugin's batch is open: BDS's `/fill` writes every cell before any
-/// neighbour hears of it (research/captures/bds-ag2lava.txt).
-#[derive(Resource, Default)]
-struct Deferred(Option<Vec<(Entity, BlockPos)>>);
-
-/// Keeps what [`neighbours_changed`] is told until [`run_deferred`]; false where already keeping.
-pub(crate) fn defer_neighbours(world: &mut World) -> bool {
-    let mut deferred = world.get_resource_or_insert_with(Deferred::default);
-    deferred.0.is_none() && deferred.0.replace(Vec::new()).is_none()
-}
-
-/// Stops keeping and runs [`neighbours_changed`] for each cell kept, in order.
-pub(crate) fn run_deferred(world: &mut World) {
-    let kept = world.get_resource_mut::<Deferred>().and_then(|mut deferred| deferred.0.take()).unwrap_or_default();
-    for (layer, pos) in kept {
-        neighbours_changed(world, layer, pos);
-    }
+    set(world, layer, pos, state, asked, false);
 }
 
 /// The block at `pos` changed: each potent sulfur beside it that its surroundings now ask another state
 /// of drops its queued turns and takes it (`neighborChanged`, 0xcf57c30), wet under water set over it.
+/// A `/fill` tells it once every cell is written (updates.rs `settle_or_keep`; research/captures/bds-ag2lava.txt).
 pub(super) fn neighbours_changed(world: &mut World, layer: Entity, pos: BlockPos) {
-    if let Some(kept) = world.get_resource_mut::<Deferred>().and_then(|deferred| deferred.into_inner().0.as_mut()) {
-        kept.push((layer, pos));
-        return;
-    }
     for beside in Face::ALL.map(|face| face.neighbour(pos)) {
         let Some(level) = level(world, layer) else { return };
         let Some(state) = state_at(level, beside) else { continue };
@@ -192,7 +216,7 @@ pub(super) fn neighbours_changed(world: &mut World, layer: Entity, pos: BlockPos
         if state == DORMANT || state == ERUPTING {
             queued::cancel(world, layer, beside, Job::PotentSulfur);
         }
-        set(world, layer, beside, state, asked);
+        set(world, layer, beside, state, asked, false);
     }
 }
 
