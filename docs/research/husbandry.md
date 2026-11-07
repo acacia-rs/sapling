@@ -135,7 +135,12 @@ sapling-h3herds.txt):
   behind; a drowned's `as_rider` makes a zombie nautilus half a block up and rides it (new seat
   layouts in `riding/seats.rs`: camel husk as the camel, the nautilus (0, 0.925, -0.2) for the
   drowned family). Each rider is announced already in its seat, as BDS's were. Riders of a natural
-  mount despawn as it does.
+  mount despawn as it does. A rider a mount's event made gets no first data (only its flags follow its
+  AddEntity), where the mount, and a mount a rider's event made, get one (bds-h3herds.txt, bds-ar2look.txt;
+  `entities::skip_first`).
+- Coats: a cat's `entity_spawned` rolls one of its 11 coats, 15 weight each (`looks.rs`; BDS's summoned
+  cat came 6, bds-ar2look.txt). A wild llama shows 0 slots per strength, a tamed one 3 (bds-ar2look.txt,
+  bds-mountdeath.txt).
 - Riders' equipment: each rider rolls its rider group's `minecraft:equipment` table
   (`riders::GEAR`): the zombie and the husk `zombie_rider_equipment` (an iron spear), the parched
   `skeleton_gear` (a bow), the drowned rider `drowned_rider_equipment` (a trident, no shell;

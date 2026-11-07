@@ -20,11 +20,13 @@ use crate::hidden::Hidden;
 use crate::labels::Labels;
 use crate::view::View;
 
+mod folded;
 pub(crate) mod gone;
 mod linked;
 pub(crate) mod moved;
 mod rehomed;
 
+pub(crate) use folded::unannounced;
 pub(crate) use linked::Linked;
 
 pub(crate) use rehomed::rehome;
@@ -160,7 +162,7 @@ fn item_shown(item: AddItemEntity) -> Vec<Bytes> {
 /// `announce` makes of its id; `None` when that makes nothing.
 pub(crate) fn spawn_shown(world: &mut World, layer: Entity, feet: [f32; 3], announce: impl FnOnce(u64) -> Option<Vec<Bytes>>) -> Option<Entity> {
     let id = world.resource::<Players>().next_net_id;
-    let announcement = announce(id)?;
+    let announcement = folded::fold(announce(id)?);
     world.resource_mut::<Players>().next_net_id += 1;
     let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
     let mob = world.spawn((Mob { announcement, after: Vec::new(), home }, NetId(id), InLayer(layer))).id();
@@ -175,10 +177,15 @@ pub(crate) fn announced(world: &World, mob: Entity) -> Option<Vec<Bytes>> {
     world.get::<Mob>(mob).map(|mob| mob.announcement.clone())
 }
 
+/// [`announced`] as [`update`] tells it, with its links and seat.
+pub(crate) fn announced_linked(world: &World, mob: Entity) -> Option<Vec<Bytes>> {
+    world.get::<Mob>(mob).map(|shown| linked::dressed(&shown.announcement, world.get::<Linked>(mob)))
+}
+
 /// What players who come to see a moving entity later are told of it.
 pub(crate) fn reannounce(world: &mut World, mob: Entity, announcement: Vec<Bytes>) {
     if let Some(mut mob) = world.get_mut::<Mob>(mob) {
-        mob.announcement = announcement;
+        mob.announcement = folded::fold(announcement);
     }
 }
 

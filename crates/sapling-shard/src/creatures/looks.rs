@@ -5,7 +5,7 @@
 //! `become_<name>` sets all four. A summon's event replaces `entity_spawned` (BDS's
 //! `make_black` horse came black with no markings); a herd's is fired after it, so a herd's horses
 //! share a coat and keep their rolled markings (docs/research/husbandry.md "Herds"). A cat's
-//! `spawn_midnight_cat` (the swamp hut's) makes it black.
+//! `spawn_midnight_cat` (the swamp hut's) makes it black; its `entity_spawned` rolls its coat.
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::AddEntity;
@@ -22,6 +22,8 @@ const FISH: &str = "minecraft:tropicalfish";
 const CAT: &str = "minecraft:cat";
 /// The swamp hut's cat (`spawn_midnight_cat`), as BDS showed it (bds-h3keep.txt).
 const BLACK_CAT: i32 = 9;
+/// A cat's `entity_spawned` picks one of 11 coats, each 15 in 165 (BDS showed a summoned cat's 6, bds-ar2look.txt).
+const CAT_COATS: u32 = 11;
 const COATS: [&str; 7] = ["white", "creamy", "chestnut", "brown", "black", "gray", "darkbrown"];
 const MARKINGS: u32 = 5;
 const SHAPES: u32 = 2;
@@ -65,6 +67,7 @@ fn rolled(world: &mut World, kind: &str) -> Option<Look> {
     match kind {
         HORSE => Some(Look([roll(COATS.len() as u32), roll(MARKINGS), 0, 0])),
         FISH => Some(Look([roll(SHAPES), roll(PATTERNS), roll(COLOURS), roll(COLOURS)])),
+        CAT => Some(Look([roll(CAT_COATS), 0, 0, 0])),
         _ => None,
     }
 }

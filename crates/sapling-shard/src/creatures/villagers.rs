@@ -119,7 +119,8 @@ fn shown(id: u64, trader: &Trader) -> SetEntityData {
     SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
-/// `announcement` with the trader's metadata after it, for a mob that is one.
+/// `announcement` with the trader's metadata after it, for a mob that is one (folded into its
+/// `AddEntity` as it is kept, mobs/folded.rs).
 pub(super) fn dressed(world: &World, entity: Entity, mut announcement: Vec<Bytes>) -> Vec<Bytes> {
     if let (Some(trader), Some(id)) = (world.get::<Trader>(entity), world.get::<NetId>(entity)) {
         announcement.push(sapling_net::encode(&shown(id.0, trader)));
@@ -133,9 +134,7 @@ fn tell(world: &mut World, entity: Entity, changed: Vec<MetadataDictionaryItem>)
     let data = SetEntityData { runtime_entity_id: id, metadata: changed, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
     entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&data)]);
     storage::keep(world, entity);
-    // A trader's announcement ends in its metadata (`dressed`): that is told afresh.
-    if let Some(mut shown) = mobs::announced(world, entity) {
-        shown.pop();
+    if let Some(shown) = mobs::announced(world, entity) {
         let shown = dressed(world, entity, shown);
         mobs::reannounce(world, entity, shown);
     }
@@ -171,7 +170,7 @@ pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     if kind == WANDERING_TRADER {
         wandering::arrive(world, layer, &mut trader, feet, kept.is_none());
     }
-    // A new trader's first data holds what it is, or it would undo the metadata told after it.
+    // A new trader's first data holds what it is, or it would undo its announcement.
     let first = world.get::<NetId>(entity).map(|id| shown(id.0, &trader).metadata);
     world.entity_mut(entity).insert(trader);
     if let Some(first) = first {

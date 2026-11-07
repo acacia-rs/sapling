@@ -22,7 +22,7 @@ use crate::{mobs, splash};
 mod first_data;
 mod tell;
 
-pub(crate) use first_data::{first_metadata, show_first};
+pub(crate) use first_data::{first_metadata, show_first, skip_first};
 pub(crate) use tell::{after_announcing, after_announcing_of, on_announcing, send_held_moves, tell_viewers};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.

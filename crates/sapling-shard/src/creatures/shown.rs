@@ -78,10 +78,28 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, prop
     crate::riding::dress_inventory(&mut added, kind, raised.is_some_and(Raised::is_tamed), raised.is_some_and(Raised::is_baby), raised.is_some_and(|raised| raised.ungrouped));
     super::slimes::sizes::dress(&mut added, kind, size);
     super::properties::dress(&mut added, properties);
+    if options.baby {
+        dress_baby_look(&mut added, kind);
+    }
     let mut shown = vec![sapling_net::encode(&added)];
     let held = HOLDS.iter().find(|(of, _)| *of == kind).map(|(_, item)| sapling_data::Stack { name: item, count: 1, damage: 0, block: None, tag: None });
     shown.extend(held.and_then(|stack| sapling_data::mob_hand(id, &stack, false)).map(|held| sapling_net::encode(&held)));
     super::looks::dressed(shown, kind, colour2)
+}
+
+/// A baby's scale and box in its announcement, for every kind: BDS's `AddEntity` carries them, where the
+/// kind's recorded announcement may be a grown one's (a baby villager's 0.5, 0.98 by 1.96, bds-an1grow.txt,
+/// bds-ar2look.txt).
+fn dress_baby_look(added: &mut acacia_proto::packets::AddEntity, kind: &str) {
+    use acacia_proto::types::{MetadataDictionaryItem as Item, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
+    let Some(([width, height], scale)) = sapling_data::mob_look(kind, true) else { return };
+    for (key, value) in [(Key::Scale, scale), (Key::BoundingboxWidth, width), (Key::BoundingboxHeight, height)] {
+        let item = Item { key, r#type: Type::Float, legacy_type: 3, value: Value::Default(Plain::Float(value)) };
+        match added.metadata.iter_mut().find(|old| old.key == key) {
+            Some(old) => *old = item,
+            None => added.metadata.push(item),
+        }
+    }
 }
 
 /// What tells a viewer of the mob now: dressed as stored and raised, its health and facing.

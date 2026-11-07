@@ -48,6 +48,7 @@ pub(super) fn arrive(world: &mut World, entity: Entity, kind: &str, event: &str)
             let up = seat.map_or([0.0; 3], |seat| crate::riding::seat_offset(&seat, rider, yaw));
             let at = [0, 1, 2].map(|axis| feet[axis] + up[axis]);
             if let Some(made) = make(world, rider, at, Some(its_event)) {
+                entities::skip_first(world, made);
                 if let Some((_, table)) = GEAR.iter().find(|(of, _)| of == rider) {
                     super::spawn_gear::equip(world, made, table);
                 }
