@@ -124,7 +124,12 @@ pub(crate) fn can_seat(world: &World, rider: Entity, vehicle: Entity) -> Result<
 
 /// How many more riders `vehicle` takes.
 pub(crate) fn seats_left(world: &World, vehicle: Entity) -> usize {
-    let Some(layout) = kind_of(world, vehicle).and_then(|kind| layout(&kind)) else { return 0 };
+    let Some(kind) = kind_of(world, vehicle) else { return 0 };
+    let Some(layout) = layout(&kind) else { return 0 };
+    // An unharnessed happy ghast has no `rideable`: `/ride` found it not rideable (bds-as3ghast.txt).
+    if kind == harness::KIND && !harness::harnessed(world, vehicle) {
+        return 0;
+    }
     layout.capacity().saturating_sub(world.get::<Seats>(vehicle).map_or(0, |seats| seats.0.len()))
 }
 
@@ -201,6 +206,11 @@ fn unseat_told(world: &mut World, rider: Entity, step_off: bool, immediate: bool
         exit::step_off(world, rider, vehicle);
     }
     true
+}
+
+/// Takes `rider` off where it is, those left not linked again, as when all are let off at once.
+pub(crate) fn let_off(world: &mut World, rider: Entity) -> bool {
+    unseat_told(world, rider, false, false, false)
 }
 
 /// Takes every rider off `vehicle`, each stepping off; how many there were.

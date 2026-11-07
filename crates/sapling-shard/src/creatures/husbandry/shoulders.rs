@@ -62,7 +62,7 @@ pub(super) fn tick(world: &mut World) {
         }
         let now = world.resource::<Tick>().0;
         for parrot in parrots.into_iter().rev() {
-            riding::unseat(world, parrot, false);
+            riding::let_off(world, parrot);
             waits(world, parrot, now);
         }
     }
