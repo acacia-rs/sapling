@@ -61,7 +61,7 @@ pub(in crate::creatures) fn steer(world: &mut World, piglin: Entity, layer: Enti
     let far = |at: [f32; 3]| (0..3).map(|axis| (at[axis] - body.at[axis]).powi(2)).sum::<f32>().sqrt();
     let nearest = lying
         .into_iter()
-        .filter(|(_, stack)| wanted(&stack.name))
+        .filter(|(item, stack)| wanted(&stack.name) && drops::mobs_may_take(world, *item))
         .filter_map(|(item, stack)| world.get::<Body>(item).map(|lies| (item, stack, lies.at)))
         .min_by(|a, b| far(a.2).total_cmp(&far(b.2)));
     let Some((item, taken, at)) = nearest else { return false };

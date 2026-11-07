@@ -23,6 +23,9 @@ use crate::{blocks, entities, inventory, mobs};
 const PICKUP_DELAY: u64 = 40;
 /// Ticks before what a broken block left can be picked up.
 const SPILL_DELAY: u64 = 10;
+/// Ticks before a mob takes a thrown item: its `mPickupDelay` 10 (items.md); BDS's piglin took one
+/// 9 ticks after it was shown (research/captures/bds-ah3nugget.txt).
+const MOBS_WAIT: u64 = 9;
 const LIFETIME: u32 = 6000;
 /// Its box, wide and high; the wire names the middle of it.
 const SIZE: f32 = 0.25;
@@ -54,6 +57,10 @@ pub(crate) struct Dropped {
     /// Ticks it has spent in lava.
     burnt: u8,
 }
+
+/// The tick from which mobs may take a thrown item.
+#[derive(Component)]
+struct MobsWait(u64);
 
 impl Dropped {
     pub(crate) fn stack(&self) -> &ItemStack {
@@ -143,8 +150,15 @@ pub(crate) fn throw(world: &mut World, player: Entity, stack: ItemStack) {
     let motion = [-sin_yaw * cos_pitch * THROW_SPEED + angle.cos() * spread, -sin_pitch * THROW_SPEED, cos_yaw * cos_pitch * THROW_SPEED + angle.sin() * spread];
     let feet = position.feet;
     let at = [feet[0], feet[1] + sapling_data::EYE_HEIGHT - THROW_BELOW_EYE, feet[2]];
-    let from = world.resource::<Tick>().0 + PICKUP_DELAY;
-    lay(world, layer, stack, at, motion, from);
+    let now = world.resource::<Tick>().0;
+    if let Some(item) = lay(world, layer, stack, at, motion, now + PICKUP_DELAY) {
+        world.entity_mut(item).insert(MobsWait(now + MOBS_WAIT));
+    }
+}
+
+/// Whether a mob may take the lying `item` up yet.
+pub(crate) fn mobs_may_take(world: &World, item: Entity) -> bool {
+    world.get::<MobsWait>(item).is_none_or(|wait| world.resource::<Tick>().0 >= wait.0)
 }
 
 /// Tosses `stack` up from `centre` (the middle of its box, where the wire puts it), as BDS's

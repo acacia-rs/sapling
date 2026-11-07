@@ -15,7 +15,7 @@ use bevy_ecs::prelude::*;
 
 use super::genes::Gene;
 use crate::body::{Body, Physics};
-use crate::components::{InLayer, Position, Tick, in_world};
+use crate::components::{InLayer, NetId, Position, Tick, in_world};
 use crate::sync::Told;
 use crate::{entities, late_sounds, vitals};
 
@@ -71,7 +71,8 @@ impl Hops {
 /// A new slime's or magma cube's hopping, if `kind` is one.
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if sizes::KINDS.contains(&kind) {
-        world.entity_mut(entity).insert(Hops { wait: CALM[0][0], yaw: 0.0, turn_in: 0, state: entity.to_bits() | 1, prey: None, touchable: 0, hopping: false });
+        let state = NetId::seed(world, entity, 0) | 1;
+        world.entity_mut(entity).insert(Hops { wait: CALM[0][0], yaw: 0.0, turn_in: 0, state, prey: None, touchable: 0, hopping: false });
     }
 }
 

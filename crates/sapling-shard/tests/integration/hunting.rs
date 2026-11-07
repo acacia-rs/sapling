@@ -84,6 +84,27 @@ fn a_zombie_turns_to_a_survival_player_walks_up_and_hits_it_once_a_second() {
     assert_eq!((targets(&sent), health(&sent)), (vec![0], vec![]), "nobody hunts a player in creative");
 }
 
+/// bds-ah3stop2.txt: a husk walks at full pace (0.114 a tick) until a block off its still prey, then
+/// eases in: each step the last one's drag-kept 0.546 plus the full push (0.0518) times its speed's
+/// share squared, the share the squared distance off, at least half (BDS's 0.0967, 0.0746, 0.0556
+/// from 0.90 off), and stands 0.56 off, unpushed by its prey.
+#[test]
+fn a_hunter_eases_in_over_its_last_block_to_its_prey() {
+    let (mut h, husk) = hunted_by("minecraft:husk", Difficulty::Easy);
+    let mut zs = Vec::new();
+    for _ in 0..80 {
+        let sent = h.tick_all().to(2).to_vec();
+        zs.extend(all::<MoveEntityDelta>(&sent).iter().filter(|moved| moved.runtime_entity_id == husk).filter_map(|moved| moved.z));
+    }
+    let steps: Vec<f32> = zs.windows(2).map(|pair| pair[0] - pair[1]).collect();
+    let full = steps.iter().position(|step| *step > 0.11).expect("full pace");
+    let eased = full + steps[full..].iter().position(|step| *step < 0.11).expect("an ease");
+    let model = |i: usize| steps[i - 1] * 0.546 + 0.0518 * ((zs[i] - 0.5).powi(2)).max(0.5).powi(2);
+    assert!((eased..eased + 4).all(|i| (steps[i] - model(i)).abs() < 0.002), "{:?} from {:?}", &steps[eased..eased + 4], &zs[eased.saturating_sub(2)..]);
+    let rest = zs.iter().copied().fold(f32::MAX, f32::min) - 0.5;
+    assert!((0.5..0.58).contains(&rest), "stood {rest} off: {zs:?}");
+}
+
 #[test]
 fn a_zombies_last_hit_names_it_and_a_peaceful_world_is_not_hunted() {
     let (mut h, _) = hunted(Difficulty::Normal);

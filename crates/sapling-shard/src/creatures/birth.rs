@@ -40,7 +40,11 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
 #[allow(clippy::too_many_arguments)]
 fn spawn_with(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>, foal: bool) -> Option<EntityId> {
     let look = looks::of(world, kind, event);
-    let gene = event.and_then(|event| genes::of_event(kind, event)).or_else(|| look.map(looks::Look::gene)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet));
+    let gene = if slimes::sizes::keeps_base(kind, event) {
+        None
+    } else {
+        event.and_then(|event| genes::of_event(kind, event)).or_else(|| look.map(looks::Look::gene)).or_else(|| genes::roll(world, kind)).or_else(|| husbandry::frog_variant(world, layer, kind, feet))
+    };
     // BDS played no `spawn` at any of 112 summons naming an event (research/captures/bds-*.txt), nor
     // for a struck pig's or a piglin's turning (bds-n3struck.txt, bds-t2barter.txt) or a shrieker's
     // emerging warden (bds-t2warden.txt).
@@ -140,7 +144,7 @@ fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: 
     let properties = super::properties::rolled(world, layer, kind, feet, reason == SpawnReason::Bred);
     let rolled = strides::roll(world, kind);
     let strength = crate::riding::roll_strength(world, kind);
-    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, Some(&properties), rolled.as_ref(), strength), None, [yaw, 0.0], gene.map_or(0, |gene| gene.0))))?;
+    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, Some(&properties), rolled.as_ref(), strength), None, [yaw, 0.0], (genes::variant(kind, gene), gene))))?;
     world.entity_mut(entity).insert((Creature { look: None }, properties));
     if let Some(rolled) = rolled {
         world.entity_mut(entity).insert(strides::Strode(rolled));
@@ -188,7 +192,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let body = Body::new(actor.position, [0.0; 3], slimes::sizes::body_size(&kind, gene).unwrap_or(size));
     let (kept, compound) = strides::stored(world, &kind, compound);
     let strength = crate::riding::kept_strength(&compound);
-    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, None, kept.as_ref(), strength), None, [0.0; 2], actor.variant))) else { return false };
+    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, None, kept.as_ref(), strength), None, [0.0; 2], (actor.variant, gene)))) else { return false };
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }

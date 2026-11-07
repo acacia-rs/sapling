@@ -5,6 +5,11 @@
 //! (BDS only) and `extra` (ours only); the first `other`, `missing` and `extra` are printed.
 //! `<world>` is a folder under `$SAPLING_ORACLE_WORLDS` (e.g. 20261003-structures). `SEEDS=<text>`
 //! prints both seeds of each `seed` entity whose kind contains the text (`SEEDS=loot` for all).
+//! A replayed run's env (tools/replay-env.sh) runs the generator in that run's order.
+#![allow(dead_code)]
+
+#[path = "../tests/oracle_support/mod.rs"]
+mod oracle_support;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -75,7 +80,8 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let [seed, world, rest @ ..] = &args[..] else { panic!("usage: block_entity_diff <seed> <world> [max chunks]") };
     let max: usize = rest.first().map_or(usize::MAX, |n| n.parse().unwrap());
-    let generator = OverworldGenerator::new(seed.parse().unwrap());
+    let mut generator = OverworldGenerator::new(seed.parse().unwrap());
+    oracle_support::replay(&mut generator);
     let root = std::env::var_os("SAPLING_ORACLE_WORLDS").map(PathBuf::from).expect("SAPLING_ORACLE_WORLDS");
     let primary = LevelDbWorld::open_in_memory(&root.join(world)).expect("the world");
     let mut tally: BTreeMap<(String, &str), u32> = BTreeMap::new();

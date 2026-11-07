@@ -95,12 +95,16 @@ pub(super) fn equip(world: &mut World, mob: Entity, table: &str) {
 /// (and the killer's Looting) only when a player slew it (`slain`, the Looting) or the chance is
 /// whole; Curse of Vanishing never drops; a piece dropped by chance is worn by
 /// `nextInt(nextInt(max(lasts, 4) - 3) + 1)` short of its full wear.
-pub(super) fn let_go(world: &mut World, mob: Entity, kind: &str, slain: Option<u8>) -> Vec<ItemStack> {
+/// Also whether its main hand's item went.
+pub(super) fn let_go(world: &mut World, mob: Entity, kind: &str, slain: Option<u8>) -> (Vec<ItemStack>, bool) {
     let gear = super::command_gear::gear_of(world, mob);
     let mut dice = world.get_resource_or_insert_with(Dice::default);
-    let mut dropped = Vec::new();
+    let (mut dropped, mut main_went) = (Vec::new(), false);
     for (slot, item) in gear {
-        let Some(mut item) = item.filter(|item| crate::enchants::level_of(item, Enchant::Vanishing) == 0) else { continue };
+        let Some(mut item) = item.filter(|item| crate::enchants::level_of(item, Enchant::Vanishing) == 0) else {
+            main_went |= slot == MobSlot::MainHand;
+            continue;
+        };
         let own = MAIN_HAND_DROPS.iter().find(|(of, _)| slot == MobSlot::MainHand && *of == kind).map(|(_, chance)| *chance);
         let mut chance = own.unwrap_or(DROPS);
         if chance == 0.0 {
@@ -115,7 +119,8 @@ pub(super) fn let_go(world: &mut World, mob: Entity, kind: &str, slain: Option<u
             let spread = dice.roll(lasts.max(4) as u32 - 3) + 1;
             inventory::set_damage(&mut item.tag, lasts - dice.roll(spread) as i32);
         }
+        main_went |= slot == MobSlot::MainHand;
         dropped.push(item);
     }
-    dropped
+    (dropped, main_went)
 }
