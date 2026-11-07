@@ -24,12 +24,15 @@ fn column_of([x, _, z]: BlockPos) -> ChunkPos {
 /// [`write_back`] on the ticks columns are saved.
 pub(crate) fn write_back_before_saving(world: &mut World) {
     if world.resource::<Tick>().0 % UNLOAD_INTERVAL == 0 {
-        write_back(world);
+        write_back(world, false);
     }
 }
 
-/// Writes what waits into every loaded column (see the module).
-pub(crate) fn write_back(world: &mut World) {
+/// Writes what waits into every loaded column (see the module). `between_ticks`: the shard's tick counter has
+/// moved on but the levels have not aged yet (shard.rs `tick` counts after the handlers), so a level's age is
+/// that of the tick before.
+pub(crate) fn write_back(world: &mut World, between_ticks: bool) {
+    let now = world.resource::<Tick>().0 - u64::from(between_ticks);
     let mut waiting = queued::waiting(world);
     waiting.extend(falling::waiting(world));
     waiting.extend(fire::waiting(world));
@@ -42,7 +45,7 @@ pub(crate) fn write_back(world: &mut World) {
     for layer in layers {
         let Some(level) = level(world, layer) else { continue };
         let age = level.level().age;
-        let on_level_clock = |due: u64| crate::clock::age_at(world, age, due);
+        let on_level_clock = |due: u64| age + (due as i64 - now as i64);
         let records: Vec<(ChunkPos, Vec<u8>)> = level
             .loaded_positions()
             .into_iter()
@@ -83,8 +86,7 @@ pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
         }
     };
     // A record dated past the level's clock (a world whose level.dat is older) counts from its own date.
-    let now = world.resource::<Tick>().0;
-    let since = level(world, layer).map_or(saved_at, |level| crate::clock::age_at(world, level.level().age, now).max(saved_at));
+    let since = level(world, layer).map_or(saved_at, |level| level.level().age.max(saved_at));
     for PendingTick { name, properties, pos, time } in ticks {
         let delay = (time - since).max(1) as u64;
         if let Some(kind) = liquid::Liquid::of(&name) {

@@ -203,7 +203,7 @@ impl Shard {
 
     /// Saves what every world still has unsaved and waits for storage.
     pub fn save_worlds(&mut self) {
-        crate::saving::write_back_all(&mut self.world);
+        crate::saving::write_back_all(&mut self.world, true);
         let mut layers = self.world.query::<&mut Layer>();
         for mut layer in layers.iter_mut(&mut self.world) {
             let failed = layer.world.save_and_wait();

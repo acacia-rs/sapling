@@ -20,11 +20,12 @@ const NOT_COPIED: [&str; 3] = ["LOCK", "LOG", "LOG.old"];
 struct Hold(SaveState);
 
 /// Hands every world what the shard keeps outside their columns: players' items, actors, block
-/// ticks, the scoreboard, maps, and the level's difficulty and tick distance.
-pub(crate) fn write_back_all(world: &mut World) {
+/// ticks, the scoreboard, maps, and the level's difficulty and tick distance. `between_ticks` as for
+/// [`blocks::write_back_ticks`].
+pub(crate) fn write_back_all(world: &mut World, between_ticks: bool) {
     inventory::save_all(world);
     actors::write_back(world);
-    blocks::write_back_ticks(world);
+    blocks::write_back_ticks(world, between_ticks);
     scoreboard::keep_all(world);
     crate::maps::keep_all(world);
     crate::spawning::keep_mob_events(world);
@@ -41,7 +42,7 @@ pub(crate) fn hold(world: &mut World) -> bool {
     if matches!(state(world), SaveState::Saving | SaveState::Ready(_)) {
         return false;
     }
-    write_back_all(world);
+    write_back_all(world, false);
     world.query::<&mut Layer>().iter_mut(world).for_each(|mut layer| layer.world.hold_saves());
     set(world, SaveState::Saving);
     true

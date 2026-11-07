@@ -128,8 +128,11 @@ in the liquid layer of a block with an empty collision box.
   `a_generated_spring_s_potent_sulfur_dries_under_its_ice_when_its_tick_runs`, `..._ticks_are_kept_on_save`).
 - Kept ticks across a save (parity/thirteenth2ag): a save between ticks (`save_worlds`, a hold, the shard's close)
   came after the tick counter moved on but before the level aged again, so every kept tick was written one tick
-  early. `clock::age_at` maps a shard tick to the level's clock from the tick the level last aged (test
-  `water_a_kept_tick_keeps_its_time_across_a_load_and_a_save`; AF's spring test now holds exactly).
+  early. `pending::write_back(world, between_ticks)` dates them from the tick before when the save runs between
+  ticks (`save_worlds`, the close); `/save hold` and the unload save run inside a tick, after the level aged (test
+  `water_a_kept_tick_keeps_its_time_across_a_load_and_a_save`; AF's spring test now holds exactly). A resource
+  `clock::advance` inserted every tick to record this changed a witch's first drink (daylight.rs witch on magma,
+  healing before fire resistance) for no found reason, so the callers say it instead.
 - In play (parity/thirteenth2ag; drills `ag2geyser`, `ag2boost`, `ag2reset`, `ag2far`, `ag2lava`, research/captures/
   bds-ag2*.txt and sapling-ag2*.txt):
   - Place (`BlockPlaceEvent`, 0xcf57850): a potent sulfur written over another block takes `compute` at once and is
