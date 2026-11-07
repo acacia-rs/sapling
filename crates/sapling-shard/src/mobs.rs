@@ -20,6 +20,7 @@ use crate::hidden::Hidden;
 use crate::labels::Labels;
 use crate::view::View;
 
+pub(crate) mod at_once;
 pub(crate) mod gone;
 mod linked;
 pub(crate) mod moved;

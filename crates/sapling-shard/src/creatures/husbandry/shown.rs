@@ -32,6 +32,13 @@ fn tell_metadata(world: &mut World, entity: Entity, packet: Bytes) {
     }
 }
 
+/// Tells the mob's viewers `metadata` alone.
+pub(super) fn metadata(world: &mut World, entity: Entity, metadata: Vec<MetadataDictionaryItem>) {
+    let Some(id) = world.get::<NetId>(entity).map(|id| id.0) else { return };
+    let packet = acacia_proto::packets::SetEntityData { runtime_entity_id: id, metadata, properties: acacia_proto::types::EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
+    tell_metadata(world, entity, sapling_net::encode(&packet));
+}
+
 /// The whole word of the mob's flags with `flag` set or cleared.
 pub(super) fn flags_with(world: &mut World, entity: Entity, flag: Flags, on: bool) -> Flags {
     let kind = world.get::<Kind>(entity).map(|kind| kind.0.clone()).unwrap_or_default();

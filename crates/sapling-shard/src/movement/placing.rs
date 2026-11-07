@@ -48,6 +48,16 @@ pub(crate) fn push(world: &mut World, entity: Entity, feet: [f32; 3]) {
     correct(world, entity, feet);
 }
 
+/// [`push`] into lava: off the ground, sinking at lava's pull, as BDS corrected a rider let off
+/// into lava (research/captures/bds-aq3exit.txt).
+pub(crate) fn push_into_lava(world: &mut World, entity: Entity, feet: [f32; 3]) {
+    let tick = world.resource::<Tick>().0;
+    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
+        motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
+    }
+    correction_on(world, entity, feet, -0.02, false);
+}
+
 /// Puts a player's feet at `feet` by correcting its prediction, as BDS does once a client is
 /// through a dimension change, and takes its next input whatever it says (dimensions.rs).
 pub(crate) fn correct(world: &mut World, entity: Entity, feet: [f32; 3]) {
@@ -61,11 +71,15 @@ pub(crate) fn correct_unmoving(world: &mut World, entity: Entity, feet: [f32; 3]
 }
 
 fn correction(world: &mut World, entity: Entity, feet: [f32; 3], fall: f32) {
+    correction_on(world, entity, feet, fall, true);
+}
+
+fn correction_on(world: &mut World, entity: Entity, feet: [f32; 3], fall: f32, on_ground: bool) {
     if let Some(mut simulated) = world.get_mut::<Simulated>(entity) {
-        simulated.adopt(feet, [0.0, fall, 0.0], true);
+        simulated.adopt(feet, [0.0, fall, 0.0], on_ground);
     }
     let Ok((mut position, motion, mut out)) = world.query::<(&mut Position, &Motion, &mut Outgoing)>().get_mut(world, entity) else { return };
-    (position.feet, position.on_ground) = (feet, true);
+    (position.feet, position.on_ground) = (feet, on_ground);
     out.push(&prediction(&position, [0.0, fall, 0.0], motion.input_tick));
 }
 

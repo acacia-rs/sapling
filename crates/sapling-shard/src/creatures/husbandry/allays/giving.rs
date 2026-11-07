@@ -15,9 +15,9 @@ use sapling_world::ItemStack;
 use super::{ALLAY, Errands, errands, shown};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{InLayer, Position, Tick};
+use crate::components::{InLayer, Layer, Position, Tick};
 use crate::creatures::wings;
-use crate::drops;
+use crate::{drops, mobs};
 use crate::entities::Kind;
 
 const HEARS: f32 = 16.0;
@@ -26,14 +26,16 @@ const SPEED: f32 = 8.0;
 const THROWS: f32 = 3.0;
 const RESTS: u64 = 60;
 const STAY_FROM: f32 = 16.0;
+const FOLLOW_FROM: f32 = 16.0;
+const FOLLOW_UNTIL: f32 = 4.0;
 const STAY_UNTIL: f32 = 4.0;
 /// The thrown item's box's middle over its feet, as BDS's was shown (bds-ap3give.txt).
 const THROWN_FROM: f32 = 0.6654;
 /// The throw's speed across and up along its line.
 const THROW_SPEED: [f32; 2] = [0.2, 0.3];
-/// BDS plays `item_thrown` when an unidentified value is a multiple of this, nine times in ten; sapling
-/// takes its tick for the value (husbandry.md "Allays collecting and giving back").
-const SOUND_EVERY: u64 = 7;
+/// BDS plays `item_thrown` when the level's `currentTick` is a multiple of this, nine times in ten
+/// (husbandry.md "Allays collecting and giving back").
+const SOUND_EVERY: i64 = 7;
 const SOUND_CHANCE: f32 = 0.9;
 
 fn centre(cell: BlockPos) -> [f32; 3] {
@@ -77,7 +79,20 @@ pub(super) fn steer(world: &mut World, allay: Entity, layer: Entity, body: &Body
         far > STAY_UNTIL && (staying || far > STAY_FROM)
     });
     super::errands(world, allay).staying = stays.is_some();
-    stays.is_some_and(|to| wings::fly_at_times(world, allay, ALLAY, to, SPEED))
+    if let Some(to) = stays {
+        return wings::fly_at_times(world, allay, ALLAY, to, SPEED);
+    }
+    follow(world, allay, body, owner)
+}
+
+/// `follow_owner`: from over [`FOLLOW_FROM`] off its owner's eyes it flies at them until within
+/// [`FOLLOW_UNTIL`], as BDS's crossed 30 blocks at about 0.56 a tick (research/captures/bds-aq3allay.txt).
+fn follow(world: &mut World, allay: Entity, body: &Body, owner: Option<[f32; 3]>) -> bool {
+    let Some(to) = owner else { return false };
+    let far = super::super::distance(body.at, to);
+    let mut errands = super::errands(world, allay);
+    errands.following = far > FOLLOW_UNTIL && (errands.following || far > FOLLOW_FROM);
+    errands.following && wings::fly_at_times(world, allay, ALLAY, to, SPEED)
 }
 
 /// Throws one of what it carries at `to` a block up, and rests.
@@ -88,13 +103,19 @@ fn throw(world: &mut World, allay: Entity, layer: Entity, body: &Body, to: [f32;
         errands.carried = Some(ItemStack { count: carried.count - 1, ..carried.clone() });
     }
     errands.rests_until = now + RESTS;
+    super::keep_carried(world, allay);
     let aim = [to[0] - body.at[0], to[1] + 1.0 - body.at[1], to[2] - body.at[2]];
     let long = aim.iter().map(|c| c * c).sum::<f32>().sqrt();
     let [across, up] = THROW_SPEED;
     let motion = if long < 1e-4 { [0.0; 3] } else { [aim[0] / long * across, aim[1] / long * up, aim[2] / long * across] };
     let from = [body.at[0], body.at[1] + THROWN_FROM, body.at[2]];
-    drops::hand_over(world, layer, ItemStack { count: 1, ..carried }, from, motion);
-    if now.is_multiple_of(SOUND_EVERY) && world.get_resource_or_insert_with(Dice::default).fraction() < SOUND_CHANCE {
+    // BDS showed the item, then the sound, then the item's metadata (bds-ap3note.txt).
+    let begun = drops::hand_over(world, layer, ItemStack { count: 1, ..carried }, from, motion).and_then(|item| mobs::at_once::show_first(world, item));
+    let age = world.get::<Layer>(layer).map_or(0, |level| level.world.level().age);
+    if age % SOUND_EVERY == 0 && world.get_resource_or_insert_with(Dice::default).fraction() < SOUND_CHANCE {
         shown::sound(world, allay, "item_thrown");
+    }
+    if let Some(begun) = begun {
+        mobs::at_once::finish(world, begun);
     }
 }

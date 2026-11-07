@@ -53,6 +53,7 @@ pub(super) fn adopt(world: &mut World, entity: Entity, kind: &str, stored: Optio
     world.entity_mut(entity).insert(raised);
     if let Some((_, compound)) = stored {
         nesting::adopt(world, entity, kind, compound);
+        allays::adopt(world, entity, kind, compound);
     }
     if baby {
         ageing::fit_body(world, entity, kind);
@@ -89,6 +90,7 @@ pub(crate) fn tick(world: &mut World) {
         sniffing::tick(world, entity, &kind, now);
         nesting::tick(world, entity, &kind, now);
         leads::hold(world, entity, now);
+        allays::check_ambient(world, entity, &kind);
     }
     knots::tick(world);
     allays::tick(world);

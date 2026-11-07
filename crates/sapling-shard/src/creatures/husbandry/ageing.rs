@@ -53,13 +53,15 @@ fn grow_up(world: &mut World, entity: Entity, kind: &str) {
     if super::tadpoles::grow_up(world, entity, kind) {
         return;
     }
-    // TODO: BDS showed the scute before the grown scale; a new item is announced at the tick's end here.
-    super::products::shed(world, entity, kind);
+    let shed = super::products::shed(world, entity, kind);
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {
         raised.kept.baby = None;
     }
     fit_body(world, entity, kind);
     shown::age(world, entity);
+    for begun in shed {
+        crate::mobs::at_once::finish(world, begun);
+    }
     if let Some(swap) = sapling_data::husbandry(kind).map(|raised| &raised.on_grow) {
         regroup(world, entity, swap);
     }

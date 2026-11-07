@@ -65,4 +65,5 @@ pub(in crate::creatures) fn take_up(world: &mut World, allay: Entity, layer: Ent
     let mut errands = super::errands(world, allay);
     let had = errands.carried.as_ref().map_or(0, |carried| carried.count);
     errands.carried = Some(ItemStack { count: had + taken, ..stack });
+    super::keep_carried(world, allay);
 }

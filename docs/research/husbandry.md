@@ -164,15 +164,20 @@ targets). Bees and axolotls in buckets are ported (creatures/bees.rs, creatures/
 
 Turtle scutes (bds-ak1scute.txt, ported): a baby turtle grown up (at its tenth seagrass there) drops its
 `minecraft:ageable` `drop_items` (`turtle_shell_piece`, named `turtle_scute` now), one, from its feet +
-0.125 tossed 0.2 up, before the grown scale's SetEntityData in that tick (husbandry.tsv `sheds`,
-husbandry/products.rs `shed`; sapling's AddItemEntity comes after the scale, new entities being
-announced at the tick's end).
+0.125 tossed 0.2 up, before the grown scale's SetEntityData in that tick, the scute's own data after it
+(husbandry.tsv `sheds`, husbandry/products.rs `shed`). Sapling announces new entities at the tick's end,
+so the shed item is shown at once to viewers within range (mobs/at_once.rs), as an allay's throw is.
 
 Allays handed items (bds-ak1allay.txt, ported in husbandry/allays.rs): a click with anything but a lead,
 not sneaking, on an allay with an empty hand gives it one of the stack (MobEquipment, the hand keeps the
 rest, same tick); the next tick `item_given` and its flags with `ACTION` and `OwnerEid`. A click with
-something on one that holds something does nothing; `ambient.tame` came about 1.2 s later and it
-dropped its item when killed (not ported).
+something on one that holds something does nothing; it dropped its item when killed (not ported).
+`ambient.tame` (bds-aq3allay.txt, ported `allays::check_ambient`): BDS's `AmbientSoundServerSystem`
+re-reads an allay's `ambient` event names when its counter passes its period, then restarts it; read
+under gdb (bds-aq3exit, Linux ELF 0x6d05e1f) the allay's period was 50, so it checks 50 ticks after it
+appears and every 51 after. Holding something it sounds `ambient.tame`, else `ambient`, told as a
+SetEntityData with that name alone; in all five drills it switched 152 ticks after appearing. The
+period comes from a random draw at init (Windows 0x145e927d0); every allay drilled drew 50 (pigs 60).
 
 Allays collecting and giving back (thirteenth3ap 2026-11-07, bds-ap3give.txt and bds-ap3note.txt; ported
 in husbandry/allays/collecting.rs and giving.rs, tests integration/thirteenth3ap.rs). The pack's
@@ -187,8 +192,9 @@ hand), give to a note block 3, give to its owner 4 (both run speed 8), stay near
   across and 0.3 up (decompiled 0x5745670). The player took it 6 to 9 ticks later. After each throw it
   took nothing up for 3 s (`pickup_item_delay`).
 - `item_thrown` came on some throws only (5 of 14 in the last note run, 1 of 9 in the first): the throw
-  plays it when a 64-bit value it reads is a multiple of 7 and then a roll is under 0.9 (0x5745670);
-  the value was not identified. Sapling takes its tick for it, so its sounds fall on other throws.
+  plays it when the level's `currentTick` (Level vtable 0x280) is a multiple of 7 and then a roll is
+  under 0.9 (0x5745670); the sounded throws in bds-aq3allay.txt fall 98, 231 and 350 ticks apart.
+  Sapling reads its level's age for it, and shows the item, then the sound, then the item's data.
 - A note block played within 16 (its vibration listener) drew the dirt instead of the owner, thrown at
   the block's centre a block up from within 3; 3 to 3.7 s on it took the same dirt up again and threw
   it back, over and over, until about 30 s after the note (the goal's `+0x54` seconds, 0x5743700; the
@@ -199,8 +205,12 @@ hand), give to a note block 3, give to its owner 4 (both run speed 8), stay near
   over the floor). Its random hover ignores slowness, so the drills put it back before handing it dirt.
   The last runs (research/captures/bds-ap3give.txt, bds-ap3note.txt, sapling-ap3give.txt,
   sapling-ap3note.txt) match in order: take, throw, retake 3.3 to 3.5 s on, give to the owner after the note.
-- Not ported: its `follow_owner` (it hovers about where it was), `ambient.tame`, what it carries
-  kept with the world.
+- Following its owner (thirteenth3aq, bds-aq3allay.txt): left 30 blocks off, BDS's flew at the owner
+  at about 0.56 a tick and hovered once about 3 to 4 off; sapling's `follow` flies at the owner's eyes
+  from over 16 off until within 4 (giving.rs).
+- What it carries is kept with the world (bds-aq3allay.txt's world): `ChestItems` slot 0 (`Count`,
+  `Name`, `WasPickedUp 1`); sapling writes it on each take and throw and reads it back on load
+  (allays.rs `keep_carried`, `adopt`). Its owner is not kept (allays.rs TODO).
 
 ## Parrots on shoulders (`parrots`, not built)
 

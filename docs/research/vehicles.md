@@ -272,3 +272,13 @@ were not found in any of these; sapling does what is listed there.
   longer sends it south; re-drilled (sapling-ak1exit.txt) every spot matches but two (exit.rs TODO):
   by lava sapling's rider is on the floor, BDS's 0.23 up, and with stone north and a campfire south
   sapling steps it onto the campfire.
+  Settled 2026-11-07 (group AQ, `aq3exit` under gdb on ExitVehicleSystemImpl, research/captures/
+  bds-aq3exit.txt): BDS's exit search put the rider on the floor of the lava cell like any other
+  (final eye -24.379 for lava north, lava south past stone, and nothing about), but its correction then
+  kept the height the client was seated at (eye -24.14999), with lava's -0.02 fall and off the ground;
+  where nothing was about it sent none. Sapling now corrects a rider let off into lava so
+  (exit.rs, movement `push_into_lava`). The campfire case was the drill's pig: it strolled south
+  before slowness took hold and the campfire set into it pushed it on, so BDS let the rider off north
+  onto the campfire by the same rule sapling uses. Off a happy ghast (`on_top_center`) BDS put the
+  rider at its centre, feet 4 (its box) + 0.001 over its feet (bds-n3exit.txt); sapling seats no one on
+  a happy ghast (no seat layout; `/ride` refuses it), so that stays open (exit.rs TODO).

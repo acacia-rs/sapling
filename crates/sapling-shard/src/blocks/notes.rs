@@ -67,12 +67,10 @@ fn play(world: &mut World, layer: Entity, pos: BlockPos, note: u8) {
     }
     let instrument = head.unwrap_or_else(|| registry.get(level.block(x, y - 1, z)).map_or(0, |under| instrument(under.name, under.is_solid())));
     let pitch = if head.is_some() { HEAD_NOTE } else { i32::from(note) };
-    // The sound comes from the cell's corner, as BDS sent it; the event's type is the instrument, its data the note under a head too (bds-p2more.txt).
-    let told = [
-        sapling_net::encode(&BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::from_raw(instrument.into()), data: i32::from(note) }),
-        send::noise("note", Vec3f { x: x as f32, y: y as f32, z: z as f32 }, instrument << 8 | pitch),
-    ];
-    send::to_viewers(world, layer, pos, &told);
+    // The sound comes from the cell's corner a tick after the event, as BDS sent it, clicked or powered; the event's type is the instrument, its data the note under a head too (bds-p2more.txt, bds-ap3note.txt).
+    let event = BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::from_raw(instrument.into()), data: i32::from(note) };
+    send::to_viewers(world, layer, pos, &[sapling_net::encode(&event)]);
+    crate::late_sounds::play_later(world, 1, layer, pos, send::noise("note", Vec3f { x: x as f32, y: y as f32, z: z as f32 }, instrument << 8 | pitch));
     super::vibrate_at(world, layer, pos, super::GameEvent::NotePlay, false);
 }
 

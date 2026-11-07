@@ -1,8 +1,8 @@
 //! Where a rider steps off to, as BDS puts a passenger leaving a vehicle with the default
 //! `dismount_mode` (matched live for a pig and a boat: acacia's docs/research/riding-fishing-elytra.md):
 //! the first free spot of 24 around the vehicle's cell, by the way it moves, at the seat's x and z.
-// TODO: BDS put a rider let off into lava 0.23 up and sent none south onto a campfire with stone
-// north (docs/research/vehicles.md "Exit spots"); `on_top_center` is not modelled.
+// TODO: `on_top_center` (a happy ghast's) is not modelled: sapling seats no one on a happy ghast
+// (docs/research/vehicles.md "Exit spots").
 
 use acacia_physics::{Aabb, WorldView};
 use bevy_ecs::prelude::*;
@@ -82,7 +82,14 @@ pub(super) fn step_off(world: &mut World, rider: Entity, vehicle: Entity) {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let seated = [wire[0] + seat[0], wire[1], wire[2] + seat[2]];
     let Some(feet) = physics_view(level, |view| exit_feet(view, wire, seated, [motion[0], motion[2]], size)) else { return };
-    if world.get::<Position>(rider).is_some() {
+    let into_lava = crate::body::liquid_in(level, feet.map(|c| c.floor() as i32), crate::body::Liquid::Lava).is_some();
+    if let Some(seated_y) = world.get::<Position>(rider).map(|position| position.feet[1]) {
+        // BDS's correction into lava kept the height the client was seated at (bds-aq3exit.txt).
+        if into_lava {
+            let feet = [feet[0], seated_y, feet[2]];
+            crate::movement::push_into_lava(world, rider, feet);
+            return;
+        }
         crate::movement::push(world, rider, feet);
     } else if let Some(mut body) = world.get_mut::<Body>(rider) {
         body.at = feet;
