@@ -12,7 +12,7 @@ use sapling_world::World as Level;
 
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{Layer, Tick};
+use crate::components::{Layer, NetId, Tick};
 use crate::sync::Told;
 
 /// Half its `random_teleport_cube`.
@@ -56,7 +56,7 @@ impl Blinks {
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if sapling_data::mob_traits(kind).teleports {
         let now = world.resource::<Tick>().0;
-        let draws = entity.to_bits() ^ 0x2545_F491_4F6C_DD1D;
+        let draws = NetId::seed(world, entity, 0x2545_F491_4F6C_DD1D);
         world.entity_mut(entity).insert(Blinks { due: Some(now), far_since: None, draws });
     }
 }

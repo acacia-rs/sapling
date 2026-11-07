@@ -3,9 +3,10 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, AddItemEntity, LevelSoundEvent, MobEquipment, TakeItemEntity};
-use acacia_proto::types::{MetadataFlags1, WindowID};
+use acacia_proto::packets::{AddEntity, AddItemEntity, InventoryContent, LevelSoundEvent, MobEquipment, TakeItemEntity};
+use acacia_proto::types::{ContainerSlotType as Container, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentDrop as Throw, MetadataFlags1, WindowID};
 use common::raising::{click_on, has_flag};
+use common::requests::{request, slot};
 use common::stored::{enter_stored, floor_with};
 use common::{Harness, all, config};
 use sapling_api::{GameMode, Item, PlayerId, Slot};
@@ -150,6 +151,34 @@ fn a_piglin_holding_a_sword_keeps_nuggets_unseen_and_drops_them_at_death() {
     let nuggets: Vec<u16> =
         all::<AddItemEntity>(&left).into_iter().filter(|item| sapling_data::item_name(item.item.network_id.into()) == Some("minecraft:gold_nugget")).map(|item| item.item.count).collect();
     assert_eq!(nuggets, [3]);
+    // Its sword, not dropped by a death no player dealt, is shown again in its main hand.
+    let hands: Vec<(u8, Option<&str>)> = all::<MobEquipment>(&left).iter().filter(|held| held.runtime_entity_id == piglin).map(|held| (held.slot, sapling_data::item_name(held.item.network_id.into()))).collect();
+    assert_eq!(hands, [(0, Some("minecraft:golden_sword")), (1, None)]);
+}
+
+/// bds-ah3nugget.txt: nuggets the actor threw lay 9 ticks before the piglin took them.
+#[test]
+fn a_piglin_takes_thrown_nuggets_9_ticks_after_they_are_shown() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Creative);
+        assert!(ctx.spawn_entity("minecraft:piglin", [0.5, 65.0, 3.5]).is_some());
+        _ = ctx.give(ALEX, &Item::new("minecraft:gold_nugget", 4));
+    });
+    let sent: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let window = all::<InventoryContent>(&sent).into_iter().filter(|window| window.input.len() == 36).last().expect("the inventory").input;
+    let at = window.iter().position(|item| sapling_data::item_name(item.network_id.into()) == Some("minecraft:gold_nugget")).expect("the nuggets");
+    let source = slot(Container::Hotbar, at as u8, window[at].stack_id.expect("a stack id"));
+    h.receive(1, &request(-3, vec![Action::Drop(Throw { count: 4, source, randomly: false })]));
+    let (mut shown, mut taken) = (None, None);
+    for tick in 0..40 {
+        let sent = h.tick_all().to(1).to_vec();
+        shown = shown.or((!all::<AddItemEntity>(&sent).is_empty()).then_some(tick));
+        taken = taken.or((!all::<TakeItemEntity>(&sent).is_empty()).then_some(tick));
+    }
+    let (Some(shown), Some(taken)) = (shown, taken) else { panic!("shown {shown:?}, taken {taken:?}") };
+    assert_eq!(taken - shown, 9);
 }
 
 /// bds-piglinkeep.txt, bds-piglinkeep2.txt: the sword it kept and the ingot it was admiring come

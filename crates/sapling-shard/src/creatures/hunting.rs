@@ -41,8 +41,9 @@ const REACH: f32 = 0.8;
 const COOLDOWN: u64 = 20;
 /// The speed its hit throws a player at, away from it and up.
 const THROW: f32 = 0.4;
-/// Nearer than this to its prey it stands: their boxes touch.
-const TOUCHING: f32 = 0.6;
+/// Nearer than this to its prey it stands, boxes overlapping: BDS's husk still walked 0.5955 off
+/// and stood from 0.5626, both times (research/captures/bds-ah3stop2.txt); the rule is not found.
+const TOUCHING: f32 = 0.58;
 /// How far apart a line of sight is looked at.
 const GLANCE: f32 = 0.25;
 /// Its sounds come from this much of its height up: its growl, and its hit.
@@ -264,7 +265,9 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         true => legs::rest(world, entity),
         false => {
             let (to, near) = heads(world, entity, layer, &body, feet);
-            legs::walk(world, entity, layer, &body, to, speed, near);
+            // Straight at its prey, the prey is its way's last node (bds-ah3stop2.txt: eased in from 0.90 off).
+            let slowed = if near > 0.0 { super::strolling::last_block_share(&body, to) } else { 1.0 };
+            legs::walk(world, entity, layer, &body, to, speed * slowed, near);
         }
     }
     true

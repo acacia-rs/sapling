@@ -510,7 +510,13 @@ By night on the stone floor, the survival actor held in place:
   husk and sapling's walked the same xs to the first hit. BDS's then eased in from 0.90 off: its walk
   went 0.0967, 0.0746, 0.0556 and then about 0.013 a tick over the drag, and it came to rest 0.523 off,
   boxes overlapping by 0.077. Sapling's walked at full pace to 0.56 off and then jostled between 0.53 and
-  0.66. Not followed: the ease is not the 0.546 drag and its rule is not found.
+  0.66. Fitted (thirteenth3aj, 2026-11-07): each eased step is the last one's 0.546 plus the full
+  push (0.0518) times s squared, s = max(d squared, 0.5) with d its distance off the prey before the
+  move: MoveControl's last-node slowdown (strolling's `LAST_SLOWEST`) with the prey as the last node,
+  exact to 1e-4 over all six steps. It pushed at 0.5955 off and stood from 0.5626 (both runs alike;
+  that bound's rule not found, sapling's `TOUCHING` 0.58), and its prey never pushed it back, where
+  the still actor pushed a cow (`crowding.rs` skips a player's push on the mob hunting it). Test
+  `a_hunter_eases_in_over_its_last_block_to_its_prey`.
 - Spider by day (`ah3spider`): BDS's took the actor at midnight 7.5 s after it came. After `/time set
   noon` it kept the target and bit every second for 10 s. One summoned at noon under the sky took nothing
   in 8 s. Sapling's model is the same (no new prey in the sun, prey kept). Its run (open world,
@@ -522,9 +528,14 @@ By night on the stone floor, the survival actor held in place:
   one (`minecraft:spawn_adult`) showed the nuggets in its main hand a tick after taking them and dropped
   the 4 at death. Fixed: a piglin holding anything else keeps nuggets unseen (`piglins/pickup.rs`
   `Pocket`), and both kinds drop them in the death's tick (`death.rs` `let_gear_go`). Test
-  `a_piglin_holding_a_sword_keeps_nuggets_unseen_and_drops_them_at_death`. Different, not followed:
-  sapling's piglin took the thrown nuggets in the tick they were thrown, before they were shown; BDS's
-  took them 9 ticks on. Sapling's death shows both hands emptied where BDS re-sent the held weapon.
+  `a_piglin_holding_a_sword_keeps_nuggets_unseen_and_drops_them_at_death`. Fixed since
+  (thirteenth3aj): BDS's piglin took the thrown nuggets 9 ticks after they were shown (a throw's
+  `mPickupDelay` 10, items.md), sapling's took them at once; now a mob takes a thrown item 9 ticks on
+  (`drops.rs` `MobsWait`, test `a_piglin_takes_thrown_nuggets_9_ticks_after_they_are_shown`). At
+  death BDS showed the main hand as the gear's drop left it (the undropped crossbow re-sent, the
+  dropped nuggets' hand empty, drowned's tridents too in bds-drownedloot.txt); sapling's did so for
+  gear `command_gear::gear_of` holds (`death.rs` `show_dead_hands`); a drowned's own held item is
+  still shown emptied.
 
 ## Not drilled
 

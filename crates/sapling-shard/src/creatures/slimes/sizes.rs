@@ -40,6 +40,8 @@ const MAGMA_CUBE: [Size; 3] = [
 pub(super) const KINDS: [&str; 2] = ["minecraft:slime", "minecraft:magma_cube"];
 const VARIANTS: [i32; 3] = [1, 2, 4];
 const EVENTS: [&str; 3] = ["spawn_small", "spawn_medium", "spawn_large"];
+const SPAWNED: &str = "minecraft:entity_spawned";
+const BASE_VARIANT: i32 = 1;
 
 /// What a mob of `kind` and `gene` is of its size, if its kind has sizes.
 pub(super) fn of(kind: &str, gene: Option<Gene>) -> Option<&'static Size> {
@@ -57,10 +59,22 @@ pub(in super::super) fn roll(world: &mut World, kind: &str) -> Option<Gene> {
     KINDS.contains(&kind).then(|| Gene(VARIANTS[world.get_resource_or_insert_with(Dice::default).roll(3) as usize]))
 }
 
-/// The size a spawn `event` gives a mob of `kind`.
+/// The size a spawn `event` gives a mob of `kind`, by the pack's exact event name.
 pub(in super::super) fn of_event(kind: &str, event: &str) -> Option<Gene> {
-    let at = EVENTS.iter().position(|name| event.strip_prefix("minecraft:").unwrap_or(event) == *name).filter(|_| KINDS.contains(&kind))?;
+    let at = EVENTS.iter().position(|name| event == *name).filter(|_| KINDS.contains(&kind))?;
     Some(Gene(VARIANTS[at]))
+}
+
+/// Whether a mob of `kind` summoned by `event` keeps its pack's base components (a largest's box,
+/// `Variant` 1, no touch, no hops): any event but a size's or `entity_spawned`, which then never
+/// runs. BDS's `minecraft:spawn_medium`, not in the pack, left one so (bds-q3crowd.txt).
+pub(in super::super) fn keeps_base(kind: &str, event: Option<&str>) -> bool {
+    KINDS.contains(&kind) && event.is_some_and(|event| event != SPAWNED && !EVENTS.contains(&event))
+}
+
+/// The `Variant` shown for a mob of `kind` without a size.
+pub(in super::super) fn base_variant(kind: &str) -> i32 {
+    if KINDS.contains(&kind) { BASE_VARIANT } else { 0 }
 }
 
 /// A stored mob of `kind`'s size, by the `Variant` it was stored with.
@@ -103,7 +117,9 @@ mod tests {
 
     #[test]
     fn a_spawn_event_names_a_size_and_a_stored_variant_keeps_it() {
-        assert_eq!(["spawn_small", "minecraft:spawn_medium", "spawn_large", "spawn_huge"].map(|event| of_event("minecraft:slime", event).map(|gene| gene.0)), [Some(1), Some(2), Some(4), None]);
+        assert_eq!(["spawn_small", "minecraft:spawn_medium", "spawn_large", "spawn_huge"].map(|event| of_event("minecraft:slime", event).map(|gene| gene.0)), [Some(1), None, Some(4), None]);
+        assert_eq!([Some("minecraft:spawn_medium"), Some("minecraft:become_calm"), Some("spawn_medium"), Some(SPAWNED), None].map(|event| keeps_base("minecraft:slime", event)), [true, true, false, false, false]);
+        assert!(!keeps_base("minecraft:cow", Some("minecraft:spawn_medium")));
         assert!(of_event("minecraft:cow", "spawn_small").is_none());
         assert_eq!([0, 2, 3].map(|variant| stored("minecraft:magma_cube", variant).map(|gene| gene.0)), [None, Some(2), None]);
         assert_eq!(body_size("minecraft:magma_cube", Some(Gene(2))), Some([1.04, 1.02]));

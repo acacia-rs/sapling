@@ -19,6 +19,14 @@ pub(crate) struct Identity(pub sapling_api::Player);
 #[derive(Component, Clone, Copy)]
 pub(crate) struct NetId(pub u64);
 
+impl NetId {
+    /// A seed for an entity's own draws. Never `Entity::to_bits`: a resource is an entity too, so
+    /// one inserted anywhere shifts every later entity's bits and with them the dice.
+    pub(crate) fn seed(world: &World, entity: Entity, salt: u64) -> u64 {
+        world.get::<NetId>(entity).map_or(0, |id| id.0) ^ salt
+    }
+}
+
 #[derive(Component, Clone, Copy, PartialEq)]
 pub(crate) struct Position {
     pub feet: [f32; 3],

@@ -69,7 +69,7 @@ fn put(world: &mut World, layer: Entity, record: WeatherRecord) {
 pub(crate) fn set(world: &mut World, layer: Entity, weather: Weather, ticks: Option<u32>) {
     let now = world.resource::<Tick>().0;
     let (least, sides, step) = COMMAND_SPELL;
-    let ticks = ticks.map_or(least + chance(now, layer, 0) % sides * step, u64::from);
+    let ticks = ticks.map_or(least + chance(now, place(world, layer), 0) % sides * step, u64::from);
     let time = i32::try_from(ticks).unwrap_or(i32::MAX);
     let level = |on: bool| if on { 1.0 } else { 0.0 };
     let record = WeatherRecord { rain_level: level(weather != Weather::Clear), rain_time: time, lightning_level: level(weather == Weather::Thunder), lightning_time: time };
@@ -85,7 +85,8 @@ pub(crate) fn stop(world: &mut World, layer: Entity) {
         return;
     }
     let now = world.resource::<Tick>().0;
-    let spell = |salt| spell(CLEAR_SPELL, now, layer, salt);
+    let at = place(world, layer);
+    let spell = |salt| spell(CLEAR_SPELL, now, at, salt);
     let home = dimensions::home(world, layer);
     let rained: Vec<Entity> = in_world(world)
         .into_iter()
@@ -118,31 +119,36 @@ fn turns(was: Weather, now: Weather) -> Vec<LevelEvent> {
     told
 }
 
+/// The world's part of [`chance`]: its seed, not its layer's entity bits (see `NetId::seed`).
+fn place(world: &World, layer: Entity) -> u64 {
+    world.get::<Layer>(dimensions::home(world, layer)).map_or(0, |home| home.world.level().seed as u64)
+}
+
 /// A number that differs by tick, world and draw: the shard's dice are not thrown for the weather.
-fn chance(now: u64, layer: Entity, salt: u64) -> u64 {
-    let mut mixed = (now ^ layer.to_bits() ^ salt.wrapping_mul(0xD6E8_FEB8_6659_FD93)).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+fn chance(now: u64, place: u64, salt: u64) -> u64 {
+    let mut mixed = (now ^ place ^ salt.wrapping_mul(0xD6E8_FEB8_6659_FD93)).wrapping_mul(0x9E37_79B9_7F4A_7C15);
     mixed ^= mixed >> 29;
     mixed.wrapping_mul(0xBF58_476D_1CE4_E5B9) >> 16
 }
 
-fn spell([least, spread]: [u64; 2], now: u64, layer: Entity, salt: u64) -> i32 {
-    (least + chance(now, layer, salt) % spread) as i32
+fn spell([least, spread]: [u64; 2], now: u64, place: u64, salt: u64) -> i32 {
+    (least + chance(now, place, salt) % spread) as i32
 }
 
 /// One tick of `Weather::tick`: both counts run down; one that ran out turns its weather and
 /// draws the new spell's length.
-fn turned(record: WeatherRecord, now: u64, layer: Entity) -> WeatherRecord {
+fn turned(record: WeatherRecord, now: u64, place: u64) -> WeatherRecord {
     let (rain_turns, lightning_turns) = (record.rain_time <= TURNS_AT, record.lightning_time <= TURNS_AT);
     let mut next = WeatherRecord { rain_time: record.rain_time - 1, lightning_time: record.lightning_time - 1, ..record };
     if rain_turns {
         let rains = record.rain_level <= 0.0;
         next.rain_level = if rains { 1.0 } else { 0.0 };
-        next.rain_time = spell(if rains { RAIN_SPELL } else { CLEAR_SPELL }, now, layer, 1);
+        next.rain_time = spell(if rains { RAIN_SPELL } else { CLEAR_SPELL }, now, place, 1);
     }
     if lightning_turns {
         let thunders = record.lightning_level <= 0.0;
         next.lightning_level = if thunders { 1.0 } else { 0.0 };
-        next.lightning_time = spell(if thunders { THUNDER_SPELL } else { CLEAR_SPELL }, now, layer, 2);
+        next.lightning_time = spell(if thunders { THUNDER_SPELL } else { CLEAR_SPELL }, now, place, 2);
     }
     next
 }
@@ -158,7 +164,7 @@ pub(crate) fn tick(world: &mut World) {
         let level = home.world.level_mut();
         let towards = level.weather;
         if level.rules.on(CYCLE) {
-            level.weather = turned(level.weather, now, layer);
+            level.weather = turned(level.weather, now, level.seed as u64);
         }
         let falling = world.get::<Falling>(layer).map_or(Falling::of(&towards), |falling| falling.towards(&towards));
         world.entity_mut(layer).insert(falling);
@@ -220,19 +226,19 @@ mod tests {
 
     #[test]
     fn the_chance_differs_from_tick_to_tick() {
-        let drawn: std::collections::HashSet<u64> = (0..64).map(|now| chance(now, Entity::PLACEHOLDER, 1) % 1000).collect();
+        let drawn: std::collections::HashSet<u64> = (0..64).map(|now| chance(now, 0, 1) % 1000).collect();
         assert!(drawn.len() > 48, "{}", drawn.len());
     }
 
     #[test]
     fn each_count_turns_its_own_weather_when_it_runs_out() {
         let rain = WeatherRecord { rain_level: 1.0, rain_time: 2, lightning_level: 0.0, lightning_time: 40 };
-        let next = turned(rain, 0, Entity::PLACEHOLDER);
+        let next = turned(rain, 0, 0);
         assert_eq!((next.rain_level, next.rain_time, next.lightning_time), (1.0, 1, 39));
-        let next = turned(next, 1, Entity::PLACEHOLDER);
+        let next = turned(next, 1, 0);
         assert_eq!((next.rain_level, next.lightning_level, next.lightning_time), (0.0, 0.0, 38), "rain stopped, lightning still counting");
         assert!((12_000..180_000).contains(&next.rain_time), "a clear spell: {}", next.rain_time);
-        let storm = turned(WeatherRecord { lightning_time: 1, ..rain }, 0, Entity::PLACEHOLDER);
+        let storm = turned(WeatherRecord { lightning_time: 1, ..rain }, 0, 0);
         assert_eq!((storm.rain_level, storm.lightning_level, sky(&storm)), (1.0, 1.0, Weather::Thunder));
         assert!((3_600..15_600).contains(&storm.lightning_time), "a thunder spell: {}", storm.lightning_time);
     }

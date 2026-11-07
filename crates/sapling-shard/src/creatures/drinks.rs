@@ -12,7 +12,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::Effect;
 
 use crate::body::Body;
-use crate::components::{Layer, Tick};
+use crate::components::{Layer, NetId, Tick};
 use crate::entities;
 use super::health::Health;
 use super::{afflictions, harm};
@@ -49,7 +49,8 @@ impl Drinker {
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if kind == KIND {
-        world.entity_mut(entity).insert(Drinker { draws: entity.to_bits() ^ 0x9E37_79B9_7F4A_7C15, drinking: None });
+        let draws = NetId::seed(world, entity, 0x9E37_79B9_7F4A_7C15);
+        world.entity_mut(entity).insert(Drinker { draws, drinking: None });
     }
 }
 
