@@ -36,3 +36,27 @@ fn a_zombie_28_off_takes_its_prey_at_each_look_and_lets_it_go_a_tick_later() {
     assert!(takes.iter().filter(|tick| **tick < 59).all(|tick| told.contains(&(tick + 1, 0))), "{told:?}");
     assert!(takes.windows(2).all(|pair| pair[1] - pair[0] == 10), "{told:?}");
 }
+
+#[test]
+fn a_commanded_vex_past_16_takes_its_prey_at_each_look_lets_it_go_a_tick_later_and_never_charges() {
+    // BDS (research/captures/bds-ap3vexgdb-hits.txt): `max_dist` 70 takes it, the follow range 16
+    // lets it go the next tick, before the charge goal may start.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        assert!(ctx.spawn_entity("minecraft:vex", [0.5, 92.0, 0.5]).is_some());
+    });
+    let mut told = Vec::new();
+    let mut charged = false;
+    for tick in 0..80 {
+        let sent = h.tick_all().to(ALEX.0).to_vec();
+        for data in all::<SetEntityData>(&sent) {
+            charged |= data.metadata.iter().any(|item| matches!(item.value, Value::Flags(flags) if flags.0 & acacia_proto::types::MetadataFlags1::CHARGE_ATTACK.0 != 0));
+            told.extend(data.metadata.iter().filter(|item| item.key == Key::TargetEid).filter_map(|item| if let Value::Default(Plain::Long(id)) = item.value { Some((tick, id)) } else { None }));
+        }
+    }
+    let takes: Vec<usize> = told.iter().filter(|(_, id)| *id != 0).map(|(tick, _)| *tick).collect();
+    assert!(takes.len() >= 3 && !charged, "charged {charged}, {told:?}");
+    assert!(takes.iter().filter(|tick| **tick < 79).all(|tick| told.contains(&(tick + 1, 0))), "{told:?}");
+}

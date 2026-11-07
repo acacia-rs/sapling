@@ -26,6 +26,8 @@ use crate::components::Tick;
 use crate::entities::Stored;
 
 pub(super) use ageing::be_born;
+pub(super) use allays::take_up as after_move;
+pub(crate) use allays::hear_note as allays_hear_note;
 pub(super) use tadpoles::frog_variant;
 pub(crate) use clicks::interact;
 pub(crate) use guarding::{owner_hit, owner_hurt};
@@ -65,6 +67,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     }
     owners::stays(world, entity)
         || leads::pull(world, entity, layer)
+        || allays::steer(world, entity, layer, kind)
         || nesting::steer(world, entity, layer, kind)
         || sniffing::steer(world, entity, layer, kind)
         || guarding::chase(world, entity, layer, kind)

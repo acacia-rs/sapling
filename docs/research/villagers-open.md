@@ -38,7 +38,8 @@ What of BDS's villagers sapling has not checked or does not copy; split from vil
   reached in the twelfth wave's group 8 (2026-11-05); the schedule walks' counts are strolls, random on
   both sides. Group 11 (2026-11-05) spent its runs on breeding and fear and did not reach them either:
   each is a port with no sapling side yet (no farming goal, map item or vibration listener for mobs),
-  not a drill of something built. The walks were seen in passing: in the `g11love` runs both sides'
+  not a drill of something built. The allay's listener was ported 2026-11-07 (thirteenth3ap, sculk.md
+  "Entity listeners"); farming and explorer maps stay open. The walks were seen in passing: in the `g11love` runs both sides'
   pairs strolled 10 to 35 apart within a minute (their `MoveEntityDelta`s).
 - Job-site range: `f3poi` (villagers.md "Unverified"; a held villager took none).
 - A baby's hurt standing (-3, ten hits to -30) moved no BDS golem within 30 s, not explained

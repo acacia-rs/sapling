@@ -54,7 +54,9 @@ direction 14cd24f50, facing_direction 14cd26368, lit 14cd25b50, sculk_sensor_pha
   10 iron_xylophone, 11 cow_bell, 12 didgeridoo, 13 bit, 14 banjo, 15 pling, 16 trumpet, 17 trumpet_exposed,
   18 trumpet_weathered, 19 trumpet_oxidized, 20 zombie, 21 skeleton, 22 creeper, 23 enderdragon,
   24 witherskeleton, 25 piglin, 26 none. [decompile]
-- B8 Instrument by block below (every other block → harp 0). [decompile]
+- B8 Instrument by block below (every other block → harp 0). [decompile] A redstone block played harp
+  (BlockEvent type 0, research/captures/bds-ap3note.txt); sapling had matched it as "stone" (bd) until
+  2026-11-07. BDS's `note` LevelSoundEvent came a tick after the BlockEvent there; sapling sends both in one tick.
   - 1 bd: stone and stone-like (stone, ores, cobblestone, bricks, sandstones; stone/deepslate/tuff/blackstone/basalt
     families; netherrack, nylium, quartz, prismarine, purpur, end stone, obsidian, crying obsidian); spawners;
     furnaces; dispenser, dropper, observer, crafter; enchanting table, end portal frame, respawn anchor, lodestone;

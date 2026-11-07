@@ -113,7 +113,7 @@ pub(crate) use heat::softening;
 pub(crate) use hatching::{hatch, make_home};
 pub(crate) use health::{Cause, Ground, Health};
 pub(crate) use hunting::{on_difficulty, sees};
-pub(crate) use husbandry::{Raised, interact, kept as kept_raising, owner_hit, owner_hurt, shear_in, tame_by_riding, tame_by_upgrade, tie_to_fence};
+pub(crate) use husbandry::{Raised, allays_hear_note, interact, kept as kept_raising, owner_hit, owner_hurt, shear_in, tame_by_riding, tame_by_upgrade, tie_to_fence};
 pub(crate) use omens::{Omens, befall, infested_hurt};
 pub(crate) use piglins::barter;
 pub(crate) use scooping::{held_kind as bucketed_kind, release as release_from_bucket, scoop};
@@ -273,6 +273,7 @@ pub(crate) fn tick(world: &mut World) {
             rams::strike(world, entity, layer, id, &kind, &body);
             drowned::throw(world, entity, layer, id, &kind, &body);
             slimes::after_move(world, entity, layer, id, &kind, &start, &body);
+            husbandry::after_move(world, entity, layer, id, &kind, &body);
             if blast::tick(world, entity, layer, id, &kind, &body) {
                 continue;
             }

@@ -4,18 +4,26 @@
 //! takes one from the player's in that tick; the next tick it is heard `item_given` and shown busy
 //! (`ACTION`) and owned (`OwnerEid`, the giver). A click holding something on an allay that holds
 //! something does nothing; an empty-handed one takes its item back (the pack's `take_item`, not drilled).
-// TODO: what it does with the item (collecting more, `go_and_give_items_to_owner`, note blocks), `ambient.tame`.
+//! What it then fetches and to whom it brings it is collecting.rs and giving.rs.
+// TODO: `ambient.tame`; its `follow_owner`; what it collected is lost when the world is saved.
+
+mod collecting;
+mod giving;
 
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1 as Flags};
 use bevy_ecs::prelude::*;
-use sapling_api::MobSlot;
+use sapling_api::{BlockPos, MobSlot};
 use sapling_world::ItemStack;
 
 use super::{products, shown};
+use crate::body::Body;
 use crate::components::{NetId, Tick};
 use crate::entities::Kind;
 use crate::inventory::{self, Inventory};
 use crate::movement::Motion;
+
+pub(in crate::creatures) use collecting::take_up;
+pub(crate) use giving::hear_note;
 
 const ALLAY: &str = "minecraft:allay";
 
@@ -26,8 +34,27 @@ pub(super) struct Given {
     due: u64,
 }
 
+/// What an allay fetches for whom: the player that handed it its item, what it has collected (its
+/// one-slot inventory, its hand unchanged), the tick it may collect again from, and the note block
+/// it last heard (its layer, cell and the tick).
+#[derive(Component, Default)]
+struct Errands {
+    owner: Option<Entity>,
+    carried: Option<ItemStack>,
+    rests_until: u64,
+    note: Option<(Entity, BlockPos, u64)>,
+    staying: bool,
+}
+
 fn held_by_allay(world: &World, allay: Entity) -> Option<ItemStack> {
     super::super::command_gear::gear_of(world, allay).into_iter().find(|(slot, _)| *slot == MobSlot::MainHand).and_then(|(_, item)| item)
+}
+
+fn errands(world: &mut World, allay: Entity) -> Mut<'_, Errands> {
+    if world.get::<Errands>(allay).is_none() {
+        world.entity_mut(allay).insert(Errands::default());
+    }
+    world.get_mut::<Errands>(allay).expect("just inserted")
 }
 
 /// The player clicked `entity`; true where it was an allay, which takes the click whatever it does.
@@ -42,6 +69,7 @@ pub(super) fn hand(world: &mut World, player: Entity, entity: Entity) -> bool {
             let one = ItemStack { count: 1, ..held };
             if super::super::command_gear::set(world, entity, MobSlot::MainHand, Some(one)).is_ok() {
                 products::spend(world, player);
+                errands(world, entity).owner = Some(player);
                 let (Some(&NetId(by)), now) = (world.get::<NetId>(player), world.resource::<Tick>().0) else { return true };
                 world.entity_mut(entity).insert(Given { by, due: now + 1 });
             }
@@ -55,6 +83,13 @@ pub(super) fn hand(world: &mut World, player: Entity, entity: Entity) -> bool {
         _ => {}
     }
     true
+}
+
+/// Before its move: an allay holding something collects what matches it, or brings what it
+/// collected to a note block it heard or its owner, or keeps near that note block.
+pub(super) fn steer(world: &mut World, allay: Entity, layer: Entity, kind: &str) -> bool {
+    let Some(body) = world.get::<Body>(allay).copied().filter(|_| kind == ALLAY) else { return false };
+    held_by_allay(world, allay).is_some_and(|hand| collecting::steer(world, allay, layer, &body, &hand)) || giving::steer(world, allay, layer, &body)
 }
 
 /// Shows the allays handed an item last tick.

@@ -44,6 +44,8 @@ fn instrument(under: &str, is_solid: bool) -> i32 {
         () if has(&["sand", "gravel", "concrete_powder"]) => 2,
         () if has(&["glass", "sea_lantern", "beacon"]) => 3,
         () if has(&["planks", "_log", "_wood", "_stem", "bookshelf", "chest", "crafting_table", "noteblock"]) => 4,
+        // BDS played harp over a redstone block (bds-ap3note.txt); "stone" must not match it.
+        () if under == "minecraft:redstone_block" || under == "minecraft:redstone_lamp" || under == "minecraft:lit_redstone_lamp" => 0,
         () if is_solid && has(&["stone", "_ore", "brick", "obsidian", "netherrack", "deepslate", "andesite", "diorite", "granite", "tuff", "basalt", "terracotta", "concrete"]) => 1,
         () => 0,
     }

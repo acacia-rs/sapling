@@ -149,6 +149,10 @@ fn hears(world: &World, layer: Entity, (name, properties): (&str, &str), pos: Bl
 /// wait for it, unless one is already on its way to it (S3-S8), and wardens hear it.
 pub(crate) fn vibrate(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, by_player: bool) {
     crate::creatures::warden_hears(world, layer, at, event, None);
+    if event == GameEvent::NotePlay {
+        let source = at.map(|c| c.floor() as i32);
+        crate::creatures::allays_hear_note(world, layer, at, |world, allay| !occlusion::occluded(world, layer, source, allay));
+    }
     reach_listeners(world, layer, at, event, by_player);
 }
 

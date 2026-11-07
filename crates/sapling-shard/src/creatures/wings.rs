@@ -8,7 +8,7 @@
 //! seconds.
 // TODO: a bat does not hang from a ceiling; a parrot neither sits, lands nor falls, bobs where
 // it hovers, nor flies higher than its pack's 1 block up or down (BDS's rose 8 over the floor, which
-// `HOVERS` copies); an allay neither follows a player nor takes items.
+// `HOVERS` copies); an allay does not follow its owner (`follow_owner`; its errands are husbandry/allays.rs).
 
 use bevy_ecs::prelude::*;
 
@@ -108,18 +108,18 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         }
     };
     if let Some(spot) = spot {
-        fly_to(world, entity, wing, &body, spot);
+        fly_to(world, entity, wing, &body, spot, 1.0);
     }
     true
 }
 
-/// Pushes the flyer a tick along the line to `spot` by its kind's wing, and turns it that way.
-fn fly_to(world: &mut World, entity: Entity, wing: &Wing, body: &Body, spot: [f32; 3]) {
+/// Pushes the flyer a tick along the line to `spot` by its kind's wing times `times` (a goal's speed), and turns it that way.
+fn fly_to(world: &mut World, entity: Entity, wing: &Wing, body: &Body, spot: [f32; 3], times: f32) {
     let towards: [f32; 3] = std::array::from_fn(|axis| spot[axis] - body.at[axis]);
     let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt();
     let Some(mut wings) = world.get_mut::<Wings>(entity) else { return };
     wings.pace = if wing.ramps { (wings.pace + PACE).min(1.0) } else { 1.0 };
-    let push = wing.push * wings.pace;
+    let push = wing.push * wings.pace * times;
     if long > 1e-4 {
         if let Some(mut moving) = world.get_mut::<Body>(entity) {
             moving.fly(towards.map(|c| c / long * push));
@@ -134,10 +134,16 @@ fn fly_to(world: &mut World, entity: Entity, wing: &Wing, body: &Body, spot: [f3
 /// Flies a flyer of `kind` a tick at `spot` (a bee to its flower, its hive or its prey), its
 /// spot about given up; false for a kind that does not fly about.
 pub(super) fn fly_at(world: &mut World, entity: Entity, kind: &str, spot: [f32; 3]) -> bool {
+    fly_at_times(world, entity, kind, spot, 1.0)
+}
+
+/// [`fly_at`] at `times` its kind's push: a goal's `speed_multiplier` (an allay's 6 or 8,
+/// research/captures/bds-ap3give.txt: 0.43 and 0.58 a tick at the full push).
+pub(super) fn fly_at_times(world: &mut World, entity: Entity, kind: &str, spot: [f32; 3], times: f32) -> bool {
     let (Some(wing), Some(body)) = (wing(kind), world.get::<Body>(entity).copied()) else { return false };
     if let Some(mut wings) = world.get_mut::<Wings>(entity) {
         wings.spot = None;
     }
-    fly_to(world, entity, wing, &body, spot);
+    fly_to(world, entity, wing, &body, spot, times);
     true
 }

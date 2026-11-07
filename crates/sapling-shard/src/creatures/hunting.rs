@@ -146,8 +146,10 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let traits = sapling_data::mob_traits(kind).hunts?;
     let angered = world.get::<Hunter>(entity)?.angered;
     let stops = !angered && traits.stops.is_some_and(|stops| chance(now, id, 0, stops));
-    let near = |feet: &[f32; 3]| traits.within.is_none_or(|within| distance(*feet, body.at) <= within);
-    let mut found = had.filter(|_| hunts && !calm && !stops).and_then(|prey| Some((prey, keeps(prey)?))).filter(|(_, feet)| near(feet));
+    // BDS measures from a player's eyes (its position) to the mob's feet (bds-ap3vexgdb.txt).
+    let eyes = |prey: Entity| if prey::is_mob(world, prey) { 0.0 } else { sapling_data::EYE_HEIGHT };
+    let near = |prey: Entity, feet: &[f32; 3]| traits.within.is_none_or(|within| distance([feet[0], feet[1] + eyes(prey), feet[2]], body.at) <= within);
+    let mut found = had.filter(|_| hunts && !calm && !stops).and_then(|prey| Some((prey, keeps(prey)?))).filter(|(prey, feet)| near(*prey, feet));
     // A spider under the sun by day took none on BDS; under a roof or by night it did
     // (research/captures/bds-spiders.txt).
     let head = [body.at[0], body.at[1] + body.size[1], body.at[2]].map(|c| c.floor() as i32);

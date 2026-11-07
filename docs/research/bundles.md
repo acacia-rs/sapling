@@ -44,7 +44,9 @@ ItemStackRequests from `crates/sapling/examples/shared/bundle_drill.rs`). saplin
   stayed. Two at once came newest first. sapling: `inventory/bundle_cleanup.rs`.
 - A bundle put in a chest stayed registered over 34 s (research/captures/bds-t2ebundle.txt);
   sapling swept it as gone and now keeps bundles in loaded block entities. The fox never took the
-  second bundle up, so one held by a mob was not judged; sapling takes it as gone.
+  second bundle up, so one held by a mob was not judged; sapling takes it as gone. Since 2026-11-07
+  an allay holding a bundle collects bundles and throws them to its owner (husbandry.md); one it carries
+  counts as gone too, and one it threw lies unnumbered like any dropped bundle.
 - A bundle dropped from the hotbar showed on BDS without `bundle_id`, with its contents
   (`bundle_weight`, `storage_item_component_content`), and its id came in the next cleanup; sapling
   shows the id and keeps it registered while it lies (research/captures/bds-t2ebundle.txt). Fixed
