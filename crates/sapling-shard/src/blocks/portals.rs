@@ -6,7 +6,10 @@
 //! find it by (portals.rs).
 
 pub(crate) mod build;
+mod order;
 pub(crate) mod shape;
+
+pub(crate) use order::defer;
 
 use acacia_proto::packets::UpdateSubchunkBlocks;
 use acacia_proto::types::{BlockCoordinates, BlockUpdate, BlockUpdateTransitionType};
@@ -57,28 +60,15 @@ pub(crate) fn kindle(world: &mut World, layer: Entity, at: BlockPos) -> bool {
     let Some(level) = level(world, layer).filter(|level| [OVERWORLD, NETHER].contains(&level.dimension())) else { return false };
     let Some(shape) = shape::find(at, &|pos| cell(level, pos)).filter(|shape| !shape.cells().iter().any(|pos| is_portal(level, *pos))) else { return false };
     let Some(id) = portal_id(level, shape.axis) else { return false };
-    let cells: Vec<(BlockPos, u32)> = shape.cells().into_iter().map(|pos| (pos, id)).collect();
+    let cells: Vec<(BlockPos, u32)> = order::lit(&shape).into_iter().map(|pos| (pos, id)).collect();
     if !crate::world_events::may_create_portal(world, layer, &cells) {
         return false;
     }
-    write_shown(world, layer, &cells);
+    let flagged: Vec<(BlockPos, u32, u32)> = cells.iter().map(|&(pos, id)| (pos, id, NETWORK)).collect();
+    let written = write_quietly(world, layer, &flagged);
+    order::show(world, layer, &written);
     keep(world, layer, &shape);
     true
-}
-
-/// Writes a Nether portal's `cells` without telling anyone, then shows them to those who see them
-/// with the network flag alone, as [`write_shown_nether`] does.
-pub(crate) fn write_shown(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)]) {
-    let flagged: Vec<(BlockPos, u32, u32)> = cells.iter().map(|&(pos, id)| (pos, id, NETWORK)).collect();
-    write_shown_nether(world, layer, &flagged);
-}
-
-/// Writes `cells` (where, block, update flags) without telling anyone, then shows them in their
-/// order, one UpdateSubchunkBlocks per section, the last section touched first: BDS's order for
-/// Nether portals (docs/research/nether-dimension.md, "Section order").
-pub(crate) fn write_shown_nether(world: &mut World, layer: Entity, cells: &[(BlockPos, u32, u32)]) {
-    let written = write_quietly(world, layer, cells);
-    show_nether(world, layer, &written);
 }
 
 /// Writes `cells` without telling anyone; the ones that changed.
@@ -86,14 +76,17 @@ pub(crate) fn write_quietly(world: &mut World, layer: Entity, cells: &[(BlockPos
     cells.iter().copied().filter(|(pos, id, _)| send::set_quietly(world, layer, *pos, *id)).collect()
 }
 
-/// Shows cells already written as [`write_shown_nether`] does.
+/// Shows cells already written (where, block, update flags) in their order, one
+/// UpdateSubchunkBlocks per section, the last section touched first, as BDS sent the portals it
+/// built for an arrival (lit and broken ones: order.rs).
 pub(crate) fn show_nether(world: &mut World, layer: Entity, written: &[(BlockPos, u32, u32)]) {
     let mut sections = in_sections(world, layer, written);
     sections.reverse();
     show(world, layer, sections);
 }
 
-/// Writes `cells` as [`write_shown_nether`] does, all with `flags`, the first section touched first.
+/// Writes `cells` quietly, then shows them as [`show_nether`] does, all with `flags`, the first
+/// section touched first.
 pub(crate) fn write_shown_flagged(world: &mut World, layer: Entity, cells: &[(BlockPos, u32)], flags: u32) {
     let written: Vec<(BlockPos, u32)> = cells.iter().copied().filter(|(pos, id)| send::set_quietly(world, layer, *pos, *id)).collect();
     show_in_sections(world, layer, &written, flags);
@@ -158,33 +151,51 @@ pub(crate) fn settle(world: &mut World) {
     let Some(touched) = world.get_resource_mut::<Touched>().map(|mut touched| std::mem::take(&mut touched.0)) else { return };
     for (layer, [x, y, z]) in touched {
         let is_fire = level(world, layer).is_some_and(|level| level.registry().get(level.block(x, y, z)).is_some_and(|state| state.name == FIRE));
-        if is_fire && kindle(world, layer, [x, y, z]) {
-            continue;
+        let kindled = is_fire && kindle(world, layer, [x, y, z]);
+        if !kindled {
+            for [dx, dy, dz] in SIDES {
+                break_unframed(world, layer, [x + dx, y + dy, z + dz], [x, y, z]);
+            }
         }
-        for [dx, dy, dz] in SIDES {
-            break_unframed(world, layer, [x + dx, y + dy, z + dz]);
+        // A held cell no sheet took goes alone; a kindled one went with the portal.
+        if order::take(world, layer, [x, y, z]) && !kindled {
+            send::show(world, layer, [x, y, z]);
         }
     }
 }
 
-/// Empties the portal sheet at `pos` if its frame is no longer whole or its inside is not all
-/// portal (BDS `PortalBlock::neighborChanged`): the whole sheet at once, top row first, and its
-/// record goes.
-fn break_unframed(world: &mut World, layer: Entity, pos: BlockPos) {
-    let Some(level) = level(world, layer) else { return };
-    let Some(axis) = portal_axis(level, pos) else { return };
+/// The axis of the portal at `pos` if its frame is no longer whole or its inside not all portal.
+fn unframed(level: &sapling_world::World, pos: BlockPos) -> Option<Axis> {
+    let axis = portal_axis(level, pos)?;
     let cell_at = |at: BlockPos| cell(level, at);
     let whole = shape::find_along(pos, axis, &cell_at).filter(|shape| shape.contains(pos) && shape.cells().iter().all(|at| is_portal(level, *at)));
-    if whole.is_some() {
-        return;
-    }
+    whole.is_none().then_some(axis)
+}
+
+/// Whether a portal beside `pos` is [`unframed`].
+fn breaks_beside(world: &World, layer: Entity, [x, y, z]: BlockPos) -> bool {
+    level(world, layer).is_some_and(|level| SIDES.iter().any(|[dx, dy, dz]| unframed(level, [x + dx, y + dy, z + dz]).is_some()))
+}
+
+/// Empties the portal sheet at `pos` if [`unframed`] (BDS `PortalBlock::neighborChanged`): the
+/// whole sheet at once, top row first, after the cell written at `by` if that was held for it
+/// (order.rs), and its record goes.
+fn break_unframed(world: &mut World, layer: Entity, pos: BlockPos, by: BlockPos) {
+    let Some(level) = level(world, layer) else { return };
+    let Some(axis) = unframed(level, pos) else { return };
     let sheet = sheet(level, pos, axis);
     let air = level.registry().air_id();
     let corner = |sheet: &[BlockPos]| sheet.iter().copied().min_by_key(|[x, y, z]| (*y, *x, *z));
     let lowest = corner(&sheet);
-    let mut cells: Vec<(BlockPos, u32)> = sheet.into_iter().map(|at| (at, air)).collect();
-    cells.sort_by_key(|([x, y, z], _)| (-*y, *x, *z));
-    write_shown_flagged(world, layer, &cells, NETWORK);
+    let mut cells: Vec<(BlockPos, u32, u32)> = sheet.into_iter().map(|at| (at, air, NETWORK)).collect();
+    cells.sort_by_key(|([x, y, z], ..)| (-*y, *x, *z));
+    let trigger = level.block(by[0], by[1], by[2]);
+    let mut shown: Vec<(BlockPos, u32, u32)> = Vec::new();
+    if order::take(world, layer, by) {
+        shown.push((by, trigger, send::FLAGS.0));
+    }
+    shown.extend(write_quietly(world, layer, &cells));
+    order::show(world, layer, &shown);
     let (Some(dimension), Some(home)) = (level_dimension(world, layer), Some(crate::dimensions::home(world, layer))) else { return };
     if let (Some(lowest), Some(mut level)) = (lowest, world.get_mut::<Layer>(home)) {
         level.world.level_mut().portals.retain(|record| !(record.dimension == dimension && record.corner == lowest));

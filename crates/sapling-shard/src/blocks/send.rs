@@ -11,6 +11,7 @@ use sapling_api::{Block, BlockPos};
 use sapling_world::{BlockEntity, BlockRegistry, ChunkPos};
 
 mod effects;
+pub(crate) mod hashed;
 mod sections;
 
 pub(crate) use effects::{destroy_particles, noise, place_sound, punch_particles, sound, sound_at};
@@ -93,7 +94,7 @@ pub(crate) fn keep_entity_quietly(world: &mut World, layer: Entity, pos: BlockPo
 /// outside the world's height and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(id) = write(world, layer, pos, id) else { return false };
-    if sections::log(world, layer, pos, 0, id) || sections::held(world, layer, pos) {
+    if sections::log(world, layer, pos, 0, id) || sections::held(world, layer, pos) || super::portals::defer(world, layer, pos) {
         return true;
     }
     let Some(packet) = world.get::<Layer>(layer).map(|level| update(level.world.registry(), pos, id, 0)) else { return false };
