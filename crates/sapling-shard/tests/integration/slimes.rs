@@ -47,6 +47,27 @@ fn a_medium_slime_takes_its_prey_squishes_as_it_hops_at_it_and_hurts_it_for_2_by
     assert!(!hurt.is_empty(), "touched: {moves:?}");
 }
 
+/// bds-q3crowd.txt: `minecraft:spawn_medium` is no event of the slime's pack, so none runs: its base
+/// box 2.08, `Variant` 1, and it never hurt the actor beside it.
+#[test]
+fn a_slime_summoned_by_an_event_its_pack_lacks_keeps_its_base_and_never_hurts() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Easy));
+    summon(&mut h, "minecraft:spawn_medium", [1.5, 65.0, 0.5]);
+    let (mut shown, mut hurt) = (None, 0);
+    for _ in 0..80 {
+        let sent = h.tick_all().to(1).to_vec();
+        shown = shown.or(all::<AddEntity>(&sent).into_iter().find(|added| added.entity_type == "minecraft:slime").map(|added| {
+            let variant = added.metadata.iter().find(|item| item.key == Key::Variant).map(|item| item.value.clone());
+            (width(&added), variant)
+        }));
+        hurt += all::<EntityEvent>(&sent).iter().filter(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation).count();
+    }
+    assert_eq!(shown, Some((Some(2.08), Some(Value::Default(Plain::Int(1))))));
+    assert_eq!(hurt, 0);
+}
+
 #[test]
 fn a_large_slime_killed_leaves_two_to_four_medium_ones_heard_born_and_a_small_one_none() {
     let mut h = Harness::new();

@@ -42,6 +42,11 @@ pub(super) fn gear_of(world: &World, mob: Entity) -> Vec<(MobSlot, Option<ItemSt
     super::turning::GEAR.into_iter().zip([main, off].into_iter().chain(worn)).filter(|(_, item)| item.is_some()).collect()
 }
 
+/// What [`gear_of`] has in the mob's main hand.
+pub(super) fn main_hand(world: &World, mob: Entity) -> Option<ItemStack> {
+    gear_of(world, mob).into_iter().find(|(slot, _)| *slot == MobSlot::MainHand).and_then(|(_, item)| item)
+}
+
 /// [`set`] shown with no sound: a hand in `MobEquipment`, armour in `MobArmorEquipment`.
 pub(super) fn set_quietly(world: &mut World, mob: Entity, slot: MobSlot, item: Option<ItemStack>) -> Option<()> {
     let MobSlot::Armor(piece) = slot else { return set(world, mob, slot, item).ok() };

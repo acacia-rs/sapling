@@ -67,6 +67,11 @@ pub(super) fn of_event(kind: &str, event: &str) -> Option<Gene> {
     names.iter().find(|(name, _)| *name == gene).map(|&(_, variant)| Gene(variant))
 }
 
+/// The `Variant` a mob of `kind` shows with `gene`, or without one.
+pub(super) fn variant(kind: &str, gene: Option<Gene>) -> i32 {
+    gene.map_or_else(|| super::slimes::sizes::base_variant(kind), |gene| gene.0)
+}
+
 /// A stored mob of `kind`'s gene, by the `Variant` it was stored with.
 pub(super) fn stored(kind: &str, variant: i32) -> Option<Gene> {
     if kind != KIND {

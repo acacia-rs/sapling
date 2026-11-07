@@ -409,8 +409,11 @@ Sapling's run: sapling-kinds3.txt.
 `/summon slime <pos> <yaw> <pitch> minecraft:spawn_medium` runs no event on BDS: the slime kept its base
 components (a 2.08 box, no `area_attack`, `Variant` 1) and never hurt the actor (bds-q3crowd.txt);
 `spawn_medium` made a medium one (bds-ah3slime.txt). `minecraft:spawn_adult` on a piglin left it bare,
-as an event its pack lacks. Not followed: sapling strips `minecraft:` (`slimes/sizes.rs` `of_event`) and
-makes a medium slime either way.
+as an event its pack lacks. Fixed (thirteenth3aj): sapling matches the pack's exact names; a slime or
+magma cube summoned by any other event than a size's or `minecraft:entity_spawned` keeps its base (no
+size: the 2.08 box, `Variant` 1, no hops, no touch; `slimes/sizes.rs` `keeps_base`), test
+`a_slime_summoned_by_an_event_its_pack_lacks_keeps_its_base_and_never_hurts`. The magma cube's base
+is assumed from its pack's like shape, not drilled.
 
 ## Sapling
 

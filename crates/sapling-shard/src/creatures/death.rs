@@ -39,10 +39,12 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     }
     let now = world.resource::<Tick>().0;
     let lasts = wither::dies(world, entity, layer, body);
+    let gear = (lasts.is_none() && leaves_loot(world, layer)).then(|| gear_to_let_go(world, entity, kind));
     if let Some(id) = world.get::<NetId>(entity).map(|id| id.0) {
         hunting::let_go(world, entity, layer, id, body);
         if lasts.is_none() {
-            empty_hands(world, entity, layer, body);
+            let kept = gear.as_ref().is_none_or(|(_, main_went)| !main_went).then(|| super::command_gear::main_hand(world, entity)).flatten();
+            show_dead_hands(world, entity, layer, body, kept);
         }
     }
     omens::died(world, entity, layer, body);
@@ -59,8 +61,11 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
             drops::toss(world, layer, stack, [x, y + LOOT_LIFT, z]);
         }
     } else {
-        if lasts.is_none() {
-            let_gear_go(world, entity, layer, kind, body);
+        if let Some((gear, _)) = gear {
+            let [x, y, z] = body.at;
+            for stack in gear {
+                drops::toss(world, layer, stack, [x, y + GEAR_LIFT, z]);
+            }
             stacks.extend(remains(world, entity, layer, kind));
         }
         stacks.extend(spilled);
@@ -99,10 +104,18 @@ fn feed_catalyst(world: &mut World, entity: Entity, layer: Entity, kind: &str, b
 
 /// Its viewers see both its hands emptied, then what it wears.
 pub(super) fn empty_hands(world: &mut World, entity: Entity, layer: Entity, body: &Body) {
+    show_dead_hands(world, entity, layer, body, None);
+}
+
+/// Its viewers see its main hand hold `kept` (what it did not let go of: BDS re-sent a piglin's
+/// undropped crossbow, research/captures/bds-ah3nugget.txt) or nothing, its offhand emptied, then
+/// what it wears.
+fn show_dead_hands(world: &mut World, entity: Entity, layer: Entity, body: &Body, kept: Option<ItemStack>) {
     let Some(id) = world.get::<NetId>(entity).map(|id| id.0) else { return };
-    let hand = |slot: u8, window_id| sapling_net::encode(&MobEquipment { runtime_entity_id: id, item: sapling_data::no_item(), slot, selected_slot: slot, window_id });
-    let emptied = vec![hand(0, WindowID::Inventory), hand(1, WindowID::Offhand), super::worn::shown_dead(world, entity, id)];
-    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), emptied);
+    let empty = |slot: u8, window_id| MobEquipment { runtime_entity_id: id, item: sapling_data::no_item(), slot, selected_slot: slot, window_id };
+    let main = kept.and_then(|stack| sapling_data::mob_hand(id, &inventory::stack(&stack), false)).unwrap_or_else(|| empty(0, WindowID::Inventory));
+    let shown = vec![sapling_net::encode(&main), sapling_net::encode(&empty(1, WindowID::Offhand)), super::worn::shown_dead(world, entity, id)];
+    entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), shown);
 }
 
 /// The dead mob's loot, tossed now.
@@ -131,16 +144,14 @@ fn remains(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> Vec<
     stacks
 }
 
-/// The gear the dying mob lets go of, tossed in its death's tick: BDS's swords had lower ids than
-/// all the loot of the pigmen killed with them (research/captures/bds-ad3drops.txt).
-fn let_gear_go(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) {
+/// The gear the dying mob lets go of, to be tossed in its death's tick (BDS's swords had lower ids
+/// than all the loot of the pigmen killed with them, research/captures/bds-ad3drops.txt), and
+/// whether its main hand's item went with it.
+fn gear_to_let_go(world: &mut World, entity: Entity, kind: &str) -> (Vec<ItemStack>, bool) {
     let looting = world.get::<attacks::Slain>(entity).map(|slain| slain.1);
-    let [x, y, z] = body.at;
-    let mut stacks = super::spawn_gear::let_go(world, entity, kind, looting);
+    let (mut stacks, main_went) = super::spawn_gear::let_go(world, entity, kind, looting);
     stacks.extend(super::piglins::picked_gold(world, entity));
-    for stack in stacks {
-        drops::toss(world, layer, stack, [x, y + GEAR_LIFT, z]);
-    }
+    (stacks, main_went)
 }
 
 /// Whether the world's `doMobLoot` lets the dead leave loot and experience.

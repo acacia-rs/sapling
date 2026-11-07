@@ -76,7 +76,9 @@ pub(super) fn tick(world: &mut World) {
         let near = (-1..=1).flat_map(|dx| (-1..=1).map(move |dz| [x + dx, z + dz])).filter_map(|at| squares.get(&(*layer, at))).flatten();
         for &other in near.filter(|other| **other > index) {
             let (other_entity, _, other_body) = &bodies[other];
-            if other >= mobs && not_by_players.contains(entity) {
+            // bds-ah3stop2.txt: a husk walked into its still prey's box to 0.523 off, never pushed back.
+            let its_prey = || super::hunting::quarry(world, *entity).is_some_and(|(prey, _)| prey == *other_entity);
+            if other >= mobs && (not_by_players.contains(entity) || its_prey()) {
                 continue;
             }
             if let Some([px, pz]) = push(body, other_body, GRACE) {

@@ -49,6 +49,12 @@ pub(crate) fn is_under_way(world: &World, entity: Entity) -> bool {
     world.get::<Stroll>(entity).is_some_and(|stroll| stroll.0.is_some() || now < stroll.1)
 }
 
+/// The share of its speed a walker keeps on its way's last block, ending at `to` ([`LAST_SLOWEST`]).
+pub(super) fn last_block_share(body: &Body, to: [f32; 2]) -> f32 {
+    let near = (to[0] - body.at[0]).powi(2) + (to[1] - body.at[2]).powi(2);
+    if near < 1.0 { near.max(LAST_SLOWEST) } else { 1.0 }
+}
+
 /// The way over whole cells to a place tried at random, as BDS's walks went from cell middle to
 /// cell middle (research/captures/bds-strolls.txt).
 fn way_to(world: &mut World, layer: Entity, body: &Body, far: f32, shuns_sun: bool) -> Option<Vec<Cell>> {
@@ -93,8 +99,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: O
     match &stroll {
         Some((way, _)) => {
             let to = middle(way[0]);
-            let near = (to[0] - body.at[0]).powi(2) + (to[1] - body.at[2]).powi(2);
-            let slowed = if way.len() == 1 && near < 1.0 { near.max(LAST_SLOWEST) } else { 1.0 };
+            let slowed = if way.len() == 1 { last_block_share(&body, to) } else { 1.0 };
             legs::walk(world, entity, layer, &body, to, speed * slowed, 0.0);
         }
         None => legs::rest(world, entity),
