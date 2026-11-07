@@ -167,8 +167,10 @@ fn an_enderman_teleports_as_it_comes_and_when_hit_then_hits_its_hitter_for_4_5_a
         let own = all::<UpdateAttributes>(h.tick_all().to(1)).into_iter().filter(|update| update.runtime_entity_id == 1).flat_map(|update| update.attributes);
         hurt.extend(own.filter(|attribute| attribute.name == "minecraft:health").map(|attribute| (tick, attribute.current)));
     }
-    let second = hurt.iter().find(|(_, left)| (*left - 11.0).abs() < 1e-3);
-    assert!(hurt.first().is_some_and(|(_, left)| *left == 15.5) && second.is_some_and(|(tick, _)| tick - hurt[0].0 == 20), "{hurt:?}");
+    // A random blink in the dark can come between two hits and put the next off.
+    let hits: Vec<u64> = hurt.windows(2).filter(|pair| pair[1].1 < pair[0].1).map(|pair| pair[1].0 as u64).collect();
+    let gaps: Vec<u64> = std::iter::once(hurt[0].0 as u64).chain(hits.iter().copied()).collect::<Vec<_>>().windows(2).map(|pair| pair[1] - pair[0]).collect();
+    assert!(hurt.first().is_some_and(|(_, left)| *left == 15.5) && gaps.contains(&20) && gaps.iter().all(|gap| *gap >= 20), "{hurt:?}");
 }
 
 #[test]
