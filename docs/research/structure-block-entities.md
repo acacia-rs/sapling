@@ -307,7 +307,7 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   seeds 5 and 73, books rolled third and first, fill BDS's slots (bds-loot-books.txt; test
   `a_dungeon_book_draws_its_cost_and_the_chest_stays_in_step`).
 - [U] Whether a comparator reads 0 from unopened loot or the drill's comparators faced the wrong way.
-- [U] 3 village chests' seeds: BDS's are draws 157 of chunk (-63, 9)'s structure MT and 306 and 459 of
+- 3 village chests' seeds (settled below: same under the run's order): BDS's are draws 157 of chunk (-63, 9)'s structure MT and 306 and 459 of
   (-62, 8)'s, sapling's 158, 301 and 449, while (-62, 8)'s chest at draw 433 matches; the draws
   between are the pieces' bottom fills (`nextInt(3)` per filled column over the whole piece), so some
   fill reads a column outside the chunk differently from BDS, though the blocks match. Not the
@@ -328,6 +328,15 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   (-1013, 86, 148..154) (chunk (-64, 9)), which BDS never did (6 more). So sapling's view of a
   neighbour's not-yet-posted column during a post is the thing to fix. It is not the fill or the
   block test. Not reached: where sapling's canvas gets those cells (`structure/` post view).
+  Settled 2026-11-07 (thirteenth3aj): wrong lead. `block_entity_diff` built its generator without
+  `oracle_support::replay`, so the c-vi ENVS never applied and every run above was the canonical
+  order: there chunk (-63, 9) posts first of its four (writers traced: its own post put the piece's air
+  at (-996..-993, 86, 146) before (-63, 8), (-62, 9) and (-62, 8) read it, all from grass in the carved
+  terrain). With the replay applied (fixed in the example), c-vi posts (-63, 8) and (-62, 8) before
+  (-63, 9), as BDS, and all 12 village chests' seeds match (`ENVS="$(tools/replay-env.sh c-vi)"
+  tools/remote-example.sh vi block_entity_diff 20261003 20261003-structures`). Sapling's canvas view
+  was right; the stock oracle's 3 seeds are its run order against the canonical one, which the stock
+  worlds can't judge.
 - The desert pyramid sand at (-6114, 60, -3508), fixed 2026-11-05: BDS's cellar sand (1483669e0)
   draws a seed for every suspicious sand cell in the 3x3 view that holds its block, a neighbour's
   included, so the last chunk to post-process the pyramid sets it (`Canvas::set_entity_in_view`;
