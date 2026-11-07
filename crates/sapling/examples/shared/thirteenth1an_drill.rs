@@ -36,8 +36,11 @@ fn count_pairs(out: &mut Vec<String>) {
 fn fear() -> Vec<String> {
     let mut out = owned([
         "kill @e[type=!player]", "gamerule domobspawning false", "gamerule dodaylightcycle false", "gamerule doweathercycle false", "weather clear", "time set 1000", "difficulty easy",
-        "tp @a 316.5 -60 -8.5", "fill 292 -61 -12 340 -61 60 grass_block", "fill 292 -60 -12 340 -56 60 air", "",
+        "tp @a 316.5 -60 24.5",
     ]);
+    // Sapling loads the columns after the teleport: a fill at once is out of its world (sapling-an1fear.txt).
+    wait(&mut out, 5);
+    out.extend(owned(["fill 292 -61 -12 340 -61 60 grass_block", "fill 292 -60 -12 340 -56 60 air", ""]));
     for i in 0..PAIRS {
         let [x, z] = zombie_at(i);
         out.push(format!("summon zombie {x}.5 -60 {z}.5"));
