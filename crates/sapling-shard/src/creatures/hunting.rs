@@ -5,9 +5,12 @@
 // monsters, idle; viewers far off are told every move, where BDS told one of every other; a piglin
 // hunts a player in gold too, and a polar bear does not rear before its hit.
 
+mod heading;
 mod prey;
 mod strike;
 
+pub(super) use heading::approach;
+use heading::{heads, stops_short};
 pub(super) use prey::{feet_of, hit as hit_mob};
 pub(super) use strike::{strike, swing};
 
@@ -16,17 +19,13 @@ use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDict
 use bevy_ecs::prelude::*;
 use sapling_api::Difficulty;
 
-use super::{blast, legs, paths};
+use super::{blast, legs};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
 use crate::{entities, late_sounds, vitals};
 
 /// Ticks between two looks for a player.
 const LOOKS: u64 = 10;
-/// A way round is looked for again after this many ticks, and a cell of it is reached this near
-/// its middle.
-const REPLANS: u64 = 10;
-const ARRIVED: f32 = 0.35;
 /// An iron golem's hit throws this fast away and up (research/captures/bds-golem.txt).
 const FLINGS: [f32; 2] = [0.52, 0.4288];
 /// An archer walks at its prey for this many ticks after taking it (BDS's went 1.7 blocks, from
@@ -41,9 +40,6 @@ const REACH: f32 = 0.8;
 const COOLDOWN: u64 = 20;
 /// The speed its hit throws a player at, away from it and up.
 const THROW: f32 = 0.4;
-/// Nearer than this to its prey it stands, boxes overlapping: BDS's husk still walked 0.5955 off
-/// and stood from 0.5626, both times (research/captures/bds-ah3stop2.txt); the rule is not found.
-const TOUCHING: f32 = 0.58;
 /// How far apart a line of sight is looked at.
 const GLANCE: f32 = 0.25;
 /// Its sounds come from this much of its height up: its growl, and its hit.
@@ -65,6 +61,8 @@ pub(super) struct Hunter {
     planned: u64,
     /// Its prey hit it: a spider's anger keeps it (no `random_stop_interval` in `spider_angry`).
     angered: bool,
+    /// Its last walk began within its way's last node radius of its prey (heading.rs).
+    reached: bool,
 }
 
 /// Makes the mob a hunter if its kind is one.
@@ -209,35 +207,6 @@ pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64,
     }
 }
 
-/// Where a hunter walks to this tick, and how near it stops: straight at its prey where the
-/// floor lets it, else to the next cell of a way round, looked for anew every [`REPLANS`] ticks.
-fn heads(world: &mut World, entity: Entity, layer: Entity, body: &Body, feet: [f32; 3]) -> ([f32; 2], f32) {
-    let now = world.resource::<Tick>().0;
-    let straight = ([feet[0], feet[2]], TOUCHING);
-    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return straight };
-    if paths::is_clear(level, body.at, feet) {
-        return straight;
-    }
-    let stale = world.get::<Hunter>(entity).is_none_or(|hunter| hunter.way.is_empty() || now >= hunter.planned + REPLANS);
-    let found = stale.then(|| paths::route(level, body.at.map(|c| c.floor() as i32), feet.map(|c| c.floor() as i32)).unwrap_or_default());
-    let Some(mut hunter) = world.get_mut::<Hunter>(entity) else { return straight };
-    if let Some(way) = found {
-        (hunter.way, hunter.planned) = (way, now);
-    }
-    let middle = |cell: &[i32; 3]| [cell[0] as f32 + 0.5, cell[2] as f32 + 0.5];
-    while hunter.way.first().is_some_and(|cell| (middle(cell)[0] - body.at[0]).hypot(middle(cell)[1] - body.at[2]) < ARRIVED) {
-        hunter.way.remove(0);
-    }
-    hunter.way.first().map_or(straight, |cell| (middle(cell), 0.0))
-}
-
-/// Before the hunter's move without prey: it walks to `to` as it would at prey, by a way round
-/// where one is needed, until it is `near` of it.
-pub(super) fn approach(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 3], speed: f32, near: f32) {
-    let (step, stop) = heads(world, entity, layer, body, to);
-    legs::walk(world, entity, layer, body, step, speed, if stop > 0.0 { near } else { 0.0 });
-}
-
 /// Before the hunter's move: it walks at its prey, if it has any.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
     let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed * super::shown::pace_share(world, entity, kind))) else { return false };
@@ -264,9 +233,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     match stands {
         true => legs::rest(world, entity),
         false => {
-            let (to, near) = heads(world, entity, layer, &body, feet);
+            let (to, straight) = heads(world, entity, layer, &body, feet);
             // Straight at its prey, the prey is its way's last node (bds-ah3stop2.txt: eased in from 0.90 off).
-            let slowed = if near > 0.0 { super::strolling::last_block_share(&body, to) } else { 1.0 };
+            let slowed = if straight { super::strolling::last_block_share(&body, to) } else { 1.0 };
+            let near = if stops_short(world, entity, &body, to, straight) { f32::INFINITY } else { 0.0 };
             legs::walk(world, entity, layer, &body, to, speed * slowed, near);
         }
     }

@@ -40,11 +40,13 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     let now = world.resource::<Tick>().0;
     let lasts = wither::dies(world, entity, layer, body);
     let gear = (lasts.is_none() && leaves_loot(world, layer)).then(|| gear_to_let_go(world, entity, kind));
+    let by_player = world.get::<attacks::Slain>(entity).is_some();
+    let trident = super::drowned::choose_drops(world, entity, by_player);
     if let Some(id) = world.get::<NetId>(entity).map(|id| id.0) {
         hunting::let_go(world, entity, layer, id, body);
         if lasts.is_none() {
             let kept = gear.as_ref().is_none_or(|(_, main_went)| !main_went).then(|| super::command_gear::main_hand(world, entity)).flatten();
-            show_dead_hands(world, entity, layer, body, kept);
+            show_dead_hands(world, entity, layer, body, kept.or(trident));
         }
     }
     omens::died(world, entity, layer, body);
@@ -139,7 +141,7 @@ fn remains(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> Vec<
     let mut stacks: Vec<_> = crate::riding::looted_saddle(world, entity, kind).into_iter().collect();
     stacks.extend(loot(world, layer, kind, on_fire, killer));
     stacks.extend(crate::riding::looted_armor(world, entity));
-    stacks.extend(super::drowned::let_go(world, entity, by_player));
+    stacks.extend(super::drowned::let_go(world, entity));
     stacks.extend(super::captains::let_go(world, entity, by_player));
     stacks
 }

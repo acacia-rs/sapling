@@ -43,6 +43,18 @@ fn a_drowned_come_as_ranged_holds_a_trident_and_throws_it_a_tick_after_its_swing
     assert!(all::<MobEquipment>(&shown).iter().any(|held| held.runtime_entity_id == drowned && held.item.network_id == held_id), "one who comes later sees it armed");
 }
 
+/// bds-drownedloot.txt: a dead drowned that keeps its trident (no player killed it) is shown
+/// holding it again, its offhand emptied.
+#[test]
+fn a_drowned_killed_by_no_player_is_shown_holding_the_trident_it_keeps() {
+    let (mut h, ticks, drowned) = held_drowned(2);
+    let held = ticks.iter().flat_map(|sent| all::<MobEquipment>(sent)).find(|held| held.runtime_entity_id == drowned).expect("shown armed").item.network_id;
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(EntityId(drowned))));
+    let shown: Vec<MobEquipment> = all::<MobEquipment>(h.tick_all().to(1)).into_iter().filter(|shown| shown.runtime_entity_id == drowned).collect();
+    let hands: Vec<(u8, i16)> = shown.iter().map(|shown| (shown.slot, shown.item.network_id)).collect();
+    assert_eq!(hands, [(0, held), (1, 0)]);
+}
+
 /// bds-s3drowned.txt: throws 48 to 84 ticks apart whatever the distance, the first 72 to 93 after
 /// it took its prey; not the pack's 20 to 60.
 #[test]

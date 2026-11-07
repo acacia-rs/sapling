@@ -52,9 +52,9 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, tilt: &str) {
         _ => None,
     };
     if let Some(heard) = heard {
-        // At the cell's corner, as BDS (research/captures/bds-bkblocks.txt).
+        // At the cell's corner (bds-bkblocks.txt), after the block (bds-leafstand.txt).
         let [x, y, z] = pos.map(|c| c as f32);
-        send::to_viewers(world, layer, pos, &[send::noise(heard, Vec3f { x, y, z }, -1)]);
+        send::after_blocks(world, layer, pos, send::noise(heard, Vec3f { x, y, z }, -1));
     }
     queued::cancel(world, layer, pos, Job::Dripleaf);
     if tilt != NONE {

@@ -3,7 +3,7 @@
 
 use crate::common;
 
-use acacia_proto::RawPacket;
+use acacia_proto::{Packet, RawPacket};
 use acacia_proto::packets::{
     LevelEvent, LevelEventEvent, PositionTrackingDbBroadcast, PositionTrackingDbBroadcastBroadcastAction, PositionTrackingDbRequest, PositionTrackingDbRequestAction,
 };
@@ -215,9 +215,12 @@ fn a_big_dripleaf_tilts_under_a_player_and_comes_back_up() {
     shooting::face(&mut h, 1, ALEX, [2.5, 65.9375, 0.5], 0.0);
     let mut seen = vec![tilt_at(&mut h, LEAF)];
     let sent: Vec<RawPacket> = (0..10).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
-    // research/captures/bds-bkblocks.txt: heard at the cell's corner.
+    // research/captures/bds-bkblocks.txt: heard at the cell's corner; bds-leafstand.txt: after the block.
     let down = all::<acacia_proto::packets::LevelSoundEvent>(&sent).into_iter().find(|sound| sound.sound_id == "tilt_down.big_dripleaf").expect("tilted");
     assert_eq!([down.position.x, down.position.y, down.position.z], [2.0, 65.0, 0.0]);
+    let kinds = common::ids(&sent);
+    let [block, sound] = [acacia_proto::packets::UpdateBlock::ID, acacia_proto::packets::LevelSoundEvent::ID].map(|id| kinds.iter().rposition(|&kind| kind == id));
+    assert!(block < sound, "{kinds:?}");
     seen.push(tilt_at(&mut h, LEAF));
     (0..10).for_each(|_| drop(h.tick_all()));
     seen.push(tilt_at(&mut h, LEAF));

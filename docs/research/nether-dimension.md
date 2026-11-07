@@ -101,8 +101,18 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
   (3,-3,2), (3,-4,2), (3,-3,1), (3,-4,1)) went out reversed, and -collide's x 1935 fits with 5 buckets, a
   fresh Nether map's count after its third insert (libc++ grows 2, 5, 11, 23 ...): (120,5) shares (120,4)'s
   bucket (hash both, mod 5). Within a section the cells go in touch order, and the
-  frame's touch order is BDS's own (neither flood nor columns; the same in two runs). Not ported: sapling's
-  hash orders follow the Windows server, and this one needs the map's bucket history per dimension.
+  frame's touch order is BDS's own (neither flood nor columns; the same in two runs).
+  Ported 2026-11-07 (thirteenth3am, `blocks/send/hashed.rs`, `blocks/portals/order.rs`), fitted in
+  scratch against every capture: the map is fresh each flush (no bucket history: bds-n13sheet.txt's first
+  `/fill` of six sections fits only 0 to 5 buckets to start, after earlier ticks' changes). A lit frame's
+  touch order is a libc++ `unordered_set<BlockPos>` (the same hash) begun with 64 buckets (so it grows
+  128, 256, 512), filled along the width (an x frame west, x falling; a z frame south) with each column
+  from the bottom up, and walked in its list order: all 441 cells of bds-portal-sections-gdb-hits.txt's
+  x 60 frame in order, and the cells and sections of 27 of the 28 lit frames in the bds-portal-*.txt
+  captures (the gdb run's x 156 frame sent its sections in another order, as another change in the
+  same tick's map would make). The forcer's built portals (z frames in -makes, -voids) follow neither
+  and keep sapling's order. Tests `a_big_frame_lights_in_bds_s_order`, `hashed.rs` unit tests. This is
+  the Linux server's order; the Windows one (MSVC containers, its own `std::hash`) was never captured.
 
 ## `/execute in` (bds-t1dexec.txt)
 
@@ -155,14 +165,16 @@ sends the PlayerAction with the join's spawn-radius rule and loads those columns
   and circuits each tick (`blocks::batched`), fills and plugin batches (`send/sections.rs`), pistons
   (flags 19, c8670476); captures still showing UpdateBlock on sapling where BDS batched
   (sapling-crops.txt, -concrete.txt, -bonemeal.txt, -conductors.txt) date from 2026-10-08 to 10-11,
-  before the batches (3e338ec4, 2026-10-24). The section order is left (below).
-- Section order where it is not last-touched-first (-collide.txt x 1935): what puts the second section
-  ahead. A breakpoint on `onBlockChanged` would show the real touch order. A lit 21x21 frame is written
-  flood-like in BDS, and column by column in sapling, so its four sections and cells differ in order
-  (bds-portal-sections.txt; the frames along x did not light there).
+  before the batches (3e338ec4, 2026-10-24). The map's order (above) is ported for lit and broken
+  portals only: other batches (`send/sections.rs`) keep their fitted orders, which the map's gives too
+  for two sections (last touched first) but not always for more (bds-n13sheet.txt's fills).
+- Section order where it is not last-touched-first: settled, "Section order" above.
 - A broken sheet (bds-n13sheet.txt, 2026-11-05: a 2x14 sheet over x 15-16 and y -26..-13, a side of the
   frame at (14, -20) set to air): BDS sent the frame cell inside the sheet's batch, not alone, and the four
   sections last touched first: (16,-32), (16,-16), (0,-16), then (0,-32) with the frame cell ahead of its
   column; cells top down. sapling-n13sheet.txt sends the frame cell first as UpdateBlock (the command's own
-  write), then (0,-16), (16,-16), (0,-32), (16,-32). Matching needs the command's write held to the tick's
-  batch; not done. A frame corner set to air broke nothing on either.
+  write), then (0,-16), (16,-16), (0,-32), (16,-32). Fixed 2026-11-07 (thirteenth3am): a write that
+  leaves a sheet beside it unframed is held (`portals/order.rs` `defer`) and goes first in the sheet's
+  batch, sections in the map's order; test
+  `a_broken_sheet_goes_out_by_sub_chunk_in_bds_s_order_with_the_frame_cell_first_in_its_own`. A frame
+  corner set to air broke nothing on either.

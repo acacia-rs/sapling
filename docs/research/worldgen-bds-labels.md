@@ -95,7 +95,7 @@ sculk conversion in the vein behaviour's `attemptUseCharge` (148b42070; replacea
 `std::set<const Block*>`), 1411a09d0 world-gen API slot 0x90 (`BlockType` vt+0x298, can be built over),
 143b84a00.. `MultifaceFeature` attach's test of the supporting block's chunk (in another chunk of state 2..5,
 a block inside a structure of the type at 0x14ccbb900, which `StrongholdFeature`'s constructor also uses, or
-0x14ccbb930 refuses the face; not ported, decoration's neighbours are past that state), 145e2d090/145e2d290/145e2d4d0 pool alias
+0x14ccbb930 refuses the face; ported in 8d4a5c23, `feature/multiface.rs` `takes`, reached by far out's lichen wall), 145e2d090/145e2d290/145e2d4d0 pool alias
 binding resolves, 141eeb8d0 `placeInWorld` (settings: +0 integrity, +4 seed, +8 terrain match, +9 mirror, +10
 rotation, +11/+12 skip structure blocks and jigsaws, +0x10 ignored block), 141f797b0
 `TemplateStructurePiece::postProcess` (seed = the chunk generator's seed field).

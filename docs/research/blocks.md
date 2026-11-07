@@ -125,7 +125,8 @@ Captures research/captures/bds-bkblocks.txt, bds-bknether.txt against sapling-*.
   overlaps the cell, at any height, and looks again when a leaf comes back up (`blocks/dripleaf.rs`
   `stood_on`; test `a_big_dripleaf_tilts_again_under_a_player_who_fell_into_its_cell`). Sapling's
   drill player drifted further (x 3.43, out of the cell) and so saw one re-tilt, not two: movement.
-  Sapling sends the tilt sound before the block, BDS after (not followed).
+  The tilt sound now goes after the block, as BDS's (2026-11-07, `send::after_blocks`; asserted in
+  `a_big_dripleaf_tilts_under_a_player_and_comes_back_up`).
 - A wet sponge set in the Nether: event 3501 0.875 up the cell, then the dry sponge
   (`blocks/sponge.rs`). Fixed.
 - `/setblock bed` (bds-fixset.txt): both halves in one UpdateSubchunkBlocks, the named cell the head

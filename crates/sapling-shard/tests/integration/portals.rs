@@ -61,7 +61,56 @@ fn fire_in_a_frame_lights_it_and_a_broken_frame_empties_it() {
     sent.extend(h.tick(1));
     let air = hash("minecraft:air");
     let gone = portal_cells(&all::<UpdateSubchunkBlocks>(&sent));
-    assert_eq!(gone, [[2, 67, 3], [3, 67, 3], [2, 66, 3], [3, 66, 3], [2, 65, 3], [3, 65, 3]].map(|at| (at, air)).to_vec(), "the whole sheet, top row first");
+    // The frame cell that broke it goes in the sheet's batch, as BDS's (research/captures/bds-n13sheet.txt).
+    assert_eq!(gone, [[1, 66, 3], [2, 67, 3], [3, 67, 3], [2, 66, 3], [3, 66, 3], [2, 65, 3], [3, 65, 3]].map(|at| (at, air)).to_vec(), "the whole sheet, top row first");
+}
+
+#[test]
+fn a_broken_sheet_goes_out_by_sub_chunk_in_bds_s_order_with_the_frame_cell_first_in_its_own() {
+    // research/captures/bds-n13sheet.txt: a 2 x 14 sheet over two sub-chunks across and two up.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        for x in 14..=17 {
+            for y in -27..=-12 {
+                let inside = (15..=16).contains(&x) && (-26..=-13).contains(&y);
+                let block = if inside { Block::new("minecraft:portal").with("portal_axis=x") } else { Block::new("minecraft:obsidian") };
+                assert!(ctx.set_block([x, y, 3], &block));
+            }
+        }
+    });
+    h.tick_all();
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.update_block([14, -20, 3], &Block::air())));
+    let raw: Vec<acacia_proto::RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let sent = all::<UpdateSubchunkBlocks>(&raw);
+    let corners: Vec<[i32; 3]> = sent.iter().map(|packet| [packet.x, packet.y, packet.z]).collect();
+    assert_eq!(corners, [[16, -32, 0], [16, -16, 0], [0, -16, 0], [0, -32, 0]]);
+    let first = &sent[3].blocks[0].position;
+    assert_eq!([first.x, first.y, first.z], [14, -20, 3]);
+    assert!(all::<acacia_proto::packets::UpdateBlock>(&raw).is_empty(), "the frame cell is not sent alone");
+}
+
+#[test]
+fn a_big_frame_lights_in_bds_s_order() {
+    // research/captures/bds-portal-sections.txt: the x 60 frame, z 20..40 and y -59..-39 inside.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        for z in 19..=41 {
+            for y in -60..=-38 {
+                let rim = z == 19 || z == 41 || y == -60 || y == -38;
+                assert!(ctx.set_block([60, y, z], &if rim { Block::new("minecraft:obsidian") } else { Block::air() }));
+            }
+        }
+    });
+    h.tick_all();
+    h.remote.run(|ctx| assert!(ctx.set_block([60, -59, 20], &Block::new("minecraft:fire"))));
+    let sent: Vec<UpdateSubchunkBlocks> = (0..3).flat_map(|_| all::<UpdateSubchunkBlocks>(h.tick_all().to(1))).filter(|packet| packet.blocks.len() > 1).collect();
+    let corners: Vec<[i32; 3]> = sent.iter().map(|packet| [packet.x, packet.y, packet.z]).collect();
+    assert_eq!(corners, [[48, -64, 16], [48, -48, 16], [48, -64, 32], [48, -48, 32]]);
+    let first: Vec<[i32; 3]> = sent[0].blocks.iter().take(4).map(|b| [b.position.x, b.position.y, b.position.z]).collect();
+    assert_eq!(first, [[60, -49, 30], [60, -50, 30], [60, -49, 29], [60, -50, 29]]);
 }
 
 #[test]

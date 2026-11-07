@@ -513,8 +513,13 @@ By night on the stone floor, the survival actor held in place:
   0.66. Fitted (thirteenth3aj, 2026-11-07): each eased step is the last one's 0.546 plus the full
   push (0.0518) times s squared, s = max(d squared, 0.5) with d its distance off the prey before the
   move: MoveControl's last-node slowdown (strolling's `LAST_SLOWEST`) with the prey as the last node,
-  exact to 1e-4 over all six steps. It pushed at 0.5955 off and stood from 0.5626 (both runs alike;
-  that bound's rule not found, sapling's `TOUCHING` 0.58), and its prey never pushed it back, where
+  exact to 1e-4 over all six steps. It pushed at 0.5955 off and stood from 0.5626 (both runs alike).
+  The bound (thirteenth3am, 2026-11-07): the path ends under the node radius, max(width/2, 0.6) as
+  for strolls, a tick behind the move: its last push began 0.5955 off, its walk before that 0.6321
+  off, and the next walk, which began 0.5626 off, was drag alone (0.0329 x 0.546 = 0.0180, as seen),
+  as when the move control takes the wanted place the follower set the tick before
+  (`hunting/heading.rs` `stops_short`, replacing the fitted 0.58; the ease test asserts it). Its
+  prey never pushed it back, where
   the still actor pushed a cow (`crowding.rs` skips a player's push on the mob hunting it). Test
   `a_hunter_eases_in_over_its_last_block_to_its_prey`.
 - Spider by day (`ah3spider`): BDS's took the actor at midnight 7.5 s after it came. After `/time set
@@ -534,8 +539,11 @@ By night on the stone floor, the survival actor held in place:
   (`drops.rs` `MobsWait`, test `a_piglin_takes_thrown_nuggets_9_ticks_after_they_are_shown`). At
   death BDS showed the main hand as the gear's drop left it (the undropped crossbow re-sent, the
   dropped nuggets' hand empty, drowned's tridents too in bds-drownedloot.txt); sapling's did so for
-  gear `command_gear::gear_of` holds (`death.rs` `show_dead_hands`); a drowned's own held item is
-  still shown emptied.
+  gear `command_gear::gear_of` holds (`death.rs` `show_dead_hands`). A drowned's own trident too
+  since thirteenth3am (2026-11-07): BDS re-sent it for slot 0 where it kept it and sent an empty
+  hand where it dropped it, the offhand emptied either way (bds-drownedloot.txt, ids 23, 27, 28
+  against 24); `drowned.rs` `choose_drops` now draws the drop as it dies, before its hands are
+  shown; test `a_drowned_killed_by_no_player_is_shown_holding_the_trident_it_keeps`.
 
 ## Not drilled
 
