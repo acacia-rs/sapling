@@ -28,6 +28,12 @@ pub(crate) fn poured(world: &mut World, layer: Entity, pos: BlockPos) {
     defer(world, layer, pos.map(|c| c as f32 + 0.5), GameEvent::FluidPlace, true);
 }
 
+/// `event` from the middle of the block at `pos`, by no player, heard the next tick: a potent sulfur's
+/// eruption that a change beside it started or ended (bds-ag2lava.txt).
+pub(crate) fn vibrate_next_tick(world: &mut World, layer: Entity, pos: BlockPos, event: GameEvent) {
+    defer(world, layer, pos.map(|c| c as f32 + 0.5), event, false);
+}
+
 /// The events put off last tick, posted now.
 pub(super) fn post(world: &mut World) {
     let Some(mut deferred) = world.get_resource_mut::<Deferred>() else { return };

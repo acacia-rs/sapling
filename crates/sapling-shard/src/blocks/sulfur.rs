@@ -101,8 +101,9 @@ fn wait(seed: i64, [x, y, z]: BlockPos, height: usize, state: usize) -> u64 {
 
 /// Sets the cell to `state` (0xcf57f80): an eruption's start and end send out `block_attach` and
 /// `block_destroy` vibrations, the start is heard with water over it open to the top; dormant or
-/// erupting queues its next turn even when the state is already so.
-fn set(world: &mut World, layer: Entity, pos: BlockPos, now: usize, state: usize) {
+/// erupting queues its next turn even when the state is already so. The vibrations of its own tick's
+/// turn fly at once; those of a change around it the next tick (bds-ag2geyser.txt, bds-ag2lava.txt).
+fn set(world: &mut World, layer: Entity, pos: BlockPos, now: usize, state: usize, ticked: bool) {
     let Some(level) = level(world, layer) else { return };
     let (height, open) = (water_height(level, pos), open_height(level, pos));
     if state != now {
@@ -116,7 +117,11 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, now: usize, state: usize
         }
         if (state >= ERUPTING) != (now >= ERUPTING) {
             let event = if state >= ERUPTING { GameEvent::BlockAttach } else { GameEvent::BlockDestroy };
-            super::sculk::vibrate_at(world, layer, pos, event, false);
+            if ticked {
+                super::sculk::vibrate_at(world, layer, pos, event, false);
+            } else {
+                super::sculk::vibrate_next_tick(world, layer, pos, event);
+            }
         }
         if state == CONTINUOUS {
             let due = world.resource::<Tick>().0 + RUMBLE_FIRST;
@@ -176,7 +181,7 @@ pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
         ERUPTING => DORMANT,
         _ => return,
     };
-    set(world, layer, pos, now, next);
+    set(world, layer, pos, now, next, true);
 }
 
 /// Whether putting `name` at `pos` may change a potent sulfur: it is one, or one is beside it.
@@ -194,7 +199,7 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, was: &str
     let Some(level) = level(world, layer) else { return };
     let Some(state) = state_at(level, pos) else { return };
     let asked = wanted(level, pos, state);
-    set(world, layer, pos, state, asked);
+    set(world, layer, pos, state, asked, false);
 }
 
 /// The block at `pos` changed: each potent sulfur beside it that its surroundings now ask another state
@@ -211,7 +216,7 @@ pub(super) fn neighbours_changed(world: &mut World, layer: Entity, pos: BlockPos
         if state == DORMANT || state == ERUPTING {
             queued::cancel(world, layer, beside, Job::PotentSulfur);
         }
-        set(world, layer, beside, state, asked);
+        set(world, layer, beside, state, asked, false);
     }
 }
 

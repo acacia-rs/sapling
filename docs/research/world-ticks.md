@@ -146,16 +146,22 @@ in the liquid layer of a block with an empty collision box.
   - Vibrations: entering erupting or continuous posts `block_attach` (f5e9d48, frequency 10), leaving them
     `block_destroy` (f5e9d50), with no source, from the cell's middle. A sensor four cells off went active 4 ticks
     after the start (both sides). Order: the block, the start sound, then the vibration's flight. Continuous to
-    wet (its lava set to stone or filled with air) posts `block_destroy` too (ag2lava). BDS sends the flight a tick
-    after the block; sapling the same tick (the sensor powers on the same tick on both).
+    wet (its lava set to stone or filled with air) posts `block_destroy` too (ag2lava). When a command's write
+    started or ended it, BDS sent the flight a tick after the block (4054 at 20127, the sound at 20077); when its
+    own tick did, the same tick (ag2geyser 50723). Sapling follows (thirteenth2al: `sulfur::set`'s `ticked`,
+    `sculk::vibrate_next_tick`).
   - `/fill` writes every cell before any neighbour hears (ag2lava): lava filled alone wets the sulfur over it, lava
-    and sulfur filled together list `air; air` with no wet write and no vibration. Sapling's plugin batch
-    (`hold_blocks`, handlers/backend.rs) keeps the sulfur's neighbour changes until it closes (`sulfur::defer_neighbours`;
-    test `a_batch_takes_a_geyser_away_unheard_but_its_lava_alone_wets_it`). Other blocks still settle cell by cell.
+    and sulfur filled together list `air; air` with no wet write and no vibration. The general rule for every block
+    is in block-rules.md "`/fill` neighbour updates".
   - `GeyserBoostSystem::tick` (Linux 0x753a640, mobs and falling blocks): from the cell at the feet (box middle in
     x z) down, the first of 25 cells with a collision box must be potent sulfur erupting or continuous and open
     (0xcf59340, water height h); while the box's bottom is under `y + plume[h] + h + 1` (plume 5, 10, 15, 20) and
-    its speed up under 0.4, 0.5, 0.6, 0.7, it gains 0.2 a tick (table 0x1c7debc +0x14, +0x18; 0x10987c4). A pig
+    its speed up under 0.4, 0.5, 0.6, 0.7, it gains 0.2 a tick (table 0x1c7debc +0x14, +0x18; 0x10987c4). It runs
+    after the mob's move and drag: the 0.2 shows in the told motion at once (BDS's first resend 0.2856) and moves
+    the mob only on its next tick. Sapling boosted before the move, so its told motion never jumped and it was
+    not resent; since thirteenth2al `Body::geysered` holds it for the next move (body/geyser.rs `boost`), and the
+    pig is resent through the bob as BDS's (sapling-ag2boost.txt, run lagged: 0.204, 0.489, 0.2353, -0.0090,
+    -0.2390 against BDS's 0.2856, 0.5151, 0.2356, -0.0088, -0.2388). A pig
     in the water over a one-water geyser rose from -23.3 to -17.2 (sulfur at -25) and bobbed about -18; sapling's
     (body/geyser.rs) to -16.7. A flying player is skipped; a third MovementEffects slot (GEYSER_BOOST) at -1 skips
     it too, which no drilled mob had.
@@ -163,10 +169,11 @@ in the liquid layer of a block with an empty collision box.
     (0xcf58437), Windows `imul r32` (bds-blocks 144bb97fc), as Java. It first differs from a 64-bit product at
     |x| 687 (random/tests.rs). A geyser at x 1000 (ag2far, level seed 0xa6e22b9d22bcfc24) erupted 424 ticks after
     its water and lasted 36: the wrapped seed gives 424 and 36, a 64-bit one 451 and 26.
-- Not ported: `geyser_continuous_eruption_active` (BDS played it every 40 ticks at the water's top, `y + h + 1`,
-  while continuous; no erupting one lasted long enough to hear `geyser_eruption_active`): its sender was not found
-  (not in PotentSulfurBlock's tick or set, the block actor's tick only sets a flag). Sapling's pig is not resent
-  `SetEntityMotion` as BDS's was; the client's plume.
+- `geyser_continuous_eruption_active`: BDS played it 41 ticks after the start's sound, then every 40, at the
+  water's top (`y + h + 1`, x z the middle) while continuous; no erupting one lasted long enough to hear
+  `geyser_eruption_active`. Its sender was not found (not in PotentSulfurBlock's tick or set; the block actor's tick
+  only sets a flag), so sapling keeps the timing itself (thirteenth2al: `sulfur::rumble`, `Rumbling`;
+  sapling-ag2lava.txt plays it at the start plus 2048 ms, as BDS).
 
 ## Parity drill (2026-10-29, `bds_command_probe bkticks` and `bknether`)
 

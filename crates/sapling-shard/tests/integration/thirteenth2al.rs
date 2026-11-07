@@ -92,6 +92,37 @@ fn a_continuous_geyser_rumbles_41_ticks_after_it_starts_then_every_40() {
     assert_eq!(heard, [(0, start, 65.5), (41, active.clone(), 67.0), (81, active, 67.0)]);
 }
 
+/// A geyser that water set over it starts flies its vibration the tick after its start's sound
+/// (bds-ag2lava.txt: 4054 at 20127 after the sound at 20077).
+#[test]
+fn a_geyser_a_command_starts_flies_its_vibration_a_tick_after_its_sound() {
+    use acacia_proto::packets::LevelEventGeneric;
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    ask(&mut h, |ctx| {
+        for y in [64, 66] {
+            [[3, y, 0], [5, y, 0], [4, y, -1], [4, y, 1]].iter().for_each(|at| _ = ctx.set_block(*at, &Block::new("glass")));
+        }
+        (66..=68).for_each(|y| _ = ctx.set_block([4, y, 0], &Block::air()));
+        ctx.set_block([4, 64, 0], &Block::new("lava"));
+        ctx.set_block([4, 65, 4], &Block::new("sculk_sensor"));
+        assert!(ctx.update_block([4, 65, 0], &Block { name: "minecraft:potent_sulfur".into(), properties: "potent_sulfur_state=dormant".into() }));
+    });
+    (0..80).for_each(|_| _ = h.tick_all());
+    h.remote.run(|ctx| assert!(ctx.update_block([4, 66, 0], &Block::new("water"))));
+    let mut heard = Vec::new();
+    for tick in 0..4 {
+        let sent = h.tick_all();
+        if all::<LevelSoundEvent>(sent.to(1)).iter().any(|sound| sound.sound_id == "geyser_continuous_eruption_start") {
+            heard.push((tick, "start"));
+        }
+        if all::<LevelEventGeneric>(sent.to(1)).iter().any(|event| event.event_id == 2027 << 1) {
+            heard.push((tick, "flight"));
+        }
+    }
+    assert_eq!(heard, [(0, "start"), (1, "flight")]);
+}
+
 /// One cell set alone wakes only its neighbours: water set by itself stands (bds-ai1liquid.txt).
 #[test]
 fn water_filled_in_one_cell_stands() {
