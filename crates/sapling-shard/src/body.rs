@@ -9,6 +9,7 @@ mod liquid;
 mod moves;
 mod physics;
 mod spawn_push;
+mod step;
 mod stuck;
 
 use acacia_physics::{Aabb, WorldView, collide_box};
@@ -172,7 +173,7 @@ impl Body {
                 self.stood = false;
             }
             let moved = [speed[0], speed[1] + lift, speed[2]];
-            self.on_ground = self.travel(level, physics, moved);
+            self.on_ground = self.travel(level, physics, moved, stood);
             return moved;
         }
         self.flung = false;
@@ -184,7 +185,7 @@ impl Body {
         }
         bubbles::push_columns(level, self);
         let wanted = self.motion;
-        self.on_ground = self.travel(level, physics, wanted);
+        self.on_ground = self.travel(level, physics, wanted, stood);
         if self.on_ground {
             self.motion[1] = 0.0;
         }
@@ -223,10 +224,14 @@ impl Body {
         held.motion
     }
 
-    /// A mob's move by `motion`: through blocks if its physics pass them, else [`Body::slide`].
-    fn travel(&mut self, level: &Level, physics: &Physics, motion: [f32; 3]) -> bool {
+    /// A mob's move by `motion`: through blocks if its physics pass them, else [`Body::slide`] with
+    /// its step up (step.rs) where it `stood` on the ground or lands.
+    fn travel(&mut self, level: &Level, physics: &Physics, motion: [f32; 3], stood: bool) -> bool {
         if !physics.passes {
-            return self.slide(level, motion);
+            return physics_view(level, |view| {
+                let moved = self.step_move(view, motion, physics.step, stood);
+                self.slide_by(view, motion, moved)
+            });
         }
         self.at = std::array::from_fn(|axis| self.at[axis] + motion[axis]);
         false
@@ -239,8 +244,13 @@ impl Body {
     }
 
     fn slide_in(&mut self, view: &impl WorldView, motion: [f32; 3]) -> bool {
+        let moved = collide_box(view, &self.aabb(), motion);
+        self.slide_by(view, motion, moved)
+    }
+
+    /// Moves by `moved` of the wanted `motion`: see [`Body::slide`].
+    fn slide_by(&mut self, view: &impl WorldView, motion: [f32; 3], moved: [f32; 3]) -> bool {
         let start = self.aabb();
-        let moved = collide_box(view, &start, motion);
         for axis in 0..3 {
             self.at[axis] += moved[axis];
             if moved[axis] != motion[axis] && (axis != 1 || motion[axis] > 0.0) {

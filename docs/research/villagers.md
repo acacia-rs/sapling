@@ -454,9 +454,19 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
   Variant and its next screen shows the new profession's freshly rolled offers; `become_unskilled` leaves
   it with none; an already-baby mob is told nothing of a baby event again. Ported (`vanilla/event.rs`,
   shard `creatures/evented.rs`, `villagers/retrained.rs`, sapling-data `mob-events.tsv`; tests
-  `an_evented_villager_takes_the_profession_its_event_names_with_its_offers`, world_commands). Left: BDS
-  answers before the event's SetEntityData, sapling after; a player's events (BDS's `gain_raid_omen` gave
-  the raid omen) and component groups sapling does not model (a sheep's `temperate_color` Color) do nothing.
+  `an_evented_villager_takes_the_profession_its_event_names_with_its_offers`, world_commands).
+- `/event` residue (group BC 2026-11-08, bds-bc1event.txt): BDS sends the CommandOutput first and the
+  event's SetEntityData and MobEffect as the tick ends; sapling now holds what an event tells until then
+  (`entities/tell.rs` `told_after_answer`), one VisibleMobEffects for a swap. Each change tells only its
+  item: a sheep's `wololo` Color 14; `on_sheared` / `on_eat_block` Flags (SHEARED set, cleared);
+  `temperate_color`, `cold_color`, `warm_color` Color by the pack's weights (81836, 5000, 5000, 5000, 3000,
+  164 of 100000, each table its own order), nothing when unchanged; `ageable_grow_up` Flags and Scale, with
+  the box only where the baby's announced box differs (a turtle's 1.2 by 0.4, not a sheep's; sapling-data
+  `mob_age_set`), and no shed scute. A player's `minecraft:gain_raid_omen` (the bare name fails) ends bad
+  omen and gives raid omen 0 for 600 ticks; `trigger_raid`, `clear_add_raid_omen` and
+  `remove_raid_trigger` showed nothing on the flat floor, nor do sapling's. Ported (`creatures/evented.rs`
+  `fire_on_player`, `husbandry/fired.rs`, `raids/omens.rs` `gain`; tests `thirteenth1bc`). Left: BDS's
+  `apply_effect.raid_omen` sound on the swap, and its `/effect` bad omen's particles off (sapling's on).
 - Trader llamas (bds-trade2.txt): both come with `LeadHolderEid` the trader's and `LEASHED` from their
   announcement (its pack's `should_leash`). Ported (`villagers/wandering.rs` `arrive`,
   `husbandry/leads.rs`: a lead holder is found again by any kept entity's `UniqueID`; test

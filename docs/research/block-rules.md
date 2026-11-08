@@ -188,8 +188,14 @@ and carrots are one plus the same throws (BDS 2-4 and 1-3; Java's rows had given
 sweet berry bush read Bedrock `growth` 3 as Java `age` 1 and dropped nothing (`GROWTH_IS_AGE`). Sapling's drill:
 sapling-at1drops.txt. Ripe beetroot (group AX, `ax1beet`, bds-ax1beet.txt: forty broken by `setblock ... destroy`):
 1 beetroot 20 times and 2 beetroot 20 times, not tied to its seeds (seeds 0/1/2/3: 3/8/6/3 beside one beetroot,
-1/7/11/1 beside two), where Java's table leaves 1; now 1 + `nextInt(2)` (`blocks/loot.rs` `BEETROOT`). The draw
-itself was not found in the decompile [U]: an even split fits the 40 as well as one more `nextInt(15) <= 7` throw.
+1/7/11/1 beside two), where Java's table leaves 1; now 1 + `nextInt(2)` (`blocks/loot.rs` `BEETROOT`). Found
+(group BC): crop drops are native, registered in `VanillaBlockDrops` (Windows fn 1487e5dd0; the ELF keeps the
+`VanillaBlockDrops::Registration::add` signature), not in `CropBlock`'s or `BeetrootBlock`'s vtable (the ELF's
+`13BeetrootBlock` overrides only its shape, render stage and seed/crop items). Beetroot's entry (1487f1ebd-1487f1f03,
+keyed by the beetroot HashedString at 14ccd5960) builds the crop strategy (1487fa680) with a count functor
+`{min 1, max 2}` whose vtable (14a92f168) counts by 14881cf00: `min + random.nextInt(max - min + 1)` where max >
+min, else min. The crop before it (14ccd54e0) gets the constant functor (14a92f180, 142f644d0: 1). So 1 +
+`nextInt(2)`, as fitted.
 
 Open checks for one bot session on BDS (place, read the state back): piston facing numbers, dispenser/piston up-down rule
 (position vs pitch), trapdoor placed on a side face, end rod values, snow-layer replace height, lever sound ids on the wire,

@@ -67,6 +67,11 @@ impl ShardCtx<'_> {
         self.backend.fire_entity_event(id, event)
     }
 
+    /// [`ShardCtx::fire_entity_event`] on a player (`minecraft:gain_raid_omen`).
+    pub fn fire_player_event(&mut self, player: PlayerId, event: &str) -> bool {
+        self.backend.fire_player_event(player, event)
+    }
+
     /// Names a mob as a name tag does: the name is shown over it, kept with it, and it no longer
     /// despawns. False for one that is gone or no mob.
     pub fn name_entity(&mut self, id: EntityId, name: &str) -> bool {
@@ -191,6 +196,9 @@ pub trait EntityBackend {
         false
     }
     fn fire_entity_event(&mut self, _id: EntityId, _event: &str) -> bool {
+        false
+    }
+    fn fire_player_event(&mut self, _player: PlayerId, _event: &str) -> bool {
         false
     }
     fn entity(&self, id: EntityId) -> Option<EntityInfo>;

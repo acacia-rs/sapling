@@ -5,7 +5,7 @@
 //! cell's corner one up; it has reached it within 1.14 of its box's middle height, and from then a count
 //! runs every tick. Standing in the egg cell (or the one above) it crumbles the eggs while the count is over
 //! 0, hops 0.3 up on the ground and is heard every 6th count, is pushed 0.3 down 3 counts after, and stomps
-//! the whole block out from count 61. Beside the cell it walks on, jumping (legs.rs `walk_up`). It gives up a walk of 1200 ticks (JAVA `RemoveBlockGoal`). Only with
+//! the whole block out from count 61. Beside the cell it walks on, stepping up onto the eggs (body/step.rs). It gives up a walk of 1200 ticks (JAVA `RemoveBlockGoal`). Only with
 //! `mobGriefing` on, and not while it hunts (creatures.rs).
 
 use bevy_ecs::prelude::*;
@@ -96,7 +96,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     }
     let count = stomping.count;
     if !in_egg_cell(&body, stomping.eggs) {
-        legs::walk_up(world, entity, layer, &body, middle, speed);
+        legs::walk(world, entity, layer, &body, middle, speed, 0.0);
         world.entity_mut(entity).insert(Stomping { reached: true, count: count + 1, ..stomping });
         return true;
     }

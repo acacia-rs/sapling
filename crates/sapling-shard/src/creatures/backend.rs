@@ -94,9 +94,14 @@ impl EntityBackend for Ctx<'_> {
     fn fire_entity_event(&mut self, id: EntityId, event: &str) -> bool {
         let Some(kind) = entities::describe(self.world, id).map(|entity| entity.kind) else { return false };
         match entities::find(self.world, id).filter(|&mob| self.world.get::<super::Creature>(mob).is_some()) {
-            Some(mob) => super::evented::fire(self.world, mob, &kind, event),
+            Some(mob) => entities::told_after_answer(self.world, |world| super::evented::fire(world, mob, &kind, event)),
             None => sapling_data::has_event(&kind, event),
         }
+    }
+
+    fn fire_player_event(&mut self, player: PlayerId, event: &str) -> bool {
+        let Some(player) = self.entity(player) else { return false };
+        entities::told_after_answer(self.world, |world| super::evented::fire_on_player(world, player, event))
     }
 
     fn turn_entity(&mut self, id: EntityId, yaw: f32) -> bool {

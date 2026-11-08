@@ -186,6 +186,8 @@ pub(super) fn physics_of(kind: &str) -> &'static Physics {
         "minecraft:allay" | super::bees::KIND => &Physics::HOVER,
         "minecraft:parrot" => &Physics::PARROT,
         "minecraft:squid" | "minecraft:glow_squid" => &Physics::SWIMMER,
+        "minecraft:enderman" | "minecraft:creaking" => &Physics::LONG_STEP,
+        "minecraft:camel" | "minecraft:camel_husk" => &Physics::CAMEL,
         _ if super::swimming::is_fish(kind) => &Physics::FISH,
         _ if sapling_data::mob_traits(kind).swims.is_some() => &Physics::SWIMMER,
         _ => &Physics::MOB,

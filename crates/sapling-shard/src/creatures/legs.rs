@@ -18,10 +18,10 @@ const STRIDE: f32 = 0.98;
 const TURN: f32 = 30.0;
 /// In the air its legs push 0.02 of what they do on the ground at speed 1.
 const AIRBORNE: f32 = 0.02;
-/// It jumps at a block whose face is this near the middle of its box, if the block is over half
-/// a block high with two free above.
+/// It jumps at a block whose face is this near the middle of its box, if the block's top is over its
+/// step (body/step.rs) above its feet with two free above: BDS's zombie stepped onto a stonecutter's
+/// 0.5625 and jumped an enchanting table's 0.75, then walked on along its top (bds-bc1step.txt).
 const STEP_NEAR: f32 = 0.5;
-const STEP: f32 = 0.5;
 
 #[derive(Component, Default)]
 pub(super) struct Legs {
@@ -30,27 +30,16 @@ pub(super) struct Legs {
 }
 
 /// Whether a step is before a mob going `facing`: see [`STEP_NEAR`].
-fn at_step(world: &World, layer: Entity, body: &Body, facing: f32) -> bool {
+fn at_step(world: &World, layer: Entity, body: &Body, facing: f32, step: f32) -> bool {
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
     let [x, y, z] = [body.at[0] - facing.sin() * STEP_NEAR, body.at[1], body.at[2] + facing.cos() * STEP_NEAR].map(|c| c.floor() as i32);
     let top = |up: i32| level.registry().get(level.block(x, y + up, z)).and_then(|state| state.boxes.iter().map(|b| b.max[1]).reduce(f32::max));
-    level.in_height(y + 2) && top(0).is_some_and(|top| top > STEP) && top(1).is_none() && top(2).is_none()
+    level.in_height(y + 2) && top(0).is_some_and(|top| y as f32 + top - body.at[1] > step) && top(1).is_none() && top(2).is_none()
 }
 
 /// Before the mob's move: it turns towards `to` and its legs push it there at `speed`, unless it
 /// is within `near` of it.
 pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32, near: f32) {
-    stride(world, entity, layer, body, to, speed, near, false);
-}
-
-/// [`walk`], jumping as it goes if on the ground: a stand-in for the step up onto a low block sapling's
-/// mobs lack (BDS's zombie walked onto turtle eggs, 0.4375 high; stomping.rs).
-pub(super) fn walk_up(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32) {
-    stride(world, entity, layer, body, to, speed, 0.0, true);
-}
-
-#[allow(clippy::too_many_arguments)]
-fn stride(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32, near: f32, up: bool) {
     let speed = speed * super::afflictions::pace(world, entity);
     let Some(mut legs) = world.get_mut::<Legs>(entity) else { return };
     let (dx, dz) = (to[0] - body.at[0], to[1] - body.at[2]);
@@ -63,7 +52,8 @@ fn stride(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f3
     let stride = if body.on_ground && body.liquid().is_none() { STRIDE * (speed * legs.pace).powi(2) } else { AIRBORNE * STRIDE * speed * legs.pace };
     let (yaw, push) = (legs.yaw, if dx.hypot(dz) < near { 0.0 } else { stride });
     let facing = yaw.to_radians();
-    let leap = body.on_ground && push > 0.0 && (up || at_step(world, layer, body, facing));
+    let step = world.get::<crate::entities::Kind>(entity).map_or(0.0, |kind| super::physics_of(&kind.0).step);
+    let leap = body.on_ground && push > 0.0 && at_step(world, layer, body, facing, step);
     if let Some(mut body) = world.get_mut::<Body>(entity) {
         body.walk([-facing.sin() * push, facing.cos() * push], leap.then_some(DEFAULT_JUMP_HEIGHT));
     }

@@ -37,8 +37,8 @@ fn stomped(at: [f32; 3]) -> (usize, usize) {
 
 /// BDS's `StompEggGoal` counts from reaching the egg (within 1.14 of the cell's corner one up) and crumbles it only
 /// standing in its cell, from count 1 till it goes at count 61: a zombie on the egg crumbles it 61 times and is
-/// heard at every 6th count from 0; one walking up crumbles it fewer times (50 in bds-av2stomp.txt and bds-ay2gdb.txt;
-/// sapling's jumps on, lacking a step up: legs.rs `walk_up`).
+/// heard at every 6th count from 0; one walking up crumbles it fewer times (50 in bds-av2stomp.txt and bds-ay2gdb.txt),
+/// stepping up onto it (body/step.rs).
 #[test]
 fn a_zombie_stomps_a_turtle_egg_out_61_counts_after_reaching_it() {
     assert_eq!(stomped([6.5, 65.0, 6.5]), (61, 11));

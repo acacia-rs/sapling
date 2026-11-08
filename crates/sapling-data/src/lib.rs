@@ -79,4 +79,4 @@ pub use start_game::{EYE_HEIGHT, StartGameOptions, start_game};
 pub use strides::{Strides, blend_strides, dress_strides, has_strides, kept_strides, roll_strides, stride_attributes};
 pub use templates::{pre_start_packets, registry_packets};
 pub use husbandry::{Husbandry, Swap, husbandry};
-pub use raised_look::{mob_age_set, mob_colour_set, mob_links_set, mob_look, mob_name_set, mob_pace};
+pub use raised_look::{mob_age_set, mob_links_set, mob_look, mob_name_set, mob_pace};

@@ -132,8 +132,8 @@ fn crop_seeds(fortune: u8, roll: &mut dyn FnMut(u32) -> u32) -> u32 {
     (0..CROP_THROWS + u32::from(fortune)).filter(|_| roll(CROP_SIDES) <= CROP_GROWTH).count() as u32
 }
 
-/// A ripe beetroot leaves 1 or 2 beetroot, evenly, apart from its seeds (bds-ax1beet.txt: 20 of
-/// 40 left 2, whatever their seeds); Java's table leaves 1.
+/// A ripe beetroot leaves 1 + `nextInt(2)` beetroot apart from its seeds, BDS's `VanillaBlockDrops` range
+/// {1, 2} (docs/research/block-rules.md; bds-ax1beet.txt); Java's table leaves 1.
 const BEETROOT: &str = "minecraft:beetroot";
 const BEETROOT_MOST: u32 = 2;
 

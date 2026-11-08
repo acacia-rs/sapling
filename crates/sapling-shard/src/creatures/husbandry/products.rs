@@ -112,12 +112,26 @@ pub(super) fn graze(world: &mut World, entity: Entity, kind: &str) {
     let Some((pos, id)) = eaten.filter(|_| griefs) else { return };
     blocks::set(world, layer, pos, id);
     shown::event(world, entity, acacia_proto::packets::EntityEventEventId::EatGrassAnimation, 0);
-    let Some(mut raised) = world.get_mut::<Raised>(entity).filter(|raised| raised.kept.sheared) else { return };
-    raised.kept.sheared = false;
+    shorn(world, entity, kind, false);
+}
+
+/// The sheep's wool goes (`minecraft:on_sheared`) or grows back (`minecraft:on_eat_block`), told by its
+/// flags alone (bds-bc1event.txt); nothing where it already has it so.
+pub(super) fn shorn(world: &mut World, entity: Entity, kind: &str, sheared: bool) {
+    let Some(mut raised) = world.get_mut::<Raised>(entity).filter(|raised| kind == SHEEP && raised.kept.sheared != sheared) else { return };
+    raised.kept.sheared = sheared;
     if let Some(rules) = sapling_data::husbandry(kind) {
-        regroup(world, entity, &rules.on_regrow);
+        regroup(world, entity, if sheared { &rules.on_sheared } else { &rules.on_regrow });
     }
-    shown::wool(world, entity);
+    shown::flag(world, entity, acacia_proto::types::MetadataFlags1::SHEARED, sheared);
+}
+
+/// The sheep's wool takes the colour `colour` (`Color`), as shown; nothing where it has it already.
+pub(super) fn colour(world: &mut World, entity: Entity, colour: i8) {
+    if let Some(mut raised) = world.get_mut::<Raised>(entity).filter(|raised| raised.kept.colour != colour) {
+        raised.kept.colour = colour;
+        shown::wool(world, entity);
+    }
 }
 
 /// Shears, a player's or a dispenser's, on a grown sheep with its wool, or a grown mooshroom.
@@ -128,11 +142,7 @@ fn shear(world: &mut World, entity: Entity, kind: &str, player: Option<Entity>, 
     match kind {
         SHEEP if !raised.kept.sheared => {
             let count = 1 + world.get_resource_or_insert_with(Dice::default).roll(3) as u8;
-            world.get_mut::<Raised>(entity).expect("read above").kept.sheared = true;
-            if let Some(rules) = sapling_data::husbandry(kind) {
-                regroup(world, entity, &rules.on_sheared);
-            }
-            shown::wool(world, entity);
+            shorn(world, entity, kind, true);
             give(world, entity, format!("minecraft:{colour}_wool"), count);
         }
         MOOSHROOM => {

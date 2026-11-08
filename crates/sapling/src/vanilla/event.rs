@@ -40,8 +40,7 @@ impl Command for EventCommand {
         if players.is_empty() && entities.is_empty() {
             return no_target(out);
         }
-        // TODO: a player's events (`minecraft:gain_raid_omen` gives BDS's player the raid omen) do nothing.
-        let mut fired = players.iter().map(|_| (PLAYER.to_owned(), sapling_data::has_event(PLAYER, &self.event))).collect::<Vec<_>>();
+        let mut fired = players.iter().map(|player| (PLAYER.to_owned(), ctx.fire_player_event(player.id, &self.event))).collect::<Vec<_>>();
         fired.extend(entities.iter().map(|entity| (entity.kind.clone(), ctx.fire_entity_event(entity.id, &self.event))));
         let kinds = |hit: bool| fired.iter().filter(|(_, fired)| *fired == hit).map(|(kind, _)| kind.as_str()).fold(Vec::<&str>::new(), |mut kinds, kind| {
             if !kinds.contains(&kind) {
