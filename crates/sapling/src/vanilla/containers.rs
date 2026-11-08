@@ -4,7 +4,8 @@
 //! bds-hit.txt, bds-fixreplace.txt).
 // Amounts 1 to 64 whatever the item (bds-k1cmds.txt: 17 and 64 pearls, 2 swords taken, 65 stone refused); old
 // coloured names take their colour from the data as `/give`'s do, other data is the item's, unchecked.
-// TODO: of a player's slots the hand, the hotbar, the inventory and armour.
+// A player's ender chest takes 0 to 26, told to nobody (bds-m3slots.txt).
+// TODO: BDS put `slot.armor.body` on a player (Armor window slot 4); sapling's player has no body slot.
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, EntityInfo, Item, MobSlot, MobSlotRefusal, Output, Permission, Sender, ShardCtx, Slot};
@@ -15,7 +16,8 @@ const SLOT_TYPE: &str = "slot.container";
 /// A player's slot types, and the inventory slot the first of each is; the hand is the held one.
 const HAND: &str = "slot.weapon.mainhand";
 const OFFHAND: &str = "slot.weapon.offhand";
-const PLAYER_SLOTS: &[(&str, u8, u8)] = &[("slot.hotbar", 0, 9), ("slot.inventory", 9, 27)];
+const PLAYER_SLOTS: &[(&str, u8, u8)] = &[("slot.hotbar", 0, 9), ("slot.inventory", 9, 27), (ENDER, 0, 27)];
+const ENDER: &str = "slot.enderchest";
 const ARMOUR_SLOTS: [&str; 4] = ["slot.armor.head", "slot.armor.chest", "slot.armor.legs", "slot.armor.feet"];
 /// Slot types only mobs have.
 const MOB_SLOTS: [&str; 4] = ["slot.saddle", "slot.armor", "slot.armor.body", "slot.chest"];
@@ -187,12 +189,14 @@ impl Command for ReplaceItem {
                     return out.translate("commands.generic.exception", Vec::new(), false);
                 }
                 let (first, size) = PLAYER_SLOTS.iter().find(|(known, ..)| known == kind).map_or((0, 1), |(_, first, size)| (*first, *size));
-                let Some(slot) = u8::try_from(self.slot).ok().filter(|slot| *slot < size) else { return self.bad_slot(out, size.into()) };
+                // BDS took `slot.weapon.offhand 1` into the offhand (bds-m3slots.txt).
+                let Some(slot) = u8::try_from(self.slot).ok().filter(|slot| *slot < size || kind == OFFHAND) else { return self.bad_slot(out, size.into()) };
                 for player in found {
                     let held = if kind == HAND { ctx.held_slot(player.id).unwrap_or(0) } else { first + slot };
                     let place = match ARMOUR_SLOTS.iter().position(|known| known == kind) {
                         Some(piece) => Slot::Armor(piece as u8),
                         None if kind == OFFHAND => Slot::Offhand,
+                        None if kind == ENDER => Slot::EnderChest(slot),
                         None => Slot::Main(held),
                     };
                     if !ctx.set_item(player.id, place, item.as_ref()) {

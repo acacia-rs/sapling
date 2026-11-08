@@ -488,7 +488,8 @@ A witch drinks as above (`creatures/drinks.rs`), a check a second (BDS's delays 
 tick), and has the potion's effects. `s3witch` (2026-11-05, bds-s3witch.txt): a free witch on magma,
 not burning, drank fire resistance 0.85 s in, then healing (the pack's `on_hot_block`; sapling's
 drank nothing, fixed), and walked 0.135 a tick drinking or not: the pack's `speed_modifier` -0.25
-slows BDS's not, nor sapling's.
+slows BDS's not, nor sapling's. A viewer who comes while it drinks gets its AddEntity, then the
+potion's MobEquipment (bds-m3witch.txt), as sapling's announcement now holds it (`drinks::held`).
 
 An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
 for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player who stares at it

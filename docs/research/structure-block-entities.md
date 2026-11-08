@@ -262,9 +262,9 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
     sub-chunk; each copy's entity is shown twice after (chest, shulker box, vault, trial spawner).
     Sapling's `/clone` now goes through `ShardCtx::copy_blocks` (`blocks/cloned.rs`); test in
     thirteenth2x.rs. A waterlogged block's water counts in the answer (a fence over water: `["2"]`).
-    Re-drilled (sapling-x2clone.txt): every clone's packets as BDS's. Found, not followed: a fence
-    `/setblock` over water is listed twice in one UpdateSubchunkBlocks with its final connections on
-    BDS; sapling sends two UpdateBlocks, unjoined then joined.
+    Re-drilled (sapling-x2clone.txt): every clone's packets as BDS's. A fence `/setblock` over water
+    is listed twice in one UpdateSubchunkBlocks with its final connections on BDS; sapling does the
+    same since bfea4eab (`blocks/commanded.rs` `joined`; test thirteenth2z.rs).
   - A vault and a trial spawner that ran (bds-x2ran.txt, mob spawning on): their cloned entities as
     BDS's but for the vault's `connected_players`; what each showed while running: spawners.md
     "Parity drill (2026-11-05)".

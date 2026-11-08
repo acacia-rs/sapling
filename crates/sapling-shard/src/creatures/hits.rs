@@ -52,14 +52,20 @@ pub(super) fn gone(world: &mut World, shot: Entity, later: bool) -> Option<()> {
     None
 }
 
-/// A [`Struck`] shot goes, in the tick after it hit: what it leaves comes, and one two ticks old is
-/// still heard `reappeared` (research/captures/bds-f14cthrow.txt, bds-p2shoot.txt).
+/// A [`Struck`] shot goes, in the tick after it hit: what it leaves comes, it goes, its landing is heard,
+/// and one two ticks old is still heard `reappeared` (research/captures/bds-f14cthrow.txt, bds-p2shoot.txt).
 pub(super) fn struck_goes(world: &mut World, shot: Entity, layer: Entity, id: u64, now: u64) {
     super::landing::leave(world, shot);
-    if let (Some(born), Some(body)) = (world.get::<flight::Arrow>(shot).map(|arrow| arrow.born), world.get::<Body>(shot).copied()) {
-        flight::vanish::reappear(world, shot, layer, id, now - born, &body);
-    }
+    let body = world.get::<Body>(shot).copied();
+    let reappeared = match (world.get::<flight::Arrow>(shot).map(|arrow| arrow.born), body) {
+        (Some(born), Some(body)) => flight::vanish::reappeared(world, shot, id, now - born, &body),
+        _ => None,
+    };
+    let heard = super::landing::heard_going(world, shot);
     crate::mobs::remove(world, shot);
+    let Some(body) = body else { return };
+    let sounds: Vec<_> = heard.into_iter().chain(reappeared).collect();
+    super::landing::after_gone(world, layer, body.at.map(|c| c.floor() as i32), sounds);
 }
 
 /// Where the archer `by` stands: a player is thrown away from it, not from the shot

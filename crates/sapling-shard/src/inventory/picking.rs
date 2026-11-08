@@ -2,9 +2,10 @@
 //! bds-packets.txt): the block's item is selected where the hotbar holds it, else put in the hand's
 //! slot when empty or the first empty one, and the client is sent its windows with the slot
 //! selected; viewers see the new hand. An entity pick got no answer and is dropped.
-// TODO: the block entity's data a pick may ask for (a chest's items) is left off; blocks whose item
-// has another name (wall torches, crops) are not picked.
+//! A block whose item has another name gives that item (`blocks::picked_as`); with data, a container's
+//! items come in the item's tag.
 
+use acacia_proto::nbt::{List, Value};
 use acacia_proto::packets::BlockPickRequest;
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
@@ -13,13 +14,15 @@ use sapling_world::ItemStack;
 use super::{HOTBAR, Inventory, Place, show_hand};
 use crate::components::{InLayer, Layer, Mode, Outgoing, PacketQueues};
 
+const DATA_LORE: &str = "(+DATA)";
+
 pub(crate) fn dispatch(world: &mut World) {
     for (player, request) in world.resource_mut::<PacketQueues>().take::<BlockPickRequest>() {
         if world.get::<Mode>(player).is_none_or(|mode| mode.0 != GameMode::Creative) || !crate::blocks::reaches(world, player, [request.x, request.y, request.z]) {
             continue;
         }
-        let Some(stack) = picked(world, player, [request.x, request.y, request.z]) else { continue };
         let pos = [request.x, request.y, request.z];
+        let Some(stack) = picked(world, player, pos, request.add_user_data) else { continue };
         if !crate::blocks::block_at(world, world.get::<InLayer>(player).map_or(player, |layer| layer.0), pos).is_some_and(|block| crate::hand_events::may_pick(world, player, pos, block)) {
             continue;
         }
@@ -43,10 +46,32 @@ pub(crate) fn dispatch(world: &mut World) {
     }
 }
 
-/// One of the item of the block at `pos`, with the block's state.
-fn picked(world: &World, player: Entity, [x, y, z]: [i32; 3]) -> Option<ItemStack> {
-    let layer = world.get::<Layer>(world.get::<InLayer>(player)?.0)?;
-    let (registry, id) = (layer.world.registry(), layer.world.block(x, y, z));
+/// One of the item of the block at `pos`, with the block's state where the item is the block's own;
+/// with `data`, a container's items and BDS's `(+DATA)` lore (research/captures/bds-m3pick.txt).
+fn picked(world: &mut World, player: Entity, pos: [i32; 3], data: bool) -> Option<ItemStack> {
+    let in_layer = world.get::<InLayer>(player)?.0;
+    let layer = world.get::<Layer>(in_layer)?;
+    let (registry, id) = (layer.world.registry(), layer.world.block(pos[0], pos[1], pos[2]));
     let name = registry.get(id).filter(|state| !state.is_air())?.name;
-    sapling_data::is_item(name).then(|| ItemStack { name: name.to_owned(), count: 1, damage: 0, block: Some(registry.network_hash(id)), tag: None })
+    let item = crate::blocks::picked_as(name)?;
+    let mut stack = match item == name {
+        true => ItemStack { name: item, count: 1, damage: 0, block: Some(registry.network_hash(id)), tag: None },
+        false => crate::inventory::stored(&sapling_api::Item::new(&item, 1), registry)?,
+    };
+    if data {
+        stack.tag = container_data(world, in_layer, pos);
+    }
+    Some(stack)
+}
+
+/// A container's block entity data as a pick with data tags its item; `None` for any other block.
+fn container_data(world: &mut World, layer: Entity, pos: [i32; 3]) -> Option<Value> {
+    let slots = crate::containers::contents(world, layer, pos)?;
+    let items: Vec<(u8, ItemStack)> = slots.iter().enumerate().filter_map(|(slot, held)| Some((slot as u8, held.as_ref()?.stack.clone()))).collect();
+    let registry = world.get::<Layer>(layer)?.world.registry();
+    let entity = Value::Compound(vec![("BlockEntityVersion".into(), Value::Int(0)), ("Findable".into(), Value::Byte(0))]);
+    let Value::Compound(mut fields) = sapling_world::with_container_items(&entity, &items, registry) else { return None };
+    let lore = Value::List(List { tag: 8, items: vec![Value::String(DATA_LORE.into())] });
+    fields.push(("display".into(), Value::Compound(vec![("Lore".into(), lore)])));
+    Some(Value::Compound(fields))
 }

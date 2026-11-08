@@ -127,6 +127,15 @@ selecting,session,items,enchanting}.rs`.
   placed the listed stone in survival (sapling-k1lock.txt); a real client sends its lists, so only a
   client that misreports them sees the difference (left as sapling's choice).
 
+## Drilled 2026-11-08 (`bds-m3slots.txt`)
+
+- `/replaceitem entity @s slot.weapon.offhand 1 ...` succeeded (any slot number is the one offhand slot).
+- `slot.enderchest` 0 to 26 succeeded and sent nothing until the ender chest was opened; 27 and -1 were
+  `badSlotNumber` [n, "0", "26"]. `slot.hotbar 9` → [9, 0, 8], `slot.inventory 27` → [27, 0, 26].
+- On a player `slot.saddle`, `slot.armor`, `slot.chest` and `slot.equippable` were `generic.exception`;
+  `slot.armor.body` succeeded into Armor window slot 4, which sapling has no slot for (TODO in
+  `vanilla/containers.rs`). Sapling: `Slot::EnderChest`; tests in `world_commands.rs`.
+
 ## Not seen; sapling's choice
 
 - `/defaultgamemode`, `/seed` and `/version` do not exist on BDS 1.26.52: sapling answers under

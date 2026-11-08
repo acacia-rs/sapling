@@ -45,11 +45,13 @@ pub enum DamageCause {
     SonicBoom = 31,
     Campfire = 32,
     SoulCampfire = 33,
+    /// A mace's smash, and `/damage ... mace_smash`.
+    MaceSmash = 34,
 }
 
 impl DamageCause {
     /// Each cause under the name `/damage` knows it by.
-    const NAMED: [(&'static str, DamageCause); 31] = [
+    const NAMED: [(&'static str, DamageCause); 32] = [
         ("none", Self::Generic),
         ("contact", Self::Contact),
         ("entity_attack", Self::Attack),
@@ -81,6 +83,7 @@ impl DamageCause {
         ("sonic_boom", Self::SonicBoom),
         ("campfire", Self::Campfire),
         ("soul_campfire", Self::SoulCampfire),
+        ("mace_smash", Self::MaceSmash),
     ];
 
     pub fn id(self) -> i32 {
@@ -95,7 +98,7 @@ impl DamageCause {
 
     /// Whether armour stops part of it, as BDS's did (docs/research/player-damage.md, "Armour").
     pub fn is_stopped_by_armour(self) -> bool {
-        matches!(self, Self::Generic | Self::Contact | Self::Attack | Self::Projectile | Self::Fire | Self::Lava | Self::BlockExplosion | Self::EntityExplosion | Self::Anvil | Self::Thorns | Self::FallingBlock | Self::Magma | Self::Fireworks | Self::Lightning | Self::Stalactite | Self::Campfire | Self::SoulCampfire)
+        matches!(self, Self::Generic | Self::Contact | Self::Attack | Self::Projectile | Self::Fire | Self::Lava | Self::BlockExplosion | Self::EntityExplosion | Self::Anvil | Self::Thorns | Self::FallingBlock | Self::Magma | Self::Fireworks | Self::Lightning | Self::Stalactite | Self::Campfire | Self::SoulCampfire | Self::MaceSmash)
     }
 
     /// Falls on the head: a helmet takes a quarter of it first.

@@ -109,6 +109,12 @@ async fn world_and_item_commands_answer_as_bds_answered() {
         ("replaceitem entity @s slot.hotbar 0 stone 65", r#"commands.generic.num.tooBig ["65", "64"] 0"#),
         ("replaceitem entity @s slot.hotbar 0 wool 1 5", r#"commands.replaceitem.success.entity ["slot.hotbar", "0", "Alice", "1", "Lime Wool"] 1"#),
         ("replaceitem entity @s slot.hotbar 0 wool 1 20", r#"commands.replaceitem.success.entity ["slot.hotbar", "0", "Alice", "1", "White Wool"] 1"#),
+        // bds-m3slots.txt.
+        ("replaceitem entity @s slot.weapon.offhand 1 apple", r#"commands.replaceitem.success.entity ["slot.weapon.offhand", "1", "Alice", "1", "Apple"] 1"#),
+        ("replaceitem entity @s slot.enderchest 26 bread 2", r#"commands.replaceitem.success.entity ["slot.enderchest", "26", "Alice", "2", "Bread"] 1"#),
+        ("replaceitem entity @s slot.enderchest 27 apple", r#"commands.replaceitem.badSlotNumber ["27", "0", "26"] 0"#),
+        ("replaceitem entity @s slot.saddle 0 saddle", "commands.generic.exception [] 0"),
+        ("replaceitem entity @s slot.inventory 27 apple", r#"commands.replaceitem.badSlotNumber ["27", "0", "26"] 0"#),
         ("spreadplayers ~ ~ -1 5 @a", r#"commands.generic.num.tooSmall ["-1.00", "0.00"] 0"#),
         ("spreadplayers ~ ~ 10 1 @a", r#"commands.generic.num.tooSmall ["1.00", "11.00"] 0"#),
         ("spreadplayers ~ ~ 1 5 nobody", "commands.generic.noTargetMatch [] 0"),

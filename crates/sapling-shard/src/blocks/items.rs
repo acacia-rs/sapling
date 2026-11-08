@@ -79,6 +79,41 @@ pub(super) fn block_of(registry: &BlockRegistry, name: &str, face: Face) -> Opti
     first(name).filter(|_| places)
 }
 
+/// Blocks a pick gives another item for, beyond [`RENAMED`] and signs (research/captures/bds-m3pick.txt).
+const PICKED_AS: &[(&str, &str)] = &[
+    ("minecraft:powered_repeater", "minecraft:repeater"),
+    ("minecraft:powered_comparator", "minecraft:comparator"),
+    ("minecraft:lit_furnace", "minecraft:furnace"),
+    ("minecraft:lit_blast_furnace", "minecraft:blast_furnace"),
+    ("minecraft:lit_smoker", "minecraft:smoker"),
+    ("minecraft:lit_redstone_lamp", "minecraft:redstone_lamp"),
+    ("minecraft:lit_redstone_ore", "minecraft:redstone_ore"),
+    ("minecraft:lit_deepslate_redstone_ore", "minecraft:deepslate_redstone_ore"),
+    ("minecraft:unlit_redstone_torch", "minecraft:redstone_torch"),
+    ("minecraft:piston_arm_collision", "minecraft:piston"),
+    ("minecraft:sticky_piston_arm_collision", "minecraft:sticky_piston"),
+    ("minecraft:bamboo_sapling", "minecraft:bamboo"),
+    ("minecraft:standing_banner", "minecraft:banner"),
+    ("minecraft:wall_banner", "minecraft:banner"),
+];
+
+/// The item a creative pick of the block `name` gives: its own where it is an item, else the item
+/// that places it; `None` for a block no item stands for (fire).
+pub(crate) fn picked_as(name: &str) -> Option<String> {
+    let renamed = PICKED_AS.iter().map(|(block, item)| (*block, *item)).chain(RENAMED.iter().map(|(item, block)| (*block, *item)));
+    if let Some((_, item)) = renamed.into_iter().find(|(block, _)| *block == name) {
+        return Some(item.to_owned());
+    }
+    if name == "minecraft:standing_sign" || name == "minecraft:wall_sign" {
+        return Some("minecraft:oak_sign".into());
+    }
+    if let Some(wood) = name.strip_suffix("_standing_sign").or_else(|| name.strip_suffix("_wall_sign")) {
+        return Some(format!("{}_sign", if wood == "minecraft:darkoak" { "minecraft:dark_oak" } else { wood }));
+    }
+    // Fire is an item but BDS picked nothing from it (bds-m3pick.txt).
+    (name != "minecraft:fire" && sapling_data::is_item(name)).then(|| name.to_owned())
+}
+
 /// The hanging sign `id`, about to hang under the block `above`, hung from one chain where that
 /// block has no whole bottom face to take two, or its placer sneaks (Java `HangingSignItem`,
 /// `CeilingHangingSignBlock`); any other block as it is.

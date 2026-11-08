@@ -20,8 +20,8 @@ use crate::components::{InLayer, Position};
 use crate::entities::Kind;
 
 pub(super) const MACE: &str = "minecraft:mace";
-/// The `HurtAnimation` cause BDS flashes a smash with: `MaceSmash`, which the API does not name.
-pub(super) const MACE_SMASH: i32 = 34;
+/// The `HurtAnimation` cause BDS flashes a smash with.
+pub(super) const MACE_SMASH: i32 = super::Cause::MaceSmash as i32;
 /// BDS's motion of a mob standing (a tick's gravity after drag), which the shove adds to.
 const RESTING: f32 = 0.0784;
 

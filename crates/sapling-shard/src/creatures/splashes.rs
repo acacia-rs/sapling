@@ -10,7 +10,7 @@ use super::{Creature, Dying};
 use crate::blocks::Dice;
 use crate::body::Body;
 use crate::components::{InLayer, Position, in_world};
-use crate::{late_sounds, vitals};
+use crate::vitals;
 
 const SLOWNESS: i16 = 17;
 const HARMING: i16 = 23;
@@ -56,8 +56,8 @@ pub(super) fn burst(world: &mut World, layer: Entity, at: [f32; 3], from: [f32; 
     let [x, y, z] = at;
     let splash = LevelEvent { event: LevelEventEvent::ParticleSplash, position: Vec3f { x, y, z }, data: sapling_data::shots::potion_colour(data) };
     let cell = at.map(|c| c.floor() as i32);
-    crate::view::to_viewers(world, layer, cell, &[sapling_net::encode(&splash)]);
-    late_sounds::play_later(world, 1, layer, cell, super::arrows::sound("glass", at, ""));
+    let shown: Vec<_> = std::iter::once(sapling_net::encode(&splash)).chain(super::landing::cracks("minecraft:splash_potion", super::landing::POTION_CRACKS, at)).collect();
+    crate::view::to_viewers(world, layer, cell, &shown);
     crate::entities::synced_next_tick(world, |world| give(world, layer, at, from, data, struck));
 }
 

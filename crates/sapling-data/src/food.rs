@@ -1,7 +1,7 @@
 //! What eating or drinking an item gives: hunger and saturation as the Java game and Dragonfly
 //! have them (BDS's apple drilled the same, research/captures/bds-eat.txt), and the effects BDS
 //! gave (docs/research/food-effects.md).
-// TODO: suspicious stews over data 14 were not drilled and give nothing, as 13 and 14 did on BDS.
+// Suspicious stews of data 13 to 20 give nothing, as on BDS (bds-foods3.txt, bds-t2eitems.txt, bds-m3stew.txt).
 
 /// Ticks use is held on a food before it is eaten.
 const USE_TICKS: u32 = 32;

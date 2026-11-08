@@ -105,6 +105,7 @@ pub(crate) use properties::set as set_property;
 pub(crate) use afflictions::{clouded, takes_potion};
 pub(crate) use armour_stands::use_on as dress_stand;
 pub(crate) use skeleton_traps::set_trap;
+pub(crate) use landing::tell_after_gone;
 pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot, first_move};
 pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, launch, sound, summon as summon_shot};
 pub(crate) use flight::vanish::vanish as vanish_shot;

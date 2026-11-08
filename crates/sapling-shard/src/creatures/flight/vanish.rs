@@ -34,13 +34,19 @@ pub(crate) fn vanish(world: &mut World, shot: Entity) -> Option<bytes::Bytes> {
 
 /// Tells a vanished shot's `reappeared` in the tick it is due, from the middle of `body`.
 pub(in crate::creatures) fn reappear(world: &mut World, shot: Entity, layer: Entity, id: u64, age: u64, body: &Body) {
-    if age != REAPPEARS_AT_AGE || world.entity_mut(shot).take::<Vanished>().is_none() {
-        return;
+    if let Some(heard) = reappeared(world, shot, id, age, body) {
+        crate::view::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &[heard]);
     }
-    let Some(kind) = world.get::<Arrow>(shot).map(|arrow| arrow.shot.kind) else { return };
+}
+
+/// [`reappear`]'s sound, where it is due, for the caller to tell.
+pub(in crate::creatures) fn reappeared(world: &mut World, shot: Entity, id: u64, age: u64, body: &Body) -> Option<bytes::Bytes> {
+    if age != REAPPEARS_AT_AGE || world.entity_mut(shot).take::<Vanished>().is_none() {
+        return None;
+    }
+    let kind = world.get::<Arrow>(shot)?.shot.kind;
     let [x, y, z] = body.at;
-    let heard = sound("reappeared", kind, id, [x, y + body.size[1] / 2.0, z]);
-    crate::view::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &[heard]);
+    Some(sound("reappeared", kind, id, [x, y + body.size[1] / 2.0, z]))
 }
 
 /// A mob's projectile of `kind` comes hidden, as a player's shot does: `disappeared` heard at `at`

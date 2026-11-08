@@ -95,7 +95,7 @@ impl Shard {
         schedule.add_systems((join, clock::advance, chunks.chain(), items.chain(), join::initialized).chain());
         let mut after_handlers = Schedule::default();
         after_handlers.set_executor(SingleThreadedExecutor::new());
-        let viewers = (visibility::update, mobs::update, entities::send_held_moves, movement::announce, movement::relay_swings, emotes::relay, inventory::announce, visibility::fan_out);
+        let viewers = (visibility::update, mobs::update, crate::creatures::tell_after_gone, entities::send_held_moves, movement::announce, movement::relay_swings, emotes::relay, inventory::announce, visibility::fan_out);
         after_handlers.add_systems((viewers.chain(), commands::announce, scoreboard::send, inventory::unlock_recipes, flush).chain());
         sapling_data::set_shield_item_id();
         world.insert_resource(CommandLists::new(&Commands::default()));

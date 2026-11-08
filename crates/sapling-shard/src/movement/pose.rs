@@ -26,6 +26,8 @@ pub(crate) struct Pose {
     pub invisible: bool,
     /// Shows `CAN_SHOW_NAMETAG`, which BDS sets on a player once invisibility left it.
     pub nametag: bool,
+    /// Eyes under water: BDS clears `BREATHING` (research/captures/bds-m3breath.txt).
+    pub holding_breath: bool,
 }
 
 /// The `Flags` bit BDS sets on a player whose freeze is full (research/captures/bds-freeze.txt).
@@ -34,8 +36,9 @@ const FROZEN: MetadataFlags1 = MetadataFlags1(1 << 40);
 impl Pose {
     /// The entity flags viewers get on top of the recorded ones.
     pub fn flags(self) -> MetadataFlags1 {
-        let mut flags = MetadataFlags1::BREATHING;
+        let mut flags = MetadataFlags1(0);
         let shown = [
+            (!self.holding_breath, MetadataFlags1::BREATHING),
             (self.sneaking, MetadataFlags1::SNEAKING),
             (self.sprinting, MetadataFlags1::SPRINTING),
             (self.swimming, MetadataFlags1::SWIMMING),
