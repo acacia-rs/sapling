@@ -46,9 +46,10 @@ impl ShardCtx<'_> {
         std::array::from_fn(|axis| base[axis] + ahead[axis] * forward + above[axis] * up + side[axis] * left)
     }
 
-    /// The players and entities `selector` names for `sender`, in vanilla's order: the nearest
-    /// first for `@p`, `@n` and any `c`, at random for `@r`, players then entities, oldest first,
-    /// otherwise. A name is the online player of that name.
+    /// The players and entities `selector` names for `sender`, in vanilla's order: at random for
+    /// `@r`, else the nearest first, players and entities together (BDS's `/effect @e` told its
+    /// MobEffects so, research/captures/bds-bd2event.txt, bds-bd2order.txt). A name is the online
+    /// player of that name.
     pub fn select(&mut self, sender: &Sender, selector: &Selector) -> Vec<Selected> {
         let here = self.origin(sender);
         self.select_from(sender, selector, here)
@@ -74,8 +75,7 @@ pub(super) fn pick(base: Base, filters: &Filters, origin: [f32; 3], candidates: 
     let limit = filters.count.or(one);
     match base {
         Base::RandomPlayer => shuffle(&mut found, seed),
-        _ if limit.is_some() => found.sort_by(|a, b| a.distance(origin).total_cmp(&b.distance(origin))),
-        _ => {}
+        _ => found.sort_by(|a, b| a.distance(origin).total_cmp(&b.distance(origin))),
     }
     if let Some(limit) = limit {
         if limit < 0 && base != Base::RandomPlayer {

@@ -198,3 +198,19 @@ fn a_walking_mob_steps_up_onto_a_block_as_high_as_its_max_auto_step() {
     let carpet = walked_at(Some("minecraft:white_carpet"), &Physics { step: 0.0, ..Physics::MOB });
     assert_eq!(carpet[1], 65.0, "with no step a carpet stops it");
 }
+
+#[test]
+fn a_mob_whose_box_clears_an_edge_stood_on_it_that_tick_and_falls_the_next() {
+    let level = level();
+    let mut zombie = Body::new([5.25, 65.0, 0.5], [0.0; 3], [0.6, 1.9]);
+    zombie.on_ground = true;
+    zombie.step(&level, &Physics::MOB, &mut || 0.5);
+    zombie.walk([0.12, 0.0], None);
+    zombie.step(&level, &Physics::MOB, &mut || 0.5);
+    assert!(zombie.at[0] - 0.3 > 5.0 && zombie.at[1] == 65.0 && zombie.on_ground, "off the edge, still stood (bds-bc1step.txt): {zombie:?}");
+    let x = zombie.at[0];
+    zombie.walk([0.12, 0.0], None);
+    zombie.step(&level, &Physics::MOB, &mut || 0.5);
+    assert!((zombie.at[1] - (65.0 - 0.0784)).abs() < 1e-5 && !zombie.on_ground, "one tick's fall: {zombie:?}");
+    assert!(zombie.at[0] - x > 0.12, "walked on at its ground pace: {zombie:?}");
+}

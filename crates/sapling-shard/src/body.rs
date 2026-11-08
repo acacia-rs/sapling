@@ -258,8 +258,10 @@ impl Body {
             }
         }
         // Only a top face under its feet stands it: one held up inside a block does not (BDS's stand
-        // half-pushed by a piston, bds-shove.txt).
-        motion[1] < 0.0 && moved[1] != motion[1] && rests_on_top(view, &start.translate(moved))
+        // half-pushed by a piston, bds-shove.txt). The fall is stopped before the move across, so a mob
+        // whose box clears an edge this tick still stood on it (bds-bc1step.txt).
+        let fell = start.translate([0.0, moved[1], 0.0]);
+        motion[1] < 0.0 && moved[1] != motion[1] && (rests_on_top(view, &fell) || rests_on_top(view, &start.translate(moved)))
     }
 }
 

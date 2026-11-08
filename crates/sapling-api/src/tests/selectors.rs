@@ -47,7 +47,7 @@ fn names(line: &str) -> String {
 #[test]
 fn commands_resolve_selectors_on_the_shard() {
     assert_eq!(names("/who @a"), "Alex, Bob Ross");
-    assert_eq!(names("/who @e"), "Alex, Bob Ross, minecraft:pig, minecraft:cow");
+    assert_eq!(names("/who @e"), "Alex, minecraft:pig, Bob Ross, minecraft:cow", "nearest first");
     assert_eq!(names("/who @e[type=!player, c=-1]"), "minecraft:cow");
     assert_eq!(names("/who @n[type=!player]"), "minecraft:pig");
     assert_eq!(names("/who @p[rm=1]"), "Bob Ross");
@@ -68,7 +68,7 @@ fn tags_put_on_the_shard_are_what_tag_tests() {
     assert!(!ctx.add_tag(Tagged::Player(PlayerId(1)), "vip") && ctx.tags(Tagged::Player(PlayerId(1))) == ["vip"]);
     assert_eq!(who(&mut backend, "/who @s[tag=vip]").0, "Alex");
     assert_eq!(who(&mut backend, "/who @e[tag=vip]").0, "Alex, minecraft:cow");
-    assert_eq!(who(&mut backend, "/who @e[tag=]").0, "Bob Ross, minecraft:pig");
+    assert_eq!(who(&mut backend, "/who @e[tag=]").0, "minecraft:pig, Bob Ross");
     assert!(ShardCtx::new(&mut backend).remove_tag(Tagged::Player(PlayerId(1)), "vip"));
     assert_eq!(who(&mut backend, "/who @a[tag=vip]").0, "commands.generic.noTargetMatch");
 }

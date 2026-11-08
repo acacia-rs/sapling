@@ -55,6 +55,11 @@ pub(super) struct Gaze {
     pitch: f32,
 }
 
+/// Where a mob's head faces, if it looks about.
+pub(super) fn head_yaw(world: &World, entity: Entity) -> Option<f32> {
+    world.get::<Gaze>(entity).map(|gaze| gaze.head)
+}
+
 fn apart(from: f32, to: f32) -> f32 {
     (to - from + 180.0).rem_euclid(360.0) - 180.0
 }
