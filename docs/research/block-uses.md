@@ -245,6 +245,10 @@ yet falls and one that has breaks. Its capture has the same states in the same o
 a block is first shown as set (the default state, `stability` 7) and not with its distance, and
 that a block about to break is not shown at 7 first.
 
+Scaffolding a world folder holds is not looked at on load (`f14sstored`, a world edited offline with
+sapling-leveldb's `set_blocks`): a floating block and one on the ground saved with `stability` 5 were
+both as stored ten seconds after the join, on BDS and sapling.
+
 ## Stacking
 
 Measured with `bds_command_probe stacks` (`bds-stacks.txt`, `sapling-stacks.txt`): the actor, in

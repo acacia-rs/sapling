@@ -77,11 +77,20 @@ pub(super) fn notice(world: &mut World, layer: Entity, pos: BlockPos) {
 }
 
 /// Notes the sources and dust of a column that came from storage: a circuit saved with the world
-/// is searched at the next evaluation and works on from there.
+/// is searched at the next evaluation and works on from there. A lit lamp is taken as lit by a
+/// signal, so one nothing powers goes out: BDS's did, as stored dust went to 0
+/// (research/captures/bds-f14sstored.txt).
 pub(crate) fn arrived(world: &mut World, layer: Entity, column: ChunkPos) {
     let Some(level) = level(world, layer) else { return };
     let registry = level.registry();
     let found = level.find_blocks(column, |id| matches!(Part::of(registry, id), part if part.is_source() || matches!(part, Part::Dust { .. })));
+    let lit = level.find_blocks(column, |id| Part::of(registry, id) == Part::User(User::Lamp { lit: true }));
+    if !lit.is_empty() {
+        let mut circuits = world.get_resource_or_insert_with(Circuits::default);
+        let circuit = circuits.layers.entry(layer).or_default();
+        circuit.power.extend(lit.iter().map(|pos| (*pos, 15)));
+        circuit.changed.extend(lit);
+    }
     if found.is_empty() {
         return;
     }
