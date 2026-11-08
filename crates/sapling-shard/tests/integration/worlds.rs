@@ -111,7 +111,7 @@ fn two_worlds_of_a_shard_are_invisible_to_each_other() {
     c.journal();
     c.leave(3);
     let sent = c.tick();
-    assert_eq!((ids(sent.to(1)), ids(sent.to(2))), (vec![RemoveEntity::ID, PlayerList::ID], vec![PlayerList::ID]));
+    assert_eq!((ids(sent.to(1)), ids(sent.to(2))), (vec![RemoveEntity::ID, acacia_proto::packets::LevelSoundEvent::ID, PlayerList::ID], vec![PlayerList::ID]));
     assert_eq!(c.journal(), ["0: quit Late in hub"]);
 }
 

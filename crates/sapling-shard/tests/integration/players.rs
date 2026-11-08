@@ -179,9 +179,10 @@ fn quitting_removes_the_entity_and_the_list_entry() {
     h.leave(3);
     let sent = h.tick_all();
     for conn in [1, 2] {
-        assert_eq!(ids(sent.to(conn)), [RemoveEntity::ID, PlayerList::ID]);
+        // bds-bg2player.txt: viewers hear the leaver `disappeared` after its RemoveEntity.
+        assert_eq!(ids(sent.to(conn)), [RemoveEntity::ID, acacia_proto::packets::LevelSoundEvent::ID, PlayerList::ID]);
         assert_eq!(all::<RemoveEntity>(sent.to(conn)), [RemoveEntity { entity_id_self: 3 }]);
-        let list: PlayerList = sent.to(conn)[1].decode().unwrap();
+        let list: PlayerList = sent.to(conn)[2].decode().unwrap();
         let PlayerRecordContent::Remove(removed) = &list.records[0].content else { panic!("not a remove: {list:?}") };
         assert_eq!((list.records.len(), list.records[0].legacy_type, removed.uuid), (1, 1, late));
     }
