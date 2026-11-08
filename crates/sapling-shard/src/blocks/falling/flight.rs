@@ -37,6 +37,8 @@ pub(crate) struct FallingBlock {
     airborne: u32,
     landed_for: Option<u32>,
     refused: bool,
+    /// A damaged anvil that wore out landing: it goes when it would be placed, leaving nothing.
+    broken: bool,
     /// The height its fall began at: the floor of the cell it left.
     from: f32,
     /// What it costs what it lands on for each block it fell, past the first.
@@ -79,7 +81,7 @@ fn spawn(world: &mut World, layer: Entity, block: u32, hash: u32, body: Body, ai
     entities::flag_moving(world, entity, true);
     // A new one is a tick into its fall, under the floor of its cell.
     let from = body.at[1].round();
-    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false, from, harm: 0.0 });
+    world.entity_mut(entity).insert(FallingBlock { block, airborne, landed_for: None, refused: false, broken: false, from, harm: 0.0 });
     Some(entity)
 }
 
@@ -102,18 +104,30 @@ fn crush(world: &mut World, layer: Entity, body: &Body, fallen: f32) {
 
 /// A landing anvil that fell `fallen` comes down one step more worn, 1 in 20 for each block past the
 /// first: fitted to bds-i1chip.txt (10 of 92 chipped falling 3, 43 of 92 falling 11; Java's extra
-/// 1 in 20 fit worse). A damaged one lands as it is (Java breaks it; not drilled).
-fn chip(world: &mut World, entity: Entity, layer: Entity, anvil: u32, fallen: f32) {
+/// 1 in 20 fit worse). A damaged one wearing so breaks: no sound, no block, no item (bds-p3anvil.txt).
+/// Whether it broke.
+fn chip(world: &mut World, entity: Entity, layer: Entity, anvil: u32, fallen: f32) -> bool {
     const WORN: [(&str, &str); 2] = [("minecraft:anvil", "minecraft:chipped_anvil"), ("minecraft:chipped_anvil", "minecraft:damaged_anvil")];
     let chance = (fallen - 1.0).ceil().max(0.0) * 0.05;
-    let Some(registry) = level(world, layer).map(|level| level.registry()) else { return };
-    let Some(state) = registry.get(anvil) else { return };
-    let Some(worn) = WORN.iter().find(|(name, _)| *name == state.name).and_then(|(_, worn)| registry.find(worn, state.properties)) else { return };
-    if world.get_resource_or_insert_with(super::super::Dice::default).fraction() < chance
-        && let Some(mut falling) = world.get_mut::<FallingBlock>(entity)
-    {
-        falling.block = worn;
+    let Some(registry) = level(world, layer).map(|level| level.registry()) else { return false };
+    let Some(state) = registry.get(anvil) else { return false };
+    // None for a damaged anvil, which wears into nothing.
+    let worn = match state.name {
+        "minecraft:damaged_anvil" => None,
+        name => match WORN.iter().find(|(from, _)| *from == name).and_then(|(_, worn)| registry.find(worn, state.properties)) {
+            Some(worn) => Some(worn),
+            None => return false,
+        },
+    };
+    if world.get_resource_or_insert_with(super::super::Dice::default).fraction() >= chance {
+        return false;
     }
+    let Some(mut falling) = world.get_mut::<FallingBlock>(entity) else { return false };
+    match worn {
+        Some(worn) => falling.block = worn,
+        None => falling.broken = true,
+    }
+    falling.broken
 }
 
 /// Writes each kept falling block's time in the air into what the world folder keeps of it.
@@ -185,7 +199,7 @@ fn brushable_dust(world: &World, layer: Entity, block: u32, cell: BlockPos) -> O
 /// One tick of a falling block; the cell its block was placed in, when it was.
 fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<BlockPos> {
     let falling = world.get::<FallingBlock>(entity)?;
-    let (block_id, airborne) = (falling.block, falling.airborne + 1);
+    let (block_id, airborne, broken) = (falling.block, falling.airborne + 1, falling.broken);
     if falling.refused {
         let at = world.get::<Body>(entity)?.at;
         mobs::remove(world, entity);
@@ -199,6 +213,10 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
             mobs::remove(world, entity);
         }
         if waited != PLACE_AFTER {
+            return None;
+        }
+        if broken {
+            mobs::remove(world, entity);
             return None;
         }
         if is_dripstone(world, layer, block_id) {
@@ -262,8 +280,9 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         // BDS sends the sound before the landing move, after the hurt it did.
         if is_anvil {
             crush(world, layer, &body, fell);
-            chip(world, entity, layer, block_id, fell);
-            packets.insert(0, event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));
+            if !chip(world, entity, layer, block_id, fell) {
+                packets.insert(0, event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));
+            }
         }
         if is_dripstone {
             dripstone::hurt(world, layer, &body, harm, fell);
