@@ -1,13 +1,18 @@
 //! Group AD of the fourteenth brief: a chest set away while open (research/captures/bds-u3chest.txt)
-//! and vehicles broken in lava or killed (bds-ffburn.txt, bds-p3lava.txt).
+//! vehicles broken in lava or killed (bds-ffburn.txt, bds-p3lava.txt), and a structure placed over
+//! columns not loaded (bds-y3place.txt).
 
 use crate::common;
 
 use acacia_proto::Packet;
 use acacia_proto::RawPacket;
 use acacia_proto::packets::{AddEntity, AddItemEntity, BlockEvent, ContainerClose, ContainerOpen, UpdateBlock};
+use std::sync::Arc;
+
 use common::{Harness, all, click};
-use sapling_api::Block;
+use sapling_api::{Block, PlaceOptions};
+use sapling_world::{BlockRegistry, Chunk, ChunkPos, Dimension, PlaceFailure, ShapeLoader, StoredColumn, World, WorldStorage};
+use sapling_worldgen::StructureWrites;
 
 const HERE: [i32; 3] = [1, 65, 0];
 
@@ -69,4 +74,54 @@ fn a_killed_boat_leaves_no_item_and_a_killed_cart_does() {
     };
     assert_eq!(dropped(&mut h, "minecraft:boat"), 0);
     assert_eq!(dropped(&mut h, "minecraft:minecart"), 1);
+}
+
+const NEAR: [i32; 3] = [8, 64, 8];
+const FAR: [i32; 3] = [88, 64, 8];
+
+/// Storage of a stone floor at y 63 whose one structure is a glowstone at NEAR and one at FAR.
+struct OneStructure(sapling_world::MemoryStorage);
+
+impl WorldStorage for OneStructure {
+    fn load_column(&self, pos: ChunkPos, dimension: i32) -> Result<Option<StoredColumn>, sapling_world::StorageError> {
+        if let Some(stored) = self.0.load_column(pos, dimension)? {
+            return Ok(Some(stored));
+        }
+        let registry = BlockRegistry::vanilla();
+        let mut chunk = Chunk::empty(pos.x, pos.z, Dimension::overworld(registry.air_id()));
+        let stone = registry.states_of("minecraft:stone").next().unwrap().0;
+        (0..16).for_each(|x| (0..16).for_each(|z| chunk.set(x, 63, z, 0, stone)));
+        Ok(Some(StoredColumn::of(chunk)))
+    }
+
+    fn store_column(&self, pos: ChunkPos, dimension: i32, column: &StoredColumn) -> Result<(), sapling_world::StorageError> {
+        self.0.store_column(pos, dimension, column)
+    }
+
+    fn structure_writes(&self, _: &str, _: [i32; 3], _: bool, _: &ShapeLoader<'_>) -> Option<Result<StructureWrites, PlaceFailure>> {
+        let glowstone = sapling_worldgen::Block::from_name("minecraft:glowstone")?;
+        Some(Ok(StructureWrites { blocks: vec![(NEAR, glowstone), (FAR, glowstone)], entities: Vec::new(), actors: Vec::new(), jigsaws: Vec::new() }))
+    }
+}
+
+fn name_at(h: &mut Harness, pos: [i32; 3]) -> String {
+    common::asking::ask(h, move |ctx| ctx.block(pos).map(|block| block.name)).unwrap_or_default()
+}
+
+#[test]
+fn a_placed_structure_s_share_of_an_unloaded_column_is_placed_when_the_column_loads() {
+    // BDS's PlaceCommand `_placeOrDeferSections`: success, the loaded part now, the rest as it loads (bds-y3place.txt).
+    let world = World::with_storage(Arc::new(OneStructure(sapling_world::MemoryStorage::default())));
+    let mut h = Harness::with(common::config(), world);
+    common::stored::enter_stored(&mut h, 1);
+    let placed = common::asking::ask(&mut h, |ctx| ctx.place_structure("minecraft:trail_ruins", [8, 64, 8], PlaceOptions::default()));
+    assert_eq!(placed, Ok(()));
+    assert_eq!(name_at(&mut h, NEAR), "minecraft:glowstone");
+    assert_eq!(name_at(&mut h, FAR), "", "column (5, 0) is out of a radius-2 view");
+    h.remote.run(|ctx| ctx.teleport(sapling_api::PlayerId(1), [88.5, 64.0, 8.5]));
+    let arrived = (0..40).any(|_| {
+        h.tick_all();
+        name_at(&mut h, FAR) == "minecraft:glowstone"
+    });
+    assert!(arrived, "placed once its column loaded");
 }
