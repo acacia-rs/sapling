@@ -17,6 +17,7 @@ pub(crate) struct Identity(pub sapling_api::Player);
 
 /// The entity's id on the wire, both its runtime and its unique id. Unique per shard.
 #[derive(Component, Clone, Copy)]
+#[component(on_add = crate::entities::slots::take, on_remove = crate::entities::slots::release)]
 pub(crate) struct NetId(pub u64);
 
 impl NetId {

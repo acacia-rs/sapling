@@ -70,7 +70,16 @@ fn last_data(packets: Vec<Bytes>) -> Vec<Bytes> {
 /// Sends what is heard as new entities appear, their first data and what was held back for the
 /// tick's announcements; runs after them (mobs.rs).
 pub(crate) fn send_held_moves(world: &mut World) {
+    let mut held: Vec<(Entity, Vec<Bytes>)> = Vec::new();
     for (player, packets) in world.get_resource_mut::<AfterAnswer>().map(|mut held| std::mem::take(&mut held.0)).unwrap_or_default() {
+        match held.iter_mut().find(|(known, _)| *known == player) {
+            Some((_, all)) => all.extend(packets),
+            None => held.push((player, packets)),
+        }
+    }
+    for (player, packets) in held {
+        let about: Vec<(Option<u64>, Bytes)> = packets.into_iter().map(|packet| (about(&packet), packet)).collect();
+        let packets = super::slots::in_sync_order(world, about);
         if let Some(mut out) = world.get_mut::<Outgoing>(player) {
             out.0.extend(packets);
         }
@@ -96,6 +105,13 @@ pub(crate) fn send_held_moves(world: &mut World) {
             }
         }
     }
+}
+
+/// The runtime id of the actor a held packet is about.
+fn about(packet: &Bytes) -> Option<u64> {
+    let raw = acacia_proto::RawPacket::parse(packet.clone()).ok()?;
+    let sound = |raw: &acacia_proto::RawPacket| raw.decode::<acacia_proto::packets::LevelSoundEvent>().ok().and_then(|sound| u64::try_from(sound.entity_unique_id).ok());
+    raw.decode::<SetEntityData>().ok().map(|data| data.runtime_entity_id).or_else(|| sound(&raw))
 }
 
 /// `packets` about `entity` less what its announcement this tick already showed (mobs/folded.rs).

@@ -57,6 +57,7 @@ impl Shard {
         world.init_resource::<Elsewhere>();
         world.init_resource::<arenas::Templates>();
         world.init_resource::<Tick>();
+        world.init_resource::<crate::entities::slots::Slots>();
         world.init_resource::<Arrivals>();
         world.init_resource::<PacketQueues>();
         world.init_resource::<ToViewers>();

@@ -479,7 +479,24 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
   nearest first, players among the mobs (actor 0, sheep 6.4 to 22.8, the watcher 30 off last); sapling
   went players first then oldest first. Fixed (`sapling-api` `selector/resolve.rs` `pick`: every base
   but `@r` sorted by distance; test `order_and_count_follow_the_base_and_c`), so sapling's `/event`
-  tells in selector order. Left: the per-tick actor walk (needs BDS's container traced, gdb).
+  tells in selector order. The per-tick actor walk: "Actor order" below.
+- Actor order (group BE 2026-11-08, gdb on the Linux BDS; bds-be3slots.txt): every tick-end SetEntityData
+  comes from `_tickActorDataSyncSystem` (adapter vtable 0xef934a8, tick 0x6d5d150, per actor 0x6d5db00, send
+  0x6d5df33), an EnTT view led by the `ActorOwnerComponent` storage (lead index 0 at system+0x38), walked
+  from its last packed slot down. That storage deletes in place (tombstones, free-list head at storage+0x48):
+  a new actor of any kind (player, mob, item, orb, slime split) takes the slot freed last, else one past the
+  end. Logged storage dumps fit every summon and kill of three be3slots runs; on bd2order (re-run under gdb)
+  the walk and the sends were both 18, 17, 16, 15, 19. So bd2order's and bd2event's orders came from the
+  animals the first `/kill` freed, their slots retaken newest-freed first.
+  Actors gone in one tick are queued per chunk as `LevelChunk`'s tick (0xc9e2940, queue call 0xc9e5b05)
+  meets them, chunks in the shuffled ticking order (tick-queue.md "Chunks"), and the queue is cleared at
+  0xc92c3a0: libc++ destroys from the back, MSVC from the front, so Linux and Windows free a tick's dead in
+  opposite orders; sapling frees as it despawns. A mob's effects run out lowest slot first (bd2event's speed:
+  15, 17, 14, 18, 19, 22, the sync's reverse; one drill). Ported (`sapling-shard` `entities/slots.rs` on
+  `NetId`'s hooks; `entities/tell.rs` held packets highest slot first; `creatures/afflictions` holds
+  VisibleMobEffects and the omen sound to the sync, runs out lowest slot first; tests `thirteenth3be`,
+  `a_new_actor_takes_the_slot_freed_last`). Left: sapling shows no mob invisibility (BDS's Flags at the
+  sync, its `disappeared` sounds the tick after, both in sync order).
 - Trader llamas (bds-trade2.txt): both come with `LeadHolderEid` the trader's and `LEASHED` from their
   announcement (its pack's `should_leash`). Ported (`villagers/wandering.rs` `arrive`,
   `husbandry/leads.rs`: a lead holder is found again by any kept entity's `UniqueID`; test

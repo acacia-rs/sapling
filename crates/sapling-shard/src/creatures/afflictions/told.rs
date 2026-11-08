@@ -80,3 +80,11 @@ pub(super) fn tell(world: &mut World, mob: Entity, packets: Vec<bytes::Bytes>) {
     let (Some(layer), Some(at)) = (world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(mob).map(|body| body.at)) else { return };
     entities::tell_viewers(world, mob, layer, at.map(|c| c.floor() as i32), packets);
 }
+
+/// [`tell`], held to BDS's actor-data sync at the tick's end: `VisibleMobEffects` and the omen sound came
+/// after `/effect`'s answer, mobs in the sync's order (bds-bd2event.txt; entities/slots.rs).
+pub(super) fn tell_at_sync(world: &mut World, mob: Entity, packets: Vec<bytes::Bytes>) {
+    if !packets.is_empty() {
+        entities::told_after_answer(world, |world| tell(world, mob, packets));
+    }
+}
