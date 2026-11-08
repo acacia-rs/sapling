@@ -51,6 +51,9 @@ fn keep(world: &mut World, moved: Vec<(Entity, Body, bool)>) {
             crate::movement::push(world, entity, body.at);
         } else if let Some(mut kept) = world.get_mut::<Body>(entity) {
             *kept = body;
+            if let Some(mut told) = world.get_mut::<crate::sync::Told>(entity) {
+                told.pistoned();
+            }
         }
     }
 }
@@ -62,17 +65,20 @@ fn rides(body: &Body, cell: BlockPos, low: [f32; 3]) -> bool {
     (min[1] - (cell[1] + 1) as f32).abs() < ON_TOP && [0, 2].iter().all(|&i| max[i] > span(i).0 && min[i] < span(i).1)
 }
 
-/// Moves what stands on the blocks at `cells` by `by` towards `dir`, through the blocks there.
-pub(super) fn carry_riders(world: &mut World, layer: Entity, cells: &[BlockPos], dir: Face, by: f32) {
-    let step = dir.offset().map(|c| c as f32 * by);
+/// Moves what stands on the blocks at `cells` by `by` towards `dir`, through the blocks there; as a
+/// push starts (`starts_out`), what is not on honey goes as far again, off its block, and falls in
+/// that tick (bds-u3carry.txt: 3.5, 4.0 told, then 4.5 falling).
+pub(super) fn carry_riders(world: &mut World, layer: Entity, cells: &[BlockPos], dir: Face, by: f32, starts_out: bool) {
     let all = bodies(world, layer);
+    let tops: Vec<Top> = cells.iter().map(|cell| top_of(world, layer, *cell)).collect();
     let Some(level) = super::level(world, layer) else { return };
     let carried: Vec<_> = all
         .into_iter()
-        .filter(|(_, body, _)| cells.iter().any(|cell| rides(body, *cell, cell.map(|c| c as f32))))
-        .map(|(entity, mut body, is_player)| {
-            body.push(level, step, cells);
-            (entity, body, is_player)
+        .filter_map(|(entity, mut body, is_player)| {
+            let top = cells.iter().zip(&tops).find(|(cell, _)| rides(&body, **cell, cell.map(|c| c as f32)))?.1;
+            let far = if starts_out && *top != Top::Honey { 2.0 * by } else { by };
+            body.push(level, dir.offset().map(|c| c as f32 * far), cells);
+            Some((entity, body, is_player))
         })
         .collect();
     keep(world, carried);

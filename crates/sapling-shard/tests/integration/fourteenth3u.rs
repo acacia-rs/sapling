@@ -52,13 +52,14 @@ fn steps(seen: &[Vec<[f32; 3]>], body: usize, axis: usize) -> Vec<f32> {
 
 #[test]
 fn a_stand_on_a_stone_pushed_sideways_goes_with_it_then_before_its_front_and_one_pulled_goes_back() {
-    // bds-u3carry.txt: on a pushed stone 3.5, 4.0, then 5.25 before its front, falling; on a pulled one 4.5, 4.0, 3.0.
+    // bds-u3carry.txt: on a pushed stone 3.5, 4.5 in the tick it starts, then 5.25 before its front,
+    // falling; on a pulled one 4.5, 4.0, 3.0.
     let mut h = ready(&[([0, 65, 0], "piston", "facing_direction=4"), ([1, 65, 0], "stone", ""), ([0, 65, 4], "sticky_piston", "facing_direction=4"), ([1, 65, 4], "stone", "")]);
     let pushed = spawned(&mut h, &[("minecraft:armor_stand", [1.5, 66.0, 0.5])]);
     ticks(&mut h,2);
     put(&mut h, &[([0, 66, 0], "redstone_block", ""), ([0, 66, 4], "redstone_block", "")]);
     let seen = track(&mut h, pushed, 30);
-    assert_eq!(steps(&seen, 0, 0), [1.5, 2.0, 3.25]);
+    assert_eq!(steps(&seen, 0, 0), [1.5, 2.5, 3.25]);
     assert_eq!(seen.last().map(|feet| feet[0][1]), Some(65.0), "it falls off");
     let pulled = spawned(&mut h, &[("minecraft:armor_stand", [2.5, 66.0, 4.5])]);
     ticks(&mut h,2);

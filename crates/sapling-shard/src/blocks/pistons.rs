@@ -146,7 +146,7 @@ fn start(world: &mut World, layer: Entity, pos: BlockPos, piston: &Piston, is_po
         shove::shove(world, layer, &[pos], piston.front, HALFWAY, &[]);
     }
     if piston.front.offset()[1] == 0 {
-        shove::carry_riders(world, layer, &taken, if is_powered { piston.front } else { back(piston.front) }, HALFWAY);
+        shove::carry_riders(world, layer, &taken, if is_powered { piston.front } else { back(piston.front) }, HALFWAY, is_powered);
     }
     let started = world.resource::<Tick>().0;
     world.resource_mut::<Pistons>().0.push(Move { layer, pos, extends: is_powered, started, stages_done: 1, taken, broken, carried: Vec::new(), is_powered });
@@ -245,7 +245,7 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
             if going.extends {
                 shove::shove(world, layer, &pushed(going), piston.front, 1.0, &tops);
             } else if step.offset()[1] == 0 {
-                shove::carry_riders(world, layer, &going.taken, step, 1.0);
+                shove::carry_riders(world, layer, &going.taken, step, 1.0, false);
             }
         }
         2 => {
