@@ -28,6 +28,15 @@ pub(crate) fn bitten(world: &mut World, player: Entity, amount: f32, kind: &str,
     struck(world, player, amount, kind, speed, Cause::Attack)
 }
 
+/// A spear's charge by a mob of `kind` hurts a player for `amount`, thrown at `speed` where it
+/// throws (hits past the spear's knockback time threw none, bds-aa2spear.txt). False where it took nothing.
+pub(crate) fn speared(world: &mut World, player: Entity, amount: f32, kind: &str, speed: Option<[f32; 3]>) -> bool {
+    match speed {
+        Some(speed) => struck(world, player, amount, kind, speed, Cause::Attack),
+        None => slain_by(world, player, kind, |world| is_mortal(world, player) && hurt(world, player, amount, Cause::Attack)),
+    }
+}
+
 /// An evoker's fang hurts a player for `amount` by magic and throws it as a hit from the evoker,
 /// at `from`, does (research/captures/bds-evoker-findings.md). False where it took nothing.
 pub(crate) fn fanged(world: &mut World, player: Entity, amount: f32, kind: &str, from: [f32; 3]) -> bool {

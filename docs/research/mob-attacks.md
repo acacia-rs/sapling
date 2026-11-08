@@ -659,8 +659,25 @@ A spear holder's `use_kinetic_weapon` (fourteenth2x, decompile only, not ported)
 vtable 0xeeb4b48 (canUse 0x5349600, canContinueToUse 0x53496e0, start 0x5349290, stop 0x5349550, tick
 0x53497c0, a four-state machine on goal+0x210 of ~575 lines, slot 8 0x5349e50). The zombie's pack:
 on foot approach 10, reposition 6-7, cooldown 9-11, `weapon_reach_multiplier` 0.5, `weapon_min_speed_multiplier`
-0.2; on a zombie horse approach 12, reposition 8-9 and cooldown 11-13 (×1.4), speed 1.4. Sapling has no kinetic
-weapon at all (no `KineticDamageDealt`, no charge), so the goal waits on that item system.
+0.2; on a zombie horse approach 12, reposition 8-9 and cooldown 11-13 (×1.4), speed 1.4.
+
+Drilled by fourteenth2aa (bds-aa2spear.txt: a zombie 10 off a survival actor given an iron spear on easy and
+normal, a wooden one on easy) and ported (creatures/hunting/strike/lances.rs). The spear went up (`ACTION`,
+bit 4) the tick it was given, under 10 off; the zombie walked at 0.114 a tick at and through the actor, to
+about 6.2 past, and back. Hits came 2.5 off centre to centre, about every 18 ticks while the thrown actor
+kept ahead, each `KineticDamageDealt` (data 1) with no swing and no attack sound: iron 3.5 on easy and 5 on
+normal, wooden 3 on easy, which is the zombie's attack 3 plus floor(speed 2.28 b/s × `damage_multiplier`)
+(iron 0.95 → 2, wooden 0.7 → 1), easy's halving plus 1 after; bds-j3ride's mounted rider at 5.26 b/s, raw
+7, fits too. Each threw the actor 0.4 away and 0.4 up until `delay` + knockback `max_duration` ticks after
+the spear went up (iron 12 + 135; a hit 154 ticks after it threw none). The spear came down after `delay` +
+damage `max_duration` (iron 237, wooden 316 ticks) and went up again 22 and 30 ticks later.
+sapling-aa2spear: the first round's hits at 121, 139, 157, 175 and 193 ticks (BDS 121, 139, 157, 176,
+194), the same harm and throws, the spear down at 277 (BDS 278); the second charge of each round comes
+later than BDS's (403 against 322: the reposition walk differs), and the wooden round hit 10 ticks early.
+Fitted, not decompiled: the reach band (2..4.5 × 0.5, the 0.25 margin as centre distance), hits only
+while charging (an unthrown actor was struck once a pass) and 10 ticks apart, the rest 20-30 ticks, the prey's own speed taken only for a mob prey, and the
+husk, zombie villager, pigman and piglin as the zombie (their packs' paces not applied). Not drilled: a
+spear holder against a mob, the camel husk's charge.
 
 ## Sapling
 
