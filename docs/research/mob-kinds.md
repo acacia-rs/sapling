@@ -495,10 +495,16 @@ is assumed from its pack's like shape, not drilled.
   glass pen 6 high it leapt only inside (frogs.rs `clear_way`). Eating: it takes a small slime or magma cube
   ~7 ticks after it comes (`mob.warning`), walks 0.0864, tongue bit 38 ~8 ticks at 1.55 off, `tongue` +1 tick
   0.4675 up its head, prey pulled 0.75 to it and gone 9 ticks on (slime ball 391, a froglight); two fed frogs
-  bred, one `PREGNANT` ~3 s on, `LAYING_EGG` 41 ticks, `frog_spawn` on water with two `lay_spawn`. Not ported.
+  bred, one `PREGNANT` ~3 s on, `LAYING_EGG` 41 ticks, `frog_spawn` on water with two `lay_spawn`. Ported by
+  fourteenth2v: frogs/eating.rs (the loot where the tongue met the prey, 1.125 up) and husbandry/frog_spawn.rs
+  (it walks at 0.1 to an air cell over water within 10 across and 3 up, lays within 1.7, though BDS's began 2.2
+  off); test fourteenth2v.
 - Bees (bds-g14bee.txt): bees with pollen grew wheat a block under them 0 to 1 with `ParticleCropGrowth` at
   the cell's corner (bees/crops.rs, pack `grows_crop` 10 charges at 0.03); a silk-touched hive's item kept its
   bee in `Occupants` and none came out; a hive over a lit campfire broken by hand let its bee out angry.
+  Fourteenth2v: a bee keeps within 22 of its hive (`minecraft:home` restriction_radius) and stays on a flower
+  400 ticks, since MoveToBlockGoal (0x5277e80) counts its stay in twentieths; hives let one out at 1 in 20 a
+  tick (block-entities.md).
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full
