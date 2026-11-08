@@ -72,6 +72,33 @@ fn an_elder_guardian_curses_a_survival_player_near_it_with_six_minutes_of_mining
 }
 
 #[test]
+fn a_guardian_that_let_go_of_prey_too_near_flees_the_player() {
+    // Its pack's `guardian_passive` `avoid_mob_type` (swimming/ashore.rs): one a block off Alex's
+    // eyes, in a pool on to x 16.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        for x in 1_i32..=16 {
+            for z in -3_i32..=3 {
+                let rim = x == 16 || z.abs() == 3;
+                assert!(ctx.set_block([x, 65, z], &Block::new(if rim { "glass" } else { "water" })));
+            }
+        }
+        assert!(ctx.spawn_entity("minecraft:guardian", [1.5, 65.0, 0.5]).is_some());
+    });
+    let guardian = (0..2).flat_map(|_| all::<AddEntity>(h.tick_all().to(1))).find(|added| added.entity_type == "minecraft:guardian").expect("shown").runtime_id;
+    let (mut at, mut furthest, mut seen) = ([1.5, 65.0, 0.5], 1.5_f32, Vec::new());
+    for (tick, sent) in watch(&mut h, 100).into_iter().enumerate() {
+        crate::fourteenth3d::moved(&sent, guardian, &mut at);
+        furthest = furthest.max(at[0]);
+        seen.extend(targets(&sent, guardian).into_iter().map(|target| (tick, target)));
+    }
+    // Took Alex, let go the tick after, shy 20 to 60 ticks at a guardian's slow pace.
+    assert!(furthest > 3.0, "it swam off from Alex at x 0.5, only to x {furthest}; targets {seen:?}");
+}
+
+#[test]
 fn a_guardian_takes_a_squid_and_lands_its_laser_on_it() {
     // The pack's `nearest_attackable_target` (bds-t2water.txt: an axolotl taken unprovoked).
     let (mut h, guardian) = by_a_pool("minecraft:guardian", Difficulty::Normal);

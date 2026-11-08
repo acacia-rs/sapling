@@ -1,10 +1,11 @@
 //! A ghast's fireballs, as BDS's flew (research/captures/bds-ghast-findings.md, bds-d3ghast.txt,
 //! bds-d3ghast2.txt): straight at 1.6 a tick, hidden and alight from its first tick
-//! (flight/vanish.rs), pushed off its ghast as it leaves it. One that meets a player hurts it 6
-//! and sets it alight, stands 6 ticks and blows up there with power 1; one that meets a mob does
-//! so at once and blows up the tick after; one that meets a block blows up where it meets it. Its
-//! blast lights fires where mobs may grief (blast.rs). A hit turns it back (struck_back.rs).
-// TODO: a player it overlaps pushes it, by about twice the Java game's `pushAwayFrom` (bds-d3ghast.txt).
+//! (flight/vanish.rs), pushed off its ghast as it leaves it. One that meets a player ends its
+//! whole step, stands 6 ticks while the players it overlaps push it as they push mobs
+//! (crowding.rs, once a tick; BDS's took 5 or 6 pushes, research/captures/bds-tt1ghast.txt), then
+//! hurts it 6, sets it alight, moves one more step and blows up there with power 1 the tick after;
+//! one that meets a mob does so at once and blows up the tick after; one that meets a block blows up
+//! where it meets it. Its blast lights fires where mobs may grief (blast.rs). A hit turns it back (struck_back.rs).
 
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
@@ -139,12 +140,24 @@ fn fly(world: &mut World, fireball: Entity, layer: Entity, id: u64) -> Option<()
         (state.owner, state.kind, state.met) = (by, kind, None);
     }
     let (owner, kind, born, met_at) = world.get::<Fireball>(fireball).map(|ball| (ball.owner, ball.kind.clone(), ball.born, ball.met))?;
-    // It hurts as it stops standing, and blows up the tick after.
+    // Standing in a player it is pushed; it hurts as it stops, takes one more step, and blows up the tick after.
     if let Some((hurts, player)) = met_at {
+        if now <= hurts && player.is_some() {
+            let [px, pz] = super::crowding::pushed_by_players(world, layer, &body);
+            (body.motion[0], body.motion[2]) = (body.motion[0] + px, body.motion[2] + pz);
+            *world.get_mut::<Body>(fireball)? = body;
+        }
+        if now < hurts {
+            return Some(());
+        }
         if let Some(player) = player.filter(|_| now == hurts) {
             if vitals::shot(world, player, HARM, &kind, body.at, false, [0.0; 3]) {
                 vitals::set_alight(world, player, BURNS);
             }
+            // Cut short by blocks in its way (bds-q1ghast.txt: clipped by the wall behind the actor).
+            let mut clipped = body;
+            clipped.shove(&world.get::<Layer>(layer)?.world, body.motion);
+            tell_move(world, fireball, layer, id, &mut body, clipped.at, false)?;
         }
         if now > hurts {
             burst(world, fireball, layer, body.at);
@@ -159,17 +172,16 @@ fn fly(world: &mut World, fireball: Entity, layer: Entity, id: u64) -> Option<()
     // Looked at a quarter of a step at a time: a whole one is as long as a player is met across.
     let along = |part: f32| -> [f32; 3] { std::array::from_fn(|axis| body.at[axis] + body.motion[axis] * part) };
     let struck = [0.25, 0.5, 0.75, 1.0].into_iter().find_map(|part| met(world, layer, owner, along(part)).map(|met| (met, along(part))));
-    let to = struck.map_or(along(1.0), |(_, at)| at);
+    // One that meets a player still ends its whole step (bds-tt1ghast.txt); one that meets a mob stops there.
+    let to = match struck {
+        Some(((_, false), at)) => at,
+        _ => along(1.0),
+    };
     if !Body::new(to, [0.0; 3], SIZE).is_free(&world.get::<Layer>(layer)?.world) {
         burst(world, fireball, layer, body.at);
         return None;
     }
-    let gone: [f32; 3] = std::array::from_fn(|axis| to[axis] - body.at[axis]);
-    body.at = to;
-    *world.get_mut::<Body>(fireball)? = body;
-    let mut packets = world.get_mut::<Told>(fireball)?.update(id, body.at, body.motion, false);
-    packets.splice(0..0, flight::flags(world, fireball, id, gone, now == born + 1));
-    entities::tell_viewers(world, fireball, layer, body.at.map(|c| c.floor() as i32), packets);
+    tell_move(world, fireball, layer, id, &mut body, to, now == born + 1)?;
     let met = match struck {
         Some(((player, true), _)) => (now + STANDS, Some(player)),
         Some(((mob, false), _)) => {
@@ -179,6 +191,17 @@ fn fly(world: &mut World, fireball: Entity, layer: Entity, id: u64) -> Option<()
         None => return Some(()),
     };
     world.get_mut::<Fireball>(fireball)?.met = Some(met);
+    Some(())
+}
+
+/// Moves the fireball to `to` and tells its viewers; `first`, it is its first tick in flight.
+fn tell_move(world: &mut World, fireball: Entity, layer: Entity, id: u64, body: &mut Body, to: [f32; 3], first: bool) -> Option<()> {
+    let gone: [f32; 3] = std::array::from_fn(|axis| to[axis] - body.at[axis]);
+    body.at = to;
+    *world.get_mut::<Body>(fireball)? = *body;
+    let mut packets = world.get_mut::<Told>(fireball)?.update(id, body.at, body.motion, false);
+    packets.splice(0..0, flight::flags(world, fireball, id, gone, first));
+    entities::tell_viewers(world, fireball, layer, body.at.map(|c| c.floor() as i32), packets);
     Some(())
 }
 

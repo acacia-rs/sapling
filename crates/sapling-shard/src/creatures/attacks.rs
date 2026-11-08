@@ -128,6 +128,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         smashed = smash;
         blows::throw_from(world, entity, from, enchant::level(weapon.as_ref(), Enchant::Knockback), blow.sprinting);
         *world.get_mut::<Health>(entity)? = health;
+        super::worn::wear_down(world, entity, harm);
         if smash.is_some() {
             smash::follow(world, player, entity, body.at, weapon.as_ref());
         }

@@ -70,10 +70,11 @@ pub(super) struct Swimmer {
     landed: Option<u64>,
 }
 
-/// Makes a mob of a kind that swims about, and hunts nothing, a swimmer.
+/// Makes a mob of a kind that swims about, and hunts nothing or swims about between its prey (a
+/// guardian), a swimmer.
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     let traits = sapling_data::mob_traits(kind);
-    if traits.swims.is_some() && traits.hunts.is_none() {
+    if traits.swims.is_some() && (traits.hunts.is_none() || super::guardians::is_guardian(kind)) {
         world.entity_mut(entity).insert(Swimmer::default());
     }
 }

@@ -250,7 +250,13 @@ survival on obsidian at midnight on easy (`research/captures/bds-ghast-findings.
 - A fireball through a standing player (`q1ghast`, bds-q1ghast.txt, fourteenth1q; a stone wall behind the
   actor): it froze 6 ticks and moved once more, clipped by the wall. The `SetEntityMotion` changes after
   the freeze lay along its own travel line (one shot +0.553, another -0.036), not from the player to it,
-  so a player's push was not seen; the wall spoils the run. A run without the wall is still to do.
+  so a player's push was not seen; the wall spoils the run.
+- Without the wall (`tt1ghast`, bds-tt1ghast.txt, fourteenth1t; a warded survival actor, open ground
+  behind, 12 shots from four spots): a fireball that meets the player ends its whole step (its box
+  into the player's), stands still 5 ticks while its motion takes the player's push (Java's
+  `pushAwayFrom` at 0.1, the player's box grown 0.2, once a tick: 5 or 6 pushes fit, cos 1.000; none
+  under 0.01 apart), and 6 ticks after the meeting hurts the player and makes one more step of that
+  motion, cut short by blocks; the blast comes the tick after. Sapling: fireballs.rs, the same.
 
 ## The snow golem (`snowgolem`)
 
@@ -586,8 +592,11 @@ shulker and 0.4 up, and turns on it; a hit breaks it, `ParticleCritical` 15 at o
 after (creatures/struck_back.rs). Idle, a shulker peeks open 30 for 19, 39 or 59 ticks, one tick in 40
 (twelve gaps averaged 42); one whose floor goes hops to a free cell over a solid block within 8,
 `ShulkerAttachPos` and `teleport` where it stood (`creatures/shulkers.rs`; BDS moved it a tick later).
-[U] a bullet's pitch does not follow its motion; a hurt shulker's hop (the Java game's one in four
-under half health) was not seen: the drilled one floated off levitated.
+A bullet is told the pitch and yaw of its last step (bds-d3shulker.txt: 881 of 883 told turns fit
+`atan2(dy, across)` and `atan2(-dx, dz)`, cut toward zero to the byte; `creatures/bullets.rs`). A
+hurt shulker does not hop: four shulkers hurt 3 a second ten times by `/damage`, open or shut, took
+40 hurts with no move (bds-tt1shulker.txt), where the Java game's hops one time in four under half
+health; sapling's does not either. One hurt by a player was not drilled.
 
 A breeze faces, shoots, leaps and walks as above (`creatures/breezes.rs`, `creatures/charges.rs`,
 `Physics::BREEZE`); it leaps over nothing in its way. Its charge (bds-d3breeze.txt) comes hidden
@@ -620,7 +629,7 @@ blast the tick after; with mob griefing the blast lights about a third of the fr
 blocks, the rest written again as air. A hit, a player's or a shot's, turns it at the hitter's look
 at 1 a tick, the hitter its owner and moved so that tick (one turned back killed its ghast); a blue
 wither skull and a breeze's charge the same (bds-d3wither.txt, bds-d3breeze.txt; one path,
-`creatures/struck_back.rs`). [U] a player it overlaps pushes it about twice `pushAwayFrom`. A
+`creatures/struck_back.rs`). A player it meets pushes it as it stands (bds-tt1ghast.txt, above). A
 fireball that meets nothing goes after 10 seconds.
 
 ## Mob knockback and group J (2026-11-08, fourteenth3j, `j3*` in fourteenth3j_drill.rs)

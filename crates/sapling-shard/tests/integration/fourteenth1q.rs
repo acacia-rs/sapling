@@ -33,7 +33,7 @@ fn pigmen_near_a_hurt_one_warn_and_show_angry_a_tick_before_it() {
 }
 
 /// A piglin holding nothing by Alex in creative, and its runtime id.
-fn piglin(h: &mut Harness) -> u64 {
+pub(crate) fn piglin(h: &mut Harness) -> u64 {
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
         ctx.set_game_mode(ALEX, GameMode::Creative);
@@ -44,7 +44,7 @@ fn piglin(h: &mut Harness) -> u64 {
 }
 
 /// Drops `item` by the piglin and ticks 40 times: the tick it was taken, if it was, and all told.
-fn offer(h: &mut Harness, piglin: u64, item: &'static str) -> (Option<usize>, Vec<Vec<RawPacket>>) {
+pub(crate) fn offer(h: &mut Harness, piglin: u64, item: &'static str) -> (Option<usize>, Vec<Vec<RawPacket>>) {
     h.remote.run(move |ctx| assert!(ctx.drop_item(&Item::new(item, 1), [5.5, 65.5, 0.5])));
     let ticks: Vec<Vec<RawPacket>> = (0..40).map(|_| h.tick_all().to(1).to_vec()).collect();
     let took = ticks.iter().position(|sent| all::<TakeItemEntity>(sent).iter().any(|taken| taken.target as u64 == piglin));

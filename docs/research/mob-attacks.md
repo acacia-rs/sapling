@@ -583,8 +583,15 @@ By night on the stone floor, the survival actor held in place:
   events (its `can_have_equipment` group, not `spawn_as_rider`) and the husk's always but as a rider;
   `drowned.rs` rolls the melee table for an unarmed one, a shell going to the off hand. A `/kill`
   showed both hands empty on BDS, as on sapling. Tests `zombies_and_husks_roll_their_table_on_hard_and_wear_nothing_on_easy`,
-  `an_unarmed_drowned_may_hold_a_shell_in_its_off_hand`. Left: a ranged drowned's trident is never
-  enchanted (`enchant_random_gear` 0.25), and mob armour is not worn down by hits (`worn.rs`).
+  `an_unarmed_drowned_may_hold_a_shell_in_its_off_hand`.
+- Wear (`tt1worn`, bds-tt1worn.txt, fourteenth1t): a piglin's picked-up diamond helmet stood at
+  `Damage` 5 after five `/damage ... 4 entity_attack` hits (healed between), and dropped so at its
+  `/kill`: a hit its armour stops wears each piece by a quarter of it, one at least, as a player's
+  (`worn.rs` `wear_down`, Unbreaking sparing it; test
+  `a_piglins_picked_up_helmet_wears_one_a_hit_of_four_and_drops_so_worn`). A ranged drowned's
+  trident and shell are now rolled from `drowned_ranged_equipment.json`, so a quarter of tridents
+  (times the spot's multiplier) come enchanted, shown and dropped with it (`drowned.rs`; no
+  enchanted one was seen on BDS, not drilled).
 
 ## Head, box, spider, nuggets (2026-11-05, thirteenth3ah, `ah3*` captures)
 

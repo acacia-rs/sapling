@@ -7,8 +7,9 @@
 //! One in 12.5 also holds a nautilus shell in its offhand (`drowned_ranged_equipment.json`'s 8%).
 //! research/captures/bds-drownedloot.txt, 40 armed drowned killed: 13 dropped their trident,
 //! worn to a random `Damage` (32 to 248 of 250), and the 5 with shells all dropped them.
+//! Both come from rolling that table, a quarter of tridents enchanted (`enchant_random_gear` 0.25
+//! times the spot's multiplier; none seen on BDS, not drilled), shown, kept and dropped so.
 // A viewer who comes later is shown the trident with the drowned.
-// TODO: the table's enchanted tridents (`enchant_random_gear` 0.25) are not done; none were seen.
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
@@ -29,6 +30,9 @@ const RIDER: &str = "as_rider";
 /// (research/captures/bds-f14cgear.txt: of 36, 2 rods and 6 shells, in the off hand).
 const MELEE_EVENTS: [&str; 4] = ["entity_born", "as_adult", "as_baby", "as_baby_jockey"];
 const MELEE_GEAR: &str = "loot_tables/entities/drowned_equipment.json";
+const RANGED_GEAR: &str = "loot_tables/entities/drowned_ranged_equipment.json";
+const TRIDENT_ITEM: &str = "minecraft:trident";
+const SHELL: &str = "minecraft:nautilus_shell";
 /// Of this many drowned, `ARMED` come armed so.
 const ARMED: u32 = 25;
 const OF: u32 = 400;
@@ -57,13 +61,14 @@ const TRIDENT: Shot = Shot {
     ..ARROW
 };
 
-/// Of armed drowned, this fraction hold a shell too; of the dead, this fraction let go of their trident.
-const SHELLED: f32 = 0.08;
+/// Of the dead, this fraction let go of their trident.
 const DROPS_TRIDENT: f32 = 0.25;
 const TRIDENT_LASTS: u32 = 250;
 
 #[derive(Component, Default)]
 pub(super) struct Thrower {
+    /// Its trident's tag (its enchantments), if any.
+    trident: Option<Value>,
     shell: bool,
     throwing: bool,
     ready: u64,
@@ -85,8 +90,10 @@ pub(super) fn arm(world: &mut World, drowned: Entity, kind: &str, event: Option<
         return super::spawn_gear::equip(world, drowned, MELEE_GEAR);
     }
     let Some(id) = world.get::<NetId>(drowned).map(|id| id.0).filter(|_| armed) else { return };
-    let shell = !rider && world.get_resource_or_insert_with(Dice::default).fraction() < SHELLED;
-    world.entity_mut(drowned).insert(Thrower { shell, ..Thrower::default() });
+    let rolled = if rider { Vec::new() } else { super::spawn_gear::rolled(world, drowned, RANGED_GEAR) };
+    let trident = rolled.iter().find(|stack| stack.name == TRIDENT_ITEM).and_then(|stack| stack.tag.clone());
+    let shell = rolled.iter().any(|stack| stack.name == SHELL);
+    world.entity_mut(drowned).insert(Thrower { trident, shell, ..Thrower::default() });
     super::reshow(world, drowned);
     let (held, Some(body)) = (held(world, drowned, id), world.get::<Body>(drowned).copied()) else { return };
     let layer = world.get::<crate::components::InLayer>(drowned).map(|layer| layer.0);
@@ -98,27 +105,27 @@ pub(super) fn arm(world: &mut World, drowned: Entity, kind: &str, event: Option<
 /// What shows an armed drowned's trident in its hand, and its shell.
 pub(super) fn held(world: &World, drowned: Entity, id: u64) -> Vec<Bytes> {
     let Some(thrower) = world.get::<Thrower>(drowned) else { return Vec::new() };
-    let stack = |name| sapling_data::Stack { name, count: 1, damage: 0, block: None, tag: None };
-    let hands = [Some(("minecraft:trident", false)), thrower.shell.then_some(("minecraft:nautilus_shell", true))];
-    hands.into_iter().flatten().filter_map(|(name, offhand)| sapling_data::mob_hand(id, &stack(name), offhand)).map(|held| sapling_net::encode(&held)).collect()
+    let stack = |name, tag| sapling_data::Stack { name, count: 1, damage: 0, block: None, tag };
+    let hands = [Some((TRIDENT_ITEM, thrower.trident.as_ref(), false)), thrower.shell.then_some((SHELL, None, true))];
+    hands.into_iter().flatten().filter_map(|(name, tag, offhand)| sapling_data::mob_hand(id, &stack(name, tag), offhand)).map(|held| sapling_net::encode(&held)).collect()
 }
 
 /// Chooses, as an armed drowned dies, what it will let go of ([`let_go`]): its shell, and by chance
 /// its trident if a player killed it, worn as Java's `Mob::dropCustomDeathLoot` wears a dropped
 /// item. The trident it keeps, which BDS showed back in its hand at death (bds-drownedloot.txt).
 pub(super) fn choose_drops(world: &mut World, drowned: Entity, by_player: bool) -> Option<ItemStack> {
-    let shell = world.get::<Thrower>(drowned)?.shell;
+    let (shell, mut tag) = world.get::<Thrower>(drowned).map(|thrower| (thrower.shell, thrower.trident.clone()))?;
     let mut dice = world.get_resource_or_insert_with(Dice::default);
     let item = |name: &str, tag| ItemStack { name: name.into(), count: 1, damage: 0, block: None, tag };
-    let mut dropped: Vec<ItemStack> = shell.then(|| item("minecraft:nautilus_shell", None)).into_iter().collect();
+    let mut dropped: Vec<ItemStack> = shell.then(|| item(SHELL, None)).into_iter().collect();
     let trident_goes = by_player && dice.fraction() < DROPS_TRIDENT;
     if trident_goes {
         let spread = 1 + dice.roll(TRIDENT_LASTS - 3);
-        let worn = TRIDENT_LASTS - dice.roll(spread);
-        dropped.push(item("minecraft:trident", Some(Value::Compound(vec![("Damage".into(), Value::Int(worn as i32))]))));
+        crate::inventory::set_damage(&mut tag, (TRIDENT_LASTS - dice.roll(spread)) as i32);
+        dropped.push(item(TRIDENT_ITEM, tag.clone()));
     }
     world.get_mut::<Thrower>(drowned)?.drops = dropped;
-    (!trident_goes).then(|| item("minecraft:trident", None))
+    (!trident_goes).then(|| item(TRIDENT_ITEM, tag))
 }
 
 /// What [`choose_drops`] chose for the dead drowned to let go of.

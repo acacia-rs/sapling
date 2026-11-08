@@ -36,7 +36,9 @@ pub(super) struct Heard {
 /// `event` happened at `at`, by `source` where known: each warden of `layer` in range that is
 /// listening starts to wait for it.
 pub(crate) fn hear(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, source: Option<Entity>) {
-    if event.frequency() == 0 {
+    // A dying mob's own vibrations are no warden's (bds-tt1warden.txt: a pig `/kill`ed or killed by
+    // `/damage` beside one reached the sculk sensor but not the warden; Java's `canTargetEntity`).
+    if event.frequency() == 0 || source.is_some_and(|source| world.get::<crate::creatures::Dying>(source).is_some()) {
         return;
     }
     let now = world.resource::<Tick>().0;

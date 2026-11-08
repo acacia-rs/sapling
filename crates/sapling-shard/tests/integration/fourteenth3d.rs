@@ -12,7 +12,7 @@ use sapling_api::{Block, Difficulty, Effect, GameMode};
 const ALEX: sapling_api::PlayerId = sapling_api::PlayerId(1);
 
 /// Alex alone on the platform at midnight on easy, with `mobs` spawned; their ids.
-fn with(mobs: &'static [(&'static str, [f32; 3])]) -> (Harness, Vec<u64>) {
+pub(crate) fn with(mobs: &'static [(&'static str, [f32; 3])]) -> (Harness, Vec<u64>) {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     let ids = ask(&mut h, move |ctx| {
@@ -27,7 +27,7 @@ fn flags_of(added: &AddEntity) -> i64 {
     added.metadata.iter().find_map(|item| if let Value::Flags(flags) = item.value { Some(flags.0) } else { None }).unwrap_or(0)
 }
 
-fn moved(sent: &[acacia_proto::RawPacket], id: u64, at: &mut [f32; 3]) {
+pub(crate) fn moved(sent: &[acacia_proto::RawPacket], id: u64, at: &mut [f32; 3]) {
     for delta in all::<MoveEntityDelta>(sent).iter().filter(|delta| delta.runtime_entity_id == id) {
         for (axis, c) in [delta.x, delta.y, delta.z].into_iter().enumerate() {
             if let Some(c) = c {

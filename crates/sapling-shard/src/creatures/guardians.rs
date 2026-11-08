@@ -12,7 +12,7 @@
 //! within 3 of it (a player's eyes) it lets go the tick after, and takes none for 1 to 3 seconds (the
 //! pack's `target_nearby_sensor` and `guardian_passive`; bds-f14eguard.txt). A player's melee hit on
 //! one not `MOVING` costs the hitter 2 by thorns (`Guardian::_hurt`, Linux BDS 0xbb77470).
-// TODO: while it takes none BDS's flees players within 8 (`avoid_mob_type`); here it swims about.
+//! While it takes none it flees players within 8, as its pack's `guardian_passive` has it (swimming/ashore.rs).
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use acacia_proto::types::MetadataFlags1;
@@ -54,6 +54,10 @@ const SPIKES: f32 = 2.0;
 #[derive(Component)]
 pub(super) struct Shy(u64);
 
+pub(super) fn is_guardian(kind: &str) -> bool {
+    kind == KIND || kind == ELDER
+}
+
 /// Whether the guardian takes no prey at `now`.
 pub(super) fn is_shy(world: &World, entity: Entity, now: u64) -> bool {
     world.get::<Shy>(entity).is_some_and(|shy| now < shy.0)
@@ -62,7 +66,7 @@ pub(super) fn is_shy(world: &World, entity: Entity, now: u64) -> bool {
 /// A player's melee hit landed on the mob of `kind`: a guardian standing still spikes the hitter.
 pub(super) fn spike(world: &mut World, mob: Entity, kind: &str, player: Entity) {
     let still = world.get::<Told>(mob).and_then(Told::mob_flags).is_some_and(|flags| flags.0 & MetadataFlags1::MOVING.0 == 0);
-    if (kind == KIND || kind == ELDER) && still {
+    if is_guardian(kind) && still {
         let at = world.get::<crate::body::Body>(mob).map_or([0.0; 3], |body| body.at);
         crate::vitals::thorned(world, player, SPIKES, at, mob);
     }

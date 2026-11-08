@@ -5,7 +5,7 @@
 //! later. One whose floor goes hops at once to a free cell over a solid block within 8 each way
 //! (Java `teleportSomewhere`, five tries), told its new `ShulkerAttachPos` and heard `teleport` where
 //! it stood; BDS moved it the tick after the attach position, sapling in the same tick.
-// TODO: a hurt shulker under half health hops one time in four (Java); not drilled.
+//! A hurt one does not hop, unlike the Java game's (bds-tt1shulker.txt: 40 `/damage` hurts, none).
 
 use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f, Vec3i};

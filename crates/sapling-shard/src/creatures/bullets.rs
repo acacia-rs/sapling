@@ -3,7 +3,6 @@
 //! level with it, or after 10 to 50 ticks; whom it meets takes 4 and floats up for ten seconds, a
 //! mob in its way too, thrown from the shulker and turned on it (bds-d3shulker.txt). It comes hidden
 //! (flight/vanish.rs) and a hit breaks it (struck_back.rs).
-// TODO: its pitch does not follow its motion as BDS's did.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
@@ -136,6 +135,9 @@ pub(super) fn fire(world: &mut World, layer: Entity, shulker: Entity, kind: &str
         Some(vec![sapling_net::encode(&shown)])
     };
     let Some(bullet) = entities::spawn_mob(world, layer, KIND, Body::new(from, [0.0; 3], SIZE), from, announce) else { return };
+    if let Some(mut told) = world.get_mut::<Told>(bullet) {
+        told.pitch(0.0);
+    }
     let born = world.resource::<Tick>().0;
     world.entity_mut(bullet).insert((Bullet { shulker, by: body.at, born, target, pull, heading, steps, spent: None }, Strikable::Breaks));
     let up = [body.at[0], body.at[1] + SHOOT_UP, body.at[2]];
@@ -196,6 +198,7 @@ fn fly(world: &mut World, bullet: Entity, layer: Entity, id: u64, kind: &str) ->
         return None;
     }
     vanish::show_mobs(world, layer, KIND, id, now - born, &body);
+    face_motion(world, bullet, body.motion);
     let feet = world.get::<Position>(target).map(|position| position.feet);
     match feet {
         Some(_) => {
@@ -240,6 +243,18 @@ fn fly(world: &mut World, bullet: Entity, layer: Entity, id: u64, kind: &str) ->
         (state.pull, state.heading, state.steps) = (pull, heading, steps);
     }
     Some(())
+}
+
+/// A tick's move is told facing the motion the bullet came into the tick with, its last step
+/// (bds-d3shulker.txt: 881 of 883 told turns): pitch up its climb, yaw along it, kept while it
+/// moves straight up or down.
+fn face_motion(world: &mut World, bullet: Entity, [x, y, z]: [f32; 3]) {
+    let Some(mut told) = world.get_mut::<Told>(bullet) else { return };
+    let across = x.hypot(z);
+    told.pitch(y.atan2(across).to_degrees());
+    if across > 0.0 {
+        told.face((-x).atan2(z).to_degrees(), 0.0);
+    }
 }
 
 /// Moves every bullet a tick.
