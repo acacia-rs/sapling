@@ -285,6 +285,19 @@ frequency 8. A sensor's `power.on`/`power.off` plays after its UpdateBlock, as o
 - Flight a tick after: covered by `sculk/deferred.rs` (tp, bucket) and, since thirteenth2al, a potent
   sulfur a command started or ended (world-ticks.md, potent sulfur "Vibrations").
 
+## Drilled 2026-11-08, group B (`b1sculk`, `b1steps`; fourteenth1b_drill.rs)
+
+bds-b1sculk.txt, bds-b1steps.txt, against sapling-b1sculk.txt. Heard a tick after the event, from the middle of
+its cell: a hurt mob or player is `entity_damage` (type 17, frequency 7), a killed one `entity_die` (18, 15); a
+mob's cell is its feet's, a player's its eyes'. A drink is `drink` (14, 8), no longer `eat`'s 15. Sapling:
+`creatures/death.rs` (`hear_hurt`, `die`), `vitals.rs` `heard_from_eyes`, `blocks/sculk/events.rs`; test
+`a_mob_hurt_and_a_mob_killed_are_heard`. Drinking and blasts were heard already (`thirteenth2x.rs`).
+
+Not ported (REMAINING4, Sculk): a mob's steps (BDS's pig first vibrated after 0.51-0.63 blocks walked, its
+zombies after 0.87 and 1.79; the player's stride rule does not fit, and no rule was found); a summoned TNT's
+`prime_fuse`; item entities hurt or killed by a blast vibrate on BDS; and of several events reaching a sensor in
+one tick BDS takes the nearest (items hurt at 3.5 were heard over the blast at 7.5) where sapling keeps the first.
+
 ## Unverified
 
 - Names of state globals 14cd24340 (`active`) and 14cd24220 (`can_summon`): inferred from use, string not traced.
