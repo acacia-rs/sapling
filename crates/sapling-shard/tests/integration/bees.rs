@@ -27,12 +27,50 @@ fn by_a_hive(time: i64, bee: [f32; 3]) -> (Harness, u64) {
         ctx.set_time(time);
         ctx.set_difficulty(Difficulty::Easy);
         ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        // A set hive would make bees of its own (`a_set_nest_makes_two_or_three_bees_...`).
+        assert!(ctx.set_game_rule("doMobSpawning", sapling_api::RuleValue::Bool(false)));
         assert!(ctx.set_block(HIVE, &Block { name: "minecraft:beehive".into(), properties: "direction=3,honey_level=0".into() }));
         *kept.lock().unwrap() = ctx.spawn_entity(BEE, bee).expect("a bee").0;
     });
     h.tick_all();
     let id = *id.lock().unwrap();
     (h, id)
+}
+
+#[test]
+fn a_set_nest_makes_two_or_three_bees_at_once_by_night_that_come_out_100_ticks_on_by_day() {
+    // research/captures/bds-f14snest.txt (noon, 2 or 3 out of each hive ~100 ticks after, heard `spawn`), bds-f14snest2.txt
+    // (midnight: three made inside at once, kept as `SaveData` {}, `ShouldSpawnBees` 0).
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_time(18_000);
+        assert!(ctx.set_block(HIVE, &Block { name: "minecraft:bee_nest".into(), properties: "direction=3,honey_level=0".into() }));
+    });
+    (0..3).for_each(|_| drop(h.tick_all()));
+    let inside = read(&mut h, |ctx| ctx.block_entity(HIVE).and_then(|entity| entity.get::<acacia_proto::nbt::Value>().cloned()));
+    let inside = inside.expect("the nest's entity");
+    let acacia_proto::nbt::Value::List(bees) = inside.get("Occupants").expect("bees inside") else { panic!("a list") };
+    assert!((2..=3).contains(&bees.items.len()), "{} made", bees.items.len());
+    assert_eq!(inside.get("ShouldSpawnBees"), Some(&acacia_proto::nbt::Value::Byte(0)));
+    assert!(bees.items.iter().all(|bee| bee.get("SaveData") == Some(&acacia_proto::nbt::Value::Compound(Vec::new()))));
+    h.remote.run(|ctx| ctx.set_time(6_000));
+    let (_, sent) = until(&mut h, 140, |sent| bee_added(sent).len() == bees.items.len());
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "spawn" && sound.entity_type == BEE), "heard as new bees");
+}
+
+#[test]
+fn a_placed_trees_nest_makes_its_bees_too() {
+    // research/captures/bds-f14snest.txt: each `/place feature` tree's nest let out 2 or 3 bees.
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| {
+        ctx.set_time(6_000);
+        assert!(ctx.set_block([-8, 64, -8], &Block { name: "minecraft:grass_block".into(), properties: String::new() }));
+        ctx.place_feature("minecraft:birch_tree_with_beehive_feature", [-8, 65, -8]).expect("a birch");
+    });
+    let (_, sent) = until(&mut h, 140, |sent| bee_added(sent).len() >= 2);
+    assert!(sounds(&sent).contains(&"block.beehive.exit".to_owned()));
 }
 
 fn sounds(sent: &[RawPacket]) -> Vec<String> {
@@ -96,6 +134,7 @@ fn a_bee_takes_pollen_from_a_flower_into_its_hive_and_makes_honey() {
     h.remote.run(|ctx| {
         ctx.set_time(6000);
         ctx.set_game_mode(PlayerId(1), GameMode::Creative);
+        assert!(ctx.set_game_rule("doMobSpawning", sapling_api::RuleValue::Bool(false)));
         assert!(ctx.set_block([0, 64, 3], &Block::new("grass_block")) && ctx.set_block([0, 65, 3], &Block::new("poppy")));
         assert!(ctx.set_block(HIVE, &Block { name: "minecraft:beehive".into(), properties: "direction=3,honey_level=0".into() }));
         assert!(ctx.spawn_entity(BEE, [0.5, 66.0, 1.5]).is_some());

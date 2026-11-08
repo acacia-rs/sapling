@@ -133,6 +133,16 @@ fn an_oak_tree_feature_grows_over_the_loaded_columns() {
     assert!(world.place_feature("minecraft:no_such_feature", [0, 64, 0], 7).is_none());
 }
 
+#[test]
+fn a_tree_with_a_beehive_grows_its_nest_over_the_loaded_columns() {
+    let mut world = World::void();
+    let grass = world.block_id("minecraft:grass_block").unwrap();
+    world.fill([-8, -27, -8], [8, -27, 8], grass);
+    let name = |id: u32| world.registry().get(id).map(|state| state.name).unwrap_or_default();
+    let nested = |seed| world.place_feature("minecraft:birch_tree_with_beehive_feature", [0, -26, 0], seed).is_some_and(|writes| writes.iter().any(|(_, id)| name(*id) == "minecraft:bee_nest"));
+    assert!((0..20).all(nested));
+}
+
 /// The world of research/captures/bds-locate.txt.
 const LOCATE_SEED: i64 = 12345;
 

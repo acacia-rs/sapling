@@ -5,7 +5,12 @@
 //! While bees are in, `block.beehive.work` is heard from the middle now and then. The hive's entity
 //! (`sapling_world::occupied_hive`) is written only as bees come and go, so its `TicksLeftToStay`
 //! are those of the last write, as BDS's were.
-// TODO: a hive on fire is not looked at; a nest from generation holds no bees.
+//! A hive whose entity says `ShouldSpawnBees` (generated nests, and hives set by command) makes 2 or 3
+//! bees inside on its first tick with `doMobSpawning` on, night or day (`BeehiveBlockActor::tick`, Linux 0xce714a0;
+//! research/captures/bds-f14snest.txt, bds-f14snest2.txt); they stay 100 ticks, kept with no data
+//! (`SaveData` {}), and come out as new bees, heard `spawn`.
+// TODO: a hive on fire is not looked at; its made bees all come out on one tick, where BDS's came
+// out ticks apart (0, 1, 13), and went home within 5 s, where BDS's stayed out ~24 s (bds-f14snest.txt).
 
 use std::collections::HashMap;
 
@@ -28,11 +33,25 @@ const HONEY: &str = "honey_level";
 const HONEY_FULL: u8 = 5;
 /// The chance a tick of `block.beehive.work` from a hive with bees in.
 const WORKS: f32 = 0.005;
+const SPAWNS_BEES: &str = "ShouldSpawnBees";
+/// Ticks a bee the hive made stays in (the constant at Linux 0x1c6d51c).
+const MADE_STAYS: i32 = 100;
 
 /// The ticks each hive has been ticked since its entity was last written, by world and place: its
 /// bees' `TicksLeftToStay` count down by those, not while its column does not tick (bds-hivekept.txt).
 #[derive(Resource, Default)]
 struct Written(HashMap<(Entity, BlockPos), u64>);
+
+fn spawns_bees(entity: &Value) -> bool {
+    matches!(entity.get(SPAWNS_BEES), Some(Value::Byte(1)))
+}
+
+/// A bee the hive made, saved as BDS saves it: no data until it comes out.
+fn unmade() -> Vec<u8> {
+    let mut out = bytes::BytesMut::new();
+    acacia_proto::nbt::write::<acacia_proto::nbt::LittleEndian>(&mut out, &acacia_proto::nbt::Nbt { name: String::new(), value: Value::Compound(Vec::new()) });
+    out.to_vec()
+}
 
 pub(crate) fn is_hive(name: &str) -> bool {
     matches!(name, "minecraft:beehive" | "minecraft:bee_nest")
@@ -101,6 +120,12 @@ fn front(registry: &sapling_world::BlockRegistry, id: u32, pos: BlockPos) -> ([f
 
 /// Lets `occupant` out of the hive at `pos` at `at` turned to `yaw`; the bee, made anew from its compound.
 fn release(world: &mut World, layer: Entity, pos: BlockPos, occupant: &Occupant, at: [f32; 3], yaw: f32) -> Option<Entity> {
+    if occupant.actor == unmade() {
+        let id = super::super::birth::spawn_as(world, layer, super::KIND, at, sapling_api::SpawnReason::Natural, yaw, None)?;
+        let bee = crate::entities::find(world, id)?;
+        super::came_home(world, bee, pos);
+        return Some(bee);
+    }
     let (_, Some(unique_id), _) = sapling_world::stored_actors(&occupant.actor).ok()?.into_iter().next()? else { return None };
     let compound = sapling_world::placed_actor(&occupant.actor, unique_id, at, [yaw, 0.0]).ok()?;
     let (Some(actor), ..) = sapling_world::stored_actors(&compound).ok()?.into_iter().next()? else { return None };
@@ -155,12 +180,22 @@ pub(crate) fn tick(world: &mut World) {
     let mut hives = Vec::new();
     for (layer, column) in crate::ticking::ticked_columns(world) {
         let Some(level) = level(world, layer) else { continue };
-        let occupied = |entity: &&sapling_world::BlockEntity| matches!(entity.nbt.get("id"), Some(Value::String(id)) if id.as_str() == ENTITY) && matches!(entity.nbt.get("Occupants"), Some(Value::List(list)) if !list.items.is_empty());
-        hives.extend(level.block_entities_in(column).into_iter().filter(occupied).map(|entity| (layer, entity.pos)));
+        let busy = |entity: &&sapling_world::BlockEntity| matches!(entity.nbt.get("id"), Some(Value::String(id)) if id.as_str() == ENTITY) && (spawns_bees(&entity.nbt) || matches!(entity.nbt.get("Occupants"), Some(Value::List(list)) if !list.items.is_empty()));
+        hives.extend(level.block_entities_in(column).into_iter().filter(busy).map(|entity| (layer, entity.pos)));
     }
     for (layer, pos) in hives {
         *world.get_resource_or_insert_with(Written::default).0.entry((layer, pos)).or_default() += 1;
-        let Some((entity, occupants)) = held(world, layer, pos) else { continue };
+        let Some((mut entity, mut occupants)) = held(world, layer, pos) else { continue };
+        // [U] BDS also asks a flag of the level's (Level+0x328, byte 2); night is not it (bds-f14snest2.txt).
+        if spawns_bees(&entity) && crate::rules::on(world, layer, "doMobSpawning") {
+            let made = 2 + world.get_resource_or_insert_with(Dice::default).roll(2) as usize;
+            occupants.extend(std::iter::repeat_n(Occupant { actor: unmade(), ticks_left: MADE_STAYS, nectar: false }, made));
+            if let Value::Compound(fields) = &mut entity {
+                fields.retain(|(key, _)| key != SPAWNS_BEES);
+                fields.push((SPAWNS_BEES.into(), Value::Byte(0)));
+            }
+            write(world, layer, pos, &entity, &occupants);
+        }
         if world.get_resource_or_insert_with(Dice::default).fraction() < WORKS {
             heard(world, layer, pos, "block.beehive.work", pos.map(|c| c as f32 + 0.5));
         }

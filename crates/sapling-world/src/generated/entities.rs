@@ -1,5 +1,5 @@
 //! Generated block entities (spawners, loot containers, trial spawners, vaults, beds, bells,
-//! cauldrons, flower pots, a mansion's chests, end gateways, kept jigsaws) as BDS saves them.
+//! cauldrons, flower pots, a mansion's chests, end gateways, kept jigsaws, bee nests) as BDS saves them.
 
 use acacia_proto::nbt::{self, LittleEndian, Nbt, Value};
 use bytes::BytesMut;
@@ -35,6 +35,10 @@ pub(crate) fn generated_block_entities(chunk_x: i32, chunk_z: i32, shape: &Chunk
         if let Some(value) = block_entity_nbt([chunk_x * 16 + x, y, chunk_z * 16 + z], block.name(), entity) {
             nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value });
         }
+    }
+    // Every generated nest has an entity that makes its bees on its first tick (sapling-shard bees/hives.rs).
+    for [x, y, z] in shape.cells_of(sapling_worldgen::Block::BeeNest) {
+        nbt::write::<LittleEndian>(&mut out, &Nbt { name: String::new(), value: sapling_leveldb::new_hive([chunk_x * 16 + x, y, chunk_z * 16 + z]) });
     }
     out.to_vec()
 }
