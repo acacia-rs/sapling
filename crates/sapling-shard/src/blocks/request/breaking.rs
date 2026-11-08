@@ -63,7 +63,9 @@ impl Request<'_> {
         let bees = crate::creatures::bees_in(self.world, site.layer, pos);
         match !event.is_cancelled() && self.remove(&site, pos) {
             true => {
-                crate::creatures::hive_broken(self.world, site.layer, pos, &name, bees, by.silk_touch);
+                if let Some(kept) = crate::creatures::hive_broken(self.world, site.layer, pos, &name, bees, mines && by.silk_touch) {
+                    tags = loot::Tags::one(&name, Some(kept));
+                }
                 loot::spill_tagged(self.world, site.layer, pos, &event.drops, &mut tags);
                 if mines {
                     after_break::leave(self.world, site.layer, pos, &name, &by);

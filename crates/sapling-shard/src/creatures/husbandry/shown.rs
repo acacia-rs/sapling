@@ -42,6 +42,14 @@ pub(super) fn metadata(world: &mut World, entity: Entity, metadata: Vec<Metadata
     tell_metadata(world, entity, sapling_net::encode(&packet));
 }
 
+/// Tells the mob's viewers its `FlagsExtended` as `bits`, even as it arrives.
+pub(super) fn flags_extended(world: &mut World, entity: Entity, bits: i64) {
+    let Some(id) = world.get::<NetId>(entity).map(|id| id.0) else { return };
+    let item = MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(acacia_proto::types::MetadataFlags2(bits)) };
+    let packet = acacia_proto::packets::SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: acacia_proto::types::EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
+    tell(world, entity, vec![sapling_net::encode(&packet)]);
+}
+
 /// The whole word of the mob's flags with `flag` set or cleared.
 pub(super) fn flags_with(world: &mut World, entity: Entity, flag: Flags, on: bool) -> Flags {
     let kind = world.get::<Kind>(entity).map(|kind| kind.0.clone()).unwrap_or_default();
@@ -52,7 +60,7 @@ pub(super) fn flags_with(world: &mut World, entity: Entity, flag: Flags, on: boo
 }
 
 /// Sets or clears `flag` and tells the mob's viewers.
-pub(super) fn flag(world: &mut World, entity: Entity, flag: Flags, on: bool) {
+pub(in crate::creatures) fn flag(world: &mut World, entity: Entity, flag: Flags, on: bool) {
     flag_with(world, entity, flag, on, Vec::new());
 }
 

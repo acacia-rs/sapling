@@ -6,9 +6,9 @@
 //! ticks, to a spot up to 8 off and 1 lower, 1 to 4 over the ground (`random_hover`); a parrot
 //! 0.0188 to one up to 15 off across. Either picks another within a block of its spot or after 5
 //! seconds.
-// TODO: a bat does not hang from a ceiling; a parrot neither sits, lands nor falls, bobs where
-// it hovers, nor flies higher than its pack's 1 block up or down (BDS's rose 8 over the floor, which
-// `HOVERS` copies); an allay does not follow its owner (`follow_owner`; its errands are husbandry/allays.rs).
+// A bat hangs in bats.rs; an allay follows its owner in husbandry/allays/giving.rs.
+// TODO: a parrot neither sits, lands nor falls, bobs where it hovers, nor flies higher than its
+// pack's 1 block up or down (BDS's rose 8 over the floor, which `HOVERS` copies).
 
 use bevy_ecs::prelude::*;
 

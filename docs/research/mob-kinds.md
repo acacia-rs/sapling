@@ -439,7 +439,25 @@ size: the 2.08 box, `Variant` 1, no hops, no touch; `slimes/sizes.rs` `keeps_bas
 `a_slime_summoned_by_an_event_its_pack_lacks_keeps_its_base_and_never_hurts`. The magma cube's base
 is assumed from its pack's like shape, not drilled.
 
-## Sapling
+## Animals of group G (2026-11-08, fourteenth3g, `g14*` in fourteenth3g_drill.rs)
+
+- Evoker (bds-g14evoker.txt): no retreat. A creative actor 2 to 11 off saw it stroll (0.6, ~0.194 a tick,
+  any way); a survival one 5 off saw it cast and stand still between casts. Sapling already did both.
+- Panda (bds-g14panda.txt): a lazy one's `AddEntity` movement is 0.07; a playful one rolls (husbandry/rolls.rs:
+  `FlagsExtended` bit 3 for 32 ticks, motion told every tick 0.2 along its facing, 0.27 up at 0, 7, 15, 23);
+  a worried one shows bit 22 the tick a held cow is 4 to 16 off. Three aggressive bystanders took no target
+  as the actor hit a fourth (not shared). Left: the lazy one's lie-downs (`LayingAmount`).
+- Bat (bds-g14bat.txt, bds-g14fly.txt): born under a full block it hangs from the start (`RESTING` in its
+  `AddEntity`, feet at floor(y)+1-0.9); flying under one it took hold after ~5 s; all four let go the tick the
+  ceiling went (creatures/bats.rs). A player within 4 was not drilled (the actor stood 4.65 off).
+- Frog (bds-g14frog.txt): croaks `FlagsExtended` bit 37 for 90 ticks, no sound, 10.8 to 14.1 s apart; in a
+  glass pen 6 high it leapt only inside (frogs.rs `clear_way`). Eating: it takes a small slime or magma cube
+  ~7 ticks after it comes (`mob.warning`), walks 0.0864, tongue bit 38 ~8 ticks at 1.55 off, `tongue` +1 tick
+  0.4675 up its head, prey pulled 0.75 to it and gone 9 ticks on (slime ball 391, a froglight); two fed frogs
+  bred, one `PREGNANT` ~3 s on, `LAYING_EGG` 41 ticks, `frog_spawn` on water with two `lay_spawn`. Not ported.
+- Bees (bds-g14bee.txt): bees with pollen grew wheat a block under them 0 to 1 with `ParticleCropGrowth` at
+  the cell's corner (bees/crops.rs, pack `grows_crop` 10 charges at 0.03); a silk-touched hive's item kept its
+  bee in `Occupants` and none came out; a hive over a lit campfire broken by hand let its bee out angry.
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full

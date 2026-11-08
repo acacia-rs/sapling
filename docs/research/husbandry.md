@@ -308,6 +308,19 @@ as it was shown (no delay), and its death sent the link's removal `immediate` af
 The pack's `find_mount` (`start_delay` 100, `within_radius` 16, `mount_distance` 2, `target_needed`
 false) is C++.
 
+## A tamed wolf's guard (2026-11-08, `g14wolf`, bds-g14wolf.txt)
+
+A wolf tamed by bones (bit 24 `SITTING` and 26 while it begged, both off once fed and the bones gone)
+took a zombie for its foe the tick after the zombie hurt its owner, not when the zombie only took the
+owner for its target. Standing 2.4 off on the ground it leapt at once: motion told 0.4 toward the
+zombie and 0.4 up (`behavior.leap_at_target` `yd` 0.4), then fell as a thrown mob. Its bite (swing,
+the zombie's hurt, `attack` from its middle a tick on) came 0.75 off centre to centre and threw the
+zombie 0.4 across and up as any hit does; the zombie turned on it and threw it back the same tick.
+BDS told both throws' 0.4 at once; sapling tells a mob's hit on a mob as moved, 0.3136 up
+(hunting/prey.rs `hit`, every hunter's), which is left open.
+Bites came 58 to 94 ticks apart, each after both were thrown apart: no pace can be fitted from them.
+Ported in husbandry/guarding.rs; test `a_tamed_wolf_leaps_at_what_its_owner_hits_and_its_bite_throws_it`.
+
 ## Not drilled
 
 - `property_inheritance` (which parent a baby's climate variant comes from): bdsre finds no

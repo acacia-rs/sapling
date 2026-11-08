@@ -18,6 +18,7 @@ mod nesting;
 mod offering;
 mod owners;
 mod products;
+mod rolls;
 mod shoulders;
 mod shown;
 mod sniffing;
@@ -42,6 +43,7 @@ pub(crate) use knots::{KNOT, from_storage as knot_from_storage, knock_down as kn
 pub(crate) use owners::{is_owner, tame_by_event, tame_by_riding, tame_by_upgrade};
 pub(crate) use products::shear_in;
 pub(crate) use shown::links_packet;
+pub(super) use shown::flag as show_flag;
 pub(crate) use state::Raised;
 
 /// Gives a new creature its raising: as the world folder kept it (`stored`, its look and
@@ -68,12 +70,13 @@ pub(super) fn adopt(world: &mut World, entity: Entity, kind: &str, stored: Optio
 }
 
 /// Before the mob's move, what its raising has it do: sit, be pulled on its lead, court, follow
-/// its owner, fight for it or follow food. False when none of these steers it.
+/// its owner, fight for it, follow food, flee or roll. False when none of these steers it.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
     if world.get::<Raised>(entity).is_none() {
         return false;
     }
     owners::stays(world, entity)
+        || rolls::keep_rolling(world, entity)
         || bedtime::lie(world, entity, layer, kind)
         || leads::pull(world, entity, layer)
         || allays::steer(world, entity, layer, kind)
@@ -85,6 +88,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         || owners::follow(world, entity, layer, kind)
         || breeding::tempted(world, entity, layer, kind)
         || avoiding::flee(world, entity, layer, kind)
+        || rolls::start(world, entity, kind)
 }
 
 /// A tick of every raised mob: babies grow, love and cooldowns wear off, partners breed, hens

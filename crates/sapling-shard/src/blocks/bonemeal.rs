@@ -196,6 +196,27 @@ pub(super) fn feed(world: &mut World, layer: Entity, pos: BlockPos, creative: bo
     true
 }
 
+/// A bee with pollen grows the crop, stem or berry bush at `pos` a step, with bone meal's sparkle, as
+/// BDS's bees grew wheat 0 to 1 (research/captures/bds-g14bee.txt). False for none, or one ripe.
+pub(crate) fn pollinate(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let grown = level(world, layer).and_then(|level| {
+        let [x, y, z] = pos;
+        let id = level.block(x, y, z);
+        let name = name_at(level, pos)?;
+        let ripe = if name == "sweet_berry_bush" { RIPE_BUSH } else { RIPE };
+        if !(CROPS.contains(&name) || STEMS.contains(&name) || name == "sweet_berry_bush") {
+            return None;
+        }
+        let properties = level.registry().get(id)?.properties;
+        let growth: u8 = properties.split(',').filter_map(|pair| pair.split_once('=')).find(|(key, _)| *key == "growth")?.1.parse().ok()?;
+        (growth < ripe).then(|| with_property(level.registry(), id, "growth", &(growth + 1).to_string())).flatten()
+    });
+    let Some(id) = grown else { return false };
+    particle(world, layer, pos);
+    send::set(world, layer, pos, id);
+    true
+}
+
 /// Bone meal's sparkle, from the cell's corner as BDS sent it.
 fn particle(world: &mut World, layer: Entity, pos: BlockPos) {
     let [x, y, z] = pos.map(|c| c as f32);

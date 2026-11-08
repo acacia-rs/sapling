@@ -6,7 +6,8 @@
 //! gravity 0.08; on landing it keeps a tenth of its speed across.
 // The run-up is fitted: BDS's waits from a landing were 7.3 to 9.2 s, sapling's 7.1 to 9.0
 // (research/captures/bds-n3frogs.txt, sapling-n3frogs.txt).
-// TODO: the way to the block is not checked for walls; a frog does not croak, eat or lay spawn.
+// TODO: a frog does not eat small slimes and magma cubes (tongue `FlagsExtended` bit 38, prey pulled
+// 0.75 to it; bds-g14frog.txt) nor lay spawn (PREGNANT, then LAYING_EGG 41 ticks, onto water).
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
@@ -26,10 +27,16 @@ const NEAREST: f32 = 1.0;
 const FASTEST: f32 = 1.0;
 const ANGLE: f32 = 70.0;
 const GRAVITY: f32 = 0.08;
+/// The ticks of a leap looked along for blocks in its way.
+const LEAP_TICKS: u32 = 60;
 const LANDING_KEEPS: f32 = 0.1;
 const PREFERRED: [&str; 2] = ["minecraft:waterlily", "minecraft:big_dripleaf"];
 const PREFERRED_CHANCE: f32 = 0.5;
 const FORBIDDEN: &str = "minecraft:water";
+/// Ticks between croaks (`interval` 10 to 20 s), how long one lasts, and its `FlagsExtended` bit.
+const CROAK_GAPS: [u64; 2] = [200, 400];
+const CROAKS: u64 = 90;
+const CROAKING: i64 = 1 << 37;
 
 #[derive(Clone, Copy)]
 enum Stage {
@@ -40,18 +47,47 @@ enum Stage {
 #[derive(Component)]
 pub(super) struct Frog {
     stage: Stage,
+    /// The tick its next croak may start in, and the tick the one under way ends in.
+    croaks: u64,
+    croaking: Option<u64>,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if kind == KIND {
-        let until = wait(world);
-        world.entity_mut(entity).insert(Frog { stage: Stage::Sitting(until) });
+        let (until, croaks) = (wait(world, WAITS), wait(world, CROAK_GAPS));
+        world.entity_mut(entity).insert(Frog { stage: Stage::Sitting(until), croaks, croaking: None });
     }
 }
 
-fn wait(world: &mut World) -> u64 {
+fn wait(world: &mut World, [least, most]: [u64; 2]) -> u64 {
     let now = world.resource::<Tick>().0;
-    now + WAITS[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll((WAITS[1] - WAITS[0]) as u32 + 1))
+    now + least + u64::from(world.get_resource_or_insert_with(Dice::default).roll((most - least) as u32 + 1))
+}
+
+/// Its `FlagsExtended` with `set`, and its croak's bit while it croaks.
+fn flags(world: &World, entity: Entity, id: u64, set: i64) -> bytes::Bytes {
+    let croaking = world.get::<Frog>(entity).is_some_and(|frog| frog.croaking.is_some());
+    breezes::flags(id, set | if croaking { CROAKING } else { 0 })
+}
+
+/// A tick of a frog on land: it starts a croak when one is due and ends it [`CROAKS`] after
+/// (`behavior.croak`; BDS's showed `FlagsExtended` bit 37 for 90 ticks, 10.8 to 14.1 s apart,
+/// with no sound, research/captures/bds-g14frog.txt).
+fn croak(world: &mut World, entity: Entity, layer: Entity, cell: [i32; 3], id: u64, leaping: bool) {
+    let now = world.resource::<Tick>().0;
+    let Some(frog) = world.get::<Frog>(entity) else { return };
+    let (croaks, croaking) = (frog.croaks, frog.croaking);
+    let next = match croaking {
+        Some(until) if now >= until => Some((None, wait(world, CROAK_GAPS))),
+        None if now >= croaks => Some((Some(now + CROAKS), croaks)),
+        _ => None,
+    };
+    let Some((croaking, croaks)) = next else { return };
+    if let Some(mut frog) = world.get_mut::<Frog>(entity) {
+        (frog.croaking, frog.croaks) = (croaking, croaks);
+    }
+    let packet = flags(world, entity, id, if leaping { breezes::LEAPING } else { 0 });
+    entities::tell_viewers(world, entity, layer, cell, vec![packet]);
 }
 
 /// Before its move: a frog in the air keeps its leap; on land it sits, and leaps when it is
@@ -63,8 +99,9 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64) -
     let next = match stage {
         Stage::Leaping([x, _, z], since) if now > since + 1 && body.on_ground => {
             fling(world, entity,[x * LANDING_KEEPS, -GRAVITY, z * LANDING_KEEPS]);
-            entities::tell_viewers(world, entity, layer, cell, vec![breezes::flags(id, 0)]);
-            Stage::Sitting(wait(world))
+            let packet = flags(world, entity, id, 0);
+            entities::tell_viewers(world, entity, layer, cell, vec![packet]);
+            Stage::Sitting(wait(world, WAITS))
         }
         Stage::Leaping([x, y, z], since) => {
             fling(world, entity,[x, y - GRAVITY * (now - since) as f32, z]);
@@ -74,14 +111,16 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64) -
         Stage::Sitting(until) if now >= until && body.on_ground => match target(world, layer, &body) {
             Some(speed) => {
                 fling(world, entity,speed);
-                entities::tell_viewers(world, entity, layer, cell, vec![breezes::flags(id, breezes::LEAPING)]);
+                let packet = flags(world, entity, id, breezes::LEAPING);
+                entities::tell_viewers(world, entity, layer, cell, vec![packet]);
                 late_sounds::play_later(world, 1, layer, cell, hunting::sound("jump_to_block", id, KIND, &body, 0.0));
                 Stage::Leaping(speed, now)
             }
-            None => Stage::Sitting(wait(world)),
+            None => Stage::Sitting(wait(world, WAITS)),
         },
         Stage::Sitting(_) => stage,
     };
+    croak(world, entity, layer, cell, id, matches!(next, Stage::Leaping(..)));
     if let Some(mut frog) = world.get_mut::<Frog>(entity) {
         frog.stage = next;
     }
@@ -131,10 +170,27 @@ fn landing(level: &Level, body: &Body, [x, y, z]: [i32; 3]) -> Option<[f32; 3]> 
     let (dx, dz) = (x as f32 + 0.5 - body.at[0], z as f32 + 0.5 - body.at[2]);
     let far = dx.hypot(dz);
     let speed = leap(far, y as f32 - body.at[1])?;
-    (far >= NEAREST).then(|| {
-        let (cos, sin) = (ANGLE.to_radians().cos(), ANGLE.to_radians().sin());
-        [dx / far * speed * cos, speed * sin, dz / far * speed * cos]
-    })
+    let (cos, sin) = (ANGLE.to_radians().cos(), ANGLE.to_radians().sin());
+    let speed = [dx / far * speed * cos, speed * sin, dz / far * speed * cos];
+    (far >= NEAREST && clear_way(level, body, speed, y as f32 + 1.0)).then_some(speed)
+}
+
+/// Whether the leap at `speed` from `body` meets no block before it comes down to `top`: BDS's frog
+/// in a glass pen 6 high leapt only within it in 16 s (research/captures/bds-g14frog.txt).
+fn clear_way(level: &Level, body: &Body, speed: [f32; 3], top: f32) -> bool {
+    let mut at = body.at;
+    for tick in 0..LEAP_TICKS {
+        let rise = speed[1] - GRAVITY * tick as f32;
+        let landed = rise < 0.0 && at[1] + rise <= top;
+        at = [at[0] + speed[0], if landed { top } else { at[1] + rise }, at[2] + speed[2]];
+        if !Body::new(at, [0.0; 3], body.size).is_free(level) {
+            return false;
+        }
+        if landed {
+            return true;
+        }
+    }
+    true
 }
 
 /// The speed of a leap at [`ANGLE`] that comes down `rise` higher `far` off: v² = g·far² /

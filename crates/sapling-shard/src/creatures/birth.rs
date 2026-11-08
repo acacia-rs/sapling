@@ -144,7 +144,8 @@ fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: 
     let properties = super::properties::rolled(world, layer, kind, feet, reason == SpawnReason::Bred);
     let rolled = strides::roll(world, kind);
     let strength = crate::riding::roll_strength(world, kind);
-    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, Some(&properties), rolled.as_ref(), strength), None, [yaw, 0.0], (genes::variant(kind, gene), gene))))?;
+    let born = super::bats::born_flags(&world.get::<Layer>(layer)?.world, kind, &body);
+    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, Some(&properties), rolled.as_ref(), strength), None, [yaw, 0.0], (genes::variant(kind, gene), gene, born))))?;
     world.entity_mut(entity).insert((Creature { look: None }, properties));
     if let Some(rolled) = rolled {
         world.entity_mut(entity).insert(strides::Strode(rolled));
@@ -154,6 +155,7 @@ fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: 
         world.entity_mut(entity).insert(gene);
     }
     give_legs(world, entity, kind);
+    super::bats::arm(world, entity, layer, kind);
     if let Some(mut legs) = world.get_mut::<legs::Legs>(entity) {
         legs.yaw = yaw;
     }
@@ -192,7 +194,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let body = Body::new(actor.position, [0.0; 3], slimes::sizes::body_size(&kind, gene).unwrap_or(size));
     let (kept, compound) = strides::stored(world, &kind, compound);
     let strength = crate::riding::kept_strength(&compound);
-    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, None, kept.as_ref(), strength), None, [0.0; 2], (actor.variant, gene)))) else { return false };
+    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, None, kept.as_ref(), strength), None, [0.0; 2], (actor.variant, gene, acacia_proto::types::MetadataFlags1(0))))) else { return false };
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }

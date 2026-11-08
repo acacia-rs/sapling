@@ -49,6 +49,11 @@ pub(crate) fn is_under_way(world: &World, entity: Entity) -> bool {
     world.get::<Stroll>(entity).is_some_and(|stroll| stroll.0.is_some() || now < stroll.1)
 }
 
+/// Whether the mob still flees a hit.
+pub(super) fn is_fleeing(world: &World, entity: Entity) -> bool {
+    world.get::<Stroll>(entity).is_some_and(|stroll| world.resource::<Tick>().0 < stroll.1)
+}
+
 /// The share of its speed a walker keeps on its way's last block, ending at `to` ([`LAST_SLOWEST`]).
 pub(super) fn last_block_share(body: &Body, to: [f32; 2]) -> f32 {
     let near = (to[0] - body.at[0]).powi(2) + (to[1] - body.at[2]).powi(2);

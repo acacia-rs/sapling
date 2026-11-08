@@ -3,14 +3,16 @@
 //! pushed 0.98 x 0.15² a tick. Without pollen, by day and dry, it looks for a flower within 6
 //! across and 4 up or down with even odds a tick, flies to it, and after 20 ticks there carries
 //! pollen. With pollen, or by night or in rain, it flies to its hive (the one it last came out
-//! of), or the nearest within 16 across and 10 up or down, and goes in (hives.rs). A bee that
+//! of), or the nearest within 16 across and 10 up or down, and goes in (hives.rs), growing crops on
+//! the way (crops.rs). A bee that
 //! finds no flower in 180 s goes home. Hit, it goes for its hitter for 25 s with every bee within
 //! 20, as one within 16 of a broken hive goes for the nearest player within 10; its sting
 //! poisons on normal (10 s) and hard (18 s), and it dies 10 to 60 s after.
-// TODO: a bee with pollen grows no crops; it keeps no 22-block bound about its hive; a full hive
+// TODO: it keeps no 22-block bound about its hive; a full hive
 // does not send it looking for another; its pollen and home are not kept with it in its column;
 // it bobs up and down as BDS's did not.
 
+mod crops;
 mod hives;
 
 use acacia_proto::types::{
@@ -69,6 +71,8 @@ const AIMS_OVER_FEET: f32 = 0.5;
 pub(super) struct Bee {
     home: Option<BlockPos>,
     nectar: bool,
+    /// Crops its pollen grew.
+    grown: u8,
     /// The flower it flies to, and the ticks it has been at it.
     flower: Option<BlockPos>,
     stayed: u32,
@@ -134,7 +138,14 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, body: &Bod
         return wings::fly_at(world, entity, KIND, [feet[0], feet[1] + AIMS_OVER_FEET, feet[2]]);
     }
     let Some(bee) = world.get::<Bee>(entity) else { return wings::steer(world, entity, layer, KIND) };
+    let (nectar, grown) = (bee.nectar, bee.grown);
     let goes_home = bee.nectar || bee.homing || !may_fly(world, layer);
+    if nectar {
+        let grown = crops::grow(world, layer, body, grown);
+        if let Some(mut bee) = world.get_mut::<Bee>(entity) {
+            bee.grown = grown;
+        }
+    }
     match goes_home {
         true => home(world, entity, layer, body),
         false => forage(world, entity, layer, body),

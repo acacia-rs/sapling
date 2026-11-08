@@ -1,9 +1,12 @@
 //! A panda's gene, rolled as its pack's genetics roll it: two alleles of 0 to 15; a main allele
 //! of 0 to 3 makes it lazy, worried, playful or aggressive, both 4 to 7 weak, both 8 or 9 brown,
 //! and the rest normal. What each does when hit, as BDS's did (research/captures/bds-pandas-findings.md):
-//! a normal or brown one hits back once, an aggressive one for 6 until it is calm, the rest run.
-// TODO: a lazy one walks and runs at its own slow pace, a worried one keeps away from other kinds,
-// a playful one rolls, and an aggressive one's anger is not passed to others of its gene.
+//! a normal or brown one hits back once, an aggressive one for 6 until it is calm, the rest run. A
+//! lazy one walks at its own pace ([`pace`]), a worried one keeps away from other kinds
+//! (husbandry/avoiding.rs) and a playful one rolls (husbandry/rolls.rs). An aggressive one's anger
+//! reached no other: three aggressive bystanders 6 to 9 off took no target (bds-g14panda.txt), its
+//! pack's `broadcast_anger` notwithstanding.
+// TODO: a lazy one's tempted, bred and followed walks keep the kind's pace.
 
 use bevy_ecs::prelude::*;
 use sapling_data::Hunts;
@@ -22,6 +25,10 @@ const MAIN: [i32; 4] = [1, 2, 3, AGGRESSIVE];
 const WEAK_HEALTH: f32 = 10.0;
 const AGGRESSIVE_ATTACK: f32 = 6.0;
 const STANDS: u64 = 48;
+/// A panda's `movement`, a lazy one's, and a lazy one's panic multiplier.
+const MOVEMENT: f32 = 0.15;
+const LAZY_MOVEMENT: f32 = 0.07;
+const LAZY_PANIC: f32 = 2.5;
 
 /// The gene a mob shows as its `Variant`.
 #[derive(Component, Clone, Copy)]
@@ -82,6 +89,44 @@ pub(super) fn stored(kind: &str, variant: i32) -> Option<Gene> {
 
 fn is_panda(world: &World, entity: Entity) -> bool {
     world.get::<crate::entities::Kind>(entity).is_some_and(|kind| kind.0 == KIND)
+}
+
+fn has_gene(world: &World, entity: Entity, gene: i32) -> bool {
+    is_panda(world, entity) && world.get::<Gene>(entity).is_some_and(|kept| kept.0 == gene)
+}
+
+pub(super) fn is_worried(world: &World, entity: Entity) -> bool {
+    has_gene(world, entity, MAIN[1])
+}
+
+pub(super) fn is_playful(world: &World, entity: Entity) -> bool {
+    has_gene(world, entity, MAIN[2])
+}
+
+/// The share of its kind's pace the mob walks at: a lazy panda's `movement` is 0.07 to the kind's
+/// 0.15 (research/captures/bds-g14panda.txt; bds-pandas-findings.md fitted its walk to it).
+pub(super) fn pace(world: &World, entity: Entity) -> f32 {
+    if has_gene(world, entity, MAIN[0]) { LAZY_MOVEMENT / MOVEMENT } else { 1.0 }
+}
+
+/// The mob's stroll and panic speeds, its kind's being `strolls` and `panics`: a lazy panda's at its
+/// pace, its panic at its own 2.5 times it (`panda_lazy`'s `behavior.panic`; BDS's ran 0.0654 to 0.066,
+/// bds-pandas-findings.md).
+pub(super) fn paces(world: &World, entity: Entity, strolls: Option<f32>, panics: Option<f32>) -> (Option<f32>, Option<f32>) {
+    match has_gene(world, entity, MAIN[0]) {
+        true => (strolls.map(|speed| speed * LAZY_MOVEMENT / MOVEMENT), panics.map(|_| LAZY_MOVEMENT * LAZY_PANIC)),
+        false => (strolls, panics),
+    }
+}
+
+/// A lazy panda is announced with its own `movement`.
+pub(super) fn dress(added: &mut acacia_proto::packets::AddEntity, kind: &str, gene: Option<Gene>) {
+    if kind != KIND || gene.is_none_or(|gene| gene.0 != MAIN[0]) {
+        return;
+    }
+    for attribute in added.attributes.iter_mut().filter(|attribute| attribute.name == "minecraft:movement") {
+        attribute.value = LAZY_MOVEMENT;
+    }
 }
 
 /// Whether a hit makes the mob turn on its hitter: every mob but a panda that runs.

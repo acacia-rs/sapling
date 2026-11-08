@@ -38,11 +38,12 @@ const HEAD_UP: f32 = 0.85;
 pub(super) type Dress<'a> = (Option<&'a Actor>, Option<&'a Raised>, Option<&'a Properties>, Option<&'a Strides>, Option<i32>);
 
 /// The mob `id` as its viewers are told of it: dressed as it was stored (`look`), or as BDS
-/// announced its kind, in `variant` and with its `properties`; either as it is `raised` now.
+/// announced its kind, in `variant` and with its `properties`; either as it is `raised` now, with
+/// the flags it was `born` with (a hanging bat's).
 // TODO: a mob dressed as it was stored is not shown on fire to one who comes to see it burning.
-pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, properties, strides, strength): Dress<'_>, health: Option<&Health>, [yaw, pitch]: [f32; 2], (variant, size): (i32, Option<Gene>)) -> Vec<Bytes> {
+pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, properties, strides, strength): Dress<'_>, health: Option<&Health>, [yaw, pitch]: [f32; 2], (variant, size, born): (i32, Option<Gene>, MetadataFlags1)) -> Vec<Bytes> {
     let left = health.map(Health::left);
-    let saddle = raised.filter(|raised| raised.saddled).map_or(0, |_| crate::riding::saddle_flags(kind).0);
+    let saddle = raised.filter(|raised| raised.saddled).map_or(0, |_| crate::riding::saddle_flags(kind).0) | born.0;
     let extra = MetadataFlags1(raised.map_or(0, |raised| raised.unstored_flags().0) | saddle);
     let dressed = look.map(|look| raised.map_or_else(|| look.clone(), |raised| raised.dress(look)));
     let told = properties.map(|properties| properties.shown(kind));
@@ -77,6 +78,7 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, prop
     }
     crate::riding::dress_inventory(&mut added, kind, raised.is_some_and(Raised::is_tamed), raised.is_some_and(Raised::is_baby), raised.is_some_and(|raised| raised.ungrouped));
     super::slimes::sizes::dress(&mut added, kind, size);
+    super::genes::dress(&mut added, kind, size);
     super::properties::dress(&mut added, properties);
     if options.baby {
         dress_baby_look(&mut added, kind);
@@ -112,7 +114,7 @@ fn shown_now(world: &World, entity: Entity) -> Option<Vec<Bytes>> {
     let strides = world.get::<super::strides::Strode>(entity).map(|strode| &strode.0);
     let mut shown = announcement(id, kind, body, (look, raised, world.get::<Properties>(entity), strides, crate::riding::strength_of(world, entity)), world.get::<Health>(entity), [yaw, pitch], {
         let gene = world.get::<Gene>(entity).copied();
-        (super::genes::variant(kind, gene), gene)
+        (super::genes::variant(kind, gene), gene, super::bats::hanging_flags(world, entity))
     });
     shown.extend(super::drowned::held(world, entity, id));
     shown.extend(super::piglins::held(world, entity, id));
@@ -129,13 +131,14 @@ pub(crate) fn is_baby(world: &World, entity: Entity) -> bool {
 }
 
 /// A baby's pace over a grown one's of `kind`, as both were announced: BDS's baby zombies hunt at
-/// their 0.35 (bds-q3baby.txt).
+/// their 0.35 (bds-q3baby.txt); times its gene's share (genes.rs `pace`).
 pub(super) fn pace_share(world: &World, entity: Entity, kind: &str) -> f32 {
     let paces = (sapling_data::mob_pace(kind, true), sapling_data::mob_pace(kind, false));
-    match paces {
+    let baby = match paces {
         (Some(baby), Some(grown)) if grown > 0.0 && is_baby(world, entity) => baby / grown,
         _ => 1.0,
-    }
+    };
+    baby * super::genes::pace(world, entity)
 }
 
 /// Players who come to see the mob later are told of it as it is now.

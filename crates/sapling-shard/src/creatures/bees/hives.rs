@@ -5,8 +5,7 @@
 //! While bees are in, `block.beehive.work` is heard from the middle now and then. The hive's entity
 //! (`sapling_world::occupied_hive`) is written only as bees come and go, so its `TicksLeftToStay`
 //! are those of the last write, as BDS's were.
-// TODO: a hive broken with silk touch lets its bees out calm instead of keeping them in its item;
-// a hive on fire or a campfire under one is not looked at; a nest from generation holds no bees.
+// TODO: a hive on fire is not looked at; a nest from generation holds no bees.
 
 use std::collections::HashMap;
 
@@ -129,21 +128,25 @@ pub(crate) fn taken(world: &World, layer: Entity, pos: BlockPos) -> Vec<Occupant
     held(world, layer, pos).map(|(_, occupants)| occupants).unwrap_or_default()
 }
 
-/// The block `name` at `pos`, holding `bees`, was broken with `silk_touch` or not: if it was a hive
-/// its bees come out, and they and every bee within 16 of it go for the nearest player within 10
-/// of them (the pack's `block_sensor` and `minecraft:exited_disturbed_hive`).
-pub(crate) fn broken(world: &mut World, layer: Entity, pos: BlockPos, name: &str, bees: Vec<Occupant>, silk_touch: bool) {
+/// The block `name` at `pos`, holding `bees`, was broken, dropping itself with `silk_touch` or not:
+/// if it was a hive, silk touch keeps its bees in the item's tag, returned, as BDS's did
+/// (research/captures/bds-g14bee.txt); else they come out, and they and every bee within 16 of it
+/// go for the nearest player within 10 of them (the pack's `block_sensor` and
+/// `minecraft:exited_disturbed_hive`), a campfire under it or not, as BDS's stung over one.
+pub(crate) fn broken(world: &mut World, layer: Entity, pos: BlockPos, name: &str, bees: Vec<Occupant>, silk_touch: bool) -> Option<Value> {
     if !is_hive(name) {
-        return;
+        return None;
     }
     world.get_resource_or_insert_with(Written::default).0.remove(&(layer, pos));
+    if silk_touch {
+        return (!bees.is_empty()).then(|| sapling_world::occupied_hive(&Value::Compound(Vec::new()), &bees));
+    }
     // Out of the gone block's middle, as BDS's came (bds-bees.txt at 110177).
     for occupant in &bees {
         release(world, layer, pos, occupant, pos.map(|c| c as f32 + 0.5), 0.0);
     }
-    if !silk_touch {
-        super::disturbed(world, layer, pos);
-    }
+    super::disturbed(world, layer, pos);
+    None
 }
 
 /// The hives of the columns that tick, ticking areas' too (`LevelChunk::tick` ticks a chunk's block
