@@ -53,6 +53,16 @@ corner each click, then rose a level with `block.composter.fill_success` (two cl
 stayed with `block.composter.fill`. Sapling rolls the Java game's chances by item
 (`blocks/composter.rs`); a full one gives a bone meal to an empty hand, which was not measured.
 
+Drilled 2026-11-08 (`bds_command_probe ffcomp`, research/captures/bds-ffcomp.txt): a click from 6
+sent the particles and level 7 with `fill_success`; 20 ticks later level 8 and
+`block.composter.ready`; a click at 7 did nothing. Emptying sent level 0, the bone meal (`AddItemEntity`
+inside the composter's own cell, `Block::popResource`) and `block.composter.empty` in one tick. A hopper
+facing down onto it skipped a stone in slot 0 and fed the pies of slot 1 every 8 ticks, without particles,
+and fed nothing at 7; one under it took the bone meal in the tick it turned 8 (level 0, `empty`), and one
+under a composter set to 8 took it the next tick. Sapling went straight to 8 and spilled into the cell
+above, and hoppers did neither; fixed (`composter.rs` `Job::Compost`, `hoppers.rs` push and
+`pull_meal`), test `a_composter_ripens_a_second_after_7_and_hoppers_feed_and_empty_it`.
+
 A flower pot given a plant had `update_bit=1`; sapling sets it.
 
 ## TNT

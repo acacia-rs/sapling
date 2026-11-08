@@ -1,13 +1,14 @@
-//! Composters: what rots goes in by chance a click, and a full one gives bone meal
-//! (docs/research/block-uses.md, "Composter").
-// TODO: hoppers neither feed nor empty one; a composter filled to 7 is ready at once, where
-// the Java game waits a second; emptying one was not measured on BDS.
+//! Composters: what rots goes in by chance a click or from a hopper above, one filled to 7 is
+//! ready a second later, and a ready one gives bone meal to a click or a hopper below
+//! (docs/research/block-uses.md, "Composter"; research/captures/bds-ffcomp.txt).
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Item};
+use sapling_world::ItemStack;
 
+use super::queued::{self, Job};
 use super::{Dice, level, send, with_property};
 use crate::{drops, inventory};
 
@@ -15,8 +16,11 @@ pub(super) const COMPOSTER: &str = "minecraft:composter";
 const LEVEL: &str = "composter_fill_level";
 const FULL: u8 = 7;
 const READY: u8 = 8;
+/// Ticks from filling to 7 to being ready.
+const RIPENS: u64 = 20;
 /// Where BDS put the particles over the cell's corner.
 const PARTICLES_UP: f32 = 0.75;
+const BONE_MEAL: &str = "minecraft:bone_meal";
 
 /// The chance that `item` raises a composter: the Java game's table by the end of the name, of
 /// which BDS showed wheat seeds raise one in two clicks of six.
@@ -53,6 +57,19 @@ fn hear(world: &mut World, layer: Entity, pos: BlockPos, name: &str) {
     send::to_viewers(world, layer, pos, &[send::noise(name, Vec3f { x, y, z }, -1)]);
 }
 
+/// Rolls `item` into the composter filled to `filled`: it rises by chance, to wait for ripening at 7.
+fn rot(world: &mut World, layer: Entity, pos: BlockPos, id: u32, filled: u8, chance: f32) {
+    // An empty one always takes the first: BDS's did in each run.
+    let rises = filled == 0 || world.get_resource_or_insert_with(Dice::default).fraction() < chance;
+    if rises {
+        set_level(world, layer, pos, id, filled + 1);
+        if filled + 1 == FULL {
+            queued::after(world, layer, pos, RIPENS, Job::Compost);
+        }
+    }
+    hear(world, layer, pos, if rises { "block.composter.fill_success" } else { "block.composter.fill" });
+}
+
 /// A click with `held` on the composter at `pos`: `None` when it is no composter that takes it,
 /// else whether the item is spent.
 pub(super) fn fill(world: &mut World, layer: Entity, pos: BlockPos, held: &str) -> Option<bool> {
@@ -63,22 +80,51 @@ pub(super) fn fill(world: &mut World, layer: Entity, pos: BlockPos, held: &str) 
     let chance = chance(held).filter(|_| filled < FULL)?;
     let position = Vec3f { x: pos[0] as f32, y: pos[1] as f32 + PARTICLES_UP, z: pos[2] as f32 };
     send::to_viewers(world, layer, pos, &[sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleCropGrowth, position, data: 0 })]);
-    // An empty one always takes the first: BDS's did in each run.
-    let rises = filled == 0 || world.get_resource_or_insert_with(Dice::default).fraction() < chance;
-    if rises {
-        set_level(world, layer, pos, id, if filled + 1 == FULL { READY } else { filled + 1 });
-    }
-    hear(world, layer, pos, if rises { "block.composter.fill_success" } else { "block.composter.fill" });
+    rot(world, layer, pos, id, filled, chance);
     Some(true)
 }
 
-/// A click on a composter that is ready: it gives its bone meal. False for anything else.
+/// A hopper's `item` fed to the composter at `pos`, without particles; whether it went in.
+pub(crate) fn feed(world: &mut World, layer: Entity, pos: BlockPos, item: &str) -> bool {
+    let Some((id, filled)) = filled(world, layer, pos).filter(|(_, filled)| *filled < FULL) else { return false };
+    let Some(chance) = chance(item) else { return false };
+    rot(world, layer, pos, id, filled, chance);
+    true
+}
+
+pub(crate) fn is_composter(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    filled(world, layer, pos).is_some()
+}
+
+/// A composter at 7 whose wait is over is ready.
+pub(super) fn ripen(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some((id, FULL)) = filled(world, layer, pos) {
+        set_level(world, layer, pos, id, READY);
+        hear(world, layer, pos, "block.composter.ready");
+    }
+}
+
+/// The bone meal a ready composter at `pos` would give a hopper.
+pub(crate) fn meal_for_hopper(world: &World, layer: Entity, pos: BlockPos) -> Option<ItemStack> {
+    matches!(filled(world, layer, pos), Some((_, READY))).then(|| ItemStack { name: BONE_MEAL.to_owned(), count: 1, damage: 0, block: None, tag: None })
+}
+
+/// The ready composter at `pos` gave its bone meal to a hopper: it is empty.
+pub(crate) fn drained(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some((id, READY)) = filled(world, layer, pos) {
+        set_level(world, layer, pos, id, 0);
+        hear(world, layer, pos, "block.composter.empty");
+    }
+}
+
+/// A click on a composter that is ready: it gives its bone meal out of its own cell. False for
+/// anything else.
 pub(super) fn empty(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     let Some((id, READY)) = filled(world, layer, pos) else { return false };
-    let meal = level(world, layer).and_then(|level| inventory::stored(&Item::new("minecraft:bone_meal".to_owned(), 1), level.registry()));
+    let meal = level(world, layer).and_then(|level| inventory::stored(&Item::new(BONE_MEAL.to_owned(), 1), level.registry()));
     set_level(world, layer, pos, id, 0);
     if let Some(meal) = meal {
-        drops::spill(world, layer, meal, [pos[0], pos[1] + 1, pos[2]]);
+        drops::spill(world, layer, meal, pos);
     }
     hear(world, layer, pos, "block.composter.empty");
     true

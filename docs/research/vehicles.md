@@ -344,3 +344,27 @@ were not found in any of these; sapling does what is listed there.
   ghast rise.
 - Left: stilled.rs
   takes the player's eyes at feet + 1.62 and ignores slowness modifiers.
+
+## Fire, lava, TNT minecarts and hopper minecarts (drilled 2026-11-08, group F: `ffburn`, `fftnt`, `ffcart`)
+
+- Burning (bds-ffburn.txt): a boat summoned into lava showed `Health` 0 in its summon tick and was gone with
+  its item the next; a minecart or chest minecart resting on lava (it stayed on top), a minecart in fire and a
+  boat or chest boat in fire showed 24, 8, −7 (boat 20, 1, −8) and broke into their item the tick after.
+  `/damage 2 fire` took 20 off a boat and 16 off a cart, so fire hurts 2 a tick and lava a boat 4, through the
+  ×10 / ×8 of a hit, mending between. Sapling: `vehicles/burning.rs`; its boat's third tick in fire takes 2
+  where BDS's took 1 (same break tick). Decompiled: `Minecart` hurt 14598be20 takes damage ×8 and breaks at
+  integrity ≤ 0.
+- TNT minecart (bds-fftnt.txt; decompiled `MinecartTNT` hurt 14598f0a0, prime 14598f200): fire and lava
+  prime it (`MinecartTntPrimeFuse` and `FuseLength` 79 in the tick it is hurt), `FuseLength` is sent every
+  tick down to 0 and it bursts the tick after; flint and steel or a fire charge in a player's hand primes it
+  with the pack's `ignite` and no event (the item is kept); `/damage` of fire or lava primes it at once,
+  `fire_tick` 3 s later; a shot on fire primes it at fuse 0 (bursting 2 ticks after the hit); a creative
+  player's plain arrow broke it (`Health` −41). The blast is the pack's power 3 whatever the speed (no scaling
+  in hurt or tick). Sapling: fire, lava, fire charge and the shown fuse fixed (`carts.rs`, `burning.rs`);
+  arrows still pass through vehicles, `/damage` does not reach them, and yaw on rails was not compared.
+- Hopper minecart on a detector rail (bds-ffcart.txt): a comparator reading from the rail gave 3, 6, 9 for
+  1, 2, 3 full stacks of 5 slots (`floor(fullness·14)+1`), each change seen at the rail's 20-tick recheck.
+  Hoppers filling and emptying carts were not measured (the capture shows no slots) and the laden-drag rows
+  all ran into the end stone; both open.
+- `summon <vehicle> <name>` gives BDS's vehicle no name: `@e[name=..]` found none and `/kill` listed
+  "Minecart"; sapling names it.
