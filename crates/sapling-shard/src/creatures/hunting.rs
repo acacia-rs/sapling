@@ -225,6 +225,7 @@ pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64,
         (hunter.ready, hunter.angered) = (now + hunts.aims.map_or(COOLDOWN, u64::from), true);
         super::bees::spread_anger(world, entity, layer, body.at, player);
         super::dolphins::anger(world, entity, layer, body.at, player);
+        super::pigmen::spread_anger(world, entity, layer, body.at, player);
     }
 }
 

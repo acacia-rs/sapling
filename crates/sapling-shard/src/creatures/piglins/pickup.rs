@@ -7,7 +7,7 @@
 //! in an empty main hand, or keeps unseen while it holds a weapon, and drops all at death
 //! (bds-ah3nugget.txt).
 // TODO: what else it holds is lost on death and its kept nuggets with the world; its other
-// shareables (armour, food, crossbows) are not picked up; it is not shown admiring (`FlagsExtended` bit 30).
+// shareables (armour, food, crossbows) are not picked up.
 
 use acacia_proto::packets::TakeItemEntity;
 use bevy_ecs::prelude::*;

@@ -63,6 +63,7 @@ fn spot(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<[f32; 3]> {
 /// Before its move, with its prey at `prey`: its anger shows or ends; in water it swims at its
 /// prey, or about; out of it it flops.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, body: &Body, prey: Option<[f32; 3]>) -> bool {
+    anger::join(world, entity, layer, body);
     anger::show(world, entity, layer, body);
     if body.liquid() != Some(Liquid::Water) {
         ashore::flop(world, entity, body);

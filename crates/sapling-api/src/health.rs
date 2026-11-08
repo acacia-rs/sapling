@@ -124,6 +124,13 @@ impl ShardCtx<'_> {
         self.backend.hurt_player_by(player, amount, cause, by)
     }
 
+    /// [`ShardCtx::hurt_player_by`] from `source`, a player or a mob in the world, as `/damage ...
+    /// entity <source>` deals it: a raised shield facing the source turns away a hit, a shot,
+    /// Thorns or fireworks, and a hit that lands throws the player away from the source.
+    pub fn hurt_player_from(&mut self, player: PlayerId, amount: f32, cause: DamageCause, source: &crate::Target) -> bool {
+        self.backend.hurt_player_from(player, amount, cause, source)
+    }
+
     /// Kills a player as `/kill` does. False for one already dead, or in creative or spectator.
     pub fn kill_player(&mut self, player: PlayerId) -> bool {
         self.backend.kill_player(player)
@@ -135,6 +142,9 @@ pub trait HealthBackend {
     fn health(&self, player: PlayerId) -> Option<f32>;
     fn hurt_player(&mut self, player: PlayerId, amount: f32, cause: DamageCause) -> bool;
     fn hurt_player_by(&mut self, player: PlayerId, amount: f32, cause: DamageCause, _by: &crate::Attacker) -> bool {
+        self.hurt_player(player, amount, cause)
+    }
+    fn hurt_player_from(&mut self, player: PlayerId, amount: f32, cause: DamageCause, _source: &crate::Target) -> bool {
         self.hurt_player(player, amount, cause)
     }
     fn kill_player(&mut self, player: PlayerId) -> bool;

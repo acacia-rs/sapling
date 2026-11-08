@@ -18,6 +18,13 @@ fn offhand(sent: &[RawPacket], id: u64) -> Vec<i16> {
     all::<MobEquipment>(sent).into_iter().filter(|held| held.runtime_entity_id == id && held.window_id == WindowID::Offhand).map(|held| held.item.network_id).collect()
 }
 
+/// Bit 30 of each `FlagsExtended` the piglin was told with.
+fn admiring_bit(sent: &[RawPacket], id: u64) -> Vec<bool> {
+    use acacia_proto::types::MetadataDictionaryItemValue as Meta;
+    let data = all::<acacia_proto::packets::SetEntityData>(sent).into_iter().filter(|data| data.runtime_entity_id == id);
+    data.flat_map(|data| data.metadata).filter_map(|item| if let Meta::FlagsExtended(flags) = item.value { Some(flags.0 & 1 << 30 != 0) } else { None }).collect()
+}
+
 #[test]
 fn a_piglin_given_gold_admires_it_8_seconds_in_its_offhand_then_hands_back_its_barter() {
     let mut h = Harness::new();
@@ -31,11 +38,13 @@ fn a_piglin_given_gold_admires_it_8_seconds_in_its_offhand_then_hands_back_its_b
     let piglin = all::<AddEntity>(&shown).into_iter().find(|added| added.entity_type == "minecraft:piglin").expect("shown").runtime_id;
     let taken = click_on(&mut h, piglin);
     assert!(offhand(&taken, piglin).first().is_some_and(|item| *item != 0), "the ingot in its offhand");
+    assert_eq!(admiring_bit(&taken, piglin), [true], "shown admiring (bds-goldpickup.txt)");
     let heard = h.tick_all().to(1).to_vec();
     assert!(all::<LevelSoundEvent>(&heard).iter().any(|sound| sound.sound_id == "admire"));
     let admiring: Vec<Vec<RawPacket>> = (0..161).map(|_| h.tick_all().to(1).to_vec()).collect();
     let emptied = admiring.iter().position(|sent| offhand(sent, piglin) == [0]).expect("its hand empties");
     assert_eq!(emptied, 159, "161 ticks after it took the ingot");
+    assert_eq!(admiring_bit(&admiring[emptied], piglin), [false], "no longer admiring");
     assert!(all::<LevelSoundEvent>(&admiring[emptied]).iter().any(|sound| sound.sound_id == "admire"), "admire again as it empties, Alex holding gold (bds-gxbarter.txt)");
     // An older mob-loot.json lacks the table (sapling-data README); the drop needs it.
     if sapling_data::has_loot_table("loot_tables/entities/piglin_barter.json") {

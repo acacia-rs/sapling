@@ -99,18 +99,20 @@ fn angry(sent: &[RawPacket], id: u64) -> Option<bool> {
 }
 
 #[test]
-fn a_hit_dolphin_angers_the_dolphins_near_which_show_it_the_tick_after() {
-    // bds-f14edolphin2.txt: all three took the hitter and showed `ANGRY` a tick after.
+fn a_hit_dolphin_angers_the_dolphins_near_which_take_it_a_tick_later() {
+    // bds-f14edolphin2.txt: the hit one took the hitter in the hit's tick, those near in the next;
+    // each showed `ANGRY` the tick after it took it.
     let (mut h, hit) = pool_with("minecraft:dolphin", [0.5, 65.0, 2.7]);
     h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:dolphin", [2.5, 61.0, 8.5]).is_some()));
     let near = all::<AddEntity>(h.tick_all().to(1)).iter().find(|added| added.entity_type == "minecraft:dolphin").expect("shown").runtime_id;
     drop(ask(&mut h, |_| ()));
     h.receive(1, &attack(hit));
-    let sent: Vec<Vec<RawPacket>> = (0..3).map(|_| h.tick_all().to(1).to_vec()).collect();
-    for id in [hit, near] {
-        assert_eq!(targets(&sent[0], id), [1], "{id} takes Alex");
+    let sent: Vec<Vec<RawPacket>> = (0..4).map(|_| h.tick_all().to(1).to_vec()).collect();
+    for (id, took) in [(hit, 0), (near, 1)] {
+        let taken: Vec<Vec<i64>> = sent.iter().map(|sent| targets(sent, id)).collect();
+        assert_eq!(taken[took], [1], "{id} takes Alex in tick {took}: {taken:?}");
         let shown: Vec<Option<bool>> = sent.iter().map(|sent| angry(sent, id)).collect();
-        assert_eq!(shown[1], Some(true), "{id} shows its anger the tick after: {shown:?}");
+        assert_eq!(shown[took + 1], Some(true), "{id} shows its anger the tick after: {shown:?}");
     }
 }
 

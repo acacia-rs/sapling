@@ -37,18 +37,34 @@ pub(crate) fn fanged(world: &mut World, player: Entity, amount: f32, kind: &str,
 
 fn struck(world: &mut World, player: Entity, amount: f32, kind: &str, speed: [f32; 3], cause: Cause) -> bool {
     let (Some(id), true) = (world.get::<NetId>(player).map(|id| id.0), is_mortal(world, player)) else { return false };
-    slain_by(world, player, kind, |world| {
-        let Some(amount) = ask(world, player, amount, cause) else { return false };
-        // Not one a guard turns away: of two hits at once BDS threw for one (bds-pvp.txt).
-        let lands = |vitals: &Vitals| {
-            let mut tried = vitals.health;
-            tried.hurt(amount) && vitals.health.left() > amount
-        };
-        if world.get::<Vitals>(player).is_some_and(lands) {
-            throw(world, player, id, speed);
-        }
-        land(world, player, amount, cause)
-    })
+    slain_by(world, player, kind, |world| thrown_hit(world, player, id, amount, cause, speed))
+}
+
+/// A hit of `amount` by `cause`, as plugins make it, that throws the player at `speed` first unless
+/// it kills it or its guard turns it away.
+fn thrown_hit(world: &mut World, player: Entity, id: u64, amount: f32, cause: Cause, speed: [f32; 3]) -> bool {
+    let Some(amount) = ask(world, player, amount, cause) else { return false };
+    // Not one a guard turns away: of two hits at once BDS threw for one (bds-pvp.txt).
+    let lands = |vitals: &Vitals| {
+        let mut tried = vitals.health;
+        tried.hurt(amount) && vitals.health.left() > amount
+    };
+    if world.get::<Vitals>(player).is_some_and(lands) {
+        throw(world, player, id, speed);
+    }
+    land(world, player, amount, cause)
+}
+
+/// `/damage` from a player or mob at `from` (feet or body): a raised shield facing it turns away the
+/// causes it turns ([`super::shield::blocks`], standing no one up); else every cause throws the player
+/// away from `from` and up before it lands, straight up from itself (research/captures/bds-h2dmgp.txt,
+/// bds-b1shield.txt). The [`death::Slayer`] is the caller's. False where it took nothing.
+pub(super) fn sourced(world: &mut World, player: Entity, amount: f32, cause: Cause, from: [f32; 3]) -> bool {
+    let (Some(id), Some(feet), true) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).map(|position| position.feet), is_mortal(world, player)) else { return false };
+    if super::harm::is_spared(world, player, cause) || super::shield::blocks(world, player, from, amount, cause, false) {
+        return false;
+    }
+    thrown_hit(world, player, id, amount, cause, away(from, feet))
 }
 
 /// Runs a hit with a mob of `kind` named as the player's [`death::Slayer`].

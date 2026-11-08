@@ -266,6 +266,15 @@ of reach.
   hit, no poison on easy; that tick it let go and lost its sting (`MarkVariant` 1). It was alive
   and wandering 8 seconds on.
 
+## Hit by `/damage` with a source (2026-11-08, `h2dmgm`, research/captures/bds-h2dmgm.txt)
+
+`/damage <mob> 1 <cause> entity <source>` is that source's hit. A cow was thrown from the actor as by a punch
+(0.4 across and up before drag) for `entity_attack`, `magic` and `fall` alike, and not without a source; a wolf,
+a zombie pigman and an iron golem took the actor; a skeleton took the zombie named. The pigman's two bystanders 9
+off took the actor too (`minecraft:angry`, `broadcast_range` 20), all three a tick after the hurt.
+Sapling: `creatures/sourced.rs` (the hit's answer is `attacks::answer`), `creatures/pigmen.rs`; tests in
+`tests/integration/fourteenth2h.rs`. Left: sapling's pigmen take the player in the hurt's tick.
+
 ## Hoglins, zoglins, the warden and the creaking (`beasts`, `creaking`)
 
 `research/captures/bds-wander-findings.md`: a hoglin hits every 40 ticks for 3 to 9 and a zoglin

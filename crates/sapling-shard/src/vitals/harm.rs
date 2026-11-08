@@ -87,8 +87,12 @@ pub(super) fn dress(world: &mut World, player: Entity) {
 
 /// [`land`]s a hit once the world's rules and plugins let it; false where it took nothing.
 pub(crate) fn hurt(world: &mut World, player: Entity, amount: f32, cause: Cause) -> bool {
-    let spared = layer_of(world, player).and_then(|layer| world.get::<Layer>(layer)).is_some_and(|layer| crate::rules::spares_player(&layer.world.level().rules, cause));
-    !spared && ask(world, player, amount, cause).is_some_and(|amount| land(world, player, amount, cause))
+    !is_spared(world, player, cause) && ask(world, player, amount, cause).is_some_and(|amount| land(world, player, amount, cause))
+}
+
+/// Whether the world's rules spare the player hits of `cause` (`falldamage` and the like).
+pub(super) fn is_spared(world: &World, player: Entity, cause: Cause) -> bool {
+    layer_of(world, player).and_then(|layer| world.get::<Layer>(layer)).is_some_and(|layer| crate::rules::spares_player(&layer.world.level().rules, cause))
 }
 
 /// What plugins make of a hit on a player, from the attacker a hit's [`death::Slayer`] names.
@@ -154,6 +158,20 @@ impl HealthBackend for Ctx<'_> {
         self.world.entity_mut(entity).insert(death::Slayer(slayer));
         let hurt = self.hurt_player(player, amount, cause);
         self.world.entity_mut(entity).remove::<death::Slayer>();
+        hurt
+    }
+
+    fn hurt_player_from(&mut self, player: PlayerId, amount: f32, cause: DamageCause, source: &sapling_api::Target) -> bool {
+        let Some(entity) = self.entity(player) else { return false };
+        let found = match source {
+            sapling_api::Target::Player(by) => self.entity(by.id).and_then(|by| self.world.get::<Position>(by)).map(|at| (at.feet, format!("{}{}", death::BY_PLAYER, by.name))),
+            sapling_api::Target::Entity(id) => crate::entities::find(self.world, *id).and_then(|mob| Some((self.world.get::<crate::body::Body>(mob)?.at, self.world.get::<crate::entities::Kind>(mob)?.0.clone()))),
+            _ => None,
+        };
+        let Some((from, slayer)) = found else { return self.hurt_player(player, amount, cause) };
+        self.world.entity_mut(entity).insert((death::Told, death::Slayer(slayer)));
+        let hurt = super::struck::sourced(self.world, entity, amount, cause, from);
+        self.world.entity_mut(entity).remove::<(death::Told, death::Slayer)>();
         hurt
     }
 
