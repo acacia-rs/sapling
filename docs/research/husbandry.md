@@ -58,7 +58,6 @@ players.rs.
 
 - Love lasts 600 ticks, the rest after breeding 6000; a mob looks 8 blocks for a mate and they breed
   after 60 ticks within 3; a birth leaves 1 to 7 experience (the Java game's numbers).
-- A horse and a donkey have a mule (not in the packs; BDS's code).
 - A tamed mob more than 12 blocks behind teleports 2 to 3 blocks from its owner (the Java game's).
 - A failed ride makes a mount 5 calmer (the Java game's; BDS's `attemptTemperMod`, default 5 in
   `MountTamingComponent`'s set-up 141de92d0).
@@ -323,6 +322,18 @@ BDS told both throws' 0.4 at once, as sapling now does (hunting/prey.rs `hit`; m
 "Mob knockback").
 Bites came 58 to 94 ticks apart, each after both were thrown apart: no pace can be fitted from them.
 Ported in husbandry/guarding.rs; test `a_tamed_wolf_leaps_at_what_its_owner_hits_and_its_bite_throws_it`.
+
+## Group K (2026-11-08, fourteenth2k_drill.rs)
+
+- `k2babies` (bds-k2babies.txt): of 100 plain summons each, 4 cows, 6 pigs, 6 chickens, 3 sheep, 3
+  mooshrooms and 24 cats were babies: the packs' `entity_spawned` 5% and 25%. Baby pigs, cows and
+  chickens rolled no voice (property index 1 left 0 in all 16); baby cats did. Sapling: birth.rs
+  `BABIES`, properties.rs `rolled`.
+- `k2mounts` (bds-k2mounts.txt): a tamed horse and donkey fed golden carrots had a mule at their
+  feet with 3 orbs, as sapling's breeding.rs `MIXED`. A tamed donkey's chest click set `CHESTED`
+  with `armor.equip_generic` (riding/packs.rs; mob-life.md "Mount inventories"); a second chest
+  click rode it, a saddle saddled it, a sneaking click opened it, and its death dropped the chest
+  and the saddle.
 
 ## Not drilled
 

@@ -4,7 +4,8 @@
 //! Each tick it changes the player and its viewers are told `FreezingEffectStrength`, with the
 //! frozen flag the tick it fills or stops being full, and a tick later the walking speed it
 //! leaves (effects/attributes.rs: 0.05 less at full).
-// TODO: mobs do not freeze; the freeze is neither kept when the player leaves nor reset at death.
+//! Dead, it thaws a step and is then gone (`thaw_dead`). Mobs' freeze: creatures/frost.rs.
+// TODO: the freeze is not kept when the player leaves.
 
 use acacia_proto::packets::SetEntityData;
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
@@ -47,11 +48,24 @@ pub(crate) fn leather(world: &World, player: Entity) -> [bool; 4] {
 /// the player now.
 pub(super) fn chill(world: &mut World, player: Entity, in_snow: bool) -> bool {
     let chilled = in_snow && !leather(world, player).contains(&true);
+    turn(world, player, |was| if chilled { (was + GAIN).min(1.0) } else { (was - LOSS).max(0.0) })
+}
+
+/// A tick of a dead player's freeze, `dead_for` ticks after its death: it thaws a step, then is
+/// gone (bds-k2freeze.txt: 1, 0.986, then 0, the walking speed a tick behind).
+pub(super) fn thaw_dead(world: &mut World, player: Entity, dead_for: u64) {
+    if world.get::<Frost>(player).is_some() {
+        turn(world, player, |was| if dead_for < 2 { (was - LOSS).max(0.0) } else { 0.0 });
+    }
+}
+
+/// Sets the freeze to what `next` makes of it and tells what changed: whether it hurts now.
+fn turn(world: &mut World, player: Entity, next: impl FnOnce(f32) -> f32) -> bool {
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
     world.entity_mut(player).insert_if_new((Frost::default(), Paced::default()));
     let mut frost = world.get_mut::<Frost>(player).expect("put above");
     let was = frost.level;
-    frost.level = if chilled { (was + GAIN).min(1.0) } else { (was - LOSS).max(0.0) };
+    frost.level = next(was);
     let level = frost.level;
     let hurts = level >= 1.0 && frost.full_for % HURTS_EVERY == 0;
     frost.full_for = if level >= 1.0 { frost.full_for + 1 } else { 0 };

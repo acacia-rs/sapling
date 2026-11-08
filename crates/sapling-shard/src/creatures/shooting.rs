@@ -10,9 +10,32 @@ use crate::components::{NetId, Tick};
 use crate::{entities, late_sounds};
 use acacia_proto::types::MetadataFlags1;
 
-/// The ticks after a shot at which a crossbow's loading is heard, and what of it.
-// TODO: heard where the archer stood at the shot, not where it has walked to since.
+/// The ticks after a shot at which a crossbow's loading is heard, and what of it: from where the
+/// archer is by then (bds-k2shot.txt: a walking pillager's three each at its place of that tick).
 const LOADS: [(u64, &str); 3] = [(3, "start"), (13, "middle"), (23, "end")];
+
+/// Crossbow loadings due: when, the archer, its world and the stage.
+#[derive(Resource, Default)]
+struct Loads(Vec<(u64, Entity, Entity, &'static str)>);
+
+/// Plays the loadings whose time has come from their archers' middles; a gone archer's are dropped.
+pub(crate) fn play_loads(world: &mut World) {
+    let now = world.resource::<Tick>().0;
+    let Some(mut loads) = world.get_resource_mut::<Loads>() else { return };
+    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut loads.0).into_iter().partition(|(when, ..)| *when <= now);
+    loads.0 = waiting;
+    for (_, archer, layer, stage) in due {
+        let Some(body) = world.get::<Body>(archer).copied() else { continue };
+        let middle = [body.at[0], body.at[1] + MIDDLE * body.size[1], body.at[2]];
+        late_sounds::play_later(world, 0, layer, body.at.map(|c| c.floor() as i32), arrows::sound(&format!("crossbow.loading.{stage}"), middle, ""));
+    }
+}
+/// Whether the archer is loading its crossbow: it stands until done (bds-k2shot.txt: a pillager
+/// moved under 0.06 over each load and walked between them).
+pub(super) fn is_loading(world: &World, archer: Entity) -> bool {
+    world.get_resource::<Loads>().is_some_and(|loads| loads.0.iter().any(|(_, loading, ..)| *loading == archer))
+}
+
 /// Its crossbow is heard this much of its height up.
 const MIDDLE: f32 = 0.5;
 const SPIT: &str = "llama_spit";
@@ -76,9 +99,8 @@ pub(super) fn shoot(world: &mut World, entity: Entity, layer: Entity, kind: &str
         let wait = if ready == 0 { hunts.aims.unwrap_or(every) } else { every };
         world.get_mut::<Hunter>(entity)?.ready = now + u64::from(wait);
         // A crossbow is heard being loaded for the next (bds-shoot2.txt).
-        let middle = [body.at[0], body.at[1] + MIDDLE * body.size[1], body.at[2]];
         for (after, stage) in LOADS.into_iter().filter(|_| hunts.closes) {
-            late_sounds::play_later(world, after, layer, body.at.map(|c| c.floor() as i32), arrows::sound(&format!("crossbow.loading.{stage}"), middle, ""));
+            world.get_resource_or_insert_with(Loads::default).0.push((now + after, entity, layer, stage));
         }
     }
     Some(())

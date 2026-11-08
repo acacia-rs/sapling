@@ -253,10 +253,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         _ => {}
     }
     let Some(feet) = prey else { return blast::is_lit(world, entity) };
-    // A lit creeper stands where it is, and an archer within its range.
+    // A lit creeper stands where it is, an archer within its range, and a crossbowman loading.
     let now = world.resource::<Tick>().0;
     let aims = sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| hunts.shoots.is_some() && !hunts.closes) && world.get::<Hunter>(entity).is_some_and(|hunter| now >= hunter.since + NEARS);
-    let stands = blast::is_lit(world, entity) || (aims && distance(feet, body.at) < SHOOTS_FROM) || super::genes::stands(world, entity, now);
+    let stands = blast::is_lit(world, entity) || (aims && distance(feet, body.at) < SHOOTS_FROM) || super::genes::stands(world, entity, now) || super::shooting::is_loading(world, entity);
     match stands {
         true => legs::rest(world, entity),
         false => {

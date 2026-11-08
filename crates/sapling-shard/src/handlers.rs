@@ -111,6 +111,7 @@ pub(crate) fn dispatch(world: &mut World) {
     containers::show_turned_barrels(world);
     containers::show_again_due(world);
     late_sounds::play_due(world);
+    creatures::play_loads(world);
     containers::close_where_gone(world);
     furnaces::tick(world);
     crate::brewing::tick(world);

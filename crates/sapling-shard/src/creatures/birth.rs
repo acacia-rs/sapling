@@ -21,15 +21,28 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]
 /// Spawn events that make a baby (`summon cow ~ ~ ~ 0 0 minecraft:entity_born`).
 pub(super) const BABY_EVENTS: [&str; 3] = ["entity_born", "as_baby", "spawn_baby"];
 
-/// Of these many of a kind's summons with no event, the pack's `entity_spawned` makes a foal of
-/// this many (BDS: 2 of 4 plain horse summons, bds-h3herds.txt).
-const FOALS: [(&str, u32, u32); 5] = [("minecraft:horse", 9, 45), ("minecraft:donkey", 20, 100), ("minecraft:mule", 20, 100), ("minecraft:zombie_horse", 9, 45), ("minecraft:skeleton_horse", 9, 45)];
+/// Of these many of a kind's summons with no event, the pack's `entity_spawned` makes a baby of
+/// this many (BDS: 2 of 4 plain horse summons, bds-h3herds.txt; of 100 each, 4 cows, 6 pigs, 6
+/// chickens, 3 sheep, 3 mooshrooms and 24 cats, bds-k2babies.txt).
+const BABIES: [(&str, u32, u32); 11] = [
+    ("minecraft:horse", 9, 45),
+    ("minecraft:donkey", 20, 100),
+    ("minecraft:mule", 20, 100),
+    ("minecraft:zombie_horse", 9, 45),
+    ("minecraft:skeleton_horse", 9, 45),
+    ("minecraft:cow", 5, 100),
+    ("minecraft:pig", 5, 100),
+    ("minecraft:chicken", 5, 100),
+    ("minecraft:sheep", 5, 100),
+    ("minecraft:mooshroom", 5, 100),
+    ("minecraft:cat", 1, 4),
+];
 const BORN: &str = "minecraft:entity_born";
 
-/// A `/summon` of `kind`: [`spawn_as`], a horse of no event rolling for a foal as its pack does.
+/// A `/summon` of `kind`: [`spawn_as`], one of no event rolling for a baby as its pack does.
 pub(super) fn summoned(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], yaw: f32, event: Option<&str>) -> Option<EntityId> {
-    let foal = event.is_none() && FOALS.iter().find(|(of, ..)| *of == kind).is_some_and(|&(_, foals, of)| world.get_resource_or_insert_with(Dice::default).roll(of) < foals);
-    spawn_with(world, layer, kind, feet, SpawnReason::Command, yaw, event, foal)
+    let baby = event.is_none() && BABIES.iter().find(|(of, ..)| *of == kind).is_some_and(|&(_, babies, of)| world.get_resource_or_insert_with(Dice::default).roll(of) < babies);
+    spawn_with(world, layer, kind, feet, SpawnReason::Command, yaw, event, baby)
 }
 
 /// [`spawn`] facing `yaw`, and as its kind's spawn `event` makes it (a panda's gene) where known.
@@ -38,7 +51,7 @@ pub(crate) fn spawn_as(world: &mut World, layer: Entity, kind: &str, feet: [f32;
 }
 
 #[allow(clippy::too_many_arguments)]
-fn spawn_with(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>, foal: bool) -> Option<EntityId> {
+fn spawn_with(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reason: SpawnReason, yaw: f32, event: Option<&str>, rolled_baby: bool) -> Option<EntityId> {
     let look = looks::of(world, kind, event);
     let gene = if slimes::sizes::keeps_base(kind, event) {
         None
@@ -53,8 +66,8 @@ fn spawn_with(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], reas
         SpawnReason::Bred => Some("born"),
         _ => (!matches!(reason, SpawnReason::Lightning | SpawnReason::Structure) && (!matches!(reason, SpawnReason::Command | SpawnReason::Summoned | SpawnReason::Transformed) || event.is_none())).then_some("spawn"),
     };
-    let event = event.or(foal.then_some(BORN));
-    let id = born_by(world, layer, kind, feet, Birth { reason, yaw, gene, sound }, event)?;
+    let event = event.or(rolled_baby.then_some(BORN));
+    let id = born_by(world, layer, kind, feet, Birth { reason, yaw, gene, sound }, event, rolled_baby)?;
     let entity = entities::find(world, id)?;
     if let Some(gene) = gene {
         entities::restore(world, entity, |compound, _| sapling_world::varied_actor(compound, gene.0, yaw).ok());
@@ -112,7 +125,7 @@ pub(crate) fn is_arriving(world: &World, entity: Entity) -> bool {
 
 /// [`spawn`] as `birth` has it.
 pub(super) fn born(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: Birth) -> Option<EntityId> {
-    born_by(world, layer, kind, feet, birth, None)
+    born_by(world, layer, kind, feet, birth, None, false)
 }
 
 /// Makes the mob what its spawn `event` makes it (a baby, tamed, saddled), shown in its announcement.
@@ -128,8 +141,9 @@ fn arrive(world: &mut World, entity: Entity, kind: &str, event: &str) {
     reshow(world, entity);
 }
 
-/// [`born`] by the spawn `event`, if any; its first breath, which tells the whole flag word, comes after.
-fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: Birth, event: Option<&str>) -> Option<EntityId> {
+/// [`born`] by the spawn `event`, if any (a `rolled_baby` is its plain summon's); its first breath,
+/// which tells the whole flag word, comes after.
+fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: Birth, event: Option<&str>, rolled_baby: bool) -> Option<EntityId> {
     let Birth { reason, yaw, gene, sound } = birth;
     let size = sapling_data::mob_size(kind)?;
     let level = &world.get::<Layer>(layer)?.world;
@@ -141,7 +155,7 @@ fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: 
         return None;
     }
     let body = Body::new(feet, [0.0; 3], slimes::sizes::body_size(kind, gene).unwrap_or(size));
-    let properties = super::properties::rolled(world, layer, kind, feet, reason == SpawnReason::Bred);
+    let properties = super::properties::rolled(world, layer, kind, feet, reason == SpawnReason::Bred, rolled_baby);
     let rolled = strides::roll(world, kind);
     let strength = crate::riding::roll_strength(world, kind);
     let born = super::bats::born_flags(&world.get::<Layer>(layer)?.world, kind, &body);

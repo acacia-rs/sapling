@@ -5,7 +5,7 @@
 //! to a sneaking player's click and to its rider's inventory key; what is in it is kept in
 //! the mob's `ChestItems` by slot, and slots 0 and 1 are the tack it shows. It dies spilling the
 //! goods ([`spilled`]).
-// TODO: a donkey's chest does not switch its component groups.
+// A chest's group switch shows only as `CHESTED` and the next chest click riding it (bds-k2mounts.txt).
 
 use acacia_proto::nbt::{self, List, Nbt, Network, Raw, Value};
 use acacia_proto::packets::UpdateEquipment;
@@ -89,15 +89,19 @@ pub(super) fn takes(kind: &str, slot: usize, item: &str) -> bool {
     }
 }
 
-/// What a mount's inventory refuses in a slot: in its tack slots what no mount wears there.
-// TODO: by kind, so a llama's slot 1 refuses horse armour (its screen offers no such slot).
-fn refuses(slot: usize, stack: &ItemStack) -> bool {
-    slot < TACK && !takes(HORSE, slot, &stack.name) && !takes(LLAMAS[0], slot, &stack.name)
+/// What a mount's inventory refuses in a slot: in its tack slots what its kind does not wear there.
+/// A llama's screen offers carpets in slot 1 and no saddle slot (bds-k2llama.txt's `UpdateEquipment`).
+fn refuses(kind: &str) -> fn(usize, &ItemStack) -> bool {
+    match kind {
+        HORSE => |slot, stack| slot < TACK && !takes(HORSE, slot, &stack.name),
+        _ if LLAMAS.contains(&kind) => |slot, stack| slot == 0 || (slot < TACK && !takes(LLAMAS[0], slot, &stack.name)),
+        _ => |slot, stack| slot < TACK && !takes(SADDLED[1], slot, &stack.name),
+    }
 }
 
 /// What the inventory of `mob` refuses, if it is a mount's that was opened.
 pub(crate) fn refusal(world: &World, mob: Entity) -> Option<fn(usize, &ItemStack) -> bool> {
-    world.get::<Pack>(mob).map(|_| refuses as fn(usize, &ItemStack) -> bool)
+    world.get::<Pack>(mob).zip(world.get::<Kind>(mob)).map(|(_, kind)| refuses(&kind.0))
 }
 
 /// The slots of `mob`'s inventory, once it was opened.
@@ -287,7 +291,9 @@ pub(super) fn clicked(world: &mut World, player: Entity, mob: Entity, kind: &str
         blocks::spend_held(world, player);
         let (Some(id), Some(body)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Body>(mob).copied()) else { return true };
         let shown = entities::mob_flags(world, mob, kind, acacia_proto::types::MetadataFlags1::CHESTED, true);
-        super::tell(world, mob, mob, vec![super::packets::flags(id, shown), super::packets::sound("add.chest", id, kind, body.at)]);
+        // Heard as armour put on, from its middle, before its flags (bds-k2mounts.txt, bds-chestdie.txt).
+        let middle = [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]];
+        super::tell(world, mob, mob, vec![super::packets::sound("armor.equip_generic", id, kind, middle), super::packets::flags(id, shown)]);
         keep(world, mob);
         return true;
     }

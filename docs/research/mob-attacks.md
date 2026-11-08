@@ -682,8 +682,10 @@ farmer put back: BDS's six arrows (bds-e1arrow2.txt) all missed it, passing x 6.
 or over its head, and missed the actor; sapling's (sapling-e1arrow.txt) hit it three times and the actor
 once, as BDS's first run. Which is hit is the spread's draw on both.
 
-A stray and a bogged shoot as the skeleton with their effect on the arrow, and a pillager while
-it walks on, its crossbow heard loading where it stood at the shot before; it is not shown anew.
+A stray and a bogged shoot as the skeleton with their effect on the arrow. A pillager stands while
+it loads its crossbow, each loading sound from its middle of that tick, and walks between loads
+(bds-k2shot.txt: under 0.06 moved over each load; sapling walked on and played them from where it
+shot until fourteenth K); the load is not shown anew.
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar

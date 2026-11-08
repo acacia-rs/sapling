@@ -6,7 +6,7 @@
 //! (research/captures/bds-properties.txt: 8 pigs, 6 cows, chickens and cats, 8 wolves), and tells
 //! a change in a SetEntityData of the properties changed.
 // TODO: properties are not saved with a mob, and a mob a world folder kept is shown as its kind
-// was recorded; a summoned grown farm animal or cat is never a baby (`entity_spawned`'s 5 and 25%).
+// was recorded.
 
 use acacia_proto::packets::{AddEntity, SetEntityData};
 use acacia_proto::types::{
@@ -75,10 +75,13 @@ fn roll_voice(dice: &mut Dice, kind: &str, properties: &mut Properties) {
     }
 }
 
-/// What a mob of `kind` coming at `feet` in `layer` is given: as one spawned, or as one `bred`.
-pub(super) fn rolled(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], bred: bool) -> Properties {
+/// What a mob of `kind` coming at `feet` in `layer` is given: as one spawned, as one `bred`, or as
+/// a `rolled_baby` (its `entity_spawned`'s baby, which skips the `spawn_adult` that rolls a farm
+/// animal's voice: 16 such pigs, cows and chickens all silent, bds-k2babies.txt; a cat's rolls).
+pub(super) fn rolled(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], bred: bool, rolled_baby: bool) -> Properties {
     let mut properties = Properties::default();
-    if (if bred { VOICED_AT_BIRTH } else { VOICED }).contains(&kind) {
+    let voiced = if bred { VOICED_AT_BIRTH.contains(&kind) } else { VOICED.contains(&kind) && !(rolled_baby && VOICED_AT_BIRTH.contains(&kind)) };
+    if voiced {
         roll_voice(&mut dice(world).0, kind, &mut properties);
     }
     let [x, y, z] = feet.map(|c| c.floor() as i32);

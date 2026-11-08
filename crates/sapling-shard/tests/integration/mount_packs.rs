@@ -64,7 +64,8 @@ fn a_tamed_donkey_opens_to_its_rider_takes_a_chest_and_opens_to_a_sneaking_click
     h.tick(1);
     h.receive(1, &interact(donkey.0));
     let sent = ticks(&mut h, 2);
-    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "add.chest"));
+    // bds-k2mounts.txt: heard as armour put on, from the donkey's middle.
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "armor.equip_generic" && (sound.position.y - 65.8).abs() < 1e-3));
     h.remote.run(move |ctx| {
         assert!(ctx.item(ALEX, Slot::Main(0)).is_none(), "the chest went on");
         assert!(ctx.riders(donkey).is_empty(), "a chest put on is all the click does");
@@ -175,6 +176,27 @@ fn a_chested_donkey_without_mob_loot_spills_the_goods_put_over_its_saddle_then_t
 }
 
 #[test]
+fn a_tame_llamas_slot_1_takes_a_carpet_but_not_horse_armour() {
+    // bds-k2llama.txt: the llama's screen offers carpets in slot 1 and nothing else.
+    use acacia_proto::types::{ContainerSlotType as Container, ItemStackResponsesItemStatus as Status};
+    use common::requests::{answer, place, request, slot};
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let llama = common::asking::ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:llama", [2.5, 65.0, 0.5], 0.0, 0.0, Some("minecraft:spawn_tame_adult")).expect("a llama"));
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:iron_horse_armor", 1))));
+        assert!(ctx.set_item(ALEX, Slot::Main(1), Some(&Item::new("minecraft:white_carpet", 1))));
+    });
+    assert_eq!(screens(&sneaking_click(&mut h, llama)).len(), 1, "opened");
+    let mut put = |from: u8| {
+        h.receive(1, &request(-3, vec![place(1, slot(Container::Hotbar, from, 0), slot(Container::HorseEquip, 1, 0))]));
+        answer(&ticks(&mut h, 1)).0
+    };
+    assert_ne!(put(0), Status::Ok, "horse armour refused");
+    assert_eq!(put(1), Status::Ok, "a carpet taken");
+}
+
+#[test]
 fn a_donkey_summoned_tame_opens_to_a_sneaking_click_even_holding_a_chest() {
     let mut h = Harness::new();
     h.enter(1, "Alex");
@@ -186,6 +208,6 @@ fn a_donkey_summoned_tame_opens_to_a_sneaking_click_even_holding_a_chest() {
     h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:chest", 1)))));
     let sent = sneaking_click(&mut h, donkey);
     // BDS's opened its screen and took no chest (research/captures/bds-tack.txt).
-    assert!(!all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "add.chest"));
+    assert!(!all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "armor.equip_generic"));
     assert_eq!(screens(&sent), [(donkey.0 as i64, 2)]);
 }

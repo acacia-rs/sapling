@@ -59,6 +59,9 @@ What of BDS's villagers sapling has not checked or does not copy; split from vil
 Gossip (Bedrock has none: its discounts are the cured ones of `economy_trade_table`, which a drilled
 cure did not give on BDS, `g8cured`), villages as BDS's dweller-claimed POIs (sapling's villages are
 its beds, bells and job sites as it finds them; VillageManager unlabelled), mingling partners (gather
-walks to the middle; BDS's pairing not seen in any capture), what becomes of trader llamas when their trader goes (their leads break after 100 ticks in sapling),
-the old trading screen, a villager's pantry kept in its actor compound. Done 2026-11-07 (group AN):
+walks to the middle; BDS's pairing not seen in any capture), the old trading screen, a villager's pantry kept in its actor compound. Done 2026-11-07 (group AN):
 growing up, sharing food, farmers farming, cats spawning, explorer map offers, the llamas' leads.
+Done 2026-11-08 (fourteenth K, bds-k2trader.txt): a killed trader's llamas get `RemoveLeash` 1 the
+tick after its death, drop their leads with `lead.break` from its last middle the tick after that and
+tame themselves a tick later; a trader that despawns (its timer or `minecraft:start_despawn`) tells its
+llamas `RemoveLeash` 0 the tick after the event and is removed with them the tick after that.
