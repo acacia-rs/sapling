@@ -298,6 +298,16 @@ zombies after 0.87 and 1.79; the player's stride rule does not fit, and no rule 
 `prime_fuse`; item entities hurt or killed by a blast vibrate on BDS; and of several events reaching a sensor in
 one tick BDS takes the nearest (items hurt at 3.5 were heard over the blast at 7.5) where sapling keeps the first.
 
+## Drilled 2026-11-08, group W (`w1pops`; fourteenth1w_drill.rs)
+
+bds-w1pops.txt: a held warden 10 off and a sensor read by a comparator into dust (the dust's runtime id is the
+FNV-1a of its state, so its `redstone_signal` reads straight off the capture). A door's upper half popping a
+tick after its lower half was set to air, and a torch popping when its block was set to air, were heard as
+`block_destroy` (12) by both; so is every block that loses its hold (`updates/loosened.rs` `popped`). Items
+`/kill`ed were heard as `entity_die` (15), from the cell of the item heard, a tick on as a mob's death
+(`creatures/killing.rs`). Tests in fourteenth1w.rs. Not ported: an item thrown by a `destroy` landing beside the
+sensor was heard at frequency 2 (`hit_ground`) half a second after it was dropped; sapling has no `hit_ground`.
+
 ## Unverified
 
 - Names of state globals 14cd24340 (`active`) and 14cd24220 (`can_summon`): inferred from use, string not traced.

@@ -57,6 +57,8 @@ pub(in crate::blocks) fn around(world: &mut World, layer: Entity, cells: &[Block
 pub(in crate::blocks) fn popped(world: &mut World, layer: Entity, pos: BlockPos) {
     if is_loose(world, layer, pos) {
         super::take(world, layer, pos, &loot::Breaker::UNAIDED, false);
+        // A door's upper half and a torch going so are heard (research/captures/bds-w1pops.txt).
+        super::super::vibrate_at(world, layer, pos, super::super::GameEvent::BlockDestroy, false);
         super::settle(world, layer, pos);
     }
 }
