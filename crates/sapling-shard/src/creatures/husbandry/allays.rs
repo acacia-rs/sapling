@@ -4,8 +4,9 @@
 //! takes one from the player's in that tick; the next tick it is heard `item_given` and shown busy
 //! (`ACTION`) and owned (`OwnerEid`, the giver). A click holding something on an allay that holds
 //! something does nothing; an empty-handed one takes its item back (the pack's `take_item`, not drilled).
-//! What it then fetches and to whom it brings it is collecting.rs and giving.rs.
-// TODO: its owner is not kept with the world.
+//! What it then fetches and to whom it brings it is collecting.rs and giving.rs. Its owner is kept
+//! with the world as a tamed mob's (`OwnerNew`, the giver's unique id): BDS's allay loaded again
+//! was announced with its `OwnerEid` and followed that player (research/captures/bds-as3allay2.txt).
 
 mod collecting;
 mod giving;
@@ -34,12 +35,10 @@ pub(super) struct Given {
     due: u64,
 }
 
-/// What an allay fetches for whom: the player that handed it its item, what it has collected (its
-/// one-slot inventory, its hand unchanged), the tick it may collect again from, and the note block
-/// it last heard (its layer, cell and the tick).
+/// What an allay fetches: what it has collected (its one-slot inventory, its hand unchanged), the
+/// tick it may collect again from, and the note block it last heard (its layer, cell and the tick).
 #[derive(Component, Default)]
 struct Errands {
-    owner: Option<Entity>,
     carried: Option<ItemStack>,
     rests_until: u64,
     note: Option<(Entity, BlockPos, u64)>,
@@ -92,7 +91,10 @@ pub(super) fn hand(world: &mut World, player: Entity, entity: Entity) -> bool {
             let one = ItemStack { count: 1, ..held };
             if super::super::command_gear::set(world, entity, MobSlot::MainHand, Some(one)).is_ok() {
                 products::spend(world, player);
-                errands(world, entity).owner = Some(player);
+                let owner = world.get::<crate::tags::Marks>(player).map(|marks| marks.unique_id);
+                if let Some(mut raised) = world.get_mut::<super::Raised>(entity) {
+                    raised.kept.owner = owner;
+                }
                 let (Some(&NetId(by)), now) = (world.get::<NetId>(player), world.resource::<Tick>().0) else { return true };
                 world.entity_mut(entity).insert(Given { by, due: now + 1 });
             }

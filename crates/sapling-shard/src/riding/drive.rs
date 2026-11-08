@@ -60,7 +60,9 @@ pub(crate) fn is_driven(world: &World, vehicle: Entity) -> bool {
 pub(crate) fn drive(world: &mut World) {
     let leave = std::mem::take(&mut world.get_resource_or_insert_with(Leaving::default).0);
     for rider in leave {
-        unseat(world, rider, false);
+        // Off a happy ghast BDS corrected the leaving client onto its top (bds-as3ghast.txt).
+        let on_top = world.get::<super::Riding>(rider).and_then(|riding| super::kind_of(world, riding.vehicle)).and_then(|kind| super::layout(&kind)).is_some_and(|layout| layout.on_top);
+        unseat(world, rider, on_top);
     }
     let drivers: Vec<(Entity, Reins)> = world.query::<(Entity, &Reins)>().iter(world).map(|(rider, reins)| (rider, *reins)).collect();
     for (driver, reins) in drivers {

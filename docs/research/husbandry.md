@@ -135,7 +135,12 @@ sapling-h3herds.txt):
   behind; a drowned's `as_rider` makes a zombie nautilus half a block up and rides it (new seat
   layouts in `riding/seats.rs`: camel husk as the camel, the nautilus (0, 0.925, -0.2) for the
   drowned family). Each rider is announced already in its seat, as BDS's were. Riders of a natural
-  mount despawn as it does.
+  mount despawn as it does. A rider a mount's event made gets no first data (only its flags follow its
+  AddEntity), where the mount, and a mount a rider's event made, get one (bds-h3herds.txt, bds-ar2look.txt;
+  `entities::skip_first`).
+- Coats: a cat's `entity_spawned` rolls one of its 11 coats, 15 weight each (`looks.rs`; BDS's summoned
+  cat came 6, bds-ar2look.txt). A wild llama shows 0 slots per strength, a tamed one 3 (bds-ar2look.txt,
+  bds-mountdeath.txt).
 - Riders' equipment: each rider rolls its rider group's `minecraft:equipment` table
   (`riders::GEAR`): the zombie and the husk `zombie_rider_equipment` (an iron spear), the parched
   `skeleton_gear` (a bow), the drowned rider `drowned_rider_equipment` (a trident, no shell;
@@ -155,17 +160,36 @@ sapling-h3herds.txt):
 
 ## Left out
 
-Riding (the vehicles work reads `Raised::saddled`/`chested`), cats' and parrots' own behaviours
-(sitting on chests and shoulders, gifts; parrots below), breeding of villagers,
-foxes' trust (`entity_born` gives `trusting_fox`: `minecraft:trust` and a `defend_trusted_target`
-within 25; BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strings at 141171c40 and
-141172080): each needs goals sapling's mobs do not have (sitting on blocks, gift loot, trusted
-targets). Bees and axolotls in buckets are ported (creatures/bees.rs, creatures/scooping.rs).
-Traced in thirteenth2ao (pack only, not drilled): `cat_tame` adds `ocelot_sit_on_block`,
-`pet_sleep_with_owner` and `drop_item_for` (the gift: day time 0.74999-0.8, chance 0.7, loot
-`cat_gift`), none of which sapling has (its cats only toggle `sittable` on a click); a fox's trust only
-matters to its `avoid_mob_type` of players (trusted or sneaking ones left out), and sapling's foxes
-avoid no player at all, so trust needs that avoidance ported first; parrots, below.
+Riding (the vehicles work reads `Raised::saddled`/`chested`), parrots' own behaviours (shoulders,
+below), breeding of villagers, a cat's sitting on blocks, a fox's `defend_trusted_target` (within 25)
+and saving its trust (BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strings at 141171c40 and
+141172080). Bees and axolotls in buckets are ported (creatures/bees.rs, creatures/scooping.rs).
+
+## Cats and foxes (thirteenth2ar; `ar2fox`, `ar2sneak`, `ar2cat` in thirteenth2ar_drill.rs)
+
+- Foxes flee players (`behavior.avoid_mob_type`), ported in `husbandry/avoiding.rs`. BDS's foxes 3 and 3.6
+  blocks from a standing survival player fled at once. Foxes 4, 5.8 and 8.7 off did not. That fits the
+  fox's box grown 3 each way meeting the player's box. Each ran to a spot further from the player at
+  0.43 a tick within 7 and 0.2 beyond (1.5 times and once its pace), 2 to 10 blocks, and stopped near a
+  cell's middle. `FlagsExtended` bit 22 (`1 << 22`) was on while it ran. Next to a sneaking player
+  nothing fled (bds-ar2sneak.txt). When the player stood up, the fox 2.8 off fled on that tick. Foxes born
+  by `entity_born` fled as well: they trust only their breeders. Sapling's bred fox now trusts the
+  players who fed its parents (Java's rule; not drilled; not saved). In sapling's first run
+  (sapling-ar2sneak.txt) a fox ran straight past the player to a spot that was only further away. Its
+  spot must now lie on the far side and out of the box. The born foxes fled on their first tick on both.
+- Clicking a tamed cat that is in love with cod again and again kept it sitting on BDS. Sapling toggled
+  it each time. Fixed: an item the kind breeds with no longer sits or stands it (`clicks.rs`).
+- A cat tamed by feeding sits: BDS sent `TAMED` and `SITTING` in one packet (bds-ar2cat.txt). A parrot
+  did not sit (bds-parrots.txt). The wolf is undrilled. Ported in `owners.rs` for cats only.
+- Sleeping with its owner (`pet_sleep_with_owner`), ported in `husbandry/bedtime.rs`. The tick the owner
+  lay down, the stood-up cat set off from 8 blocks away at 0.28 a tick (1.2 times its pace). It stopped
+  on the foot of the bed, 0.3 from the cell's middle at the bed's top. About 6 ticks later it showed
+  `RESTING` (bit 23). When the night was skipped it lost `RESTING` on the owner's wake tick and was put at
+  (-2, 7), 4.7 blocks off, an unexplained spot. It gave no gift in that run (the gift comes 7 times in 10).
+  Sapling's cat (sapling-ar2cat.txt) set off on the same tick, lay at (-2.32, 2.55), got up on the wake
+  tick and gave its gift then. It is not moved first.
+- Sitting on blocks (`ocelot_sit_on_block`): in 40 s the stood-up cat went around the lit furnace, beside
+  it on three sides, and never got on top. It never went near the chest or the bed. Not ported.
 
 Turtle scutes (bds-ak1scute.txt, ported): a baby turtle grown up (at its tenth seagrass there) drops its
 `minecraft:ageable` `drop_items` (`turtle_shell_piece`, named `turtle_scute` now), one, from its feet +
@@ -215,9 +239,30 @@ hand), give to a note block 3, give to its owner 4 (both run speed 8), stay near
   from over 16 off until within 4 (giving.rs).
 - What it carries is kept with the world (bds-aq3allay.txt's world): `ChestItems` slot 0 (`Count`,
   `Name`, `WasPickedUp 1`); sapling writes it on each take and throw and reads it back on load
-  (allays.rs `keep_carried`, `adopt`). Its owner is not kept (allays.rs TODO).
+  (allays.rs `keep_carried`, `adopt`).
+- Its owner is kept too (thirteenth3as, `as3allay` then `as3allay2` on the kept world;
+  research/captures/bds-as3allay-dump.txt): `OwnerNew` is the giver's unique id with `IsTamed` 0, and
+  after a restart the allay was announced with that `OwnerEid` and followed the owner. Sapling keeps it
+  as a tamed mob's (`Raised` owner, allays.rs `hand`; test
+  `an_allay_s_owner_is_kept_with_the_world_and_shown_when_it_is_loaded`). Open: after the restart BDS's
+  allay took dropped dirt but threw none to its owner in 11 s.
 
-## Parrots on shoulders (`parrots`, not built)
+## Parrots on shoulders (built 2026-11-07, group AS: husbandry/shoulders.rs)
+
+`bds-as3parrot.txt` (thirteenth3as_drill.rs): a parrot summoned with `on_tame` came tamed and owned by
+no one, and mounted any player, owner or not: about 100 ticks after it appeared it flew to the nearest
+and got on some 28 ticks later. A second shoulder took (-0.4, -0.2, -0.1); BDS told the first parrot's
+link (type 1) again, then the new one's (type 2), not the first one's seat. A fall threw both off, the
+newest first (type 0, not immediate, no relinking), once it reached 1.59 to 2.11 blocks; the head going
+under water threw them a tick after its air began to drop; damage did not. They came back 7 to 13 s
+later. Sapling: `find_mount` at 100 ticks, 16 and 2 (measured to the player's eyes, where it flies),
+off at a 2-block fall or eyes in water, the 100 ticks again after (tests in thirteenth3as.rs).
+Re-drilled (research/captures/sapling-as3parrot.txt): the mount, the second shoulder's links and the fall's
+links match; sapling's second parrot was tamed by the fifth seed (BDS's the eighth), so the three
+clicks after sat it down and it did not come back. `on_tame` now tames a parrot (owners.rs).
+Earlier, `bds-parrots.txt`:
+
+`bds-parrots.txt` (survival actor, a parrot tamed with seeds on the fifth try): the parrot, tamed and
 
 `bds-parrots.txt` (survival actor, a parrot tamed with seeds on the fifth try): the parrot, tamed and
 standing, sat on the actor 2.3 s after it was last stood up by a click: `SetEntityData` with
@@ -230,8 +275,7 @@ Java's `fallDistance > 0.5`. It did not sit on the player again in the 18 s afte
 came back as a new player (see bundles.md "Open"): the parrot, still in the world, sat on the newcomer
 as it was shown (no delay), and its death sent the link's removal `immediate` after `RemoveEntity`.
 The pack's `find_mount` (`start_delay` 100, `within_radius` 16, `mount_distance` 2, `target_needed`
-false) is C++; when it tries again after a dismount was not found. Sapling's seats (riding/, the
-vehicles work) take no player as a vehicle.
+false) is C++.
 
 ## Not drilled
 
@@ -251,5 +295,5 @@ vehicles work) take no player as a vehicle.
   by when the parents' love particles stopped), then a cold and a temperate one. Sapling made
   four: warm, temperate, temperate, cold. Every calf took one parent's climate on both sides,
   which fits sapling's random pick of a parent; three calves cannot show the odds.
-- Herds from natural spawning (above); cats', parrots' and foxes' own goals (Left out).
+- Herds from natural spawning (above); parrots' goals and a cat's sitting on blocks (Left out).
 - The exact distance a lead snaps at, between 11 and 11.99 (bds-uuknot.txt).

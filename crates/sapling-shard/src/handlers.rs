@@ -62,6 +62,7 @@ pub(crate) fn dispatch(world: &mut World) {
     chat::dispatch(world);
     commands::dispatch(world);
     blocks::show_blocks_again(world);
+    blocks::show_stroked(world);
     blocks::dispatch_command_block_updates(world);
     blocks::dispatch_structure_block_updates(world);
     blocks::dispatch_structure_exports(world);

@@ -10,7 +10,7 @@ use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_world::ItemStack;
 
-use super::{Reins, Seats, packets};
+use super::{Reins, Seats, harness, packets};
 use crate::body::Body;
 use crate::components::{NetId, Position, Tick};
 use crate::creatures::Raised;
@@ -61,6 +61,9 @@ pub(crate) struct Tack {
 /// The flags a saddle shows on `kind`: with the horse family's `input_ground_controlled` and
 /// `can_power_jump`, a camel's `dash_action` (research/captures/bds-mountflags.txt).
 pub(crate) fn saddle_flags(kind: &str) -> MetadataFlags1 {
+    if kind == harness::KIND {
+        return MetadataFlags1(0);
+    }
     let controls = match kind {
         CAMEL => MetadataFlags1::WASD_CONTROLLED.0 | MetadataFlags1::CAN_DASH.0,
         _ if TAMED_SADDLED.contains(&kind) => MetadataFlags1::WASD_CONTROLLED.0 | MetadataFlags1::CAN_POWER_JUMP.0,
@@ -69,9 +72,9 @@ pub(crate) fn saddle_flags(kind: &str) -> MetadataFlags1 {
     MetadataFlags1(MetadataFlags1::SADDLED.0 | controls)
 }
 
-/// Whether the mob has a saddle on.
+/// Whether the mob has a saddle on, or a happy ghast its harness.
 pub(crate) fn saddled(world: &World, mob: Entity) -> bool {
-    world.get::<Raised>(mob).is_some_and(|raised| raised.saddled)
+    world.get::<Raised>(mob).is_some_and(|raised| raised.saddled) || harness::harnessed(world, mob)
 }
 
 fn tamed(world: &World, mob: Entity) -> bool {
@@ -125,6 +128,9 @@ pub(crate) fn used_on(world: &mut World, player: Entity, target: Entity) -> bool
 /// it takes none of them now.
 fn put_on(world: &mut World, player: Entity, mob: Entity, kind: &str) -> bool {
     let Some(stack) = held(world, player) else { return false };
+    if kind == harness::KIND {
+        return harness::take_off(world, player, mob, &stack) || harness::put_on(world, player, mob, &stack);
+    }
     let grown = !creatures::is_baby(world, mob);
     let mut tack = world.get::<Tack>(mob).cloned().unwrap_or_default();
     let saddles = ALWAYS_SADDLED.contains(&kind) || (TAMED_SADDLED.contains(&kind) && tamed(world, mob));
@@ -179,6 +185,8 @@ pub(crate) enum Rein {
     Held,
     /// It walks towards this place at this speed.
     Walk([f32; 2], f32),
+    /// It flies, pushed by this.
+    Fly([f32; 3]),
 }
 
 /// How the rider of `mob` steers it.
@@ -196,6 +204,9 @@ pub(crate) fn steers(world: &World, mob: Entity, kind: &str, body: &Body) -> Rei
         }
         let boosted = world.get::<Tack>(mob).is_some_and(|tack| tack.boosted_until > world.resource::<Tick>().0);
         return toward([0.0, 1.0], steered.speed * if boosted { BOOST } else { 1.0 });
+    }
+    if kind == harness::KIND && saddled(world, mob) {
+        return Rein::Fly(harness::flight(reins, at));
     }
     if kind == CAMEL && saddled(world, mob) {
         return if reins.keys == [0.0; 2] { Rein::Held } else { toward(reins.keys, CAMEL_SPEED) };

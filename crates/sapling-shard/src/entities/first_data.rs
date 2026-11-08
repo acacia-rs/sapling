@@ -29,6 +29,12 @@ pub(crate) fn show_first(world: &mut World, entity: Entity, items: Vec<MetadataD
     true
 }
 
+/// The new entity gets no first data: a rider a mount's spawn event made got none on BDS, where the
+/// mount did (bds-ar2look.txt, bds-h3herds.txt).
+pub(crate) fn skip_first(world: &mut World, entity: Entity) {
+    world.entity_mut(entity).remove::<Due>();
+}
+
 fn put(items: &mut Vec<MetadataDictionaryItem>, item: MetadataDictionaryItem) {
     match items.iter_mut().find(|old| old.key == item.key) {
         Some(old) => *old = item,

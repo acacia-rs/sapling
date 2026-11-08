@@ -68,6 +68,8 @@ pub(crate) fn dress(added: &mut AddEntity, kind: &str, tamed: bool, baby: bool, 
         match (item.key, container) {
             (Key::ContainerType, Some((of, _))) => *item = byte(Key::ContainerType, of),
             (Key::ContainerBaseSize, Some((_, size))) => *item = int(Key::ContainerBaseSize, size),
+            // A wild llama shows no slots per strength (bds-ar2look.txt), a tamed one 3 (bds-mountdeath.txt).
+            (Key::ContainerExtraSlotsPerStrength, Some((0, _))) => *item = int(Key::ContainerExtraSlotsPerStrength, 0),
             (Key::BoundingboxWidth, _) if unboxed => item.value = Value::Default(Plain::Float(MADE[0])),
             (Key::BoundingboxHeight, _) if unboxed => item.value = Value::Default(Plain::Float(MADE[1])),
             _ => {}

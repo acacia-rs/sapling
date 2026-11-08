@@ -98,12 +98,13 @@ pub(crate) use structure_blocks::{dispatch_exports as dispatch_structure_exports
 pub(crate) use falling::{from_storage as falling_from_storage, keep_times as keep_fall_times};
 pub(crate) use daylight::tick as read_daylight;
 pub(crate) use fire::{light as light_fire, tick as burn_fires};
-pub(crate) use eggs::{lay_turtle_eggs, stomp_turtle_eggs, stomping_turtle_eggs, tread_turtle_eggs, turtle_dig, turtle_egg_near, turtle_nest_near};
+pub(crate) use eggs::{foretell_turtle_eggs, lay_turtle_eggs, stomp_turtle_eggs, stomping_turtle_eggs, tread_turtle_eggs, turtle_dig, turtle_egg_near, turtle_nest_near};
 pub(crate) use frost::{frost_walk, tick as melt_frost};
 pub(crate) use growth::{arrived as plants_arrived, holds_snow, tick as random_ticks, trample};
 pub(crate) use ores::{light as light_ore, tread as tread_ore};
 pub(crate) use scaffolds::tick as settle_scaffolds;
 pub(crate) use brushing::tick as settle_brushing;
+pub(crate) use brushing::show_stroked;
 pub(crate) use bed_burst::bursts as bed_bursts;
 pub(crate) use lodestone::answer as answer_lodestone_queries;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};

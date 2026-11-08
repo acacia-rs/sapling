@@ -25,6 +25,11 @@ const RIDE_TEMPER: i32 = 5;
 const TAMING_EVENTS: [&str; 2] = ["spawn_tame_adult", "on_tame"];
 /// Its pack has neither event: BDS's summon with one came wild (bds-s7mounts.txt).
 const TRADER_LLAMA: &str = "minecraft:trader_llama";
+/// BDS's parrot summoned with `on_tame` came tamed, owned by no one (research/captures/bds-as3parrot.txt).
+const PARROT: &str = "minecraft:parrot";
+/// A cat tamed by feeding sits, told with its tamed flag (bds-ar2cat.txt); BDS's tamed parrot did not
+/// (bds-parrots.txt). The wolf is undrilled.
+const SITS_WHEN_TAMED: [&str; 1] = ["minecraft:cat"];
 
 /// Whether `player` owns the mob.
 pub(crate) fn is_owner(world: &World, entity: Entity, player: Entity) -> bool {
@@ -42,7 +47,8 @@ pub(super) fn tame_to(world: &mut World, entity: Entity, kind: &str, owner: i64)
 /// comes tamed with no owner (research/captures/bds-tack.txt, bds-s7mounts.txt); false for any
 /// other event.
 pub(crate) fn tame_by_event(world: &mut World, entity: Entity, kind: &str, event: &str) -> bool {
-    if !TAMING_EVENTS.contains(&event.trim_start_matches("minecraft:")) || kind == TRADER_LLAMA || sapling_data::husbandry(kind).is_none_or(|rules| rules.temper.is_none()) {
+    let tamed_so = kind == PARROT || sapling_data::husbandry(kind).is_some_and(|rules| rules.temper.is_some());
+    if !TAMING_EVENTS.contains(&event.trim_start_matches("minecraft:")) || kind == TRADER_LLAMA || !tamed_so {
         return false;
     }
     tame(world, entity, kind, None);
@@ -90,6 +96,9 @@ pub(super) fn try_tame(world: &mut World, entity: Entity, kind: &str, item: &str
     let owner = world.get::<Marks>(player).map(|marks| marks.unique_id);
     match (tamed, owner) {
         (true, Some(owner)) => {
+            if SITS_WHEN_TAMED.contains(&kind) {
+                sit_untold(world, entity);
+            }
             tame_to(world, entity, kind, owner);
             shown::event(world, entity, EntityEventEventId::TameSuccess, 0);
         }
@@ -138,6 +147,14 @@ pub(crate) fn tame_by_riding(world: &mut World, entity: Entity, rider: Entity) -
     }
     shown::event(world, entity, EntityEventEventId::TameFail, 0);
     false
+}
+
+/// The mob sits, its viewers told with its next flags.
+fn sit_untold(world: &mut World, entity: Entity) {
+    if let Some(mut raised) = world.get_mut::<Raised>(entity) {
+        raised.kept.sitting = true;
+    }
+    shown::flags_with(world, entity, Flags::SITTING, true);
 }
 
 /// Its owner's click sits a tamed mob of a kind that sits down, or stands it up. False for anyone

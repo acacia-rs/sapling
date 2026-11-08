@@ -185,6 +185,9 @@ were not found in any of these; sapling does what is listed there.
   the boat's wire point, its box 0.375 lower, then pushed out of blocks as a summoned mob (see
   water-movement.md "Summoned into blocks"); vehicles.rs `summon`, body/spawn_push.rs. Sapling now
   matches 28 of 30; open: (-0.5, 4.5) and a lone (4.5, 4.5) went to z 4.3 where the fit gives 4.7.
+  Traced, still open (thirteenth2ar): at z 4.5 the box's two overlaps are 0.2 each, and their f32 values
+  (0.20000005 below, 0.19999981 above) send every z 4.5 the same way, so they cannot explain why x 9.5 went
+  to 4.7 and x 4.5 and -0.5 to 4.3. The tie seems settled by something that depends on x; no drill was run.
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
   Drilled 2026-11-05 (group AI, `ai1ride`, bds-ai1ride.txt): a tamed, saddled horse is client-predicted;
   BDS took the bot's walk and 10-tick charged jump with one vehicle correction at the mount, as sapling
@@ -263,8 +266,8 @@ were not found in any of these; sapling does what is listed there.
   Differences left (exit.rs TODO): next to lava and to a campfire BDS sent no correction at all
   (the client stayed put; in lava it caught fire); by a ladder it was put at (-0.94, -0.06) from the
   seat; and BDS's correction kept the rider 0.16 to 0.23 above the floor where sapling puts it on
-  the floor. Off a harnessed happy ghast (slowed) BDS put the rider on top of it (`on_top_center`);
-  sapling has no seat layout for the ghast.
+  the floor. Off a harnessed happy ghast (slowed) BDS put the rider on top of it (`on_top_center`):
+  see "Happy ghast" below.
   Re-drilled 2026-11-07 (group AK, `ak1exit`, eleven still pigs with blocks north and south; the
   ninth wave's "no correction" and ladder readings came from its negative-x cells, `{x}.5` being the
   wrong cell there): BDS let the rider off north into a ladder's cell for every facing, onto a
@@ -281,6 +284,31 @@ were not found in any of these; sapling does what is listed there.
   where nothing was about it sent none. Sapling now corrects a rider let off into lava so
   (exit.rs, movement `push_into_lava`). The campfire case was the drill's pig: it strolled south
   before slowness took hold and the campfire set into it pushed it on, so BDS let the rider off north
-  onto the campfire by the same rule sapling uses. Off a happy ghast (`on_top_center`) BDS put the
-  rider at its centre, feet 4 (its box) + 0.001 over its feet (bds-n3exit.txt); sapling seats no one on
-  a happy ghast (no seat layout; `/ride` refuses it), so that stays open (exit.rs TODO).
+  onto the campfire by the same rule sapling uses. Off a happy ghast see "Happy ghast" below.
+
+## Happy ghast (drilled 2026-11-07, group AS: `as3ghast`, research/captures/bds-as3ghast.txt)
+
+- Unharnessed it has no `rideable`: `/ride` answered `notRideable` (riding.rs `seats_left`).
+- A click holding a harness: `MobArmorEquipment` with it in the body slot, `armor.equip_generic` at its
+  middle (feet + 2), and `Flags` with `FlagsExtended` gaining bits 58, 59 and 61. Shears on one no one
+  rides: the body slot emptied, the harness tossed 5.125 over its feet, `armor.unequip_generic`, and
+  bit 59 stayed. Both in riding/harness.rs.
+- Seats (`adult_harnessed` `rideable`): four at (0, 3.8, 1.7), (-1.7, 3.8, 0), (0, 3.8, -1.7),
+  (1.7, 3.8, 0); a player's seat item is `RiderSeatPosition` (y 5.02001), `RiderMaxRotation` 181,
+  `SeatThirdPersonCameraRadius` 8 and `SeatCameraRelaxDistanceSmoothing` 6. The first rider: seat,
+  `mount`, `attach`, link, `AmbientSoundInterval` 30 (the n3exit run heard `attach` a tick later). A
+  second: seat, `mount`, the driver's link again, its own (type 2); no one else's seat. Every seating on
+  any vehicle tells all riders' links again (as bds-ride.txt's boat did); seats that did not move are not
+  told (riding/told.rs).
+- One getting off of two: its link 0, then the other's link again. The last: link 0, the rider corrected
+  onto its top at its middle, feet 4.025 over its feet (4.0247 in bds-n3exit.txt, by `/ride`, and 4.0250
+  here, by the client's leave; exit.rs `ON_TOP_LIFT`), `detach` and `AmbientSoundInterval` 5.
+- Steering: the server moves it (no `ClientPredictedVehicle`): each tick 0.91 of its speed plus its
+  `flying_speed` 0.016 the way its driver looks, pitch and all (`free_camera_controlled`, backwards at
+  0.5). Looking straight up it rose 0.016, 0.03056, 0.04381 ... and coasted down at 0.91 after the keys
+  let go; sapling's sapling-as3ghast.txt run matched every `MoveEntityDelta` to the last digit
+  (harness.rs `flight`, FLYER physics).
+- Left (harness.rs TODO): its `become_immobile` sensor (a player on its top: `can_move` 0, movement 0,
+  extended bits 54, 56 and 57); `vertical_movement_action` (the bot's jump moved nothing seen); the late
+  viewer's harness flags; the dismount correction's delta (BDS 0, sapling -0.0784) and `detach` a tick
+  after; the shears' item shown after the sound where BDS showed it before.

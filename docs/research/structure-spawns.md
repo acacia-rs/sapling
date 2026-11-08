@@ -39,7 +39,10 @@ Data-driven and the other hardcoded structures, read 2026-11-05 off the oracle w
 files its whole box in every column it meets, a piece or not (trial chambers' y -45 to 15 alone in
 chunk (3, 17)); a camp under its variant's id (`minecraft:abandoned_camp_meadow`); data-driven areas
 come before hardcoded ones in a column (chunk (81, 6): trial chambers ids 1 to 6, the jungle pyramid
-8 and 9; BDS skipped 7, sapling numbers on). Sapling files them so (`data_driven.rs` `file_v2`, first
+8 and 9). Settled 2026-11-08 (thirteenth3au): a name and each area take the next of one count from 0,
+so the trial chambers' name is 0, the jungle pyramid's 7; names are listed from the highest index
+down, as the boxes. Sapling now writes so (`encode_spawn_areas`, test
+`a_second_name_takes_an_id_of_the_areas_count`, the oracle record byte for byte). Sapling files them so (`data_driven.rs` `file_v2`, first
 in the post-process; `igloo.rs`; `stage.rs`); tests in `spawn_area_tests.rs`. `tools/replay-all.sh`
 still 0 wrong, 0 missing.
 

@@ -73,7 +73,9 @@ pub(crate) fn interact(world: &mut World, player: Entity, entity: Entity) -> boo
         crate::creatures::reshow(world, entity);
         return true;
     }
-    let sat = owners::toggle_sitting(world, entity, &kind, player);
+    // BDS's tamed cat in love, clicked with cod again and again, kept sitting (bds-ar2cat.txt).
+    let breeds_with = sapling_data::husbandry(&kind).is_some_and(|rules| rules.breed.contains(&item.as_str()));
+    let sat = !breeds_with && owners::toggle_sitting(world, entity, &kind, player);
     if sat {
         crate::creatures::reshow(world, entity);
     }

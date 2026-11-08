@@ -80,7 +80,8 @@ fn the_api_seats_mobs_until_a_boat_is_full_and_eviction_empties_it() {
         assert!(!ctx.ride(&Target::Entity(boat), pigs[2], Mount::RiderToVehicle), "an unsaddled pig takes no rider");
     });
     let sent = ticks(&mut h, 2);
-    assert_eq!(links(&sent).iter().filter(|(ridden, ..)| *ridden == boat.0 as i64).count(), 2, "{:?}", links(&sent));
+    // The second seating tells the first rider's link again, then its own (bds-ride.txt).
+    assert_eq!(links(&sent).iter().filter(|(ridden, ..)| *ridden == boat.0 as i64).count(), 3, "{:?}", links(&sent));
     h.remote.run(move |ctx| {
         assert_eq!(ctx.evict_riders(boat), 2);
         assert_eq!(ctx.seats_left(boat), 2);

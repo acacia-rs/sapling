@@ -8,7 +8,7 @@ use sapling_data::EYE_HEIGHT;
 use super::{Riding, Seats, kind_of, layout, seats, vehicle_wire};
 use crate::body::Body;
 use crate::components::{InLayer, NetId, Position};
-use crate::entities::{self, Kind};
+use crate::entities;
 use crate::sync::Told;
 
 /// Puts every rider in its seat; a rider whose vehicle is gone (unloaded with its column) is let off.
@@ -34,9 +34,11 @@ pub(crate) fn carry(world: &mut World) {
 
 /// Puts the riders of `vehicle` in their seats.
 pub(super) fn place(world: &mut World, vehicle: Entity) {
-    let (Some((wire, yaw)), Some(kind), Some(riders)) = (vehicle_wire(world, vehicle), world.get::<Kind>(vehicle).map(|kind| kind.0.clone()), world.get::<Seats>(vehicle).map(|seats| seats.0.clone())) else { return };
+    let (Some((wire, yaw)), Some(kind), Some(riders)) = (vehicle_wire(world, vehicle), kind_of(world, vehicle), world.get::<Seats>(vehicle).map(|seats| seats.0.clone())) else { return };
     let Some(layout) = layout(&kind) else { return };
     let (motion, on_ground) = world.get::<Body>(vehicle).map_or(([0.0; 3], false), |body| (body.motion, body.on_ground));
+    // A parrot on a player's shoulder is not moved for its viewers: BDS sent none (bds-as3parrot.txt).
+    let shown = kind != seats::PLAYER;
     for (index, rider) in riders.iter().enumerate() {
         let (Some(seat), Some(rider_kind)) = (layout.seat(riders.len(), index), kind_of(world, *rider)) else { continue };
         let offset = seats::offset(&seat, &rider_kind, yaw);
@@ -48,15 +50,18 @@ pub(super) fn place(world: &mut World, vehicle: Entity) {
             }
             continue;
         }
-        carry_mob(world, *rider, at, motion, on_ground);
+        carry_mob(world, *rider, at, motion, on_ground, shown);
     }
 }
 
-/// Moves a mob rider to `at` (its feet: a mob's wire is its feet), telling its viewers.
-fn carry_mob(world: &mut World, rider: Entity, at: [f32; 3], motion: [f32; 3], on_ground: bool) {
+/// Moves a mob rider to `at` (its feet: a mob's wire is its feet), telling its viewers when `shown`.
+fn carry_mob(world: &mut World, rider: Entity, at: [f32; 3], motion: [f32; 3], on_ground: bool, shown: bool) {
     let (Some(id), Some(layer)) = (world.get::<NetId>(rider).map(|id| id.0), world.get::<InLayer>(rider).map(|layer| layer.0)) else { return };
     let Some(mut body) = world.get_mut::<Body>(rider) else { return };
     (body.at, body.motion, body.on_ground) = (at, motion, on_ground);
+    if !shown {
+        return;
+    }
     let Some(mut told) = world.get_mut::<Told>(rider) else { return };
     let packets = told.update(id, at, motion, on_ground);
     entities::tell_viewers(world, rider, layer, at.map(|c| c.floor() as i32), packets);

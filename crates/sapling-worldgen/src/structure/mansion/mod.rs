@@ -94,6 +94,12 @@ impl Structures {
         self.templates.mansions.get(start, || generate(density, &mut grid.candidate_random(self.level_seed, start).1, start))
     }
 
+    /// Every mansion starting within `radius` chunks of `centre`, its start and its pieces' templates and boxes.
+    pub fn mansion_rooms(&self, density: &Density, centre: (i32, i32), radius: i32) -> Vec<((i32, i32), Vec<(String, BoundingBox)>)> {
+        let starts = self.starts_near(density, StructureKind::Mansion, centre, radius);
+        starts.into_iter().map(|start| (start, self.mansion(density, start).pieces.iter().map(|p| (p.template.name.clone(), p.bb)).collect())).collect()
+    }
+
     /// `seed` is the chunk's structure seed: the mansions' pieces share one generator of it.
     pub(super) fn place_mansions(canvas: &mut Canvas, mansions: &[Arc<Mansion>], seed: u32) {
         let mut random = Mt19937::new(seed);

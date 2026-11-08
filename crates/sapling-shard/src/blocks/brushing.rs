@@ -51,6 +51,8 @@ pub(crate) struct Brushing {
     checks: Vec<(u64, Entity, BlockPos)>,
     /// When each player's next `brush` sound may play.
     sounds: HashMap<Entity, u64>,
+    /// Blocks stroked this tick, shown the next as BDS shows them (bds-au3brush.txt).
+    shows: Vec<(u64, Entity, BlockPos)>,
 }
 
 /// The block a brushed one becomes.
@@ -86,9 +88,10 @@ pub(super) fn stroke(world: &mut World, player: Entity, pos: BlockPos, face: Fac
         return true;
     }
     let name = level.registry().get(id).map(|state| state.name);
-    // The sound names the block's first state, whatever its progress (bds-brush.txt).
+    // The sound names a brushable block unbrushed, its other states kept (bds-au3brush.txt), any other its first state.
     let first = name.and_then(|name| level.registry().states_of(name).next()).map_or(id, |(first, _)| first);
-    let hash = level.registry().network_hash(first) as i32;
+    let unbrushed = super::with_property(level.registry(), id, "brushed_progress", "0").unwrap_or(first);
+    let hash = level.registry().network_hash(unbrushed) as i32;
     if name.and_then(uncovered).is_some() && brush(world, layer, pos, face) {
         crate::inventory::wear_hand_by(world, player, 1, LASTS);
         return true;
@@ -181,8 +184,26 @@ fn brush(world: &mut World, layer: Entity, pos: BlockPos, face: Face) -> bool {
         uncover(world, layer, pos, &fields);
         return true;
     }
-    keep(world, layer, pos, fields);
+    if let Some(mut layer) = world.get_mut::<crate::components::Layer>(layer) {
+        layer.world.set_block_entity(pos, &Value::Compound(fields));
+    }
+    world.resource_mut::<Brushing>().shows.push((now, layer, pos));
     false
+}
+
+/// Shows the blocks stroked before this tick as their counts stand, before this tick's strokes.
+pub(crate) fn show_stroked(world: &mut World) {
+    let now = world.resource::<Tick>().0;
+    let Some(mut brushing) = world.get_resource_mut::<Brushing>() else { return };
+    let (due, later): (Vec<_>, Vec<_>) = std::mem::take(&mut brushing.shows).into_iter().partition(|(at, ..)| *at < now);
+    brushing.shows = later;
+    for (_, layer, pos) in due {
+        let is_brushable = level(world, layer).is_some_and(|level| level.registry().get(level.block(pos[0], pos[1], pos[2])).is_some_and(|state| uncovered(state.name).is_some()));
+        if is_brushable {
+            let fields = fields_at(world, layer, pos);
+            keep(world, layer, pos, fields);
+        }
+    }
 }
 
 /// Rolls the block's `LootTable` into its `item` (`Count`, `Damage`, `Name`, `WasPickedUp`) once.

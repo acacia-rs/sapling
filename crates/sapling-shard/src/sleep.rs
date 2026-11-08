@@ -69,6 +69,11 @@ pub(crate) struct Sleeping {
     ticks: u64,
 }
 
+/// The world and foot cell of the bed `player` lies in.
+pub(crate) fn bed_foot(world: &World, player: Entity) -> Option<(Entity, BlockPos)> {
+    world.get::<Sleeping>(player).map(|sleeping| (sleeping.layer, sleeping.foot))
+}
+
 /// Tells a player why it did not lie down, or that its spawn is set, as BDS does: the game's own
 /// grey line.
 fn tell(world: &mut World, player: Entity, key: &str) {

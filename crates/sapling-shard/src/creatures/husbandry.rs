@@ -1,11 +1,13 @@
 //! Raising animals, as BDS's vanilla packs describe each kind (`sapling_data::husbandry`, docs/research/husbandry.md):
 //! breeding and babies growing up (breeding.rs, ageing.rs), taming, sitting, following and
-//! defending an owner (owners.rs, guarding.rs), leads and their knots (leads.rs, knots.rs), and
-//! what animals give (products.rs). What a player's click on a mob does is clicks.rs; what a mob
+//! defending an owner (owners.rs, guarding.rs), a cat's nights on its owner's bed (bedtime.rs), a
+//! fox's flight (avoiding.rs), leads and their knots (leads.rs, knots.rs), and what animals give (products.rs). What a player's click on a mob does is clicks.rs; what a mob
 //! keeps of all this is its [`Raised`], written back with its compound (`sapling_world::Raising`).
 
 mod ageing;
 mod allays;
+mod avoiding;
+mod bedtime;
 mod breeding;
 mod clicks;
 mod guarding;
@@ -14,6 +16,7 @@ mod leads;
 mod nesting;
 mod owners;
 mod products;
+mod shoulders;
 mod shown;
 mod sniffing;
 mod state;
@@ -68,14 +71,17 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         return false;
     }
     owners::stays(world, entity)
+        || bedtime::lie(world, entity, layer, kind)
         || leads::pull(world, entity, layer)
         || allays::steer(world, entity, layer, kind)
+        || shoulders::steer(world, entity, layer, kind)
         || nesting::steer(world, entity, layer, kind)
         || sniffing::steer(world, entity, layer, kind)
         || guarding::chase(world, entity, layer, kind)
         || breeding::court(world, entity, layer, kind)
         || owners::follow(world, entity, layer, kind)
         || breeding::tempted(world, entity, layer, kind)
+        || avoiding::flee(world, entity, layer, kind)
 }
 
 /// A tick of every raised mob: babies grow, love and cooldowns wear off, partners breed, hens
@@ -95,6 +101,7 @@ pub(crate) fn tick(world: &mut World) {
     }
     knots::tick(world);
     allays::tick(world);
+    shoulders::tick(world);
 }
 
 /// The compound the mob is kept as, with its raising now.

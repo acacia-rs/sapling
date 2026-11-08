@@ -35,6 +35,11 @@ impl OverworldGenerator {
     }
 
     #[doc(hidden)]
+    pub fn mansion_rooms(&self, centre_x: i32, centre_z: i32, radius: i32) -> Vec<((i32, i32), Vec<(String, structure::BoundingBox)>)> {
+        self.structures.mansion_rooms(&self.density, (centre_x, centre_z), radius)
+    }
+
+    #[doc(hidden)]
     pub fn v2_template_cells(&self, chunk_x: i32, chunk_z: i32) -> Vec<([i32; 3], String, Block, u8, Block)> {
         self.structures.v2_template_cells(&self.density, (chunk_x, chunk_z))
     }

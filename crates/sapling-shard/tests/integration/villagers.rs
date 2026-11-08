@@ -250,9 +250,11 @@ fn a_villager_a_zombie_kills_on_hard_becomes_a_zombie_villager_keeping_its_profe
         let sent = h.tick(1);
         let added: Vec<AddEntity> = all::<AddEntity>(&sent).into_iter().filter(|added| added.entity_type == "minecraft:zombie_villager_v2").collect();
         assert_eq!(added.len(), usize::from(turns), "{difficulty:?}");
+        // In its AddEntity, as BDS's (bds-f3convert.txt, bds-ar2look.txt).
         if let Some(zombie) = added.first() {
-            assert_eq!(metadata(&sent, zombie.runtime_id, Key::Variant).last(), Some(&8));
-            assert_eq!(metadata(&sent, zombie.runtime_id, Key::MaxTradeTier).last(), Some(&4));
+            let shown = |key: Key| zombie.metadata.iter().find(|item| item.key == key).map(|item| item.value.clone());
+            assert_eq!(shown(Key::Variant), Some(Meta::Default(Plain::Int(8))));
+            assert_eq!(shown(Key::MaxTradeTier), Some(Meta::Default(Plain::Int(4))));
         }
     }
 }
