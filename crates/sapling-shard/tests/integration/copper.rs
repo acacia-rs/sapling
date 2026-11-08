@@ -106,6 +106,26 @@ fn a_copper_chest_pair_opens_unless_sneaked_on_then_waxes_both_halves_shown_toge
     assert!(paired(&mut h, LEAD) && paired(&mut h, OTHER), "each half keeps its entity");
 }
 
+/// Alex puts the held `item` on the top of `on`.
+fn put(h: &mut Harness, item: &'static str, on: [i32; 3]) {
+    h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new(item, 1)))));
+    h.tick_all();
+    h.receive(1, &click(on, 1, Some(item)));
+    (0..3).for_each(|_| _ = h.tick_all());
+}
+
+#[test]
+fn an_exposed_copper_chest_put_beside_a_copper_chest_takes_its_stage_and_pairs() {
+    // research/captures/bds-r3copper.txt: the exposed one was shown unweathered as it was put, then paired.
+    let mut h = ready("minecraft:stick", Vec::new());
+    put(&mut h, "minecraft:copper_chest", [2, 64, 2]);
+    let facing = common::asking::ask(&mut h, |ctx| ctx.block([2, 65, 2]).map(|block| block.properties).unwrap_or_default());
+    let other = if facing.contains("north") || facing.contains("south") { [3, 65, 2] } else { [2, 65, 3] };
+    put(&mut h, "minecraft:exposed_copper_chest", [other[0], 64, other[2]]);
+    assert_eq!([name(&mut h, [2, 65, 2]), name(&mut h, other)], ["minecraft:copper_chest"; 2].map(String::from), "{facing}");
+    assert!(paired(&mut h, [2, 65, 2]) && paired(&mut h, other));
+}
+
 #[test]
 fn a_copper_chest_pair_weathers_together_by_its_lead() {
     let mut h = chest_pair("minecraft:stick", "copper_chest");
