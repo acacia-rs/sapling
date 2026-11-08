@@ -150,7 +150,8 @@ mod tests {
         assert!(horse.mates.contains(&"minecraft:donkey") && horse.grow.contains(&("minecraft:hay_block", 0.15)));
         assert_eq!(husbandry("minecraft:chicken").unwrap().lays, Some(("minecraft:egg", 6000, 12_000)));
         assert!(husbandry("minecraft:sheep").unwrap().on_sheared.added.contains(&"minecraft:sheep_sheared"));
-        assert!(husbandry("minecraft:zombie").is_none());
+        let zombie = husbandry("minecraft:zombie").expect("its baby look");
+        assert!(zombie.breed.is_empty() && zombie.tame.is_empty() && zombie.grows.is_none() && zombie.mates.is_empty());
     }
 
     #[test]
