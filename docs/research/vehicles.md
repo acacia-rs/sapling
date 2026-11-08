@@ -192,7 +192,9 @@ were not found in any of these; sapling does what is listed there.
   → (9.7, 4.7), (-0.5, 4.5) → (-0.3, 4.3) again, already so in the AddEntity. The Linux ELF's
   `MoveTowardsClosestSpaceSystemImpl` (vtable 0xefd8a70, per entity 0x74a90a0, a velocity push) never ran
   for these boats, and `ActorMoveSystemImpl::updateDepenetration` (adapter vtable 0xef8f6b8) is a later
-  tick's: the shift is made on the spawn path before the AddEntity, not found. Still open.
+  tick's: the shift is made on the spawn path before the AddEntity, not found. Found 2026-11-08
+  (thirteenth2ba, watchpoints): the actor's initial move depenetrates over the touched block boxes last
+  first, f32 ties deciding the z side; see water-movement.md "Summoned into blocks". Done.
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
   Drilled 2026-11-05 (group AI, `ai1ride`, bds-ai1ride.txt): a tamed, saddled horse is client-predicted;
   BDS took the bot's walk and 10-tick charged jump with one vehicle correction at the mount, as sapling
@@ -328,6 +330,17 @@ were not found in any of these; sapling does what is listed there.
   `WantUp`, `JumpPressedRaw` and `Up` with and without a walk, so none of those inputs sets it. The only
   `or $0x10` into +0x60 in the ELF is 0x7472a7b, in a system function at 0x7472930 that sets it when byte
   +0x61 bit 0 is on, the move vector (+0x24, +0x28) is not zero, and a check at 0xbb60980 passes (an
-  auto-jump-like path). The input that sets it is still open.
-- Left (harness.rs TODO): `vertical_movement_action` (see above); stilled.rs
+  auto-jump-like path). Settled 2026-11-08 (thirteenth2ba, bds-ba2gdb-ghast.txt, bds-ba2ghast.txt): a
+  watchpoint on +0x60 showed its writer is 0x73e72b0, which copies `PlayerAuthInput` input data into the
+  component each input (input bit 6 `Jumping` → 0x10, bit 7 `AutoJumpingInWater` → 0x20, 16/17 `WantUp`
+  and `WantDown` → 0x4/0x8, 8 `Sneaking` → 0x1, 20 `Sprinting` → 0x2, 24 `PersistSneak` → 0x80; both jump bits cleared
+  when byte 2 bit 2 of its third argument's flags is set). The acacia bot never sent `Jumping` while
+  riding anything but a horse (riding/tick.rs reports keys only); with a drill-only patch that does, the
+  flags read 0x114 and the ghast rose. Rule: the pack's 0.5 is added to the driver's flight intent's y,
+  the intent cut to length 1, times `flying_speed`: jump alone 0.008 more a tick after 0.91 of its speed,
+  jump with a walk straight up 0.016 (as a walk alone). Ported: harness.rs `flight`; sapling-ba2ghast.txt
+  matches BDS tick for tick except one-tick shifts at key changes (line pacing). acacia should report
+  `Jumping`/`JumpDown`/`WantUp` while riding any vehicle (riding/tick.rs), else bots can't make a happy
+  ghast rise.
+- Left: stilled.rs
   takes the player's eyes at feet + 1.62 and ignores slowness modifiers.

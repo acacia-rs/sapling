@@ -215,13 +215,23 @@ capture contradicted the first version of this section).
   y -26.5 went up to the floor and 0.8 south (z 2.5 → 3.3), leaving it under its 2x2 roof, and a zombie in a
   one-wide shaft under a roof block went 0.8 south into the shaft's wall (z 1.5 → 2.3), out of the roof block
   alone.
-- **Summoned into blocks** (thirteenth2ao, bds-ao2push.txt, bds-ao2boat.txt; fitted to 45 of 47 summons with
-  bds-uuspawn.txt, the C++ not found: bdsre's summon path 143a0b220 → 1403d5c10 adds only a cart's 0.35, and
-  `MoveTowardsClosestSpace` is the player's alone): each block box the mob's box overlaps where summoned,
-  taken by x, then z, then y, and only while it still overlaps, pushes the box out through that box's nearest
-  face, ties going +x, -x, +z, -z, +y, -y; a mob pushed down into a block then stands on its top (a cow, horse
-  and llama 0.3 to 0.87 into a roof showed at the floor). Ported: body/spawn_push.rs, used by
-  creatures/summoned.rs `placed` and vehicles.rs `summon` (boats); every ao2push mob now lands as BDS's.
+- **Summoned into blocks**, read under gdb 2026-11-08 (thirteenth2ba; Linux ELF; bds-ba2gdb-boat.txt,
+  bds-ba2gdb-clip.txt). A hardware watchpoint on the boat's AABB from its constructor (0xbb8d4ed,
+  `StateVectorComponent*` at actor+0x208, `AABBShapeComponent*` at +0x210) caught the shift in the actor's
+  initial move (Actor vtable slot 6, 0xb2cd6c0 → system dispatch 0xd77f610 → 0x6d123c0 → 0x6d13860), not on
+  the summon command's path. 0x6d13860 runs the depenetration solver 0x72b7190 with three zero moves (y, x,
+  z) over the list of block boxes the AABB touches (x, then z, then y), per-axis depth limit 1.0 (the boat's;
+  the tick's own depenetration passes 0.01). Each pass takes the boxes **last first**, each against the
+  AABB as it was at the pass's start (0xd7814b0): for every axis the two overlaps (box max − AABB min, AABB
+  max − box min; within 1e-6 is none) must be positive, the axis keeps the smaller (equal goes +); the box
+  takes its smallest axis (ties x, then y, then z) and is skipped if that depth passes the limit; a push
+  replaces the pass's shift on that axis unless one the same way is larger. After the pass the AABB moves by
+  the shift. The z 4.5 boats are f32 ties: at x 4.5 the (3, 5) column's z push (0.1999998) beats its x
+  push (0.2000000) and sends z to 4.3, at x 9.5 x 8.8f makes the two equal, x wins, and the (9, 3) column's
+  +z stands (4.7). The old fit (box by box, moving between) matched 28 of 30 ao2 boats; this matches all
+  30, bds-ai1boat's and the three ba2 boats (a whole-number summon is centred first). Ported:
+  body/spawn_push.rs, used by creatures/summoned.rs `placed` and vehicles.rs `summon` (boats); a mob pushed
+  down into a block then stands on its top (a cow, horse and llama 0.3 to 0.87 into a roof showed at the floor).
 
 ## 5. Buoyancy (`minecraft:buoyant`): why xp orbs float
 
