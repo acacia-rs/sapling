@@ -55,9 +55,9 @@ fn a_cat_sitting_on_a_chest_holds_it_shut() {
     };
     hold(&mut h, Some(Item::new("minecraft:cod", 64)));
     let cat = spawn(&mut h, "minecraft:cat", [1.5, 66.0, 0.5]);
-    assert!((0..40).any(|_| showed(&click_on(&mut h, cat), cat, Event::TameSuccess)), "a third of fish tame");
+    let tamed = (0..40).map(|_| click_on(&mut h, cat)).find(|sent| showed(sent, cat, Event::TameSuccess)).expect("a third of fish tame");
+    assert_eq!(has_flag(&tamed, cat, Flags::SITTING), Some(true), "a cat sits as it is tamed (bds-ar2cat.txt)");
     hold(&mut h, None);
-    assert_eq!(has_flag(&click_on(&mut h, cat), cat, Flags::SITTING), Some(true));
     h.remote.run(move |ctx| assert!(ctx.move_entity(EntityId(cat), [1.5, 65.875, 0.5])));
     h.tick(1);
     h.tick(1);
