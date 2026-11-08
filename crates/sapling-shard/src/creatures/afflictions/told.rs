@@ -21,7 +21,7 @@ pub(super) fn is_told(effect: Effect) -> bool {
 pub(super) fn omen_heard(world: &World, mob: Entity, id: u64, sound: &str) -> Option<bytes::Bytes> {
     let (kind, body) = (world.get::<entities::Kind>(mob)?.0.as_str(), world.get::<Body>(mob)?);
     let baby = crate::creatures::shown::is_baby(world, mob);
-    let [width, height] = sapling_data::mob_look(kind, baby).filter(|_| baby).map_or(body.size, |(size, scale)| size.map(|side| side * scale));
+    let [width, height] = shown_size(world, mob, kind, body);
     let legs = || world.get::<crate::creatures::legs::Legs>(mob).map(|legs| legs.yaw);
     let yaw = crate::creatures::gaze::head_yaw(world, mob).or_else(legs).unwrap_or(0.0).to_radians();
     let (up, ahead) = match kind {
@@ -35,6 +35,12 @@ pub(super) fn omen_heard(world: &World, mob: Entity, id: u64, sound: &str) -> Op
     Some(sapling_net::encode(&heard))
 }
 
+/// The mob's box as shown: a baby's scaled.
+pub(super) fn shown_size(world: &World, mob: Entity, kind: &str, body: &Body) -> [f32; 2] {
+    let baby = crate::creatures::shown::is_baby(world, mob);
+    sapling_data::mob_look(kind, baby).filter(|_| baby).map_or(body.size, |(size, scale)| size.map(|side| side * scale))
+}
+
 pub(super) fn told(id: u64, event_id: MobEffectEventId, active: &Active) -> bytes::Bytes {
     sapling_net::encode(&MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: active.left as i32, tick: 0, ambient: false })
 }
@@ -43,10 +49,12 @@ pub(super) fn told(id: u64, event_id: MobEffectEventId, active: &Active) -> byte
 /// `before`, also written into its announcement for viewers coming later; BDS sent it after the
 /// `MobEffect` and not for an unshown one (research/captures/bds-lateeffects.txt).
 /// Fire resistance coming or going flips the `FIRE_IMMUNE` flag in the same data, first; water
-/// breathing shows no flag (research/captures/bds-t2flags.txt).
+/// breathing shows no flag (research/captures/bds-t2flags.txt); invisibility: invisible.rs.
 pub(super) fn shown_and_announced(world: &mut World, mob: Entity, id: u64, before: &[Active], active: &[Active]) -> Option<bytes::Bytes> {
     let resists = |list: &[Active]| list.iter().any(|active| active.effect == Effect::FireResistance);
     let flags = (resists(before) != resists(active)).then(|| fire_immune(world, mob, id, resists(active))).flatten();
+    let hides = super::invisible::is_invisible(active);
+    let flags = (super::invisible::is_invisible(before) != hides).then(|| super::invisible::flip(world, mob, id, hides)).flatten().or(flags);
     let mut shown = visible_effects(id, active);
     let visible = shown.metadata != visible_effects(id, before).metadata;
     if visible {
