@@ -126,6 +126,7 @@ fn loose(world: &mut World, player: Entity, shot: Shot, below: f32, power: f32, 
     let (layer, position, archer) = shooter(world, player)?;
     let (from, motion) = aim::from_eyes(world, &position, below, power, tilt, uncertainty);
     let motion = aim::turned(motion, turn);
+    crate::blocks::vibrate_by(world, layer, position.feet, crate::blocks::GameEvent::ProjectileShoot, player);
     crate::creatures::launch(world, Launch { layer, by: player, archer, from, motion, shot, gives: None }, Some(loosed))
 }
 

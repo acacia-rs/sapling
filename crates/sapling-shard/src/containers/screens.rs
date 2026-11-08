@@ -97,7 +97,7 @@ pub(crate) fn open(world: &mut World, player: Entity, layer: Entity, pos: BlockP
         return false;
     };
     if is_first && kind.has_lid {
-        crate::blocks::vibrate_at(world, layer, pos, crate::blocks::GameEvent::ContainerOpen, true);
+        crate::blocks::vibrate_at_by(world, layer, pos, crate::blocks::GameEvent::ContainerOpen, player);
     }
     let screen = if kind.is_per_player { Screen::Own } else { Screen::Container };
     let viewing = Viewing { layer, pos: lead, window: 0, screen };
@@ -183,7 +183,7 @@ pub(crate) fn close(world: &mut World, player: Entity) {
     lid::set(world, viewing.layer, &halves, false);
     slots::release(world, viewing.layer, viewing.pos);
     if super::kind_at(world, viewing.layer, viewing.pos).is_some_and(|kind| kind.has_lid) {
-        crate::blocks::vibrate_at(world, viewing.layer, viewing.pos, crate::blocks::GameEvent::ContainerClose, true);
+        crate::blocks::vibrate_at_by(world, viewing.layer, viewing.pos, crate::blocks::GameEvent::ContainerClose, player);
     }
 }
 

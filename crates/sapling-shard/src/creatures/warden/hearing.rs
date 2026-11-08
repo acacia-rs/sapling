@@ -77,10 +77,14 @@ pub(super) fn arrive(world: &mut World, entity: Entity, layer: Entity, id: u64, 
     disturb(world, entity, layer, id, kind, body, suspect.map(|player| (player, if projectile { anger::PROJECTILE_ANNOYS } else { anger::ANNOYS })), at, 1);
 }
 
-/// A player it may be angry at: a mortal one of its layer.
-pub(super) fn is_suspect(world: &World, player: Entity, layer: Entity) -> bool {
-    world.get::<InLayer>(player).is_some_and(|in_layer| in_layer.0 == layer) && vitals::is_mortal(world, player)
+/// One it may be angry at, of its layer: a mortal player, or a living mob other than a warden or
+/// an armor stand (BDS's warden roared at a pig hurt three times, bds-q1warden.txt).
+pub(super) fn is_suspect(world: &World, suspect: Entity, layer: Entity) -> bool {
+    let is_mob = || crate::creatures::is_alive(world, suspect) && world.get::<entities::Kind>(suspect).is_some_and(|kind| !NO_SUSPECTS.contains(&kind.0.as_str()));
+    world.get::<InLayer>(suspect).is_some_and(|in_layer| in_layer.0 == layer) && (vitals::is_mortal(world, suspect) || is_mob())
 }
+
+const NO_SUSPECTS: &[&str] = &["minecraft:warden", "minecraft:armor_stand"];
 
 /// Each player whose box touches the warden's disturbs it, once a second.
 pub(super) fn touched(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) {

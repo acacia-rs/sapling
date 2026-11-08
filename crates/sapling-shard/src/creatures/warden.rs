@@ -1,11 +1,9 @@
 //! The warden, as BDS's was in the `warden` drill (research/captures/bds-warden-findings.md): it
 //! sniffs for players about it, goes to look at what disturbs it (hearing.rs) and grows angry at
-//! the player behind it (anger.rs); angry, it roars, then hunts that player as any hunter, booming
-//! at one it cannot walk to (boom.rs). Summoned emerging it climbs out first; left undisturbed a
-//! minute it digs down and is gone.
+//! the player or mob behind it (anger.rs); angry, it roars, then hunts that one as any hunter,
+//! booming at a player it cannot walk to (boom.rs). Summoned emerging it climbs out first; left
+//! undisturbed a minute it digs down and is gone.
 //! It casts darkness about it (darkness.rs).
-// TODO: mobs are no suspects; a player's vibrations
-// but its steps (blocks, doors, containers, shots) name no suspect; damage is not heard.
 
 mod anger;
 mod boom;
@@ -159,7 +157,8 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     let (Some(body), Some(stage)) = (world.get::<Body>(entity).copied(), world.get::<Warden>(entity).map(|warden| warden.stage)) else { return false };
     let now = world.resource::<Tick>().0;
     if now.is_multiple_of(anger::COOLS) {
-        let suspects: Vec<Entity> = in_world(world).into_iter().filter(|player| hearing::is_suspect(world, *player, layer)).collect();
+        let held: Vec<Entity> = world.get::<Warden>(entity).expect("read above").anger.suspects().collect();
+        let suspects: Vec<Entity> = held.into_iter().filter(|suspect| hearing::is_suspect(world, *suspect, layer)).collect();
         world.get_mut::<Warden>(entity).expect("read above").anger.cool(|suspect| suspects.contains(&suspect));
     }
     if !matches!(stage, Stage::Emerging(_) | Stage::Digging(_)) {

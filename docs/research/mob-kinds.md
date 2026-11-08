@@ -52,6 +52,12 @@ Three runs on the flat ground, the actor in survival at midnight and healed each
 - Left more than 16 off, it teleported 30 ticks later to some 16 nearer, give or take 4: the
   Java game's `teleportTowards`. Twice it teleported away from beside the actor for no cause seen.
 - It never let its target go: 32 seconds, out to 24 blocks. Water hurt it 1 and sent it off.
+- Rates (`q1ender`, `q1ender2`, fourteenth1q; count with `SoundEndermanTeleport` pairs): four calm endermen
+  made 77 teleports in 14400 enderman-ticks at midnight (0.0053 a tick) and 132 in 6400 at noon under the sky
+  (0.021), both about 0.4 of the attempts `TeleportSystem`'s chance and timer give. The random teleport
+  (0x142443ff0) draws one point in the cube and tries only it (0x142443220), so many attempts fail; sapling
+  tries one spot for a chance or timer teleport since fourteenth1q (`teleports.rs`). The roofed phase was spoilt
+  by endermen leaving the roof's cover.
 
 ## The goat (`goat`)
 
@@ -241,6 +247,10 @@ survival on obsidian at midnight on easy (`research/captures/bds-ghast-findings.
   actor stood 6 ticks, then hurt it 6 (`HurtAnimation` 3) and set it alight; the blast of power
   1 came the tick after, `7 (a² + a)` with `a = 1 - d/2`, d from the feet, the same on every
   difficulty, and lit fire about it. One that met the floor blew up there.
+- A fireball through a standing player (`q1ghast`, bds-q1ghast.txt, fourteenth1q; a stone wall behind the
+  actor): it froze 6 ticks and moved once more, clipped by the wall. The `SetEntityMotion` changes after
+  the freeze lay along its own travel line (one shot +0.553, another -0.036), not from the player to it,
+  so a player's push was not seen; the wall spoils the run. A run without the wall is still to do.
 
 ## The snow golem (`snowgolem`)
 
@@ -336,8 +346,14 @@ Admiring shows as `FlagsExtended` bit 30 (33685504 at rest, bits 17 and 25), sen
 each time it fills and empties (bds-goldpickup.txt; sapling since fourteenth2h, `piglins::shown_admiring`).
 Other shareables (bds-o1piglin.txt): a golden helmet is admired like a sword; cooked pork is taken and eaten
 unseen; a crossbow goes to an empty main hand, shown a tick on. A `/kill` dropped whatever it took up (the
-helmet and sword still or once admired, the crossbow); sapling since fourteenth1o (`piglins/pickup.rs`). Not
-drilled: armour other than gold, a crossbow over another weapon.
+helmet and sword still or once admired, the crossbow); sapling since fourteenth1o (`piglins/pickup.rs`).
+Weapons and armour by the pack's `shareables` priorities (bds-q1piglin.txt, `q1piglin`; sapling since
+fourteenth1q, `piglins/gear.rs`): it took a crossbow over an iron sword, an iron sword into an empty hand, a
+diamond helmet over an iron one and leather boots onto bare feet, and refused an iron sword over a crossbow, a
+crossbow over a golden sword and an iron helmet over a diamond one. What it took was shown a tick on
+(`MobEquipment` slot 0, or for armour the equipment slot, 2 head to 5 feet, `selected_slot` 120, window
+`Inventory`); what it put down dropped a tick after that, 0.125 over its feet. At death what it took up drops;
+`/replaceitem` armour does not. Unexplained: it left an iron helmet by its bare head.
 
 `piglinkeep` then `piglinkeep2` with `KEEP_WORLD=1` (`bds-piglinkeep.txt`, `bds-piglinkeep2.txt`): a
 piglin picked up a thrown golden sword, admired it in the offhand, and 161 ticks on was sent the sword

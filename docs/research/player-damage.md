@@ -108,9 +108,12 @@ A creative player eats and drinks too (bds-b1eat.txt, `b1eat` in fourteenth1b_dr
 as each use starts, potion and milk included; nothing is used up, and the whole inventory (four windows) is sent
 as it ends; a potion leaves a glass bottle beside it unheard, honey and milk nothing; the burp, the vibration and
 a chorus fruit's teleport are as in survival (`vitals/eating.rs` `keep`; test
-`a_creative_player_eats_and_drinks_what_it_keeps_and_a_potion_leaves_a_bottle_as_well`). Left (REMAINING4): BDS
-started no second meal of a food the held use asked for after the first, while it drank a drink twice; sapling
-eats both twice. No rule was found.
+`a_creative_player_eats_and_drinks_what_it_keeps_and_a_potion_leaves_a_bottle_as_well`). A second meal
+(bds-q1meal.txt vs sapling-q1meal.txt, `q1meal` in fourteenth1q_drill.rs, raw ClickAir sent by the probe): any
+click after a meal ends starts the next, plain or finishing, food or drink alike, and clicks during a meal are
+ignored; held use (a click every 4 ticks) gave meals at ~31, 63, 95 and 127 for bread, a golden apple and a
+potion, and honey (40 ticks) at ~39, 80 and 120. Sapling matched each rhythm within a tick. b1eat's "no second
+meal" was the bot's finish click landing before the meal ended.
 
 ## Shield
 

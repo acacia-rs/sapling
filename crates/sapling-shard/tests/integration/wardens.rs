@@ -133,6 +133,47 @@ fn a_warden_booms_through_armour_at_prey_it_cannot_reach_every_five_seconds() {
     assert!((boom[0] - 3.0 * plain[0]).abs() < 1e-5 && (boom[2] - 3.0 * plain[2]).abs() < 1e-5 && boom[1] == 0.4167, "{boom:?}");
 }
 
+/// bds-q1warden.txt: a pig hurt with no source was heard and angered the warden at the pig; three
+/// hurts made it roar, and it took the pig when the roar was over.
+#[test]
+fn a_warden_grows_angry_at_a_mob_it_hears_hurt_and_hunts_it() {
+    use sapling_api::{DamageCause, EntityId};
+    let (mut h, warden, _) = with_warden([-3.5, 65.0, -5.5], None, GameMode::Creative);
+    // Penned on the platform, so its panic does not take it out of hearing.
+    let pig = common::asking::ask(&mut h, |ctx| {
+        for (x, z) in [(-5, 0), (-4, 0), (-3, 0), (-5, 1), (-3, 1), (-5, 2), (-4, 2), (-3, 2)] {
+            for y in 65..=66 {
+                ctx.set_block([x, y, z], &Block::new("minecraft:glass"));
+            }
+        }
+        ctx.spawn_entity("minecraft:pig", [-3.5, 65.0, 1.5]).expect("a pig")
+    });
+    let mut timeline = Vec::new();
+    // 4 s apart, as BDS's, past the 2 s it hears nothing after a vibration.
+    for hurt in 0..3 {
+        assert!(common::asking::ask(&mut h, move |ctx| ctx.hurt_entity(pig, 1.0, DamageCause::Magic)), "hurt {hurt}");
+        timeline.extend((1..=80).flat_map(|tick| told(hurt * 80 + tick, h.tick_all().to(2), warden)));
+    }
+    timeline.extend(run(&mut h, warden, 100).into_iter().map(|(tick, told)| (tick + 240, told)));
+    let heard = first(&timeline, Told::Sound("listening".into()));
+    assert!(heard < 80 &&timeline.contains(&(heard - 1, Told::Heartbeat(27))), "{timeline:?}");
+    let roars = first(&timeline, Told::Flags(ROARING));
+    let EntityId(pig) = pig;
+    assert_eq!(first(&timeline, Told::Target(pig as i64)), roars + 85, "{timeline:?}");
+}
+
+/// bds-q1warden.txt: a chest opened by the actor angered the warden at the actor by 35.
+#[test]
+fn a_warden_hears_a_player_open_a_chest_and_is_angered_at_the_player() {
+    let (mut h, warden, _) = with_warden([0.5, 65.0, 10.5], None, GameMode::Survival);
+    h.remote.run(|ctx| assert!(ctx.set_block([0, 65, 2], &Block::new("minecraft:chest"))));
+    h.tick_all();
+    h.receive(1, &common::click([0, 65, 2], 1, None));
+    let timeline = run(&mut h, warden, 30);
+    let heard = first(&timeline, Told::Sound("listening".into()));
+    assert!(timeline.contains(&(heard - 1, Told::Heartbeat(27))), "told as it hears, listening a tick on: {timeline:?}");
+}
+
 #[test]
 fn a_warden_casts_darkness_on_survival_players_within_20_every_121_ticks() {
     use acacia_proto::packets::{MobEffect, MobEffectEventId};

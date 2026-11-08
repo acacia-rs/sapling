@@ -214,8 +214,7 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
     let mut holds = true;
     if let Some((_, face)) = met_block {
         holds = crate::blocks::shot_stopped(world, layer, shot.kind, body.at, motion, face, shot.sticks, shot.burns > 0, arrow, by);
-        let by_player = world.get::<crate::components::Identity>(by).is_some();
-        crate::blocks::vibrate(world, layer, body.at, crate::blocks::GameEvent::ProjectileLand, by_player);
+        crate::blocks::vibrate_by(world, layer, body.at, crate::blocks::GameEvent::ProjectileLand, by);
     }
     if stopped && !shot.sticks {
         landing::land(world, arrow, layer, body.at, behind, None);

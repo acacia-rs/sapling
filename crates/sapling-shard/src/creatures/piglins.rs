@@ -12,6 +12,7 @@
 //! held (bds-goldpickup.txt); one hit takes no gold for 20 s (`cooldown_after_being_attacked`;
 //! BDS's refused an ingot 2 s after its hit, bds-gxbarter.txt).
 
+mod gear;
 mod pickup;
 
 pub(super) use pickup::{picked_up, steer};
@@ -129,6 +130,14 @@ pub(super) fn hold(world: &mut World, piglin: Entity, item: &ItemStack) -> bool 
     true
 }
 
+/// A command put `hands` in the mob's hands: a piglin's become its own, none of them taken up.
+pub(super) fn handed(world: &mut World, mob: Entity, [main, off]: [Option<ItemStack>; 2]) {
+    if world.get::<Kind>(mob).is_some_and(|kind| kind.0 == PIGLIN) {
+        world.entity_mut(mob).insert(Hands { main, off });
+        world.entity_mut(mob).remove::<pickup::PickedMain>();
+    }
+}
+
 /// A stored piglin's hands become its own, no longer shown from its stored look.
 pub(super) fn adopt(world: &mut World, piglin: Entity) {
     if world.get::<Kind>(piglin).is_none_or(|kind| kind.0 != PIGLIN) {
@@ -189,6 +198,7 @@ pub(crate) fn barter(world: &mut World, player: Entity, piglin: Entity) -> bool 
 /// Piglins done admiring empty their offhand: an ingot is bartered a tick on, anything else goes
 /// to the main hand (research/captures/bds-t2barter.txt).
 pub(super) fn tick(world: &mut World) {
+    gear::shed(world);
     let now = world.resource::<Tick>().0;
     let done: Vec<(Entity, Entity, u64, Body, bool)> = world
         .query::<(Entity, &Admiring, &InLayer, &NetId, &Body)>()

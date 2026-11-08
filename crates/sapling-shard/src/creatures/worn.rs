@@ -88,6 +88,13 @@ pub(crate) fn put_on(world: &mut World, mob: Entity, piece: usize, item: Option<
     true
 }
 
+/// Takes the mob's `piece` off, dying or not, telling no one; what it wore there.
+pub(super) fn take_off(world: &mut World, mob: Entity, piece: usize) -> Option<ItemStack> {
+    let taken = world.get_mut::<Worn>(mob)?.0.get_mut(piece)?.take();
+    dress(world, mob);
+    taken
+}
+
 /// [`put_on`] telling no one: what would show the mob's armour now, and the piece taken off.
 /// `None` where [`put_on`] is false.
 pub(super) fn wear(world: &mut World, mob: Entity, piece: usize, item: Option<ItemStack>) -> Option<(Option<Bytes>, Option<ItemStack>)> {

@@ -195,7 +195,7 @@ impl Request<'_> {
                 .into_iter()
                 .collect();
             send::to_viewers(self.world, site.layer, pos, &[&again[..], &[sound], &again[..]].concat());
-            super::vibrate_at(self.world, site.layer, pos, super::GameEvent::BlockPlace, true);
+            super::vibrate_at_by(self.world, site.layer, pos, super::GameEvent::BlockPlace, self.entity);
             signs::open_editor(self.world, self.entity, site.layer, pos, &block.name);
             rails::join_placed(self.world, site.layer, pos);
             super::pistons::furnish(self.world, site.layer, pos);

@@ -202,7 +202,8 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     told.extend(super::shulkers::peek(world, layer, id, kind, body.at, prey.is_some()));
     entities::tell_viewers(world, entity, layer, cell, told);
     if prey.is_some() {
-        late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", id, kind, body, HEAD));
+        let after = if super::pigmen::warns_at_once(world, entity) { 0 } else { 1 };
+        late_sounds::play_later(world, after, layer, cell, sound("mob.warning", id, kind, body, HEAD));
     }
     if prey.is_some() && ANGERED.contains(&kind) {
         late_sounds::play_later(world, 2, layer, cell, sound("angry", id, kind, body, HEAD));

@@ -4,6 +4,8 @@
 //! brightness is 0.5 or less (raw 12 or less) and in 20 where brighter with the sky over it (none
 //! where brighter under a roof), without prey whenever its timer runs out (reset to a random 0 to
 //! 600 ticks, so also its first tick), and away from water it touches or rain on it, which costs it 1.
+//! A chance or timer teleport tries one spot in the cube (0x142443ff0): BDS's four calm endermen made
+//! 0.0053 a tick at night and 0.021 at noon under the sky, about 0.4 of the attempts (bds-q1ender*.txt).
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -120,13 +122,15 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, prey: Optio
     let far_since = far.map(|_| blinks.far_since.unwrap_or(now));
     let towards = far.filter(|_| far_since.is_some_and(|since| now >= since + FAR_FOR));
     let by_chance = blinks.chance(odds);
-    let random = by_chance || (prey.is_none() && blinks.timer_out()) || wet || blinks.due.is_some_and(|due| now >= due);
+    let driven = wet || blinks.due.is_some_and(|due| now >= due);
+    let random = by_chance || (prey.is_none() && blinks.timer_out()) || driven;
+    let tries = if driven { TRIES } else { 1 };
     world.get_resource_or_insert_with(Dice::default);
     let to = world.resource_scope(|world, mut dice: Mut<Dice>| {
         let level = &world.get::<Layer>(layer)?.world;
         match (towards, random) {
             (Some(feet), _) => landing(level, &body, aimed(&mut dice, body.at, feet)),
-            (None, true) => (0..TRIES).find_map(|_| landing(level, &body, scattered(&mut dice, body.at))),
+            (None, true) => (0..tries).find_map(|_| landing(level, &body, scattered(&mut dice, body.at))),
             (None, false) => None,
         }
     });

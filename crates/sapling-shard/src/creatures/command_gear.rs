@@ -102,6 +102,7 @@ pub(crate) fn set(world: &mut World, mob: Entity, slot: MobSlot, item: Option<It
     let hands = [gear.main.clone(), gear.off.clone()];
     world.entity_mut(mob).insert(gear);
     if is_hand {
+        super::piglins::handed(world, mob, hands.clone());
         entities::restore(world, mob, |compound, registry| sapling_world::handed_actor(compound, &hands, registry).ok());
     }
     if let Some(layer) = world.get::<InLayer>(mob).map(|layer| layer.0) {
