@@ -37,10 +37,11 @@ pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str) 
     let (Some(body), Some(level)) = (world.get::<Body>(entity).copied(), world.get::<Layer>(layer).map(|layer| &layer.world)) else { return };
     if kind == KIND && ceiling(level, &body) {
         world.entity_mut(entity).insert(Hanging);
+        // One born woken is heard taking off where it was summoned (bds-x2bat.txt: y -58.00001), not held up first.
         if born_flags(world, layer, kind, &body) != Flags(0) {
             entities::mob_flags(world, entity, kind, Flags::RESTING, true);
+            hold(world, entity, &body);
         }
-        hold(world, entity, &body);
     }
 }
 

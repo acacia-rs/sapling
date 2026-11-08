@@ -2,11 +2,12 @@
 //! of 0 to 3 makes it lazy, worried, playful or aggressive, both 4 to 7 weak, both 8 or 9 brown,
 //! and the rest normal. What each does when hit, as BDS's did (research/captures/bds-pandas-findings.md):
 //! a normal or brown one hits back once, an aggressive one for 6 until it is calm, the rest run. A
-//! lazy one walks at its own pace ([`pace`]), a worried one keeps away from other kinds
+//! lazy one walks at its own pace ([`pace`]), tempted too (bds-x2panda.txt: 0.0165 a tick to a normal
+//! one's 0.0759), and lies down (husbandry/lying.rs), a worried one keeps away from other kinds
 //! (husbandry/avoiding.rs) and a playful one rolls (husbandry/rolls.rs). An aggressive one's anger
 //! reached no other: three aggressive bystanders 6 to 9 off took no target (bds-g14panda.txt), its
 //! pack's `broadcast_anger` notwithstanding.
-// TODO: a lazy one's tempted, bred and followed walks keep the kind's pace.
+// TODO: a lazy one courting or followed by its baby is not drilled at its pace (BDS's fed pandas only ate).
 
 use bevy_ecs::prelude::*;
 use sapling_data::Hunts;
@@ -101,6 +102,10 @@ pub(super) fn is_worried(world: &World, entity: Entity) -> bool {
 
 pub(super) fn is_playful(world: &World, entity: Entity) -> bool {
     has_gene(world, entity, MAIN[2])
+}
+
+pub(super) fn is_lazy(world: &World, entity: Entity) -> bool {
+    has_gene(world, entity, MAIN[0])
 }
 
 /// The share of its kind's pace the mob walks at: a lazy panda's `movement` is 0.07 to the kind's

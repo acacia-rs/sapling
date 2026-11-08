@@ -4,7 +4,7 @@
 //! the survival actor's bamboo; two lazy pandas fed bamboo 6 apart beside eight bamboo stalks. `x2parrot`: three
 //! wild parrots over the floor; one tamed by seeds, made to sit and stand by clicks while the actor walks off.
 //! `x2bee`: by night four bees by a hive, a second hive 10 off; by night two bees in a hive that fire is set
-//! beside. `x2wolf`: a tamed wolf biting a held, warded, healing zombie its owner hit, for a minute.
+//! beside. `x2wolf`: six wolves fed four rounds of bones, the tamed ones not left sitting biting a held, warded, healing zombie their owner hit, for a minute.
 //! `x2bob`: two casts into a pool, each left 25 s.
 
 use crate::villages::wait;
@@ -102,11 +102,16 @@ fn bees() -> Vec<String> {
 fn wolves() -> Vec<String> {
     let mut out = start("18000");
     out.extend(survival());
-    out.extend(owned(["tp @s 0.5 -60 0.5 -90 0", "summon wolf 2.5 -60 -0.5", "effect @e[type=wolf] slowness 60 255 true", "give @s bone 64", ""]));
-    for _ in 0..8 {
+    out.push("tp @s 0.5 -60 0.5 -90 0".into());
+    // Each feed after a wolf's taming flips its sitting, so wolves tamed in different rounds end apart, about half standing.
+    for at in ["2.5 -60 -0.5", "2.5 -60 1.5", "-1.5 -60 -0.5", "-1.5 -60 1.5", "0.5 -60 2.5", "0.5 -60 -1.5"] {
+        out.push(format!("summon wolf {at}"));
+    }
+    out.extend(owned(["effect @e[type=wolf] slowness 60 255 true", "give @s bone 64", ""]));
+    for _ in 0..4 {
         out.extend(owned(["tp @s 0.5 -60 0.5 -90 0", "!feedall wolf", ""]));
     }
-    out.extend(owned(["clear @s", "effect @e[type=wolf] clear", "summon zombie z 2.5 -60 2.5", ""]));
+    out.extend(owned(["clear @s", "effect @e[type=wolf] clear", "summon zombie z 3.5 -60 0.5", ""]));
     out.extend([held("name=z"), "effect @e[name=z] resistance 1000 3 true".into(), "effect @e[name=z] regeneration 1000 4 true".into(), "effect @e[name=z] fire_resistance 1000 0 true".into(), String::new(), "!hit zombie".into()]);
     wait(&mut out, 60);
     out.extend(owned(["kill @e[type=!player]", "gamemode creative @s", "effect @s clear", ""]));

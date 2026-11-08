@@ -92,6 +92,11 @@ fn pick(world: &mut World, layer: Entity, at: [f32; 3], wing: &Wing) -> Option<[
 
 /// Before its move: it flies on to its spot, picking another when due.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
+    steer_times(world, entity, layer, kind, 1.0)
+}
+
+/// [`steer`] at `times` its kind's push (a bee fleeing fire).
+pub(super) fn steer_times(world: &mut World, entity: Entity, layer: Entity, kind: &str, times: f32) -> bool {
     let (Some(wing), Some(body)) = (wing(kind), world.get::<Body>(entity).copied()) else { return false };
     let now = world.resource::<Tick>().0;
     let Some(wings) = world.get::<Wings>(entity) else { return false };
@@ -108,7 +113,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         }
     };
     if let Some(spot) = spot {
-        fly_to(world, entity, wing, &body, spot, 1.0);
+        fly_to(world, entity, wing, &body, spot, times);
     }
     true
 }

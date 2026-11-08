@@ -5,9 +5,10 @@
 //! pollen. With pollen, or by night or in rain, it flies to its hive (the one it last came out
 //! of), or the nearest within 16 across and 10 up or down, and goes in (hives.rs), growing crops on
 //! the way (crops.rs). Wandering, it keeps within 22 of its hive. A bee that finds no flower in
-//! 180 s goes home. Hit, it stings (stings.rs).
-// TODO: a full hive does not send it looking for another (`hive_full`, 5 to 20 s); its pollen and
-// home are not kept with it in its column; it bobs up and down as BDS's did not.
+//! 180 s goes home. Hit, it stings (stings.rs). At a full hive it wanders 5 to 20 s (`hive_full`),
+//! then flies to the nearest hive (bds-x2bee.txt: the fourth bee left a full hive at once and went
+//! into one 10 off 13 s later). Let out by fire, it flees at 1.25 its pace for 20 to 50 s (`escape_fire`).
+// TODO: its pollen and home are not kept with it in its column; it bobs up and down as BDS's did not.
 
 mod crops;
 mod hives;
@@ -60,6 +61,10 @@ const AT_HOME: f32 = 1.2;
 const NIGHT: u8 = 4;
 /// It flies at this height over its prey's feet, where its sting reaches.
 const AIMS_OVER_FEET: f32 = 0.5;
+/// Ticks it wanders after a full hive (`hive_full`'s timer), and flees fire (`escape_fire`'s), and how fast it flees.
+const FULL_WANDERS: [u32; 2] = [100, 400];
+const FLEES_FIRE: [u32; 2] = [400, 1000];
+const FLEES: f32 = 1.25;
 
 #[derive(Component, Default)]
 pub(super) struct Bee {
@@ -76,6 +81,21 @@ pub(super) struct Bee {
     since: u64,
     /// It stung: the tick it dies in.
     perishes: Option<u64>,
+    /// The tick it wanders until after a full hive, and flees fire until.
+    full_until: u64,
+    flees_until: u64,
+}
+
+fn until(world: &mut World, [least, most]: [u32; 2]) -> u64 {
+    world.resource::<Tick>().0 + u64::from(least + world.get_resource_or_insert_with(Dice::default).roll(most - least + 1))
+}
+
+/// A bee fire let out of its hive flees.
+fn escape_fire(world: &mut World, bee: Entity) {
+    let flees_until = until(world, FLEES_FIRE);
+    if let Some(mut kept) = world.get_mut::<Bee>(bee) {
+        kept.flees_until = flees_until;
+    }
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
@@ -132,6 +152,14 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, body: &Bod
         return wings::fly_at(world, entity, KIND, [feet[0], feet[1] + AIMS_OVER_FEET, feet[2]]);
     }
     let Some(bee) = world.get::<Bee>(entity) else { return wings::steer(world, entity, layer, KIND) };
+    let now = world.resource::<Tick>().0;
+    if now < bee.flees_until {
+        return wings::steer_times(world, entity, layer, KIND, FLEES);
+    }
+    if now < bee.full_until {
+        return wander(world, entity, layer, body);
+    }
+    let bee = world.get::<Bee>(entity).expect("read above");
     let (nectar, grown) = (bee.nectar, bee.grown);
     let goes_home = bee.nectar || bee.homing || !may_fly(world, layer);
     if nectar {
@@ -218,8 +246,15 @@ fn home(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool {
         }
         return wings::steer(world, entity, layer, KIND);
     };
-    if distance(body.at, middle(hive)) <= AT_HOME && hives::enter(world, entity, layer, hive, nectar) {
-        return true;
+    if distance(body.at, middle(hive)) <= AT_HOME {
+        if hives::enter(world, entity, layer, hive, nectar) {
+            return true;
+        }
+        let full_until = until(world, FULL_WANDERS);
+        if let Some(mut bee) = world.get_mut::<Bee>(entity) {
+            (bee.home, bee.full_until) = (None, full_until);
+        }
+        return wander(world, entity, layer, body);
     }
     wings::fly_at(world, entity, KIND, middle(hive))
 }
