@@ -5,7 +5,8 @@
 //! exact in the air and the first tick in water). In water fish come (bite.rs). What it meets
 //! first on its way it hooks, and then sits in; a move cut short by a block leaves it in the
 //! ground until one is not.
-// TODO: in water the fit drifts by about 1e-3 a tick from the third tick on.
+//! In water it matched bds-x2bob.txt's 25 s bob (sapling-x2bob.txt): exact for the first five
+//! ticks, then within 0.01 with no growing drift, the slow wave's dips at the same ticks.
 
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain};
 use bevy_ecs::prelude::*;
