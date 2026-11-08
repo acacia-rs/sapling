@@ -496,7 +496,7 @@ is assumed from its pack's like shape, not drilled.
   as the actor hit a fourth (not shared). Left: the lazy one's lie-downs (`LayingAmount`).
 - Bat (bds-g14bat.txt, bds-g14fly.txt): born under a full block it hangs from the start (`RESTING` in its
   `AddEntity`, feet at floor(y)+1-0.9); flying under one it took hold after ~5 s; all four let go the tick the
-  ceiling went (creatures/bats.rs). A player within 4 was not drilled (the actor stood 4.65 off).
+  ceiling went (creatures/bats.rs). A player within 4 was not drilled here (the actor stood 4.65 off); see Group X.
 - Frog (bds-g14frog.txt): croaks `FlagsExtended` bit 37 for 90 ticks, no sound, 10.8 to 14.1 s apart; in a
   glass pen 6 high it leapt only inside (frogs.rs `clear_way`). Eating: it takes a small slime or magma cube
   ~7 ticks after it comes (`mob.warning`), walks 0.0864, tongue bit 38 ~8 ticks at 1.55 off, `tongue` +1 tick
@@ -511,6 +511,24 @@ is assumed from its pack's like shape, not drilled.
   Fourteenth2v: a bee keeps within 22 of its hive (`minecraft:home` restriction_radius) and stays on a flower
   400 ticks, since MoveToBlockGoal (0x5277e80) counts its stay in twentieths; hives let one out at 1 in 20 a
   tick (block-entities.md).
+
+## Group X (2026-11-08, fourteenth2x, `x2*` in fourteenth2x_drill.rs)
+
+- Bat (bds-x2bat.txt): a hanging bat let go, heard `takeoff` from its feet a tick after its `AddEntity`, with a
+  player 3.2 off (creative too) and kept still 4.1 off; one born that near is never shown `RESTING`
+  (creatures/bats.rs `WAKES`; sapling-x2bat.txt the same but the takeoff a tick sooner).
+- Panda (bds-x2panda.txt): a lazy one tempted walked 0.0165 a tick to a normal one's 0.0759, as sapling's
+  does. Four lazy ones lay down six times in ~2900 standing ticks (1 in 400, the pack's `interval`) for 30, 66,
+  278 and 697 ticks and two cut short: about 1 in 400 to get up too, not `random_stop_interval` 2000.
+  `FlagsExtended` bit 0; from the next tick `LayingAmount` +0.15 a tick to 1 or −0.19 to 0, its `Previous` a tick
+  behind (husbandry/lying.rs). Fed bamboo by a bamboo row, they only ate (`EatingItem`): no courting seen.
+- Bees (bds-x2bee.txt): of four bees by a hive at night three went in; the fourth hovered at the full hive
+  ~1 s, wandered and went into a hive 10 off 13 s later (pack `hive_full` 5 to 20 s, then `find_hive`;
+  bees.rs `full_until`). Fire set beside a hive by night let both its bees out a tick later, unheard, over and
+  behind it (not in front), to flee (`escape_fire`, panic 1.25, 20 to 50 s; hives.rs `fire_near`, `beside`);
+  the hive burned 0.9 s on and one bee flew into the fire.
+- Parrot (bds-x2parrot.txt): falls slowly, as Java's `(v − 0.08) · 0.98 · 0.6` (−0.114 a tick at most), lands
+  and sits on the floor, rises by +0.08 a tick steps, up to ~4.2 over the floor. Not ported (wings.rs TODO).
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full

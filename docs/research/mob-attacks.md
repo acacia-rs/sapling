@@ -643,6 +643,13 @@ By night on the stone floor, the survival actor held in place:
 
 The kinds not named here, and what a blast leaves of the blocks it breaks and of softer ground.
 
+A spear holder's `use_kinetic_weapon` (fourteenth2x, decompile only, not ported): Linux `UseKineticWeaponGoal`
+vtable 0xeeb4b48 (canUse 0x5349600, canContinueToUse 0x53496e0, start 0x5349290, stop 0x5349550, tick
+0x53497c0, a four-state machine on goal+0x210 of ~575 lines, slot 8 0x5349e50). The zombie's pack:
+on foot approach 10, reposition 6-7, cooldown 9-11, `weapon_reach_multiplier` 0.5, `weapon_min_speed_multiplier`
+0.2; on a zombie horse approach 12, reposition 8-9 and cooldown 11-13 (×1.4), speed 1.4. Sapling has no kinetic
+weapon at all (no `KineticDamageDealt`, no charge), so the goal waits on that item system.
+
 ## Sapling
 
 Every kind that walks strolls (`creatures/strolling.rs`, `strolls=` in `mob-traits.tsv`, the
