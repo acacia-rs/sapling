@@ -242,4 +242,12 @@ head attach point (sapling: 0.85 of its height).
   fire charge 1.3 and 10, wind charge 1.5 and 1 (`shots/dispensed.rs` `shoot_unowned`). Whether a stack of
   charges throws one: drilled 2026-11-05 (`y3omen`, bds-y3omen.txt, eight ominous spawners for 60 s): all
   ten item spawners showed `MinecartDisplayBlock` `Count` 1 (nine lingering potions, one arrow), and each
-  threw one shot and was gone, as sapling's `ominous_items.rs` (one of the kept stack).
+  threw one shot and was gone. Those eight spawners all sat in one 30x20x30 region, so one kept table.
+  Drilled again 2026-11-08 (`au3charge`, bds-au3charge.txt, level seed 20261018 as the drill server's;
+  twelve ominous spawners in twelve regions): an item spawner carries its kept stack whole (`Count` 2
+  or 3 of `fire_charge` in ten of them) and throws one shot (ten small fireballs), then is gone.
+  Its `MinecartDisplayBlock` is `Count`, `Damage`, `Name`, `WasPickedUp` 0, in that order. Sapling
+  showed `Count` 1 and its fields unsorted without `WasPickedUp`; fixed (`ominous_items.rs` `pick`,
+  `fireworks::display_fields`). Re-drilled (sapling-au3charge.txt): each region's kept items
+  (arrows of poison, potions 31, 43, 45, fire charges of 2 and 3) as BDS's, which settles the kept
+  per-position MT19937 roll; ten fireballs, one per carried stack.

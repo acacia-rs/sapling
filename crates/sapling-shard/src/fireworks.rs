@@ -56,9 +56,16 @@ struct Rocket {
 
 /// The item a rocket (or an ominous item spawner) is shown carrying: its stack's compound, as the network writes NBT.
 pub(crate) fn display_item(world: &World, layer: Entity, stack: &ItemStack) -> Option<MetadataDictionaryItem> {
+    display_fields(world, layer, stack, |_| {})
+}
+
+/// [`display_item`] with its compound's fields changed by `change` first.
+pub(crate) fn display_fields(world: &World, layer: Entity, stack: &ItemStack, change: impl FnOnce(&mut Vec<(nbt::Str, Value)>)) -> Option<MetadataDictionaryItem> {
     let registry = world.get::<Layer>(layer)?.world.registry();
+    let mut fields = stack.fields(registry);
+    change(&mut fields);
     let mut out = BytesMut::new();
-    nbt::write::<Network>(&mut out, &Nbt { name: String::new(), value: Value::Compound(stack.fields(registry)) });
+    nbt::write::<Network>(&mut out, &Nbt { name: String::new(), value: Value::Compound(fields) });
     let raw = Raw::<Network>::read(&mut &out[..]).ok()?;
     Some(MetadataDictionaryItem { key: Key::MinecartDisplayBlock, r#type: Type::Compound, legacy_type: 5, value: MetaValue::Default(Plain::Compound(raw)) })
 }

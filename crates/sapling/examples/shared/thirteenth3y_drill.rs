@@ -120,7 +120,7 @@ pub(crate) const TRIAL_START: [&str; 6] =["kill @e[type=!player]", "gamerule dom
 pub(crate) const TRIAL_END: [&str; 5] =["gamemode creative @s", "kill @e[type=!player]", "gamerule domobspawning false", "effect @s clear", "tp @s 0.5 -26 0.5"];
 
 /// A trial spawner with a zombie at `[x, y, z]`, its egg used from a barrier 4 west.
-fn spawner(lines: &mut Vec<String>, [x, y, z]: [i32; 3], ominous: bool) {
+pub(crate) fn spawner(lines: &mut Vec<String>, [x, y, z]: [i32; 3], ominous: bool) {
     let state = if ominous { " [\"ominous\"=true]" } else { "" };
     lines.extend([
         "gamemode creative @s".to_owned(), format!("setblock {} {} {z} barrier", x - 4, y - 1), format!("tp @s {}.5 {y} {z}.5", x - 4), String::new(), format!("fill {} {y} {} {} {} {} air", x - 3, z - 1, x - 1, y + 2, z + 1),

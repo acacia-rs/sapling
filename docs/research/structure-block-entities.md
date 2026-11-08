@@ -146,7 +146,13 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   them (`sapling-leveldb` `generated_chest`: `Findable` 0, each item `Block` if a block, `Count`, `Damage`
   0, `Name`, `Slot`, `WasPickedUp` 0, `tag` 0 when empty). The templates hold 69 empty chests and four
   with items: 1x1_b5's eight allium (the oracle's), 1x2_a4's dark oak saplings, 1x2_a6's iron axe (Java
-  efficiency, Bedrock ench 15) and 1x2_s2's trapped chest of two ender pearls; [U] the last three's forms.
+  efficiency, Bedrock ench 15) and 1x2_s2's trapped chest of two ender pearls. The last three's forms
+  drilled 2026-11-08: `mansion_rooms` (sapling-worldgen example) found mansions of seed 20261003 holding
+  1x2_a4 and 1x2_a6 (start chunk (1077, -210)) and 1x2_s2 ((-2154, -430)); a BDS run of those chunks
+  (oracle world `20261003-au3mansion`) and `block_entity_diff`: the saplings, axe and pearls chests
+  same. Found there: BDS saves a legacy template's potted sapling (Java `sapling` data 2) as an empty
+  pot entity (no `PlantBlock`); sapling put the birch sapling in. Fixed (`template/load.rs`,
+  `generated_flower_pot`): 7 of 7 pots same.
   Beds, bells and cauldrons are written since 2026-11-03 (templates.bin kinds `bed`, `bell`, `cauldron`;
   the witch hut's cauldron in `scattered/hut.rs`). `block_entity_diff 20261003 20261003-structures`:
   every bed (0, 4, 10, 11, 13, 14), bell and cauldron same. BDS saved the trial chambers' magenta and
@@ -296,9 +302,15 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
 
 ## Unverified
 
-- [U] Brushing's catch-up rate: the decompile gives one owed stroke a tick (sapling's), but the
-  capture's gravel brushed again after a pause showed progress 1, 2, 3 and done ~5, 10, 16 ticks in
-  (one a tick would be 2, 5, 9). Probe a second pause with tick stamps to settle it.
+- Brushing's catch-up rate, settled 2026-11-08 (`au3brush`, bds-au3brush.txt): the earlier probes
+  (q3brush, s3brush) held the bot's own ticks while brushing, so BDS got no `PlayerAuthInput` and took
+  every held click at the let-go in one burst. `!au3brush` runs the bot's ticks between held clicks.
+  BDS then brushed gravel 35 ticks (counts 1, 3 shown), 30 off, 60 on (6 shown 2 ticks in, done 23
+  ticks in), sand 12/35/12/25/80 likewise: one owed stroke a tick, as the decompile and sapling.
+  Fixed (sapling-au3brush.txt, now stroke for stroke as BDS's): a stroke's block and entity are shown
+  the next tick, before that tick's strokes (`brushing::show_stroked`); the `brush` sound names the
+  block with `brushed_progress` 0 and its own `hanging` (623036 for hanging gravel), not its first
+  state.
 
 - `enchant_randomly` (a dungeon's book; thirteenth2d, 2026-11-05): BDS's `EnchantRandomlyFunction`
   (apply 14752bc20) draws one `nextInt(30)` from the loot random as the cost, then enchants by
