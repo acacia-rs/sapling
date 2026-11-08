@@ -87,8 +87,9 @@ pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, prop
     super::looks::dressed(shown, kind, colour2)
 }
 
-/// A baby's scale and box in its announcement, for a kind BDS was recorded announcing only grown
-/// (a baby villager's 0.5, 0.98 by 1.96, bds-an1grow.txt).
+/// A baby's scale and box in its announcement, for every kind: BDS's `AddEntity` carries them, where the
+/// kind's recorded announcement may be a grown one's (a baby villager's 0.5, 0.98 by 1.96, bds-an1grow.txt,
+/// bds-ar2look.txt).
 fn dress_baby_look(added: &mut acacia_proto::packets::AddEntity, kind: &str) {
     use acacia_proto::types::{MetadataDictionaryItem as Item, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
     let Some(([width, height], scale)) = sapling_data::mob_look(kind, true) else { return };

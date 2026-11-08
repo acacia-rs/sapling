@@ -438,6 +438,16 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
   on sand pens held up by stone, and one in a lane with sand 2 west and 3 east, laid nothing in 50 s;
   four pregnant turtles taken home (n3home) walked back but laid nothing in the 60 s after.
 - Stomping: the 1 in 20 start, the 1200-tick give-up, and the walking speed (not tried again).
+  Drilled 2026-11-08 (thirteenth2ar `ar2stomp`, bds-ar2stomp.txt), still open:
+  - Start: two zombies 6 from eggs set off 0.5 s after appearing, a third within 1.5 s. That fits
+    1 in 20 a tick.
+  - Target: not the nearest egg. Two zombies walked over their own eggs 6 off and went for one 7.2
+    and 10 off. They broke the eggs one after another: three blocks of one egg each took 60 ticks
+    from the first crumble (sapling: 48).
+  - Give-up: a zombie 3.5 from an egg on a 2-high 3 by 3 platform ignored that egg and went for one
+    8.5 off. No zombie went for an egg it could not reach, so the 1200-tick give-up was not seen.
+  - The two zombies summoned at z -6.5 and -2.5 landed in the lane walls: `{z}.5` for a negative z is
+    the cell below.
 
 Drilled since (2026-10-30): a chested mount's chest drops after its goods (mob-life.md, `bds-chestdie.txt`), as
 sapling's did. The `lay_egg` sound's 0.34 over a turtle's feet is fixed: 0.85 of its height, from the

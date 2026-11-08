@@ -47,10 +47,28 @@ pub(crate) fn dig(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
 /// Lays `count` (1 to 4) fresh turtle eggs at `pos`, still open on sand (they sparkle as placed);
 /// false where it cannot.
 pub(crate) fn lay(world: &mut World, layer: Entity, pos: BlockPos, count: usize) -> bool {
-    let Some(eggs) = COUNTS.get(count.wrapping_sub(1)).filter(|_| level(world, layer).is_some_and(|level| is_nest(level, pos))) else { return false };
-    let block = Block::new(EGG).with(format!("cracked_state=no_cracks,turtle_egg_count={eggs}"));
-    let Some(id) = level(world, layer).and_then(|level| send::resolve(level.registry(), &block)) else { return false };
+    let Some(id) = clutch(world, layer, pos, count) else {
+        if let Some(mut told) = world.get_resource_mut::<super::turtle::Foretold>() {
+            told.0.retain(|nest| *nest != (layer, pos));
+        }
+        return false;
+    };
     send::set(world, layer, pos, id)
+}
+
+/// The egg block `count` eggs laid at `pos` make, where a nest is open.
+fn clutch(world: &World, layer: Entity, pos: BlockPos, count: usize) -> Option<u32> {
+    let eggs = COUNTS.get(count.wrapping_sub(1)).filter(|_| level(world, layer).is_some_and(|level| is_nest(level, pos)))?;
+    let block = Block::new(EGG).with(format!("cracked_state=no_cracks,turtle_egg_count={eggs}"));
+    level(world, layer).and_then(|level| send::resolve(level.registry(), &block))
+}
+
+/// The sparkle of `count` eggs to be laid at `pos` the next tick, sent now: BDS's came a tick before
+/// their UpdateBlock (bds-nesting.txt, bds-ao2nest.txt). Their [`lay`] then sparkles no more.
+pub(crate) fn foretell(world: &mut World, layer: Entity, pos: BlockPos, count: usize) {
+    let Some(sparkle) = clutch(world, layer, pos, count).zip(level(world, layer)).map(|(id, level)| level_event(LevelEventEvent::ParticleTurtleEgg, pos, sapling_world::block_hash(level.registry(), id) as i32)) else { return };
+    send::to_viewers(world, layer, pos, &[sparkle]);
+    world.get_resource_or_insert_with(super::turtle::Foretold::default).0.push((layer, pos));
 }
 
 /// A sound of a mob `kind` (`unique` its id) at the eggs at `pos`, from the cell's corner.

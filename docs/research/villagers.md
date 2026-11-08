@@ -266,8 +266,13 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   (the pack's half; easy turns none, not drilled). Ported (`villagers/conversion.rs` `infect`, from a zombie's or husk's
   killing hit, by command or in a fight; test
   `a_villager_a_zombie_kills_on_hard_becomes_a_zombie_villager_keeping_its_profession`). Sapling's drill:
-  hard 1 of 1, normal 2 of 6. Residue: sapling's `AddEntity` carries the defaults and a `SetEntityData`
-  the same tick carries the villager's values, where BDS's `AddEntity` carries them.
+  hard 1 of 1, normal 2 of 6. The residue (sapling's `AddEntity` carried the defaults and a same-tick
+  `SetEntityData` the villager's values) is fixed for every mob (thirteenth2ar, bds-ar2look.txt,
+  sapling-ar2look.txt): a SetEntityData kept after an announcement is folded into its `AddEntity`
+  (`mobs/folded.rs`), and what a new mob's first tick tells that its announcement already shows is not
+  sent (`entities/tell.rs`). BDS's baby `zombie_villager_v2` (`as_baby`) shows 0.5 and 0.98 by 1.96, a
+  baby villager's look; sapling's shows it once AN's `baby_look` covers that kind. A plain-summoned
+  zombie villager came with `Variant` 8 on BDS (its spawn rolls a profession), 0 on sapling: not followed.
 - A zombie villager keeps what it was (`Infected`) for its cure; `creatures/turning.rs` carries it back.
 - Curing (pack `villager_converted` → `to_villager`; BDS 1424459c0, 14194f610): a golden apple used on
   one under weakness (used up out of creative) sets it shaking, takes the weakness, gives 300 s of

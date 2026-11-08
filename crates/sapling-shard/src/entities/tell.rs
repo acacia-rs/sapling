@@ -51,6 +51,7 @@ pub(crate) fn send_held_moves(world: &mut World) {
         match about {
             None => view::to_viewers(world, layer, cell, &packets),
             Some(entity) => {
+                let packets = unannounced(world, entity, packets);
                 let packets = crate::world_notices::heard(world, layer, &packets).into_owned();
                 for viewer in shown_to(world, entity, layer, cell) {
                     if let Some(mut out) = world.get_mut::<Outgoing>(viewer) {
@@ -60,6 +61,12 @@ pub(crate) fn send_held_moves(world: &mut World) {
             }
         }
     }
+}
+
+/// `packets` about `entity` less what its announcement this tick already showed (mobs/folded.rs).
+fn unannounced(world: &World, entity: Entity, packets: Vec<Bytes>) -> Vec<Bytes> {
+    let Some(shown) = crate::mobs::announced_linked(world, entity).filter(|_| is_new(world, entity)) else { return packets };
+    packets.into_iter().filter_map(|packet| crate::mobs::unannounced(&shown, packet)).collect()
 }
 
 /// Leaves each new entity's last flag word of the tick and drops the ones before it: BDS told a
