@@ -16,12 +16,14 @@ mod pickup;
 mod throws;
 mod tridents;
 
+pub(crate) use throws::thrown_heard_at;
+
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_api::GameMode;
 use sapling_world::ItemStack;
 
-use crate::components::{InLayer, Mode, NetId, Position, Tick};
+use crate::components::{InLayer, Mode, Position, Tick};
 use crate::creatures::{Launch, Loosed, Shot};
 use crate::inventory::{self, Inventory};
 use crate::vitals::eating;
@@ -117,29 +119,20 @@ fn shooter(world: &World, player: Entity) -> Option<(Entity, Position, String)> 
     Some((world.get::<InLayer>(player)?.0, *world.get::<Position>(player)?, format!("player:{name}")))
 }
 
-/// The player looses `shot` from its eyes at `power` along its look turned `tilt` up, carrying
+/// The player looses `shot` from `below` its eyes at `power` along its look turned `tilt` up, carrying
 /// `loosed`, its motion turned `turn` degrees about the up axis. The shot's entity.
 #[allow(clippy::too_many_arguments)]
-fn loose(world: &mut World, player: Entity, shot: Shot, power: f32, tilt: f32, uncertainty: f32, turn: f32, loosed: Loosed) -> Option<Entity> {
+fn loose(world: &mut World, player: Entity, shot: Shot, below: f32, power: f32, tilt: f32, uncertainty: f32, turn: f32, loosed: Loosed) -> Option<Entity> {
     let (layer, position, archer) = shooter(world, player)?;
-    let (from, motion) = aim::from_eyes(world, &position, power, tilt, uncertainty);
+    let (from, motion) = aim::from_eyes(world, &position, below, power, tilt, uncertainty);
     let motion = aim::turned(motion, turn);
     crate::creatures::launch(world, Launch { layer, by: player, archer, from, motion, shot, gives: None }, Some(loosed))
 }
 
-/// `sound` heard from the player, where BDS hears a player's (the middle of its box), told as the
-/// player's own, as BDS tells a throw.
-fn heard(world: &mut World, player: Entity, sound: &str) {
-    heard_as(world, player, sound, true);
-}
-
-/// [`heard`] told as no one's, as BDS tells a bow's, a crossbow's and a trident's (bds-r1shots.txt).
+/// `sound` heard from the player's middle, told as no one's, as BDS tells a bow's, a crossbow's and a
+/// trident's (bds-r1shots.txt).
 fn heard_plain(world: &mut World, player: Entity, sound: &str) {
-    heard_as(world, player, sound, false);
-}
-
-fn heard_as(world: &mut World, player: Entity, sound: &str, as_player: bool) {
-    if let Some((layer, cell, heard)) = sound_of(world, player, sound, as_player) {
+    if let Some((layer, cell, heard)) = sound_of(world, player, sound) {
         crate::view::to_viewers(world, layer, cell, &[heard]);
     }
 }
@@ -147,7 +140,7 @@ fn heard_as(world: &mut World, player: Entity, sound: &str, as_player: bool) {
 /// [`heard_plain`] as the player's `shots` appear, after their announcement, each also heard
 /// `disappeared`: after the sound, or before it when `sound_last` (bds-r1shots.txt).
 fn heard_shooting(world: &mut World, player: Entity, sound: &str, shots: &[Entity], sound_last: bool) {
-    let Some((layer, cell, heard)) = sound_of(world, player, sound, false) else { return };
+    let Some((layer, cell, heard)) = sound_of(world, player, sound) else { return };
     let mut packets: Vec<Bytes> = shots.iter().filter_map(|shot| crate::creatures::vanish_shot(world, *shot)).collect();
     if sound_last {
         packets.push(heard);
@@ -158,17 +151,17 @@ fn heard_shooting(world: &mut World, player: Entity, sound: &str, shots: &[Entit
 }
 
 /// `sound` from the player's middle, its world and cell.
-fn sound_of(world: &World, player: Entity, sound: &str, as_player: bool) -> Option<(Entity, [i32; 3], Bytes)> {
-    let (Some(layer), Some(position), Some(id)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).copied(), world.get::<NetId>(player).map(|id| id.0)) else { return None };
+fn sound_of(world: &World, player: Entity, sound: &str) -> Option<(Entity, [i32; 3], Bytes)> {
+    let (Some(layer), Some(position)) = (world.get::<InLayer>(player).map(|layer| layer.0), world.get::<Position>(player).copied()) else { return None };
     let [x, y, z] = position.feet;
     let packet = acacia_proto::packets::LevelSoundEvent {
         sound_id: sound.into(),
         position: acacia_proto::types::Vec3f { x, y: y + 0.9, z },
         extra_data: -1,
-        entity_type: if as_player { "minecraft:player".into() } else { String::new() },
+        entity_type: String::new(),
         is_baby_mob: false,
         is_global: false,
-        entity_unique_id: if as_player { id as i64 } else { -1 },
+        entity_unique_id: -1,
         fire_at_position: None,
     };
     Some((layer, position.feet.map(|c| c.floor() as i32), sapling_net::encode(&packet)))

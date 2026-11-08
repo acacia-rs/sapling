@@ -30,6 +30,17 @@ const TABLES: [(&str, &str); 9] = [
     ("minecraft:vindicator", "loot_tables/entities/vindicator_gear.json"),
 ];
 
+/// A zombie's table comes with the group its spawn's age events add (`can_have_equipment`), a husk's
+/// with its components; a rider's is its rider group's instead (riders.rs). research/captures/
+/// bds-f14cgear.txt, 40 of each on hard: 7 zombies and 6 husks in armour, 3 and 6 armed, 1 and 2 enchanted.
+const ZOMBIE_GEAR: &str = "loot_tables/entities/zombie_equipment.json";
+const ZOMBIE: &str = "minecraft:zombie";
+const HUSK: &str = "minecraft:husk";
+const ZOMBIE_ARMING_EVENTS: [&str; 5] = ["entity_spawned", "entity_born", "as_adult", "as_baby", "as_baby_jockey"];
+const RIDES: &str = "spawn_as_rider";
+/// Items a table gives that go in the off hand (bds-f14cgear.txt: a drowned's shell).
+const OFF_HAND: [&str; 1] = ["minecraft:nautilus_shell"];
+
 const PIGLIN: &str = "minecraft:piglin";
 const RANGED: &str = "loot_tables/entities/piglin_gear_ranged.json";
 const MELEE: &str = "loot_tables/entities/piglin_gear_melee.json";
@@ -57,6 +68,11 @@ pub(super) fn arm(world: &mut World, mob: Entity, kind: &str, event: Option<&str
         }
     } else if let Some((_, table)) = TABLES.iter().find(|(of, _)| *of == kind) {
         equip(world, mob, table);
+    } else if kind == ZOMBIE || kind == HUSK {
+        let event = event.unwrap_or("minecraft:entity_spawned").trim_start_matches("minecraft:");
+        if if kind == ZOMBIE { ZOMBIE_ARMING_EVENTS.contains(&event) } else { event != RIDES } {
+            equip(world, mob, ZOMBIE_GEAR);
+        }
     }
 }
 
@@ -85,7 +101,10 @@ pub(super) fn equip(world: &mut World, mob: Entity, table: &str) {
         match piece {
             Some(piece) => drop(super::worn::wear(world, mob, piece, Some(stack))),
             None if super::piglins::hold(world, mob, &stack) => {}
-            None => super::command_gear::hold_from_birth(world, mob, stack),
+            None => {
+                let off = OFF_HAND.contains(&stack.name.as_str());
+                super::command_gear::hold_from_birth(world, mob, stack, off);
+            }
         }
     }
     super::shown::reshow(world, mob);

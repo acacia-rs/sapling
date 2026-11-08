@@ -25,7 +25,7 @@ use crate::visibility::ToViewers;
 use crate::vitals::Vitals;
 pub(crate) use crawl::crawl;
 pub(crate) use placing::{correct, correct_unmoving, push, push_into_lava, push_unmoving, reset, teleport, teleport_as, teleport_onto_ground};
-pub(crate) use pose::{Pose, flags_item, pose_packet, whole_packet};
+pub(crate) use pose::{Pose, after_pose, flags_item, pose_packet, whole_packet};
 
 /// Blocks an input may be from the one before it; further is a teleport the server never made.
 const MAX_STEP: f32 = 10.0;
@@ -253,19 +253,31 @@ pub(crate) fn player_input(
 }
 
 /// Queues, once per player that moved or changed pose, what its viewers need to know.
-pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, mut players: Query<(Entity, &NetId, &Stage, &Position, &mut Motion, Option<&Riding>)>) {
-    for (entity, id, stage, position, mut motion, riding) in &mut players {
+pub(crate) fn announce(mut to_viewers: ResMut<ToViewers>, after: Option<ResMut<pose::AfterPose>>, mut players: Query<(Entity, &NetId, &Stage, &Position, &mut Motion, Option<&Riding>, &mut Outgoing)>) {
+    let mut after = after.map(|mut after| std::mem::take(&mut after.0)).unwrap_or_default();
+    for (entity, id, stage, position, mut motion, riding, mut out) in &mut players {
         if *stage != Stage::InWorld {
             continue;
         }
         let (now, tick) = ((*position, motion.pose), motion.input_tick);
         // A new viewer learns the current state from AddPlayer; only changes are announced.
-        let Some(told) = motion.told.replace(now) else { continue };
-        if told.0 != now.0 {
-            to_viewers.push(entity, &MovePlayer { ridden_runtime_id: riding.map_or(0, |riding| riding.id as u32), ..move_player(id.0, position, None, tick) });
+        if let Some(told) = motion.told.replace(now) {
+            if told.0 != now.0 {
+                to_viewers.push(entity, &MovePlayer { ridden_runtime_id: riding.map_or(0, |riding| riding.id as u32), ..move_player(id.0, position, None, tick) });
+            }
+            if told.1 != now.1 {
+                let shown = pose_packet(id.0, now.1, tick);
+                if told.1.input_shown() != now.1.input_shown() {
+                    out.push(&shown);
+                }
+                to_viewers.push(entity, &shown);
+            }
         }
-        if told.1 != now.1 {
-            to_viewers.push(entity, &pose_packet(id.0, now.1, tick));
+        let (mine, rest): (Vec<_>, Vec<_>) = after.into_iter().partition(|(of, _)| *of == entity);
+        after = rest;
+        for (_, data) in mine {
+            out.push(&data);
+            to_viewers.push(entity, &data);
         }
     }
 }

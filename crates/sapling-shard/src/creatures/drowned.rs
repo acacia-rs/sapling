@@ -25,6 +25,10 @@ use crate::entities;
 const DROWNED: &str = "minecraft:drowned";
 const RANGED: &str = "minecraft:as_ranged_adult";
 const RIDER: &str = "as_rider";
+/// An unarmed drowned's events that add `melee_equipment`: a fishing rod at 3.75%, a shell at 8%
+/// (research/captures/bds-f14cgear.txt: of 36, 2 rods and 6 shells, in the off hand).
+const MELEE_EVENTS: [&str; 4] = ["entity_born", "as_adult", "as_baby", "as_baby_jockey"];
+const MELEE_GEAR: &str = "loot_tables/entities/drowned_equipment.json";
 /// Of this many drowned, `ARMED` come armed so.
 const ARMED: u32 = 25;
 const OF: u32 = 400;
@@ -77,6 +81,9 @@ pub(super) fn arm(world: &mut World, drowned: Entity, kind: &str, event: Option<
     // A rider's `drowned_rider_equipment` is a trident alone (bds-h3herds.txt).
     let rider = event.is_some_and(|event| event.trim_start_matches("minecraft:") == RIDER);
     let armed = rider || event == Some(RANGED) || event.is_none() && world.get_resource_or_insert_with(Dice::default).roll(OF) < ARMED;
+    if !armed && event.is_none_or(|event| MELEE_EVENTS.contains(&event.trim_start_matches("minecraft:"))) {
+        return super::spawn_gear::equip(world, drowned, MELEE_GEAR);
+    }
     let Some(id) = world.get::<NetId>(drowned).map(|id| id.0).filter(|_| armed) else { return };
     let shell = !rider && world.get_resource_or_insert_with(Dice::default).fraction() < SHELLED;
     world.entity_mut(drowned).insert(Thrower { shell, ..Thrower::default() });

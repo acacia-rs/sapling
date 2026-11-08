@@ -42,7 +42,9 @@ pub(super) fn land(world: &mut World, shot: Entity, layer: Entity, at: [f32; 3],
         Lands::Splash(data) => super::splashes::burst(world, layer, at, from, data, struck.map(|(struck, _)| struck)),
         Lands::Lingers(data) => {
             splash(world, layer, at, shots::potion_colour(data));
-            crate::shots::clouds::spawn(world, layer, at, data);
+            world.entity_mut(shot).insert(Leaves(Box::new(move |world| {
+                crate::shots::clouds::spawn(world, layer, at, data);
+            })));
         }
         Lands::Snowball => {
             if let Some((struck, is_player)) = struck {
@@ -80,7 +82,7 @@ pub(super) fn land(world: &mut World, shot: Entity, layer: Entity, at: [f32; 3],
                 let mut dice = world.get_resource_or_insert_with(Dice::default);
                 shots::bottle_experience(&mut || dice.fraction())
             };
-            crate::orbs::spawn(world, layer, at, points);
+            world.entity_mut(shot).insert(Leaves(Box::new(move |world| crate::orbs::spawn(world, layer, at, points))));
         }
         Lands::Wind => {
             let player = struck.filter(|(_, is_player)| *is_player).map(|(struck, _)| struck);
@@ -94,6 +96,25 @@ pub(super) fn land(world: &mut World, shot: Entity, layer: Entity, at: [f32; 3],
             view::to_viewers(world, layer, at.map(|c| c.floor() as i32), &packets);
         }
     }
+}
+
+/// What a landed thing leaves as it goes the tick after: a lingering potion's cloud, a bottle's orbs,
+/// announced just before its RemoveEntity (research/captures/bds-f14cthrow.txt).
+#[derive(Component)]
+pub(super) struct Leaves(Box<dyn FnOnce(&mut World) + Send + Sync>);
+
+/// Runs what `shot` leaves behind, if anything.
+pub(super) fn leave(world: &mut World, shot: Entity) {
+    if let Some(Leaves(left)) = world.entity_mut(shot).take::<Leaves>() {
+        left(world);
+    }
+}
+
+/// Whether a thing that lands so goes the tick after, whenever it lands: every thrown thing but a wind
+/// charge, its RemoveEntity coming with the glass or `undefined` heard then (splashes.rs; bds-f14cthrow.txt,
+/// bds-s7shots.txt, bds-p2shoot.txt, bds-small.txt).
+pub(super) fn goes_late(lands: Lands) -> bool {
+    !matches!(lands, Lands::Hurts | Lands::Wind)
 }
 
 /// Where a charge that met a block at `at`, flying from `from`, bursts: [`charges::BACK`] back.

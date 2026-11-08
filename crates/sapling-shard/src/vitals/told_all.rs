@@ -1,13 +1,14 @@
 //! Every attribute of a player in one UpdateAttributes, in BDS's order, as BDS told the player
-//! and its viewers when it started eating (research/captures/bds-t2eitems.txt).
+//! and its viewers when it started eating (research/captures/bds-t2eitems.txt); and all its data.
 
-use acacia_proto::packets::UpdateAttributes;
-use acacia_proto::types::PlayerAttributesItem;
+use acacia_proto::packets::{SetEntityData, UpdateAttributes};
+use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataFlags2, PlayerAttributesItem};
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
 
 use super::{MAX, Vitals, boost, effects};
-use crate::components::{NetId, Tick};
+use crate::components::{Identity, NetId, Tick};
+use crate::movement::Motion;
 
 /// The ones no state of the shard's moves: name, least, most and value (bds-t2eitems.txt).
 const STILL: [(&str, f32, f32, f32); 6] = [
@@ -38,4 +39,25 @@ pub(crate) fn all_attributes(world: &World, player: Entity) -> Option<UpdateAttr
     known.extend(still);
     let attributes = ORDER.iter().filter_map(|name| known.iter().find(|known| known.name == *name).cloned()).collect();
     Some(UpdateAttributes { runtime_entity_id: id.0, attributes, tick })
+}
+
+/// The player's whole data now, as BDS told it and its viewers at a throw (research/captures/
+/// bds-bg2player.txt, bds-small.txt), stamped with its input's tick.
+pub(crate) fn whole_data(world: &World, player: Entity) -> Option<SetEntityData> {
+    let (id, motion) = (world.get::<NetId>(player)?.0, world.get::<Motion>(player)?);
+    let name = world.get::<Identity>(player).map_or("", |identity| identity.0.name.as_str());
+    let mut data = crate::movement::whole_packet(id, name, motion.pose, motion.input_tick());
+    live_data(id, world.get::<effects::Effects>(player), world.get::<super::Guard>(player), &mut data.metadata);
+    Some(data)
+}
+
+/// Writes what the player `id` shows now of its effects and its shield into its recorded `metadata`.
+pub(crate) fn live_data(id: u64, effects: Option<&effects::Effects>, guard: Option<&super::Guard>, metadata: &mut [MetadataDictionaryItem]) {
+    for item in metadata {
+        match item.key {
+            Key::VisibleMobEffects => *item = effects::announced(id, effects),
+            Key::FlagsExtended => item.value = Value::FlagsExtended(MetadataFlags2(sapling_data::player_flags_extended().0 | super::shown_bits(guard))),
+            _ => {}
+        }
+    }
 }

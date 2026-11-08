@@ -6,7 +6,6 @@
 use std::collections::{HashMap, HashSet};
 
 use acacia_proto::packets::RemoveEntity;
-use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataFlags2};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use sapling_data::AddPlayerOptions;
@@ -21,7 +20,7 @@ use crate::mobs::Linked;
 use crate::movement::Motion;
 use crate::roster::Profile;
 use crate::view::View;
-use crate::vitals::effects::{self, Effects};
+use crate::vitals::effects::Effects;
 use crate::vitals::{self, Guard};
 
 /// The other players this player's client has as entities.
@@ -58,12 +57,7 @@ fn spawn_packets((id, identity, position, motion, profile, inventory, labels, ef
         device_id: &profile.device_id,
         device_os: profile.device_os,
     });
-    if let Some(item) = player.metadata.iter_mut().find(|item| item.key == Key::VisibleMobEffects) {
-        *item = effects::announced(id.0, effects);
-    }
-    if let Some(item) = player.metadata.iter_mut().find(|item| item.key == Key::FlagsExtended) {
-        item.value = Value::FlagsExtended(MetadataFlags2(sapling_data::player_flags_extended().0 | vitals::shown_bits(guard)));
-    }
+    vitals::told_all::live_data(id.0, effects, guard, &mut player.metadata);
     for item in linked.map_or(&[][..], |linked| &linked.seat) {
         match player.metadata.iter_mut().find(|old| old.key == item.key) {
             Some(old) => *old = item.clone(),

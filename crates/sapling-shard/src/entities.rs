@@ -24,7 +24,7 @@ pub(crate) mod slots;
 mod tell;
 
 pub(crate) use first_data::{first_metadata, show_first, skip_first};
-pub(crate) use tell::{after_announcing, after_announcing_of, on_announcing, send_held_moves, tell_viewers, told_after_answer};
+pub(crate) use tell::{after_announcing, after_announcing_of, on_announcing, send_held_moves, sync_tick, synced_next_tick, tell_viewers, told_after_answer};
 
 /// What an entity is, namespaced: `minecraft:pig`, `minecraft:item` and so on.
 #[derive(Component, Clone, Debug)]

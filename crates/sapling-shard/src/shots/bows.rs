@@ -41,7 +41,7 @@ pub(super) fn loose(world: &mut World, player: Entity, stack: &ItemStack, ticks:
         tipped,
         ..Loosed::new(player, pickup, Some(arrow))
     };
-    let Some(arrow) = super::loose(world, player, shot, BOW_SPEED * draw, 0.0, 1.0, 0.0, loosed) else { return };
+    let Some(arrow) = super::loose(world, player, shot, super::aim::BELOW_EYES, BOW_SPEED * draw, 0.0, 1.0, 0.0, loosed) else { return };
     if !creative {
         if let Some((place, _)) = found.filter(|_| !infinite) {
             ammo::spend(world, player, place);

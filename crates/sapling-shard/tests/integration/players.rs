@@ -94,7 +94,8 @@ fn pose_and_swings_reach_the_viewer() {
     input.input_data = vec![InputData::StartSneaking, InputData::StartSprinting];
     h.receive(1, &input);
     let sent = h.tick_all();
-    assert!(sent.to(1).is_empty());
+    // bds-f14csneak.txt: the sneaker is told its own pose too.
+    assert_eq!(all::<SetEntityData>(sent.to(1)).first(), all::<SetEntityData>(sent.to(2)).first());
     let data = all::<SetEntityData>(sent.to(2)).remove(0);
     let flags = flags_of(&data.metadata);
     assert!(flags.contains(MetadataFlags1::SNEAKING) && flags.contains(MetadataFlags1::SPRINTING) && !flags.contains(MetadataFlags1::SWIMMING));
@@ -105,7 +106,7 @@ fn pose_and_swings_reach_the_viewer() {
     input.input_data = vec![InputData::StopSneaking];
     h.receive(1, &input);
     let sent = h.tick_all();
-    assert_eq!(ids(sent.to(2)), [SetEntityData::ID], "standing still, only the pose is told");
+    assert_eq!(ids(sent.to(2)), [SetEntityData::ID, SetEntityData::ID], "standing still, only the pose and the shield's lingering bit are told");
     let flags = flags_of(&all::<SetEntityData>(sent.to(2))[0].metadata);
     assert!(!flags.contains(MetadataFlags1::SNEAKING) && flags.contains(MetadataFlags1::SPRINTING));
 

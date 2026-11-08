@@ -2,6 +2,7 @@
 
 use acacia_proto::packets::SetEntityData;
 use acacia_proto::types::{EntityProperties, InputData, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault, MetadataFlags1};
+use bevy_ecs::prelude::*;
 
 const STANDING_HEIGHT: f32 = 1.8;
 const SNEAKING_HEIGHT: f32 = 1.49;
@@ -51,6 +52,12 @@ impl Pose {
             }
         }
         flags
+    }
+
+    /// What its own input sets: BDS's sync tells the player itself of these too (bds-bg2player.txt,
+    /// bds-sprint.txt); the rest it is told where they change.
+    pub(super) fn input_shown(self) -> [bool; 3] {
+        [self.sneaking, self.sprinting, self.swimming]
     }
 
     pub(super) fn height(self) -> f32 {
@@ -107,6 +114,16 @@ fn box_height(pose: Pose) -> MetadataDictionaryItem {
 /// The `Flags` item of a player in `pose`.
 pub(crate) fn flags_item(pose: Pose) -> Option<MetadataDictionaryItem> {
     sapling_data::player_metadata("", pose.flags()).into_iter().find(|item| item.key == Key::Flags)
+}
+
+/// Data told to a player and its viewers after its pose's change this tick, as BDS sent a sneaker's
+/// `FlagsExtended` after its flags and box (bds-bg2player.txt, bds-shield.txt).
+#[derive(Resource, Default)]
+pub(crate) struct AfterPose(pub(super) Vec<(Entity, SetEntityData)>);
+
+/// Tells `data` to the player and its viewers once its pose this tick is told.
+pub(crate) fn after_pose(world: &mut World, player: Entity, data: SetEntityData) {
+    world.get_resource_or_insert_with(AfterPose::default).0.push((player, data));
 }
 
 pub(crate) fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {

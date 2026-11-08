@@ -53,10 +53,10 @@ pub(super) fn set_quietly(world: &mut World, mob: Entity, slot: MobSlot, item: O
     super::worn::put_on(world, mob, usize::from(piece), item).then_some(())
 }
 
-/// Puts `item` in a new mob's main hand, kept and shown to those who come to see it, telling no one now.
-pub(super) fn hold_from_birth(world: &mut World, mob: Entity, item: ItemStack) {
+/// Puts `item` in a new mob's main hand, or its off hand where `off`, kept and shown to those who come to see it, telling no one now.
+pub(super) fn hold_from_birth(world: &mut World, mob: Entity, item: ItemStack, off: bool) {
     let mut gear = world.get::<Gear>(mob).cloned().unwrap_or_default();
-    gear.main = Some(item);
+    *(if off { &mut gear.off } else { &mut gear.main }) = Some(item);
     let hands = [gear.main.clone(), gear.off.clone()];
     world.entity_mut(mob).insert(gear);
     entities::restore(world, mob, |compound, registry| sapling_world::handed_actor(compound, &hands, registry).ok());

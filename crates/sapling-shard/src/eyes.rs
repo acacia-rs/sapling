@@ -25,9 +25,6 @@ const LIFE: u32 = 80;
 /// A stronghold further off than this is flown toward, this far and this much higher.
 const REACH: f32 = 12.0;
 const RISE: f32 = 8.0;
-/// The throw is heard this far under the eyes and this far ahead along the look (the drop point).
-const SOUND_BELOW_EYES: f32 = 0.3;
-const SOUND_AHEAD: f32 = 0.15;
 
 #[derive(Component)]
 pub(crate) struct Eye {
@@ -100,8 +97,7 @@ pub(crate) fn throw(world: &mut World, player: Entity) -> bool {
         told.tell_every_move();
         told.pitch(0.0);
     }
-    let (sin, cos) = position.yaw.to_radians().sin_cos();
-    let [x, y, z] = [position.feet[0] - sin * SOUND_AHEAD, eyes[1] - SOUND_BELOW_EYES, position.feet[2] + cos * SOUND_AHEAD];
+    let [x, y, z] = crate::shots::thrown_heard_at(&position);
     let sound = LevelSoundEvent { sound_id: "throw".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: by as i64, fire_at_position: None };
     // Held back with the eye's own packets: BDS tells the eye before the throw's sound.
     entities::tell_viewers(world, eye, layer, cell, vec![sapling_net::encode(&sound)]);

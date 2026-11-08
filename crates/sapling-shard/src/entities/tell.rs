@@ -42,6 +42,29 @@ pub(crate) fn on_announcing(world: &mut World, layer: Entity, cell: [i32; 3], pa
 #[derive(Resource, Default)]
 struct AfterAnswer(Vec<(Entity, Vec<Bytes>)>);
 
+/// What a breaking potion has told at the sync, held to the next tick's: BDS's potion breaks after its
+/// tick's actor-data sync, so the marks of what it gave show a tick after their `MobEffect`
+/// (research/captures/bds-bg2player.txt, bds-bf1potion.txt). The tick it was told in.
+#[derive(Resource, Default)]
+struct NextSync {
+    on: bool,
+    held: Vec<(u64, Entity, Vec<Bytes>)>,
+}
+
+/// Runs `act`, holding what it tells at the sync to the next tick's.
+pub(crate) fn synced_next_tick<R>(world: &mut World, act: impl FnOnce(&mut World) -> R) -> R {
+    world.get_resource_or_insert_with(NextSync::default).on = true;
+    let done = act(world);
+    world.resource_mut::<NextSync>().on = false;
+    done
+}
+
+/// The tick whose sync tells what is told now: the next while [`synced_next_tick`] runs.
+pub(crate) fn sync_tick(world: &World) -> u64 {
+    let deferred = world.get_resource::<NextSync>().is_some_and(|next| next.on);
+    world.resource::<Tick>().0 + u64::from(deferred)
+}
+
 /// Runs `act`, holding what it tells players until this tick's held moves are sent.
 pub(crate) fn told_after_answer<R>(world: &mut World, act: impl FnOnce(&mut World) -> R) -> R {
     let before: Vec<(Entity, usize)> = world.query::<(Entity, &Outgoing)>().iter(world).map(|(player, out)| (player, out.0.len())).collect();
@@ -52,8 +75,21 @@ pub(crate) fn told_after_answer<R>(world: &mut World, act: impl FnOnce(&mut Worl
             held.push((player, last_data(out.0.split_off(len))));
         }
     }
-    world.get_resource_or_insert_with(AfterAnswer::default).0.extend(held);
+    let now = world.resource::<Tick>().0;
+    match world.get_resource_mut::<NextSync>().filter(|next| next.on) {
+        Some(mut next) => next.held.extend(held.into_iter().map(|(player, packets)| (now, player, packets))),
+        None => world.get_resource_or_insert_with(AfterAnswer::default).0.extend(held),
+    }
     done
+}
+
+/// The held packets told before this tick, in front of this tick's.
+fn due_from_last_tick(world: &mut World) -> Vec<(Entity, Vec<Bytes>)> {
+    let now = world.resource::<Tick>().0;
+    let Some(mut next) = world.get_resource_mut::<NextSync>() else { return Vec::new() };
+    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut next.held).into_iter().partition(|(when, ..)| *when < now);
+    next.held = waiting;
+    due.into_iter().map(|(_, player, packets)| (player, packets)).collect()
 }
 
 /// `packets` less each SetEntityData whose every item a later one of the same entity sets again: BDS
@@ -71,7 +107,8 @@ fn last_data(packets: Vec<Bytes>) -> Vec<Bytes> {
 /// tick's announcements; runs after them (mobs.rs).
 pub(crate) fn send_held_moves(world: &mut World) {
     let mut held: Vec<(Entity, Vec<Bytes>)> = Vec::new();
-    for (player, packets) in world.get_resource_mut::<AfterAnswer>().map(|mut held| std::mem::take(&mut held.0)).unwrap_or_default() {
+    let now_told = world.get_resource_mut::<AfterAnswer>().map(|mut held| std::mem::take(&mut held.0)).unwrap_or_default();
+    for (player, packets) in due_from_last_tick(world).into_iter().chain(now_told) {
         match held.iter_mut().find(|(known, _)| *known == player) {
             Some((_, all)) => all.extend(packets),
             None => held.push((player, packets)),
