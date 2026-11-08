@@ -158,7 +158,9 @@ The table was read from the strings (`str copper`, `str lightning_rod`); all 128
 
 - U1 Whether a random tick reaches waxed / oxidized copper at all (irrelevant: O2 drops them, but two RNG floats
   are consumed if it does).
-- U2 `+0x2dc & 1` on the chest actor is `mPairLead` (header layout guess); whether a single chest has it set.
+- U2 `+0x2dc & 1` on the chest actor is `mPairLead` (header layout guess). Drilled 2026-11-08 (bds-p3copper.txt):
+  lone copper chests oxidise; a pair's halves change together in one UpdateSubchunkBlocks by oxidising, waxing and
+  scraping (two particles), as O6/W7 read. Sapling's copper chest is no container, so it never pairs (REMAINING4).
 - U3 141a56c80 is `hurtAndBreak`: Unbreaking applies (bds-m3axe.txt: a plain iron axe wore 4 in 4 scrapes;
   with Unbreaking III, 8 in 24 scrapes and 6 in 12 unwaxings), as sapling's wear does. 142535e40 tests the
   SNEAKING flag.

@@ -147,6 +147,8 @@ changes level between checks whenever an entity inside it ticks.
   sensitive box decides the signal anyway, so overlap of the cell is enough to start the check.
 - The old-version branch (globals 14cc48318/14cc48338 and a version compare against 14cc48300) uses
   PowerOn/PowerOff (73/74) and skips the weighted in-place update; not needed for a current client.
-- `neighborChanged` (folded, not decompiled) presumably breaks the plate when `canSurvive` fails, as `tick` does.
+- `neighborChanged` (folded, not decompiled) breaks the plate when `canSurvive` fails: a stone, wooden and light
+  weighted plate each on stone, a fence and a top slab set to air showed breaking at once and went with their item
+  a tick later, as sapling's (bds-p3plate.txt, 2026-11-08).
 - Game-event names for 14cc8a93c / 14cc8a944 inferred (block_activate / block_deactivate).
 - Java 26.3 sources were not found under `research/java-truth`; every Java remark is from memory.
