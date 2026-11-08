@@ -2,7 +2,6 @@
 //! them as any body does, pushed by those who walk into them; a detector rail is pressed under
 //! one (detectors.rs), an activator rail throws out a minecart's rider and primes a TNT minecart, which bursts at
 //! the end of its fuse or when it falls hard (docs/research/vehicles.md "Minecarts").
-// TODO: a cart's yaw does not follow its rail.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, SetEntityData};
 use acacia_proto::types::Vec3f;
@@ -34,6 +33,9 @@ const EMPTY_DRAG: f32 = 0.96;
 /// signal is below 15 (bds-ffcart.txt: a full hopper minecart slowed 0.98 a tick, a plain one 0.96).
 const LADEN_DRAG: f32 = 0.98;
 const LADEN_EASE: f32 = 0.001;
+/// The squared move across a tick past which a cart on a rail faces the way it went, `atan2(dz, dx)`:
+/// BDS's turned 0, 290, 315 then 270 round a curve east to north (research/captures/bds-u3yaw.txt).
+const TURNS_PAST: f32 = 0.001;
 pub(super) const FUSE: i32 = 80;
 /// The fuse of one a blast reached: from this many ticks, to this many more.
 pub(super) const SHORT_FUSE: [i32; 2] = [10, 20];
@@ -166,6 +168,10 @@ pub(super) fn tick(world: &mut World) {
                 (moved.at, moved.motion, moved.on_ground) = (feet, motion, true);
                 let moved = *moved;
                 let Some(mut told) = world.get_mut::<Told>(cart) else { continue };
+                let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
+                if dx * dx + dz * dz > TURNS_PAST {
+                    told.face_body(dz.atan2(dx).to_degrees());
+                }
                 let packets = told.update(id, [feet[0], feet[1] + LIFT, feet[2]], motion, true);
                 act(world, cart, &kind, &rail);
                 (moved, packets)

@@ -107,7 +107,9 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
             flung |= top == Some(Top::Slime);
         }
         if flung && !is_player {
-            body.motion[axis] = offset[axis] as f32;
+            let mut speed = body.motion;
+            speed[axis] = offset[axis] as f32;
+            body.throw(speed);
         }
         if body.at != start || flung {
             shoved.push((entity, body, is_player));

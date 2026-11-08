@@ -121,6 +121,18 @@ fn a_comparator_by_a_detector_rail_reads_a_hopper_carts_fullness() {
 }
 
 #[test]
+fn a_cart_faces_the_way_it_rolls_round_a_curve() {
+    // bds-u3yaw.txt: east 0, on the curve -45 (315), north -90 (270).
+    let mut h = ready(&[([0, 65, 0], "rail", "rail_direction=1"), ([1, 65, 0], "rail", "rail_direction=1"), ([2, 65, 0], "rail", "rail_direction=1"), ([3, 65, 0], "rail", "rail_direction=8"), ([3, 65, -1], "rail", "rail_direction=0"), ([3, 65, -2], "rail", "rail_direction=0"), ([3, 65, -3], "rail", "rail_direction=0"), ([3, 65, -4], "rail", "rail_direction=0")]);
+    let cart = spawned(&mut h, &[("minecraft:minecart", [0.5, 65.0, 0.5])])[0];
+    h.remote.run(move |ctx| assert!(ctx.set_velocity(cart, [0.4, 0.0, 0.0])));
+    let yaws: Vec<f32> = (0..20).map(|_| common::asking::ask(&mut h, move |ctx| ctx.entity(cart).map_or(f32::NAN, |info| info.yaw))).collect();
+    let near = |want: f32| yaws.iter().any(|yaw| (yaw - want).abs() < 1.5);
+    assert!(near(0.0) && near(-45.0) && near(-90.0), "{yaws:?}");
+    assert!((yaws.last().copied().unwrap_or(f32::NAN) + 90.0).abs() < 1.5, "{yaws:?}");
+}
+
+#[test]
 fn damage_shakes_a_boat_and_a_cart_and_fire_primes_a_tnt_cart() {
     // bds-ffburn.txt, bds-fftnt.txt: /damage reached both; fire, lava or burning primed a TNT cart.
     let mut h = ready(&[(RAIL, "rail", "")]);

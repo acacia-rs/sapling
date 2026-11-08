@@ -214,11 +214,13 @@ impl Told {
         Some(Flags(shown.told))
     }
 
-    /// The entity's body and head now face `yaw` and `head`, in degrees; viewers are told with
-    /// its next [`Told::update`].
+    /// The entity's body and head now face `yaw` and `head`, in degrees; viewers are told with its next [`Told::update`].
     pub fn face(&mut self, yaw: f32, head: f32) {
         self.turn = [yaw, head].map(angle_byte);
     }
+
+    /// Its body alone now faces `yaw`, as a minecart turns along its rail (bds-u3yaw.txt).
+    pub fn face_body(&mut self, yaw: f32) { self.turn[0] = angle_byte(yaw); }
 
     /// Viewers knew it turned `yaw` and `head` at its announcement.
     pub fn announced_facing(&mut self, yaw: f32, head: f32) {

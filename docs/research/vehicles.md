@@ -363,11 +363,18 @@ were not found in any of these; sapling does what is listed there.
   `fire_tick` 3 s later; a shot on fire primes it at fuse 0 (bursting 2 ticks after the hit); a creative
   player's plain arrow broke it (`Health` −41). The blast is the pack's power 3 whatever the speed (no scaling
   in hurt or tick). Sapling: fire, lava, fire charge and the shown fuse fixed (`carts.rs`, `burning.rs`);
-  arrows still pass through vehicles, `/damage` does not reach them, and yaw on rails was not compared.
+  since group U (2026-11-08) arrows meet vehicles (`flight/in_way.rs` → `vehicles/struck.rs`: a creative
+  player's breaks it a tick on with no item, a flaming one primes a TNT cart at fuse 1, others shake it) and
+  `/damage` reaches them (a hit ×10 / ×8; fire, lava or burning prime a TNT cart, with `SoundIgnite`).
 - Hopper minecart on a detector rail (bds-ffcart.txt): a comparator reading from the rail gave 3, 6, 9 for
-  1, 2, 3 full stacks of 5 slots (`floor(fullness·14)+1`), each change seen at the rail's 20-tick recheck.
-  Hoppers filling and emptying carts were not measured (the capture shows no slots) and the laden-drag rows
-  all ran into the end stone; both open.
+  1, 2, 3 full stacks of 5 slots (`floor(fullness·14)+1`), each change seen at the rail's 20-tick recheck;
+  an empty one 0 though the rail was pressed. Hoppers fill a chest minecart under them and empty one over
+  them; a hopper minecart under a chest pulls from it. A laden cart's rail drag is `0.98 + (15 − signal)·0.001`
+  (5 full stacks 0.98, a plain cart 0.96, an empty hopper cart capped at 0.4 a tick as sapling's).
+  `replaceitem entity <cart> slot.inventory` fills its slots. Sapling (group U): `vehicles/hopped.rs`
+  (hopper ↔ cart, the oldest cart in the cell), `detectors.rs` `reading` (the comparator takes it in place of
+  the rail's power), `carts.rs` laden drag, `cargo.rs` `put_goods`. Not followed: a cart killed drops its
+  item at y −25.725 where BDS's was −25.375.
 - `summon <vehicle> <name>` gives BDS's vehicle no name: `@e[name=..]` found none and `/kill` listed
   "Minecart"; sapling now does the same (bds-p3names.txt, world-commands.md).
 - Carts in lava and water (bds-p3lava.txt, 2026-11-08): off a rail a cart falls 0.04, 0.08, ... a tick with no drag,
