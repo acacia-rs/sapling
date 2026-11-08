@@ -23,12 +23,14 @@ use crate::view::View;
 pub(crate) mod at_once;
 mod folded;
 pub(crate) mod gone;
+mod late;
 mod linked;
 mod live;
 pub(crate) mod moved;
 mod rehomed;
 
 pub(crate) use folded::unannounced;
+pub(crate) use late::{ShownLate, show_late};
 pub(crate) use linked::Linked;
 
 pub(crate) use rehomed::rehome;
@@ -268,13 +270,14 @@ const SHOWN_WITHIN: i32 = 4;
 /// Adds the mobs whose column came within each player's [`SHOWN_WITHIN`] circle and removes those
 /// that left it or are gone. A player whose view stayed where it was while no mob came or went is
 /// skipped.
-pub(crate) fn update(grid: Res<MobGrid>, tick: Res<Tick>, mut viewers: Query<Viewer>, mobs: Query<MobShown>, kept: Query<(), With<FromFolder>>) {
+pub(crate) fn update(grid: Res<MobGrid>, tick: Res<Tick>, mut viewers: Query<Viewer>, mobs: Query<MobShown>, kept: Query<(), With<FromFolder>>, late: Query<(), With<ShownLate>>) {
     for (stage, in_layer, view, mut sees, mut out, hidden) in &mut viewers {
         let made_for = Some((view.moves(), grid.changes));
         if *stage != Stage::InWorld || sees.made_for == made_for {
             continue;
         }
-        let mut covered: Vec<(Entity, u64)> = grid.grid.within(in_layer.0, view, SHOWN_WITHIN).copied().filter(|(entity, _)| !Hidden::hides(hidden, *entity)).collect();
+        let shows = |entity: Entity| !Hidden::hides(hidden, entity) && !late.contains(entity);
+        let mut covered: Vec<(Entity, u64)> = grid.grid.within(in_layer.0, view, SHOWN_WITHIN).copied().filter(|(entity, _)| shows(*entity)).collect();
         covered.sort_unstable_by_key(|(entity, id)| if kept.contains(*entity) { (false, u64::MAX - id) } else { (true, *id) });
         let new: Vec<Entity> = covered.iter().map(|(entity, _)| *entity).filter(|entity| !sees.mobs.contains_key(entity) && mobs.contains(*entity)).collect();
         let rides = |mob: Entity| mobs.get(mob).ok()?.3?.rides.as_ref().map(|(mount, drives, _)| (*mount, *drives));

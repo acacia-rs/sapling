@@ -2,6 +2,7 @@
 //! named here is thrown out. Shears shear only sheep and mooshrooms; minecarts and boats are thrown.
 
 use acacia_proto::packets::LevelEventEvent;
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos, Face};
 use sapling_world::ItemStack;
@@ -79,16 +80,20 @@ fn meal(world: &mut World, layer: Entity, pos: BlockPos, face: Face) -> Dispense
     if fed { Dispensed::Spent } else { Dispensed::Stays }
 }
 
-/// Shoots one of `stack` if it is a shot, with its launch sound; arrows click as well (D9 table).
+/// Shoots one of `stack` if it is a shot, with its launch sound; an arrow clicks as well, of no block,
+/// once it is shown a tick on (D9 table; research/captures/bds-p3disp.txt).
 fn shoot(world: &mut World, layer: Entity, pos: BlockPos, face: Face, stack: &ItemStack) -> bool {
-    if !crate::shots::dispensed::shoot(world, layer, mouth(pos, face), face.offset().map(|c| c as f32), stack) {
-        return false;
-    }
+    let at = mouth(pos, face);
+    let Some(shot) = crate::shots::dispensed::shoot(world, layer, at, face.offset().map(|c| c as f32), stack) else { return false };
     let name = stack.name.as_str();
     let event = if name == "minecraft:fire_charge" { LevelEventEvent::SoundGhastShoot } else { LevelEventEvent::SoundShoot };
     launched(world, layer, pos, face, event);
     if name.ends_with("arrow") {
-        click(world, layer, pos, face);
+        let heard = send::noise("block.click", Vec3f { x: at[0], y: at[1], z: at[2] }, -1);
+        match world.get_mut::<crate::mobs::ShownLate>(shot) {
+            Some(mut late) => late.after.push(heard),
+            None => click(world, layer, pos, face),
+        }
     }
     vibrate_at(world, layer, pos, GameEvent::ProjectileShoot, false);
     true

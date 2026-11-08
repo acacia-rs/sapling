@@ -22,13 +22,14 @@ const SHERDS: &str = "sherds";
 const BRICK: &str = "minecraft:brick";
 const SHATTER: &str = "shatter_pot";
 
-/// The shot of entity type `kind` moving at `motion` has met the block at `pos`.
-pub(super) fn shot(world: &mut World, layer: Entity, pos: BlockPos, kind: &str, motion: [f32; 3]) {
-    let Some(name) = level(world, layer).filter(|level| level.in_height(pos[1])).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).map(|state| state.name) else { return };
+/// The shot of entity type `kind` moving at `motion` has met the block at `pos`: whether it breaks
+/// it, now or (a pot) next tick, and so does not hold the shot.
+pub(super) fn shot(world: &mut World, layer: Entity, pos: BlockPos, kind: &str, motion: [f32; 3]) -> bool {
+    let Some(name) = level(world, layer).filter(|level| level.in_height(pos[1])).and_then(|level| level.registry().get(level.block(pos[0], pos[1], pos[2]))).map(|state| state.name) else { return false };
     let is_fast_trident = kind == TRIDENT && motion.iter().map(|c| c * c).sum::<f32>().sqrt() > TRIDENT_SPEED;
     let breaks = name == POT || name == CHORUS_FLOWER || name == DRIPSTONE && is_fast_trident;
     if !breaks || !crate::rules::on(world, layer, RULE) {
-        return;
+        return false;
     }
     if name == POT {
         cracked(world, layer, pos);
@@ -36,6 +37,7 @@ pub(super) fn shot(world: &mut World, layer: Entity, pos: BlockPos, kind: &str, 
         updates::pop_by(world, layer, pos, &Breaker { by_entity: true, ..Breaker::UNAIDED });
         updates::settle(world, layer, pos);
     }
+    true
 }
 
 /// What a pot whose entity `kept` its faces and an item leaves when it shatters.

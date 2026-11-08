@@ -120,6 +120,26 @@ fn a_dispensers_arrows_leave_at_bds_s_speed() {
 }
 
 #[test]
+fn a_dispensed_arrow_is_shown_a_tick_after_its_sound_a_move_along_then_clicks() {
+    // research/captures/bds-p3disp.txt: SoundShoot; a tick on AddEntity past the mouth (x 4.2), then
+    // `block.click` of no block (-1), then the tick's move.
+    use acacia_proto::Packet;
+    use acacia_proto::packets::{AddEntity, MoveEntityDelta};
+    let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:arrow", 1)], vec![]);
+    h.remote.run(|ctx| assert!(ctx.update_block(POWER, &Block::new("redstone_block"))));
+    let ticked: Vec<Vec<RawPacket>> = (0..8).map(|_| h.tick_all().to(1).to_vec()).collect();
+    let shot = ticked.iter().position(|sent| events(sent).contains(&LevelEventEvent::SoundShoot)).expect("it shoots");
+    assert!(all::<AddEntity>(&ticked[shot]).is_empty(), "unseen the tick it leaves");
+    let next = &ticked[shot + 1];
+    let added = all::<AddEntity>(next).into_iter().find(|added| added.entity_type == "minecraft:arrow").expect("shown a tick on");
+    assert!(added.position.x > 5.0, "a move along: {:?}", added.position);
+    let index = |id: u32| next.iter().position(|packet| packet.id == id);
+    let clicked = all::<LevelSoundEvent>(next).into_iter().find(|sound| sound.sound_id == "block.click").map(|sound| sound.extra_data);
+    assert_eq!(clicked, Some(-1));
+    assert!(index(AddEntity::ID) < index(LevelSoundEvent::ID) && index(LevelSoundEvent::ID) < index(MoveEntityDelta::ID), "AddEntity, click, move");
+}
+
+#[test]
 fn a_dispenser_shoots_an_arrow_and_a_snowball_and_primes_tnt() {
     let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:arrow", 1)], vec![]);
     power(&mut h, true, 8);

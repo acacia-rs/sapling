@@ -45,7 +45,7 @@ fn sounds(name: &str) -> Option<([&'static str; 2], [u64; 2])> {
     match name {
         BARREL => Some((["block.barrel.open", "block.barrel.close"], LATER)),
         "minecraft:ender_chest" => Some((["enderchest.open", "enderchest.closed"], LATER)),
-        "minecraft:chest" | "minecraft:trapped_chest" => Some((["chest.open", "chest.closed"], CHEST_LATE)),
+        _ if super::is_chest(name) => Some((["chest.open", "chest.closed"], CHEST_LATE)),
         _ if super::is_shulker_box(name) => Some((["shulkerbox.open", "shulkerbox.closed"], SHULKER_LATE)),
         _ => None,
     }

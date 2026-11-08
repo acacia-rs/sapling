@@ -121,8 +121,10 @@ and set by `/fill`; placing and staying agreed. In `canProvideSupport` kinds (sa
 
 Lanterns, flower pots and plates set unheld by `/fill` showed their particles and went a tick later, as torches.
 Sapling: `updates.rs` `holds` asks the face by those kinds (any other dependent still takes any solid block), and
-`updates/unheld.rs` pops lanterns, pots and plates. Whether light is checked as a plant is placed (the rest of
-REMAINING4's line) was not drilled.
+`updates/unheld.rs` pops lanterns, pots and plates. Light as a plant is placed (bds-r3light.txt, 2026-11-08): a
+mushroom put by hand at noon on stone and on dirt was refused and in a shut stone room put on both, so
+`MushroomBlock` asks light on placing, unlike line 41's base rule; a sapling on dirt at noon was put. Sapling:
+`place.rs` asks `ground::is_wrongly_lit` (efb188be). Wheat seeds on farmland were not reached by the drill.
 
 ### A7. Dust, rails, diodes and carpet on a top (2026-11-08, `bds_command_probe p3ground`, `p3carpet`; bds-p3ground.txt, bds-p3carpet.txt)
 

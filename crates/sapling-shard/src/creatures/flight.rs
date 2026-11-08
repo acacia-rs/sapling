@@ -172,6 +172,9 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
     let drag = if wet { shot.wet_drag } else { shot.drag };
     let unflown = world.entity_mut(arrow).take::<Unflown>().is_some();
     let mut motion = if unflown { body.motion } else { [body.motion[0] * drag, body.motion[1] * drag - shot.weight, body.motion[2] * drag] };
+    if !unflown {
+        mobs::show_late(world, arrow, body.at, motion);
+    }
     let behind: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - motion[axis]);
     let (mut passed, spent) = world.get::<Loosed>(arrow).map_or((Vec::new(), false), |loosed| (loosed.pierced.clone(), loosed.spent));
     passed.extend(world.get::<Arrow>(arrow).and_then(|arrow| arrow.bounced_off));

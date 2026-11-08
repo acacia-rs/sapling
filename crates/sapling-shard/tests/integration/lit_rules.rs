@@ -92,6 +92,28 @@ fn grass_dies_under_stone_and_spreads_in_the_light_only() {
 }
 
 #[test]
+fn a_mushroom_is_not_put_in_daylight_off_mycelium() {
+    // research/captures/bds-r3light.txt: refused on stone and dirt at noon, put on both in a shut room.
+    let mut h = lit_world(0, vec![([2, 64, 0], block("stone", "")), ([2, 64, 2], block("mycelium", ""))]);
+    h.remote.run(|ctx| _ = ctx.set_item(ALEX, sapling_api::Slot::Main(0), Some(&sapling_api::Item::new("minecraft:brown_mushroom", 3))));
+    h.tick_all();
+    for on in [[2, 64, 0], [2, 64, 2]] {
+        h.receive(1, &common::click(on, 1, Some("minecraft:brown_mushroom")));
+        h.tick_all();
+    }
+    assert_eq!(blocks(&mut h, 2, vec![[2, 65, 0], [2, 65, 2]]), ["air[]", "brown_mushroom[]"]);
+}
+
+#[test]
+fn mycelium_dies_under_a_block_that_stops_light_but_not_a_mushroom_block_glass_or_water() {
+    let covers = ["stone", "oak_planks", "glass", "brown_mushroom_block", "water", "air"];
+    let set = covers.iter().enumerate().flat_map(|(k, cover)| [([2 * k as i32, 64, 6], block("mycelium", "")), ([2 * k as i32, 65, 6], block(cover, ""))]).collect();
+    let mut h = lit_world(4096, set);
+    let after = blocks(&mut h, 120, (0..covers.len()).map(|k| [2 * k as i32, 64, 6]).collect());
+    assert_eq!(after, ["dirt[]", "dirt[]", "mycelium[]", "mycelium[]", "mycelium[]", "mycelium[]"]);
+}
+
+#[test]
 fn ice_melts_by_glowstone_and_not_in_daylight_and_snow_in_plains_melts_either_way() {
     let set = vec![
         ([3, 65, -3], block("ice", "")),

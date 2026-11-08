@@ -9,6 +9,7 @@ use super::ammo;
 use super::kinds::{BOTTLE, EGG, LINGERING, PLAYER_ARROW, SNOWBALL, SPLASH, WIND};
 use crate::blocks::Dice;
 use crate::creatures::{ARROW, FIREBALL, Lands, Launch, Loosed, Pickup, Shot};
+use crate::mobs::ShownLate;
 
 /// A shot's gaussian spread for each point of uncertainty.
 const SPREAD: f32 = 0.0075;
@@ -38,9 +39,10 @@ fn kind_of(item: &ItemStack) -> Option<(Shot, f32, f32)> {
     }
 }
 
-/// Shoots `item` from `from` along the unit way `way`; false for what a dispenser does not shoot.
-pub(crate) fn shoot(world: &mut World, layer: Entity, from: [f32; 3], way: [f32; 3], item: &ItemStack) -> bool {
-    let Some((shot, power, uncertainty)) = kind_of(item) else { return false };
+/// Shoots `item` from `from` along the unit way `way`: the shot, or `None` for what a dispenser does
+/// not shoot. An arrow or a thrown thing is shown a tick late, a move along (mobs/late.rs).
+pub(crate) fn shoot(world: &mut World, layer: Entity, from: [f32; 3], way: [f32; 3], item: &ItemStack) -> Option<Entity> {
+    let (shot, power, uncertainty) = kind_of(item)?;
     let width = if shot.kind == PLAYER_ARROW.kind { crate::creatures::spread(world, ARROW_UNCERTAINTY) } else { SPREAD * uncertainty };
     let motion = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
@@ -52,7 +54,13 @@ pub(crate) fn shoot(world: &mut World, layer: Entity, from: [f32; 3], way: [f32;
             aimed.map(|c| (c / long + dice.gaussian() * width) * power)
         }
     };
-    fire(world, layer, from, motion, shot, item)
+    if shot.kind == FIREBALL.kind || shot.kind == WIND.kind {
+        return fire(world, layer, from, motion, shot, item);
+    }
+    // The tick's own flight moves it once; it is shown before the next.
+    let fired = launched(world, layer, from, motion, shot, item)?;
+    world.entity_mut(fired).insert(ShownLate { after: Vec::new() });
+    Some(fired)
 }
 
 /// Shoots `item` from `from` along the unit way `way` with no shooter, as BDS's
@@ -70,12 +78,17 @@ pub(crate) fn shoot_unowned(world: &mut World, layer: Entity, from: [f32; 3], wa
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         way.map(|c| (c + dice.gaussian() * SPREAD * uncertainty) * power)
     };
-    fire(world, layer, from, motion, shot, item)
+    fire(world, layer, from, motion, shot, item).is_some()
 }
 
-fn fire(world: &mut World, layer: Entity, from: [f32; 3], motion: [f32; 3], shot: Shot, item: &ItemStack) -> bool {
-    let loosed = (shot.kind == ARROW.kind).then(|| Loosed { player: None, tipped: ammo::tip(item), ..Loosed::new(Entity::PLACEHOLDER, Pickup::Anyone, Some(ItemStack { count: 1, ..item.clone() })) });
-    let Some(fired) = crate::creatures::launch(world, Launch { layer, by: Entity::PLACEHOLDER, archer: ARCHER.into(), from, motion, shot, gives: None }, loosed) else { return false };
+/// [`launched`], moved at once.
+fn fire(world: &mut World, layer: Entity, from: [f32; 3], motion: [f32; 3], shot: Shot, item: &ItemStack) -> Option<Entity> {
+    let fired = launched(world, layer, from, motion, shot, item)?;
     crate::creatures::first_move(world, fired);
-    true
+    Some(fired)
+}
+
+fn launched(world: &mut World, layer: Entity, from: [f32; 3], motion: [f32; 3], shot: Shot, item: &ItemStack) -> Option<Entity> {
+    let loosed = (shot.kind == ARROW.kind).then(|| Loosed { player: None, tipped: ammo::tip(item), ..Loosed::new(Entity::PLACEHOLDER, Pickup::Anyone, Some(ItemStack { count: 1, ..item.clone() })) });
+    crate::creatures::launch(world, Launch { layer, by: Entity::PLACEHOLDER, archer: ARCHER.into(), from, motion, shot, gives: None }, loosed)
 }

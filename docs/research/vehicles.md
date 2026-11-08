@@ -106,7 +106,9 @@ were not found in any of these; sapling does what is listed there.
 7. Going down gains |v| += (y_old − y_new)·0.05.
 8. A powered rail adds 0.06 along v when |v| > 0.01; at rest on a straight rail it kicks 0.02 away from a solid block
    at either end.
-9. Off a rail: each axis capped at 0.4, ×0.5 on the ground.
+9. Off a rail: each axis capped at 0.4, ×0.5 if on the ground (not the first tick off a rail), all before the
+   move; gravity 0.04, no drag across or down. Rolling off a flat rail's end the cart drops to the rail block's
+   bottom that tick (bds-r3cart.txt).
 
 - Pushing (ED `legacy_minecart`): strength 0.1·min(1, 1/d); the cart takes half, the pusher a quarter.
 - Activator rail powered: a minecart throws out its riders, a TNT minecart primes, a hopper minecart locks.
@@ -372,5 +374,9 @@ were not found in any of these; sapling does what is listed there.
   through water to the pool's floor as through air. One summoned into lava (its wire point in lava) showed `Health`
   16 then −7, 3 a tick; one that fell onto lava, 0.01 into it, 24, 8, −7 as a scorched one. Neither moved in the tick
   it burnt through, and each broke into its item the next. Sapling: `carts.rs` `LOOSE` (fall drag 1, liquids
-  ignored; the 0.4 cap and the air's sideways drag undrilled), `burning.rs` `CART_IN_LAVA`, a burnt-through cart
-  skipped by `carts::tick`. The wire-point test is a fit to these two carts.
+  ignored), `burning.rs` `CART_IN_LAVA`, a burnt-through cart skipped by `carts::tick`. The wire-point test is a
+  fit to these two carts.
+- Off a runway (bds-r3cart.txt, 2026-11-08): a cart at 1.18 left seventeen powered rails, dropped 0.15 to the rail
+  block's bottom, went 0.4 onto the floor's edge, then 0.2 a tick across while falling 0.04, 0.08, ... (no drag
+  either way), and 0.1, 0.05, 0.025 once landed. Sapling (`carts.rs` `loosen`, efc14f5d, 0da91291) matches it
+  move for move (sapling-r3cart.txt).

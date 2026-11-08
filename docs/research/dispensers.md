@@ -238,8 +238,10 @@ Block behaviours (BlockType vt+0x190):
   took them (pickup by anyone). On normal and hard (bds-p3disp.txt, twelve each) the spread was about 0.13 and 0.10
   a tick: uncertainty 24 less 4 a difficulty level, 20, 16, 12 (`shots/dispensed.rs` `ARROW_UNCERTAINTY`).
 - A dispensed arrow (bds-p3disp.txt, bds-p3pot.txt) is first shown a tick after `SoundShoot`, already a move along,
-  with the `block.click` (extra data -1) that tick; sapling shows it at the mouth with its click in the shot's tick
-  (extra data the block's hash). Open (REMAINING4).
+  with the `block.click` (extra data -1) that tick. Sapling does the same (6f5aba50): `shots/dispensed.rs` launches
+  it unshown with `mobs::ShownLate`, and its first fly (`creatures/flight.rs`) announces it there, the click after.
+  An arrow that cracks or shatters a decorated pot flies on through it (bds-p3pot.txt; `blocks/target.rs`
+  `shot_stopped`, 8d846335).
 - BDS's snowball left with no spread (bds-p2shoot.txt); snowballs, eggs, potions and bottles get none. The
   snowball's hit: six `ParticleProjectileHit` data 15 where it landed, then LevelSoundEvent `undefined` there a
   tick later (`creatures/landing.rs`).

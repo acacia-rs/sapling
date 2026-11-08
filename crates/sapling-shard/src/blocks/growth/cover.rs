@@ -48,20 +48,24 @@ fn brightness(level: &Level, [x, y, z]: BlockPos, darken: u8) -> u8 {
 }
 
 /// Whether the grass or mycelium `name` at `pos` dies (`GrassBlockBase::_canBeGrass`): grass under
-/// a block that stops light or under water. Mycelium never yet: under stone in the dark BDS's
-/// lived 60 seconds at 200 (research/captures/bds-lightgrow.txt).
-// TODO: `MyceliumBlock::randomTick` 1465eb280 kills in the dark under a solid block unless that has the tag at 0x14cd22f48; find the tag.
+/// a block that stops light or under water. Mycelium (`MyceliumBlock::randomTick` 1465eb280) only
+/// under a block that stops light, light under 4 over it, and not under a huge mushroom block
+/// (its global 0x14cd22f48 is the `huge_mushroom_bits` state): BDS's died in the dark under
+/// stone, planks, sand and dirt, and lived under glass, leaves, a slab, a fence, water and both
+/// mushroom blocks (research/captures/bds-r3myc.txt).
 fn dies(level: &Level, pos: BlockPos, name: &str) -> bool {
-    if name == MYCELIUM {
-        return false;
-    }
-    let [x, y, z] = Face::Up.neighbour(pos);
+    let over @ [x, y, z] = Face::Up.neighbour(pos);
     let registry = level.registry();
     if !level.in_height(y) {
         return false;
     }
+    let stops_light = |id| registry.get(id).is_some_and(|state| state.light_filter >= sapling_world::FULL_LIGHT);
+    if name == MYCELIUM {
+        let mushroom = registry.get(level.block(x, y, z)).is_some_and(|state| state.property("huge_mushroom_bits").is_some());
+        return stops_light(level.block(x, y, z)) && !mushroom && brightness(level, over, 0) < DIM;
+    }
     let states = [level.block(x, y, z), level.liquid(x, y, z)].map(|id| registry.get(id));
-    states.iter().flatten().any(|state| state.light_filter >= sapling_world::FULL_LIGHT || state.is_liquid())
+    stops_light(level.block(x, y, z)) || states.iter().flatten().any(|state| state.is_liquid())
 }
 
 /// The block light in the cell of `pos`, or one less than beside it: sapling's light table has

@@ -16,7 +16,7 @@ mod shulker;
 mod slots;
 
 pub(crate) use access::close_where_gone;
-pub(crate) use pairs::{carried, halves as chest_halves, lost_partner, stand_alone};
+pub(crate) use pairs::{carried, halves as chest_halves, halves_in as chest_halves_in, lost_partner, stand_alone, staged as staged_chest};
 
 use std::collections::HashMap;
 
@@ -103,10 +103,16 @@ impl Kind {
 
 const UNSHOWN: [&str; 7] = ["Furnace", "BlastFurnace", "Smoker", "Hopper", "BrewingStand", "Dispenser", "Dropper"];
 
+/// Whether the block is a chest that pairs: a chest, a trapped chest or a copper chest of any
+/// stage or wax (BDS gives copper chests a `Chest` entity; research/captures/bds-p3copper.txt).
+pub(crate) fn is_chest(block: &str) -> bool {
+    matches!(block, "minecraft:chest" | "minecraft:trapped_chest") || block.ends_with("copper_chest")
+}
+
 pub(crate) fn kind(block: &str) -> Option<Kind> {
     let smelter = |entity, window| Kind { entity, slots: SMELTER_SLOTS, window, has_lid: false, refuses: Some(crate::furnaces::refuses), is_per_player: false };
     Some(match block {
-        "minecraft:chest" | "minecraft:trapped_chest" => CHEST,
+        _ if is_chest(block) => CHEST,
         "minecraft:barrel" => Kind { entity: "Barrel", ..CHEST },
         "minecraft:ender_chest" => Kind { entity: "EnderChest", is_per_player: true, ..CHEST },
         "minecraft:hopper" => HOPPER,
