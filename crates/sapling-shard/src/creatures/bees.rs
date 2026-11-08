@@ -8,7 +8,7 @@
 //! 180 s goes home. Hit, it stings (stings.rs). At a full hive it wanders 5 to 20 s (`hive_full`),
 //! then flies to the nearest hive (bds-x2bee.txt: the fourth bee left a full hive at once and went
 //! into one 10 off 13 s later). Let out by fire, it flees at 1.25 its pace for 20 to 50 s (`escape_fire`).
-// TODO: its pollen and home are not kept with it in its column; it bobs up and down as BDS's did not.
+// TODO: its pollen and home are not kept with it in its column.
 
 mod crops;
 mod hives;
@@ -40,9 +40,11 @@ const FLOWERS: &[&str] = &[
 /// How far across and up or down it looks for a flower, and the odds a tick that it looks.
 const FLOWERS_WITHIN: [i32; 2] = [6, 4];
 const LOOKS: f32 = 0.5;
-/// It takes pollen after this many ticks this near the flower's spot, counted while near and kept
-/// while it drifts off (`MoveToBlockGoal::tick` 0x5277e80; BDS's bees took 19 to 23 s, bds-g14bee.txt,
-/// bds-beesout.txt); the spot is this far over the flower's bottom.
+/// It takes pollen after this many ticks with its middle this near the flower's spot, counted while
+/// near and kept while it drifts off (`MoveToBlockGoal::tick` 0x5277e80; BDS's bees took 19 to 23 s,
+/// bds-g14bee.txt, bds-beesout.txt); that near it is no longer pushed and drifts to a stop (bds-bees.txt:
+/// pushed until its middle came within 1, then still for 95 ticks, where a bee pushed at the spot
+/// all along bobbed about it, sapling-bees.txt). The spot is this far over the flower's bottom.
 const AT_FLOWER: f32 = 1.0;
 const POLLINATES: u32 = 400;
 const NECTAR: &str = "minecraft:has_nectar";
@@ -203,7 +205,7 @@ fn forage(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool
         return wander(world, entity, layer, body);
     };
     let spot = [flower[0] as f32 + 0.5, flower[1] as f32 + OVER_FLOWER, flower[2] as f32 + 0.5];
-    let there = distance(body.at, spot) < AT_FLOWER;
+    let there = distance([body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]], spot) < AT_FLOWER;
     let Some(mut bee) = world.get_mut::<Bee>(entity) else { return false };
     if bee.flower != Some(flower) {
         bee.stayed = 0;
@@ -214,7 +216,7 @@ fn forage(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool
         (bee.nectar, bee.flower, bee.stayed, bee.since) = (true, None, 0, now);
         super::properties::set(world, entity, NECTAR, 1, nectar_sounds());
     }
-    wings::fly_at(world, entity, KIND, spot)
+    there || wings::fly_at(world, entity, KIND, spot)
 }
 
 /// Its random flight, back towards its hive while it is more than [`HOME_BOUND`] off.

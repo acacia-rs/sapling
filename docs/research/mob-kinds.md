@@ -535,12 +535,34 @@ is assumed from its pack's like shape, not drilled.
   at, its speed quartered first within a third of its box's sides (0.667) of that cell's centre, the next
   cell taken within 0.5. Every BDS takeoff rose 0.02, 0.42 and 1.00125 over 1, 6 and 11 ticks, which only
   that fits (no drag up, the first cell straight up, 1.5 over the floor). With no flight under way gravity is
-  back and it falls as a chicken. Fitted, not decompiled: the takeoff odds (8 takeoffs in ~1830 sitting ticks, 1 in 230; BDS's
-  flights come from `random_fly` (RandomFlyingGoal 0xeee7290, spot by RandomPos or a leaf top in a box
-  x/z −3..+2, y −6..+5) and `follow_mob` alike: the three ended in a clump and sat), and the spot's height
-  (1 to 4.2 over the ground). Its path is a line of cells, straight up off a floor first. sapling-x2parrot:
-  the fall and the takeoff the same to the drawn digit, the fastest pace across 0.199 a tick (BDS 0.197);
-  sapling's fly more of the time (median pace 0.07 against 0.006), from the fitted takeoff odds.
+  back and it falls as a chicken. Takeoff odds decompiled by fourteenth2ac (see "Group AC" below; the fitted 1 in
+  230 is gone). Fitted, not decompiled: whether `follow_mob` starts flights too (the three ended in a clump
+  and sat), and the spot's height (1 to 4.2 over the ground). Its path is a line of cells, straight up off a
+  floor first. sapling-x2parrot: the fall and the takeoff the same to the drawn digit, the fastest pace across
+  0.199 a tick (BDS 0.197).
+
+## Group AC (2026-11-08, fourteenth2ac, `ac2*` in fourteenth2ac_drill.rs)
+
+- Parrot takeoff, decompiled: `RandomFlyingGoal::canUse` (Linux 0x57601e0) reads a per-mob counter (component
+  hash 0x4125a80c) and only while it is under 100 rolls `nextInt(120) == 0`, then the spot (slot 12, 0x57603c0:
+  in water a RandomPos; else, `can_land_on_trees`, a leaf/log top in x/z −3..+2, y −6..+5 unless
+  `nextFloat() < 0.001`; then RandomPos 0xbd09940, 10 tries). The stroll goal (0xbdc8d30) has no such gate.
+  bds-x2parrot.txt fits a counter reset at a flight's end: all 8 takeoffs came 7 to 98 ticks after a landing,
+  and each parrot then sat 350 to 570 ticks to the end. Ported (wings/parrots.rs `TAKES_OFF`, `RESTLESS`);
+  re-drilled sapling-x2parrot.txt: each took off 14 to 83 ticks after landing, then sat for good (BDS's had 2
+  or 3 flights each, sapling's one: chance). The reset's source is read off the capture, not decompiled.
+- Bee at its flower (bds-bees.txt against sapling-bees.txt): BDS's bee was pushed at the spot over the flower
+  until its middle came within the goal radius 1 of it, then slowed (×0.38 a tick, then a creep of 0.016) and
+  stood still 95 ticks; sapling's, pushed at the spot all along, bobbed about it ±0.05 for its whole stay.
+  Now it is no longer pushed once its middle is within 1 and drifts to a stop on its hover drag (bees.rs
+  `forage`); re-drilled: still from tick 64 to its pollen at 417. Its stop is softer than BDS's (drag 0.8645).
+- Pandas fed bamboo (bds-ac2panda.txt): two lazy and then two normal pandas fed by the probe beside two bamboo
+  rows all ate it (`EATING`, bit 62) and none showed `INLOVE` (bit 7) or courted, as in x2panda: a courting
+  pace cannot be drilled through the probe's feeding.
+- Wolf sight (bds-ac2wolf.txt, two runs): `OwnerHurtByTargetGoal::canUse` (0x57553b0) checks the owner's last
+  attacker through the target goal's `_canAttack` with `must_see` from goal+0x32 (the pack sets none; its
+  default is not read). Both drills failed to show it: the first held zombie stood 3.6 off the actor's hit,
+  the second's four tamed wolves were all sitting (`SITTING`, bit 24) after four rounds of bones.
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full

@@ -18,21 +18,30 @@ const FLOOR: f32 = 65.0;
 #[test]
 fn a_parrot_falls_slowly_sits_and_takes_off_without_gravity() {
     let mut h = ready(GameMode::Creative, &[], 0.0);
-    let parrot = ask(&mut h, |ctx| {
+    // Several, since one may take off mid-fall or sit for good (fourteenth2ac: only within 100 ticks of landing).
+    let parrots = ask(&mut h, |ctx| {
         ctx.set_game_mode(ALEX, GameMode::Creative);
         ctx.teleport(ALEX, [-6.5, FLOOR, -6.5]);
-        ctx.summon_as(None, "minecraft:parrot", [2.5, FLOOR + 2.0, 2.5], 0.0, 0.0, None).expect("a parrot")
+        [-4.5, -1.5, 1.5, 4.5].map(|x| ctx.summon_as(None, "minecraft:parrot", [x, FLOOR + 2.0, 2.5], 0.0, 0.0, None).expect("a parrot").0)
     });
-    let mut heights = vec![FLOOR + 2.0];
-    let mut flags = Vec::new();
-    let feet = Arc::new(Mutex::new(0.0));
+    let mut heights = vec![vec![FLOOR + 2.0]; parrots.len()];
+    let mut flags = vec![Vec::new(); parrots.len()];
+    let feet = Arc::new(Mutex::new(Vec::new()));
     for _ in 0..2000 {
         let out = feet.clone();
-        h.remote.run(move |ctx| *out.lock().unwrap() = ctx.entity(EntityId(parrot.0)).expect("the parrot").feet[1]);
+        h.remote.run(move |ctx| *out.lock().unwrap() = parrots.map(|parrot| ctx.entity(EntityId(parrot)).expect("the parrot").feet[1]).to_vec());
         let sent = h.tick_all().to(1).to_vec();
-        flags.push(has_flag(&sent, parrot.0, MetadataFlags1::AFFECTED_BY_GRAVITY));
-        heights.push(*feet.lock().unwrap());
+        for (index, parrot) in parrots.iter().enumerate() {
+            flags[index].push(has_flag(&sent, *parrot, MetadataFlags1::AFFECTED_BY_GRAVITY));
+            heights[index].push(feet.lock().unwrap()[index]);
+        }
     }
+    let lands_then_flies = |heights: &Vec<f32>| {
+        let sits = heights.iter().position(|y| *y == FLOOR);
+        sits.is_some_and(|sits| heights[..sits].windows(2).all(|pair| pair[1] <= pair[0]) && heights[sits..].iter().any(|y| *y > FLOOR))
+    };
+    let chosen = heights.iter().position(lands_then_flies).expect("a parrot that lands and takes off");
+    let (heights, flags) = (&heights[chosen], &flags[chosen]);
     let start = heights.windows(2).position(|pair| pair[1] < pair[0]).expect("it falls");
     let falls: Vec<f32> = heights[start..].windows(2).take_while(|pair| pair[1] < pair[0]).map(|pair| pair[1] - pair[0]).collect();
     assert!((falls[0] + 0.0784).abs() < 1e-4, "{falls:?}");

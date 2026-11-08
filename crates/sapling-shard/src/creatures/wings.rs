@@ -72,11 +72,14 @@ pub(super) struct Wings {
     aloft: bool,
     /// The cell centre a parrot flies at on its way to its spot.
     next: Option<[f32; 3]>,
+    /// The tick a parrot's last flight ended, or it was born.
+    landed: u64,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if wing(kind).is_some() {
-        world.entity_mut(entity).insert(Wings::default());
+        let landed = world.resource::<Tick>().0;
+        world.entity_mut(entity).insert(Wings { landed, ..Wings::default() });
     }
 }
 
