@@ -17,7 +17,7 @@ use sapling_api::Effect;
 pub(super) use kept::{adopt, keep};
 pub(crate) use potions::{clouded, splashed, takes_potion};
 pub(super) use told::visible;
-use told::{is_told, shown_and_announced, tell};
+use told::{is_told, shown_and_announced, tell, tell_at_sync};
 
 use super::health::{Cause, Health};
 use super::{Creature, Dying, harm, strolling};
@@ -93,12 +93,13 @@ pub(super) fn give_shown(world: &mut World, mob: Entity, effect: Effect, ticks: 
         }
     };
     let list = afflicted.0.clone();
-    let mut packets: Vec<bytes::Bytes> = is_told(effect).then(|| told::told(id, event_id, &now)).into_iter().collect();
+    tell(world, mob, is_told(effect).then(|| told::told(id, event_id, &now)).into_iter().collect());
+    let mut synced: Vec<bytes::Bytes> = Vec::new();
     if event_id == MobEffectEventId::Add {
-        packets.extend(crate::vitals::effects::omen_sound(effect).and_then(|sound| told::omen_heard(world, mob, id, sound)));
+        synced.extend(crate::vitals::effects::omen_sound(effect).and_then(|sound| told::omen_heard(world, mob, id, sound)));
     }
-    packets.extend(shown_and_announced(world, mob, id, &before, &list));
-    tell(world, mob, packets);
+    synced.extend(shown_and_announced(world, mob, id, &before, &list));
+    tell_at_sync(world, mob, synced);
     if effect == Effect::HealthBoost {
         super::boosts::boost(world, mob);
     }
@@ -123,14 +124,15 @@ fn lose(world: &mut World, mob: Entity, gone: &[Active]) {
     }
     let (left, list) = (afflicted.0.is_empty(), afflicted.0.clone());
     let before: Vec<Active> = list.iter().chain(gone).copied().collect();
-    let mut packets: Vec<bytes::Bytes> = gone.iter().filter(|active| is_told(active.effect)).map(|active| told::told(id, MobEffectEventId::Remove, active)).collect();
-    packets.extend(shown_and_announced(world, mob, id, &before, &list));
+    let removed: Vec<bytes::Bytes> = gone.iter().filter(|active| is_told(active.effect)).map(|active| told::told(id, MobEffectEventId::Remove, active)).collect();
+    let synced: Vec<bytes::Bytes> = shown_and_announced(world, mob, id, &before, &list).into_iter().collect();
     if left
         && let Some(mut health) = world.get_mut::<Health>(mob)
     {
         health.ward(1.0, false);
     }
-    tell(world, mob, packets);
+    tell(world, mob, removed);
+    tell_at_sync(world, mob, synced);
     if gone.iter().any(|active| active.effect == Effect::HealthBoost) {
         super::boosts::boost(world, mob);
     }
@@ -188,13 +190,16 @@ fn act(world: &mut World, mob: Entity, layer: Entity, active: &Active) {
 }
 
 /// A tick of every mob's effects; those whose time is up go, and its viewers are told what is left.
+/// Mobs go lowest storage slot first: BDS's speed ran out on bd2event's sheep in the reverse of the
+/// sync's order.
 pub(super) fn tick(world: &mut World, ticked: &super::ticked::Ticked) {
-    let afflicted: Vec<(Entity, Entity, Vec<Active>)> = world
+    let mut afflicted: Vec<(Entity, Entity, Vec<Active>)> = world
         .query_filtered::<(Entity, &InLayer, &Afflicted), (With<Creature>, Without<Dying>)>()
         .iter(world)
         .filter(|(mob, layer, afflicted)| !afflicted.0.is_empty() && ticked.ticks(world, *mob, layer.0))
         .map(|(mob, layer, afflicted)| (mob, layer.0, afflicted.0.clone()))
         .collect();
+    afflicted.sort_by_key(|(mob, ..)| entities::slots::slot(world, *mob));
     for (mob, layer, active) in afflicted {
         for active in &active {
             act(world, mob, layer, active);

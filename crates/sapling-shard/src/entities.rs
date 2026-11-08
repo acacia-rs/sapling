@@ -20,6 +20,7 @@ use crate::sync::Told;
 use crate::{mobs, splash};
 
 mod first_data;
+pub(crate) mod slots;
 mod tell;
 
 pub(crate) use first_data::{first_metadata, show_first, skip_first};

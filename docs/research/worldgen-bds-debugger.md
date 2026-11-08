@@ -210,5 +210,7 @@ class keeps its RTTI name, so virtual functions are found without symbols:
   expressions when it hits (`"*(long*)($rbx+0x208)+8"`: an actor's position z), logging each change with
   its pc and backtrace; x86 has four, so one set at a time (`rearm` replaces it at the next hit). Found the
   summon push-out (water-movement.md) and the happy ghast's input copy (vehicles.md) in one run each.
+- An EnTT storage is readable at a view system's entry: pools at system+0x10.., packed vector at pool+0x20,
+  free-list head pool+0x48; a write watchpoint on the head logs every create/destroy (villagers.md "Actor order").
 - Used for: lit ore's pace (fire.md), portal section order (nether-dimension.md), drop send order
   (leftovers.md). Linux containers are libc++, not MSVC: hash orders read off testbox captures follow libc++.
