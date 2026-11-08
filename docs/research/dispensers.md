@@ -234,9 +234,12 @@ Block behaviours (BlockType vt+0x190):
 - Names of hash globals 14ccf9950 (air), 14ccdb710 (fire), 14cce2cf8 (tnt), 14ccdafe8 (lava), 14ccdd3a0, the dirt
   list 14ccdb858, tag 14ccdb7d0, recipe tag 14cde8268, game events 14cc89850 / 14cc8a91c / 14cc8a9ec.
 - Arrows, drilled 2026-11-05 (bds-r1disp.txt, twelve shots on easy; bds-f1pickup.txt): they left at 1.11 a
-  tick on average with 0.175 of spread on each axis, so power 1.1 and an uncertainty of about 21 (±2.5); sapling
-  takes 22 on every difficulty (`shots/dispensed.rs`). Only easy was drilled, so whether difficulty changes it
-  is open. Players took them (pickup by anyone).
+  tick on average with 0.175 of spread on each axis, so power 1.1 and an uncertainty of about 21 (±2.5). Players
+  took them (pickup by anyone). On normal and hard (bds-p3disp.txt, twelve each) the spread was about 0.13 and 0.10
+  a tick: uncertainty 24 less 4 a difficulty level, 20, 16, 12 (`shots/dispensed.rs` `ARROW_UNCERTAINTY`).
+- A dispensed arrow (bds-p3disp.txt, bds-p3pot.txt) is first shown a tick after `SoundShoot`, already a move along,
+  with the `block.click` (extra data -1) that tick; sapling shows it at the mouth with its click in the shot's tick
+  (extra data the block's hash). Open (REMAINING4).
 - BDS's snowball left with no spread (bds-p2shoot.txt); snowballs, eggs, potions and bottles get none. The
   snowball's hit: six `ParticleProjectileHit` data 15 where it landed, then LevelSoundEvent `undefined` there a
   tick later (`creatures/landing.rs`).

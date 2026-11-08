@@ -159,7 +159,7 @@ pub(crate) fn first_move(world: &mut World, shot: Entity) {
 
 /// The normal throw's width on each part of a one-long aim for a pack's `uncertainty_base` and
 /// `uncertainty_multiplier` (see [`Shot::uncertainty`]).
-pub(super) fn spread(world: &World, [base, per_level]: [f32; 2]) -> f32 {
+pub(crate) fn spread(world: &World, [base, per_level]: [f32; 2]) -> f32 {
     0.0075 * (base - per_level * level(world)).max(0.0)
 }
 
