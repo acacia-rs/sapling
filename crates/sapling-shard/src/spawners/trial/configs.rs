@@ -96,8 +96,10 @@ fn built_in(key: &str) -> Option<Config> {
 }
 
 /// A config written whole (BDS's inline form): its numbers, its `spawn_potentials` and its
-/// `loot_tables_to_eject`, each field the default where missing.
-// TODO: [U] the inline potentials' keys; read here as a monster spawner's `SpawnData`.
+/// `loot_tables_to_eject`, each field the default where missing. A `spawn_potentials` entry is
+/// `{data: {entity: {id}}, weight}`; BDS drops entries named any other way (`{TypeId, Weight}`,
+/// `{data: {TypeId}}`) when it loads one, and a spawner left with none never wakes
+/// (research/captures/bds-f14sstored.txt).
 fn inline(fields: &Fields, ominous: bool) -> Config {
     let mut config = Config::base(ominous);
     config.total = fields.float("total_mobs", config.total);
@@ -107,7 +109,7 @@ fn inline(fields: &Fields, ominous: bool) -> Config {
     config.ticks_between = fields.int("ticks_between_spawn", config.ticks_between);
     config.spawn_range = fields.int("spawn_range", config.spawn_range.into()) as i32;
     config.cooldown = fields.int("target_cooldown_length", config.cooldown);
-    config.potentials = fields.list("spawn_potentials").iter().filter_map(|data| Some((spawn_kind(data)?, weight(data), matches!(data.get("IsBaby"), Some(Value::Byte(1)))))).collect();
+    config.potentials = fields.list("spawn_potentials").iter().filter_map(|entry| Some((potential_kind(entry)?, weight(entry), false))).collect();
     let loot: Vec<(String, u32)> = fields.list("loot_tables_to_eject").iter().filter_map(|entry| Some((name_of(entry)?, weight(entry)))).collect();
     if !loot.is_empty() {
         config.loot = loot;
@@ -124,6 +126,13 @@ fn weight(data: &Value) -> u32 {
 
 fn name_of(entry: &Value) -> Option<String> {
     ["name", "loot_table", "data"].iter().find_map(|key| if let Some(Value::String(name)) = entry.get(key) { Some(name.to_string()) } else { None })
+}
+
+fn potential_kind(entry: &Value) -> Option<String> {
+    match entry.get("data").and_then(|data| data.get("entity")).and_then(|entity| entity.get("id")) {
+        Some(Value::String(kind)) if !kind.is_empty() => Some(kind.to_string()),
+        _ => None,
+    }
 }
 
 /// The kind a `SpawnData` names: `TypeId`, else `entity`'s `id`.
@@ -169,6 +178,20 @@ mod tests {
         let slow = of(&named("minecraft:trial_chamber/slow_ranged/stray/normal"), false);
         assert_eq!((slow.ticks_between, slow.caps(2)), (160, (8.0, 6.0)));
         assert!(of(&named("minecraft:trial_chamber/small_melee/baby_zombie/normal"), false).potentials[0].2);
+    }
+
+    #[test]
+    fn an_inline_config_spawns_only_the_potentials_named_by_entity_id() {
+        let compound = |pairs: Vec<(&str, Value)>| Value::Compound(pairs.into_iter().map(|(key, value)| (key.into(), value)).collect());
+        let named = |kind: &str| Value::String(kind.into());
+        let potentials = vec![
+            compound(vec![("TypeId", named("minecraft:pig")), ("Weight", Value::Int(1))]),
+            compound(vec![("data", compound(vec![("entity", compound(vec![("id", named("minecraft:cow"))]))])), ("weight", Value::Int(3))]),
+            compound(vec![("data", compound(vec![("TypeId", named("minecraft:sheep"))])), ("weight", Value::Int(1))]),
+        ];
+        let list = Value::List(acacia_proto::nbt::List { tag: 10, items: potentials });
+        let fields = Fields(vec![("normal_config".into(), compound(vec![("spawn_potentials", list)]))]);
+        assert_eq!(of(&fields, false).potentials, vec![("minecraft:cow".to_owned(), 3, false)]);
     }
 
     #[test]

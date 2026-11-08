@@ -117,6 +117,7 @@ fn place(world: &mut World, layer: Entity, feature: &str, origin: BlockPos, clea
         return false;
     };
     send::set_many(world, layer, &tree);
+    super::furnish_nests(world, layer, &tree);
     cleared.iter().filter(|cell| !tree.iter().any(|(at, _)| at == *cell)).for_each(|cell| send::show(world, layer, *cell));
     true
 }

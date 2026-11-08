@@ -65,7 +65,7 @@ pub(super) struct Trial {
 impl Trial {
     fn load(fields: Fields, ominous: bool, now: i64) -> Self {
         let config = configs::of(&fields, ominous);
-        // A world BDS saved counts its own ticks, not this shard's.
+        // Times past the level's clock (a level.dat older than the column) wait a full period at most.
         let cooldown_end = fields.int("cooldown_end_at", 0).min(now + config.cooldown);
         let next_spawn = fields.int("next_mob_spawns_at", 0).min(now + config.ticks_between.max(REWARD_DELAY));
         Self {
@@ -134,7 +134,7 @@ fn halted(world: &World, layer: Entity) -> bool {
 
 pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fields, near: &[Near]) {
     let Some(state) = property(world, layer, pos, "trial_spawner_state").and_then(|state| state.parse::<u8>().ok()) else { return };
-    let (ominous, now) = (property(world, layer, pos, "ominous") == Some("1"), now(world));
+    let (ominous, now) = (property(world, layer, pos, "ominous") == Some("1"), now(world, layer));
     let before = Value::Compound(fields.0.clone());
     let mut trial = Trial::load(fields, ominous, now);
     let first = world.get_resource_or_insert_with(Ticked::default).0.insert((layer, pos));

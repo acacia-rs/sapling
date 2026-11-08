@@ -208,15 +208,17 @@ fn a_torch_clock_holds_its_lamps_lit_from_its_first_flip_till_8_ticks_after_its_
 
 #[test]
 fn a_circuit_a_stored_column_holds_works_once_the_column_is_loaded() {
-    let dust_line = [([2, 64, 3], "minecraft:redstone_block"), ([3, 64, 3], "minecraft:redstone_wire"), ([4, 64, 3], "minecraft:redstone_lamp")];
+    // A lamp saved lit with nothing by it goes out, as on BDS (research/captures/bds-f14sstored.txt).
+    let dust_line = [([2, 64, 3], "minecraft:redstone_block"), ([3, 64, 3], "minecraft:redstone_wire"), ([4, 64, 3], "minecraft:redstone_lamp"), ([4, 64, 6], "minecraft:lit_redstone_lamp")];
     let storage = common::stored::floor_holding(Vec::new(), &dust_line);
     let mut h = Harness::with(common::config(), sapling_world::World::with_storage(storage));
     common::stored::enter_stored(&mut h, 1);
-    (0..6).for_each(|_| drop(h.tick(1)));
+    (0..16).for_each(|_| drop(h.tick(1)));
     let (tx, rx) = mpsc::channel();
-    h.remote.run(move |ctx| tx.send([[3, 64, 3], [4, 64, 3]].map(|pos| (ctx.power_at(pos), ctx.block(pos).map(|block| block.name)))).unwrap());
+    h.remote.run(move |ctx| tx.send([[3, 64, 3], [4, 64, 3], [4, 64, 6]].map(|pos| (ctx.power_at(pos), ctx.block(pos).map(|block| block.name)))).unwrap());
     h.tick(1);
-    assert_eq!(rx.recv().unwrap(), [(15, Some("minecraft:redstone_wire".to_owned())), (15, Some("minecraft:lit_redstone_lamp".to_owned()))]);
+    let cell = |power, name: &str| (power, Some(name.to_owned()));
+    assert_eq!(rx.recv().unwrap(), [cell(15, "minecraft:redstone_wire"), cell(15, "minecraft:lit_redstone_lamp"), cell(0, "minecraft:redstone_lamp")]);
 }
 
 fn repeater(lit: bool, input: &str, delay: u8) -> u32 {

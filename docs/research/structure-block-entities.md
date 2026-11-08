@@ -304,10 +304,9 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   source chunk writing into (-28, -27), and `blocks_match_bds_canons`' new region "trial chamber ores"
   (that chunk) is 0 wrong, 0 missing. The blobs' heights were the stock runs' own (both stock runs drew
   them alike), not ours.
-- A vault's `state_updating_resumes_at` is 0 (BDS: the level time at generation); nothing reads it
-  before the vault's first tick rewrites it (`spawners/vault.rs` takes the lesser of it and now + 1
-  step), so left. Undrillable as a difference: the generator has no level clock to save, and a loaded
-  vault steps at its first tick either way (2026-11-04).
+- A vault's `state_updating_resumes_at` was 0 (BDS: the level time at generation). Since fourteenth S the
+  generator leaves it out and the column's arrival writes the level's age (`date_generated_vaults`), and
+  the vault's clock is the level's age, not the shard's run-relative tick.
 
 ## Unverified
 

@@ -167,6 +167,12 @@ stay by those ticks (bees/hives.rs `Written`); test `a_hive_out_of_the_tick_regi
 Sapling's drill (`sapling-hivekept.txt`) counted as BDS's but for one bee by the far hive after the return, while the
 ticking area's two had left theirs: most likely one of those wandered within 8 of it (bees wander; the hives' answers agree).
 
+`ShouldSpawnBees` (`f14snest`, `f14snest2`, 2026-11-08): a nest or hive set by `/setblock` or placed with a tree by
+`/place feature`, and a generated nest (`ShouldSpawnBees` 1, no `Occupants`), takes 2 or 3 bees on its first tick
+with `doMobSpawning` on, by night as by day, each `SaveData {}` with `TicksLeftToStay` 100, and clears the flag; the
+bees come out ~100 ticks on with `spawn` and `block.beehive.exit`. Linux BDS's tick (BeehiveBlockActor vtable slot 43,
+0xce714a0) also asks a flag of the level's (Level+0x328, byte 2) that was not named. Sapling: bees/hives.rs.
+
 ## Open checks (one bot session on BDS)
 
 Placed skull's saved `SkullType` (-1 or kind); cauldron `PotionId`/`PotionType` defaults; sign text cap in the

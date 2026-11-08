@@ -133,6 +133,16 @@ fn an_oak_tree_feature_grows_over_the_loaded_columns() {
     assert!(world.place_feature("minecraft:no_such_feature", [0, 64, 0], 7).is_none());
 }
 
+#[test]
+fn a_tree_with_a_beehive_grows_its_nest_over_the_loaded_columns() {
+    let mut world = World::void();
+    let grass = world.block_id("minecraft:grass_block").unwrap();
+    world.fill([-8, -27, -8], [8, -27, 8], grass);
+    let name = |id: u32| world.registry().get(id).map(|state| state.name).unwrap_or_default();
+    let nested = |seed| world.place_feature("minecraft:birch_tree_with_beehive_feature", [0, -26, 0], seed).is_some_and(|writes| writes.iter().any(|(_, id)| name(*id) == "minecraft:bee_nest"));
+    assert!((0..20).all(nested));
+}
+
 /// The world of research/captures/bds-locate.txt.
 const LOCATE_SEED: i64 = 12345;
 
@@ -231,4 +241,20 @@ fn a_generated_column_keeps_the_liquid_ticks_its_queue_holds() {
     assert_eq!((ticks.len(), ticks[0].pos), (7, [88, -13, 79]), "sapling-worldgen's leftovers.rs test");
     assert!(ticks.iter().all(|tick| tick.name == "minecraft:water" && tick.time - saved_at == 1), "{ticks:?}");
     assert!(generated.generate_column(ChunkPos::new(0, 0)).pending_ticks.is_empty());
+}
+
+/// BDS saves a generated vault's `state_updating_resumes_at` as the level's age at generation.
+#[test]
+fn a_generated_vault_arrives_dated_by_the_levels_age() {
+    let pos = ChunkPos::new(0, 0);
+    let mut record = bytes::BytesMut::new();
+    let vault = sapling_leveldb::generated_vault([3, 70, 3], "t", "k");
+    acacia_proto::nbt::write::<acacia_proto::nbt::LittleEndian>(&mut record, &acacia_proto::nbt::Nbt { name: String::new(), value: vault });
+    let storage = Arc::new(MemoryStorage::default());
+    storage.store_column(pos, 0, &StoredColumn { block_entities: record.to_vec(), ..StoredColumn::of(stone_column(pos, 0)) }).unwrap();
+    let mut world = World::with_storage(storage);
+    world.level_mut().age = 777;
+    world.load_now(pos);
+    let data = world.block_entity([3, 70, 3]).and_then(|entity| entity.nbt.get("data").cloned());
+    assert_eq!(data.and_then(|data| data.get("state_updating_resumes_at").cloned()), Some(Value::Long(777)));
 }

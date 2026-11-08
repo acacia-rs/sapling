@@ -53,15 +53,18 @@ fn set(fields: &mut Vec<(Str, Value)>, key: &str, value: Value) {
     }
 }
 
-/// A bee's actor compound as a hive keeps it, its pollen among its `properties`.
+/// A bee's actor compound as a hive keeps it, its pollen among its `properties`; one the hive made
+/// itself has none yet and is kept empty (research/captures/bds-f14snest2.txt).
 fn kept_bee(occupant: &Occupant) -> Option<Value> {
     let Value::Compound(mut actor) = nbt::read::<LittleEndian>(&mut &occupant.actor[..]).ok()?.value else { return None };
-    let mut properties = match actor.iter().find(|(name, _)| name == PROPERTIES) {
-        Some((_, Value::Compound(properties))) => properties.clone(),
-        _ => Vec::new(),
-    };
-    set(&mut properties, NECTAR, Value::Byte(i8::from(occupant.nectar)));
-    set(&mut actor, PROPERTIES, Value::Compound(properties));
+    if !actor.is_empty() {
+        let mut properties = match actor.iter().find(|(name, _)| name == PROPERTIES) {
+            Some((_, Value::Compound(properties))) => properties.clone(),
+            _ => Vec::new(),
+        };
+        set(&mut properties, NECTAR, Value::Byte(i8::from(occupant.nectar)));
+        set(&mut actor, PROPERTIES, Value::Compound(properties));
+    }
     Some(Value::Compound(vec![("ActorIdentifier".into(), Value::String(BEE.into())), ("SaveData".into(), Value::Compound(actor)), ("TicksLeftToStay".into(), Value::Int(occupant.ticks_left))]))
 }
 

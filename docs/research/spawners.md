@@ -57,7 +57,10 @@ here was drilled against a running BDS.
 | 141191c10 | `getOrCreateNextSpawnData` |
 
 - Configs live in the server, not the packs: `normal_config` / `ominous_config` name one
-  (`minecraft:trial_chamber/<kind>/normal|ominous`) or hold one inline. Default: 6 mobs in all, 2 at once,
+  (`minecraft:trial_chamber/<kind>/normal|ominous`) or hold one inline. An inline `spawn_potentials`
+  entry is `{data: {entity: {id}}, weight}`; on load BDS dropped entries written `{TypeId, Weight}` or
+  `{data: {TypeId}}` from the saved list, and a spawner left with none stayed waiting by a survival player
+  (bds-f14sstored.txt, worlds written by sapling-leveldb's `put_trial_spawners`). Default: 6 mobs in all, 2 at once,
   +2 and +1 per player after the first, 20 ticks between, range 4, cooldown 36000; rewards `spawners/
   trial_chamber/key.json` and `consumables.json` 1:1 (ominous: the `spawners/ominous/` pair 3:7). The kinds
   (total / at once / +total / +at once / ticks; `-` default):
@@ -112,7 +115,9 @@ here was drilled against a running BDS.
   4.5 (at least the first), `key_item`, `override_loot_table_to_display`}; `data` (not Java's `server_data`)
   {`display_item`, `state_updating_resumes_at` Long, `items_to_eject`, `rewarded_players` (Longs), 
   `total_ejections_needed` Long}; `shared_data` only `connected_particle_range` is read. `vault_state`
-  inactive, active, unlocking, ejecting.
+  inactive, active, unlocking, ejecting. Its times (and a trial spawner's `cooldown_end_at`,
+  `next_mob_spawns_at`) are on the level's clock (`currentTick`, sapling `Level::age`, spawners.rs `now`);
+  a generated vault is dated with the level's age as its column arrives (sapling-leveldb `date_generated_vaults`).
 - Every 20 ticks while active the shown item is rolled anew (one item of a roll of the table). At
   `state_updating_resumes_at`: inactive → active when a player (spectators no, creative yes) not yet
   rewarded is within 4 of the block's middle; active → inactive when none is within 4.5; unlocking →

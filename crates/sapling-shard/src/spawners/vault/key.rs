@@ -29,7 +29,7 @@ pub(in crate::spawners) fn use_key(world: &mut World, player: Entity, layer: Ent
     }
     let unique_id = world.get::<crate::tags::Marks>(player).map_or(0, |marks| marks.unique_id);
     let refusal = if held != vault.config.key { Some("vault.insert_item_fail") } else if vault.rewarded().contains(&unique_id) { Some("vault.reject_rewarded_player") } else { None };
-    let now = now(world);
+    let now = now(world, layer);
     if let Some(refusal) = refusal {
         let mut refusals = world.get_resource_or_insert_with(Refusals::default);
         if refusals.0.get(&(layer, pos)).is_none_or(|last| now - last >= FAIL_GAP) {

@@ -92,10 +92,27 @@ pub(super) fn is_unheld_frame(world: &World, layer: Entity, pos: BlockPos) -> bo
     level.registry().get(id).is_some_and(|state| matches!(state.name, "minecraft:frame" | "minecraft:glow_frame")) && super::updates::lacks_support(world, layer, pos, id)
 }
 
+/// Gives each nest a grown tree wrote the entity a set one gets, unshown: it makes its bees on its
+/// first tick (bds-f14snest.txt).
+pub(crate) fn furnish_nests(world: &mut World, layer: Entity, written: &[(BlockPos, u32)]) {
+    let Some(level) = super::level(world, layer) else { return };
+    let nests: Vec<BlockPos> = written.iter().filter(|(_, id)| level.registry().get(*id).is_some_and(|state| state.name == "minecraft:bee_nest")).map(|(pos, _)| *pos).collect();
+    for pos in nests {
+        super::send::keep_entity_quietly(world, layer, pos, &sapling_world::new_hive(pos));
+    }
+}
+
 /// Gives a block set at `pos` without an entity the one BDS's command makes, shows it, and has
 /// it shown again on the next tick where BDS did (shown_again.rs).
 pub(super) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &str) {
     let placing = Placing { damage: if block == "minecraft:bed" { RED } else { 0 }, tag: None, yaw: 0.0, properties: "" };
+    // Unshown, with `ShouldSpawnBees`: it makes its bees on its first tick (creatures/bees/hives.rs, bds-f14snest.txt).
+    if matches!(block, "minecraft:beehive" | "minecraft:bee_nest") {
+        if let Some(mut level) = world.get_mut::<Layer>(layer).filter(|level| level.world.block_entity(pos).is_none()) {
+            _ = level.world.set_block_entity(pos, &sapling_world::new_hive(pos));
+        }
+        return;
+    }
     if !is_shown(block) {
         return;
     }

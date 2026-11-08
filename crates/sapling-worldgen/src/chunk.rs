@@ -216,6 +216,15 @@ impl ChunkShape {
         })
     }
 
+    /// The cells holding `block`, as chunk x, world y, chunk z; all-air sections are skipped.
+    pub fn cells_of(&self, block: Block) -> Vec<[i32; 3]> {
+        let (code, air) = (pack(block), air_section());
+        let skipped = |section: &Section| matches!((section, &air), (Section::Shared(blocks), Section::Shared(air)) if Arc::ptr_eq(blocks, air));
+        let sections = self.sections.iter().enumerate().filter(|(_, section)| !skipped(section));
+        let cells = sections.flat_map(|(s, section)| section.blocks().iter().enumerate().filter(move |(_, at)| **at == code).map(move |(i, _)| s * SECTION + i));
+        cells.map(|index| [index as i32 & 15, index as i32 / 256 + MIN_Y, (index as i32 >> 4) & 15]).collect()
+    }
+
     pub(crate) fn block_at(&self, index: usize) -> Block {
         unpack(self.code_at(index))
     }
@@ -280,5 +289,14 @@ mod tests {
         copy.set_block(3, 70, 5, Block::Dirt);
         assert_eq!((shape.block(3, 70, 5), copy.block(3, 70, 5)), (Block::Stone, Block::Dirt));
         assert_eq!(copy.block(3, 71, 5), Block::Air);
+    }
+
+    #[test]
+    fn cells_of_finds_a_block_in_world_heights() {
+        let mut shape = ChunkShape::empty();
+        shape.set_block(3, 70, 5, Block::BeeNest);
+        shape.set_block(15, -60, 0, Block::BeeNest);
+        shape.set_block(4, 70, 5, Block::Stone);
+        assert_eq!(shape.cells_of(Block::BeeNest), vec![[15, -60, 0], [3, 70, 5]]);
     }
 }

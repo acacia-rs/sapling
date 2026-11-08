@@ -2,7 +2,7 @@
 //! ground four blocks deep under the drills (a flat world's, so that what a drill digs has
 //! something under it), everyone an operator in creative mode, vanilla's commands, nothing
 //! protected. `tools/sapling-drill.sh` runs a probe against it. `SAPLING_DRILL_WORLD` picks
-//! another overworld: `strongholds`, `generated`, `cold` or `lowflat` (also `open`, below).
+//! another overworld: `strongholds`, `generated`, `cold`, `lowflat` (also `open`, below) or `folder:<path>`.
 //! `cargo run -p sapling --example drill_server -- [port]` (default 19190)
 #[path = "shared/clock.rs"]
 #[allow(dead_code)]
@@ -100,6 +100,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             builder.world(cold, OPEN_SPAWN)
         }
         Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), seed, 2))), GENERATED_SPAWN),
+        // `folder:<path>`: a copy of a vanilla world folder held in memory, as a BDS drill with KEEP_WORLD=1 loads it.
+        Ok(world) if world.starts_with("folder:") => builder.folder(World::open_folder_in_memory(std::path::Path::new(&world["folder:".len()..]))?).game_mode(GameMode::Creative),
         // Joining over the void, the probes' first commands went unanswered.
         _ => builder.world(ground, if open { OPEN_SPAWN } else { [0.5, 64.0, 0.5] }),
     };

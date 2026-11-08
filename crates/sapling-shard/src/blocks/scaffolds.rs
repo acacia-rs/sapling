@@ -1,7 +1,8 @@
 //! Scaffolding: each block knows how far it is from what holds it up, and one seven away comes
 //! down, falling if it was only just put there and broken if it stood
 //! (docs/research/block-uses.md, "Scaffolding").
-// TODO: scaffolding a world folder holds is not looked at until something by it is written.
+//! Scaffolding a world folder holds is not looked at until something by it is written: BDS left
+//! a floating one and a wrong stability as stored (research/captures/bds-f14sstored.txt).
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;

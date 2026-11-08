@@ -49,7 +49,10 @@ impl GenerationBackend for Ctx<'_> {
             Some(writes) if writes.is_empty() => Err(PlaceFailure::Failed),
             Some(blocks) => Ok(PlacedStructure { blocks, ..PlacedStructure::default() }),
         };
-        write(self.world, layer, Some(placed), PlaceOptions::default())
+        let written = placed.as_ref().map(|placed| placed.blocks.clone()).unwrap_or_default();
+        write(self.world, layer, Some(placed), PlaceOptions::default())?;
+        blocks::furnish_nests(self.world, layer, &written);
+        Ok(())
     }
 
     fn place_structure(&mut self, name: &str, at: BlockPos, options: PlaceOptions) -> Result<(), PlaceError> {
