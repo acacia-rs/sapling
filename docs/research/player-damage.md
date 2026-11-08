@@ -23,6 +23,9 @@ survival player (the bot, runtime id 1) and a watcher; breath and blocks from `s
 - With water at its eyes a player's `Air` (`SetEntityData`, told every tick) falls 1 a tick from 300. At
   0 it goes on to -20, the player is hurt 2 (cause 9) and `Air` is 0 again: 2 every 20 ticks.
 - Out of the water `Air` rises 4 a tick to 300.
+- `BREATHING` (Flags bit 35) is cleared the tick the eyes go under and set the tick they come out, told
+  in one SetEntityData with that tick's `Air` ([Flags, Air]) to the player and its viewers
+  (bds-m3breath.txt). Sapling: `Pose::holding_breath`, `vitals/stand.rs`.
 - A block set over the head alone hurts nothing: BDS lays the player down (`BoundingboxHeight` 0.6 and a
   flag in `FlagsExtended`) until the block is gone.
 - Both of its blocks filled with stone: 2 (cause 4) from about the 8th tick, then every 10 ticks, while
@@ -131,7 +134,10 @@ Sapling: `vitals/shield.rs` (`blocks_mob`, `stand_up`, `sneak_again`, `tell_ride
 away `entity_attack`, `thorns`, `fireworks` and `projectile` (answer `commands.damage.failed`, no stand-up). Any
 cause that lands, all 29 drilled, throws the player 0.4 away from the source across and 0.4 up, told before the
 flash; from itself straight up. Sapling: `vitals/struck.rs` `sourced`, `ShardCtx::hurt_player_from`; tests in
-`tests/integration/fourteenth2h.rs`. Left: `mace_smash` is no cause sapling knows (REMAINING4).
+`tests/integration/fourteenth2h.rs`. `mace_smash` (bds-m3mace.txt) flashes `HurtAnimation` 34, armour stops part
+of it as of `entity_attack` (4 through a diamond chestplate left 17.024), a death without a source is
+`death.attack.generic` and with one `death.attack.maceSmash.player` [victim, source] (a zombie's
+`%entity.zombie.name`). Sapling: `DamageCause::MaceSmash`; test `fourteenth3m.rs`.
 
 ## Death
 

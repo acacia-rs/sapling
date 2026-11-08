@@ -121,6 +121,7 @@ fn shown_now(world: &World, entity: Entity) -> Option<Vec<Bytes>> {
     shown.extend(super::captains::worn(world, entity, id));
     shown.extend(super::worn::shown(world, entity, id));
     shown.extend(super::command_gear::shown(world, entity, id));
+    shown.extend(super::drinks::held(world, entity, id));
     let flags = world.get::<Told>(entity).and_then(Told::mob_flags);
     shown.extend(flags.and_then(|flags| super::husbandry::links_packet(world, entity, id, flags)));
     Some(super::villagers::dressed(world, entity, shown))

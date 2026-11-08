@@ -2,7 +2,7 @@
 //! from it each tick, by the rules mobs are hurt by (creatures/health.rs), told as BDS tells a
 //! player's (docs/research/player-damage.md). A hit: harm.rs; dying and rising: death.rs; mending
 //! and starving: hunger.rs; effects: effects.rs.
-// TODO: the breathing flag is not told. Crawling under a block: movement/crawl.rs.
+// Crawling under a block: movement/crawl.rs.
 
 pub(crate) mod boost;
 mod chorus;

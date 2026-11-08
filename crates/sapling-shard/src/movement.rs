@@ -97,6 +97,15 @@ impl Motion {
         }
         self.pose
     }
+
+    /// The player's eyes went under water (`on`) or came out, as viewers are already told
+    /// (vitals/stand.rs); the pose it is in now.
+    pub fn show_held_breath(&mut self, on: bool) -> Pose {
+        for pose in std::iter::once(&mut self.pose).chain(self.told.as_mut().map(|(_, pose)| pose)) {
+            pose.holding_breath = on;
+        }
+        self.pose
+    }
 }
 
 fn eyes(position: &Position) -> Vec3f {

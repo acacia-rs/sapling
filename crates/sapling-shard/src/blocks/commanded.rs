@@ -156,13 +156,16 @@ fn aged(world: &mut World, layer: Entity, [x, y, z]: BlockPos, block: &Block) ->
 }
 
 /// A torch named bare, set over a solid block, stands on it, written twice as an aged block is: BDS's
-/// went in `top` there (bds-p2rs.txt), `unknown` with nothing round it (block-defaults.tsv).
-// TODO: which side a bare torch takes with no floor but a wall beside it.
+/// went in `top` there (bds-p2rs.txt), `unknown` with nothing round it (block-defaults.tsv). With no floor
+/// it takes the name of the first solid side of west, east, north, south: the wall's own side, not the
+/// facing a placed torch on that wall gets (bds-m3torch.txt).
 fn standing_torch(world: &World, layer: Entity, [x, y, z]: BlockPos, block: &Block) -> Option<Block> {
     let bare = block.properties.is_empty() || block.properties == format!("{TORCH_FACING}=unknown");
-    let level = level(world, layer).filter(|level| block.name == "minecraft:torch" && bare && level.in_height(y - 1))?;
-    level.registry().get(level.block(x, y - 1, z)).filter(|under| under.is_solid())?;
-    Some(Block::new(block.name.as_str()).with(format!("{TORCH_FACING}=top")))
+    let level = level(world, layer).filter(|level| block.name == "minecraft:torch" && bare)?;
+    let solid = |[x, y, z]: BlockPos| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_solid());
+    let sides = [("top", [x, y - 1, z]), ("west", [x - 1, y, z]), ("east", [x + 1, y, z]), ("north", [x, y, z - 1]), ("south", [x, y, z + 1])];
+    let (facing, _) = sides.into_iter().find(|(_, at)| solid(*at))?;
+    Some(Block::new(block.name.as_str()).with(format!("{TORCH_FACING}={facing}")))
 }
 
 /// A fence or pane its neighbours join, in the state they decide: BDS listed a fence set between stones

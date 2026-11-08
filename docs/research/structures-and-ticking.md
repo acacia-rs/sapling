@@ -139,7 +139,9 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   `abandoned_camp_meadow` a `generation.error`; a structure is drawn only over loaded columns
   (`chunknotloaded.error`, where BDS placed one 9000 blocks off); `ignoreStartHeight` for kinds
   other than the v2 ones; `includeEntities` is followed for `/place structure`
-  as for jigsaws, undrilled there; the depth limit is taken as 20 (1..20; 0 and 30 refused).
+  as for jigsaws, undrilled there (bds-m3place.txt placed both ways, out of the drill's sight). The
+  depth limit is 1..20: `trail_ruins/tower` placed at 1 and 20, 0 and 21 were `maxdepth.error`
+  (bds-m3place.txt), as sapling's.
   Block entities are placed with their loot tables (`StructureWrites::entities`); what BDS's
   chests held is unseen by command.
 - Drilled 2026-11-05, group AI (`ai1camps`, bds-ai1camps.txt): on the flat drill world, every one of

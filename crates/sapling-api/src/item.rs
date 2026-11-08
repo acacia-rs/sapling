@@ -49,6 +49,8 @@ pub enum Slot {
     /// 0 helmet, 1 chestplate, 2 leggings, 3 boots.
     Armor(u8),
     Offhand,
+    /// 0 to 26 of the player's ender chest.
+    EnderChest(u8),
 }
 
 /// A player throwing a stack out of their inventory. Cancelled, the stack stays where it was.

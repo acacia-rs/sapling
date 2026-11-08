@@ -109,7 +109,8 @@ down on the thrower, the watcher standing off along x.
 - Absorption on hit (research/captures/bds-t2eitems.txt): a golden apple's 8 went 5, 2, 0 under
   3-point hits; the hit that took it to 0 also removed the effect (MobEffect Remove, 483 ticks
   left) and its overflow went to health. Sapling now ends the effect there (`vitals.rs` `settle`).
-- Suspicious stew data 15, 16 and 20 gave no effect on BDS, as in sapling (bds-t2eitems.txt).
+- Suspicious stew data 15, 16 and 20 gave no effect on BDS, as in sapling (bds-t2eitems.txt); 13, 17, 18
+  and 19 were eaten (bowl, burp) with no effect either (bds-m3stew.txt, 2026-11-08).
 - Eating starts with one UpdateAttributes of all 14 player attributes to the eater and its
   viewers (bds-t2eitems.txt); sapling sends it (`vitals/told_all.rs`).
 

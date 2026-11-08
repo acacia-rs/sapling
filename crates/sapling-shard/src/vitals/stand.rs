@@ -223,8 +223,13 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
         super::totem::rescue(world, player, cause);
     }
     let is_alive = world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0);
-    if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.air != breath) {
-        tell(world, player, &sapling_data::mob_air(id, vitals.air));
+    let held_breath = world.get::<Motion>(player).is_some_and(|motion| motion.pose.holding_breath);
+    let turned = (held_breath != under_water).then(|| world.get_mut::<Motion>(player).map(|mut motion| motion.show_held_breath(under_water))).flatten();
+    if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.air != breath || turned.is_some()) {
+        // BDS told the flag with the air, in one SetEntityData (bds-m3breath.txt).
+        let mut told = sapling_data::mob_air(id, vitals.air);
+        told.metadata.splice(0..0, turned.and_then(crate::movement::flags_item));
+        tell(world, player, &told);
     }
     if let Some(id) = world.get::<NetId>(player).map(|id| id.0).filter(|_| vitals.hunger.shown() != fed.shown()) {
         let tick = world.resource::<Tick>().0;

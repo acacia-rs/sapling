@@ -109,3 +109,14 @@ went on (research/captures/bds-t2edon.txt); sapling put them on and now leaves t
   InventorySlot of window 3 slot 0; `BeaconPayment{1, 0}` + Destroy 27 answered Ok, no BlockEntityData.
   On a one-layer iron pyramid speed came to the payer and the watcher as MobEffect Add, amplifier 0,
   duration 220, ambient, particles, then Update every 80 ticks.
+
+## Pick block (`m3pick`; `inventory/picking.rs`, `blocks/items.rs` `picked_as`)
+
+- A pick gives the item that places the block: wheat → wheat_seeds, carrots → carrot, potatoes → potato,
+  beetroot → beetroot_seeds, pumpkin_stem → pumpkin_seeds, cocoa → cocoa_beans, standing/wall_sign →
+  oak_sign, redstone_wire → redstone, powered/unpowered repeater and comparator, lit_furnace → furnace,
+  lit_redstone_lamp → redstone_lamp, unlit_redstone_torch → redstone_torch, trip_wire → string,
+  sweet_berry_bush → sweet_berries, wooden_door → its item, piston_arm_collision → piston; fire gives
+  nothing (bds-m3pick.txt). A redstone torch on a wall gave nothing in the one run (not chased).
+- With data a chest's item carries `{BlockEntityVersion 0, Findable 0, Items [...], display {Lore
+  ["(+DATA)"]}}`.

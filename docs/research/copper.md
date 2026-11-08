@@ -159,7 +159,9 @@ The table was read from the strings (`str copper`, `str lightning_rod`); all 128
 - U1 Whether a random tick reaches waxed / oxidized copper at all (irrelevant: O2 drops them, but two RNG floats
   are consumed if it does).
 - U2 `+0x2dc & 1` on the chest actor is `mPairLead` (header layout guess); whether a single chest has it set.
-- U3 141a56c80 is `hurtAndBreak` (Unbreaking applies?); 142535e40 tests the SNEAKING flag.
+- U3 141a56c80 is `hurtAndBreak`: Unbreaking applies (bds-m3axe.txt: a plain iron axe wore 4 in 4 scrapes;
+  with Unbreaking III, 8 in 24 scrapes and 6 in 12 unwaxings), as sapling's wear does. 142535e40 tests the
+  SNEAKING flag.
 - U4 Whether the generic `BlockPlayerInteractEvent` reaches copper when the player sneaks with an item.
 - U5 GameEvent ids 14cc8a9e4 / 14cc89898 not named (likely `block_change` / `lightning_strike`).
 - U6 The statue's `ActorInternalEvent` (turning into a golem) not read. W8's turn was drilled and ported

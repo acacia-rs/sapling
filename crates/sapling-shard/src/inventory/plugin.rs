@@ -21,6 +21,7 @@ fn place(slot: Slot) -> Place {
         Slot::Main(slot) => Place::Main(slot.into()),
         Slot::Armor(slot) => Place::Armor(slot.into()),
         Slot::Offhand => Place::Offhand,
+        Slot::EnderChest(slot) => Place::Ender(slot.into()),
     }
 }
 
@@ -126,8 +127,11 @@ pub(crate) fn set_item(world: &mut World, player: Entity, slot: Slot, item: Opti
         },
         None => None,
     };
-    if let Place::Armor(piece) = place(slot) {
-        return super::armour_wear::put_on(world, player, piece, stack);
+    match place(slot) {
+        Place::Armor(piece) => return super::armour_wear::put_on(world, player, piece, stack),
+        // BDS told nothing of an ender chest's slot set (research/captures/bds-m3slots.txt).
+        Place::Ender(at) => return world.get_mut::<Inventory>(player).is_some_and(|mut inventory| inventory.put(Place::Ender(at), stack)),
+        _ => {}
     }
     change(world, player, |inventory| inventory.put(place(slot), stack)) == Some(true)
 }

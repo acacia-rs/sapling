@@ -51,13 +51,13 @@ fn a_bare_sneak_shows_the_shield_bits_to_all_and_its_pose_to_the_sneaker_and_a_s
 }
 
 /// Throws what Alex holds straight down; what Alex was told in each of the next `ticks` ticks.
-fn thrown(item: &str, data: i16, ticks: usize) -> Vec<Vec<RawPacket>> {
+pub(crate) fn thrown(item: &str, data: i16, ticks: usize) -> Vec<Vec<RawPacket>> {
     let mut h = ready(GameMode::Creative, &[(item, 1, data)], 90.0);
     h.receive(1, &click_air());
     (0..ticks).map(|_| h.tick_all().to(1).to_vec()).collect()
 }
 
-fn tick_of(ticks: &[Vec<RawPacket>], found: impl Fn(&[RawPacket]) -> bool) -> Option<usize> {
+pub(crate) fn tick_of(ticks: &[Vec<RawPacket>], found: impl Fn(&[RawPacket]) -> bool) -> Option<usize> {
     ticks.iter().position(|sent| found(sent))
 }
 

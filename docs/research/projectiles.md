@@ -130,8 +130,12 @@ bds-small.txt, bds-q3wind.txt), each thrown straight down by a player at midnigh
   particles and what it does (effects given, a pearl's teleport), in the next its RemoveEntity, with
   the orbs or the cloud it leaves announced just before and `glass` or `undefined` heard; one two
   ticks old is still heard `reappeared` then (`creatures/landing.rs` `goes_late`, `Leaves`;
-  `hits.rs` `struck_goes`). Tests in `fourteenth2c.rs`. Left: the potion's 5 item particles, a pearl's
-  teleport events, and the order within the tick (research/parity/REMAINING4.md).
+  `hits.rs` `struck_goes`). Tests in `fourteenth2c.rs`. In the going tick the order is the orbs or
+  cloud, RemoveEntity, the sound, `reappeared` (bds-f14cthrow.txt): sapling queues the sounds for after
+  `mobs::update` (`landing::tell_after_gone`). In the landing tick an egg shows 6 and a splash potion
+  `ParticleSplash` then 5 `ParticleProjectileHit` of data `item id << 16 | 14` (iconcrack); a pearl
+  `ParticleEndermanTeleport` at the landing and `SoundPortal` 1.62 over the thrower's old feet and over
+  the landing. Tests in `fourteenth3m.rs`.
 
 A stuck arrow or trident that a player may pick up is kept with its column, with the fields
 `player`, `isCreative`, `auxValue` and `Trident` (sapling-leveldb `actors/stuck.rs`). Any other stuck
@@ -158,8 +162,10 @@ These are the Java game's, a guess, or not found in the decompile:
 - Riptide's launch (`3 × (1 + level) / 4`);
 - the `chargedItem` tag of a loaded crossbow;
 - most effect colours, which are Java's (sapling-data `shots.rs`);
-- the five chick-hatching numbers, the snowball's 3 against a blaze and the bottle's 3 to 10 are the
-  pack's, but were not seen in play.
+- the bottle's 3 to 10: an orb's worth is not on the wire. bds-m3throw.txt: 32 summoned bottles broke in
+  one tick and let out 13 orbs between them, as sapling's did (sapling-m3throw.txt; orbs merge).
+  Seen there: a summoned snowball took 3 off a blaze (4 left 1, 3 killed it); 64 eggs hatched 10
+  chickens, in keeping with 1 in 8 and a rare 4.
 
 Firework rockets as crossbow ammunition and Channeling are in wither-lightning-fireworks.md; both
 drilled the same (research/captures/bds-t2efire.txt).

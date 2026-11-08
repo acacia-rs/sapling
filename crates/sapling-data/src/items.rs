@@ -100,7 +100,7 @@ pub fn creative_item(entry_id: u32) -> Option<CreativeItem> {
 }
 
 /// The network id of the item `name`, custom items included.
-pub(crate) fn network_id(name: &str) -> Option<i16> {
+pub fn network_id(name: &str) -> Option<i16> {
     NETWORK_IDS.get(name).copied().or_else(|| custom_items::by_name(name).map(|item| item.id))
 }
 

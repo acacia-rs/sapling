@@ -4,11 +4,12 @@
 //! fire resistance on fire or on magma, healing when hurt, swiftness with prey 11 or more off. It
 //! holds the potion 33 ticks, then has its effects (`afflictions`). The pack's `speed_modifier`
 //! -0.25 slowed BDS's not (bds-s3witch.txt: 0.135 a tick on, drinking or not).
-// TODO: a viewer who comes while it drinks does not see the potion.
+//! A viewer who comes while it drinks is shown the potion after its AddEntity (bds-m3witch.txt).
 
 use acacia_proto::packets::MobEquipment;
 use acacia_proto::types::WindowID;
 use bevy_ecs::prelude::*;
+use bytes::Bytes;
 use sapling_api::Effect;
 
 use crate::body::Body;
@@ -54,13 +55,24 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     }
 }
 
-/// The witch `id` holds `potion`, or nothing.
+fn potion_held(id: u64, potion: i16) -> Option<MobEquipment> {
+    sapling_data::mob_hand(id, &sapling_data::Stack { name: "minecraft:potion", count: 1, damage: potion, block: None, tag: None }, false)
+}
+
+/// What shows a drinking witch's potion to a viewer who comes while it drinks.
+pub(super) fn held(world: &World, entity: Entity, id: u64) -> Option<Bytes> {
+    let (potion, _) = world.get::<Drinker>(entity)?.drinking?;
+    potion_held(id, potion).map(|held| sapling_net::encode(&held))
+}
+
+/// The witch `id` holds `potion`, or nothing, shown to its viewers now and to those who come later.
 fn hold(world: &mut World, entity: Entity, layer: Entity, id: u64, body: &Body, potion: Option<i16>) {
     let held = match potion {
-        Some(data) => sapling_data::mob_hand(id, &sapling_data::Stack { name: "minecraft:potion", count: 1, damage: data, block: None, tag: None }, false),
+        Some(data) => potion_held(id, data),
         None => Some(MobEquipment { runtime_entity_id: id, item: sapling_data::no_item(), slot: 0, selected_slot: 0, window_id: WindowID::Inventory }),
     };
     entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), held.into_iter().map(|held| sapling_net::encode(&held)).collect());
+    super::shown::reshow(world, entity);
 }
 
 /// Before its move: a witch with prey at `prey` finishes a draught, or begins one.
@@ -69,9 +81,9 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, bo
     let Some(drinking) = world.get::<Drinker>(entity).map(|drinker| drinker.drinking) else { return };
     match drinking {
         Some((potion, since)) if now >= since + DRINKS => {
+            world.get_mut::<Drinker>(entity).expect("a drinker, above").drinking = None;
             hold(world, entity, layer, id, body, None);
             afflictions::splashed(world, entity, potion, 1.0);
-            world.get_mut::<Drinker>(entity).expect("a drinker, above").drinking = None;
         }
         Some(_) => {}
         None if (now + id).is_multiple_of(CHECKS) => {

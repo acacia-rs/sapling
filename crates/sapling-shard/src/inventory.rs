@@ -77,6 +77,8 @@ pub(crate) enum Place {
     Ui(usize),
     /// A slot of the bundle a request names, while it is answered (bundles.rs).
     Bundle(usize),
+    /// A slot of the player's ender chest.
+    Ender(usize),
 }
 
 #[derive(Component, Clone)]
@@ -156,6 +158,7 @@ impl Inventory {
             Place::Container(slot) => self.container.get(slot),
             Place::Ui(slot) => self.grid.get(slot),
             Place::Bundle(slot) => self.bundle.as_ref()?.1.get(slot),
+            Place::Ender(slot) => self.ender.get(slot),
         }
     }
 
@@ -170,6 +173,7 @@ impl Inventory {
             Place::Container(slot) => self.container.get_mut(slot),
             Place::Ui(slot) => self.grid.get_mut(slot),
             Place::Bundle(slot) => self.bundle.as_mut()?.1.get_mut(slot),
+            Place::Ender(slot) => self.ender.get_mut(slot),
         }
     }
 

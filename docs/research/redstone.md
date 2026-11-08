@@ -484,6 +484,9 @@ Built in `sapling-shard/src/blocks/pistons/plan.rs`.
 - A bare torch set on slime stood on its top (bds-p2rs.txt); pushed with the slime, it popped a tick after
   the move began, over the arm (`piston_arm_collision` not facing up holds nothing on its top). Fixed in
   `blocks/updates.rs` `holds`. A sticky piston whose slime is held back brought nothing on both sides.
+- A bare `/setblock torch` with air under it takes the name of the first solid side of west, east, north,
+  south (stone east → `east`, east+west → `west`, north+south → `north`, all four → `west`), `unknown`
+  with none (bds-m3torch.txt). Sapling: `blocks/commanded.rs` `standing_torch`.
 
 ## Daylight detectors (2026-10-11, `bds_command_probe daylight`, research/captures/bds-daylight.txt)
 
