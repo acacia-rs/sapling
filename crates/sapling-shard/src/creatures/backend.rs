@@ -91,6 +91,14 @@ impl EntityBackend for Ctx<'_> {
         entities::find(self.world, id).is_some_and(|mob| super::husbandry::give_name(self.world, mob, name.to_owned()))
     }
 
+    fn fire_entity_event(&mut self, id: EntityId, event: &str) -> bool {
+        let Some(kind) = entities::describe(self.world, id).map(|entity| entity.kind) else { return false };
+        match entities::find(self.world, id).filter(|&mob| self.world.get::<super::Creature>(mob).is_some()) {
+            Some(mob) => super::evented::fire(self.world, mob, &kind, event),
+            None => sapling_data::has_event(&kind, event),
+        }
+    }
+
     fn turn_entity(&mut self, id: EntityId, yaw: f32) -> bool {
         let Some(entity) = entities::find(self.world, id) else { return false };
         super::gaze::turn(self.world, entity, yaw);

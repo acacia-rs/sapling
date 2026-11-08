@@ -14,6 +14,7 @@ mod custom_items;
 pub mod enchant;
 mod entity;
 mod entity_properties;
+mod events;
 mod families;
 mod food;
 mod game_rules;
@@ -54,6 +55,7 @@ pub use command_names::{block_tile_key, command_takes_block, command_takes_featu
 pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_block, add_painting, announced_flags, mob_health, mob_size};
 pub use entity_properties::{EntityProperty, PropertyShape, entity_properties, entity_property, property_registry_packets, property_values};
 pub use attack::item_attack;
+pub use events::has_event;
 pub use families::{has_family, is_arthropod, is_undead, mob_families};
 pub use armour::{armour, armour_lasts};
 pub use food::{Food, Gives, consumable, food, potion_effects};

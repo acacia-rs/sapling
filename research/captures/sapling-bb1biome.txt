@@ -1,0 +1,957 @@
+## drill starts at 1794109487816
+## /kill @e[type=!player]
+## /gamerule domobspawning false
+## /gamerule dodaylightcycle false
+## /time set 1000
+   3105 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+   3106 actor   CommandOutput success_count=1 data=None commands.time.set success=true ["1000"]
+   3106 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1000, paused: false }] }) }
+   3106 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.time.set\",\"with\":{\"rawtext\":[{\"text\":\"1000\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /tp @a 0.5 200 0.5
+   5097 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 200.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5097 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"200.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5100 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, 200.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5100 actor   CommandOutput success_count=2 data=None commands.tp.success.coordinates success=true ["CmdActor, CmdWatcher", "0.50", "200.00", "0.50"]
+## /
+## /locate biome minecraft:plains
+   7275 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:plains\"},{\"text\":\"-928\"},{\"text\":\"67\"},{\"text\":\"-928\"},{\"text\":\"1312\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   7283 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:plains", "-928", "67", "-928", "1312"]
+## /
+## /
+   9101 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1108, paused: false }] }) }
+   9102 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1108, paused: false }] }) }
+## /
+## /locate biome minecraft:sunflower_plains
+  11314 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:sunflower_plains\"},{\"text\":\"-1120\"},{\"text\":\"75\"},{\"text\":\"-992\"},{\"text\":\"1496\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11316 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:sunflower_plains", "-1120", "75", "-992", "1496"]
+## /
+## /
+## /
+## /locate biome minecraft:desert
+## /
+## /
+## /
+## /locate biome minecraft:extreme_hills
+## /
+## /
+## /
+## /locate biome minecraft:forest
+## /
+## /
+  25890 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:desert"]
+## /
+## /locate biome minecraft:flower_forest
+## /
+  28498 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:extreme_hills\"},{\"text\":\"-3680\"},{\"text\":\"94\"},{\"text\":\"-2912\"},{\"text\":\"4692\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28498 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:forest\"},{\"text\":\"-928\"},{\"text\":\"63\"},{\"text\":\"-288\"},{\"text\":\"971\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  28501 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:extreme_hills", "-3680", "94", "-2912", "4692"]
+  28501 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:forest", "-928", "63", "-288", "971"]
+  28711 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:flower_forest", "-1248", "64", "-1120", "1676"]
+  28711 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:flower_forest\"},{\"text\":\"-1248\"},{\"text\":\"64\"},{\"text\":\"-1120\"},{\"text\":\"1676\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /locate biome minecraft:birch_forest
+  31419 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:birch_forest", "-1632", "63", "-1184", "2016"]
+  31423 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:birch_forest\"},{\"text\":\"-1632\"},{\"text\":\"63\"},{\"text\":\"-1184\"},{\"text\":\"2016\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:roofed_forest
+  35459 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:roofed_forest", "-1696", "63", "-1120", "2032"]
+  35460 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:roofed_forest\"},{\"text\":\"-1696\"},{\"text\":\"63\"},{\"text\":\"-1120\"},{\"text\":\"2032\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+  38297 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1364, paused: false }] }) }
+  38297 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1364, paused: false }] }) }
+## /locate biome minecraft:taiga
+  39541 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:taiga", "-992", "78", "96", "996"]
+  39541 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:taiga\"},{\"text\":\"-992\"},{\"text\":\"78\"},{\"text\":\"96\"},{\"text\":\"996\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:mega_taiga
+  43882 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:mega_taiga", "800", "84", "-1568", "1760"]
+  43883 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:mega_taiga\"},{\"text\":\"800\"},{\"text\":\"84\"},{\"text\":\"-1568\"},{\"text\":\"1760\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:cold_taiga
+  47905 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cold_taiga\"},{\"text\":\"672\"},{\"text\":\"95\"},{\"text\":\"-1824\"},{\"text\":\"1943\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  47908 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cold_taiga", "672", "95", "-1824", "1943"]
+## /
+## /
+## /
+## /locate biome minecraft:swampland
+## /
+## /
+## /
+## /locate biome minecraft:mangrove_swamp
+  56100 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:swampland", "3488", "76", "-2016", "4028"]
+  56100 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:swampland\"},{\"text\":\"3488\"},{\"text\":\"76\"},{\"text\":\"-2016\"},{\"text\":\"4028\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:river
+## /
+## /
+## /
+## /locate biome minecraft:frozen_river
+## /
+## /
+## /
+  66292 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mangrove_swamp"]
+## /locate biome minecraft:beach
+  67721 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:river\"},{\"text\":\"-736\"},{\"text\":\"63\"},{\"text\":\"-224\"},{\"text\":\"769\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  67721 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_river\"},{\"text\":\"-1120\"},{\"text\":\"63\"},{\"text\":\"-2528\"},{\"text\":\"2764\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  67721 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:river", "-736", "63", "-224", "769"]
+  67721 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_river", "-1120", "63", "-2528", "2764"]
+  67929 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:beach", "-864", "63", "-352", "932"]
+  67929 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:beach\"},{\"text\":\"-864\"},{\"text\":\"63\"},{\"text\":\"-352\"},{\"text\":\"932\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:stone_beach
+  71449 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:stone_beach", "-544", "89", "-32", "544"]
+  71449 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:stone_beach\"},{\"text\":\"-544\"},{\"text\":\"89\"},{\"text\":\"-32\"},{\"text\":\"544\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  71810 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1620, paused: false }] }) }
+  71811 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1620, paused: false }] }) }
+## /
+## /
+## /
+## /locate biome minecraft:jungle
+## /
+  76412 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jungle", "-2272", "63", "544", "2336"]
+  76412 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jungle\"},{\"text\":\"-2272\"},{\"text\":\"63\"},{\"text\":\"544\"},{\"text\":\"2336\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /locate biome minecraft:jungle_edge
+## /
+  80419 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jungle_edge\"},{\"text\":\"-2400\"},{\"text\":\"68\"},{\"text\":\"608\"},{\"text\":\"2475\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  80419 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jungle_edge", "-2400", "68", "608", "2475"]
+## /
+## /
+## /locate biome minecraft:bamboo_jungle
+## /
+  84475 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:bamboo_jungle", "-2656", "69", "928", "2813"]
+  84475 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:bamboo_jungle\"},{\"text\":\"-2656\"},{\"text\":\"69\"},{\"text\":\"928\"},{\"text\":\"2813\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /locate biome minecraft:savanna
+## /
+  88304 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:savanna\"},{\"text\":\"-2720\"},{\"text\":\"106\"},{\"text\":\"-1632\"},{\"text\":\"3172\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  88304 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:savanna", "-2720", "106", "-1632", "3172"]
+## /
+## /
+## /locate biome minecraft:savanna_plateau
+## /
+## /
+  93429 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:savanna_plateau", "2080", "97", "-224", "2092"]
+  93430 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:savanna_plateau\"},{\"text\":\"2080\"},{\"text\":\"97\"},{\"text\":\"-224\"},{\"text\":\"2092\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+  94374 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1876, paused: false }] }) }
+  94374 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 1876, paused: false }] }) }
+## /locate biome minecraft:mesa
+## /
+## /
+## /
+## /locate biome minecraft:mesa_bryce
+## /
+## /
+## /
+## /locate biome minecraft:mushroom_island
+## /
+## /
+ 105678 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mesa"]
+## /
+## /locate biome minecraft:ice_plains
+## /
+## /
+## /
+## /locate biome minecraft:ice_plains_spikes
+## /
+## /
+## /
+## /locate biome minecraft:ocean
+## /
+## /
+## /
+ 118596 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mesa_bryce"]
+ 118596 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:mushroom_island", "-3104", "75", "-416", "3131"]
+ 118596 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:mushroom_island\"},{\"text\":\"-3104\"},{\"text\":\"75\"},{\"text\":\"-416\"},{\"text\":\"3131\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /locate biome minecraft:deep_ocean
+## /
+## /
+ 122113 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ice_plains", "-608", "66", "-1888", "1983"]
+ 122113 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ice_plains_spikes", "-1312", "63", "-3360", "3607"]
+ 122113 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ocean", "-32", "63", "-32", "45"]
+ 122113 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ice_plains\"},{\"text\":\"-608\"},{\"text\":\"66\"},{\"text\":\"-1888\"},{\"text\":\"1983\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 122113 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ice_plains_spikes\"},{\"text\":\"-1312\"},{\"text\":\"63\"},{\"text\":\"-3360\"},{\"text\":\"3607\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 122113 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ocean\"},{\"text\":\"-32\"},{\"text\":\"63\"},{\"text\":\"-32\"},{\"text\":\"45\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 122264 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:deep_ocean\"},{\"text\":\"32\"},{\"text\":\"63\"},{\"text\":\"-96\"},{\"text\":\"101\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 122265 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:deep_ocean", "32", "63", "-96", "101"]
+## /
+## /locate biome minecraft:warm_ocean
+## /
+## /
+## /
+## /locate biome minecraft:lukewarm_ocean
+## /
+## /
+## /
+## /locate biome minecraft:cold_ocean
+## /
+## /
+ 134087 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:warm_ocean"]
+## /
+ 135198 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:lukewarm_ocean\"},{\"text\":\"-2464\"},{\"text\":\"63\"},{\"text\":\"-1440\"},{\"text\":\"2853\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 135199 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:lukewarm_ocean", "-2464", "63", "-1440", "2853"]
+ 135199 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cold_ocean", "-864", "63", "-864", "1221"]
+ 135199 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cold_ocean\"},{\"text\":\"-864\"},{\"text\":\"63\"},{\"text\":\"-864\"},{\"text\":\"1221\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /locate biome minecraft:frozen_ocean
+ 135951 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_ocean\"},{\"text\":\"-544\"},{\"text\":\"63\"},{\"text\":\"-1824\"},{\"text\":\"1903\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 135951 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_ocean", "-544", "63", "-1824", "1903"]
+## /
+## /
+## /
+## /locate biome minecraft:meadow
+ 139733 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:meadow\"},{\"text\":\"-1056\"},{\"text\":\"97\"},{\"text\":\"32\"},{\"text\":\"1056\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 139734 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:meadow", "-1056", "97", "32", "1056"]
+## /
+## /
+## /
+## /locate biome minecraft:grove
+ 144021 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:grove", "-416", "98", "288", "505"]
+ 144021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:grove\"},{\"text\":\"-416\"},{\"text\":\"98\"},{\"text\":\"288\"},{\"text\":\"505\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:snowy_slopes
+ 148248 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:snowy_slopes", "544", "133", "32", "544"]
+ 148248 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:snowy_slopes\"},{\"text\":\"544\"},{\"text\":\"133\"},{\"text\":\"32\"},{\"text\":\"544\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+ 150611 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2132, paused: false }] }) }
+ 150611 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2132, paused: false }] }) }
+## /locate biome minecraft:jagged_peaks
+ 152298 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jagged_peaks\"},{\"text\":\"672\"},{\"text\":\"112\"},{\"text\":\"32\"},{\"text\":\"672\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 152298 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jagged_peaks", "672", "112", "32", "672"]
+## /
+## /
+## /
+## /locate biome minecraft:frozen_peaks
+ 156194 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_peaks", "672", "116", "-672", "950"]
+ 156195 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_peaks\"},{\"text\":\"672\"},{\"text\":\"116\"},{\"text\":\"-672\"},{\"text\":\"950\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:stony_peaks
+## /
+## /
+ 162071 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:stony_peaks\"},{\"text\":\"-3744\"},{\"text\":\"119\"},{\"text\":\"672\"},{\"text\":\"3803\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 162072 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:stony_peaks", "-3744", "119", "672", "3803"]
+## /
+## /locate biome minecraft:cherry_grove
+ 164285 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cherry_grove", "416", "93", "-480", "635"]
+ 164285 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cherry_grove\"},{\"text\":\"416\"},{\"text\":\"93\"},{\"text\":\"-480\"},{\"text\":\"635\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:pale_garden
+ 168436 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:pale_garden", "1056", "103", "544", "1187"]
+ 168436 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:pale_garden\"},{\"text\":\"1056\"},{\"text\":\"103\"},{\"text\":\"544\"},{\"text\":\"1187\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:dappled_forest
+ 171754 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:dappled_forest\"},{\"text\":\"-1056\"},{\"text\":\"63\"},{\"text\":\"-992\"},{\"text\":\"1448\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 171756 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:dappled_forest", "-1056", "63", "-992", "1448"]
+## /
+ 173100 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2388, paused: false }] }) }
+ 173101 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2388, paused: false }] }) }
+## /
+## /
+## /locate biome minecraft:lush_caves
+## /
+## /
+## /
+ 178747 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:lush_caves", "-928", "5", "32", "928"]
+ 178747 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:lush_caves\"},{\"text\":\"-928\"},{\"text\":\"5\"},{\"text\":\"32\"},{\"text\":\"928\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /locate biome minecraft:dripstone_caves
+## /
+## /
+ 181897 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:dripstone_caves\"},{\"text\":\"-1392\"},{\"text\":\"-11\"},{\"text\":\"-1360\"},{\"text\":\"1946\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 181897 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:dripstone_caves", "-1392", "-11", "-1360", "1946"]
+## /
+## /locate biome minecraft:deep_dark
+## /
+## /
+ 185599 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:deep_dark\"},{\"text\":\"-560\"},{\"text\":\"-43\"},{\"text\":\"16\"},{\"text\":\"560\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 185600 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:deep_dark", "-560", "-43", "16", "560"]
+## /
+## /locate biome minecraft:sulfur_caves
+## /
+ 189357 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:sulfur_caves", "-1184", "5", "-1184", "1674"]
+ 189358 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:sulfur_caves\"},{\"text\":\"-1184\"},{\"text\":\"5\"},{\"text\":\"-1184\"},{\"text\":\"1674\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /tp @a 22.5 200 204.5
+ 191648 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"22.50, 200.00, 204.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 191648 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"22.50\"},{\"text\":\"200.00\"},{\"text\":\"204.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 191649 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"22.50, 200.00, 204.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 191649 actor   CommandOutput success_count=2 data=None commands.tp.success.coordinates success=true ["CmdActor, CmdWatcher", "22.50", "200.00", "204.50"]
+## /
+## /locate biome minecraft:plains
+ 193711 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:plains\"},{\"text\":\"-10\"},{\"text\":\"72\"},{\"text\":\"236\"},{\"text\":\"45\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 193712 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:plains", "-10", "72", "236", "45"]
+## /
+## /
+## /
+## /locate biome minecraft:sunflower_plains
+ 197565 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2644, paused: false }] }) }
+ 197565 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2644, paused: false }] }) }
+ 197702 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:sunflower_plains", "-10", "72", "172", "45"]
+ 197702 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:sunflower_plains\"},{\"text\":\"-10\"},{\"text\":\"72\"},{\"text\":\"172\"},{\"text\":\"45\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:desert
+## /
+## /
+## /
+## /locate biome minecraft:extreme_hills
+## /
+## /
+## /
+## /locate biome minecraft:forest
+## /
+## /
+ 212117 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:desert"]
+ 212577 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:extreme_hills", "-1610", "70", "-1364", "2263"]
+ 212577 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:forest", "-458", "78", "172", "481"]
+ 212577 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:extreme_hills\"},{\"text\":\"-1610\"},{\"text\":\"70\"},{\"text\":\"-1364\"},{\"text\":\"2263\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 212577 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:forest\"},{\"text\":\"-458\"},{\"text\":\"78\"},{\"text\":\"172\"},{\"text\":\"481\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /locate biome minecraft:flower_forest
+ 213885 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:flower_forest\"},{\"text\":\"-1098\"},{\"text\":\"70\"},{\"text\":\"-788\"},{\"text\":\"1496\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 213885 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:flower_forest", "-1098", "70", "-788", "1496"]
+## /
+## /
+## /
+## /locate biome minecraft:birch_forest
+ 217885 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:birch_forest", "-650", "64", "236", "672"]
+ 217886 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:birch_forest\"},{\"text\":\"-650\"},{\"text\":\"64\"},{\"text\":\"236\"},{\"text\":\"672\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:roofed_forest
+ 221862 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:roofed_forest", "-714", "70", "172", "736"]
+ 221862 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:roofed_forest\"},{\"text\":\"-714\"},{\"text\":\"70\"},{\"text\":\"172\"},{\"text\":\"736\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 222250 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2900, paused: false }] }) }
+ 222250 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 2900, paused: false }] }) }
+## /
+## /
+## /
+## /locate biome minecraft:taiga
+ 225881 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:taiga\"},{\"text\":\"-906\"},{\"text\":\"66\"},{\"text\":\"108\"},{\"text\":\"932\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 225881 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:taiga", "-906", "66", "108", "932"]
+## /
+## /
+## /
+## /locate biome minecraft:mega_taiga
+ 230387 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:mega_taiga", "822", "81", "-1556", "1933"]
+ 230388 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:mega_taiga\"},{\"text\":\"822\"},{\"text\":\"81\"},{\"text\":\"-1556\"},{\"text\":\"1933\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:cold_taiga
+## /
+ 235156 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cold_taiga\"},{\"text\":\"-1034\"},{\"text\":\"64\"},{\"text\":\"-2452\"},{\"text\":\"2858\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 235158 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cold_taiga", "-1034", "64", "-2452", "2858"]
+## /
+## /
+## /locate biome minecraft:swampland
+## /
+## /
+## /
+## /locate biome minecraft:mangrove_swamp
+ 242682 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:swampland", "3510", "70", "-2068", "4162"]
+ 242682 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:swampland\"},{\"text\":\"3510\"},{\"text\":\"70\"},{\"text\":\"-2068\"},{\"text\":\"4162\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:river
+## /
+## /
+## /
+## /locate biome minecraft:frozen_river
+## /
+## /
+## /
+ 253180 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mangrove_swamp"]
+## /locate biome minecraft:beach
+ 254607 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:river", "-714", "63", "-212", "845"]
+ 254607 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_river", "-970", "63", "-2452", "2835"]
+ 254607 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:river\"},{\"text\":\"-714\"},{\"text\":\"63\"},{\"text\":\"-212\"},{\"text\":\"845\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 254607 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_river\"},{\"text\":\"-970\"},{\"text\":\"63\"},{\"text\":\"-2452\"},{\"text\":\"2835\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+ 254809 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:beach", "-906", "69", "-660", "1267"]
+ 254810 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:beach\"},{\"text\":\"-906\"},{\"text\":\"69\"},{\"text\":\"-660\"},{\"text\":\"1267\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 254930 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3156, paused: false }] }) }
+ 254930 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3156, paused: false }] }) }
+## /
+## /
+## /locate biome minecraft:stone_beach
+ 257927 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:stone_beach", "-202", "68", "236", "226"]
+ 257927 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:stone_beach\"},{\"text\":\"-202\"},{\"text\":\"68\"},{\"text\":\"236\"},{\"text\":\"226\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:jungle
+ 262697 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jungle\"},{\"text\":\"-2634\"},{\"text\":\"70\"},{\"text\":\"-1428\"},{\"text\":\"3117\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 262697 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jungle", "-2634", "70", "-1428", "3117"]
+## /
+## /
+## /
+## /locate biome minecraft:jungle_edge
+## /
+ 266832 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jungle_edge\"},{\"text\":\"-2762\"},{\"text\":\"64\"},{\"text\":\"236\"},{\"text\":\"2784\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 266832 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jungle_edge", "-2762", "64", "236", "2784"]
+## /
+## /
+ 269696 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3412, paused: false }] }) }
+ 269696 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3412, paused: false }] }) }
+## /locate biome minecraft:bamboo_jungle
+## /
+ 270954 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:bamboo_jungle", "-2570", "64", "940", "2694"]
+ 270954 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:bamboo_jungle\"},{\"text\":\"-2570\"},{\"text\":\"64\"},{\"text\":\"940\"},{\"text\":\"2694\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /locate biome minecraft:savanna
+## /
+ 274817 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:savanna\"},{\"text\":\"-2762\"},{\"text\":\"77\"},{\"text\":\"-1620\"},{\"text\":\"3328\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 274817 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:savanna", "-2762", "77", "-1620", "3328"]
+## /
+## /
+## /locate biome minecraft:savanna_plateau
+## /
+## /
+ 279838 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:savanna_plateau\"},{\"text\":\"2102\"},{\"text\":\"111\"},{\"text\":\"-276\"},{\"text\":\"2134\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 279839 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:savanna_plateau", "2102", "111", "-276", "2134"]
+## /
+## /locate biome minecraft:mesa
+## /
+## /
+## /
+## /locate biome minecraft:mesa_bryce
+## /
+## /
+## /
+## /locate biome minecraft:mushroom_island
+## /
+ 291646 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mesa"]
+## /
+## /
+## /locate biome minecraft:ice_plains
+## /
+## /
+## /
+## /locate biome minecraft:ice_plains_spikes
+## /
+## /
+ 300292 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:mushroom_island\"},{\"text\":\"-3018\"},{\"text\":\"63\"},{\"text\":\"-852\"},{\"text\":\"3218\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 300293 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mesa_bryce"]
+ 300293 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:mushroom_island", "-3018", "63", "-852", "3218"]
+## /
+## /locate biome minecraft:ocean
+## /
+ 303620 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ice_plains\"},{\"text\":\"-1162\"},{\"text\":\"68\"},{\"text\":\"-2580\"},{\"text\":\"3025\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 303620 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ice_plains_spikes\"},{\"text\":\"-1418\"},{\"text\":\"79\"},{\"text\":\"-3284\"},{\"text\":\"3773\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 303620 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ice_plains", "-1162", "68", "-2580", "3025"]
+ 303620 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ice_plains_spikes", "-1418", "79", "-3284", "3773"]
+ 303742 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ocean\"},{\"text\":\"-74\"},{\"text\":\"63\"},{\"text\":\"108\"},{\"text\":\"135\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 303743 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ocean", "-74", "63", "108", "135"]
+## /
+## /
+## /locate biome minecraft:deep_ocean
+ 306018 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:deep_ocean\"},{\"text\":\"54\"},{\"text\":\"63\"},{\"text\":\"44\"},{\"text\":\"163\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 306019 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:deep_ocean", "54", "63", "44", "163"]
+## /
+## /
+ 308258 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3668, paused: false }] }) }
+ 308258 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3668, paused: false }] }) }
+## /
+## /locate biome minecraft:warm_ocean
+## /
+## /
+## /
+## /locate biome minecraft:lukewarm_ocean
+## /
+## /
+ 317011 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:warm_ocean"]
+## /
+ 317940 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:lukewarm_ocean", "-2506", "63", "-1300", "2941"]
+ 317940 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:lukewarm_ocean\"},{\"text\":\"-2506\"},{\"text\":\"63\"},{\"text\":\"-1300\"},{\"text\":\"2941\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /locate biome minecraft:cold_ocean
+ 318804 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cold_ocean\"},{\"text\":\"-522\"},{\"text\":\"63\"},{\"text\":\"-1236\"},{\"text\":\"1539\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 318805 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cold_ocean", "-522", "63", "-1236", "1539"]
+## /
+## /
+## /
+## /locate biome minecraft:frozen_ocean
+## /
+ 323650 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_ocean\"},{\"text\":\"54\"},{\"text\":\"63\"},{\"text\":\"-1940\"},{\"text\":\"2144\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 323650 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_ocean", "54", "63", "-1940", "2144"]
+## /
+## /
+## /locate biome minecraft:meadow
+ 326708 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:meadow\"},{\"text\":\"-1034\"},{\"text\":\"94\"},{\"text\":\"44\"},{\"text\":\"1068\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 326713 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:meadow", "-1034", "94", "44", "1068"]
+## /
+## /
+## /
+ 330357 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3924, paused: false }] }) }
+ 330357 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 3924, paused: false }] }) }
+## /locate biome minecraft:grove
+ 330902 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:grove", "-458", "118", "300", "489"]
+ 330902 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:grove\"},{\"text\":\"-458\"},{\"text\":\"118\"},{\"text\":\"300\"},{\"text\":\"489\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:snowy_slopes
+ 334554 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:snowy_slopes\"},{\"text\":\"-394\"},{\"text\":\"97\"},{\"text\":\"172\"},{\"text\":\"417\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 334555 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:snowy_slopes", "-394", "97", "172", "417"]
+## /
+## /
+## /
+## /locate biome minecraft:jagged_peaks
+ 339165 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jagged_peaks", "630", "120", "236", "608"]
+ 339166 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jagged_peaks\"},{\"text\":\"630\"},{\"text\":\"120\"},{\"text\":\"236\"},{\"text\":\"608\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:frozen_peaks
+ 343104 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_peaks\"},{\"text\":\"694\"},{\"text\":\"143\"},{\"text\":\"-788\"},{\"text\":\"1198\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 343104 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_peaks", "694", "143", "-788", "1198"]
+## /
+## /
+ 345036 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4180, paused: false }] }) }
+ 345036 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4180, paused: false }] }) }
+## /
+## /locate biome minecraft:stony_peaks
+## /
+## /
+ 348883 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:stony_peaks\"},{\"text\":\"-3402\"},{\"text\":\"162\"},{\"text\":\"940\"},{\"text\":\"3502\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 348883 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:stony_peaks", "-3402", "162", "940", "3502"]
+## /
+## /locate biome minecraft:cherry_grove
+ 351198 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cherry_grove\"},{\"text\":\"438\"},{\"text\":\"96\"},{\"text\":\"-468\"},{\"text\":\"790\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 351199 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cherry_grove", "438", "96", "-468", "790"]
+## /
+## /
+## /
+## /locate biome minecraft:pale_garden
+ 355314 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:pale_garden\"},{\"text\":\"1078\"},{\"text\":\"112\"},{\"text\":\"556\"},{\"text\":\"1113\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 355314 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:pale_garden", "1078", "112", "556", "1113"]
+## /
+## /
+## /
+## /locate biome minecraft:dappled_forest
+ 358703 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:dappled_forest\"},{\"text\":\"-1098\"},{\"text\":\"63\"},{\"text\":\"-980\"},{\"text\":\"1629\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 358703 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:dappled_forest", "-1098", "63", "-980", "1629"]
+## /
+## /
+## /
+ 361988 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4436, paused: false }] }) }
+ 361989 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4436, paused: false }] }) }
+## /locate biome minecraft:lush_caves
+## /
+## /
+ 365034 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:lush_caves\"},{\"text\":\"-666\"},{\"text\":\"-27\"},{\"text\":\"188\"},{\"text\":\"688\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 365034 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:lush_caves", "-666", "-27", "188", "688"]
+## /
+## /locate biome minecraft:dripstone_caves
+## /
+## /
+ 368488 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:dripstone_caves", "-1434", "5", "-1444", "2199"]
+ 368488 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:dripstone_caves\"},{\"text\":\"-1434\"},{\"text\":\"5\"},{\"text\":\"-1444\"},{\"text\":\"2199\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /locate biome minecraft:deep_dark
+## /
+## /
+ 372809 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:deep_dark\"},{\"text\":\"-362\"},{\"text\":\"-27\"},{\"text\":\"204\"},{\"text\":\"384\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 372810 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:deep_dark", "-362", "-27", "204", "384"]
+## /
+## /locate biome minecraft:sulfur_caves
+## /
+## /
+ 376839 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:sulfur_caves", "-1162", "5", "-788", "1544"]
+ 376839 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:sulfur_caves\"},{\"text\":\"-1162\"},{\"text\":\"5\"},{\"text\":\"-788\"},{\"text\":\"1544\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /tp @a -1000.5 200 700.5
+ 378577 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-1000.50, 200.00, 700.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 378577 actor   CommandOutput success_count=2 data=None commands.tp.success.coordinates success=true ["CmdActor, CmdWatcher", "-1000.50", "200.00", "700.50"]
+ 378577 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"-1000.50, 200.00, 700.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 378577 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor, CmdWatcher\"},{\"text\":\"-1000.50\"},{\"text\":\"200.00\"},{\"text\":\"700.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /locate biome minecraft:plains
+ 380666 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:plains", "-1033", "69", "668", "45"]
+ 380666 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:plains\"},{\"text\":\"-1033\"},{\"text\":\"69\"},{\"text\":\"668\"},{\"text\":\"45\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+ 383917 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4692, paused: false }] }) }
+ 383917 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4692, paused: false }] }) }
+## /locate biome minecraft:sunflower_plains
+ 384999 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:sunflower_plains\"},{\"text\":\"-1225\"},{\"text\":\"70\"},{\"text\":\"-612\"},{\"text\":\"1330\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 384999 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:sunflower_plains", "-1225", "70", "-612", "1330"]
+## /
+## /
+## /
+## /locate biome minecraft:desert
+## /
+## /
+## /
+## /locate biome minecraft:extreme_hills
+## /
+## /
+## /
+## /locate biome minecraft:forest
+## /
+ 397710 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:desert"]
+ 398232 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:extreme_hills", "-1353", "72", "-1060", "1794"]
+ 398232 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:forest", "-1097", "64", "668", "101"]
+ 398233 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:extreme_hills\"},{\"text\":\"-1353\"},{\"text\":\"72\"},{\"text\":\"-1060\"},{\"text\":\"1794\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 398233 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:forest\"},{\"text\":\"-1097\"},{\"text\":\"64\"},{\"text\":\"668\"},{\"text\":\"101\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /locate biome minecraft:flower_forest
+ 400963 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:flower_forest", "-1289", "64", "-676", "1405"]
+ 400964 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:flower_forest\"},{\"text\":\"-1289\"},{\"text\":\"64\"},{\"text\":\"-676\"},{\"text\":\"1405\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:birch_forest
+ 404816 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:birch_forest\"},{\"text\":\"-1481\"},{\"text\":\"70\"},{\"text\":\"732\"},{\"text\":\"481\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 404816 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:birch_forest", "-1481", "70", "732", "481"]
+## /
+## /
+ 407272 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4948, paused: false }] }) }
+ 407285 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 4948, paused: false }] }) }
+## /
+## /locate biome minecraft:roofed_forest
+ 408913 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:roofed_forest", "-2185", "69", "-1060", "2121"]
+ 408913 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:roofed_forest\"},{\"text\":\"-2185\"},{\"text\":\"69\"},{\"text\":\"-1060\"},{\"text\":\"2121\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:taiga
+ 412761 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:taiga\"},{\"text\":\"-1353\"},{\"text\":\"71\"},{\"text\":\"604\"},{\"text\":\"364\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 412761 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:taiga", "-1353", "71", "604", "364"]
+## /
+## /
+## /
+## /locate biome minecraft:mega_taiga
+ 417408 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:mega_taiga\"},{\"text\":\"-201\"},{\"text\":\"72\"},{\"text\":\"1692\"},{\"text\":\"1274\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 417410 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:mega_taiga", "-201", "72", "1692", "1274"]
+## /
+## /
+## /
+## /locate biome minecraft:cold_taiga
+## /
+ 422104 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cold_taiga", "-777", "63", "-2212", "2920"]
+ 422104 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cold_taiga\"},{\"text\":\"-777\"},{\"text\":\"63\"},{\"text\":\"-2212\"},{\"text\":\"2920\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+ 422909 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5204, paused: false }] }) }
+ 422909 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5204, paused: false }] }) }
+## /
+## /locate biome minecraft:swampland
+## /
+## /
+ 426930 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:swampland\"},{\"text\":\"-4937\"},{\"text\":\"64\"},{\"text\":\"860\"},{\"text\":\"3939\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 426931 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:swampland", "-4937", "64", "860", "3939"]
+## /
+## /locate biome minecraft:mangrove_swamp
+## /
+## /
+## /
+## /locate biome minecraft:river
+## /
+## /
+## /
+## /locate biome minecraft:frozen_river
+## /
+ 438379 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mangrove_swamp"]
+## /
+## /
+ 439879 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:river", "-1097", "63", "604", "135"]
+ 439879 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_river", "-457", "63", "-2084", "2836"]
+ 439880 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:river\"},{\"text\":\"-1097\"},{\"text\":\"63\"},{\"text\":\"604\"},{\"text\":\"135\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 439880 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_river\"},{\"text\":\"-457\"},{\"text\":\"63\"},{\"text\":\"-2084\"},{\"text\":\"2836\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /locate biome minecraft:beach
+ 440894 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:beach", "-1033", "70", "-228", "928"]
+ 440895 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:beach\"},{\"text\":\"-1033\"},{\"text\":\"70\"},{\"text\":\"-228\"},{\"text\":\"928\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:stone_beach
+ 444877 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:stone_beach", "-1161", "63", "-100", "815"]
+ 444878 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:stone_beach\"},{\"text\":\"-1161\"},{\"text\":\"63\"},{\"text\":\"-100\"},{\"text\":\"815\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:jungle
+ 449011 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jungle\"},{\"text\":\"-2185\"},{\"text\":\"68\"},{\"text\":\"540\"},{\"text\":\"1194\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 449012 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jungle", "-2185", "68", "540", "1194"]
+## /
+ 450061 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5460, paused: false }] }) }
+ 450077 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5460, paused: false }] }) }
+## /
+## /
+## /locate biome minecraft:jungle_edge
+ 453017 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jungle_edge", "-2249", "67", "604", "1251"]
+ 453017 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jungle_edge\"},{\"text\":\"-2249\"},{\"text\":\"67\"},{\"text\":\"604\"},{\"text\":\"1251\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:bamboo_jungle
+ 457096 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:bamboo_jungle", "-2441", "75", "924", "1457"]
+ 457096 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:bamboo_jungle\"},{\"text\":\"-2441\"},{\"text\":\"75\"},{\"text\":\"924\"},{\"text\":\"1457\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:savanna
+ 461046 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:savanna", "-2249", "70", "348", "1296"]
+ 461046 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:savanna\"},{\"text\":\"-2249\"},{\"text\":\"70\"},{\"text\":\"348\"},{\"text\":\"1296\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+ 464281 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5716, paused: false }] }) }
+ 464281 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5716, paused: false }] }) }
+## /locate biome minecraft:savanna_plateau
+ 465698 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:savanna_plateau\"},{\"text\":\"-3593\"},{\"text\":\"109\"},{\"text\":\"540\"},{\"text\":\"2596\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 465699 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:savanna_plateau", "-3593", "109", "540", "2596"]
+## /
+## /
+## /
+## /locate biome minecraft:mesa
+## /
+## /
+## /
+## /locate biome minecraft:mesa_bryce
+## /
+## /
+## /
+## /locate biome minecraft:mushroom_island
+ 477600 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mesa"]
+## /
+## /
+## /
+## /locate biome minecraft:ice_plains
+## /
+## /
+## /
+## /locate biome minecraft:ice_plains_spikes
+## /
+## /
+ 487285 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:mushroom_island\"},{\"text\":\"-3145\"},{\"text\":\"63\"},{\"text\":\"-420\"},{\"text\":\"2418\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 487286 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:mesa_bryce"]
+ 487286 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:mushroom_island", "-3145", "63", "-420", "2418"]
+## /
+## /locate biome minecraft:ocean
+## /
+## /
+ 491021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ice_plains\"},{\"text\":\"-585\"},{\"text\":\"67\"},{\"text\":\"-1892\"},{\"text\":\"2625\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 491021 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ice_plains_spikes\"},{\"text\":\"-1545\"},{\"text\":\"83\"},{\"text\":\"-3172\"},{\"text\":\"3910\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 491023 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ice_plains", "-585", "67", "-1892", "2625"]
+ 491023 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ice_plains_spikes", "-1545", "83", "-3172", "3910"]
+ 491265 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:ocean", "-1033", "63", "-164", "864"]
+ 491266 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:ocean\"},{\"text\":\"-1033\"},{\"text\":\"63\"},{\"text\":\"-164\"},{\"text\":\"864\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /locate biome minecraft:deep_ocean
+ 493141 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:deep_ocean\"},{\"text\":\"-2249\"},{\"text\":\"63\"},{\"text\":\"-548\"},{\"text\":\"1764\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 493161 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:deep_ocean", "-2249", "63", "-548", "1764"]
+## /
+## /
+## /
+## /locate biome minecraft:warm_ocean
+## /
+## /
+## /
+## /locate biome minecraft:lukewarm_ocean
+## /
+## /
+## /
+## /locate biome minecraft:cold_ocean
+ 505059 actor   CommandOutput success_count=0 data=None commands.locate.biome.fail success=false ["minecraft:warm_ocean"]
+ 505665 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:lukewarm_ocean", "-2633", "63", "-996", "2353"]
+ 505665 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cold_ocean", "-841", "63", "-868", "1576"]
+ 505665 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:lukewarm_ocean\"},{\"text\":\"-2633\"},{\"text\":\"63\"},{\"text\":\"-996\"},{\"text\":\"2353\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 505665 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cold_ocean\"},{\"text\":\"-841\"},{\"text\":\"63\"},{\"text\":\"-868\"},{\"text\":\"1576\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:frozen_ocean
+## /
+ 510048 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_ocean\"},{\"text\":\"-521\"},{\"text\":\"63\"},{\"text\":\"-1828\"},{\"text\":\"2573\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 510049 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_ocean", "-521", "63", "-1828", "2573"]
+## /
+ 510871 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5972, paused: false }] }) }
+ 510871 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 5972, paused: false }] }) }
+## /
+## /locate biome minecraft:meadow
+ 513022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:meadow\"},{\"text\":\"-1033\"},{\"text\":\"89\"},{\"text\":\"348\"},{\"text\":\"353\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 513022 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:meadow", "-1033", "89", "348", "353"]
+## /
+## /
+## /
+## /locate biome minecraft:grove
+ 517565 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:grove\"},{\"text\":\"-649\"},{\"text\":\"117\"},{\"text\":\"348\"},{\"text\":\"497\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 517565 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:grove", "-649", "117", "348", "497"]
+## /
+## /
+## /
+## /locate biome minecraft:snowy_slopes
+## /
+ 522374 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:snowy_slopes\"},{\"text\":\"-1033\"},{\"text\":\"157\"},{\"text\":\"2012\"},{\"text\":\"1312\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 522375 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:snowy_slopes", "-1033", "157", "2012", "1312"]
+## /
+## /
+## /locate biome minecraft:jagged_peaks
+## /
+ 526321 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:jagged_peaks", "-393", "115", "2012", "1446"]
+ 526321 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:jagged_peaks\"},{\"text\":\"-393\"},{\"text\":\"115\"},{\"text\":\"2012\"},{\"text\":\"1446\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+ 527437 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6228, paused: false }] }) }
+ 527438 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6228, paused: false }] }) }
+## /
+## /locate biome minecraft:frozen_peaks
+ 529691 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:frozen_peaks\"},{\"text\":\"-393\"},{\"text\":\"129\"},{\"text\":\"1756\"},{\"text\":\"1218\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 529692 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:frozen_peaks", "-393", "129", "1756", "1218"]
+## /
+## /
+## /
+## /locate biome minecraft:stony_peaks
+ 533824 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:stony_peaks\"},{\"text\":\"-3721\"},{\"text\":\"133\"},{\"text\":\"668\"},{\"text\":\"2720\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 533824 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:stony_peaks", "-3721", "133", "668", "2720"]
+## /
+## /
+## /
+## /locate biome minecraft:cherry_grove
+## /
+ 538069 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:cherry_grove\"},{\"text\":\"-2185\"},{\"text\":\"100\"},{\"text\":\"-2020\"},{\"text\":\"2966\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 538069 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:cherry_grove", "-2185", "100", "-2020", "2966"]
+## /
+## /
+## /locate biome minecraft:pale_garden
+## /
+ 542411 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:pale_garden\"},{\"text\":\"1079\"},{\"text\":\"101\"},{\"text\":\"540\"},{\"text\":\"2086\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 542411 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:pale_garden", "1079", "101", "540", "2086"]
+## /
+## /
+ 544622 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6484, paused: false }] }) }
+ 544623 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6484, paused: false }] }) }
+## /locate biome minecraft:dappled_forest
+ 545407 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:dappled_forest", "-1097", "71", "-996", "1698"]
+ 545407 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:dappled_forest\"},{\"text\":\"-1097\"},{\"text\":\"71\"},{\"text\":\"-996\"},{\"text\":\"1698\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /
+## /
+## /locate biome minecraft:lush_caves
+## /
+## /
+ 551008 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:lush_caves", "-1481", "5", "732", "481"]
+ 551009 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:lush_caves\"},{\"text\":\"-1481\"},{\"text\":\"5\"},{\"text\":\"732\"},{\"text\":\"481\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /
+## /locate biome minecraft:dripstone_caves
+## /
+ 554541 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:dripstone_caves\"},{\"text\":\"-1305\"},{\"text\":\"37\"},{\"text\":\"748\"},{\"text\":\"307\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 554541 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:dripstone_caves", "-1305", "37", "748", "307"]
+## /
+## /
+## /locate biome minecraft:deep_dark
+## /
+ 558044 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:deep_dark\"},{\"text\":\"-1177\"},{\"text\":\"-43\"},{\"text\":\"764\"},{\"text\":\"187\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 558045 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:deep_dark", "-1177", "-43", "764", "187"]
+## /
+## /
+## /locate biome minecraft:sulfur_caves
+## /
+ 562315 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.locate.biome.success\",\"with\":{\"rawtext\":[{\"text\":\"minecraft:sulfur_caves\"},{\"text\":\"-1673\"},{\"text\":\"5\"},{\"text\":\"-228\"},{\"text\":\"1145\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+ 562316 actor   CommandOutput success_count=1 data=None commands.locate.biome.success success=true ["minecraft:sulfur_caves", "-1673", "5", "-228", "1145"]
+## /
+## /
+ 564007 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6740, paused: false }] }) }
+ 564007 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6740, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 577050 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6996, paused: false }] }) }
+ 577051 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6996, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 590181 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7252, paused: false }] }) }
+ 590181 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7252, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 603210 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7508, paused: false }] }) }
+ 603210 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7508, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+ 616157 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7764, paused: false }] }) }
+ 616158 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7764, paused: false }] }) }
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+## /
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1

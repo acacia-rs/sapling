@@ -153,6 +153,12 @@ potion rules): each entity's
 components', or, for a kind that has them only in component groups, every group's together. Kinds the
 packs give no family (items, falling blocks) are not listed.
 
+## Mob events
+
+`mob-events.tsv` (read by `events.rs`, what `/event entity` may fire): each entity's `events` from the vanilla
+behaviour packs, by the names its definition gives them (`minecraft:entity_born`, the sheep's bare `spawn_baby`), by
+`data/generate/mob-events.py`. Kinds with no events are not listed.
+
 ## Entity properties
 
 `entity-properties.tsv` (tracked; read by `entity_properties.rs`): each entity's

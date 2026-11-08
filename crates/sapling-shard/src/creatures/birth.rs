@@ -19,7 +19,7 @@ pub(crate) fn spawn(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]
 }
 
 /// Spawn events that make a baby (`summon cow ~ ~ ~ 0 0 minecraft:entity_born`).
-const BABY_EVENTS: [&str; 3] = ["entity_born", "as_baby", "spawn_baby"];
+pub(super) const BABY_EVENTS: [&str; 3] = ["entity_born", "as_baby", "spawn_baby"];
 
 /// Of these many of a kind's summons with no event, the pack's `entity_spawned` makes a foal of
 /// this many (BDS: 2 of 4 plain horse summons, bds-h3herds.txt).

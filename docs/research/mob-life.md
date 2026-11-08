@@ -142,7 +142,8 @@ Captures in `research/captures/`; sapling's own runs of the same scenes match ex
 
 - The sniffer:
   - Without `/event`, sniffers are undrillable in a few minutes (the pack's 400–500 s `timer_flag_1`
-    cooldown), and sapling has no `/event`, so sapling's search and dig were checked by test, not drill.
+    cooldown), and sapling's `/event` (since thirteenth1bb) answers `on_scenting_success` but does not start a
+    search, so sapling's search and dig were checked by test, not drill.
     How a search position is chosen (sapling: the highest open soil in a random column within reach),
     the give-up time (sapling: 30 s, not in the pack; BDS's longest search here 21 s), and whether dug spots
     are remembered.

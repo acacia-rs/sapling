@@ -15,9 +15,10 @@ fn namespaced(name: &str) -> String {
     if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") }
 }
 
-/// The distance BDS shows: across, from the sender's feet, rounded down.
-fn distance(here: [f32; 3], [x, z]: [i32; 2]) -> String {
-    ((x as f32 - here[0]).hypot(z as f32 - here[2]).floor() as i64).to_string()
+/// The distance BDS shows: across, from the sender's block, rounded down (research/captures/bds-bb1biome.txt:
+/// 1312 to (-928, -928) from feet at (0.5, 0.5)).
+fn distance(from: [i32; 3], [x, z]: [i32; 2]) -> String {
+    (f64::from(x - from[0]).hypot(f64::from(z - from[2])).floor() as i64).to_string()
 }
 
 pub(crate) enum Locate {
@@ -54,15 +55,14 @@ impl CommandSyntax for Locate {
 
 impl Command for Locate {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let here = ctx.origin(sender);
-        let from = here.map(|axis| axis.floor() as i32);
+        let from = ctx.origin(sender).map(|axis| axis.floor() as i32);
         match self {
             Locate::Structure(name) => match ctx.locate_structure(&name, from) {
-                Some([x, z]) => out.translate("commands.locate.structure.success", vec![name, x.to_string(), z.to_string(), distance(here, [x, z])], true),
+                Some([x, z]) => out.translate("commands.locate.structure.success", vec![name, x.to_string(), z.to_string(), distance(from, [x, z])], true),
                 None => out.translate("commands.locate.structure.fail.nostructurefound", Vec::new(), false),
             },
             Locate::Biome(name) => match ctx.locate_biome(&name, from) {
-                Some([x, y, z]) => out.translate("commands.locate.biome.success", vec![name, x.to_string(), y.to_string(), z.to_string(), distance(here, [x, z])], true),
+                Some([x, y, z]) => out.translate("commands.locate.biome.success", vec![name, x.to_string(), y.to_string(), z.to_string(), distance(from, [x, z])], true),
                 None => out.translate("commands.locate.biome.fail", vec![name], false),
             },
         }
@@ -178,5 +178,14 @@ impl Command for Place {
             Err(PlaceError::Unloaded) => out.translate("commands.place.chunknotloaded.error", Vec::new(), false),
             Err(PlaceError::Failed | PlaceError::NoGenerator) => out.translate("commands.place.generation.error", Vec::new(), false),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn the_distance_counts_from_the_sender_s_block() {
+        // bds-bb1biome.txt from feet (0.5, 0.5) and (-1000.5, 700.5).
+        assert_eq!([super::distance([0, 200, 0], [-928, -928]), super::distance([-1001, 200, 700], [-1033, 668])], ["1312", "45"]);
     }
 }

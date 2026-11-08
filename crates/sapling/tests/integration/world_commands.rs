@@ -136,6 +136,23 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     assert_eq!(answer(&mut alice, "kill @e[type=cow,name=!cow1]").await, r#"commands.kill.successful ["Cow, Cow"] 2"#);
     assert_eq!(answer(&mut alice, "kill @e[type=cow,name=cow1]").await, r#"commands.kill.successful ["cow1"] 1"#);
     assert_eq!(answer(&mut alice, "kill @e[name=cow1]").await, "commands.generic.noTargetMatch [] 0");
+    // bds-bb1event.txt: kinds listed once each, the event by the pack's own name.
+    for kind in ["sheep", "sheep", "cow"] {
+        assert_eq!(answer(&mut alice, &format!("summon {kind} ~ ~ ~3")).await, "commands.summon.success [] 1");
+    }
+    let events: &[(&str, &str)] = &[
+        ("event entity @e[type=sheep] minecraft:entity_born", r#"commands.event.success ["minecraft:entity_born", "minecraft:sheep"] 1"#),
+        ("event entity @e[type=sheep] entity_born", r#"commands.event.error.failed ["entity_born", "minecraft:sheep"] 0"#),
+        ("event entity @e[type=sheep] spawn_baby", r#"commands.event.success ["spawn_baby", "minecraft:sheep"] 1"#),
+        ("event entity @e[type=cow] minecraft:temperate_color", r#"commands.event.error.failed ["minecraft:temperate_color", "minecraft:cow"] 0"#),
+        ("event entity @s minecraft:entity_born", r#"commands.event.error.failed ["minecraft:entity_born", "minecraft:player"] 0"#),
+        ("event entity @s minecraft:gain_raid_omen", r#"commands.event.success ["minecraft:gain_raid_omen", "minecraft:player"] 1"#),
+        ("event entity nobody minecraft:entity_born", "commands.generic.noTargetMatch [] 0"),
+        ("event entity @e[type=sheep]", r#"commands.generic.syntax ["ype=sheep]", "", ""] 0"#),
+    ];
+    for (line, expected) in events {
+        assert_eq!(answer(&mut alice, line).await, *expected, "/{line}");
+    }
     let seed = answer(&mut alice, "seed").await;
     assert!(seed.starts_with("commands.seed.success [") && seed.ends_with("] 1"), "{seed}");
     let version = answer(&mut alice, "version").await;

@@ -94,12 +94,21 @@ pub(super) fn of(variant: i32) -> Option<&'static Profession> {
 /// one of the thirteen or a nitwit, each as likely.
 pub(super) fn first_profession(event: Option<&str>, dice: &mut Dice) -> i32 {
     match event.and_then(|event| event.strip_prefix("minecraft:")) {
-        Some("become_unskilled" | "entity_born") => UNSKILLED,
-        Some("become_nitwit") => NITWIT,
+        Some("entity_born") => UNSKILLED,
         // 90% unskilled, 10% nitwit (the pack's `spawn_from_village`).
         Some("spawn_from_village") => if dice.roll(10) == 0 { NITWIT } else { UNSKILLED },
-        Some(event) => event.strip_prefix("become_").and_then(|group| PROFESSIONS.iter().find(|p| p.group == group)).map_or(UNSKILLED, |p| p.variant),
+        Some(_) => event.and_then(of_event).unwrap_or(UNSKILLED),
         None => 1 + dice.roll(PROFESSIONS.len() as u32 + 1) as i32,
+    }
+}
+
+/// The profession `minecraft:become_<group>` gives; the pack spells the shepherd's event `become_sheperd`.
+pub(super) fn of_event(event: &str) -> Option<i32> {
+    match event.strip_prefix("minecraft:become_")? {
+        "unskilled" => Some(UNSKILLED),
+        "nitwit" => Some(NITWIT),
+        "sheperd" => Some(3),
+        group => PROFESSIONS.iter().find(|p| p.group == group).map(|p| p.variant),
     }
 }
 
@@ -270,5 +279,6 @@ mod tests {
     fn become_events_name_the_pack_groups() {
         let mut dice = Dice::default();
         assert_eq!(["minecraft:become_armorer", "minecraft:become_weaponsmith", "minecraft:become_mason", "minecraft:become_unskilled"].map(|e| first_profession(Some(e), &mut dice)), [8, 9, 13, 0]);
+        assert_eq!(["minecraft:become_sheperd", "minecraft:become_nitwit", "become_farmer", "minecraft:entity_born"].map(of_event), [Some(3), Some(NITWIT), None, None]);
     }
 }

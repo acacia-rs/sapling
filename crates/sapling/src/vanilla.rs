@@ -25,6 +25,7 @@ mod copying;
 mod damage;
 mod effects;
 mod enchanting;
+mod event;
 mod execute;
 mod items;
 mod lifecycle;
@@ -83,7 +84,7 @@ impl ServerBuilder {
         let messaging = admin.command::<messaging::Me>().command::<messaging::TellRaw>().command::<titles::Title>().command::<titles::TitleRaw>();
         let sounds = messaging.command::<sounds::PlaySound>().command::<sounds::StopSound>().command::<sounds::Particle>();
         let world_tools = sounds.command::<structure::StructureCommand>().command::<tickingarea::TickingAreaCommand>().command::<worldgen::Place>().command::<worldgen::Locate>();
-        let world_tools = world_tools.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>().command::<riding::Ride>().command::<loot::Loot>();
+        let world_tools = world_tools.command::<scoreboard::Scoreboard>().command::<tag::Tag>().command::<scriptevent::ScriptEventCommand>().command::<riding::Ride>().command::<loot::Loot>().command::<event::EventCommand>();
         let screen = world_tools.command::<camera::Camera>().command::<camera::CameraShake>().command::<screen::Fog>().command::<screen::Hud>().command::<screen::PlayAnimation>().command::<screen::Music>();
         let controls = screen.command::<controls::InputPermission>().command::<controls::MobEvent>().command::<controls::DayLock>().command::<recipes::Recipe>();
         let stopping = lifecycle::Stopping(controls.stop.clone());

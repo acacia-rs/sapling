@@ -28,6 +28,7 @@ pub(crate) use crowding::pushed_by_players;
 mod death;
 mod duels;
 mod enchanted;
+mod evented;
 mod fireballs;
 mod flight;
 mod floating;
