@@ -124,6 +124,10 @@ east 3) from the bell toward the clicker, then `block.bell.hit` at the block's c
 redstone put beside a standing bell (south of it, bell facing south) rang it the same with `Direction` 0 and no
 `toggle_bit` flip; taking it away sent nothing. BDS never showed `Ringing` back to 0. Sapling: `blocks/bells.rs`.
 
+Put on a side (bds-p3bell.txt, 2026-11-08): `direction` is the clicked face's (north face 2) whatever the placer's
+look, and with a solid block across the cell, a one-wide gap, `attachment=multiple`; alone `side`, under a ceiling
+`hanging`. Sapling: `bells.rs` `placed`.
+
 ### Chiseled bookshelves
 
 `bds-bookshelves.txt`. Placed: a bare `ChiseledBookshelf` entity. A click on the front (`direction` 1: west) at the
