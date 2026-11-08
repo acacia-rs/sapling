@@ -173,7 +173,7 @@ pub(super) fn spawn_sound(name: &str, id: u64, kind: &str, body: &Body, baby: bo
 pub(super) fn physics_of(kind: &str) -> &'static Physics {
     match kind {
         "minecraft:breeze" => &Physics::BREEZE,
-        "minecraft:ghast" => &Physics::FLYER,
+        "minecraft:ghast" | "minecraft:happy_ghast" => &Physics::FLYER,
         super::wither::KIND => &Physics::WITHER,
         vexes::KIND => &Physics::GHOST,
         "minecraft:turtle" => &Physics::TURTLE,

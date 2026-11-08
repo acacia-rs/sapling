@@ -25,6 +25,8 @@ const RIDE_TEMPER: i32 = 5;
 const TAMING_EVENTS: [&str; 2] = ["spawn_tame_adult", "on_tame"];
 /// Its pack has neither event: BDS's summon with one came wild (bds-s7mounts.txt).
 const TRADER_LLAMA: &str = "minecraft:trader_llama";
+/// BDS's parrot summoned with `on_tame` came tamed, owned by no one (research/captures/bds-as3parrot.txt).
+const PARROT: &str = "minecraft:parrot";
 
 /// Whether `player` owns the mob.
 pub(crate) fn is_owner(world: &World, entity: Entity, player: Entity) -> bool {
@@ -42,7 +44,8 @@ pub(super) fn tame_to(world: &mut World, entity: Entity, kind: &str, owner: i64)
 /// comes tamed with no owner (research/captures/bds-tack.txt, bds-s7mounts.txt); false for any
 /// other event.
 pub(crate) fn tame_by_event(world: &mut World, entity: Entity, kind: &str, event: &str) -> bool {
-    if !TAMING_EVENTS.contains(&event.trim_start_matches("minecraft:")) || kind == TRADER_LLAMA || sapling_data::husbandry(kind).is_none_or(|rules| rules.temper.is_none()) {
+    let tamed_so = kind == PARROT || sapling_data::husbandry(kind).is_some_and(|rules| rules.temper.is_some());
+    if !TAMING_EVENTS.contains(&event.trim_start_matches("minecraft:")) || kind == TRADER_LLAMA || !tamed_so {
         return false;
     }
     tame(world, entity, kind, None);

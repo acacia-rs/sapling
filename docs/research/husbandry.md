@@ -215,9 +215,30 @@ hand), give to a note block 3, give to its owner 4 (both run speed 8), stay near
   from over 16 off until within 4 (giving.rs).
 - What it carries is kept with the world (bds-aq3allay.txt's world): `ChestItems` slot 0 (`Count`,
   `Name`, `WasPickedUp 1`); sapling writes it on each take and throw and reads it back on load
-  (allays.rs `keep_carried`, `adopt`). Its owner is not kept (allays.rs TODO).
+  (allays.rs `keep_carried`, `adopt`).
+- Its owner is kept too (thirteenth3as, `as3allay` then `as3allay2` on the kept world;
+  research/captures/bds-as3allay-dump.txt): `OwnerNew` is the giver's unique id with `IsTamed` 0, and
+  after a restart the allay was announced with that `OwnerEid` and followed the owner. Sapling keeps it
+  as a tamed mob's (`Raised` owner, allays.rs `hand`; test
+  `an_allay_s_owner_is_kept_with_the_world_and_shown_when_it_is_loaded`). Open: after the restart BDS's
+  allay took dropped dirt but threw none to its owner in 11 s.
 
-## Parrots on shoulders (`parrots`, not built)
+## Parrots on shoulders (built 2026-11-07, group AS: husbandry/shoulders.rs)
+
+`bds-as3parrot.txt` (thirteenth3as_drill.rs): a parrot summoned with `on_tame` came tamed and owned by
+no one, and mounted any player, owner or not: about 100 ticks after it appeared it flew to the nearest
+and got on some 28 ticks later. A second shoulder took (-0.4, -0.2, -0.1); BDS told the first parrot's
+link (type 1) again, then the new one's (type 2), not the first one's seat. A fall threw both off, the
+newest first (type 0, not immediate, no relinking), once it reached 1.59 to 2.11 blocks; the head going
+under water threw them a tick after its air began to drop; damage did not. They came back 7 to 13 s
+later. Sapling: `find_mount` at 100 ticks, 16 and 2 (measured to the player's eyes, where it flies),
+off at a 2-block fall or eyes in water, the 100 ticks again after (tests in thirteenth3as.rs).
+Re-drilled (research/captures/sapling-as3parrot.txt): the mount, the second shoulder's links and the fall's
+links match; sapling's second parrot was tamed by the fifth seed (BDS's the eighth), so the three
+clicks after sat it down and it did not come back. `on_tame` now tames a parrot (owners.rs).
+Earlier, `bds-parrots.txt`:
+
+`bds-parrots.txt` (survival actor, a parrot tamed with seeds on the fifth try): the parrot, tamed and
 
 `bds-parrots.txt` (survival actor, a parrot tamed with seeds on the fifth try): the parrot, tamed and
 standing, sat on the actor 2.3 s after it was last stood up by a click: `SetEntityData` with
@@ -230,8 +251,7 @@ Java's `fallDistance > 0.5`. It did not sit on the player again in the 18 s afte
 came back as a new player (see bundles.md "Open"): the parrot, still in the world, sat on the newcomer
 as it was shown (no delay), and its death sent the link's removal `immediate` after `RemoveEntity`.
 The pack's `find_mount` (`start_delay` 100, `within_radius` 16, `mount_distance` 2, `target_needed`
-false) is C++; when it tries again after a dismount was not found. Sapling's seats (riding/, the
-vehicles work) take no player as a vehicle.
+false) is C++.
 
 ## Not drilled
 

@@ -14,6 +14,8 @@ pub(crate) struct Seat {
     pub lock: Option<f32>,
     /// What the rider's facing is turned by against the vehicle's.
     pub turn: f32,
+    /// The seat's third person camera radius and relax smoothing, told instead of its turn.
+    pub camera: Option<[f32; 2]>,
 }
 
 /// Who rides a kind, and how.
@@ -22,24 +24,47 @@ pub(crate) struct Layout {
     seats: &'static [&'static [Seat]],
     /// Families that may ride it; empty for any.
     pub riders: &'static [&'static str],
-    /// It takes riders only with a saddle on.
+    /// It takes riders only with a saddle on (a happy ghast: a harness, riding/harness.rs).
     pub saddled: bool,
+    /// Only tamed riders: a player's shoulders take a tamed parrot (its `parrot_tame` family).
+    pub tamed_riders: bool,
     /// It pulls in mobs that bump into it.
     pub pulls_in: bool,
+    /// Riders get off onto its top, at its middle (`dismount_mode` `on_top_center`, exit.rs).
+    pub on_top: bool,
 }
 
 const fn seat(position: [f32; 3]) -> Seat {
-    Seat { position, lock: None, turn: 0.0 }
+    Seat { position, lock: None, turn: 0.0, camera: None }
 }
 
 const fn boat_seat(x: f32) -> Seat {
-    Seat { position: [x, -0.2, 0.0], lock: Some(90.0), turn: -90.0 }
+    Seat { position: [x, -0.2, 0.0], lock: Some(90.0), turn: -90.0, camera: None }
 }
 
-const BOAT: Layout = Layout { seats: &[&[boat_seat(0.0)], &[boat_seat(0.2), boat_seat(-0.6)]], riders: &[], saddled: false, pulls_in: true };
-const CHEST_BOAT: Layout = Layout { seats: &[&[Seat { position: [0.2, -0.2, 0.0], lock: Some(90.0), turn: 0.0 }]], ..BOAT };
-const MINECART: Layout = Layout { seats: &[&[seat([0.0, -0.2, 0.0])]], riders: &[], saddled: false, pulls_in: true };
-const HORSE: Layout = Layout { seats: &[&[seat([0.0, 1.1, -0.2])]], riders: &["player"], saddled: false, pulls_in: false };
+/// A player's shoulders (player.json `rideable`, `lock_rider_rotation` 0).
+const fn shoulder(x: f32) -> Seat {
+    Seat { position: [x, -0.2, -0.1], lock: Some(0.0), turn: 0.0, camera: None }
+}
+
+/// A harnessed happy ghast's seats, in the order riders take them (`adult_harnessed` `rideable`).
+const fn ghast_seat(position: [f32; 3]) -> Seat {
+    Seat { position, lock: None, turn: 0.0, camera: Some([8.0, 6.0]) }
+}
+
+const GHAST_SEATS: [Seat; 4] = [ghast_seat([0.0, 3.8, 1.7]), ghast_seat([-1.7, 3.8, 0.0]), ghast_seat([0.0, 3.8, -1.7]), ghast_seat([1.7, 3.8, 0.0])];
+
+const BOAT: Layout = Layout { seats: &[&[boat_seat(0.0)], &[boat_seat(0.2), boat_seat(-0.6)]], riders: &[], saddled: false, tamed_riders: false, pulls_in: true, on_top: false };
+const CHEST_BOAT: Layout = Layout { seats: &[&[Seat { position: [0.2, -0.2, 0.0], lock: Some(90.0), turn: 0.0, camera: None }]], ..BOAT };
+const MINECART: Layout = Layout { seats: &[&[seat([0.0, -0.2, 0.0])]], ..BOAT };
+const PLAYER_SHOULDERS: Layout = Layout { seats: &[&[shoulder(0.4)], &[shoulder(0.4), shoulder(-0.4)]], riders: &["parrot_tame"], tamed_riders: true, pulls_in: false, ..BOAT };
+const HORSE: Layout = Layout { seats: &[&[seat([0.0, 1.1, -0.2])]], riders: &["player"], saddled: false, tamed_riders: false, pulls_in: false, on_top: false };
+const HAPPY_GHAST: Layout = Layout {
+    seats: &[&[GHAST_SEATS[0]], &[GHAST_SEATS[0], GHAST_SEATS[1]], &[GHAST_SEATS[0], GHAST_SEATS[1], GHAST_SEATS[2]], &GHAST_SEATS],
+    saddled: true,
+    on_top: true,
+    ..HORSE
+};
 const SADDLED: Layout = Layout { saddled: true, ..HORSE };
 const PIG: Layout = Layout { seats: &[&[seat([0.0, 0.63, 0.0])]], ..SADDLED };
 const STRIDER: Layout = Layout { seats: &[&[seat([0.0, 1.7, -0.2])]], ..SADDLED };
@@ -69,6 +94,8 @@ pub(crate) fn layout(kind: &str) -> Option<&'static Layout> {
         "minecraft:camel" => &CAMEL,
         "minecraft:camel_husk" => &CAMEL_HUSK,
         "minecraft:zombie_nautilus" => &ZOMBIE_NAUTILUS,
+        "minecraft:happy_ghast" => &HAPPY_GHAST,
+        PLAYER => &PLAYER_SHOULDERS,
         _ => return None,
     })
 }
@@ -81,6 +108,11 @@ impl Layout {
     /// The seat of the rider at `index` among `count`.
     pub fn seat(&self, count: usize, index: usize) -> Option<Seat> {
         self.seats.get(count.checked_sub(1)?)?.get(index).copied()
+    }
+
+    /// Whether the rider at `index` among `count` sat elsewhere at `before` (its index among how many).
+    pub fn moved(&self, count: usize, index: usize, (before_count, before_index): (usize, usize)) -> bool {
+        self.seat(count, index) != self.seat(before_count, before_index)
     }
 
     /// Whether a rider of `kind` may sit on it.

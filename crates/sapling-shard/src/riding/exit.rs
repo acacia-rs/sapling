@@ -1,8 +1,7 @@
 //! Where a rider steps off to, as BDS puts a passenger leaving a vehicle with the default
 //! `dismount_mode` (matched live for a pig and a boat: acacia's docs/research/riding-fishing-elytra.md):
 //! the first free spot of 24 around the vehicle's cell, by the way it moves, at the seat's x and z.
-// TODO: `on_top_center` (a happy ghast's) is not modelled: sapling seats no one on a happy ghast
-// (docs/research/vehicles.md "Exit spots").
+//! Off a happy ghast (`on_top_center`) it is put on its top at its middle.
 
 use acacia_physics::{Aabb, WorldView};
 use bevy_ecs::prelude::*;
@@ -18,6 +17,9 @@ const PLAYER_SIZE: [f32; 2] = [0.6, 1.8];
 const STILL: f32 = 9.801e-5;
 /// Feet are put this far above the floor found.
 const LIFT: f32 = 0.001;
+/// Feet are put this far above a vehicle's top they get off onto: BDS's 4.0247 and 4.0250 over a
+/// happy ghast's feet (research/captures/bds-n3exit.txt, bds-as3ghast.txt).
+const ON_TOP_LIFT: f32 = 0.025;
 
 /// The eight offsets across, in the order they are tried: from the way the vehicle moves.
 fn around([dx, dz]: [f32; 2]) -> [[f32; 2]; 8] {
@@ -77,11 +79,13 @@ fn exit_feet(view: &impl WorldView, vehicle: [f32; 3], seat: [f32; 3], motion: [
 pub(super) fn step_off(world: &mut World, rider: Entity, vehicle: Entity) {
     let (Some((wire, yaw)), Some(motion), Some(layer)) = (vehicle_wire(world, vehicle), world.get::<Body>(vehicle).map(|body| body.motion), world.get::<InLayer>(vehicle).map(|layer| layer.0)) else { return };
     let Some(kind) = kind_of(world, rider) else { return };
-    let seat = world.get::<Kind>(vehicle).and_then(|vehicle| super::layout(&vehicle.0)?.seat(1, 0)).map_or([0.0; 3], |seat| seats::offset(&seat, &kind, yaw));
+    let layout = world.get::<Kind>(vehicle).and_then(|vehicle| super::layout(&vehicle.0));
+    let seat = layout.and_then(|layout| layout.seat(1, 0)).map_or([0.0; 3], |seat| seats::offset(&seat, &kind, yaw));
     let size = world.get::<Body>(rider).map_or(PLAYER_SIZE, |body| body.size);
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let seated = [wire[0] + seat[0], wire[1], wire[2] + seat[2]];
-    let Some(feet) = physics_view(level, |view| exit_feet(view, wire, seated, [motion[0], motion[2]], size)) else { return };
+    let on_top = layout.filter(|layout| layout.on_top).and(world.get::<Body>(vehicle)).map(|body| [body.at[0], body.at[1] + body.size[1] + ON_TOP_LIFT, body.at[2]]);
+    let Some(feet) = on_top.or_else(|| physics_view(level, |view| exit_feet(view, wire, seated, [motion[0], motion[2]], size))) else { return };
     let into_lava = crate::body::liquid_in(level, feet.map(|c| c.floor() as i32), crate::body::Liquid::Lava).is_some();
     if let Some(seated_y) = world.get::<Position>(rider).map(|position| position.feet[1]) {
         // BDS's correction into lava kept the height the client was seated at (bds-aq3exit.txt).
