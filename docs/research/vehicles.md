@@ -373,8 +373,9 @@ were not found in any of these; sapling does what is listed there.
   (5 full stacks 0.98, a plain cart 0.96, an empty hopper cart capped at 0.4 a tick as sapling's).
   `replaceitem entity <cart> slot.inventory` fills its slots. Sapling (group U): `vehicles/hopped.rs`
   (hopper ↔ cart, the oldest cart in the cell), `detectors.rs` `reading` (the comparator takes it in place of
-  the rail's power), `carts.rs` laden drag, `cargo.rs` `put_goods`. Not followed: a cart killed drops its
-  item at y −25.725 where BDS's was −25.375.
+  the rail's power), `carts.rs` laden drag, `cargo.rs` `put_goods`. A vehicle wrecked drops its item from its
+  wire point (feet + 0.35 for a cart, + 0.375 for a boat), not its feet: BDS's cart's at y −25.375
+  (`vehicles.rs` `wreck`, group Y; test `fourteenth3y`).
 - `summon <vehicle> <name>` gives BDS's vehicle no name: `@e[name=..]` found none and `/kill` listed
   "Minecart"; sapling now does the same (bds-p3names.txt, world-commands.md).
 - Carts in lava and water (bds-p3lava.txt, 2026-11-08): off a rail a cart falls 0.04, 0.08, ... a tick with no drag,
