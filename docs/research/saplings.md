@@ -126,7 +126,7 @@ randomTick: if block != this: return
   else if propagule_stage != 4: setBlock(stage + 1, flags 3)
 onFertilized: if !canBeFertilized(above): false
   not hanging: Rapid or creative -> grow; else nextFloat < 0.45 -> grow; true
-  hanging: advances stage (not read further)
+  hanging: advances stage (not read further; drilled below)
 _growTree: f1 = nextFloat, f2 = nextFloat
   name = f1 >= 0.85 ? (f2 < 0.01 ? mangrove_tree_with_beenest : mangrove_tree)
                     : (f2 < 0.01 ? tall_mangrove_tree_with_beenest : tall_mangrove_tree)   // *_feature
@@ -153,6 +153,11 @@ clear-to-air step is absent. Flowering azalea uses the same class [I].
    with the original block at pos. A failed single restores pos. [D]
 5. Yes, sapling cell(s) set to air before placing. No dirt write in the sapling code; any dirt under
    the trunk comes from the tree feature itself. [D for absence in sapling code]
+6. Hanging propagule (2026-11-08, `bds_command_probe i1misc`, research/captures/bds-i1misc.txt): creative bone
+   meal took it 0 to 4 a stage a click, each with `ParticleCropGrowth` at the cell's corner then the UpdateBlock;
+   at 4 the click was refused (the cells resent). Eight under `randomtickspeed 100` reached 4 in about 5 s, a stage
+   per pick, no 1-in-7. Sapling now does both (`blocks/saplings.rs` `aged_hanging`, `tick_odds`; survival bone
+   meal taken as creative's, Java's `isBonemealSuccess` being true for a hanging one); test fourteenth1i.rs.
 
 ## Unverified
 - `_growTree` opening gate: Level+0xc0 vt 0xc30 false and ILevel vt 0x9e8 true -> return true

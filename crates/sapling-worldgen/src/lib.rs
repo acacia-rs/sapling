@@ -36,7 +36,7 @@ pub mod tick_heap;
 use std::sync::Arc;
 
 pub use biome::ChunkBiomes;
-pub use block::{Block, material_blocks_motion};
+pub use block::{Block, Support, material_blocks_motion, provides_support};
 pub use block_entity::BlockEntity;
 pub use end::EndGenerator;
 pub use nether::NetherGenerator;

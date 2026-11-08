@@ -1,7 +1,8 @@
 //! Saplings, mangrove propagules and azaleas growing into trees, by random tick and bone meal, as
 //! BDS's `SaplingBlock`, `MangrovePropaguleBlock` and `AzaleaBlock` do (docs/research/saplings.md).
-//! The tree is worldgen's own feature, placed over the live world (`World::place_feature`).
-// TODO: a hanging propagule neither ages nor takes bone meal.
+//! The tree is worldgen's own feature, placed over the live world (`World::place_feature`). A
+//! hanging propagule grows no tree: each random tick it is picked for and each bone meal age it a
+//! stage, up to 4 (Java `MangrovePropaguleBlock`; bds-i1misc.txt).
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -63,9 +64,26 @@ fn of(name: &str) -> Option<&'static Species> {
     SPECIES.iter().find(|species| species.sapling == name)
 }
 
+const STAGE: &str = "propagule_stage";
+const LAST_STAGE: u8 = 4;
+
 /// Whether a random tick can grow the block `name` (unprefixed) with `properties`.
 pub(super) fn is_ticked(name: &str, properties: &str) -> bool {
-    of(name).is_some() || name == PROPAGULE && !properties.contains("hanging=1")
+    let is_grown = properties.split(',').any(|pair| pair == format!("{STAGE}={LAST_STAGE}"));
+    of(name).is_some() || name == PROPAGULE && !(properties.contains("hanging=1") && is_grown)
+}
+
+/// The one in so many of the random ticks the block at `pos` is picked for that grow it.
+pub(super) fn tick_odds(world: &World, layer: Entity, pos: BlockPos) -> u32 {
+    if property(world, layer, pos, "hanging") == Some(1) { 1 } else { TICK_ODDS }
+}
+
+/// Ages the hanging propagule at `pos` a stage; false where it is grown.
+fn aged_hanging(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let Some(stage) = property(world, layer, pos, STAGE).filter(|stage| *stage < LAST_STAGE) else { return false };
+    let [x, y, z] = pos;
+    let older = level(world, layer).and_then(|level| with_property(level.registry(), level.block(x, y, z), STAGE, &(stage + 1).to_string()));
+    older.is_some_and(|older| send::set(world, layer, pos, older))
 }
 
 /// The corner of the square of four saplings like the one at `pos` that it is part of.
@@ -137,6 +155,7 @@ fn grow_mangrove(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
 pub(super) fn ticked(world: &mut World, layer: Entity, pos: BlockPos) {
     let [x, y, z] = pos;
     match name_at(world, layer, pos) {
+        Some(PROPAGULE) if property(world, layer, pos, "hanging") == Some(1) => _ = aged_hanging(world, layer, pos),
         Some(PROPAGULE) => _ = grow_mangrove(world, layer, pos),
         Some(name) => {
             let lit = crate::light::brightness(world, layer, [x, y + 1, z]).is_some_and(|light| light >= GROWING_LIGHT);
@@ -156,7 +175,7 @@ pub(super) fn fertilized(world: &mut World, layer: Entity, pos: BlockPos, creati
     let lucky = creative || world.get_resource_or_insert_with(Dice::default).fraction() < BONE_MEAL;
     if name == PROPAGULE {
         if property(world, layer, pos, "hanging") == Some(1) {
-            return Some(false);
+            return Some(aged_hanging(world, layer, pos));
         }
         if lucky {
             grow_mangrove(world, layer, pos);

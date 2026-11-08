@@ -314,6 +314,10 @@ immediate signal 148a82ae0): DirectionalProducer with `direction = mStronglyPowe
     lit, 16 relit, with `fizz`, on both. The "18 ticks" was a misreading: bds-redstone-burnout.txt has the same
     6 (dust 0 at 16637, lamp out at 16941). Left as it is: the torch's first flip came 3 ticks after the
     command on this BDS run, 2 on the old run and on sapling, which is the 2-tick evaluation's phase.
+  - Loop broken while out (2026-11-08, `i1misc`, research/captures/bds-i1misc.txt): the clock's dust (not beside
+    the torch) set to air 3 s and again 10 s after the burnout relit the torch 3 ticks later both times, R20's other
+    branch. Sapling waited for a change beside the torch; now an evaluation with changes asks a burnt torch's search
+    as if lit, and with no loop back to it resets it (`redstone.rs`, `TorchState::unloop`); test fourteenth1i.rs.
 
 ## Repeaters (2026-10-09, `bds_command_probe repeater-facing` and `repeaters`, research/captures/bds-redstone-repeaters.txt)
 

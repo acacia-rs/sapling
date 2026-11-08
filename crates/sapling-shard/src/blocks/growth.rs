@@ -198,7 +198,8 @@ pub(crate) fn tick(world: &mut World) {
             continue;
         }
         if super::saplings::is_ticked(name.strip_prefix("minecraft:").unwrap_or(name), "") {
-            if (0..ticks).any(|_| picks.below(super::saplings::TICK_ODDS) == 0) {
+            let odds = super::saplings::tick_odds(world, layer, pos);
+            if (0..ticks).any(|_| picks.below(odds) == 0) {
                 saplings.push((layer, pos));
             }
         } else {

@@ -1,8 +1,8 @@
 //! The state a placed block takes from how it was placed: which face was clicked, how high on
 //! it, and which way the placer looked.
-// TODO: only the properties below; rails, skulls and the rest keep the item's own value (a
-// door's hinge, which its neighbours decide, is doors.rs's). Each value's evidence is in docs/research/block-rules.md: collision
-// boxes per state, the Java game's placement code, and for pistons only other servers' code.
+//! A door's hinge, which its neighbours decide, is doors.rs's. Each value's evidence is in
+//! docs/research/block-rules.md: collision boxes per state, the Java game's placement code, and
+//! for pistons only other servers' code.
 
 use sapling_api::Face;
 use sapling_world::BlockRegistry;
@@ -121,7 +121,13 @@ impl Click {
                 (Face::East, _) => "east",
             },
             // A hanging sign hangs only put under a block, and keeps no sixteenth either way (bds-z2hand.txt).
-            "hanging" if block.ends_with("_hanging_sign") => if self.face == Face::Down { "1" } else { "0" },
+            "hanging" if ends(&["_hanging_sign", "lantern", "pointed_dripstone"]) => if self.face == Face::Down { "1" } else { "0" },
+            // A bell or grindstone stands on a floor, hangs under a block, and else is on a side (bds-i1facing.txt).
+            "attachment" if ends(&[":bell", "grindstone"]) => match self.face {
+                Face::Up => "standing",
+                Face::Down => "hanging",
+                _ => "side",
+            },
             "ground_sign_direction" if block.ends_with("_hanging_sign") => "0",
             "ground_sign_direction" => self.sixteenth(),
             // Named for the side the torch leans away from: the block it hangs on.
@@ -195,6 +201,9 @@ mod tests {
         // research/captures/bds-z2hand.txt, a placer looking east.
         let hanging = |face| placed("minecraft:oak_hanging_sign", face, 0.5, -90.0);
         assert_eq!([hanging(Face::West), hanging(Face::Down)], ["attached_bit=0,facing_direction=3,ground_sign_direction=0,hanging=0", "attached_bit=0,facing_direction=4,ground_sign_direction=0,hanging=1"]);
+        // research/captures/bds-i1facing.txt, the same placer.
+        assert!(placed("minecraft:bell", Face::Down, 0.0, -90.0).contains("attachment=hanging") && placed("minecraft:grindstone", Face::West, 0.5, -90.0).contains("attachment=side"));
+        assert!(placed("minecraft:lantern", Face::Down, 0.0, -90.0).contains("hanging=1") && placed("minecraft:pointed_dripstone", Face::Up, 1.0, -90.0).contains("hanging=0"));
         let registry = BlockRegistry::vanilla();
         let piston = registry.states_of("minecraft:piston").next().unwrap().0;
         let facing = |eyes_over| registry.get(oriented(&registry, piston, &Click { face: Face::Up, height: 1.0, yaw: -90.0, eyes_over })).unwrap().properties.to_owned();

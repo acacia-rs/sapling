@@ -2,7 +2,6 @@
 //! walls also rise where something stands on them, stairs turn corners, and a gate sinks into a
 //! wall (docs/research/standing-and-shapes.md, part B: walls are BDS's rule, the rest Java's; who
 //! joins whom was drilled against BDS, "Joins drilled").
-// TODO: a block's outline is taken to be its collision boxes.
 
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -34,13 +33,14 @@ enum Family {
 struct Cell {
     name: &'static str,
     properties: &'static str,
-    boxes: &'static [sapling_world::Aabb],
+    /// BDS's `getOutline`, what the wall rule reads (bds-i1stay.txt).
+    outline: &'static [sapling_world::Aabb],
     is_full: bool,
 }
 
 fn cell(level: &Level, [x, y, z]: BlockPos) -> Option<Cell> {
     let state = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten()?;
-    Some(Cell { name: state.name, properties: state.properties, boxes: state.boxes, is_full: state.is_full_cube() })
+    Some(Cell { name: state.name, properties: state.properties, outline: state.selection, is_full: state.is_full_cube() })
 }
 
 fn get<'a>(properties: &'a str, key: &str) -> Option<&'a str> {
@@ -86,7 +86,7 @@ fn rests_on(boxes: &[sapling_world::Aabb], [x0, x1, z0, z1]: [f32; 4]) -> bool {
 /// A wall's sides and post (BDS `WallBlock::tryFixWallStates`).
 fn wall(level: &Level, pos: BlockPos) -> Vec<(String, &'static str)> {
     let above = cell(level, [pos[0], pos[1] + 1, pos[2]]);
-    let boxes = above.as_ref().map_or(&[][..], |above| above.boxes);
+    let boxes = above.as_ref().map_or(&[][..], |above| above.outline);
     let arms: Vec<&str> = SIDES
         .iter()
         .zip(ARMS)
@@ -182,7 +182,7 @@ fn connections(level: &Level, pos: BlockPos, family: Family) -> Vec<(String, &'s
 /// The state a fence or pane `id` put at `pos` takes from its neighbours, where that differs from `id`.
 pub(super) fn joined_state(level: &Level, pos: BlockPos, id: u32) -> Option<u32> {
     let state = level.registry().get(id)?;
-    let this = Cell { name: state.name, properties: state.properties, boxes: state.boxes, is_full: state.is_full_cube() };
+    let this = Cell { name: state.name, properties: state.properties, outline: state.selection, is_full: state.is_full_cube() };
     let family = family(&this).filter(|family| *family != Family::Wall)?;
     with_all(level.registry(), id, &connections(level, pos, family)).filter(|joined| *joined != id)
 }

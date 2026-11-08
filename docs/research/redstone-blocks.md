@@ -169,6 +169,16 @@ direction 14cd24f50, facing_direction 14cd26368, lit 14cd25b50, sculk_sensor_pha
   and the wire attached twice; each hook played `attach` at its own cell + (0.5, 0.1, 0.5). Sapling set no bits,
   left the client an unattached wire (it showed the state written before the hooks rewrote it) and played one
   sound at the cell's middle. Fixed (`blocks/tripwire.rs` `shape`, `send::write` returns the cell as it stands).
+- Drilled (bds-i1trip.txt, 2026-11-08; hooks at x -3 and 3, wire between, a survival player):
+  - Broken by hand: the cell shown pressed then air with its item, both hooks powered in that tick (`power.on` far
+    hook first), and 10 ticks later both let go (attached 0, powered 0, the wires attached 0, `power.off`): B24 and
+    B22's tick outliving the wire. With shears: gone at once, the hooks let go 10 ticks later with `detach`.
+  - `/setblock` of a wire or a hook to air changed no hook. String put into such a gap took `attached_bit` 0 and
+    no hook changed (B18 rewrites wires only as `attached` changes). A hook put by hand at the line's end attached
+    both (`attach` far then near), then `place`.
+  - Sapling set nothing off for a hand break, and let hooks go at once whenever a wire or hook was written away.
+    Fixed (`tripwire.rs` `breaking`, from `request/breaking.rs`; `written`; `update_line`); test fourteenth1i.rs.
+    Every line a hook could reach is not looked at on BDS either: only the lines through the written cell (B23).
 
 ## Target (vt 14a8eead0; onProjectileHit 1471f22a0, core 1471f2530, tick 1471f20b0, setupRedstoneComponent 1471f2200)
 

@@ -153,3 +153,10 @@ Twelve of each ore broken by `/fill ... air destroy` (which leaves orbs as a pla
 ores broken by a survival player, orbs summed per ore. All fell in the Java ranges sapling uses
 (`blocks/after_break.rs`): coal 0-2 (15 ores), deepslate coal 0-2, diamond 3-7, emerald 3-7, lapis 2-5, nether
 quartz 2-5, nether gold 0-1, redstone 1-4 seen of 1-5 (no 5 in 12 has odds 0.07; left at 1-5).
+
+## Spawners and sculk (2026-11-08, `bds_command_probe i1misc`, research/captures/bds-i1misc.txt)
+
+Twelve of each broken by `/fill ... air destroy`: a spawner left 16 to 42 (Java 15 + two rolls of 0..14), sculk 1,
+a sculk vein 0, a sensor, calibrated sensor, catalyst and shrieker 5 each. Sapling leaves them by a player's break
+and by `/fill ... destroy` (`blocks/after_break.rs` `leave_experience`, called from `updates::break_block`); ores
+still leave theirs only by a player's break. Silk touch leaves none, as Java (not drilled).
