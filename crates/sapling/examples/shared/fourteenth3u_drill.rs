@@ -20,6 +20,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "u3plants" => (plants(), BLOCKS),
         "u3sched" => (scheduled(), &["CommandOutput", "Text"]),
         "u3yaw" => (curve(), MOVES),
+        "u3place" => (rules_and_options(), &["CommandOutput", "UpdateBlock", "UpdateSubchunkBlocks", "AddEntity"]),
         _ => return None,
     })
 }
@@ -139,4 +140,28 @@ fn scheduled() -> Vec<String> {
     lines = with(lines, &["tickingarea remove u3area", "schedule on_area_loaded add circle 5000 0 5000 2 probe/later", "schedule on_area_loaded add tickingarea u3none probe/later", "tickingarea add circle 5000 0 5000 2 u3circle"]);
     waits(&mut lines, 5);
     with(lines, &["tickingarea remove u3circle", "schedule on_area_loaded add 7000 0 7000 7001 0 7001 probe/later", "schedule clear probe/later", "schedule on_area_loaded add 7000 0 7000 7001 0 7001 probe/nonesuch", "tickingarea add 7000 0 7000 7001 0 7001 u3late", "", "", "", "tickingarea remove u3late", ""])
+}
+
+const RULES: &[&str] = &[
+    "overworld_surface_tall_grass_feature",
+    "overworld_after_surface_flowers_feature_rules",
+    "plains_surface_flowers_feature",
+    "overworld_underground_coal_ore_feature",
+    "overworld_underground_dirt_feature",
+    "overworld_amethyst_geode_feature",
+];
+
+/// `/place featurerule` and `/place structure`'s options where the actor joins a generated world of seed
+/// 20261003 (BDS copy of level-type DEFAULT, op level 4; sapling `SAPLING_DRILL_WORLD=generated`).
+fn rules_and_options() -> Vec<String> {
+    let mut lines = with(Vec::new(), &["gamerule domobspawning false", "gamemode creative @s"]);
+    waits(&mut lines, 4);
+    for rule in RULES {
+        lines.extend([format!("place featurerule minecraft:{rule} ~ ~ ~"), format!("place featurerule minecraft:{rule} ~ ~-1 ~"), format!("place featurerule minecraft:{rule} ~ ~-30 ~"), String::new()]);
+    }
+    for options in ["~40 ~ ~ true", "~-40 ~ ~ false", "~ ~ ~40 false false true", "~ ~ ~-40 false false false"] {
+        lines.extend([format!("place structure minecraft:trail_ruins {options}"), String::new(), String::new()]);
+    }
+    lines.extend(["place structure minecraft:abandoned_camp_forest ~60 ~ ~60 false false true".into(), String::new(), String::new()]);
+    with(lines, &["place structure minecraft:abandoned_camp_forest ~-60 ~ ~-60 false false false", "", ""])
 }

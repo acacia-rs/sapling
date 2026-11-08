@@ -1425,7 +1425,7 @@ built: no runtime loading, as the README's non-goals say. Evidence: `research/ca
 - **`/scriptevent`** (`vanilla/scriptevent.rs`): BDS's answers; the event goes to plugins as
   `ScriptEvent`, queued and offered before tasks each tick (raised from a task or listener, heard the
   next tick).
-- Not done: behavior pack data beyond functions, `/schedule on_area_loaded`, the Script API, and
+- Not done: behavior pack data beyond functions, the Script API, and
   `server.properties` `texturepack-required` (docs/NEXT.md).
 
 ## Building against a local acacia

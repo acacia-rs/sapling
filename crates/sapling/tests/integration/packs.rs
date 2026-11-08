@@ -179,9 +179,21 @@ async fn a_client_downloads_the_packs_and_an_operator_runs_functions() {
     let queued = run(&mut alice, "schedule delay add probe/later 10").await;
     assert!(queued[0].starts_with(r#"answer commands.schedule.delay.functionQueued ["probe/later", "10", "#), "{queued:?}");
     let ran = until(&mut alice, |line| line.starts_with("echo")).await;
-    let echo = r#"echo {"rawtext":[{"text":"§7§o["},{"translate":"commands.origin.server"},{"text":": "},{"translate":"commands.schedule.functionRan","with":{"rawtext":[{"text":"1"},{"text":"probe/later"}]}},{"text":"]"}]}"#;
+    let echo: &str = r#"echo {"rawtext":[{"text":"§7§o["},{"translate":"commands.origin.server"},{"text":": "},{"translate":"commands.schedule.functionRan","with":{"rawtext":[{"text":"1"},{"text":"probe/later"}]}},{"text":"]"}]}"#;
     assert_eq!(ran, ["said [Server] later", echo]);
     assert_eq!(run(&mut alice, "schedule delay clear probe/later").await, [r#"answer commands.schedule.clear.failure ["probe/later"] 0"#]);
+
+    // bds-u3sched.txt: a ticking area runs it at once as the sender, unanswered; a far one waits for a ticking area.
+    alice.client().command("schedule on_area_loaded add ~ ~ ~ ~1 ~1 ~1 probe/later");
+    assert_eq!(until(&mut alice, |line| line.starts_with("echo")).await, ["said [Alice] later", echo]);
+    let queued = r#"answer commands.schedule.functionQueued [] 1"#;
+    assert_eq!(run(&mut alice, "schedule on_area_loaded add 3000 0 3000 3001 0 3001 probe/later").await, [queued]);
+    assert_eq!(run(&mut alice, "schedule on_area_loaded add tickingarea u3none probe/later").await, [queued]);
+    alice.client().command("tickingarea add 3000 0 3000 3001 0 3001 u3area");
+    let ran = until(&mut alice, |line| line.starts_with("echo")).await;
+    assert_eq!(ran[ran.len() - 2..], ["said [Alice] later", echo], "{ran:?}");
+    assert_eq!(run(&mut alice, "schedule clear probe/later").await, [r#"answer commands.schedule.clear.success ["1", "probe/later"] 1"#]);
+    run(&mut alice, "tickingarea remove u3area").await;
 
     assert_eq!(run(&mut alice, "scriptevent hi there").await, ["answer commands.scriptevent.invalidNamespace [] 0"]);
     assert_eq!(run(&mut alice, "scriptevent ns:hi hello world").await, [r#"answer Script event %%s has been sent ["ns:hi"] 1"#]);
