@@ -45,6 +45,10 @@ fn a_shot_pot_shows_breaking_a_tick_before_it_shatters() {
     let shattered = ticks.iter().position(|sent| all::<LevelSoundEvent>(sent).iter().any(|sound| sound.sound_id == "shatter_pot")).expect("shattered");
     assert_eq!(shattered, cracked + 1);
     assert_eq!(name_at(&mut h, AIMED), "minecraft:air");
+    // BDS's arrow lay on the pot's face that tick, unstopped and unshaken, and flew on through its cell.
+    let shaken = ticks[cracked..=shattered].iter().flat_map(|sent| all::<EntityEvent>(sent)).any(|event| event.event_id == EntityEventEventId::ArrowShake);
+    let past = ticks[shattered..].iter().flat_map(|sent| all::<MoveEntityDelta>(sent)).any(|moved| moved.x.is_some_and(|x| x > AIMED[0] as f32 + 1.0));
+    assert!(!shaken && past, "shaken {shaken}, flew past {past}");
 }
 
 fn name_at(h: &mut Harness, pos: [i32; 3]) -> String {
