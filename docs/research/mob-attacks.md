@@ -336,6 +336,18 @@ A held squid and glow squid hit by the survival actor, each let go after
   picks anew there. On land a squid hopped 0.2 at each hurt and suffocated after 300 ticks
   (`HurtAnimation` 4, 2 every 10 ticks), turning slowly; it dove (`squid_dive`) when out of water
   above air. Neither turn is ported.
+- Ported 2026-11-08 (fourteenth1w), from the Linux ELF's goals: `SquidFleeGoal` keeps going while its
+  hitter is within 10 (squared distance under 100, 0x1098c58) and the squid in water; above its band
+  (0x7211b00's high, the idle goal's) a rising way loses its y. `SquidIdleGoal` picks at once on
+  starting, so after a flight. Out of water `SquidDiveGoal` runs over a block that is not solid
+  (canUse 0x5932b20), its way `(x, -1, z)` scaled to 0.5 a second with x and z `nextFloat - 0.5`
+  (start 0x5932d00); on the ground `SquidOutOfWaterGoal` takes a random way once (start 0x5933ab0
+  via 0x7211330: an angle, 0.2 across, `nextFloat * 0.2 - 0.1` up). Neither moves it; the squid
+  turns a tenth of the way to its way a tick, the tray squid's pitch a tick behind its yaw, settling
+  at -80 and its yaw at -56 (bds-f14esquid.txt). Sapling: creatures/squids.rs, squids/ashore.rs;
+  tests in fourteenth1w.rs. Left: `SquidMoveAwayFromGroundGoal` (prio 1; start 0x5933980, a way off
+  the ground at 0.0025 x the 0x7211530 ray's), the `minecraft:squid_flee_particle` every tenth flee
+  tick (no packet in the capture).
 
 ## Mobs that fight their own way
 

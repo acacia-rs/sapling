@@ -117,7 +117,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         }
         let flashed = if smash.is_some() { smash::MACE_SMASH } else { Cause::Attack.id() };
         packets.insert(0, harm::strike_as(id, &health, flashed, None));
-        super::squids::struck(world, entity, eye, id, &mut packets);
+        super::squids::struck(world, entity, player, eye, id, &mut packets);
         if let Some(sparks) = blows::sparks(blow, id) {
             packets.insert(1, sapling_net::encode(&sparks));
         }

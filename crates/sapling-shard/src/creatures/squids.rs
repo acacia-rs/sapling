@@ -8,7 +8,10 @@
 //! Hit by a player it inks (`SquidInkCloud` after its `HurtAnimation`) and, in water within 10 of
 //! the hitter, takes the way of `SquidFleeGoal` (Linux BDS 0x5933130): 3 a second, less a fifth of
 //! each block past 5, straight away from the hitter's eyes (research/captures/bds-f14esquid.txt).
-// TODO: BDS zeroes a fleeing squid's climb at the surface where this idle picks anew; `squid_dive`/`squid_out_of_water` turns.
+//! It flees while in water and within 10 of the hitter, the idle goal picking at once after; above
+//! its band a rising flight loses its climb and keeps its way across. Out of water: ashore.rs.
+
+mod ashore;
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
@@ -17,8 +20,9 @@ use sapling_world::World as Level;
 
 use crate::blocks::Dice;
 use crate::body::{Body, Liquid};
-use crate::components::Layer;
+use crate::components::{Layer, Position};
 use crate::sync::Told;
+use ashore::Ashore;
 
 const KINDS: &[&str] = &["minecraft:squid", "minecraft:glow_squid"];
 const WATER: [&str; 2] = ["minecraft:water", "minecraft:flowing_water"];
@@ -41,23 +45,43 @@ pub(super) struct Squid {
     idle: u32,
     /// Its yaw and pitch, in degrees, unwrapped as BDS keeps them.
     facing: [f32; 2],
+    /// The player it flees, and the goal it runs out of water.
+    fleeing: Option<Entity>,
+    ashore: Option<Ashore>,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if KINDS.contains(&kind) {
-        world.entity_mut(entity).insert(Squid { way: [0.0; 3], idle: KEEPS, facing: [0.0; 2] });
+        world.entity_mut(entity).insert(Squid { way: [0.0; 3], idle: KEEPS, facing: [0.0; 2], fleeing: None, ashore: None });
     }
 }
 
-/// Before its move: in water a squid swims on its way, now and then another.
+/// Before its move: in water a squid swims on its way, now and then another; out of it it turns.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
     let (Some(body), Some(squid)) = (world.get::<Body>(entity).copied(), world.get::<Squid>(entity)) else { return false };
+    let (mut way, idle, facing, fleeing, was_ashore) = (squid.way, squid.idle, squid.facing, squid.fleeing, squid.ashore);
     if body.liquid() != Some(Liquid::Water) {
+        let Some(goal) = world.get::<Layer>(layer).map(|layer| ashore::goal(&layer.world, &body)) else { return true };
+        let pitch = ashore::aim(way)[1];
+        if was_ashore != Some(goal) {
+            way = ashore::way(&mut world.get_resource_or_insert_with(Dice::default), goal);
+        }
+        let target = [ashore::aim(way)[0], pitch];
+        let facing = std::array::from_fn(|axis| facing[axis] + (target[axis] - facing[axis]) * TURNS);
+        if let Some(mut squid) = world.get_mut::<Squid>(entity) {
+            (squid.way, squid.facing, squid.fleeing, squid.ashore, squid.idle) = (way, facing, None, Some(goal), KEEPS);
+        }
+        face(world, entity, facing);
         return true;
     }
-    let (mut way, idle, facing) = (squid.way, squid.idle, squid.facing);
+    let still = fleeing.filter(|hitter| flees_from(world, *hitter, &body));
+    let (ended, fleeing) = (fleeing.is_some() && still.is_none(), still);
     let band = world.get::<Layer>(layer).map(|layer| band(&layer.world, &body));
-    let picks = idle >= KEEPS || band.is_some_and(|[_, high]| body.at[1] > high && way[1] > 0.0);
+    let above = band.is_some_and(|[_, high]| body.at[1] > high && way[1] > 0.0);
+    let picks = fleeing.is_none() && (idle >= KEEPS || above || ended);
+    if fleeing.is_some() && above {
+        way[1] = 0.0;
+    }
     if let (true, Some(band)) = (picks, band) {
         way = pick(&mut world.get_resource_or_insert_with(Dice::default), &body, band);
     }
@@ -68,21 +92,32 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
         facing[1] + (-across.atan2(speed[1]).to_degrees() - facing[1]) * TURNS,
     ];
     if let Some(mut squid) = world.get_mut::<Squid>(entity) {
-        (squid.way, squid.idle, squid.facing) = (way, if picks { 0 } else { idle + 1 }, facing);
+        (squid.way, squid.idle, squid.facing, squid.fleeing, squid.ashore) = (way, if picks || fleeing.is_some() { 0 } else { idle + 1 }, facing, fleeing, None);
     }
     if let Some(mut moving) = world.get_mut::<Body>(entity) {
         moving.fly(std::array::from_fn(|axis| speed[axis] - body.motion[axis] * WATER_DRAG));
     }
+    face(world, entity, facing);
+    true
+}
+
+fn face(world: &mut World, entity: Entity, facing: [f32; 2]) {
     if let Some(mut told) = world.get_mut::<Told>(entity) {
         told.face(facing[0], facing[0]);
         told.pitch(facing[1]);
     }
-    true
 }
 
-/// A squid hit by a player whose eyes are at `from`: its ink goes out after the hit's packet at the
+/// Whether a squid at `body` still flees `hitter`: it is there and within 10 of its eyes.
+fn flees_from(world: &World, hitter: Entity, body: &Body) -> bool {
+    let Some(at) = world.get::<Position>(hitter) else { return false };
+    let eyes = [at.feet[0], at.feet[1] + sapling_data::EYE_HEIGHT, at.feet[2]];
+    (0..3).map(|axis| (body.at[axis] - eyes[axis]).powi(2)).sum::<f32>() < FLEES_WITHIN * FLEES_WITHIN
+}
+
+/// A squid hit by `hitter`, whose eyes are at `from`: its ink goes out after the hit's packet at the
 /// head of `packets`, and in water it flees.
-pub(super) fn struck(world: &mut World, entity: Entity, from: [f32; 3], id: u64, packets: &mut Vec<Bytes>) {
+pub(super) fn struck(world: &mut World, entity: Entity, hitter: Entity, from: [f32; 3], id: u64, packets: &mut Vec<Bytes>) {
     let Some(body) = world.get::<Body>(entity).copied() else { return };
     if world.get::<Squid>(entity).is_none() {
         return;
@@ -96,7 +131,7 @@ pub(super) fn struck(world: &mut World, entity: Entity, from: [f32; 3], id: u64,
     }
     let length = if far > FLEE_FULL { FLEE - (far - FLEE_FULL) / FLEE_FULL } else { FLEE };
     if let Some(mut squid) = world.get_mut::<Squid>(entity) {
-        (squid.way, squid.idle) = (away.map(|c| c / far * length.max(0.0) / 20.0), 0);
+        (squid.way, squid.idle, squid.fleeing) = (away.map(|c| c / far * length.max(0.0) / 20.0), 0, Some(hitter));
     }
 }
 
