@@ -98,6 +98,7 @@ pub(crate) use set_entities::furnish_nests;
 pub(crate) use items::picked_as;
 pub(crate) use command_blocks::{dispatch_updates as dispatch_command_block_updates, run_for_cart};
 pub(crate) use shown_again::show_due as show_blocks_again;
+pub(crate) use shown_again::pair_next_tick as show_pair_next_tick;
 pub(crate) use structure_blocks::{dispatch_exports as dispatch_structure_exports, dispatch_updates as dispatch_structure_block_updates};
 pub(crate) use falling::{FallingBlock, from_storage as falling_from_storage, keep_times as keep_fall_times};
 pub(crate) use daylight::{arrived as detectors_arrived, tick as read_daylight};

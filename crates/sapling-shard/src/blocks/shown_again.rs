@@ -32,9 +32,35 @@ pub(super) fn bed_next_tick(world: &mut World, layer: Entity, pos: BlockPos) {
     queue(world, layer, pos, false, 1);
 }
 
+/// Double chests paired a tick ago: when, the world, the lead half and the other.
+#[derive(Resource, Default)]
+pub(crate) struct PairsShown(Vec<(u64, Entity, [BlockPos; 2])>);
+
+/// Shows the chest pair `halves` (lead first) again on the next tick, as BDS did once a chest put
+/// beside another paired with it: lead, other, other, lead in one UpdateSubchunkBlocks, then their
+/// entities in that order (research/captures/bds-u3chest.txt, bds-r3copper.txt).
+pub(crate) fn pair_next_tick(world: &mut World, layer: Entity, halves: [BlockPos; 2]) {
+    let due = world.resource::<Tick>().0 + 1;
+    world.get_resource_or_insert_with(PairsShown::default).0.push((due, layer, halves));
+}
+
+fn show_pairs(world: &mut World, now: u64) {
+    let Some(mut pairs) = world.get_resource_mut::<PairsShown>().filter(|pairs| !pairs.0.is_empty()) else { return };
+    let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut pairs.0).into_iter().partition(|(when, ..)| *when <= now);
+    pairs.0 = waiting;
+    for (_, layer, [lead, other]) in due {
+        let cells = [lead, other, other, lead];
+        send::show_together(world, layer, &cells.map(|pos| (pos, send::FLAGS)));
+        let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
+        let entities: Vec<_> = cells.iter().filter_map(|pos| level.block_entity(*pos).map(|entity| send::block_entity_data(*pos, entity))).collect();
+        send::to_viewers(world, layer, lead, &entities);
+    }
+}
+
 /// Shows again what is due, a structure block first put in its entity's mode.
 pub(crate) fn show_due(world: &mut World) {
     let now = world.resource::<Tick>().0;
+    show_pairs(world, now);
     let Some(mut again) = world.get_resource_mut::<ShownAgain>().filter(|again| !again.0.is_empty()) else { return };
     let (due, waiting): (Vec<_>, Vec<_>) = std::mem::take(&mut again.0).into_iter().partition(|(when, ..)| *when <= now);
     again.0 = waiting;

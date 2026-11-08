@@ -103,6 +103,14 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 - `/clone` (same drill): a single chest's copy gets `forceunpair` 1; a whole pair's copies name each
   other at the destination; one half alone answers `commands.clone.failed`. Sapling: `pairs.rs`
   `carried`, `vanilla/copying.rs`.
+- **Chest pairs put** (bds-u3chest.txt, 2026-11-08): the new half's `UpdateBlock` with its entity already
+  paired, the `place` sound (its `extra_data` the block's default state, a chest facing north, not the one
+  put), then the next tick one `UpdateSubchunkBlocks` of lead, other, other, lead and their four
+  `BlockEntityData` in that order. By hand the capture listed the old half first, by `/setblock` the new
+  one (the order a hash set gives); sapling lists the lead first (`blocks/shown_again.rs` `show_pairs`,
+  `containers/pairs.rs` `pair_placed`; test `fourteenth3y`).
+- **A chest set away while open** (same capture): lid `BlockEvent` 0, `ContainerClose` (server), lid 0
+  again, no sound. Sapling the same (`containers/access.rs` `close_where_gone`, `lid.rs` `shut_gone`).
 - A trapped chest's signal is the viewer count of both halves, capped at 15 (`ChestBlock::use`).
 
 ## C. Barrel, trapped chest, ender chest, shulker box

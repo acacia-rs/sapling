@@ -32,10 +32,13 @@ pub(crate) fn punch_particles(registry: &BlockRegistry, pos: BlockPos, face: Fac
     sapling_net::encode(&LevelEvent { event: PUNCH[face as usize], position: centre(pos), data: sapling_world::block_hash(registry, id) as i32 })
 }
 
-/// The sound of the block `id` placed: BDS names the block's first state, not the one placed.
+/// The sound of the block `id` placed: BDS names the block's default state, not the one placed (a
+/// chest's faces north, research/captures/bds-u3chest.txt).
 pub(crate) fn place_sound(registry: &BlockRegistry, pos: BlockPos, id: u32) -> Bytes {
-    let first = registry.get(id).and_then(|state| registry.states_of(state.name).next()).map_or(id, |(first, _)| first);
-    sound("place", registry, pos, first)
+    let Some(name) = registry.get(id).map(|state| state.name) else { return sound("place", registry, pos, id) };
+    let first = registry.states_of(name).next().map_or(id, |(first, _)| first);
+    let default = sapling_data::default_properties(name).and_then(|properties| registry.find(name, properties)).unwrap_or(first);
+    sound("place", registry, pos, default)
 }
 
 /// The sound `name` of the block `id`, which tells the client what the block is made of.
