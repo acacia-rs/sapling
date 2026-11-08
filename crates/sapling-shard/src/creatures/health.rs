@@ -33,7 +33,9 @@ pub(crate) struct Health {
     burning: u16,
     /// The highest it has been since it left the ground.
     peak: Option<f32>,
+    /// Its breath, and the most it holds (`minecraft:breathable`'s supply).
     air: i16,
+    supply: i16,
     /// Ticks running its head has been in a block.
     walled: u8,
     /// A landing that hurts in the tick after it: what it costs, where that tick began, and its cause.
@@ -61,7 +63,7 @@ impl Health {
     /// A mob of `max` health with `left` of it, `burning` ticks more.
     pub(crate) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
-        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], warding: Warding::default(), cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, idle: 0, unheard: false, told: left, lit: false }
+        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, supply: AIR, walled: 0, landed: None, armour: [0.0; 2], warding: Warding::default(), cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, idle: 0, unheard: false, told: left, lit: false }
     }
 
     pub(crate) fn left(&self) -> f32 {
@@ -269,22 +271,6 @@ impl Health {
         !self.fireproof && self.hurt(self.warded(self.shielded(LAVA_HARM), Cause::Lava))
     }
 
-    /// A tick of breath, held where it has none to draw: its breath when that changed.
-    pub(crate) fn breathe(&mut self, held: bool) -> Option<i16> {
-        let air = if held { (self.air - 1).max(0) } else { AIR };
-        (std::mem::replace(&mut self.air, air) != air).then_some(air)
-    }
-
-    /// Whether, out of breath under water, it was hurt.
-    pub(crate) fn drown(&mut self, under_water: bool) -> bool {
-        under_water && self.air == 0 && self.hurt(self.warded(DROWN_HARM, Cause::Drowning))
-    }
-
-    /// Whether, out of breath out of the water it needs (a fish), it was hurt: 2 a hit, as a cod, a
-    /// salmon and a pufferfish on dry stone 15 s on BDS (research/captures/bds-harm2.txt).
-    pub(crate) fn gasp(&mut self, dry: bool) -> bool {
-        dry && self.air == 0 && self.hurt(SMOTHER_HARM)
-    }
 }
 
 /// The share of a hit of `amount` that armour of these points and toughness stops.
@@ -292,6 +278,7 @@ pub(crate) fn armour_stops(amount: f32, [points, toughness]: [f32; 2]) -> f32 {
     (points - amount / (2.0 + toughness / 4.0)).clamp(points * 0.2, 20.0) / 25.0
 }
 
+mod breath;
 mod falls;
 #[cfg(test)]
 mod tests;

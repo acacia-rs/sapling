@@ -161,6 +161,7 @@ for document in packs.entities().values():
         ("no_fall", unhurt_by(components, "fall")),
         ("breathes_water", breath.get("breathes_water", False)),
         ("no_air", breath.get("breathes_air", True) is False),
+        ("no_bubbles", breath.get("generates_bubbles", True) is False and entity["description"]["identifier"] != "minecraft:player"),
         ("burns_in_sun", any("minecraft:burns_in_daylight" in group for group in [components, *entity.get("component_groups", {}).values()])),
         ("teleports", components.get("minecraft:teleport", {}).get("random_teleports", False) is True),
         ("floats", "minecraft:behavior.float" in components or "minecraft:behavior.slime_float" in components),

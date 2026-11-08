@@ -204,7 +204,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
             packets.push(strike(id, &health, Cause::Generic, None));
         }
         packets.extend(breath_told(world, entity, id, held, breath));
-        if under_water {
+        if under_water && !traits.no_bubbles {
             packets.push(sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleBubble, position: Vec3f { x, y, z }, data: BUBBLES }));
         }
     } else {
@@ -232,7 +232,7 @@ fn head_cell(kind: &str, body: &Body) -> [i32; 3] {
 /// it cannot breathe.
 fn held_breath(world: &World, entity: Entity, layer: Entity, kind: &str, body: &Body) -> (bool, bool) {
     let traits = sapling_data::mob_traits(kind);
-    let breathes = traits.breathes_water || traits.breath.is_some() || super::afflictions::level(world, entity, sapling_api::Effect::WaterBreathing).is_some();
+    let breathes = traits.breathes_water || super::afflictions::level(world, entity, sapling_api::Effect::WaterBreathing).is_some();
     let head = head_cell(kind, body);
     world.get::<Layer>(layer).map_or((false, false), |layer| (is_full_block(&layer.world, head), !breathes && holds(&layer.world, head, WATER)))
 }

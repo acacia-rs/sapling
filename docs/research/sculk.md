@@ -312,8 +312,10 @@ FNV-1a of its state, so its `redstone_signal` reads straight off the capture). A
 tick after its lower half was set to air, and a torch popping when its block was set to air, were heard as
 `block_destroy` (12) by both; so is every block that loses its hold (`updates/loosened.rs` `popped`). Items
 `/kill`ed were heard as `entity_die` (15), from the cell of the item heard, a tick on as a mob's death
-(`creatures/killing.rs`). Tests in fourteenth1w.rs. Not ported: an item thrown by a `destroy` landing beside the
-sensor was heard at frequency 2 (`hit_ground`) half a second after it was dropped; sapling has no `hit_ground`.
+(`creatures/killing.rs`). Tests in fourteenth1w.rs. An item thrown by a `destroy` landing beside the
+sensor was heard at frequency 2 (`hit_ground`, type 31) half a second after it was dropped; sapling's items
+send it as they land after a fall (drops.rs `fly`; test fourteenth1z `an_item_landing_is_heard_as_hit_ground`,
+fourteenth1z). A mob landing is not sent (not drilled).
 sapling-w1pops.txt matches the door, torch, destroy and both kills (12, 12, 12, 15, 15). Two misfits, both
 known: BDS's setup `/setblock`s raised 13 (`block_place`, the sourceless `/setblock` line), and in the last
 part BDS's sensor, busy from the landing's 2, missed the next `destroy` that sapling's heard at 12.

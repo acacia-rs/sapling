@@ -22,6 +22,8 @@ pub struct MobTraits {
     pub breathes_water: bool,
     /// It cannot breathe air: out of water it holds its breath, then smothers (a fish).
     pub no_air: bool,
+    /// Its head under water shows no bubbles (`generates_bubbles` false: a dolphin's).
+    pub no_bubbles: bool,
     /// The ticks of breath it holds, where they are more than the usual 300 (a dolphin's 4800).
     pub breath: Option<u32>,
     /// It teleports about by itself (its `minecraft:teleport`'s `random_teleports`).
@@ -159,7 +161,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
         let (least, most) = range(parts.next()?)?;
         Some(Looks { distance, chance, ticks: (least as u32, most as u32) })
     });
-    MobTraits { looks, glances: has("glances"), fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), no_air: has("no_air"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, baby_experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
+    MobTraits { looks, glances: has("glances"), fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), no_air: has("no_air"), no_bubbles: has("no_bubbles"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, baby_experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
 }
 
 /// The mob `id` has `left` of `max` health.
