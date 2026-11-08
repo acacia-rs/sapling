@@ -67,6 +67,8 @@ BDS was not read). Drilled on BDS 2026-10-29 with `bds_command_probe` scenes fro
 - A chest used on a tamed grown donkey, mule or llama sets `Chested` (ED: `minecraft:equippable` / chest groups) with
   sound `armor.equip_generic` from the mob's middle before the flags (bds-k2mounts.txt; sapling said `add.chest`
   until fourteenth K). A second chest click on a chested one rides it, as any empty-handed click.
+- A llama's screen has one tack slot, 1, accepting only carpets (bds-k2llama.txt NBT): slot 0 and horse armour are
+  refused (riding/packs.rs `refuses`).
 - Stack requests: `ContainerSlotType::HorseEquip` (27) names the tack slots and `Container` the chest slots. Both are
   `Place::Container(slot)` (inventory/requests.rs).
 - Kept in the compound:

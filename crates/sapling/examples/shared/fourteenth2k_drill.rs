@@ -88,7 +88,7 @@ fn trader() -> Vec<String> {
 }
 
 fn shot() -> Vec<String> {
-    let mut lines = with(floor(), &["tp CmdWatcher -6.5 -26 6.5", "gamemode survival @s", "effect @s resistance 1000 255 true", "summon pillager 14.5 -26 0.5"]);
+    let mut lines = with(floor(), &["tp CmdWatcher -6.5 -26 6.5", "difficulty easy", "gamemode survival @s", "effect @s resistance 1000 255 true", "summon pillager 14.5 -26 0.5"]);
     for _ in 0..5 {
         waits(&mut lines, 5);
         lines.push(HOME.into());
@@ -102,7 +102,7 @@ fn shot() -> Vec<String> {
 }
 
 fn freeze() -> Vec<String> {
-    let mut lines = with(floor(), &["tp CmdWatcher -6.5 -26 6.5", "time set noon"]);
+    let mut lines = with(floor(), &["tp CmdWatcher -6.5 -26 6.5", "difficulty easy", "time set noon"]);
     for (kind, x, z) in [("zombie", 4, 4), ("cow", 8, 4), ("skeleton", 12, 4), ("stray", 4, -4), ("polar_bear", 8, -4), ("pig", 12, -4)] {
         lines.push(format!("fill {} -26 {} {} -24 {} powder_snow", x - 1, z - 1, x + 1, z + 1));
         lines.push(format!("summon {kind} {x}.5 -26 {z}.5"));
@@ -127,7 +127,7 @@ fn llama() -> Vec<String> {
 }
 
 fn freeze2() -> Vec<String> {
-    let mut lines = with(floor(), &["tp CmdWatcher -6.5 -26 6.5", "time set noon"]);
+    let mut lines = with(floor(), &["tp CmdWatcher -6.5 -26 6.5", "difficulty easy", "time set noon"]);
     for (kind, x, z) in [("zombie", 4, 4), ("magma_cube", 12, 4), ("strider", 8, -4)] {
         lines.push(format!("fill {} -26 {} {} -24 {} powder_snow", x - 1, z - 1, x + 1, z + 1));
         lines.push(format!("summon {kind} {x}.5 -26 {z}.5"));

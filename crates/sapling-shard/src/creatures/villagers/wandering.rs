@@ -2,8 +2,8 @@
 //! feet half a block up, with a `plop`), and the time it leaves at: its pack's `minecraft:timer`
 //! of 2400 or 3600 seconds (or its `minecraft:start_despawn` fired), after which it goes once no
 //! player is within 24 blocks, taking its llamas with it (`remove_child_entities`; bds-k2trader.txt:
-//! each told `RemoveLeash` 0, then all three removed in that tick). Its llamas tame themselves once
-//! off its lead (husbandry/leads.rs).
+//! each told `RemoveLeash` 0 the tick after the event, then all three removed the tick after that).
+//! Its llamas tame themselves once off its lead (husbandry/leads.rs).
 
 use bevy_ecs::prelude::*;
 use sapling_api::SpawnReason;
@@ -20,9 +20,11 @@ const LLAMA: &str = "minecraft:trader_llama";
 const LLAMAS: usize = 2;
 const STAYS: [u64; 2] = [48_000, 72_000];
 const NO_PLAYER_WITHIN: f32 = 24.0;
-/// Ticks between a trader's looks for players once its time is up.
-const LOOK_EVERY: u64 = 20;
 pub(super) const START_DESPAWN: &str = "minecraft:start_despawn";
+
+/// A trader that let its llamas go: it and they are removed the tick after.
+#[derive(Component)]
+struct Departing(Vec<Entity>);
 
 /// Sets the trader's time to leave; a `new` one comes with its llamas on its leads (its pack's
 /// `should_leash`; bds-trade2.txt: their `LeadHolderEid` the trader's from their announcement).
@@ -40,21 +42,29 @@ pub(super) fn arrive(world: &mut World, entity: Entity, layer: Entity, trader: &
     }
 }
 
-/// `minecraft:start_despawn` fired on the trader: its time is up now.
+/// `minecraft:start_despawn` fired on the trader: its time is up from the next tick.
 pub(super) fn start_despawn(world: &mut World, entity: Entity) {
     let now = world.resource::<Tick>().0;
     if let Some(mut trader) = world.get_mut::<Trader>(entity) {
-        trader.leaves_at = Some(now);
+        trader.leaves_at = Some(now + 1);
     }
 }
 
 /// A trader whose time is up goes once no player is near (BDS's despawn filter: also one that
-/// sold out of everything). True once it went.
+/// sold out of everything), checked each tick: it lets its llamas go, and the tick after they and
+/// it are removed. True once it went.
 pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, now: u64) -> bool {
+    if let Some(Departing(llamas)) = world.entity_mut(entity).take::<Departing>() {
+        for llama in llamas {
+            mobs::remove(world, llama);
+        }
+        mobs::remove(world, entity);
+        return true;
+    }
     let Some(trader) = world.get::<Trader>(entity) else { return false };
     let sold_out = trader.deals.iter().all(super::Deal::sold_out);
     let due = trader.leaves_at.is_some_and(|at| now >= at) || sold_out;
-    if !due || now % LOOK_EVERY != 0 || trader.customer.is_some() {
+    if !due || trader.customer.is_some() {
         return false;
     }
     let Some(at) = world.get::<Body>(entity).map(|body| body.at) else { return false };
@@ -69,9 +79,6 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, now: u64) -
     for llama in &llamas {
         husbandry::release_lead(world, *llama);
     }
-    for llama in llamas {
-        mobs::remove(world, llama);
-    }
-    mobs::remove(world, entity);
-    true
+    world.entity_mut(entity).insert(Departing(llamas));
+    false
 }

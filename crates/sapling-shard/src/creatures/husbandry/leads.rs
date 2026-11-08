@@ -73,11 +73,16 @@ fn let_go(world: &mut World, entity: Entity) -> bool {
     if !unleash(world, entity, true) {
         return false;
     }
+    drop_lead(world, entity);
+    true
+}
+
+/// A lead drops from the mob's middle.
+fn drop_lead(world: &mut World, entity: Entity) {
     if let Some((layer, _, _, body)) = shown::of(world, entity) {
         let lead = ItemStack { name: LEAD.to_owned(), count: 1, damage: 0, block: None, tag: None };
         crate::drops::toss(world, layer, lead, [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]]);
     }
-    true
 }
 
 /// The mob's lead comes off, its viewers told `RemoveLeash` (`dropped` 1 when the lead drops, as
@@ -118,9 +123,22 @@ pub(super) fn heard_from_holder(world: &mut World, entity: Entity, name: &str, [
 #[derive(Component)]
 pub(crate) struct TamedWhenLoose;
 
+/// A held mob whose holder died, with the holder's middle then: BDS's let go the tick after the
+/// death and dropped the lead, `lead.break` heard there, the tick after that (bds-k2trader.txt).
+#[derive(Component, Clone)]
+struct Orphaned(acacia_proto::types::Vec3f);
+
 /// A tick of the mob's lead: its kept holder is found again, or given up on; one too far snaps it;
-/// a dying holder lets go at once, the snap heard from its middle (bds-k2trader.txt).
+/// a dying holder's lets go ([`Orphaned`]).
 pub(super) fn hold(world: &mut World, entity: Entity, now: u64) {
+    if let Some(Orphaned(middle)) = world.get::<Orphaned>(entity).cloned() {
+        if !unleash(world, entity, true) {
+            world.entity_mut(entity).remove::<Orphaned>();
+            drop_lead(world, entity);
+            shown::tell(world, entity, vec![shown::unattributed("lead.break", middle)]);
+        }
+        return;
+    }
     let Some(raised) = world.get::<Raised>(entity) else { return };
     if raised.kept.leasher.is_none() && world.get::<TamedWhenLoose>(entity).is_some() {
         world.entity_mut(entity).remove::<TamedWhenLoose>();
@@ -130,13 +148,9 @@ pub(super) fn hold(world: &mut World, entity: Entity, now: u64) {
         return;
     }
     let (Some(leasher), holder, since) = (raised.kept.leasher, raised.holder, raised.looked_since) else { return };
-    if let Some(dying) = holder.filter(|holder| crate::creatures::is_dying(world, *holder)) {
-        let middle = world.get::<Body>(dying).map(|body| acacia_proto::types::Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] });
-        if let_go(world, entity)
-            && let Some(position) = middle
-        {
-            shown::tell(world, entity, vec![shown::unattributed("lead.break", position)]);
-        }
+    if let Some(body) = holder.filter(|holder| crate::creatures::is_dying(world, *holder)).and_then(|dying| world.get::<Body>(dying)) {
+        let middle = acacia_proto::types::Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] };
+        world.entity_mut(entity).insert(Orphaned(middle));
         return;
     }
     let here = world.get::<InLayer>(entity).map(|layer| layer.0).zip(world.get::<Body>(entity).map(|body| body.at));

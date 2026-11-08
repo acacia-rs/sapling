@@ -176,6 +176,27 @@ fn a_chested_donkey_without_mob_loot_spills_the_goods_put_over_its_saddle_then_t
 }
 
 #[test]
+fn a_tame_llamas_slot_1_takes_a_carpet_but_not_horse_armour() {
+    // bds-k2llama.txt: the llama's screen offers carpets in slot 1 and nothing else.
+    use acacia_proto::types::{ContainerSlotType as Container, ItemStackResponsesItemStatus as Status};
+    use common::requests::{answer, place, request, slot};
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let llama = common::asking::ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:llama", [2.5, 65.0, 0.5], 0.0, 0.0, Some("minecraft:spawn_tame_adult")).expect("a llama"));
+    h.remote.run(|ctx| {
+        assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:iron_horse_armor", 1))));
+        assert!(ctx.set_item(ALEX, Slot::Main(1), Some(&Item::new("minecraft:white_carpet", 1))));
+    });
+    assert_eq!(screens(&sneaking_click(&mut h, llama)).len(), 1, "opened");
+    let mut put = |from: u8| {
+        h.receive(1, &request(-3, vec![place(1, slot(Container::Hotbar, from, 0), slot(Container::HorseEquip, 1, 0))]));
+        answer(&ticks(&mut h, 1)).0
+    };
+    assert_ne!(put(0), Status::Ok, "horse armour refused");
+    assert_eq!(put(1), Status::Ok, "a carpet taken");
+}
+
+#[test]
 fn a_donkey_summoned_tame_opens_to_a_sneaking_click_even_holding_a_chest() {
     let mut h = Harness::new();
     h.enter(1, "Alex");

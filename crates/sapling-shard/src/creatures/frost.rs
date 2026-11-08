@@ -4,8 +4,8 @@
 //! later; a zombie, cow and pig held there 140 ticks froze and were hurt 20 ticks after. The packs'
 //! `freezing_immune` kinds never freeze; a skeleton instead shakes from its first tick in it and
 //! after 20 s becomes a stray (skeleton.json's `got_in_powder_snow` timer), heard `convert_to_stray`.
-// The thaw out of snow is taken from the player's (vitals/frost.rs); the `freezing_vulnerable`
-// kinds' 5 is the Java game's: neither was drilled on a mob.
+//! The packs' `freezing_vulnerable` kinds take 5 (bds-k2freeze2.txt: a strider died of its fourth).
+//! Out of the snow it thaws as a player does (vitals/frost.rs): the zombie's flag went the next tick.
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;

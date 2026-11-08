@@ -5,11 +5,11 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddItemEntity, EntityEvent, EntityEventEventId as Event, LevelSoundEvent, RemoveEntity, SetEntityData};
+use acacia_proto::packets::{AddItemEntity, EntityEvent, EntityEventEventId as Event, LevelSoundEvent, RemoveEntity, SetEntityData, UpdateAttributes};
 use acacia_proto::types::{MetadataDictionaryItemValue as MetaValue, MetadataFlags1 as Flags};
 use common::asking::ask;
 use common::raising::{click_on, has_flag};
-use common::shooting::{added, ready, spawn, watch};
+use common::shooting::{added, ready, watch};
 use common::{Harness, all};
 use sapling_api::{Block, Difficulty, Effect, EntityId, GameMode, ShardCtx};
 use std::sync::{Arc, Mutex};
@@ -98,7 +98,7 @@ fn a_killed_traders_llamas_drop_their_leads_and_tame_themselves() {
 
 #[test]
 fn a_trader_sent_start_despawn_goes_with_its_llamas_once_no_player_is_near() {
-    // bds-k2trader.txt: RemoveLeash 0 to each llama, then all three removed in that tick.
+    // bds-k2trader.txt: RemoveLeash 0 to each llama the tick after the event, all three removed the tick after that.
     let mut level = common::platform();
     let stone = level.block_id("minecraft:stone").unwrap();
     level.fill([24, 64, -4], [40, 64, 4], stone);
@@ -106,10 +106,10 @@ fn a_trader_sent_start_despawn_goes_with_its_llamas_once_no_player_is_near() {
     h.enter(1, "Alex");
     let (trader, llamas) = trader(&mut h, [30.5, 65.0, 0.5]);
     assert!(ask(&mut h, move |ctx| ctx.fire_entity_event(EntityId(trader), "minecraft:start_despawn")));
-    let ticks: Vec<Vec<RawPacket>> = (0..25).map(|_| h.tick_all().to(1).to_vec()).collect();
-    let gone = ticks.iter().find(|sent| all::<RemoveEntity>(sent).len() == 3).expect("the three went together");
+    let ticks: Vec<Vec<RawPacket>> = (0..4).map(|_| h.tick_all().to(1).to_vec()).collect();
+    assert!(all::<RemoveEntity>(&ticks[0]).is_empty() && all::<RemoveEntity>(&ticks[1]).len() == 3, "the three went together the tick after");
     for llama in &llamas {
-        assert_eq!(unleashed(gone, *llama), [0], "llama {llama}");
+        assert_eq!(unleashed(&ticks[0], *llama), [0], "llama {llama}");
     }
     assert!(ticks.iter().flat_map(|sent| all::<AddItemEntity>(sent)).next().is_none(), "no leads dropped");
 }
@@ -136,6 +136,26 @@ fn a_pillagers_crossbow_is_heard_loading_from_where_it_is_by_then() {
         heard.extend(all::<LevelSoundEvent>(&sent).into_iter().filter(|sound| moved && sound.sound_id.starts_with("crossbow.loading.")).map(|sound| [sound.position.x, sound.position.y, sound.position.z]));
     }
     assert!(heard.len() >= 3 && heard[..3].iter().all(|at| (at[0] - 3.5).abs() < 0.3 && (at[1] - 65.95).abs() < 1e-3), "{heard:?}");
+}
+
+#[test]
+fn a_pillager_stands_while_it_loads_its_crossbow() {
+    // bds-k2shot.txt: under 0.06 moved over each load, walking between them.
+    let mut h = floor();
+    let pillager = ask(&mut h, |ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        ctx.set_time(18000);
+        ctx.spawn_entity("minecraft:pillager", [0.5, 65.0, 7.5]).expect("spawned").0
+    });
+    let shot = (0..120).any(|_| {
+        h.receive(1, &common::input_at([0.5, 65.0, 0.5]));
+        !added(h.tick_all().to(1), "minecraft:arrow").is_empty()
+    });
+    assert!(shot, "it shot");
+    // From its loading's start, 3 ticks after the shot, to its end at 23.
+    let feet: Vec<[f32; 3]> = (0..23).map(|_| ask(&mut h, move |ctx| ctx.entity(EntityId(pillager)).expect("there").feet)).skip(2).collect();
+    let moved = feet.iter().map(|at| (at[0] - feet[0][0]).hypot(at[2] - feet[0][2])).fold(0.0, f32::max);
+    assert!(moved < 0.06, "{moved}");
 }
 
 /// Ticks from now until the mob `id` shows `flag` on, and the hurts it showed by freezing on the way.
@@ -178,6 +198,23 @@ fn a_cow_in_powder_snow_freezes_in_seven_seconds_and_is_hurt_every_two_after() {
     let on = on.expect("frozen");
     assert!((138..=141).contains(&on), "{on}");
     assert_eq!(hurts, [on + 19, on + 59], "{on}");
+}
+
+#[test]
+fn a_frozen_strider_is_hurt_5_and_a_zombie_let_out_of_the_snow_thaws_at_once() {
+    // bds-k2freeze2.txt: the strider died of its fourth hurt; the zombie's flag went the tick after the snow.
+    let mut h = floor();
+    let strider = snowed(&mut h, "minecraft:strider");
+    let sent = watch(&mut h, 162);
+    let hurts = all::<EntityEvent>(&sent).into_iter().filter(|event| event.runtime_entity_id == strider && event.event_id == Event::HurtAnimation && event.data == 27).count();
+    let told = all::<UpdateAttributes>(&sent).into_iter().filter(|update| update.runtime_entity_id == strider).flat_map(|update| update.attributes);
+    let left = told.filter(|attribute| attribute.name == "minecraft:health").map(|attribute| attribute.current).last();
+    assert_eq!((hurts, left), (1, Some(15.0)));
+    let mut h = floor();
+    let zombie = snowed(&mut h, "minecraft:zombie");
+    assert!(frozen_in(&mut h, zombie, Flags::VIBRATING, 145).0.is_some());
+    ask(&mut h, |ctx| (3..=5).for_each(|x| (65..=67).for_each(|y| (3..=5).for_each(|z| assert!(ctx.set_block([x, y, z], &Block::new("air")))))));
+    assert_eq!(has_flag(&watch(&mut h, 2), zombie, Flags::VIBRATING), Some(false));
 }
 
 #[test]

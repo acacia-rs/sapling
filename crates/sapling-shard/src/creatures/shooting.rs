@@ -30,6 +30,12 @@ pub(crate) fn play_loads(world: &mut World) {
         late_sounds::play_later(world, 0, layer, body.at.map(|c| c.floor() as i32), arrows::sound(&format!("crossbow.loading.{stage}"), middle, ""));
     }
 }
+/// Whether the archer is loading its crossbow: it stands until done (bds-k2shot.txt: a pillager
+/// moved under 0.06 over each load and walked between them).
+pub(super) fn is_loading(world: &World, archer: Entity) -> bool {
+    world.get_resource::<Loads>().is_some_and(|loads| loads.0.iter().any(|(_, loading, ..)| *loading == archer))
+}
+
 /// Its crossbow is heard this much of its height up.
 const MIDDLE: f32 = 0.5;
 const SPIT: &str = "llama_spit";

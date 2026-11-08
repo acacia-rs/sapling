@@ -89,15 +89,19 @@ pub(super) fn takes(kind: &str, slot: usize, item: &str) -> bool {
     }
 }
 
-/// What a mount's inventory refuses in a slot: in its tack slots what no mount wears there.
-// TODO: by kind, so a llama's slot 1 refuses horse armour (its screen offers no such slot).
-fn refuses(slot: usize, stack: &ItemStack) -> bool {
-    slot < TACK && !takes(HORSE, slot, &stack.name) && !takes(LLAMAS[0], slot, &stack.name)
+/// What a mount's inventory refuses in a slot: in its tack slots what its kind does not wear there.
+/// A llama's screen offers carpets in slot 1 and no saddle slot (bds-k2llama.txt's `UpdateEquipment`).
+fn refuses(kind: &str) -> fn(usize, &ItemStack) -> bool {
+    match kind {
+        HORSE => |slot, stack| slot < TACK && !takes(HORSE, slot, &stack.name),
+        _ if LLAMAS.contains(&kind) => |slot, stack| slot == 0 || (slot < TACK && !takes(LLAMAS[0], slot, &stack.name)),
+        _ => |slot, stack| slot < TACK && !takes(SADDLED[1], slot, &stack.name),
+    }
 }
 
 /// What the inventory of `mob` refuses, if it is a mount's that was opened.
 pub(crate) fn refusal(world: &World, mob: Entity) -> Option<fn(usize, &ItemStack) -> bool> {
-    world.get::<Pack>(mob).map(|_| refuses as fn(usize, &ItemStack) -> bool)
+    world.get::<Pack>(mob).zip(world.get::<Kind>(mob)).map(|(_, kind)| refuses(&kind.0))
 }
 
 /// The slots of `mob`'s inventory, once it was opened.
