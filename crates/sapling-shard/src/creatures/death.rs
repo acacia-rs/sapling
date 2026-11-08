@@ -54,7 +54,7 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
         }
     }
     omens::died(world, entity, layer, body);
-    crate::blocks::vibrate_next_tick(world, layer, body.at.map(|c| c.floor() as i32), crate::blocks::GameEvent::EntityDie);
+    crate::blocks::vibrate_next_tick(world, layer, body.at.map(|c| c.floor() as i32), crate::blocks::GameEvent::EntityDie, Some(entity));
     feed_catalyst(world, entity, layer, kind, body);
     let spilled = crate::riding::spilled(world, entity);
     let unsaddled = spilled.iter().any(|stack| stack.name == SADDLE);
@@ -117,7 +117,7 @@ pub(super) fn hear_hurt(world: &mut World, entity: Entity, layer: Entity) {
         return;
     }
     if let Some(feet) = world.get::<Body>(entity).map(|body| body.at.map(|c| c.floor() as i32)) {
-        crate::blocks::vibrate_next_tick(world, layer, feet, crate::blocks::GameEvent::EntityDamage);
+        crate::blocks::vibrate_next_tick(world, layer, feet, crate::blocks::GameEvent::EntityDamage, Some(entity));
     }
 }
 

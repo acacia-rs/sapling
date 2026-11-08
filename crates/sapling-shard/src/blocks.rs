@@ -136,7 +136,7 @@ pub(crate) use conduits::tick as wake_conduits;
 pub(crate) use pending::{arrived as ticks_arrived, write_back as write_back_ticks, write_back_before_saving as write_back_ticks_before_saving};
 pub(crate) use rods::{Strike as LightningStrike, felt as lightning_felt, sparks as lightning_sparks, struck as lightning_struck};
 pub(crate) use sulfur::{plume as geyser_plume, rumble as rumble_geysers};
-pub(crate) use sculk::{GameEvent, catalysts_arrived, mob_died, poured, teleported, tick as hear_vibrations, vibrate, vibrate_at, vibrate_next_tick, walked};
+pub(crate) use sculk::{GameEvent, catalysts_arrived, mob_died, poured, teleported, tick as hear_vibrations, vibrate, vibrate_at, vibrate_at_by, vibrate_by, vibrate_next_tick, walked};
 pub(crate) use target::shot_stopped;
 pub(crate) use tripwire::tick as trip_wires;
 

@@ -269,7 +269,10 @@ pub(super) fn swing(world: &mut World, player: Option<Entity>, layer: Entity, po
     }
     let Some(now_open) = toggle(world, layer, pos) else { return false };
     let event = if now_open { super::GameEvent::BlockOpen } else { super::GameEvent::BlockClose };
-    super::vibrate_at(world, layer, pos, event, true);
+    match player {
+        Some(player) => super::vibrate_at_by(world, layer, pos, event, player),
+        None => super::vibrate_at(world, layer, pos, event, true),
+    }
     match before {
         Some(id) => play_as(world, layer, pos, sounds[usize::from(!now_open)], id),
         None => play(world, layer, pos, sounds[usize::from(!now_open)]),

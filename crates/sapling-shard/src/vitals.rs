@@ -135,7 +135,7 @@ fn heard_from_eyes(world: &mut World, player: Entity, event: crate::blocks::Game
     let (Some(position), Some(layer)) = (world.get::<Position>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
     let [x, y, z] = position.feet;
     let eyes = [x, y + sapling_data::EYE_HEIGHT, z].map(|c| c.floor() as i32);
-    crate::blocks::vibrate_next_tick(world, layer, eyes, event);
+    crate::blocks::vibrate_next_tick(world, layer, eyes, event, Some(player));
 }
 
 /// To the player and to those who see it.

@@ -99,7 +99,7 @@ impl Request<'_> {
             return false;
         }
         updates::settle(self.world, site.layer, [x, y, z]);
-        blocks::vibrate_at(self.world, site.layer, [x, y, z], blocks::GameEvent::BlockDestroy, true);
+        blocks::vibrate_at_by(self.world, site.layer, [x, y, z], blocks::GameEvent::BlockDestroy, self.entity);
         true
     }
 }

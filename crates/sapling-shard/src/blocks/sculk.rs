@@ -148,7 +148,23 @@ fn hears(world: &World, layer: Entity, (name, properties): (&str, &str), pos: Bl
 /// `event` happened at `at`, by a player or not: each listener in range that hears it starts to
 /// wait for it, unless one is already on its way to it (S3-S8), and wardens hear it.
 pub(crate) fn vibrate(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, by_player: bool) {
-    crate::creatures::warden_hears(world, layer, at, event, None);
+    vibrate_from(world, layer, at, event, by_player, None);
+}
+
+/// [`vibrate`] made by `source`, a player or a mob (a shot's owner for a shot), which a warden that
+/// hears it takes for a suspect (research/captures/bds-q1warden.txt).
+pub(crate) fn vibrate_by(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, source: Entity) {
+    let by_player = crate::components::in_world(world).contains(&source);
+    vibrate_from(world, layer, at, event, by_player, Some(source));
+}
+
+/// [`vibrate_by`] from the middle of the block at `pos`.
+pub(crate) fn vibrate_at_by(world: &mut World, layer: Entity, pos: BlockPos, event: GameEvent, source: Entity) {
+    vibrate_by(world, layer, pos.map(|c| c as f32 + 0.5), event, source);
+}
+
+fn vibrate_from(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, by_player: bool, source: Option<Entity>) {
+    crate::creatures::warden_hears(world, layer, at, event, source);
     if event == GameEvent::NotePlay {
         let source = at.map(|c| c.floor() as i32);
         crate::creatures::allays_hear_note(world, layer, at, |world, allay| !occlusion::occluded(world, layer, source, allay));
@@ -206,7 +222,7 @@ pub(crate) fn walked(world: &mut World, player: Entity, layer: Entity, from: [f3
     }
     let under = [to[0].floor() as i32, (to[1] - 0.5).floor() as i32, to[2].floor() as i32];
     if name_at(world, layer, under).is_some_and(|(name, ..)| is_sensor(name)) {
-        vibrate_at(world, layer, under, GameEvent::SculkTouch, true);
+        vibrate_at_by(world, layer, under, GameEvent::SculkTouch, player);
     }
     if sneaking {
         return;

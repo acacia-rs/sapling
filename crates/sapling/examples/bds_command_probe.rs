@@ -241,6 +241,7 @@ mod twelfth3;
 #[path = "shared/fourteenth1o_drill.rs"] mod fourteenth1o;
 #[path = "shared/fourteenth3p_drill.rs"] mod fourteenth3p;
 #[path = "shared/fourteenth2n_drill.rs"] mod fourteenth2n;
+#[path = "shared/fourteenth1q_drill.rs"] mod fourteenth1q;
 
 use std::time::{Duration, Instant};
 
@@ -401,6 +402,7 @@ const DRILLS: &[fn(&str) -> Named] = &[
     fourteenth1o::drill,
     fourteenth3p::drill,
     fourteenth2n::drill,
+    fourteenth1q::drill,
 ];
 
 fn owned(lines: &[&str]) -> Vec<String> {
@@ -448,7 +450,8 @@ async fn act(actor: &mut Bot, watcher: &mut Bot, start: Instant, shown: &[&str],
             || thirteenth1::act(actor, line).await
             || thirteenth3au::act(actor, line).await
             || fourteenth3d::act(actor, line).await
-            || fourteenth1l::act(actor, line).await;
+            || fourteenth1l::act(actor, line).await
+            || fourteenth1q::act(actor, line).await;
         if !done {
             player::act(actor, line).await;
         }

@@ -274,8 +274,9 @@ a zombie pigman and an iron golem took the actor; a skeleton took the zombie nam
 off took the actor too (`minecraft:angry`, `broadcast_range` 20), all three a tick after the hurt.
 Sapling: `creatures/sourced.rs` (the hit's answer is `attacks::answer`), `creatures/pigmen.rs`; tests in
 `tests/integration/fourteenth2h.rs`. bds-o1pig.txt: a melee hit did the same as `/damage`; sapling's pigmen now
-take the player a tick on too (`pigmen::waits`). Left: BDS's bystanders sounded `mob.warning` a tick before the
-hurt one's; sapling's sound together.
+take the player a tick on too (`pigmen::waits`). There the bystanders sounded `mob.warning` and showed `ANGRY`
+(`Flags` bit 25) a tick after the hurt, the hurt one both a tick later; sapling does since fourteenth1q
+(`pigmen::spread_anger`, `warns_at_once`; test in fourteenth1q.rs).
 
 A blast pushes falling blocks (bds-o1blast.txt, a creeper under a falling slab of sand): by
 `1 - (dist to feet - 0.49) / reach` towards the block's middle, added to its motion, then a tick's gravity and
@@ -736,6 +737,12 @@ A hoglin, a zoglin and a warden hunt as above with their numbers (`varies=` draw
 zoglin's hits). The warden (`creatures/warden.rs`, research/captures/bds-warden-findings.md) sniffs,
 looks at what disturbs it, grows angry at the player behind a step or a touch, roars, then hunts;
 it booms through armour at prey it cannot walk to, and climbs out and digs down (2026-10-28).
+bds-q1warden.txt (`q1warden`, fourteenth1q): a pig hurt by a sourceless `/damage` was heard ~6 ticks on and
+angered it at the pig (heartbeat 27); three hurts made it roar and take the pig 85 ticks later. A player's chest
+open and close, door, block placed, own `/damage` (35 each) and snowball thrown (10, heard as the throw from the
+thrower, 10 ticks over 10 blocks) all named that player; a `/setblock` was heard naming nobody. Sapling since
+fourteenth1q: mobs other than wardens and armor stands are suspects (`hearing::is_suspect`), and vibrations
+carry their source (`blocks::vibrate_by`, `vibrate_at_by`); booms stay for players.
 A creaking (`creatures/creaking.rs`) freezes under a look within 60 degrees of its middle from 16
 blocks, the Java game's rule; its heart: `creaking/heart.rs`. Drilled (bds-gxcreak.txt): taking
 prey, `TargetEid` at T, then at T+1 `mob.warning`, `activate`, `CALM|OBSERVED` and state 1; prey

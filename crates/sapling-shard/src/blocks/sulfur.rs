@@ -120,7 +120,7 @@ fn set(world: &mut World, layer: Entity, pos: BlockPos, now: usize, state: usize
             if ticked {
                 super::sculk::vibrate_at(world, layer, pos, event, false);
             } else {
-                super::sculk::vibrate_next_tick(world, layer, pos, event);
+                super::sculk::vibrate_next_tick(world, layer, pos, event, None);
             }
         }
         if state == CONTINUOUS {

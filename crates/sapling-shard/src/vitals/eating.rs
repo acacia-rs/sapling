@@ -179,7 +179,7 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     let event = if meal.food.drunk { crate::blocks::GameEvent::Drink } else { crate::blocks::GameEvent::Eat };
     let heard = move |world: &mut World| {
         if let (Some(eyes), Some(layer)) = (eyes, world.get::<InLayer>(player).map(|layer| layer.0)) {
-            crate::blocks::vibrate(world, layer, eyes, event, true);
+            crate::blocks::vibrate_by(world, layer, eyes, event, player);
         }
     };
     if !meal.food.drunk {

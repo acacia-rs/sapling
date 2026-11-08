@@ -152,7 +152,8 @@ fn an_enderman_teleports_as_it_comes_and_when_hit_then_hits_its_hitter_for_4_5_a
     });
     let first: Vec<acacia_proto::RawPacket> = (0..2).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     let enderman = all::<AddEntity>(&first)[0].runtime_id;
-    assert!(teleported(&first) && heard(&first) == 2, "it teleports as it comes");
+    // It tries as it comes, one spot: BDS's landed for two of four at night (bds-q1ender.txt).
+    assert_eq!(heard(&first), if teleported(&first) { 2 } else { 0 }, "heard at both ends where it teleports as it comes");
     let quiet: Vec<acacia_proto::RawPacket> = (0..40).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     // Not "and no teleport": one a tick in 100 in the dark is BDS's too, drawn from its entity's id.
     assert!(health(&quiet).iter().all(|left| *left == 20.0), "then strolls, hitting nobody");

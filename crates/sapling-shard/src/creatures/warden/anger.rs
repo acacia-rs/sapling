@@ -41,6 +41,10 @@ impl Anger {
         self.suspects.retain(|(suspect, anger)| *anger > 0 && keep(*suspect));
     }
 
+    pub(super) fn suspects(&self) -> impl Iterator<Item = Entity> + '_ {
+        self.suspects.iter().map(|(suspect, _)| *suspect)
+    }
+
     /// The suspect it is angriest at, and how angry.
     pub(super) fn top(&self) -> Option<(Entity, u32)> {
         self.suspects.iter().copied().max_by_key(|(_, anger)| *anger)
