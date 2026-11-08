@@ -213,7 +213,7 @@ night counts ("darkened"), or block light if brighter. [D] decompiled, [I] infer
 | bamboo (1458106a0, 145812a70) | one tick in 3, darkened light >= 9 over it; a stalk up to 12 + a hash of its column % 5 [D] | the light; its odds and height stay as measured above |
 | berry bush (1471efab0), cocoa (148b2b230), vines (1425e0490), cave vines (148b208d0) | no light read [D] | none |
 | grass (`GrassBlockBase::randomTick` 147165820) | dirt if `_canBeGrass` (147165b50) fails: liquid or a block that keeps light out over it; with darkened light >= 9 over it, 4 tries 1 across, 3 under to 1 over, at dirt that could be grass [D] | dies under a block of filter 15 or liquid; the dirt must be open to the air |
-| mycelium (1465eb280) | light, night not counted: dies with < 4 over it under a solid block unless that has a tag (0x14cd22f48, unread); with >= 9 over it, 4 tries 1 across, 2 either way, at dirt with >= 4 over it and nothing solid or liquid [D]. Drilled: under stone in the dark it lived 60 s at 200 | spreads as BDS, the dirt open to the air; never dies (TODO in `growth/cover.rs`) |
+| mycelium (1465eb280) | light, night not counted: dies with < 4 over it under a block that stops light unless that has the `huge_mushroom_bits` state (0x14cd22f48 is that state's id, no tag); with >= 9 over it, 4 tries 1 across, 2 either way, at dirt with >= 4 over it and nothing solid or liquid [D]. Drilled (bds-r3myc.txt): in the dark it died under stone, planks, sand and dirt, lived under glass, leaves, a slab, a fence, water and both mushroom blocks; bds-lightgrow's under stone died too (once read as lived) | as BDS (`growth/cover.rs` `dies`, sapling-r3myc.txt matches) |
 | ice (`IceBlock::randomTick` 142fd3470) | block light in its cell > 11 - its light block (0): water, air in an ultrawarm dimension [D] | block light in its cell, or one less beside it, >= 12: sapling's light table gives ice filter 2, where BDS's constructor gives none |
 | snow layer (`TopSnowBlock::randomTick` 1471fb850) | block light b >= 12 in its cell melts b - 11 layers, up to 8 [D]; also one layer now and then in a biome over 0.15 when not snowing: drilled at light 11 in plains, 8 layers in about 32 s at 200 | the light; in a warm biome one layer a random tick in 16 |
 | freezing (`LevelChunk::tick` 1409f98a0) | `randomTickSpeed` picks a chunk a tick at the rain top; one in 16 freezes still water that is not water on all four sides, biome <= 0.15, block light < 10 (`Weather::shouldFreeze` 14119e860), whatever the weather [D] | as BDS, chunks that tick ("Where random ticks run"; `growth/snowfall.rs`); no cap on the picks since 2026-11-04 (mob-damage.md "What the rain's level drives") |
@@ -324,7 +324,8 @@ world is plains, too warm for snow.
     - Wheat, beetroot, carrots and potatoes ripen at one pace (median ripe about 20 to 26 s); beetroot is not slower.
   - Fixed:
     - Crops never break by light. They had broken in sapling as a neighbour changed in the dark, a fill's crops among them.
-    - Mycelium under stone does not die.
+    - Mycelium under stone does not die. Wrong: bds-lightgrow.txt shows it turn to dirt before the fast ticks;
+      it dies as the table above says (bds-r3myc.txt).
     - Snow in a warm biome loses a layer one random tick in 16.
   - Left:
     - Grass spread at light 9 over its dirt, but within 60 s not at 10; sapling's did the reverse. Read as chance.
