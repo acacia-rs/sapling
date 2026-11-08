@@ -146,6 +146,7 @@ pub(super) fn court(world: &mut World, entity: Entity, layer: Entity, kind: &str
 fn breed(world: &mut World, parent: Entity, mate: Entity, layer: Entity, kind: &str) {
     let mate_kind = world.get::<Kind>(mate).map(|kind| kind.0.clone()).unwrap_or_default();
     let baby_kind = MIXED.iter().find(|(a, b, _)| (*a == kind && *b == mate_kind) || (*b == kind && *a == mate_kind)).map_or(kind, |(_, _, baby)| *baby).to_owned();
+    let causes = [parent, mate].map(|one| world.get::<Raised>(one).map(|raised| raised.kept.love_cause).filter(|cause| *cause != 0));
     for one in [parent, mate] {
         if let Some(mut raised) = world.get_mut::<Raised>(one) {
             (raised.kept.in_love, raised.kept.breed_cooldown, raised.partner, raised.loved_at) = (0, COOLDOWN, None, None);
@@ -165,6 +166,7 @@ fn breed(world: &mut World, parent: Entity, mate: Entity, layer: Entity, kind: &
         ageing::be_born(world, baby, &baby_kind);
         super::super::properties::inherit(world, baby, [parent, mate], &baby_kind);
         super::super::strides::blend(world, baby, [parent, mate], &baby_kind);
+        super::avoiding::trust_breeders(world, baby, &baby_kind, causes);
         if let Some(owner) = owner {
             super::owners::tame_to(world, baby, &baby_kind, owner);
         }

@@ -2,19 +2,24 @@
 //! (stone at y -27). `ar2look`: mobs of several kinds and states summoned a second apart (villagers by job and
 //! born, a zombie villager, a born cow, a jockey, mounts, a tamed horse, a llama), a villager a zombie kills on
 //! hard, then the watcher away and back to be shown them all again: what each `AddEntity` carries. `ar2fox`:
-//! foxes near a standing and a sneaking player, and born (trusting) ones. `ar2cat`: a cat tamed by feeding,
-//! beside blocks it may sit on, then sleeping with its owner until morning.
+//! foxes near a standing and a sneaking player, and born (trusting) ones; `ar2sneak` foxes within reach of a
+//! sneaking player who stands up. `ar2stomp`: zombies going for turtle eggs. `ar2cat`: a cat and a wolf tamed by feeding, the cat beside blocks it may
+//! sit on, then sleeping with its owner until morning.
 
 use super::creatures::{floor, waits, with};
 
 const LOOK_SHOWN: &[&str] = &["AddEntity", "SetEntityData", "SetEntityLink", "RemoveEntity", "CommandOutput"];
 const PET_SHOWN: &[&str] = &["AddEntity", "AddItemEntity", "SetEntityData", "MoveEntityDelta", "MoveEntityAbsolute", "EntityEvent", "LevelSoundEvent", "CommandOutput", "RemoveEntity"];
 
+const STOMP_SHOWN: &[&str] = &["AddEntity", "MoveEntityDelta", "MoveEntityAbsolute", "UpdateBlock", "LevelEvent", "LevelSoundEvent", "CommandOutput", "RemoveEntity"];
+
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
     Some(match name {
         "ar2look" => (looks(), LOOK_SHOWN),
         "ar2fox" => (foxes(), PET_SHOWN),
         "ar2cat" => (cats(), PET_SHOWN),
+        "ar2sneak" => (sneaking(), PET_SHOWN),
+        "ar2stomp" => (stomping(), STOMP_SHOWN),
         _ => return None,
     })
 }
@@ -63,15 +68,48 @@ fn foxes() -> Vec<String> {
     with(lines, &["gamemode creative @s", "kill @e[type=!player]", "time set 6000", ""])
 }
 
-/// A wild cat tamed by the actor with cod beside a chest, a lit furnace and a bed, watched 40 s; then the
-/// actor sleeps in the bed with the cat near until morning (half the players sleeping skip the night).
+/// Zombies by night with turtle eggs and `mobgriefing` on: four in glass lanes, each 6 from its own egg,
+/// watched 20 s (when each sets off); then one 3 from an egg on a 3 by 3 platform 2 high it cannot climb,
+/// watched 75 s (whether it gives up after 1200 ticks).
+fn stomping() -> Vec<String> {
+    let mut lines = with(floor(), &["time set 18000", "gamerule mobgriefing true", "tp CmdWatcher -6.5 -26 -7.5", "tp @s -7.5 -26 -7.5", ""]);
+    for lane in 0..4 {
+        let z = -6 + 4 * lane;
+        lines.push(format!("fill -6 -26 {} 4 -25 {} glass", z - 1, z - 1));
+        lines.push(format!("fill -6 -26 {} 4 -25 {} glass", z + 1, z + 1));
+        lines.push(format!("setblock 2 -26 {z} turtle_egg"));
+    }
+    lines.extend((0..4).map(|lane| format!("summon zombie -3.5 -26 {}.5", -6 + 4 * lane)));
+    waits(&mut lines, 20);
+    lines.extend(["kill @e[type=zombie]", "fill 11 -26 -1 13 -25 1 stone", "setblock 12 -24 0 turtle_egg", "summon zombie 8.5 -26 0.5", ""].map(String::from));
+    waits(&mut lines, 75);
+    with(lines, &["kill @e[type=!player]", "fill -6 -26 -8 13 -24 8 air", "time set 6000", ""])
+}
+
+/// The actor sneaking with foxes 3 and 2.9 off, watched 4 s, then standing up, watched 6 s.
+fn sneaking() -> Vec<String> {
+    let mut lines = with(floor(), &["time set 18000", "setblock 30 -27 0 stone", "tp CmdWatcher 30.5 -26 0.5", "gamemode survival @s", "tp @s 0.5 -26 0.5 -90 0", "", "!sneak", ""]);
+    lines.extend(["summon fox 3.5 -26 0.5 0 0 minecraft:entity_spawned", "summon fox 2.5 -26 -1.5 0 0 minecraft:entity_spawned"].map(String::from));
+    waits(&mut lines, 4);
+    lines.push("!unsneak".into());
+    waits(&mut lines, 6);
+    with(lines, &["gamemode creative @s", "kill @e[type=!player]", "time set 6000", ""])
+}
+
+/// A wild cat and a wild wolf tamed by the actor's feeding (each sits when tamed), the cat stood up by its
+/// owner's click beside a chest, a lit furnace and a bed, watched 40 s; then the actor sleeps in the bed until
+/// morning (half the players sleeping skip the night).
 fn cats() -> Vec<String> {
     let mut lines = with(floor(), &["time set 12000", "tp CmdWatcher -6.5 -26 -6.5", "gamemode survival @s", "tp @s 0.5 -26 0.5 -90 0", "clear @s", "give @s cod 64", ""]);
-    lines.extend(["summon cat 2.5 -26 0.5 0 0 minecraft:spawn_wild_adult", "effect @e[type=cat] slowness 30 255 true", ""].map(String::from));
-    for _ in 0..8 {
-        lines.extend(["tp @s 0.5 -26 0.5 -90 0", "!feedall cat", ""].map(String::from));
+    lines.extend(["summon cat 2.5 -26 0.5 0 0 minecraft:spawn_wild_adult", "summon wolf 2.5 -26 -2.5", "effect @e[type=!player] slowness 60 255 true", ""].map(String::from));
+    for (item, kind) in [("cod", "cat"), ("bone", "wolf")] {
+        lines.extend(["clear @s".to_owned(), format!("give @s {item} 64"), String::new()]);
+        for _ in 0..8 {
+            lines.extend(["tp @s 0.5 -26 0.5 -90 0".to_owned(), format!("!feedall {kind}"), String::new()]);
+        }
     }
-    lines.extend(["testfor @e[type=cat]", "effect @e[type=cat] clear", "setblock 5 -26 3 chest", "setblock 5 -26 -3 lit_furnace", "setblock -3 -26 3 bed [\"direction\"=0]", ""].map(String::from));
+    lines.extend(["testfor @e[type=cat]", "kill @e[type=wolf]", "clear @s", "effect @e[type=cat] clear", "", "!interact cat", ""].map(String::from));
+    lines.extend(["setblock 5 -26 3 chest", "setblock 5 -26 -3 lit_furnace", "setblock -3 -26 3 bed [\"direction\"=0]", ""].map(String::from));
     waits(&mut lines, 40);
     lines.extend(["gamerule playerssleepingpercentage 50", "time set 13000", "tp @s -2.5 -26 1.5 0 0", "", "!sleep 0 0 2", ""].map(String::from));
     waits(&mut lines, 25);

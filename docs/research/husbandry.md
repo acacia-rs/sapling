@@ -160,17 +160,36 @@ sapling-h3herds.txt):
 
 ## Left out
 
-Riding (the vehicles work reads `Raised::saddled`/`chested`), cats' and parrots' own behaviours
-(sitting on chests and shoulders, gifts; parrots below), breeding of villagers,
-foxes' trust (`entity_born` gives `trusting_fox`: `minecraft:trust` and a `defend_trusted_target`
-within 25; BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strings at 141171c40 and
-141172080): each needs goals sapling's mobs do not have (sitting on blocks, gift loot, trusted
-targets). Bees and axolotls in buckets are ported (creatures/bees.rs, creatures/scooping.rs).
-Traced in thirteenth2ao (pack only, not drilled): `cat_tame` adds `ocelot_sit_on_block`,
-`pet_sleep_with_owner` and `drop_item_for` (the gift: day time 0.74999-0.8, chance 0.7, loot
-`cat_gift`), none of which sapling has (its cats only toggle `sittable` on a click); a fox's trust only
-matters to its `avoid_mob_type` of players (trusted or sneaking ones left out), and sapling's foxes
-avoid no player at all, so trust needs that avoidance ported first; parrots, below.
+Riding (the vehicles work reads `Raised::saddled`/`chested`), parrots' own behaviours (shoulders,
+below), breeding of villagers, a cat's sitting on blocks, a fox's `defend_trusted_target` (within 25)
+and saving its trust (BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strings at 141171c40 and
+141172080). Bees and axolotls in buckets are ported (creatures/bees.rs, creatures/scooping.rs).
+
+## Cats and foxes (thirteenth2ar; `ar2fox`, `ar2sneak`, `ar2cat` in thirteenth2ar_drill.rs)
+
+- Foxes flee players (`behavior.avoid_mob_type`), ported in `husbandry/avoiding.rs`. BDS's foxes 3 and 3.6
+  blocks from a standing survival player fled at once. Foxes 4, 5.8 and 8.7 off did not. That fits the
+  fox's box grown 3 each way meeting the player's box. Each ran to a spot further from the player at
+  0.43 a tick within 7 and 0.2 beyond (1.5 times and once its pace), 2 to 10 blocks, and stopped near a
+  cell's middle. `FlagsExtended` bit 22 (`1 << 22`) was on while it ran. Next to a sneaking player
+  nothing fled (bds-ar2sneak.txt). When the player stood up, the fox 2.8 off fled on that tick. Foxes born
+  by `entity_born` fled as well: they trust only their breeders. Sapling's bred fox now trusts the
+  players who fed its parents (Java's rule; not drilled; not saved). In sapling's first run
+  (sapling-ar2sneak.txt) a fox ran straight past the player to a spot that was only further away. Its
+  spot must now lie on the far side and out of the box. The born foxes fled on their first tick on both.
+- Clicking a tamed cat that is in love with cod again and again kept it sitting on BDS. Sapling toggled
+  it each time. Fixed: an item the kind breeds with no longer sits or stands it (`clicks.rs`).
+- A cat tamed by feeding sits: BDS sent `TAMED` and `SITTING` in one packet (bds-ar2cat.txt). A parrot
+  did not sit (bds-parrots.txt). The wolf is undrilled. Ported in `owners.rs` for cats only.
+- Sleeping with its owner (`pet_sleep_with_owner`), ported in `husbandry/bedtime.rs`. The tick the owner
+  lay down, the stood-up cat set off from 8 blocks away at 0.28 a tick (1.2 times its pace). It stopped
+  on the foot of the bed, 0.3 from the cell's middle at the bed's top. About 6 ticks later it showed
+  `RESTING` (bit 23). When the night was skipped it lost `RESTING` on the owner's wake tick and was put at
+  (-2, 7), 4.7 blocks off, an unexplained spot. It gave no gift in that run (the gift comes 7 times in 10).
+  Sapling's cat (sapling-ar2cat.txt) set off on the same tick, lay at (-2.32, 2.55), got up on the wake
+  tick and gave its gift then. It is not moved first.
+- Sitting on blocks (`ocelot_sit_on_block`): in 40 s the stood-up cat went around the lit furnace, beside
+  it on three sides, and never got on top. It never went near the chest or the bed. Not ported.
 
 Turtle scutes (bds-ak1scute.txt, ported): a baby turtle grown up (at its tenth seagrass there) drops its
 `minecraft:ageable` `drop_items` (`turtle_shell_piece`, named `turtle_scute` now), one, from its feet +
@@ -246,5 +265,5 @@ vehicles work) take no player as a vehicle.
   by when the parents' love particles stopped), then a cold and a temperate one. Sapling made
   four: warm, temperate, temperate, cold. Every calf took one parent's climate on both sides,
   which fits sapling's random pick of a parent; three calves cannot show the odds.
-- Herds from natural spawning (above); cats', parrots' and foxes' own goals (Left out).
+- Herds from natural spawning (above); parrots' goals and a cat's sitting on blocks (Left out).
 - The exact distance a lead snaps at, between 11 and 11.99 (bds-uuknot.txt).

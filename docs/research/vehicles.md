@@ -185,6 +185,9 @@ were not found in any of these; sapling does what is listed there.
   the boat's wire point, its box 0.375 lower, then pushed out of blocks as a summoned mob (see
   water-movement.md "Summoned into blocks"); vehicles.rs `summon`, body/spawn_push.rs. Sapling now
   matches 28 of 30; open: (-0.5, 4.5) and a lone (4.5, 4.5) went to z 4.3 where the fit gives 4.7.
+  Traced, still open (thirteenth2ar): at z 4.5 the box's two overlaps are 0.2 each, and their f32 values
+  (0.20000005 below, 0.19999981 above) send every z 4.5 the same way, so they cannot explain why x 9.5 went
+  to 4.7 and x 4.5 and -0.5 to 4.3. The tie seems settled by something that depends on x; no drill was run.
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
   Drilled 2026-11-05 (group AI, `ai1ride`, bds-ai1ride.txt): a tamed, saddled horse is client-predicted;
   BDS took the bot's walk and 10-tick charged jump with one vehicle correction at the mount, as sapling
