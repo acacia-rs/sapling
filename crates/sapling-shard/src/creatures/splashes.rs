@@ -50,13 +50,19 @@ fn share_of((low, high): ([f32; 3], [f32; 3]), at: [f32; 3]) -> f32 {
 }
 
 /// The potion of data value `data` breaks at `at`, flying from `from`, on the player or mob `struck` if it
-/// met one: that one gets it in full, others within reach a share by how far off they are.
+/// met one: that one gets it in full, others within reach a share by how far off they are. What they
+/// show of it waits for the next tick's sync, the potion going then too (flight.rs).
 pub(super) fn burst(world: &mut World, layer: Entity, at: [f32; 3], from: [f32; 3], data: i16, struck: Option<Entity>) {
     let [x, y, z] = at;
     let splash = LevelEvent { event: LevelEventEvent::ParticleSplash, position: Vec3f { x, y, z }, data: sapling_data::shots::potion_colour(data) };
     let cell = at.map(|c| c.floor() as i32);
     crate::view::to_viewers(world, layer, cell, &[sapling_net::encode(&splash)]);
     late_sounds::play_later(world, 1, layer, cell, super::arrows::sound("glass", at, ""));
+    crate::entities::synced_next_tick(world, |world| give(world, layer, at, from, data, struck));
+}
+
+/// The potion's effects on those it reaches.
+fn give(world: &mut World, layer: Entity, at: [f32; 3], from: [f32; 3], data: i16, struck: Option<Entity>) {
     let share = |body: &Body, who: Entity| match struck == Some(who) {
         true => 1.0,
         false => share_of(body.bounds(), at),

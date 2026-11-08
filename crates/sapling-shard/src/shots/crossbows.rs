@@ -131,7 +131,7 @@ pub(super) fn shoot(world: &mut World, player: Entity, stack: &ItemStack) -> boo
             _ => Pickup::Never,
         };
         let loosed = Loosed { critical: true, tipped: ammo::tip(&arrow), pierces, ..Loosed::new(player, pickup, Some(arrow.clone())) };
-        arrows.extend(super::loose(world, player, PLAYER_ARROW, CROSSBOW_SPEED, 0.0, 1.0, *turn, loosed));
+        arrows.extend(super::loose(world, player, PLAYER_ARROW, super::aim::BELOW_EYES, CROSSBOW_SPEED, 0.0, 1.0, *turn, loosed));
     }
     super::set_hand(world, player, Some(charged(stack, None)));
     if !creative {

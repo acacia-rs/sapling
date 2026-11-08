@@ -69,7 +69,7 @@ pub(super) fn let_go(world: &mut World, player: Entity, stack: &ItemStack, ticks
     let Some(thrown) = super::held(world, player).filter(|held| held.name == TRIDENT) else { return };
     let pickup = if creative { Pickup::Creative } else { Pickup::Anyone };
     let loosed = Loosed { impaling: enchant::level(tag, Enchant::Impaling), loyalty: enchant::level(tag, Enchant::Loyalty), ..Loosed::new(player, pickup, Some(thrown)) };
-    let Some(trident) = super::loose(world, player, THROWN, TRIDENT_SPEED, 0.0, 1.0, 0.0, loosed) else { return };
+    let Some(trident) = super::loose(world, player, THROWN, super::aim::BELOW_EYES, TRIDENT_SPEED, 0.0, 1.0, 0.0, loosed) else { return };
     if !creative {
         super::set_hand(world, player, None);
     }

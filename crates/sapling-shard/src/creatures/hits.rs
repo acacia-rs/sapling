@@ -52,6 +52,16 @@ pub(super) fn gone(world: &mut World, shot: Entity, later: bool) -> Option<()> {
     None
 }
 
+/// A [`Struck`] shot goes, in the tick after it hit: what it leaves comes, and one two ticks old is
+/// still heard `reappeared` (research/captures/bds-f14cthrow.txt, bds-p2shoot.txt).
+pub(super) fn struck_goes(world: &mut World, shot: Entity, layer: Entity, id: u64, now: u64) {
+    super::landing::leave(world, shot);
+    if let (Some(born), Some(body)) = (world.get::<flight::Arrow>(shot).map(|arrow| arrow.born), world.get::<Body>(shot).copied()) {
+        flight::vanish::reappear(world, shot, layer, id, now - born, &body);
+    }
+    crate::mobs::remove(world, shot);
+}
+
 /// Where the archer `by` stands: a player is thrown away from it, not from the shot
 /// (research/captures/bds-pillswitch2.txt: pillagers 3 west and 1 north threw it 0.4 along (3, 1)).
 fn archer_feet(world: &World, by: Entity) -> Option<[f32; 3]> {

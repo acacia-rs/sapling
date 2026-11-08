@@ -7,6 +7,8 @@
 // TODO: a riding player's shield turns hits away too (only its bits are shown); a blocked mob's hit or shot also stood the blocker up from
 // its sneak on BDS; Thorns and fireworks are turned away there too.
 
+mod bare;
+
 use acacia_proto::packets::{InventorySlot, LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, ItemV4Extra, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2, Vec3f, WindowIDVarint};
 use bevy_ecs::prelude::*;
@@ -48,13 +50,15 @@ pub(crate) struct Guard {
     down_until: u64,
     rides: bool,
     lingers: bool,
+    /// Its bits show it up with no shield (bare.rs).
+    bare: bool,
 }
 
 /// The shield's bits of `FlagsExtended` a new viewer is shown. A rider is shown raised and moving,
 /// shield or none, and the moving bit stays after it gets off (research/captures/bds-m3rideview.txt).
 pub(crate) fn shown_bits(guard: Option<&Guard>) -> i64 {
     let Some(guard) = guard else { return 0 };
-    let raised = if guard.rides || guard.raised.is_some() { RAISED } else { 0 };
+    let raised = if guard.rides || guard.raised.is_some() || guard.bare { RAISED } else { 0 };
     raised | if guard.rides || guard.lingers { MOVING } else { 0 }
 }
 
@@ -93,6 +97,9 @@ pub(super) fn tick(world: &mut World) {
             continue;
         }
         let alive = !is_dead(world, player);
+        if bare::tell(world, player, id, now, holds, alive) {
+            continue;
+        }
         let mut guard = world.get_mut::<Guard>(player).expect("put above");
         if guard.rides {
             continue;
@@ -114,7 +121,7 @@ pub(super) fn tick(world: &mut World) {
             if moving == MOVING {
                 show_shield(world, player, if raised { now as i64 } else { 0 });
             }
-            tell(world, player, &extended(id, raised_bit | moving, now));
+            crate::movement::after_pose(world, player, extended(id, raised_bit | moving, now));
         }
     }
 }

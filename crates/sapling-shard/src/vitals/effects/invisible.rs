@@ -27,8 +27,8 @@ pub(super) fn is_invisible(world: &World, player: Entity) -> bool {
 /// the flags item to tell.
 pub(super) fn flip(world: &mut World, player: Entity, on: bool) -> Option<MetadataDictionaryItem> {
     let pose = world.get_mut::<Motion>(player)?.show_unseen(on);
-    let now = world.resource::<Tick>().0;
-    world.get_resource_or_insert_with(Vanishing::default).0.push((now, player, on));
+    let synced = crate::entities::sync_tick(world);
+    world.get_resource_or_insert_with(Vanishing::default).0.push((synced, player, on));
     crate::movement::flags_item(pose)
 }
 

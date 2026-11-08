@@ -70,8 +70,8 @@ pub(super) fn flip(world: &mut World, mob: Entity, id: u64, on: bool) -> Option<
         let shown = entities::mob_flags(world, mob, &kind, Flags::INVISIBLE, false);
         if nametag { entities::mob_flags(world, mob, &kind, Flags::CAN_SHOW_NAMETAG, true) } else { shown }
     };
-    let now = world.resource::<Tick>().0;
-    world.get_resource_or_insert_with(Vanishing::default).0.push((now, mob, on));
+    let synced = entities::sync_tick(world);
+    world.get_resource_or_insert_with(Vanishing::default).0.push((synced, mob, on));
     Some(flags_item(id, word.0))
 }
 
