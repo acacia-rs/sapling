@@ -8,7 +8,7 @@ use crate::common;
 use crate::riding::spawned;
 
 use acacia_proto::Packet;
-use acacia_proto::packets::{AddItemEntity, BlockEntityData, BlockEvent, ContainerClose, ContainerOpen, LevelSoundEvent, MoveEntityDelta, UpdateSubchunkBlocks};
+use acacia_proto::packets::{AddItemEntity, BlockEntityData, BlockEvent, ContainerClose, ContainerOpen, CorrectPlayerMovePrediction, LevelSoundEvent, MoveEntityDelta, UpdateSubchunkBlocks};
 use common::{Harness, all, click};
 use sapling_api::{Block, Item, PlayerId, Slot};
 
@@ -91,6 +91,40 @@ fn a_killed_cart_drops_its_item_at_its_wire_point() {
     let sent: Vec<_> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
     let dropped = all::<AddItemEntity>(&sent).first().map(|item| item.position.y).expect("its item");
     assert!((dropped - feet - 0.475).abs() < 1e-3, "{feet} -> {dropped}");
+}
+
+#[test]
+fn a_stand_pinned_against_obsidian_by_an_arm_stays_in_the_arm() {
+    // bds-y3pin.txt: the stand went flush against the obsidian (x 3.75) and was not squeezed out sideways.
+    let mut h = alex(Vec::new());
+    put(&mut h, &[([0, 65, 8], "piston", "facing_direction=4"), ([2, 65, 8], "obsidian", "")]);
+    let stand = spawned(&mut h, &[("minecraft:armor_stand", [1.5, 65.0, 8.3])])[0];
+    put(&mut h, &[([0, 66, 8], "redstone_block", "")]);
+    (0..10).for_each(|_| _ = h.tick_all());
+    let feet = common::asking::ask(&mut h, move |ctx| ctx.entity(stand).map_or([f32::NAN; 3], |info| info.feet));
+    assert!((feet[0] - 1.75).abs() < 1e-4 && (feet[2] - 8.3).abs() < 1e-4, "{feet:?}");
+}
+
+/// The corrections Alex is sent in the 10 ticks after standing at `feet` on the slime of `blocks`
+/// and the piston's power.
+fn corrected(blocks: &'static [([i32; 3], &'static str, &'static str)], feet: [f32; 3], power: [i32; 3]) -> Vec<CorrectPlayerMovePrediction> {
+    let mut h = alex(Vec::new());
+    put(&mut h, blocks);
+    h.remote.run(move |ctx| ctx.teleport(PlayerId(1), feet));
+    (0..3).for_each(|_| _ = h.tick_all());
+    h.remote.run(move |ctx| assert!(ctx.set_block(power, &Block::new("redstone_block"))));
+    (0..10).flat_map(|_| all::<CorrectPlayerMovePrediction>(h.tick_all().to(1))).collect()
+}
+
+#[test]
+fn a_player_on_slime_pushed_up_is_flung_and_one_pushed_sideways_is_left_to_its_client() {
+    // bds-y3fling.txt: up, one correction a block up and a fling's move on, rising 0.9016;
+    // sideways, none.
+    let up = corrected(&[([3, 64, 0], "piston", "facing_direction=1"), ([3, 65, 0], "slime", "")], [3.5, 66.0, 0.5], [4, 64, 0]);
+    let flung: Vec<(f32, f32)> = up.iter().map(|told| (told.position.y - sapling_data::EYE_HEIGHT, told.delta.y)).collect();
+    assert!(flung.first().is_some_and(|(feet, rise)| (feet - 68.0).abs() < 1e-3 && (rise - 0.9016).abs() < 1e-4), "{flung:?}");
+    let sideways = corrected(&[([0, 65, 4], "piston", "facing_direction=4"), ([1, 65, 4], "slime", "")], [1.5, 66.0, 4.5], [0, 66, 4]);
+    assert!(sideways.is_empty(), "{sideways:?}");
 }
 
 #[test]

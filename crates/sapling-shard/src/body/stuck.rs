@@ -25,11 +25,16 @@ impl Body {
 
     /// Puts a mob a full-height block reaches into at its feet beside it, its box flush with the
     /// nearest side that has room: BDS's cows 0.65 and 0.16 into a stone set at their feet went that
-    /// far east the same tick (research/captures/bds-m3inblock.txt).
+    /// far east the same tick (research/captures/bds-m3inblock.txt). A piston's arm does not count:
+    /// BDS's cows and stand pinned in one by obsidian stayed there (bds-y3pin.txt).
     pub(super) fn push_out_of_block(&mut self, level: &Level) {
         let feet = self.at[1];
         let blocks = physics_view(level, |view| overlapped(view, &self.aabb()));
-        let walls: Vec<&Aabb> = blocks.iter().filter(|b| b.min[1] <= feet + TOUCH && b.max[1] - feet >= 1.0 - TOUCH).collect();
+        let arm = |b: &Aabb| {
+            let [x, y, z] = b.min.map(|c| c.floor() as i32);
+            level.registry().get(level.block(x, y, z)).is_some_and(|state| state.name.ends_with("piston_arm_collision"))
+        };
+        let walls: Vec<&Aabb> = blocks.iter().filter(|b| b.min[1] <= feet + TOUCH && b.max[1] - feet >= 1.0 - TOUCH && !arm(b)).collect();
         let (Some(first), (min, max)) = (walls.first(), self.bounds()) else { return };
         let (lo, hi) = walls.iter().fold((first.min, first.max), |(lo, hi), b| (std::array::from_fn(|i| lo[i].min(b.min[i])), std::array::from_fn(|i| hi[i].max(b.max[i]))));
         let half = self.size[0] / 2.0;

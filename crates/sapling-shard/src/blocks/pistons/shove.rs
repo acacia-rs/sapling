@@ -1,10 +1,9 @@
 //! What stands in the way of a piston going out is pushed before it, as BDS's armour stands
 //! were (docs/research/redstone.md, "Pistons and entities"). What stands on a block it moves
 //! sideways goes with it, half a block in the tick it starts; going out, it is then put before the
-//! block's front, and slime flings it on at 1 a tick (research/captures/bds-u3carry.txt).
-// TODO: a body pinned against a block is squeezed out to +z where BDS's went -z; pushed bodies are
-// not told with `force_move_local_entity`; a player on slime is not flung. A player is pushed as a
-// body is and told by a correction (research/captures/bds-pushed.txt).
+//! block's front, and slime flings it on at 1 a tick (research/captures/bds-u3carry.txt). A player
+//! in the way is pushed as a body is and told by a correction (bds-pushed.txt); one on a moved
+//! block is left to its client, but for a fling up (bds-y3fling.txt).
 
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
@@ -74,6 +73,8 @@ pub(super) fn carry_riders(world: &mut World, layer: Entity, cells: &[BlockPos],
     let Some(level) = super::level(world, layer) else { return };
     let carried: Vec<_> = all
         .into_iter()
+        // BDS left a player on slime pushed sideways to its own client (bds-y3fling.txt).
+        .filter(|(_, _, is_player)| !is_player)
         .filter_map(|(entity, mut body, is_player)| {
             let top = cells.iter().zip(&tops).find(|(cell, _)| rides(&body, **cell, cell.map(|c| c as f32)))?.1;
             let far = if starts_out && *top != Top::Honey { 2.0 * by } else { by };
@@ -94,7 +95,7 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
     let all = bodies(world, layer);
     let Some(level) = super::level(world, layer) else { return };
     let moving: Vec<BlockPos> = from.iter().map(|cell| dir.neighbour(*cell)).collect();
-    let mut shoved = Vec::new();
+    let (mut shoved, mut flung_players) = (Vec::new(), Vec::new());
     for (entity, mut body, is_player) in all {
         let start = body.at;
         let mut flung = false;
@@ -104,13 +105,20 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
             let low: [f32; 3] = std::array::from_fn(|i| cell[i] as f32 + offset[i] as f32 * gone);
             let (min, max) = body.bounds();
             let rider = top.is_some_and(|top| top != Top::Honey) && axis != 1 && rides(&body, *cell, low);
-            if !rider && (0..3).any(|i| max[i] <= low[i] || min[i] >= low[i] + 1.0) {
+            if (rider && is_player) || (!rider && (0..3).any(|i| max[i] <= low[i] || min[i] >= low[i] + 1.0)) {
                 continue;
             }
             let mut by = [0.0; 3];
             by[axis] = if ahead { low[axis] + 1.0 - min[axis] } else { low[axis] - max[axis] };
             body.push(level, by, &moving);
             flung |= top == Some(Top::Slime);
+        }
+        if flung && is_player && axis == 1 {
+            // Its first move of the fling is in the correction: 1 up, then a tick's gravity and drag.
+            let mut feet = body.at;
+            feet[1] += offset[1] as f32;
+            flung_players.push((entity, feet, (offset[1] as f32 - 0.08) * 0.98));
+            continue;
         }
         if flung && !is_player {
             let mut speed = body.motion;
@@ -122,4 +130,7 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
         }
     }
     keep(world, shoved);
+    for (player, feet, rise) in flung_players {
+        crate::movement::push_off_ground(world, player, feet, rise);
+    }
 }

@@ -548,6 +548,13 @@ What stands on a moved block (`bds_command_probe u3carry`, research/captures/bds
   block's front a tick on (or carried 1 more on a pull); slime sets the push axis's motion to 1.
   Every move a piston causes is told with `force_move_local_entity` (`Told::pistoned`), as BDS's
   all were.
+- Pinned (bds-y3pin.txt): cows and a stand in an arm's cell with obsidian beyond went flush with the
+  obsidian and stayed in the arm, unhurt, wherever across the cell they stood; none was squeezed out
+  sideways. Sapling's `push_out_of_block` (body/stuck.rs) skips arm cells for that.
+- A player on slime (bds-y3fling.txt): pushed sideways BDS sends nothing, its client carries it; pushed
+  up one `CorrectPlayerMovePrediction` puts its feet 2 up (the lift and one flung move of 1) with a
+  delta of 0.9016 up, off the ground. Sapling: `pistons/shove.rs` leaves riding players to their client
+  and flings an up-pushed one so (`movement::push_off_ground`).
 
 ## More parts (2026-10-25, decompiled, not drilled)
 
