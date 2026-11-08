@@ -43,9 +43,9 @@ impl Forced {
         Ok(Self { reaching, bb: None })
     }
 
-    fn jigsaw(kind: Option<StructureKind>, pieces: Arc<Vec<Piece>>) -> Result<Self, PlaceFailure> {
+    fn jigsaw(kind: Option<StructureKind>, pieces: Arc<Vec<Piece>>, commanded: Option<[i32; 3]>) -> Result<Self, PlaceFailure> {
         let bb = union(pieces.iter().map(|p| p.bb));
-        Self::spanning(Reaching { v2: vec![(kind, pieces)], ..Default::default() }, bb)
+        Self::spanning(Reaching { v2: vec![(kind, pieces)], commanded, ..Default::default() }, bb)
     }
 }
 
@@ -109,7 +109,7 @@ impl Structures {
             }
             StructureKind::TrialChambers | StructureKind::TrailRuins | StructureKind::AbandonedCamp => {
                 let pieces = self.forced_v2(density, kind, start, start_y).ok_or(PlaceFailure::Failed)?;
-                Forced::jigsaw(Some(kind), pieces)
+                Forced::jigsaw(Some(kind), pieces, None)
             }
         }
     }
@@ -117,13 +117,13 @@ impl Structures {
     /// `/place structure <name> <at>` for the v2 kinds BDS takes ([`Structures::commanded_v2`]);
     /// Unknown for another name.
     pub(crate) fn forced_command(&self, density: &Density, name: &str, at: [i32; 3], keep_height: bool) -> Result<Forced, PlaceFailure> {
-        let pieces = self.commanded_v2(density, name, at, keep_height).ok_or(PlaceFailure::Unknown)?;
+        let (pieces, loot_at) = self.commanded_v2(density, name, at, keep_height).ok_or(PlaceFailure::Unknown)?;
         let kind = match name {
             "minecraft:trail_ruins" => StructureKind::TrailRuins,
             "minecraft:trial_chambers" => StructureKind::TrialChambers,
             _ => StructureKind::AbandonedCamp,
         };
-        Forced::jigsaw(Some(kind), pieces)
+        Forced::jigsaw(Some(kind), pieces, Some(loot_at))
     }
 
     /// `/place jigsaw <pool> <target> <max_depth> <at>`: the v2 placer from `pool`'s start element,
@@ -145,6 +145,6 @@ impl Structures {
         let mut random = JavaRandom::new(self.seed).fork_at(at[0], at[1], at[2]);
         let (piece, centre) = start.named_start(&target, (at[0], at[1], at[2]), &mut random).ok_or(PlaceFailure::Failed)?;
         let raw = RawHeights::new(density);
-        Forced::jigsaw(None, Arc::new(start.grow(piece, centre, Vec::new(), &mut random, &|x, z| raw.at(x, z))))
+        Forced::jigsaw(None, Arc::new(start.grow(piece, centre, Vec::new(), &mut random, &|x, z| raw.at(x, z))), Some(at))
     }
 }

@@ -41,7 +41,7 @@ impl Structures {
     /// The post-process of `chunk` over `shape`, reading past it through `neighbours` (and
     /// `features` for the features some pieces place).
     pub fn place(&self, density: &Density, reaching: &Reaching, shape: &mut ChunkShape, chunk: (i32, i32), neighbours: Neighbours, biomes: &ChunkBiomes, features: &ElementWorld) -> Placed {
-        let Reaching { strongholds, temples, mineshafts, treasure, monuments, igloos, shipwrecks, portals, ruins, outposts, cities, villages, v2, mansions } = reaching;
+        let Reaching { strongholds, temples, mineshafts, treasure, monuments, igloos, shipwrecks, portals, ruins, outposts, cities, villages, v2, mansions, commanded } = reaching;
         let mut mineshafts: Vec<&Arc<Mineshaft>> = mineshafts.iter().collect();
         if mineshafts.len() > 1 {
             // `foreachIntersectingStructureStart` walks the start map's list.
@@ -113,7 +113,7 @@ impl Structures {
         self.place_portals(density, &mut canvas, portals);
         canvas.whole = false;
         Self::place_ancient_cities(&mut canvas, cities, seed);
-        self.place_v2(&mut canvas, v2);
+        self.place_v2(&mut canvas, v2, *commanded);
         let touched = placed.iter().fold(canvas.touched, |(lo, hi), b| (lo.min(b.y0 - 1), hi.max(b.y1 + 1)));
         let mut past = std::mem::take(&mut canvas.unclipped);
         past.append(&mut canvas.spilled);

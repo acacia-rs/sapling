@@ -13,7 +13,7 @@ use super::element::{Element, ElementKind, Projection};
 use crate::block::Block;
 use crate::block_entity::randomizable;
 use crate::feature::element_random;
-use crate::random::{Mt19937, Xoroshiro};
+use crate::random::Mt19937;
 
 #[derive(Clone)]
 pub struct Piece {
@@ -142,8 +142,9 @@ impl Piece {
 
     /// A v2 piece within the canvas's chunk (`template::JavaPlacement`); a feature element draws
     /// from its own generator (145e144c0). Every randomizable container the template places takes
-    /// the low 32 bits of `random.nextLong()` as its `LootTableSeed`, in placement order (141ee1f71).
-    pub fn post_process_java(&self, canvas: &mut Canvas, level_seed: i64, random: &mut Xoroshiro) {
+    /// the low 32 bits of `random.nextLong()` as its `LootTableSeed`, in placement order (141ee1f71):
+    /// `loot_seed` draws one.
+    pub fn post_process_java(&self, canvas: &mut Canvas, level_seed: i64, loot_seed: &mut dyn FnMut() -> i32) {
         if let ElementKind::Feature(name) = &self.element.kind {
             let (x, y, z) = self.origin;
             trace::label(|| format!("feature {name} {:?}", self.origin));
@@ -159,7 +160,7 @@ impl Piece {
         for ((x, y, z), block, entity) in blocks {
             if canvas.bb.contains(x, y, z) {
                 canvas.set(x, y, z, block);
-                let seed = randomizable(block.name()).then(|| random.next_int());
+                let seed = randomizable(block.name()).then(|| loot_seed());
                 if let Some(entity) = entity {
                     canvas.set_entity(x, y, z, seed.map_or(entity, |seed| entity.seeded(seed)));
                 }
