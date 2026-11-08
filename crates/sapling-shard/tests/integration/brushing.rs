@@ -91,8 +91,9 @@ fn sounds(packets: &[RawPacket]) -> Vec<String> {
 fn a_held_brush_uncovers_suspicious_sand_in_ten_strokes_ten_ticks_apart() {
     let mut h = sand();
     let ticks = hold(&mut h, 100, true);
-    // BDS: count 1 at the first click, then a stroke every 10 ticks; shown only as the progress moves.
-    assert_eq!(shown(&ticks), [(0, 1), (21, 3), (51, 6)]);
+    // BDS: count 1 at the first click, then a stroke every 10 ticks; shown only as the progress moves,
+    // the tick after the stroke (bds-au3brush.txt).
+    assert_eq!(shown(&ticks), [(1, 1), (22, 3), (52, 6)]);
     // research/captures/bds-t3brush.txt: each brushing click answered by the whole inventory and offhand.
     let windows = |packets: &[RawPacket]| all::<InventoryContent>(packets).iter().map(|window| window.window_id).collect::<Vec<_>>();
     assert!(ticks[..90].iter().all(|packets| windows(packets).contains(&WindowIDVarint::Inventory) && windows(packets).contains(&WindowIDVarint::Offhand)), "{:?}", windows(&ticks[1]));
@@ -106,25 +107,25 @@ fn a_held_brush_uncovers_suspicious_sand_in_ten_strokes_ten_ticks_apart() {
     assert_eq!(sapling_data::item_name(item.item.network_id.into()), Some("minecraft:archer_pottery_sherd"));
     assert_eq!([item.position.x, item.position.y, item.position.z], [0.5, 65.625, 1.5], "over the face brushed");
     assert_eq!(wear(&ticks.concat()), Some(1), "one use of the brush");
-    // The brush sound every 9 ticks names the block's first state, then plain sand.
+    // The brush sound every 9 ticks names the block unbrushed, its `hanging` kept (bds-au3brush.txt).
     let heard: Vec<usize> = ticks.iter().enumerate().filter(|(_, packets)| sounds(packets).contains(&"brush".to_owned())).map(|(tick, _)| tick).collect();
     assert_eq!(heard[..3], [0, 9, 18]);
     let first = all::<LevelSoundEvent>(&ticks[0]).pop().unwrap();
-    assert_eq!(first.extra_data as u32, common::hash("minecraft:suspicious_sand"));
+    assert_eq!(first.extra_data, -2140609367, "suspicious_sand[brushed_progress=0,hanging=1]");
 }
 
 #[test]
 fn a_brushed_block_let_go_falls_back_two_strokes_a_time_then_catches_up() {
     let mut h = sand();
-    let ticks = hold(&mut h, 22, true);
-    assert_eq!(shown(&ticks), [(0, 1), (21, 3)]);
+    let ticks = hold(&mut h, 23, true);
+    assert_eq!(shown(&ticks), [(1, 1), (22, 3)]);
     // Checks queued at each stroke (+40), rechecked every 20 while brushed within 40: the first fall
     // is the second stroke's check (tick 51 + 20), then one every 10.
     let ticks = hold(&mut h, 60, false);
-    assert_eq!(shown(&ticks), [(49, 1), (58, 0)]);
+    assert_eq!(shown(&ticks), [(48, 1), (57, 0)]);
     // Brushed again, the strokes owed since the last come one a tick.
-    let ticks = hold(&mut h, 6, true);
-    assert_eq!(shown(&ticks), [(0, 1), (2, 3), (5, 6)]);
+    let ticks = hold(&mut h, 7, true);
+    assert_eq!(shown(&ticks), [(1, 1), (3, 3), (6, 6)]);
     let entity = ask(&mut h, |ctx| ctx.block_entity(CELL).and_then(|data| data.get::<Value>().cloned())).expect("the entity");
     assert!(matches!(entity.get("item"), Some(Value::Compound(_))) && entity.get("LootTable").is_none(), "rolled at the first stroke");
 }

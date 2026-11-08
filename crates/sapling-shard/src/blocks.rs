@@ -104,6 +104,7 @@ pub(crate) use growth::{arrived as plants_arrived, holds_snow, tick as random_ti
 pub(crate) use ores::{light as light_ore, tread as tread_ore};
 pub(crate) use scaffolds::tick as settle_scaffolds;
 pub(crate) use brushing::tick as settle_brushing;
+pub(crate) use brushing::show_stroked;
 pub(crate) use bed_burst::bursts as bed_bursts;
 pub(crate) use lodestone::answer as answer_lodestone_queries;
 pub(crate) use doors::{bed_head, release_buttons, with as with_property};

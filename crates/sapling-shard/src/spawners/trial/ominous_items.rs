@@ -65,7 +65,8 @@ fn roll(world: &mut World, layer: Entity, pos: BlockPos) -> Vec<ItemStack> {
     kept
 }
 
-/// One of the spawner's kept stacks by the blocks' dice, weighted by count; one of it.
+/// One of the spawner's kept stacks by the blocks' dice, weighted by count, whole: an item spawner
+/// shows a kept stack of charges as it is and throws one (bds-au3charge.txt).
 fn pick(world: &mut World, layer: Entity, pos: BlockPos) -> Option<ItemStack> {
     let kept = world.get_resource_or_insert_with(Kept::default).0.get(&(layer, pos)).cloned().unwrap_or_default();
     let kept = if kept.is_empty() { roll(world, layer, pos) } else { kept };
@@ -79,7 +80,7 @@ fn pick(world: &mut World, layer: Entity, pos: BlockPos) -> Option<ItemStack> {
         left = left.saturating_sub(stack.count.into());
         found
     })?;
-    Some(ItemStack { count: 1, ..stack.clone() })
+    Some(stack.clone())
 }
 
 /// The head attach points of the wave's `mobs` that are alive here, in the wave's order.
@@ -125,7 +126,11 @@ pub(super) fn drop_over(world: &mut World, layer: Entity, pos: BlockPos, near: &
     let Some(at) = spot(world, layer, head, above) else { return false };
     let Some(item) = pick(world, layer, pos) else { return false };
     let left = DELAY[0] + dice(world).roll(DELAY[1]);
-    let shown = crate::fireworks::display_item(world, layer, &item);
+    // BDS's compound: its fields in name order and `WasPickedUp` 0 (bds-au3charge.txt).
+    let shown = crate::fireworks::display_fields(world, layer, &item, |fields| {
+        fields.push(("WasPickedUp".into(), acacia_proto::nbt::Value::Byte(0)));
+        fields.sort_by(|a, b| a.0.cmp(&b.0));
+    });
     let spawned = entities::spawn(world, layer, KIND, Body::new(at, [0.0; 3], SIZE), at, |id| {
         let options = sapling_data::AddEntityOptions { id, identifier: KIND, feet: at, yaw: 0.0, pitch: 0.0, variant: 0, mark_variant: 0, color: 0, baby: false, flags: acacia_proto::types::MetadataFlags1(0), health: None, name: "" };
         let mut added = sapling_data::add_entity(&options);
@@ -172,7 +177,7 @@ pub(crate) fn tick(world: &mut World) {
             sound(world, layer, spawner, "ominous_item_spawner.about_to_spawn_item", at, -1);
             continue;
         }
-        let Some(item) = world.entity_mut(entity).take::<Carrying>().map(|carrying| carrying.item) else { continue };
+        let Some(item) = world.entity_mut(entity).take::<Carrying>().map(|carrying| ItemStack { count: 1, ..carrying.item }) else { continue };
         if !crate::shots::dispensed::shoot_unowned(world, layer, at, [0.0, -1.0, 0.0], &item) {
             crate::drops::eject(world, layer, item, at, [0.0; 3]);
         }
@@ -196,5 +201,14 @@ mod tests {
             let shots = [("minecraft:arrow", 0), ("minecraft:arrow", 26), ("minecraft:arrow", 43), ("minecraft:fire_charge", 0), ("minecraft:wind_charge", 0)];
             assert!(shots.contains(&(shot.name.as_str(), shot.data)) && (1..=3).contains(&shot.count), "{shot:?}");
         }
+    }
+
+    #[test]
+    fn a_kept_stack_of_charges_is_carried_whole() {
+        let mut world = World::new();
+        let (layer, pos) = (Entity::PLACEHOLDER, [0, 0, 0]);
+        let charges = ItemStack { name: "minecraft:fire_charge".into(), count: 3, damage: 0, block: None, tag: None };
+        world.insert_resource(Kept(HashMap::from([((layer, pos), vec![charges.clone()])])));
+        assert_eq!(pick(&mut world, layer, pos), Some(charges));
     }
 }

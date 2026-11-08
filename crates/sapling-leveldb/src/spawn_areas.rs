@@ -84,30 +84,37 @@ pub fn decode_spawn_areas(record: &[u8]) -> Result<Vec<SpawnArea>, Error> {
     Ok(areas.into_iter().map(|(_, area)| area).collect())
 }
 
-/// `areas` as BDS saves them: ids from 1 in the given order, names indexed as first met; empty for none.
+/// `areas` as BDS saves them, in the given order: a name and each area take the next of one count from 0
+/// as met (chunk (81, 6) of 20261003-structures: trial chambers' name 0 and areas 1 to 6, the jungle
+/// pyramid's name 7 and areas 8 and 9); names and areas listed from the highest down; empty for none.
 pub fn encode_spawn_areas(areas: &[SpawnArea]) -> Vec<u8> {
     if areas.is_empty() {
         return Vec::new();
     }
-    let mut names: Vec<&str> = Vec::new();
+    let mut names: Vec<(u32, &str)> = Vec::new();
+    let mut numbered: Vec<(u32, &SpawnArea)> = Vec::new();
+    let mut next = 0;
     for area in areas {
-        if !names.contains(&area.structure.as_str()) {
-            names.push(&area.structure);
+        if !names.iter().any(|(_, name)| *name == area.structure) {
+            names.push((next, &area.structure));
+            next += 1;
         }
+        numbered.push((next, area));
+        next += 1;
     }
-    let index = |area: &SpawnArea| names.iter().position(|name| *name == area.structure).expect("listed above") as u32;
+    numbered.reverse();
+    let index = |area: &SpawnArea| names.iter().find(|(_, name)| *name == area.structure).expect("listed above").0;
     let mut out = Vec::new();
     let mut put = |value: u32| out.extend_from_slice(&value.to_le_bytes());
     put(VERSION);
     put(names.len() as u32);
     let mut text = Vec::new();
-    for (i, name) in names.iter().enumerate() {
-        text.extend_from_slice(&(i as u32).to_le_bytes());
+    for (i, name) in names.iter().rev() {
+        text.extend_from_slice(&i.to_le_bytes());
         text.extend_from_slice(&(name.len() as u16).to_le_bytes());
         text.extend_from_slice(name.as_bytes());
     }
     out.extend_from_slice(&text);
-    let numbered: Vec<(u32, &SpawnArea)> = areas.iter().enumerate().rev().map(|(i, area)| (i as u32 + 1, area)).collect();
     let mut put = |value: u32| out.extend_from_slice(&value.to_le_bytes());
     put(numbered.len() as u32);
     for (id, area) in &numbered {
@@ -152,6 +159,16 @@ mod tests {
         assert_eq!(camp.len(), 2);
         assert!(camp[0].whole && camp[0].y_offset.is_none() && !camp[1].whole);
         assert_eq!(encode_spawn_areas(&camp), hex(CAMP));
+    }
+
+    /// Chunk 81,6 of 20261003-structures: trial chambers, then a jungle pyramid.
+    const CHAMBERS_AND_PYRAMID: &str = "01 00 00 00 02 00 00 00 07 00 00 00 18 00 6d 69 6e 65 63 72 61 66 74 3a 6a 75 6e 67 6c 65 5f 70 79 72 61 6d 69 64 00 00 00 00 18 00 6d 69 6e 65 63 72 61 66 74 3a 74 72 69 61 6c 5f 63 68 61 6d 62 65 72 73 08 00 00 00 09 00 00 00 10 05 00 00 48 00 00 00 60 00 00 00 1b 05 00 00 51 00 00 00 6e 00 00 00 08 00 00 00 10 05 00 00 40 00 00 00 60 00 00 00 1b 05 00 00 49 00 00 00 6e 00 00 00 06 00 00 00 15 05 00 00 d9 ff ff ff 60 00 00 00 17 05 00 00 da ff ff ff 60 00 00 00 05 00 00 00 10 05 00 00 da ff ff ff 60 00 00 00 12 05 00 00 dd ff ff ff 60 00 00 00 04 00 00 00 1a 05 00 00 d9 ff ff ff 60 00 00 00 1c 05 00 00 da ff ff ff 60 00 00 00 03 00 00 00 10 05 00 00 e2 ff ff ff 61 00 00 00 13 05 00 00 e6 ff ff ff 61 00 00 00 02 00 00 00 10 05 00 00 d7 ff ff ff 60 00 00 00 1f 05 00 00 e9 ff ff ff 60 00 00 00 01 00 00 00 10 05 00 00 d4 ff ff ff 60 00 00 00 1f 05 00 00 f5 ff ff ff 6f 00 00 00 06 00 00 00 06 00 00 00 00 00 00 00 00 00 00 00 05 00 00 00 00 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 03 00 00 00 00 00 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 02 00 00 00 09 00 00 00 07 00 00 00 00 00 00 00 00 00 00 00 08 00 00 00 07 00 00 00 00 00 00 00 01 00 00 00";
+
+    #[test]
+    fn a_second_name_takes_an_id_of_the_areas_count() {
+        let areas = decode_spawn_areas(&hex(CHAMBERS_AND_PYRAMID)).unwrap();
+        assert_eq!(areas.iter().map(|area| area.structure.as_str()).collect::<Vec<_>>()[5..], ["minecraft:trial_chambers", "minecraft:jungle_pyramid", "minecraft:jungle_pyramid"]);
+        assert_eq!(encode_spawn_areas(&areas), hex(CHAMBERS_AND_PYRAMID));
     }
 
     #[test]

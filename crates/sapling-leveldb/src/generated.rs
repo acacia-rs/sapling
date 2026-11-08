@@ -150,9 +150,9 @@ fn plant_block(plant: &str) -> Value {
     compound(vec![("name", string(plant)), ("states", compound(states)), ("version", Value::Int(crate::states::STATE_VERSION))])
 }
 
-/// A flower pot holding the plant `plant` (`minecraft:red_mushroom`).
+/// A flower pot holding the plant `plant` (`minecraft:red_mushroom`), or nothing when it is empty.
 pub fn generated_flower_pot(pos: [i32; 3], plant: &str) -> Value {
-    entity("FlowerPot", pos, vec![("PlantBlock", plant_block(plant))])
+    entity("FlowerPot", pos, if plant.is_empty() { Vec::new() } else { vec![("PlantBlock", plant_block(plant))] })
 }
 
 /// An end gateway leading over `exit`, as BDS's generation leaves one (oracle 20261003-end, which had

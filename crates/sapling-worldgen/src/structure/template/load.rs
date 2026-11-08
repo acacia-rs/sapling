@@ -141,7 +141,11 @@ fn parse() -> Data {
                 1 => markers.push((block, r.string())),
                 2 => loot_chests.push(block),
                 3 => ceiling_vines.push(block),
-                _ => entities.push((block, r.entity())),
+                _ => entities.push((block, match r.entity() {
+                    // BDS saves a legacy template's potted sapling as an empty pot (structure-block-entities.md, oracle 20261003-au3mansion).
+                    BlockEntity::FlowerPot(plant) if legacy && plant.ends_with("_sapling") => BlockEntity::FlowerPot(""),
+                    entity => entity,
+                })),
             }
         }
         templates.insert(name.clone(), Template { name, size, legacy, blocks, jigsaws, markers, loot_chests, ceiling_vines, entities });
