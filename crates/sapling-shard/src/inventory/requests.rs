@@ -18,6 +18,7 @@ use super::{ARMOR, Inventory, MAX_COUNT, Place, bundles, described};
 use crate::components::{Mode, Outgoing, PacketQueues, PerTick, in_world_identity};
 use crate::{containers, drops, plugins, workstations};
 
+mod auto;
 mod slots;
 
 use slots::Applied;
@@ -174,6 +175,12 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     let at = &At { station: containers::station(world, entity), bench: workstations::bench(world, entity), grid_map: crate::maps::in_grid(world, entity) };
     let refuses = containers::refusal(world, entity);
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
+    if let Some(status) = auto::refusal(&trial, request, open.is_some()) {
+        if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
+            out.push(&refusal(request.request_id, status));
+        }
+        return;
+    }
     bundles::lend(&mut trial, request);
     let takes_nothing = bundles::takes_nothing(&trial, request);
     let looms_a_full_banner = forge::holds_a_full_banner(&trial) && request.actions.iter().any(|action| matches!(action.content, Action::CraftLoomRequest(_)));

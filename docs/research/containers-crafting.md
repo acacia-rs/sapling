@@ -213,6 +213,12 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
    10 InvalidCraftResultIndex, 11 InvalidCraftResultItem, 25 a consumed item fails the expected descriptor
    (REC: a tag in `CraftRecipeAuto`), 27 ConsumedItemNotAllowed (REC: Consume from `Hotbar`), 31/32 recipe
    not found, 33 MismatchedCraftingSize, 35 grid mismatch, 36 EmptyCraftResults, 63 InvalidNumCrafts.
+7. **Recipe-book crafts drilled** (`bds_command_probe y3auto`, research/captures/bds-y3auto.txt, 2026-11-08;
+   forged `CraftRecipeAuto` with the inventory screen open, sticks from planks). Taken: Consumes from
+   `HotbarAndInventory` anywhere in the inventory, two of one slot, `*2` from one, `times` 2. Refused, nothing
+   resent: from `Hotbar` or `Inventory` 27; cobblestone 25; one plank of two 19; a third from an emptied slot
+   or slot 40 49; with a chest's screen open 7 (no craft handler: `!openinv` first, or every case was 7).
+   Sapling checks these before trying the request (`inventory/requests/auto.rs`; test fourteenth3y).
 
 ## F. Stonecutter and smithing table
 

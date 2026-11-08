@@ -222,7 +222,7 @@ async fn anvil(actor: &mut Bot, words: &[&str], keep: bool) {
 
 /// Does a crafting drill's `!` line: `!ui from slot [count]` lays hotbar `from` into UI `slot`,
 /// `!uiback slot to` takes it back into hotbar `to`, `!grid`, `!anvilcraft` and `!auto` craft,
-/// `!move`, `!ominous` and `!forget` (below), `!inv` prints the hotbar as the bot believes it.
+/// `!move`, `!ominous` and `!forget` (below), `!inv` prints the hotbar as the bot believes it, `!openinv` opens the inventory screen.
 /// False else.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
     let words: Vec<&str> = line.split(' ').collect();
@@ -258,6 +258,7 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
             HOT.with(|hot| hot.borrow_mut().clear());
             UI.with(|ui| ui.borrow_mut().clear());
         }
+        "!openinv" => actor.open_inventory(),
         "!inv" => {
             for slot in 0..HOTBAR {
                 if let Some(stack) = SlotRef::Main(slot).stack(actor.state()).filter(|stack| stack.count > 0) {

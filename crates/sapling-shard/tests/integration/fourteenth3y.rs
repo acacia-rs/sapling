@@ -1,11 +1,16 @@
 //! Group Y of the fourteenth parity brief: a chest pair's put (research/captures/bds-u3chest.txt), a
 //! chest removed while open, a killed cart's drop (bds-ffburn.txt), and what pistons tell of what
-//! they move (bds-u3carry.txt, bds-ffpush.txt).
+//! they move (bds-u3carry.txt, bds-ffpush.txt), and a recipe-book craft's statuses (bds-y3auto.txt).
 
 use std::sync::{Arc, Mutex};
 
 use crate::common;
+use crate::common::requests::{answer, consume, place, request, slot};
 use crate::riding::spawned;
+use crate::special_recipes::{stack, steve};
+
+use acacia_proto::packets::InventoryContent;
+use acacia_proto::types::{ContainerSlotType as Container, ItemStackRequestActionsItemContent as Action, ItemStackRequestActionsItemContentCraftRecipeAuto as Auto, ItemStackResponsesItemStatus as Status};
 
 use acacia_proto::Packet;
 use acacia_proto::packets::{AddItemEntity, BlockEntityData, BlockEvent, ContainerClose, ContainerOpen, CorrectPlayerMovePrediction, LevelSoundEvent, MoveEntityDelta, UpdateSubchunkBlocks};
@@ -142,4 +147,42 @@ fn a_piston_tells_what_it_moves_as_its_own_and_keeps_a_carpet_on_its_arm() {
     (0..10).for_each(|_| _ = h.tick_all());
     let carpet = common::asking::ask(&mut h, |ctx| ctx.block([1, 66, 4]).map(|block| block.name.clone()));
     assert_eq!(carpet.as_deref(), Some("minecraft:white_carpet"));
+}
+
+/// The status a recipe-book craft of `times` sticks gets with these Consumes ((container, slot,
+/// count)) out of planks or cobblestone at `held` (main slot, item, count), on the inventory screen.
+fn auto_sticks(held: &[(usize, &str, u8)], times: u8, from: &[(Container, u8, u8)]) -> Status {
+    let mut main = vec![None; 10];
+    held.iter().for_each(|(at, name, count)| main[*at] = stack(name, *count, 0, None));
+    let (mut h, _) = steve(main, false);
+    let fits = |recipe: &sapling_data::Recipe| recipe.outputs[0].0.name == "minecraft:stick" && recipe.inputs.iter().all(|(cell, _)| cell.accepts("minecraft:oak_planks", 0));
+    let recipe_network_id = (0..20_000).find(|id| sapling_data::recipe(*id).is_some_and(fits)).expect("planks to sticks");
+    let mut actions = vec![Action::CraftRecipeAuto(Auto { recipe_network_id, times_crafted: times, ingredients: Vec::new() })];
+    actions.extend(from.iter().map(|&(kind, at, count)| consume(count, slot(kind, at, 0))));
+    actions.push(place(4 * times, slot(Container::CreativeOutput, 50, 0), slot(Container::HotbarAndInventory, 8, 0)));
+    h.receive(1, &request(-9, actions));
+    let sent = h.tick(1);
+    let (status, _) = answer(&sent);
+    // BDS resent nothing after a refusal.
+    assert!(status == Status::Ok || all::<InventoryContent>(&sent).is_empty(), "{status:?}");
+    let _ = common::asking::ask(&mut h, |_| ());
+    status
+}
+
+#[test]
+fn a_recipe_book_craft_is_held_to_where_and_what_it_takes_as_bds_answered() {
+    use Container::{Hotbar, HotbarAndInventory as Both, Inventory};
+    let planks = |count| [(0, "minecraft:oak_planks", count)];
+    let split = [(0, "minecraft:oak_planks", 1), (9, "minecraft:oak_planks", 1)];
+    // bds-y3auto.txt, its cases in turn.
+    assert_eq!(auto_sticks(&planks(2), 1, &[(Both, 0, 1), (Both, 0, 1)]), Status::Ok);
+    assert_eq!(auto_sticks(&split, 1, &[(Both, 0, 1), (Both, 9, 1)]), Status::Ok);
+    assert_eq!(auto_sticks(&planks(2), 1, &[(Hotbar, 0, 1), (Hotbar, 0, 1)]), Status::Unknown(27));
+    assert_eq!(auto_sticks(&split, 1, &[(Both, 0, 1), (Inventory, 9, 1)]), Status::Unknown(27));
+    assert_eq!(auto_sticks(&[(0, "minecraft:cobblestone", 2)], 1, &[(Both, 0, 1), (Both, 0, 1)]), Status::Unknown(25));
+    assert_eq!(auto_sticks(&planks(4), 1, &[(Both, 0, 2)]), Status::Ok);
+    assert_eq!(auto_sticks(&planks(4), 2, &[(Both, 0, 2), (Both, 0, 2)]), Status::Ok);
+    assert_eq!(auto_sticks(&planks(2), 1, &[(Both, 0, 1)]), Status::Unknown(19));
+    assert_eq!(auto_sticks(&planks(2), 1, &[(Both, 0, 1), (Both, 0, 1), (Both, 0, 1)]), Status::Unknown(49));
+    assert_eq!(auto_sticks(&planks(2), 1, &[(Both, 0, 1), (Both, 40, 1)]), Status::Unknown(49));
 }

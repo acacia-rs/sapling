@@ -52,7 +52,8 @@ fn flung() -> Vec<String> {
 fn case(lines: &mut Vec<String>, items: &[&str], craft: &str) {
     lines.extend(["clear @s".into(), "!forget".into()]);
     lines.extend(items.iter().map(|item| format!("replaceitem entity @s {item}")));
-    lines.extend([String::new(), format!("!auto {craft}"), String::new()]);
+    // BDS crafts only on a screen with a craft handler (the inventory's or a table's); else status 7.
+    lines.extend([String::new(), "!openinv".into(), String::new(), format!("!auto {craft}"), String::new(), "!close".into(), String::new()]);
 }
 
 fn auto() -> Vec<String> {
