@@ -15,7 +15,8 @@ use bevy_ecs::prelude::*;
 use sapling_world::{VillagePart, VillageRecord};
 
 use crate::body::Body;
-use crate::components::{Identity, InLayer, Layer, Position, Tick};
+use crate::components::{InLayer, Layer, Position, Tick};
+use crate::tags::Marks;
 
 const COMPOUND: u8 = 10;
 
@@ -88,10 +89,9 @@ impl Village {
 #[derive(Resource, Default)]
 struct Standings(HashMap<(Entity, [i32; 3]), Village>);
 
-/// The player's key in a village's standings: BDS keys them by `ActorUniqueID`, which sapling's
-/// players do not keep, so the low half of the identity's uuid stands in for it.
+/// The player's key in a village's standings: its `UniqueID`, as BDS keys them (bds-f14nvillage.txt).
 fn player_key(world: &World, player: Entity) -> Option<PlayerKey> {
-    world.get::<Identity>(player).map(|identity| identity.0.uuid.as_u128() as i64)
+    world.get::<Marks>(player).map(|marks| marks.unique_id)
 }
 
 fn village_of(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<[i32; 3]> {
@@ -232,9 +232,9 @@ pub(in crate::creatures) fn outlaw(world: &mut World, golem: Entity, layer: Enti
     village.settle(now);
     let off = |at: [f32; 3]| (0..3).map(|axis| (at[axis] - body.at[axis]).powi(2)).sum::<f32>().sqrt();
     let players: Vec<(Entity, [f32; 3])> = world
-        .query::<(Entity, &InLayer, &Position, &Identity)>()
+        .query::<(Entity, &InLayer, &Position, &Marks)>()
         .iter(world)
-        .filter(|(_, on, at, identity)| on.0 == layer && off(at.feet) <= sight && village.players.get(&(identity.0.uuid.as_u128() as i64)).is_some_and(|value| *value <= OUTLAW))
+        .filter(|(_, on, at, marks)| on.0 == layer && off(at.feet) <= sight && village.players.get(&marks.unique_id).is_some_and(|value| *value <= OUTLAW))
         .map(|(player, _, at, _)| (player, at.feet))
         .collect();
     world.resource_mut::<Standings>().0.insert(key, village);

@@ -51,11 +51,10 @@ What of BDS's villagers sapling has not checked or does not copy; split from vil
 - The aggressor a golem defends against: any attacker of a villager or golem goes on the village's
   list (villagers.md "Standing"); only a player's hand hit on a grown villager is copied (`golems.rs`),
   not a mob attacker's. Ranged kills, the founding reward and the cure's +5: done (villagers.md). Standing is kept as BDS's `VILLAGE_<id>_PLAYERS` (`Players`, each `ID` long and
-  `S` int; 0x142a2c140), the id sapling's village uuid and `ID` the low half of the player's uuid (sapling
-  players keep no `ActorUniqueID`). Drilled 2026-11-08 (fourteenth N, `f14nvillage`, the world's records
-  dumped): BDS's `ID` was -4294967295, the actor's `ActorUniqueID` as StartGame gave it, `S` -1 after two
-  hits. An unsigned bot gets no player record, so that id is not kept for it across sessions; matching
-  it needs players that keep a unique id (a signed client's record). Not changed.
+  `S` int; 0x142a2c140), the id sapling's village uuid. Drilled 2026-11-08 (fourteenth N, `f14nvillage`, the
+  world's records dumped): BDS's `ID` was -4294967295, the actor's `ActorUniqueID` as StartGame gave it, `S` -1
+  after two hits. Sapling's players keep a `UniqueID` in their records (tags.rs `Marks`), so `ID` is that since
+  fourteenth S (was the low half of the uuid); test `a_standing_is_kept_under_the_players_unique_id`.
 
 ## Left out
 
