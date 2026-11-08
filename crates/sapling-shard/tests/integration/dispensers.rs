@@ -147,7 +147,9 @@ fn shears_from_a_dispenser_shear_the_sheep_in_front() {
     let mut h = setup(Block::new("dispenser").with("facing_direction=5"), vec![Item::new("minecraft:shears", 1)], vec![]);
     h.remote.run(|ctx| assert!(ctx.spawn_entity("minecraft:sheep", [4.5, 65.0, 3.5]).is_some()));
     power(&mut h, true, 8);
-    assert!(!lying(&mut h, "minecraft:white_wool").is_empty(), "the sheep's wool");
+    // A spawned sheep's colour is rolled (husbandry/fired.rs), most often white.
+    let wools = ["white", "black", "light_gray", "gray", "brown", "pink"].map(|colour| format!("minecraft:{colour}_wool"));
+    assert!(wools.iter().any(|wool| !lying(&mut h, wool).is_empty()), "the sheep's wool");
 }
 
 #[test]

@@ -12,6 +12,7 @@
 // freeze are not sent, and one shown anew has the flags it was announced with.
 
 mod heart;
+mod trail;
 
 pub(crate) use heart::{arrived as hearts_arrived, noticed as heart_noticed};
 pub(super) use heart::{shrugs_off, tick as tick_hearts};

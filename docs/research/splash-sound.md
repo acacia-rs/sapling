@@ -88,3 +88,6 @@ On the first tick a non-player entity's water check turns true (and it is not ri
 and before drag: send `LevelSoundEvent { sound: splash, pos: aabb_centre, extra_data:
 (min(1, sqrt(0.2*vx^2 + vy^2 + 0.2*vz^2) * 0.2) * 0xFF_FFFF) as i32, entity_type, is_baby_mob: false, unique id }`
 with `v` the motion just used for the move. Use 0.9 instead of 0.2 when the entity has a controlling rider.
+A mob rider does not count: BDS's zombie horse under its zombie splashed 2831719, as an unridden one from the
+same height (research/captures/bds-j3ride.txt), so sapling takes 0.9 only for a player in the first seat
+(undrilled).

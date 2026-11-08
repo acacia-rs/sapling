@@ -2,10 +2,12 @@
 //! research/captures/bds-kinds2.txt): on the ground one waits out its `jump_delay`, then jumps
 //! up and ahead the way it faces, by its size (sizes.rs), and keeps going ahead in the air. A calm one turns another
 //! way now and then; one with prey (hunting.rs, `fights=hops`) faces it and waits less. Its viewers
-//! see it squish as it jumps and as it lands (`EntityAge` 2 and 1), and a player its box touches is
-//! hurt by its size (sizes.rs), at most once in [`TOUCHES`] ticks.
+//! see it squish as it jumps and as it lands (`EntityAge` 2 and 1), and a player or its golem prey
+//! its box touches is hurt by its size (sizes.rs), at most once in [`TOUCHES`] ticks
+//! (research/captures/bds-j3slime.txt: a large one hurt an iron golem 4, unthrown).
 // TODO: a split one's AddEntity shows its kind's box and a velocity, then its whole dictionary, as
-// BDS's; it splits only once dead, not when despawned; it hops in lava; its touch hurts golems.
+// BDS's; it splits only once dead, not when despawned (summoned ones never despawn: undrilled); it
+// sinks in lava and a small one dies at once, where BDS's rose 0.02 to 0.04 a tick, hurt by turns.
 
 pub(super) mod sizes;
 
@@ -140,19 +142,29 @@ pub(super) fn after_move(world: &mut World, entity: Entity, layer: Entity, id: u
         return None;
     }
     let (low, high) = body.bounds();
+    let meets = |feet: [f32; 3], [width, height]: [f32; 2]| {
+        let (reach, top) = ([width / 2.0, 0.0, width / 2.0], [width / 2.0, height, width / 2.0]);
+        (0..3).all(|axis| feet[axis] - reach[axis] < high[axis] + TOUCH && feet[axis] + top[axis] > low[axis] - TOUCH)
+    };
     let touched = in_world(world).into_iter().find(|&player| {
         let Some(feet) = world.get::<Position>(player).map(|position| position.feet) else { return false };
-        let reach = [PLAYER[0] / 2.0, 0.0, PLAYER[0] / 2.0];
-        let top = [PLAYER[0] / 2.0, PLAYER[1], PLAYER[0] / 2.0];
-        world.get::<InLayer>(player).is_some_and(|at| at.0 == layer) && vitals::is_mortal(world, player) && (0..3).all(|axis| feet[axis] - reach[axis] < high[axis] + TOUCH && feet[axis] + top[axis] > low[axis] - TOUCH)
-    })?;
+        world.get::<InLayer>(player).is_some_and(|at| at.0 == layer) && vitals::is_mortal(world, player) && meets(feet, PLAYER)
+    });
+    let mob = || super::hunting::prey_of(world, entity).filter(|prey| world.get::<Position>(*prey).is_none()).and_then(|prey| world.get::<Body>(prey).filter(|them| meets(them.at, them.size)).map(|them| (prey, them.at)));
+    let (touched, feet) = match touched {
+        Some(player) => (player, world.get::<Position>(player)?.feet),
+        None => mob()?,
+    };
     world.get_mut::<Hops>(entity)?.touchable = now + TOUCHES;
-    let harm = super::on_difficulty(world, size.touch)?;
-    let feet = world.get::<Position>(touched)?.feet;
     let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
     let far = dx.hypot(dz);
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
-    vitals::bitten(world, touched, harm, kind, [away[0] * THROW, THROW, away[1] * THROW]);
+    if world.get::<Position>(touched).is_some() {
+        let harm = super::on_difficulty(world, size.touch)?;
+        vitals::bitten(world, touched, harm, kind, [away[0] * THROW, THROW, away[1] * THROW]);
+    } else {
+        super::hunting::hit_mob(world, layer, entity, touched, size.touch, away);
+    }
     late_sounds::play_later(world, 1, layer, cell, super::hunting::sound("attack", id, kind, body, MIDDLE));
     Some(())
 }

@@ -85,7 +85,7 @@ pub(super) fn rolled(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3
     let Some(biome) = world.get::<Layer>(layer).filter(|_| !bred).and_then(|layer| layer.world.biome(x, y, z)) else { return properties };
     let has = |tag: &str| sapling_data::biome_has_tag(biome, tag);
     if FARM_ANIMALS.contains(&kind)
-        && let Some((_, climate)) = CLIMATES.iter().find(|(tag, _)| has(tag))
+        && let Some(climate) = climate(world, layer, feet)
     {
         properties.put_named(kind, CLIMATE, climate);
     }
@@ -93,6 +93,13 @@ pub(super) fn rolled(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3
         properties.put_named(kind, "minecraft:variant", "coral");
     }
     properties
+}
+
+/// The farm animals' climate of the biome at `feet`: warm, cold, or none for temperate.
+pub(super) fn climate(world: &World, layer: Entity, feet: [f32; 3]) -> Option<&'static str> {
+    let [x, y, z] = feet.map(|c| c.floor() as i32);
+    let biome = world.get::<Layer>(layer)?.world.biome(x, y, z)?;
+    CLIMATES.iter().find(|(tag, _)| sapling_data::biome_has_tag(biome, tag)).map(|(_, climate)| *climate)
 }
 
 /// AddEntity with the mob's properties, where its kind has any.

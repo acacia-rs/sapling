@@ -69,6 +69,15 @@ pub(super) fn adopt(world: &mut World, entity: Entity, kind: &str, stored: Optio
     }
 }
 
+/// A new mob's raising as its announcement shows it, where its spawn rolls some of it: a sheep's
+/// wool colour (research/captures/bds-j3sheep.txt: 64 summoned in plains came in five colours).
+pub(super) fn spawned_raising(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3]) -> Option<Raised> {
+    let climate = super::properties::climate(world, layer, feet);
+    let mut raised = Raised::newcomer(kind);
+    raised.kept.colour = fired::spawned_colour(world, kind, climate)?;
+    Some(raised)
+}
+
 /// Before the mob's move, what its raising has it do: sit, be pulled on its lead, court, follow
 /// its owner, fight for it, follow food, flee or roll. False when none of these steers it.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
@@ -100,7 +109,7 @@ pub(crate) fn tick(world: &mut World) {
         ageing::tick(world, entity, &kind);
         breeding::tick(world, entity, &kind, now);
         products::lay(world, entity, &kind, now);
-        products::graze(world, entity, &kind);
+        products::graze(world, entity, &kind, now);
         sniffing::tick(world, entity, &kind, now);
         nesting::tick(world, entity, &kind, now);
         leads::hold(world, entity, now);

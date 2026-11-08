@@ -14,6 +14,9 @@ use crate::entities::Kind;
 
 /// A player's box, for one that is the prey.
 const PLAYER: [f32; 2] = [0.6, 1.8];
+/// An iron golem's hit throws a mob this far away and up: BDS's six on a zombie went 0.515 to 0.518
+/// across (its 0.52 on a player kept; the shortfall unexplained) and 0.82009906 up (bds-j3knock.txt).
+const MOB_FLINGS: [f32; 2] = [0.52, 0.820_099_06];
 
 /// Where the prey, a player or a mob, stands.
 pub(in crate::creatures) fn feet_of(world: &World, prey: Entity) -> Option<[f32; 3]> {
@@ -62,14 +65,17 @@ pub(in crate::creatures) fn spotted(world: &World, prey: Entity, from: [f32; 3],
     !unseen || distance([feet[0], feet[1] + eyes, feet[2]], from) <= super::super::afflictions::unseen_sight(sight, worn(world))
 }
 
-/// The hunter `by`'s hit of `harm` on the mob `prey`, `away` from it: hurt and thrown as a hit throws,
-/// startled, and turned on `by` (hurt_by.rs). A mob's harm is not scaled by difficulty.
+/// The hunter `by`'s hit of `harm` on the mob `prey`, `away` from it: hurt, then thrown as a hit throws
+/// and told so in that tick, startled, and turned on `by` (hurt_by.rs). A mob's harm is not scaled by
+/// difficulty. BDS told the throw at once, after the hurt (bds-j3knock.txt, bds-g14wolf.txt).
 pub(in crate::creatures) fn hit(world: &mut World, layer: Entity, by: Entity, prey: Entity, harm: f32, away: [f32; 2]) {
     super::hurt_by::hurt(world, prey, by);
     let kept = 1.0 - world.get::<Kind>(prey).map_or(0.0, |kind| sapling_data::mob_traits(&kind.0).resists);
-    if let Some(mut thrown) = world.get_mut::<Body>(prey).filter(|_| kept > 0.0) {
-        thrown.throw([away[0] * THROW * kept, THROW * kept, away[1] * THROW * kept]);
-    }
+    let flings = world.get::<Kind>(by).and_then(|kind| sapling_data::mob_traits(&kind.0).hunts).is_some_and(|hunts| hunts.upto.is_some());
+    let [along, up] = if flings { MOB_FLINGS } else { [THROW; 2] };
     harm::wound(world, prey, layer, harm, super::super::Cause::Attack);
+    if kept > 0.0 {
+        super::super::hits::throw_at_once(world, prey, layer, [away[0] * along * kept, up * kept, away[1] * along * kept]);
+    }
     super::super::strolling::startle(world, prey);
 }

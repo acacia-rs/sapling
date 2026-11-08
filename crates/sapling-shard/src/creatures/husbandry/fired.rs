@@ -25,11 +25,23 @@ pub(in crate::creatures) fn fired(world: &mut World, entity: Entity, kind: &str,
         "minecraft:on_eat_block" => products::shorn(world, entity, kind, false),
         "wololo" => products::colour(world, entity, RED),
         _ => {
-            let Some((_, weights)) = COLOURS.iter().find(|(name, _)| *name == event) else { return };
-            let total = weights.iter().map(|(weight, _)| weight).sum();
-            let mut drawn = world.get_resource_or_insert_with(Dice::default).roll(total);
-            let colour = weights.iter().find_map(|&(weight, colour)| (drawn < weight).then_some(colour).or_else(|| { drawn -= weight; None })).unwrap_or(0);
-            products::colour(world, entity, colour);
+            if let Some(colour) = rolled_colour(world, event) {
+                products::colour(world, entity, colour);
+            }
         }
     }
+}
+
+/// The colour a newly spawned sheep's `minecraft:entity_spawned` rolls, by its biome's farm-animal
+/// `climate` (none for temperate); None for any other kind.
+pub(super) fn spawned_colour(world: &mut World, kind: &str, climate: Option<&str>) -> Option<i8> {
+    (kind == "minecraft:sheep").then_some(())?;
+    rolled_colour(world, &format!("minecraft:{}_color", climate.unwrap_or("temperate")))
+}
+
+fn rolled_colour(world: &mut World, event: &str) -> Option<i8> {
+    let (_, weights) = COLOURS.iter().find(|(name, _)| *name == event)?;
+    let total = weights.iter().map(|(weight, _)| weight).sum();
+    let mut drawn = world.get_resource_or_insert_with(Dice::default).roll(total);
+    Some(weights.iter().find_map(|&(weight, colour)| (drawn < weight).then_some(colour).or_else(|| { drawn -= weight; None })).unwrap_or(0))
 }

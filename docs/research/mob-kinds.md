@@ -598,3 +598,28 @@ at 1 a tick, the hitter its owner and moved so that tick (one turned back killed
 wither skull and a breeze's charge the same (bds-d3wither.txt, bds-d3breeze.txt; one path,
 `creatures/struck_back.rs`). [U] a player it overlaps pushes it about twice `pushAwayFrom`. A
 fireball that meets nothing goes after 10 seconds.
+
+## Mob knockback and group J (2026-11-08, fourteenth3j, `j3*` in fourteenth3j_drill.rs)
+
+- Mob knockback (bds-j3knock.txt): a zombie's hit on a villager is told in the hit's tick, `HurtAnimation` then
+  SetEntityMotion (0, 0.4, ±0.4), then 0.3136 as moved a tick on; an iron golem's six on a zombie went 0.515 to
+  0.518 across and 0.82009906 up, the same way (a wolf's bite: bds-g14wolf.txt). Ported for every hunter
+  (hunting/prey.rs `hit`, `hits::throw_at_once`). A player's knockback was already told at once. Left: a mob
+  that moves after its hitter in sapling's tick is told moved in the same tick too (sapling-j3slime.txt).
+- Slimes (bds-j3slime.txt): a large one took an iron golem as its target, its touch hurt it 4 (no throw) with
+  `attack` a tick on; packs: slime takes snow and iron golems, magma cube iron golems. A medium one in lava died
+  and split 4, which rose 0.02 to 0.04 a tick, hurt by turns; sapling's sink and a small one dies at once. A
+  large one's aggressive hop went 0.193 across; sapling's 0.086. Despawning undrillable by summon (persistent).
+- Wind-charged burst (bds-j3omen.txt): four cows fit `1 - d / 7.5` within 0.004, d from the burst to their feet,
+  towards 0.9 of their height, added to their motion (-0.0784 standing) and told at once; none at 7.07 or
+  beyond. Items went about 0.95 of that, told as moved. An oozing slime leaves only its split; an oozing
+  zombie's two size-2 slimes split when killed.
+- Creaking heart (bds-j3creak.txt): a shrugged-off hit grows 2 or 3 resin clumps a tick on (the Java game's
+  `spreadResin`; face bits down 1, up 2, south 4, west 8, north 16, east 32), each heard `place` at the cell's
+  corner, and from a tick after that `block.creaking_heart.trail` every 10 ticks, 10 times, at
+  `0.2 + 0.08 k` of the way from the creaking's middle to the heart's, `extra_data` `1000 (2 f - 1)` in f32
+  (-600 ... 840). A hit during a trail sets off nothing. Moved 30 off it stayed; 40 or 50 off it was torn down
+  at once (16478 a tick on, `death` and state 4 the next, gone the next; no state 3): sapling uses 34.
+- Riding (bds-j3ride.txt): a zombie horse's rider took the actor as target ~7 ticks after spawning, steered the
+  horse to it and hit (`KineticDamageDealt`); a chicken jockey's baby zombie steered and hit every 20 ticks.
+  Not ported. A mob-ridden mount splashed as an unridden one (splash-sound.md); its rider splashed 0 a tick on.
