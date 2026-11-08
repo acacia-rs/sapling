@@ -320,7 +320,10 @@ tick after its lower half was set to air, and a torch popping when its block was
 (`creatures/killing.rs`). Tests in fourteenth1w.rs. An item thrown by a `destroy` landing beside the
 sensor was heard at frequency 2 (`hit_ground`, type 31) half a second after it was dropped; sapling's items
 send it as they land after a fall (drops.rs `fly`; test fourteenth1z `an_item_landing_is_heard_as_hit_ground`,
-fourteenth1z). A mob landing is not sent (not drilled).
+fourteenth1z). A mob landing is heard too (bds-ab1land.txt, sapling-ab1land.txt alike): a cow dropped 0.3, 1,
+2 and 3 down a glass shaft each lit the dust at `hit_ground`'s power, one summoned on the ground and one landing
+in water 2 deep were not, and its `/kill` in the water was not heard either (creatures/footfalls.rs `tread`;
+test fourteenth1ab `a_cow_landing_from_a_drop_is_heard_as_hit_ground_and_one_put_on_the_ground_is_not`).
 sapling-w1pops.txt matches the door, torch, destroy and both kills (12, 12, 12, 15, 15). Two misfits, both
 known: BDS's setup `/setblock`s raised 13 (`block_place`, the sourceless `/setblock` line), and in the last
 part BDS's sensor, busy from the landing's 2, missed the next `destroy` that sapling's heard at 12.

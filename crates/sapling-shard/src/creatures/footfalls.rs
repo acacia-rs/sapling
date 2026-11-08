@@ -1,4 +1,7 @@
-//! What a mob's feet do to the world: its steps vibrate, and its landing treads farmland.
+//! What a mob's feet do to the world: its steps and landings vibrate, and its landing treads farmland.
+//!
+//! Landing: a mob that drops onto ground, even 0.3, vibrates `hit_ground` (31, frequency 2) from its feet;
+//! one summoned on the ground does not, nor one landing under water (research/captures/bds-ab1land.txt).
 //!
 //! Steps, as BDS's step system (Linux 0x7539970, under gdb in research/captures/bds-f14v2steps-gdb.txt): a
 //! mob on the ground counts 3 for each block it walks across and vibrates (`entity_move`, 22) from its feet
@@ -43,10 +46,14 @@ pub(super) fn step(world: &mut World, entity: Entity, layer: Entity, start: &Bod
     }
 }
 
-/// A mob's move ended on the ground after dropping `dropped`.
-pub(super) fn tread(world: &mut World, layer: Entity, body: &Body, dropped: f32) {
+/// A mob's move ended on the ground after dropping `dropped`: its landing vibrates.
+pub(super) fn tread(world: &mut World, layer: Entity, entity: Entity, body: &Body, dropped: f32) {
+    if dropped <= 0.0 {
+        return;
+    }
+    crate::blocks::vibrate_by(world, layer, body.at, GameEvent::HitGround, entity);
     let [width, height] = body.size;
-    if dropped > 0.0 && width * width * height >= LEAST_BULK && super::stomping::griefs(world, layer) {
+    if width * width * height >= LEAST_BULK && super::stomping::griefs(world, layer) {
         crate::blocks::trample(world, layer, body.at, dropped);
     }
 }
