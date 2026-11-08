@@ -75,9 +75,16 @@ fn an_elder_guardian_curses_a_survival_player_near_it_with_six_minutes_of_mining
 fn a_guardian_takes_a_squid_and_lands_its_laser_on_it() {
     // The pack's `nearest_attackable_target` (bds-t2water.txt: an axolotl taken unprovoked).
     let (mut h, guardian) = by_a_pool("minecraft:guardian", Difficulty::Normal);
+    // The pool runs on to x 12, the squid 5 off: one within 3 it lets go (fourteenth2e.rs).
     h.remote.run(|ctx| {
         let _ = ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative);
-        assert!(ctx.spawn_entity("minecraft:squid", [3.5, 65.0, 2.5]).is_some());
+        for x in 8_i32..=12 {
+            for z in -3_i32..=3 {
+                let rim = x == 12 || z.abs() == 3;
+                assert!(ctx.set_block([x, 65, z], &Block::new(if rim { "glass" } else { "water" })));
+            }
+        }
+        assert!(ctx.spawn_entity("minecraft:squid", [10.5, 65.0, 0.5]).is_some());
     });
     let ticks = watch(&mut h, 120);
     let squid = ticks.iter().flat_map(|sent| all::<AddEntity>(sent)).find(|added| added.entity_type == "minecraft:squid").expect("shown").runtime_id as i64;

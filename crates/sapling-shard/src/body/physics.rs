@@ -63,11 +63,15 @@ impl Physics {
     pub const FLYER: Physics = Physics { gravity: 0.0, air_drag: 0.91, fall_drag: 0.91, ground_drag: 0.91, ..Physics::MOB };
     /// A wither, which keeps 0.91 of its speed across; its rise and fall are its own (creatures/wither/flight.rs).
     pub const WITHER: Physics = Physics { fall_drag: 1.0, ..Physics::FLYER };
-    /// A dolphin, which swims in water and is a mob out of it (research/captures/bds-dolphin-findings.md).
+    /// A swimmer, which swims in water and is a mob out of it (research/captures/bds-dolphin-findings.md).
     pub const SWIMMER: Physics = Physics { liquid: InLiquid::Swims, ..Physics::MOB };
     /// A fish, which out of water falls 0.1 a tick faster, keeps all of its fall and keeps 0.91 of
     /// its speed across in a hop's first tick as after (research/captures/bds-flop.txt).
     pub const FISH: Physics = Physics { gravity: 0.1, fall_drag: 1.0, ground_drag: DEFAULT_AIR_FRICTION, ..Physics::SWIMMER };
+    /// A dolphin out of water, which falls 0.1 a tick faster than a mob after drag (each tick's
+    /// fall 0.98 of the last less 0.1784) and keeps 0.91 of its speed across in a hop's first tick
+    /// (research/captures/bds-f14edolphin.txt).
+    pub const DOLPHIN: Physics = Physics { gravity: 0.1784 / 0.98, ground_drag: DEFAULT_AIR_FRICTION, ..Physics::SWIMMER };
     /// A vex, which flies as a ghast does and through blocks (research/captures/bds-evoker-findings.md).
     pub const GHOST: Physics = Physics { passes: true, ..Physics::FLYER };
     /// A turtle, whose `water_movement` keeps 0.9 (research/captures/bds-wander-findings.md).

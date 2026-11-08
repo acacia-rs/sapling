@@ -120,6 +120,23 @@ water, held still by slowness for one hit and healed each second
   away and 0.4 up in water. It breached once mid-chase, out of the water 7 ticks.
 - It was still angry 32 seconds on, past its pack's 25.
 
+`f14edolphin` and `f14edolphin2` (research/captures/bds-f14edolphin.txt, trimmed to the actor's
+stream; bds-f14edolphin2.txt), three dolphins in an open pool, one on a dry stone tray, one under
+a stone cap:
+
+- Anger: hurt by `/damage` as from the actor, the dolphin took it a tick on; the two others (5 and
+  8 off) took it the tick after, each `mob.warning` and `ANGRY` a tick after its `TargetEid`. All
+  three let go when the actor went creative; each `ANGRY` cleared 24.9 s after that dolphin's last
+  bite (one bite at most 10 s before, the hit one's 4 s before): 25 s from its last bite.
+- On land: a tick after coming to rest it hopped, its first tick's rise 0.4216 (0.5 on a
+  grounded tick's 0.0784 fall), up to some 0.2 across, a random yaw, then each tick's fall 0.98 of
+  the last less 0.1784; heard `flop` a tick after each hop. After 2400 ticks out of water (2401
+  after it landed, 2407 after its summon in the air) it was hurt 1 every 10 ticks with no cause
+  (`HurtAnimation` -1) until it died, 10 hits on.
+- Under the cap its `Air` ran down 4800 a tick at a time; at 0 it drowned, 2 every 10 ticks
+  (`HurtAnimation` 9). In the open pool none came up in 4 minutes but on running low: at `Air` 140
+  to 148 each swam up at up to 0.2 a tick, breached (`SPRINTING`), and filled its `Air` again.
+
 ## Pandas' genes (`pandas`)
 
 A panda of each of five genes, summoned with its gene's event, held still and hit once, the actor
@@ -482,9 +499,11 @@ lets prey farther than 16 go the tick after it takes it and charges only prey it
 
 A dolphin swims as above (`creatures/dolphins.rs`, `Physics::SWIMMER`, `InLiquid::Swims`) to
 spots of water up to 10 off, or at its hitter, which it bites as other hunters do (`provoked`,
-`fights=swims`). It holds 4800 ticks of breath (`breath=`) and here never runs out; it does not
-breach, bob under the surface, turn 10 degrees at most, flock or swim with players, flop or dry
-out on land, or pass its anger on, and its anger does not end.
+`fights=swims`). Its anger passes to dolphins within 16, shows `ANGRY` and ends 25 s after its
+last bite (`creatures/dolphins/anger.rs`); on land it hops and dries out as above
+(`creatures/dolphins/ashore.rs`, `Physics::DOLPHIN`). It holds 4800 ticks of breath (`breath=`)
+and here never runs out; it does not breach, bob under the surface, turn 10 degrees at most,
+flock or swim with players, and takes its prey in the hit's tick, where BDS's took it a tick on.
 
 A fish on land hops as BDS's cod did (`creatures/swimming/ashore.rs`, research/captures/bds-flop.txt),
 and is heard `flop` a tick after each hop from where it hopped, as bds-t2water.txt's cod was

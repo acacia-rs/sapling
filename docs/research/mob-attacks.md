@@ -295,6 +295,28 @@ A guardian and an elder guardian in a pool beside a survival actor on normal
   either (`preys=squid,axolotl` in `mob-traits.tsv`) and its laser lands on a mob as on a player,
   then the magic (test `a_guardian_takes_a_squid_and_lands_its_laser_on_it`; sapling-t2water.txt's
   guardian took the squid, BDS's pool drained and the run was not alike enough to compare further).
+- `f14eguard`, `f14eguard2` (research/captures/bds-f14eguard.txt, bds-f14eguard2.txt): hurt as
+  from the actor while it held still (no `MOVING`), it spiked the actor, `HurtAnimation` 18
+  (thorns) before its own flash; hurt while `MOVING`, it did not, as `Guardian::_hurt` (Linux BDS
+  0xbb77470) hurts the attacker 2 unless it moves or the cause is magic, a projectile or a
+  blast. Aiming it holds still (`GuardianAttackGoal`, 0x57477c0), as sapling's. Prey within 3 of
+  it it let go the tick after it took it and took none for 60 to 64 ticks
+  (`target_nearby_sensor`, `guardian_passive`); sapling follows both (`creatures/guardians.rs`).
+  While it takes none BDS's flees players within 8 (`avoid_mob_type`); sapling's swims about.
+
+## Squids (`f14esquid`)
+
+A held squid and glow squid hit by the survival actor, each let go after
+(research/captures/bds-f14esquid.txt), and `SquidFleeGoal` (Linux BDS 0x5933130):
+
+- The hit flashed `HurtAnimation` then `SquidInkCloud` the same tick; it was thrown 0.4 up and
+  away, then took a way of 0.15 a tick straight from the hitter's eyes (3 a second, less a fifth
+  of each block past 5, within 10 and in water only), its speed settling at 0.0878 a tick.
+  Sapling inks and flees so (`creatures/squids.rs`).
+- At the surface BDS zeroed the fleeing squid's climb and kept its way across; sapling's idle
+  picks anew there. On land a squid hopped 0.2 at each hurt and suffocated after 300 ticks
+  (`HurtAnimation` 4, 2 every 10 ticks), turning slowly; it dove (`squid_dive`) when out of water
+  above air. Neither turn is ported.
 
 ## Mobs that fight their own way
 

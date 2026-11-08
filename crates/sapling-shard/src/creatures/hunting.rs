@@ -175,7 +175,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     // prey takes none that tick (research/captures/bds-raidaim.txt, bds-pillswitch.txt).
     let reselects = traits.reselects && !angered && found.is_some();
     let lost = had.is_some() && found.is_none();
-    if ((found.is_none() && looks && !lost) || reselects) && hunts && !dazzled {
+    if ((found.is_none() && looks && !lost) || reselects) && hunts && !dazzled && !super::guardians::is_shy(world, entity, now) {
         let player = if traits.provoked { super::villagers::outlaw(world, entity, layer, kind, body, sight) } else { nearest_but(world, layer, body, sight, |player| spares(world, kind, player)) };
         let mob = prey::nearest(world, entity, layer, body, sight, traits);
         found = [found, player, mob].into_iter().flatten().min_by(|a, b| distance(a.1, body.at).total_cmp(&distance(b.1, body.at)));
@@ -224,6 +224,7 @@ pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64,
         let mut hunter = world.get_mut::<Hunter>(entity).expect("a hunter, above");
         (hunter.ready, hunter.angered) = (now + hunts.aims.map_or(COOLDOWN, u64::from), true);
         super::bees::spread_anger(world, entity, layer, body.at, player);
+        super::dolphins::anger(world, entity, layer, body.at, player);
     }
 }
 

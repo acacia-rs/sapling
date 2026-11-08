@@ -8,18 +8,26 @@
 //! 1459a1130).
 // Squid and axolotls are prey too (the pack's `nearest_attackable_target`; bds-t2water.txt: a
 // guardian took an axolotl unprovoked). A guarded magic still flashes (`HurtAnimation` 14 after 2).
-// TODO: guardians spike no attacker and swim at their prey as at nothing.
+//! With prey it holds still (`GuardianAttackGoal` stops its way each tick, Linux BDS 0x57477c0); prey
+//! within 3 of it (a player's eyes) it lets go the tick after, and takes none for 1 to 3 seconds (the
+//! pack's `target_nearby_sensor` and `guardian_passive`; bds-f14eguard.txt). A player's melee hit on
+//! one not `MOVING` costs the hitter 2 by thorns (`Guardian::_hurt`, Linux BDS 0xbb77470).
+// TODO: while it takes none BDS's flees players within 8 (`avoid_mob_type`); here it swims about.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
+use acacia_proto::types::MetadataFlags1;
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
 
 use super::{Cause, hunting};
+use crate::blocks::Dice;
 use crate::body::Body;
+use crate::sync::Told;
 use crate::components::{InLayer, NetId, Position, Tick, in_world};
 use crate::entities::{self, Kind};
 use crate::vitals;
 
+const KIND: &str = "minecraft:guardian";
 const ELDER: &str = "minecraft:elder_guardian";
 /// Ticks from taking its prey to showing its laser, and from that to its landing.
 const AIMS: u64 = 9;
@@ -37,6 +45,27 @@ const CURSE_TICKS: u32 = 6000;
 const CURSE_LEVEL: u8 = 2;
 /// A player with mining fatigue at least this high for at least this long is spared.
 const SPARED_FOR: u32 = 1200;
+/// Prey this near is let go, and none taken for between these ticks.
+const TOO_CLOSE: f32 = 3.0;
+const SHY: [u32; 2] = [20, 60];
+const SPIKES: f32 = 2.0;
+
+/// A guardian that takes no prey until this tick.
+#[derive(Component)]
+pub(super) struct Shy(u64);
+
+/// Whether the guardian takes no prey at `now`.
+pub(super) fn is_shy(world: &World, entity: Entity, now: u64) -> bool {
+    world.get::<Shy>(entity).is_some_and(|shy| now < shy.0)
+}
+
+/// A player's melee hit landed on the mob of `kind`: a guardian standing still spikes the hitter.
+pub(super) fn spike(world: &mut World, mob: Entity, kind: &str, player: Entity) {
+    let still = world.get::<Told>(mob).and_then(Told::mob_flags).is_some_and(|flags| flags.0 & MetadataFlags1::MOVING.0 == 0);
+    if (kind == KIND || kind == ELDER) && still {
+        crate::vitals::thorned(world, player, SPIKES);
+    }
+}
 
 fn tell(world: &mut World, mob: Entity, layer: Entity, at: [f32; 3], event: EntityEvent) {
     entities::tell_viewers(world, mob, layer, at.map(|c| c.floor() as i32), vec![sapling_net::encode(&event)]);
@@ -46,6 +75,14 @@ fn tell(world: &mut World, mob: Entity, layer: Entity, at: [f32; 3], event: Enti
 pub(super) fn steer(world: &mut World, mob: Entity, layer: Entity, id: u64, kind: &str, body: &Body, prey: Option<[f32; 3]>) -> bool {
     let Some((victim, since)) = prey.and(hunting::quarry(world, mob)) else { return super::swimming::steer(world, mob, layer, kind) };
     let now = world.resource::<Tick>().0;
+    let eyes = if world.get::<super::Creature>(victim).is_some() { 0.0 } else { sapling_data::EYE_HEIGHT };
+    let near = prey.is_some_and(|feet| (0..3).map(|axis| (feet[axis] + if axis == 1 { eyes } else { 0.0 } - body.at[axis]).powi(2)).sum::<f32>() < TOO_CLOSE * TOO_CLOSE);
+    if near && now > since {
+        let shy = SHY[0] + world.get_resource_or_insert_with(Dice::default).roll(SHY[1] - SHY[0] + 1);
+        world.entity_mut(mob).insert(Shy(now + u64::from(shy)));
+        hunting::give_up(world, mob, layer, id, kind, body);
+        return super::swimming::steer(world, mob, layer, kind);
+    }
     let charges = if kind == ELDER { ELDER_CHARGES } else { CHARGES };
     match now - since {
         AIMS => tell(world, mob, layer, body.at, EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::GuardianAttack, data: 0, fire_at_position: None }),

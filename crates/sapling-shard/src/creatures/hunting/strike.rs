@@ -62,6 +62,7 @@ fn hit_prey(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &st
         return None;
     }
     world.get_mut::<Hunter>(entity)?.ready = now + hunts.every.map_or(COOLDOWN, u64::from);
+    super::super::dolphins::bit(world, entity);
     let harm = harm + hunts.varies.map_or(0.0, |most| world.get_resource_or_insert_with(crate::blocks::Dice::default).fraction() * (most - hunts.attack));
     let harm = super::super::afflictions::hits_for(world, entity, harm);
     let cell = body.at.map(|c| c.floor() as i32);

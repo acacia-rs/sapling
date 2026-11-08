@@ -5,9 +5,14 @@
 //! turns a tenth of the way to where it is going each tick.
 // bds-swimmers.txt's spurts were its pool's flow: in still water (bds-u1squid.txt) BDS's squid and
 // glow squid swam a steady 0.017 a tick at most, as sapling's.
-// TODO: fleeing a hit (`squid_flee`), ink, `squid_dive` and `squid_out_of_water` are not copied.
+//! Hit by a player it inks (`SquidInkCloud` after its `HurtAnimation`) and, in water within 10 of
+//! the hitter, takes the way of `SquidFleeGoal` (Linux BDS 0x5933130): 3 a second, less a fifth of
+//! each block past 5, straight away from the hitter's eyes (research/captures/bds-f14esquid.txt).
+// TODO: BDS zeroes a fleeing squid's climb at the surface where this idle picks anew; `squid_dive`/`squid_out_of_water` turns.
 
+use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
+use bytes::Bytes;
 use sapling_world::World as Level;
 
 use crate::blocks::Dice;
@@ -25,6 +30,10 @@ const SPEED: f32 = 0.5 / 20.0;
 const CLOSES: f32 = 0.22;
 const WATER_DRAG: f32 = 0.8;
 const TURNS: f32 = 0.1;
+/// A flight's length in blocks a second, from hitters this near, falling off by a fifth a block past `FLEE_FULL`.
+const FLEE: f32 = 3.0;
+const FLEE_FULL: f32 = 5.0;
+const FLEES_WITHIN: f32 = 10.0;
 
 #[derive(Component)]
 pub(super) struct Squid {
@@ -69,6 +78,26 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
         told.pitch(facing[1]);
     }
     true
+}
+
+/// A squid hit by a player whose eyes are at `from`: its ink goes out after the hit's packet at the
+/// head of `packets`, and in water it flees.
+pub(super) fn struck(world: &mut World, entity: Entity, from: [f32; 3], id: u64, packets: &mut Vec<Bytes>) {
+    let Some(body) = world.get::<Body>(entity).copied() else { return };
+    if world.get::<Squid>(entity).is_none() {
+        return;
+    }
+    let ink = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::SquidInkCloud, data: 0, fire_at_position: None };
+    packets.insert(packets.len().min(1), sapling_net::encode(&ink));
+    let away: [f32; 3] = std::array::from_fn(|axis| body.at[axis] - from[axis]);
+    let far = away.iter().map(|c| c * c).sum::<f32>().sqrt();
+    if body.liquid() != Some(Liquid::Water) || far >= FLEES_WITHIN || far <= 0.0 {
+        return;
+    }
+    let length = if far > FLEE_FULL { FLEE - (far - FLEE_FULL) / FLEE_FULL } else { FLEE };
+    if let Some(mut squid) = world.get_mut::<Squid>(entity) {
+        (squid.way, squid.idle) = (away.map(|c| c / far * length.max(0.0) / 20.0), 0);
+    }
 }
 
 /// A way across at random and up or down towards a height in the squid's band, 0.5 a second.

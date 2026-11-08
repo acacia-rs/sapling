@@ -235,6 +235,10 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         if health.gasp(dry) && weigh(world, &mut health, before, Cause::Suffocation) {
             packets.push(strike(id, &health, Cause::Suffocation, None));
         }
+        let before = health;
+        if super::dolphins::dried(world, entity, wet || rained) && health.hurt(1.0) && weigh(world, &mut health, before, Cause::Generic) {
+            packets.push(strike(id, &health, Cause::Generic, None));
+        }
         packets.extend(breath_told(world, entity, id, held, breath));
         if under_water {
             packets.push(sapling_net::encode(&LevelEvent { event: LevelEventEvent::ParticleBubble, position: Vec3f { x, y, z }, data: BUBBLES }));
