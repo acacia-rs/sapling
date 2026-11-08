@@ -132,6 +132,11 @@ fn crop_seeds(fortune: u8, roll: &mut dyn FnMut(u32) -> u32) -> u32 {
     (0..CROP_THROWS + u32::from(fortune)).filter(|_| roll(CROP_SIDES) <= CROP_GROWTH).count() as u32
 }
 
+/// A ripe beetroot leaves 1 or 2 beetroot, evenly, apart from its seeds (bds-ax1beet.txt: 20 of
+/// 40 left 2, whatever their seeds); Java's table leaves 1.
+const BEETROOT: &str = "minecraft:beetroot";
+const BEETROOT_MOST: u32 = 2;
+
 /// What the block `block` (namespaced) with `properties` leaves when `by` breaks it; nothing
 /// for a block no item stands for. `roll(n)` throws a number below `n`.
 pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnMut(u32) -> u32) -> Vec<Item> {
@@ -156,7 +161,12 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
         last_left = wanted && if row.otherwise { !last_left } else { roll(CHANCE_SIDES) < (chance * CHANCE_SIDES as f32) as u32 };
         if last_left {
             let ripe_seeds = CROP_SEEDS.contains(&row.item) && matches!(row.fortune, Fortune::Binomial { .. });
-            left.extend(some(row.item, if ripe_seeds { crop_seeds(by.fortune, roll) } else { count(row, by.fortune, roll) }));
+            let many = match row.item {
+                _ if ripe_seeds => crop_seeds(by.fortune, roll),
+                BEETROOT => 1 + roll(BEETROOT_MOST),
+                _ => count(row, by.fortune, roll),
+            };
+            left.extend(some(row.item, many));
         }
     }
     left

@@ -104,7 +104,8 @@ code), whether `1/(n*255)` is f32, and which biome components the overrides are.
 - Only default block states were drawn; state-dependent colours (log axis, beds) use the default's.
 - Saving (sapling-leveldb `maps.rs`, from a BDS world's `map_<id>` records): BDS saved all five scales of a
   filled map at once, each `parentMapId` the id one up (-1 at scale 4); sapling saves the maps it made.
-  Unread: the RGBA byte order of `colors` (the BDS records seen were blank) and `decorations`.
+  Read 2026-11-08 (bds-ax1maps.txt's world): `colors` is R, G, B, A per pixel, and an explorer map's
+  `decorations` hold its pin (villagers.md "Explorer maps bought").
 - Locked maps' ids: `bds_command_probe maplock` (bds-maplock.txt) locked three maps (unique ids -4294967272,
   -4294967267, -4294967262) to 1396458477, 2162056098 and 3185328418, after 255902174 in the first capture:
   positive, 32 bits wide, in no order, apart from the unique-id run. Where BDS draws them was not found

@@ -185,8 +185,11 @@ spawn ... loot <table>` stay in stacks (bds-lootcmd*.txt, bds-wetloot.txt). Sapl
 before. Ripe wheat and beetroot: BDS's seeds are `3 + fortune` throws of `nextInt(15) <= 7` with no base seed
 (no seed from 2 of 12 ripe wheat, never with Java's table), now `blocks/loot.rs` `crop_seeds`; ripe potatoes
 and carrots are one plus the same throws (BDS 2-4 and 1-3; Java's rows had given sapling up to 5). Sapling's
-sweet berry bush read Bedrock `growth` 3 as Java `age` 1 and dropped nothing (`GROWTH_IS_AGE`). Left: BDS's
-ripe beetroot left 2 beetroot three times in four (1 by the table) [U]. Sapling's drill: sapling-at1drops.txt.
+sweet berry bush read Bedrock `growth` 3 as Java `age` 1 and dropped nothing (`GROWTH_IS_AGE`). Sapling's drill:
+sapling-at1drops.txt. Ripe beetroot (group AX, `ax1beet`, bds-ax1beet.txt: forty broken by `setblock ... destroy`):
+1 beetroot 20 times and 2 beetroot 20 times, not tied to its seeds (seeds 0/1/2/3: 3/8/6/3 beside one beetroot,
+1/7/11/1 beside two), where Java's table leaves 1; now 1 + `nextInt(2)` (`blocks/loot.rs` `BEETROOT`). The draw
+itself was not found in the decompile [U]: an even split fits the 40 as well as one more `nextInt(15) <= 7` throw.
 
 Open checks for one bot session on BDS (place, read the state back): piston facing numbers, dispenser/piston up-down rule
 (position vs pitch), trapdoor placed on a side face, end rod values, snow-layer replace height, lever sound ids on the wire,

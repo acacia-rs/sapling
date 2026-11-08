@@ -419,10 +419,27 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
   are; the pin comes before the players, and a player past 319 pixels shows as `SmallSquareWhite` on
   the edge instead of going. Ported: `maps/pinned.rs`, `maps/marks.rs` `pin`, `villagers/deals.rs`
   `chart`, worldgen `locate_village`; test `an_explorer_map_finds_the_first_village_of_its_type`.
-  Left open: BDS's map already carried rendered terrain pixels (sapling's starts blank and fills as
-  held), the bought map took a new id with the same data (sapling hands over the offer's id), BDS
-  told the offer's map at the buy, not the roll, temples (jungle, swamp) not located, the pin not kept
-  across a restart.
+- Explorer maps bought (group AX 2026-11-08, bds-ax1maps.txt, world seed 20261003):
+  - Preview: the offer's map carries a biome preview from the roll (`MapItem::renderBiomePreviewMap`,
+    tiles 141a68d40, pixels 141a756f0; none in a flat world, 14161b3e0). Biomes are read at y 0;
+    deep biomes (depth below 0) are water. Ported (`maps/preview.rs`; all 128 rows of the taiga map
+    matched, test `the_taiga_village_map_previews_as_bds_drew_it`).
+  - Purchase: nothing is told at the roll. On the bought map's first tick in the inventory (not on
+    the cursor) BDS tells the offer's map whole. It then makes a new map located from the buyer (the
+    item's `map_regenerate` gone, a new `map_uuid`), shows the slot and tells the new map whole.
+    Ported (`maps/pinned.rs` `regenerate`; test `a_bought_explorer_map_gets_a_new_id_told_after_the_offers`).
+  - Temples: `filled_map` 12 is a jungle temple (`JungleTemple` pin, bds-ax1swamp3.txt) and 13 a swamp
+    hut (`WitchHut`, bds-ax1jungle.txt), the first temple of that kind in `/locate`'s ring order.
+    `/locate structure jungle_temple` and `swamp_hut` found nothing on BDS. Ported (worldgen
+    `locate_temple`; test `an_explorer_map_finds_the_first_temple_of_its_kind_but_locate_finds_none`).
+  - Kept: the map's record keeps the pin as its one `decorations` entry with `unlimitedTracking` 1
+    (sapling-leveldb `maps.rs` `MapPin`). Ported, and restored on load (`maps/kept.rs`).
+  - Biome type: three cartographers summoned in a swamp by `become_cartographer` offered the plains
+    type's maps (bds-ax1swamp.txt), while ones summoned plain and given the event by `/event` offered
+    the swamp's (bds-ax1swamp2.txt). A summon by a `become_*` event now takes type 0 (plains)
+    (`villagers.rs` `arm`).
+  - Left: sapling has no `/event` command, and its `/locate biome` jungle and swamp answers differ from
+    BDS's on this seed (bds-ax1temple.txt against sapling-ax1jungle.txt).
 - Trader llamas (bds-trade2.txt): both come with `LeadHolderEid` the trader's and `LEASHED` from their
   announcement (its pack's `should_leash`). Ported (`villagers/wandering.rs` `arrive`,
   `husbandry/leads.rs`: a lead holder is found again by any kept entity's `UniqueID`; test

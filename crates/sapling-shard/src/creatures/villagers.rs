@@ -160,7 +160,11 @@ pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
     let mut dice = world.remove_resource::<Dice>().unwrap_or_default();
     let mut trader = kept.clone().unwrap_or_default();
     if kept.is_none() {
-        trader.mark = world.get::<Layer>(layer).map_or(0, |layer| jobs::mark_at(&layer.world, feet));
+        trader.mark = match event.is_some_and(|event| event.starts_with("minecraft:become_")) {
+            // bds-ax1swamp.txt: cartographers summoned by `become_cartographer` in a swamp kept the plains type.
+            true => 0,
+            false => world.get::<Layer>(layer).map_or(0, |layer| jobs::mark_at(&layer.world, feet)),
+        };
         trader.skin = dice.roll(SKINS) as i32;
         trader.founding = villager;
         match villager {

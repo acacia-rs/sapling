@@ -66,7 +66,7 @@ pub use data3d::Data3d;
 pub use db::{Batch, Db};
 pub use keys::{ChunkKey, ParsedKey, Tag};
 pub use level_dat::{LevelDat, WeatherRecord};
-pub use maps::{MAP_PREFIX, MapRecord};
+pub use maps::{MAP_PREFIX, MapPin, MapRecord};
 pub use mob_events::{load_mob_events, store_mob_events};
 pub use states::{BlockStates, PLACEHOLDER, block_of_hash, palette_block};
 pub use custom_states::{

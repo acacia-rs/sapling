@@ -2,7 +2,9 @@
 //! `decorations`, `dimension`, `fullyExplored`, `height`, `mapId`, `mapLocked`, `parentMapId` (the
 //! map a scale up, id + 1; -1 at scale 4), `scale`, `unlimitedTracking`, `width`, `xCenter` and `zCenter`,
 //! as BDS 1.26 saved them (a BDS world's `map_-708669603834`..`838`: one map's five scales, the
-//! four above made blank with it).
+//! four above made blank with it). An explorer map's record keeps its pin as its one decoration and
+//! `unlimitedTracking` 1 (bds-ax1maps.txt's world: `data` {rot 8, type 21, x -76, y -28}, `key`
+//! {blockX -984, blockY 64, blockZ 136, type 1}); players' markers are not kept.
 
 use acacia_proto::nbt::{self, LittleEndian, List, Nbt, Value};
 use bytes::BytesMut;
@@ -23,6 +25,43 @@ pub struct MapRecord {
     pub centre: [i32; 2],
     /// R, G, B, A of each pixel, rows from the north.
     pub colours: Vec<u8>,
+    pub pin: Option<MapPin>,
+}
+
+/// An explorer map's structure: its marker (type, rotation and place in half pixels from the
+/// middle) and the block it tracks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MapPin {
+    pub kind: i32,
+    pub rotation: i32,
+    pub x: i32,
+    pub y: i32,
+    pub block: [i32; 3],
+}
+
+/// `key`'s `type` for a tracked block.
+const BLOCK_KEY: i32 = 1;
+
+impl MapPin {
+    fn encode(&self) -> Value {
+        let [x, y, z] = self.block;
+        let data = Value::Compound(vec![("rot".into(), Value::Int(self.rotation)), ("type".into(), Value::Int(self.kind)), ("x".into(), Value::Int(self.x)), ("y".into(), Value::Int(self.y))]);
+        let key = Value::Compound(vec![("blockX".into(), Value::Int(x)), ("blockY".into(), Value::Int(y)), ("blockZ".into(), Value::Int(z)), ("type".into(), Value::Int(BLOCK_KEY))]);
+        Value::Compound(vec![("data".into(), data), ("key".into(), key)])
+    }
+
+    /// The first decoration tracking a block; `None` when none does.
+    fn decode(decorations: Option<&Value>) -> Option<Self> {
+        let Some(Value::List(list)) = decorations else { return None };
+        list.items.iter().find_map(|decoration| {
+            let int = |part: &str, key: &str| match decoration.get(part)?.get(key)? {
+                Value::Int(value) => Some(*value),
+                _ => None,
+            };
+            (int("key", "type")? == BLOCK_KEY).then_some(())?;
+            Some(Self { kind: int("data", "type")?, rotation: int("data", "rot")?, x: int("data", "x")?, y: int("data", "y")?, block: [int("key", "blockX")?, int("key", "blockY")?, int("key", "blockZ")?] })
+        })
+    }
 }
 
 impl MapRecord {
@@ -33,7 +72,7 @@ impl MapRecord {
     pub fn encode(&self) -> Vec<u8> {
         let root = Value::Compound(vec![
             ("colors".into(), Value::ByteArray(self.colours.clone())),
-            ("decorations".into(), Value::List(List { tag: 0, items: Vec::new() })),
+            ("decorations".into(), Value::List(List { tag: if self.pin.is_some() { 10 } else { 0 }, items: self.pin.iter().map(MapPin::encode).collect() })),
             ("dimension".into(), Value::Byte(self.dimension)),
             ("fullyExplored".into(), Value::Byte(0)),
             ("height".into(), Value::Short(SIDE)),
@@ -41,7 +80,7 @@ impl MapRecord {
             ("mapLocked".into(), Value::Byte(i8::from(self.locked))),
             ("parentMapId".into(), Value::Long(self.parent)),
             ("scale".into(), Value::Byte(self.scale)),
-            ("unlimitedTracking".into(), Value::Byte(0)),
+            ("unlimitedTracking".into(), Value::Byte(i8::from(self.pin.is_some()))),
             ("width".into(), Value::Short(SIDE)),
             ("xCenter".into(), Value::Int(self.centre[0])),
             ("zCenter".into(), Value::Int(self.centre[1])),
@@ -74,7 +113,7 @@ impl MapRecord {
             _ => return Err(Error::Map("no colours")),
         };
         let centre = [int("xCenter")?, int("zCenter")?];
-        Ok(Some(Self { id: long("mapId")?, parent: long("parentMapId")?, dimension: byte("dimension"), scale: byte("scale"), locked: byte("mapLocked") != 0, centre, colours }))
+        Ok(Some(Self { id: long("mapId")?, parent: long("parentMapId")?, dimension: byte("dimension"), scale: byte("scale"), locked: byte("mapLocked") != 0, centre, colours, pin: MapPin::decode(root.get("decorations")) }))
     }
 }
 
@@ -84,7 +123,9 @@ mod tests {
 
     #[test]
     fn a_map_reads_back_as_it_was_written() {
-        let map = MapRecord { id: -4294967279, parent: -1, dimension: 1, scale: 2, locked: true, centre: [320, -192], colours: (0..=255).cycle().take(128 * 128 * 4).collect() };
+        let map = MapRecord { id: -4294967279, parent: -1, dimension: 1, scale: 2, locked: true, centre: [320, -192], colours: (0..=255).cycle().take(128 * 128 * 4).collect(), pin: None };
+        let pinned = MapRecord { pin: Some(MapPin { kind: 21, rotation: 8, x: -76, y: -28, block: [-984, 64, 136] }), ..map.clone() };
+        assert_eq!(MapRecord::decode(&pinned.key(), &pinned.encode()).unwrap(), Some(pinned.clone()));
         assert_eq!(map.key(), b"map_-4294967279");
         assert_eq!(MapRecord::decode(&map.key(), &map.encode()).unwrap(), Some(map.clone()));
         assert_eq!(MapRecord::decode(b"mapsomething", &map.encode()).unwrap(), None);

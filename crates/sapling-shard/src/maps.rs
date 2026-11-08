@@ -10,6 +10,7 @@
 mod kept;
 mod marks;
 mod pinned;
+mod preview;
 mod render;
 mod table;
 
@@ -27,7 +28,7 @@ use crate::components::{InLayer, Layer, NetId, Outgoing, PacketQueues, Position,
 use crate::inventory::{self, Inventory};
 
 pub(crate) use kept::keep_all;
-pub(crate) use pinned::{EXPLORER_SCALE, make_pinned};
+pub(crate) use pinned::chart_explorer;
 pub(crate) use render::Colours;
 pub(crate) use table::{chart, charted, in_grid};
 
@@ -211,8 +212,9 @@ pub(crate) fn dispatch(world: &mut World) {
     }
 }
 
-/// Ticks each map in a player's hand.
+/// Makes bought explorer maps again, then ticks each map in a player's hand.
 pub(crate) fn tick(world: &mut World) {
+    pinned::regenerate(world);
     let now = world.resource::<Tick>().0;
     let holders: Vec<(Entity, i64)> = crate::components::in_world(world)
         .into_iter()
