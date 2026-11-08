@@ -36,17 +36,27 @@ impl V2Start {
     /// The start piece at its height and the structure's position (the piece's middle at the
     /// start height), which its biome test reads.
     pub fn start_piece(&self, random: &mut JavaRandom, chunk: (i32, i32), height: &dyn Fn(i32, i32) -> i32) -> (Piece, (i32, i32, i32)) {
-        let start_y = match self.height {
+        let start_y = self.start_height(random);
+        self.start_at((chunk.0 * 16, start_y, chunk.1 * 16), self.project, random, height)
+    }
+
+    fn start_height(&self, random: &mut JavaRandom) -> i32 {
+        match self.height {
             StartHeight::Constant(y) => y,
             StartHeight::Uniform(lo, hi) => random.next_int(hi - lo + 1) + lo,
-        };
+        }
+    }
+
+    /// A rotation and an element drawn, the piece's corner at `origin`, its bottom one below the
+    /// start height (counted from the surface at its middle when `project`).
+    fn start_at(&self, origin: (i32, i32, i32), project: bool, random: &mut JavaRandom, height: &dyn Fn(i32, i32) -> i32) -> (Piece, (i32, i32, i32)) {
         let rotation = Rotation::from_index(random.next_int(4));
         let pool = data().pool(self.pool).expect("v2 start pool");
         let element = pool.list[random.next_int(pool.list.len() as i32) as usize];
-        let mut piece = Piece::new(element, (chunk.0 * 16, start_y, chunk.1 * 16), rotation, 0);
+        let mut piece = Piece::new(element, origin, rotation, 0);
         let b = piece.bb;
         let (x, z) = (middle(b.x0, b.x1), middle(b.z0, b.z1));
-        let y = if self.project { start_y + height(x, z) } else { start_y };
+        let y = if project { origin.1 + height(x, z) } else { origin.1 };
         piece.shift_y(y - 1 - b.y0);
         (piece, (x, y, z))
     }
@@ -56,6 +66,17 @@ impl V2Start {
         let start_y = if self.project { y - height(x, z) } else { y };
         let aliases = self.resolve_aliases(level_seed, (chunk.0 * 16, start_y, chunk.1 * 16));
         self.grow(piece, (x, y, z), aliases, random, height)
+    }
+
+    /// `/place structure` at the block `at` (PlaceCommand 143aed7f0): the level seed's Java random
+    /// forked at `at`, the start height drawn from a copy of it (none with `keep_height`, which
+    /// also leaves it unprojected), the start piece's corner at `at` and that height.
+    pub fn assemble_from(&self, level_seed: i64, at: [i32; 3], keep_height: bool, height: &dyn Fn(i32, i32) -> i32) -> Vec<Piece> {
+        let mut random = JavaRandom::new(level_seed).fork_at(at[0], at[1], at[2]);
+        let (start_y, project) = if keep_height { (at[1], false) } else { (self.start_height(&mut random.clone()), self.project) };
+        let (piece, centre) = self.start_at((at[0], start_y, at[2]), project, &mut random, height);
+        let aliases = self.resolve_aliases(level_seed, (at[0], start_y, at[2]));
+        self.grow(piece, centre, aliases, &mut random, height)
     }
 
     /// Java's `/place jigsaw` start (`JigsawPlacement.addPieces` given a start jigsaw name): a

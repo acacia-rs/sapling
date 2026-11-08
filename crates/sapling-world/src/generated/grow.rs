@@ -73,13 +73,22 @@ impl World {
         Some(writes.into_iter().map(|(pos, block, _)| (pos, ids.forward.id(block))).collect())
     }
 
-    /// The generator's structure `name` drawn over the loaded columns as though it started in
-    /// chunk `start`, its start piece at `start_y` where given (`ignoreStartHeight`) and its jigsaw
-    /// blocks kept with `keep_jigsaws`; `None` without a generator.
-    pub fn place_structure(&self, name: &str, start: ChunkPos, start_y: Option<i32>, keep_jigsaws: bool) -> Option<Result<PlacedStructure, PlaceFailure>> {
+    /// [`World::place_feature`] for the feature rule `name` run in `at`'s chunk as `/place
+    /// featurerule` runs it (`sapling_worldgen::place_feature_rule`); empty where it placed nothing.
+    pub fn place_feature_rule(&self, name: &str, at: [i32; 3], seed: u32) -> Option<Vec<([i32; 3], u32)>> {
         let ids = ids(&self.registry);
         let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
-        let writes = self.loader.as_ref()?.storage().structure_writes(name, start, start_y, &load)?;
+        let writes = sapling_worldgen::place_feature_rule(name, at, seed, &load, &|_| None)?;
+        Some(writes.into_iter().map(|(pos, block, _)| (pos, ids.forward.id(block))).collect())
+    }
+
+    /// The generator's structure `name` drawn over the loaded columns as `/place structure` starts
+    /// it at the block `at`, its start height kept with `keep_height` (`ignoreStartHeight`) and its
+    /// jigsaw blocks kept with `keep_jigsaws`; `None` without a generator.
+    pub fn place_structure(&self, name: &str, at: [i32; 3], keep_height: bool, keep_jigsaws: bool) -> Option<Result<PlacedStructure, PlaceFailure>> {
+        let ids = ids(&self.registry);
+        let load = |chunk_x: i32, chunk_z: i32| Arc::new(self.shape_of(ChunkPos::new(chunk_x, chunk_z), ids));
+        let writes = self.loader.as_ref()?.storage().structure_writes(name, at, keep_height, &load)?;
         Some(writes.map(|writes| PlacedStructure::of(writes, ids, keep_jigsaws.then_some(&self.registry))))
     }
 

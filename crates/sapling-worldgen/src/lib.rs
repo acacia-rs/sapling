@@ -41,7 +41,7 @@ pub use block_entity::BlockEntity;
 pub use end::EndGenerator;
 pub use nether::NetherGenerator;
 #[doc(hidden)]
-pub use feature::grow::{is_feature, place_feature};
+pub use feature::grow::{is_feature, place_feature, place_feature_rule};
 pub use feature::flowers::meal_flower;
 pub use feature::reach::{Cells as ReachCells, Tries as ReachTries};
 #[doc(hidden)]

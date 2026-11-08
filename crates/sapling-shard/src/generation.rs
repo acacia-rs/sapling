@@ -39,26 +39,58 @@ fn write(world: &mut World, layer: Entity, placed: Option<Result<PlacedStructure
     Ok(())
 }
 
+/// Writes a feature's or a feature rule's blocks (None: not a known one; none: it placed nothing),
+/// then furnishes the bee nests among them.
+fn write_feature(world: &mut World, layer: Entity, writes: Option<Vec<(BlockPos, u32)>>) -> Result<(), PlaceError> {
+    let placed = match writes {
+        None => Err(PlaceFailure::Unknown),
+        Some(writes) if writes.is_empty() => Err(PlaceFailure::Failed),
+        Some(blocks) => Ok(PlacedStructure { blocks, ..PlacedStructure::default() }),
+    };
+    let written = placed.as_ref().map(|placed| placed.blocks.clone()).unwrap_or_default();
+    write(world, layer, Some(placed), PlaceOptions::default())?;
+    blocks::furnish_nests(world, layer, &written);
+    Ok(())
+}
+
+/// The seed every `/place featurerule` draws from: BDS's level random's, drawn once a server run
+/// (sapling_worldgen::place_feature_rule).
+#[derive(Resource, Clone, Copy)]
+struct RuleSeed(u32);
+
 impl GenerationBackend for Ctx<'_> {
     fn place_feature(&mut self, name: &str, at: BlockPos) -> Result<(), PlaceError> {
         let layer = worlds::current(self.world);
         let seed = self.world.get_resource_or_insert_with(Dice::default).roll(u32::MAX);
         let level = &self.world.get::<Layer>(layer).ok_or(PlaceError::NoGenerator)?.world;
-        let placed = match level.place_feature(name, at, seed) {
-            None => Err(PlaceFailure::Unknown),
-            Some(writes) if writes.is_empty() => Err(PlaceFailure::Failed),
-            Some(blocks) => Ok(PlacedStructure { blocks, ..PlacedStructure::default() }),
+        let writes = level.place_feature(name, at, seed);
+        write_feature(self.world, layer, writes)
+    }
+
+    fn place_feature_rule(&mut self, name: &str, at: BlockPos) -> Result<(), PlaceError> {
+        let layer = worlds::current(self.world);
+        let seed = match self.world.get_resource::<RuleSeed>() {
+            Some(seed) => seed.0,
+            None => {
+                let seed = RuleSeed(self.world.get_resource_or_insert_with(Dice::default).roll(u32::MAX));
+                self.world.insert_resource(seed);
+                seed.0
+            }
         };
-        let written = placed.as_ref().map(|placed| placed.blocks.clone()).unwrap_or_default();
-        write(self.world, layer, Some(placed), PlaceOptions::default())?;
-        blocks::furnish_nests(self.world, layer, &written);
-        Ok(())
+        let level = &self.world.get::<Layer>(layer).ok_or(PlaceError::NoGenerator)?.world;
+        let chunk = ChunkPos::of_block(at[0], at[2]);
+        // BDS's `areChunksFullyLoaded(pos, 1)`: the chunk and the eight round it.
+        if !(-1..=1).all(|dx| (-1..=1).all(|dz| level.is_loaded(ChunkPos::new(chunk.x + dx, chunk.z + dz)))) {
+            return Err(PlaceError::Unloaded);
+        }
+        let writes = level.place_feature_rule(name, at, seed);
+        write_feature(self.world, layer, writes)
     }
 
     fn place_structure(&mut self, name: &str, at: BlockPos, options: PlaceOptions) -> Result<(), PlaceError> {
         let layer = worlds::current(self.world);
         let level = &self.world.get::<Layer>(layer).ok_or(PlaceError::NoGenerator)?.world;
-        let placed = level.place_structure(name, ChunkPos::of_block(at[0], at[2]), options.ignore_start_height.then_some(at[1]), options.keep_jigsaws);
+        let placed = level.place_structure(name, at, options.ignore_start_height, options.keep_jigsaws);
         write(self.world, layer, placed, options)
     }
 

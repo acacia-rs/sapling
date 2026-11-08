@@ -114,6 +114,18 @@ fn ignore_start_height_stands_trail_ruins_at_the_given_height() {
 }
 
 #[test]
+fn the_place_command_starts_trail_ruins_at_its_block_with_that_block_s_random() {
+    // PlaceCommand 143aed7f0: Java's random forked at the block, the start piece's corner there; two
+    // blocks of one chunk start different ruins, the same block the same.
+    let generator = OverworldGenerator::new(SEED);
+    let placed = |at| generator.place_commanded("minecraft:trail_ruins", at, true, &flat).unwrap().blocks;
+    let [a, b] = [[70, -20, 210], [75, -20, 213]].map(placed);
+    assert_ne!(a, b);
+    assert_eq!(a, placed([70, -20, 210]));
+    assert_eq!(generator.place_commanded("minecraft:village", [0, 0, 0], true, &flat).err(), Some(PlaceFailure::Unknown));
+}
+
+#[test]
 fn place_structure_fails_a_temple_in_the_ocean() {
     // The monument BDS located (structure/tests.rs): deep ocean, no temple kind there.
     let generator = OverworldGenerator::new(SEED);
