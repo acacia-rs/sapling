@@ -38,7 +38,7 @@ const SUPPORTERS: [&str; 13] = [
     "oak_stairs [\"upside_down_bit\"=true,\"weirdo_direction\"=3]",
     "hopper",
     "iron_bars",
-    "oak_trapdoor [\"upside_down_bit\"=true]",
+    "trapdoor [\"upside_down_bit\"=true]",
     "chain",
 ];
 pub const FIRST: i32 = -2;
