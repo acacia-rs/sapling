@@ -1,9 +1,9 @@
 //! An enderman's teleports (docs/research/mob-kinds.md, "The enderman"), as BDS's were seen to
-//! (research/captures/bds-ender-findings.md): on its first tick, the tick after a hit, towards
-//! prey that has been more than 16 off for 30 ticks, a tick in 100 in the dark and in 20 in
-//! the sun (its pack's `light_teleport_chance`, the component's dark default: BDS's came 5.2
-//! seconds apart at midnight), and away from water it touches or rain on it, which costs it 1.
-// TODO: BDS's random rate was lower (bds-a3ender.txt: 2 and 4 in ~820 ticks); the rule is open.
+//! (research/captures/bds-ender-findings.md) and its `TeleportSystem` (0x145ed2fb0) reads: the tick
+//! after a hit, towards prey that has been more than 16 off for 30 ticks, a tick in 100 where its
+//! brightness is 0.5 or less (raw 12 or less) and in 20 where brighter with the sky over it (none
+//! where brighter under a roof), without prey whenever its timer runs out (reset to a random 0 to
+//! 600 ticks, so also its first tick), and away from water it touches or rain on it, which costs it 1.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;
@@ -29,6 +29,10 @@ const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
 /// The chance a tick of a random teleport in the dark and in the sun.
 const DARK_CHANCE: f32 = 0.01;
 const LIGHT_CHANCE: f32 = 0.05;
+/// Raw brightness above this is over 0.5 by the overworld's ramp.
+const DARK_UNTIL: u8 = 12;
+/// The pack's `max_random_teleport_time`, 30 s.
+const TIMER_MAX: u64 = 600;
 /// A touch of water costs this, and its `splash` is heard this far up it.
 const WET: f32 = 1.0;
 const SPLASH_UP: f32 = 1.45;
@@ -39,25 +43,40 @@ pub(super) struct Blinks {
     due: Option<u64>,
     /// The tick its prey went further off than [`FAR`].
     far_since: Option<u64>,
+    /// Ticks left before a random teleport while it has no prey.
+    timer: u64,
     /// Its own draws for the chance each tick, so that they shift no other roll of the shard's.
     draws: u64,
 }
 
 impl Blinks {
-    fn chance(&mut self, odds: f32) -> bool {
+    fn fraction(&mut self) -> f32 {
         self.draws ^= self.draws << 13;
         self.draws ^= self.draws >> 7;
         self.draws ^= self.draws << 17;
-        ((self.draws >> 40) as f32 / (1u64 << 24) as f32) < odds
+        (self.draws >> 40) as f32 / (1u64 << 24) as f32
+    }
+
+    fn chance(&mut self, odds: f32) -> bool {
+        self.fraction() < odds
+    }
+
+    /// Without prey: whether its timer ran out, reset if so.
+    fn timer_out(&mut self) -> bool {
+        if self.timer >= 2 {
+            self.timer -= 1;
+            return false;
+        }
+        self.timer = (self.fraction() * TIMER_MAX as f32) as u64;
+        true
     }
 }
 
 /// Has the mob teleport, from its first tick, if its kind does.
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if sapling_data::mob_traits(kind).teleports {
-        let now = world.resource::<Tick>().0;
         let draws = NetId::seed(world, entity, 0x2545_F491_4F6C_DD1D);
-        world.entity_mut(entity).insert(Blinks { due: Some(now), far_since: None, draws });
+        world.entity_mut(entity).insert(Blinks { due: None, far_since: None, timer: 0, draws });
     }
 }
 
@@ -84,7 +103,14 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, prey: Optio
     let level = world.get::<Layer>(layer).map(|layer| &layer.world);
     let soaked = level.is_some_and(|level| super::harm::touches(level, &body, WATER));
     let rained = level.is_some_and(|level| super::harm::is_rained_on(level, feet, rains) || super::harm::is_rained_on(level, head, rains));
-    let (wet, lit) = (soaked || rained, super::harm::sun_on(world, layer, head));
+    let wet = soaked || rained;
+    let bright = crate::light::brightness(world, layer, head).is_some_and(|light| light > DARK_UNTIL);
+    let open = level.is_some_and(|level| level.light_at(feet[0], feet[1], feet[2]).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT));
+    let odds = match (bright, open) {
+        (false, _) => DARK_CHANCE,
+        (true, true) => LIGHT_CHANCE,
+        (true, false) => 0.0,
+    };
     // Rain's own harm is harm.rs's; here it only drives the mob off.
     if soaked {
         drench(world, entity, layer, &body);
@@ -93,7 +119,8 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, prey: Optio
     let far = prey.filter(|feet| distance(*feet, body.at) > FAR);
     let far_since = far.map(|_| blinks.far_since.unwrap_or(now));
     let towards = far.filter(|_| far_since.is_some_and(|since| now >= since + FAR_FOR));
-    let random = blinks.chance(if lit { LIGHT_CHANCE } else { DARK_CHANCE }) || wet || blinks.due.is_some_and(|due| now >= due);
+    let by_chance = blinks.chance(odds);
+    let random = by_chance || (prey.is_none() && blinks.timer_out()) || wet || blinks.due.is_some_and(|due| now >= due);
     world.get_resource_or_insert_with(Dice::default);
     let to = world.resource_scope(|world, mut dice: Mut<Dice>| {
         let level = &world.get::<Layer>(layer)?.world;

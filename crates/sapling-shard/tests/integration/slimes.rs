@@ -47,6 +47,21 @@ fn a_medium_slime_takes_its_prey_squishes_as_it_hops_at_it_and_hurts_it_for_2_by
     assert!(!hurt.is_empty(), "touched: {moves:?}");
 }
 
+/// bds-j3slime.txt: a large slime's hop at its prey went 0.1926 across as told after its first tick.
+#[test]
+fn a_large_slime_hops_at_its_prey_0_1926_across() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(|ctx| ctx.set_difficulty(Difficulty::Easy));
+    summon(&mut h, "spawn_large", [0.5, 65.0, 5.5]);
+    let mut hops = Vec::new();
+    for _ in 0..120 {
+        let sent = h.tick_all().to(1).to_vec();
+        hops.extend(all::<acacia_proto::packets::SetEntityMotion>(&sent).iter().filter(|told| (told.velocity.y - 0.3332).abs() < 1e-3).map(|told| told.velocity.x.hypot(told.velocity.z)));
+    }
+    assert!(!hops.is_empty() && hops.iter().all(|across| (across - 0.1926).abs() < 3e-3), "{hops:?}");
+}
+
 /// bds-q3crowd.txt: `minecraft:spawn_medium` is no event of the slime's pack, so none runs: its base
 /// box 2.08, `Variant` 1, and it never hurt the actor beside it.
 #[test]

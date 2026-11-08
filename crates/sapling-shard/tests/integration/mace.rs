@@ -58,6 +58,31 @@ fn a_smash_stops_the_hitter_and_shoves_a_mob_near() {
     assert!((shoved.velocity.x - 0.18 * 0.546).abs() < 1e-4 && (shoved.velocity.y - 0.43276805).abs() < 1e-5, "{shoved:?}");
 }
 
+/// bds-o1pets.txt: the hitter's tamed wolf beside the smash was told no motion, a wild one 0.43 up.
+#[test]
+fn a_smash_spares_the_hitters_own_wolf() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| ctx.set_game_mode(PlayerId(2), GameMode::Creative));
+    let golem = spawned(&mut h, "minecraft:iron_golem", [2.0, 65.0, 0.5]);
+    let pet = spawned(&mut h, "minecraft:wolf", [3.0, 65.0, 2.0]);
+    let wild = spawned(&mut h, "minecraft:wolf", [3.0, 65.0, -1.0]);
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:bone", 64)))));
+    h.tick_all();
+    let tamed = (0..40).any(|_| common::raising::showed(&common::raising::click_on(&mut h, pet), pet, EntityEventEventId::TameSuccess));
+    assert!(tamed, "a third of bones tame");
+    h.remote.run(|ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:mace", 1)))));
+    for y in [66.6, 68.6, 68.5, 65.6] {
+        h.receive(1, &input_at([0.5, y, 0.5]));
+        h.tick_all();
+    }
+    h.receive(1, &attack(golem));
+    let sent = h.tick_all().to(2).to_vec();
+    let told: Vec<u64> = all::<SetEntityMotion>(&sent).into_iter().map(|told| told.runtime_entity_id).filter(|id| [pet, wild].contains(id)).collect();
+    assert_eq!(told, [wild]);
+}
+
 #[test]
 fn a_fall_short_of_one_and_a_half_is_a_plain_critical() {
     let (sent, golem, _) = smash(Item::new("minecraft:mace", 1), 67.4);

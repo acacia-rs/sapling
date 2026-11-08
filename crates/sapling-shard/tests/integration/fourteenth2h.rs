@@ -100,13 +100,14 @@ fn damage_from_a_player_throws_a_mob_and_provokes_it_and_from_a_mob_sets_it_on_t
 
     let bystander = spawn(&mut h, "minecraft:zombie_pigman", [FEET[0] - 5.0, FEET[1], FEET[2] + 5.0]);
     let pigman = spawn(&mut h, "minecraft:zombie_pigman", [FEET[0] + 3.0, FEET[1], FEET[2] + 3.0]);
-    let (_, mut sent) = told(&mut h, move |ctx| {
+    let (_, hurt_tick) = told(&mut h, move |ctx| {
         let alex = ctx.players().find(|player| player.id == ALEX).expect("Alex");
         assert!(ctx.hurt_entity_from(EntityId(pigman), 1.0, DamageCause::Attack, &Target::Player(alex)));
     });
-    sent.extend(ticks(&mut h, 3));
-    assert_eq!(targets(&sent, pigman).first(), Some(&1), "the pigman takes Alex (bds-h2dmgm.txt)");
-    assert_eq!(targets(&sent, bystander).first(), Some(&1), "and the pigman near it");
+    assert!(targets(&hurt_tick, pigman).is_empty() && targets(&hurt_tick, bystander).is_empty(), "none takes Alex in the hurt's tick (bds-o1pig.txt)");
+    let next = ticks(&mut h, 1);
+    assert_eq!(targets(&next, pigman).first(), Some(&1), "the pigman takes Alex a tick on (bds-h2dmgm.txt)");
+    assert_eq!(targets(&next, bystander).first(), Some(&1), "and the pigman near it");
 
     let zombie = spawn(&mut h, "minecraft:zombie", [FEET[0] - 4.0, FEET[1], FEET[2]]);
     let skeleton = spawn(&mut h, "minecraft:skeleton", [FEET[0] + 3.0, FEET[1], FEET[2] - 3.0]);

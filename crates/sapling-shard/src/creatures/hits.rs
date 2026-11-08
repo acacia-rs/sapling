@@ -14,7 +14,7 @@ use super::health::{Cause, Health};
 use super::{afflictions, harm, hunting};
 use crate::blocks::Dice;
 use crate::body::{Body, Liquid};
-use crate::components::{NetId, Position};
+use crate::components::{NetId, Position, Tick};
 use crate::{entities, late_sounds, vitals};
 
 /// A shot throws the mob it hits this fast along its way across and up, a dispenser's arrow as a
@@ -194,13 +194,25 @@ fn burn(world: &mut World, struck: Entity, is_player: bool, ticks: u16) {
     }
 }
 
-/// A shot throws the mob it met by `speed`, told to its viewers in the same tick: BDS sent a
-/// struck cow's (0.4, 0.4) at once and its moved speed the tick after (bds-n3knock.txt).
+/// The tick a mob was thrown in: it does not move again in that tick (creatures.rs).
+#[derive(Component)]
+pub(super) struct Thrown(u64);
+
+/// Whether `mob` was thrown this tick, so its own move waits for the next one.
+pub(super) fn thrown_now(world: &World, mob: Entity) -> bool {
+    world.get::<Thrown>(mob).is_some_and(|thrown| thrown.0 == world.resource::<Tick>().0)
+}
+
+/// A shot or a hit throws the mob it met by `speed`, told to its viewers in the same tick: BDS sent a
+/// struck cow's (0.4, 0.4) at once and its moved speed the tick after (bds-n3knock.txt), a slime
+/// thrown by a golem that ticked first too (bds-j3slime.txt).
 pub(super) fn throw_at_once(world: &mut World, mob: Entity, layer: Entity, speed: [f32; 3]) -> Option<()> {
     let mut body = world.get_mut::<Body>(mob)?;
     body.throw(speed);
     let at = body.at;
     let id = world.get::<NetId>(mob)?.0;
+    let now = world.resource::<Tick>().0;
+    world.entity_mut(mob).insert(Thrown(now));
     let told = SetEntityMotion { runtime_entity_id: id, velocity: Vec3f { x: speed[0], y: speed[1], z: speed[2] }, tick: 0 };
     entities::tell_viewers(world, mob, layer, at.map(|c| c.floor() as i32), vec![sapling_net::encode(&told)]);
     Some(())

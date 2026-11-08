@@ -157,12 +157,32 @@ fn a_piglin_holding_a_sword_keeps_nuggets_unseen_and_drops_them_at_death() {
     assert!(all::<MobEquipment>(&ticks).iter().all(|held| held.runtime_entity_id != piglin), "its sword still shown");
     h.remote.run(move |ctx| assert!(ctx.kill_entity(id)));
     let left: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
-    let nuggets: Vec<u16> =
-        all::<AddItemEntity>(&left).into_iter().filter(|item| sapling_data::item_name(item.item.network_id.into()) == Some("minecraft:gold_nugget")).map(|item| item.item.count).collect();
-    assert_eq!(nuggets, [3]);
-    // Its sword, not dropped by a death no player dealt, is shown again in its main hand.
+    let mut dropped: Vec<(Option<&str>, u16)> = all::<AddItemEntity>(&left).into_iter().map(|item| (sapling_data::item_name(item.item.network_id.into()), item.item.count)).collect();
+    dropped.sort();
+    // bds-o1piglin.txt: a golden sword it took up goes with it too, its hands shown empty.
+    assert_eq!(dropped, [(Some("minecraft:gold_nugget"), 3), (Some("minecraft:golden_sword"), 1)]);
     let hands: Vec<(u8, Option<&str>)> = all::<MobEquipment>(&left).iter().filter(|held| held.runtime_entity_id == piglin).map(|held| (held.slot, sapling_data::item_name(held.item.network_id.into()))).collect();
-    assert_eq!(hands, [(0, Some("minecraft:golden_sword")), (1, None)]);
+    assert_eq!(hands, [(0, None), (1, None)]);
+}
+
+/// bds-o1piglin.txt: pork taken is eaten unseen; a crossbow goes to its empty main hand a tick on,
+/// and both the crossbow and an admired helmet are dropped at a `/kill`.
+#[test]
+fn a_piglin_eats_pork_and_drops_a_crossbow_and_helmet_it_took_up_at_death() {
+    let mut h = Harness::new();
+    let piglin = piglin_by_alex(&mut h);
+    let id = crate::common::asking::ask(&mut h, |ctx| ctx.entities().into_iter().find(|entity| entity.kind == "minecraft:piglin").map(|entity| entity.id)).expect("the piglin");
+    let (took, ticks) = dropped_for(&mut h, piglin, "minecraft:cooked_porkchop", [6.5, 65.5, 0.5]);
+    assert!(ticks[took..].iter().all(|sent| all::<MobEquipment>(sent).iter().all(|held| held.runtime_entity_id != piglin)), "pork is not held");
+    let (took, ticks) = dropped_for(&mut h, piglin, "minecraft:crossbow", [6.5, 65.5, -1.5]);
+    let held: Vec<Option<&str>> = all::<MobEquipment>(&ticks[took + 1]).iter().filter(|held| held.runtime_entity_id == piglin).map(|held| sapling_data::item_name(held.item.network_id.into())).collect();
+    assert_eq!(held, [Some("minecraft:crossbow")], "the crossbow in its main hand a tick on");
+    dropped_for(&mut h, piglin, "minecraft:golden_helmet", [6.5, 65.5, 1.5]);
+    h.remote.run(move |ctx| assert!(ctx.kill_entity(id)));
+    let left: Vec<RawPacket> = (0..3).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let mut dropped: Vec<Option<&str>> = all::<AddItemEntity>(&left).into_iter().map(|item| sapling_data::item_name(item.item.network_id.into())).collect();
+    dropped.sort();
+    assert_eq!(dropped, [Some("minecraft:crossbow"), Some("minecraft:golden_helmet")]);
 }
 
 /// bds-ah3nugget.txt: nuggets the actor threw lay 9 ticks before the piglin took them.

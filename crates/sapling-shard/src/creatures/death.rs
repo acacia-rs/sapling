@@ -164,8 +164,9 @@ fn remains(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> Vec<
 /// whether its main hand's item went with it.
 fn gear_to_let_go(world: &mut World, entity: Entity, kind: &str) -> (Vec<ItemStack>, bool) {
     let looting = world.get::<attacks::Slain>(entity).map(|slain| slain.1);
+    let picked = super::piglins::picked_up(world, entity);
     let (mut stacks, main_went) = super::spawn_gear::let_go(world, entity, kind, looting);
-    stacks.extend(super::piglins::picked_gold(world, entity));
+    stacks.extend(picked);
     (stacks, main_went)
 }
 

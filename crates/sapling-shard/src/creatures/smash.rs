@@ -2,9 +2,7 @@
 //! (`sapling_data::enchant::mace` has the rules, research/captures/bds-gameplay-findings.md the
 //! evidence). The struck mob flashes `MaceSmash`, dust rises where it stands, the hitter stops
 //! falling (its motion told as nought, its fall forgotten) and Wind Burst launches it, and the mobs
-//! around are shoved.
-// Players around are not shoved, as on BDS (bds-l1mace.txt). TODO: whether the hitter's pets are spared
-// was not drilled (the drill's wolf would not tame).
+//! around are shoved, but not players (bds-l1mace.txt) nor the hitter's pets (bds-o1pets.txt).
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
@@ -99,7 +97,8 @@ fn shove(world: &mut World, player: Entity, target: Entity, at: [f32; 3]) {
     let Some(layer) = world.get::<InLayer>(target).map(|layer| layer.0) else { return };
     let near = |body: &Body| (0..3).all(|axis| (body.at[axis] - at[axis]).abs() <= mace::SHOVE_REACH);
     let mut mobs = world.query_filtered::<(Entity, &InLayer, &Body, &Kind), With<Health>>();
-    let shoved: Vec<(Entity, Body, String)> = mobs.iter(world).filter(|(mob, in_layer, body, _)| in_layer.0 == layer && *mob != target && *mob != player && near(body)).map(|(mob, _, body, kind)| (mob, *body, kind.0.clone())).collect();
+    let mut shoved: Vec<(Entity, Body, String)> = mobs.iter(world).filter(|(mob, in_layer, body, _)| in_layer.0 == layer && *mob != target && *mob != player && near(body)).map(|(mob, _, body, kind)| (mob, *body, kind.0.clone())).collect();
+    shoved.retain(|(mob, ..)| !super::husbandry::is_owner(world, *mob, player));
     for (mob, body, kind) in shoved {
         let (dx, dz) = (body.at[0] - at[0], body.at[2] - at[2]);
         let apart = dx.hypot(dz);

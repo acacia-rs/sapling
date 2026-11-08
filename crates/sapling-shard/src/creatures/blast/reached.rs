@@ -1,10 +1,12 @@
 //! What a blast does to the mobs, vehicles and primed TNT it reaches (bds-blasts.txt, bds-c1blast.txt).
 
+use acacia_proto::packets::SetEntityMotion;
+use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 
 use super::{EYES, HARM, KNOCK, distance, seen};
 use crate::body::Body;
-use crate::components::InLayer;
+use crate::components::{InLayer, NetId};
 use crate::creatures::harm;
 use crate::creatures::health::{Cause, Health};
 use crate::entities;
@@ -68,5 +70,29 @@ pub(super) fn throw_primed(world: &mut World, layer: Entity, at: [f32; 3], reach
                 body.motion = std::array::from_fn(|axis| body.motion[axis] + push[axis]);
             }
         }
+    }
+}
+
+/// Falling blocks in a blast at `at` that reaches `reach` are pushed by its impact towards their
+/// middle, the new motion told at once (bds-o1blast.txt: a layer of 34 fit, the layer above as well
+/// with its height 0.74 under its last told).
+pub(super) fn throw_falling(world: &mut World, layer: Entity, at: [f32; 3], reach: f32) {
+    let falling: Vec<(Entity, u64, Body)> = world
+        .query_filtered::<(Entity, &InLayer, &NetId, &Body), With<crate::blocks::FallingBlock>>()
+        .iter(world)
+        .filter(|(_, in_layer, ..)| in_layer.0 == layer)
+        .map(|(entity, _, id, body)| (entity, id.0, *body))
+        .collect();
+    for (entity, id, its) in falling {
+        let Some(impact) = impact(world, layer, at, its.at, its.size, reach) else { continue };
+        let push = towards(at, [its.at[0], its.at[1] + its.size[1] / 2.0, its.at[2]], impact);
+        // BDS told, and next moved by, the pushed motion after a tick's gravity and drag.
+        let falls = crate::body::Physics::FALLING_BLOCK;
+        let motion: [f32; 3] = std::array::from_fn(|axis| (its.motion[axis] + push[axis] - if axis == 1 { falls.gravity } else { 0.0 }) * falls.air_drag);
+        if let Some(mut body) = world.get_mut::<Body>(entity) {
+            body.motion = motion;
+        }
+        let told = SetEntityMotion { runtime_entity_id: id, velocity: Vec3f { x: motion[0], y: motion[1], z: motion[2] }, tick: 0 };
+        entities::tell_viewers(world, entity, layer, its.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&told)]);
     }
 }

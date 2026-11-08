@@ -1,7 +1,7 @@
 //! Mobs that blow up, as BDS's creeper did (docs/research/mob-attacks.md, "Creepers"): lit near
 //! its prey, it burns a fuse down and bursts, hurting and throwing who is near and breaking blocks
 //! (docs/research/block-uses.md, "Blasts").
-// TODO: a falling block is not thrown (bds-a3creeper2.txt's one sample fits no rule); Blast Protection spares no mob's throw.
+// TODO: Blast Protection spares no mob's throw.
 
 mod reached;
 pub(super) mod rays;
@@ -12,7 +12,7 @@ use bevy_ecs::prelude::*;
 use sapling_api::{Difficulty, ExplosionEvent};
 
 use super::health::{Cause, Health};
-use reached::{blast_mob, harm_by, throw_primed};
+use reached::{blast_mob, harm_by, throw_falling, throw_primed};
 pub(super) use reached::{impact, towards};
 use crate::blocks;
 use crate::body::Body;
@@ -240,6 +240,7 @@ fn blast(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3],
     }
     crate::vehicles::blasted(world, layer, |world, feet, size| impact(world, layer, at, feet, size, reach).map(|impact| harm_by(impact, reach)));
     throw_primed(world, layer, at, reach);
+    throw_falling(world, layer, at, reach);
     let mut mobs = world.query::<(Entity, &InLayer, &Body, &Health, &NetId)>();
     let near: Vec<(Entity, u64, Body)> = mobs.iter(world).filter(|(_, in_layer, ..)| in_layer.0 == layer).map(|(mob, _, body, _, id)| (mob, id.0, *body)).collect();
     // The source's removal lands later in the tick; it is gone to the blast already.

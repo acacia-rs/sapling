@@ -276,7 +276,8 @@ pub(crate) fn tick(world: &mut World) {
             slimes::tick(world, entity, layer, id, &kind, &start);
         }
         afflictions::float(world, entity);
-        let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
+        let stepped = if hits::thrown_now(world, entity) { world.get::<Body>(entity).map(|body| (*body, Vec::new())) } else { entities::step(world, entity, layer, id, physics_of(&kind), 0.0) };
+        let Some((body, packets)) = stepped else { continue };
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets.clone());
         crate::blocks::tread_turtle_eggs(world, layer, &kind, body.at, body.on_ground, body.on_ground && !start.on_ground);
         if body.on_ground {

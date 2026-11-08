@@ -41,6 +41,10 @@ fn an_iron_golems_hit_throws_a_zombie_0_52_across_and_0_82_up_told_in_the_hit_ti
     let [x, up, z] = motions(&ticks[hit], zombie).into_iter().find(|[_, up, _]| *up > 0.8).unwrap();
     assert!((x.hypot(z) - 0.52).abs() < 1e-3 && (up - 0.820_099_06).abs() < 1e-5, "{x} {up} {z}");
     assert!(showed(&ticks[hit], zombie, Event::HurtAnimation), "told in the tick it was hurt");
+    // The golem ticks first, yet the zombie moves only a tick on (bds-j3knock.txt, sapling-j3slime.txt).
+    assert_eq!(motions(&ticks[hit], zombie).len(), 1, "told once in the hit's tick");
+    let [_, moved, _] = *motions(&ticks[hit + 1], zombie).first().expect("moved a tick on");
+    assert!((moved - (0.820_099_06 - 0.08) * 0.98).abs() < 1e-4, "{moved}");
 }
 
 #[test]

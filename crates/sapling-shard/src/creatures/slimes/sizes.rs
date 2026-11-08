@@ -25,12 +25,12 @@ const fn size(width: f32, height: f32, health: f32, pace: f32, touch: f32, hop: 
 }
 
 /// The packs' `slime_small`, `slime_medium` and `slime_large` groups. Hops as BDS's told them
-/// (bds-kinds2.txt, bds-player-omens.txt, bds-effects3.txt): a slime's not by its pace, and a magma
-/// cube's 0.1 higher a size. No large slime was drilled: its hop is a medium one's.
+/// (bds-kinds2.txt, bds-player-omens.txt, bds-effects3.txt, bds-j3slime.txt): a slime's 0.535 of its
+/// pace squared (the large one's 0.1926 with prey), and a magma cube's rise 0.1 higher a size.
 const SLIME: [Size; 3] = [
     size(0.52, 0.52, 1.0, 0.3, 0.0, 0.0482, 0.42),
     size(1.04, 1.04, 4.0, 0.4, 2.0, 0.0856, 0.42),
-    size(2.08, 2.08, 16.0, 0.6, 4.0, 0.0856, 0.42),
+    size(2.08, 2.08, 16.0, 0.6, 4.0, 0.1926, 0.42),
 ];
 const MAGMA_CUBE: [Size; 3] = [
     size(0.52, 0.52, 1.0, 0.6, 3.0, 0.1926, 0.52),
