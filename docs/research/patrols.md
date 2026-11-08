@@ -80,3 +80,9 @@ the second lagged to 15 to 22 off before closing in again in two of three runs [
 
 Undrillable naturally: a patrol wants a world 6000 s (100 minutes) old, then a 600-660 s wait, then
 a 21 in 100 roll that restarts the wait on a miss; a drill world is fresh on both sides.
+Tried once (`tt1patrol`, bds-tt1patrol.txt, fourteenth1t): the flat drill world's level.dat
+`currentTick` set to 140000 (7000 s) and restored after, `KEEP_WORLD=1`, both players creative at the
+spawn at midnight on easy, `/mobevent` patrols and events on, 480 s: no pillager came (32 natural
+monsters did: zombies, creepers, skeletons, spiders, two zombie horses). One run has about one 21 in
+100 roll, as the first wait is already over at that age. To see patrols, raise the rule's
+`spawn_chance` in the run's pack (memory bds-pack-override-probe) or run several such nights.
