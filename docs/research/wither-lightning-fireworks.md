@@ -211,6 +211,17 @@ same (`wither/heads.rs` `Rate`; sapling-leveldb actor_state.rs `WitherRecord`; t
 `off_easy_each_sixth_of_its_health_lost_halves_its_fire_rate_and_is_saved`). Sapling's wither hovered
 higher (skulls from y -6 against BDS's -16 to -18 over the actor at -26); fixed by the flight above.
 
+Head aim (`ab1wither2`, research/captures/bds-ab1wither2.txt; fourteenth1ab): the wither among three cows held
+by slowness and resistance in the open, the players creative far off. It took a cow (`TargetEid`) as it
+spawned. Spawning, body and head spun together, then the body stopped and the head took random looks. Once
+it flew, the head yaw told (`MoveEntityDelta` rot_z) stayed within 5 degrees of the yaw to its prey on 483 of
+566 told moves, turning 20 a told move (10 a tick) to get there, while the body yaw went its own way (up to
+170 off). After a volley's blue skull the head went back to the body for about a second, then turned back
+at 10 a tick; the told pitch stayed 0 or 8, not aimed. Sapling's middle head did not turn; now it turns 10 a
+tick towards its prey across, or back to the body with none (`wither/heads.rs` `look`; test
+`the_withers_middle_head_aims_its_told_head_yaw_at_its_prey`). Not ported: the look back after a volley and
+the random looks while spawning.
+
 ## Fireworks
 
 Code: `crates/sapling-shard/src/fireworks.rs`, `fireworks/{item,recipes,burst}.rs`,
