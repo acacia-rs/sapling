@@ -577,9 +577,15 @@ A dolphin swims as above (`creatures/dolphins.rs`, `Physics::SWIMMER`, `InLiquid
 spots of water up to 10 off, or at its hitter, which it bites as other hunters do (`provoked`,
 `fights=swims`). Its anger passes to dolphins within 16, shows `ANGRY` and ends 25 s after its
 last bite (`creatures/dolphins/anger.rs`); on land it hops and dries out as above
-(`creatures/dolphins/ashore.rs`, `Physics::DOLPHIN`). It holds 4800 ticks of breath (`breath=`)
-and here never runs out; it does not breach, bob under the surface, turn 10 degrees at most,
-flock or swim with players, and takes its prey in the hit's tick, where BDS's took it a tick on.
+(`creatures/dolphins/ashore.rs`, `Physics::DOLPHIN`), each hop turning its body to a random yaw.
+It turns 10 degrees a tick at most and is pushed along its heading, bobbing down 0.086 with its
+feet in the top water cell (`creatures/dolphins/swim.rs`). It holds 4800 ticks of breath
+(`breath=`, health/breath.rs), shows no bubbles, and drowns at 0; under 150 it shows `SWIMMING`
+and swims up at up to 0.2 a tick, breaching (`SPRINTING`, 0.4 along the way it moves most on top
+of its motion, then 0.62 up) once its eyes reach the top water cell, and now and then breaches at
+random where 6 cells ahead are open surface (`creatures/dolphins/breath.rs`, fourteenth1z). It
+breathes 4 ticks into a breach where BDS's did at 2 (sapling's mobs breathe by where the tick
+began). It does not flock or swim with players (no capture shows either).
 
 A fish on land hops as BDS's cod did (`creatures/swimming/ashore.rs`, research/captures/bds-flop.txt),
 and is heard `flop` a tick after each hop from where it hopped, as bds-t2water.txt's cod was

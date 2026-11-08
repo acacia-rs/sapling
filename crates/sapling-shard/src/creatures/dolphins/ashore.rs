@@ -3,9 +3,10 @@
 //! the fall of a tick on the ground) and up to 0.2 across, falling as `Physics::DOLPHIN`. Out of
 //! water 2400 ticks (`drying_out_timer`'s 120 s) it dries out, hurt 1 a hit with no cause
 //! (`dolphin_dried`'s `damage_over_time`; the hit's guard spaces them 10 ticks), until water or
-//! rain wets it again.
-// TODO: BDS also turns it to a random yaw each hop; its first dry hit came 2401 ticks after it
-// landed and 2407 after it was summoned in the air, so where the count starts is not pinned.
+//! rain wets it again. Each hop turns its body to a random yaw, not the hop's way (f14edolphin's
+//! `rot_y`, told only with a hop).
+// TODO: its first dry hit came 2401 ticks after it landed and 2407 after it was summoned in the
+// air, so where the count starts is not pinned.
 
 use bevy_ecs::prelude::*;
 
@@ -33,8 +34,15 @@ pub(super) fn flop(world: &mut World, entity: Entity, body: &Body) {
             let mut dice = world.get_resource_or_insert_with(Dice::default);
             let mut across = || (dice.fraction() * 2.0 - 1.0) * HOP_ACROSS;
             let hop = [body.motion[0] + across(), HOP_UP, body.motion[2] + across()];
+            let yaw = dice.fraction() * 360.0 - 180.0;
             if let Some(mut body) = world.get_mut::<Body>(entity) {
                 body.throw(hop);
+            }
+            if let Some(mut legs) = world.get_mut::<crate::creatures::legs::Legs>(entity) {
+                legs.yaw = yaw;
+            }
+            if let Some(mut told) = world.get_mut::<crate::sync::Told>(entity) {
+                told.face_body(yaw);
             }
             super::super::swimming::heard_flop(world, entity, body);
         }

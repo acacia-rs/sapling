@@ -14,6 +14,8 @@ pub(crate) enum GameEvent {
     SculkTouch,
     ProjectileLand,
     ProjectileShoot,
+    /// An item landing (bds-w1pops.txt).
+    HitGround,
     /// A food eaten (BDS's `eat`) or a drink drunk (`drink`), both 8, heard from the eyes as it was
     /// finished (research/captures/bds-v2tp.txt, bds-x2drink.txt).
     Eat,
@@ -62,6 +64,7 @@ impl GameEvent {
             GameEvent::EntityDie => 18,
             GameEvent::Step => 22,
             GameEvent::Explode => 27,
+            GameEvent::HitGround => 31,
             GameEvent::FluidPickup => 29,
             GameEvent::FluidPlace => 30,
             GameEvent::LightningStrike => 34,
@@ -80,7 +83,7 @@ impl GameEvent {
     pub(crate) fn frequency(self) -> u8 {
         match self {
             GameEvent::Step | GameEvent::SculkTouch => 1,
-            GameEvent::ProjectileLand => 2,
+            GameEvent::ProjectileLand | GameEvent::HitGround => 2,
             GameEvent::ProjectileShoot => 3,
             GameEvent::EntityDamage => 7,
             GameEvent::Eat | GameEvent::Drink => 8,

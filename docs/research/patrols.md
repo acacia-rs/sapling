@@ -95,3 +95,12 @@ sit in `__brarchive` (unchecked: no load log names it), or another filter fails 
 (`spawns_on_surface` at 24-48 blocks, `player_in_village_filter`). Next: put the rule in its own
 behaviour pack enabled in the world's `world_behavior_packs.json`, with a marker change that shows
 (e.g. `population_control` or a cheap visible rule) to prove it loaded.
+
+Separate pack tried (fourteenth1z, bds-z1patrol.txt): `z1patrol` in `behavior_packs/`, listed in the
+world's `world_behavior_packs.json`, with the three `pillager_patrol` rules at `spawn_chance` 100 and
+`delay_filter` 20-30 s, and a `functions/z1mark.mcfunction` run from the console. The log showed it
+loaded (`Pack Stack - [00] z1patrol`, "Successfully executed 1 function entries"). Same aged night
+(`currentTick` 140000, `tt1patrol`, 480 s): still no pillager, among 69 natural mobs. So the rule
+loads and still never spawns here: suspect a filter the flat world fails (`spawns_on_surface`, or
+`player_in_village_filter`) or a patrol spawner that ignores the JSON chance. Next: a gdb breakpoint
+on the delay/patrol spawner, or the same pack on a normal-generated world.

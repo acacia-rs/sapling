@@ -348,6 +348,14 @@ A held squid and glow squid hit by the survival actor, each let go after
   tests in fourteenth1w.rs. Left: `SquidMoveAwayFromGroundGoal` (prio 1; start 0x5933980, a way off
   the ground at 0.0025 x the 0x7211530 ray's), the `minecraft:squid_flee_particle` every tenth flee
   tick (no packet in the capture).
+- Read further 2026-11-08 (fourteenth1z, Linux ELF; vtable 0xeefca20): `SquidMoveAwayFromGroundGoal`'s
+  canUse (0x5933820) and canContinueToUse (0x59338d0) are both "has `CollisionFlagComponent`" (type
+  hash 0xf3f3a3cc), so it runs while the squid is pressed against a block. Its start takes the
+  out-of-water goal's random way (0x7211330), normalises it and casts it 5 blocks (0x7211530): blocked,
+  it casts the way turned either side and keeps the one that runs farther; the way it keeps, times
+  0.0025 on each axis (0x13e2850, 0x13e2854, 0x1098b84), is its new swim way: next to still. Its tick
+  and stop are empty. Not ported: sapling's bodies keep no collision flag and no capture shows it.
+  The flee particle is the client's: BDS sent no packet for it in f14esquid, as sapling sends none.
 
 ## Mobs that fight their own way
 

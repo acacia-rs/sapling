@@ -287,6 +287,7 @@ fn give_health(world: &mut World, entity: Entity, kind: &str, left: Option<f32>,
         let max = genes::health(kind, world.get::<genes::Gene>(entity).copied(), max);
         let max = world.get::<strides::Strode>(entity).map_or(max, |strode| strode.0.health);
         let mut health = Health::new(max, left, burning);
+        health.hold_air(sapling_data::mob_traits(kind).breath);
         health.wear(super::worn::skin(kind), Default::default());
         world.entity_mut(entity).insert(health);
     }
