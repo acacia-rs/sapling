@@ -2,9 +2,10 @@
 //! them as any body does, pushed by those who walk into them; a detector rail is pressed under
 //! one (detectors.rs), an activator rail throws out a minecart's rider and primes a TNT minecart, which bursts at
 //! the end of its fuse or when it falls hard (docs/research/vehicles.md "Minecarts").
-// TODO: a TNT minecart's blast is not scaled by its speed and nothing but flint and steel, an
-// activator rail and a fall sets one off; a cart's yaw does not follow its rail.
+// TODO: a shot neither hits nor sets off a TNT minecart; a cart's yaw does not follow its rail.
 
+use acacia_proto::packets::{EntityEvent, EntityEventEventId, SetEntityData};
+use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use bevy_ecs::prelude::*;
 use sapling_api::{BlockPos, Face};
 
@@ -68,6 +69,20 @@ pub(super) fn prime(world: &mut World, cart: Entity, fuse: i32) -> bool {
     true
 }
 
+/// [`prime`] by a hurt from fire or lava, which BDS showed with `MinecartTntPrimeFuse`.
+pub(super) fn prime_burning(world: &mut World, cart: Entity) {
+    let (Some(id), Some(layer), Some(body)) = (world.get::<NetId>(cart).map(|id| id.0), world.get::<InLayer>(cart).map(|layer| layer.0), world.get::<Body>(cart).copied()) else { return };
+    if prime(world, cart, FUSE) {
+        let shown = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::MinecartTntPrimeFuse, data: 0, fire_at_position: None };
+        entities::tell_viewers(world, cart, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&shown)]);
+    }
+}
+
+fn fuse_shown(id: u64, fuse: i32) -> bytes::Bytes {
+    let item = MetadataDictionaryItem { key: Key::FuseLength, r#type: Type::Int, legacy_type: 2, value: Value::Default(Plain::Int(fuse)) };
+    sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
+}
+
 /// How a cart rolls this tick: its drag, its rider's push, the solid blocks at its rail's ends.
 fn how(world: &World, cart: Entity, kind: &str, rail: &Rail, level: &sapling_world::World) -> Roll {
     let driver = world.get::<crate::riding::Seats>(cart).and_then(|seats| seats.0.first().copied());
@@ -123,11 +138,15 @@ pub(super) fn tick(world: &mut World) {
         let Some(mut state) = world.get::<Cart>(cart).copied() else { continue };
         let landed_hard = kind == TNT_MINECART && body.on_ground && state.fallen > HARD_FALL;
         state.fallen = if body.on_ground { 0.0 } else { state.fallen - body.motion[1].min(0.0) };
-        state.fuse = state.fuse.map(|fuse| fuse - 1);
+        // A fuse is shown each tick down to 0, and bursts the tick after (research/captures/bds-fftnt.txt).
         if landed_hard || state.fuse.is_some_and(|fuse| fuse <= 0) {
             crate::riding::forget(world, cart);
             creatures::explode_primed(world, cart, layer, body.at, BLAST, crate::tnt::wreck(world, layer));
             continue;
+        }
+        state.fuse = state.fuse.map(|fuse| fuse - 1);
+        if let Some(fuse) = state.fuse {
+            entities::tell_viewers(world, cart, layer, body.at.map(|c| c.floor() as i32), vec![fuse_shown(id, fuse)]);
         }
         if let Ok(mut entity) = world.get_entity_mut(cart) {
             entity.insert((state, super::detectors::Settled));

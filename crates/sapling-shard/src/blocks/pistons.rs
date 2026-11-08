@@ -1,9 +1,7 @@
 //! Pistons, by what BDS shows of them (docs/research/redstone.md, "Pistons"): a powered one
 //! pushes up to 12 blocks over four ticks, breaking what has no body, and an unpowered one draws
 //! back, a sticky one bringing the block before it. Its block entity tells clients where it is.
-// TODO: a piston that could not push does not try again
-// until its power changes; a container open on a screen is moved unseen;
-// what breaks bursts a tick later than on BDS, and what stood on a pushed block falls a tick later.
+// TODO: what stood on a pushed block falls a tick later than on BDS.
 
 use acacia_proto::nbt::{List, Str, Value};
 use acacia_proto::types::Vec3f;
@@ -53,8 +51,10 @@ struct Move {
     is_powered: bool,
 }
 
+/// The pistons going, and the powered ones that could not push, which try again each tick: BDS's
+/// went a tick after what blocked them went, 2 and 13 blocks off (research/captures/bds-ffpush.txt).
 #[derive(Resource, Default)]
-pub(crate) struct Pistons(Vec<Move>);
+pub(crate) struct Pistons(Vec<Move>, Vec<(Entity, BlockPos)>);
 
 fn block_name(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(u32, &'static str, &'static str)> {
     let level = level(world, layer).filter(|level| level.in_height(y) && level.is_loaded(send::column([x, y, z])))?;
@@ -116,17 +116,30 @@ pub(crate) fn power(world: &mut World, layer: Entity, pos: BlockPos, is_powered:
         going.is_powered = is_powered;
         return;
     }
+    world.resource_mut::<Pistons>().1.retain(|at| *at != (layer, pos));
     if is_extended(world, layer, pos, &piston) == is_powered {
         return;
     }
+    if !start(world, layer, pos, &piston, is_powered) {
+        world.resource_mut::<Pistons>().1.push((layer, pos));
+    }
+}
+
+/// Starts the piston at `pos` going out or back; false where a push is blocked.
+fn start(world: &mut World, layer: Entity, pos: BlockPos, piston: &Piston, is_powered: bool) -> bool {
     let (taken, broken) = match is_powered {
         true => match plan::pushed(world, layer, pos, piston.front) {
             Some(lists) => lists,
-            None => return,
+            None => return false,
         },
         false if piston.is_sticky => plan::drawn(world, layer, pos, back(piston.front)),
         false => Default::default(),
     };
+    // What it breaks bursts in the tick it starts, ahead of its block entity, and goes a tick on (bds-n2pistons.txt).
+    let bursts: Vec<_> = level(world, layer).map(|level| broken.iter().map(|at| send::destroy_particles(level.registry(), *at, level.block(at[0], at[1], at[2]))).collect()).unwrap_or_default();
+    if !bursts.is_empty() {
+        send::to_viewers(world, layer, pos, &bursts);
+    }
     send::keep_entity(world, layer, pos, &arm(pos, if is_powered { EXPANDING } else { RETRACTING }, piston.is_sticky, &taken, &broken));
     if is_powered {
         // Only the arm pushes halfway, in the tick it starts, before it shows: what is behind a
@@ -135,6 +148,18 @@ pub(crate) fn power(world: &mut World, layer: Entity, pos: BlockPos, is_powered:
     }
     let started = world.resource::<Tick>().0;
     world.resource_mut::<Pistons>().0.push(Move { layer, pos, extends: is_powered, started, stages_done: 1, taken, broken, carried: Vec::new(), is_powered });
+    true
+}
+
+/// Lets each blocked piston that is still a piston try its push again.
+fn retry_blocked(world: &mut World) {
+    let Some(blocked) = world.get_resource_mut::<Pistons>().map(|mut pistons| std::mem::take(&mut pistons.1)).filter(|blocked| !blocked.is_empty()) else { return };
+    for (layer, pos) in blocked {
+        let Some(piston) = piston_at(world, layer, pos) else { continue };
+        if !is_extended(world, layer, pos, &piston) && !start(world, layer, pos, &piston, true) {
+            world.resource_mut::<Pistons>().1.push((layer, pos));
+        }
+    }
 }
 
 /// Takes the block at `from` to `to` as a moving block, for the piston at `piston`, listing what
@@ -194,7 +219,7 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
     let front = piston.front.neighbour(pos);
     match going.stages_done {
         1 => {
-            going.broken.iter().for_each(|at| updates::pop(world, layer, *at));
+            going.broken.iter().for_each(|at| updates::pop_unshown(world, layer, *at));
             let mut shown = Vec::new();
             if !going.extends {
                 let air = level(world, layer)?.registry().air_id();
@@ -202,6 +227,9 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
                 shown.push((front, air));
             }
             let step = if going.extends { piston.front } else { back(piston.front) };
+            for from in &going.taken {
+                crate::containers::carried_off(world, layer, *from, step.neighbour(*from), 2);
+            }
             going.carried = going.taken.clone().into_iter().filter_map(|from| carry(world, layer, from, step.neighbour(from), pos, going.extends, &mut shown)).collect();
             updates::loosened::around(world, layer, &going.taken);
             if going.extends {
@@ -238,6 +266,7 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
 
 /// Moves on every piston that is going, and turns back those whose power changed meanwhile.
 pub(crate) fn tick(world: &mut World) {
+    retry_blocked(world);
     let now = world.resource::<Tick>().0;
     let Some(mut pistons) = world.get_resource_mut::<Pistons>().filter(|pistons| !pistons.0.is_empty()) else { return };
     let mut going = std::mem::take(&mut pistons.0);

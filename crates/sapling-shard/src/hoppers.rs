@@ -4,8 +4,8 @@
 //! above or, when there is none, takes an item lying on it, whole if it fits. A move sets the
 //! cooldown; a hopper that moved nothing tries again the next tick. They move in BDS's order
 //! (order.rs). Their slots are a container's (containers.rs); a jukebox takes a disc from one
-//! and gives it to the one under it once its song is over (blocks/jukebox.rs).
-// TODO: composters are not fed or emptied.
+//! and gives it to the one under it once its song is over (blocks/jukebox.rs); a composter is fed
+//! by one facing down onto it and gives its bone meal to the one under it (blocks/composter.rs).
 
 mod order;
 
@@ -169,6 +169,12 @@ fn push(world: &mut World, layer: Entity, pos: BlockPos, slots: &mut [Option<Hel
         take_one(&mut slots[slot]);
         return true;
     }
+    if facing == Face::Down && crate::blocks::is_composter(world, layer, target) {
+        // The first slot whose item rots goes in, others skipped (research/captures/bds-ffcomp.txt).
+        let Some(slot) = (0..slots.len()).find(|slot| slots[*slot].as_ref().is_some_and(|held| crate::blocks::feed_composter(world, layer, target, &held.stack.name))) else { return false };
+        take_one(&mut slots[slot]);
+        return true;
+    }
     if !takes_items(world, layer, target) {
         return false;
     }
@@ -234,6 +240,15 @@ fn pull_disc(world: &mut World, layer: Entity, jukebox: BlockPos, slots: &mut [O
     }
 }
 
+/// Takes the bone meal of the ready composter at `composter` into the hopper's slots.
+fn pull_meal(world: &mut World, layer: Entity, composter: BlockPos, slots: &mut [Option<Held>]) -> bool {
+    let Some(meal) = crate::blocks::meal_for_hopper(world, layer, composter) else { return false };
+    insert(world, slots, &meal, |_| true) > 0 && {
+        crate::blocks::drain_composter(world, layer, composter);
+        true
+    }
+}
+
 /// One move of the hopper at `pos`: a push, then a pull; true if either moved an item.
 fn step(world: &mut World, layer: Entity, pos: BlockPos, facing: Face) -> bool {
     let Some(mut slots) = containers::slots_at(world, layer, pos) else { return false };
@@ -243,6 +258,7 @@ fn step(world: &mut World, layer: Entity, pos: BlockPos, facing: Face) -> bool {
         Some(kind) if kind.holds_items() => pull_from_above(world, layer, pos, &mut slots, kind),
         Some(_) => false,
         None if crate::blocks::is_jukebox(world, layer, above) => pull_disc(world, layer, above, &mut slots),
+        None if crate::blocks::is_composter(world, layer, above) => pull_meal(world, layer, above, &mut slots),
         None => pull_lying(world, layer, pos, &mut slots),
     };
     containers::set_slots(world, layer, pos, slots);

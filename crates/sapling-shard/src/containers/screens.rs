@@ -157,6 +157,18 @@ pub(crate) fn workstation(world: &World, player: Entity) -> Option<(Workstation,
     }
 }
 
+/// A container a piston carries off `from` to `to`, landing in `lands_in` ticks: those looking in
+/// stop unseen, their screens left for them to shut, and it is heard shut once landed, as BDS's
+/// was (research/captures/bds-ffpush.txt).
+pub(crate) fn carried_off(world: &mut World, layer: Entity, from: BlockPos, to: BlockPos, lands_in: u64) {
+    let Some(viewers) = opened(world).into_inner().chests.get_mut(&(layer, from)).map(|chest| std::mem::take(&mut chest.viewers)).filter(|viewers| !viewers.is_empty()) else { return };
+    for viewer in viewers {
+        stop_viewing(world, viewer);
+    }
+    lid::heard_shut_at(world, layer, from, to, lands_in);
+    slots::release(world, layer, from);
+}
+
 /// Ends a player's look into a block's screen. The last one to leave a container shuts its lid,
 /// and its slots are let go unless it ticks.
 pub(crate) fn close(world: &mut World, player: Entity) {

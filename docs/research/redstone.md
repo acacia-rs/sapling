@@ -438,6 +438,16 @@ No decompile: all of this is from the captures.
   `no_pickaxe`), and a pot broken but by a shot is not `cracked`, so it drops itself (`blocks/loot.rs`).
 - Not drilled: a piston put
   beside power already on, power going while it moves, the place a real client's piston faces.
+- Drilled 2026-11-08 (`bds_command_probe ffpush`, research/captures/bds-ffpush.txt): a powered piston that
+  could not push (obsidian 2 out, 13 stones) went once what blocked it was gone, its state 1 the tick after
+  the `setblock` and its moves the tick after that; sapling waited for its power to change (fixed: blocked
+  pistons try again each tick, `pistons::retry_blocked`). A chest pushed while the actor had it open sent no
+  `ContainerClose`: it moved with its items, `chest.closed` was heard at its new cell 5 ticks after it landed,
+  and the actor's own close later got the usual answer; sapling shut the screen as the server's doing (fixed:
+  `containers::carried_off`). What a piston breaks bursts in the tick it starts, ahead of its block entity
+  (bds-n2pistons.txt); sapling burst it a tick on (fixed). An armour stand on a stone pushed east went
+  +0.5, +0.5 (and down 0.08) in the start tick, +0.75 the next, then fell off; sapling's dropped into the
+  moving block, not carried (open). Tests in tests/integration/fourteenth1f.rs.
 - A mob in the way (2026-11-04, `bds_command_probe n2pistonmob`, research/captures/bds-n2pistonmob.txt; cows
   with slowness, though two wandered before it took): a cow before a pushed stone went to 0.45 past the stone's
   new cell in one move, in the tick the stone started (sapling: the same place a tick later); a cow on an up

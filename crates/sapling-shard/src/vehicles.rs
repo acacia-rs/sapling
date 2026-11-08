@@ -1,12 +1,12 @@
 //! Boats and minecarts (docs/research/vehicles.md): entities placed from their items, moved by
 //! their own physics (boats.rs, carts.rs) unless a driver's client moves them (riding/drive.rs),
 //! hit until they break into their item, carrying goods (cargo.rs) and pulling in mobs that bump
-//! into them (pull.rs). Who rides them is riding.rs's.
-// TODO: lava and fire do not break them.
+//! into them (pull.rs), and burning up in fire and lava (burning.rs). Who rides them is riding.rs's.
 
 mod blasts;
 mod boats;
 mod bumps;
+mod burning;
 mod cargo;
 mod carts;
 mod command_cart;
@@ -176,6 +176,7 @@ pub(crate) fn tick(world: &mut World) {
     }
     blasts::tick(world);
     boats::tick(world);
+    burning::tick(world);
     carts::tick(world);
     cargo::take_up(world);
     pull::tick(world);
@@ -197,11 +198,23 @@ pub(crate) fn used_on(world: &mut World, player: Entity, vehicle: Entity) -> boo
     let sneaking = world.get::<Motion>(player).is_some_and(|motion| motion.pose.sneaking);
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
     match kind.as_str() {
-        TNT_MINECART if held.as_deref() == Some("minecraft:flint_and_steel") => carts::prime(world, vehicle, carts::FUSE),
+        TNT_MINECART if matches!(held.as_deref(), Some("minecraft:flint_and_steel" | "minecraft:fire_charge")) => carts::prime(world, vehicle, carts::FUSE) && {
+            ignite_heard(world, vehicle);
+            true
+        },
         CHEST_BOAT if sneaking => cargo::open(world, player, vehicle),
         "minecraft:chest_minecart" | "minecraft:hopper_minecart" => cargo::open(world, player, vehicle),
         _ => false,
     }
+}
+
+/// The pack's `ignite` of a TNT minecart lit by hand, at the cart (research/captures/bds-fftnt.txt).
+fn ignite_heard(world: &mut World, cart: Entity) {
+    let (Some(layer), Some(body), Some(id)) = (world.get::<InLayer>(cart).map(|layer| layer.0), world.get::<Body>(cart).copied(), world.get::<NetId>(cart).map(|id| id.0)) else { return };
+    let [x, y, z] = body.at;
+    let position = acacia_proto::types::Vec3f { x, y: y + crate::riding::wire_lift(TNT_MINECART), z };
+    let heard = acacia_proto::packets::LevelSoundEvent { sound_id: "ignite".into(), position, extra_data: -1, entity_type: TNT_MINECART.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    entities::tell_viewers(world, cart, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&heard)]);
 }
 
 /// A player hit `vehicle` for `damage`: it shakes, and breaks once its integrity is gone, at

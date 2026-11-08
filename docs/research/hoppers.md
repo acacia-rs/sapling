@@ -57,7 +57,9 @@ Decompiled; what was drilled since is under "Drilled".
      try **target slots 0..n in order**, `_tryMoveInItem(..., count 1, face)`. The first success decrements the
      hopper slot and calls `setContainerChanged` on both sides, then returns true.
    - facing 0 with a **composter** below (block id 14ccdf110, inf: same helpers as the composter code
-     148b34c90/148b34a90): each slot in turn feeds 1 item to the composter instead.
+     148b34c90/148b34a90): each slot in turn feeds 1 item to the composter instead. Drilled 2026-11-08
+     (bds-ffcomp.txt, block-uses.md "Note block, composter"): what does not rot is skipped, and nothing
+     goes in at 7; sapling does both, and a composter's bone meal is pulled from above (`hoppers.rs`).
 5. **`_tryMoveInItem`** 1429cd870 (BDSRE): `target.canPushInItem(slot, face, item)` (Container vt+0x100) must
    pass. A non-empty slot takes the item only if it is the same item and below max stack, filled up to
    `min(count, max - have)`. An empty slot takes `count`. Target slots are tried in index order and the first

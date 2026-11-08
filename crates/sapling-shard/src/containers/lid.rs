@@ -70,6 +70,16 @@ pub(super) fn set(world: &mut World, layer: Entity, halves: &[BlockPos], open: b
     late_sounds::play_later(world, late[usize::from(!open)], layer, pos, heard);
 }
 
+/// The shutting sound of the container at `from`, heard at `to` once its own wait and `after` more
+/// ticks are over, without a lid shown: one a piston carries.
+pub(super) fn heard_shut_at(world: &mut World, layer: Entity, from: BlockPos, to: BlockPos, after: u64) {
+    let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
+    let (registry, id) = (level.registry(), level.block(from[0], from[1], from[2]));
+    let Some(([_, shutting], late)) = registry.get(id).and_then(|state| sounds(state.name)) else { return };
+    let heard = blocks::sound(shutting, registry, to, id);
+    late_sounds::play_later(world, after + late[1], layer, to, heard);
+}
+
 /// Shows the barrels turned a tick ago, with what they hold, as BDS did.
 pub(crate) fn show_turned_barrels(world: &mut World) {
     let now = world.resource::<Tick>().0;
