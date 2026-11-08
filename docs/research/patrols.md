@@ -104,3 +104,10 @@ loaded (`Pack Stack - [00] z1patrol`, "Successfully executed 1 function entries"
 loads and still never spawns here: suspect a filter the flat world fails (`spawns_on_surface`, or
 `player_in_village_filter`) or a patrol spawner that ignores the JSON chance. Next: a gdb breakpoint
 on the delay/patrol spawner, or the same pack on a normal-generated world.
+
+Age ruled out (fourteenth1ab, bds-ab1patrol.txt): the same `z1patrol` pack (loaded, `Pack Stack - [00]
+z1patrol`), `currentTick` set to 140000 in level.dat (restored after) and `time query gametime` 140400 at the
+start, so the level was 7020 s old: `time set` moves only the day time (a run with `time set 138000` alone
+read gametime 2943). 240 s at midnight with the event on: no pillager among 36 natural mobs (zombies,
+skeletons, spiders, creepers, a witch, a zombie horse). So the world age gate is passed and the rule
+loads; what stops it is still unread. Next: gdb on the patrol spawner, or a normally generated world.

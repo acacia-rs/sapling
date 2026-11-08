@@ -2,7 +2,7 @@
 //! at under 150 (`SwimUpForBreathGoal`, Linux canUse 0xbdcfe90) it shows `SWIMMING` and swims
 //! up at up to 0.2 a tick, as BDS's four in `f14edolphin` did at `Air` 148
 //! (research/captures/bds-f14edolphin.txt; under a cap it stayed pressed to it and drowned). With its
-//! eyes in the top water cell it breaches: `SPRINTING` (never cleared after) and 0.4 along the
+//! eyes [`UP_THE_TOP`] up the top water cell it breaches: `SPRINTING` (never cleared after) and 0.4 along the
 //! way it moves most, on top of its motion, then 0.62 up the tick after, `SWIMMING` cleared
 //! (bds-dolphin.txt 51885: told (-0.0968, 0, -0.4422), then moved (-0.098, 0.62, -0.45)). Out of
 //! water its head draws its whole `Air` back at once. At random (`random_breach`, interval 50,
@@ -22,6 +22,9 @@ const LOW: i16 = 150;
 /// Its push up while it swims for breath: 0.2 a tick at most in water's 0.8.
 const RISE: f32 = 0.04;
 const EYES: f32 = 0.51;
+/// It breaches once its eyes are this far up the top water cell: BDS's breached with its eyes 0.48 up
+/// it (bds-dolphin.txt 51885) and breathed 2 ticks on, its eyes out after the leap's first tick.
+const UP_THE_TOP: f32 = 0.4;
 const BOUND: f32 = 0.4;
 const LEAP: f32 = 0.62;
 const EVERY: u32 = 50;
@@ -77,8 +80,8 @@ pub(super) fn swim_up(world: &mut World, entity: Entity, layer: Entity, body: &B
         }
         return false;
     }
-    let eyes = [body.at[0], body.at[1] + EYES, body.at[2]].map(|c| c.floor() as i32);
-    if swim::is_top(world, layer, eyes) {
+    let eyes = [body.at[0], body.at[1] + EYES, body.at[2]];
+    if swim::is_top(world, layer, eyes.map(|c| c.floor() as i32)) && eyes[1] - eyes[1].floor() >= UP_THE_TOP {
         bound(world, entity, layer, body);
         return true;
     }

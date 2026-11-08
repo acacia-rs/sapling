@@ -354,8 +354,16 @@ A held squid and glow squid hit by the survival actor, each let go after
   out-of-water goal's random way (0x7211330), normalises it and casts it 5 blocks (0x7211530): blocked,
   it casts the way turned either side and keeps the one that runs farther; the way it keeps, times
   0.0025 on each axis (0x13e2850, 0x13e2854, 0x1098b84), is its new swim way: next to still. Its tick
-  and stop are empty. Not ported: sapling's bodies keep no collision flag and no capture shows it.
+  and stop are empty.
   The flee particle is the client's: BDS sent no packet for it in f14esquid, as sapling sends none.
+- Ported 2026-11-08 (fourteenth1ab): the cast's rules read off the start (turn by cos 0.866, sin 0.5,
+  flat; one side clear wins, both blocked the farther, neither a coin), and bds-ab1squid.txt (three
+  squids in a pool 5 across, 60 s) shows it: pressed to a wall, a squid crept along it at 0.0018 a told
+  move (every other tick) for seconds, against 0.0146 swimming. Sapling counts a squid pressed while
+  its box grown by 1e-3 meets a block, short of fleeing, and the idle goal picks at once on release
+  (squids/pressed.rs; test `a_squid_against_a_wall_creeps_along_it_at_a_tenth_of_its_swim`).
+  sapling-ab1squid.txt crept on 701 of 2360 told moves where BDS's did on 354 of 2953: the touch test
+  is looser than BDS's collision flag.
 
 ## Mobs that fight their own way
 

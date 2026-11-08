@@ -94,8 +94,8 @@ fn a_dolphin_swims_up_for_breath_at_air_148_and_breaches_or_drowns_under_a_cap()
     let rose = opened.iter().position(|seen| seen.flags.is_some_and(|flags| flags & swimming != 0)).unwrap();
     let breached = opened.iter().skip(rose).position(|seen| seen.flags.is_some_and(|flags| flags & MetadataFlags1::SPRINTING.0 != 0)).expect("breaches");
     let breathed = opened.iter().skip(rose).position(|seen| seen.air == Some(4800)).expect("breathes again");
-    // BDS's breathed 2 ticks into the breach; sapling's mobs breathe by where the tick began, so later.
-    assert!(breached < 80 && (breached + 2..=breached + 4).contains(&breathed), "breached {breached}, breathed {breathed} ticks after it rose");
+    // BDS's breathed 2 ticks into the breach (bds-f14edolphin.txt; fourteenth1ab).
+    assert!(breached < 80 && breathed == breached + 2, "breached {breached}, breathed {breathed} ticks after it rose");
     let drowned: Vec<usize> = sent.iter().enumerate().filter(|(_, sent)| seen(sent, capped).hurt == Some(9)).map(|(tick, _)| tick).collect();
     assert!(drowned.len() >= 3 && drowned.windows(2).all(|pair| pair[1] - pair[0] == 10), "drowned every 10 ticks: {drowned:?}");
 }

@@ -9,9 +9,11 @@
 //! the hitter, takes the way of `SquidFleeGoal` (Linux BDS 0x5933130): 3 a second, less a fifth of
 //! each block past 5, straight away from the hitter's eyes (research/captures/bds-f14esquid.txt).
 //! It flees while in water and within 10 of the hitter, the idle goal picking at once after; above
-//! its band a rising flight loses its climb and keeps its way across. Out of water: ashore.rs.
+//! its band a rising flight loses its climb and keeps its way across. Out of water: ashore.rs; pressed
+//! against a block, short of fleeing: pressed.rs.
 
 mod ashore;
+mod pressed;
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
@@ -48,18 +50,19 @@ pub(super) struct Squid {
     /// The player it flees, and the goal it runs out of water.
     fleeing: Option<Entity>,
     ashore: Option<Ashore>,
+    pressed: bool,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if KINDS.contains(&kind) {
-        world.entity_mut(entity).insert(Squid { way: [0.0; 3], idle: KEEPS, facing: [0.0; 2], fleeing: None, ashore: None });
+        world.entity_mut(entity).insert(Squid { way: [0.0; 3], idle: KEEPS, facing: [0.0; 2], fleeing: None, ashore: None, pressed: false });
     }
 }
 
 /// Before its move: in water a squid swims on its way, now and then another; out of it it turns.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
     let (Some(body), Some(squid)) = (world.get::<Body>(entity).copied(), world.get::<Squid>(entity)) else { return false };
-    let (mut way, idle, facing, fleeing, was_ashore) = (squid.way, squid.idle, squid.facing, squid.fleeing, squid.ashore);
+    let (mut way, idle, facing, fleeing, was_ashore, was_pressed) = (squid.way, squid.idle, squid.facing, squid.fleeing, squid.ashore, squid.pressed);
     if body.liquid() != Some(Liquid::Water) {
         let Some(goal) = world.get::<Layer>(layer).map(|layer| ashore::goal(&layer.world, &body)) else { return true };
         let pitch = ashore::aim(way)[1];
@@ -69,7 +72,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
         let target = [ashore::aim(way)[0], pitch];
         let facing = std::array::from_fn(|axis| facing[axis] + (target[axis] - facing[axis]) * TURNS);
         if let Some(mut squid) = world.get_mut::<Squid>(entity) {
-            (squid.way, squid.facing, squid.fleeing, squid.ashore, squid.idle) = (way, facing, None, Some(goal), KEEPS);
+            (squid.way, squid.facing, squid.fleeing, squid.ashore, squid.idle, squid.pressed) = (way, facing, None, Some(goal), KEEPS, false);
         }
         face(world, entity, facing);
         return true;
@@ -77,8 +80,12 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
     let still = fleeing.filter(|hitter| flees_from(world, *hitter, &body));
     let (ended, fleeing) = (fleeing.is_some() && still.is_none(), still);
     let band = world.get::<Layer>(layer).map(|layer| band(&layer.world, &body));
+    let pressed = fleeing.is_none() && world.get::<Layer>(layer).is_some_and(|layer| pressed::touches(&layer.world, &body));
+    if pressed && !was_pressed {
+        way = pressed::way(world, layer, &body);
+    }
     let above = band.is_some_and(|[_, high]| body.at[1] > high && way[1] > 0.0);
-    let picks = fleeing.is_none() && (idle >= KEEPS || above || ended);
+    let picks = fleeing.is_none() && !pressed && (idle >= KEEPS || above || ended || was_pressed);
     if fleeing.is_some() && above {
         way[1] = 0.0;
     }
@@ -92,7 +99,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
         facing[1] + (-across.atan2(speed[1]).to_degrees() - facing[1]) * TURNS,
     ];
     if let Some(mut squid) = world.get_mut::<Squid>(entity) {
-        (squid.way, squid.idle, squid.facing, squid.fleeing, squid.ashore) = (way, if picks || fleeing.is_some() { 0 } else { idle + 1 }, facing, fleeing, None);
+        (squid.way, squid.idle, squid.facing, squid.fleeing, squid.ashore, squid.pressed) = (way, if picks || fleeing.is_some() { 0 } else { idle + 1 }, facing, fleeing, None, pressed);
     }
     if let Some(mut moving) = world.get_mut::<Body>(entity) {
         moving.fly(std::array::from_fn(|axis| speed[axis] - body.motion[axis] * WATER_DRAG));

@@ -2,8 +2,11 @@
 //! middle one shoots its prey in volleys of four at its fire rate, the fourth a blue one; off easy each side
 //! one takes a player at random within 30 across and 8 up or down that it sees, shoots it and
 //! looks again 40 to 59 ticks on, else again 10 to 19 ticks on; head 1's 17th look in a row with none
-//! shoots a blue skull at random near.
-// TODO: the middle head holds still while it moves.
+//! shoots a blue skull at random near. The middle head (the yaw told as its head's) turns 10 degrees a
+//! tick at most towards its prey across, and back to the body with none (research/captures/bds-ab1wither2.txt:
+//! held cows, 483 of 566 told moves within 5 degrees of the prey's yaw, turning 20 a told move).
+// TODO: BDS's looked back to the body for a second after a volley's blue skull, and took random looks
+// while it was spawning; not ported.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -37,6 +40,7 @@ const MIDDLE_UP: f32 = 3.0;
 const SIDE_UP: f32 = 2.2;
 const ASIDE: f32 = 1.3;
 const MOB_EYES: f32 = 0.85;
+const HEAD_TURN: f32 = 10.0;
 
 #[derive(Default)]
 pub(super) struct Heads {
@@ -45,6 +49,8 @@ pub(super) struct Heads {
     targets: [Option<Entity>; 3],
     idle: u32,
     pub(super) rate: Rate,
+    /// The middle head's yaw, in degrees, once it has looked.
+    look: Option<f32>,
 }
 
 /// The middle head's ticks between shots (`firerate`) and the health it next halves under
@@ -91,6 +97,13 @@ fn mouth(body: &Body, yaw: f32, head: usize) -> [f32; 3] {
     }
     let angle = (yaw + head as f32 * 180.0 - 180.0).to_radians();
     [body.at[0] + angle.cos() * ASIDE, body.at[1] + SIDE_UP, body.at[2] + angle.sin() * ASIDE]
+}
+
+/// The middle head's yaw a tick on from `head`: [`HEAD_TURN`] at most towards `prey` across, or the body's `yaw`.
+fn look(head: f32, yaw: f32, body: &Body, prey: Option<[f32; 3]>) -> f32 {
+    let wanted = prey.map_or(yaw, |feet| (body.at[0] - feet[0]).atan2(feet[2] - body.at[2]).to_degrees());
+    let turn = (wanted - head + 180.0).rem_euclid(360.0) - 180.0;
+    head + turn.clamp(-HEAD_TURN, HEAD_TURN)
 }
 
 /// Where a skull at `target` is aimed: its position (a player's eyes, a mob's feet) plus half its eye
@@ -149,6 +162,11 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
     let before = heads.targets;
     let prey = prey(world, wither, layer, body);
     heads.targets[0] = prey.map(|(player, _)| player);
+    let look = look(heads.look.unwrap_or(yaw), yaw, body, prey.map(|(_, feet)| feet));
+    heads.look = Some(look);
+    if let Some(mut told) = world.get_mut::<crate::sync::Told>(wither) {
+        told.face(yaw, look);
+    }
     if let Some((target, feet)) = prey.filter(|_| now >= heads.next[0]) {
         heads.shots += 1;
         let blue = heads.shots % BLUE_EVERY == 0;
