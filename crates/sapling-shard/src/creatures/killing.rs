@@ -20,6 +20,10 @@ pub(super) fn kill(world: &mut World, id: EntityId) -> bool {
         return true;
     }
     if world.get::<Creature>(entity).is_none() || NO_DEATH.contains(&kind.as_str()) {
+        // A `/kill`ed item dies as a mob does to sculk (research/captures/bds-w1pops.txt: frequency 15).
+        if kind == "minecraft:item" {
+            crate::blocks::vibrate_next_tick(world, layer, body.at.map(|c| c.floor() as i32), crate::blocks::GameEvent::EntityDie, None);
+        }
         mobs::remove(world, entity);
         return true;
     }
