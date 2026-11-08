@@ -18,7 +18,7 @@ const TADPOLES: (u32, u32) = (2, 5);
 /// Tadpoles come this far down from the spawn's cell, into the water.
 const DOWN: f32 = 0.5;
 
-fn afloat(level: &Level, [x, y, z]: BlockPos) -> bool {
+pub(super) fn afloat(level: &Level, [x, y, z]: BlockPos) -> bool {
     name_at(level, [x, y - 1, z]).is_some_and(|under| WATER.contains(&under))
 }
 

@@ -41,7 +41,7 @@ fn unique(world: &World, entity: Entity) -> i64 {
     world.get::<crate::tags::UniqueId>(entity).map_or(-1, |id| id.0)
 }
 
-fn griefs(world: &World, layer: Entity) -> bool {
+pub(super) fn griefs(world: &World, layer: Entity) -> bool {
     world.get::<crate::components::Layer>(layer).is_some_and(|layer| layer.world.level().rules.on(GRIEFING))
 }
 

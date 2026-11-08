@@ -43,7 +43,7 @@ fn may_love(world: &World, entity: Entity, kind: &str, item: &str) -> bool {
     let (Some(rules), Some(raised)) = (sapling_data::husbandry(kind), world.get::<Raised>(entity)) else { return false };
     let healthy = world.get::<crate::creatures::Health>(entity).is_none_or(|health| health.left() >= health.max());
     // A turtle with an egg does not fall in love (JAVA `Turtle.canFallInLove`).
-    rules.breed.contains(&item) && !raised.is_baby() && !super::nesting::is_nesting(world, entity) && raised.kept.in_love == 0 && raised.kept.breed_cooldown == 0 && (!rules.breed_tame || raised.is_tamed()) && (!rules.breed_healthy || healthy)
+    rules.breed.contains(&item) && !raised.is_baby() && !super::nesting::is_nesting(world, entity) && !super::frog_spawn::is_spawning(world, entity) && raised.kept.in_love == 0 && raised.kept.breed_cooldown == 0 && (!rules.breed_tame || raised.is_tamed()) && (!rules.breed_healthy || healthy)
 }
 
 /// The mob is fed `item` by `player`: it falls in love if it may, shown eating the item's id and
@@ -154,7 +154,7 @@ fn breed(world: &mut World, parent: Entity, mate: Entity, layer: Entity, kind: &
         shown::flag(world, one, Flags::INLOVE, false);
     }
     let Some(body) = world.get::<Body>(parent).copied() else { return };
-    if super::nesting::conceives(world, parent, kind) {
+    if super::nesting::conceives(world, parent, kind) || super::frog_spawn::conceives(world, parent, kind) {
         return leave_experience(world, layer, body.at);
     }
     if let Some((_, egg)) = LAYS_EGG.iter().find(|(mother, _)| *mother == kind) {

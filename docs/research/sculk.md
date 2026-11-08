@@ -293,8 +293,15 @@ mob's cell is its feet's, a player's its eyes'. A drink is `drink` (14, 8), no l
 `creatures/death.rs` (`hear_hurt`, `die`), `vitals.rs` `heard_from_eyes`, `blocks/sculk/events.rs`; test
 `a_mob_hurt_and_a_mob_killed_are_heard`. Drinking and blasts were heard already (`thirteenth2x.rs`).
 
-Not ported (REMAINING4, Sculk): a mob's steps (BDS's pig first vibrated after 0.51-0.63 blocks walked, its
-zombies after 0.87 and 1.79; the player's stride rule does not fit, and no rule was found); a summoned TNT's
+A mob's steps (fourteenth2v, bds-f14v2steps-gdb.txt: VibrationListener slot 2 0xc4e8c30 under gdb, the posts
+traced to the step system 0x7539970): a mob on the ground counts 3 a block walked across (constant 0x1098af0;
+up and down count only on two blocks, read as ladder and scaffolding, not ported) and posts `entity_move` (22)
+from its feet when the count passes the next whole one; BDS's zombie walking at 0.114 a tick posted every
+third tick, 0.342 apart. b1sculk/b1steps' first-heard distances (0.51 to 1.79 walked) were read off the
+sensors' activation, which comes after the vibration's travel, and b1steps' zombies started 8.1 from the sensors.
+Sapling: creatures/footfalls.rs `step`, test fourteenth2v `a_cow_walking_past_a_sensor_is_heard_stepping`.
+
+Not ported (REMAINING4, Sculk): a summoned TNT's
 `prime_fuse`; item entities hurt or killed by a blast vibrate on BDS; and of several events reaching a sensor in
 one tick BDS takes the nearest (items hurt at 3.5 were heard over the blast at 7.5) where sapling keeps the first.
 

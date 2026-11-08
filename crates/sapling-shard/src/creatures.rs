@@ -33,6 +33,7 @@ mod evented;
 mod fireballs;
 mod flight;
 mod floating;
+mod footfalls;
 mod frogs;
 mod gaze;
 mod genes;
@@ -290,6 +291,7 @@ pub(crate) fn tick(world: &mut World) {
         if body.on_ground {
             crate::blocks::tread_ore(world, layer, body.at);
         }
+        footfalls::step(world, entity, layer, &start, &body);
         if thinks {
             if !creaking::is_frozen(world, entity) && !warden::is_busy(world, entity) {
                 hunting::strike(world, entity, layer, id, &kind, &body);

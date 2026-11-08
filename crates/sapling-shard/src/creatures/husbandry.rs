@@ -11,6 +11,7 @@ mod bedtime;
 mod breeding;
 mod clicks;
 mod fired;
+mod frog_spawn;
 mod guarding;
 mod knots;
 mod leads;
@@ -62,6 +63,7 @@ pub(super) fn adopt(world: &mut World, entity: Entity, kind: &str, stored: Optio
     world.entity_mut(entity).insert(raised);
     if let Some((_, compound)) = stored {
         nesting::adopt(world, entity, kind, compound);
+        frog_spawn::adopt(world, entity, kind, compound);
         allays::adopt(world, entity, kind, compound);
     }
     if baby {
@@ -91,6 +93,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         || allays::steer(world, entity, layer, kind)
         || shoulders::steer(world, entity, layer, kind)
         || nesting::steer(world, entity, layer, kind)
+        || frog_spawn::steer(world, entity, layer, kind)
         || sniffing::steer(world, entity, layer, kind)
         || guarding::chase(world, entity, layer, kind)
         || breeding::court(world, entity, layer, kind)
@@ -112,6 +115,7 @@ pub(crate) fn tick(world: &mut World) {
         products::graze(world, entity, &kind, now);
         sniffing::tick(world, entity, &kind, now);
         nesting::tick(world, entity, &kind, now);
+        frog_spawn::tick(world, entity, now);
         leads::hold(world, entity, now);
         allays::check_ambient(world, entity, &kind);
     }

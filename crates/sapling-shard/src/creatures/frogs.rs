@@ -6,8 +6,9 @@
 //! gravity 0.08; on landing it keeps a tenth of its speed across.
 // The run-up is fitted: BDS's waits from a landing were 7.3 to 9.2 s, sapling's 7.1 to 9.0
 // (research/captures/bds-n3frogs.txt, sapling-n3frogs.txt).
-// TODO: a frog does not eat small slimes and magma cubes (tongue `FlagsExtended` bit 38, prey pulled
-// 0.75 to it; bds-g14frog.txt) nor lay spawn (PREGNANT, then LAYING_EGG 41 ticks, onto water).
+//! It eats small slimes and magma cubes (eating.rs) and lays frogspawn (husbandry/frog_spawn.rs).
+
+mod eating;
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
@@ -96,6 +97,10 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64) -
     let (Some(stage), Some(body)) = (world.get::<Frog>(entity).map(|frog| frog.stage), world.get::<Body>(entity).copied()) else { return false };
     let now = world.resource::<Tick>().0;
     let cell = body.at.map(|c| c.floor() as i32);
+    if matches!(stage, Stage::Sitting(_)) && body.liquid() != Some(Liquid::Water) && eating::steer(world, entity, layer, id, &body) {
+        croak(world, entity, layer, cell, id, false);
+        return true;
+    }
     let next = match stage {
         Stage::Leaping([x, _, z], since) if now > since + 1 && body.on_ground => {
             fling(world, entity,[x * LANDING_KEEPS, -GRAVITY, z * LANDING_KEEPS]);

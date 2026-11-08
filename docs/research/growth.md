@@ -179,6 +179,17 @@ chance: cows summoned 3 over it 0 of 5 (bds-b1tread.txt); cows walked off a ledg
 landing on it (bds-b1tread3.txt, only its rows at positive cells placed right). No rule was found; sapling's
 mobs tread none (REMAINING4).
 
+Fourteenth2v, decompiled and read under gdb (bds-f14v2tread*.txt with bds_gdb.py breakpoints): the rule is
+Java's. The fall-distance update (Linux 0xb2df080), on the tick a mob lands with a fall over 0 and no
+`CurrentlyImmuneToFallDamageComponent`, calls `transformOnFall` (slot 51) of the block it stands on with its fall
+distance. FarmBlock's (0xc563f30) needs a mob (`ActorTypeComponent` & 0x100), `nextFloat() < fall - 0.5`, a box
+of width² × height at least 0.512, and `mobGriefing` for all but players (players: an ability check); a
+cancellable event then makes it dirt. The b1tread drills' low counts were their placing: rows at negative
+cells (`format!("{x}.5")`) put the mobs on the stone beside the farmland, a summoned cow can be a calf (box 0.45
+by 0.65, too small), and cows left on their ledge wandered off it; every cow that came down on the farmland
+from 2.7 or more trod it. Sapling: creatures/footfalls.rs `tread`, test fourteenth2v
+`a_cow_dropped_onto_farmland_treads_it_and_a_calf_or_a_griefless_cow_does_not`.
+
 ## Sapling
 
 Sapling keeps track of the crops, stems, berry bushes, cane, cactus, bamboo and farmland that

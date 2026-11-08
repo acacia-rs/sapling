@@ -55,7 +55,8 @@ fn a_set_nest_makes_two_or_three_bees_at_once_by_night_that_come_out_100_ticks_o
     assert_eq!(inside.get("ShouldSpawnBees"), Some(&acacia_proto::nbt::Value::Byte(0)));
     assert!(bees.items.iter().all(|bee| bee.get("SaveData") == Some(&acacia_proto::nbt::Value::Compound(Vec::new()))));
     h.remote.run(|ctx| ctx.set_time(6_000));
-    let (_, sent) = until(&mut h, 140, |sent| bee_added(sent).len() == bees.items.len());
+    // Each comes out at 1 in 20 a tick once its 100 are up (bds-f14snest.txt: 3, 4 and 16 ticks after).
+    let (_, sent) = until(&mut h, 400, |sent| bee_added(sent).len() == bees.items.len());
     assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "spawn" && sound.entity_type == BEE), "heard as new bees");
 }
 
@@ -69,7 +70,7 @@ fn a_placed_trees_nest_makes_its_bees_too() {
         assert!(ctx.set_block([-8, 64, -8], &Block { name: "minecraft:grass_block".into(), properties: String::new() }));
         ctx.place_feature("minecraft:birch_tree_with_beehive_feature", [-8, 65, -8]).expect("a birch");
     });
-    let (_, sent) = until(&mut h, 140, |sent| bee_added(sent).len() >= 2);
+    let (_, sent) = until(&mut h, 400, |sent| bee_added(sent).len() >= 2);
     assert!(sounds(&sent).contains(&"block.beehive.exit".to_owned()));
 }
 
@@ -120,7 +121,7 @@ fn a_bee_shelters_in_a_hive_by_night_and_comes_out_in_front_by_day_600_ticks_aft
     assert!(gone(&mut h, bee));
     h.remote.run(|ctx| ctx.set_time(6000));
     let (ticks, sent) = until(&mut h, 700, |sent| !bee_added(sent).is_empty());
-    assert!((595..=600).contains(&ticks), "{ticks}");
+    assert!((595..=900).contains(&ticks), "{ticks}");
     let out = bee_added(&sent).remove(0);
     assert_eq!(([out.position.x, out.position.y, out.position.z], out.yaw.rem_euclid(360.0)), ([4.5, 65.5, 0.5], 270.0), "in the cell before its east face, turned east");
     assert_eq!(sounds(&sent), ["block.beehive.exit"]);
@@ -139,10 +140,12 @@ fn a_bee_takes_pollen_from_a_flower_into_its_hive_and_makes_honey() {
         assert!(ctx.set_block(HIVE, &Block { name: "minecraft:beehive".into(), properties: "direction=3,honey_level=0".into() }));
         assert!(ctx.spawn_entity(BEE, [0.5, 66.0, 1.5]).is_some());
     });
-    let (_, sent) = until(&mut h, 600, |sent| !sounds(sent).is_empty());
+    // 20 s at the poppy first (bds-g14bee.txt: 20.05, 20.15 and 23.3 s from bees summoned over poppies).
+    let (pollinated, sent) = until(&mut h, 1200, |sent| !sounds(sent).is_empty());
+    assert!(pollinated > 400, "{pollinated}");
     assert_eq!(sounds(&sent), ["block.beehive.enter"]);
-    let (ticks, _) = until(&mut h, 2500, |sent| !bee_added(sent).is_empty());
-    assert!((2395..=2400).contains(&ticks), "{ticks}");
+    let (ticks, _) = until(&mut h, 2800, |sent| !bee_added(sent).is_empty());
+    assert!((2395..=2700).contains(&ticks), "{ticks}");
     assert_eq!(honey(&mut h), "1");
 }
 

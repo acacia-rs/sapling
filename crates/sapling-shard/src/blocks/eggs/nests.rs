@@ -49,6 +49,21 @@ pub(crate) fn nest_near(world: &World, layer: Entity, at: [f32; 3], across: i32,
     nearest(world, layer, at, across, up, is_nest)
 }
 
+fn is_spawn_site(level: &super::Level, pos: BlockPos) -> bool {
+    name_at(level, pos) == Some(AIR) && super::frogspawn::afloat(level, pos)
+}
+
+/// The nearest open cell over water within `across` and `up` of `at`: where a frog lays.
+pub(crate) fn spawn_site_near(world: &World, layer: Entity, at: [f32; 3], across: i32, up: i32) -> Option<BlockPos> {
+    nearest(world, layer, at, across, up, is_spawn_site)
+}
+
+/// Frogspawn laid at `pos`, still open over water; false where it cannot be.
+pub(crate) fn lay_spawn(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    let Some(id) = level(world, layer).filter(|level| is_spawn_site(level, pos)).and_then(|level| level.registry().find(super::frogspawn::SPAWN, "")) else { return false };
+    send::set(world, layer, pos, id)
+}
+
 /// A turtle digging at `pos`: the sand under it flies from the cell's corner
 /// (research/captures/bds-nesting.txt).
 pub(crate) fn dig(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
