@@ -86,3 +86,12 @@ spawn at midnight on easy, `/mobevent` patrols and events on, 480 s: no pillager
 monsters did: zombies, creepers, skeletons, spiders, two zombie horses). One run has about one 21 in
 100 roll, as the first wait is already over at that age. To see patrols, raise the rule's
 `spawn_chance` in the run's pack (memory bds-pack-override-probe) or run several such nights.
+
+Override tried twice (fourteenth1w, bds-w1patrol.txt and bds-w1patrol2.txt): the same aged night with
+a loose `behavior_packs/vanilla_1.18.0/spawn_rules/pillager_patrol.json` (the brarchive rule with
+`spawn_chance` 100, then also `delay_filter` 20-30), removed after. 480 s each, no pillager either
+time (36 and 44 natural monsters). Either BDS ignores a loose `spawn_rules/` in a pack whose rules
+sit in `__brarchive` (unchecked: no load log names it), or another filter fails on the flat world
+(`spawns_on_surface` at 24-48 blocks, `player_in_village_filter`). Next: put the rule in its own
+behaviour pack enabled in the world's `world_behavior_packs.json`, with a marker change that shows
+(e.g. `population_control` or a cheap visible rule) to prove it loaded.

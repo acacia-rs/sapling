@@ -307,6 +307,9 @@ tick after its lower half was set to air, and a torch popping when its block was
 `/kill`ed were heard as `entity_die` (15), from the cell of the item heard, a tick on as a mob's death
 (`creatures/killing.rs`). Tests in fourteenth1w.rs. Not ported: an item thrown by a `destroy` landing beside the
 sensor was heard at frequency 2 (`hit_ground`) half a second after it was dropped; sapling has no `hit_ground`.
+sapling-w1pops.txt matches the door, torch, destroy and both kills (12, 12, 12, 15, 15). Two misfits, both
+known: BDS's setup `/setblock`s raised 13 (`block_place`, the sourceless `/setblock` line), and in the last
+part BDS's sensor, busy from the landing's 2, missed the next `destroy` that sapling's heard at 12.
 
 ## Unverified
 
