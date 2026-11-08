@@ -133,14 +133,14 @@ fn breath() -> Vec<String> {
 /// A full inventory (stone in every slot) with two empty buckets in hand, then one, then two with a free slot.
 fn buckets() -> Vec<String> {
     let mut out = start();
-    out.extend(owned(["gamemode survival @s", "setblock 2 -61 0 glass", "!look 2 0.3 0", ""]));
+    out.extend(owned(["gamemode survival @s", "setblock 2 -61 0 glass", ""]));
     for (count, free) in [(2, false), (1, false), (2, true)] {
         out.extend(owned(["clear @s", "give @s stone 2304", "setblock 2 -60 0 water", ""]));
         out.push(hold(&format!("bucket {count}")));
         if free {
             out.push("replaceitem entity @s slot.inventory 5 air".into());
         }
-        out.extend(owned(["", "!use", "", "", "kill @e[type=item]", ""]));
+        out.extend(owned(["", "!click 2 0 0", "", "", "kill @e[type=item]", ""]));
     }
     out.extend(owned(["clear @s", "gamemode creative @s", "setblock 2 -60 0 air", ""]));
     out
