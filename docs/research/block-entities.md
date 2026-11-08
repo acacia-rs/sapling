@@ -172,6 +172,11 @@ ticking area's two had left theirs: most likely one of those wandered within 8 o
 with `doMobSpawning` on, by night as by day, each `SaveData {}` with `TicksLeftToStay` 100, and clears the flag; the
 bees come out ~100 ticks on with `spawn` and `block.beehive.exit`. Linux BDS's tick (BeehiveBlockActor vtable slot 43,
 0xce714a0) also asks a flag of the level's (Level+0x328, byte 2) that was not named. Sapling: bees/hives.rs.
+Each bee whose stay is up comes out by day and dry at 1 in 20 a tick (the occupant tick 0xce705e0, `nextInt(20)`,
+decompiled by fourteenth2v), so a hive's bees come out ticks apart (f14snest: 3, 4 and 16 ticks after their 100).
+They stayed out 24 to 35 s because a bee takes pollen after 400 ticks within 1 of its flower (MoveToBlockGoal::tick
+0x5277e80 counts ticks inside `goal_radius` against `stay_duration` 20, read as seconds; bds-g14bee's bees over
+poppies took 20.05, 20.15 and 23.3 s, bds-beesout's 19 s from arriving), not sapling's old 20 ticks.
 
 ## Open checks (one bot session on BDS)
 

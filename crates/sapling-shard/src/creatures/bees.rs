@@ -1,34 +1,33 @@
 //! Bees, by their pack's goals and as BDS's flew in the `keephive` and `bees` drills
 //! (research/captures/bds-keephive.txt, bds-bees.txt). One flies as an allay does (wings.rs) but
 //! pushed 0.98 x 0.15² a tick. Without pollen, by day and dry, it looks for a flower within 6
-//! across and 4 up or down with even odds a tick, flies to it, and after 20 ticks there carries
+//! across and 4 up or down with even odds a tick, flies to it, and after 20 s there carries
 //! pollen. With pollen, or by night or in rain, it flies to its hive (the one it last came out
 //! of), or the nearest within 16 across and 10 up or down, and goes in (hives.rs), growing crops on
-//! the way (crops.rs). A bee that
-//! finds no flower in 180 s goes home. Hit, it goes for its hitter for 25 s with every bee within
-//! 20, as one within 16 of a broken hive goes for the nearest player within 10; its sting
-//! poisons on normal (10 s) and hard (18 s), and it dies 10 to 60 s after.
-// TODO: it keeps no 22-block bound about its hive; a full hive
-// does not send it looking for another; its pollen and home are not kept with it in its column;
-// it bobs up and down as BDS's did not.
+//! the way (crops.rs). Wandering, it keeps within 22 of its hive. A bee that finds no flower in
+//! 180 s goes home. Hit, it stings (stings.rs).
+// TODO: a full hive does not send it looking for another (`hive_full`, 5 to 20 s); its pollen and
+// home are not kept with it in its column; it bobs up and down as BDS's did not.
 
 mod crops;
 mod hives;
+mod stings;
 
 use acacia_proto::types::{
     MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain,
 };
 use bevy_ecs::prelude::*;
-use sapling_api::{BlockPos, Difficulty};
+use sapling_api::BlockPos;
 
-use super::{hunting, wings};
+use super::wings;
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick};
-use crate::entities::Kind;
+use crate::components::{Layer, NetId, Tick};
 
 use hives::is_hive;
 pub(crate) use hives::{broken as hive_broken, taken as bees_in};
+use stings::disturbed;
+pub(super) use stings::{is_spent, spread_anger, stung};
 
 pub(super) const KIND: &str = "minecraft:bee";
 /// The blocks it takes pollen from (`look_for_food`'s `target_blocks`).
@@ -40,28 +39,23 @@ const FLOWERS: &[&str] = &[
 /// How far across and up or down it looks for a flower, and the odds a tick that it looks.
 const FLOWERS_WITHIN: [i32; 2] = [6, 4];
 const LOOKS: f32 = 0.5;
-/// It takes pollen this near the flower's spot, over this many ticks; the spot is this far over
-/// the flower's bottom.
+/// It takes pollen after this many ticks this near the flower's spot, counted while near and kept
+/// while it drifts off (`MoveToBlockGoal::tick` 0x5277e80; BDS's bees took 19 to 23 s, bds-g14bee.txt,
+/// bds-beesout.txt); the spot is this far over the flower's bottom.
 const AT_FLOWER: f32 = 1.0;
-const POLLINATES: u32 = 20;
+const POLLINATES: u32 = 400;
 const NECTAR: &str = "minecraft:has_nectar";
 const OVER_FLOWER: f32 = 0.25;
 /// Ticks it looks for flowers before it goes home (`find_flower_timeout`), and how far it looks
 /// for a hive.
 const GIVES_UP: u64 = 3600;
 const HIVES_WITHIN: [i32; 2] = [16, 10];
+/// Wandering, it keeps this near its hive (`minecraft:home`'s `restriction_radius`, `move_towards_home_restriction`).
+const HOME_BOUND: f32 = 22.0;
 /// It goes into a hive this near its middle (`go_home`'s `goal_radius`): BDS's three bees went in
 /// 0.75, 1.06 and 1.2 from it (research/captures/bds-keephive-world.txt). `find_hive`'s 0.633
 /// cannot be reached beside a hive.
 const AT_HOME: f32 = 1.2;
-/// Ticks from its sting to its death, the least and the most.
-const PERISHES: [u32; 2] = [200, 1200];
-/// Its anger reaches bees this near; a broken hive angers those this near it at players this near them.
-const ANGER_SPREADS: f32 = 20.0;
-const HIVE_SENSES: f32 = 16.0;
-const PICKS_PLAYER: f32 = 10.0;
-/// Poison its sting gives on normal and hard.
-const POISONS: [u32; 2] = [200, 360];
 /// The sky darkens this far by night (`sleep::rest`'s night).
 const NIGHT: u8 = 4;
 /// It flies at this height over its prey's feet, where its sting reaches.
@@ -160,7 +154,7 @@ fn forage(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool
         if let Some(mut bee) = world.get_mut::<Bee>(entity) {
             (bee.homing, bee.since) = (true, now);
         }
-        return wings::steer(world, entity, layer, KIND);
+        return wander(world, entity, layer, body);
     }
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
     let still = flower.filter(|pos| level.registry().get(level.block(pos[0], pos[1], pos[2])).is_some_and(|state| is_flower(state.name, level.liquid(pos[0], pos[1], pos[2]), level)));
@@ -178,19 +172,30 @@ fn forage(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool
         if let Some(mut bee) = world.get_mut::<Bee>(entity) {
             (bee.flower, bee.stayed) = (None, 0);
         }
-        return wings::steer(world, entity, layer, KIND);
+        return wander(world, entity, layer, body);
     };
     let spot = [flower[0] as f32 + 0.5, flower[1] as f32 + OVER_FLOWER, flower[2] as f32 + 0.5];
     let there = distance(body.at, spot) < AT_FLOWER;
     let Some(mut bee) = world.get_mut::<Bee>(entity) else { return false };
+    if bee.flower != Some(flower) {
+        bee.stayed = 0;
+    }
     bee.flower = Some(flower);
-    bee.stayed = if there { bee.stayed + 1 } else { 0 };
-    let pollinated = bee.stayed >= POLLINATES;
-    if pollinated {
+    bee.stayed += u32::from(there);
+    if bee.stayed >= POLLINATES {
         (bee.nectar, bee.flower, bee.stayed, bee.since) = (true, None, 0, now);
         super::properties::set(world, entity, NECTAR, 1, nectar_sounds());
     }
     wings::fly_at(world, entity, KIND, spot)
+}
+
+/// Its random flight, back towards its hive while it is more than [`HOME_BOUND`] off.
+fn wander(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool {
+    let home = world.get::<Bee>(entity).and_then(|bee| bee.home);
+    match home.filter(|home| distance(body.at, middle(*home)) > HOME_BOUND) {
+        Some(home) => wings::fly_at(world, entity, KIND, middle(home)),
+        None => wings::steer(world, entity, layer, KIND),
+    }
 }
 
 /// The sounds BDS sent with a bee's `has_nectar` (bds-beesout.txt): those of its pollen group.
@@ -217,63 +222,6 @@ fn home(world: &mut World, entity: Entity, layer: Entity, body: &Body) -> bool {
         return true;
     }
     wings::fly_at(world, entity, KIND, middle(hive))
-}
-
-/// A hunter swung at `prey` (hit or not, as `bitten`): a bee's sting poisons on normal and hard,
-/// and the bee dies [`PERISHES`] after, hunting no more.
-pub(super) fn stung(world: &mut World, bee: Entity, prey: Entity, bitten: bool) {
-    if world.get::<Bee>(bee).is_none() {
-        return;
-    }
-    let poison = match world.resource::<Settings>().0.difficulty {
-        Difficulty::Normal => Some(POISONS[0]),
-        Difficulty::Hard => Some(POISONS[1]),
-        _ => None,
-    };
-    if let Some(ticks) = poison.filter(|_| bitten) {
-        crate::vitals::afflict(world, prey, "poison", ticks);
-    }
-    let after = PERISHES[0] + world.get_resource_or_insert_with(Dice::default).roll(PERISHES[1] - PERISHES[0] + 1);
-    let now = world.resource::<Tick>().0;
-    if let Some(mut bee) = world.get_mut::<Bee>(bee) {
-        bee.perishes = Some(now + u64::from(after));
-    }
-}
-
-/// Whether the bee stung and hunts no more.
-pub(super) fn is_spent(world: &World, bee: Entity) -> bool {
-    world.get::<Bee>(bee).is_some_and(|bee| bee.perishes.is_some())
-}
-
-/// Bees within `reach` of `at` in `layer`, but `but`, that have not stung.
-fn bees_near(world: &mut World, layer: Entity, at: [f32; 3], reach: f32, but: Option<Entity>) -> Vec<(Entity, u64, Body)> {
-    world
-        .query::<(Entity, &InLayer, &NetId, &Kind, &Body, &Bee)>()
-        .iter(world)
-        .filter(|(entity, in_layer, _, kind, body, bee)| in_layer.0 == layer && kind.0 == KIND && Some(*entity) != but && bee.perishes.is_none() && distance(body.at, at) <= reach)
-        .map(|(entity, _, id, _, body, _)| (entity, id.0, *body))
-        .collect()
-}
-
-/// A hunter took `player` for its prey: if a bee, so does every bee within 20 of it (`broadcastAnger`).
-pub(super) fn spread_anger(world: &mut World, bee: Entity, layer: Entity, at: [f32; 3], player: Entity) {
-    if world.get::<Bee>(bee).is_none() {
-        return;
-    }
-    for (other, id, body) in bees_near(world, layer, at, ANGER_SPREADS, Some(bee)) {
-        hunting::provoke(world, other, layer, id, KIND, &body, player);
-    }
-}
-
-/// The hive at `pos` was broken: each bee within 16 goes for the nearest player within 10 of it.
-fn disturbed(world: &mut World, layer: Entity, pos: BlockPos) {
-    for (bee, id, body) in bees_near(world, layer, middle(pos), HIVE_SENSES, None) {
-        let players = crate::components::in_world(world).into_iter().filter(|player| world.get::<InLayer>(*player).is_some_and(|in_layer| in_layer.0 == layer) && crate::vitals::is_mortal(world, *player));
-        let nearest = players.filter_map(|player| Some((player, distance(world.get::<Position>(player)?.feet, body.at)))).filter(|(_, far)| *far <= PICKS_PLAYER).min_by(|a, b| a.1.total_cmp(&b.1));
-        if let Some((player, _)) = nearest {
-            hunting::provoke(world, bee, layer, id, KIND, &body, player);
-        }
-    }
 }
 
 /// Bees whose time after a sting is up die, and hives let their bees out.

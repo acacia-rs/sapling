@@ -8,9 +8,10 @@
 //! A hive whose entity says `ShouldSpawnBees` (generated nests, and hives set by command) makes 2 or 3
 //! bees inside on its first tick with `doMobSpawning` on, night or day (`BeehiveBlockActor::tick`, Linux 0xce714a0;
 //! research/captures/bds-f14snest.txt, bds-f14snest2.txt); they stay 100 ticks, kept with no data
-//! (`SaveData` {}), and come out as new bees, heard `spawn`.
-// TODO: a hive on fire is not looked at; its made bees all come out on one tick, where BDS's came
-// out ticks apart (0, 1, 13), and went home within 5 s, where BDS's stayed out ~24 s (bds-f14snest.txt).
+//! (`SaveData` {}), and come out as new bees, heard `spawn`. A bee whose stay is up comes out by day
+//! and dry at 1 in 20 a tick (`BeehiveBlockActor` 0xce705e0), so a hive's bees come out ticks apart
+//! (bds-f14snest.txt: 3, 4 and 16 ticks after their stay).
+// TODO: a hive on fire is not looked at.
 
 use std::collections::HashMap;
 
@@ -36,6 +37,8 @@ const WORKS: f32 = 0.005;
 const SPAWNS_BEES: &str = "ShouldSpawnBees";
 /// Ticks a bee the hive made stays in (the constant at Linux 0x1c6d51c).
 const MADE_STAYS: i32 = 100;
+/// A bee whose stay is up comes out at 1 in this a tick, each on its own roll (Linux 0xce705e0's `nextInt(20)`).
+const LEAVES: u32 = 20;
 
 /// The ticks each hive has been ticked since its entity was last written, by world and place: its
 /// bees' `TicksLeftToStay` count down by those, not while its column does not tick (bds-hivekept.txt).
@@ -202,7 +205,14 @@ pub(crate) fn tick(world: &mut World) {
         if !super::may_fly(world, layer) || occupants.iter().all(|occupant| occupant.ticks_left > 0) {
             continue;
         }
-        let (due, staying): (Vec<Occupant>, Vec<Occupant>) = occupants.into_iter().partition(|occupant| occupant.ticks_left <= 0);
+        let (mut due, mut staying) = (Vec::new(), Vec::new());
+        for occupant in occupants {
+            let leaves = occupant.ticks_left <= 0 && world.get_resource_or_insert_with(Dice::default).roll(LEAVES) == 0;
+            if leaves { due.push(occupant) } else { staying.push(occupant) }
+        }
+        if due.is_empty() {
+            continue;
+        }
         write(world, layer, pos, &entity, &staying);
         let Some(level) = level(world, layer) else { continue };
         let (at, yaw) = front(level.registry(), level.block(pos[0], pos[1], pos[2]), pos);
