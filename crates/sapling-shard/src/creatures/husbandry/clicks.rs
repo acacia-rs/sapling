@@ -6,6 +6,7 @@
 // TODO: a click does not swing the player's arm for its viewers.
 
 use acacia_proto::nbt::Value;
+use acacia_proto::types::MetadataFlags1 as Flags;
 use bevy_ecs::prelude::*;
 
 use super::products::{self, spend};
@@ -28,8 +29,11 @@ pub(super) fn name(world: &mut World, entity: Entity, name: String) {
     let Some(mut raised) = world.get_mut::<Raised>(entity) else { return };
     raised.kept.name = name;
     keep_for_good(world, entity);
-    // A mob new this tick is announced with its name.
-    if !crate::entities::is_new(world, entity) {
+    // A mob new this tick is announced with its name, and its first tick's flags show it
+    // (bds-bg2names.txt: the summoned sheep's BREATHING came with CAN_SHOW_NAMETAG).
+    if crate::entities::is_new(world, entity) {
+        shown::flag(world, entity, Flags::CAN_SHOW_NAMETAG, true);
+    } else {
         shown::name(world, entity);
     }
     crate::creatures::reshow(world, entity);

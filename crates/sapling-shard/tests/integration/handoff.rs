@@ -102,7 +102,7 @@ fn the_player_list_spans_the_shards() {
 
     c.leave(3);
     let sent = c.ticks(2);
-    assert_eq!((ids(sent.to(2)), ids(sent.to(1))), (vec![PlayerList::ID], vec![RemoveEntity::ID, PlayerList::ID]));
+    assert_eq!((ids(sent.to(2)), ids(sent.to(1))), (vec![PlayerList::ID], vec![RemoveEntity::ID, acacia_proto::packets::LevelSoundEvent::ID, PlayerList::ID]));
     // A player who quits on the shard it moved to is unlisted on the one it came from.
     c.leave(2);
     let sent = c.ticks(2);

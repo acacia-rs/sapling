@@ -25,7 +25,7 @@ use crate::visibility::ToViewers;
 use crate::vitals::Vitals;
 pub(crate) use crawl::crawl;
 pub(crate) use placing::{correct, correct_unmoving, push, push_into_lava, push_unmoving, reset, teleport, teleport_as, teleport_onto_ground};
-pub(crate) use pose::{Pose, pose_packet, whole_packet};
+pub(crate) use pose::{Pose, flags_item, pose_packet, whole_packet};
 
 /// Blocks an input may be from the one before it; further is a teleport the server never made.
 const MAX_STEP: f32 = 10.0;
@@ -86,6 +86,16 @@ impl Motion {
     /// The client's own tick of its last input.
     pub fn input_tick(&self) -> u64 {
         self.input_tick
+    }
+
+    /// The player shows itself invisible (`on`) or seen again, as viewers are already told
+    /// (vitals/effects/invisible.rs); the pose it is in now.
+    pub fn show_unseen(&mut self, on: bool) -> Pose {
+        for pose in std::iter::once(&mut self.pose).chain(self.told.as_mut().map(|(_, pose)| pose)) {
+            pose.invisible = on;
+            pose.nametag |= !on;
+        }
+        self.pose
     }
 }
 

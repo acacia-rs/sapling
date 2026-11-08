@@ -6,6 +6,7 @@
 
 mod attributes;
 mod combat;
+mod invisible;
 mod told;
 mod turns;
 

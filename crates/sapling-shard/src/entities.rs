@@ -68,7 +68,7 @@ pub(crate) fn restore(world: &mut World, entity: Entity, change: impl FnOnce(&[u
 /// The tick an entity appeared in: its viewers are told of it after the tick's handlers, so a
 /// move in that tick would reach them before the entity does.
 #[derive(Component)]
-struct Born(u64);
+pub(crate) struct Born(pub(crate) u64);
 
 /// An entity taken by a player: it goes from screens the tick after, as BDS sends an item's or
 /// an orb's RemoveEntity (research/captures/containers-findings.md D3, D6).

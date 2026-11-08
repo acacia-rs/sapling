@@ -5,7 +5,7 @@ use std::hash::{BuildHasher, Hasher};
 use sapling_api::command::{Axis, Selector};
 use sapling_api::{BlockPos, Command, Output, Sender, ShardCtx};
 
-use super::{display_name, no_target, targets};
+use super::{answer_name, no_target, targets};
 
 /// The top of the world, where `/spreadplayers` looks down for ground without a `maxHeight`.
 const TOP: i32 = 319;
@@ -27,7 +27,7 @@ pub(crate) struct TestFor {
 impl Command for TestFor {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let (players, entities) = targets(ctx, sender, Some(&self.victim));
-        let names: Vec<String> = players.into_iter().map(|player| player.name).chain(entities.iter().map(|entity| display_name(entity))).collect();
+        let names: Vec<String> = players.into_iter().map(|player| player.name).chain(entities.iter().map(|entity| answer_name(ctx, entity))).collect();
         if names.is_empty() {
             return no_target(out);
         }

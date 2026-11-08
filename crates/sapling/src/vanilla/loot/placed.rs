@@ -7,7 +7,7 @@
 use sapling_api::{BlockPos, Item, MobSlot, Output, PlayerId, Sender, ShardCtx, Slot};
 
 use super::Target;
-use crate::vanilla::{display_name, no_target, players, targets};
+use crate::vanilla::{answer_name, no_target, players, targets};
 
 /// A player's slots, as one container: hotbar then inventory.
 const PLAYER_SLOTS: usize = 36;
@@ -78,7 +78,7 @@ fn replace_entity(ctx: &mut ShardCtx<'_>, sender: &Sender, target: &sapling_api:
     }
     for mob in mobs {
         let Some(at) = MOB_SLOTS.iter().position(|kind| Some(*kind) == mob_slot(slot_type)) else {
-            return out.translate("commands.loot.failure.invalidSlotTypeForEntity", vec![display_name(&mob), slot_type.into()], false);
+            return out.translate("commands.loot.failure.invalidSlotTypeForEntity", vec![answer_name(ctx, &mob), slot_type.into()], false);
         };
         // Through the hands and the head, which a cow's head did not run on from; one in the rest.
         let end = if at <= SPILLS_TO { SPILLS_TO + 1 } else { at + 1 };
@@ -86,7 +86,7 @@ fn replace_entity(ctx: &mut ShardCtx<'_>, sender: &Sender, target: &sapling_api:
         for (kind, item) in MOB_SLOTS[at..].iter().zip(put) {
             _ = ctx.set_mob_item(mob.id, *kind, Some(item));
         }
-        shown(out, display_name(&mob), put);
+        shown(out, answer_name(ctx, &mob), put);
     }
 }
 

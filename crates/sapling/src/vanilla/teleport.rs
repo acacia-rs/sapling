@@ -3,7 +3,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, no_target, targets, tell_target};
+use super::{answer_name, no_target, targets, tell_target};
 
 /// `/tp [victim] <destination>`: the first word is a target unless it is a coordinate, and the
 /// destination a place or whoever a target names (research/captures/bds-golem.txt). A place may
@@ -112,8 +112,9 @@ impl Command for Teleport {
             // The nearest of those it names.
             Destination::At(selector) => {
                 let (people, others) = targets(ctx, sender, Some(selector));
-                let named = people.into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name)));
-                let all = named.chain(others.into_iter().map(|entity| (entity.feet, display_name(&entity))));
+                let named: Vec<([f32; 3], String)> = people.into_iter().filter_map(|player| Some((ctx.position(player.id)?.feet, player.name))).collect();
+                let others: Vec<([f32; 3], String)> = others.iter().map(|entity| (entity.feet, answer_name(ctx, entity))).collect();
+                let all = named.into_iter().chain(others);
                 let far = |feet: &[f32; 3]| (0..3).map(|axis| (feet[axis] - here[axis]).powi(2)).sum::<f32>();
                 match all.min_by(|a, b| far(&a.0).total_cmp(&far(&b.0))) {
                     Some((feet, name)) => (feet, Some(name)),
@@ -147,7 +148,7 @@ impl Command for Teleport {
                 ctx.move_entity(entity.id, to);
             }
         }
-        let names: Vec<String> = moved_players.iter().map(|player| player.name.clone()).chain(moved.iter().map(|entity| display_name(&entity))).collect();
+        let names: Vec<String> = moved_players.iter().map(|player| player.name.clone()).chain(moved.iter().map(|entity| answer_name(ctx, entity))).collect();
         // BDS counts each one moved, and the one gone to as one more (bds-s3misc.txt).
         out.done_to((names.len() + usize::from(at.is_some())) as u32);
         match (names.is_empty(), at) {

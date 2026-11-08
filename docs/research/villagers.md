@@ -496,7 +496,7 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
   `NetId`'s hooks; `entities/tell.rs` held packets highest slot first; `creatures/afflictions` holds
   VisibleMobEffects and the omen sound to the sync, runs out lowest slot first; tests `thirteenth3be`,
   `a_new_actor_takes_the_slot_freed_last`). Mob invisibility follows the same order: effects.md
-  "Invisibility on mobs".
+  "Invisibility".
 - Trader llamas (bds-trade2.txt): both come with `LeadHolderEid` the trader's and `LEASHED` from their
   announcement (its pack's `should_leash`). Ported (`villagers/wandering.rs` `arrive`,
   `husbandry/leads.rs`: a lead holder is found again by any kept entity's `UniqueID`; test

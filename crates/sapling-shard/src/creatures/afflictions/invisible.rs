@@ -2,7 +2,7 @@
 //! no `MobEffect`; at the tick-end sync its flags gain `INVISIBLE` and lose `CAN_SHOW_NAMETAG` (a
 //! named mob's comes back), in one SetEntityData with its `VisibleMobEffects`; the tick after it is
 //! heard `disappeared` (`reappeared` as it goes) at half its shown height, in the same sync order.
-//! A raise while it lasts tells nothing. Viewers coming later find the flags in its announcement.
+//! A raise while it lasts tells nothing. Viewers coming later are announced its flags (mobs/live.rs).
 //! A hunter sees it nearer: [`sight`].
 
 use acacia_proto::packets::{AddEntity, LevelSoundEvent};
@@ -51,8 +51,8 @@ fn flags_item(id: u64, word: i64) -> MetadataDictionaryItem {
     sapling_data::mob_flags_set(id, Flags(word)).metadata.remove(0)
 }
 
-/// The mob `id`'s invisibility came (`on`) or went: its flags word for viewers now and in its
-/// announcement, and its sound for the next tick.
+/// The mob `id`'s invisibility came (`on`) or went: its flags word for viewers, and its sound for
+/// the next tick.
 pub(super) fn flip(world: &mut World, mob: Entity, id: u64, on: bool) -> Option<MetadataDictionaryItem> {
     let kind = world.get::<entities::Kind>(mob)?.0.clone();
     let stored = announced_flags(world, mob)?;
@@ -70,18 +70,9 @@ pub(super) fn flip(world: &mut World, mob: Entity, id: u64, on: bool) -> Option<
         let shown = entities::mob_flags(world, mob, &kind, Flags::INVISIBLE, false);
         if nametag { entities::mob_flags(world, mob, &kind, Flags::CAN_SHOW_NAMETAG, true) } else { shown }
     };
-    let later = if on { (stored | Flags::INVISIBLE.0) & !Flags::CAN_SHOW_NAMETAG.0 } else { (stored & !Flags::INVISIBLE.0) | if nametag { Flags::CAN_SHOW_NAMETAG.0 } else { 0 } };
-    crate::mobs::reannounce_item(world, mob, flags_item(id, later));
     let now = world.resource::<Tick>().0;
     world.get_resource_or_insert_with(Vanishing::default).0.push((now, mob, on));
     Some(flags_item(id, word.0))
-}
-
-/// The flags of an invisible mob's announcement once rebuilt (creatures/shown.rs `reshow`).
-pub(in crate::creatures) fn announced_unseen(world: &World, mob: Entity) -> Option<MetadataDictionaryItem> {
-    world.get::<Unseen>(mob)?;
-    let stored = announced_flags(world, mob)?;
-    Some(flags_item(world.get::<NetId>(mob)?.0, (stored | Flags::INVISIBLE.0) & !Flags::CAN_SHOW_NAMETAG.0))
 }
 
 /// Plays the sounds of the mobs whose invisibility changed before this tick, held to the sync.

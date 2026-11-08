@@ -21,6 +21,10 @@ pub(crate) struct Pose {
     pub gliding: bool,
     /// Full of powder snow's freeze (vitals/frost.rs).
     pub frozen: bool,
+    /// Under invisibility (vitals/effects/invisible.rs).
+    pub invisible: bool,
+    /// Shows `CAN_SHOW_NAMETAG`, which BDS sets on a player once invisibility left it.
+    pub nametag: bool,
 }
 
 /// The `Flags` bit BDS sets on a player whose freeze is full (research/captures/bds-freeze.txt).
@@ -38,6 +42,8 @@ impl Pose {
             (self.using, MetadataFlags1::ACTION),
             (self.gliding, MetadataFlags1::GLIDING),
             (self.frozen, FROZEN),
+            (self.invisible, MetadataFlags1::INVISIBLE),
+            (self.nametag && !self.invisible, MetadataFlags1::CAN_SHOW_NAMETAG),
         ];
         for (on, flag) in shown {
             if on {
@@ -98,8 +104,12 @@ fn box_height(pose: Pose) -> MetadataDictionaryItem {
     float(Key::BoundingboxHeight, pose.height())
 }
 
+/// The `Flags` item of a player in `pose`.
+pub(crate) fn flags_item(pose: Pose) -> Option<MetadataDictionaryItem> {
+    sapling_data::player_metadata("", pose.flags()).into_iter().find(|item| item.key == Key::Flags)
+}
+
 pub(crate) fn pose_packet(id: u64, pose: Pose, tick: u64) -> SetEntityData {
     let height = box_height(pose);
-    let flags = sapling_data::player_metadata("", pose.flags()).into_iter().filter(|item| item.key == Key::Flags);
-    SetEntityData { runtime_entity_id: id, metadata: flags.chain([height]).collect(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick }
+    SetEntityData { runtime_entity_id: id, metadata: flags_item(pose).into_iter().chain([height]).collect(), properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick }
 }

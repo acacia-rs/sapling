@@ -3,8 +3,8 @@
 //! precedes any AddPlayer.
 
 use acacia_proto::manual::Uuid;
-use acacia_proto::packets::{PlayerList, RemoveEntity};
-use acacia_proto::types::{PlayerRecord, PlayerRecordContent, PlayerRecordContentAdd, PlayerRecordContentRemove, PlayerRecordType};
+use acacia_proto::packets::{LevelSoundEvent, PlayerList, RemoveEntity};
+use acacia_proto::types::{PlayerRecord, PlayerRecordContent, PlayerRecordContentAdd, PlayerRecordContentRemove, PlayerRecordType, Vec3f};
 use bevy_ecs::prelude::*;
 use std::collections::HashMap;
 
@@ -21,6 +21,8 @@ const PLAYER_COLOUR: i32 = -303_174_145;
 /// `legacy_type` of an add and of a remove record, as BDS sends them (`bds_probe`).
 const LEGACY_ADD: u8 = 0;
 const LEGACY_REMOVE: u8 = 1;
+/// How far over a leaving player's feet it is heard going.
+const LEFT_HEARD_ABOVE: f32 = 0.9;
 
 /// What a login tells other clients about its player.
 #[derive(Component)]
@@ -121,20 +123,30 @@ pub(crate) fn arrive(world: &mut World, newcomer: Entity) {
     world.resource::<Peers>().tell_others(|| ShardMsg::Listed { conn: own.0, entry: own.1.clone() });
 }
 
-/// Removes a player's entity from those who saw it: it left their world or the shard.
-pub(crate) fn vanish(world: &mut World, leaver: Entity, id: u64) {
+/// Removes a player's entity from those who saw it, who are returned: it left their world or the shard.
+pub(crate) fn vanish(world: &mut World, leaver: Entity, id: u64) -> Vec<Entity> {
     let remove = sapling_net::encode(&RemoveEntity { entity_id_self: id as i64 });
+    let mut saw = Vec::new();
     for player in in_world(world) {
         if world.get_mut::<Sees>(player).is_some_and(|mut sees| sees.0.remove(&leaver)) {
             send(world, player, [remove.clone()]);
+            saw.push(player);
         }
     }
+    saw
 }
 
-/// Unlists a player whose connection ended and removes its entity from those who saw it.
+/// Unlists a player whose connection ended and removes its entity from those who saw it, who
+/// hear it `disappeared` 0.9 over its feet as on BDS (research/captures/bds-bg2player.txt).
 pub(crate) fn depart(world: &mut World, leaver: Entity) {
     let (Some((conn, entry)), Some(id)) = (list_entry(world, leaver), world.get::<NetId>(leaver).map(|id| id.0)) else { return };
-    vanish(world, leaver, id);
+    let feet = world.get::<crate::components::Position>(leaver).map(|position| position.feet);
+    let saw = vanish(world, leaver, id);
+    if let Some([x, y, z]) = feet {
+        let heard = LevelSoundEvent { sound_id: "disappeared".into(), position: Vec3f { x, y: y + LEFT_HEARD_ABOVE, z }, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+        let heard = sapling_net::encode(&heard);
+        saw.into_iter().for_each(|player| send(world, player, [heard.clone()]));
+    }
     chat::send_to_all(world, &entry.remove);
     world.resource::<Peers>().tell_others(|| ShardMsg::Unlisted { conn });
 }

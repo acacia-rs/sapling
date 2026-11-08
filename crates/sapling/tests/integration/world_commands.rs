@@ -136,6 +136,11 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     assert_eq!(answer(&mut alice, "kill @e[type=cow,name=!cow1]").await, r#"commands.kill.successful ["Cow, Cow"] 2"#);
     assert_eq!(answer(&mut alice, "kill @e[type=cow,name=cow1]").await, r#"commands.kill.successful ["cow1"] 1"#);
     assert_eq!(answer(&mut alice, "kill @e[name=cow1]").await, "commands.generic.noTargetMatch [] 0");
+    // bds-bg2names.txt: BDS's other overload, the name before the position.
+    assert_eq!(answer(&mut alice, "summon villager v ~ ~ ~3").await, "commands.summon.success [] 1");
+    // bds-bg2names.txt: other answers name it too.
+    assert_eq!(answer(&mut alice, "effect @e[name=v] slowness 10 0 true").await, r#"commands.effect.success ["%potion.moveSlowdown", "0", "v", "10"] 1"#);
+    assert_eq!(answer(&mut alice, "kill @e[name=v]").await, r#"commands.kill.successful ["v"] 1"#);
     // bds-bb1event.txt: kinds listed once each, the event by the pack's own name.
     for kind in ["sheep", "sheep", "cow"] {
         assert_eq!(answer(&mut alice, &format!("summon {kind} ~ ~ ~3")).await, "commands.summon.success [] 1");
