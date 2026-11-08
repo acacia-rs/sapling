@@ -1,8 +1,7 @@
 //! Mobs that hunt players, as BDS's were seen to (docs/research/mob-attacks.md): one picks
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
 // TODO: a spider keeps the prey it took in the dark when day comes; prey once seen is kept behind a
-// wall; a spider hunts by day too and none holds what it hits with; viewers far off are told every
-// move, where BDS told one of every other.
+// wall; a spider hunts by day too and none holds what it hits with.
 
 mod heading;
 mod hurt_by;

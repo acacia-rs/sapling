@@ -163,7 +163,7 @@ These are the Java game's, a guess, or not found in the decompile:
 - the `chargedItem` tag of a loaded crossbow;
 - most effect colours, which are Java's (sapling-data `shots.rs`);
 - the bottle's 3 to 10: an orb's worth is not on the wire. bds-m3throw.txt: 32 summoned bottles broke in
-  one tick and let out 13 orbs between them, so most bottles left none to be seen or BDS merged them.
+  one tick and let out 13 orbs between them, as sapling's did (sapling-m3throw.txt; orbs merge).
   Seen there: a summoned snowball took 3 off a blaze (4 left 1, 3 killed it); 64 eggs hatched 10
   chickens, in keeping with 1 in 8 and a rare 4.
 

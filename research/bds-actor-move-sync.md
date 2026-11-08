@@ -147,6 +147,13 @@ now `sapling_data::told_angle` in every `add_entity`, `ShardCtx::turn_entity` fr
 a mob's legs and gaze restarting at it). Re-drilled (sapling-g8rot.txt): all 12 stands' bytes and head
 moves equal bds-g8rot.txt's; test `a_stand_turned_by_a_teleport_is_told_its_body_then_its_head_as_on_bds`.
 
+## Drilled 2026-11-08 (`m3far`, bds-m3far.txt against sapling-m3far.txt)
+
+A hunting zombie seen by a watcher 20, 28 and 40 north of its path: BDS told the watcher one move in 2,
+3 and 5, sapling the same (`sync/pace.rs`). At 56 BDS told one in 7 (ticks 4 to 7); sapling's watcher
+got ticks rising 7 to 10 as the drill bot fell at the new spot, so that band and 72/96 say nothing of
+the pacing.
+
 ## Unknown
 
 - What `dim.vt[0x118]` tests (visibility/range) and what `sync.byte9` means.
