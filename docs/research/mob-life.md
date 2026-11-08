@@ -65,7 +65,8 @@ BDS was not read). Drilled on BDS 2026-10-29 with `bds_command_probe` scenes fro
   - A sneaking click on a tamed mount, even one holding a chest (`bds-tack.txt`).
   - The inventory key (`Interact OpenInventory`) while riding a mob. A ride without an inventory opens the player's own.
 - A chest used on a tamed grown donkey, mule or llama sets `Chested` (ED: `minecraft:equippable` / chest groups) with
-  sound `add.chest`.
+  sound `armor.equip_generic` from the mob's middle before the flags (bds-k2mounts.txt; sapling said `add.chest`
+  until fourteenth K). A second chest click on a chested one rides it, as any empty-handed click.
 - Stack requests: `ContainerSlotType::HorseEquip` (27) names the tack slots and `Container` the chest slots. Both are
   `Place::Container(slot)` (inventory/requests.rs).
 - Kept in the compound:
@@ -138,15 +139,26 @@ Captures in `research/captures/`; sapling's own runs of the same scenes match ex
   digging 42 as well). Fixed in sniffing.rs: the bits, the dust, the find's height, `timer_flag_3` at the end
   not at the find (mob_life.rs). The one-tick searching blip is not followed.
 
+## The sniffer's search (2026-11-08, `k2sniff` in fourteenth2k_drill.rs, bds-k2sniff.txt)
+
+- `/event ... on_scenting_success` (and the scent's end) adds `sniffer_search_and_dig`; sapling now starts
+  the search on it too (husbandry/fired.rs, sniffing.rs `scented`).
+- Where: `RandomSearchAndDigGoal` (Linux ELF vtable 0xeee73e8) tries `find_valid_position_retries` (5) land
+  positions (0x0bd09940, the ranges and 10) each `canUse`, valid when air with a target block under it
+  (0x5761980). As the goal is asked again each tick, a single dirt block 5 off was found 14, 45 and 62
+  ticks after three events, one 9 off (held still) after 142; on a dirt field the same tick. Sapling seeks
+  each tick (`Stage::Seeking`) over 50 columns: the 5 retries times the land position's 10 candidates,
+  of which an animal's walk target value takes soil where any is.
+- Dug spots are not remembered: the single block was dug three times running.
+- No give-up time: searches lasted up to 27 s (a field, 15 off). One held by slowness 255 gave up after
+  141 ticks and stood up (`timer_flag_2` 2.85 s, no `timer_flag_3`): navigation's stuck rule. Sapling: under
+  1 block moved in 140 ticks ends the search so (sniffing.rs `STUCK_FOR`). Tests in fourteenth2k.rs.
+- Residue: one whose spot went bad as it arrived (the floor's edge) dug for one tick, searched for one,
+  then stood up; sapling digs on. The one-tick searching blip after a dig is not followed either.
+
 ## Not drilled
 
 - The sniffer:
-  - Without `/event`, sniffers are undrillable in a few minutes (the pack's 400–500 s `timer_flag_1`
-    cooldown), and sapling's `/event` (since thirteenth1bb) answers `on_scenting_success` but does not start a
-    search, so sapling's search and dig were checked by test, not drill.
-    How a search position is chosen (sapling: the highest open soil in a random column within reach),
-    the give-up time (sapling: 30 s, not in the pack; BDS's longest search here 21 s), and whether dug spots
-    are remembered.
   - Its state not being kept in a world folder needs a restart, which the drill harness has none of.
   - BDS sends one full `SetEntityData` right after every summoned mob's announcement (the sniffer's: all
     the AddEntity keys but `JumpDuration`, `Scale`, `BoundingboxWidth`, `RiderSeatPosition`, plus defaults

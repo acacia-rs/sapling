@@ -68,6 +68,18 @@ fn powder_snow_freezes_a_player_in_seven_seconds_then_hurts_it_every_two() {
 }
 
 #[test]
+fn a_frozen_player_that_dies_thaws_a_step_and_then_is_unfrozen() {
+    // bds-k2freeze.txt: 1, then 0.986 with the flag off the tick after the death, then 0, and nothing more.
+    let mut h = snowed_in();
+    told(&mut h, 140, 1, strengths);
+    assert!(common::asking::ask(&mut h, |ctx| ctx.kill_player(ALEX)));
+    let after = told(&mut h, 1, 1, strengths);
+    assert!(after.len() == 1 && (after[0] - (1.0 - 1.0 / 70.0)).abs() < 1e-5, "{after:?}");
+    assert_eq!(told(&mut h, 1, 1, strengths), [0.0]);
+    assert!(told(&mut h, 10, 1, strengths).is_empty());
+}
+
+#[test]
 fn out_of_powder_snow_or_in_any_leather_the_freeze_thaws_twice_as_fast() {
     let mut h = snowed_in();
     told(&mut h, 13, 1, strengths);

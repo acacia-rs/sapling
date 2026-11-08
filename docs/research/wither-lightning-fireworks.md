@@ -55,8 +55,14 @@ Code: `crates/sapling-shard/src/lightning.rs`, `lightning/{storms,rods}.rs`, `cr
   simulated, gives 8 to 41, median 19. Sapling follows the rule.
 
 Unverified: an unwaxed rod that is oxidised seems to be scraped instead of powered (its vtable's
-slot 16 jumps to the copper routine; not tried live); the `Animal` kinds sapling lists; the sky
-flash (Weather +0x50) is not sent.
+slot 16 jumps to the copper routine; not tried live); the sky flash (Weather +0x50) is not sent.
+
+- **`Animal` kinds, checked (fourteenth K):** 0x1409fae83 passes 0x1300 to 0x1409f8a10, whose test
+  0x140d27800 is `(type & 0x1300) == 0x1300`. The 31 ids that pass (LeviLamina `ActorType.h`) are
+  lightning/storms.rs's `ANIMALS`, which had 13: added were the ocelot, cat, parrot, the five horse
+  kinds, hoglin, strider, axolotl, frog, trader llama, camel, camel husk, sniffer, armadillo and
+  happy ghast. `k2bolt` (bds-k2bolt.txt) struck each kind with a summoned
+  bolt for the hurt and conversions.
 
 Drilled (2026-11-04, `bds_command_probe n3struck`, research/captures/bds-n3struck.txt): a struck
 pig turns 10 ticks after the bolt's strike: `AddEntity` of the zombie pigman, its `MobEquipment`,

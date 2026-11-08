@@ -1,7 +1,7 @@
 //! A raised mob's pack events fired by `/event entity` that change what sapling keeps of it
 //! (research/captures/bds-bc1event.txt): a baby's `minecraft:ageable_grow_up`, a sheep's wool
 //! (`minecraft:on_sheared`, `minecraft:on_eat_block`) and colour (`wololo` and the three
-//! `*_color` rolls of its `minecraft:entity_spawned`).
+//! `*_color` rolls of its `minecraft:entity_spawned`), and a sniffer's `on_scenting_success`.
 
 use bevy_ecs::prelude::*;
 
@@ -24,6 +24,10 @@ pub(in crate::creatures) fn fired(world: &mut World, entity: Entity, kind: &str,
         "minecraft:on_sheared" => products::shorn(world, entity, kind, true),
         "minecraft:on_eat_block" => products::shorn(world, entity, kind, false),
         "wololo" => products::colour(world, entity, RED),
+        "on_scenting_success" => {
+            let now = world.resource::<crate::components::Tick>().0;
+            super::sniffing::scented(world, entity, kind, now);
+        }
         _ => {
             let Some((_, weights)) = COLOURS.iter().find(|(name, _)| *name == event) else { return };
             let total = weights.iter().map(|(weight, _)| weight).sum();

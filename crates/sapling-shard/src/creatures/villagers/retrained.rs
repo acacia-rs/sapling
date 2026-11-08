@@ -11,6 +11,9 @@ use crate::components::InLayer;
 
 /// Fires `event` on the trader `entity`; nothing for an event that names no profession.
 pub(in crate::creatures) fn fired(world: &mut World, entity: Entity, event: &str) {
+    if event == super::wandering::START_DESPAWN {
+        return super::wandering::start_despawn(world, entity);
+    }
     let Some(variant) = jobs::of_event(event) else { return };
     let Some(mut trader) = world.get::<Trader>(entity).cloned() else { return };
     let mut dice = world.remove_resource::<Dice>().unwrap_or_default();

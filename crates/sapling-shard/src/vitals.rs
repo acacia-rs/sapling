@@ -187,6 +187,9 @@ pub(crate) fn tick(world: &mut World) {
             stand::stand(world, player, layer);
         } else {
             stand::stand_unhurt(world, player, layer);
+            if let Some(died) = world.get::<Vitals>(player).and_then(|vitals| vitals.died) {
+                frost::thaw_dead(world, player, world.resource::<Tick>().0 - died);
+            }
             death::leave(world, player, layer);
         }
     }

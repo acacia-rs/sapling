@@ -64,7 +64,8 @@ fn a_tamed_donkey_opens_to_its_rider_takes_a_chest_and_opens_to_a_sneaking_click
     h.tick(1);
     h.receive(1, &interact(donkey.0));
     let sent = ticks(&mut h, 2);
-    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "add.chest"));
+    // bds-k2mounts.txt: heard as armour put on, from the donkey's middle.
+    assert!(all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "armor.equip_generic" && (sound.position.y - 65.8).abs() < 1e-3));
     h.remote.run(move |ctx| {
         assert!(ctx.item(ALEX, Slot::Main(0)).is_none(), "the chest went on");
         assert!(ctx.riders(donkey).is_empty(), "a chest put on is all the click does");
@@ -186,6 +187,6 @@ fn a_donkey_summoned_tame_opens_to_a_sneaking_click_even_holding_a_chest() {
     h.remote.run(move |ctx| assert!(ctx.set_item(ALEX, Slot::Main(0), Some(&Item::new("minecraft:chest", 1)))));
     let sent = sneaking_click(&mut h, donkey);
     // BDS's opened its screen and took no chest (research/captures/bds-tack.txt).
-    assert!(!all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "add.chest"));
+    assert!(!all::<LevelSoundEvent>(&sent).iter().any(|sound| sound.sound_id == "armor.equip_generic"));
     assert_eq!(screens(&sent), [(donkey.0 as i64, 2)]);
 }

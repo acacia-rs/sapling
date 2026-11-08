@@ -5,7 +5,7 @@
 //! to a sneaking player's click and to its rider's inventory key; what is in it is kept in
 //! the mob's `ChestItems` by slot, and slots 0 and 1 are the tack it shows. It dies spilling the
 //! goods ([`spilled`]).
-// TODO: a donkey's chest does not switch its component groups.
+// A chest's group switch shows only as `CHESTED` and the next chest click riding it (bds-k2mounts.txt).
 
 use acacia_proto::nbt::{self, List, Nbt, Network, Raw, Value};
 use acacia_proto::packets::UpdateEquipment;
@@ -287,7 +287,9 @@ pub(super) fn clicked(world: &mut World, player: Entity, mob: Entity, kind: &str
         blocks::spend_held(world, player);
         let (Some(id), Some(body)) = (world.get::<NetId>(mob).map(|id| id.0), world.get::<Body>(mob).copied()) else { return true };
         let shown = entities::mob_flags(world, mob, kind, acacia_proto::types::MetadataFlags1::CHESTED, true);
-        super::tell(world, mob, mob, vec![super::packets::flags(id, shown), super::packets::sound("add.chest", id, kind, body.at)]);
+        // Heard as armour put on, from its middle, before its flags (bds-k2mounts.txt, bds-chestdie.txt).
+        let middle = [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]];
+        super::tell(world, mob, mob, vec![super::packets::sound("armor.equip_generic", id, kind, middle), super::packets::flags(id, shown)]);
         keep(world, mob);
         return true;
     }

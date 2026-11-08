@@ -4,8 +4,8 @@
 //! and it comes only where rain falls. A bolt not drawn to a rod leaves a skeleton horse trap
 //! where it struck one time in 134, 67 or 45 on easy, normal or hard while `doMobSpawning` is on
 //! (BDS fcn.142cb06f0 and its table at 0x14a7d4940, called from `LevelChunk::tick`).
-// TODO: the animals are the kinds of its `Animal` type as read from its actor type ids, not checked
-// one by one.
+// Animals: every kind whose actor type id holds all of `Animal`'s bits 0x1300 (the call at 0x1409fae83
+// passes 0x1300 to fcn.1409f8a10, whose test fcn.140d27800 is `(type & 0x1300) == 0x1300`).
 
 use bevy_ecs::prelude::*;
 use sapling_world::{ChunkPos, FULL_LIGHT};
@@ -22,8 +22,10 @@ const TRAP_ONE_IN: [u32; 3] = [134, 67, 45];
 /// Columns this many from a player's tick.
 const NEAR: i32 = 4;
 const ANIMALS: &[&str] = &[
-    "minecraft:chicken", "minecraft:cow", "minecraft:pig", "minecraft:sheep", "minecraft:wolf", "minecraft:mooshroom", "minecraft:rabbit", "minecraft:polar_bear", "minecraft:llama",
-    "minecraft:turtle", "minecraft:panda", "minecraft:fox", "minecraft:goat",
+    "minecraft:chicken", "minecraft:cow", "minecraft:pig", "minecraft:sheep", "minecraft:wolf", "minecraft:mooshroom", "minecraft:rabbit", "minecraft:ocelot", "minecraft:horse",
+    "minecraft:polar_bear", "minecraft:llama", "minecraft:parrot", "minecraft:donkey", "minecraft:mule", "minecraft:skeleton_horse", "minecraft:zombie_horse", "minecraft:turtle",
+    "minecraft:cat", "minecraft:panda", "minecraft:fox", "minecraft:hoglin", "minecraft:strider", "minecraft:goat", "minecraft:axolotl", "minecraft:frog", "minecraft:trader_llama",
+    "minecraft:camel", "minecraft:sniffer", "minecraft:armadillo", "minecraft:happy_ghast", "minecraft:camel_husk",
 ];
 
 /// The columns of `layer` near its players.

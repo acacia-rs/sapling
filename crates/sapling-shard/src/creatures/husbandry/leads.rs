@@ -4,6 +4,7 @@
 //! lets it go, as a player who left does.
 // TODO: the distances and the drag are the Java game's; BDS's leashable says 6/10 soft/hard but not how hard it pulls.
 
+use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
 use sapling_world::ItemStack;
 
@@ -69,14 +70,33 @@ pub(super) fn untie(world: &mut World, entity: Entity, sound: &str) {
 
 /// The mob's lead comes off and drops by it; false when it had none.
 fn let_go(world: &mut World, entity: Entity) -> bool {
-    let Some(mut raised) = world.get_mut::<Raised>(entity).filter(|raised| raised.kept.leasher.is_some()) else { return false };
-    (raised.kept.leasher, raised.holder, raised.looked_since) = (None, None, 0);
-    shown::links(world, entity);
+    if !unleash(world, entity, true) {
+        return false;
+    }
     if let Some((layer, _, _, body)) = shown::of(world, entity) {
         let lead = ItemStack { name: LEAD.to_owned(), count: 1, damage: 0, block: None, tag: None };
         crate::drops::toss(world, layer, lead, [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]]);
     }
     true
+}
+
+/// The mob's lead comes off, its viewers told `RemoveLeash` (`dropped` 1 when the lead drops, as
+/// BDS's; bds-k2trader.txt) before its flags; false when it had none.
+fn unleash(world: &mut World, entity: Entity, dropped: bool) -> bool {
+    let Some(mut raised) = world.get_mut::<Raised>(entity).filter(|raised| raised.kept.leasher.is_some()) else { return false };
+    (raised.kept.leasher, raised.holder, raised.looked_since) = (None, None, 0);
+    if let Some(id) = world.get::<crate::components::NetId>(entity).map(|id| id.0) {
+        let event = EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::RemoveLeash, data: i32::from(dropped), fire_at_position: None };
+        shown::tell(world, entity, vec![sapling_net::encode(&event)]);
+    }
+    shown::links(world, entity);
+    true
+}
+
+/// The mob's lead comes off and goes with no drop and no sound: its holder went (a wandering trader
+/// despawning takes its llamas with it, bds-k2trader.txt).
+pub(in crate::creatures) fn release(world: &mut World, entity: Entity) {
+    unleash(world, entity, false);
 }
 
 /// The lead pulled too far snaps, heard from its holder at `holder` (bds-uuknot.txt).
@@ -93,10 +113,32 @@ pub(super) fn heard_from_holder(world: &mut World, entity: Entity, name: &str, [
     shown::tell(world, entity, vec![shown::unattributed(name, position)]);
 }
 
-/// A tick of the mob's lead: its kept holder is found again, or given up on; one too far snaps it.
+/// A wandering trader's llama (`llama_wandering_trader`): once off its lead it tames itself, owned
+/// by no one, as BDS's did a tick after their trader died (bds-k2trader.txt).
+#[derive(Component)]
+pub(crate) struct TamedWhenLoose;
+
+/// A tick of the mob's lead: its kept holder is found again, or given up on; one too far snaps it;
+/// a dying holder lets go at once, the snap heard from its middle (bds-k2trader.txt).
 pub(super) fn hold(world: &mut World, entity: Entity, now: u64) {
     let Some(raised) = world.get::<Raised>(entity) else { return };
+    if raised.kept.leasher.is_none() && world.get::<TamedWhenLoose>(entity).is_some() {
+        world.entity_mut(entity).remove::<TamedWhenLoose>();
+        if let Some(kind) = world.get::<crate::entities::Kind>(entity).map(|kind| kind.0.clone()) {
+            super::owners::tame_by_upgrade(world, entity, &kind);
+        }
+        return;
+    }
     let (Some(leasher), holder, since) = (raised.kept.leasher, raised.holder, raised.looked_since) else { return };
+    if let Some(dying) = holder.filter(|holder| crate::creatures::is_dying(world, *holder)) {
+        let middle = world.get::<Body>(dying).map(|body| acacia_proto::types::Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] });
+        if let_go(world, entity)
+            && let Some(position) = middle
+        {
+            shown::tell(world, entity, vec![shown::unattributed("lead.break", position)]);
+        }
+        return;
+    }
     let here = world.get::<InLayer>(entity).map(|layer| layer.0).zip(world.get::<Body>(entity).map(|body| body.at));
     match holder.and_then(|holder| holder_at(world, holder)) {
         Some((at, layer)) if here.is_some_and(|(mine, feet)| mine == layer && distance(feet, at) <= BREAKS) => {}

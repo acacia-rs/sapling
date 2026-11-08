@@ -1,5 +1,5 @@
-//! What hurts a mob where it is: a fall, fire and lava, a block its head is in, and water it
-//! cannot breathe in, found each tick and told to its viewers as BDS tells them
+//! What hurts a mob where it is: a fall, fire and lava, a block its head is in, water it cannot
+//! breathe in, and powder snow (frost.rs), found each tick and told to its viewers as BDS tells them
 //! (docs/research/mob-damage.md). The rules themselves: health.rs.
 // Breath comes back at once out of water, as BDS's cow's 120 went to 300 (bds-n3breath.txt); an
 // armour stand in fire is armour_stands/burning.rs's.
@@ -181,6 +181,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let feet = start.at.map(|c| c.floor() as i32);
         let rained = level.is_some_and(|level| is_rained_on(level, feet, rains));
         let sunlit = traits.burns_in_sun && !rained && level.is_some_and(|level| is_sunlit(level, head, darken));
+        let in_snow = level.is_some_and(|level| touches(level, now, super::frost::POWDER_SNOW));
         health.begin();
         let weigh = |world: &mut World, health: &mut Health, before: Health, cause: Cause| crate::damage::weigh(world, entity, health, &before, cause);
         let before = health;
@@ -220,6 +221,15 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
             packets.push(strike(id, &health, Cause::Suffocation, None));
         }
         tell(world, entity, &mut health, id, kind, burns, &mut packets);
+        let (frozen, freezes) = super::frost::chill(world, entity, id, kind, in_snow);
+        packets.extend(frozen);
+        let before = health;
+        if let Some(harm) = freezes
+            && health.hurt(health.warded(harm, Cause::Freezing))
+            && weigh(world, &mut health, before, Cause::Freezing)
+        {
+            packets.push(strike(id, &health, Cause::Freezing, None));
+        }
         let before = health;
         if scalds && health.scald() && weigh(world, &mut health, before, Cause::Lava) {
             packets.push(strike(id, &health, Cause::Lava, None));

@@ -1,12 +1,15 @@
 //! A grown sniffer's sniffing and digging, as the vanilla pack's sniffer.json gives it (docs/
 //! research/mob-life.md "Sniffers"): every 400 to 500 seconds it scents for 2 seconds
-//! (`timer_flag_1`), then picks open soil within 20 across and 3 up or down (5 tries), walks to
+//! (`timer_flag_1`), then picks open soil within 20 across and 3 up or down ([`TRIES`] a tick), walks to
 //! within 2 of it at 1.25 times its pace (searching), and digs 8 to 10 seconds, raising dust 2.25
 //! ahead every 4 ticks from 35 ticks in; 6 seconds in it turns up a torchflower seed or a pitcher
 //! pod there, and once done it stands up (`timer_flag_2`) and is happy (`timer_flag_3`), each 2 to 5
 //! seconds. The client animates by these flags. BDS's digs: research/captures/bds-sniffdig.txt.
-// TODO: the search gives up after SEARCH_FOR (not in the pack); dug spots are not remembered and
-// the state is not kept in the world folder.
+//! Its scent's end and `/event ... on_scenting_success` add the search (bds-k2sniff.txt): it looks
+//! for a spot each tick until one is found (a single dirt block 5 off took BDS's 14 to 62 ticks, a
+//! field one), digs the same spot again if sent again, and walks as long as it needs (27 s seen);
+//! one held still gave up after 141 ticks, standing up (`timer_flag_2`) unhappy.
+// TODO: the state is not kept in the world folder.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, SetEntityData};
 use acacia_proto::types::{Vec3f, EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2 as Flags};
@@ -36,12 +39,16 @@ const FINDS: [&str; 2] = ["minecraft:torchflower_seeds", "minecraft:pitcher_pod"
 /// Ticks between scents: the least, and how many more.
 const SCENTS_EVERY: (u64, u32) = (8000, 2000);
 const SCENTS_FOR: u64 = 40;
-const TRIES: usize = 5;
+/// Columns tried a tick: the pack's 5 retries, each of BDS's land position's 10 candidates, the
+/// best of which is soil where any is (an animal's walk target value).
+const TRIES: usize = 50;
 const ACROSS: i32 = 20;
 const UP: i32 = 3;
 const NEAR: f32 = 2.0;
 const SEARCH_PACE: f32 = 1.25;
-const SEARCH_FOR: u64 = 600;
+/// A searching sniffer that has come less than [`STUCK_WITHIN`] nearer in this many ticks gives up.
+const STUCK_FOR: u64 = 140;
+const STUCK_WITHIN: f32 = 1.0;
 /// Ticks of digging: the least, and how many more; the find comes this far in.
 const DIGS_FOR: (u64, u32) = (160, 40);
 const FINDS_AT: u64 = 120;
@@ -58,7 +65,10 @@ const AFTER: (u64, u32) = (40, 60);
 enum Stage {
     Idle,
     Scenting { until: u64 },
-    Searching { target: BlockPos, until: u64 },
+    /// Scented, looking each tick for a spot.
+    Seeking,
+    /// Walking to `target`; at `check` it must have moved [`STUCK_WITHIN`] from `from`.
+    Searching { target: BlockPos, check: u64, from: [f32; 3] },
     Digging { started: u64, until: u64 },
     Rising { until: u64 },
 }
@@ -127,6 +137,23 @@ fn into(world: &mut World, entity: Entity, stage: Stage, from: Option<Flags>, to
     to.into_iter().for_each(|to| flag(world, entity, to, true));
 }
 
+/// `on_scenting_success` fired on a grown sniffer: an idle or scenting one starts seeking a spot.
+pub(super) fn scented(world: &mut World, entity: Entity, kind: &str, now: u64) {
+    if kind != SNIFFER || world.get::<Raised>(entity).is_none_or(Raised::is_baby) {
+        return;
+    }
+    let stage = world.get::<Sniffing>(entity).map(|sniffing| sniffing.stage);
+    match stage {
+        None => {
+            let next = now + roll(world, SCENTS_EVERY);
+            world.entity_mut(entity).insert(Sniffing { stage: Stage::Seeking, next, happy_until: None, extended: 0 });
+        }
+        Some(Stage::Scenting { .. }) => into(world, entity, Stage::Seeking, Some(TIMER_FLAG_1), None),
+        Some(Stage::Idle) => into(world, entity, Stage::Seeking, None, None),
+        Some(_) => {}
+    }
+}
+
 /// A tick of a sniffer that thinks: its timers run and its stages turn over.
 pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
     if kind != SNIFFER || world.get::<Raised>(entity).is_none_or(Raised::is_baby) {
@@ -146,13 +173,25 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
         Stage::Idle if now >= next => into(world, entity, Stage::Scenting { until: now + SCENTS_FOR }, None, Some(TIMER_FLAG_1)),
         Stage::Scenting { until } if now >= until => {
             world.get_mut::<Sniffing>(entity).expect("read above").next = now + roll(world, SCENTS_EVERY);
-            let found = pick(world, layer, body.at).map(|target| Stage::Searching { target, until: now + SEARCH_FOR });
-            into(world, entity, found.unwrap_or(Stage::Idle), Some(TIMER_FLAG_1), found.map(|_| SEARCHING));
+            into(world, entity, Stage::Seeking, Some(TIMER_FLAG_1), None);
         }
-        Stage::Searching { until, .. } if now >= until => into(world, entity, Stage::Idle, Some(SEARCHING), None),
+        Stage::Seeking => {
+            if let Some(target) = pick(world, layer, body.at) {
+                into(world, entity, Stage::Searching { target, check: now + STUCK_FOR, from: body.at }, None, Some(SEARCHING));
+            }
+        }
         Stage::Searching { target, .. } if (body.at[0] - target[0] as f32 - 0.5).hypot(body.at[2] - target[2] as f32 - 0.5) <= NEAR => {
             let until = now + roll(world, DIGS_FOR);
             into(world, entity, Stage::Digging { started: now, until }, Some(SEARCHING), Some(DIGGING));
+        }
+        Stage::Searching { check, from, .. } if now >= check && (body.at[0] - from[0]).hypot(body.at[2] - from[2]) < STUCK_WITHIN => {
+            let until = now + roll(world, AFTER);
+            into(world, entity, Stage::Rising { until }, Some(SEARCHING), Some(TIMER_FLAG_2));
+        }
+        Stage::Searching { target, check, .. } if now >= check => {
+            if let Some(mut sniffing) = world.get_mut::<Sniffing>(entity) {
+                sniffing.stage = Stage::Searching { target, check: now + STUCK_FOR, from: body.at };
+            }
         }
         Stage::Digging { started, .. } if now == started + FINDS_AT => {
             let find = FINDS[world.get_resource_or_insert_with(Dice::default).roll(FINDS.len() as u32) as usize];
@@ -174,7 +213,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str, now: u64) {
 /// Before a sniffer's move: it walks to the soil it searches for, and stands while it scents,
 /// digs and rises. False when it is idle.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
-    let Some(stage) = world.get::<Sniffing>(entity).map(|sniffing| sniffing.stage).filter(|stage| *stage != Stage::Idle) else { return false };
+    let Some(stage) = world.get::<Sniffing>(entity).map(|sniffing| sniffing.stage).filter(|stage| !matches!(stage, Stage::Idle | Stage::Seeking)) else { return false };
     let Some(body) = world.get::<crate::body::Body>(entity).copied() else { return false };
     match stage {
         Stage::Searching { target, .. } => {
