@@ -130,7 +130,9 @@ fn an_exposed_copper_chest_put_beside_a_copper_chest_takes_its_stage_and_pairs()
 fn a_copper_chest_pair_weathers_together_by_its_lead() {
     let mut h = chest_pair("minecraft:stick", "copper_chest");
     h.remote.run(|ctx| assert!(ctx.set_game_rule("randomTickSpeed", sapling_api::RuleValue::Int(2000))));
-    let first = (0..600).map(|_| [name(&mut h, LEAD), name(&mut h, OTHER)]).find(|now| now[0] != "minecraft:copper_chest" || now[1] != "minecraft:copper_chest");
+    // Both halves read in one handler: read one a tick apart, a weathering between the reads showed a split pair.
+    let both = |h: &mut Harness| common::asking::ask(h, |ctx| [LEAD, OTHER].map(|pos| ctx.block(pos).map(|block| block.name).unwrap_or_default()));
+    let first = (0..600).map(|_| both(&mut h)).find(|now| now[0] != "minecraft:copper_chest" || now[1] != "minecraft:copper_chest");
     assert_eq!(first, Some(["minecraft:exposed_copper_chest"; 2].map(String::from)), "both halves at once");
     assert!(paired(&mut h, LEAD) && paired(&mut h, OTHER));
 }
