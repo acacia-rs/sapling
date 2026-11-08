@@ -254,7 +254,7 @@ pub(super) fn fly(world: &mut World, arrow: Entity, layer: Entity, id: u64, now:
 /// The shot's flag word where a tick that moved it by `gone` changed it: it is shown, and its
 /// name may be, the tick after it came (`first`), and `MOVING` goes as for any entity
 /// (research/captures/bds-s7shots.txt, bds-shoot.txt).
-fn flags(world: &mut World, arrow: Entity, id: u64, gone: [f32; 3], first: bool) -> Option<bytes::Bytes> {
+pub(super) fn flags(world: &mut World, arrow: Entity, id: u64, gone: [f32; 3], first: bool) -> Option<bytes::Bytes> {
     let mut told = world.get_mut::<Told>(arrow)?;
     let moved = told.flags_word(gone, false, false);
     let seen = first.then(|| {

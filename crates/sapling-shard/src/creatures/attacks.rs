@@ -63,6 +63,15 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         }
         return Some(());
     }
+    if let Some(shot) = entities::find(world, EntityId(id)).filter(|entity| super::struck_back::is_strikable(world, *entity)) {
+        if world.get::<Body>(shot).is_some_and(|body| distance(eye, body) <= reach) && world.get::<Mode>(player)?.0 != GameMode::Spectator {
+            let blow = blows::blow(world, player, 0.0);
+            let cell = from.map(|c| c.floor() as i32);
+            crate::view::to_viewers(world, layer, cell, &[sapling_net::encode(&blows::sound(blow, from))]);
+            super::struck_back::strike(world, shot, player, [0.0; 3]);
+        }
+        return Some(());
+    }
     if let Some(vehicle) = entities::find(world, EntityId(id)).filter(|entity| world.get::<crate::vehicles::Vehicle>(*entity).is_some()) {
         if world.get::<Body>(vehicle).is_some_and(|body| distance(eye, body) <= reach) &&world.get::<Mode>(player)?.0 != GameMode::Spectator {
             let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));

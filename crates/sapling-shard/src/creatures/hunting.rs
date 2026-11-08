@@ -195,7 +195,7 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let target = prey.and_then(|prey| world.get::<NetId>(prey)).map_or(0, |id| id.0 as i64);
     let cell = body.at.map(|c| c.floor() as i32);
     let mut told = vec![targets(id, target)];
-    told.extend(super::bullets::peek(world, layer, id, kind, body.at, prey.is_some()));
+    told.extend(super::shulkers::peek(world, layer, id, kind, body.at, prey.is_some()));
     entities::tell_viewers(world, entity, layer, cell, told);
     if prey.is_some() {
         late_sounds::play_later(world, 1, layer, cell, sound("mob.warning", id, kind, body, HEAD));

@@ -3,14 +3,16 @@
 //! and picks another within a block of it or after 2 to 7 seconds. With prey in sight it opens its
 //! mouth with `warn` 20 ticks after taking it, shoots 21 after that, and warns again 60 after each
 //! shot (`fireballs`).
-// TODO: a spot is not checked to hold its box, and slowness does not stop it.
+//! A spot its box would not reach, there or on the straight way, is given up and another picked
+//! the tick after; slowness slows its push as it slows a walker (bds-ghast.txt: held at 0, it hung still).
 
 use acacia_proto::types::MetadataFlags1;
 use bevy_ecs::prelude::*;
+use sapling_world::World as Level;
 
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::Tick;
+use crate::components::{Layer, Tick};
 use crate::{entities, late_sounds};
 use super::{fireballs, hunting};
 
@@ -56,19 +58,39 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
             let mut off = |reach: f32| ((dice.fraction() * 2.0 - 1.0) * reach).round();
             let picked = [body.at[0].floor() + off(ACROSS), body.at[1].floor() + off(UP_OR_DOWN), body.at[2].floor() + off(ACROSS)];
             let lasts = FLOATS[0] + dice.roll((FLOATS[1] - FLOATS[0]) as u32 + 1) as u64;
+            let reached = world.get::<Layer>(layer).is_some_and(|level| reaches(&level.world, body, picked));
             if let Some(mut ghast) = world.get_mut::<Ghast>(entity) {
-                (ghast.spot, ghast.until) = (Some(picked), now + lasts);
+                (ghast.spot, ghast.until) = (reached.then_some(picked), now + lasts);
+            }
+            if !reached {
+                return steer_shots(world, entity, layer, id, kind, body, prey, warns, shoots);
             }
             picked
         }
     };
     let towards: [f32; 3] = std::array::from_fn(|axis| spot[axis] - body.at[axis]);
     let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt();
-    if long > 1e-4 {
+    let push = PUSH * super::afflictions::pace(world, entity);
+    if long > 1e-4 && push > 0.0 {
         if let Some(mut moving) = world.get_mut::<Body>(entity) {
-            moving.fly(towards.map(|c| c / long * PUSH));
+            moving.fly(towards.map(|c| c / long * push));
         }
     }
+    steer_shots(world, entity, layer, id, kind, body, prey, warns, shoots)
+}
+
+/// Whether a ghast of `body` floats to `spot` unhindered: its box free there and at each block
+/// of the straight way (the pack's `float_wander` `must_reach`, as the Java game's `GhastMoveControl.canReach`).
+fn reaches(level: &Level, body: &Body, spot: [f32; 3]) -> bool {
+    let way: [f32; 3] = std::array::from_fn(|axis| spot[axis] - body.at[axis]);
+    let steps = way.iter().map(|c| c * c).sum::<f32>().sqrt().ceil().max(1.0) as usize;
+    (1..=steps).all(|step| Body::new(std::array::from_fn(|axis| body.at[axis] + way[axis] * step as f32 / steps as f32), [0.0; 3], body.size).is_free(level))
+}
+
+/// With prey at `prey`, the ghast warns and shoots when they are due.
+#[allow(clippy::too_many_arguments)]
+fn steer_shots(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, prey: Option<[f32; 3]>, warns: Option<u64>, shoots: Option<u64>) -> bool {
+    let now = world.resource::<Tick>().0;
     let cell = body.at.map(|c| c.floor() as i32);
     let mouth = |world: &mut World, open: bool| {
         let flags = entities::mob_flags(world, entity, kind, MetadataFlags1::CHARGED, open);

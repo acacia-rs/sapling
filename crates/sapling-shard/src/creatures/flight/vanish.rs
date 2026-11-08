@@ -34,6 +34,22 @@ pub(super) fn reappear(world: &mut World, shot: Entity, layer: Entity, id: u64, 
     crate::view::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &[heard]);
 }
 
+/// A mob's projectile of `kind` comes hidden, as a player's shot does: `disappeared` heard at `at`
+/// (its shooter's, as each kind's says), told after its announcement.
+pub(crate) fn hide_mobs(world: &mut World, layer: Entity, kind: &str, id: u64, at: [f32; 3]) {
+    crate::entities::after_announcing(world, layer, at.map(|c| c.floor() as i32), vec![sound("disappeared", kind, id, at)]);
+}
+
+/// A tick of a mob's projectile `age` ticks old, before its move: `reappeared` at two from the middle of
+/// `body` (bds-ghast-findings.md, bds-shulker-findings.md, bds-breeze-findings.md).
+pub(crate) fn show_mobs(world: &mut World, layer: Entity, kind: &str, id: u64, age: u64, body: &Body) {
+    if age == REAPPEARS_AT_AGE {
+        let [x, y, z] = body.at;
+        let heard = sound("reappeared", kind, id, [x, y + body.size[1] / 2.0, z]);
+        crate::view::to_viewers(world, layer, body.at.map(|c| c.floor() as i32), &[heard]);
+    }
+}
+
 fn sound(name: &str, kind: &str, id: u64, [x, y, z]: [f32; 3]) -> bytes::Bytes {
     sapling_net::encode(&LevelSoundEvent { sound_id: name.into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: kind.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None })
 }

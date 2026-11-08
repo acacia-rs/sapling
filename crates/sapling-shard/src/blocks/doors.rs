@@ -22,7 +22,6 @@ const LEFT: [[i32; 2]; 4] = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 const STONE_PRESS_TICKS: u64 = 20;
 const WOODEN_PRESS_TICKS: u64 = 30;
 const STONE_BUTTONS: &[&str] = &[":stone_button", "polished_blackstone_button"];
-
 const DELAY: &str = "repeater_delay";
 const SUBTRACTS: &str = "output_subtract_bit";
 
@@ -237,19 +236,25 @@ fn turn_comparator(world: &mut World, layer: Entity, [x, y, z]: BlockPos) {
     }
 }
 
-/// What a hand does to the block `name` at `pos`: a door, trapdoor, fence gate or lever opens
-/// or shuts, a button goes in, a repeater takes its next delay, a comparator its other way. Iron
-/// does not move by hand. False for a block a hand does not move.
+/// What a hand does to the block `name` at `pos`: [`swing`], or a repeater takes its next delay, a
+/// comparator its other way. False for a block a hand does not move.
 pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos: BlockPos, name: &str) -> bool {
+    match name {
+        _ if name.ends_with("_repeater") => { turn_repeater(world, layer, pos); true }
+        _ if name.ends_with("_comparator") => { turn_comparator(world, layer, pos); true }
+        _ if name.contains("daylight_detector") => { super::daylight::turn(world, layer, pos); true }
+        _ => swing(world, Some(player), layer, pos, name),
+    }
+}
+
+/// A door, trapdoor, fence gate or lever at `pos` opens or shuts, a button goes in, by `player`'s hand or a gust (gusts.rs); not iron.
+pub(super) fn swing(world: &mut World, player: Option<Entity>, layer: Entity, pos: BlockPos, name: &str) -> bool {
     if name.contains("iron_") {
         return false;
     }
     // What it sounds like to open and to shut; a lever clicks like a button (BDS `LeverBlock::toggle`).
     let sounds = match name {
         _ if name.ends_with("button") => return { press(world, layer, pos); true },
-        _ if name.ends_with("_repeater") => return { turn_repeater(world, layer, pos); true },
-        _ if name.ends_with("_comparator") => return { turn_comparator(world, layer, pos); true },
-        _ if name.contains("daylight_detector") => return { super::daylight::turn(world, layer, pos); true },
         _ if name.ends_with("trapdoor") => ["trapdoor.open", "trapdoor.close"],
         _ if name.ends_with("door") => ["door.open", "door.close"],
         _ if name.ends_with("fence_gate") => ["fence_gate.open", "fence_gate.close"],
@@ -259,7 +264,7 @@ pub(super) fn use_by_hand(world: &mut World, player: Entity, layer: Entity, pos:
     // A door's sound names the state it had, a trapdoor's and a gate's the one they have now
     // (research/captures/bds-sounds.txt).
     let before = level(world, layer).map(|level| level.block(pos[0], pos[1], pos[2])).filter(|_| sounds[0] == "door.open");
-    if sounds[0] == "fence_gate.open" {
+    if let Some(player) = player.filter(|_| sounds[0] == "fence_gate.open") {
         super::gates::turn_to_user(world, player, layer, pos);
     }
     let Some(now_open) = toggle(world, layer, pos) else { return false };

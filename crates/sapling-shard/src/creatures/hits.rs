@@ -67,7 +67,7 @@ pub(crate) fn channels(world: &World, shot: Entity) -> bool {
 pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entity, is_player: bool, at: [f32; 3], motion: [f32; 3]) -> After {
     let Some((archer, by, gives, shot)) = flight::shooter(world, arrow) else { return After::Gone };
     // Its hurt does nothing, so the shot is refused as by anything that takes nothing.
-    if crate::dragon::reflect_fireball(world, struck, by, motion) {
+    if super::struck_back::strike(world, struck, by, motion) {
         if shot.kind == super::arrows::ARROW.kind {
             return After::Bounced;
         }

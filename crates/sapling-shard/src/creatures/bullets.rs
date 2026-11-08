@@ -1,32 +1,40 @@
 //! A shulker's bullets, as BDS's flew (research/captures/bds-shulker-findings.md): the Java game's
 //! `ShulkerBullet`, which flies along one axis at a time towards its target and turns where it is
-//! level with it, or after 10 to 50 ticks; whom it meets takes 4 and floats up for ten seconds.
-// TODO: a bullet is not shown hidden on its first tick nor turned as it flies; it hits no mob and
-// cannot be shot down; a shulker shows no idle peeks and does not teleport.
+//! level with it, or after 10 to 50 ticks; whom it meets takes 4 and floats up for ten seconds, a
+//! mob in its way too, thrown from the shulker and turned on it (bds-d3shulker.txt). It comes hidden
+//! (flight/vanish.rs) and a hit breaks it (struck_back.rs).
+// TODO: its pitch does not follow its motion as BDS's did.
 
-use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
-use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
+use acacia_proto::packets::LevelSoundEvent;
+use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
+use sapling_api::Effect;
 use sapling_data::AddEntityOptions;
 use sapling_world::World as Level;
 
+use super::flight::{self, vanish};
+use super::health::{Cause, Health};
+use super::struck_back::{self, Strikable};
+use super::{Creature, Dying, afflictions, harm, hits, hunting};
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{InLayer, Layer, NetId, Position, in_world};
+use crate::components::{InLayer, Layer, NetId, Position, Tick, in_world};
 use crate::sync::Told;
 use crate::{entities, late_sounds, mobs, vitals};
 
 /// Its name in `mob-traits.tsv` (`shot=`).
 pub(super) const NAME: &str = "shulker_bullet";
 const KIND: &str = "minecraft:shulker_bullet";
-const SHULKER: &str = "minecraft:shulker";
+pub(super) const SHULKER: &str = "minecraft:shulker";
 const SIZE: [f32; 2] = [0.3125, 0.3125];
 const PLAYER: [f32; 2] = [0.6, 1.8];
-/// It leaves this far up its shulker and this far towards its target; `shoot` is heard this far up.
+/// It leaves this far up its shulker and this far towards its target; `shoot` is heard this far up,
+/// `disappeared` this far.
 const HELD: f32 = 0.692;
 const AHEAD: f32 = 1.0;
 const SHOOT_UP: f32 = 0.99;
+const HIDDEN_UP: f32 = 0.9;
 /// The speed it is drawn to on a new leg, growing by this much a tick, and how much of the way
 /// there it gets in a tick.
 const PULL: f32 = 0.15;
@@ -42,12 +50,14 @@ const FALLS: f32 = 0.04;
 const HARM: f32 = 4.0;
 const LIFTS: u32 = 200;
 const REACH: f32 = 0.3;
-/// A shulker with prey is open this far.
-const OPEN: i32 = 100;
+/// A mob it meets is thrown this fast away from the shulker, and up.
+const THROW: f32 = 0.4;
 
 #[derive(Component)]
 struct Bullet {
+    shulker: Entity,
     by: [f32; 3],
+    born: u64,
     target: Entity,
     pull: [f32; 3],
     /// The axis it flies along and which way, if it is not making straight for its target.
@@ -59,16 +69,6 @@ struct Bullet {
 
 fn heard(name: &str, [x, y, z]: [f32; 3], of: &str, id: i64) -> Bytes {
     sapling_net::encode(&LevelSoundEvent { sound_id: name.into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: of.into(), is_baby_mob: false, is_global: false, entity_unique_id: id, fire_at_position: None })
-}
-
-/// The shulker `id` opens for its prey or closes, heard a tick later; nothing for other kinds.
-pub(super) fn peek(world: &mut World, layer: Entity, id: u64, kind: &str, feet: [f32; 3], open: bool) -> Option<Bytes> {
-    (kind == SHULKER).then(|| {
-        let sound = heard(if open { "shulker.open" } else { "shulker.close" }, feet, SHULKER, id as i64);
-        late_sounds::play_later(world, 1, layer, feet.map(|c| c.floor() as i32), sound);
-        let item = MetadataDictionaryItem { key: Key::ShulkerPeekId, r#type: Type::Int, legacy_type: 2, value: Value::Default(Plain::Int(if open { OPEN } else { 0 })) };
-        sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
-    })
 }
 
 fn is_empty(level: &Level, [x, y, z]: [i32; 3]) -> bool {
@@ -129,41 +129,73 @@ pub(super) fn fire(world: &mut World, layer: Entity, shulker: Entity, kind: &str
     let Some((pull, heading, steps)) = turn_in(world, layer, from, feet, None) else { return };
     let owner = world.get::<NetId>(shulker).map_or(-1, |id| id.0 as i64);
     let announce = |id: u64| {
-        let options = AddEntityOptions { id, identifier: KIND, feet: from, yaw: 0.0, pitch: 0.0, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1(0), health: None, name: "" };
+        let options = AddEntityOptions { id, identifier: KIND, feet: from, yaw: 0.0, pitch: 0.0, variant: 0, mark_variant: 0, color: 0, baby: false, flags: MetadataFlags1::INVISIBLE, health: None, name: "" };
         let mut shown = sapling_data::add_entity(&options);
         shown.metadata.retain(|item| item.key != Key::OwnerEid);
         shown.metadata.push(MetadataDictionaryItem { key: Key::OwnerEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(owner)) });
         Some(vec![sapling_net::encode(&shown)])
     };
-    let Some(bullet) = entities::spawn(world, layer, KIND, Body::new(from, [0.0; 3], SIZE), from, announce) else { return };
-    world.entity_mut(bullet).insert(Bullet { by: body.at, target, pull, heading, steps, spent: None });
+    let Some(bullet) = entities::spawn_mob(world, layer, KIND, Body::new(from, [0.0; 3], SIZE), from, announce) else { return };
+    let born = world.resource::<Tick>().0;
+    world.entity_mut(bullet).insert((Bullet { shulker, by: body.at, born, target, pull, heading, steps, spent: None }, Strikable::Breaks));
     let up = [body.at[0], body.at[1] + SHOOT_UP, body.at[2]];
     let cell = body.at.map(|c| c.floor() as i32);
+    let Some(id) = world.get::<NetId>(bullet).map(|id| id.0) else { return };
+    vanish::hide_mobs(world, layer, KIND, id, [body.at[0], body.at[1] + HIDDEN_UP, body.at[2]]);
     entities::tell_viewers(world, shulker, layer, cell, vec![heard("undefined", up, "", -1), heard("shoot", up, kind, owner)]);
-    if let Some(id) = world.get::<NetId>(bullet).map(|id| id.0) {
-        fly(world, bullet, layer, id, kind);
-    }
+    fly(world, bullet, layer, id, kind);
 }
 
-/// The player of `layer` whose box, `REACH` wider, holds `at`.
-fn met(world: &World, layer: Entity, at: [f32; 3]) -> Option<Entity> {
-    let across = PLAYER[0] / 2.0 + REACH;
-    in_world(world).into_iter().find(|player| {
-        let Some(feet) = world.get::<Position>(*player).map(|position| position.feet) else { return false };
-        world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer) && vitals::is_mortal(world, *player) && (at[0] - feet[0]).abs() < across && (at[2] - feet[2]).abs() < across && at[1] > feet[1] - REACH && at[1] < feet[1] + PLAYER[1] + REACH
+/// The player of `layer` whose box, `REACH` wider, holds `at`, else the living mob other than `shulker`.
+fn met(world: &mut World, layer: Entity, shulker: Entity, at: [f32; 3]) -> Option<(Entity, bool)> {
+    let holds = |feet: [f32; 3], size: [f32; 2]| {
+        let across = size[0] / 2.0 + REACH;
+        (at[0] - feet[0]).abs() < across && (at[2] - feet[2]).abs() < across && at[1] > feet[1] - REACH && at[1] < feet[1] + size[1] + REACH
+    };
+    let player = in_world(world).into_iter().find(|player| {
+        world.get::<InLayer>(*player).map(|layer| layer.0) == Some(layer) && vitals::is_mortal(world, *player) && world.get::<Position>(*player).is_some_and(|position| holds(position.feet, PLAYER))
+    });
+    player.map(|player| (player, true)).or_else(|| {
+        let mut mobs = world.query_filtered::<(Entity, &InLayer, &Body), (With<Creature>, With<Health>, Without<Dying>)>();
+        mobs.iter(world).find(|(mob, on, body)| *mob != shulker && on.0 == layer && holds(body.at, body.size)).map(|(mob, ..)| (mob, false))
     })
+}
+
+/// The bullet shot from `by` by `shulker` met `struck`.
+fn strike(world: &mut World, layer: Entity, struck: Entity, is_player: bool, shulker: Entity, by: [f32; 3], kind: &str) {
+    if is_player {
+        if vitals::shot(world, struck, HARM, kind, by, true, [0.0; 3]) {
+            vitals::afflict(world, struck, "levitation", LIFTS);
+        }
+        return;
+    }
+    if harm::wound_by(world, struck, layer, HARM, Cause::Projectile, None) != Some(true) {
+        return;
+    }
+    afflictions::give(world, struck, Effect::Levitation, LIFTS, 0);
+    let Some(at) = world.get::<Body>(struck).map(|body| body.at) else { return };
+    let (dx, dz) = (at[0] - by[0], at[2] - by[2]);
+    let far = dx.hypot(dz).max(1e-4);
+    hits::throw_at_once(world, struck, layer, [dx / far * THROW, THROW, dz / far * THROW]);
+    hunting::hurt_by(world, struck, shulker);
 }
 
 /// A tick of one bullet, shot by a mob of `kind`.
 fn fly(world: &mut World, bullet: Entity, layer: Entity, id: u64, kind: &str) -> Option<()> {
+    let now = world.resource::<Tick>().0;
     let mut body = *world.get::<Body>(bullet)?;
+    if world.get::<struck_back::Broken>(bullet).is_some() {
+        mobs::remove(world, bullet);
+        return None;
+    }
     let state = world.get::<Bullet>(bullet)?;
-    let (by, target, mut pull, heading) = (state.by, state.target, state.pull, state.heading);
+    let (shulker, by, born, target, mut pull, heading) = (state.shulker, state.by, state.born, state.target, state.pull, state.heading);
     if let Some(point) = state.spent {
         mobs::remove(world, bullet);
         late_sounds::play_later(world, 0, layer, point.map(|c| c.floor() as i32), heard("bullet.hit", point, "", -1));
         return None;
     }
+    vanish::show_mobs(world, layer, KIND, id, now - born, &body);
     let feet = world.get::<Position>(target).map(|position| position.feet);
     match feet {
         Some(_) => {
@@ -174,13 +206,11 @@ fn fly(world: &mut World, bullet: Entity, layer: Entity, id: u64, kind: &str) ->
     }
     let middle = [body.at[0], body.at[1] + SIZE[1] / 2.0, body.at[2]];
     let along = |part: f32| -> [f32; 3] { std::array::from_fn(|a| middle[a] + body.motion[a] * part) };
-    let struck = [0.25, 0.5, 0.75, 1.0].into_iter().find_map(|part| met(world, layer, along(part)).map(|player| (player, along(part))));
+    let struck = [0.25, 0.5, 0.75, 1.0].into_iter().find_map(|part| met(world, layer, shulker, along(part)).map(|met| (met, along(part))));
     let end = along(1.0);
     let walled = !is_empty(&world.get::<Layer>(layer)?.world, end.map(|c| c.floor() as i32));
-    if let Some((player, point)) = struck {
-        if vitals::shot(world, player, HARM, kind, by, true, [0.0; 3]) {
-            vitals::afflict(world, player, "levitation", LIFTS);
-        }
+    if let Some(((struck, is_player), point)) = struck {
+        strike(world, layer, struck, is_player, shulker, by, kind);
         world.get_mut::<Bullet>(bullet)?.spent = Some(point);
         return Some(());
     }
@@ -188,9 +218,12 @@ fn fly(world: &mut World, bullet: Entity, layer: Entity, id: u64, kind: &str) ->
         world.get_mut::<Bullet>(bullet)?.spent = Some(end);
         return Some(());
     }
+    let start = body.at;
     body.at = std::array::from_fn(|a| body.at[a] + body.motion[a]);
     *world.get_mut::<Body>(bullet)? = body;
-    let packets = world.get_mut::<Told>(bullet)?.update(id, body.at, body.motion, false);
+    let mut packets = world.get_mut::<Told>(bullet)?.update(id, body.at, body.motion, false);
+    let gone: [f32; 3] = std::array::from_fn(|a| body.at[a] - start[a]);
+    packets.splice(0..0, flight::flags(world, bullet, id, gone, now == born + 1));
     entities::tell_viewers(world, bullet, layer, body.at.map(|c| c.floor() as i32), packets);
     let Some(feet) = feet else { return Some(()) };
     let own = body.at.map(|c| c.floor() as i32);

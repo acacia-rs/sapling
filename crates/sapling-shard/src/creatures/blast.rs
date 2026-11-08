@@ -255,8 +255,9 @@ fn blast(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3],
         Wreck::Nothing | Wreck::Breaks => 0.0,
     };
     let left = if wreck != Wreck::Nothing { blocks::break_blown(world, layer, &cells, leaves) } else { Default::default() };
-    if rule == Rule::Burning {
-        set_fires(world, layer, &listed);
+    // A ghast's fireball burns where it may grief (bds-d3ghast.txt, bds-d3ghast2.txt).
+    if rule == Rule::Burning || (rule == Rule::Fireball && wreck != Wreck::Nothing) {
+        set_fires(world, layer, &[&cells[..], &free[..]].concat());
     }
     left
 }

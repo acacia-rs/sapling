@@ -507,17 +507,30 @@ level, operation 2), once more for each taken off (bds-a3fx.txt: a zombie's 0.32
 twice; `told::paced`). Levitation, slow falling and jump boost move it (`afflictions/moved.rs`,
 bds-a3fx.txt, bds-a3fx2.txt), and strength and weakness scale its hit as a player's (effects.md;
 bds-a3fx.txt, bds-a3fx3.txt: a zombie's 3 on normal was 4.9 and 7.37 under strength I and II, 1.9 and 1.02
-under weakness I and II). Slowness 255 stopped a zombie's hits on BDS, not only its walk
-(bds-a3fx2.txt: none in four 3-second holds beside the survival watcher, one within 4 to 20 ticks of each
-clear). Effects are not saved with it or told to one who comes.
+under weakness I and II). Slowness stops a mob's walk, not its hits (bds-d3slow.txt: a zombie held at
+movement 0 by slowness 255 or 6, at 0.0575 by slowness 4, a spider and a vindicator at 255, each
+teleported 1.1 off the survival watcher, hit it the tick it came and every 20 ticks while it stayed in
+reach); bds-a3fx2.txt's hitless holds had the watcher out of reach. Sapling's hunters do the same.
+Effects are not saved with it or told to one who comes.
 
 A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
-41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits
-no mob and cannot be shot down, and a shulker neither peeks idly nor teleports.
+41 ticks apart where BDS's varied. Its bullet (bds-d3shulker.txt) comes hidden: AddEntity flags
+INVISIBLE, `disappeared` 0.9 up the shulker, shown the next tick, `reappeared` from its middle the
+tick after (flight/vanish.rs). A mob in its way takes 4 and levitation, is thrown 0.4 away from the
+shulker and 0.4 up, and turns on it; a hit breaks it, `ParticleCritical` 15 at once and gone the tick
+after (creatures/struck_back.rs). Idle, a shulker peeks open 30 for 19, 39 or 59 ticks, one tick in 40
+(twelve gaps averaged 42); one whose floor goes hops to a free cell over a solid block within 8,
+`ShulkerAttachPos` and `teleport` where it stood (`creatures/shulkers.rs`; BDS moved it a tick later).
+[U] a bullet's pitch does not follow its motion; a hurt shulker's hop (the Java game's one in four
+under half health) was not seen: the drilled one floated off levitated.
 
 A breeze faces, shoots, leaps and walks as above (`creatures/breezes.rs`, `creatures/charges.rs`,
-`Physics::BREEZE`); it leaps over nothing in its way, and its
-bursts push no mob, toggle no block and do not push the breeze. Its leap (2026-11-05, bdsre 149fb7240,
+`Physics::BREEZE`); it leaps over nothing in its way. Its charge (bds-d3breeze.txt) comes hidden
+as a shulker's bullet does; one that meets a mob bursts there at once, 1 to it, thrown 0.4 away from
+the breeze and up plus the burst's push; a burst pushes every mob near, its breeze too, and the tick
+after swings the wooden doors, trapdoors, fence gates and levers and presses the buttons its power-3
+rays reach (an iron door stayed; `blocks/gusts.rs`). A hit turns a charge, as a fireball. Facing, the
+breeze turns 30 degrees a tick towards its prey (`legs::face`). Its leap (2026-11-05, bdsre 149fb7240,
 14890ff00, 149fb78e0, 14890f450; `creatures/breezes/leap.rs`): only with prey 4 to 20 off and 4 air
 cells over it; a spot 2 to 2.83 off the prey along its head yaw + 180 + 45 x a normal draw degrees,
 snapped to a floor within 10, not lava, seen from its eyes; the aim that cell's middle pulled 0.5
@@ -529,9 +542,18 @@ level times the launch's y over its length to its y, after the solve: bds-g10bre
 jump boost V fit to 1e-4 (`breezes/leap.rs` `boosted`). A leap keeps its launch speed across from its first tick
 (BDS's x stayed -0.5035 a tick); sapling's took ground friction on its second, fixed in `body.rs`
 (sapling-g10breeze.txt). [U] sapling's first SetEntityMotion comes a tick after BDS's. The breeze drill
-cannot judge the landings: its capture lacks the actor, whom each burst pushes. A charge that meets nothing flies on.
+cannot judge the landings: its capture lacks the actor, whom each burst pushes. A charge that meets
+nothing flew on out of sight (62 blocks); sapling's goes after 10 seconds.
 
 A ghast floats and shoots as above (`creatures/ghasts.rs`, `creatures/fireballs.rs`,
-`Physics::FLYER`, `blast::explode_fireball`); a spot is not checked to hold it, slowness does not
-stop it, its fireball is not pushed off it and hits no mob, and the blast lights no fire. A
+`Physics::FLYER`, `blast::explode_fireball`). A spot its box would not reach, there or a block at a
+time along the way, is given up (the pack's `float_wander` `must_reach`; not drilled), and slowness
+scales its push, 0 at 255 (bds-ghast.txt). Its fireball (bds-d3ghast.txt, bds-d3ghast2.txt) comes
+hidden and alight (flags INVISIBLE, then ONFIRE the same tick), pushed off its ghast by the Java
+game's `pushAwayFrom` and the ghast back a tick later; a mob it meets takes 6 and burns at once, the
+blast the tick after; with mob griefing the blast lights about a third of the free cells over solid
+blocks, the rest written again as air. A hit, a player's or a shot's, turns it at the hitter's look
+at 1 a tick, the hitter its owner and moved so that tick (one turned back killed its ghast); a blue
+wither skull and a breeze's charge the same (bds-d3wither.txt, bds-d3breeze.txt; one path,
+`creatures/struck_back.rs`). [U] a player it overlaps pushes it about twice `pushAwayFrom`. A
 fireball that meets nothing goes after 10 seconds.
