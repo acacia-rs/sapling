@@ -43,6 +43,14 @@ research/captures/bds-t2ekeep-dump.txt). A kept `definitions` list is edited as 
 owner sets `Persistent` and keeps the mob from despawning. Kinds the packs give no `minecraft:ageable`
 (a baby zombie) stay babies.
 
+## A click's swing (bds-b1click.txt, `b1click` in fourteenth1b_drill.rs)
+
+Each click on a mob that BDS takes (wheat to a cow, shears to a sheep, a bucket to a cow) sends the clicker and
+its viewers `Animate` `SwingArm` with the source `interact`, in the tick of the click; a click not taken (a stick)
+sends none. The client's own swing is relayed to the viewers with the source it gave. Sapling: `actions.rs`
+`swing`, `movement.rs` `relay_swings`; tests `a_click_a_mob_takes_swings_the_clickers_arm_for_it_and_its_viewers`,
+players.rs.
+
 ## Unverified
 
 - Love lasts 600 ticks, the rest after breeding 6000; a mob looks 8 blocks for a mate and they breed

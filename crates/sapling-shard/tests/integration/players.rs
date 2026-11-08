@@ -109,13 +109,13 @@ fn pose_and_swings_reach_the_viewer() {
     let flags = flags_of(&all::<SetEntityData>(sent.to(2))[0].metadata);
     assert!(!flags.contains(MetadataFlags1::SNEAKING) && flags.contains(MetadataFlags1::SPRINTING));
 
-    // A swing is relayed under the sender's own id, once a tick.
-    let swing = Animate { action_id: AnimateActionId::SwingArm, runtime_entity_id: 2, data: 3.0, has_swing_source: true, swing_source: Some("x".into()) };
+    // A swing is relayed under the sender's own id with its source, once a tick (bds-b1click.txt).
+    let swing = Animate { action_id: AnimateActionId::SwingArm, runtime_entity_id: 2, data: 3.0, has_swing_source: true, swing_source: Some("interact".into()) };
     h.receive(1, &swing);
     h.receive(1, &swing);
     h.receive(1, &Animate { action_id: AnimateActionId::CriticalHit, ..swing.clone() });
     let sent = h.tick_all();
-    let relayed = Animate { action_id: AnimateActionId::SwingArm, runtime_entity_id: 1, data: 0.0, has_swing_source: false, swing_source: None };
+    let relayed = Animate { action_id: AnimateActionId::SwingArm, runtime_entity_id: 1, data: 0.0, has_swing_source: true, swing_source: Some("interact".into()) };
     assert_eq!((all::<Animate>(sent.to(2)), sent.to(1).len()), (vec![relayed], 0));
 
     // Someone who arrives later sees the pose in AddPlayer.
