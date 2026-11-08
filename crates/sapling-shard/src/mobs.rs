@@ -24,6 +24,7 @@ pub(crate) mod at_once;
 mod folded;
 pub(crate) mod gone;
 mod linked;
+mod live;
 pub(crate) mod moved;
 mod rehomed;
 
@@ -110,8 +111,10 @@ pub(crate) fn announcement_with(actor: &Actor, id: u64, extra: MetadataFlags1, p
         ActorState::Chested => MetadataFlags1::CHESTED,
         ActorState::Sitting => MetadataFlags1::SITTING,
     };
+    // A named mob's flags show its name (bds-ad3reload.txt's cows, stored and summoned).
+    let named = if actor.name.is_empty() { 0 } else { MetadataFlags1::CAN_SHOW_NAMETAG.0 };
     let mut added = sapling_data::add_entity(&AddEntityOptions {
-        flags: MetadataFlags1(actor.states.iter().fold(extra.0, |flags, state| flags | flag(state).0)),
+        flags: MetadataFlags1(actor.states.iter().fold(extra.0 | named, |flags, state| flags | flag(state).0)),
         health: actor.health,
         id,
         identifier: &actor.identifier,
@@ -255,6 +258,7 @@ pub(crate) fn despawn_unloaded(mut commands: Commands, tick: Res<Tick>, mut grid
 }
 
 type Viewer<'a> = (&'a Stage, &'a InLayer, &'a View, &'a mut SeesMobs, &'a mut Outgoing, Option<&'a Hidden>);
+type MobShown<'a> = (&'a Mob, &'a NetId, Option<&'a Labels>, Option<&'a Linked>, Option<&'a crate::sync::Told>, Option<&'a crate::entities::Born>);
 
 /// How far from a player's chunk, in chunks (a circle), mobs are shown: BDS hid a mob 3,3 and 5,0
 /// chunks off and showed it 3,2 and 4,0 off at every `tick-distance` from 4 to 10, ticking the hidden
@@ -264,7 +268,7 @@ const SHOWN_WITHIN: i32 = 4;
 /// Adds the mobs whose column came within each player's [`SHOWN_WITHIN`] circle and removes those
 /// that left it or are gone. A player whose view stayed where it was while no mob came or went is
 /// skipped.
-pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query<(&Mob, &NetId, Option<&Labels>, Option<&Linked>)>, kept: Query<(), With<FromFolder>>) {
+pub(crate) fn update(grid: Res<MobGrid>, tick: Res<Tick>, mut viewers: Query<Viewer>, mobs: Query<MobShown>, kept: Query<(), With<FromFolder>>) {
     for (stage, in_layer, view, mut sees, mut out, hidden) in &mut viewers {
         let made_for = Some((view.moves(), grid.changes));
         if *stage != Stage::InWorld || sees.made_for == made_for {
@@ -275,8 +279,9 @@ pub(crate) fn update(grid: Res<MobGrid>, mut viewers: Query<Viewer>, mobs: Query
         let new: Vec<Entity> = covered.iter().map(|(entity, _)| *entity).filter(|entity| !sees.mobs.contains_key(entity) && mobs.contains(*entity)).collect();
         let rides = |mob: Entity| mobs.get(mob).ok()?.3?.rides.as_ref().map(|(mount, drives, _)| (*mount, *drives));
         let new: Vec<_> = linked::order(&new, rides).into_iter().filter_map(|entity| mobs.get(entity).ok()).collect();
-        for (mob, id, labels, linked) in &new {
-            out.0.extend(linked::dressed(&mob.announcement, *linked));
+        for (mob, id, labels, linked, told, born) in &new {
+            let made_now = born.is_some_and(|born| born.0 == tick.0);
+            out.0.extend(live::as_now(linked::dressed(&mob.announcement, *linked), told.filter(|_| !made_now)));
             out.0.extend(crate::labels::packet(*labels, id.0));
         }
         for (mob, ..) in &new {

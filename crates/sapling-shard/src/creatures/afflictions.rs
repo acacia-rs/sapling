@@ -15,7 +15,6 @@ use acacia_proto::packets::MobEffectEventId;
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
 
-pub(super) use invisible::announced_unseen;
 pub(crate) use invisible::sight as unseen_sight;
 pub(super) use kept::{adopt, keep};
 pub(crate) use potions::{clouded, splashed, takes_potion};

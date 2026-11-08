@@ -23,11 +23,12 @@ pub(super) fn greet(world: &mut World, player: Entity) {
     }
 }
 
-/// Tells the player of one effect, stamped with the tick it is told in as BDS's (bds-r1buckets.txt).
+/// Tells the player and its viewers of one effect at once, before the command's answer (bds-bg2player.txt),
+/// stamped with the tick it is told in as BDS's (bds-r1buckets.txt).
 pub(super) fn tell_effect(world: &mut World, player: Entity, id: u64, event_id: MobEffectEventId, active: &Active) {
     let tick = world.resource::<crate::components::Tick>().0;
     let told = MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: active.left as i32, tick, ambient: active.ambient };
-    tell(world, player, &told);
+    tell_seen(world, player, sapling_net::encode(&told));
 }
 
 /// Puts `amount` of health on top of a player's own, told at once.
@@ -47,9 +48,10 @@ pub(super) fn boost(world: &mut World, player: Entity, id: u64) {
     tell(world, player, &told);
 }
 
-/// The ids of the effects on a player that show their particles, in order.
-pub(super) fn shown(world: &World, player: Entity) -> Vec<i32> {
-    shown_of(world.get::<Effects>(player))
+/// What a player's effects show of it: the ids of those that show their particles, in order,
+/// and whether it is invisible.
+pub(super) fn shown(world: &World, player: Entity) -> (Vec<i32>, bool) {
+    (shown_of(world.get::<Effects>(player)), super::invisible::is_invisible(world, player))
 }
 
 fn shown_of(effects: Option<&Effects>) -> Vec<i32> {
@@ -64,10 +66,39 @@ pub(crate) fn announced(id: u64, effects: Option<&Effects>) -> acacia_proto::typ
     sapling_data::visible_effects(id, shown_of(effects)).metadata.remove(0)
 }
 
-/// Tells the player and its viewers the effects it shows, where they are not `before`'s.
-pub(super) fn show(world: &mut World, player: Entity, id: u64, before: &[i32]) {
-    let now = shown(world, player);
-    if now != before {
-        tell(world, player, &sapling_data::visible_effects(id, now));
+/// Tells the player and its viewers what its effects show, where it is not `before`'s: the flags
+/// invisibility gives or takes (invisible.rs), then the effects it shows, in one SetEntityData at
+/// the tick-end sync stamped with its input's tick (bds-bg2player.txt, bds-lateeffects.txt).
+pub(super) fn show(world: &mut World, player: Entity, id: u64, (before, hidden): &(Vec<i32>, bool)) {
+    let (now, hides) = shown(world, player);
+    let mut told = sapling_data::visible_effects(id, now.clone());
+    if now == *before {
+        told.metadata.clear();
+    }
+    if hides != *hidden {
+        told.metadata.splice(0..0, super::invisible::flip(world, player, hides));
+    }
+    if told.metadata.is_empty() {
+        return;
+    }
+    told.tick = world.get::<crate::movement::Motion>(player).map_or(0, crate::movement::Motion::input_tick);
+    tell_at_sync(world, player, sapling_net::encode(&told));
+}
+
+/// Sends `packet` to the player and its viewers once this tick's actors are synced, in their order
+/// (entities/slots.rs).
+pub(super) fn tell_at_sync(world: &mut World, player: Entity, packet: bytes::Bytes) {
+    crate::entities::told_after_answer(world, |world| tell_seen(world, player, packet));
+}
+
+/// Sends `packet` now to the player and those who see it.
+fn tell_seen(world: &mut World, player: Entity, packet: bytes::Bytes) {
+    if let Some(mut out) = world.get_mut::<crate::components::Outgoing>(player) {
+        out.0.push(packet.clone());
+    }
+    for (sees, mut out) in world.query::<(&crate::visibility::Sees, &mut crate::components::Outgoing)>().iter_mut(world) {
+        if sees.0.contains(&player) {
+            out.0.push(packet.clone());
+        }
     }
 }

@@ -4,7 +4,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Attacker, Command, DamageCause, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, no_target, targets};
+use super::{answer_name, no_target, targets};
 
 pub(crate) struct Damage {
     target: Selector,
@@ -69,7 +69,8 @@ impl Command for Damage {
         if found.is_empty() && mobs.is_empty() {
             return no_target(out);
         }
-        let names = || found.iter().map(|player| player.name.clone()).chain(mobs.iter().map(|mob| display_name(mob))).collect::<Vec<_>>().join(", ");
+        let mob_names: Vec<String> = mobs.iter().map(|mob| answer_name(ctx, mob)).collect();
+        let names = || found.iter().map(|player| player.name.clone()).chain(mob_names.iter().cloned()).collect::<Vec<_>>().join(", ");
         // BDS fails `suffocation` for anyone (research/captures/bds-worn.txt).
         if self.cause == DamageCause::Suffocation {
             return out.translate("commands.damage.failed", vec![names()], false);
@@ -85,11 +86,12 @@ impl Command for Damage {
             .collect();
         hurt.extend(
             mobs.iter()
-                .filter(|mob| match &attacker {
+                .zip(&mob_names)
+                .filter(|(mob, _)| match &attacker {
                     Some(by) => ctx.hurt_entity_by(mob.id, amount, cause, by),
                     None => ctx.hurt_entity(mob.id, amount, cause),
                 })
-                .map(|mob| display_name(mob)),
+                .map(|(_, name)| name.clone()),
         );
         if hurt.is_empty() {
             return out.translate("commands.damage.failed", vec![names()], false);

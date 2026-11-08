@@ -98,7 +98,7 @@ Drilled 2026-10-29 (research/captures/bds-fx3.txt):
   Fixed (`creatures/afflictions/told.rs`), test
   `a_mobs_effect_is_told_before_what_it_shows_and_a_hidden_one_shows_nothing`.
 
-## Invisibility on mobs (group BF)
+## Invisibility (groups BF and BG)
 
 Drilled 2026-11-08 (`bds_command_probe bf1give`, `bf1potion`, `bf1near`, `bf1armour`, `bf1target`;
 research/captures/bds-bf1*.txt, sapling-bf1*.txt after the port):
@@ -112,8 +112,16 @@ research/captures/bds-bf1*.txt, sapling-bf1*.txt after the port):
   while it lasts tells nothing; dying invisible plays nothing. Armour and held items are told as
   before (equipment packets unchanged, a late viewer gets them too); a late viewer's `AddEntity`
   carries the invisible flags and `VisibleMobEffects`, with no sound.
-- The player (not ported, REMAINING3): `MobEffect` at once, then flags and `VisibleMobEffects` at the
-  sync with the tick stamped, `disappeared`/`reappeared` 0.9 over its feet the tick after.
+- The player (`bg2player`, ported in `vitals/effects/invisible.rs`): `MobEffect` to it and its viewers
+  before the answer, then at the sync one SetEntityData of flags (`INVISIBLE` on, `CAN_SHOW_NAMETAG`
+  off) and changed `VisibleMobEffects`, stamped with its input tick; `disappeared`/`reappeared` 0.9 over
+  its feet the tick after. A raise tells nothing; sneaking keeps `INVISIBLE`; once seen again it keeps
+  `CAN_SHOW_NAMETAG` for good. Every player's `VisibleMobEffects` waits for the sync. A splash hits both
+  players in sync order. A late viewer's `AddPlayer` carries the flags. A player leaving is heard
+  `disappeared` at feet + 0.9 after its `RemoveEntity` (roster.rs). Left: the thrown invisibility
+  potion is heard `disappeared`/`reappeared` itself (REMAINING3).
+- Late viewers (`bg2names`): a mob's `AddEntity` carries the flags it has now (BREATHING, MOVING, a
+  charge, a name), not those it was made with (`mobs/live.rs`); a mob made this tick keeps its own.
 - Hunting: a zombie (sight 35) took a bare invisible player only within 2.45 of its eyes (2.41 yes,
   2.57 no; 4, 9 and 15 off never) and an invisible villager 4 off never; in iron the reach grew with
   the pieces worn: four took it 15 off, two 9 off but not 15, one not 9 off. That is sight x 0.7 x
@@ -131,7 +139,7 @@ told: the drill bot comes back with a new identity, so BDS gave it a new player 
 
 The effects of `fx` are built, health boost with the attribute BDS wrote (its default and
 default most stay 20). Those BDS only told of are only told of here,
-so levitation lifts as far as the client does it; invisibility: "Invisibility on mobs" above.
+so levitation lifts as far as the client does it; invisibility: "Invisibility" above.
 Run against sapling the drill gave BDS's speeds, falls and strong hits (7.7 and 6.01 left of a
 cow's 10); its bare and its weak hit missed a cow that had strolled off, and a test holds them.
 

@@ -4,7 +4,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector, parse_choice};
 use sapling_api::{Command, Output, Permission, Sender, ShardCtx, Tagged};
 
-use super::{display_name, no_target, targets};
+use super::{answer_name, no_target, targets};
 
 pub(crate) struct Tag {
     target: Selector,
@@ -40,7 +40,7 @@ impl Command for Tag {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let (players, entities) = targets(ctx, sender, Some(&self.target));
         let mut found: Vec<(Tagged, String)> = players.into_iter().map(|player| (Tagged::Player(player.id), player.name)).collect();
-        found.extend(entities.iter().map(|entity| (Tagged::Entity(entity.id), display_name(entity))));
+        found.extend(entities.iter().map(|entity| (Tagged::Entity(entity.id), answer_name(ctx, entity))));
         if found.is_empty() {
             return no_target(out);
         }

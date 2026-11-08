@@ -10,8 +10,8 @@ use super::{husbandry, raids, villagers};
 const PLAYER: &str = "minecraft:player";
 
 /// Fires `event` on `entity` of `kind`, doing what sapling models of it: a baby event makes it a newborn,
-/// a look or rider event as a herd's does, a `become_<profession>` retrains a villager, and a raised
-/// mob's growing, wool and colour events (husbandry/fired.rs). False where its kind's definition has no
+/// a look or rider event as a herd's does, a `become_<profession>` retrains a villager, a raised
+/// mob's growing, wool and colour events (husbandry/fired.rs) and a creeper's charge. False where its kind's definition has no
 /// such event.
 // TODO: the events' other component groups and properties.
 pub(super) fn fire(world: &mut World, entity: Entity, kind: &str, event: &str) -> bool {
@@ -25,6 +25,7 @@ pub(super) fn fire(world: &mut World, entity: Entity, kind: &str, event: &str) -
     fire_herd_event(world, entity, kind, event);
     villagers::retrain(world, entity, event);
     husbandry::fired(world, entity, kind, event);
+    super::struck::evented(world, entity, kind, event);
     true
 }
 

@@ -64,6 +64,7 @@ impl Raised {
             (kept.leasher.is_some(), Flags::LEASHED),
             (self.saddled, Flags::SADDLED),
             (self.chested, Flags::CHESTED),
+            (!kept.name.is_empty(), Flags::CAN_SHOW_NAMETAG),
         ];
         Flags(bits.iter().filter(|(on, _)| *on).fold(0, |flags, (_, flag)| flags | flag.0))
     }

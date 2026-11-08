@@ -39,6 +39,7 @@ fn act(world: &mut World, player: Entity, active: &Active) {
 
 /// A tick of every player's effects; those whose time is up are told gone.
 pub(in crate::vitals) fn tick(world: &mut World) {
+    super::invisible::heard(world);
     for player in in_world(world) {
         told::greet(world, player);
         if world.get::<Vitals>(player).is_some_and(|vitals| vitals.died.is_some()) {

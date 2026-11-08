@@ -43,7 +43,9 @@ fn show(world: &mut World, mob: Entity, feet: [f32; 3]) {
         *first = placed(first, feet);
     }
     let home = shown.home;
-    let packets: Vec<Bytes> = shown.announcement.iter().cloned().chain(labels).chain(shown.after.iter().cloned()).collect();
+    let (announcement, after) = (shown.announcement.clone(), shown.after.clone());
+    let announced = super::live::as_now(announcement, world.get::<crate::sync::Told>(mob).filter(|_| !crate::entities::is_new(world, mob)));
+    let packets: Vec<Bytes> = announced.into_iter().chain(labels).chain(after).collect();
     for (stage, in_layer, view, mut sees, mut out, hidden) in world.query::<Viewer>().iter_mut(world) {
         if *stage != Stage::InWorld || in_layer.0 != layer || sees.mobs.contains_key(&mob) || Hidden::hides(hidden, mob) || !shows(view, home) {
             continue;

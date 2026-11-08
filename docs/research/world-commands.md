@@ -87,6 +87,12 @@ selecting,session,items,enchanting}.rs`.
   a ride the rider cannot mount stays, unnamed, and the answer is `summonRide.notRideable []`
   (earlier `bds-f1cmds.txt` mounted and named its horse "Ride"). `ShardCtx::name_entity` names a
   mob as a name tag does; boats and minecarts take no name in sapling.
+- Names (bds-bg2names.txt): `summon <kind> <name> <pos>` (the name first) works as `summon <kind>
+  <pos> ... <name>`; the named mob's AddEntity carries the name and `CAN_SHOW_NAMETAG`
+  (`AlwaysShowNametag` 0), and so do its first tick's flags. Answers name a named target by its name
+  (`/effect` "a", "v"; `vanilla.rs` `answer_name`). `/event ... minecraft:become_charged` charges a
+  creeper as lightning does. A name tag used on a live mob was not drilled: BDS named nothing for the
+  probe's click after the anvil, with or without a rejoin between (bds-bg2tag.txt).
 - `/camera`: see the run, bdsre 0x140ff03e0. Checks in order: easing with seconds > 0 on a preset
   without it (`invalid.easing`, first_person; third_person's not drilled), `rot` pitch, then
   `view_offset` (|x|, |y| > 64 → `invalid.view.offset`) and `entity_offset` (> 64 on an axis →

@@ -169,6 +169,12 @@ fn display_name(entity: &EntityInfo) -> String {
     listed(id).or_else(|| sapling_data::item_display_name(id, 0)).map_or_else(|| title_case(id), str::to_owned)
 }
 
+/// A target as BDS names it in a command's answer: by its name where it has one (bds-bg2names.txt: `/effect`
+/// answered the sheep "a" and the villager "v"), else as [`display_name`].
+fn answer_name(ctx: &mut ShardCtx<'_>, entity: &EntityInfo) -> String {
+    ctx.name_tag(entity.id).unwrap_or_else(|| display_name(entity))
+}
+
 /// An item of `data` as BDS names it in a command's answer: `Raw Chicken`, `Potion of Slowness`.
 fn item_display_name(id: &str, data: i16) -> String {
     sapling_data::item_display_name(id, u16::try_from(data).unwrap_or(0)).map_or_else(|| title_case(id), str::to_owned)

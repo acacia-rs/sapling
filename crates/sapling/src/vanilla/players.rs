@@ -4,7 +4,7 @@
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Coords, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
 use sapling_api::{Command, Difficulty, GameMode, Output, Permission, Sender, ShardCtx};
 
-use super::{display_name, no_target, players, targets, tell_target};
+use super::{answer_name, no_target, players, targets, tell_target};
 
 fn namespaced(name: &str) -> String {
     if name.contains(':') { name.to_owned() } else { format!("minecraft:{name}") }
@@ -84,6 +84,8 @@ impl Command for DifficultyCommand {
 #[command(crate = "crate", name = "summon", description = "Summons an entity", permission = "operator")]
 pub(crate) struct Summon {
     kind: EntityName,
+    /// `summon <kind> <name> [position]`, BDS's other overload (bds-bf1give.txt `summon villager v`).
+    named: Option<NameFirst>,
     position: Option<Coords>,
     yaw: Option<f32>,
     pitch: Option<f32>,
@@ -114,6 +116,23 @@ impl Parameter for EntityName {
     }
 }
 
+/// A name right after `/summon`'s kind, where a position would stand.
+pub(crate) struct NameFirst(String);
+
+impl Parameter for NameFirst {
+    fn kind() -> ParamKind {
+        <String as Parameter>::kind()
+    }
+
+    fn begins(next: &str) -> bool {
+        !next.starts_with(|first: char| first.is_ascii_digit() || "~^-+.".contains(first))
+    }
+
+    fn parse(args: &mut Args<'_>) -> Result<Self, ParseError> {
+        String::parse(args).map(Self)
+    }
+}
+
 impl Command for Summon {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let at = self.position.map_or_else(|| ctx.origin(sender), |position| position.resolve(ctx, sender));
@@ -123,8 +142,11 @@ impl Command for Summon {
             kind => kind,
         };
         let made = ctx.summon_as(sender.player().map(|by| by.id), &kind, at, self.yaw.unwrap_or(0.0), self.pitch.unwrap_or(0.0), self.event.as_deref());
-        if let (Some(made), Some(name)) = (made, &self.name) {
-            ctx.set_name_tag(made, Some(name));
+        // The mob's own name, as a name tag gives it (BDS: in its AddEntity, CAN_SHOW_NAMETAG set).
+        if let (Some(made), Some(name)) = (made, self.named.map(|named| named.0).or(self.name)) {
+            if !ctx.name_entity(made, &name) {
+                ctx.set_name_tag(made, Some(&name));
+            }
         }
         let summoned = made.is_some();
         out.translate(if summoned { "commands.summon.success" } else { "commands.summon.failed" }, Vec::new(), summoned);
@@ -143,8 +165,7 @@ impl Command for Kill {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
         let (people, named) = targets(ctx, sender, self.target.as_ref());
         let mut killed: Vec<String> = people.into_iter().filter(|player| ctx.kill_player(player.id)).map(|player| player.name).collect();
-        // bds-ad3reload.txt: a named cow is answered by its name.
-        let names: Vec<String> = named.iter().map(|entity| ctx.name_tag(entity.id).unwrap_or_else(|| display_name(entity))).collect();
+        let names: Vec<String> = named.iter().map(|entity| answer_name(ctx, entity)).collect();
         killed.extend(named.iter().zip(names).filter(|(entity, _)| ctx.kill_entity(entity.id)).map(|(_, name)| name));
         match killed.is_empty() {
             true => no_target(out),

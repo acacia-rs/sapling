@@ -69,6 +69,16 @@ fn charge(world: &mut World, mob: Entity, layer: Entity) -> Option<()> {
     tell(world, mob, layer, vec![sapling_net::encode(&told)])
 }
 
+/// A creeper's `minecraft:become_charged` charges it as lightning does (bds-bg2names.txt: POWERED at the sync).
+pub(super) fn evented(world: &mut World, mob: Entity, kind: &str, event: &str) {
+    if kind != CREEPER || event != "minecraft:become_charged" || world.get::<Charged>(mob).is_some() {
+        return;
+    }
+    if let Some(layer) = world.get::<crate::components::InLayer>(mob).map(|in_layer| in_layer.0) {
+        charge(world, mob, layer);
+    }
+}
+
 /// A charged creeper's flags, which its announcement shows once rebuilt.
 pub(super) fn shown_flags(world: &World, mob: Entity) -> Option<MetadataDictionaryItem> {
     world.get::<Charged>(mob)?;
