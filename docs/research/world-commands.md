@@ -134,7 +134,7 @@ selecting,session,items,enchanting}.rs`.
   is the game's as players know it (`sapling-data/src/enchant/table.rs`), as is the order of
   `/enchant`'s checks (id, targets, level, item).
 - BDS lists commands sapling has not (bds-t1denums.txt `command` rows, sapling-t1denums.txt):
-  `aimassist controlscheme dialogue event gametest packstack script` (Script API, NPCs, game
+  `aimassist controlscheme dialogue gametest packstack script` (`event` since thirteenth1bb; Script API, NPCs, game
   tests, client settings) and the host's `changesetting editor-allowlist permission reload
   reloadconfig reloadpacketlimitconfig sendshowstoreoffer serveridentity wsserver`; an `/execute`
   of the latter is refused as BDS refuses it. `/teleport` is `/tp`'s alias.

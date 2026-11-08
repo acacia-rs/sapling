@@ -33,7 +33,8 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 
 - `structure <name> [useNewChunksOnly]`: `commands.locate.structure.success` [minecraft:name, x, z,
   distance], x and z the middle of the start chunk (a stronghold where an eye flies; trial chambers and
-  trail ruins the middle of their start piece), distance the 2D one from the sender rounded down. Unknown
+  trail ruins the middle of their start piece), distance the 2D one from the sender's block (its feet floored) rounded down (bds-bb1biome.txt: 1312 to
+  (-928, -928) from feet at (0.5, 0.5); sapling counted from the feet, one more, until thirteenth1bb). Unknown
   or absent kinds (abandoned camp, fortress, end city, bastion in the overworld) →
   `structure.fail.nostructurefound` []. All 13 answers of the capture's seed-12345 world are reproduced
   (`sapling-world/src/generated/tests.rs`).
@@ -47,7 +48,8 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   answered if the biome is there; else a 16-block lattice 64 round it under that height, then the highest
   open cell (it and the one above air, the biome in either) within 16 of that hit, in steps of two down
   from 16 above. Nothing found: the whole search again from 32 further in x, y and z. The capture's two
-  answers and two failures are reproduced. Not drilled: a hit whose surface is not the biome (the
+  answers and two failures are reproduced, and all 138 of bds-bb1biome.txt (46 biomes from (0, 0), (22, 204) and
+  (-1001, 700), seed 20261003; sapling-bb1biome.txt). Not drilled: a hit whose surface is not the biome (the
   16-block step), and loaded chunks, whose height BDS reads from their blocks.
 
 ## /place

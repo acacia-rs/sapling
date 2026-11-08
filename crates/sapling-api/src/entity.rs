@@ -60,6 +60,13 @@ impl ShardCtx<'_> {
         self.backend.summon_as(by, kind, feet, yaw, pitch, event)
     }
 
+    /// Fires `event` of the entity's definition on it, as `/event entity` does: `event` is named as the
+    /// pack names it (`minecraft:entity_born`, the sheep's bare `spawn_baby`). False where its kind has
+    /// no such event or it is gone.
+    pub fn fire_entity_event(&mut self, id: EntityId, event: &str) -> bool {
+        self.backend.fire_entity_event(id, event)
+    }
+
     /// Names a mob as a name tag does: the name is shown over it, kept with it, and it no longer
     /// despawns. False for one that is gone or no mob.
     pub fn name_entity(&mut self, id: EntityId, name: &str) -> bool {
@@ -181,6 +188,9 @@ pub trait EntityBackend {
         }
     }
     fn name_entity(&mut self, _id: EntityId, _name: &str) -> bool {
+        false
+    }
+    fn fire_entity_event(&mut self, _id: EntityId, _event: &str) -> bool {
         false
     }
     fn entity(&self, id: EntityId) -> Option<EntityInfo>;

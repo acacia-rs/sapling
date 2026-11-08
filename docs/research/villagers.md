@@ -442,8 +442,21 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
     type's maps (bds-ax1swamp.txt), while ones summoned plain and given the event by `/event` offered
     the swamp's (bds-ax1swamp2.txt). A summon by a `become_*` event now takes type 0 (plains)
     (`villagers.rs` `arm`).
-  - Left: sapling has no `/event` command, and its `/locate biome` jungle and swamp answers differ from
-    BDS's on this seed (bds-ax1temple.txt against sapling-ax1jungle.txt).
+  - `/locate biome` jungle and swamp (group BB): the two captures asked from different places (BDS's
+    player at its spawn, about (22, 204); sapling's at (0, 0)), and the search's lattice is laid from the
+    sender. From the same block both answer alike (bds-bb1biome.txt, structures-and-ticking.md "/locate").
+- `/event entity <target> <event>` (group BB 2026-11-08, bds-bb1event.txt): the event fires on each target
+  whose definition names it exactly so (`minecraft:entity_born` but the sheep's bare `spawn_baby`; no
+  namespace is added or dropped). One `commands.event.success` [event, kinds] lists the kinds it fired on,
+  each once, counted by kinds; one `commands.event.error.failed` [event, kinds] the kinds without it (a
+  player, an item); no target is `noTargetMatch`. BDS's kind order within a list varied between runs.
+  A villager's `minecraft:become_<profession>` (the shepherd's spelt `become_sheperd`) tells only its
+  Variant and its next screen shows the new profession's freshly rolled offers; `become_unskilled` leaves
+  it with none; an already-baby mob is told nothing of a baby event again. Ported (`vanilla/event.rs`,
+  shard `creatures/evented.rs`, `villagers/retrained.rs`, sapling-data `mob-events.tsv`; tests
+  `an_evented_villager_takes_the_profession_its_event_names_with_its_offers`, world_commands). Left: BDS
+  answers before the event's SetEntityData, sapling after; a player's events (BDS's `gain_raid_omen` gave
+  the raid omen) and component groups sapling does not model (a sheep's `temperate_color` Color) do nothing.
 - Trader llamas (bds-trade2.txt): both come with `LeadHolderEid` the trader's and `LEASHED` from their
   announcement (its pack's `should_leash`). Ported (`villagers/wandering.rs` `arrive`,
   `husbandry/leads.rs`: a lead holder is found again by any kept entity's `UniqueID`; test

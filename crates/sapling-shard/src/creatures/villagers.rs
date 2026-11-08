@@ -20,6 +20,7 @@ mod growing;
 mod jobs;
 mod love;
 mod pantry;
+mod retrained;
 mod schedule;
 mod sharing;
 mod standing;
@@ -47,6 +48,7 @@ pub(super) use cat_spawns::tick as spawn_cats;
 pub(super) use golem_spawns::tick as spawn_golems;
 pub(super) use growing::grew_up;
 pub(super) use pantry::put as put_in_pantry;
+pub(super) use retrained::fired as retrain;
 pub(super) use standing::{hit as hurt_standing, outlaw, shot as shot_standing};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};
 
