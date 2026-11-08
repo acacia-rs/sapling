@@ -750,6 +750,14 @@ open and close, door, block placed, own `/damage` (35 each) and snowball thrown 
 thrower, 10 ticks over 10 blocks) all named that player; a `/setblock` was heard naming nobody. Sapling since
 fourteenth1q: mobs other than wardens and armor stands are suspects (`hearing::is_suspect`), and vibrations
 carry their source (`blocks::vibrate_by`, `vibrate_at_by`); booms stay for players.
+bds-tt1warden.txt (`tt1warden`, fourteenth1t; a slowed warden 4 off, a sculk sensor 4 off): a plain
+`/setblock` or `/fill` of stone or air was heard by neither (q1's "heard `/setblock`" was a door's
+lower half: its upper half popped, `ParticleDestroy`, and both heard that); `/setblock ... air destroy`
+was heard by both (`VibrationDetected`, no anger); a pig `/kill`ed or `/damage`d to death by 100 was
+heard by the sensor only, a pig hurt by 1 by both; a warden `/kill`ed was heard by no sensor (Java's
+`dampensVibrations`). Sapling since fourteenth1t: a dying source is no warden's
+(`warden/hearing.rs`), a command's break vibrates (`blocks::break_block`), and a warden's own
+vibrations reach nothing (`blocks/sculk.rs`). Left: a door half popping makes no vibration on sapling.
 A creaking (`creatures/creaking.rs`) freezes under a look within 60 degrees of its middle from 16
 blocks, the Java game's rule; its heart: `creaking/heart.rs`. Drilled (bds-gxcreak.txt): taking
 prey, `TargetEid` at T, then at T+1 `mob.warning`, `activate`, `CALM|OBSERVED` and state 1; prey
