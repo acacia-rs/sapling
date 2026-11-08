@@ -4,8 +4,8 @@
 //! (research/captures/bds-ar2cat.txt: it set off the tick the owner lay down, from 8 blocks off).
 //! Waking with its owner in the morning (`on_wake_with_owner`), it gives a roll of
 //! `cat_gift.json` 7 times in 10 (`drop_item_for`, morning only, its owner within 6).
-// TODO: BDS's cat was put 4.7 blocks from the bed as it woke and gave nothing (the 3 in 10); where the
-// drop goal moves a cat first is undrilled.
+// TODO: BDS put the cat at the same cell corner 4.7 from the bed on the wake tick, before its gift, in two
+// runs of one layout; the rule is open (docs/research/husbandry.md, bds-av2cat.txt).
 
 use acacia_proto::types::MetadataFlags1 as Flags;
 use bevy_ecs::prelude::*;

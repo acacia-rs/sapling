@@ -149,6 +149,9 @@ pub(super) fn reshow(world: &mut World, entity: Entity) {
     if let Some(flags) = super::struck::shown_flags(world, entity) {
         mobs::reannounce_item(world, entity, flags);
     }
+    if let Some(flags) = crate::riding::ghast_flags(world, entity) {
+        mobs::reannounce_item(world, entity, flags);
+    }
 }
 
 /// Where a mob's head is, as BDS places it; it faces +z (yaw 0).

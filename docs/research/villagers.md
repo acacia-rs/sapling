@@ -271,8 +271,12 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   sapling-ar2look.txt): a SetEntityData kept after an announcement is folded into its `AddEntity`
   (`mobs/folded.rs`), and what a new mob's first tick tells that its announcement already shows is not
   sent (`entities/tell.rs`). BDS's baby `zombie_villager_v2` (`as_baby`) shows 0.5 and 0.98 by 1.96, a
-  baby villager's look; sapling's shows it once AN's `baby_look` covers that kind. A plain-summoned
-  zombie villager came with `Variant` 8 on BDS (its spawn rolls a profession), 0 on sapling: not followed.
+  baby villager's look. Ported 2026-11-08 (group AV): husbandry.py now gives kinds raised by nothing a
+  `baby_look` from their born groups (zombie, husk, drowned, zombie pigman and zombie villager rows). A
+  plain-summoned zombie villager came with `Variant` 8 on BDS: its pack's `entity_spawned` rolls one of 15
+  professions (uniform, not for a baby) and `add_biome_and_skin` a skin of 6 and the biome's mark;
+  `spawn_skilled_adult` rolls one of the 13 skilled. Ported (`conversion.rs` `arm`, an `Infected` it
+  starts with, so a cure stocks that profession's first tier; test file integration/thirteenth2av.rs).
 - A zombie villager keeps what it was (`Infected`) for its cure; `creatures/turning.rs` carries it back.
 - Curing (pack `villager_converted` → `to_villager`; BDS 1424459c0, 14194f610): a golden apple used on
   one under weakness (used up out of creative) sets it shaking, takes the weakness, gives 300 s of

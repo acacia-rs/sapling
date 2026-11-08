@@ -125,10 +125,11 @@ fn shown(id: u64, trader: &Trader) -> SetEntityData {
     SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 }
 }
 
-/// `announcement` with the trader's metadata after it, for a mob that is one (folded into its
+/// `announcement` with the trader's metadata after it, for a mob that is one or a zombie villager (folded into its
 /// `AddEntity` as it is kept, mobs/folded.rs).
 pub(super) fn dressed(world: &World, entity: Entity, mut announcement: Vec<Bytes>) -> Vec<Bytes> {
-    if let (Some(trader), Some(id)) = (world.get::<Trader>(entity), world.get::<NetId>(entity)) {
+    let trader = world.get::<Trader>(entity).or_else(|| world.get::<conversion::Infected>(entity).map(|infected| &infected.0));
+    if let (Some(trader), Some(id)) = (trader, world.get::<NetId>(entity)) {
         announcement.push(sapling_net::encode(&shown(id.0, trader)));
     }
     announcement
@@ -150,6 +151,7 @@ fn tell(world: &mut World, entity: Entity, changed: Vec<MetadataDictionaryItem>)
 /// new, as the spawn `event` makes it where it names one.
 pub(super) fn arm(world: &mut World, entity: Entity, layer: Entity, kind: &str, loaded: bool, event: Option<&str>) {
     golems::arm(world, entity, kind, event);
+    conversion::arm(world, entity, layer, kind, loaded, event);
     let villager = kind == VILLAGER || kind == OLD_VILLAGER;
     if !villager && kind != WANDERING_TRADER {
         return;

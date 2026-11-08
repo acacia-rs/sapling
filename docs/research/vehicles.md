@@ -308,7 +308,13 @@ were not found in any of these; sapling does what is listed there.
   0.5). Looking straight up it rose 0.016, 0.03056, 0.04381 ... and coasted down at 0.91 after the keys
   let go; sapling's sapling-as3ghast.txt run matched every `MoveEntityDelta` to the last digit
   (harness.rs `flight`, FLYER physics).
-- Left (harness.rs TODO): its `become_immobile` sensor (a player on its top: `can_move` 0, movement 0,
-  extended bits 54, 56 and 57); `vertical_movement_action` (the bot's jump moved nothing seen); the late
-  viewer's harness flags; the dismount correction's delta (BDS 0, sapling -0.0784) and `detach` a tick
-  after; the shears' item shown after the sound where BDS showed it before.
+- Ported 2026-11-08 (group AV, test file integration/thirteenth3as.rs): the `become_immobile` and
+  `become_mobile` sensors (riding/stilled.rs: a live non-spectator player not riding a happy ghast within
+  3 across and 1.5 up or down of feet + 4.5 stills it; none within 3.5 and 2 frees it). Stilled: `Flags`
+  and `FlagsExtended` with bits 54, 56 and 57, property `can_move` 0, then `UpdateAttributes` with two
+  `minecraft:movement` entries (0, or 0.016 freed), and it stops steering. A late viewer's `AddEntity`
+  carries the harness and still bits (`ghast_flags`, creatures/shown.rs). The last rider's correction
+  onto its top has delta 0 (movement `push_unmoving`), and `detach` with `AmbientSoundInterval` come a tick
+  after the link. Shears: `MobArmorEquipment`, the harness item, the sound, then `FlagsExtended` alone.
+- Left (harness.rs TODO): `vertical_movement_action` (the bot's jump moved nothing seen); stilled.rs
+  takes the player's eyes at feet + 1.62 and ignores slowness modifiers.

@@ -94,7 +94,10 @@ pub(super) fn step_off(world: &mut World, rider: Entity, vehicle: Entity) {
             crate::movement::push_into_lava(world, rider, feet);
             return;
         }
-        crate::movement::push(world, rider, feet);
+        match on_top {
+            Some(_) => crate::movement::push_unmoving(world, rider, feet),
+            None => crate::movement::push(world, rider, feet),
+        }
     } else if let Some(mut body) = world.get_mut::<Body>(rider) {
         body.at = feet;
     }

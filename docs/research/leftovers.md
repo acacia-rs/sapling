@@ -93,7 +93,7 @@ Scenes `tack`, `llamabreed`, `nesting`, `stomping` (`examples/shared/tack_drill.
   5 ticks, the first as it starts.
 - Stomping (`bds-stomping.txt`), fixed: at the eggs a zombie crumbles them every tick (`ParticleBreakingEgg` at the
   corner, data the plain egg). It hops and is heard (`block.turtle_egg.attack`, with its type and id) every 6 ticks
-  from its third. After 48 to 51 ticks the block goes with 2003 (`ParticleDestroyEgg`), then the break sound with its
+  from its third. After 48 to 51 ticks (47 to 60 in later runs, see "Stomping" below) the block goes with 2003 (`ParticleDestroyEgg`), then the break sound with its
   type. Zombies also tread eggs as any mob does.
 
 Drilled 2026-11-03 (research/captures/bds-gridmend.txt, sapling-gridmend.txt; `bds_command_probe gridmend`,
@@ -448,6 +448,15 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
     8.5 off. No zombie went for an egg it could not reach, so the 1200-tick give-up was not seen.
   - The two zombies summoned at z -6.5 and -2.5 landed in the lane walls: `{z}.5` for a negative z is
     the cell below.
+  Re-drilled 2026-11-08 (thirteenth2av `av2stomp`, bds-av2stomp.txt), ported in stomping.rs:
+  - Duration: a one-egg and a three-egg block 4 off each went in 50 ticks from the first crumble, the whole
+    block at once. Over all nine BDS blocks seen: 47, 50, 50, 51, 50 and 59, 60, 60, 60 ticks; no rule split
+    the two groups (both hop the same). Sapling takes 50 now (was 48).
+  - Target: one zombie among four eggs 3.5, 6, 6.5 and 9.4 off took the 3.5 one, then one 9.4 off over two
+    about 7 off, then one 14 off over one 10 off, and left the last. Nearest is ruled out twice, and Java's
+    ring scan once. Sapling picks any egg within reach at random; the real rule is open.
+  - Crumbling starts once it stands on the eggs (feet at the egg's top, about 0.5 to 0.7 from the middle),
+    where sapling starts within 1.14 on the floor beside them: not changed.
 
 Drilled since (2026-10-30): a chested mount's chest drops after its goods (mob-life.md, `bds-chestdie.txt`), as
 sapling's did. The `lay_egg` sound's 0.34 over a turtle's feet is fixed: 0.85 of its height, from the

@@ -139,11 +139,56 @@ pub(in crate::creatures) fn turned(world: &mut World, villager: Entity, kept: Op
     }
     let Some(mut trader) = world.get::<Trader>(villager).cloned() else { return };
     (trader.profession, trader.mark, trader.skin, trader.tier, trader.experience) = (was.profession, was.mark, was.skin, was.tier, was.experience);
-    (trader.deals, trader.tiers) = (was.deals, was.tiers);
+    if was.tiers.is_empty() {
+        // One that was never a villager trades as its profession does, from the first tier.
+        let mut dice = world.remove_resource::<Dice>().unwrap_or_default();
+        super::jobs::take_up(&mut trader, was.profession, &mut dice);
+        world.insert_resource(dice);
+    } else {
+        (trader.deals, trader.tiers) = (was.deals, was.tiers);
+    }
     let Some(id) = world.get::<NetId>(villager).map(|id| id.0) else { return };
     let metadata = shown(id, &trader).metadata;
     world.entity_mut(villager).insert(trader);
     super::tell(world, villager, metadata);
+}
+
+/// A new zombie villager no villager turned into, as its pack's spawn `event` makes it: `entity_spawned`
+/// rolls a grown one's profession of the fifteen, `spawn_skilled_adult` of the thirteen skilled, `become_<job>`
+/// gives that one, and the first two and a baby's events roll its skin and take its type from the biome
+/// (bds-ar2look.txt: a plain summon came an armorer, `Variant` 8, a baby unskilled). It is kept as
+/// what it was, for its families and its cure.
+pub(in crate::creatures) fn arm(world: &mut World, zombie: Entity, layer: Entity, kind: &str, loaded: bool, event: Option<&str>) {
+    let event = event.map(|event| event.trim_start_matches("minecraft:"));
+    if kind != ZOMBIE_VILLAGER || loaded || event == Some(super::super::turning::TRANSFORMED.trim_start_matches("minecraft:")) {
+        return;
+    }
+    let baby = super::super::shown::is_baby(world, zombie);
+    let feet = world.get::<Body>(zombie).map_or([0.0; 3], |body| body.at);
+    let mut trader = Trader::default();
+    let mut dice = world.remove_resource::<Dice>().unwrap_or_default();
+    let skinned = match event {
+        None | Some("entity_spawned" | "from_village") => {
+            trader.profession = if baby { 0 } else { dice.roll(super::jobs::NITWIT as u32 + 1) as i32 };
+            true
+        }
+        Some("spawn_skilled_adult") => {
+            trader.profession = 1 + dice.roll(super::jobs::NITWIT as u32 - 1) as i32;
+            true
+        }
+        Some("as_baby" | "entity_born") => true,
+        Some(event) => {
+            trader.profession = super::jobs::first_profession(Some(&format!("minecraft:{event}")), &mut dice);
+            false
+        }
+    };
+    if skinned {
+        trader.skin = dice.roll(super::SKINS) as i32;
+        trader.mark = world.get::<Layer>(layer).map_or(0, |layer| super::jobs::mark_at(&layer.world, feet));
+    }
+    world.insert_resource(dice);
+    world.entity_mut(zombie).insert(Infected(trader));
+    dress(world, zombie);
 }
 
 /// The zombie villager's first data and announcement hold what it was.

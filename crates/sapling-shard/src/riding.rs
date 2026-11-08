@@ -22,6 +22,7 @@ mod packs;
 mod rearing;
 mod replaced;
 mod seats;
+mod stilled;
 mod strength;
 mod told;
 
@@ -42,6 +43,7 @@ pub(crate) use evented::{is_bare as saddled_bare, looted_saddle, saddle_by_event
 pub(crate) use strength::{dress as dress_strength, give as give_strength, kept as kept_strength, of as strength_of, roll as roll_strength};
 pub(crate) use drive::{Leaving, Reins, drive, is_driven};
 pub(crate) use mounts::{Rein, boost, reaches, saddle_flags, steers, used_on};
+pub(crate) use harness::shown_flags as ghast_flags;
 use mounts::predicted;
 pub(crate) use mouth::{fall as mouth_at_death, open_mouths};
 pub(crate) use packets::sound as sound_packet;
@@ -196,10 +198,10 @@ fn unseat_told(world: &mut World, rider: Entity, step_off: bool, immediate: bool
         told.extend(told::links(world, vehicle));
     }
     told.extend(told::seat_packets(world, vehicle, told::Change::Left(index)));
-    if let Some((sound, interval)) = left.and_then(|left| harness::riders_now(world, vehicle, left, false)) {
-        told.extend([sound, interval]);
-    }
     tell(world, vehicle, rider, told);
+    if let Some(left) = left {
+        harness::detach_next_tick(world, vehicle, left);
+    }
     announced::unfile(world, rider);
     retell(world, vehicle);
     if step_off {

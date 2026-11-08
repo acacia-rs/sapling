@@ -191,6 +191,9 @@ pub(crate) enum Rein {
 
 /// How the rider of `mob` steers it.
 pub(crate) fn steers(world: &World, mob: Entity, kind: &str, body: &Body) -> Rein {
+    if super::stilled::is_stilled(world, mob) {
+        return Rein::Fly([0.0; 3]);
+    }
     let Some(driver) = world.get::<Seats>(mob).and_then(|seats| seats.0.first().copied()) else { return Rein::Free };
     let (Some(reins), Some(at)) = (world.get::<Reins>(driver), world.get::<Position>(driver)) else { return Rein::Free };
     let toward = |[across, forward]: [f32; 2], speed: f32| {

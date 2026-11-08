@@ -70,6 +70,7 @@ pub(crate) fn drive(world: &mut World) {
             follow(world, driver, vehicle, wire, yaw);
         }
     }
+    super::stilled::sense(world);
 }
 
 /// Puts `vehicle` where its driver's client says it is, telling everyone else who sees it.

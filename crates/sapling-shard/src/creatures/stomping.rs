@@ -1,7 +1,7 @@
 //! Zombies and their kin going for turtle eggs (ED `behavior.stomp_turtle_egg` on the zombie,
 //! husk, drowned, zombie villager and zombie pigman: one tick in 20, eggs within 10 across and 2
-//! up or down, within 1.14 is there). There, as BDS showed: it hops on the eggs, 0.3 up every 6
-//! ticks, heard each hop, the eggs crumbling every tick, and 48 ticks in stomps the whole
+//! up or down, any of them rather than the nearest, within 1.14 is there). There, as BDS showed: it hops on the eggs, 0.3 up every 6
+//! ticks, heard each hop, the eggs crumbling every tick, and 50 ticks in stomps the whole
 //! block out at once. It gives up a walk of 1200 ticks (JAVA `RemoveBlockGoal`). Only with `mobGriefing` on, and not while it hunts (creatures.rs).
 
 use bevy_ecs::prelude::*;
@@ -20,8 +20,8 @@ const HOP: f32 = 0.3;
 /// It hops, heard, every 6 ticks at the eggs from its third (research/captures/bds-stomping.txt).
 const HOP_EVERY: u32 = 6;
 const HOP_FIRST: u32 = 2;
-/// Ticks at the eggs till they go: 48 and 51 on BDS (research/captures/bds-stomping.txt).
-const STOMPS_FOR: u32 = 48;
+/// Ticks at the eggs till they go: 50 or 51 in five BDS runs, 59 to 60 in four (docs/research/leftovers.md "Stomping").
+const STOMPS_FOR: u32 = 50;
 const GIVES_UP: u32 = 1200;
 const GRIEFING: &str = "mobGriefing";
 
@@ -51,7 +51,11 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     let stomping = match world.get::<Stomping>(entity).copied() {
         Some(stomping) => stomping,
         None if griefs(world, layer) && world.get_resource_or_insert_with(Dice::default).roll(ODDS) == 0 => {
-            let Some(eggs) = crate::blocks::turtle_egg_near(world, layer, body.at, ACROSS, UP) else { return false };
+            let near = crate::blocks::turtle_eggs_near(world, layer, body.at, ACROSS, UP);
+            if near.is_empty() {
+                return false;
+            }
+            let eggs = near[world.resource_mut::<Dice>().roll(near.len() as u32) as usize];
             Stomping { eggs, walked: 0, stomped: 0 }
         }
         None => return false,

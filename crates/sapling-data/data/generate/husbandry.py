@@ -44,7 +44,7 @@ def found(entity, key):
 def swaps(entity, event, depth=0):
     """The groups an event removes and adds, followed through its triggers and unconditional
     sequence steps; randomized and filtered steps are left out."""
-    body = entity.get("events", {}).get(event)
+    body = (entity.get("events") or {}).get(event)
     if body is None or depth > 4:
         return [], []
     removed, added = [], []
@@ -115,7 +115,8 @@ def row(entity):
     if isinstance(movement, (int, float)) and fields:
         fields.append(f"walks={round(movement, 4)}")
     if not fields:
-        return None
+        # A kind raised by nothing may still have babies BDS shows by their born groups (a zombie villager's).
+        return " ".join(baby_look(entity, swaps(entity, EVENTS["on_born"])[1])) or None
     groups = entity.get("component_groups", {})
     tamed = [groups.get(g, {}) for g in swaps(entity, EVENTS["on_tame"])[1]]
     # A tamed wolf's health comes from a group of its own that its upgrade event gives.
