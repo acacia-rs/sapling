@@ -50,6 +50,7 @@ fn is_snow_covered(biome: u32) -> bool {
 struct Known {
     tags: Vec<String>,
     downfall: f32,
+    depth: f32,
 }
 
 static BIOMES: LazyLock<HashMap<u32, Known>> = LazyLock::new(|| {
@@ -59,7 +60,7 @@ static BIOMES: LazyLock<HashMap<u32, Known>> = LazyLock::new(|| {
     for biome in &list.biome_definitions {
         let name = string(biome.name_index as usize);
         let Some(&(_, id)) = IDS.iter().find(|(known, _)| Some(*known) == name.strip_prefix("minecraft:")) else { continue };
-        biomes.insert(id, Known { tags: biome.tags.iter().flatten().map(|&tag| string(tag.into())).collect(), downfall: biome.downfall });
+        biomes.insert(id, Known { tags: biome.tags.iter().flatten().map(|&tag| string(tag.into())).collect(), downfall: biome.downfall, depth: biome.depth });
     }
     biomes
 });
@@ -79,6 +80,12 @@ pub fn biome_has_tag(biome: u32, tag: &str) -> bool {
 /// weighs how often rain fills a cauldron and snow lies (`LevelChunk::tick` reads the biome's +0xc).
 pub fn biome_downfall(biome: u32) -> f32 {
     BIOMES.get(&biome).map_or(0.0, |known| known.downfall)
+}
+
+/// The depth of the biome chunks store as `biome`, 0 for one sapling does not know: below 0 the
+/// biome is water to an explorer map's preview (its biome's +0x30).
+pub fn biome_depth(biome: u32) -> f32 {
+    BIOMES.get(&biome).map_or(0.0, |known| known.depth)
 }
 
 /// A spawn rule's `minecraft:biome_filter`, from the prefix form `data/spawn-rules.tsv` writes it in.
@@ -154,6 +161,13 @@ mod tests {
         assert_eq!(biome_downfall(DESERT), 0.0);
         assert!(biome_downfall(biome_id("jungle").unwrap()) > biome_downfall(PLAINS));
         assert_eq!(biome_downfall(9999), 0.0);
+    }
+
+    #[test]
+    fn oceans_and_rivers_lie_deep() {
+        let depth = |name: &str| biome_depth(biome_id(name).unwrap());
+        assert!(["ocean", "deep_ocean", "river", "frozen_river", "warm_ocean"].iter().all(|name| depth(name) < 0.0));
+        assert!(["plains", "beach", "taiga", "jungle"].iter().all(|name| depth(name) >= 0.0));
     }
 
     #[test]

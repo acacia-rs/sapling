@@ -6,7 +6,7 @@ use std::sync::Arc;
 use bevy_ecs::prelude::*;
 use sapling_world::MapRecord;
 
-use super::{ID_BASE, IDS_PER_MAP, MapData, Maps};
+use super::{ID_BASE, IDS_PER_MAP, MapData, Maps, marks};
 use crate::components::Layer;
 use crate::dimensions::{home, members};
 
@@ -40,7 +40,9 @@ fn restored(world: &mut World, home: Entity) -> Maps {
         let dimension = i32::from(record.dimension);
         let layer = layers.iter().find(|(kept, _)| *kept == dimension).map_or(home, |(_, layer)| *layer);
         let pixels = record.colours.chunks_exact(4).map(|rgba| u32::from_le_bytes([rgba[0], rgba[1], rgba[2], rgba[3]])).collect();
-        let map = MapData::kept(record.id, record.scale as u8, record.centre, dimension, layer, record.locked, pixels);
+        let mut map = MapData::kept(record.id, record.scale as u8, record.centre, dimension, layer, record.locked, pixels);
+        map.pin = record.pin.as_ref().map(marks::restored_pin);
+        (map.tracked, map.marks) = map.pin.iter().cloned().unzip();
         maps.maps.insert(record.id, map);
     }
     let runs = records.iter().filter(|record| record.id > ID_BASE && record.id < 0).map(|record| (record.id - ID_BASE - 1) / IDS_PER_MAP + 1).max();
@@ -61,5 +63,5 @@ pub(crate) fn keep_all(world: &mut World) {
 fn record(map: &MapData) -> MapRecord {
     let parent = if map.scale < TOP_SCALE && !map.locked { map.id + 1 } else { -1 };
     let colours = map.pixels.iter().flat_map(|pixel| pixel.to_le_bytes()).collect();
-    MapRecord { id: map.id, parent, dimension: map.dimension as i8, scale: map.scale as i8, locked: map.locked, centre: map.centre, colours }
+    MapRecord { id: map.id, parent, dimension: map.dimension as i8, scale: map.scale as i8, locked: map.locked, centre: map.centre, colours, pin: map.pin.as_ref().and_then(marks::kept_pin) }
 }

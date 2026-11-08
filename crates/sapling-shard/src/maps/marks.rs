@@ -3,6 +3,7 @@
 
 use acacia_proto::packets::ClientboundMapItemData;
 use acacia_proto::types::{BlockCoordinates, MapDecoration, MapDecorationType, TrackedObject, TrackedObjectType, Vec3i};
+use sapling_world::MapPin;
 
 use super::MapData;
 use super::render::SIZE;
@@ -46,6 +47,20 @@ pub(crate) fn pin(map: &MapData, r#type: MapDecorationType, [x, z]: [i32; 2]) ->
     let half = |at: i32, centre: i32| place(at as f32, centre, map.scale).map_or(0, |(half, _)| half) as u8;
     let tracked = TrackedObject { r#type: TrackedObjectType::Block, entity_unique_id: None, block_position: Some(BlockCoordinates { x, y: PIN_Y, z }) };
     let mark = MapDecoration { r#type, rotation: PIN_ROTATION, x: half(x, map.centre[0]), y: half(z, map.centre[1]), label: String::new(), color_abgr: HOLDER };
+    (tracked, mark)
+}
+
+/// A pin as the map's record keeps it; `None` for one tracking no block.
+pub(super) fn kept_pin((tracked, mark): &(TrackedObject, MapDecoration)) -> Option<MapPin> {
+    let at = tracked.block_position.as_ref()?;
+    Some(MapPin { kind: mark.r#type.clone().to_raw() as i32, rotation: mark.rotation.into(), x: (mark.x as i8).into(), y: (mark.y as i8).into(), block: [at.x, at.y, at.z] })
+}
+
+/// The pin a map's record kept.
+pub(super) fn restored_pin(kept: &MapPin) -> (TrackedObject, MapDecoration) {
+    let [x, y, z] = kept.block;
+    let tracked = TrackedObject { r#type: TrackedObjectType::Block, entity_unique_id: None, block_position: Some(BlockCoordinates { x, y, z }) };
+    let mark = MapDecoration { r#type: MapDecorationType::from_raw(kept.kind.into()), rotation: kept.rotation as u8, x: kept.x as u8, y: kept.y as u8, label: String::new(), color_abgr: HOLDER };
     (tracked, mark)
 }
 
@@ -128,5 +143,14 @@ mod tests {
     fn yaws_turn_into_sixteenths() {
         let turned: Vec<u8> = [-90.0, 37.0, 170.0, -170.0, 10.0, 100.0, -2.0].into_iter().map(rotation).collect();
         assert_eq!(turned, [252, 2, 7, 249, 0, 4, 0]);
+    }
+
+    #[test]
+    fn a_pin_is_kept_as_bds_saved_it() {
+        // bds-ax1maps.txt's world: the taiga village map's one decoration.
+        let kept = MapPin { kind: 21, rotation: 8, x: -76, y: -28, block: [-984, 64, 136] };
+        let pin = restored_pin(&kept);
+        assert_eq!((pin.1.r#type.clone(), pin.1.x, pin.1.y), (MapDecorationType::VillageTaiga, 180, 228));
+        assert_eq!(kept_pin(&pin), Some(kept));
     }
 }

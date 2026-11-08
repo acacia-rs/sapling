@@ -317,6 +317,16 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   the next tick, before that tick's strokes (`brushing::show_stroked`); the `brush` sound names the
   block with `brushed_progress` 0 and its own `hanging` (623036 for hanging gravel), not its first
   state.
+  Timing within a hold is jitter (group AX, 2026-11-08): `au3brush` again twice on BDS
+  (bds-ax1brush2.txt, bds-ax1brush3.txt) and once on sapling (sapling-ax1brush2.txt). Ticks from the
+  hold's first `brush` sound to the shown count, BDS's three runs then sapling's two: sand's second
+  hold `brush_count` 6 at 7.0, 5.0, 5.9 / 4.0, 4.1 (BDS's first shown count was 3 once, 4 twice: two
+  strokes in one tick, the bot's inputs bunched); its third hold done at 6.3, 8.1, 8.0 / 5.0, 5.0;
+  gravel's done at 26.1, 23.9, 25.9 / 25.1, 25.0. Sapling's sand sits about a tick under BDS's
+  fastest run, its gravel inside BDS's spread. BDS's own runs spread two ticks, and the times are
+  the watcher's wall clock, where a server that falls behind and catches up (sapling's drill logged
+  "shard fell behind its tick") squeezes ticks. The counts and their order match in every run, and
+  the rule is the decompile's on both sides (141f23fa0: due 10 after the last due; 141f25300).
 
 - `enchant_randomly` (a dungeon's book; thirteenth2d, 2026-11-05): BDS's `EnchantRandomlyFunction`
   (apply 14752bc20) draws one `nextInt(30)` from the loot random as the cost, then enchants by

@@ -169,6 +169,19 @@ fn an_explorer_map_finds_the_first_village_of_its_type() {
 }
 
 #[test]
+fn an_explorer_map_finds_the_first_temple_of_its_kind_but_locate_finds_none() {
+    // research/captures/bds-ax1swamp3.txt and bds-ax1jungle.txt: maps bought standing at
+    // (3509.5, -2066.5) and (-2635.5, -1427.5); bds-ax1maps.txt: `/locate` of either name failed,
+    // of `temple` found (680, -424).
+    let world = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), 20261003, 1)));
+    let from_swamp = ["jungle_temple", "village_snowy", "village_taiga"].map(|name| world.locate_structure(name, 3509, -2067));
+    assert_eq!(from_swamp, [Some([5208, -3272]), Some([1160, -3064]), Some([1800, -2968])]);
+    let from_jungle = ["swamp_hut", "village_desert", "village_savanna"].map(|name| world.locate_structure(name, -2636, -1428));
+    assert_eq!(from_jungle, [Some([-5592, 760]), Some([-5768, -3624]), Some([-3592, -1864])]);
+    assert_eq!(["minecraft:jungle_temple", "minecraft:swamp_hut", "minecraft:temple"].map(|name| world.locate_structure(name, 0, 2)), [None, None, Some([680, -424])]);
+}
+
+#[test]
 fn biomes_are_located_where_bds_located_them() {
     let world = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), LOCATE_SEED, 1)));
     let id = |name: &str| sapling_data::biome_id(name).unwrap();

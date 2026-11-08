@@ -9,7 +9,7 @@ mod herds;
 use std::sync::LazyLock;
 
 use biomes::Filter;
-pub use biomes::{biome_downfall, biome_has_tag, biome_id};
+pub use biomes::{biome_depth, biome_downfall, biome_has_tag, biome_id};
 pub use gates::{Delay, Gates, Village, kind_and_event};
 pub use herds::HerdEvents;
 

@@ -17,6 +17,11 @@ impl World {
         self.loader.as_ref()?.storage().locate_structure(name, x, z)
     }
 
+    /// The biome the generator gives cell (x, y, z); `None` without a generator.
+    pub fn generated_biome(&self, x: i32, y: i32, z: i32) -> Option<u32> {
+        self.loader.as_ref()?.storage().generated_biome(x, y, z)
+    }
+
     /// The cell `/locate biome` answers for `biome` from `from`; `None` without a generator or where the
     /// search finds none.
     pub fn locate_biome(&self, biome: u32, from: [i32; 3]) -> Option<[i32; 3]> {

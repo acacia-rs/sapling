@@ -21,6 +21,18 @@ impl Structures {
         self.locate_where(density, StructureKind::Village, from, &|start| super::village::type_of(density, start) == village_type)
     }
 
+    /// [`Self::locate`] for the first temple of one kind, by name: an explorer map's `jungle_temple`
+    /// or `swamp_hut`; `None` for another name.
+    pub fn locate_temple(&self, density: &Density, name: &str, from: (i32, i32)) -> Option<(i32, i32)> {
+        use super::scattered::Temple;
+        let temple = match name {
+            "jungle_temple" => Temple::JungleTemple,
+            "swamp_hut" => Temple::SwampHut,
+            _ => return None,
+        };
+        self.locate_where(density, StructureKind::Temple, from, &|start| self.scattered(density, start).is_some_and(|found| found.temple == temple))
+    }
+
     fn locate_where(&self, density: &Density, kind: StructureKind, (x, z): (i32, i32), accept: &dyn Fn((i32, i32)) -> bool) -> Option<(i32, i32)> {
         let (grid, java) = match (kind.grid(), kind.java_grid()) {
             (Some(grid), _) => (grid, false),
