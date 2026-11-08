@@ -1,8 +1,8 @@
 //! A player's death and its rising, in the packets BDS sends for them
 //! (docs/research/player-damage.md, "Death"). `doImmediateRespawn` asks nothing of the server:
 //! BDS answered a client's respawn alike with it on (research/captures/bds-anchor.txt).
-// TODO: the words of a natural death by contact, magma, a falling block, thorns or fireworks were
-// not seen on BDS; `/damage` of each cause was (research/captures/bds-deaths.txt).
+// TODO: a natural death by fireworks was not seen on BDS (bds-l1death.txt: the bot never launched its
+// crafted rocket); `/damage` of each cause was (research/captures/bds-deaths.txt).
 
 use acacia_proto::packets::{DeathInfo, EntityEvent, EntityEventEventId, LevelSoundEvent, Respawn, SetHealth};
 use acacia_proto::types::Vec3f;
@@ -31,6 +31,10 @@ const BODY_MIDDLE: f32 = 0.1;
 /// The kind of the mob that last hit a player: named if that hit is what it dies of.
 #[derive(Component)]
 pub(super) struct Slayer(pub String);
+
+/// The name a named mob in [`Slayer`] is said by (bds-l1death.txt: Thorns on a guardian named `g`).
+#[derive(Component)]
+pub(super) struct SlayerName(pub String);
 
 /// On a player while a hit `/damage` or a plugin asked for lands: it has no block or mob behind it.
 #[derive(Component)]
@@ -131,16 +135,19 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None });
     let told = world.get::<Told>(player).is_some();
     // A told hit has a slayer only from `/damage ... entity <who>`: BDS said `death.attack.mob` for its projectile too (bds-fixmisc.txt).
-    let slayer = world.get::<Slayer>(player).filter(|_| matches!(cause, Cause::Attack | Cause::Projectile)).map(|slayer| slayer.0.clone());
+    let slayer = world.get::<Slayer>(player).filter(|_| matches!(cause, Cause::Attack | Cause::Projectile | Cause::Thorns)).map(|slayer| slayer.0.clone());
     let by_player = slayer.as_deref().and_then(|slayer| slayer.strip_prefix(BY_PLAYER)).map(str::to_owned);
     let key = match (slayer.is_some(), by_player.is_some(), cause) {
+        (true, _, Cause::Thorns) => "death.attack.thorns",
         (true, true, _) => "death.attack.player",
         (true, _, Cause::Projectile) if !told => "death.attack.arrow",
         (true, ..) => "death.attack.mob",
         (false, ..) if told => told_words(cause),
+        (false, _, Cause::Contact) if super::hazards::in_berries(world, player) => "death.attack.sweetBerry",
         (false, ..) => words(cause),
     };
-    let slayer = by_player.or(slayer.map(|kind| format!("%entity.{}.name", kind.trim_start_matches("minecraft:"))));
+    let named = world.get::<SlayerName>(player).map(|name| name.0.clone());
+    let slayer = by_player.or(slayer.map(|kind| named.unwrap_or_else(|| format!("%entity.{}.name", kind.trim_start_matches("minecraft:")))));
     let messages: Vec<String> = std::iter::once(name).chain(slayer).collect();
     let said = match &death.message {
         DeathMessage::Text(text) => Some(chat::raw_packet(text)),

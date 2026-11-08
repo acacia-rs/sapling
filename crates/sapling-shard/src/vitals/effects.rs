@@ -11,12 +11,13 @@ mod told;
 mod turns;
 
 use acacia_proto::packets::MobEffectEventId;
+use attributes::take_pace;
 pub(crate) use attributes::{Paced, cushion, mob_walking, tell_pace, walking};
 pub(crate) use combat::{dig_speed, hit_under, hits_for};
 use bevy_ecs::prelude::*;
 use sapling_api::{Effect, EffectBackend, PlayerId};
 pub(crate) use told::announced;
-use told::{boost, pad, show, shown, tell_effect};
+use told::{boost, pad, show, shown, tell_attributes, tell_effect};
 pub(super) use turns::tick;
 
 use crate::components::NetId;
@@ -80,16 +81,18 @@ fn take(world: &mut World, player: Entity, gone: impl Fn(&Active) -> bool) -> bo
     taken.sort_by_key(|active| active.effect.id());
     effects.0.retain(|active| !gone(active));
     effects.1 |= !taken.is_empty();
+    let (mut paced, mut boosted) = (None, None);
     for active in &taken {
         tell_effect(world, player, id, MobEffectEventId::Remove, active);
         match active.effect {
-            Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
+            Effect::Speed | Effect::Slowness => paced = Some(take_pace(world, player, id)),
             Effect::Absorption => pad(world, player, 0.0),
-            Effect::HealthBoost => boost(world, player, id),
+            Effect::HealthBoost => boosted = Some(boost(world, player, id)),
             _ => {}
         }
     }
     show(world, player, id, &before);
+    tell_attributes(world, player, id, paced.into_iter().chain(boosted).collect());
     !taken.is_empty()
 }
 
@@ -180,13 +183,17 @@ fn give_as(world: &mut World, player: Entity, new: Active, heard: bool) -> bool 
         let heard = acacia_proto::packets::LevelSoundEvent { sound_id: sound.into(), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
         super::tell(world, player, &heard);
     }
-    match effect {
-        Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
-        Effect::Absorption => pad(world, player, CUSHIONS * (f32::from(now.amplifier) + 1.0)),
-        Effect::HealthBoost => boost(world, player, id),
-        _ => {}
-    }
+    let changed = match effect {
+        Effect::Speed | Effect::Slowness => vec![take_pace(world, player, id)],
+        Effect::Absorption => {
+            pad(world, player, CUSHIONS * (f32::from(now.amplifier) + 1.0));
+            Vec::new()
+        }
+        Effect::HealthBoost => vec![boost(world, player, id)],
+        _ => Vec::new(),
+    };
     show(world, player, id, &before);
+    tell_attributes(world, player, id, changed);
     true
 }
 

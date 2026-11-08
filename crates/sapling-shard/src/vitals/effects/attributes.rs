@@ -70,13 +70,19 @@ pub(crate) fn walking(world: &World, player: Entity, id: u64) -> PlayerAttribute
 /// Tells a player its walking speed now, and has the server's step take it.
 pub(crate) fn tell_pace(world: &mut World, player: Entity, id: u64) {
     let tick = world.resource::<Tick>().0;
+    let told = UpdateAttributes { runtime_entity_id: id, attributes: vec![take_pace(world, player, id)], tick };
+    crate::vitals::tell(world, player, &told);
+}
+
+/// Has the server's step take a player's walking speed now, and gives it as it is told.
+pub(super) fn take_pace(world: &mut World, player: Entity, id: u64) -> PlayerAttributesItem {
     let (quick, slow) = (level(world, player, Effect::Speed), level(world, player, Effect::Slowness));
     let paced = world.get::<Paced>(player).copied().unwrap_or_default();
-    let (told, unfrozen) = pace(id, quick, slow, paced, tick);
+    let (mut told, unfrozen) = pace(id, quick, slow, paced, 0);
     if let Some(mut simulated) = world.get_mut::<crate::simulation::Simulated>(player) {
         simulated.set_speed(unfrozen);
     }
-    crate::vitals::tell(world, player, &told);
+    told.attributes.remove(0)
 }
 
 /// The health on top of a player's own.

@@ -1,6 +1,7 @@
 //! What a player and its viewers are told of its effects, and the health they put on top.
 
-use acacia_proto::packets::{MobEffect, MobEffectEventId};
+use acacia_proto::packets::{MobEffect, MobEffectEventId, UpdateAttributes};
+use acacia_proto::types::PlayerAttributesItem;
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
 
@@ -17,7 +18,10 @@ pub(super) fn greet(world: &mut World, player: Entity) {
         tell_effect(world, player, id, MobEffectEventId::Add, &active);
         match active.effect {
             Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
-            Effect::HealthBoost => boost(world, player, id),
+            Effect::HealthBoost => {
+                let told = UpdateAttributes { runtime_entity_id: id, attributes: vec![boost(world, player, id)], tick: 0 };
+                tell(world, player, &told);
+            }
             _ => {}
         }
     }
@@ -39,13 +43,24 @@ pub(super) fn pad(world: &mut World, player: Entity, amount: f32) {
     settle(world, player, Cause::Generic);
 }
 
-/// Sets the most health a player has under the health boost on it now, and tells it.
-pub(super) fn boost(world: &mut World, player: Entity, id: u64) {
+/// Sets the most health a player has under the health boost on it now, and gives its health as it is told.
+pub(super) fn boost(world: &mut World, player: Entity, id: u64) -> PlayerAttributesItem {
     let boosted = level(world, player, Effect::HealthBoost);
-    let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
-    vitals.health.grow(super::super::boost::boosted_max(super::super::MAX, boosted));
-    let told = super::super::boost::boosted_health(id, vitals.health.left(), super::super::MAX, boosted);
-    tell(world, player, &told);
+    let left = world.get_mut::<Vitals>(player).map_or(0.0, |mut vitals| {
+        vitals.health.grow(super::super::boost::boosted_max(super::super::MAX, boosted));
+        vitals.health.left()
+    });
+    super::super::boost::boosted_health(id, left, super::super::MAX, boosted).attributes.remove(0)
+}
+
+/// Tells the player and its viewers the attributes its effects changed, in one UpdateAttributes at the
+/// tick-end sync stamped with its input's tick, as BDS's (bds-q3witch.txt `effect clear`, bds-r1fx.txt).
+pub(super) fn tell_attributes(world: &mut World, player: Entity, id: u64, attributes: Vec<PlayerAttributesItem>) {
+    if attributes.is_empty() {
+        return;
+    }
+    let tick = world.get::<crate::movement::Motion>(player).map_or(0, crate::movement::Motion::input_tick);
+    tell_at_sync(world, player, sapling_net::encode(&UpdateAttributes { runtime_entity_id: id, attributes, tick }));
 }
 
 /// What a player's effects show of it: the ids of those that show their particles, in order,

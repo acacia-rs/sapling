@@ -147,9 +147,8 @@ pub(super) fn sipped_at(position: &Position) -> Vec3f {
 }
 
 /// A drink is gone: the bottle is heard emptied, under the eyes and ahead of them, as BDS's
-/// (research/captures/bds-drink.txt); an ominous bottle as the omen taking hold and its own end
-/// (bds-fx3.txt).
-// TODO: only drunk facing south (yaw 0): the way ahead is taken to turn with the yaw.
+/// (research/captures/bds-drink.txt; turned with the yaw each way, bds-l1drink.txt); an ominous
+/// bottle as the omen taking hold and its own end (bds-fx3.txt).
 fn drained(world: &mut World, player: Entity, ominous: bool) {
     let (Some(position), Some(id)) = (world.get::<Position>(player).copied(), world.get::<NetId>(player).map(|id| id.0)) else { return };
     let position = sipped_at(&position);

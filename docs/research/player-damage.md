@@ -52,7 +52,8 @@ From `bds_command_probe toil` (research/captures/bds-toil.txt) and `bite`:
 
 - A block of dirt broken by hand adds 0.005. A block of stone broken by hand, which leaves
   nothing, adds none.
-- A hit that lands on a cow adds 0.1, and so does one on an armour stand.
+- A hit that lands on a cow adds 0.1, and so does one on an armour stand (each hit, told alone:
+  bds-l1stand.txt; sapling since fourteenth1l).
 - Being hurt adds none: not by `/damage`, not by a zombie.
 
 ## Armour
@@ -153,6 +154,17 @@ flash; from itself straight up. Sapling: `vitals/struck.rs` `sourced`, `ShardCtx
   recovery compass reads these on the client. Kept as `DeathPositionX/Y/Z`, `DeathDimension` and
   `HasDiedBefore` (BDSRE: Player load 1402af220 reads them only together), and told again at join.
 - `doImmediateRespawn` only reaches the client in `GameRulesChanged`; the server's answers were alike.
+- Natural deaths (bds-l1death.txt, `l1death` in fourteenth1l_drill.rs): a cactus `death.attack.cactus`, a ripe
+  berry bush `death.attack.sweetBerry`, magma `death.attack.magma`, a dropped anvil `death.attack.anvil`, a
+  stalactite `death.attack.stalactite`, and Thorns on what the player hit `death.attack.thorns` naming the wearer
+  (`["CmdActor", "g"]`, the guardian's own name). The cactus was stood on, not walked into. Sapling matches all
+  but the stalactite (its drip missed in sapling's run and in one of BDS's two): magma under a standing player
+  hurts as it does a mob (`vitals/stand.rs`), a cactus pricks one standing on it (`vitals/hazards.rs` `thorns`),
+  `in_berries` names the bush, `vitals/struck.rs` `thorned` the wearer (`death::SlayerName`); tests in
+  `tests/integration/fourteenth1l.rs`. Fireworks not seen on BDS: the bot never held its crafted rocket there (the
+  craft does not update its hotbar); sapling's run launched it and said `death.attack.fireworks`.
+- A hit while climbing a ladder is not critical, one in an open fall is (bds-l1crit.txt); sapling:
+  `vitals/stand.rs` `falls_freely`.
 
 ## A respawn anchor's spawn
 
@@ -212,8 +224,10 @@ research/captures/bds-hurt2.txt, bds-deaths.txt, bds-fx3.txt, bds-void.txt:
 Drilled 2026-11-04 (research/captures/bds-t2ewear.txt, bds-t2ebreath.txt):
 - Armour worn out: each piece of four sets at the edge of its uses broke under `/damage 4 entity_attack`
   on both, after the same wear (53/78/73/63, 163/238/223/193, ...) and health.
-- Head in stone for 15 s: `Air` went 299 and back to 300 on BDS, with no hurt; sapling sent no `Air`
-  change and no hurt either (the one-tick dip is not copied).
+- Head in stone for 15 s: `Air` went 299 and back to 300 on BDS, with no hurt. The dip is the tick of the
+  `/tp`, before the player is laid down to crawl; the next tick it crawls and `Air` fills again. Sapling sent
+  no `Air` change; fixed (fourteenth1l): eyes in a full block take breath unless the player already crawls
+  (`vitals/stand.rs`; test `a_player_put_with_its_head_in_stone_dips_its_air_once_before_crawling`).
 - A bed used in the Nether blew up on both; BDS's player was also burning in that scene, so the
   amounts were not compared.
 
@@ -294,7 +308,7 @@ The actor in all of iron (`research/captures/bds-wear.txt`). After a hit the cli
 - Glass and leaves smother nothing (glass drilled; leaves taken as glass).
 - Mending and starving are built to the numbers above (`vitals/hunger.rs`), and so is what a jump and
   a sprint cost (`vitals.rs`), a block broken with what harvests it and a hit that takes health
-  from a mob (an armour stand has none here), swimming, and a hit inside the guard; starving stops
+  from a mob or lands on an armour stand, swimming, and a hit inside the guard; starving stops
   by the difficulty (`vitals/hunger.rs` `starved`). A durable item's data value is its wear, kept in
   its `Damage` tag (`inventory/plugin.rs`); armour in the hand goes on by a click in the air
   (`inventory/donning.rs`). `/damage` deaths are said as above (`vitals/death.rs` `told_words`);

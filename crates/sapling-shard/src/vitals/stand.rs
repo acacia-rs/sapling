@@ -48,14 +48,21 @@ fn sound_landing(world: &mut World, player: Entity, layer: Entity, from: [f32; 3
     }
 }
 
-/// Whether a player's hit now is critical: it falls, not in a liquid (which ends a fall), riding or
-/// blind (research/captures/bds-crit.txt).
-// TODO: nor climbing.
+/// Whether a player's hit now is critical: it falls, not in a liquid (which ends a fall), riding,
+/// blind (research/captures/bds-crit.txt) or on a ladder (bds-l1crit.txt).
 pub(crate) fn falls_freely(world: &World, player: Entity) -> bool {
     let (Some(vitals), Some(position)) = (world.get::<Vitals>(player), world.get::<Position>(player)) else { return false };
     let blind = effects::level(world, player, sapling_api::Effect::Blindness).is_some();
     let feet = position.feet[1];
-    !position.on_ground && vitals.health.is_airborne() && vitals.health.dropped(feet, feet) > 0.0 && !blind && world.get::<crate::riding::Riding>(player).is_none()
+    let falls = !position.on_ground && vitals.health.is_airborne() && vitals.health.dropped(feet, feet) > 0.0;
+    falls && !blind && world.get::<crate::riding::Riding>(player).is_none() && !climbs(world, player, position.feet)
+}
+
+/// Whether the cell a player's feet are in is a ladder, a vine or another block it climbs.
+fn climbs(world: &World, player: Entity, feet: [f32; 3]) -> bool {
+    use acacia_physics::WorldView;
+    let Some(layer) = world.get::<crate::components::InLayer>(player).and_then(|in_layer| world.get::<Layer>(in_layer.0)) else { return false };
+    crate::terrain::physics_view(&layer.world, |view| view.block(feet.map(|c| c.floor() as i32)).climbable)
 }
 
 /// How far a player off the ground has fallen; none on it or riding.
@@ -119,11 +126,12 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let (fire, lava, water) = (touches(level, &body, FIERY), touches(level, &body, LAVA), touches(level, &body, WATER));
     let (thorns, in_void, in_snow) = (hazards::thorns(level, &body), hazards::in_void(level, position.feet[1]), touches(level, &body, frost::POWDER_SNOW));
     let on_soul = soles::on_soul(level, position);
-    let soften = crate::creatures::softening(level, position.feet);
+    let on_magma = position.on_ground && crate::creatures::on_magma(level, &body);    let soften = crate::creatures::softening(level, position.feet);
     let [low, eyes] = [0.0, EYE_HEIGHT].map(|up| [position.feet[0], position.feet[1] + up, position.feet[2]].map(|c| c.floor() as i32));
-    // BDS lays a player with only its head in a block down, unhurt.
+    // BDS lays a player with only its head in a block down, unhurt, its Air dipping the tick before (bds-t2ebreath.txt).
     let eyes_wet = holds(level, eyes, WATER);
     let (under_water, in_wall) = (eyes_wet && !gilled, is_full_block(level, eyes) && is_full_block(level, low));
+    let head_in_block = in_wall || (is_full_block(level, eyes) && world.get::<crate::movement::Crawling>(player).is_none());
     // A teleport is no fall: until the client follows it, the height starts anew.
     let (carried, sprinting, jumps) = world.get_mut::<Motion>(player).map_or((false, false, 0), |mut motion| (motion.awaits_teleport(), motion.pose.sprinting, std::mem::take(&mut motion.jumps)));
     let freezes = frost::chill(world, player, in_snow);
@@ -164,6 +172,10 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let before = *health;
     let burnt = health.burn(fire.then_some((1.0, true)), water).map(|cause| if lit { Cause::FireTick } else { cause });
     take(health, before, burnt);
+    // bds-l1death.txt: standing on magma killed BDS's player. TODO: sneaking on it was not drilled.
+    let before = *health;
+    let scorched = (on_magma && health.scorch()).then_some(Cause::Magma);
+    take(health, before, scorched);
     let before = *health;
     let walled = health.smother(in_wall, WALLED).then_some(Cause::Suffocation);
     take(health, before, walled);
@@ -180,7 +192,7 @@ pub(super) fn stand(world: &mut World, player: Entity, layer: Entity) {
     let before = *health;
     let frozen = (freezes && health.hurt(frost::FREEZE_HARM)).then_some(Cause::Freezing);
     take(health, before, frozen);
-    vitals.air = match under_water || in_wall {
+    vitals.air = match under_water || head_in_block {
         true if warding.respiration > 0 && world.get_resource_or_insert_with(Dice::default).fraction() < enchant::holds_breath(warding.respiration) => breath,
         true => breath - 1,
         false => (breath + BREATH).min(AIR),

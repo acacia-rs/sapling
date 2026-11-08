@@ -21,19 +21,32 @@ pub(super) const VOID_HARM: f32 = 4.0;
 const VOID_DEPTH: f32 = 16.0;
 /// A player in a bush that moved no more than this across this tick is not pricked (BDS 1471f0d30).
 const STIRS: f32 = 0.003;
+/// How far under the feet a cactus still pricks: one stood on.
+const STANDS_ON: f32 = 0.01;
 const WALL_HARM: f32 = 10.0;
 const WALL_SPARED: f32 = 3.0;
 /// Flying into a wall for more than this is heard as a big fall.
 const BIG_WALL: f32 = 4.0;
 
-/// Whether the player's box touches a cactus, and whether it is in a bush with berries on it.
+/// Whether the player's box touches a cactus, standing on one too (bds-l1death.txt), and whether it is
+/// in a bush with berries on it.
 pub(super) fn thorns(level: &Level, body: &Body) -> [bool; 2] {
-    [touches(level, body, CACTUS), in_ripe_bush(level, body)]
+    let [x, y, z] = body.at;
+    let lowered = Body::new([x, y - STANDS_ON, z], [0.0; 3], super::SIZE);
+    [touches(level, &lowered, CACTUS), in_ripe_bush(level, body)]
 }
 
 /// Whether the player is pricked by the thorns it is among, having moved `moved` across.
 pub(super) fn pricks([cactus, bush]: [bool; 2], moved: [f32; 2]) -> bool {
     cactus || bush && (moved[0].abs() > STIRS || moved[1].abs() > STIRS)
+}
+
+/// Whether what pricks the player now is a berry bush and no cactus: BDS names that death
+/// `death.attack.sweetBerry` (bds-l1death.txt).
+pub(super) fn in_berries(world: &World, player: Entity) -> bool {
+    let (Some(position), Some(layer)) = (world.get::<Position>(player), world.get::<crate::components::InLayer>(player).and_then(|in_layer| world.get::<crate::components::Layer>(in_layer.0))) else { return false };
+    let body = Body::new(position.feet, [0.0; 3], super::SIZE);
+    thorns(&layer.world, &body) == [false, true]
 }
 
 fn in_ripe_bush(level: &Level, body: &Body) -> bool {

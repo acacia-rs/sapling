@@ -117,7 +117,7 @@ pub(crate) use creaking::{heart_noticed, hearts_arrived};
 pub(crate) use blast::{Wreck, blast_particles, explode, explode_burning, explode_primed};
 pub(crate) use enchanted::thorned;
 pub(crate) use harm::{holds, in_rain, is_full_block, touches, wound};
-pub(crate) use heat::softening;
+pub(crate) use heat::{on_magma, softening};
 pub(crate) use hatching::{hatch, make_home};
 pub(crate) use health::{Cause, Ground, Health};
 pub(crate) use hunting::{on_difficulty, sees};

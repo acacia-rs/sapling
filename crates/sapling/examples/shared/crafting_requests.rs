@@ -17,7 +17,8 @@ use acacia_bot::proto::types::{
 use acacia_bot::{Bot, BotEvent};
 
 /// The multi recipes `!grid` names (docs/research/crafting-storage.md).
-const RECIPES: [(&str, &str); 7] = [
+const RECIPES: [(&str, &str); 8] = [
+    ("fireworks", "00000000-0000-0000-0000-000000000002"),
     ("dup", "b5c5d105-75a2-4076-af2b-923ea2bf4bf0"),
     ("shield", "00000000-0000-0000-0000-0000000000c8"),
     ("book", "d1ca6b84-338e-4f2f-9c6b-76cc8b4bd98d"),

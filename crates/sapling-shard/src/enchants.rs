@@ -67,7 +67,7 @@ pub(crate) fn thorns(world: &mut World, wearer: Entity, attacker: Entity) {
         };
         pricked[piece] = Some(back.is_some());
         if let Some(back) = back
-            && !crate::vitals::thorned(world, attacker, back, at)
+            && !crate::vitals::thorned(world, attacker, back, at, wearer)
         {
             crate::creatures::thorned(world, attacker, back);
         }

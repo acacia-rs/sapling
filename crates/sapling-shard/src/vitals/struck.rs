@@ -84,22 +84,37 @@ fn away(from: [f32; 3], feet: [f32; 3]) -> [f32; 3] {
 
 /// The player named `by` hits a player for `amount` and throws it at `speed`; one it kills is
 /// not thrown. False where it took nothing.
-pub(crate) fn punched(world: &mut World, player: Entity, amount: f32, by: &str, speed: [f32; 3], pierced: f32) -> bool {
-    world.entity_mut(player).insert(Pierced(pierced));
+pub(crate) fn punched(world: &mut World, player: Entity, amount: f32, by: &str, speed: [f32; 3], punch: Punch) -> bool {
+    world.entity_mut(player).insert(punch);
     let took = bitten(world, player, amount, &format!("{}{by}", death::BY_PLAYER), speed);
-    world.entity_mut(player).remove::<Pierced>();
+    world.entity_mut(player).remove::<Punch>();
     took
 }
 
-/// What a hit under way takes off the share the struck player's armour stops ([`punched`]).
-#[derive(Component)]
-pub(super) struct Pierced(pub f32);
+/// A player's hit under way on a player ([`punched`]): what it takes off the share the struck player's
+/// armour stops, and the `HurtAnimation` it flashes instead of a plain hit's (a mace's smash: bds-l1mace.txt).
+#[derive(Component, Clone, Copy)]
+pub(crate) struct Punch {
+    pub pierced: f32,
+    pub flashed: Option<i32>,
+}
 
-/// The Thorns of what `player` hit, standing at `from`, hurt it for `amount`, or its shield turned
-/// them away; false where `player` is no player, or it took nothing.
-pub(crate) fn thorned(world: &mut World, player: Entity, amount: f32, from: [f32; 3]) -> bool {
+/// The Thorns of `wearer`, which `player` hit, standing at `from`, hurt it for `amount`, or its shield
+/// turned them away; false where `player` is no player, or it took nothing. A death names the wearer
+/// (bds-l1death.txt: `death.attack.thorns` with the guardian).
+pub(crate) fn thorned(world: &mut World, player: Entity, amount: f32, from: [f32; 3], wearer: Entity) -> bool {
     let mortal = world.get::<Vitals>(player).is_some() && is_mortal(world, player);
-    mortal && (super::shield::blocks(world, player, from, amount, Cause::Thorns, false) || hurt(world, player, amount, Cause::Thorns))
+    let slayer = match crate::components::in_world_identity(world, wearer) {
+        Some(identity) => format!("{}{}", death::BY_PLAYER, identity.name),
+        None => world.get::<crate::entities::Kind>(wearer).map_or_else(String::new, |kind| kind.0.clone()),
+    };
+    let named = world.get::<crate::creatures::Raised>(wearer).map(|raised| raised.kept.name.clone()).filter(|name| !name.is_empty());
+    if let Some(name) = named {
+        world.entity_mut(player).insert(death::SlayerName(name));
+    }
+    let took = mortal && slain_by(world, player, &slayer, |world| super::shield::blocks(world, player, from, amount, Cause::Thorns, false) || hurt(world, player, amount, Cause::Thorns));
+    world.entity_mut(player).remove::<death::SlayerName>();
+    took
 }
 
 pub(crate) fn is_fireproof(world: &World, player: Entity) -> bool {

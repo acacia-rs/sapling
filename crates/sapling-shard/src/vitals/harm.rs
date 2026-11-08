@@ -19,10 +19,15 @@ const HELMETED: f32 = 0.75;
 
 /// The flash of a hit of `cause` that landed; a fall's names the player's eyes.
 pub(super) fn flash(world: &mut World, player: Entity, cause: Cause) {
-    let (Some(id), Some(position)) = (world.get::<NetId>(player).map(|id| id.0), world.get::<Position>(player).copied()) else { return };
+    let Some(position) = world.get::<Position>(player).copied() else { return };
     let [x, y, z] = position.feet;
     let fire_at_position = (cause == Cause::Fall).then_some(Vec3f { x, y: y + EYE_HEIGHT, z });
-    tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::HurtAnimation, data: cause.id(), fire_at_position });
+    tell_flash(world, player, cause.id(), fire_at_position);
+}
+
+fn tell_flash(world: &mut World, player: Entity, data: i32, fire_at_position: Option<Vec3f>) {
+    let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
+    tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::HurtAnimation, data, fire_at_position });
 }
 
 /// The flash of a hit of `cause` the player's guard took whole, as BDS shows a guardian's magic
@@ -113,7 +118,8 @@ pub(super) fn land(world: &mut World, player: Entity, amount: f32, cause: Cause)
     let helmeted = cause.is_on_the_head() && world.get::<crate::inventory::Inventory>(player).is_some_and(|inventory| inventory.has_helmet());
     let whole = amount;
     let amount = if helmeted { amount * HELMETED } else { amount };
-    let pierced = world.get::<struck::Pierced>(player).map_or(0.0, |pierced| pierced.0);
+    let punch = world.get::<struck::Punch>(player).copied();
+    let pierced = punch.map_or(0.0, |punch| punch.pierced);
     let lands = |mut vitals: Mut<Vitals>| {
         let amount = if cause.is_stopped_by_armour() { vitals.health.shielded_but(amount, pierced) } else { amount };
         let amount = vitals.health.warded(amount, cause);
@@ -127,7 +133,10 @@ pub(super) fn land(world: &mut World, player: Entity, amount: f32, cause: Cause)
     }
     totem::rescue(world, player, cause);
     if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0) {
-        flash(world, player, cause);
+        match punch.and_then(|punch| punch.flashed) {
+            Some(data) => tell_flash(world, player, data, None),
+            None => flash(world, player, cause),
+        }
         omens::hurt(world, player);
         super::heard_from_eyes(world, player, crate::blocks::GameEvent::EntityDamage);
     }
