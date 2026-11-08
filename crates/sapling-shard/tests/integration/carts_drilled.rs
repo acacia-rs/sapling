@@ -224,6 +224,21 @@ fn a_cart_off_a_rail_goes_at_most_0_4_across_with_no_drag_in_the_air_and_halves_
     assert!((across[landed] - 0.2).abs() < 1e-4 && (across[landed + 1] - 0.1).abs() < 1e-4, "{across:?} {at:?}");
 }
 
+/// bds-r3cart.txt: the tick it rolled off the runway's end the cart dropped from the rail's 0.15 to its
+/// block's bottom, and went on the whole 0.4 the tick after.
+#[test]
+fn a_cart_rolling_off_a_rails_end_drops_to_the_rails_bottom_and_goes_on_unhalved() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    rail_line(&mut h);
+    let cart = spawned(&mut h, &[("minecraft:minecart", [10.5, 65.0, 0.5])])[0];
+    h.remote.run(move |ctx| assert!(ctx.set_velocity(cart, [1.2, 0.0, 0.0])));
+    let at: Vec<[f32; 3]> = (0..16).map(|_| feet(&mut h, vec![cart])[0]).collect();
+    let off = at.iter().position(|at| at[0] >= 13.0).expect("off the end");
+    assert!((at[off][1] - 65.0).abs() < 1e-4 && (at[off - 1][1] - 65.15).abs() < 1e-4, "{at:?}");
+    assert!((at[off + 1][0] - at[off][0] - 0.4).abs() < 1e-4, "{at:?}");
+}
+
 /// The x each tick of two carts summoned on the rail line `apart` east of 4.5, from their first tick.
 fn parting(apart: f32, ticks: usize) -> Vec<[f32; 2]> {
     let mut h = Harness::new();

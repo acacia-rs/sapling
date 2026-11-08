@@ -133,6 +133,10 @@ pub(super) fn tick(world: &mut World) {
                     (feet, motion) = super::bumps::walled(level, &body, feet, bottom, motion);
                     feet[1] = rails::height(&rail, [feet[0], feet[2]]);
                 }
+                // Rolled off a flat rail's end it is left at the rail block's bottom: BDS's dropped 0.15 that tick (bds-r3cart.txt).
+                if rail.shape <= 1 && rails::rail_under(level, feet).is_none() {
+                    feet[1] = rail.pos[1] as f32;
+                }
                 if let Some(stopped) = super::bumps::blocked(world, cart, layer, &body, feet) {
                     (feet, motion) = (stopped, [0.0; 3]);
                 }
