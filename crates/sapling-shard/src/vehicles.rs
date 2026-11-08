@@ -11,8 +11,10 @@ mod cargo;
 mod carts;
 mod command_cart;
 mod detectors;
+mod hopped;
 mod pull;
 mod rails;
+mod struck;
 
 use acacia_proto::types::{MetadataDictionaryItem as Item, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use acacia_proto::packets::SetEntityData;
@@ -31,8 +33,9 @@ use crate::movement::Motion;
 use crate::sync::Told;
 
 pub(crate) use blasts::blasted;
-pub(crate) use cargo::{Cargo, cargo, load_cargo, moved_by_command};
+pub(crate) use cargo::{Cargo, cargo, load_cargo, moved_by_command, put_goods};
 pub(crate) use command_cart::set_command as set_cart_command;
+pub(crate) use {detectors::reading as detector_reading, hopped::{hopper_pull, hopper_push}, struck::{damaged, shot}};
 
 /// Riders who asked for their inventory while riding a vehicle with goods: that opens instead
 /// (inventory/equipment.rs takes the asks in; BDS opened a chest boat's, bds-t2eboats.txt).
@@ -174,6 +177,7 @@ pub(crate) fn tick(world: &mut World) {
             crate::inventory::open_own(world, player);
         }
     }
+    struck::tick(world);
     blasts::tick(world);
     boats::tick(world);
     burning::tick(world);
@@ -199,22 +203,13 @@ pub(crate) fn used_on(world: &mut World, player: Entity, vehicle: Entity) -> boo
     let held = world.get::<Inventory>(player).and_then(|inventory| inventory.in_hand().as_ref().map(|held| held.stack.name.clone()));
     match kind.as_str() {
         TNT_MINECART if matches!(held.as_deref(), Some("minecraft:flint_and_steel" | "minecraft:fire_charge")) => carts::prime(world, vehicle, carts::FUSE) && {
-            ignite_heard(world, vehicle);
+            carts::ignite_heard(world, vehicle);
             true
         },
         CHEST_BOAT if sneaking => cargo::open(world, player, vehicle),
         "minecraft:chest_minecart" | "minecraft:hopper_minecart" => cargo::open(world, player, vehicle),
         _ => false,
     }
-}
-
-/// The pack's `ignite` of a TNT minecart lit by hand, at the cart (research/captures/bds-fftnt.txt).
-fn ignite_heard(world: &mut World, cart: Entity) {
-    let (Some(layer), Some(body), Some(id)) = (world.get::<InLayer>(cart).map(|layer| layer.0), world.get::<Body>(cart).copied(), world.get::<NetId>(cart).map(|id| id.0)) else { return };
-    let [x, y, z] = body.at;
-    let position = acacia_proto::types::Vec3f { x, y: y + crate::riding::wire_lift(TNT_MINECART), z };
-    let heard = acacia_proto::packets::LevelSoundEvent { sound_id: "ignite".into(), position, extra_data: -1, entity_type: TNT_MINECART.into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
-    entities::tell_viewers(world, cart, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&heard)]);
 }
 
 /// A player hit `vehicle` for `damage`: it shakes, and breaks once its integrity is gone, at

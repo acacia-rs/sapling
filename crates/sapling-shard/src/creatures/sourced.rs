@@ -17,6 +17,9 @@ pub(super) fn wound(world: &mut World, mob: Entity, amount: f32, cause: DamageCa
     if world.get::<super::Dying>(mob).is_some() {
         return false;
     }
+    if let Some(took) = crate::vehicles::damaged(world, mob, amount, cause) {
+        return took;
+    }
     let (Some(layer), Some(health)) = (world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Health>(mob).copied()) else { return false };
     let before = health.left();
     // BDS's `/damage` of 8 cost a zombie in a diamond chestplate 5.824 (research/captures/bds-boosts.txt).
@@ -44,7 +47,7 @@ pub(super) fn hurt(world: &mut World, mob: Entity, amount: f32, cause: DamageCau
         None => crate::components::in_world_identity(world, source).map(Attacker::Player),
     };
     let took = wound(world, mob, amount, cause, by.as_ref(), player);
-    if !took || world.get::<super::Dying>(mob).is_some() {
+    if !took || world.get::<super::Dying>(mob).is_some() || world.get::<crate::vehicles::Vehicle>(mob).is_some() {
         return took;
     }
     let (Some(from), Some(layer), Some(id), Some(kind)) = (from, world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<NetId>(mob).map(|id| id.0), world.get::<entities::Kind>(mob).map(|kind| kind.0.clone())) else { return took };

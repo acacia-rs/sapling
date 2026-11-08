@@ -3,7 +3,7 @@
 //! their sounds, each as late as BDS sent it (research/captures/bds-shut.txt).
 
 use acacia_proto::packets::{BlockEvent, BlockEventType};
-use acacia_proto::types::BlockCoordinates;
+use acacia_proto::types::{BlockCoordinates, Vec3f};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
@@ -25,13 +25,21 @@ const BARREL: &str = "minecraft:barrel";
 #[derive(Resource, Default)]
 pub(crate) struct TurnedBarrels(Vec<(u64, Entity, BlockPos)>);
 
+/// The lid shown at the lead half only: BDS's double chests, plain and copper, sent no event at the
+/// other (research/captures/bds-u3chest.txt).
 fn event(world: &mut World, layer: Entity, halves: &[BlockPos], open: bool) {
-    let has_lid = |pos: &&BlockPos| super::block_name(world, layer, **pos).and_then(super::kind).is_some_and(|kind| kind.has_lid);
-    let lidded: Vec<BlockPos> = halves.iter().filter(has_lid).copied().collect();
-    for [x, y, z] in lidded {
-        let lid = BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::ChangeState, data: open.into() };
-        blocks::to_viewers(world, layer, [x, y, z], &[sapling_net::encode(&lid)]);
+    let Some(&[x, y, z]) = halves.first() else { return };
+    if !super::block_name(world, layer, [x, y, z]).and_then(super::kind).is_some_and(|kind| kind.has_lid) {
+        return;
     }
+    let lid = BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::ChangeState, data: open.into() };
+    blocks::to_viewers(world, layer, [x, y, z], &[sapling_net::encode(&lid)]);
+}
+
+/// Where a container is heard: the middle of its halves (BDS's double chest from the seam).
+fn middle(halves: &[BlockPos]) -> Vec3f {
+    let along = |axis: usize| halves.iter().map(|pos| pos[axis] as f32 + 0.5).sum::<f32>() / halves.len().max(1) as f32;
+    Vec3f { x: along(0), y: along(1), z: along(2) }
 }
 
 /// Shows the lid of a container that is open once more.
@@ -62,7 +70,7 @@ pub(super) fn set(world: &mut World, layer: Entity, halves: &[BlockPos], open: b
     let Some(([opening, shutting], late)) = sounds(name) else { return };
     let turned = blocks::with_property(registry, id, "open_bit", if open { "1" } else { "0" }).filter(|_| name == BARREL);
     // A barrel's sound names the state it turns to.
-    let heard = blocks::sound(if open { opening } else { shutting }, registry, pos, turned.unwrap_or(id));
+    let heard = blocks::sound_at(if open { opening } else { shutting }, registry, middle(halves), turned.unwrap_or(id));
     if turned.is_some_and(|turned| blocks::set_quietly(world, layer, pos, turned)) {
         let due = world.resource::<Tick>().0 + 1;
         world.get_resource_or_insert_with(TurnedBarrels::default).0.push((due, layer, pos));

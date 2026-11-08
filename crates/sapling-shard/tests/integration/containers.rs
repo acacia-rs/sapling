@@ -5,7 +5,7 @@ use crate::common;
 
 use acacia_proto::RawPacket;
 use acacia_proto::nbt::Value;
-use acacia_proto::packets::{AddEntity, AddItemEntity, ContainerOpen, InventoryContent, InventorySlot, LevelSoundEvent, UpdateAttributes};
+use acacia_proto::packets::{AddEntity, AddItemEntity, BlockEvent, ContainerOpen, InventoryContent, InventorySlot, LevelSoundEvent, UpdateAttributes};
 use acacia_proto::types::{ContainerSlotType as Container, ItemStackResponsesItemStatus as Status, ItemV4, ItemV4Extra};
 use common::requests::{answer, place, request, slot, take};
 use common::{Harness, all, click};
@@ -213,6 +213,11 @@ fn a_stored_double_chest_opens_its_54_slots_at_the_lead_from_either_half() {
     assert_eq!([opened.coordinates.x, opened.coordinates.y, opened.coordinates.z], HERE);
     let shown = all::<InventoryContent>(&sent).into_iter().find(|content| content.window_id.to_raw() == opened.window_id.to_raw()).expect("its slots");
     assert_eq!(shown.input.len(), 54);
+    // research/captures/bds-u3chest.txt: the lid only at the lead, heard from the seam.
+    let lids: Vec<[i32; 3]> = all::<BlockEvent>(&sent).iter().map(|lid| [lid.position.x, lid.position.y, lid.position.z]).collect();
+    assert_eq!(lids, vec![HERE]);
+    let heard: Vec<LevelSoundEvent> = (0..2).flat_map(|_| all::<LevelSoundEvent>(h.tick_all().to(1))).filter(|sound| sound.sound_id == "chest.open").collect();
+    assert_eq!(heard.iter().map(|sound| [sound.position.x, sound.position.z]).collect::<Vec<_>>(), vec![[2.0, 0.5]]);
 }
 
 #[test]

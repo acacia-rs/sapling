@@ -57,7 +57,7 @@ use std::sync::LazyLock;
 
 pub use material_table::material_blocks_motion;
 pub use plant_table::Block;
-pub use support::{Kind as Support, provides_support};
+pub use support::{Kind as Support, is_solid_blocking, provides_support};
 
 use crate::structure::template::{COLLIDES, palette};
 

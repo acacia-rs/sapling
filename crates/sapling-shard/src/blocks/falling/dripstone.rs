@@ -35,9 +35,11 @@ fn is_tip(registry: &BlockRegistry, id: u32) -> bool {
     registry.get(id).is_some_and(|state| state.properties.contains("dripstone_thickness=tip"))
 }
 
-/// Whether the stalactite piece at `pos` holds: what is over it is solid or more of it.
+/// Whether the stalactite piece at `pos` holds: what is over it has a whole bottom or is more of it
+/// (a bottom slab and a composter held one, leaves not: research/captures/bds-u3plants.txt).
 fn holds(world: &World, layer: Entity, pos: BlockPos) -> bool {
-    block(world, layer, Face::Up.neighbour(pos)).is_some_and(|(registry, id)| hangs(registry, id) || registry.get(id).is_some_and(|state| state.is_solid()))
+    let above = Face::Up.neighbour(pos);
+    block(world, layer, above).is_some_and(|(registry, id)| hangs(registry, id)) || level(world, layer).is_some_and(|level| super::super::ground::whole_face(level, above, Face::Down))
 }
 
 /// Sets the stalactite from `pos` down falling where nothing holds it: its upper pieces are emptied

@@ -9,7 +9,7 @@
 // a comparator reads no lectern.
 
 mod apply;
-mod capacitors;
+pub(super) mod capacitors;
 mod kept;
 mod observers;
 mod parts;
@@ -246,7 +246,7 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
                 continue;
             }
             Part::Comparator { lit, input, subtracts, output } => {
-                let behind = shown.inputs.get(pos).map_or(0, |(input, _)| *input).max(stored.get(pos).copied().unwrap_or(0));
+                let behind = stored.get(pos).copied().unwrap_or_else(|| shown.inputs.get(pos).map_or(0, |(input, _)| *input));
                 let next = circuit.kept.next(*pos, behind, shown.sides.get(pos).copied().unwrap_or(0), subtracts, output);
                 circuit.comparators.insert(*pos, next);
                 restrengthened |= next != output;

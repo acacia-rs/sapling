@@ -1,7 +1,6 @@
 //! Pistons, by what BDS shows of them (docs/research/redstone.md, "Pistons"): a powered one
 //! pushes up to 12 blocks over four ticks, breaking what has no body, and an unpowered one draws
 //! back, a sticky one bringing the block before it. Its block entity tells clients where it is.
-// TODO: what stood on a pushed block falls a tick later than on BDS.
 
 use acacia_proto::nbt::{List, Str, Value};
 use acacia_proto::types::Vec3f;
@@ -144,7 +143,10 @@ fn start(world: &mut World, layer: Entity, pos: BlockPos, piston: &Piston, is_po
     if is_powered {
         // Only the arm pushes halfway, in the tick it starts, before it shows: what is behind a
         // moved block goes once, a tick on (bds-shove.txt, bds-e3pmob.txt).
-        shove::shove(world, layer, &[pos], piston.front, HALFWAY);
+        shove::shove(world, layer, &[pos], piston.front, HALFWAY, &[]);
+    }
+    if piston.front.offset()[1] == 0 {
+        shove::carry_riders(world, layer, &taken, if is_powered { piston.front } else { back(piston.front) }, HALFWAY);
     }
     let started = world.resource::<Tick>().0;
     world.resource_mut::<Pistons>().0.push(Move { layer, pos, extends: is_powered, started, stages_done: 1, taken, broken, carried: Vec::new(), is_powered });
@@ -227,6 +229,7 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
                 shown.push((front, air));
             }
             let step = if going.extends { piston.front } else { back(piston.front) };
+            let tops: Vec<_> = std::iter::once(None).chain(going.taken.iter().rev().map(|at| Some(shove::top_of(world, layer, *at)))).collect();
             for from in &going.taken {
                 crate::containers::carried_off(world, layer, *from, step.neighbour(*from), 2);
             }
@@ -240,7 +243,9 @@ fn stage(world: &mut World, going: &mut Move) -> Option<()> {
             }
             send::show_moved(world, layer, &shown, false);
             if going.extends {
-                shove::shove(world, layer, &pushed(going), piston.front, 1.0);
+                shove::shove(world, layer, &pushed(going), piston.front, 1.0, &tops);
+            } else if step.offset()[1] == 0 {
+                shove::carry_riders(world, layer, &going.taken, step, 1.0);
             }
         }
         2 => {

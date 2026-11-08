@@ -109,7 +109,7 @@ pub(super) fn compared(behind: u8, side: u8, subtracts: bool) -> u8 {
 
 /// The signal a comparator reads off a container whose slots hold `filled` (a count and the most
 /// the slot takes of it, for each stack): 0 when empty, else 1 and 14 by how full it is.
-pub(super) fn fullness(filled: impl Iterator<Item = (u8, u8)>, slots: usize) -> u8 {
+pub(crate) fn fullness(filled: impl Iterator<Item = (u8, u8)>, slots: usize) -> u8 {
     let parts: Vec<f32> = filled.map(|(count, most)| f32::from(count) / f32::from(most.max(1))).collect();
     if parts.is_empty() || slots == 0 {
         return 0;
