@@ -63,7 +63,8 @@ fn tell_placed(world: &mut World, boat: Entity, layer: Entity, [x, y, z]: [f32; 
 
 /// Moves each boat no driver's client moves a tick.
 pub(super) fn tick(world: &mut World) {
-    let boats: Vec<(Entity, Entity, u64, Boat, Body)> = world.query::<(Entity, &InLayer, &NetId, &Boat, &Body)>().iter(world).map(|(boat, layer, id, state, body)| (boat, layer.0, id.0, *state, *body)).collect();
+    // A boat burnt through stays put until it breaks (bds-ffburn.txt: one in lava dropped where summoned).
+    let boats: Vec<(Entity, Entity, u64, Boat, Body)> = world.query_filtered::<(Entity, &InLayer, &NetId, &Boat, &Body), Without<super::burning::BurntThrough>>().iter(world).map(|(boat, layer, id, state, body)| (boat, layer.0, id.0, *state, *body)).collect();
     for (boat, layer, id, Boat(mut state), body) in boats {
         let wire = [body.at[0], body.at[1] + LIFT, body.at[2]];
         if crate::riding::is_driven(world, boat) {

@@ -120,8 +120,9 @@ fn a_minecart_off_a_rail_falls_through_water_without_drag() {
 }
 
 #[test]
-fn a_minecart_in_lava_burns_through_in_two_ticks_and_stays_put_the_second() {
-    // bds-p3lava.txt: `Health` 16 then −7 (3 a tick), no move in the tick it burnt through, gone the next.
+fn a_minecart_in_lava_burns_through_in_two_ticks_and_falls_on_the_second() {
+    // bds-p3lava.txt: `Health` 16 then −7 (3 a tick), gone the next; its item 0.08 under its last told
+    // place puts it a fall further down the tick it burnt through (fourteenth3ad).
     let mut h = Harness::new();
     h.enter(1, "Alex");
     ask(&mut h, |ctx| {
@@ -131,5 +132,5 @@ fn a_minecart_in_lava_burns_through_in_two_ticks_and_stays_put_the_second() {
     let cart = ask(&mut h, |ctx| ctx.summon_as(None, "minecraft:minecart", [3.5, 62.0, 3.5], 0.0, 0.0, None)).expect("a cart");
     let heights: Vec<Option<f32>> = (0..4).map(|_| ask(&mut h, move |ctx| ctx.entity(cart).map(|cart| cart.feet[1]))).collect();
     let alive: Vec<f32> = heights.iter().map_while(|height| *height).collect();
-    assert!((1..=2).contains(&alive.len()) && alive.windows(2).all(|pair| pair[0] == pair[1]), "{heights:?}");
+    assert!((1..=2).contains(&alive.len()) && alive.windows(2).all(|pair| pair[1] < pair[0]), "{heights:?}");
 }
