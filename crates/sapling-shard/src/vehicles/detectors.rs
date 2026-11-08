@@ -49,14 +49,27 @@ pub(super) fn tick(world: &mut World) {
     }
 }
 
-/// Whether a cart's box reaches into the part of `pos` that presses it.
-fn is_pressed(world: &mut World, layer: Entity, [x, y, z]: BlockPos) -> bool {
+/// The carts whose boxes reach into the part of `pos` that presses it.
+fn pressing(world: &mut World, layer: Entity, [x, y, z]: BlockPos) -> Vec<Entity> {
     let cell = [x as f32, y as f32, z as f32];
-    let mut carts = world.query_filtered::<(&InLayer, &Body), With<Cart>>();
-    carts.iter(world).filter(|(on, _)| on.0 == layer).any(|(_, body)| {
+    let mut carts = world.query_filtered::<(Entity, &InLayer, &Body), With<Cart>>();
+    let presses = |body: &Body| {
         let (low, high) = body.bounds();
         (0..3).all(|axis| low[axis] < cell[axis] + FELT_MAX[axis] && high[axis] > cell[axis] + FELT_MIN[axis])
-    })
+    };
+    carts.iter(world).filter(|(_, on, body)| on.0 == layer && presses(body)).map(|(cart, ..)| cart).collect()
+}
+
+fn is_pressed(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
+    !pressing(world, layer, pos).is_empty()
+}
+
+/// What a comparator reads off the detector rail at `pos`: a pressed one, the goods of the cart on it
+/// (none for a cart without), an unpressed one nothing; `None` for no detector rail (bds-ffcart.txt).
+pub(crate) fn reading(world: &mut World, layer: Entity, pos: BlockPos) -> Option<u8> {
+    let rail = world.get::<Layer>(layer).and_then(|level| rails::rail_at(&level.world, pos)).filter(|rail| rail.kind == RailKind::Detector && rail.pos == pos)?;
+    let carts = if rail.on { pressing(world, layer, pos) } else { Vec::new() };
+    Some(carts.into_iter().find_map(|cart| super::hopped::signal(world, cart)).unwrap_or(0))
 }
 
 /// BDS `checkPressed`: the rail at `pos` pressed while a cart is on it, and while pressed checked
@@ -70,6 +83,8 @@ fn check(world: &mut World, layer: Entity, pos: BlockPos) {
     if pressed != rail.on {
         set_pressed(world, layer, pos, pressed);
     }
+    // Comparators read its cart's goods again at each check, not as they change.
+    crate::blocks::container_changed(world, layer, pos);
     let when = world.resource::<Tick>().0 + RECHECK;
     let mut checks = world.get_resource_or_insert_with(Checks::default);
     match pressed {

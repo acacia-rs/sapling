@@ -176,7 +176,7 @@ fn push(world: &mut World, layer: Entity, pos: BlockPos, slots: &mut [Option<Hel
         return true;
     }
     if !takes_items(world, layer, target) {
-        return false;
+        return crate::vehicles::hopper_push(world, layer, target, slots).unwrap_or(false);
     }
     // The target's face that touches the hopper.
     let face = Face::from_index(facing as u32 ^ 1).unwrap_or(facing);
@@ -199,7 +199,7 @@ fn delay_receiver(world: &mut World, layer: Entity, pos: BlockPos) {
 }
 
 /// Moves one item into the hopper from the first slot of the container above that gives one.
-fn pull_from_above(world: &mut World, layer: Entity, pos: BlockPos, slots: &mut [Option<Held>], above: Kind) -> bool {
+pub(crate) fn pull_from_above(world: &mut World, layer: Entity, pos: BlockPos, slots: &mut [Option<Held>], above: Kind) -> bool {
     let source = Face::Up.neighbour(pos);
     let pulled = containers::with_slots(world, layer, source, |world, from| {
         for slot in 0..from.len() {
@@ -259,7 +259,7 @@ fn step(world: &mut World, layer: Entity, pos: BlockPos, facing: Face) -> bool {
         Some(_) => false,
         None if crate::blocks::is_jukebox(world, layer, above) => pull_disc(world, layer, above, &mut slots),
         None if crate::blocks::is_composter(world, layer, above) => pull_meal(world, layer, above, &mut slots),
-        None => pull_lying(world, layer, pos, &mut slots),
+        None => crate::vehicles::hopper_pull(world, layer, above, &mut slots).unwrap_or_else(|| pull_lying(world, layer, pos, &mut slots)),
     };
     containers::set_slots(world, layer, pos, slots);
     pushed || pulled

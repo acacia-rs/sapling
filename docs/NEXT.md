@@ -220,8 +220,6 @@ left). Left:
 Resource packs, functions, `/schedule delay` and `/scriptevent` are built (DESIGN.md "Packs (as
 built)"). Left:
 
-- **`/schedule on_area_loaded`**: waits for ticking areas, which are built now (`ticking.rs`,
-  `/tickingarea`). BDS ran it at once when the area was loaded (`research/captures/bds-functions.txt`).
 - **`texturepack-required`** in `server.properties` → `ResourcePacks::required`; BDS's
   `resource_packs` folder and the world lists read by `config_file`.
 - **The Script API** (`@minecraft/server`): a question for the user, since plugins are compiled

@@ -1,5 +1,7 @@
 //! What a comparator reads off the block behind it, or behind the block behind it: a block by its
-//! state, a jukebox by its disc, a pot, a crafter, a sculk sensor, or a container by how full it is.
+//! state, a jukebox by its disc, a pot, a crafter, a sculk sensor, a detector rail by its cart's goods, or a
+//! container by how full it is. A reading replaces the power behind: a pressed detector rail read 0 under an
+//! empty cart (bds-ffcart.txt).
 
 use std::collections::HashMap;
 
@@ -51,6 +53,7 @@ fn read(world: &mut World, layer: Entity, at: BlockPos) -> Option<u8> {
         .or_else(|| pot(world))
         .or_else(|| crate::blocks::sculk::signal(world, layer, at))
         .or_else(|| crate::blocks::crafter::signal(world, layer, at))
+        .or_else(|| crate::vehicles::detector_reading(world, layer, at))
         .or_else(|| {
             containers::with_slots(world, layer, at, |_, slots| {
                 let filled = slots.iter().flatten().map(|held| (held.stack.count, sapling_data::max_stack(&held.stack.name)));

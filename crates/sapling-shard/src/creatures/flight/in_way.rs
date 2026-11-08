@@ -41,6 +41,13 @@ fn met_fireball(world: &mut World, layer: Entity, at: [f32; 3], size: [f32; 2]) 
     balls.iter(world).find(|(_, in_layer, body)| in_layer.0 == layer && reaches(body, at, size)).map(|(ball, ..)| ball)
 }
 
+/// The boat or minecart of `layer` whose box the arrow's reaches into (bds-fftnt.txt), not the one `by` rides.
+fn met_vehicle(world: &mut World, layer: Entity, by: Entity, at: [f32; 3], size: [f32; 2]) -> Option<Entity> {
+    let ridden = world.get::<crate::riding::Riding>(by).map(|riding| riding.vehicle);
+    let mut vehicles = world.query_filtered::<(Entity, &InLayer, &Body), With<crate::vehicles::Vehicle>>();
+    vehicles.iter(world).find(|(vehicle, in_layer, body)| Some(*vehicle) != ridden && in_layer.0 == layer && reaches(body, at, size)).map(|(vehicle, ..)| vehicle)
+}
+
 /// Whether a shot of `size` with its bottom middle at `at` reaches into `body`'s box.
 fn reaches(body: &Body, at: [f32; 3], size: [f32; 2]) -> bool {
     let across = (body.size[0] + size[0]) / 2.0;
@@ -58,5 +65,6 @@ pub(super) fn first_met(world: &mut World, layer: Entity, by: Entity, at: [f32; 
         let point = on_way(look);
         met(world, layer, by, point, size, passed, arrow).map(|player| (point, player, true)).or_else(|| met_mob(world, layer, by, point, size, passed).map(|mob| (point, mob, false))).or_else(|| tnt.then(|| met_primed(world, layer, point, size)).flatten().map(|lit| (point, lit, false)))
             .or_else(|| tnt.then(|| met_fireball(world, layer, point, size)).flatten().map(|ball| (point, ball, false)))
+            .or_else(|| arrow.then(|| met_vehicle(world, layer, by, point, size)).flatten().map(|vehicle| (point, vehicle, false)))
     })
 }

@@ -164,7 +164,10 @@ The table was read from the strings (`str copper`, `str lightning_rod`); all 128
   (3116dd5a): copper chests are chests (`containers::is_chest`); a lone one and a pair's lead tick, the lead
   changing both (`blocks/copper/chests.rs`); a click without a sneak opens it. A copper chest put beside a single
   one of another stage takes that stage and pairs (bds-r3copper.txt: an exposed one put by an unweathered one was
-  shown unweathered; `containers/pairs.rs` `staged`). Open: a pair's lid event and open sound (REMAINING4).
+  shown unweathered; `containers/pairs.rs` `staged`). A pair's lid is as a plain double chest's (bds-u3chest.txt,
+  2026-11-08): one `BlockEvent` at the lead half from either half's click, the sound from the pair's middle;
+  sapling's `containers/lid.rs` since group U. Open: the packets of a pair put (BDS: the new half twice in one
+  `UpdateSubchunkBlocks` with its entity twice, then both halves the next tick; sapling one `UpdateBlock`).
 - U3 141a56c80 is `hurtAndBreak`: Unbreaking applies (bds-m3axe.txt: a plain iron axe wore 4 in 4 scrapes;
   with Unbreaking III, 8 in 24 scrapes and 6 in 12 unwaxings), as sapling's wear does. 142535e40 tests the
   SNEAKING flag.

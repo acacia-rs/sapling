@@ -96,6 +96,11 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
     let speed = motion.iter().map(|c| c * c).sum::<f32>().sqrt();
     let from: [f32; 3] = std::array::from_fn(|axis| at[axis] - motion[axis]);
     let cost = harm(world, layer, shot.harm, loosed.as_ref(), speed, struck, is_player);
+    if world.get::<crate::vehicles::Vehicle>(struck).is_some() {
+        let creative = loosed.and_then(|loosed| loosed.player).and_then(|player| world.get::<crate::components::Mode>(player)).is_some_and(|mode| mode.0 == sapling_api::GameMode::Creative);
+        crate::vehicles::shot(world, struck, cost, shot.burns > 0, creative);
+        return After::Gone;
+    }
     let push = loosed.as_ref().map_or([0.0; 3], |loosed| punched(loosed.punch, motion));
     let turns = if loosed.as_ref().is_none_or(|loosed| loosed.player.is_none()) { vitals::blocks_mob } else { vitals::blocks };
     if is_player && turns(world, struck, from, cost, Cause::Projectile, false) {

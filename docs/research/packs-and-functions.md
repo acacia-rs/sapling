@@ -40,7 +40,12 @@ the pack negotiation and the commands' syntax), `research/captures/bds-functions
 - Due: runs as the server (`[Server] later`), operators get a Json Text
   `§7§o[` + `commands.origin.server` + `: ` + `commands.schedule.functionRan [count, f]` + `]`.
 - `delay clear f` → `commands.schedule.clear.success [cleared, f]`, none → `.clear.failure [f]`.
-- `on_area_loaded add` ran at once as the player (area loaded); not built (needs ticking areas).
+- `on_area_loaded add` (bds-u3sched.txt, 2026-11-08): on an area that ticks it runs at once as the
+  sender (`[CmdActor] later`) with the Server `functionRan` echo and no answer; elsewhere
+  `commands.schedule.functionQueued []`, and it runs as the sender 2-3 ticks after a ticking area
+  covers it. `circle <centre> <r>` counts chunks; `tickingarea <name>` is queued though no area has
+  the name, and runs once one does and ticks. `schedule clear f` clears both kinds (`[2, f]`); an
+  unknown function → functionNameNotFound. Sapling: `functions/schedule.rs` (checked each tick).
 
 ## /scriptevent (bdsre 0x1403ea1a0)
 

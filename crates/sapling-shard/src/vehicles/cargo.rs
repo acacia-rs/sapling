@@ -1,10 +1,11 @@
 //! What chest boats and chest and hopper minecarts carry (docs/research/vehicles.md "Cargo"):
 //! slots kept on the vehicle and in its stored `ChestItems`, shown on a screen naming the
-//! vehicle, spilled when it breaks; a hopper minecart takes up the items it rolls over.
-// TODO: hoppers neither fill nor empty vehicles, and comparators do not read them.
+//! vehicle, spilled when it breaks; a hopper minecart takes up the items it rolls over. Hoppers fill and
+//! empty them (hopped.rs).
 
 use acacia_proto::types::WindowType;
 use bevy_ecs::prelude::*;
+use sapling_api::MobSlotRefusal;
 use sapling_world::ItemStack;
 
 use crate::body::Body;
@@ -80,6 +81,19 @@ pub(crate) fn load_cargo(world: &mut World, vehicle: Entity, slots: Vec<Option<H
     entities::restore(world, vehicle, |compound, registry| sapling_world::chested_actor(compound, &items, registry).ok());
 }
 
+/// `replaceitem entity <vehicle> slot.inventory <slot>` (bds-ffcart.txt): `stack` into that slot of what
+/// `vehicle` carries; `None` for a vehicle that carries nothing.
+pub(crate) fn put_goods(world: &mut World, vehicle: Entity, slot: usize, stack: Option<ItemStack>) -> Option<Result<(), MobSlotRefusal>> {
+    world.get::<Cargo>(vehicle)?;
+    let mut slots = cargo(world, vehicle)?;
+    if slot >= slots.len() {
+        return Some(Err(MobSlotRefusal::BadSlot { size: slots.len() }));
+    }
+    slots[slot] = stack.map(|stack| containers::new_held(world, stack));
+    load_cargo(world, vehicle, slots);
+    Some(Ok(()))
+}
+
 /// Opens the screen of what `vehicle` carries for a player; false for one that carries nothing.
 pub(crate) fn open(world: &mut World, player: Entity, vehicle: Entity) -> bool {
     let Some((_, window)) = world.get::<Kind>(vehicle).and_then(|kind| hold(&kind.0)) else { return false };
@@ -153,6 +167,13 @@ pub(super) fn take_up(world: &mut World) {
         world.entity_mut(cart).insert(HopperWait { left: wait.saturating_sub(1), cell });
         let Some(level) = world.get::<crate::components::Layer>(layer).map(|layer| &layer.world) else { continue };
         if wait > 0 || super::rails::rail_under(level, body.at).is_some_and(|rail| rail.kind == super::rails::RailKind::Activator && rail.on) {
+            continue;
+        }
+        // A container over it is emptied instead of what lies about.
+        if let Some(pulled) = super::hopped::pull_from_above(world, layer, cart, body.at) {
+            if pulled {
+                world.entity_mut(cart).insert(HopperWait { left: HOPPER_EVERY, cell });
+            }
             continue;
         }
         let Some(mut slots) = cargo(world, cart) else { continue };

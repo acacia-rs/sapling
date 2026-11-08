@@ -152,6 +152,13 @@ pub fn provides_support(name: &str, states: &str, face: usize, kind: Kind) -> bo
     provides(class, states, face, kind)
 }
 
+/// The solid-blocking property for any block by its `minecraft:` name, as [`Block::is_solid_blocking`].
+pub fn is_solid_blocking(name: &str) -> bool {
+    static BLOCKING: LazyLock<std::collections::HashSet<&str>> = LazyLock::new(|| SOLID_BLOCKING.split_whitespace().collect());
+    let name = name.strip_prefix("minecraft:").unwrap_or(name);
+    CLASS_OF.get(name).is_none() || BLOCKING.contains(name)
+}
+
 impl Block {
     fn support_masks(self) -> Masks {
         match self {

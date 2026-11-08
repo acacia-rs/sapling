@@ -136,7 +136,12 @@ change fits `canProvideSupport` on the top face:
 - repeater, comparator: Any (off a bottom slab, leaves and the trapdoor only).
 
 A3's decompiled "Center" for dust is short of this. Sapling: `ground.rs` `top_gives` (a shulker box's top still holds
-no dust, bds-conductors.txt); kelp, nether vines and dripstone still read collision boxes. Carpet stays on anything
+no dust, bds-conductors.txt). Kelp, nether vines and dripstone (bds-u3plants.txt, 2026-11-08, on top slab, bottom
+slab, leaves, glass, fence, wall, cauldron, composter, upside-down stairs, hopper, bars, chain; the trapdoor's
+`/setblock` failed): standing dripstone wants a whole top, Centre and Edge (top slab, glass, stairs, hopper); weeping
+vines and hanging dripstone a whole bottom (bottom slab, glass, composter); twisting vines a solid-blocking block or a
+top slab (top slab, leaves, glass; not stairs or a hopper); kelp the same less leaves and glass (top slab only here).
+Sapling: `ground.rs` `whole_face`, `solid_top`, `falling/dripstone.rs` `holds`. Carpet stays on anything
 but air (`CarpetBlock::canSurvive`): set alone over air by `/setblock` or a one-cell `/fill` it stays, but three set
 side by side by `/fill` all showed breaking and went a tick later with their items, each noticing its neighbour; sapling
 now does the same (`ground.rs` carpet rule).

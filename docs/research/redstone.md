@@ -531,6 +531,23 @@ When the arm under it drew back the player stood a block lower than it began, in
 row, so the two cases after that (against a wall, a sticky piston) showed nothing. Sapling
 pushes players so (`pistons/shove.rs`, `movement::push`).
 
+What stands on a moved block (`bds_command_probe u3carry`, research/captures/bds-u3carry.txt,
+2026-11-08), pistons east:
+
+- A stand and a cow on a pushed stone went 0.5 with `force_move_local_entity` in the start tick and
+  0.5 more as they began to fall (3.5 → 4.5), then were put before the stone's new front (5.25 and
+  5.45: front plus half their width) a tick on, and fell. On a stone a sticky piston drew back a
+  stand went 4.5 → 4.0 → 3.0. Sand on a pushed or pulled stone is not carried: it falls when the arm
+  under it goes.
+- On a slime block pushed sideways in the air a stand was flung on (SetEntityMotion x 0.91: 1 a tick
+  after one tick's drag); on honey it went 0.5 and stayed; on stone as on the floor.
+- Pushed up (bds-ffshove.txt): stands on stone and honey are lifted a block; on slime they are
+  flung too (SetEntityMotion y 0.9016: 1 a tick after a tick's gravity) and bounce.
+- Sapling (`pistons/shove.rs`): riders go 0.5 in the start tick (the in-between 4.5 is not shown),
+  are put before the block's front a tick on (or carried 1 more on a pull), unless on honey; slime
+  sets the push axis's motion to 1. Not followed: `force_move_local_entity`, a flung player, and the
+  side a pinned body is squeezed to (BDS -z, sapling +z).
+
 ## More parts (2026-10-25, decompiled, not drilled)
 
 Dispensers, droppers and crafters: dispensers.md. Note blocks, copper bulbs, targets, tripwire,
