@@ -263,6 +263,7 @@ pub(crate) fn tick(world: &mut World) {
             floating::tick(world, entity, layer, &kind, &start);
             slimes::tick(world, entity, layer, id, &kind, &start);
         }
+        afflictions::float(world, entity);
         let Some((body, packets)) = entities::step(world, entity, layer, id, physics_of(&kind), 0.0) else { continue };
         entities::tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), packets.clone());
         crate::blocks::tread_turtle_eggs(world, layer, &kind, body.at, body.on_ground, body.on_ground && !start.on_ground);

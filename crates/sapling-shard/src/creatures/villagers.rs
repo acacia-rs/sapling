@@ -46,6 +46,7 @@ pub(super) use conversion::{hasten_cures, infect, kept_through_turning, turned};
 pub(crate) use fear::alarm;
 pub(super) use cat_spawns::tick as spawn_cats;
 pub(super) use golem_spawns::tick as spawn_golems;
+pub(super) use golems::is_players as is_players_golem;
 pub(super) use growing::grew_up;
 pub(super) use pantry::put as put_in_pantry;
 pub(super) use retrained::fired as retrain;

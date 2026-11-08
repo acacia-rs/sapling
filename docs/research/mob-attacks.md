@@ -589,7 +589,14 @@ stone. What a block withstands is BDS's own resistance (`block-resistance.tsv`, 
 and its drops as `Explosion::explode`'s, d719a4e7); the fuse goes out when its prey
 is 6 off or gone, as the pack says: drilled 2026-11-05 (`q3creeper`, bds-q3creeper.txt against
 sapling-q3creeper.txt), prey stepped 5.5 off a lit fuse let it burn on, 6.5 and 7.5 off put it out until
-the creeper walked back, on both alike.
+the creeper walked back, on both alike. Losing sight of its prey inside 2.5 puts it out too (the pack's
+`on_vision_lost_inside_range`; bds-a3creeper3.txt: lit beside the actor, it cleared `IGNITED` 2 ticks
+after the actor was put 2.1 off behind a wall, its `FuseLength` not told again, and took no target
+behind the wall before nor after). Its blast takes orbs as it takes items (bds-a3creeper2.txt: an
+orb 2.8 off gone the tick after). An arrow lying 2.8 off was not thrown, only fell as the floor under
+it broke. A falling sand ~5.5 above and 1 aside was thrown (-0.0996, +0.633, 0) by the blast, more
+than `1 - d / 6` allows at that distance; one sample and a cratered floor, so sapling throws none
+(REMAINING4).
 
 A skeleton stands within 10 blocks of its prey and looses an arrow every 61 ticks
 (`creatures/arrows.rs`): aimed and spread as the Java game's, flying by the two numbers above,
@@ -636,8 +643,17 @@ it walks on, its crossbow heard loading where it stood at the shot before; it is
 
 A wolf and a zombified piglin hunt none but a survival player that hit them, from that tick
 (`hunting::provoke`), and so do an iron golem, with a hit of 7 to 21 and its throw, and a polar
-bear, every 39 ticks without its rearing; a spider dazzled by the sun takes its hitter too. A
-piglin hunts any survival player, gold worn or not; out of the Nether it turns into a zombified
+bear, every 39 ticks, rearing (`REARING`) 10 ticks before each bite and dropping with it, and for
+the 10 ticks 20 before the next while its prey is in reach (bds-provoke2.txt; `hunting/rear.rs`); a
+spider dazzled by the sun takes its hitter too. Any hunter with a pack `hurt_by_target` takes a mob
+or a survival player that hurt it the tick after, sparing its pack's families (`hunting/hurt_by.rs`,
+bds-a3hurt.txt: a held skeleton, a creeper and a held pillager each took the snow golem whose
+snowball, costing 0, hit it); a creative hitter is not taken, nor taken later when it turns survival
+(bds-a3hurt2.txt), and an iron golem made by a player takes no player (bds-a3hurt.txt; a plain one
+does). A piglin hunts no player wearing gold, and takes one about a tick after the gold comes off
+(bds-a3hunt.txt). On peaceful no hunter takes anyone, hit or not (bds-a3hunt.txt). A zombie at its
+prey hit it from ~1.4 off and threw it before their boxes met: no push between them was seen
+(bds-a3hunt.txt, bds-ah3stop2.txt). Out of the Nether a piglin turns into a zombified
 one 303 ticks on (mob-kinds.md, `t2barter`). A
 piglin's fellows did not join in on BDS either (bds-gxfellows.txt: of a piglin 9.5 off in the open
 and one shut in stone 12 off, neither took a target when the third was hit, the pack's

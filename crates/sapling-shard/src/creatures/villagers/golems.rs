@@ -14,6 +14,8 @@ const GOLEM: &str = "minecraft:iron_golem";
 const FROM_VILLAGE: &str = "minecraft:from_village";
 /// The component group `minecraft:from_village` adds (the pack's iron golem).
 const VILLAGE_CREATED: &str = "minecraft:village_created";
+const FROM_PLAYER: &str = "minecraft:from_player";
+const PLAYER_CREATED: &str = "minecraft:player_created";
 /// How far from the hurt villager a golem defends it: its pack's `follow_range`.
 const DEFENDS: f32 = 64.0;
 
@@ -21,24 +23,42 @@ const DEFENDS: f32 = 64.0;
 #[derive(Component)]
 pub(in crate::creatures) struct VillageGolem;
 
-/// Marks a golem spawned by `minecraft:from_village`, or kept with that event's group, as its
-/// village's; a new one's kept compound gains the group.
+/// An iron golem a player made, which its pack's `player_created` group has take no player that
+/// hurts it (research/captures/bds-a3hurt.txt).
+#[derive(Component)]
+pub(in crate::creatures) struct PlayerGolem;
+
+/// Marks a golem spawned by `minecraft:from_village` or `minecraft:from_player`, or kept with that
+/// event's group, as its village's or a player's; a new one's kept compound gains the group.
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str, event: Option<&str>) {
     if kind != GOLEM {
         return;
     }
-    let kept = world.get::<Stored>(entity).is_some_and(|stored| sapling_world::actor_groups(&stored.compound).iter().any(|group| group == VILLAGE_CREATED));
-    if event == Some(FROM_VILLAGE) && !kept {
+    if grouped(world, entity, event, FROM_VILLAGE, VILLAGE_CREATED) {
+        world.entity_mut(entity).insert(VillageGolem);
+    }
+    if grouped(world, entity, event, FROM_PLAYER, PLAYER_CREATED) {
+        world.entity_mut(entity).insert(PlayerGolem);
+    }
+}
+
+/// Whether the golem was spawned by `by` or kept with its `group`, which a new one's compound gains.
+fn grouped(world: &mut World, entity: Entity, event: Option<&str>, by: &str, group: &str) -> bool {
+    let kept = world.get::<Stored>(entity).is_some_and(|stored| sapling_world::actor_groups(&stored.compound).iter().any(|kept| kept == group));
+    if event == Some(by) && !kept {
         if let Some(mut stored) = world.get_mut::<Stored>(entity) {
-            match sapling_world::regrouped_actor(&stored.compound, &[], &[VILLAGE_CREATED]) {
+            match sapling_world::regrouped_actor(&stored.compound, &[], &[group]) {
                 Ok(compound) => stored.compound = compound,
-                Err(error) => tracing::warn!(%error, "a golem's compound is unreadable: its village is not kept"),
+                Err(error) => tracing::warn!(%error, "a golem's compound is unreadable: its group is not kept"),
             }
         }
     }
-    if kept || event == Some(FROM_VILLAGE) {
-        world.entity_mut(entity).insert(VillageGolem);
-    }
+    kept || event == Some(by)
+}
+
+/// Whether the mob is a golem a player made.
+pub(in crate::creatures) fn is_players(world: &World, mob: Entity) -> bool {
+    world.get::<PlayerGolem>(mob).is_some()
 }
 
 /// The village golems near the grown villager at `at` in `layer` take `player`, who hurt it.

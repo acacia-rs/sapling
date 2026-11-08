@@ -20,8 +20,15 @@ pub(in crate::creatures) fn swing(world: &mut World, mob: Entity, layer: Entity,
     entities::tell_viewers(world, mob, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&swing)]);
 }
 
-/// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later.
+/// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later; a
+/// polar bear rears before it (rear.rs).
 pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
+    let struck = hit_prey(world, entity, layer, id, kind, body);
+    super::rear::rear(world, entity, layer, id, kind, body);
+    struck
+}
+
+fn hit_prey(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
     let now = world.resource::<Tick>().0;
     let hunts = sapling_data::mob_traits(kind).hunts.filter(|hunts| hunts.fights.is_none_or(|fights| BITES.contains(&fights)))?;
     let hunts = super::super::genes::hunts(world, entity, hunts);
@@ -40,8 +47,10 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
     let (feet, size) = (super::feet_of(world, prey)?, super::prey::size_of(world, prey));
     let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
     if hunts.explodes.is_some() {
-        // Between their boxes, as the pack's `target_nearby_sensor` counts.
+        // Between their boxes, as the pack's `target_nearby_sensor` counts; it `must_see`, and losing
+        // sight inside its range puts the fuse out (`on_vision_lost_inside_range`, bds-a3creeper3.txt).
         match distance(feet, body.at) - (body.size[0] + size[0]) / 2.0 {
+            gap if gap < IGNITES && !super::in_sight(world, layer, body, feet) => blast::put_out(world, entity, layer, id, kind, body),
             gap if gap < IGNITES => blast::light(world, entity, layer, id, kind, body),
             gap if gap > GOES_OUT => blast::put_out(world, entity, layer, id, kind, body),
             _ => {}
@@ -54,13 +63,14 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
     }
     world.get_mut::<Hunter>(entity)?.ready = now + hunts.every.map_or(COOLDOWN, u64::from);
     let harm = harm + hunts.varies.map_or(0.0, |most| world.get_resource_or_insert_with(crate::blocks::Dice::default).fraction() * (most - hunts.attack));
+    let harm = super::super::afflictions::hits_for(world, entity, harm);
     let cell = body.at.map(|c| c.floor() as i32);
     let far = dx.hypot(dz);
     let away = if far > 1e-4 { [dx / far, dz / far] } else { [0.0; 2] };
     if super::prey::is_mob(world, prey) {
         swing(world, entity, layer, id, body);
         if !super::super::villagers::infect(world, prey, layer, kind, harm) {
-            super::prey::hit(world, layer, prey, harm, away);
+            super::prey::hit(world, layer, entity, prey, harm, away);
         }
         late_sounds::play_later(world, 1, layer, cell, sound("attack", id, kind, body, MIDDLE));
         return Some(());

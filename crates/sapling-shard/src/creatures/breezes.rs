@@ -1,7 +1,7 @@
 //! A breeze, as BDS's fought (research/captures/bds-breeze-findings.md): it faces its prey for 16
 //! ticks and shoots a wind charge (`charges`); 4 ticks on it leaps near prey 4 to 20 off (`leap`),
 //! after readying for 10, or walks out to 4 to 8 off prey nearer, then faces it again.
-// TODO: jump boost does not add to its leap, its own bursts do not push it, and it does not turn
+// TODO: its own bursts do not push it, and it does not turn
 // as it faces.
 
 mod leap;

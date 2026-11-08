@@ -80,7 +80,7 @@ fn land_on_mob(world: &mut World, mob: Entity, kind: &str, body: &Body, victim: 
     let (Some(layer), Some(feet), Some(harm)) = (world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Body>(victim).map(|at| at.at), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.attack)) else { return };
     let (dx, dz) = (feet[0] - body.at[0], feet[2] - body.at[2]);
     let far = dx.hypot(dz).max(1e-4);
-    hunting::hit_mob(world, layer, victim, harm, [dx / far, dz / far]);
+    hunting::hit_mob(world, layer, mob, victim, harm, [dx / far, dz / far]);
     super::harm::wound(world, victim, layer, MAGIC, Cause::Magic);
 }
 

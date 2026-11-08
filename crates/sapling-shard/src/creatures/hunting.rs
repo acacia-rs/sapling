@@ -1,15 +1,17 @@
 //! Mobs that hunt players, as BDS's were seen to (docs/research/mob-attacks.md): one picks
 //! the nearest player it could kill, walks straight at it and hits it when it is within reach.
 // TODO: a spider keeps the prey it took in the dark when day comes; prey once seen is kept behind a
-// wall; a player and a hunter do not push each other aside; a spider hunts by day too and none holds what it hits with; peaceful worlds keep their
-// monsters, idle; viewers far off are told every move, where BDS told one of every other; a piglin
-// hunts a player in gold too, and a polar bear does not rear before its hit.
+// wall; a spider hunts by day too and none holds what it hits with; viewers far off are told every
+// move, where BDS told one of every other.
 
 mod heading;
+mod hurt_by;
 mod prey;
+mod rear;
 mod strike;
 
 pub(super) use heading::approach;
+pub(super) use hurt_by::hurt as hurt_by;
 use heading::{heads, stops_short};
 pub(super) use prey::{feet_of, hit as hit_mob};
 pub(super) use strike::{strike, swing};
@@ -103,9 +105,20 @@ pub(crate) fn sees(level: &sapling_world::World, from: [f32; 3], to: [f32; 3]) -
 
 /// The nearest player within `sight` of a mob in `layer` that it sees and may hurt, and its feet.
 pub(super) fn nearest(world: &World, layer: Entity, body: &Body, sight: f32) -> Option<(Entity, [f32; 3])> {
+    nearest_but(world, layer, body, sight, |_| false)
+}
+
+/// [`nearest`], passing over the players `spared` names.
+fn nearest_but(world: &World, layer: Entity, body: &Body, sight: f32, spared: impl Fn(Entity) -> bool) -> Option<(Entity, [f32; 3])> {
     let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
-    let found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?)));
+    let found = in_world(world).into_iter().filter(|player| !spared(*player)).filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?)));
     found.filter(|(player, feet)| prey::spotted(world, *player, body.at, *feet, sight) && in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)))
+}
+
+/// Whether a hunter of `kind` takes no `player` as its prey at a look: a piglin, one in a piece of gold
+/// armour (its pack's `has_equipment` filters, bds-a3hunt.txt).
+fn spares(world: &World, kind: &str, player: Entity) -> bool {
+    kind == "minecraft:piglin" && world.get::<crate::inventory::Inventory>(player).is_some_and(|inventory| inventory.worn_names().flatten().any(|name| name.starts_with("minecraft:golden_")))
 }
 
 /// The hunter `id` has the entity `target` as its prey, or none for 0.
@@ -137,6 +150,7 @@ fn chance(now: u64, id: u64, draw: u64, odds: u32) -> bool {
 
 /// Keeps or picks the hunter's prey and tells its viewers of a change; where the prey is.
 fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<[f32; 3]> {
+    hurt_by::avenge(world, entity, layer, id, kind, body);
     let now = world.resource::<Tick>().0;
     let had = world.get::<Hunter>(entity)?.prey;
     let sight = sapling_data::mob_traits(kind).hunts?.sees;
@@ -162,7 +176,7 @@ fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
     let reselects = traits.reselects && !angered && found.is_some();
     let lost = had.is_some() && found.is_none();
     if ((found.is_none() && looks && !lost) || reselects) && hunts && !dazzled {
-        let player = if traits.provoked { super::villagers::outlaw(world, entity, layer, kind, body, sight) } else { nearest(world, layer, body, sight) };
+        let player = if traits.provoked { super::villagers::outlaw(world, entity, layer, kind, body, sight) } else { nearest_but(world, layer, body, sight, |player| spares(world, kind, player)) };
         let mob = prey::nearest(world, entity, layer, body, sight, traits);
         found = [found, player, mob].into_iter().flatten().min_by(|a, b| distance(a.1, body.at).total_cmp(&distance(b.1, body.at)));
     }
@@ -197,7 +211,10 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
     super::warden::provoked(world, entity, player);
     super::piglins::attacked(world, entity);
-    let fights = super::genes::fights(world, entity) && !super::bees::is_spent(world, entity);
+    let fights = super::genes::fights(world, entity) && !super::bees::is_spent(world, entity) && !super::villagers::is_players_golem(world, entity);
+    if sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| !hunts.provoked && !hunts.by_dark) {
+        hurt_by::hurt(world, entity, player);
+    }
     let Some(hunts) = sapling_data::mob_traits(kind).hunts.filter(|hunts| (hunts.provoked || hunts.by_dark) && fights) else { return };
     let hunted = world.resource::<Settings>().0.difficulty != Difficulty::Peaceful && seen(world, player, layer, body.at, hunts.sees).is_some() && !super::husbandry::is_owner(world, entity, player);
     if hunted && world.get::<Hunter>(entity).is_some_and(|hunter| hunter.prey != Some(player)) {

@@ -36,6 +36,18 @@ impl Body {
         self.walking[1] += speed;
     }
 
+    /// Has a mob's ticks in the air rise towards `speed` in place of falling, as levitation does
+    /// (0 for none): a fifth of the way each tick, then the fall's drag (bds-a3fx.txt).
+    pub fn levitate(&mut self, speed: f32) {
+        self.lifted = speed;
+    }
+
+    /// Has a mob's gravity be 0.01 in place of its own on the ticks it starts already falling, as slow
+    /// falling does: a still mob's first tick fell by the full 0.08 (bds-a3fx2.txt).
+    pub fn fall_slowly(&mut self, slowly: bool) {
+        self.slowed = slowly;
+    }
+
     /// Has a flying mob's next tick add `speed`, every way, after the drag.
     pub fn fly(&mut self, speed: [f32; 3]) {
         self.walking = speed;

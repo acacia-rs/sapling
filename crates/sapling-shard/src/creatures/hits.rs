@@ -104,6 +104,9 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
         if let Some(loosed) = loosed.as_ref().filter(|_| !is_player) {
             throw_mob(world, struck, layer, motion, push, loosed.player);
         }
+        if !is_player {
+            hunting::hurt_by(world, struck, by);
+        }
     }
     if channels(world, arrow) {
         let feet = world.get::<crate::components::Position>(struck).map(|position| position.feet).or_else(|| world.get::<Body>(struck).map(|body| body.at));

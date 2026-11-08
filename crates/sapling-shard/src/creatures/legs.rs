@@ -54,8 +54,9 @@ pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body
     let facing = yaw.to_radians();
     let step = world.get::<crate::entities::Kind>(entity).map_or(0.0, |kind| super::physics_of(&kind.0).step);
     let leap = body.on_ground && push > 0.0 && at_step(world, layer, body, facing, step);
+    let rise = super::afflictions::jump(world, entity, DEFAULT_JUMP_HEIGHT);
     if let Some(mut body) = world.get_mut::<Body>(entity) {
-        body.walk([-facing.sin() * push, facing.cos() * push], leap.then_some(DEFAULT_JUMP_HEIGHT));
+        body.walk([-facing.sin() * push, facing.cos() * push], leap.then_some(rise));
     }
     if let Some(mut told) = world.get_mut::<Told>(entity) {
         told.face(yaw, yaw);
@@ -79,8 +80,9 @@ pub(super) fn ridden(world: &mut World, entity: Entity, layer: Entity, kind: &st
 
 /// The mob hops where it stands, if it is on the ground.
 pub(super) fn hop(world: &mut World, entity: Entity) {
+    let rise = super::afflictions::jump(world, entity, DEFAULT_JUMP_HEIGHT);
     if let Some(mut body) = world.get_mut::<Body>(entity).filter(|body| body.on_ground) {
-        body.walk([0.0; 2], Some(DEFAULT_JUMP_HEIGHT));
+        body.walk([0.0; 2], Some(rise));
     }
 }
 

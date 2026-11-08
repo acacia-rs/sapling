@@ -3,7 +3,7 @@
 //! prey that has been more than 16 off for 30 ticks, a tick in 100 in the dark and in 20 in
 //! the sun (its pack's `light_teleport_chance`, the component's dark default: BDS's came 5.2
 //! seconds apart at midnight), and away from water it touches or rain on it, which costs it 1.
-// TODO: none from beside its prey.
+// TODO: BDS's random rate was lower (bds-a3ender.txt: 2 and 4 in ~820 ticks); the rule is open.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent};
 use acacia_proto::types::Vec3f;

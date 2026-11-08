@@ -67,7 +67,7 @@ third level with 60, 48, 36, 24 and 12.
   (`7107de5e-7ce8-4030-940e-514c1f160890`) of -0.15 a level: 0.085 at the first, 0.04 at the fourth.
 - A fist's hit on a cow cost it 3.99 under strength's second level (5) and 0.3 under weakness
   (18): the hit times 1.3 a level plus (1.3^levels - 1) / 0.3, and times 0.8 a level plus
-  (0.8^levels - 1) / 0.4.
+  (0.8^levels - 1) / 0.4. A mob's hit scales the same (bds-a3fx3.txt; mob-kinds.md).
 - A fall of 8 blocks cost 5 bare, 4 under jump boost (8), 1 under its fourth level and nothing
   under slow falling (27).
 - Under water breathing (13) twenty seconds under water cost nothing.

@@ -11,8 +11,8 @@ mod told;
 mod turns;
 
 use acacia_proto::packets::MobEffectEventId;
-pub(crate) use attributes::{Paced, cushion, tell_pace, walking};
-pub(crate) use combat::{dig_speed, hits_for};
+pub(crate) use attributes::{Paced, cushion, mob_walking, tell_pace, walking};
+pub(crate) use combat::{dig_speed, hit_under, hits_for};
 use bevy_ecs::prelude::*;
 use sapling_api::{Effect, EffectBackend, PlayerId};
 pub(crate) use told::announced;

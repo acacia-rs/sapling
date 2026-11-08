@@ -32,11 +32,8 @@ pub(crate) struct Paced {
 /// that speed less the freeze's share, which the server's own step adds itself. The adds are listed
 /// first and go before the effects multiply (research/captures/bds-r1fx.txt).
 fn pace(id: u64, quick: Option<u8>, slow: Option<u8>, paced: Paced, tick: u64) -> (UpdateAttributes, f32) {
-    let modifier = |levels: Option<u8>, id: &str, name: &str, each: f32| {
-        levels.map(|levels| PlayerAttributesItemModifiersItem { id: id.into(), name: name.into(), amount: each * (f32::from(levels) + 1.0), operation: 2, operand: 2, serializable: false })
-    };
     let adds = |amount: f32, id: &str, name: &str, serializable: bool| (amount != 0.0).then(|| PlayerAttributesItemModifiersItem { id: id.into(), name: name.into(), amount, operation: 0, operand: 2, serializable });
-    let times = [modifier(quick, QUICKENS_AS, "MovementSpeed", QUICKENS), modifier(slow, SLOWS_AS, "MovementSlowdown", -SLOWS)];
+    let times = effect_modifiers(quick, slow);
     let freeze = adds(paced.freeze * acacia_physics::constants::FREEZE_SPEED_MODIFIER, FREEZES_AS, "Freeze effect", true);
     let modifiers: Vec<_> = [freeze, adds(paced.soles, SOLES_AS, "Sprinting speed boost", false)].into_iter().chain(times).flatten().collect();
     let speed = |base: f32| modifiers.iter().filter(|modifier| modifier.operation == 2).fold(base, |pace, modifier| pace * (1.0 + modifier.amount)).max(0.0);
@@ -44,6 +41,23 @@ fn pace(id: u64, quick: Option<u8>, slow: Option<u8>, paced: Paced, tick: u64) -
     let unfrozen = speed(WALKS + paced.soles);
     let movement = PlayerAttributesItem { min: 0.0, max: f32::MAX, current: speed(WALKS + added), default_min: 0.0, default_max: f32::MAX, default: WALKS, name: "minecraft:movement".into(), modifiers };
     (UpdateAttributes { runtime_entity_id: id, attributes: vec![movement], tick }, unfrozen)
+}
+
+/// The modifiers levels of speed and of slowness put on a walking speed, a player's or a mob's.
+fn effect_modifiers(quick: Option<u8>, slow: Option<u8>) -> [Option<PlayerAttributesItemModifiersItem>; 2] {
+    let modifier = |levels: Option<u8>, id: &str, name: &str, each: f32| {
+        levels.map(|levels| PlayerAttributesItemModifiersItem { id: id.into(), name: name.into(), amount: each * (f32::from(levels) + 1.0), operation: 2, operand: 2, serializable: false })
+    };
+    [modifier(quick, QUICKENS_AS, "MovementSpeed", QUICKENS), modifier(slow, SLOWS_AS, "MovementSlowdown", -SLOWS)]
+}
+
+/// A mob's walking speed of `base` under levels of speed and of slowness, as BDS told its viewers
+/// (research/captures/bds-mob-effects.txt: a cow's 0.25 at 0.35 under speed II, 0 under slowness 255).
+pub(crate) fn mob_walking(id: u64, base: f32, quick: Option<u8>, slow: Option<u8>) -> UpdateAttributes {
+    let modifiers: Vec<_> = effect_modifiers(quick, slow).into_iter().flatten().collect();
+    let current = modifiers.iter().fold(base, |pace, modifier| pace * (1.0 + modifier.amount)).max(0.0);
+    let movement = PlayerAttributesItem { min: 0.0, max: f32::MAX, current, default_min: 0.0, default_max: f32::MAX, default: base, name: "minecraft:movement".into(), modifiers };
+    UpdateAttributes { runtime_entity_id: id, attributes: vec![movement], tick: 0 }
 }
 
 /// A player's walking speed now, as it is told.
