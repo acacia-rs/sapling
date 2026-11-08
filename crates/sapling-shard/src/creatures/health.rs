@@ -50,6 +50,8 @@ pub(crate) struct Health {
     springs: f32,
     /// Ticks since it was last hurt or near a player (BDS's `NoActionTimeComponent`, spawning/despawn.rs).
     idle: u32,
+    /// A hit landed that sculk has yet to hear (death.rs `hear_hurt`).
+    pub(super) unheard: bool,
     /// What viewers know: its health, and whether it is on fire.
     pub(super) told: f32,
     pub(super) lit: bool,
@@ -59,7 +61,7 @@ impl Health {
     /// A mob of `max` health with `left` of it, `burning` ticks more.
     pub(crate) fn new(max: f32, left: Option<f32>, burning: u16) -> Self {
         let left = left.map_or(max, |left| left.clamp(0.0, max));
-        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], warding: Warding::default(), cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, idle: 0, told: left, lit: false }
+        Self { left, max, last: 0.0, guarded: 0, burning, peak: None, air: AIR, walled: 0, landed: None, armour: [0.0; 2], warding: Warding::default(), cushion: 0.0, takes: 1.0, fireproof: false, springs: 0.0, idle: 0, unheard: false, told: left, lit: false }
     }
 
     pub(crate) fn left(&self) -> f32 {
@@ -152,7 +154,7 @@ impl Health {
         if self.left <= 0.0 || (taken <= 0.0 && !whole) {
             return false;
         }
-        (self.last, self.guarded, self.idle) = (amount, GUARD, 0);
+        (self.last, self.guarded, self.idle, self.unheard) = (amount, GUARD, 0, true);
         let soaked = taken.min(self.cushion);
         self.cushion -= soaked;
         self.left = (self.left - (taken - soaked)).max(0.0);

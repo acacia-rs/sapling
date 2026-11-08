@@ -127,6 +127,7 @@ pub(super) fn die(world: &mut World, player: Entity, cause: Cause) {
         (vitals.died, vitals.leaves) = (Some(now), Some(points));
     }
     super::omens::died(world, player);
+    super::heard_from_eyes(world, player, crate::blocks::GameEvent::EntityDie);
     tell(world, player, &EntityEvent { runtime_entity_id: id, event_id: EntityEventEventId::DeathAnimation, data: 0, fire_at_position: None });
     let told = world.get::<Told>(player).is_some();
     // A told hit has a slayer only from `/damage ... entity <who>`: BDS said `death.attack.mob` for its projectile too (bds-fixmisc.txt).

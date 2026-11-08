@@ -59,6 +59,7 @@ pub(crate) fn thorns(world: &mut World, wearer: Entity, attacker: Entity) {
         return;
     }
     let mut pricked = [None; 4];
+    let at = world.get::<crate::components::Position>(wearer).map(|position| position.feet).or_else(|| world.get::<crate::body::Body>(wearer).map(|body| body.at)).unwrap_or_default();
     for (piece, level) in levels.into_iter().enumerate().filter(|(_, level)| *level > 0) {
         let back = {
             let mut dice = world.get_resource_or_insert_with(Dice::default);
@@ -66,7 +67,7 @@ pub(crate) fn thorns(world: &mut World, wearer: Entity, attacker: Entity) {
         };
         pricked[piece] = Some(back.is_some());
         if let Some(back) = back
-            && !crate::vitals::thorned(world, attacker, back)
+            && !crate::vitals::thorned(world, attacker, back, at)
         {
             crate::creatures::thorned(world, attacker, back);
         }

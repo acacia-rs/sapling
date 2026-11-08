@@ -4,7 +4,7 @@
 //! the event, then cools down. A calibrated sensor powered from behind hears only the frequency
 //! of that power. A shrieker hears sensors going active, and shrieks when a player set one off
 //! (shrieks.rs).
-// TODO: wool broken or walked on is heard; mobs, drinking, damage and explosions are not.
+// TODO: wool broken or walked on is heard; a mob's steps, a summoned TNT's fuse and a hurt item are not.
 
 mod catalyst;
 mod deferred;

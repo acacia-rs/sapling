@@ -125,6 +125,7 @@ pub(super) fn land(world: &mut World, player: Entity, amount: f32, cause: Cause)
     if world.get::<Vitals>(player).is_some_and(|vitals| vitals.health.left() > 0.0) {
         flash(world, player, cause);
         omens::hurt(world, player);
+        super::heard_from_eyes(world, player, crate::blocks::GameEvent::EntityDamage);
     }
     settle(world, player, cause);
     true

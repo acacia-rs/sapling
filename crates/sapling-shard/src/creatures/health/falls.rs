@@ -66,6 +66,14 @@ impl Health {
         self.peak.map_or(from, |peak| peak.max(from)).max(to) - to
     }
 
+    /// [`Health::fall`] for one no fall hurts (a creative player): how far it dropped, if it
+    /// landed in this move; a `carried` move starts the fall anew.
+    pub(crate) fn fall_unhurt(&mut self, from: f32, to: f32, on_ground: bool, carried: bool) -> f32 {
+        let dropped = if on_ground && !carried { self.dropped(from, to) } else { 0.0 };
+        self.peak = (!on_ground && !carried).then(|| self.peak.map_or(from, |peak| peak.max(from)).max(to));
+        dropped
+    }
+
     /// Forgets how far it has fallen: a fall from `at` starts anew.
     pub(crate) fn break_fall(&mut self, at: f32) {
         if self.peak.is_some() {

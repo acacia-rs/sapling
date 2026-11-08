@@ -288,8 +288,8 @@ pub(crate) fn relay_swings(mut packets: ResMut<PacketQueues>, mut to_viewers: Re
     for (entity, animate) in packets.take::<Animate>() {
         let Ok((id, stage)) = players.get(entity) else { continue };
         if animate.action_id == AnimateActionId::SwingArm && *stage == Stage::InWorld && swung.insert(entity) {
-            // The id is the sender's whatever the packet says; BDS forwards no swing source.
-            to_viewers.push(entity, &Animate { action_id: AnimateActionId::SwingArm, runtime_entity_id: id.0, data: 0.0, has_swing_source: false, swing_source: None });
+            // The id is the sender's whatever the packet says; BDS forwards its swing source (bds-b1click.txt).
+            to_viewers.push(entity, &Animate { action_id: AnimateActionId::SwingArm, runtime_entity_id: id.0, data: 0.0, has_swing_source: animate.has_swing_source, swing_source: animate.swing_source });
         }
     }
 }

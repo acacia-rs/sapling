@@ -197,6 +197,15 @@ keyed by the beetroot HashedString at 14ccd5960) builds the crop strategy (1487f
 min, else min. The crop before it (14ccd54e0) gets the constant functor (14a92f180, 142f644d0: 1). So 1 +
 `nextInt(2)`, as fitted.
 
+Stems and states Java's tables read (group B of the fourteenth wave, `b1stem` in fourteenth1b_drill.rs,
+bds-b1stem.txt, broken by `setblock ... destroy` on the flat ground). A pumpkin or melon stem drops its seeds in
+three throws of `nextInt(15) < growth + 1` (decompiled with the crop strategies above; the drill's counts agree);
+sapling had dropped nothing. A composter at level 8 drops bone meal and itself, below that itself alone; a pale
+moss carpet drops only from its bottom (`upper_block_bit` 0); a mangrove propagule drops when standing, or
+hanging at stage 4; a pitcher crop at growth 4 drops the pitcher plant, otherwise its pod. Sapling reads these
+states off the Bedrock block for the Java rows (`blocks/loot.rs` `java_state`, `STEMS`); a row about a state it
+still cannot read is skipped. Test: `stems_composters_carpets_propagules_and_pitchers_leave_what_bds_does`.
+
 Open checks for one bot session on BDS (place, read the state back): piston facing numbers, dispenser/piston up-down rule
 (position vs pitch), trapdoor placed on a side face, end rod values, snow-layer replace height, lever sound ids on the wire,
 door sound packet, which blocks count as support.

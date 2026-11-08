@@ -79,10 +79,11 @@ pub(crate) fn punched(world: &mut World, player: Entity, amount: f32, by: &str, 
 #[derive(Component)]
 pub(super) struct Pierced(pub f32);
 
-/// The Thorns of what `player` hit hurt it for `amount`; false where `player` is no player, or
-/// it took nothing.
-pub(crate) fn thorned(world: &mut World, player: Entity, amount: f32) -> bool {
-    world.get::<Vitals>(player).is_some() && is_mortal(world, player) && hurt(world, player, amount, Cause::Thorns)
+/// The Thorns of what `player` hit, standing at `from`, hurt it for `amount`, or its shield turned
+/// them away; false where `player` is no player, or it took nothing.
+pub(crate) fn thorned(world: &mut World, player: Entity, amount: f32, from: [f32; 3]) -> bool {
+    let mortal = world.get::<Vitals>(player).is_some() && is_mortal(world, player);
+    mortal && (super::shield::blocks(world, player, from, amount, Cause::Thorns, false) || hurt(world, player, amount, Cause::Thorns))
 }
 
 pub(crate) fn is_fireproof(world: &World, player: Entity) -> bool {
@@ -172,9 +173,10 @@ pub(crate) fn electrocuted(world: &mut World, player: Entity, amount: f32, burns
     is_mortal(world, player) && hurt(world, player, amount, Cause::Lightning)
 }
 
-/// A firework rocket bursting at `from` hurts a player for `amount`; false where it took nothing.
+/// A firework rocket bursting at `from` hurts a player for `amount`, unless its shield turns it
+/// away; false where it took nothing.
 pub(crate) fn fireworked(world: &mut World, player: Entity, amount: f32, from: [f32; 3]) -> bool {
-    hit_from(world, player, amount, from, [0.0; 3], Cause::Fireworks)
+    !super::shield::blocks(world, player, from, amount, Cause::Fireworks, false) && hit_from(world, player, amount, from, [0.0; 3], Cause::Fireworks)
 }
 
 /// A burst that did not hit the player throws it by `push` alone.

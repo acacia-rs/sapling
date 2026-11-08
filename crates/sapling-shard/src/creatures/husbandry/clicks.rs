@@ -3,7 +3,7 @@
 //! shears, a brush, a bucket, a bowl, a flower or a dye take or give what [`super::products`] says;
 //! its food heals a tamed one that is hurt, grows a baby, puts a grown one in love, tames a wild
 //! one or calms a mount; and its owner's click with anything else sits it down or stands it up.
-// TODO: a click does not swing the player's arm for its viewers.
+//! A click taken swings the clicker's arm (actions.rs).
 
 use acacia_proto::nbt::Value;
 use acacia_proto::types::MetadataFlags1 as Flags;

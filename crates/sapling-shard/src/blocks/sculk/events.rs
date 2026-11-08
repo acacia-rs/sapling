@@ -14,9 +14,13 @@ pub(crate) enum GameEvent {
     SculkTouch,
     ProjectileLand,
     ProjectileShoot,
-    /// A food eaten or a drink drunk (BDS's `eat` and `drink`, both 8), heard from the eyes as it was
+    /// A food eaten (BDS's `eat`) or a drink drunk (`drink`), both 8, heard from the eyes as it was
     /// finished (research/captures/bds-v2tp.txt, bds-x2drink.txt).
     Eat,
+    Drink,
+    /// A mob or a player hurt, or dead, heard the next tick from where it was (bds-b1sculk.txt).
+    EntityDamage,
+    EntityDie,
     ContainerClose,
     BlockClose,
     ContainerOpen,
@@ -52,8 +56,10 @@ impl GameEvent {
             GameEvent::ContainerClose => 11,
             GameEvent::ContainerOpen => 12,
             GameEvent::DispenseFail => 13,
-            // TODO: a drink shares Eat, so it saves 15 where BDS saves drink's 14.
+            GameEvent::Drink => 14,
             GameEvent::Eat => 15,
+            GameEvent::EntityDamage => 17,
+            GameEvent::EntityDie => 18,
             GameEvent::Step => 22,
             GameEvent::Explode => 27,
             GameEvent::FluidPickup => 29,
@@ -76,13 +82,14 @@ impl GameEvent {
             GameEvent::Step | GameEvent::SculkTouch => 1,
             GameEvent::ProjectileLand => 2,
             GameEvent::ProjectileShoot => 3,
-            GameEvent::Eat => 8,
+            GameEvent::EntityDamage => 7,
+            GameEvent::Eat | GameEvent::Drink => 8,
             GameEvent::ContainerClose | GameEvent::BlockClose => 9,
             GameEvent::ContainerOpen | GameEvent::BlockOpen | GameEvent::DispenseFail | GameEvent::NotePlay | GameEvent::PrimeFuse | GameEvent::BlockAttach => 10,
             GameEvent::BlockDestroy | GameEvent::FluidPickup => 12,
             GameEvent::BlockPlace | GameEvent::FluidPlace => 13,
             GameEvent::LightningStrike | GameEvent::Teleport => 14,
-            GameEvent::Explode => 15,
+            GameEvent::Explode | GameEvent::EntityDie => 15,
             GameEvent::TendrilsClicking => 0,
             GameEvent::Resonate(frequency) => frequency,
         }

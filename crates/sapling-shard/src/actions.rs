@@ -1,6 +1,7 @@
 //! Player actions offered to plugins before the game acts on them: moves, which
 //! `movement::player_input` queues because systems cannot reach plugins, item use and entity clicks.
 
+use acacia_proto::packets::{Animate, AnimateActionId};
 use bevy_ecs::prelude::*;
 use sapling_api::{EntityAttackEvent, EntityId, EntityInteractEvent, ItemUseEvent, MoveEvent, Player, Slot, Target};
 
@@ -8,6 +9,8 @@ use crate::components::{NetId, Position, in_world, in_world_identity};
 use crate::inventory::{self, Inventory};
 use crate::movement::{self, Moves};
 use crate::{entities, plugins, worlds};
+
+const SWING_SOURCE: &str = "interact";
 
 /// Offers this tick's moves; a cancelled one puts the player back where it was.
 pub(crate) fn dispatch_moves(world: &mut World) {
@@ -66,8 +69,17 @@ pub(crate) fn interacted(world: &mut World, uses: Vec<(Entity, u64, [f32; 3])>) 
             || crate::riding::used_on(world, player, target);
         if taken {
             keep(world, target);
+            swing(world, player);
         }
     }
+}
+
+/// A click something took swings the player's arm for it and its viewers, besides the client's own
+/// swing relayed (bds-b1click.txt; bds-mounts.txt, bds-armorstand.txt).
+fn swing(world: &mut World, player: Entity) {
+    let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return };
+    let swing = Animate { action_id: AnimateActionId::SwingArm, runtime_entity_id: id, data: 0.0, has_swing_source: true, swing_source: Some(SWING_SOURCE.into()) };
+    crate::vitals::tell(world, player, &swing);
 }
 
 /// A mob a player did something to stays: BDS's `Player::interact` (1402b7be0) makes any `Mob` it

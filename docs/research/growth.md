@@ -168,8 +168,16 @@ farmland, which is lower than a block, `~-1` named the cell under it, so the lat
 the two onto wheat laid their farmland a level down and say nothing.
 
 Sapling treads farmland to dirt under a survival player that lands on it, with the Java game's
-chance, the drop less a half (`trample` in `blocks/growth.rs`); what grew on it breaks. Mobs and
-creative players tread none, and the chance between 0.8 and 1.5 was not measured.
+chance, the drop less a half (`trample` in `blocks/growth.rs`); what grew on it breaks. The chance
+between 0.8 and 1.5 was not measured.
+
+Group B of the fourteenth wave (fourteenth1b_drill.rs): a creative player treads it as a survival one does
+(bds-b1tread.txt, a drop of 3; `vitals/stand.rs` `stand_unhurt`, test
+`a_creative_player_treads_farmland_it_drops_onto`). BDS's mobs tread it too, but seldom and not by Java's
+chance: cows summoned 3 over it 0 of 5 (bds-b1tread.txt); cows walked off a ledge they stood on 3 over it 1 of
+3, 9 over it 2 of 2 (bds-b1tread2.txt); cows dropped 6 over it about 1 of 8, 8 over it none of about 8, some
+landing on it (bds-b1tread3.txt, only its rows at positive cells placed right). No rule was found; sapling's
+mobs tread none (REMAINING4).
 
 ## Sapling
 

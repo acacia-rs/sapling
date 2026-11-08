@@ -224,6 +224,7 @@ pub(crate) fn tick(world: &mut World) {
         if world.get::<Dying>(entity).is_none() {
             crate::spawning::count_idle(world, entity, layer, &kind);
         }
+        death::hear_hurt(world, entity, layer);
         // A rider is carried to its seat, a vehicle its driver's client moves put where it says (riding.rs).
         // A seated mob is still harmed where its seat is: BDS's pig in a boat under a roof held its
         // breath and choked (research/captures/bds-ai1boat.txt). TODO: a riding mob does not think.

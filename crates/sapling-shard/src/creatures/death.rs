@@ -50,6 +50,7 @@ pub(super) fn die(world: &mut World, entity: Entity, layer: Entity, kind: &str, 
         }
     }
     omens::died(world, entity, layer, body);
+    crate::blocks::vibrate_next_tick(world, layer, body.at.map(|c| c.floor() as i32), crate::blocks::GameEvent::EntityDie);
     feed_catalyst(world, entity, layer, kind, body);
     let spilled = crate::riding::spilled(world, entity);
     let unsaddled = spilled.iter().any(|stack| stack.name == SADDLE);
@@ -101,6 +102,18 @@ fn feed_catalyst(world: &mut World, entity: Entity, layer: Entity, kind: &str, b
         && let Some(mut slain) = world.get_mut::<attacks::Slain>(entity)
     {
         slain.0 = 0;
+    }
+}
+
+/// A hit that landed on the mob since its last tick is heard the next tick from the cell of its
+/// feet; one that killed it is heard as its death instead (`die`; bds-b1sculk.txt).
+pub(super) fn hear_hurt(world: &mut World, entity: Entity, layer: Entity) {
+    let Some(mut health) = world.get_mut::<Health>(entity) else { return };
+    if !std::mem::take(&mut health.unheard) || health.left() <= 0.0 {
+        return;
+    }
+    if let Some(feet) = world.get::<Body>(entity).map(|body| body.at.map(|c| c.floor() as i32)) {
+        crate::blocks::vibrate_next_tick(world, layer, feet, crate::blocks::GameEvent::EntityDamage);
     }
 }
 

@@ -32,7 +32,7 @@ pub(crate) mod told_all;
 mod told_health;
 pub(crate) use told_health::{held as health_held, tell_held as tell_held_health};
 mod totem;
-pub(crate) use shield::{Guard, blocks, shown_bits, thrown_back, wields_axe};
+pub(crate) use shield::{Guard, blocks, blocks_mob, shown_bits, thrown_back, wields_axe};
 pub(crate) use stand::{break_fall, breathes_water, fallen, falls_freely};
 #[cfg(test)]
 pub(crate) use splashed::shared_strength;
@@ -42,7 +42,7 @@ use acacia_proto::Packet;
 use bevy_ecs::prelude::*;
 use sapling_api::GameMode;
 
-use crate::components::{InLayer, Mode, NetId, Outgoing, Tick, in_world};
+use crate::components::{InLayer, Mode, NetId, Outgoing, Position, Tick, in_world};
 use crate::creatures::Health;
 use crate::visibility::ToViewers;
 
@@ -111,6 +111,10 @@ pub(crate) fn is_mortal(world: &World, player: Entity) -> bool {
     !is_dead(world, player) && world.get::<Mode>(player).is_some_and(|mode| matches!(mode.0, GameMode::Survival | GameMode::Adventure))
 }
 
+pub(crate) fn is_creative(world: &World, player: Entity) -> bool {
+    !is_dead(world, player) && world.get::<Mode>(player).is_some_and(|mode| mode.0 == GameMode::Creative)
+}
+
 /// Its health whole again, as BDS's respawn after the End's exit portal makes it; the caller
 /// tells it (portals/exit.rs).
 pub(crate) fn mend_fully(world: &mut World, player: Entity) {
@@ -123,6 +127,15 @@ pub(crate) fn mend_fully(world: &mut World, player: Entity) {
 /// Died and not yet risen.
 pub(crate) fn is_dead(world: &World, player: Entity) -> bool {
     world.get::<Vitals>(player).is_none_or(|vitals| vitals.died.is_some())
+}
+
+/// `event` heard the next tick from the cell of the player's eyes, as BDS's hurt player was
+/// (research/captures/bds-b1sculk.txt).
+fn heard_from_eyes(world: &mut World, player: Entity, event: crate::blocks::GameEvent) {
+    let (Some(position), Some(layer)) = (world.get::<Position>(player).copied(), world.get::<InLayer>(player).map(|layer| layer.0)) else { return };
+    let [x, y, z] = position.feet;
+    let eyes = [x, y + sapling_data::EYE_HEIGHT, z].map(|c| c.floor() as i32);
+    crate::blocks::vibrate_next_tick(world, layer, eyes, event);
 }
 
 /// To the player and to those who see it.
@@ -173,9 +186,6 @@ pub(crate) fn tick(world: &mut World) {
         if is_mortal(world, player) {
             stand::stand(world, player, layer);
         } else {
-            if let Some(mut vitals) = world.get_mut::<Vitals>(player) {
-                vitals.was = None;
-            }
             stand::stand_unhurt(world, player, layer);
             death::leave(world, player, layer);
         }
