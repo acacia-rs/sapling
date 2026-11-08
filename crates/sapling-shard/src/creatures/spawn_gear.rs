@@ -87,16 +87,21 @@ fn regional(world: &World, layer: Entity) -> Regional {
     Regional::at(difficulty, world.get::<Layer>(layer).map_or(0, |layer| layer.world.level().time))
 }
 
-/// Gives `mob` what `table` rolls: armour worn, the rest held.
-pub(super) fn equip(world: &mut World, mob: Entity, table: &str) {
-    let Some(layer) = world.get::<InLayer>(mob).map(|layer| layer.0) else { return };
+/// What `table` rolls for `mob`, enchanted by its spot's difficulty.
+pub(super) fn rolled(world: &mut World, mob: Entity, table: &str) -> Vec<ItemStack> {
+    let Some(layer) = world.get::<InLayer>(mob).map(|layer| layer.0) else { return Vec::new() };
     let regional = regional(world, layer);
     let rolled = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
         sapling_data::gear_loot(table, regional, &mut || dice.fraction())
     };
-    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return };
-    let stacks: Vec<_> = rolled.into_iter().filter_map(|looted| kept_stack(looted, registry)).map(|stack| (inventory::worn_in(&stack.name), stack)).collect();
+    let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return Vec::new() };
+    rolled.into_iter().filter_map(|looted| kept_stack(looted, registry)).collect()
+}
+
+/// Gives `mob` what `table` rolls: armour worn, the rest held.
+pub(super) fn equip(world: &mut World, mob: Entity, table: &str) {
+    let stacks: Vec<_> = rolled(world, mob, table).into_iter().map(|stack| (inventory::worn_in(&stack.name), stack)).collect();
     for (piece, stack) in stacks {
         match piece {
             Some(piece) => drop(super::worn::wear(world, mob, piece, Some(stack))),

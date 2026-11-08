@@ -13,10 +13,12 @@ mod occlusion;
 mod resonance;
 mod saved;
 mod shrieks;
+mod walks;
 
 pub(crate) use catalyst::{arrived as catalysts_arrived, mob_died};
 pub(crate) use deferred::{poured, teleported, vibrate_next_tick};
 pub(crate) use events::GameEvent;
+pub(crate) use walks::walked;
 
 use std::collections::{HashMap, HashSet};
 
@@ -41,9 +43,6 @@ const COOLDOWN: u64 = 10;
 const IDLE: u8 = 0;
 const LISTENING: u8 = 1;
 const COOLING: u8 = 2;
-/// A step's share of a block walked (the Java game's `moveDist` of 0.6 a block, a step at each whole).
-const STRIDE: f32 = 0.6;
-
 /// A vibration on its way to a listener.
 struct Coming {
     when: u64,
@@ -164,6 +163,10 @@ pub(crate) fn vibrate_at_by(world: &mut World, layer: Entity, pos: BlockPos, eve
 }
 
 fn vibrate_from(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, by_player: bool, source: Option<Entity>) {
+    // A warden's own vibrations reach nothing (Java `dampensVibrations`; bds-tt1warden.txt: no sensor heard one killed).
+    if source.is_some_and(|source| world.get::<crate::entities::Kind>(source).is_some_and(|kind| kind.0 == "minecraft:warden")) {
+        return;
+    }
     crate::creatures::warden_hears(world, layer, at, event, source);
     if event == GameEvent::NotePlay {
         let source = at.map(|c| c.floor() as i32);
@@ -212,31 +215,6 @@ fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEv
 /// [`vibrate`] from the middle of the block at `pos`.
 pub(crate) fn vibrate_at(world: &mut World, layer: Entity, pos: BlockPos, event: GameEvent, by_player: bool) {
     vibrate(world, layer, pos.map(|c| c as f32 + 0.5), event, by_player);
-}
-
-/// A player walked from `from` to `to` (feet): a step is heard every 1/0.6 blocks walked on the
-/// ground, but not sneaking; a sensor walked on is touched, sneaking or not (S14).
-pub(crate) fn walked(world: &mut World, player: Entity, layer: Entity, from: [f32; 3], to: [f32; 3], on_ground: bool, sneaking: bool) {
-    if !on_ground {
-        return;
-    }
-    let under = [to[0].floor() as i32, (to[1] - 0.5).floor() as i32, to[2].floor() as i32];
-    if name_at(world, layer, under).is_some_and(|(name, ..)| is_sensor(name)) {
-        vibrate_at_by(world, layer, under, GameEvent::SculkTouch, player);
-    }
-    if sneaking {
-        return;
-    }
-    let walked = (to[0] - from[0]).hypot(to[2] - from[2]) * STRIDE;
-    let mut listeners = world.get_resource_or_insert_with(Listeners::default);
-    let gone = listeners.strides.entry(player).or_insert(0.0);
-    *gone += walked;
-    let stepped = *gone >= 1.0;
-    *gone = gone.fract();
-    if stepped {
-        crate::creatures::warden_hears(world, layer, to, GameEvent::Step, Some(player));
-        reach_listeners(world, layer, to, GameEvent::Step, true);
-    }
 }
 
 /// Listeners that a vibration reached this tick act on it, and catalysts' charge moves.

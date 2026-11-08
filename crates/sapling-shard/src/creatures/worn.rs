@@ -1,7 +1,7 @@
 //! The armour a mob wears (helmet, chestplate, leggings, boots, as a world folder's `Armor`): shown
 //! in `MobArmorEquipment` and worn against hits over its own skin, as BDS's zombie in a diamond
 //! chestplate took 5.824 of a diamond sword's 8 (research/captures/bds-hits2.txt).
-// TODO: it is not written back to a world folder or worn down by hits (spawn_gear.rs enchants and drops it).
+// TODO: it is not written back to a world folder (spawn_gear.rs enchants and drops it).
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -59,6 +59,31 @@ pub(super) fn shown(world: &World, entity: Entity, id: u64) -> Option<Bytes> {
 /// The pieces the mob wears, helmet first.
 pub(super) fn pieces(world: &World, mob: Entity) -> [Option<ItemStack>; PIECES] {
     world.get::<Worn>(mob).map(|worn| worn.0.clone()).unwrap_or_default()
+}
+
+/// A hit of `amount` its armour stops wears each piece by a quarter of it, one at least, as a
+/// player's (inventory/armour_wear.rs), unless Unbreaking spares it; told to no one
+/// (research/captures/bds-tt1worn.txt: five `/damage` hits of 4 left a piglin's picked-up diamond helmet at `Damage` 5).
+pub(super) fn wear_down(world: &mut World, mob: Entity, amount: f32) {
+    let Some(mut worn) = world.get::<Worn>(mob).cloned() else { return };
+    let share = ((amount / 4.0) as i32).max(1);
+    for piece in worn.0.iter_mut().flatten().filter(|piece| sapling_data::armour(&piece.name).is_some()) {
+        let unbreaking = sapling_data::enchant::level(piece.tag.as_ref(), sapling_data::enchant::Enchant::Unbreaking);
+        let chance = sapling_data::enchant::wear_chance(unbreaking, true);
+        if chance < 100 && world.get_resource_or_insert_with(crate::blocks::Dice::default).roll(100) >= chance {
+            continue;
+        }
+        let had = match piece.tag.as_ref().and_then(|tag| tag.get("Damage")) {
+            Some(acacia_proto::nbt::Value::Int(damage)) => *damage,
+            _ => 0,
+        };
+        crate::inventory::set_damage(&mut piece.tag, had + share);
+    }
+    if let Some(look) = world.get_mut::<Creature>(mob).and_then(|creature| creature.into_inner().look.as_mut()) {
+        look.armor.resize(PIECES, None);
+        look.armor[..PIECES].clone_from_slice(&worn.0);
+    }
+    world.entity_mut(mob).insert(worn);
 }
 
 /// Has the mob's health wear its skin and its armour.

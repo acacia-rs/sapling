@@ -4,8 +4,9 @@
 //! over an iron one, leather boots onto bare feet; not an iron sword over a crossbow, a crossbow over
 //! a golden sword (both 2) nor an iron helmet over a diamond one. What it takes is shown a tick on
 //! (armour as `MobEquipment` naming its equipment slot, 2 the head to 5 the feet), what it put down
-//! is dropped a tick after that, and what it took drops at its death.
-// TODO: BDS's piglin left an iron helmet by its bare head once (bds-q1piglin.txt), not explained.
+//! is dropped a tick after that, and what it took drops at its death. Every piece offered to a bare
+//! piglin was taken (bds-tt1piglin.txt, the iron helmet four times of four; bds-q1piglin.txt's one
+//! left lying did not come again).
 
 use acacia_proto::packets::MobEquipment;
 use acacia_proto::types::WindowID;
@@ -20,7 +21,8 @@ use crate::{drops, late_sounds};
 
 /// The admired golden items' priority, which no weapon or piece beats but a crossbow equals.
 const GOLDEN: u8 = 2;
-const MATERIALS: [(&str, u8); 6] = [("netherite", 3), ("diamond", 4), ("iron", 5), ("chainmail", 6), ("copper", 7), ("leather", 8)];
+/// The turtle shell is the pack's 9 with the heads and carved pumpkin (bds-tt1piglin.txt: one took it onto a bare head).
+const MATERIALS: [(&str, u8); 7] = [("netherite", 3), ("diamond", 4), ("iron", 5), ("chainmail", 6), ("copper", 7), ("leather", 8), ("turtle", 9)];
 const PIECES: [&str; 4] = ["helmet", "chestplate", "leggings", "boots"];
 /// A sword's priority by material: one worse than the same armour from copper on, as the pack lists.
 const SWORDS: [(&str, u8); 6] = [("netherite", 3), ("diamond", 4), ("iron", 5), ("copper", 6), ("stone", 7), ("wooden", 8)];

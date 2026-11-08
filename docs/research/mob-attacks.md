@@ -583,8 +583,15 @@ By night on the stone floor, the survival actor held in place:
   events (its `can_have_equipment` group, not `spawn_as_rider`) and the husk's always but as a rider;
   `drowned.rs` rolls the melee table for an unarmed one, a shell going to the off hand. A `/kill`
   showed both hands empty on BDS, as on sapling. Tests `zombies_and_husks_roll_their_table_on_hard_and_wear_nothing_on_easy`,
-  `an_unarmed_drowned_may_hold_a_shell_in_its_off_hand`. Left: a ranged drowned's trident is never
-  enchanted (`enchant_random_gear` 0.25), and mob armour is not worn down by hits (`worn.rs`).
+  `an_unarmed_drowned_may_hold_a_shell_in_its_off_hand`.
+- Wear (`tt1worn`, bds-tt1worn.txt, fourteenth1t): a piglin's picked-up diamond helmet stood at
+  `Damage` 5 after five `/damage ... 4 entity_attack` hits (healed between), and dropped so at its
+  `/kill`: a hit its armour stops wears each piece by a quarter of it, one at least, as a player's
+  (`worn.rs` `wear_down`, Unbreaking sparing it; test
+  `a_piglins_picked_up_helmet_wears_one_a_hit_of_four_and_drops_so_worn`). A ranged drowned's
+  trident and shell are now rolled from `drowned_ranged_equipment.json`, so a quarter of tridents
+  (times the spot's multiplier) come enchanted, shown and dropped with it (`drowned.rs`; no
+  enchanted one was seen on BDS, not drilled).
 
 ## Head, box, spider, nuggets (2026-11-05, thirteenth3ah, `ah3*` captures)
 
@@ -743,6 +750,14 @@ open and close, door, block placed, own `/damage` (35 each) and snowball thrown 
 thrower, 10 ticks over 10 blocks) all named that player; a `/setblock` was heard naming nobody. Sapling since
 fourteenth1q: mobs other than wardens and armor stands are suspects (`hearing::is_suspect`), and vibrations
 carry their source (`blocks::vibrate_by`, `vibrate_at_by`); booms stay for players.
+bds-tt1warden.txt (`tt1warden`, fourteenth1t; a slowed warden 4 off, a sculk sensor 4 off): a plain
+`/setblock` or `/fill` of stone or air was heard by neither (q1's "heard `/setblock`" was a door's
+lower half: its upper half popped, `ParticleDestroy`, and both heard that); `/setblock ... air destroy`
+was heard by both (`VibrationDetected`, no anger); a pig `/kill`ed or `/damage`d to death by 100 was
+heard by the sensor only, a pig hurt by 1 by both; a warden `/kill`ed was heard by no sensor (Java's
+`dampensVibrations`). Sapling since fourteenth1t: a dying source is no warden's
+(`warden/hearing.rs`), a command's break vibrates (`blocks::break_block`), and a warden's own
+vibrations reach nothing (`blocks/sculk.rs`). Left: a door half popping makes no vibration on sapling.
 A creaking (`creatures/creaking.rs`) freezes under a look within 60 degrees of its middle from 16
 blocks, the Java game's rule; its heart: `creaking/heart.rs`. Drilled (bds-gxcreak.txt): taking
 prey, `TargetEid` at T, then at T+1 `mob.warning`, `activate`, `CALM|OBSERVED` and state 1; prey

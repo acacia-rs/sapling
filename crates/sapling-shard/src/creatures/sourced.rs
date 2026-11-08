@@ -20,13 +20,15 @@ pub(super) fn wound(world: &mut World, mob: Entity, amount: f32, cause: DamageCa
     let (Some(layer), Some(health)) = (world.get::<InLayer>(mob).map(|layer| layer.0), world.get::<Health>(mob).copied()) else { return false };
     let before = health.left();
     // BDS's `/damage` of 8 cost a zombie in a diamond chestplate 5.824 (research/captures/bds-boosts.txt).
-    let amount = if cause.is_stopped_by_armour() { health.shielded(amount) } else { amount };
+    let shielded = if cause.is_stopped_by_armour() { health.shielded(amount) } else { amount };
     if let Some(Attacker::Mob { kind }) = by
-        && super::villagers::infect(world, mob, layer, kind, amount)
+        && super::villagers::infect(world, mob, layer, kind, shielded)
     {
         return true;
     }
-    super::harm::wound_by(world, mob, layer, amount, cause, player);
+    if super::harm::wound_by(world, mob, layer, shielded, cause, player) == Some(true) && cause.is_stopped_by_armour() {
+        super::worn::wear_down(world, mob, amount);
+    }
     world.get::<super::Dying>(mob).is_some() || world.get::<Health>(mob).is_some_and(|health| health.left() < before)
 }
 

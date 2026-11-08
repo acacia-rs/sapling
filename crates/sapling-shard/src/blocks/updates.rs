@@ -139,6 +139,8 @@ pub(crate) fn break_block(world: &mut World, layer: Entity, pos: BlockPos) -> bo
         return false;
     };
     pop(world, layer, pos);
+    // `/setblock ... destroy` is heard by a warden and a sensor (bds-tt1warden.txt).
+    super::vibrate_at(world, layer, pos, super::GameEvent::BlockDestroy, false);
     super::after_break::leave_experience(world, layer, pos, name);
     settle_or_keep(world, layer, pos);
     true

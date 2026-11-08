@@ -162,6 +162,18 @@ fn a_warden_grows_angry_at_a_mob_it_hears_hurt_and_hunts_it() {
     assert_eq!(first(&timeline, Told::Target(pig as i64)), roars + 85, "{timeline:?}");
 }
 
+/// bds-tt1warden.txt: a pig killed outright was heard by a sensor, never by the warden.
+#[test]
+fn a_warden_does_not_hear_a_mob_killed_outright() {
+    use sapling_api::DamageCause;
+    let (mut h, warden, _) = with_warden([-3.5, 65.0, -5.5], None, GameMode::Creative);
+    let pig = common::asking::ask(&mut h, |ctx| ctx.spawn_entity("minecraft:pig", [-3.5, 65.0, 1.5]).expect("a pig"));
+    h.tick_all();
+    assert!(common::asking::ask(&mut h, move |ctx| ctx.hurt_entity(pig, 100.0, DamageCause::Magic)));
+    let timeline = run(&mut h, warden, 80);
+    assert!(timeline.iter().all(|(_, told)| *told != Told::Sound("listening".into())), "{timeline:?}");
+}
+
 /// bds-q1warden.txt: a chest opened by the actor angered the warden at the actor by 35.
 #[test]
 fn a_warden_hears_a_player_open_a_chest_and_is_angered_at_the_player() {

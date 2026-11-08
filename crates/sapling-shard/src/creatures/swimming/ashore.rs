@@ -17,6 +17,7 @@ const FISH: &[&str] = &["minecraft:cod", "minecraft:salmon", "minecraft:tropical
 const HOP_UP: f32 = 0.5;
 const HOP_ACROSS: f32 = 0.1;
 const FLEES_WITHIN: f32 = 6.0;
+const GUARDIAN_FLEES_WITHIN: f32 = 8.0;
 const SPRINTS_WITHIN: f32 = 7.0;
 const SPRINT: f32 = 2.0;
 const WALK: f32 = 1.5;
@@ -70,22 +71,30 @@ fn nearest_player(world: &World, layer: Entity, at: [f32; 3], within: f32) -> Op
         .min_by(|a, b| a.1.total_cmp(&b.1))
 }
 
-/// In water, before it swims: how many times its own pace a fish swims, fleeing a player near it
-/// to a spot it is given; 1 where it flees nobody.
-pub(super) fn flee(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) -> f32 {
-    if !is_fish(kind) {
-        return 1.0;
+/// Whom a swimmer of `kind` flees now: players within so far, at so many times its pace within
+/// [`SPRINTS_WITHIN`] of one and beyond. A guardian that takes no prey (`guardians::is_shy`) has its
+/// pack's `guardian_passive` `avoid_mob_type`: players within 8, at its own pace (the defaults).
+fn flees(world: &World, entity: Entity, kind: &str, now: u64) -> Option<(f32, f32, f32)> {
+    if is_fish(kind) {
+        return Some((FLEES_WITHIN, SPRINT, WALK));
     }
+    crate::creatures::guardians::is_shy(world, entity, now).then_some((GUARDIAN_FLEES_WITHIN, 1.0, 1.0))
+}
+
+/// In water, before it swims: how many times its own pace a fish (or a shy guardian) swims,
+/// fleeing a player near it to a spot it is given; 1 where it flees nobody.
+pub(super) fn flee(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &Body) -> f32 {
     let now = world.resource::<Tick>().0;
+    let Some((within, sprint, walk)) = flees(world, entity, kind, now) else { return 1.0 };
     let Some(swimmer) = world.get::<Swimmer>(entity) else { return 1.0 };
     let fled = swimmer.fleeing && swimmer.spot.is_some_and(|spot| now < swimmer.since + GIVES_UP && (0..3).map(|axis| (spot[axis] - body.at[axis]).powi(2)).sum::<f32>().sqrt() >= REACHED);
     if !fled {
         world.get_mut::<Swimmer>(entity).expect("read above").fleeing = false;
-        let Some((threat, far)) = nearest_player(world, layer, body.at, FLEES_WITHIN) else { return 1.0 };
+        let Some((threat, far)) = nearest_player(world, layer, body.at, within) else { return 1.0 };
         let away = (0..AWAY_TRIES).filter_map(|_| water_near(world, layer, body.at, AWAY)).find(|spot| (0..3).map(|axis| (spot[axis] - threat[axis]).powi(2)).sum::<f32>().sqrt() > far);
         let Some(away) = away else { return 1.0 };
         let mut swimmer = world.get_mut::<Swimmer>(entity).expect("read above");
         (swimmer.spot, swimmer.since, swimmer.fleeing) = (Some(away), now, true);
     }
-    if nearest_player(world, layer, body.at, SPRINTS_WITHIN).is_some() { SPRINT } else { WALK }
+    if nearest_player(world, layer, body.at, SPRINTS_WITHIN).is_some() { sprint } else { walk }
 }
