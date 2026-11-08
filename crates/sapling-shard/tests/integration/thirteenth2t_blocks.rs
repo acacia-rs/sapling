@@ -141,12 +141,15 @@ fn a_crafter_crafting_shows_five_ticks_left_and_sounds_from_its_corner_as_it_was
 }
 
 #[test]
-fn a_broken_campfire_throws_its_two_charcoal_one_at_a_time() {
-    // research/captures/bds-z2hand.txt: two AddItemEntity of one charcoal each, for each `setblock ... destroy`.
+fn a_broken_block_throws_each_item_of_its_loot_alone() {
+    // research/captures/bds-z2hand.txt: two AddItemEntity of one charcoal each, for each `setblock ... destroy`;
+    // bds-loot.txt: 2 to 4 glowstone dust as as many entities; bds-an1farm.txt: a ripe crop's seeds and wheat.
     let mut h = holding("minecraft:stone");
-    h.remote.run(|ctx| assert!(ctx.set_block([3, 65, 3], &Block::new("minecraft:campfire")) && ctx.break_block([3, 65, 3])));
-    let counts: Vec<u8> = all::<AddItemEntity>(h.tick_all().to(1)).into_iter().map(|item| item.item.count as u8).collect();
-    assert_eq!(counts, [1, 1]);
+    for (block, least) in [(Block::new("minecraft:campfire"), 2), (Block::new("minecraft:glowstone"), 2), (Block::new("minecraft:wheat").with("growth=7"), 2)] {
+        h.remote.run(move |ctx| assert!(ctx.set_block([3, 65, 3], &block) && ctx.break_block([3, 65, 3])));
+        let counts: Vec<u8> = all::<AddItemEntity>(h.tick_all().to(1)).into_iter().map(|item| item.item.count as u8).collect();
+        assert!(counts.len() >= least && counts.iter().all(|&count| count == 1), "{counts:?}");
+    }
 }
 
 fn sensor_phase(h: &mut Harness) -> String {

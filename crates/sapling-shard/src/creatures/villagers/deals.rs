@@ -135,18 +135,22 @@ impl Deal {
     }
 }
 
-/// An explorer map's scale; BDS's was centred on the cartographer's square of 512 (bds-an1maps.txt).
-const EXPLORER_SCALE: u8 = 2;
-
 /// Makes a map for each of the trader's explorer maps without one, as BDS's offers name theirs
-/// from the roll on. Its structure is not located: the map shows none (villagers-open.md).
+/// from the roll on: pinned on its structure as located from the trader, else blank on the
+/// trader's square (maps/pinned.rs).
 pub(super) fn chart(world: &mut World, entity: Entity, layer: Entity) {
+    use crate::maps::EXPLORER_SCALE;
     let unmade = |deal: &Deal| deal.offer.sell.name == crate::maps::FILLED && deal.offer.sell.tag.as_ref().is_some_and(|tag| tag.get("map_regenerate").is_some() && tag.get("map_uuid").is_none());
     let Some(mut trader) = world.get::<super::Trader>(entity).filter(|trader| trader.deals.iter().any(unmade)).cloned() else { return };
     let (Some(feet), Some(dimension)) = (world.get::<crate::body::Body>(entity).map(|body| body.at), world.get::<crate::components::Layer>(layer).map(|level| level.world.dimension())) else { return };
     let centre = [feet[0], feet[2]].map(|at| crate::maps::centre(at, EXPLORER_SCALE));
     for deal in trader.deals.iter_mut().filter(|deal| unmade(deal)) {
-        let id = crate::maps::make(world, layer, dimension, centre, EXPLORER_SCALE, false);
+        let destination = sapling_data::trades::explorer_destination(deal.offer.sell.damage);
+        let located = destination.and_then(|to| Some((to, world.get::<crate::components::Layer>(layer)?.world.locate_structure(to, feet[0].floor() as i32, feet[2].floor() as i32)?)));
+        let id = match located {
+            Some((to, at)) => crate::maps::make_pinned(world, layer, dimension, to, at),
+            None => crate::maps::make(world, layer, dimension, centre, EXPLORER_SCALE, false),
+        };
         if let Some(Value::Compound(fields)) = deal.offer.sell.tag.as_mut() {
             fields.push(("map_uuid".into(), Value::Long(id)));
         }

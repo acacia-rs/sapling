@@ -2,7 +2,7 @@
 //! carrying them (docs/research/maps.md "Markers" and "Packets").
 
 use acacia_proto::packets::ClientboundMapItemData;
-use acacia_proto::types::{MapDecoration, MapDecorationType, TrackedObject, TrackedObjectType, Vec3i};
+use acacia_proto::types::{BlockCoordinates, MapDecoration, MapDecorationType, TrackedObject, TrackedObjectType, Vec3i};
 
 use super::MapData;
 use super::render::SIZE;
@@ -40,15 +40,34 @@ pub(super) struct Seen {
     pub holder: bool,
 }
 
-/// The tracked players and their markers, newest player first (BDS's order changed between captures).
+/// An explorer map's structure: a block tracked at `(x, 64, z)` and its marker, as BDS pinned them
+/// (bds-at1maps.txt: taiga village (-984, 136) on the map at (-832, 192) drawn at (180, 228)).
+pub(crate) fn pin(map: &MapData, r#type: MapDecorationType, [x, z]: [i32; 2]) -> (TrackedObject, MapDecoration) {
+    let half = |at: i32, centre: i32| place(at as f32, centre, map.scale).map_or(0, |(half, _)| half) as u8;
+    let tracked = TrackedObject { r#type: TrackedObjectType::Block, entity_unique_id: None, block_position: Some(BlockCoordinates { x, y: PIN_Y, z }) };
+    let mark = MapDecoration { r#type, rotation: PIN_ROTATION, x: half(x, map.centre[0]), y: half(z, map.centre[1]), label: String::new(), color_abgr: HOLDER };
+    (tracked, mark)
+}
+
+const PIN_Y: i32 = 64;
+const PIN_ROTATION: u8 = 8;
+
+/// The pin, then the tracked players and their markers, newest player first (BDS's order changed
+/// between captures). A pinned map marks a player past [`FAR`] small on its edge, as BDS's explorer
+/// maps did 560 pixels off.
 pub(super) fn mark(map: &MapData, mut seen: Vec<Seen>) -> (Vec<TrackedObject>, Vec<MapDecoration>) {
     seen.sort_by_key(|player| std::cmp::Reverse(player.id));
-    let mut tracked = Vec::new();
-    let mut marks = Vec::new();
+    let (mut tracked, mut marks): (Vec<_>, Vec<_>) = map.pin.iter().cloned().unzip();
+    let pinned = map.pin.is_some();
     for player in seen {
-        let (Some((x, x_on)), Some((z, z_on))) = (place(player.feet[0], map.centre[0], map.scale), place(player.feet[2], map.centre[1], map.scale)) else { continue };
+        let axis = |at: f32, centre: i32| place(at, centre, map.scale).map(|(half, on)| (half, on, false)).or_else(|| pinned.then(|| (if at < centre as f32 { -128 } else { 127 }, false, true)));
+        let (Some((x, x_on, x_far)), Some((z, z_on, z_far))) = (axis(player.feet[0], map.centre[0]), axis(player.feet[2], map.centre[1])) else { continue };
         tracked.push(TrackedObject { r#type: TrackedObjectType::Entity, entity_unique_id: Some(player.id), block_position: None });
-        let r#type = if x_on && z_on { MapDecorationType::MarkerWhite } else { MapDecorationType::SquareWhite };
+        let r#type = match (x_on && z_on, x_far || z_far) {
+            (true, _) => MapDecorationType::MarkerWhite,
+            (false, false) => MapDecorationType::SquareWhite,
+            (false, true) => MapDecorationType::SmallSquareWhite,
+        };
         let color_abgr = if player.holder { HOLDER } else { OTHER };
         marks.push(MapDecoration { r#type, rotation: rotation(player.yaw), x: x as u8, y: z as u8, label: String::new(), color_abgr });
     }

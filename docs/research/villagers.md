@@ -407,6 +407,17 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
   names (snowy 7, plains 9, desert 11, jungle 12, swamp 13). Ported (`trades/roll.rs`,
   `villagers/deals.rs` `chart`; test `a_cartographer_offers_explorer_maps_each_with_its_own_map`).
   Before, a drawn map trade made no offer, so sapling's cartographers had fewer.
+- Explorer maps' structures (bds-at1maps.txt, group AT 2026-11-07, world seed 20261003): the map is
+  centred on the 512 square of the structure found from the cartographer (the first village of the
+  map's type in `/locate`'s ring order: taiga (-984, 136), savanna (2296, 264)). It tracks a `Block` at
+  (x, 64, z) with a marker of the destination's type, rotation 8, colour -1, placed as player markers
+  are; the pin comes before the players, and a player past 319 pixels shows as `SmallSquareWhite` on
+  the edge instead of going. Ported: `maps/pinned.rs`, `maps/marks.rs` `pin`, `villagers/deals.rs`
+  `chart`, worldgen `locate_village`; test `an_explorer_map_finds_the_first_village_of_its_type`.
+  Left open: BDS's map already carried rendered terrain pixels (sapling's starts blank and fills as
+  held), the bought map took a new id with the same data (sapling hands over the offer's id), BDS
+  told the offer's map at the buy, not the roll, temples (jungle, swamp) not located, the pin not kept
+  across a restart.
 - Trader llamas (bds-trade2.txt): both come with `LeadHolderEid` the trader's and `LEASHED` from their
   announcement (its pack's `should_leash`). Ported (`villagers/wandering.rs` `arrive`,
   `husbandry/leads.rs`: a lead holder is found again by any kept entity's `UniqueID`; test

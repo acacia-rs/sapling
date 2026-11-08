@@ -161,6 +161,14 @@ fn structures_are_located_where_bds_located_them() {
 }
 
 #[test]
+fn an_explorer_map_finds_the_first_village_of_its_type() {
+    // research/captures/bds-at1maps.txt: the cartographer stood at (0.5, 2.5).
+    let world = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), 20261003, 1)));
+    let found = ["village_taiga", "village_savanna"].map(|name| world.locate_structure(name, 0, 2));
+    assert_eq!(found, [Some([-984, 136]), Some([2296, 264])]);
+}
+
+#[test]
 fn biomes_are_located_where_bds_located_them() {
     let world = World::with_storage(Arc::new(Generated::with_areas(MemoryStorage::default(), LOCATE_SEED, 1)));
     let id = |name: &str| sapling_data::biome_id(name).unwrap();

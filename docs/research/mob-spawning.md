@@ -90,6 +90,14 @@ monster, swamp, mangrove or frozen biome). sapling: `spawning/gates.rs`, tested 
   `nextFloat` under the moon's fullness, `[1, .75, .5, .25, 0, .25, .5, .75]` (`14a75c000`) by
   `|time / 24000| & 7`, and a biome tag [U: read as `swamp`; BDS reads a tag id off the level].
 - Elsewhere none. sapling draws both rolls from natural spawning's dice.
+- The slime's own `checkSpawnRules` (142999ca0, group AT 2026-11-07): in a flat world (the level's
+  generator 2, read as `Generator` in `level.dat`; the lookup's default 1) the level random's
+  `nextInt(4)` must be 1, so a quarter of the spots pass. With its argument set (natural spawning
+  passes 0: `spawnMob` 14118caf0, `checkSpawnRules(param_8)`, called 0 by `_spawnMobInCluster`) a
+  `nextFloat` under the moon's fullness and another under 0.5 follow. Then Mob's own tests (no
+  colliding entity, not over three blocks, walk target value not below 0) [U: not ported].
+  bds-an1grow.txt (flat world, 584 s): 20 slimes against sapling's 45; sapling now keeps
+  `Level::flat` and draws the quarter (gates.rs `own_check`; test `a_flat_world_spawns_a_quarter_of_the_slimes`).
 
 ## Own spawn checks [D]
 

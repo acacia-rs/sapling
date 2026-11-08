@@ -32,10 +32,16 @@ fn village_type(biome: u32) -> &'static str {
     }
 }
 
+/// The type of the village starting in `start`: the biome at the chunk's middle on its preliminary surface.
+pub(super) fn type_of(density: &Density, start: (i32, i32)) -> &'static str {
+    let probe = Probe { density };
+    village_type(probe.biome(start.0 * 16 + 8, probe.surface(start), start.1 * 16 + 8))
+}
+
 pub fn generate(density: &Density, random: &mut Mt19937, start: (i32, i32)) -> Village {
     let probe = Probe { density };
     let surface = probe.surface(start);
-    let kind = village_type(probe.biome(start.0 * 16 + 8, surface, start.1 * 16 + 8));
+    let kind = type_of(density, start);
     let rotation = Rotation::from_index(random.next_int(4));
     let abandoned = random.next_float() < 0.02;
     let pool = if abandoned { format!("village/abandoned/{kind}/town_centers") } else { format!("village/{kind}/town_centers") };

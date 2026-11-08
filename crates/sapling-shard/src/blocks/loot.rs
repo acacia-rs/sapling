@@ -18,6 +18,9 @@ pub(super) use spill::{Tags, add_entity_loot, let_go, spill, spill_tagged, throw
 
 /// Java states that count from one where Bedrock's count from zero: Java's, Bedrock's.
 const FROM_ONE: &[(&str, &str)] = &[("candles", "candles"), ("pickles", "cluster_count"), ("layers", "height"), ("flower_amount", "growth"), ("segment_amount", "growth")];
+/// Blocks whose Bedrock `growth` counts as Java's `age` does (a berry bush's 0 to 3; sapling-at1drops.txt
+/// read a ripe one as age 1 and dropped nothing).
+const GROWTH_IS_AGE: &[&str] = &["sweet_berry_bush"];
 /// Bedrock's `growth` of a ripe crop.
 const RIPE: i32 = 7;
 /// Chances are thrown out of this many.
@@ -75,6 +78,7 @@ impl Broken<'_> {
             // A shot pot shatters (shot_blocks.rs); broken any other way it is whole.
             "cracked" => Some("false".to_owned()),
             "berries" => Some(self.name.contains("with_berries").to_string()),
+            "age" if GROWTH_IS_AGE.contains(&self.java) => self.number("growth").map(|age| age.to_string()),
             "age" => match (self.number("growth"), self.number("age"), sapling_data::ripe_age(self.java)) {
                 (Some(growth), _, Some(ripe)) => Some(if growth >= RIPE { i32::from(ripe) } else { growth * i32::from(ripe) / RIPE }),
                 (None, age, _) => age,
@@ -115,6 +119,19 @@ fn count(row: &LootRow, fortune: u8, roll: &mut dyn FnMut(u32) -> u32) -> u32 {
     count.clamp(row.limit.0.into(), row.limit.1.into())
 }
 
+/// Seeds a ripe Bedrock crop pops, one for each of `3 + fortune` throws of `nextInt(15) <= 7`
+/// (BDS's `CropBlock`), on top of its one product: no seed at all from one ripe wheat in ten
+/// (bds-at1drops.txt: 2 of 12), where Java's table always leaves one; a potato's and a carrot's
+/// seed is the product, 1 to 4 (BDS carrots 1, 3, 3, 2; Java's table 2 to 5).
+const CROP_SEEDS: [&str; 4] = ["minecraft:wheat_seeds", "minecraft:beetroot_seeds", "minecraft:carrot", "minecraft:potato"];
+const CROP_THROWS: u32 = 3;
+const CROP_SIDES: u32 = 15;
+const CROP_GROWTH: u32 = 7;
+
+fn crop_seeds(fortune: u8, roll: &mut dyn FnMut(u32) -> u32) -> u32 {
+    (0..CROP_THROWS + u32::from(fortune)).filter(|_| roll(CROP_SIDES) <= CROP_GROWTH).count() as u32
+}
+
 /// What the block `block` (namespaced) with `properties` leaves when `by` breaks it; nothing
 /// for a block no item stands for. `roll(n)` throws a number below `n`.
 pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnMut(u32) -> u32) -> Vec<Item> {
@@ -138,12 +155,9 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
         // An "otherwise" row is the other side of the throw the row before it lost.
         last_left = wanted && if row.otherwise { !last_left } else { roll(CHANCE_SIDES) < (chance * CHANCE_SIDES as f32) as u32 };
         if last_left {
-            left.extend(some(row.item, count(row, by.fortune, roll)));
+            let ripe_seeds = CROP_SEEDS.contains(&row.item) && matches!(row.fortune, Fortune::Binomial { .. });
+            left.extend(some(row.item, if ripe_seeds { crop_seeds(by.fortune, roll) } else { count(row, by.fortune, roll) }));
         }
-    }
-    // BDS threw a campfire's two charcoal one at a time (bds-z2hand.txt).
-    if name == "campfire" {
-        return left.into_iter().flat_map(|item| (0..item.count).map(move |_| Item { count: 1, ..item.clone() })).collect();
     }
     left
 }

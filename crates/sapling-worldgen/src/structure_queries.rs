@@ -60,6 +60,11 @@ impl OverworldGenerator {
         self.structures.locate(&self.density, kind, (x, z))
     }
 
+    /// The start chunk of the first village of `village_type` (`taiga`, `plains`, ...) the search finds.
+    pub fn locate_village(&self, village_type: &str, x: i32, z: i32) -> Option<(i32, i32)> {
+        self.structures.locate_village(&self.density, village_type, (x, z))
+    }
+
     /// The block column `/locate structure` names for `kind`'s start in a chunk.
     pub fn located_column(&self, kind: structure::StructureKind, chunk_x: i32, chunk_z: i32) -> [i32; 2] {
         let (x, z) = self.structures.located_column(&self.density, kind, (chunk_x, chunk_z));

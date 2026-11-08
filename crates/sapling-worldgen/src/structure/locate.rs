@@ -10,7 +10,18 @@ const MAX_RINGS: i32 = 100;
 
 impl Structures {
     /// The chunk BDS's `/locate` answers from a block position, for kinds placed on a grid.
-    pub fn locate(&self, density: &Density, kind: StructureKind, (x, z): (i32, i32)) -> Option<(i32, i32)> {
+    pub fn locate(&self, density: &Density, kind: StructureKind, from: (i32, i32)) -> Option<(i32, i32)> {
+        self.locate_where(density, kind, from, &|_| true)
+    }
+
+    /// [`Self::locate`] for the first start `accept` takes: an explorer map's village of one type
+    /// (bds-at1maps.txt: a taiga village map found the taiga village `/locate` named, a savanna one
+    /// one 2300 off).
+    pub fn locate_village(&self, density: &Density, village_type: &str, from: (i32, i32)) -> Option<(i32, i32)> {
+        self.locate_where(density, StructureKind::Village, from, &|start| super::village::type_of(density, start) == village_type)
+    }
+
+    fn locate_where(&self, density: &Density, kind: StructureKind, (x, z): (i32, i32), accept: &dyn Fn((i32, i32)) -> bool) -> Option<(i32, i32)> {
         let (grid, java) = match (kind.grid(), kind.java_grid()) {
             (Some(grid), _) => (grid, false),
             (None, Some(grid)) => (grid, true),
@@ -26,7 +37,7 @@ impl Structures {
                     }
                     let region = ((dx * spacing + cx).div_euclid(spacing) * spacing, (dz * spacing + cz).div_euclid(spacing) * spacing);
                     let candidate = if java { grid.java_candidate(self.seed, region) } else { grid.candidate(self.level_seed, region) };
-                    if self.is_start(density, kind, candidate) {
+                    if self.is_start(density, kind, candidate) && accept(candidate) {
                         return Some(candidate);
                     }
                 }

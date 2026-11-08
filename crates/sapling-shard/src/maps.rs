@@ -9,7 +9,9 @@
 
 mod kept;
 mod marks;
+mod pinned;
 mod render;
+mod table;
 
 use std::collections::HashMap;
 
@@ -22,10 +24,12 @@ use sapling_world::ItemStack;
 
 use crate::blocks::Dice;
 use crate::components::{InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick};
-use crate::inventory::{self, CARTOGRAPHY_INPUT, Chart, Inventory, Place};
+use crate::inventory::{self, Inventory};
 
 pub(crate) use kept::keep_all;
+pub(crate) use pinned::{EXPLORER_SCALE, make_pinned};
 pub(crate) use render::Colours;
+pub(crate) use table::{chart, charted, in_grid};
 
 const EMPTY: &str = "minecraft:empty_map";
 pub(crate) const FILLED: &str = "minecraft:filled_map";
@@ -55,6 +59,8 @@ pub(crate) struct MapData {
     changed: Option<[usize; 4]>,
     pub tracked: Vec<TrackedObject>,
     pub marks: Vec<MapDecoration>,
+    /// An explorer map's structure (pinned.rs).
+    pin: Option<(TrackedObject, MapDecoration)>,
     redraw: u32,
     told: u32,
     born: u64,
@@ -63,7 +69,7 @@ pub(crate) struct MapData {
 impl MapData {
     /// A map as storage kept it; the next tick that ticks it shows it.
     fn kept(id: i64, scale: u8, centre: [i32; 2], dimension: i32, layer: Entity, locked: bool, pixels: Vec<u32>) -> Self {
-        Self { id, scale, centre, dimension, layer, locked, pixels, changed: None, tracked: Vec::new(), marks: Vec::new(), redraw: 0, told: 0, born: u64::MAX }
+        Self { id, scale, centre, dimension, layer, locked, pixels, changed: None, tracked: Vec::new(), marks: Vec::new(), pin: None, redraw: 0, told: 0, born: u64::MAX }
     }
 
     pub(crate) fn paint(&mut self, x: usize, z: usize, pixel: u32) {
@@ -133,6 +139,7 @@ pub(crate) fn make(world: &mut World, layer: Entity, dimension: i32, centre: [i3
         changed: Some([0, 0, size - 1, size - 1]),
         tracked: Vec::new(),
         marks: Vec::new(),
+        pin: None,
         redraw: 0,
         told: 0,
         born,
@@ -178,55 +185,6 @@ pub(crate) fn fill(world: &mut World, player: Entity) -> bool {
     let sound = LevelSoundEvent { sound_id: "ui.cartography_table.take_result".into(), position: Vec3f { x, y, z }, extra_data: -1, entity_type: String::new(), is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None };
     crate::late_sounds::play_later(world, 1, layer, [x, y, z].map(|c| c as i32), sapling_net::encode(&sound));
     true
-}
-
-/// What a player's cartography table knows of the map in its input.
-pub(crate) fn chart(world: &World, player: Entity) -> Chart {
-    let maps = world.get::<InLayer>(player).and_then(|layer| world.get::<Maps>(crate::dimensions::home(world, layer.0)));
-    let held = world.get::<Inventory>(player).and_then(|inventory| inventory.slot(Place::Ui(CARTOGRAPHY_INPUT))?.as_ref().and_then(|held| map_id(&held.stack)));
-    let input = held.and_then(|id| maps?.maps.get(&id)).map(|map| (map.id, map.scale, map.locked));
-    Chart { input, fresh: locked_id(world.resource::<Tick>().0, maps) }
-}
-
-/// What the level knows of the filled map in a player's crafting grid: id, scale, locked.
-pub(crate) fn in_grid(world: &World, player: Entity) -> Option<(i64, u8, bool)> {
-    let id = inventory::grid_map_id(world.get::<Inventory>(player)?)?;
-    let home = crate::dimensions::home(world, world.get::<InLayer>(player)?.0);
-    world.get::<Maps>(home)?.maps.get(&id).map(|map| (map.id, map.scale, map.locked))
-}
-
-/// The id a locked copy takes: BDS's look drawn, positive and 32 bits wide, apart from the
-/// unique-id run new maps take (bds-maplock.txt: 1396458477, 2162056098, 3185328418).
-fn locked_id(now: u64, maps: Option<&Maps>) -> i64 {
-    use std::hash::BuildHasher;
-    let hasher = std::hash::BuildHasherDefault::<std::collections::hash_map::DefaultHasher>::default();
-    let taken = |id: &i64| maps.is_some_and(|maps| maps.maps.contains_key(id));
-    (0u64..).map(|salt| i64::from(hasher.hash_one((now, maps.map_or(0, |maps| maps.maps.len()), salt)) as u32)).find(|id| *id > 0 && !taken(id)).unwrap_or(1)
-}
-
-/// Makes the map `to` a cartography table made of the map `from`: zoomed out (blank, a scale
-/// up, centred anew around the old centre) or locked (a copy that never redraws), and tells
-/// everyone in its world all of it. A zoom level made before is kept as it is.
-pub(crate) fn charted(world: &mut World, layer: Entity, from: i64, to: i64, zoomed: bool) {
-    let now = world.resource::<Tick>().0;
-    let mut maps = kept::maps_mut(world, layer);
-    let Some(old) = maps.maps.get(&from).filter(|_| !maps.maps.contains_key(&to)).cloned() else { return };
-    let mut map = MapData { id: to, changed: None, tracked: Vec::new(), marks: Vec::new(), redraw: 0, told: 0, born: now.wrapping_sub(1), ..old.clone() };
-    if zoomed {
-        map.scale += 1;
-        map.centre = old.centre.map(|axis| centre(axis as f32, map.scale));
-        map.pixels.fill(0);
-    } else {
-        map.locked = true;
-    }
-    if to == maps.next_id() {
-        maps.made += 1;
-    }
-    let size = render::SIZE as usize;
-    let whole = marks::update(&map, Some([0, 0, size, size]));
-    let layer = map.layer;
-    maps.maps.insert(to, map);
-    tell_layer(world, layer, &whole);
 }
 
 /// Answers this tick's `MapInfoRequest`s: the whole map to the asker, or the pixels it sent painted in.

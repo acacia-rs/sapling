@@ -15,8 +15,12 @@ fn kind(name: &str) -> Option<StructureKind> {
 }
 
 /// The block BDS names for the nearest start: a stronghold's is where an eye of ender flies, the
-/// others' as `OverworldGenerator::located_column` (research/captures/bds-locate.txt).
+/// others' as `OverworldGenerator::located_column` (research/captures/bds-locate.txt). An explorer
+/// map's `village_<type>` takes the first village of that type.
 pub(super) fn locate(generator: &OverworldGenerator, name: &str, x: i32, z: i32) -> Option<[i32; 2]> {
+    if let Some(village_type) = name.strip_prefix("village_") {
+        return generator.locate_village(village_type, x, z).map(|(cx, cz)| generator.located_column(StructureKind::Village, cx, cz));
+    }
     match kind(name)? {
         StructureKind::Stronghold => generator.locate_stronghold(x, z).map(|[x, _, z]| [x, z]),
         kind => generator.locate_structure(kind, x, z).map(|(cx, cz)| generator.located_column(kind, cx, cz)),

@@ -7,6 +7,9 @@ use super::{StorageError, StoredColumn, WorldStorage};
 use crate::ChunkPos;
 use crate::level::{Level, read_rules, read_structures, write_rules};
 
+/// `level.dat`'s `Generator` of a flat world.
+const FLAT: i32 = 2;
+
 /// A vanilla world folder.
 pub struct LevelDbStorage(LevelDbWorld);
 
@@ -67,7 +70,7 @@ impl LevelDbStorage {
             tracing::warn!(%error, "the mob event switches are unreadable; every one is on");
             None
         });
-        Level { spawn, time, age, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, weather, difficulty, chunk_tick_range: None, mob_events }
+        Level { spawn, time, age, rules, portals, seed, dragon_fight, scoreboard, structures, folder_structures, ticking_areas, maps, trackers, last_tracker, villages, hardcore, flat: dat.int("Generator") == Some(FLAT), weather, difficulty, chunk_tick_range: None, mob_events }
     }
 }
 

@@ -80,6 +80,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ground.fill(FLAT.0, FLAT.1, stone);
     // Portals are made with the world seed's draws, as on the test BDS.
     ground.level_mut().seed = NETHER_SEED;
+    // The test BDS's worlds are flat (`level-type=FLAT`).
+    ground.level_mut().flat = true;
     let builder = Server::builder().bind(([127, 0, 0, 1], port).into()).name("sapling drills").online_mode(false).game_mode(GameMode::Creative);
     // The probes' bots and settles run `ACACIA_TICK_SCALE` times faster too (shared/clock.rs).
     let builder = builder.tick(clock::scaled(sapling_shard::TICK));
@@ -94,6 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok("cold") => {
             let mut cold = World::with_storage(cold_ground());
             cold.level_mut().seed = NETHER_SEED;
+            cold.level_mut().flat = true;
             builder.world(cold, OPEN_SPAWN)
         }
         Ok("generated") => builder.world(World::with_storage(std::sync::Arc::new(Generated::with_areas(MemoryStorage::default(), seed, 2))), GENERATED_SPAWN),

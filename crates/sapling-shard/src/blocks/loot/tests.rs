@@ -44,8 +44,11 @@ fn chance_enchantments_and_shears_change_what_is_left() {
 #[test]
 fn the_tables_states_are_read_off_bedrock_blocks() {
     assert_eq!(left_of("wheat", "growth=3", HAND, 0), named("wheat_seeds", 1));
-    assert_eq!(left_of("wheat", "growth=7", HAND, 0), [named("wheat", 1), named("wheat_seeds", 4)].concat(), "every try of the binomial succeeds");
-    assert_eq!([left_of("beetroot", "growth=7", HAND, u32::MAX), left_of("beetroot", "growth=4", HAND, 0)], [[named("beetroot", 1), named("beetroot_seeds", 1)].concat(), named("beetroot_seeds", 1)]);
+    assert_eq!(left_of("wheat", "growth=7", HAND, 0), [named("wheat", 1), named("wheat_seeds", 3)].concat(), "every one of the crop's three throws succeeds");
+    assert_eq!([left_of("beetroot", "growth=7", HAND, u32::MAX), left_of("beetroot", "growth=4", HAND, 0)], [named("beetroot", 1), named("beetroot_seeds", 1)], "a ripe crop may leave no seed");
+    let carrots = |thrown| left_of("carrots", "growth=7", HAND, thrown).iter().map(|(_, count)| *count).sum::<u8>();
+    assert_eq!([carrots(0), carrots(u32::MAX)], [4, 1], "bds-at1drops.txt: 1 to 4");
+    assert_eq!(left_of("sweet_berry_bush", "growth=3", HAND, 0), named("sweet_berries", 2), "a bush's growth is its age");
     assert_eq!([left_of("snow_layer", "covered_bit=0,height=2", HAND, 0), left_of("snow_layer", "covered_bit=0,height=2", Breaker::UNAIDED, 0)], [named("snowball", 3), vec![]]);
 }
 

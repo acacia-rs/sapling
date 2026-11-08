@@ -53,12 +53,17 @@ fn slime(world: &mut World, layer: Entity, found: &Found) -> bool {
 }
 
 /// Whether a mob of `kind` with its feet `at` in `cell` passes its class's own spawn check: a
-/// zombie pigman's (1429904c0), a guardian's (1459a02d0), or Monster's darkness (14298f930).
+/// zombie pigman's (1429904c0), a guardian's (1459a02d0), a slime's in a flat world (142999ca0),
+/// or Monster's darkness (14298f930).
 pub(super) fn own_check(world: &mut World, layer: Entity, kind: &str, at: [f32; 3], cell: [i32; 3]) -> bool {
     if kind == PIGMAN {
         return unobstructed(world, layer, kind, at);
     }
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return false };
+    // A slime's (142999ca0): in a flat world the level random's `nextInt(4)` must be 1.
+    if kind == SLIME && level.level().flat {
+        return world.get_resource_or_insert_with(SpawnDice::default).0.roll(4) == 1;
+    }
     if GUARDIANS.contains(&kind) {
         let covered = !sees_sky_from_below_water(level, cell);
         return covered || world.get_resource_or_insert_with(SpawnDice::default).0.roll(20) == 0;

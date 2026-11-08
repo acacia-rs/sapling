@@ -44,13 +44,17 @@ pub(in crate::blocks) fn add_entity_loot(world: &World, layer: Entity, pos: Bloc
     Tags(entities::loot_tags(&kept.nbt))
 }
 
-/// [`of`] with the shard's dice.
+/// [`of`] with the shard's dice, one item at a time: BDS pops each item of a block's loot alone,
+/// for `/loot ... mine` too (bds-loot.txt: four redstone as four entities; bds-at1drops.txt).
 pub(in crate::blocks) fn thrown(world: &mut World, block: &str, properties: &str, by: &Breaker) -> Vec<Item> {
-    if let Some(drops) = custom::drops(block) {
-        return drops;
-    }
-    let mut dice = world.get_resource_or_insert_with(Dice::default);
-    of(block, properties, by, &mut |sides| dice.roll(sides))
+    let stacks = match custom::drops(block) {
+        Some(drops) => drops,
+        None => {
+            let mut dice = world.get_resource_or_insert_with(Dice::default);
+            of(block, properties, by, &mut |sides| dice.roll(sides))
+        }
+    };
+    stacks.into_iter().flat_map(|item| (0..item.count).map(move |_| Item { count: 1, ..item.clone() })).collect()
 }
 
 /// What the block at `pos` would drop to `tool` (`/loot ... mine`); the block stays. Nothing from

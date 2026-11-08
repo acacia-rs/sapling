@@ -49,6 +49,9 @@ pub struct Level {
     pub villages: Vec<VillageRecord>,
     /// `IsHardcore`: one life, after which a player only watches.
     pub hardcore: bool,
+    /// A flat world (`level.dat` `Generator` 2), where BDS's slimes spawn one time in four
+    /// (sapling-shard spawning/gates.rs).
+    pub flat: bool,
     /// The weather, which the shard turns as BDS's `Weather::tick` does.
     pub weather: WeatherRecord,
     /// `Difficulty`, 0 peaceful to 3 hard: the shard's, written back when the world closes.
@@ -79,6 +82,7 @@ impl Default for Level {
             last_tracker: 0,
             villages: Vec::new(),
             hardcore: false,
+            flat: false,
             weather: WeatherRecord { rain_level: 0.0, rain_time: FIRST_SPELL, lightning_level: 0.0, lightning_time: FIRST_SPELL },
             difficulty: None,
             chunk_tick_range: None,

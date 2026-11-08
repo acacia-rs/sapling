@@ -84,6 +84,11 @@ const EXPLORER_MAPS: [(&str, i16); 10] = [
     ("trial_chambers", 14),
 ];
 
+/// The destination (`monument`, `village_taiga`) of the explorer map of `filled_map` damage `damage`.
+pub fn explorer_destination(damage: i16) -> Option<&'static str> {
+    EXPLORER_MAPS.iter().find(|(_, at)| *at == damage).map(|(to, _)| *to)
+}
+
 static TABLES: LazyLock<HashMap<String, Table>> = LazyLock::new(|| {
     let all: Value = serde_json::from_str(include_str!("../data/trades.json")).expect("trades.json is JSON");
     all.as_object().into_iter().flatten().map(|(name, table)| (name.clone(), parse_table(table))).collect()
