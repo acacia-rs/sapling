@@ -9,11 +9,11 @@ use acacia_proto::nbt::{self, LittleEndian, Nbt, Value};
 use bevy_ecs::prelude::*;
 use bytes::BytesMut;
 use sapling_api::{Block, BlockPos, StructureLoad};
-use sapling_world::{ChunkPos, StructureTemplate, palette_block, placed_actor, stored_actors};
+use sapling_world::{ChunkPos, StructureTemplate, palette_block};
 use sapling_worldgen::random::Mt19937;
 
 use super::turn::Turn;
-use crate::components::{Layer, Players, Tick};
+use crate::components::Layer;
 use crate::{actors, blocks};
 
 /// A template about to be put with the lowest corner of its turned box at `at`: its palette as
@@ -114,21 +114,15 @@ impl Placing {
             let Some(Value::List(list)) = value else { return None };
             list.items.iter().map(|item| if let Value::Float(f) = item { Some(*f) } else { None }).collect()
         };
-        let high = (world.resource::<Tick>().0 as i64) << 32;
         for (n, entity) in template.entities.iter().enumerate() {
             let Some(pos) = floats(entity.get("Pos")).filter(|pos| pos.len() == 3) else { continue };
             let [yaw, pitch] = floats(entity.get("Rotation")).and_then(|rotation| rotation.try_into().ok()).unwrap_or([0.0, 0.0]);
             let local: [f32; 3] = std::array::from_fn(|axis| pos[axis] - template.origin[axis] as f32);
             let turned = turn.point(local, template.size);
             let feet: [f32; 3] = std::array::from_fn(|axis| at[axis] as f32 + turned[axis]);
-            let unique_id = high | ((world.resource::<Players>().next_net_id as i64 + n as i64) & 0xffff_ffff);
             let mut bytes = BytesMut::new();
             nbt::write::<LittleEndian>(&mut bytes, &Nbt { name: String::new(), value: entity.clone() });
-            let Ok(compound) = placed_actor(&bytes, unique_id, feet, [turn.yaw(yaw), pitch]) else { continue };
-            let Ok(mut read) = stored_actors(&compound) else { continue };
-            let Some((actor, unique_id, compound)) = read.pop() else { continue };
-            let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
-            actors::bring_in(world, layer, home, actor, unique_id, compound);
+            actors::bring_in_saved(world, layer, &bytes, feet, [turn.yaw(yaw), pitch], n);
         }
     }
 }

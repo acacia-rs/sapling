@@ -88,6 +88,16 @@ pub struct TemplateActor {
     /// The spawn event it is made with.
     pub event: &'static str,
     pub feet: [f32; 3],
+    /// An actor the template saved (a bastion's mob pieces), made from that rather than by kind and event.
+    pub saved: Option<SavedCompound>,
+}
+
+/// A template's saved actor as placed: its compound, turned yaw and pitch, and turned `HomePos`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SavedCompound {
+    pub nbt: &'static [u8],
+    pub rotation: [f32; 2],
+    pub home: Option<[f32; 3]>,
 }
 
 /// One chunk column: `block(x, y, z)` with y from -64 to 319.

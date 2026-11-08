@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use super::{Jigsaw, Kind, State, Template, TemplateBlock};
+use super::{Jigsaw, Kind, SavedActor, State, Template, TemplateBlock};
 use crate::block::Block;
 use crate::block_entity::BlockEntity;
 
@@ -73,6 +73,10 @@ impl Reader {
     fn str_u16(&mut self) -> &'static str {
         let n = self.u16() as usize;
         self.str(n)
+    }
+
+    fn f32(&mut self) -> f32 {
+        f32::from_le_bytes(self.take(4).try_into().unwrap())
     }
 
     fn string(&mut self) -> String {
@@ -148,7 +152,7 @@ fn parse() -> Data {
                 })),
             }
         }
-        templates.insert(name.clone(), Template { name, size, legacy, blocks, jigsaws, markers, loot_chests, ceiling_vines, entities });
+        templates.insert(name.clone(), Template { name, size, legacy, blocks, jigsaws, markers, loot_chests, ceiling_vines, entities, actors: Vec::new() });
     }
     let mut blocks: HashMap<u16, Block> = HashMap::new();
     let states = (0..r.u16())
@@ -157,5 +161,25 @@ fn parse() -> Data {
             (kind, [(); 4].map(|_| *blocks.entry(r.u16()).or_insert_with_key(|&i| palette_block(i))))
         })
         .collect();
+    // A templates.bin from before the section has none (test `bastion_mob_pieces_keep_their_saved_actors`).
+    if r.0.starts_with(b"ACT1") {
+        r.take(4);
+        for _ in 0..r.u16() {
+            let name = r.short_str();
+            let actors = (0..r.u16()).map(|_| r.saved_actor()).collect();
+            templates.get_mut(name).expect("templates.bin: actors of an unknown template").actors = actors;
+        }
+    }
     Data { templates, states }
+}
+
+impl Reader {
+    fn saved_actor(&mut self) -> SavedActor {
+        let kind = self.short_str();
+        let pos = [(); 3].map(|_| self.f32());
+        let rotation = [(); 2].map(|_| self.f32());
+        let home = (self.u8() != 0).then(|| [(); 3].map(|_| self.f32()));
+        let n = self.u32() as usize;
+        SavedActor { kind, pos, rotation, home, nbt: self.take(n) }
+    }
 }

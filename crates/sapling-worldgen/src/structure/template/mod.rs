@@ -134,6 +134,23 @@ pub struct Template {
     pub ceiling_vines: Vec<usize>,
     /// The block entities BDS keeps from the template, by block index in file order; loot seeds 0.
     pub entities: Vec<(usize, BlockEntity)>,
+    /// The actors a .mcstructure template saved, in file order (none for Java templates).
+    pub actors: Vec<SavedActor>,
+}
+
+/// An actor saved in a template, as BDS's second `placeInWorld` pass hands it to `ActorFactory`
+/// (docs/research/structure-spawns.md "Template actors").
+#[derive(Debug)]
+pub struct SavedActor {
+    pub kind: &'static str,
+    /// Its feet less the template's origin.
+    pub pos: [f32; 3],
+    /// Yaw and pitch.
+    pub rotation: [f32; 2],
+    /// Its `HomePos` less the template's origin (a brute's).
+    pub home: Option<[f32; 3]>,
+    /// The saved compound, a nameless little-endian root.
+    pub nbt: &'static [u8],
 }
 
 impl Template {
@@ -172,4 +189,19 @@ fn templates_keep_their_block_entities() {
     assert!(plants.iter().all(|plant| has(&|e| matches!(e, BlockEntity::FlowerPot(p) if *p == plant.as_str()))));
     // The oracle mansion's chests: two of eight allium in slots 8 to 18, the rest empty.
     assert!(has(&|e| matches!(e, BlockEntity::Chest(items) if items.starts_with("8 1 minecraft:allium block;10 1"))) && has(&|e| *e == BlockEntity::Chest("")));
+}
+
+#[cfg(test)]
+#[test]
+fn bastion_mob_pieces_keep_their_saved_actors() {
+    // A templates.bin made before its actor section loads with none: regenerate it (scripts/templates_to_rust.py).
+    let kinds = ["crossbow_piglin", "hoglin", "melee_piglin", "melee_piglin_always", "sword_piglin"].map(|piece| {
+        let actors = &Template::get(&format!("bastion/mobs/{piece}")).actors;
+        assert_eq!(actors.len(), 1, "{piece}");
+        assert_eq!(&actors[0].nbt[..3], &[10, 0, 0], "{piece}");
+        assert_eq!(actors[0].pos[1], 1.0, "{piece}");
+        actors[0].kind
+    });
+    assert_eq!(kinds, ["minecraft:piglin", "minecraft:hoglin", "minecraft:piglin_brute", "minecraft:piglin_brute", "minecraft:piglin"]);
+    assert!(data().templates.values().filter(|t| !t.name.starts_with("bastion/mobs/")).all(|t| t.actors.is_empty()));
 }

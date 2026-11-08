@@ -4,9 +4,10 @@ layer, jigsaws (their block entity's name, target, target_pool, joint, final_sta
 voids (index -1) and air are left out."""
 import struct
 
-# A Bedrock jigsaw's `rotation` for a vertical facing is its top direction.
 FACING = ['down', 'up', 'north', 'south', 'west', 'east']
-TOPS = ['north', 'east', 'south', 'west']
+# A Bedrock jigsaw's `rotation` for a vertical facing is its top direction, Bedrock's order (south first). Read north
+# first, the stables' aligned mob jigsaws turned their mobs a half turn from BDS's (bds-az3bastion.txt).
+TOPS = ['south', 'west', 'north', 'east']
 
 
 def _read(d, i, t):
@@ -49,6 +50,39 @@ def _java_state(entry):
     facing = FACING[states['facing_direction']]
     top = TOPS[states.get('rotation', 0)] if facing in ('down', 'up') else 'up'
     return {'Name': name, 'Properties': {'orientation': f'{facing}_{top}'}}
+
+
+def _field(d, i, want):
+    """The tag type and payload offset of key `want` in the compound whose payload starts at `i`."""
+    while (t := d[i]) != 0:
+        n = struct.unpack_from('<H', d, i + 1)[0]
+        key, i = d[i + 3:i + 3 + n].decode(), i + 3 + n
+        if key == want:
+            return t, i
+        _, i = _read(d, i, t)
+    raise KeyError(want)
+
+
+def entities(path):
+    """The template's saved actors as (identifier, Pos less `structure_world_origin`, Rotation, HomePos less the
+    origin or None, the compound's own bytes as a nameless little-endian root), in file order: what `placeInWorld`
+    hands `ActorFactory`."""
+    d = open(path, 'rb').read()
+    n = struct.unpack_from('<H', d, 1)[0]
+    root, _ = _read(d, 3 + n, 10)
+    origin = root['structure_world_origin']
+    _, i = _field(d, 3 + n, 'structure')
+    _, i = _field(d, i, 'entities')
+    count = struct.unpack_from('<i', d, i + 1)[0]
+    i += 5
+    out = []
+    for _ in range(count):
+        actor, end = _read(d, i, 10)
+        local = [p - o for p, o in zip(actor['Pos'], origin)]
+        home = [p - o for p, o in zip(actor['HomePos'], origin)] if 'HomePos' in actor else None
+        out.append((actor['identifier'], local, actor['Rotation'], home, b'\x0a\x00\x00' + d[i:end]))
+        i = end
+    return out
 
 
 def load(path):

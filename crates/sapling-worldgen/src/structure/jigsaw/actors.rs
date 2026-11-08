@@ -4,8 +4,9 @@
 //! turn its villagers into zombie villagers.
 
 use super::super::canvas::Canvas;
-use super::super::template::Template;
+use super::super::template::{Rotation, Template};
 use crate::block::Block;
+use crate::chunk::{SavedCompound, TemplateActor};
 
 const VILLAGER: &str = "minecraft:villager_v2:minecraft:spawn_from_village";
 const GOLEM: &str = "minecraft:iron_golem:minecraft:from_village";
@@ -23,6 +24,32 @@ pub(super) fn add(canvas: &mut Canvas, template: &'static Template, placed: &[((
         let (kind, event) = split(named);
         canvas.add_actor(kind, event, at);
     }
+}
+
+/// Files the actors a .mcstructure element saved (a bastion's mob pieces: 145e1c910, `placeInWorld`
+/// 141f52300 with blocks ignored), feet and `HomePos` turned with the piece (`turned`), yaw a quarter
+/// a turn; made from their compounds (`ActorFactory` 141ce8200), with no event (bds-az3bastion.txt).
+pub(super) fn add_saved(canvas: &mut Canvas, template: &'static Template, origin: (i32, i32, i32), rotation: Rotation) {
+    for actor in &template.actors {
+        let yaw = (actor.rotation[0] + 90.0 * rotation as i32 as f32 + 180.0).rem_euclid(360.0) - 180.0;
+        let saved = SavedCompound { nbt: actor.nbt, rotation: [yaw, actor.rotation[1]], home: actor.home.map(|home| turned(rotation, origin, home)) };
+        canvas.file_actor(TemplateActor { kind: actor.kind, event: "minecraft:entity_spawned", feet: turned(rotation, origin, actor.pos), saved: Some(saved) });
+    }
+}
+
+/// A template point at `origin` turned about the template's origin as its block cells are, the cells
+/// keeping their extent: a turned piece's cell (0, 0) still spans its first block, so the point turns
+/// about that block's middle (BDS's feet and homes, bds-az3bastion.txt and its world's dump).
+fn turned(rotation: Rotation, origin: (i32, i32, i32), [x, y, z]: [f32; 3]) -> [f32; 3] {
+    let (dx, dz) = (x - 0.5, z - 0.5);
+    let (dx, dz) = match rotation {
+        Rotation::None => (dx, dz),
+        Rotation::Clockwise90 => (-dz, dx),
+        Rotation::Clockwise180 => (-dx, -dz),
+        Rotation::CounterClockwise90 => (dz, -dx),
+    };
+    // One lower than the template says, feet and homes alike (BDS's dump); the piece places no block to show its own y.
+    [origin.0 as f32 + 0.5 + dx, origin.1 as f32 + y - 1.0, origin.2 as f32 + 0.5 + dz]
 }
 
 /// "namespace:id:event" as kind and event, the event `minecraft:entity_spawned` where there is none.

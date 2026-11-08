@@ -116,6 +116,7 @@ impl Piece {
             }
         }
         super::actors::add(canvas, template, &blocks, self.element.name.starts_with("abandoned_"));
+        super::actors::add_saved(canvas, template, self.origin, self.rotation);
         placement.update_pass(canvas, template, self.origin);
         trace::label(|| format!("{} foundation", template.name));
         if post & 1 != 0 {

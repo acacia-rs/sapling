@@ -250,6 +250,44 @@ actor rule processor (vtable 14a89ad80) as `abandoned_mobs`, matching
 `minecraft:iron_golem:minecraft:from_village` with an empty result: the golem is dropped, as
 sapling does.
 
+The bastion's saved actors [L] (`az3bastion`, thirteenth3az_drill.rs: both bots straight to
+(-328, 248) in the Nether a minute; research/captures/bds-az3bastion.txt, its world dumped with
+`actor_dump --all`): BDS showed 24 piglins, 13 brutes and 14 hoglins (51; the 22 piglins counted
+above were a miscount: bds-t12actors2.txt shows the same 51 at the same places). Each is a
+`bastion/mobs/*.mcstructure` piece's one saved actor (crossbow_piglin, sword_piglin, melee_piglin,
+melee_piglin_always, hoglin), made from its compound: kind, `definitions` as saved (`+ranged_unit`
+or `+melee_unit`, `+go_back_to_spawn` ...), its `Mainhand` (crossbow, golden sword, golden axe),
+Persistent 1, NaturalSpawn 0, no spawn event. Its feet are the saved `Pos` less the template's
+`structure_world_origin`, turned with the piece about the middle of its block cell (a quarter turn
+takes fraction (x, z) to (1 - z, x)); its yaw is the saved yaw plus 90 a quarter, wrapped to
+-180..180 (BDS showed -180 for 0 turned twice); its `HomePos` (brutes) turned as the feet (the
+dump: a turned brute at x -342.628 saved home x -342, an unturned one its own cell). Gated as
+the other template mobs (none with `doMobSpawning` off, bds-t12actors.txt). BDS places feet and
+`HomePos` alike one block below the template's offset (the dump's homes, not a fall): on the
+parent's floor, under the piece's jigsaw cell, which ends as air (final state `blackstone_bricks`).
+
+The piece's turn: the hoglin stables' mob jigsaws are `aligned`, so the mob piece takes the turn
+whose jigsaw top matches. Sapling first read the mcstructure jigsaw's `rotation` state as
+north, east, south, west; it is Bedrock's south, west, north, east (scripts/mcstructure.py
+`TOPS`), and with the old reading every mob under an aligned jigsaw (29 of 51) stood a half turn
+from BDS's while the blocks (one cell, no block of its own) replayed the same. Fixing it moves
+only the five mob templates' jigsaw state and orientation bytes in templates.bin; the palette is
+unchanged.
+
+Sapling: scripts/templates_to_rust.py appends the mcstructure actors to templates.bin (`saved_actors`,
+after the state table, so the earlier bytes are unchanged); template/load.rs reads them into
+`Template::actors`; a pool element files them with its blocks (jigsaw/actors.rs `add_saved`) as
+`TemplateActor`s carrying a `SavedCompound`; the shard's mob step brings each in from its compound
+as `/structure load` brings a structure's entities (actors.rs `bring_in_saved`), the home rewritten.
+Tests `bastion_mob_pieces_place_their_saved_actors_where_bds_did` (all 51 feet within 0.001 and
+yaws within a byte step of BDS's, the brutes' homes as the dump),
+`bastion_mob_pieces_keep_their_saved_actors`, and the shard's
+`a_bastion_piece_s_piglin_comes_as_its_template_saved_it`. A templates.bin made before this has
+no actor section and loads with none: regenerate it. Sapling's drill
+(research/captures/sapling-az3bastion.txt, generated world, seed 20261003) shows all 51 at BDS's
+positions (within 0.01), yaws and mainhands; its 7 more (4 piglins at (-333.51, 61, 234.49), 3
+zombie pigmen) are natural packs at cell middles, which BDS's minute happened not to spawn.
+
 The swamp hut's witch and black cat (row above; research/captures/bds-h3keep.txt, both at
 (3842.5, 72, -1818.5) at first sight, the dump Persistent 1, NaturalSpawn 0): sapling-worldgen's
 hut.rs files both, the cat's event setting `Variant` 9 (creatures/looks.rs); test

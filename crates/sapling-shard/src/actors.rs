@@ -90,6 +90,18 @@ pub(crate) fn bring_in(world: &mut World, layer: Entity, home: ChunkPos, actor: 
     }
 }
 
+/// Brings in a saved actor's `compound` (a structure's or template's) as a new one with its feet at
+/// `feet`, turned to `rotation`; `nth` keeps the unique ids of one batch apart.
+pub(crate) fn bring_in_saved(world: &mut World, layer: Entity, compound: &[u8], feet: [f32; 3], rotation: [f32; 2], nth: usize) {
+    let high = (world.resource::<Tick>().0 as i64) << 32;
+    let unique_id = high | ((world.resource::<crate::components::Players>().next_net_id as i64 + nth as i64) & 0xffff_ffff);
+    let Ok(compound) = sapling_world::placed_actor(compound, unique_id, feet, rotation) else { return };
+    let Ok(mut read) = sapling_world::stored_actors(&compound) else { return };
+    let Some((actor, unique_id, compound)) = read.pop() else { return };
+    let home = ChunkPos::of_block(feet[0].floor() as i32, feet[2].floor() as i32);
+    bring_in(world, layer, home, actor, unique_id, compound);
+}
+
 /// [`write_back`] on the ticks columns are saved.
 pub(crate) fn write_back_before_saving(world: &mut World) {
     if world.resource::<Tick>().0 % UNLOAD_INTERVAL == 0 {
