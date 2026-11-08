@@ -185,6 +185,10 @@ Drilled: bds-raid.txt, bds-raidhero.txt, bds-raidlost.txt, bds-raidkeep.txt, bds
 bds-ominous.txt (`bds_command_probe raid|raidhero|raidlost|raidkeep|raidkeep2|ominous`). Fixed from them:
 raid omen amplifier 0, the bar's `raid.name`, the 40-tick cleared bar, the defeat bar's health, heroes
 only by slaying, the bottle's particles, `/setblock` bells and beds keeping their entity.
+Heroes across a load (2026-11-08, fourteenth N, `f14nvillage`, its world's records dumped): the
+`VILLAGE_<id>_RAID` record held `GameTick`, `GroupNum`, `NumGroups`, `NumRaiders`, `Raiders`,
+`SpawnFails`, `SpawnX/Y/Z`, `State`, `Status`, `Ticks`, `TotalMaxHealth` and no heroes, the actor having
+slain a raider, so BDS's heroes go with a load as sapling's do (`raids/kept.rs`).
 
 ## Not drilled
 

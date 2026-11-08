@@ -10,7 +10,7 @@ mod stuck;
 use std::collections::{HashMap, HashSet};
 
 pub use falling::{falling_block, new_falling_block_actor, timed_falling_block};
-pub use lying::{aged_orb, lying_stack, new_item_actor, new_orb_actor, orb_age, orb_value, orb_worth};
+pub use lying::{actor_age, aged_actor, lying_stack, new_item_actor, new_orb_actor, orb_value, orb_worth};
 pub use stuck::{ShotRecord, new_shot_actor, shot_record};
 
 use acacia_proto::nbt::{self, LittleEndian, List, Value};
@@ -151,6 +151,16 @@ pub fn moved_actor(compound: &[u8], position: [f32; 3], motion: [f32; 3]) -> Res
 /// and turned to `rotation` (yaw, pitch), as a loaded structure places the actors it holds.
 pub fn placed_actor(compound: &[u8], unique_id: i64, position: [f32; 3], rotation: [f32; 2]) -> Result<Vec<u8>, Error> {
     with_fields(compound, [("UniqueID", Value::Long(unique_id)), ("Pos", floats(&position)), ("Rotation", floats(&rotation))])
+}
+
+/// One stored actor's compound with its field `key` set to `value`.
+pub fn actor_with_field(compound: &[u8], key: &str, value: Value) -> Result<Vec<u8>, Error> {
+    with_fields(compound, [(key, value)])
+}
+
+/// The field `key` of a stored actor's compound, if it has one.
+pub fn actor_field(compound: &[u8], key: &str) -> Option<Value> {
+    nbt::read::<LittleEndian>(&mut &compound[..]).ok()?.value.get(key).cloned()
 }
 
 /// `compound` with each of `set` replacing the field of its name, or added where it had none.

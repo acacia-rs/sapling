@@ -138,8 +138,20 @@ fn lay_unkept(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], 
 pub(crate) fn from_storage(world: &mut World, layer: Entity, stack: ItemStack, at: [f32; 3], unique_id: i64, compound: Vec<u8>) -> bool {
     let tick = world.resource::<Tick>().0;
     let Some(item) = lay_unkept(world, layer, stack, at, [0.0; 3], tick, false) else { return false };
+    if let Some(mut dropped) = world.get_mut::<Dropped>(item) {
+        dropped.age = u32::try_from(sapling_world::actor_age(&compound)).unwrap_or(0);
+    }
     entities::keep(world, item, layer, unique_id, compound);
     true
+}
+
+/// Writes each kept item's age into what the world folder keeps of it, as BDS saves `Age`.
+pub(crate) fn keep_ages(world: &mut World) {
+    let items: Vec<(Entity, u32)> = world.query_filtered::<(Entity, &Dropped), With<entities::Stored>>().iter(world).map(|(entity, item)| (entity, item.age)).collect();
+    for (entity, age) in items {
+        let age = i16::try_from(age).unwrap_or(i16::MAX);
+        entities::restore(world, entity, |compound, _| sapling_world::aged_actor(compound, age).ok());
+    }
 }
 
 /// Throws `stack` from under the player's eye along its look (BDS `Player::drop`).

@@ -4,9 +4,8 @@
 //! coral; a bred one rolls its voice where its kind's `entity_born` does and takes a parent's
 //! climate (`property_inheritance`); a cat rolls again when grown. BDS announced them so
 //! (research/captures/bds-properties.txt: 8 pigs, 6 cows, chickens and cats, 8 wolves), and tells
-//! a change in a SetEntityData of the properties changed.
-// TODO: properties are not saved with a mob, and a mob a world folder kept is shown as its kind
-// was recorded.
+//! a change in a SetEntityData of the properties changed. They are kept in the actor compound's
+//! `properties` and read back with it.
 
 use acacia_proto::packets::{AddEntity, SetEntityData};
 use acacia_proto::types::{
@@ -23,6 +22,7 @@ use crate::entities::{self, Kind};
 const SOUND: &str = "minecraft:sound_variant";
 const CLIMATE: &str = "minecraft:climate_variant";
 const NAUTILUS: &str = "minecraft:zombie_nautilus";
+const KEPT: &str = "properties";
 /// Kinds whose grown ones roll their voice as they spawn.
 const VOICED: &[&str] = &["minecraft:pig", "minecraft:cow", "minecraft:chicken", "minecraft:cat", "minecraft:wolf"];
 /// Kinds whose `entity_born` rolls it (a bred wolf or cat is a tame baby, which does not).
@@ -103,6 +103,21 @@ pub(super) fn climate(world: &World, layer: Entity, feet: [f32; 3]) -> Option<&'
     let [x, y, z] = feet.map(|c| c.floor() as i32);
     let biome = world.get::<Layer>(layer)?.world.biome(x, y, z)?;
     CLIMATES.iter().find(|(tag, _)| sapling_data::biome_has_tag(biome, tag)).map(|(_, climate)| *climate)
+}
+
+/// The properties a stored compound of `kind` keeps (`properties`), if it keeps any.
+pub(super) fn stored(kind: &str, compound: &[u8]) -> Option<Properties> {
+    sapling_world::actor_field(compound, KEPT).map(|kept| Properties(sapling_data::properties_of_nbt(kind, &kept)))
+}
+
+/// Writes each kept mob's properties into what the world folder keeps of it, as BDS saves them.
+pub(super) fn keep(world: &mut World) {
+    let kept: Vec<(Entity, Option<acacia_proto::nbt::Value>)> =
+        world.query_filtered::<(Entity, &Kind, &Properties), With<entities::Stored>>().iter(world).map(|(entity, kind, properties)| (entity, sapling_data::properties_nbt(&kind.0, &properties.0))).collect();
+    for (entity, value) in kept {
+        let Some(value) = value else { continue };
+        entities::restore(world, entity, |compound, _| sapling_world::actor_with_field(compound, KEPT, value).ok());
+    }
 }
 
 /// AddEntity with the mob's properties, where its kind has any.

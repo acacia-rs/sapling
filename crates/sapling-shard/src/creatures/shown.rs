@@ -39,20 +39,19 @@ pub(super) type Dress<'a> = (Option<&'a Actor>, Option<&'a Raised>, Option<&'a P
 
 /// The mob `id` as its viewers are told of it: dressed as it was stored (`look`), or as BDS
 /// announced its kind, in `variant` and with its `properties`; either as it is `raised` now, with
-/// the flags it was `born` with (a hanging bat's).
-// TODO: a mob dressed as it was stored is not shown on fire to one who comes to see it burning.
+/// the flags it was `born` with (a hanging bat's), on fire while it burns.
 pub(super) fn announcement(id: u64, kind: &str, body: &Body, (look, raised, properties, strides, strength): Dress<'_>, health: Option<&Health>, [yaw, pitch]: [f32; 2], (variant, size, born): (i32, Option<Gene>, MetadataFlags1)) -> Vec<Bytes> {
     let left = health.map(Health::left);
+    let on_fire = health.is_some_and(Health::is_burning);
+    let fire = if on_fire { MetadataFlags1::ONFIRE.0 } else { 0 };
     let saddle = raised.filter(|raised| raised.saddled).map_or(0, |_| crate::riding::saddle_flags(kind).0) | born.0;
-    let extra = MetadataFlags1(raised.map_or(0, |raised| raised.unstored_flags().0) | saddle);
+    let extra = MetadataFlags1(raised.map_or(0, |raised| raised.unstored_flags().0) | saddle | fire);
     let dressed = look.map(|look| raised.map_or_else(|| look.clone(), |raised| raised.dress(look)));
     let told = properties.map(|properties| properties.shown(kind));
     let colour2 = raised.map_or(0, |raised| raised.kept.colour2);
     if let Some(shown) = dressed.and_then(|look| mobs::announcement_with(&Actor { position: body.at, health: left.or(look.health), ..look }, id, extra, told, (strides, strength))) {
         return super::looks::dressed(shown, kind, colour2);
     }
-    let on_fire = health.is_some_and(Health::is_burning);
-    let fire = if on_fire { MetadataFlags1::ONFIRE.0 } else { 0 };
     let kept = raised.map(|raised| &raised.kept);
     let options = AddEntityOptions {
         id,

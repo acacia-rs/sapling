@@ -39,7 +39,12 @@ seven; on short grass with air over it, it grows it tall one in ten. Planting no
 The flower (1438ee940) is the legacy flower features' by VanillaBiomeTags: 9 flower forest (noise
 x/48 into the list at 14ccdae18), 1 plains (noise x/200 under -0.8 a tulip, else a dandelion one in
 four or poppy, azure bluet, oxeye daisy, cornflower), 8 swamp (blue orchid), and for most others a
-dandelion one in three, else a poppy; tags 10, 11, 22, 23 and 24 pick flowers not named here.
+dandelion one in three, else a poppy. Named 2026-11-08 (fourteenth N; tags off 14393d890's HashedStrings,
+0x30 apart, read at registry +0x98 + 0x18 x tag; blocks by the VanillaBlockTypeIds initialiser's `lea`s):
+23 `pale_garden` a closed eyeblossom; 24 `meadow` or 11 `birch`, unless 12 `hills`, wildflowers with
+`growth` `nextInt(3)`; 10 `forest` or 22 `forest_generation` (a tag no biome definition carries), unless
+5 `extreme_hills` or 4 `taiga`, a lily of the valley on `nextBoolean`, else a dandelion
+(`sapling_worldgen::meal_flower`, test `bone_meal_flowers_follow_the_biomes_tags`). Not drilled live.
 `FlowerBlock::onFertilized` (14715ca10): the same 48 walks from the cell over the flower, y by
 (nextInt(3) - 1) x nextInt(3) / 2, a walk dropped where the cell under it is no grass block; each free
 end gets the flower's own kind, a poppy and a dandelion turning into each other one in eight. Sapling

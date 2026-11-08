@@ -48,7 +48,13 @@ pub(super) use cat_spawns::tick as spawn_cats;
 pub(super) use golem_spawns::tick as spawn_golems;
 pub(super) use golems::is_players as is_players_golem;
 pub(super) use growing::grew_up;
-pub(super) use pantry::put as put_in_pantry;
+pub(super) use pantry::{keep as keep_pantries, put as put_in_pantry};
+
+/// A villager a world folder kept fills its pantry from its stored compound.
+pub(super) fn adopt_pantry(world: &mut World, entity: Entity, kind: &str) {
+    let Some(compound) = world.get::<crate::entities::Stored>(entity).map(|stored| stored.compound.clone()).filter(|_| shown_kind(kind) == VILLAGER) else { return };
+    pantry::adopt(world, entity, &compound);
+}
 pub(super) use retrained::fired as retrain;
 pub(super) use standing::{hit as hurt_standing, outlaw, shot as shot_standing};
 pub(crate) use trading::{bargains, interact, stop_trading, traded};

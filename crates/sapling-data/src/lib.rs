@@ -53,7 +53,7 @@ pub use custom_items::{register_block_item, register_item};
 pub use names::{entity_display_name, item_display_name};
 pub use command_names::{block_tile_key, command_takes_block, command_takes_feature_rule, command_takes_item};
 pub use entity::{AddEntityOptions, add_entity, add_experience_orb, add_falling_block, add_painting, announced_flags, mob_health, mob_size};
-pub use entity_properties::{EntityProperty, PropertyShape, entity_properties, entity_property, property_registry_packets, property_values};
+pub use entity_properties::{EntityProperty, PropertyShape, entity_properties, entity_property, properties_nbt, properties_of_nbt, property_registry_packets, property_values};
 pub use attack::item_attack;
 pub use events::has_event;
 pub use families::{has_family, is_arthropod, is_undead, mob_families};

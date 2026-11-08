@@ -1,7 +1,6 @@
 //! Daylight detectors: each gives the signal the sky over it is worth, read anew every second,
-//! and a click turns one inside out (docs/research/redstone.md, "Daylight detectors").
-// TODO: only detectors written while the shard runs are read: one a world folder holds stays as
-// it was stored.
+//! and a click turns one inside out (docs/research/redstone.md, "Daylight detectors"). One a world
+//! folder holds is read from its column's arrival on, as BDS's block actor ticks wherever it is loaded.
 
 use std::collections::HashSet;
 use std::f32::consts::PI;
@@ -52,6 +51,16 @@ pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos) {
         let mut detectors = world.get_resource_or_insert_with(Detectors::default);
         detectors.0.insert((layer, pos));
         detectors.1.insert((layer, pos));
+    }
+}
+
+/// Notes the detectors of a column that came from storage, read at each second from then on.
+pub(crate) fn arrived(world: &mut World, layer: Entity, column: sapling_world::ChunkPos) {
+    let Some(level) = level(world, layer) else { return };
+    let registry = level.registry();
+    let found = level.find_blocks(column, |id| registry.get(id).is_some_and(|state| is_detector(state.name)));
+    if !found.is_empty() {
+        world.get_resource_or_insert_with(Detectors::default).0.extend(found.into_iter().map(|pos| (layer, pos)));
     }
 }
 

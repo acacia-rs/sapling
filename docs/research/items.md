@@ -142,7 +142,10 @@ v = (-sin(yaw)*cos(pitch)*0.3 + cos(a)*s,
    blocks: yes, every server tick, by setting the velocity to 0.25 (0.1 for some blocks) toward the nearest open
    face. Water: floats up (vy eases toward +0.06 at 1%/tick, gravity off, horizontal *0.99) unless the water is
    falling. Lava: same rise, horizontal *0.95, Fizz sound; burning is the generic actor fire damage on 5 health
-   (not read). Lifetime 6000 ticks; items whose Item has the `+0x152 & 0x40` flag clear never despawn.
+   (not read). Lifetime 6000 ticks; items whose Item has the `+0x152 & 0x40` flag clear never despawn. The
+   age is saved as `Age` (Short, beside `Health` Short 5; bds-t2ekeep-dump.txt 400, bds-f14nkeep-dump.txt 431
+   and 1071) and sapling keeps and reads it (`drops.rs`, test `a_lying_item_is_kept_with_its_age_and_comes_back_as_old`);
+   that BDS's load resumes from it is taken from the save, not drilled (a 5-minute wait).
    Resting items (on ground, |v|^2 <= 1e-4, not just out of water) only run physics every 4th tick.
 2. **Box** (high): 0.25 x 0.25, height offset 0.125. The actor position is the box **centre**, 0.125 above its
    bottom; the tick itself uses `pos.y - heightOffset` for the feet. MoveActor data copies that position, so the

@@ -30,7 +30,17 @@ pub(super) struct Dash {
 impl Dash {
     /// It was armoured just now.
     pub(super) fn arm(&mut self, now: u64) {
-        self.next = Some(now + FIRST);
+        self.resume(now, FIRST);
+    }
+
+    /// Its next dash is `left` ticks off.
+    pub(super) fn resume(&mut self, now: u64, left: u64) {
+        self.next = Some(now + left);
+    }
+
+    /// Ticks to its next dash, when it is armoured.
+    pub(super) fn due_in(&self, now: u64) -> Option<u64> {
+        self.next.map(|due| due.saturating_sub(now))
     }
 }
 

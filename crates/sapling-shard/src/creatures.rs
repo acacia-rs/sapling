@@ -189,6 +189,8 @@ pub(crate) fn keep_state(world: &mut World) {
     piglins::keep(world);
     captains::keep(world);
     raids::keep_patrols(world);
+    properties::keep(world);
+    villagers::keep_pantries(world);
 }
 
 /// Moves every spawned mob a tick and hurts it by where it is; a dead one goes once it has died.

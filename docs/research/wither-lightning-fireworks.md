@@ -196,6 +196,11 @@ Decompiled (thirteenth3j) [D]: `WitherBoss` load 142f97350 / save 142f96ca0 keep
 half-health turn sets `firerate` back to 20 and doubles +0x510. The tick (142f933e0) reloads the
 middle head's wait (+0x52c) and the side heads' (+0x4ec) from `firerate`. No code past load and
 save reads `ShieldHealth` in the wither's own functions [U: what it guards].
+Kept armoured (2026-11-08, fourteenth N, `f14nwither` then `f14nwither2` on the kept world,
+bds-f14nwither{,2}.txt): hit to half, saved 60 ticks later (137 before its first dash), it dashed
+about 140 ticks after the reload and again about 280 after that, so BDS keeps its dash timer across a
+load under no key its loader names. Sapling keeps it as its own `DashIn` (ticks left; `wither.rs`
+`adopt`/`keep`); a BDS-saved armoured one with none dashes 197 ticks after it arrives.
 Drilled (2026-11-05, `m3wither` and `m3wither0`, thirteenth3m_drill.rs, research/captures/bds-m3wither{,0}.txt,
 the worlds dumped with `actor_dump`): `t2wither` ran on easy (warden_drill.rs `start`), hence no halving.
 On normal, hurt 10 every 3 s from 450, the volley spacing went 20 → 10 below 375 → 5 below 300: the step
