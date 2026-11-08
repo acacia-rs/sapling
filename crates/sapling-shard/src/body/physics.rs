@@ -81,6 +81,8 @@ impl Physics {
     pub const BAT: Physics = Physics { fall_drag: 0.6, ..Physics::FLYER };
     /// An allay, which keeps 0.8645 of its speed every way (bds-wander-findings.md).
     pub const HOVER: Physics = Physics { air_drag: 0.8645, fall_drag: 0.8645, ground_drag: 0.8645, ..Physics::FLYER };
-    /// A parrot in flight keeps 0.92 of its speed every way; its fall is its wings' (creatures/wings.rs).
-    pub const PARROT: Physics = Physics { air_drag: 0.92, fall_drag: 0.92, ..Physics::FLYER };
+    /// A parrot in flight keeps 0.91 of its speed across and all of it up or down; falling it is a
+    /// chicken (creatures/wings/parrots.rs).
+    pub const PARROT: Physics = Physics { fall_drag: 1.0, ..Physics::FLYER };
+    pub const PARROT_FALLING: Physics = Physics::CHICKEN;
 }
