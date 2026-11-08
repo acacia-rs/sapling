@@ -1,6 +1,6 @@
-//! Torches, buttons and rails set where nothing holds them: BDS shows them breaking at once and
-//! takes them out, leaving their item, a tick later; a lever, ladder, flower, carpet or wall sign
-//! set so stays (research/captures/bds-unheld.txt). A small dripleaf set off its ground shows both
+//! Torches, buttons, rails, lanterns, flower pots and pressure plates set where nothing holds them:
+//! BDS shows them breaking at once and takes them out, leaving their item, a tick later; a lever,
+//! ladder, flower, carpet or wall sign set so stays (research/captures/bds-unheld.txt, bds-i1stay.txt). A small dripleaf set off its ground shows both
 //! halves breaking and goes whole (bds-t5holds.txt).
 
 use bevy_ecs::prelude::*;
@@ -10,7 +10,7 @@ use super::super::queued::{self, Job};
 use super::super::{doors, level, send};
 
 /// Name endings of the blocks that go.
-const POPS: &[&str] = &["torch", "_button", "rail", "small_dripleaf_block"];
+const POPS: &[&str] = &["torch", "_button", "rail", "small_dripleaf_block", "lantern", "flower_pot", "pressure_plate"];
 
 /// The block at `pos`, when it is one of [`POPS`] with nothing holding it.
 fn unheld(world: &World, layer: Entity, pos: BlockPos) -> Option<u32> {

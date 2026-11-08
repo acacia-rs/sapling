@@ -1,8 +1,6 @@
 //! Tripwire hooks and their wire (docs/research/redstone-blocks.md, "Tripwire"): two hooks facing
 //! each other across a line of wire are attached; anything in a wire presses it, and the hooks then
 //! power the blocks they hang on. A pressed wire looks again every 10 ticks until it is left.
-// TODO: a wire broken without shears sets nothing off; only the line through a written cell is
-// looked at, not every line a hook could reach.
 
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
@@ -76,9 +74,13 @@ pub(crate) fn tick(world: &mut World) {
     }
 }
 
-/// A pressed wire's check: still pressed, it looks again later; left, it lets its hooks go.
+/// A pressed wire's check: still pressed, it looks again later; left, it lets its hooks go. Where
+/// the wire is gone, its hooks look at their lines (B22: the tick outlives the wire).
 pub(super) fn recheck(world: &mut World, layer: Entity, pos: BlockPos) {
-    let Some((WIRE, properties, _)) = state(world, layer, pos) else { return };
+    let Some((WIRE, properties, _)) = state(world, layer, pos) else {
+        wire_changed(world, layer, pos);
+        return;
+    };
     if !bit(properties, "powered_bit") {
         return;
     }
@@ -119,17 +121,28 @@ fn shape(world: &mut World, layer: Entity, pos: BlockPos) {
 }
 
 /// A hook, a wire or what was one was written at `pos`: it and the wires beside it take their
-/// shapes, and the lines through it are looked at again.
+/// shapes; a new hook looks at its line, a new wire has the hooks of the lines through it look at
+/// theirs. A wire or hook taken away tells no hook (bds-i1trip.txt; B16's `onRemove` changed nothing).
 pub(super) fn written(world: &mut World, layer: Entity, pos: BlockPos, old: &str, new: &str) {
     if old == new || ![old, new].iter().any(|name| *name == HOOK || *name == WIRE) {
         return;
     }
     shape(world, layer, pos);
     ACROSS.iter().for_each(|face| shape(world, layer, face.neighbour(pos)));
-    if new == HOOK {
-        update_line(world, layer, pos);
+    match new {
+        HOOK => update_line(world, layer, pos),
+        WIRE => wire_changed(world, layer, pos),
+        _ => {}
     }
+}
+
+/// A player is breaking the wire at `pos` (B24): without shears it is pressed first, and its hooks
+/// look at their lines now and again 10 ticks on, when the wire is gone (bds-i1trip.txt).
+pub(super) fn breaking(world: &mut World, layer: Entity, pos: BlockPos, shears: bool) {
+    let Some((WIRE, ..)) = state(world, layer, pos) else { return };
+    set_bits(world, layer, pos, &[("powered_bit", !shears)]);
     wire_changed(world, layer, pos);
+    queued::after(world, layer, pos, RECHECK, Job::Tripwire);
 }
 
 /// Attaches the hook at `hook` to the hook facing it across a line of wire, or lets it go, and
@@ -158,7 +171,8 @@ fn update_line(world: &mut World, layer: Entity, hook: BlockPos) {
     for end in &ends {
         set_bits(world, layer, *end, &[("attached_bit", attached), ("powered_bit", powered)]);
     }
-    for (wire, _) in &wires {
+    // B18: the wires are rewritten only as the line attaches or lets go.
+    for (wire, _) in wires.iter().filter(|_| attached != was_attached) {
         set_bits(world, layer, *wire, &[("attached_bit", attached)]);
     }
     let sound = match (was_attached, attached, was_powered, powered) {

@@ -77,15 +77,8 @@ pub(super) fn hurt(world: &mut World, layer: Entity, body: &Body, per_block: f32
         return;
     }
     let cost = (blocks * per_block).floor().min(MAX_HARM);
-    let reaches = |other: &Body| {
-        let ((low, high), (other_low, other_high)) = (body.bounds(), other.bounds());
-        (0..3).all(|axis| low[axis] < other_high[axis] && other_low[axis] < high[axis])
-    };
-    let mut mobs = world.query_filtered::<(Entity, &InLayer, &Body), With<Creature>>();
-    let struck: Vec<Entity> = mobs.iter(world).filter(|(_, on, other)| on.0 == layer && reaches(other)).map(|(mob, ..)| mob).collect();
-    for mob in struck {
-        creatures::wound(world, mob, layer, cost, Cause::Stalactite);
-    }
+    wound_mobs(world, layer, body, cost, Cause::Stalactite);
+    let reaches = |other: &Body| overlaps(body, other);
     let players: Vec<Entity> = in_world(world)
         .into_iter()
         .filter(|player| world.get::<InLayer>(*player).is_some_and(|on| on.0 == layer))
@@ -93,6 +86,24 @@ pub(super) fn hurt(world: &mut World, layer: Entity, body: &Body, per_block: f32
         .collect();
     for player in players {
         vitals::hurt(world, player, cost, Cause::Stalactite);
+    }
+}
+
+fn overlaps(body: &Body, other: &Body) -> bool {
+    let ((low, high), (other_low, other_high)) = (body.bounds(), other.bounds());
+    (0..3).all(|axis| low[axis] < other_high[axis] && other_low[axis] < high[axis])
+}
+
+/// Hurts the mobs a landing block's box at `body` reaches by `cost` (bds-i1anvil.txt: an anvil
+/// hurt a cow under 4 and killed one under 16).
+pub(super) fn wound_mobs(world: &mut World, layer: Entity, body: &Body, cost: f32, cause: Cause) {
+    if cost <= 0.0 {
+        return;
+    }
+    let mut mobs = world.query_filtered::<(Entity, &InLayer, &Body), With<Creature>>();
+    let struck: Vec<Entity> = mobs.iter(world).filter(|(_, on, other)| on.0 == layer && overlaps(body, other)).map(|(mob, ..)| mob).collect();
+    for mob in struck {
+        creatures::wound(world, mob, layer, cost, cause);
     }
 }
 

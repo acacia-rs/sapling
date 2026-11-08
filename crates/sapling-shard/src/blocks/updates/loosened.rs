@@ -35,7 +35,8 @@ fn is_loose(world: &World, layer: Entity, pos: BlockPos) -> bool {
         return false;
     }
     let own_half = doors::other_half(world, layer, pos);
-    let holds = |[x, y, z]: BlockPos, face| level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| super::holds(state, face));
+    let held = registry.get(id).map_or("", |state| state.name);
+    let holds = |[x, y, z]: BlockPos, face| level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| super::holds(state, face, held));
     let unheld = Face::ALL.into_iter().any(|face| {
         let support = [0, 1, 2].map(|axis| pos[axis] - face.offset()[axis]);
         super::depended(registry, id, face) && own_half != Some(support) && !holds(support, face)

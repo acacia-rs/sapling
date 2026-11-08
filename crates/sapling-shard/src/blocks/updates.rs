@@ -65,24 +65,35 @@ fn depended(registry: &BlockRegistry, id: u32, face: Face) -> bool {
     ends(state.name, HANGS) && is("facing_direction", FACES[index]) || face == Face::Up && ends(state.name, STANDS) && !ground::has_rule(state.name)
 }
 
-/// Whether the block `id` could not stay at `pos`: what it stands or hangs on is not solid, or
-/// is not the ground it needs (ground.rs).
-// TODO: the game asks the face (a top slab holds a torch, leaves do not); this asks the cell.
+/// Whether the block `id` could not stay at `pos`: the face it stands or hangs on does not hold
+/// it ([`holds`]), or it is not on the ground it needs (ground.rs).
 pub(super) fn lacks_support(world: &World, layer: Entity, pos: BlockPos, id: u32) -> bool {
     let Some(level) = level(world, layer) else { return false };
     let registry = level.registry();
+    let held = registry.get(id).map_or("", |state| state.name);
     let own_half = doors::second_cell(registry, id, pos).map(|(cell, _)| cell);
     !ground::may_stand(level, pos, id) || Face::ALL.iter().filter(|face| depended(registry, id, **face)).any(|face| {
         let [x, y, z] = [0, 1, 2].map(|axis| pos[axis] - face.offset()[axis]);
-        own_half != Some([x, y, z]) && !(level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| holds(state, *face)))
+        own_half != Some([x, y, z]) && !(level.in_height(y) && registry.get(level.block(x, y, z)).is_some_and(|state| holds(state, *face, held)))
     })
 }
 
-/// Whether the block `state` holds what depends on it from `face` of it: a solid block does, but
-/// for the top of a piston's arm not pointing up, which held no torch on BDS (bds-p2rs.txt).
-pub(super) fn holds(state: &acacia_world::BlockState, face: Face) -> bool {
+/// Whether `face` of the block `state` holds the block named `held` on it: BDS's
+/// `canProvideSupport` by the kind `held` asks for (docs/research/standing-and-shapes.md, "Support
+/// by face"); a ladder wants an opaque full block. A piston's arm not pointing up held no torch on
+/// its top (bds-p2rs.txt).
+pub(super) fn holds(state: &acacia_world::BlockState, face: Face, held: &str) -> bool {
+    use sapling_worldgen::Support;
     let is_bare_arm = state.name.ends_with("piston_arm_collision") && state.property("facing_direction") != Some("1");
-    state.is_solid() && !(face == Face::Up && is_bare_arm)
+    let by = |kind| sapling_worldgen::provides_support(state.name, state.properties, face as usize, kind);
+    let kind_holds = match () {
+        _ if held.ends_with("ladder") => sapling_worldgen::Block::from_name(state.name).map_or(state.is_full_cube() && state.light_filter >= 15, |block| block.is_opaque_solid()),
+        _ if held.ends_with("torch") || held.ends_with("lantern") || held == "minecraft:flower_pot" => by(Support::Centre),
+        _ if held.ends_with("lever") || held.ends_with("_button") => by(Support::Centre) && by(Support::Edge),
+        _ if held.ends_with("pressure_plate") => by(Support::Centre) || by(Support::Edge),
+        _ => true,
+    };
+    state.is_solid() && kind_holds && !(face == Face::Up && is_bare_arm)
 }
 
 fn block(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(&BlockRegistry, u32)> {
@@ -121,13 +132,14 @@ fn take(world: &mut World, layer: Entity, pos: BlockPos, by: &loot::Breaker, sho
     }
 }
 
-/// Breaks the block at `pos` as one broken by hand, and lets what is around react; false for air
-/// or a place not loaded.
+/// Breaks the block at `pos` as one broken by hand, leaving a spawner's or sculk's experience
+/// (`/fill ... destroy`), and lets what is around react; false for air or a place not loaded.
 pub(crate) fn break_block(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
-    if block(world, layer, pos).is_none_or(|(registry, id)| id == registry.air_id()) {
+    let Some(name) = block(world, layer, pos).filter(|(registry, id)| *id != registry.air_id()).and_then(|(registry, id)| registry.get(id)).map(|state| state.name) else {
         return false;
-    }
+    };
     pop(world, layer, pos);
+    super::after_break::leave_experience(world, layer, pos, name);
     settle_or_keep(world, layer, pos);
     true
 }
@@ -202,7 +214,10 @@ pub(super) fn settle(world: &mut World, layer: Entity, pos: BlockPos) {
         }
         let Some((registry, id)) = block(world, layer, pos) else { continue };
         let state = registry.get(id);
-        let gone = Face::ALL.map(|face| !state.is_some_and(|state| holds(state, face)));
+        let gone = Face::ALL.map(|face| {
+            let held = block(world, layer, face.neighbour(pos)).and_then(|(registry, id)| registry.get(id)).map_or("", |state| state.name);
+            !state.is_some_and(|state| holds(state, face, held))
+        });
         for (face, is_gone) in Face::ALL.into_iter().zip(gone) {
             let beside = face.neighbour(pos);
             if crate::containers::lost_partner(world, layer, beside, pos) {

@@ -237,6 +237,18 @@ ticks fallen so far, wrapped the same (`sapling_world::timed_falling_block`, wri
   (`vitals::health_held`) and told after the landing's packets (`blocks/falling/flight.rs`); tests in
   thirteenth2x.rs.
 
+## Anvils on helmets, mobs, and chipping (drilled 2026-11-08, research/captures/bds-i1anvil.txt, bds-i1chip.txt)
+
+- On a survival player in an iron helmet an anvil from 7 over its feet (12) left 11.144 and from 3 (4) left 17.06;
+  bare from 3 left 16. That is the helmet's 0.75 and then the armour rule (2 points: 9 to 8.856, 3 to 2.94), which
+  sapling's `vitals::harm::land` already did; the helmet was rewritten (`InventorySlot` armour slot 0) at each hit.
+- A held cow under a drop of 4 was hurt, one under 16 killed: anvils now hurt mobs as dripstone does
+  (`falling/dripstone.rs` `wound_mobs`, from `flight.rs` `crush`).
+- Chipping: the landed block (`UpdateBlockSynced` Destroy) was `chipped_anvil` for 10 of 92 falling 3 and 43 of 92
+  falling 11 (and 2 of 5 single drops). Sapling chips one a step, 1 in 20 per block past the first (`flight.rs`
+  `chip`), a fit to those counts; Java's extra 1 in 20 predicts 14 and 51. A damaged anvil landing, which Java
+  breaks, was not drilled and lands as it is.
+
 ## On the wire (drilled 2026-11-05, research/captures/bds-n13net.txt)
 
 - Sand set over a 7-block drop: UpdateBlockSynced(air, Create, the actor's id) then AddEntity at the cell's centre

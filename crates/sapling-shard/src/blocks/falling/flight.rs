@@ -83,11 +83,12 @@ fn spawn(world: &mut World, layer: Entity, block: u32, hash: u32, body: Body, ai
     Some(entity)
 }
 
-/// A landing anvil that fell `fallen` hurts the players its box meets: two for each block past the
-/// first, at most 40 (research/captures/bds-anvil.txt: 6 blocks cost 10, 16 killed).
-// TODO: what a helmet spares and how it wears; mobs under it; the anvil chipping.
+/// A landing anvil that fell `fallen` hurts the players and mobs its box meets: two for each block
+/// past the first, at most 40 (research/captures/bds-anvil.txt: 6 blocks cost 10, 16 killed; a
+/// helmet's share is vitals' `HELMETED`, bds-i1anvil.txt).
 fn crush(world: &mut World, layer: Entity, body: &Body, fallen: f32) {
     let amount = ((fallen - 1.0).ceil() * ANVIL_HARM).clamp(0.0, ANVIL_MOST);
+    dripstone::wound_mobs(world, layer, body, amount, crate::creatures::Cause::Anvil);
     let (low, high) = body.bounds();
     let meets = |feet: [f32; 3]| (feet[0] - body.at[0]).abs() < (SIZE + PLAYER[0]) / 2.0 && (feet[2] - body.at[2]).abs() < (SIZE + PLAYER[0]) / 2.0 && feet[1] < high[1] && low[1] < feet[1] + PLAYER[1];
     let struck: Vec<Entity> = crate::components::in_world(world)
@@ -96,6 +97,22 @@ fn crush(world: &mut World, layer: Entity, body: &Body, fallen: f32) {
         .collect();
     for player in struck.into_iter().filter(|_| amount > 0.0) {
         crate::vitals::crushed(world, player, amount);
+    }
+}
+
+/// A landing anvil that fell `fallen` comes down one step more worn, 1 in 20 for each block past the
+/// first: fitted to bds-i1chip.txt (10 of 92 chipped falling 3, 43 of 92 falling 11; Java's extra
+/// 1 in 20 fit worse). A damaged one lands as it is (Java breaks it; not drilled).
+fn chip(world: &mut World, entity: Entity, layer: Entity, anvil: u32, fallen: f32) {
+    const WORN: [(&str, &str); 2] = [("minecraft:anvil", "minecraft:chipped_anvil"), ("minecraft:chipped_anvil", "minecraft:damaged_anvil")];
+    let chance = (fallen - 1.0).ceil().max(0.0) * 0.05;
+    let Some(registry) = level(world, layer).map(|level| level.registry()) else { return };
+    let Some(state) = registry.get(anvil) else { return };
+    let Some(worn) = WORN.iter().find(|(name, _)| *name == state.name).and_then(|(_, worn)| registry.find(worn, state.properties)) else { return };
+    if world.get_resource_or_insert_with(super::super::Dice::default).fraction() < chance
+        && let Some(mut falling) = world.get_mut::<FallingBlock>(entity)
+    {
+        falling.block = worn;
     }
 }
 
@@ -245,6 +262,7 @@ fn step(world: &mut World, entity: Entity, layer: Entity, id: u64) -> Option<Blo
         // BDS sends the sound before the landing move, after the hurt it did.
         if is_anvil {
             crush(world, layer, &body, fell);
+            chip(world, entity, layer, block_id, fell);
             packets.insert(0, event(LevelEventEvent::SoundAnvilFall, cell_of(at).map(|c| c as f32), 0));
         }
         if is_dripstone {

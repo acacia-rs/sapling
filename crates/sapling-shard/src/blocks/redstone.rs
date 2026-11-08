@@ -6,8 +6,7 @@
 //! written to are searched again from their sources (search.rs); what changed is written into
 //! the blocks at the start of the next (apply.rs).
 // TODO: the circuits of an arena's template are found only once one of their blocks is written;
-// a comparator reads no lectern; a burnt torch whose loop was broken while it was out still
-// waits for a change beside it.
+// a comparator reads no lectern.
 
 mod apply;
 mod capacitors;
@@ -214,6 +213,15 @@ fn evaluate_circuit(world: &World, layer: Entity, circuit: &mut Circuit, now: u6
     let mut sources: Vec<(BlockPos, Part)> = circuit.sources.iter().map(|pos| (*pos, as_kept(pos, part(*pos)))).collect();
     let mut restrengthened = false;
     let shown = search::search(&sources, &mut part);
+    // A burnt torch is out, so whether its loop still stands is asked of it lit.
+    for (pos, source) in sources.iter().filter(|_| !changed.is_empty()) {
+        let Part::Torch { lit: false, support } = *source else { continue };
+        let Some(torch) = circuit.torches.get_mut(pos).filter(|torch| torch.is_burnt()) else { continue };
+        let looped = search::search(&[(*pos, Part::Torch { lit: true, support })], &mut part).inputs.get(pos).is_some_and(|(_, origin)| origin == pos);
+        if !looped {
+            torch.unloop();
+        }
+    }
     let (mut due, mut held, mut half_pulses) = (Vec::new(), false, false);
     for (pos, source) in &mut sources {
         if matches!(source, Part::Torch { .. } | Part::Repeater { .. } | Part::Comparator { .. }) && !ticks(*pos) {

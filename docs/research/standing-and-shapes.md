@@ -105,6 +105,25 @@ after (`blocks/updates/loosened.rs`; BDS showed the lower vine breaking in the t
 `/setblock bed` put the head on the named cell and the foot behind it, both with `Bed` entities (color 14), and
 refused a second `/setblock` on the head; sapling's `/setblock` puts the one half.
 
+### A6. Support by face (2026-11-08, `bds_command_probe i1place` and `i1stay`, research/captures/bds-i1place.txt, bds-i1stay.txt)
+
+Thirteen supporters (top and bottom slab, leaves, glass, fence, wall, cauldron, composter, upside-down stairs, hopper,
+iron bars, chain; the trapdoor's `/setblock` failed) each took a dependent on its top or north face, placed by hand
+and set by `/fill`; placing and staying agreed. In `canProvideSupport` kinds (sapling-worldgen `block/support.rs`):
+
+- torch, lantern, flower pot on top: Centre (on a top slab, glass, fence, wall, stairs, hopper, bars, chain; not a
+  bottom slab, leaves, cauldron, composter);
+- lever and button: Centre and Edge (also off a fence, wall, bars, chain);
+- pressure plate: Centre or Edge (stays on a cauldron and composter, off leaves and a bottom slab);
+- on the north face a torch, lever or button stayed only on glass, a composter and the stairs' back;
+- a ladder went from all of them, glass, composter and the stairs' back too: it wants an opaque full block;
+- carpet and a standing sign stayed on anything; a torch clicked onto a face that cannot hold it stood on the floor.
+
+Lanterns, flower pots and plates set unheld by `/fill` showed their particles and went a tick later, as torches.
+Sapling: `updates.rs` `holds` asks the face by those kinds (any other dependent still takes any solid block), and
+`updates/unheld.rs` pops lanterns, pots and plates. Whether light is checked as a plant is placed (the rest of
+REMAINING4's line) was not drilled.
+
 ## Part B: shapes that reconnect
 
 ### B1. States (REG)
@@ -189,6 +208,11 @@ Differences from JAVA `WallBlock` (`shouldRaisePost`: `WALL_POST_OVERRIDE` tag, 
 shape): Bedrock asks overlap with the selection box, not a tag or full cover: anything whose box touches the centre square
 (a torch, a lantern, a full block) raises a post on a straight short wall, and any block reaching an arm's outer
 quarter makes that arm tall.
+
+Drilled 2026-11-08 (bds-i1stay.txt, a straight wall with each thing set on it): a torch, standing sign, lever,
+flower pot, lantern and fence raised the post; a pressure plate, carpet and dust made both arms tall with no post,
+as stone did. Sapling read collision boxes, so plates and dust (none) did nothing; `blocks/shapes.rs` now reads
+the state's selection boxes (`BlockState::selection`).
 
 Fence gate `in_wall_bit` (JAVA `FenceGateBlock.getStateForPlacement`/`updateShape`, not decompiled on BDS): 1 when the
 neighbour on either side along the gate's line (gate facing north/south: west and east cells; east/west: north and

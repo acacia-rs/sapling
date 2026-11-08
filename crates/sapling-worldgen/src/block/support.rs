@@ -132,15 +132,25 @@ fn masks(name: &str, states: &str, classes: &HashMap<&str, Class>, (blocking, op
     out
 }
 
+static CLASS_OF: LazyLock<HashMap<&str, Class>> =
+    LazyLock::new(|| CLASSES.iter().flat_map(|&(class, names)| names.split_whitespace().map(move |name| (name, class))).collect());
+
 /// Masks of `Block::ALL`, then of the template palette.
 static TABLE: LazyLock<(Vec<Masks>, Vec<Masks>)> = LazyLock::new(|| {
-    let classes: HashMap<&str, Class> = CLASSES.iter().flat_map(|&(class, names)| names.split_whitespace().map(move |name| (name, class))).collect();
+    let classes = &*CLASS_OF;
     let blocking: Vec<&str> = SOLID_BLOCKING.split_whitespace().collect();
     let open: Vec<&str> = super::material_table::OPEN_MATERIAL.split_whitespace().collect();
-    let own = Block::ALL.iter().map(|block| masks(block.name(), block.states(), &classes, (&blocking, &open))).collect();
-    let templates = palette().iter().map(|&(name, states, ..)| masks(name, states, &classes, (&blocking, &open))).collect();
+    let own = Block::ALL.iter().map(|block| masks(block.name(), block.states(), classes, (&blocking, &open))).collect();
+    let templates = palette().iter().map(|&(name, states, ..)| masks(name, states, classes, (&blocking, &open))).collect();
     (own, templates)
 });
+
+/// `canProvideSupport` for any block by its `minecraft:` name and `key=value` states, for blocks the
+/// worldgen table lacks; a name in no class counts as solid.
+pub fn provides_support(name: &str, states: &str, face: usize, kind: Kind) -> bool {
+    let class = CLASS_OF.get(name.strip_prefix("minecraft:").unwrap_or(name)).copied().unwrap_or(Class::Solid);
+    provides(class, states, face, kind)
+}
 
 impl Block {
     fn support_masks(self) -> Masks {

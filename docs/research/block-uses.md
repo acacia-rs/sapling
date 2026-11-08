@@ -259,6 +259,7 @@ onto it.
 | pink petals, wildflowers, leaf litter | `growth` one more, to 3; `place` from the cell's floor |
 | turtle egg | `turtle_egg_count` one more, to four eggs; `place` |
 | oak slab | a double slab at the second, `item.use.on` from its middle; the third went on top as a slab |
+| smooth stone slab under a top one (`bds-i1misc.txt`) | clicked on the top slab's underside: a double slab (`vertical_half=bottom`) in its cell, `item.use.on` from its middle; another kind of slab went under it as a top slab |
 
 Sapling's capture has the same states step for step (`blocks/stacking.rs`). Its sounds differ in
 two ways: the first candle, pickle and snow layer are told by `place` where BDS told them by

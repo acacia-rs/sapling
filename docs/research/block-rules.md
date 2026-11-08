@@ -54,6 +54,16 @@ North 2, South 3, West 4, East 5.
 | rails (`rail_direction` 0-9) | 0 north-south, 1 east-west, 2-5 ascending east/west/north/south, 6-9 curves. Placed: 0 when looking north/south else 1, then reshaped to join neighbouring rails. | PM `BaseRail`; JAVA `RailBlock` |
 | campfire, grindstone (`attachment`,`direction`), bell, `amethyst_cluster` (`minecraft:block_face` = clicked face name), lantern (`hanging` = clicked Down face) | Listed for completeness; not checked. | registry property names (BOX) |
 
+Drilled 2026-11-08 (`bds_command_probe i1facing`, research/captures/bds-i1facing.txt, a placer looking east): every
+`minecraft:cardinal_direction` block tried (chest, ender chest, furnace, smoker, lectern, stonecutter, portal frame,
+pumpkins, repeater, comparator, big dripleaf, petals, leaf litter, wildflowers, shelf, vault, dried ghast, copper
+golem statue) faced the placer, as the generic arm; signs' sixteenths, a bell's `direction`, skulls (floor 1, wall
+the clicked face) and rails were already right. New: a bell and a grindstone take `attachment` standing on a top,
+hanging under a block and `side` on a side, their `direction` still the look's (the one side tried, a west face,
+does not tell the two apart); a lantern, soul lantern and pointed dripstone take `hanging=1` under a block and stand
+on the floor when a side is clicked (`facing.rs`). A coral fan put out of water became its dead fan; a bell between
+two blocks (`multiple`) was not tried.
+
 ## 2. doors.rs
 
 Sound packet for all rows below: `LevelSoundEvent`, position = block centre (x+0.5, y+0.5, z+0.5), extra data = the

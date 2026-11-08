@@ -26,6 +26,16 @@ impl TorchState {
         }
     }
 
+    pub(super) fn is_burnt(&self) -> bool {
+        self.count >= BURNOUT
+    }
+
+    /// A burnt torch whose loop is broken lights again at this evaluation, as R20 does when its
+    /// strongest input no longer starts at itself (bds-i1misc.txt).
+    pub(super) fn unloop(&mut self) {
+        (self.count, self.looped) = (0, false);
+    }
+
     /// Whether lamps, doors and the like take it as lit whatever its block: BDS's half pulse (R20), from
     /// its first evaluation powering itself to the one after it went out for good.
     pub(super) fn is_half_pulse(&self) -> bool {

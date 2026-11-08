@@ -1,7 +1,6 @@
 //! Things that go into one cell several at a time: put onto its like, a candle, sea pickle, snow
 //! layer, petal, wildflower, leaf litter or turtle egg makes the block there one more, and a
 //! slab a double slab (docs/research/block-uses.md, "Stacking").
-// TODO: a top slab takes none from below.
 
 use acacia_proto::types::Vec3f;
 use sapling_api::{BlockPos, Face, GameMode};
@@ -36,8 +35,10 @@ fn one_more(registry: &BlockRegistry, id: u32, face: Face) -> Option<(u32, bool)
         let now = EGGS.iter().position(|eggs| Some(*eggs) == get("turtle_egg_count"))?;
         return Some((with_property(registry, id, "turtle_egg_count", EGGS.get(now + 1)?)?, false));
     }
-    let lower = state.name.ends_with("_slab") && !state.name.ends_with("double_slab") && get("minecraft:vertical_half") == Some("bottom");
-    let double = registry.find(&state.name.replacen("_slab", "_double_slab", 1), state.properties).filter(|_| lower && face == Face::Up)?;
+    // A bottom slab takes one on its top, a top slab one on its underside; the double is a bottom one (bds-i1misc.txt).
+    let half = get("minecraft:vertical_half");
+    let takes = state.name.ends_with("_slab") && !state.name.ends_with("double_slab") && (half == Some("bottom") && face == Face::Up || half == Some("top") && face == Face::Down);
+    let double = registry.find(&state.name.replacen("_slab", "_double_slab", 1), &state.properties.replace("=top", "=bottom")).filter(|_| takes)?;
     Some((double, true))
 }
 
@@ -86,5 +87,6 @@ mod tests {
         assert!(more("turtle_egg", "cracked_state=no_cracks,turtle_egg_count=four_egg", Face::Up).is_none());
         assert!(more("oak_slab", "minecraft:vertical_half=bottom", Face::Up).is_some_and(|double| double.starts_with("oak_double_slab")));
         assert!(more("oak_slab", "minecraft:vertical_half=bottom", Face::North).is_none() && more("oak_slab", "minecraft:vertical_half=top", Face::Up).is_none());
+        assert_eq!(more("oak_slab", "minecraft:vertical_half=top", Face::Down).as_deref(), Some("oak_double_slab minecraft:vertical_half=bottom"), "bds-i1misc.txt");
     }
 }
