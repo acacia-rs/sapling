@@ -5,7 +5,6 @@
 //! at half health it is armoured, blows up again, calls three wither skeletons and from then on
 //! dashes now and then (dash.rs). Its boss bar
 //! shows every second to players within 55; with none within 50 it heals 1 a second.
-// TODO: one kept armoured does not dash until armoured again.
 
 mod dash;
 mod dying;
@@ -51,6 +50,9 @@ const BAR_REACH: f32 = 55.0;
 const LONELY: f32 = 50.0;
 const SECOND: u64 = 20;
 const TITLE: &str = "entity.wither.name";
+/// Sapling's own key for the ticks to an armoured one's next dash, which BDS keeps across a load
+/// under no key its loader names (bds-f14nwither2.txt: 140 ticks after the load, 137 were left).
+const DASH_IN: &str = "DashIn";
 
 /// A wither's own state.
 #[derive(Component, Default)]
@@ -76,7 +78,8 @@ pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
 }
 
 /// Puts a wither a world folder kept (its compound `compound`) back as it was: its max health,
-/// its charge, its armour and its fire rate (research/captures/bds-keepmobs.txt, bds-m3wither.txt's world).
+/// its charge, its armour, its fire rate (research/captures/bds-keepmobs.txt, bds-m3wither.txt's
+/// world) and, armoured, its next dash (a BDS-saved one's as though armoured just now).
 pub(super) fn adopt(world: &mut World, wither: Entity, compound: &[u8]) {
     let Some(record) = sapling_world::wither_record(compound).filter(|_| world.get::<Wither>(wither).is_some()) else { return };
     if let Some(health) = world.get::<Health>(wither).copied() {
@@ -86,22 +89,34 @@ pub(super) fn adopt(world: &mut World, wither: Entity, compound: &[u8]) {
     let charging = u32::try_from(record.charging).unwrap_or(0);
     let mut kept = Wither { charging, armoured: record.armoured, ..Wither::default() };
     kept.heads.rate = heads::Rate { every: u64::try_from(record.fire_rate).unwrap_or(1).max(1), under: Some(record.interval) };
+    if record.armoured {
+        let now = world.resource::<Tick>().0;
+        match sapling_world::actor_field(compound, DASH_IN) {
+            Some(acacia_proto::nbt::Value::Int(left)) => kept.dash.resume(now, u64::try_from(left).unwrap_or(0)),
+            _ => kept.dash.arm(now),
+        }
+    }
     world.entity_mut(wither).insert(kept);
 }
 
 /// Writes each kept wither's fight into what the world folder keeps of it.
 pub(super) fn keep(world: &mut World) {
-    let withers: Vec<(Entity, sapling_world::WitherRecord)> = world
+    let now = world.resource::<Tick>().0;
+    let withers: Vec<(Entity, sapling_world::WitherRecord, Option<u64>)> = world
         .query_filtered::<(Entity, &Wither, &Health), With<entities::Stored>>()
         .iter(world)
         .map(|(wither, kept, health)| {
             let rate = kept.heads.rate;
             let record = sapling_world::WitherRecord { charging: kept.charging as i32, armoured: kept.armoured, max_health: health.max() as i32, fire_rate: rate.every as i32, interval: rate.under.unwrap_or(health.max() as i32) };
-            (wither, record)
+            (wither, record, kept.dash.due_in(now))
         })
         .collect();
-    for (wither, record) in withers {
-        entities::restore(world, wither, |compound, _| sapling_world::withered_actor(compound, record).ok());
+    for (wither, record, dash_in) in withers {
+        entities::restore(world, wither, |compound, _| {
+            let compound = sapling_world::withered_actor(compound, record).ok()?;
+            let Some(left) = dash_in else { return Some(compound) };
+            sapling_world::actor_with_field(&compound, DASH_IN, acacia_proto::nbt::Value::Int(i32::try_from(left).unwrap_or(i32::MAX))).ok()
+        });
     }
 }
 

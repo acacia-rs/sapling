@@ -1,7 +1,7 @@
 //! Pressure plates: down the tick something is on one, checked again while down and up on the
 //! first check that finds nothing, by BDS's `BasePressurePlateBlock`
 //! (docs/research/pressure-plates.md).
-// TODO: no redstone behind them; stored mobs, which are statues outside entities.rs, press nothing.
+// TODO: no redstone behind them.
 
 use std::collections::HashMap;
 

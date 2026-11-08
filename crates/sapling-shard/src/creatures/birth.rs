@@ -212,7 +212,11 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     let body = Body::new(actor.position, [0.0; 3], slimes::sizes::body_size(&kind, gene).unwrap_or(size));
     let (kept, compound) = strides::stored(world, &kind, compound);
     let strength = crate::riding::kept_strength(&compound);
-    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, None, kept.as_ref(), strength), None, [0.0; 2], (actor.variant, gene, acacia_proto::types::MetadataFlags1(0))))) else { return false };
+    let properties = super::properties::stored(&kind, &compound);
+    let Some(entity) = entities::spawn_mob(world, layer, &kind, body, actor.position, |id| Some(announcement(id, &kind, &body, (Some(&actor), None, properties.as_ref(), kept.as_ref(), strength), None, [0.0; 2], (actor.variant, gene, acacia_proto::types::MetadataFlags1(0))))) else { return false };
+    if let Some(properties) = properties {
+        world.entity_mut(entity).insert(properties);
+    }
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }
@@ -235,6 +239,7 @@ pub(crate) fn from_storage(world: &mut World, layer: Entity, actor: Actor, uniqu
     }
     entities::keep(world, entity, layer, unique_id, compound);
     villagers::arm(world, entity, layer, &kind, true, None);
+    villagers::adopt_pantry(world, entity, &kind);
     super::skeleton_traps::arm(world, entity, &kind, None);
     crate::riding::give_strength(world, entity, &kind, None);
     reshow(world, entity);

@@ -326,7 +326,10 @@ The actor compound keeps `Variant`, `MarkVariant`, `SkinID`, `TradeTier`, `Trade
   a zombie villager its own, `zombie_villager`, zombie, undead, monster, mob); test
   `a_villager_that_takes_up_armoring_is_of_the_armorer_family`.
 - The wandering trader leaves after 2400 or 3600 seconds (its `minecraft:timer`, taken as seconds) or
-  once sold out, when no player is within 24 blocks; its timer is not kept by the actor compound.
+  once sold out, when no player is within 24 blocks. Its timer's end is kept as `TimeStamp` (Long, the
+  level tick it leaves at, beside `HasExecuted` 0; research/captures/bds-f14nkeep-dump.txt: 48672 for one
+  summoned 672 ticks in) and read back (`villagers/wandering.rs`, test
+  `a_wandering_trader_keeps_the_tick_it_leaves_at`; the reload itself not drilled).
 
 Drilled: bds-village.txt, bds-golems.txt (`bds_command_probe village|golems`): sleeping (fixed: lying
 shown, babies sleep), which golems defend (fixed). bds-golems2.txt (a restart) only counted the golems.
@@ -364,7 +367,10 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
   `born` at the baby's head with `is_baby_mob` (also for animals' bred babies, `bds-llamabreed.txt`).
   Each parent eats what made it willing and rests 6000 ticks (Java's; not drilled).
 - Pickup (`villagers/pantry.rs`): a grown villager walks to food within 3 and takes the whole stack at
-  once (`TakeItemEntity`; `g11breed-2` took 24 bread 0.45 s after the drop). Sharing: below.
+  once (`TakeItemEntity`; `g11breed-2` took 24 bread 0.45 s after the drop). Sharing: below. Its eight
+  slots are kept as `ChestItems` (with `Slot`; BDS writes all eight, empty ones as `Count` 0 and `Name` "",
+  and `InventoryVersion` "1.26.52" beside them, bds-f14nkeep-dump.txt; sapling writes the full ones) and
+  read back (test `a_villager_keeps_its_pantry`).
 - Sapling drilled (`SAPLING_DRILL_WORLD=lowflat`): both given 3 bred in one of three runs
   (sapling-g11love-6.txt: `INLOVE` 20.2 s after the feed, 300 ticks, the baby heard `born`; -7, -8 none,
   their pair strolled apart), as BDS's one in three; 24 dropped was taken 0.2 s after the drop with no

@@ -231,6 +231,10 @@ tests/integration/mob_packets.rs):
   the AddEntity's properties. It is not sent when a mob is shown again or to a player who comes later;
   for a mob loaded from a world folder it was not drilled and sapling sends none. The first data's
   values: sixth wave, below. Tests read changes past it (`common/data.rs`).
+- Fixed 2026-11-08 (fourteenth N, bds-f14nkeep.txt): BDS saves a mob's entity properties as a
+  `properties` compound of every property by name, enums as String and bools as Byte (a cow's
+  `minecraft:climate_variant`, a frog's variant). Sapling writes it on save (`creatures/properties.rs`
+  `keep`) and a loaded mob comes back with them; a stored mob that burns shows ONFIRE again.
 - Mobs shown again as a player comes back: bds-s3far's three cows of one chunk came newest first
   (20, 19, 18); sapling's `mobs::update` shows them by runtime id, oldest first. Not followed:
   bds-w3despawn's 28 shown on the walk back to the hut follow no rule by id or chunk (chunk

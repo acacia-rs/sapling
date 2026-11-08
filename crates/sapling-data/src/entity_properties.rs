@@ -104,6 +104,43 @@ pub fn property_values(kind: &str, set: &[(u32, i32)]) -> EntityProperties {
     EntityProperties { ints, floats: Vec::new() }
 }
 
+/// `kind`'s properties as an actor compound keeps them (`properties`): every one, by name in name order,
+/// an enum's value by its name, a bool a Byte, an int an Int (research/captures/bds-f14nkeep-dump.txt).
+/// `None` for a kind with none.
+pub fn properties_nbt(kind: &str, set: &[(u32, i32)]) -> Option<Value> {
+    let mut named: Vec<&EntityProperty> = entity_properties(kind).collect();
+    named.sort_by_key(|property| property.name);
+    let fields: Vec<(Str, Value)> = named
+        .into_iter()
+        .filter_map(|property| {
+            let value = set.iter().find(|(index, _)| *index == property.index).map_or(property.default, |(_, value)| *value);
+            let kept = match &property.shape {
+                PropertyShape::Enum(values) => Value::String(Str::from(*values.get(value as usize)?)),
+                PropertyShape::Bool => Value::Byte(value as i8),
+                PropertyShape::Int { .. } => Value::Int(value),
+                PropertyShape::Float { .. } => return None,
+            };
+            Some((Str::from(property.name), kept))
+        })
+        .collect();
+    (!fields.is_empty()).then_some(Value::Compound(fields))
+}
+
+/// The properties of `kind` a kept `properties` compound names, as indices and sent values.
+pub fn properties_of_nbt(kind: &str, kept: &Value) -> Vec<(u32, i32)> {
+    entity_properties(kind)
+        .filter_map(|property| {
+            let value = match (&property.shape, kept.get(property.name)?) {
+                (PropertyShape::Enum(_), Value::String(name)) => property.value_of(name)?,
+                (PropertyShape::Bool, Value::Byte(flag)) => i32::from(*flag != 0),
+                (PropertyShape::Int { .. }, Value::Int(number)) => *number,
+                _ => return None,
+            };
+            Some((property.index, value))
+        })
+        .collect()
+}
+
 /// The SyncEntityProperty BDS sends after StartGame, one per kind, in its order and bytes.
 pub fn property_registry_packets() -> &'static [Bytes] {
     static PACKETS: LazyLock<Vec<Bytes>> = LazyLock::new(|| {

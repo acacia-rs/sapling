@@ -101,6 +101,30 @@ pub(super) fn fetch(world: &mut World, entity: Entity, layer: Entity, body: &Bod
     true
 }
 
+/// Writes each kept villager's pantry where BDS saves it: `ChestItems` by slot
+/// (research/captures/bds-f14nkeep-dump.txt: eight slots, `InventoryVersion` beside them).
+pub(crate) fn keep(world: &mut World) {
+    let kept: Vec<(Entity, Vec<(u8, ItemStack)>)> = world
+        .query_filtered::<(Entity, &Pantry), With<crate::entities::Stored>>()
+        .iter(world)
+        .map(|(entity, pantry)| (entity, pantry.0.iter().enumerate().filter_map(|(slot, stack)| Some((slot as u8, stack.clone()?))).collect()))
+        .collect();
+    for (entity, items) in kept {
+        crate::entities::restore(world, entity, |compound, registry| sapling_world::chested_actor(compound, &items, registry).ok());
+    }
+}
+
+/// A villager a world folder kept holds its `ChestItems` again.
+pub(crate) fn adopt(world: &mut World, entity: Entity, compound: &[u8]) {
+    let mut pantry = Pantry::default();
+    for (slot, stack) in sapling_world::actor_chest(compound).into_iter().filter(|(slot, _)| usize::from(*slot) < SLOTS) {
+        pantry.0[usize::from(slot)] = Some(stack);
+    }
+    if pantry.0.iter().any(Option::is_some) {
+        world.entity_mut(entity).insert(pantry);
+    }
+}
+
 /// `/replaceitem entity <villager> slot.inventory <slot>`: false for a mob that is no villager.
 pub(crate) fn put(world: &mut World, mob: Entity, slot: usize, stack: Option<ItemStack>) -> Option<Result<(), MobSlotRefusal>> {
     world.get::<super::Trader>(mob).filter(|trader| trader.leaves_at.is_none())?;

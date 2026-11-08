@@ -4,7 +4,7 @@
 //! (their `UniqueID`s), `NumRaiders`, `TotalMaxHealth`, `SpawnFails`. sapling keeps its own
 //! village beside them: `CenterX/Y/Z` and the omen's `OmenLevel`. A kept raid's raiders rejoin as
 //! their columns load.
-// TODO: the heroes are not kept: a raid won after a load rewards the players in it then.
+//! Its heroes are not kept, as BDS's record names none (bds-f14nvillage.txt's world).
 
 use acacia_proto::nbt::{self, LittleEndian, List, Nbt, Value};
 use bevy_ecs::prelude::*;

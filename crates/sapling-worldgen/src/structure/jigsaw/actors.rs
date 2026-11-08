@@ -1,7 +1,7 @@
 //! The mobs a pool element's data markers name, "minecraft:villager_v2:minecraft:spawn_from_village"
 //! (`StructurePoolElement` marker handler 145e1e2a0, spawned by `postProcessMobsAt` 141ef28c0): kind
 //! and event, made at the corner of the marker's cell. An abandoned village's actor rules (1480bbe90)
-//! turn its villagers into zombie villagers.
+//! turn its villagers into zombie villagers and drop its golems.
 
 use super::super::canvas::Canvas;
 use super::super::template::{Rotation, Template};
@@ -17,7 +17,7 @@ pub(super) fn add(canvas: &mut Canvas, template: &'static Template, placed: &[((
         let Some((_, marker)) = template.markers.iter().find(|(block, _)| *block == index) else { continue };
         let named = match marker.as_str() {
             VILLAGER if abandoned => "minecraft:zombie_villager_v2:from_village",
-            // TODO: the rule BDS's abandoned villages put on golems was not decoded; taken as removing them.
+            // `minecraft:abandoned_golems` (1480bc418) maps the golem marker to an empty name: none is made.
             GOLEM if abandoned => continue,
             marker => marker,
         };

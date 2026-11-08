@@ -1,7 +1,7 @@
 //! A trader in its actor compound, under BDS's keys (bdsre: the actor load at 0x140d26a70 and
 //! `MerchantRecipeList` at 0x1416404a0): `Variant`, `MarkVariant`, `SkinID`, `TradeTier`,
-//! `TradeExperience`, `Offers` (`Recipes`, `TierExpRequirements`) and `RewardPlayersOnFirstFounding`.
-// TODO: a wandering trader's timer is not kept: one loaded again gets a new one.
+//! `TradeExperience`, `Offers` (`Recipes`, `TierExpRequirements`) and `RewardPlayersOnFirstFounding`;
+//! a wandering trader's `TimeStamp` (wandering.rs).
 
 use acacia_proto::nbt::{self, LittleEndian, Nbt, Str, Value};
 use bevy_ecs::prelude::*;
@@ -52,6 +52,7 @@ pub(super) fn keep(world: &mut World, entity: Entity) {
     if !trader.deals.is_empty() {
         set.push(("Offers", offers_compound(&trader.deals, &trader.tiers, false, None, layer.world.registry())));
     }
+    set.extend(world.get::<InLayer>(entity).and_then(|layer| super::wandering::time_stamp(world, layer.0, trader)));
     for (key, value) in set {
         match fields.iter_mut().find(|(name, _)| name == key) {
             Some((_, old)) => *old = value,

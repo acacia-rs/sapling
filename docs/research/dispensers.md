@@ -244,4 +244,6 @@ Block behaviours (BlockType vt+0x190):
 - Spawn egg exact position for up/down and the 5% branch; shears details; `Item::dispense` special at 141a88af0.
 - Crafter toggle-slot server handling (empty slot required? sound?), interact 14713f470.
 - `isFirstTime` handling for a dispenser placed already powered (consumer flags not read).
-- Dispenser/dropper container vtable attribution (D32) and whether a dropper's `Items` differ.
+- Dispenser/dropper container vtable attribution (D32). A dropper's `Items` do not differ: bds-f14nkeep.txt's
+  world (2026-11-08) saved both as `BlockEntityVersion`, `Items` (`Count`, `Damage`, `Name`, `Slot`,
+  `WasPickedUp`, `Block` for block items) and `id` `Dispenser`/`Dropper`, the layout sapling writes for both.

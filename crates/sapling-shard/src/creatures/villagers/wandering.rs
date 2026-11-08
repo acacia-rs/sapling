@@ -5,14 +5,16 @@
 //! each told `RemoveLeash` 0 the tick after the event, then all three removed the tick after that).
 //! Its llamas tame themselves once off its lead (husbandry/leads.rs).
 
+use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
 use sapling_api::SpawnReason;
 
 use super::Trader;
 use crate::blocks::Dice;
 use crate::body::Body;
-use crate::components::{InLayer, Position, Tick, in_world};
+use crate::components::{InLayer, Layer, Position, Tick, in_world};
 use crate::creatures::{Raised, husbandry};
+use crate::entities::Stored;
 use crate::mobs;
 
 pub(super) const TABLE: &str = "wandering_trader";
@@ -21,16 +23,24 @@ const LLAMAS: usize = 2;
 const STAYS: [u64; 2] = [48_000, 72_000];
 const NO_PLAYER_WITHIN: f32 = 24.0;
 pub(super) const START_DESPAWN: &str = "minecraft:start_despawn";
+const TIME_STAMP: &str = "TimeStamp";
 
 /// A trader that let its llamas go: it and they are removed the tick after.
 #[derive(Component)]
 struct Departing(Vec<Entity>);
 
-/// Sets the trader's time to leave; a `new` one comes with its llamas on its leads (its pack's
-/// `should_leash`; bds-trade2.txt: their `LeadHolderEid` the trader's from their announcement).
+/// Sets the trader's time to leave: the level tick a kept one's `TimeStamp` names (BDS keeps its
+/// timer's end so, research/captures/bds-f14nkeep-dump.txt: 48672 for one summoned 672 ticks in),
+/// else rolled; a `new` one comes with its llamas on its leads (its pack's `should_leash`;
+/// bds-trade2.txt: their `LeadHolderEid` the trader's from their announcement).
 pub(super) fn arrive(world: &mut World, entity: Entity, layer: Entity, trader: &mut Trader, feet: [f32; 3], new: bool) {
-    let stays = STAYS[world.get_resource_or_insert_with(Dice::default).roll(STAYS.len() as u32) as usize];
-    trader.leaves_at = Some(world.resource::<Tick>().0 + stays);
+    let now = world.resource::<Tick>().0;
+    let kept = (!new).then(|| world.get::<Stored>(entity).and_then(|stored| sapling_world::actor_field(&stored.compound, TIME_STAMP))).flatten();
+    let age = world.get::<Layer>(layer).map_or(0, |level| level.world.level().age);
+    trader.leaves_at = Some(match kept {
+        Some(Value::Long(stamp)) => now + u64::try_from(stamp - age).unwrap_or(0),
+        _ => now + STAYS[world.get_resource_or_insert_with(Dice::default).roll(STAYS.len() as u32) as usize],
+    });
     if new {
         for _ in 0..LLAMAS {
             let llama = super::super::spawn(world, layer, LLAMA, [feet[0], feet[1] + 0.5, feet[2]], SpawnReason::Summoned).and_then(|id| crate::entities::find(world, id));
@@ -40,6 +50,12 @@ pub(super) fn arrive(world: &mut World, entity: Entity, layer: Entity, trader: &
             }
         }
     }
+}
+
+/// The level tick the trader leaves at, as its `TimeStamp` keeps it.
+pub(super) fn time_stamp(world: &World, layer: Entity, trader: &Trader) -> Option<(&'static str, Value)> {
+    let (now, age) = (world.resource::<Tick>().0, world.get::<Layer>(layer)?.world.level().age);
+    Some((TIME_STAMP, Value::Long(age + trader.leaves_at?.saturating_sub(now) as i64)))
 }
 
 /// `minecraft:start_despawn` fired on the trader: its time is up from the next tick.

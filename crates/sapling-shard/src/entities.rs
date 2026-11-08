@@ -1,8 +1,8 @@
 //! What every entity the shard moves has, whatever it is: a [`Kind`], a [`Body`] and what its
 //! viewers were last [`Told`]. Finding, listing, moving and removing any of them, and keeping
 //! each filed under the column it is in (mobs.rs). Each kind does the rest itself: creatures.rs,
-//! drops.rs, orbs.rs, blocks/falling.
-// TODO: the mobs a world folder stores are still statues (mobs.rs), outside this.
+//! drops.rs, orbs.rs, blocks/falling. A world folder's mobs come in as creatures (actors.rs); only
+//! kinds with no recorded box stay statues (mobs.rs).
 
 use acacia_proto::RawPacket;
 use acacia_proto::packets::AddEntity;

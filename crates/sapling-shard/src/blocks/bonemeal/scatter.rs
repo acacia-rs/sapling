@@ -71,15 +71,15 @@ pub(super) fn grass(level: &Level, [x, y, z]: BlockPos, random: &mut Mt19937) ->
 fn plant_grass(planting: &mut Planting, at: BlockPos, random: &mut Mt19937) {
     let level = planting.level;
     if planting.is_air(at) {
-        let name = if one_in(random, 8) {
+        let (name, growth) = if one_in(random, 8) {
             let biome = level.biome(at[0], at[1], at[2]);
             sapling_worldgen::meal_flower(&|tag| biome.is_some_and(|biome| sapling_data::biome_has_tag(biome, tag)), at, random)
         } else if one_in(random, 7) {
-            "fern"
+            ("fern", None)
         } else {
-            "short_grass"
+            ("short_grass", None)
         };
-        if let Some(id) = state(level, name, "") {
+        if let Some(id) = state(level, name, &growth.map(|growth| format!("growth={growth}")).unwrap_or_default()) {
             planting.set.push((at, id));
         }
         return;

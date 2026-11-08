@@ -36,6 +36,7 @@ pub(crate) fn arrive(world: &mut World) {
         let Some(arrived) = world.get_mut::<Layer>(layer).map(|mut level| level.world.take_arrived()) else { continue };
         for home in arrived {
             blocks::circuits_arrived(world, layer, home);
+            blocks::detectors_arrived(world, layer, home);
             blocks::plants_arrived(world, layer, home);
             blocks::ticks_arrived(world, layer, home);
             creatures::hearts_arrived(world, layer, home);
@@ -113,6 +114,7 @@ pub(crate) fn write_back_before_saving(world: &mut World) {
 pub(crate) fn write_back(world: &mut World) {
     crate::tnt::keep_fuses(world);
     crate::orbs::keep_ages(world);
+    drops::keep_ages(world);
     blocks::keep_fall_times(world);
     creatures::keep_state(world);
     crate::spawning::mark_persistence(world);

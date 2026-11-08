@@ -7,7 +7,7 @@ use acacia_proto::nbt::{List, Value};
 use acacia_proto::packets::AddEntity;
 use common::stored::{actor_with, compound, enter_stored, floor_with};
 use common::{Harness, all, config};
-use sapling_world::{ChunkPos, World, WorldStorage, WitherRecord, actor_effects, actor_fuse, stored_actors, wither_record};
+use sapling_world::{ChunkPos, World, WorldStorage, WitherRecord, actor_effects, actor_field, actor_fuse, stored_actors, wither_record};
 
 /// One effect as BDS wrote it, less the fade data it reads without.
 fn effect(id: i8, amplifier: i8, left: i32, particles: i8) -> Value {
@@ -46,6 +46,24 @@ fn effects_a_lit_fuse_and_a_withers_armour_come_back_and_are_saved_as_they_went_
     let fuse = actor_fuse(&of("minecraft:tnt")).expect("a fuse");
     assert!((60..=100).contains(&fuse), "{fuse}");
     assert_eq!(wither_record(&of("minecraft:wither")), Some(WitherRecord { charging: 0, armoured: true, max_health: 300, fire_rate: 20, interval: 300 }));
+    // A BDS-saved one names no dash: it dashes as though armoured on arrival, 197 ticks on.
+    assert!(matches!(actor_field(&of("minecraft:wither"), "DashIn"), Some(Value::Int(left)) if (137..=177).contains(&left)));
+}
+
+#[test]
+fn an_armoured_withers_next_dash_is_kept_across_a_load() {
+    // bds-f14nwither2.txt: saved 137 ticks before its dash, it dashed 140 ticks after the load.
+    let wither = vec![("AirAttack", Value::Byte(0)), ("Invul", Value::Int(0)), ("SpawningFrames", Value::Int(0)), ("Phase", Value::Int(0)), ("maxHealth", Value::Int(300)), ("DashIn", Value::Int(100))];
+    let storage = floor_with(actor_with(-13, "minecraft:wither", [12.5, 70.0, 12.5], wither));
+    let config = sapling_shard::ShardConfig { difficulty: sapling_api::Difficulty::Easy, ..config() };
+    let mut h = Harness::with(config, World::with_storage(storage.clone()));
+    enter_stored(&mut h, 1);
+    h.remote.run(|ctx| ctx.set_game_mode(sapling_api::PlayerId(1), sapling_api::GameMode::Creative));
+    (0..20).for_each(|_| drop(h.tick(1)));
+    h.shard.save_worlds();
+    let column = storage.load_column(ChunkPos::new(0, 0), 0).unwrap().expect("the column");
+    let saved = stored_actors(&column.actors).unwrap().into_iter().find_map(|(.., compound)| wither_record(&compound).map(|_| compound)).expect("a wither");
+    assert!(matches!(actor_field(&saved, "DashIn"), Some(Value::Int(left)) if (40..=80).contains(&left)), "{:?}", actor_field(&saved, "DashIn"));
 }
 
 #[test]
