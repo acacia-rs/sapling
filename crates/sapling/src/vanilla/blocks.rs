@@ -20,7 +20,8 @@ pub(super) fn has_states(there: &Block, states: &str) -> bool {
 /// its old name on BDS and found under its new one (research/captures/bds-loot2.txt,
 /// bds-names.txt, bds-n13names.txt).
 // TODO: those that were tried; BDS knows more.
-const OLD_NAMES: [(&str, &str); 39] = [
+const OLD_NAMES: [(&str, &str); 40] = [
+    ("chain", "iron_chain"),
     ("double_plant", "sunflower"),
     ("coral_fan_dead", "dead_tube_coral_fan"),
     ("skull", "skeleton_skull"),
@@ -62,14 +63,25 @@ const OLD_NAMES: [(&str, &str); 39] = [
     ("light_block", "light_block_0"),
 ];
 
+/// The anvil an anvil's old `damage` state names, on any anvil (bds-p3alias.txt).
+const ANVIL_DAMAGE: [(&str, &str); 4] = [("undamaged", "anvil"), ("slightly_damaged", "chipped_anvil"), ("very_damaged", "damaged_anvil"), ("broken", "deprecated_anvil")];
+
 /// The block a command names; an old name in any case (BDS set `invisibleBedrock`, bds-n13names.txt).
 pub(super) fn block(name: &str, states: Option<&States>) -> Block {
     let lower = name.to_ascii_lowercase();
     let plain = lower.strip_prefix("minecraft:").unwrap_or(&lower);
-    let block = Block::new(OLD_NAMES.iter().find(|(old, _)| *old == plain).map_or(name, |(_, new)| new));
+    let mut name = OLD_NAMES.iter().find(|(old, _)| *old == plain).map_or(name, |(_, new)| new);
+    let mut kept: Vec<&str> = states.map(|states| states.0.split(',').filter(|state| !state.is_empty()).collect()).unwrap_or_default();
+    if plain.ends_with("anvil")
+        && let Some(at) = kept.iter().position(|state| state.starts_with("damage="))
+        && let Some((_, anvil)) = ANVIL_DAMAGE.iter().find(|(damage, _)| Some(*damage) == kept[at].strip_prefix("damage="))
+    {
+        name = anvil;
+        kept.remove(at);
+    }
     match states {
-        Some(states) => block.with(states.0.clone()),
-        None => block,
+        Some(_) => Block::new(name).with(kept.join(",")),
+        None => Block::new(name),
     }
 }
 
@@ -141,7 +153,7 @@ impl Command for TestForBlock {
         if there.name != wanted.name {
             return out.translate("commands.testforblock.failed.tile", [place(), vec![tile_key(&there.name), tile_key(&wanted.name)]].concat(), false);
         }
-        match self.states.as_ref().is_none_or(|states| has_states(&there, &states.0)) {
+        match has_states(&there, &wanted.properties) {
             true => out.translate("commands.testforblock.success", place(), true),
             false => out.translate("commands.testforblock.failed.data", place(), false),
         }

@@ -142,8 +142,10 @@ impl Command for Summon {
             kind => kind,
         };
         let made = ctx.summon_as(sender.player().map(|by| by.id), &kind, at, self.yaw.unwrap_or(0.0), self.pitch.unwrap_or(0.0), self.event.as_deref());
-        // The mob's own name, as a name tag gives it (BDS: in its AddEntity, CAN_SHOW_NAMETAG set).
-        if let (Some(made), Some(name)) = (made, self.named.map(|named| named.0).or(self.name)) {
+        // The mob's own name, as a name tag gives it (BDS: in its AddEntity, CAN_SHOW_NAMETAG set). A
+        // vehicle takes none (bds-p3names.txt).
+        let is_vehicle = kind.ends_with("minecart") || kind == "minecraft:boat" || kind == "minecraft:chest_boat";
+        if let (Some(made), Some(name), false) = (made, self.named.map(|named| named.0).or(self.name), is_vehicle) {
             if !ctx.name_entity(made, &name) {
                 ctx.set_name_tag(made, Some(&name));
             }
