@@ -41,17 +41,17 @@ const SUPPORTERS: [&str; 13] = [
     "oak_trapdoor [\"upside_down_bit\"=true]",
     "chain",
 ];
-const FIRST: i32 = -2;
-const LAST: i32 = FIRST + SUPPORTERS.len() as i32 - 1;
+pub const FIRST: i32 = -2;
+pub const LAST: i32 = FIRST + SUPPORTERS.len() as i32 - 1;
 
 /// The supporters laid at z -6 and copied to z 2, the cells over and north of them emptied.
-fn supporters() -> Vec<String> {
+pub fn supporters() -> Vec<String> {
     let mut lines = with(floor(), &["tp CmdWatcher 14.5 -26 6.5"]);
     lines.extend(SUPPORTERS.iter().zip(FIRST..).map(|(block, x)| format!("setblock {x} -26 -6 {block}")));
     lines
 }
 
-fn reset() -> Vec<String> {
+pub fn reset() -> Vec<String> {
     [
         format!("clone {FIRST} -26 -6 {LAST} -26 -6 {FIRST} -26 2"),
         format!("fill {FIRST} -25 2 {LAST} -25 2 air"),
