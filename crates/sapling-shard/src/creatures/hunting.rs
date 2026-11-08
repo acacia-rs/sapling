@@ -104,7 +104,8 @@ pub(crate) fn sees(level: &sapling_world::World, from: [f32; 3], to: [f32; 3]) -
 /// The nearest player within `sight` of a mob in `layer` that it sees and may hurt, and its feet.
 pub(super) fn nearest(world: &World, layer: Entity, body: &Body, sight: f32) -> Option<(Entity, [f32; 3])> {
     let near = |(_, feet): &(Entity, [f32; 3])| distance(body.at, *feet);
-    in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?))).filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)))
+    let found = in_world(world).into_iter().filter_map(|player| Some((player, seen(world, player, layer, body.at, sight)?)));
+    found.filter(|(player, feet)| prey::spotted(world, *player, body.at, *feet, sight) && in_sight(world, layer, body, *feet)).min_by(|a, b| near(a).total_cmp(&near(b)))
 }
 
 /// The hunter `id` has the entity `target` as its prey, or none for 0.

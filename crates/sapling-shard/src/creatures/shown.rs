@@ -146,6 +146,9 @@ pub(super) fn reshow(world: &mut World, entity: Entity) {
     if let Some(effects) = super::afflictions::visible(world, entity) {
         mobs::reannounce_item(world, entity, effects);
     }
+    if let Some(flags) = super::afflictions::announced_unseen(world, entity) {
+        mobs::reannounce_item(world, entity, flags);
+    }
     if let Some(flags) = super::struck::shown_flags(world, entity) {
         mobs::reannounce_item(world, entity, flags);
     }

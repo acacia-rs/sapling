@@ -3,6 +3,7 @@
 //! zombies villagers, and iron golems monsters. A mob prey is hit as a goat's ram hits one.
 
 use bevy_ecs::prelude::*;
+use sapling_api::Effect;
 use sapling_data::Hunts;
 
 use super::super::{Creature, Dying, harm, is_alive, is_baby};
@@ -45,7 +46,20 @@ pub(super) fn nearest(world: &mut World, hunter: Entity, layer: Entity, body: &B
         .filter(|(mob, _, kind, _)| hunts.preys_on(&sapling_data::mob_families(&kind.0), is_baby(world, *mob)))
         .map(|(mob, _, _, at)| (mob, at.at))
         .collect();
-    near.into_iter().filter(|(_, feet)| in_sight(world, layer, body, *feet)).min_by(|a, b| distance(a.1, body.at).total_cmp(&distance(b.1, body.at)))
+    near.into_iter().filter(|(mob, feet)| spotted(world, *mob, body.at, *feet, sight) && in_sight(world, layer, body, *feet)).min_by(|a, b| distance(a.1, body.at).total_cmp(&distance(b.1, body.at)))
+}
+
+/// Whether a hunter at `from` that sees `sight` far may take `prey` standing at `feet`: an invisible
+/// one only from nearer by its armour (afflictions/invisible.rs), a player measured from its eyes.
+// TODO: whether a hunter keeps prey that turns invisible was not drilled; it does here.
+pub(in crate::creatures) fn spotted(world: &World, prey: Entity, from: [f32; 3], feet: [f32; 3], sight: f32) -> bool {
+    let worn = |world: &World| match world.get::<crate::inventory::Inventory>(prey) {
+        Some(inventory) => inventory.worn_names().flatten().count(),
+        None => super::super::worn::pieces(world, prey).iter().flatten().filter(|piece| sapling_data::armour(&piece.name).is_some()).count(),
+    };
+    let unseen = if is_mob(world, prey) { super::super::afflictions::level(world, prey, Effect::Invisibility).is_some() } else { crate::vitals::effects::on(world, prey, Effect::Invisibility).is_some() };
+    let eyes = if is_mob(world, prey) { 0.0 } else { sapling_data::EYE_HEIGHT };
+    !unseen || distance([feet[0], feet[1] + eyes, feet[2]], from) <= super::super::afflictions::unseen_sight(sight, worn(world))
 }
 
 /// The hunter's hit of `harm` on the mob `prey`, `away` from it: hurt and thrown as a hit throws,

@@ -2,10 +2,11 @@
 //! turns and sizes of a player's (`vitals::effects`), counted down a tick at a time, shown to its
 //! viewers (`told`). An undead mob is mended by instant damage and hurt, unflashed, by instant
 //! health, each its own size, and takes no poison or regeneration at all. A mob an effect hurts
-//! runs. Its effects are kept with it (`kept`); potions on it: `potions`.
+//! runs. Its effects are kept with it (`kept`); potions on it: `potions`; invisibility: `invisible`.
 // TODO: speed's change to the movement attribute is not shown; strength and weakness do not change
 // its hit, and levitation, slow falling and jump boost do nothing to it.
 
+mod invisible;
 mod kept;
 mod potions;
 mod told;
@@ -14,6 +15,8 @@ use acacia_proto::packets::MobEffectEventId;
 use bevy_ecs::prelude::*;
 use sapling_api::Effect;
 
+pub(super) use invisible::announced_unseen;
+pub(crate) use invisible::sight as unseen_sight;
 pub(super) use kept::{adopt, keep};
 pub(crate) use potions::{clouded, splashed, takes_potion};
 pub(super) use told::visible;
@@ -193,6 +196,7 @@ fn act(world: &mut World, mob: Entity, layer: Entity, active: &Active) {
 /// Mobs go lowest storage slot first: BDS's speed ran out on bd2event's sheep in the reverse of the
 /// sync's order.
 pub(super) fn tick(world: &mut World, ticked: &super::ticked::Ticked) {
+    invisible::heard(world);
     let mut afflicted: Vec<(Entity, Entity, Vec<Active>)> = world
         .query_filtered::<(Entity, &InLayer, &Afflicted), (With<Creature>, Without<Dying>)>()
         .iter(world)
