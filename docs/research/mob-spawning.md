@@ -183,6 +183,16 @@ after the move all stayed for 60 s, none of them within 44, and 39 were counted 
 Re-drilled (sapling-w3despawn.txt): 32 mobs, 30 after the move, all 30 kept for 60 s, 23 back at the
 hut (the 44 cap again, once ticked).
 
+The roll, `aw3despawn` (2026-11-08, bds-aw3despawn.txt, sapling-aw3despawn.txt and -run2): 67 s at the
+hut at midnight, spawning off, then the players 13 higher (y 104), so the mobs on the ground stand 32 to 44
+off and stay ticked; counts every 5 s for 145 s (all / within 32 / 32 to 44). BDS 39 -> 33 at the move
+(the 44 cap), then 33 -> 19, the 32-44 band 12 -> 2; sapling 29 -> 19 -> 12 (band 6 -> 3) and 26 -> 14 -> 9
+(band 3 -> 2). Against the band's mob-seconds at 1 in 800 a tick, BDS lost 0.7 of what the roll predicts
+and sapling 0.5 in both runs (14, 7 and 5 lost: a Poisson spread of about 0.2; sapling's drill server fell behind
+its ticks in the spawning phase). Mobs within 32 stayed on both sides. Same rule; test
+`natural_mobs_past_32_stay_while_idle_under_30_s_then_go_by_the_roll` (despawning.rs) pins the 30 s and
+the roll.
+
 Saved [D, S]: BDS keeps `Persistent` (its `PersistentComponent`, which `_canDespawn` asks) and
 `NaturalSpawn` with every mob; a summoned one is saved `Persistent` 1, `NaturalSpawn` 0
 (bds-keepmobs.txt, bds-t2ekeep-dump.txt, the template actors of bds-t12actors). A natural one has no

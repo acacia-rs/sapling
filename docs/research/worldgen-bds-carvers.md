@@ -7,10 +7,14 @@ Companion to [worldgen-bds.md](worldgen-bds.md) (pipeline, RNGs, labels). They r
   the low 32 bits of the world seed; `a = nextInt()`, `b = nextInt()`, forced odd as `(v − (v>>31)) | 1` = `v/2*2+1`;
   `seed(x,z) = (z·b' + x·a') ^ levelSeed`. Since `nextInt()` ≥ 0 this equals `|1`. Source chunks x outer, z inner,
   ±8 around the target.
-- Vanilla data: only `overworld_extra_cave_carver_feature` (pregeneration_pass, overworld tags) places a carver
-  (`underground_extra_cave_carver_feature`: skip 66, height_limit 103). The unreferenced
-  `underground_cave_carver_feature` (skip 33, height_limit 236) also runs (oracle: +3k matched cells, no extras);
-  where its rule comes from is unmapped. Both see the same chunk seeds (each rule reseeds with the level seed).
+- Vanilla data: two rules place a carver, both pregeneration_pass on the overworld tags.
+  `overworld_extra_cave_carver_feature` (vanilla_1.18.0 pack) places `underground_extra_cave_carver_feature` (skip 66,
+  height_limit 103). `overworld_cave_carver_feature` is a loose file of the server's `definitions/feature_rules`, which
+  no pack overrides, and places `underground_cave_carver_feature`, which vanilla_1.18.0's `features.brarchive`
+  redefines (skip 33, height_limit 236, y_scale 0.1-0.9; the loose `definitions/features` copy is the old skip 15,
+  height 120). The loose `overworld_underwater_cave_carver_feature` is shut off by vanilla_1.18.0 (an empty
+  `any_of` biome filter). `bdsre str` could not find the name: it is pack data, not in the exe (2026-11-08,
+  thirteenth3aw). Both see the same chunk seeds (each rule reseeds with the level seed).
 - `CaveFeature::addFeature` 148284810: count `nextInt(nextInt(nextInt(40)+1)+1)`, then `nextInt(skip) != 0` drops it;
   per cave z=`nextInt(16)`, y=`getCaveY`, x=`nextInt(16)` (MSVC right-to-left args), then horizontal/vertical radius
   multipliers and floor level (each `min+(max−min)·f` when min≠max); room on `nextInt(4)==0`, then `nextInt(4)` extra

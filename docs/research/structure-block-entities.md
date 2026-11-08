@@ -71,7 +71,13 @@ drawn) and `PotionType` Short -1.
 spawners whose block itself differs in the oracle already: 3 BDS has where ours is air or web, 1 the other way),
 every trial spawner's config, every vault's table and key, and every table match. Every seed matches
 (`SEEDS=loot` prints the rest) but 3 of 16 village chests and 1 of 7 desert pyramid suspicious sands;
-the desert well's two match too since its port (worldgen-bds-features.md, "Desert well"). Before the draws
+the desert well's two match too since its port (worldgen-bds-features.md, "Desert well"). Rechecked on master
+ef95bc38 (2026-11-08, thirteenth3aw): the stock world still shows the four mineshaft cave spider spawners
+((342, 32, -553) ours alone; (-1039, 0, 1224), (-917, 6, -2809), (-915, 6, -2804) BDS's alone, ours air or web)
+and 3 village chest seeds; under the one-worker replays of their regions every one is the same (`ENVS="$(tools/
+replay-env.sh c-ig)"` and c-or, c-ac, c-vi: 3, 2 and 7 cave spider spawners, 12 village chests). A corridor's
+spawner cell is `nextInt(3)` into the generator its chunk's post-process drew on, so it moves with the stock
+run's order, as the village seeds do (below). Before the draws
 above were ported, 447 seeds differed. Blocks are unchanged (`tools/replay-all.sh`, nether and end
 replays): the new draws are of generators nothing else reads after them.
 

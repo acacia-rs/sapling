@@ -28,6 +28,7 @@ mod chunks;
 mod combat;
 mod command_blocks;
 mod command_fixes;
+mod despawning;
 mod commands;
 mod container_access;
 mod containers;

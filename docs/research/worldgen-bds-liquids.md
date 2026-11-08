@@ -175,6 +175,21 @@ sculk veins, buttons, doors, signs, buds. `scripts/data/block_liquid.tsv` keeps 
 `scripts/liquid_data.py` writes `liquid/detect_table.rs`, `liquid/detect.rs` answers `blocking` for water.
 Lava still asks the type (above).
 
+The type's own test (2026-11-08, thirteenth3aw): `_isLiquidBlocking(region, to, from, dir)` asks
+`to`'s type vt+0x88 with `dir` and then `from`'s with the opposite side; only slabs (0x1466031d0: a bottom slab
+shuts its down face, a top one its up face), stairs (0x146615720, by half and facing, corners through their
+neighbours), shelves (0x148b51f50: the back face), sculk sensors and the heavy core (0x141175090: the down
+face) override the base's yes (block_types.tsv column 2, slot 0x88 read with pefile). Every one of them holds
+water out on +0xba = 2, so on the `to` side the test is never reached; it matters only for water leaving a
+waterlogged one. A probe over every canon (replay-all with a trace in `liquid/flow.rs`) found 196 water ticks
+in waterlogged stairs and slabs (ruins, shipwrecks), none with an open side to flow to, so it is not ported.
+
+Waterlogged plants under falling lava (2026-11-08, thirteenth3aw; canon `aw3dripleaf`, dir aw3, chunk -50,20,
+trail ruins' neighbour): lava falling on a waterlogged small dripleaf turns it to stone, as on plain water, and
+the lava then spreads over it (BDS 8 lava cells at y 19 and 3 more stones). Ours kept the plant, so its lava
+stopped (16 cells). `flow.rs` now writes that stone over a waterlogged block; other liquid writes still leave a
+waterlogged plant alone. The same probe found no other write a waterlogged plant refused.
+
 Sculk does not wake liquid: the spreader writes through the world-gen API (`setBlock` vt+0x58 in 148b41810
 and its siblings) with no feature transaction behind it, so nothing calls `updateNeighborsAt`. In the
 badlands one-worker run a patch of source 595,-349 took the vein under falling water at 9515,-24,-5568 and

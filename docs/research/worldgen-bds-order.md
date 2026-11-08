@@ -624,7 +624,10 @@ What was found (each on a one-worker run, logged live where named):
   queue `acquireAllTicks` moved in): the bubble column cell over it, as over a blob's (near origin's 3).
   BubbleColumn's onPlace is an event and events do not fire while a chunk generates, so columns stay one cell.
   Magma and bubble columns do hear liquid updates (BlockLegacy +0x163 bit 3; magma's `neighborChanged`
-  148b64bf0 queues a tick in 2 for water above, 160 + level random otherwise): not modelled, no case seen.
+  148b64bf0 queues a tick in 2 for water above, 160 + level random otherwise): not modelled. Its one effect is
+  the magma tick's column, over a water source only. Canon `aw3magma` (2026-11-08, thirteenth3aw, chunk
+  -49,-181, the only spot a trace over every canon found: five magma cells whose water above a flow rewrote)
+  matches with it unmodelled: BDS's water over the magma is ours, state for state, with no column.
 - **Desert pyramid:** worldgen/unify6's c83800d (cellar sand's loot seed read from the world), merged here
   through all2.
 - On `c8`, far out keeps the same kind of lichen cell of source 100004,100002 as on `far`.
@@ -690,7 +693,7 @@ What the first differing pieces and sources were:
   -93,-125 (spawner -1480,-2,-1982) over it. Ours placed the same room and then let the lava beside it run in.
   The room writes with no feature transaction (149e9dae0, plain `setBlock` 3) and wakes no liquid.
 - **Leaf litter** needs a top face that holds an edge: about 70 cells on a village tree's leaves, a fence and
-  a path (trees a village places stand before decoration; a fit of three block classes, not read out).
+  a path (trees a village places stand before decoration). Read out since: "Fits checked against the binary" above.
 
 Stronghold, left (132; 0 on master by 2026-11-04, `c-st` in replay-all): water that runs through corridors under -88,-123 the other way (first source -87,-122,
 rank 96: ours has water at -1387,-4,-1948 where BDS has none; about 45 cells with the structure-stage ones),
