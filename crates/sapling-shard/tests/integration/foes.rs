@@ -48,7 +48,9 @@ fn a_shulker_opens_for_its_prey_and_its_bullet_flies_to_it_for_4_and_levitation(
     let (mut opened, mut fired, mut hit, mut lifted) = (None, Vec::new(), None, Vec::new());
     for tick in 0..120 {
         let sent = h.tick_all().to(1).to_vec();
-        let peeks = common::data::changes(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::ShulkerPeekId));
+        // Open 100 for its prey; an idle peek opens it 30 (creatures/shulkers.rs).
+        let open = acacia_proto::types::MetadataDictionaryItemValue::Default(acacia_proto::types::MetadataDictionaryItemValueDefault::Int(100));
+        let peeks = common::data::changes(&sent).iter().any(|data| data.metadata.iter().any(|item| item.key == acacia_proto::types::MetadataDictionaryItemKey::ShulkerPeekId && item.value == open));
         opened = opened.or(peeks.then_some(tick));
         fired.extend(all::<acacia_proto::packets::AddEntity>(&sent).iter().filter(|added| added.entity_type == "minecraft:shulker_bullet").map(|added| (tick, [added.position.x, added.position.y, added.position.z])));
         if hit.is_none() && all::<EntityEvent>(&sent).iter().any(|event| event.runtime_entity_id == 1 && event.event_id == EntityEventEventId::HurtAnimation && event.data == 3) {

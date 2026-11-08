@@ -106,7 +106,9 @@ Code: `crates/sapling-shard/src/creatures/wither.rs`, `creatures/wither/{heads,s
   shoots a blue skull at a random point ±10/±5/±10. Firing points: middle (x, y+3, z), sides y+2.2,
   1.3 aside by yaw + head·180 − 180. Targets told as `WitherTarget1..3` (49–51).
 - **Skulls** (pack `wither_skull`, `wither_skull_dangerous`): power 1.2 (blue 0.6), no gravity; on a
-  hit a blast of power 1, no fire; Wither II for 200 ticks on normal, 800 on hard.
+  hit a blast of power 1, no fire; Wither II for 200 ticks on normal, 800 on hard. A player's hit
+  turns a blue one (`reflect_on_hurt`) along the hitter's look at 1 a tick, the hitter its owner
+  (research/captures/bds-d3wither.txt); a black one flew on and burst on the hitter.
 - **Block breaking** (`_destroyBlocks` 0x142f92bd0, `canDestroy` 0x142f8f450): 20 ticks after a
   hurt, with `mobGriefing`, its box ± 1, but bedrock, portals and frames, gateways, command blocks,
   barrier, border, allow, invisible bedrock, camera, chalkboard, structure blocks and void,

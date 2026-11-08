@@ -2,8 +2,9 @@
 //! 1.2 a tick, a blue one at 0.6; one that meets a player, a mob or a block blows up there with
 //! power 1, and gives one it met Wither II for 10 seconds on normal, 40 on hard. A blue one's blast
 //! counts no block stronger than its pack's `max_resistance` 4, 0.8 in sapling's resistances (BDS's
-//! are five times the Java game's, whose dangerous skull caps at 0.8 too); not drilled.
-// TODO: a blue one is not struck back.
+//! are five times the Java game's, whose dangerous skull caps at 0.8 too); not drilled. A hit
+//! turns a blue one back, sparing whoever turned it (struck_back.rs, bds-d3wither.txt); a black one
+//! flies on.
 
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1, Vec3f};
 use bevy_ecs::prelude::*;
@@ -63,7 +64,7 @@ pub(super) fn fire(world: &mut World, layer: Entity, wither: Entity, from: [f32;
     let born = world.resource::<Tick>().0;
     world.entity_mut(skull).insert(Skull { born, wither });
     if blue {
-        world.entity_mut(skull).insert(blast::rays::Capped(BLUE_RESISTS));
+        world.entity_mut(skull).insert((blast::rays::Capped(BLUE_RESISTS), super::super::struck_back::Strikable::Turns));
     }
     entities::after_announcing(world, layer, from.map(|c| c.floor() as i32), vec![super::heads::sound("shoot", from)]);
 }
@@ -117,6 +118,9 @@ fn burst(world: &mut World, skull: Entity, layer: Entity, at: [f32; 3], struck: 
 /// A tick of one skull.
 fn fly(world: &mut World, skull: Entity, layer: Entity, id: u64, now: u64) -> Option<()> {
     let mut body = *world.get::<Body>(skull)?;
+    if let Some(by) = super::super::struck_back::turned(world, skull) {
+        world.get_mut::<Skull>(skull)?.wither = by;
+    }
     if now >= world.get::<Skull>(skull)?.born + FLIES {
         mobs::remove(world, skull);
         return None;

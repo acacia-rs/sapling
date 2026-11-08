@@ -34,7 +34,7 @@ pub(in crate::creatures) struct Capped(pub(in crate::creatures) f32);
 
 /// The cells a blast of `power` at `at` breaks, none where its middle is in water, and the free
 /// cells its rays cross. A ray stops at water; air costs it nothing.
-pub(super) fn broken(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32) -> (Vec<[i32; 3]>, Vec<[i32; 3]>) {
+pub(in crate::creatures) fn broken(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32) -> (Vec<[i32; 3]>, Vec<[i32; 3]>) {
     let cap = source.and_then(|source| world.get::<Capped>(source)).map_or(f32::MAX, |cap| cap.0);
     let strengths: Vec<f32> = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);

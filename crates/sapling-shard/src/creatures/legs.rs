@@ -37,13 +37,29 @@ fn at_step(world: &World, layer: Entity, body: &Body, facing: f32, step: f32) ->
     level.in_height(y + 2) && top(0).is_some_and(|top| y as f32 + top - body.at[1] > step) && top(1).is_none() && top(2).is_none()
 }
 
+/// The turn from `yaw` that faces a way `dx`, `dz` across, the short way round.
+fn turn_to(yaw: f32, dx: f32, dz: f32) -> f32 {
+    ((-dx).atan2(dz).to_degrees() - yaw + 180.0).rem_euclid(360.0) - 180.0
+}
+
+/// The mob turns towards `to` where it stands, by up to [`TURN`] a tick (a breeze facing its prey,
+/// bds-breeze-findings.md: 21 to 22 of 256 a tick).
+pub(super) fn face(world: &mut World, entity: Entity, body: &Body, to: [f32; 2]) {
+    let Some(mut legs) = world.get_mut::<Legs>(entity) else { return };
+    legs.yaw += turn_to(legs.yaw, to[0] - body.at[0], to[1] - body.at[2]).clamp(-TURN, TURN);
+    let yaw = legs.yaw;
+    if let Some(mut told) = world.get_mut::<Told>(entity) {
+        told.face(yaw, yaw);
+    }
+}
+
 /// Before the mob's move: it turns towards `to` and its legs push it there at `speed`, unless it
 /// is within `near` of it.
 pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32, near: f32) {
     let speed = speed * super::afflictions::pace(world, entity);
     let Some(mut legs) = world.get_mut::<Legs>(entity) else { return };
     let (dx, dz) = (to[0] - body.at[0], to[1] - body.at[2]);
-    let turn = ((-dx).atan2(dz).to_degrees() - legs.yaw + 180.0).rem_euclid(360.0) - 180.0;
+    let turn = turn_to(legs.yaw, dx, dz);
     let most = if speed > 0.0 && legs.pace > 0.0 { TURN * (1.0 / legs.pace).clamp(1.0, 2.0) } else { TURN };
     legs.yaw += turn.clamp(-most, most);
     legs.pace = (legs.pace + PACE).min(1.0);

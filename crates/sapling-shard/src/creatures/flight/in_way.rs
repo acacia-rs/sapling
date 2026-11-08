@@ -34,9 +34,10 @@ fn met_primed(world: &mut World, layer: Entity, at: [f32; 3], size: [f32; 2]) ->
     lit.iter(world).find(|(_, in_layer, body)| in_layer.0 == layer && reaches(body, at, size)).map(|(tnt, ..)| tnt)
 }
 
-/// The dragon fireball of `layer` whose box the shot's reaches into (it has a `PickComponent`, extras 5.1).
+/// The mob's projectile of `layer` a strike turns or breaks whose box the shot's reaches into (a
+/// dragon fireball has a `PickComponent`, extras 5.1).
 fn met_fireball(world: &mut World, layer: Entity, at: [f32; 3], size: [f32; 2]) -> Option<Entity> {
-    let mut balls = world.query_filtered::<(Entity, &InLayer, &Body), With<crate::dragon::Fireball>>();
+    let mut balls = world.query_filtered::<(Entity, &InLayer, &Body), Or<(With<crate::dragon::Fireball>, With<super::super::struck_back::Strikable>)>>();
     balls.iter(world).find(|(_, in_layer, body)| in_layer.0 == layer && reaches(body, at, size)).map(|(ball, ..)| ball)
 }
 

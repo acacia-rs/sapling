@@ -52,24 +52,12 @@ pub(crate) fn reflect(world: &mut World, fireball: Entity, shooter: Entity, moti
     if world.get::<Fireball>(fireball).is_none() {
         return false;
     }
-    let along = match world.get::<Position>(shooter) {
-        Some(position) => {
-            let (yaw, pitch) = (position.yaw.to_radians(), position.pitch.to_radians());
-            [-yaw.sin() * pitch.cos(), -pitch.sin(), yaw.cos() * pitch.cos()]
-        }
-        None => motion,
-    };
-    let long = along.iter().map(|c| c * c).sum::<f32>().sqrt();
-    let way = if long < 1e-4 { [0.0; 3] } else { along.map(|c| c / long) };
+    let way = crate::creatures::look_of(world, shooter, motion);
     if let Some(mut body) = world.get_mut::<Body>(fireball) {
         body.motion = way;
     }
     world.get_mut::<Fireball>(fireball).expect("checked").reflected = true;
-    let (Some(id), Some(owner)) = (world.get::<NetId>(fireball).map(|id| id.0), world.get::<NetId>(shooter).map(|id| id.0 as i64)) else { return true };
-    let told = SetEntityData { runtime_entity_id: id, metadata: vec![item(Key::OwnerEid, Plain::Long(owner))], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
-    if let (Some(layer), Some(body)) = (world.get::<InLayer>(fireball).map(|in_layer| in_layer.0), world.get::<Body>(fireball).copied()) {
-        entities::tell_viewers(world, fireball, layer, body.at.map(|c| c.floor() as i32), vec![sapling_net::encode(&told)]);
-    }
+    crate::creatures::tell_owner(world, fireball, shooter);
     true
 }
 

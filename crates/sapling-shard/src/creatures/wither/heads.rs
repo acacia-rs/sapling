@@ -3,7 +3,7 @@
 //! one takes a player at random within 30 across and 8 up or down that it sees, shoots it and
 //! looks again 40 to 59 ticks on, else again 10 to 19 ticks on; head 1's 17th look in a row with none
 //! shoots a blue skull at random near.
-// TODO: the middle head holds still while it moves; BDS's skulls spread about their aim (bds-y3wither.txt).
+// TODO: the middle head holds still while it moves.
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, Vec3f};
