@@ -177,8 +177,9 @@ and saving its trust (BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strin
   players who fed its parents (Java's rule; not drilled; not saved). In sapling's first run
   (sapling-ar2sneak.txt) a fox ran straight past the player to a spot that was only further away. Its
   spot must now lie on the far side and out of the box. The born foxes fled on their first tick on both.
-- Clicking a tamed cat that is in love with cod again and again kept it sitting on BDS. Sapling toggled
-  it each time. Fixed: an item the kind breeds with no longer sits or stands it (`clicks.rs`).
+- A cod click that puts a tamed cat in love leaves it sitting. Each cod click while it is in love sat it
+  down or stood it up, 5 of 5 in both av2cat runs (bds-av2cat.txt, 2026-11-08); the earlier "kept
+  sitting" reading of bds-ar2cat.txt had only the love-starting click. `clicks.rs` toggles it again.
 - A cat tamed by feeding sits: BDS sent `TAMED` and `SITTING` in one packet (bds-ar2cat.txt). A parrot
   did not sit (bds-parrots.txt). The wolf is undrilled. Ported in `owners.rs` for cats only.
 - Sleeping with its owner (`pet_sleep_with_owner`), ported in `husbandry/bedtime.rs`. The tick the owner
@@ -188,8 +189,16 @@ and saving its trust (BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strin
   (-2, 7), 4.7 blocks off, an unexplained spot. It gave no gift in that run (the gift comes 7 times in 10).
   Sapling's cat (sapling-ar2cat.txt) set off on the same tick, lay at (-2.32, 2.55), got up on the wake
   tick and gave its gift then. It is not moved first.
+  Re-drilled 2026-11-08 (group AV, `av2cat`, bds-av2cat.txt, same bed and owner spots): put at exactly
+  (-2.0, -26, 7.0) again on the wake tick, flags first, then a gift (`AddItemEntity` at its new feet +
+  0.285). The same spot twice suggests a fixed search near the owner (`drop_item_for`: `offering_distance`
+  5, `minimum_teleport_distance` 2, `teleport_offset` [0, 1, 0], a cell corner), but one layout cannot
+  give the rule. Open (bedtime.rs TODO).
 - Sitting on blocks (`ocelot_sit_on_block`): in 40 s the stood-up cat went around the lit furnace, beside
-  it on three sides, and never got on top. It never went near the chest or the bed. Not ported.
+  it on three sides, and never got on top. It never went near the chest or the bed. In av2cat a standing
+  tamed cat had a chest alone for 80 s and a bed alone for 80 s: it walked over the chest once and never
+  sat on either. Sapling's cats do not sit on blocks either: same as far as drilled.
+  Drill trap: extra feeds toggle a cat in love, so a following click may sit it (av2cat's first run).
 
 Turtle scutes (bds-ak1scute.txt, ported): a baby turtle grown up (at its tenth seagrass there) drops its
 `minecraft:ageable` `drop_items` (`turtle_shell_piece`, named `turtle_scute` now), one, from its feet +
@@ -244,8 +253,12 @@ hand), give to a note block 3, give to its owner 4 (both run speed 8), stay near
   research/captures/bds-as3allay-dump.txt): `OwnerNew` is the giver's unique id with `IsTamed` 0, and
   after a restart the allay was announced with that `OwnerEid` and followed the owner. Sapling keeps it
   as a tamed mob's (`Raised` owner, allays.rs `hand`; test
-  `an_allay_s_owner_is_kept_with_the_world_and_shown_when_it_is_loaded`). Open: after the restart BDS's
-  allay took dropped dirt but threw none to its owner in 11 s.
+  `an_allay_s_owner_is_kept_with_the_world_and_shown_when_it_is_loaded`). After the restart BDS's
+  allay took dropped dirt but threw none to its owner: none in 11 s (as3allay2), none in 40 s (av2allay2,
+  2026-11-08). Its `OwnerEid` stayed the actor's first-launch unique id (-4294967295) while the rejoined
+  actor came back as -8589934589 (the dropped dirt's owner), so no player in the world is its owner. Sapling
+  keeps a player's unique id in its player data, so its allay still delivers. Open: whether BDS gives
+  players new ids each launch or the probe's offline login is a new player each time is not settled.
 
 ## Parrots on shoulders (built 2026-11-07, group AS: husbandry/shoulders.rs)
 

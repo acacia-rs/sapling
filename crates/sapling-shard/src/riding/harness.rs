@@ -2,9 +2,9 @@
 //! bds-as3ghast.txt): put on by a click with one in hand, it shows in the body slot, is heard
 //! (`armor.equip_generic`) and adds three extended flags; shears take it off a ghast no one rides,
 //! tossing it 5 blocks up. A harnessed ghast seats four (seats.rs) and flies where its driver looks
-//! (`free_camera_controlled`); its first rider is heard `attach`ing, its last `detach`ing.
-// TODO: the `become_immobile` sensor (a player standing on top stops it: `can_move` 0 and three more
-// extended flags) and `vertical_movement_action` (jump to rise) are not modelled.
+//! (`free_camera_controlled`); its first rider is heard `attach`ing, its last `detach`ing. A player on its
+//! top stills it (stilled.rs). Its extended flags are in its announcement for those who see it later.
+// TODO: `vertical_movement_action` (jump to rise) is not modelled: the drilled bot's jump moved nothing.
 
 use acacia_proto::types::{
     EntityProperties, MetadataDictionaryItem as Item, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value,
@@ -44,20 +44,45 @@ fn is_harness(name: &str) -> bool {
     name.starts_with("minecraft:") && name.ends_with("_harness")
 }
 
+/// A happy ghast shears took a harness off: one of the harness's flags stays.
+#[derive(Component)]
+struct Sheared;
+
 /// Whether the mob is a happy ghast with a harness on.
 pub(super) fn harnessed(world: &World, mob: Entity) -> bool {
     super::body::worn(world, mob).is_some_and(|body| is_harness(&body.name))
 }
 
-/// The sound at its middle and its flags with the extended `flags`.
-fn shown(world: &mut World, mob: Entity, id: u64, sound: &str, flags: i64) -> Vec<Bytes> {
+/// The happy ghast's extended flags now: harnessed or not, and still or not.
+pub(super) fn extended(world: &World, mob: Entity) -> i64 {
+    let worn = match (harnessed(world, mob), world.get::<Sheared>(mob).is_some()) {
+        (true, _) => HARNESSED,
+        (false, true) => UNHARNESSED_AGAIN,
+        (false, false) => UNHARNESSED,
+    };
+    worn | if super::stilled::is_stilled(world, mob) { super::stilled::STILL } else { 0 }
+}
+
+fn extended_item(world: &World, mob: Entity) -> Item {
+    Item { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(extended(world, mob))) }
+}
+
+/// Its extended flags as those who see it later are told them, for a happy ghast whose differ from its kind's.
+pub(crate) fn shown_flags(world: &World, mob: Entity) -> Option<Item> {
+    let ghast = world.get::<crate::entities::Kind>(mob).is_some_and(|kind| kind.0 == KIND);
+    (ghast && extended(world, mob) != UNHARNESSED).then(|| extended_item(world, mob))
+}
+
+/// The sound at its middle and its extended flags, with its flag word too where `with_flags`.
+fn shown(world: &mut World, mob: Entity, id: u64, sound: &str, with_flags: bool) -> Vec<Bytes> {
     let Some(body) = world.get::<Body>(mob).copied() else { return Vec::new() };
     let middle = [body.at[0], body.at[1] + body.size[1] / 2.0, body.at[2]];
     let word = crate::entities::mob_flags(world, mob, KIND, MetadataFlags1(0), false);
-    let metadata = vec![
-        Item { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(word) },
-        Item { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(MetadataFlags2(flags)) },
-    ];
+    let mut metadata = vec![extended_item(world, mob)];
+    if with_flags {
+        metadata.insert(0, Item { key: Key::Flags, r#type: Type::Long, legacy_type: 7, value: Value::Flags(word) });
+    }
+    crate::mobs::reannounce_item(world, mob, extended_item(world, mob));
     let data = SetEntityData { runtime_entity_id: id, metadata, properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
     vec![packets::sound(sound, id, KIND, middle), sapling_net::encode(&data)]
 }
@@ -72,7 +97,7 @@ pub(super) fn put_on(world: &mut World, player: Entity, mob: Entity, stack: &Ite
     let harness = ItemStack { count: 1, ..stack.clone() };
     super::body::dress(world, mob, Some(harness.clone()));
     let mut told = vec![super::mounts::body_shown(id, Some(&harness))];
-    told.extend(shown(world, mob, id, "armor.equip_generic", HARNESSED));
+    told.extend(shown(world, mob, id, "armor.equip_generic", true));
     super::tell(world, mob, mob, told);
     super::retell(world, mob);
     true
@@ -89,10 +114,16 @@ pub(super) fn take_off(world: &mut World, player: Entity, mob: Entity, stack: &I
         return false;
     };
     super::body::dress(world, mob, None);
+    world.entity_mut(mob).insert(Sheared);
     super::tell(world, mob, mob, vec![super::mounts::body_shown(id, None)]);
-    crate::drops::toss(world, layer, harness, [body.at[0], body.at[1] + TOSSED_UP, body.at[2]]);
-    let told = shown(world, mob, id, "armor.unequip_generic", UNHARNESSED_AGAIN);
+    // BDS showed the tossed harness before the sound and the flags (bds-as3ghast.txt).
+    let tossed = crate::drops::toss(world, layer, harness, [body.at[0], body.at[1] + TOSSED_UP, body.at[2]]);
+    let begun = tossed.and_then(|item| crate::mobs::at_once::show_first(world, item));
+    let told = shown(world, mob, id, "armor.unequip_generic", false);
     super::tell(world, mob, mob, told);
+    if let Some(begun) = begun {
+        crate::mobs::at_once::finish(world, begun);
+    }
     super::retell(world, mob);
     if world.get::<crate::components::Mode>(player).is_none_or(|mode| mode.0 != sapling_api::GameMode::Creative) {
         crate::inventory::wear_hand_by(world, player, 1, SHEARS_LAST);
@@ -111,6 +142,16 @@ pub(super) fn riders_now(world: &World, vehicle: Entity, count: usize, joined: b
     let item = Item { key: Key::AmbientSoundInterval, r#type: Type::Float, legacy_type: 3, value: Value::Default(Plain::Float(interval)) };
     let data = SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 };
     Some((packets::sound(sound, id, KIND, at), sapling_net::encode(&data)))
+}
+
+/// [`riders_now`] after its last rider left, told next tick: BDS's `on_rider_exit_event` came a tick after
+/// the link (bds-as3ghast.txt, bds-n3exit.txt).
+pub(super) fn detach_next_tick(world: &mut World, vehicle: Entity, left: usize) {
+    let Some((sound, interval)) = riders_now(world, vehicle, left, false) else { return };
+    let (Some(layer), Some(body)) = (world.get::<InLayer>(vehicle).map(|layer| layer.0), world.get::<Body>(vehicle)) else { return };
+    let at = body.at.map(|c| c.floor() as i32);
+    crate::late_sounds::play_later(world, 1, layer, at, sound);
+    crate::late_sounds::play_later(world, 1, layer, at, interval);
 }
 
 /// What its driver's keys push a harnessed happy ghast by this tick: its flying speed the way the

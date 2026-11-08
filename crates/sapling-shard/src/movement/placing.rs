@@ -48,6 +48,16 @@ pub(crate) fn push(world: &mut World, entity: Entity, feet: [f32; 3]) {
     correct(world, entity, feet);
 }
 
+/// [`push`] with no fall in it, as BDS corrected a rider let off onto a happy ghast's top (research/captures/
+/// bds-as3ghast.txt).
+pub(crate) fn push_unmoving(world: &mut World, entity: Entity, feet: [f32; 3]) {
+    let tick = world.resource::<Tick>().0;
+    if let Some(mut motion) = world.get_mut::<Motion>(entity) {
+        motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
+    }
+    correct_unmoving(world, entity, feet);
+}
+
 /// [`push`] into lava: off the ground, sinking at lava's pull, as BDS corrected a rider let off
 /// into lava (research/captures/bds-aq3exit.txt).
 pub(crate) fn push_into_lava(world: &mut World, entity: Entity, feet: [f32; 3]) {

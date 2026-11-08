@@ -95,6 +95,7 @@ use killing::kill;
 use shown::{head, physics_of, reshow};
 pub(crate) use birth::{fire_herd_event, from_storage, is_arriving, spawn, spawn_as};
 pub(crate) use shown::{head as head_of, is_baby};
+pub(crate) use properties::set as set_property;
 pub(crate) use afflictions::{clouded, takes_potion};
 pub(crate) use armour_stands::use_on as dress_stand;
 pub(crate) use skeleton_traps::set_trap;

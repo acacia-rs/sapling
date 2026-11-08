@@ -15,7 +15,7 @@ use sapling_api::BlockPos;
 use super::queued::{self, Job};
 use super::{Dice, level, send};
 
-pub(crate) use nests::{dig as turtle_dig, egg_near as turtle_egg_near, foretell as foretell_turtle_eggs, lay as lay_turtle_eggs, nest_near as turtle_nest_near, stomp_out as stomp_turtle_eggs, stomped_at as stomping_turtle_eggs};
+pub(crate) use nests::{dig as turtle_dig, egg_near as turtle_egg_near, eggs_near as turtle_eggs_near, foretell as foretell_turtle_eggs, lay as lay_turtle_eggs, nest_near as turtle_nest_near, stomp_out as stomp_turtle_eggs, stomped_at as stomping_turtle_eggs};
 pub(crate) use turtle::trodden as tread_turtle_eggs;
 
 type Level = sapling_world::World;

@@ -12,18 +12,32 @@ use super::{level, level_event, name_at, send};
 const AIR: &str = "minecraft:air";
 
 /// The cells within `across` and `up` of `at`, nearest first, that `fits`.
-fn nearest(world: &World, layer: Entity, at: [f32; 3], across: i32, up: i32, fits: fn(&super::Level, BlockPos) -> bool) -> Option<BlockPos> {
-    let level = level(world, layer)?;
+fn within(world: &World, layer: Entity, at: [f32; 3], across: i32, up: i32, fits: fn(&super::Level, BlockPos) -> bool) -> Vec<BlockPos> {
+    let Some(level) = level(world, layer) else { return Vec::new() };
     let [x, y, z] = at.map(|c| c.floor() as i32);
     let mut cells: Vec<BlockPos> = (-across..=across).flat_map(|dx| (-up..=up).flat_map(move |dy| (-across..=across).map(move |dz| [x + dx, y + dy, z + dz]))).collect();
     let away = |[cx, cy, cz]: &BlockPos| (cx - x).pow(2) + (cy - y).pow(2) + (cz - z).pow(2);
     cells.sort_by_key(away);
-    cells.into_iter().find(|cell| fits(level, *cell))
+    cells.retain(|cell| fits(level, *cell));
+    cells
+}
+
+fn nearest(world: &World, layer: Entity, at: [f32; 3], across: i32, up: i32, fits: fn(&super::Level, BlockPos) -> bool) -> Option<BlockPos> {
+    within(world, layer, at, across, up, fits).into_iter().next()
+}
+
+fn is_egg(level: &super::Level, cell: BlockPos) -> bool {
+    name_at(level, cell) == Some(EGG)
 }
 
 /// The nearest turtle egg within `across` and `up` of `at`.
 pub(crate) fn egg_near(world: &World, layer: Entity, at: [f32; 3], across: i32, up: i32) -> Option<BlockPos> {
-    nearest(world, layer, at, across, up, |level, cell| name_at(level, cell) == Some(EGG))
+    nearest(world, layer, at, across, up, is_egg)
+}
+
+/// Every turtle egg within `across` and `up` of `at`, nearest first.
+pub(crate) fn eggs_near(world: &World, layer: Entity, at: [f32; 3], across: i32, up: i32) -> Vec<BlockPos> {
+    within(world, layer, at, across, up, is_egg)
 }
 
 fn is_nest(level: &super::Level, [x, y, z]: BlockPos) -> bool {
