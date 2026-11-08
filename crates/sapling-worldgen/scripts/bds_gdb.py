@@ -8,7 +8,10 @@ Config: {"log": "<out file>", "breakpoints": [...]}, each breakpoint
      "box": [0, x0, y0, z0, x1, y1, z1],                  # keep hits whose mem[0] lies in the box
      "backtrace": 4,                                      # return addresses, ELF-relative
      "gates": "draws", "when": [[-263], [-392]],          # enable breakpoints labelled "draws" while mem == when
-     "gated": true}                                       # start disabled, for a gates breakpoint to enable
+     "gated": true,                                       # start disabled, for a gates breakpoint to enable
+     "watch": [{"label": "pos z", "expr": "*(long*)($rdi+0x208)+8", "fmt": "f", "limit": 40}],
+     "rearm": false}                                      # hardware write watchpoints armed at each hit
+                                                          # (replacing the last set; rearm false: once)
 Addresses are the ELF's own (bds_elf.py prints them); the image loads at BASE with randomization off. Each
 hit is one line: wall time, label, thread, the mem values, the backtrace. With "hits": true in the config the
 lines are bds_dbg.py's (`hit <label> t<thread> ... rax=<hex> [reg+off]=(...)`), which dbg_loads.py reads
@@ -50,6 +53,17 @@ class Logged(gdb.Breakpoint):
         super().__init__(f"*{BASE + int(spec['at'], 16):#x}", internal=True)
         self.spec = spec
         self.enabled = not spec.get("gated")
+        self.watches = []
+
+    def arm(self):
+        for old in self.watches:
+            old.delete()
+        self.watches = []
+        for w in self.spec["watch"]:
+            addr = int(gdb.parse_and_eval(w["expr"])) & 0xFFFFFFFFFFFFFFFF
+            self.watches.append(Watched(w, addr, self.spec.get("backtrace", 0)))
+        out.write(f"{time.time():.3f} | armed | {gdb.selected_thread().num} | "
+                  + " ".join(f"{w.spec['label']}@{w.addr:#x}={w.value()}" for w in self.watches) + "\n")
 
     def stop(self):
         spec, inferior = self.spec, gdb.selected_inferior()
@@ -67,6 +81,8 @@ class Logged(gdb.Breakpoint):
             return False
         if box and not all(lo <= v <= hi for v, lo, hi in zip(values[box[0]], box[1:4], box[4:7])):
             return False
+        if spec.get("watch") and (spec.get("rearm", True) or not self.watches):
+            self.arm()
         if cfg.get("hits"):
             regs = [f"{r}={int(gdb.parse_and_eval('$' + r)) & 0xFFFFFFFFFFFFFFFF:x}" for r in spec.get("regs", [])]
             mems = [f"[{m[0]}+{m[1]:x}]={v}" for m, v in zip(spec.get("mem", []), values)]
@@ -81,6 +97,34 @@ class Logged(gdb.Breakpoint):
             line += [f"{r}={int(gdb.parse_and_eval('$' + r)) & 0xFFFFFFFFFFFFFFFF:#x}" for r in spec["regs"] if r in REGS]
         if spec.get("backtrace"):
             line.append("bt " + " ".join(backtrace(spec["backtrace"])))
+        out.write(" | ".join(line) + "\n")
+        return False
+
+
+class Watched(gdb.Breakpoint):
+    """A hardware write watchpoint: one line per change (wall time, label, thread, new value, pc, backtrace)."""
+
+    SIZES = {1: "char", 2: "short", 4: "int", 8: "long"}
+
+    def __init__(self, spec, addr, depth):
+        self.spec, self.addr, self.depth, self.count = spec, addr, depth, 0
+        size = struct.calcsize("<" + spec["fmt"])
+        super().__init__(f"*({self.SIZES[size]}*){addr:#x}", gdb.BP_WATCHPOINT, gdb.WP_WRITE, internal=True)
+
+    def value(self):
+        raw = bytes(gdb.selected_inferior().read_memory(self.addr, struct.calcsize("<" + self.spec["fmt"])))
+        return " ".join(map(str, struct.unpack("<" + self.spec["fmt"], raw)))
+
+    def stop(self):
+        self.count += 1
+        if self.count > self.spec.get("limit", 50):
+            self.enabled = False
+            return False
+        frame = gdb.newest_frame()
+        line = [f"{time.time():.3f}", self.spec["label"], str(gdb.selected_thread().num), self.value(),
+                f"pc {frame.pc() - BASE:#x}"]
+        if self.depth:
+            line.append("bt " + " ".join(backtrace(self.depth)))
         out.write(" | ".join(line) + "\n")
         return False
 

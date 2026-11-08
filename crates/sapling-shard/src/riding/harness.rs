@@ -4,7 +4,6 @@
 //! tossing it 5 blocks up. A harnessed ghast seats four (seats.rs) and flies where its driver looks
 //! (`free_camera_controlled`); its first rider is heard `attach`ing, its last `detach`ing. A player on its
 //! top stills it (stilled.rs). Its extended flags are in its announcement for those who see it later.
-// TODO: `vertical_movement_action` (jump to rise) is not modelled: the drilled bot's jump moved nothing.
 
 use acacia_proto::types::{
     EntityProperties, MetadataDictionaryItem as Item, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value,
@@ -33,6 +32,8 @@ const UNHARNESSED_AGAIN: i64 = UNHARNESSED | 1 << 59;
 /// Its `flying_speed` (`adult_mobile`), and how much of it going backwards gets.
 const FLYING_SPEED: f32 = 0.016;
 const BACKWARDS: f32 = 0.5;
+/// Its pack's `vertical_movement_action` `vertical_velocity`, added to the driver's intent.
+const VERTICAL_VELOCITY: f32 = 0.5;
 /// How far over its feet shears toss the harness (its pack's `drop_item_y_offset`) and the item
 /// box's half height.
 const TOSSED_UP: f32 = 5.0 + 0.125;
@@ -156,7 +157,8 @@ pub(super) fn detach_next_tick(world: &mut World, vehicle: Entity, left: usize) 
 
 /// What its driver's keys push a harnessed happy ghast by this tick: its flying speed the way the
 /// driver looks, pitch and all (bds-as3ghast.txt: looking straight up, it rose 0.016 more each tick
-/// after 0.91 of its speed).
+/// after 0.91 of its speed), plus `vertical_movement_action`'s 0.5 up while the driver's input says
+/// `Jumping` (bds-ba2ghast.txt: 0.008 a tick alone, 0.016 with a walk up, so the sum is cut to length 1).
 pub(super) fn flight(reins: &Reins, at: &Position) -> [f32; 3] {
     let [across, forward] = reins.keys;
     let forward = if forward < 0.0 { forward * BACKWARDS } else { forward };
@@ -164,5 +166,11 @@ pub(super) fn flight(reins: &Reins, at: &Position) -> [f32; 3] {
     let (sin_pitch, cos_pitch) = reins.look[1].to_radians().sin_cos();
     let ahead = [-sin_yaw * cos_pitch, -sin_pitch, cos_yaw * cos_pitch];
     let left = [cos_yaw, 0.0, sin_yaw];
-    std::array::from_fn(|axis| FLYING_SPEED * (forward * ahead[axis] + across * left[axis]))
+    let mut intent: [f32; 3] = std::array::from_fn(|axis| forward * ahead[axis] + across * left[axis]);
+    if reins.jumping {
+        intent[1] += VERTICAL_VELOCITY;
+    }
+    let length = intent.iter().map(|c| c * c).sum::<f32>().sqrt();
+    let scale = if length > 1.0 { FLYING_SPEED / length } else { FLYING_SPEED };
+    intent.map(|c| c * scale)
 }
