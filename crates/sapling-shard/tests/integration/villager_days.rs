@@ -76,14 +76,16 @@ fn lying(sent: &[acacia_proto::RawPacket], id: u64) -> Vec<(f32, f32, i64)> {
 #[test]
 fn a_villager_sleeps_in_its_bed_at_night_lying_down_as_bds_shows() {
     let (mut h, id) = village(18_000, [0.5, 65.0, 0.5], "minecraft:become_unskilled");
+    // Every tick's packets kept: an `ask` (feet_of) tick drops what it sent, the lying down too.
     let mut sent = Vec::new();
-    for _ in 0..120 {
-        (0..10).for_each(|_| sent.extend(h.tick_all().to(1).to_vec()));
-        if off(feet_of(&mut h, id), HEAD) <= 0.6 {
+    for _ in 0..1200 {
+        sent.extend(h.tick_all().to(1).to_vec());
+        if !lying(&sent, id).is_empty() {
             break;
         }
     }
     (0..5).for_each(|_| sent.extend(h.tick_all().to(1).to_vec()));
+    assert!(off(feet_of(&mut h, id), HEAD) <= 0.6, "it lies on its bed's head");
     assert_eq!(lying(&sent, id), [(1.0, 0.3, (1 << 25) | (1 << 17) | (1 << 12))], "research/captures/bds-village.txt");
     (0..100).for_each(|_| drop(h.tick_all()));
     assert!(off(feet_of(&mut h, id), HEAD) <= 0.8, "it stays asleep");
