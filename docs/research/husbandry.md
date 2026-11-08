@@ -191,9 +191,15 @@ and saving its trust (BDS keeps `TrustedPlayersAmount`/`TrustedPlayer<n>`, strin
   tick and gave its gift then. It is not moved first.
   Re-drilled 2026-11-08 (group AV, `av2cat`, bds-av2cat.txt, same bed and owner spots): put at exactly
   (-2.0, -26, 7.0) again on the wake tick, flags first, then a gift (`AddItemEntity` at its new feet +
-  0.285). The same spot twice suggests a fixed search near the owner (`drop_item_for`: `offering_distance`
-  5, `minimum_teleport_distance` 2, `teleport_offset` [0, 1, 0], a cell corner), but one layout cannot
-  give the rule. Open (bedtime.rs TODO).
+  0.285). Read under gdb (thirteenth2ay `ay2gdb`, bds-ay2gdb.txt; Linux ELF `DropItemForGoal` vtable
+  0xeee83c8: start 0x5774b40, findTargetBlock 0x57754a0, isValidTarget 0x57757a0, tick 0x5773eb0):
+  around the block of the owner's position (eyes, (-3.5, -24.38, 3.5) on waking) it scans as
+  `MoveToBlockGoal` (layers from one under, rings out to `search_range` 5, height 2) for a solid block
+  with air over it, keeping the first whose squared block distance is strictly nearest `offering_distance`
+  squared (+0xac = 25): (-2, -27, 7). A cat further than `minimum_teleport_distance` (+0xb0 = 2, held
+  unsquared but compared with the squared distance) from its corner is put there plus `teleport_offset`
+  (0, 1, 0) (0xb2dacf0). Ported (husbandry/offering.rs, bedtime.rs `wake`; test
+  `a_cat_waking_with_its_owner_in_the_morning_goes_to_its_offering_spot`).
 - Sitting on blocks (`ocelot_sit_on_block`): in 40 s the stood-up cat went around the lit furnace, beside
   it on three sides, and never got on top. It never went near the chest or the bed. In av2cat a standing
   tamed cat had a chest alone for 80 s and a bed alone for 80 s: it walked over the chest once and never
@@ -257,8 +263,12 @@ hand), give to a note block 3, give to its owner 4 (both run speed 8), stay near
   allay took dropped dirt but threw none to its owner: none in 11 s (as3allay2), none in 40 s (av2allay2,
   2026-11-08). Its `OwnerEid` stayed the actor's first-launch unique id (-4294967295) while the rejoined
   actor came back as -8589934589 (the dropped dirt's owner), so no player in the world is its owner. Sapling
-  keeps a player's unique id in its player data, so its allay still delivers. Open: whether BDS gives
-  players new ids each launch or the probe's offline login is a new player each time is not settled.
+  keeps a player's unique id in its player data, so its allay still delivers. Settled 2026-11-08
+  (thirteenth2ay `ay2ident`, bds-ay2ident.txt): within one launch each rejoin got a new unique id
+  (-4294967295, then -4294967274, -4294967273), lost the diamonds it held (`clear` found none) and its
+  position, and BDS wrote no player record to the world: the probe's offline login (no xuid, empty
+  self-signed id) is a new player each time. The ownerless allay is a probe artifact; sapling's allay
+  delivering to a returning player is as BDS for a recognized one.
 
 ## Parrots on shoulders (built 2026-11-07, group AS: husbandry/shoulders.rs)
 

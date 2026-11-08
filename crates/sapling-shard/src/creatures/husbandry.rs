@@ -14,6 +14,7 @@ mod guarding;
 mod knots;
 mod leads;
 mod nesting;
+mod offering;
 mod owners;
 mod products;
 mod shoulders;

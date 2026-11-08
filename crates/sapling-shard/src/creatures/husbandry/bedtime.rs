@@ -3,15 +3,15 @@
 //! its pace onto the bed's foot and lies there (`RESTING`) till the owner gets up
 //! (research/captures/bds-ar2cat.txt: it set off the tick the owner lay down, from 8 blocks off).
 //! Waking with its owner in the morning (`on_wake_with_owner`), it gives a roll of
-//! `cat_gift.json` 7 times in 10 (`drop_item_for`, morning only, its owner within 6).
-// TODO: BDS put the cat at the same cell corner 4.7 from the bed on the wake tick, before its gift, in two
-// runs of one layout; the rule is open (docs/research/husbandry.md, bds-av2cat.txt).
+//! `cat_gift.json` 7 times in 10 (`drop_item_for`, morning only, its owner within 6), first going to the
+//! spot it offers from (offering.rs) on the wake tick.
 
 use acacia_proto::types::MetadataFlags1 as Flags;
 use bevy_ecs::prelude::*;
 use sapling_api::Item;
 
-use super::{Raised, distance, shown};
+use super::{Raised, distance, offering, shown};
+use crate::sync::Told;
 use crate::blocks::Dice;
 use crate::body::Body;
 use crate::components::{Layer, Position};
@@ -26,6 +26,8 @@ const ARRIVED: f32 = 0.3;
 const GIFT: &str = "loot_tables/entities/cat_gift.json";
 const GIFT_CHANCE: f32 = 0.7;
 const GIFT_REACH: f32 = 6.0;
+/// BDS measures the offering spot from a player's position, its eyes.
+const EYES: f32 = 1.62;
 /// `time_of_day` 0.75 to 0.8: the day's first 1200 ticks.
 const MORNING: i64 = 1200;
 const DAY: i64 = 24000;
@@ -50,7 +52,7 @@ pub(super) fn lie(world: &mut World, entity: Entity, layer: Entity, kind: &str) 
             if bedtime.lying {
                 shown::flag(world, entity, Flags::RESTING, false);
             }
-            wake(world, layer, &body, owner);
+            wake(world, entity, layer, &body, owner);
         }
         return false;
     };
@@ -70,11 +72,25 @@ pub(super) fn lie(world: &mut World, entity: Entity, layer: Entity, kind: &str) 
     true
 }
 
-/// The cat got up with its owner: in the morning, with the owner near, it may leave a gift.
-fn wake(world: &mut World, layer: Entity, body: &Body, owner: Entity) {
+/// The cat got up with its owner: in the morning, with the owner near, it goes to its offering spot
+/// (offering.rs) and may leave a gift there.
+fn wake(world: &mut World, entity: Entity, layer: Entity, body: &Body, owner: Entity) {
     let morning = world.get::<Layer>(layer).is_some_and(|layer| layer.world.level().time.rem_euclid(DAY) < MORNING);
-    let near = world.get::<Position>(owner).is_some_and(|position| distance(position.feet, body.at) <= GIFT_REACH);
-    if !morning || !near || world.get_resource_or_insert_with(Dice::default).fraction() >= GIFT_CHANCE {
+    let Some(feet) = world.get::<Position>(owner).map(|position| position.feet).filter(|feet| distance(*feet, body.at) <= GIFT_REACH) else { return };
+    if !morning {
+        return;
+    }
+    let mut body = *body;
+    let eyes = [feet[0], feet[1] + EYES, feet[2]];
+    let to = world.get::<Layer>(layer).and_then(|layer| offering::spot(&layer.world, eyes)).and_then(|spot| offering::teleport_to(body.at, spot));
+    if let Some(to) = to {
+        (body.at, body.motion) = (to, [0.0; 3]);
+        world.entity_mut(entity).insert(body);
+        if let Some(mut told) = world.get_mut::<Told>(entity) {
+            told.jump();
+        }
+    }
+    if world.get_resource_or_insert_with(Dice::default).fraction() >= GIFT_CHANCE {
         return;
     }
     let loot = {

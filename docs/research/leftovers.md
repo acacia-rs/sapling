@@ -70,7 +70,7 @@ what follows is the pack (ED `turtle.json`, `zombie.json` and kin) and the Java 
   `laid_egg` drops `wants_to_lay_egg`.
 - **Stomping** (`behavior.stomp_turtle_egg` on zombie, husk, drowned, zombie villager (both) and zombie
   pigman: interval 20, search 10 across and 2 up or down, goal radius 1.14): one tick in 20 a zombie that
-  does not hunt picks the nearest turtle egg and walks there. At the eggs it hops (0.3 up while on the
+  does not hunt picks any turtle egg in reach at random and walks there (see "Stomping" below). At the eggs it hops (0.3 up while on the
   ground), and the eggs break as "Drilled" says (JAVA `RemoveBlockGoal`/`ZombieAttackTurtleEggGoal`). It gives up
   after 1200 ticks of walking. Only with `mobGriefing` (JAVA).
 
@@ -457,6 +457,23 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
     ring scan once. Sapling picks any egg within reach at random; the real rule is open.
   - Crumbling starts once it stands on the eggs (feet at the egg's top, about 0.5 to 0.7 from the middle),
     where sapling starts within 1.14 on the floor beside them: not changed.
+  Settled 2026-11-08 by breakpoint (thirteenth2ay `ay2gdb`, research/captures/bds-ay2gdb.txt; Linux ELF
+  `StompEggGoal` vtable 0xeeb40f8: findTargetBlock 0x533bc10, start 0x533be90, tick 0x533bf30; base
+  `BaseMoveToBlockGoal` tick 0x48c9340), ported in stomping.rs:
+  - Target: findTargetBlock lists every turtle egg in the box ±`search_range` (10) across, ±`search_height`
+    (2) up and down of the mob's block (0xc8e3790 with predicate 0x53728a0) and takes `nextInt(count)` of
+    the mob's random: any egg in reach, uniformly. Sapling already did; nearest and ring scans were wrong.
+  - Reaching: the target point is the egg cell's corner plus (0, 1, 0) (+0x64, offset +0x70); the mob has
+    reached it when that point is within 1.14 (+0x44 = 1.2996 squared) of (x, box bottom + half height, z).
+    Once reached it stays so while the target is within 1.14 across of its block's corner.
+  - The count (+0xa0, zeroed at start) runs every tick from reaching, whether or not the mob is on the eggs.
+    Standing in the egg cell or the one above: count 3 mod 6 sets its motion (0, -0.3, 0), count 0 mod 6 on
+    the ground (0, 0.3, 0); count over 0 crumbles the eggs; count 0 mod 6 plays the attack sound; count over
+    60 stomps the block out. So a zombie reaching the eggs from afar at about 0.11 a tick crumbles them from
+    count 11 (50 ticks, logged 11 to 61), and one already beside them from count 1 (60 ticks): the 47-51
+    and 59-60 split. Sapling crumbled for a flat 50 from arriving within 1.14; now as above (test
+    `a_zombie_stomps_a_turtle_egg_out_61_counts_after_reaching_it`). Sapling's mobs have no step up onto
+    the egg's 0.4375 box, so beside the cell its zombie walks on jumping (legs.rs `walk_up`).
 
 Drilled since (2026-10-30): a chested mount's chest drops after its goods (mob-life.md, `bds-chestdie.txt`), as
 sapling's did. The `lay_egg` sound's 0.34 over a turtle's feet is fixed: 0.85 of its height, from the
