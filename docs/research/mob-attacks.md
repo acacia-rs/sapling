@@ -695,7 +695,16 @@ while charging (an unthrown actor was struck once a pass) and 10 ticks apart, th
 husk, zombie villager, pigman and piglin as the zombie (their packs' paces not applied). Mounted
 (sapling-j3ride against bds-j3ride) still differs: sapling's zombie horse walks 0.185 a tick to BDS's 0.27,
 never gets past the thrown actor and hits 9 times in pairs 10 ticks apart where BDS's passed, turned 8.8 off
-and hit 4 times (49, 136, 152, 227). Not drilled: a spear holder against a mob, the camel husk's charge.
+and hit 4 times (49, 136, 152, 227). Fourteenth2ac: the pace is the horse's `movement` roll, not a rule:
+BDS's rolled 0.255 and 2.16 × (0.255 × 1.4)² = 0.275, sapling's j3ride horse rolled 0.209 both runs (its
+dice run the same way), 0.185. sapling-ac2ride.txt (two horses summoned and killed first; this one 0.239,
+0.241 a tick) passed the thrown actor and turned back as BDS's did, but still differs: it hit at 36 and 46,
+then 120, 130, 140, 150 and 160, 10 ticks apart while it chased the thrown actor, where BDS's second hit of
+a charge came 16 ticks on (136, 152); and BDS's horse, once past, turned back to a spot 8.8 north of the
+actor, the side it came from, where sapling's goes on 8-9 beyond (to z −10). The spot is
+`UseKineticWeaponGoal` 0x5349f00: an angle from atan2 of the two positions plus a random spread of
+±goal+0x158 / 2 degrees, a distance in the reposition range, floored; which way the atan2 runs and the
+spread were not settled. Not drilled: a spear holder against a mob, the camel husk's charge.
 
 ## Sapling
 

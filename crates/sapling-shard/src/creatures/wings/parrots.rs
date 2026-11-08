@@ -15,9 +15,13 @@ use crate::body::{Body, Physics};
 use crate::components::{Layer, Tick};
 
 pub(in crate::creatures) const KIND: &str = "minecraft:parrot";
-/// A tick's chance that a parrot not flying takes off to a new spot: BDS's three took off 8 times in
-/// ~1830 ticks sitting (fitted; their `random_fly` and `follow_mob` both start flights).
-const TAKES_OFF: f32 = 1.0 / 230.0;
+/// A parrot not flying takes off to a new spot at 1 in this a tick, while its last flight ended under
+/// [`RESTLESS`] ticks ago: `RandomFlyingGoal::canUse` (Linux 0x57601e0) rolls `nextInt(120)` only
+/// while a counter of the mob's is under 100. bds-x2parrot.txt: all 8 takeoffs came 7 to 98 ticks
+/// after a landing, and none in the 350 to 570 ticks each of the three then sat (the counter's reset
+/// at a flight's end is read off that capture, not decompiled).
+const TAKES_OFF: u32 = 120;
+const RESTLESS: u64 = 100;
 /// What its speed keeps where it nears the cell it flies at.
 const NEARING: f32 = 0.25;
 
@@ -26,11 +30,11 @@ const NEARING: f32 = 0.25;
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
     let (Some(body), Some(wings)) = (world.get::<Body>(entity).copied(), world.get::<Wings>(entity)) else { return true };
     let now = world.resource::<Tick>().0;
-    let (spot, until) = (wings.spot, wings.until);
+    let (spot, until, landed) = (wings.spot, wings.until, wings.landed);
     let spot = match spot {
         Some(spot) if now < until && distance(spot, body.at) >= REACHED => spot,
-        Some(_) => return land(world, entity),
-        None if world.get_resource_or_insert_with(Dice::default).fraction() >= TAKES_OFF => return true,
+        Some(_) => return land(world, entity, now),
+        None if now >= landed + RESTLESS || world.get_resource_or_insert_with(Dice::default).roll(TAKES_OFF) != 0 => return true,
         None => {
             let Some(spot) = super::pick(world, layer, body.at, &super::PARROT) else { return true };
             if let Some(mut wings) = world.get_mut::<Wings>(entity) {
@@ -54,9 +58,9 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
     true
 }
 
-fn land(world: &mut World, entity: Entity) -> bool {
+fn land(world: &mut World, entity: Entity, now: u64) -> bool {
     if let Some(mut wings) = world.get_mut::<Wings>(entity) {
-        (wings.spot, wings.next) = (None, None);
+        (wings.spot, wings.next, wings.landed) = (None, None, now);
     }
     true
 }
