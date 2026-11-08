@@ -60,6 +60,8 @@ pub(crate) enum Job {
     PotentSulfur,
     /// A composter filled to 7 is ready (composter.rs).
     Compost,
+    /// A decorated pot a shot met shatters (shot_blocks.rs).
+    Shatter,
 }
 
 /// What a queued tick is for.
@@ -241,5 +243,6 @@ fn run(world: &mut World, layer: Entity, pos: BlockPos, ticked: Ticked) {
         Job::Ignite => crate::tnt::ignited(world, layer, pos),
         Job::PotentSulfur => super::sulfur::ticked(world, layer, pos),
         Job::Compost => super::composter::ripen(world, layer, pos),
+        Job::Shatter => super::shot_blocks::shatter(world, layer, pos),
     }
 }

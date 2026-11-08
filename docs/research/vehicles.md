@@ -367,4 +367,10 @@ were not found in any of these; sapling does what is listed there.
   Hoppers filling and emptying carts were not measured (the capture shows no slots) and the laden-drag rows
   all ran into the end stone; both open.
 - `summon <vehicle> <name>` gives BDS's vehicle no name: `@e[name=..]` found none and `/kill` listed
-  "Minecart"; sapling names it.
+  "Minecart"; sapling now does the same (bds-p3names.txt, world-commands.md).
+- Carts in lava and water (bds-p3lava.txt, 2026-11-08): off a rail a cart falls 0.04, 0.08, ... a tick with no drag,
+  through water to the pool's floor as through air. One summoned into lava (its wire point in lava) showed `Health`
+  16 then −7, 3 a tick; one that fell onto lava, 0.01 into it, 24, 8, −7 as a scorched one. Neither moved in the tick
+  it burnt through, and each broke into its item the next. Sapling: `carts.rs` `LOOSE` (fall drag 1, liquids
+  ignored; the 0.4 cap and the air's sideways drag undrilled), `burning.rs` `CART_IN_LAVA`, a burnt-through cart
+  skipped by `carts::tick`. The wire-point test is a fit to these two carts.

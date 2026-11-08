@@ -113,6 +113,7 @@ impl Request<'_> {
         let id = doors::hinged(level, facing::oriented(registry, id, click), pos, click.quarter());
         let id = items::attached(registry, id, level.block(against[0], against[1], against[2]), site.sneaking);
         let id = super::ground::settled(level, pos, id);
+        let id = super::bells::placed(level, pos, id, click.face);
         let feet = self.world.get::<Position>(self.entity).map_or(pos, |position| position.feet.map(|c| c.floor() as i32));
         let id = super::coral::placed(level, pos, id, feet);
         let id = super::structure_blocks::as_placed(registry, id);

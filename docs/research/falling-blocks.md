@@ -246,8 +246,12 @@ ticks fallen so far, wrapped the same (`sapling_world::timed_falling_block`, wri
   (`falling/dripstone.rs` `wound_mobs`, from `flight.rs` `crush`).
 - Chipping: the landed block (`UpdateBlockSynced` Destroy) was `chipped_anvil` for 10 of 92 falling 3 and 43 of 92
   falling 11 (and 2 of 5 single drops). Sapling chips one a step, 1 in 20 per block past the first (`flight.rs`
-  `chip`), a fit to those counts; Java's extra 1 in 20 predicts 14 and 51. A damaged anvil landing, which Java
-  breaks, was not drilled and lands as it is.
+  `chip`), a fit to those counts; Java's extra 1 in 20 predicts 14 and 51.
+- A damaged anvil wearing so breaks (bds-p3anvil.txt: 2 of 6 dropped 8, 2 of 6 dropped 3): no `SoundAnvilFall`,
+  no block, no item, its entity gone in the tick the others were placed. Sapling: `flight.rs` `chip`, `broken`.
+- Sand dropped on snow layers over persistent leaves and over stone (bds-p3snow.txt): onto height 0 it took the
+  snow's cell, onto heights 1 to 7 it broke into its item, alike over both; no snow fell into the leaves. Sapling
+  does the same; the Leaves-below reading below was not reached by it.
 
 ## On the wire (drilled 2026-11-05, research/captures/bds-n13net.txt)
 

@@ -564,6 +564,13 @@ By night on the stone floor, the survival actor held in place:
   the zombie pigman's gold nuggets lying there into its main hand (`piglins/pickup.rs`); BDS's held
   its crossbow (its pack keeps nuggets `stored_in_inventory`; the drill shows no item packets, so
   whether BDS's took them is not known). Left: that, and the other functions' item data.
+- Death loot keeps its item data (fourteenth3p): `mob_loot_stacks` keeps `set_data` and `set_potion` (a
+  stray's or bogged's tipped arrows of slowness, data 18) through `containers::loot::kept_stack`; a kill by
+  a tamed mob with an owner counts as `killed_by_player_or_pets` (blaze, bogged, breeze, drowned, nautilus, zombie and pigman tables) but not
+  `killed_by_player` nor looting (`Killer::Pet`, `death.rs` `KilledByPet`). `specific_enchants`,
+  `set_armor_trim` and `set_banner_details` appear only in trial-chamber and captain equipment tables no
+  death rolls; left unapplied. Not drilled on BDS (read off the pack); test
+  `a_pets_kill_leaves_what_players_or_pets_get_and_a_stray_its_tipped_arrows`.
 - Zombies, husks and drowned (fourteenth2c, `f14cgear`, bds-f14cgear.txt: 40 of each summoned on
   hard, 5 at a time): 7 zombies and 6 husks wore armour (leather, copper, gold, iron, partial sets),
   3 and 6 held an iron shovel, sword or spear (`zombie_equipment.json`: 5% weapons, 15% armour tiers),

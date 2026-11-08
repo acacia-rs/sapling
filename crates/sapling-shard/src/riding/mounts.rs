@@ -195,6 +195,9 @@ pub(crate) fn steers(world: &World, mob: Entity, kind: &str, body: &Body) -> Rei
         return Rein::Fly([0.0; 3]);
     }
     let Some(driver) = world.get::<Seats>(mob).and_then(|seats| seats.0.first().copied()) else { return Rein::Free };
+    if let Some((to, speed)) = creatures::jockey_rein(world, mob, kind, driver) {
+        return Rein::Walk(to, speed);
+    }
     let (Some(reins), Some(at)) = (world.get::<Reins>(driver), world.get::<Position>(driver)) else { return Rein::Free };
     let toward = |[across, forward]: [f32; 2], speed: f32| {
         let (sin, cos) = at.yaw.to_radians().sin_cos();

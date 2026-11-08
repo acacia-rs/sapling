@@ -73,7 +73,14 @@ pub(in crate::creatures) fn hit(world: &mut World, layer: Entity, by: Entity, pr
     let kept = 1.0 - world.get::<Kind>(prey).map_or(0.0, |kind| sapling_data::mob_traits(&kind.0).resists);
     let flings = world.get::<Kind>(by).and_then(|kind| sapling_data::mob_traits(&kind.0).hunts).is_some_and(|hunts| hunts.upto.is_some());
     let [along, up] = if flings { MOB_FLINGS } else { [THROW; 2] };
+    let pets = world.get::<super::super::Raised>(by).is_some_and(|raised| raised.is_tamed() && raised.kept.owner.is_some());
+    if pets {
+        world.entity_mut(prey).insert(super::super::death::KilledByPet);
+    }
     harm::wound(world, prey, layer, harm, super::super::Cause::Attack);
+    if pets && let Ok(mut prey) = world.get_entity_mut(prey) {
+        prey.remove::<super::super::death::KilledByPet>();
+    }
     if kept > 0.0 {
         super::super::hits::throw_at_once(world, prey, layer, [away[0] * along * kept, up * kept, away[1] * along * kept]);
     }

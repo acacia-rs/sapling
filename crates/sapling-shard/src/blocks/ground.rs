@@ -1,11 +1,11 @@
 //! What crops, cane, berries, cocoa, vines, redstone and rails need to stand on, by BDS's
 //! `mayPlace` / `canSurvive` of each (docs/research/standing-and-shapes.md, part A). Blocks
 //! not named here need only what updates.rs asks.
-// TODO: which blocks give a face's centre or edge support is approximated from collision
-// boxes; the dirt and sand tags are Java's lists. Light is asked only on a neighbour's change
-// ([`is_wrongly_lit`]), not on placing.
+// TODO: kelp, nether vines and dripstone still read a top from collision boxes, and the dirt and
+// sand tags are Java's lists. Light is asked only on a neighbour's change ([`is_wrongly_lit`]), not on placing.
 
-use sapling_api::BlockPos;
+use sapling_api::{BlockPos, Face};
+use sapling_worldgen::Support;
 use sapling_world::{BlockRegistry, World};
 
 const CROPS: &[&str] = &[
@@ -96,6 +96,15 @@ pub(super) fn has_top(level: &World, [x, y, z]: BlockPos, whole: bool) -> bool {
     state.boxes.iter().any(|shape| shape.max[1] >= 1.0 && covers(shape.min[0], shape.max[0]) && covers(shape.min[2], shape.max[2]))
 }
 
+/// Whether the top of the block at `pos` gives every kind of support in `kinds` (BDS
+/// `canProvideSupport`): dust wants centre and edge, a rail edge, a diode any (bds-p3ground.txt).
+/// A shulker box's holds no dust (bds-conductors.txt).
+fn top_gives(level: &World, [x, y, z]: BlockPos, kinds: &[Support]) -> bool {
+    let Some(state) = level.in_height(y).then(|| level.registry().get(level.block(x, y, z))).flatten() else { return false };
+    let shulker_centre = state.name.ends_with("shulker_box") && kinds.contains(&Support::Centre);
+    !shulker_centre && kinds.iter().all(|kind| sapling_worldgen::provides_support(state.name, state.properties, Face::Up as usize, *kind))
+}
+
 fn cane_may_stand(level: &World, pos: BlockPos) -> bool {
     let ground = below(pos);
     if name(level, ground) == Some(REEDS) {
@@ -121,13 +130,15 @@ pub(super) fn may_stand(level: &World, pos: BlockPos, id: u32) -> bool {
         "minecraft:sweet_berry_bush" => under.is_some_and(|under| VEGETATION.contains(&under)) && !is_wet(level, pos),
         _ if BUSHES.contains(&block) => under.is_some_and(|under| VEGETATION.contains(&under)),
         REEDS => cane_may_stand(level, pos),
-        "minecraft:redstone_wire" => !is_wet(level, pos) && (has_top(level, below(pos), false) || under.is_some_and(|under| LIT_FROM_BELOW.contains(&under))),
-        _ if DIODES.contains(&block) => has_top(level, below(pos), false),
+        "minecraft:redstone_wire" => !is_wet(level, pos) && (top_gives(level, below(pos), &[Support::Centre, Support::Edge]) || under.is_some_and(|under| LIT_FROM_BELOW.contains(&under))),
+        _ if DIODES.contains(&block) => top_gives(level, below(pos), &[Support::Any]),
         _ if RAILS.contains(&block) => {
             let rises = property(registry, id, "rail_direction").and_then(|shape| RISES_TO.iter().find(|(rising, _)| *rising == shape));
             // The cell risen to, at the rail's own height (`BaseRailBlock` 142cd5660).
-            has_top(level, below(pos), false) && rises.is_none_or(|(_, [dx, dz])| has_top(level, [pos[0] + dx, pos[1], pos[2] + dz], false))
+            top_gives(level, below(pos), &[Support::Edge]) && rises.is_none_or(|(_, [dx, dz])| top_gives(level, [pos[0] + dx, pos[1], pos[2] + dz], &[Support::Edge]))
         }
+        // `CarpetBlock::canSurvive`: anything but air; set over air it stays till a neighbour changes (bds-p3carpet.txt).
+        _ if block.ends_with("carpet") => under.is_some_and(|under| under != "minecraft:air"),
         SMALL_DRIPLEAF if property(registry, id, "upper_block_bit") == Some("1") => under == Some(SMALL_DRIPLEAF),
         SMALL_DRIPLEAF => under.is_some_and(|under| DRIPLEAF_GROUND.contains(&under) || is_water(level, pos) && VEGETATION.contains(&under)),
         _ if block.ends_with("_hanging_sign") && property(registry, id, "hanging") == Some("1") => {
@@ -188,7 +199,7 @@ pub(super) fn is_wrongly_lit(level: &World, [x, y, z]: BlockPos, id: u32) -> boo
 /// Whether [`may_stand`] has a rule for the block `name`, which then replaces updates.rs's.
 pub(super) fn has_rule(name: &str) -> bool {
     const OTHERS: &[&str] = &["minecraft:bamboo", "minecraft:bamboo_sapling", "minecraft:pink_petals", "minecraft:big_dripleaf", "minecraft:mangrove_propagule", "minecraft:nether_wart", "minecraft:sweet_berry_bush", REEDS, "minecraft:redstone_wire", "minecraft:cocoa", "minecraft:trip_wire", "minecraft:frog_spawn", KELP, TWISTING, WEEPING, SMALL_DRIPLEAF];
-    [CROPS, DIODES, RAILS, VINES, BUSHES, OTHERS].iter().any(|list| list.contains(&name))
+    [CROPS, DIODES, RAILS, VINES, BUSHES, OTHERS].iter().any(|list| list.contains(&name)) || name.ends_with("carpet")
 }
 
 /// Whether the bottom of the block at `pos` holds something hanging under its middle.
@@ -223,5 +234,16 @@ mod tests {
         let held = ["minecraft:rail", "minecraft:redstone_wire", "minecraft:unpowered_repeater"].map(|block| on("minecraft:hopper", block));
         assert_eq!(held, [true; 3]);
         assert_eq!([on("minecraft:stone", "minecraft:poppy"), on("minecraft:stone", "minecraft:short_grass"), on("minecraft:grass_block", "minecraft:poppy")], [false, false, true]);
+    }
+
+    /// research/captures/bds-p3ground.txt: dust wants centre and edge, a rail edge, a diode any.
+    #[test]
+    fn dust_rails_and_diodes_ask_their_own_kind_of_top() {
+        let tops = ["minecraft:oak_fence", "minecraft:cauldron", "minecraft:composter", "minecraft:iron_bars", "minecraft:oak_leaves"];
+        let held = |block| tops.map(|top| on(top, block));
+        assert_eq!(held("minecraft:redstone_wire"), [false; 5]);
+        assert_eq!(held("minecraft:rail"), [false, true, true, false, false]);
+        assert_eq!(held("minecraft:unpowered_repeater"), [true, true, true, true, false]);
+        assert_eq!([on("minecraft:air", "minecraft:white_carpet"), on("minecraft:oak_fence", "minecraft:white_carpet")], [false, true]);
     }
 }

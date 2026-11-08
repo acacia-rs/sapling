@@ -2,7 +2,8 @@
 //! `data/generate/mob-loot.py`), run for a death no one caused or one a player caused with the
 //! Looting it held (enchant.rs), of a mob, cooked when the mob was on fire. [`drawn_table_loot`]
 //! runs a table in BDS's draw order (`LootPool::addRandomItems` 14127b8e0), for a container's seeded loot.
-// TODO: only the seeded tables keep item data (item_data.rs); a mob's loot is left plain. A pet's kill counts as no one's.
+// TODO: `specific_enchants`, `set_armor_trim` and `set_banner_details` are not applied; only the
+// trial chamber and captain equipment tables use them, which no mob rolls here (captains.rs makes its banner).
 
 use std::sync::LazyLock;
 
@@ -25,6 +26,8 @@ pub enum Killer {
     None,
     /// A player, with the level of Looting on what it held.
     Player { looting: u8 },
+    /// A player's tamed mob: `killed_by_player_or_pets` holds, `killed_by_player` does not.
+    Pet,
 }
 
 #[derive(Clone, Copy)]
@@ -39,7 +42,7 @@ impl Death {
     fn looting(self) -> u8 {
         match self.killer {
             Killer::Player { looting } => looting,
-            Killer::None => 0,
+            Killer::None | Killer::Pet => 0,
         }
     }
 }
@@ -82,11 +85,16 @@ impl Roll<'_> {
 /// What a mob of `kind` leaves when it dies, `on_fire` or not, killed by `killer`, as (item,
 /// count); `roll` gives numbers in [0, 1). Nothing for a kind without a table.
 pub fn mob_loot(kind: &str, on_fire: bool, killer: Killer, roll: &mut dyn FnMut() -> f32) -> Vec<(String, u32)> {
+    counted(mob_loot_stacks(kind, on_fire, killer, roll))
+}
+
+/// [`mob_loot`] with the item data the table sets: a stray's tipped arrows, a glow squid's ink.
+pub fn mob_loot_stacks(kind: &str, on_fire: bool, killer: Killer, roll: &mut dyn FnMut() -> f32) -> Vec<Looted> {
     let mut left = Vec::new();
     if let Some(table) = LOOT["entities"][kind].as_str() {
         run(table, Death { on_fire, killer, regional: None }, &mut Roll { draws: &mut Fractions(roll), bds_order: false }, &mut left);
     }
-    counted(left)
+    left
 }
 
 fn counted(left: Vec<Looted>) -> Vec<(String, u32)> {
@@ -229,7 +237,8 @@ fn holds(conditions: &Value, death: Death, roll: &mut Roll) -> bool {
         }
         Some("random_difficulty_chance") => death.regional.is_some_and(|regional| roll.draws.float() < regional::difficulty_chance(condition, regional.difficulty)),
         Some("random_regional_difficulty_chance") => death.regional.is_some_and(|regional| roll.draws.float() < condition["max_chance"].as_f64().unwrap_or(0.0) as f32 * regional.multiplier),
-        Some("killed_by_player" | "killed_by_player_or_pets") => by_player,
+        Some("killed_by_player") => by_player,
+        Some("killed_by_player_or_pets") => by_player || death.killer == Killer::Pet,
         Some("killed_by_entity") => by_player && condition["entity_type"] == "minecraft:player",
         Some("entity_properties") => death.on_fire && condition["entity"] == "this" && condition["properties"] == serde_json::json!({"on_fire": true}),
         _ => false,

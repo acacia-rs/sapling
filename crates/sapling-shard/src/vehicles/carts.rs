@@ -19,9 +19,12 @@ use crate::riding::{Reins, Riding};
 use crate::sync::Told;
 
 /// The wire puts a minecart this far above its box's bottom.
-const LIFT: f32 = 0.35;
-/// Off a rail a cart falls as a block does and slides half as far on the ground.
-const LOOSE: Physics = Physics { gravity: 0.04, air_drag: 0.95, fall_drag: 0.95, ground_drag: 0.5, liquid: InLiquid::Sinks, burns: false, passes: false, water_drag: 0.8, flutter: 1.0, step: 0.0 };
+pub(super) const LIFT: f32 = 0.35;
+/// Off a rail a cart falls without drag, through water and lava alike, and slides half as far on the
+/// ground (bds-p3lava.txt: 0.04, 0.08, ... a tick to a pool's floor).
+// TODO: the 0.4 cap on each axis off a rail (vehicles.md, step 9) is not applied; the air's
+// sideways drag is undrilled.
+const LOOSE: Physics = Physics { gravity: 0.04, air_drag: 0.95, fall_drag: 1.0, ground_drag: 0.5, liquid: InLiquid::Ignores, burns: false, passes: false, water_drag: 0.8, flutter: 1.0, step: 0.0 };
 const RIDDEN_DRAG: f32 = 0.997;
 const EMPTY_DRAG: f32 = 0.96;
 /// A cart with goods keeps more of its motion, the less full it is: its comparator signal.
@@ -100,7 +103,7 @@ pub(super) fn tick(world: &mut World) {
     super::detectors::tick(world);
     push(world);
     super::bumps::push(world);
-    let carts: Vec<(Entity, Entity, u64, String, Body)> = world.query_filtered::<(Entity, &InLayer, &NetId, &Kind, &Body), With<Cart>>().iter(world).map(|(cart, layer, id, kind, body)| (cart, layer.0, id.0, kind.0.clone(), *body)).collect();
+    let carts: Vec<(Entity, Entity, u64, String, Body)> = world.query_filtered::<(Entity, &InLayer, &NetId, &Kind, &Body), (With<Cart>, Without<super::burning::BurntThrough>)>().iter(world).map(|(cart, layer, id, kind, body)| (cart, layer.0, id.0, kind.0.clone(), *body)).collect();
     for (cart, layer, id, kind, body) in carts {
         let parting = world.entity_mut(cart).take::<super::bumps::Parting>();
         let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };

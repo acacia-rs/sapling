@@ -3,7 +3,6 @@
 use acacia_proto::packets::MobEquipment;
 use acacia_proto::types::WindowID;
 use bevy_ecs::prelude::*;
-use sapling_api::Item;
 use sapling_world::ItemStack;
 
 use super::health::Health;
@@ -20,6 +19,11 @@ const SADDLE: &str = "minecraft:saddle";
 const LOOT_LIFT: f32 = 0.075;
 /// How far above its feet a mob's own gear lands, tossed as it dies (research/captures/bds-ad3drops.txt).
 const GEAR_LIFT: f32 = 0.125;
+
+/// The hit a player's tamed mob is landing on this mob: if it kills it, the loot's
+/// `killed_by_player_or_pets` holds (a wolf's blaze leaves its rods).
+#[derive(Component)]
+pub(super) struct KilledByPet;
 
 /// What a mob that died leaves, tossed where it is the tick after its death, as BDS's loot, a
 /// mount's chest and saddle came (research/captures/bds-bodies.txt, bds-chestdie.txt).
@@ -146,7 +150,8 @@ fn remains(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> Vec<
     let on_fire = world.get::<Health>(entity).is_some_and(|health| health.is_burning());
     let looting = world.get::<attacks::Slain>(entity).map(|slain| slain.1);
     let by_player = looting.is_some();
-    let killer = looting.map_or(sapling_data::Killer::None, |looting| sapling_data::Killer::Player { looting });
+    let by_pet = world.get::<KilledByPet>(entity).is_some();
+    let killer = looting.map_or(if by_pet { sapling_data::Killer::Pet } else { sapling_data::Killer::None }, |looting| sapling_data::Killer::Player { looting });
     if !leaves_loot(world, layer) || crate::riding::saddled_bare(world, entity) {
         return Vec::new();
     }
@@ -178,8 +183,8 @@ pub(super) fn leaves_loot(world: &World, layer: Entity) -> bool {
 fn loot(world: &mut World, layer: Entity, kind: &str, on_fire: bool, killer: sapling_data::Killer) -> Vec<ItemStack> {
     let loot = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
-        sapling_data::mob_loot(kind, on_fire, killer, &mut || dice.fraction())
+        sapling_data::mob_loot_stacks(kind, on_fire, killer, &mut || dice.fraction())
     };
     let Some(registry) = world.get::<Layer>(layer).map(|layer| layer.world.registry()) else { return Vec::new() };
-    loot.into_iter().filter_map(|(name, count)| inventory::stored(&Item::new(name, count.min(64) as u8), registry)).collect()
+    loot.into_iter().filter_map(|looted| crate::containers::loot::kept_stack(looted, registry)).collect()
 }

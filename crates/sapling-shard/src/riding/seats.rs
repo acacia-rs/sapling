@@ -75,7 +75,8 @@ const MULE: Layout = Layout { seats: &[&[seat([0.0, 0.975, -0.2])]], ..HORSE };
 const LLAMA: Layout = Layout { seats: &[&[seat([0.0, 1.17, -0.3])]], ..HORSE };
 const CAMEL: Layout = Layout { seats: &[&[seat([0.0, 1.905, 0.5])], &[seat([0.0, 1.905, 0.5]), seat([0.0, 1.905, -0.5])]], pulls_in: true, ..HORSE };
 const CAMEL_HUSK: Layout = Layout { riders: &["player", "parched", "husk"], pulls_in: false, ..CAMEL };
-const ZOMBIE_NAUTILUS: Layout = Layout { seats: &[&[seat([0.0, 0.925, -0.2])]], riders: &["drowned"], pulls_in: true, ..HORSE };
+const CHICKEN: Layout = Layout { seats: &[&[seat([0.0, 0.48, 0.0])]], riders: &["baby_undead"], ..HORSE };
+const ZOMBIE_NAUTILUS: Layout =Layout { seats: &[&[seat([0.0, 0.925, -0.2])]], riders: &["drowned"], pulls_in: true, ..HORSE };
 
 /// The layout of a kind that takes riders (the adult's; babies are not told apart).
 pub(crate) fn layout(kind: &str) -> Option<&'static Layout> {
@@ -84,6 +85,7 @@ pub(crate) fn layout(kind: &str) -> Option<&'static Layout> {
         "minecraft:chest_boat" => &CHEST_BOAT,
         "minecraft:minecart" => &MINECART,
         "minecraft:pig" => &PIG,
+        "minecraft:chicken" => &CHICKEN,
         "minecraft:strider" => &STRIDER,
         "minecraft:horse" => &HORSE,
         "minecraft:skeleton_horse" => &SKELETON_HORSE,
@@ -115,9 +117,12 @@ impl Layout {
         self.seat(count, index) != self.seat(before_count, before_index)
     }
 
-    /// Whether a rider of `kind` may sit on it.
-    pub fn takes(&self, kind: &str) -> bool {
-        self.riders.is_empty() || mob_families(kind).iter().any(|family| self.riders.contains(family))
+    /// Whether a rider of `kind` may sit on it: a `baby` undead is also `baby_undead` (the zombies'
+    /// baby groups).
+    pub fn takes(&self, kind: &str, baby: bool) -> bool {
+        let families = mob_families(kind);
+        let baby_undead = baby && families.contains(&"undead") && self.riders.contains(&"baby_undead");
+        self.riders.is_empty() || baby_undead || families.iter().any(|family| self.riders.contains(family))
     }
 }
 
@@ -151,8 +156,10 @@ mod tests {
         assert_eq!(boat.seat(2, 1).map(|seat| seat.position), Some([-0.6, -0.2, 0.0]));
         assert!((offset(&boat.seat(1, 0).unwrap(), PLAYER, 0.0)[1] - 1.02001).abs() < 1e-6);
         assert!((offset(&boat.seat(1, 0).unwrap(), "minecraft:zombie", 0.0)[1] + 0.7).abs() < 1e-6);
-        assert!(layout("minecraft:pig").unwrap().saddled && !layout("minecraft:pig").unwrap().takes("minecraft:zombie"));
-        assert!(boat.takes("minecraft:cow") && layout("minecraft:cow").is_none());
+        assert!(layout("minecraft:pig").unwrap().saddled && !layout("minecraft:pig").unwrap().takes("minecraft:zombie", false));
+        assert!(boat.takes("minecraft:cow", false) && layout("minecraft:cow").is_none());
+        let chicken = layout("minecraft:chicken").unwrap();
+        assert!(chicken.takes("minecraft:zombie", true) && !chicken.takes("minecraft:zombie", false) && !chicken.takes("minecraft:cow", true));
     }
 
     #[test]

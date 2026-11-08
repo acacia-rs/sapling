@@ -306,7 +306,8 @@ one tick BDS takes the nearest (items hurt at 3.5 were heard over the blast at 7
 - `getInputStrength` returns -1 on one path (component missing); effect on S12 not checked.
 - Order of block-actor ticks vs. events within a tick (T0+1 assumption in S10); chunk ticking requirement timing.
 - 142255db0 meaning in `tryShriek`; `_canRespond` beyond the `can_summon` read (difficulty, gamerule).
-- Place sounds (`SculkSensorPlace` 381, `SculkShriekerPlace` 382) assumed client/place-event driven, not traced.
+- Place sounds: placed by hand, BDS sent the generic `place` LevelSoundEvent with the block's hash for a sensor, a
+  shrieker and a calibrated sensor, as sapling does; no `SculkSensorPlace`/`SculkShriekerPlace` (bds-p3sculk.txt).
 
 ## Left out
 

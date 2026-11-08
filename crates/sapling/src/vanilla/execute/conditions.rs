@@ -25,7 +25,7 @@ pub(super) fn test(ctx: &mut ShardCtx<'_>, sender: &Sender, dimension: i32, cond
             }
             let there = ctx.block(pos).unwrap_or_else(Block::air);
             let wanted = block(&name.0, states.as_ref());
-            Some((there.name == wanted.name && states.as_ref().is_none_or(|states| has_states(&there, &states.0)), None))
+            Some((there.name == wanted.name && has_states(&there, &wanted.properties), None))
         }
         Condition::Blocks([begin, end, destination], masked) => {
             let [begin, end] = [begin, end].map(|corner| corner.resolve(ctx, sender));

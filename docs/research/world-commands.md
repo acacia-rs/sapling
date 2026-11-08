@@ -136,6 +136,14 @@ selecting,session,items,enchanting}.rs`.
   `slot.armor.body` succeeded into Armor window slot 4, which sapling has no slot for (TODO in
   `vanilla/containers.rs`). Sapling: `Slot::EnderChest`; tests in `world_commands.rs`.
 
+## Drilled 2026-11-08 (`bds-p3alias.txt`, `bds-p3names.txt`)
+
+- `chain` is `iron_chain`, its states kept. An anvil's old `damage` names the anvil on any anvil name, other states
+  kept: `undamaged` anvil, `slightly_damaged` chipped, `very_damaged` damaged, `broken` `deprecated_anvil`.
+  `testforblock chipped_anvil ["damage"="very_damaged"]` failed on BDS as on sapling. Sapling:
+  `vanilla/blocks.rs` `OLD_NAMES`, `ANVIL_DAMAGE`; `testforblock` and `execute if block` read the mapped states.
+- `summon <vehicle> <name>`: no minecart or boat takes the name, a pig does. Sapling: `vanilla/players.rs`.
+
 ## Not seen; sapling's choice
 
 - `/defaultgamemode`, `/seed` and `/version` do not exist on BDS 1.26.52: sapling answers under

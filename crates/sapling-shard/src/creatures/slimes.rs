@@ -6,8 +6,8 @@
 //! its box touches is hurt by its size (sizes.rs), at most once in [`TOUCHES`] ticks
 //! (research/captures/bds-j3slime.txt: a large one hurt an iron golem 4, unthrown).
 // TODO: a split one's AddEntity shows its kind's box and a velocity, then its whole dictionary, as
-// BDS's; it splits only once dead, not when despawned (summoned ones never despawn: undrilled); it
-// sinks in lava and a small one dies at once, where BDS's rose 0.02 to 0.04 a tick, hurt by turns.
+// BDS's; it splits only once dead, not when despawned (summoned ones never despawn: undrilled).
+// In lava it rises (floating.rs).
 
 pub(super) mod sizes;
 

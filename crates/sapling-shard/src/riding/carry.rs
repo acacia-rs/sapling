@@ -40,8 +40,7 @@ pub(super) fn place(world: &mut World, vehicle: Entity) {
     // A parrot on a player's shoulder is not moved for its viewers: BDS sent none (bds-as3parrot.txt).
     let shown = kind != seats::PLAYER;
     for (index, rider) in riders.iter().enumerate() {
-        let (Some(seat), Some(rider_kind)) = (layout.seat(riders.len(), index), kind_of(world, *rider)) else { continue };
-        let offset = seats::offset(&seat, &rider_kind, yaw);
+        let Some(offset) = layout.seat(riders.len(), index).and_then(|seat| super::rider_offset(world, &seat, *rider, yaw)) else { continue };
         let at: [f32; 3] = std::array::from_fn(|axis| wire[axis] + offset[axis]);
         if let Some(mut position) = world.get_mut::<Position>(*rider) {
             let feet = [at[0], at[1] - EYE_HEIGHT, at[2]];

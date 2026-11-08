@@ -147,6 +147,22 @@ async fn world_and_item_commands_answer_as_bds_answered() {
     // bds-bg2names.txt: other answers name it too.
     assert_eq!(answer(&mut alice, "effect @e[name=v] slowness 10 0 true").await, r#"commands.effect.success ["%potion.moveSlowdown", "0", "v", "10"] 1"#);
     assert_eq!(answer(&mut alice, "kill @e[name=v]").await, r#"commands.kill.successful ["v"] 1"#);
+    // bds-p3alias.txt: `chain` is the iron chain, and an anvil's `damage` names which anvil.
+    let alias: &[(&str, &str)] = &[
+        (r#"setblock ~-3 ~ ~-3 chain ["pillar_axis"="x"]"#, "commands.setblock.success"),
+        (r#"testforblock ~-3 ~ ~-3 iron_chain ["pillar_axis"="x"]"#, "commands.testforblock.success"),
+        (r#"setblock ~-5 ~ ~-3 anvil ["damage"="very_damaged","minecraft:cardinal_direction"="east"]"#, "commands.setblock.success"),
+        (r#"testforblock ~-5 ~ ~-3 damaged_anvil ["minecraft:cardinal_direction"="east"]"#, "commands.testforblock.success"),
+        (r#"testforblock ~-5 ~ ~-3 anvil ["damage"="very_damaged"]"#, "commands.testforblock.success"),
+    ];
+    for (line, expected) in alias {
+        let answered = answer(&mut alice, line).await;
+        assert!(answered.starts_with(expected), "/{line}: {answered}");
+    }
+    // bds-p3names.txt: a vehicle takes no name.
+    assert_eq!(answer(&mut alice, "summon minecart m ~ ~ ~3").await, "commands.summon.success [] 1");
+    assert_eq!(answer(&mut alice, "kill @e[name=m]").await, "commands.generic.noTargetMatch [] 0");
+    assert_eq!(answer(&mut alice, "kill @e[type=minecart]").await, r#"commands.kill.successful ["Minecart"] 1"#);
     // bds-bb1event.txt: kinds listed once each, the event by the pack's own name.
     for kind in ["sheep", "sheep", "cow"] {
         assert_eq!(answer(&mut alice, &format!("summon {kind} ~ ~ ~3")).await, "commands.summon.success [] 1");

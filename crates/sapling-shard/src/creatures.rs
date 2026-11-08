@@ -46,6 +46,8 @@ mod heat;
 mod hits;
 mod hunting;
 mod husbandry;
+mod jockeys;
+pub(crate) use jockeys::rein as jockey_rein;
 mod killing;
 mod landing;
 mod legs;
@@ -107,7 +109,7 @@ pub(crate) use afflictions::{clouded, takes_potion};
 pub(crate) use armour_stands::use_on as dress_stand;
 pub(crate) use skeleton_traps::set_trap;
 pub(crate) use landing::tell_after_gone;
-pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot, first_move};
+pub(crate) use arrows::{ARROW, FIREBALL, Lands, Shot, first_move, spread};
 pub(crate) use shooting::play_loads;
 pub(crate) use flight::{Arrow, Launch, Loosed, Pickup, facing, launch, sound, summon as summon_shot};
 pub(crate) use flight::vanish::vanish as vanish_shot;
@@ -237,13 +239,16 @@ pub(crate) fn tick(world: &mut World) {
         death::hear_hurt(world, entity, layer);
         // A rider is carried to its seat, a vehicle its driver's client moves put where it says (riding.rs).
         // A seated mob is still harmed where its seat is: BDS's pig in a boat under a roof held its
-        // breath and choked (research/captures/bds-ai1boat.txt). TODO: a riding mob does not think.
+        // breath and choked (research/captures/bds-ai1boat.txt). A seated hunter hunts (jockeys.rs).
         let seated = world.get::<crate::riding::Riding>(entity).is_some();
         let ridden = seated || crate::riding::is_driven(world, entity);
         let Some(start) = world.get::<Body>(entity).copied().filter(|_| !ridden) else {
-            if let Some(body) = world.get::<Body>(entity).copied().filter(|_| seated)
-                && harm::tick(world, entity, layer, id, &kind, &body, &body, world.get::<Dying>(entity).is_some())
-            {
+            let Some(body) = world.get::<Body>(entity).copied().filter(|_| seated) else { continue };
+            let dying = world.get::<Dying>(entity).is_some();
+            if !dying && crate::rules::on(world, layer, sapling_data::MOB_AI) {
+                jockeys::think(world, entity, layer, id, &kind, &body);
+            }
+            if harm::tick(world, entity, layer, id, &kind, &body, &body, dying) {
                 die(world, entity, layer, &kind, &body);
             }
             continue;

@@ -124,6 +124,21 @@ Sapling: `updates.rs` `holds` asks the face by those kinds (any other dependent 
 `updates/unheld.rs` pops lanterns, pots and plates. Whether light is checked as a plant is placed (the rest of
 REMAINING4's line) was not drilled.
 
+### A7. Dust, rails, diodes and carpet on a top (2026-11-08, `bds_command_probe p3ground`, `p3carpet`; bds-p3ground.txt, bds-p3carpet.txt)
+
+A6's supporters took dust, a rail, a repeater and a comparator by `/fill` and by hand; what popped at a neighbour's
+change fits `canProvideSupport` on the top face:
+
+- dust: Centre and Edge (off a bottom slab, leaves, a closed trapdoor, fence, wall, bars, chain, cauldron, composter);
+- rail: Edge (stays on a cauldron and composter, off a fence, wall, bars, chain, bottom slab, leaves, trapdoor);
+- repeater, comparator: Any (off a bottom slab, leaves and the trapdoor only).
+
+A3's decompiled "Center" for dust is short of this. Sapling: `ground.rs` `top_gives` (a shulker box's top still holds
+no dust, bds-conductors.txt); kelp, nether vines and dripstone still read collision boxes. Carpet stays on anything
+but air (`CarpetBlock::canSurvive`): set alone over air by `/setblock` or a one-cell `/fill` it stays, but three set
+side by side by `/fill` all showed breaking and went a tick later with their items, each noticing its neighbour; sapling
+now does the same (`ground.rs` carpet rule).
+
 ## Part B: shapes that reconnect
 
 ### B1. States (REG)

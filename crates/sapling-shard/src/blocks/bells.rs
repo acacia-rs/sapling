@@ -42,6 +42,27 @@ pub(crate) fn forget(world: &mut World, layer: Entity, pos: BlockPos) {
     }
 }
 
+/// The bell `id` put at `pos` on the `face` clicked: on a side it faces off that face whatever the
+/// placer's look, and with a solid block across the cell it hangs between the two
+/// (`attachment=multiple`; bds-p3bell.txt).
+pub(super) fn placed(level: &sapling_world::World, pos: BlockPos, id: u32, face: Face) -> u32 {
+    let registry = level.registry();
+    let direction = match face {
+        Face::South => "0",
+        Face::West => "1",
+        Face::North => "2",
+        Face::East => "3",
+        Face::Up | Face::Down => return id,
+    };
+    if !registry.get(id).is_some_and(|state| state.name == BELL) {
+        return id;
+    }
+    let across = face.neighbour(pos);
+    let between = level.in_height(across[1]) && registry.get(level.block(across[0], across[1], across[2])).is_some_and(|state| state.is_solid());
+    let id = with_property(registry, id, "direction", direction).unwrap_or(id);
+    if between { with_property(registry, id, "attachment", "multiple").unwrap_or(id) } else { id }
+}
+
 /// Starts counting a bell just put at `pos`.
 pub(super) fn noticed(world: &mut World, layer: Entity, pos: BlockPos) {
     if bell_at(world, layer, pos).is_some() {
@@ -152,5 +173,17 @@ mod tests {
         // bds-bells.txt: the player at (0.5, 0.5); bells north-east, south-east and east of it.
         let player = [0.5, 0.5];
         assert_eq!([way([2.5, -2.5], player), way([2.5, 3.5], player), way([6.5, 0.5], player)], [0, 2, 1]);
+    }
+
+    /// bds-p3bell.txt: put on a stone's north face, alone and with another stone across the gap.
+    #[test]
+    fn a_bell_between_two_blocks_hangs_from_both() {
+        let mut level = sapling_world::World::void();
+        let (stone, bell) = (level.block_id("minecraft:stone").unwrap(), level.block_id("minecraft:bell").unwrap());
+        level.set_block(3, 64, 1, stone);
+        let state = |level: &sapling_world::World| level.registry().get(placed(level, [3, 64, 0], bell, Face::North)).unwrap().properties;
+        assert!(!state(&level).contains("attachment=multiple") && state(&level).contains("direction=2"), "{}", state(&level));
+        level.set_block(3, 64, -1, stone);
+        assert!(state(&level).contains("attachment=multiple"), "{}", state(&level));
     }
 }
