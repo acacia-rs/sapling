@@ -1,9 +1,10 @@
 //! Group V of the fourteenth wave: a frog eating a small slime and laying frogspawn
-//! (research/captures/bds-g14frog.txt); mobs treading farmland.
+//! (research/captures/bds-g14frog.txt); a mob's steps and its landing on farmland.
 
 use crate::common;
 
 use acacia_proto::RawPacket;
+use acacia_proto::nbt::Value as Nbt;
 use acacia_proto::packets::{AddItemEntity, LevelSoundEvent, RemoveEntity, SetEntityData, SetEntityMotion};
 use acacia_proto::types::{MetadataDictionaryItemValue as MetaValue, MetadataFlags1 as Flags};
 use common::asking::ask;
@@ -76,6 +77,20 @@ fn two_fed_frogs_make_one_pregnant_and_it_lays_frogspawn_on_water() {
     let spawn = ask(&mut h, |ctx| (3..=5).flat_map(|x| (-1..=1).map(move |z| [x, 65, z])).filter(|pos| ctx.block(*pos).is_some_and(|block| block.name == "minecraft:frog_spawn")).count());
     assert_eq!(spawn, 1, "frogspawn on the water");
     assert!(all::<LevelSoundEvent>(&told).iter().any(|sound| sound.sound_id == "lay_spawn" && sound.entity_type == FROG), "heard from the frog");
+}
+
+/// research/captures/bds-f14v2steps-gdb.txt: BDS's walking zombie vibrated `entity_move` every third of a block.
+#[test]
+fn a_cow_walking_past_a_sensor_is_heard_stepping() {
+    let mut h = ready(GameMode::Survival, &[("minecraft:wheat", 1, 0)], 0.0);
+    let sensor = [4, 65, 2];
+    ask(&mut h, move |ctx| {
+        assert!(ctx.set_block(sensor, &Block::new("minecraft:sculk_sensor")));
+        ctx.summon_as(None, "minecraft:cow", [7.5, 65.0, 0.5], 0.0, 0.0, None).expect("a cow");
+    });
+    ticks(&mut h, 100);
+    let heard = ask(&mut h, move |ctx| ctx.block_entity(sensor).and_then(|data| data.get::<Nbt>().cloned())).expect("a block actor");
+    assert_eq!(heard.get("VibrationListener").and_then(|listener| listener.get("event")).cloned(), Some(Nbt::Int(22)), "entity_move");
 }
 
 /// research/captures/bds-f14v2tread2.txt: under gdb, cows that fell 2.7 onto farmland trod it, a calf did not.

@@ -139,7 +139,7 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let before = health;
         let ground = level.map_or(super::Ground::Soft(1.0), |level| super::heat::softening(level, now.at));
         let dropped = if now.on_ground && now.liquid().is_none() { health.dropped(start.at[1], now.at[1]) } else { 0.0 };
-        super::treading::tread(world, layer, now, dropped);
+        super::footfalls::tread(world, layer, now, dropped);
         if let Some((harm, from, cause)) = health.fall_onto(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall, ground)
             && weigh(world, &mut health, before, cause)
         {
