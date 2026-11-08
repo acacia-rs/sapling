@@ -13,7 +13,8 @@ special count, per special: u32 block index, u8 kind (0 jigsaw: name, target, po
 strings, u16 final state, i32 selection and placement priorities; 1 data marker: metadata string; 2 chest
 whose block entity draws a loot seed; 3 vine with Java's `up`; 4 block entity: `block_entity`'s kind and strings),
 strings as u8 length + bytes; then the state table
-(templates_palette.py).
+(templates_palette.py); then the saved actors of the .mcstructure templates (`saved_actors`), appended last so the
+bytes before them stay as they were.
 """
 import gzip
 import os
@@ -270,6 +271,23 @@ def as_saved(key, rot, probed, table):
     return probed
 
 
+def saved_actors(templates):
+    """b'ACT1', u16 count; per template with actors (only .mcstructure ones: Java templates' `entities` are never
+    placed): u8 name length, name, u16 actor count; per actor: u8 identifier length, identifier, f32 x3 Pos less the
+    template's origin, f32 yaw and pitch, u8 1 and f32 x3 HomePos less the origin (u8 0 for none), u32 length, the
+    actor's compound as a nameless little-endian root."""
+    found = [(name, mcstructure.entities(path)) for name, path in templates if path.endswith('.mcstructure')]
+    found = [(name, actors) for name, actors in found if actors]
+    out = bytearray(b'ACT1') + struct.pack('<H', len(found))
+    for name, actors in found:
+        out += bytes([len(name)]) + name.encode() + struct.pack('<H', len(actors))
+        for kind, local, rotation, home, nbt in actors:
+            out += bytes([len(kind)]) + kind.encode() + struct.pack('<5f', *local, *rotation)
+            out += struct.pack('<B3f', 1, *home) if home else b'\x00'
+            out += struct.pack('<I', len(nbt)) + nbt
+    return bytes(out)
+
+
 def main():
     bds = sys.argv[1]
     table = {}
@@ -337,7 +355,7 @@ def main():
             table.update({(key, rot): placed_sides(key, rot, table[(key, rot)]) for rot in range(4) if (key, rot) in table})
         table.update({(key, rot): as_saved(key, rot, table[(key, rot)], table) for rot in range(4) if (key, rot) in table})
     states, palette = state_table(keys, table, stages)
-    out = b'SPT1' + palette_bytes(palette) + out[4:] + states
+    out = b'SPT1' + palette_bytes(palette) + out[4:] + states + saved_actors(templates)
     open(os.path.join(OUT, 'templates.bin'), 'wb').write(out)
     print(f'{len(templates)} templates, {len(keys)} states, {len(palette)} blocks, {len(out)} bytes')
 

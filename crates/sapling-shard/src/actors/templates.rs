@@ -64,7 +64,8 @@ fn is_ready(world: &World, region: &Region, layer: Entity, column: ChunkPos) -> 
 }
 
 /// The mob step of `column`: the waiting mobs in its box, which reaches a block into the columns
-/// east and south (BDS's box is x0..x0+16 and z0..z0+16); persistent as any stored mob. With
+/// east and south (BDS's box is x0..x0+16 and z0..z0+16); persistent as any stored mob, a saved
+/// one (a bastion's) brought in from its compound, home turned, as `/structure load` brings one. With
 /// `doMobSpawning` off BDS skips the step and the mobs never come (bds-t12actors.txt).
 fn make(world: &mut World, layer: Entity, column: ChunkPos) {
     let (x0, z0) = (column.x * 16, column.z * 16);
@@ -87,7 +88,12 @@ fn make(world: &mut World, layer: Entity, column: ChunkPos) {
     if made.is_empty() || !crate::rules::on(world, layer, "doMobSpawning") {
         return;
     }
-    for actor in made {
+    for (nth, actor) in made.into_iter().enumerate() {
+        if let Some(saved) = actor.saved {
+            let homed = saved.home.and_then(|home| sapling_world::homed_actor(saved.nbt, home, sapling_world::actor_home(saved.nbt)?.1).ok());
+            super::bring_in_saved(world, layer, homed.as_deref().unwrap_or(saved.nbt), actor.feet, saved.rotation, nth);
+            continue;
+        }
         let event = Some(actor.event).filter(|event| *event != "minecraft:entity_spawned");
         creatures::spawn_as(world, layer, actor.kind, actor.feet, sapling_api::SpawnReason::Structure, 0.0, event);
     }

@@ -216,9 +216,14 @@ impl<'a> Canvas<'a> {
 
     /// A mob of `kind`, made by `event`, its feet at `feet`; only inside the chunk.
     pub fn add_actor_at(&mut self, kind: &'static str, event: &'static str, feet: [f32; 3]) {
-        let [x, y, z] = feet.map(|c| c.floor() as i32);
+        self.file_actor(crate::chunk::TemplateActor { kind, event, feet, saved: None });
+    }
+
+    /// `actor`, only inside the chunk.
+    pub fn file_actor(&mut self, actor: crate::chunk::TemplateActor) {
+        let [x, y, z] = actor.feet.map(|c| c.floor() as i32);
         if self.bb.contains(x, y, z) {
-            self.shape.add_actor(crate::chunk::TemplateActor { kind, event, feet });
+            self.shape.add_actor(actor);
         }
     }
 
