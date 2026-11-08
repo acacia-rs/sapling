@@ -56,8 +56,14 @@ A zombie walking at 0.114 a tick into a row one block deep, by night:
   feet. Sapling's mob move had no step up (`collide_box` only), hence the stand-in jump thirteenth2ay
   added for eggs. Ported (`body/step.rs`, `Physics::step`; `legs.rs` `at_step` measures from the feet;
   test `a_walking_mob_steps_up_onto_a_block_as_high_as_its_max_auto_step`); sapling's `bc1step` now
-  steps and jumps in the same ticks. Left: walking off the edge, sapling's mob is off the ground the tick
-  its box clears it, BDS's the tick after (as before the step; not looked into).
+  steps and jumps in the same ticks.
+- Walking off the edge (group BD): BDS's zombie is still on the ground in the tick its box clears the
+  block, falls 0.0784 the next at its full ground stride (slab: z -4.689 stood, -4.575 at y -25.578).
+  The move stops the fall first, then goes across, so the ground under it is judged before the step
+  across; sapling judged it under the box's end and was off a tick early, then a tick's fall and an air
+  stride behind. Fixed (`body.rs` `slide_by`: the box after the fall alone stands it too; test
+  `a_mob_whose_box_clears_an_edge_stood_on_it_that_tick_and_falls_the_next`); sapling-bc1step.txt now
+  leaves the slab, stonecutter and table in BDS's ticks to 1e-6.
 
 ## Around a fence (`around`)
 
@@ -446,6 +452,10 @@ A zombie 12 north of the survival actor by night, 15 s for each way (sapling-e1p
   and hit at 6 s. Sapling's stood where it came and never saw the actor: its eyes' line to the
   actor's passed 0.007 into the shelf's edge, which the quarter block BDS's had walked cleared. A
   drop of three is taken (test `a_zombie_on_a_ledge_three_up_takes_its_prey_below_and_drops_to_it`).
+  Noise (group BD, `bd2shelf`: the same shelf five times 8 s, bds-bd2shelf.txt, sapling-bd2shelf.txt):
+  BDS's zombie strolled in four (two away, two south) and took the actor only on the two south strolls,
+  as its sight clears the edge; sapling's strolled in four, took it on two south strolls, the same way.
+  e1path's sapling run had simply drawn no stroll in its 15 s.
 - A one-deep pool three wide: BDS's crossed its floor at 0.45 blocks a second and climbed out; sapling's
   walked across at its land pace. Fixed: legs in a liquid push as in the air (`legs.rs`, 0.02 x 0.98 x
   its speed against water's drag of 0.8).

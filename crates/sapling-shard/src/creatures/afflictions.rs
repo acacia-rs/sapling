@@ -73,7 +73,8 @@ pub(super) fn give_shown(world: &mut World, mob: Entity, effect: Effect, ticks: 
         return false;
     }
     let Some(id) = world.get::<NetId>(mob).map(|id| id.0) else { return false };
-    let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles };
+    // A sheep's bad omen showed no particles, its raid and trial omens did (bds-bd2event.txt).
+    let new = Active { effect, amplifier, left: if effect.is_instant() { 1 } else { ticks }, particles: particles && effect != Effect::BadOmen };
     if world.get::<Afflicted>(mob).is_none() {
         world.entity_mut(mob).insert(Afflicted::default());
     }
@@ -93,6 +94,9 @@ pub(super) fn give_shown(world: &mut World, mob: Entity, effect: Effect, ticks: 
     };
     let list = afflicted.0.clone();
     let mut packets: Vec<bytes::Bytes> = is_told(effect).then(|| told::told(id, event_id, &now)).into_iter().collect();
+    if event_id == MobEffectEventId::Add {
+        packets.extend(crate::vitals::effects::omen_sound(effect).and_then(|sound| told::omen_heard(world, mob, id, sound)));
+    }
     packets.extend(shown_and_announced(world, mob, id, &before, &list));
     tell(world, mob, packets);
     if effect == Effect::HealthBoost {

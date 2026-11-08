@@ -15,6 +15,26 @@ pub(super) fn is_told(effect: Effect) -> bool {
     matches!(effect, Effect::Speed | Effect::Slowness)
 }
 
+/// A mob's omen taking hold (`vitals::effects::omen_sound`), heard 0.85 of its shown height up (a
+/// zombie's 0.9, a villager's at its feet) and 0.9 of its width ahead along its head's yaw: bds-bd2mouth.txt's
+/// cow, calf, pig, chicken, zombie and villager, bds-bd2event.txt's sheep.
+pub(super) fn omen_heard(world: &World, mob: Entity, id: u64, sound: &str) -> Option<bytes::Bytes> {
+    let (kind, body) = (world.get::<entities::Kind>(mob)?.0.as_str(), world.get::<Body>(mob)?);
+    let baby = crate::creatures::shown::is_baby(world, mob);
+    let [width, height] = sapling_data::mob_look(kind, baby).filter(|_| baby).map_or(body.size, |(size, scale)| size.map(|side| side * scale));
+    let legs = || world.get::<crate::creatures::legs::Legs>(mob).map(|legs| legs.yaw);
+    let yaw = crate::creatures::gaze::head_yaw(world, mob).or_else(legs).unwrap_or(0.0).to_radians();
+    let (up, ahead) = match kind {
+        "minecraft:villager_v2" => (0.0, 0.0),
+        "minecraft:zombie" => (0.9 * height, 0.9 * width),
+        _ => (0.85 * height, 0.9 * width),
+    };
+    let [x, y, z] = body.at;
+    let position = acacia_proto::types::Vec3f { x: x - yaw.sin() * ahead, y: y + up, z: z + yaw.cos() * ahead };
+    let heard = acacia_proto::packets::LevelSoundEvent { sound_id: sound.into(), position, extra_data: -1, entity_type: kind.into(), is_baby_mob: baby, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+    Some(sapling_net::encode(&heard))
+}
+
 pub(super) fn told(id: u64, event_id: MobEffectEventId, active: &Active) -> bytes::Bytes {
     sapling_net::encode(&MobEffect { runtime_entity_id: id, event_id, effect_id: active.effect.id(), amplifier: i32::from(active.amplifier), particles: active.particles, duration: active.left as i32, tick: 0, ambient: false })
 }

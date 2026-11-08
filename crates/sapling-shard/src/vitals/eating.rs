@@ -111,7 +111,8 @@ fn afflict(world: &mut World, player: Entity, food: &sapling_data::Food) {
         // A stew's effect is told twice, Add then Update (bds-foods2.txt).
         let told = if food.leaves == Some("minecraft:bowl") { 2 } else { 1 };
         for _ in 0..told {
-            effects::give(world, player, effect, gives.ticks, gives.amplifier, !food.ominous);
+            // The bottle's omen is heard with the bottle, after the drink is told (`drained`).
+            effects::give_unheard(world, player, effect, gives.ticks, gives.amplifier, !food.ominous);
         }
     }
 }
@@ -124,14 +125,20 @@ fn leave(world: &mut World, player: Entity, food: &sapling_data::Food) {
     }
 }
 
+/// Where a player's bottle is heard: under its eyes and ahead of them, as is an omen taking hold
+/// (bds-bd2event.txt).
+pub(super) fn sipped_at(position: &Position) -> Vec3f {
+    let ([x, y, z], (sin, cos)) = (position.feet, position.yaw.to_radians().sin_cos());
+    Vec3f { x: x - sin * BOTTLE_AHEAD, y: y + EYE_HEIGHT - BOTTLE_BELOW, z: z + cos * BOTTLE_AHEAD }
+}
+
 /// A drink is gone: the bottle is heard emptied, under the eyes and ahead of them, as BDS's
 /// (research/captures/bds-drink.txt); an ominous bottle as the omen taking hold and its own end
 /// (bds-fx3.txt).
 // TODO: only drunk facing south (yaw 0): the way ahead is taken to turn with the yaw.
 fn drained(world: &mut World, player: Entity, ominous: bool) {
     let (Some(position), Some(id)) = (world.get::<Position>(player).copied(), world.get::<NetId>(player).map(|id| id.0)) else { return };
-    let ([x, y, z], (sin, cos)) = (position.feet, position.yaw.to_radians().sin_cos());
-    let position = Vec3f { x: x - sin * BOTTLE_AHEAD, y: y + EYE_HEIGHT - BOTTLE_BELOW, z: z + cos * BOTTLE_AHEAD };
+    let position = sipped_at(&position);
     let heard = |sound_id: &str, entity_type: &str, entity_unique_id: i64| LevelSoundEvent {
         sound_id: sound_id.into(), position: position.clone(), extra_data: -1, entity_type: entity_type.into(), is_baby_mob: false, is_global: false, entity_unique_id, fire_at_position: None,
     };

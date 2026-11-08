@@ -160,6 +160,22 @@ Bedrock was found.
   trial omen for 18000 ticks a level, LevelEvent 3616 at the spawner, its mobs removed, the ominous config
   [docs/research/spawners.md "Ominous"; Java `TrialSpawner.tryDetectPlayers`].
 
+## Omen sounds and particles (group BD, 2026-11-08)
+
+- Bad omen never shows particles, however given: `/effect @s bad_omen 30 0` (no `true`) came as a
+  MobEffect with particles false and no VisibleMobEffects, on a player and on a sheep; raid omen and trial
+  omen by `/effect` show them (VisibleMobEffects 72, 62; both on a sheep 8008) [cap bds-bd2event.txt].
+  Sapling showed bad omen's; fixed (`vitals/effects.rs` `has_particles`, `creatures/afflictions.rs`).
+- Each omen taking hold is heard: `apply_effect.bad_omen`, `.raid_omen`, `.trial_omen`, with the
+  entity's type and unique id, by `/effect`, by `gain_raid_omen` (event or a village) and by a bottle;
+  not as one is raised again (bad omen 1 over 0 was silent). A player's is 0.2 under its eyes and 0.2
+  ahead, as the bottle's; a mob's 0.85 of its shown height up and 0.9 of its width ahead along its yaw
+  (sheep, cow and calf, pig, chicken), a zombie's 0.9 up, a villager's at its feet [cap bds-bd2event.txt,
+  bds-bd2mouth.txt; also in bds-raid.txt, bds-raidhero.txt, bds-raidlost.txt]. Sapling played only the
+  bottle's; ported (`vitals::effects::omen_sound`, `give` / `give_unheard`, `afflictions/told.rs`
+  `omen_heard`). Other kinds go by the general rule, undrilled. BDS sends it after the command's answer
+  with the tick's VisibleMobEffects; sapling right after the MobEffect.
+
 ## Hero of the Village
 
 - A villager (not a wandering trader) asks `max(1, floor((0.3 + 0.0625 * amplifier) * count))` less of

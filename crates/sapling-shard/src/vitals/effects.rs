@@ -117,23 +117,44 @@ pub(super) fn end_at_rise(world: &mut World, player: Entity) {
     world.entity_mut(player).remove::<Effects>();
 }
 
-/// See `ShardCtx::give_effect`.
+/// See `ShardCtx::give_effect`; an omen taking hold is heard ([`omen_sound`]).
 pub(crate) fn give(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
-    give_as(world, player, Active { effect, amplifier, left: ticks, particles, ambient: false, since: 0 })
+    give_as(world, player, Active { effect, amplifier, left: ticks, particles, ambient: false, since: 0 }, true)
+}
+
+/// [`give`] with no omen heard: the caller plays it.
+pub(crate) fn give_unheard(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8, particles: bool) -> bool {
+    give_as(world, player, Active { effect, amplifier, left: ticks, particles, ambient: false, since: 0 }, false)
 }
 
 /// A beacon's effect: as [`give`], told `ambient`.
 pub(crate) fn give_ambient(world: &mut World, player: Entity, effect: Effect, ticks: u32, amplifier: u8) -> bool {
-    give_as(world, player, Active { effect, amplifier, left: ticks, particles: true, ambient: true, since: 0 })
+    give_as(world, player, Active { effect, amplifier, left: ticks, particles: true, ambient: true, since: 0 }, true)
 }
 
-fn give_as(world: &mut World, player: Entity, new: Active) -> bool {
+/// The sound an omen makes as it takes hold of a player or mob, not as it is raised again
+/// (research/captures/bds-bd2event.txt).
+pub(crate) fn omen_sound(effect: Effect) -> Option<&'static str> {
+    match effect {
+        Effect::BadOmen => Some("apply_effect.bad_omen"),
+        Effect::RaidOmen => Some("apply_effect.raid_omen"),
+        Effect::TrialOmen => Some("apply_effect.trial_omen"),
+        _ => None,
+    }
+}
+
+/// Whether an effect given with `asked` particles shows them: darkness (bds-fx2.txt) and bad omen
+/// (bds-bd2event.txt, by `/effect` or a bottle) never do.
+fn has_particles(effect: Effect, asked: bool) -> bool {
+    asked && !matches!(effect, Effect::Darkness | Effect::BadOmen)
+}
+
+fn give_as(world: &mut World, player: Entity, new: Active, heard: bool) -> bool {
     let effect = new.effect;
     let Some(id) = world.get::<NetId>(player).map(|id| id.0) else { return false };
-    // bds-fx2.txt: darkness came without particles though the command asked for them.
     // A stew's saturation feeds every tick it lasts (bds-foods2.txt); /effect gives it one.
     let since = world.resource::<crate::components::Tick>().0;
-    let new = Active { left: if effect.is_instant() && effect != Effect::Saturation { 1 } else { new.left }, particles: new.particles && effect != Effect::Darkness, since, ..new };
+    let new = Active { left: if effect.is_instant() && effect != Effect::Saturation { 1 } else { new.left }, particles: has_particles(effect, new.particles), since, ..new };
     let before = shown(world, player);
     if world.get::<Effects>(player).is_none() {
         world.entity_mut(player).insert(Effects::default());
@@ -153,6 +174,11 @@ fn give_as(world: &mut World, player: Entity, new: Active) -> bool {
     };
     effects.1 = true;
     tell_effect(world, player, id, event_id, &now);
+    if let (true, MobEffectEventId::Add, Some(sound), Some(position)) = (heard, event_id, omen_sound(effect), world.get::<crate::components::Position>(player)) {
+        let position = super::eating::sipped_at(position);
+        let heard = acacia_proto::packets::LevelSoundEvent { sound_id: sound.into(), position, extra_data: -1, entity_type: "minecraft:player".into(), is_baby_mob: false, is_global: false, entity_unique_id: id as i64, fire_at_position: None };
+        super::tell(world, player, &heard);
+    }
     match effect {
         Effect::Speed | Effect::Slowness => tell_pace(world, player, id),
         Effect::Absorption => pad(world, player, CUSHIONS * (f32::from(now.amplifier) + 1.0)),

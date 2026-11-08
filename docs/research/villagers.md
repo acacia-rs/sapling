@@ -465,8 +465,21 @@ villagers in the three-bed village; `research/captures/bds-g11*.txt`, `sapling-g
   `mob_age_set`), and no shed scute. A player's `minecraft:gain_raid_omen` (the bare name fails) ends bad
   omen and gives raid omen 0 for 600 ticks; `trigger_raid`, `clear_add_raid_omen` and
   `remove_raid_trigger` showed nothing on the flat floor, nor do sapling's. Ported (`creatures/evented.rs`
-  `fire_on_player`, `husbandry/fired.rs`, `raids/omens.rs` `gain`; tests `thirteenth1bc`). Left: BDS's
-  `apply_effect.raid_omen` sound on the swap, and its `/effect` bad omen's particles off (sapling's on).
+  `fire_on_player`, `husbandry/fired.rs`, `raids/omens.rs` `gain`; tests `thirteenth1bc`). The raid omen's
+  sound and bad omen's particles: effects-raids.md "Omen sounds and particles" (group BD).
+- `/event` on several mobs (group BD 2026-11-08, bds-bd2event.txt, bds-bd2order.txt; sheep scattered over
+  four chunks, one killed and replaced, one moved across): the tick-end SetEntityData are not newest
+  first. bd2event's six came 22, 19, 18, 14, 17, 15, bd2order's five 23, 21, 22, 25, 24 (summoned 21 to
+  25), the same order for every tick-end change of that tick (event Color and Flags, `/effect`'s
+  VisibleMobEffects, invisibility's Flags and its `disappeared` sounds), so it is BDS's per-tick actor
+  walk, not `/event`'s. No rule found: not by id either way, distance, chunk then id, a chunk's newest,
+  nor a simulated libc++ unordered_set of runtime or unique ids (0 to 19 older actors assumed); BC's
+  three in one chunk read as newest first by chance.
+  What did show a rule is the selector: `/effect @e` told its MobEffects, and listed its answers,
+  nearest first, players among the mobs (actor 0, sheep 6.4 to 22.8, the watcher 30 off last); sapling
+  went players first then oldest first. Fixed (`sapling-api` `selector/resolve.rs` `pick`: every base
+  but `@r` sorted by distance; test `order_and_count_follow_the_base_and_c`), so sapling's `/event`
+  tells in selector order. Left: the per-tick actor walk (needs BDS's container traced, gdb).
 - Trader llamas (bds-trade2.txt): both come with `LeadHolderEid` the trader's and `LEASHED` from their
   announcement (its pack's `should_leash`). Ported (`villagers/wandering.rs` `arrive`,
   `husbandry/leads.rs`: a lead holder is found again by any kept entity's `UniqueID`; test

@@ -146,8 +146,8 @@ fn picks(line: &str) -> Vec<String> {
 #[test]
 fn order_and_count_follow_the_base_and_c() {
     assert_eq!([picks("@p"), picks("@p[c=-1]"), picks("@p[c=2]")], [vec!["Cara"], vec!["Bob"], vec!["Cara", "Alex"]]);
-    assert_eq!([picks("@a"), picks("@a[c=2]"), picks("@a[c=-2]")], [vec!["Alex", "Bob", "Cara"], vec!["Cara", "Alex"], vec!["Bob", "Alex"]]);
-    assert_eq!(picks("@e"), ["Alex", "Bob", "Cara", "pig4", "pig5", "zombie6"], "players, then entities oldest first");
+    assert_eq!([picks("@a"), picks("@a[c=2]"), picks("@a[c=-2]")], [vec!["Cara", "Alex", "Bob"], vec!["Cara", "Alex"], vec!["Bob", "Alex"]]);
+    assert_eq!(picks("@e"), ["Cara", "pig4", "Alex", "zombie6", "Bob", "pig5"], "nearest first, players among the rest (bds-bd2order.txt)");
     assert_eq!([picks("@n"), picks("@n[type=pig]"), picks("@e[type=pig,c=-1]"), picks("@n[c=3]")], [vec!["Cara"], vec!["pig4"], vec!["pig5"], vec!["Cara", "pig4", "Alex"]]);
     assert_eq!(picks("@p[x=21,y=0,z=0]"), ["Bob"], "counted from x y z");
 }
@@ -169,32 +169,32 @@ fn r_picks_at_random_and_takes_entities_only_with_a_type() {
 
 #[test]
 fn place_filters_measure_from_the_origin() {
-    assert_eq!(picks("@e[r=3]"), ["Alex", "Cara", "pig4"], "r takes its edge");
-    assert_eq!(picks("@e[rm=4,r=..10]"), ["Bob", "zombie6"]);
+    assert_eq!(picks("@e[r=3]"), ["Cara", "pig4", "Alex"], "r takes its edge");
+    assert_eq!(picks("@e[rm=4,r=..10]"), ["zombie6", "Bob"]);
     assert_eq!(picks("@e[x=10,r=0]"), ["Bob"]);
-    assert_eq!(picks("@e[x=0,y=0,z=0,dx=5,dy=0,dz=5]"), ["Alex", "pig4", "zombie6"], "whole blocks from x y z to x+dx y+dy z+dz");
+    assert_eq!(picks("@e[x=0,y=0,z=0,dx=5,dy=0,dz=5]"), ["pig4", "Alex", "zombie6"], "whole blocks from x y z to x+dx y+dy z+dz");
     assert_eq!(picks("@e[dx=-2]"), ["Cara"], "the other way, dy and dz 0");
     assert_eq!(picks("@e[rxm=20]"), ["Cara"]);
     assert_eq!(picks("@e[rym=45,ry=135]"), ["Cara"]);
-    assert_eq!(picks("@e[rym=170,ry=-170]"), ["pig5", "zombie6"], "round past 180");
+    assert_eq!(picks("@e[rym=170,ry=-170]"), ["zombie6", "pig5"], "round past 180");
 }
 
 #[test]
 fn who_filters_test_names_kinds_tags_and_players() {
-    assert_eq!([picks("@a[name=Bob]"), picks("@e[name=!Bob,type=player]")], [vec!["Bob"], vec!["Alex", "Cara"]]);
+    assert_eq!([picks("@a[name=Bob]"), picks("@e[name=!Bob,type=player]")], [vec!["Bob"], vec!["Cara", "Alex"]]);
     assert_eq!([picks("@e[type=!player,type=!pig]"), picks("@e[type=minecraft:zombie]")], [vec!["zombie6"], vec!["zombie6"]]);
     assert_eq!([picks("@e[family=monster]"), picks("@e[family=mob,family=!undead]")], [vec!["zombie6"], vec!["pig4", "pig5"]]);
-    assert_eq!(picks("@e[family=player]"), ["Alex", "Bob", "Cara"]);
-    assert_eq!([picks("@e[tag=red]"), picks("@e[tag=!]"), picks("@e[tag=!boss,type=!player]")], [vec!["Bob"], vec!["Bob", "zombie6"], vec!["pig4", "pig5"]]);
-    assert_eq!(picks("@e[tag=]"), ["Alex", "Cara", "pig4", "pig5"], "an empty tag is having none");
-    assert_eq!([picks("@e[m=creative]"), picks("@e[m=!c]"), picks("@a[m=d]")], [vec!["Bob"], vec!["Alex", "Cara"], vec!["Alex", "Cara"]], "m is for players");
-    assert_eq!([picks("@a[lm=1]"), picks("@e[l=..4]")], [vec!["Bob"], vec!["Alex", "Cara"]]);
-    assert_eq!([picks("@e[haspermission={camera=enabled}]"), picks("@a[haspermission={jump=disabled}]")], [vec!["Alex", "Bob", "Cara"], vec!["Cara"]]);
+    assert_eq!(picks("@e[family=player]"), ["Cara", "Alex", "Bob"]);
+    assert_eq!([picks("@e[tag=red]"), picks("@e[tag=!]"), picks("@e[tag=!boss,type=!player]")], [vec!["Bob"], vec!["zombie6", "Bob"], vec!["pig4", "pig5"]]);
+    assert_eq!(picks("@e[tag=]"), ["Cara", "pig4", "Alex", "pig5"], "an empty tag is having none");
+    assert_eq!([picks("@e[m=creative]"), picks("@e[m=!c]"), picks("@a[m=d]")], [vec!["Bob"], vec!["Cara", "Alex"], vec!["Cara", "Alex"]], "m is for players");
+    assert_eq!([picks("@a[lm=1]"), picks("@e[l=..4]")], [vec!["Bob"], vec!["Cara", "Alex"]]);
+    assert_eq!([picks("@e[haspermission={camera=enabled}]"), picks("@a[haspermission={jump=disabled}]")], [vec!["Cara", "Alex", "Bob"], vec!["Cara"]]);
     assert_eq!([picks("@e[scores={}]").len(), picks("@e[scores={kills=0..}]").len()], [6, 1]);
     assert_eq!([picks("@e[scores={kills=!0..}]"), picks("@e[scores={kills=..5,deaths=0}]")], [vec!["Bob"], vec!["Alex"]], "objectives are all tested");
     assert!(picks("@e[scores={deaths=!1}]") == ["Alex"] && picks("@e[scores={none=..0}]").is_empty(), "no score fails, `!` or not, as on BDS");
     assert_eq!(picks("@a[hasitem={item=apple}]"), ["Alex"]);
-    assert_eq!(picks("@e[hasitem={item=apple,quantity=0}]"), ["Bob", "Cara", "pig4", "pig5", "zombie6"]);
+    assert_eq!(picks("@e[hasitem={item=apple,quantity=0}]"), ["Cara", "pig4", "zombie6", "Bob", "pig5"]);
 }
 
 #[test]
