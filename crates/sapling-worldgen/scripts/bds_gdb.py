@@ -9,6 +9,7 @@ Config: {"log": "<out file>", "breakpoints": [...]}, each breakpoint
      "backtrace": 4,                                      # return addresses, ELF-relative
      "gates": "draws", "when": [[-263], [-392]],          # enable breakpoints labelled "draws" while mem == when
      "gated": true,                                       # start disabled, for a gates breakpoint to enable
+     "floats": ["xmm0"],                                  # float arguments, logged as each register's low lane
      "watch": [{"label": "pos z", "expr": "*(long*)($rdi+0x208)+8", "fmt": "f", "limit": 40}],
      "rearm": false}                                      # hardware write watchpoints armed at each hit
                                                           # (replacing the last set; rearm false: once)
@@ -95,6 +96,7 @@ class Logged(gdb.Breakpoint):
         line += [" ".join(map(str, v)) if isinstance(v, tuple) else v for v in values]
         if spec.get("regs"):
             line += [f"{r}={int(gdb.parse_and_eval('$' + r)) & 0xFFFFFFFFFFFFFFFF:#x}" for r in spec["regs"] if r in REGS]
+        line += [f"{x}={float(gdb.parse_and_eval(f'${x}.v4_float[0]'))}" for x in spec.get("floats", [])]
         if spec.get("backtrace"):
             line.append("bt " + " ".join(backtrace(spec["backtrace"])))
         out.write(" | ".join(line) + "\n")

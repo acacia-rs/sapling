@@ -83,6 +83,7 @@ mod stuck;
 mod summoned;
 mod swimming;
 mod teleports;
+mod treading;
 mod ticked;
 mod turning;
 mod vexes;

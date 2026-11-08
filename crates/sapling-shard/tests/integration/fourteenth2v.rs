@@ -1,5 +1,5 @@
 //! Group V of the fourteenth wave: a frog eating a small slime and laying frogspawn
-//! (research/captures/bds-g14frog.txt).
+//! (research/captures/bds-g14frog.txt); mobs treading farmland.
 
 use crate::common;
 
@@ -10,7 +10,7 @@ use common::asking::ask;
 use common::raising::{click_on, has_flag};
 use common::shooting::ready;
 use common::{Harness, all};
-use sapling_api::{Block, Difficulty, Effect, EntityId, GameMode};
+use sapling_api::{Block, Difficulty, Effect, EntityId, GameMode, RuleValue};
 
 const FROG: &str = "minecraft:frog";
 const TONGUE: i64 = 1 << 38;
@@ -76,4 +76,23 @@ fn two_fed_frogs_make_one_pregnant_and_it_lays_frogspawn_on_water() {
     let spawn = ask(&mut h, |ctx| (3..=5).flat_map(|x| (-1..=1).map(move |z| [x, 65, z])).filter(|pos| ctx.block(*pos).is_some_and(|block| block.name == "minecraft:frog_spawn")).count());
     assert_eq!(spawn, 1, "frogspawn on the water");
     assert!(all::<LevelSoundEvent>(&told).iter().any(|sound| sound.sound_id == "lay_spawn" && sound.entity_type == FROG), "heard from the frog");
+}
+
+/// research/captures/bds-f14v2tread2.txt: under gdb, cows that fell 2.7 onto farmland trod it, a calf did not.
+#[test]
+fn a_cow_dropped_onto_farmland_treads_it_and_a_calf_or_a_griefless_cow_does_not() {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    let drop = |h: &mut Harness, x: f32, event: Option<&'static str>, griefs: bool| {
+        ask(h, move |ctx| {
+            assert!(ctx.set_game_rule("randomTickSpeed", RuleValue::Int(0)) && ctx.set_game_rule("mobGriefing", RuleValue::Bool(griefs)));
+            assert!(ctx.set_block([x as i32, 64, 0], &Block::new("farmland")));
+            ctx.summon_as(None, "minecraft:cow", [x + 0.5, 68.0, 0.5], 0.0, 0.0, event).expect("a cow");
+        });
+        ticks(h, 40);
+        ask(h, move |ctx| ctx.block([x as i32, 64, 0]).map(|block| block.name))
+    };
+    assert_eq!(drop(&mut h, 0.0, None, true).as_deref(), Some("minecraft:dirt"));
+    assert_eq!(drop(&mut h, 3.0, Some("minecraft:entity_born"), true).as_deref(), Some("minecraft:farmland"), "a calf's box holds under 0.512");
+    assert_eq!(drop(&mut h, 6.0, None, false).as_deref(), Some("minecraft:farmland"), "mobGriefing off");
 }

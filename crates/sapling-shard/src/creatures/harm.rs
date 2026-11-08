@@ -8,13 +8,18 @@ use bevy_ecs::prelude::*;
 use bytes::Bytes;
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, LevelSoundEvent};
 use acacia_proto::types::{MetadataFlags1, Vec3f};
-use sapling_world::World as Level;
 
 use super::health::{Cause, Health, WALLED};
 use crate::body::{Body, InLiquid, Liquid, in_liquid};
 use crate::components::Layer;
 use crate::sync::Told;
 use crate::{entities, late_sounds, splash};
+
+mod cells;
+
+pub(crate) use cells::{holds, in_rain, is_full_block, touches};
+pub(super) use cells::{is_rained_on, sun_on};
+use cells::is_sunlit;
 
 const WATER: &[&str] = &["minecraft:water", "minecraft:flowing_water"];
 /// Kinds that rain and water hurt, 1 a hit as drowning: BDS's endermen in the rain
@@ -64,61 +69,8 @@ pub(super) fn flinch(world: &mut World, mob: Entity, layer: Entity, cause: Cause
     Some(())
 }
 
-/// Whether the body's box reaches into a cell holding one of `names`, however full.
-pub(crate) fn touches(level: &Level, body: &Body, names: &[&str]) -> bool {
-    const EDGE: f32 = 1e-4;
-    let (low, high) = body.bounds();
-    let cells = |axis: usize| low[axis].floor() as i32..=(high[axis] - EDGE).floor() as i32;
-    cells(0).any(|x| cells(1).any(|y| cells(2).any(|z| holds(level, [x, y, z], names))))
-}
-
-/// Whether the cell holds one of `names`, as a block or as the liquid in one.
-pub(crate) fn holds(level: &Level, [x, y, z]: [i32; 3], names: &[&str]) -> bool {
-    let registry = level.registry();
-    is_within(level, [x, y, z]) && [level.block(x, y, z), level.liquid(x, y, z)].into_iter().any(|id| registry.get(id).is_some_and(|state| names.contains(&state.name)))
-}
-
-fn is_within(level: &Level, [x, y, z]: [i32; 3]) -> bool {
-    level.in_height(y) && level.is_loaded(sapling_world::ChunkPos::of_block(x, z))
-}
-
 /// The sun burns a mob for this many ticks at a time.
 const SUN_BURNS: u16 = 160;
-/// It is day while the sky is darkened by no more than this (`Actor::isInDaylight`): BDS's zombie
-/// burnt at 0, 12000 and 23500 and not at 12600 or 23000.
-const DAY_DARKEN: u8 = 3;
-
-/// Whether the sun reaches the cell `at` with the sky darkened by `darken`
-/// (`crate::light::darken`): it is day, and the cell has the sky's full light. A stone roof and
-/// leaves held it back on BDS, glass did not (research/captures/bds-sun.txt).
-fn is_sunlit(level: &Level, [x, y, z]: [i32; 3], darken: u8) -> bool {
-    darken <= DAY_DARKEN && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT)
-}
-
-/// [`is_sunlit`] in the world `layer` now.
-pub(super) fn sun_on(world: &World, layer: Entity, at: [i32; 3]) -> bool {
-    let darken = crate::light::darken(world, layer);
-    world.get::<Layer>(layer).is_some_and(|layer| is_sunlit(&layer.world, at, darken))
-}
-
-/// Whether rain falls on the cell `at` while it `rains` (`weather::rains`): the sky is over it and the biome is not
-/// cold enough for snow, which does not put a burning mob out (`Actor::isInWaterOrRain`).
-pub(super) fn is_rained_on(level: &Level, [x, y, z]: [i32; 3], rains: bool) -> bool {
-    rains && level.light_at(x, y, z).is_some_and(|(sky, _)| sky == sapling_world::FULL_LIGHT) && !level.is_cold(x, y, z)
-}
-
-/// Whether rain falls on the feet or the head of a body standing at `feet`, `height` tall
-/// (`Actor::isInRain`, the rain's level as `weather::rains`).
-pub(crate) fn in_rain(world: &World, layer: Entity, feet: [f32; 3], height: f32) -> bool {
-    let rains = crate::weather::rains(world, layer);
-    let cells = [feet, [feet[0], feet[1] + height, feet[2]]].map(|at| at.map(|c| c.floor() as i32));
-    world.get::<Layer>(layer).is_some_and(|layer| cells.iter().any(|cell| is_rained_on(&layer.world, *cell, rains)))
-}
-
-pub(crate) fn is_full_block(level: &Level, [x, y, z]: [i32; 3]) -> bool {
-    let smothers = |name: &str| !name.ends_with("glass") && !name.ends_with("leaves");
-    is_within(level, [x, y, z]) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.is_full_cube() && smothers(state.name))
-}
 
 /// The hit's flash, or the death it was; a fall's names where it landed.
 pub(super) fn strike(id: u64, health: &Health, cause: Cause, landed: Option<[f32; 3]>) -> Bytes {
@@ -186,6 +138,8 @@ pub(super) fn tick(world: &mut World, entity: Entity, layer: Entity, id: u64, ki
         let weigh = |world: &mut World, health: &mut Health, before: Health, cause: Cause| crate::damage::weigh(world, entity, health, &before, cause);
         let before = health;
         let ground = level.map_or(super::Ground::Soft(1.0), |level| super::heat::softening(level, now.at));
+        let dropped = if now.on_ground && now.liquid().is_none() { health.dropped(start.at[1], now.at[1]) } else { 0.0 };
+        super::treading::tread(world, layer, now, dropped);
         if let Some((harm, from, cause)) = health.fall_onto(start.at, now.at[1], now.on_ground, now.liquid().is_some() || traits.no_fall, ground)
             && weigh(world, &mut health, before, cause)
         {
