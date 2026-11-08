@@ -144,8 +144,10 @@ fn a_tamed_wolf_leaps_at_what_its_owner_hits_and_its_bite_throws_it() {
     let leap = told.first().expect("it leapt").1;
     assert!((leap[0].hypot(leap[2]) - 0.4).abs() < 1e-3 && leap[1] == 0.4, "{told:?}");
     let bit = ticks.iter().position(|sent| showed(sent, wolf, Event::ArmSwing)).expect("it bit");
-    // Told as moved, 0.4 less a tick's fall and drag; BDS told the 0.4 itself first (see husbandry.md).
-    assert!(ticks[bit..bit + 2].iter().flat_map(|sent| motions(sent, pig)).any(|[_, up, _]| (up - 0.3136).abs() < 1e-4), "the bite threw the pig");
+    // Told at once as 0.4, then as moved, 0.4 less a tick's fall and drag (bds-g14wolf.txt).
+    let [x, up, z] = motions(&ticks[bit], pig)[0];
+    assert!((x.hypot(z) - 0.4).abs() < 1e-4 && up == 0.4, "the bite threw the pig at once: {x} {up} {z}");
+    assert!(ticks[bit..bit + 2].iter().flat_map(|sent| motions(sent, pig)).any(|[_, up, _]| (up - 0.3136).abs() < 1e-4), "then told as moved");
     let heard = all::<LevelSoundEvent>(&ticks[bit + 1]).into_iter().any(|sound| sound.sound_id == "attack" && sound.entity_type == "minecraft:wolf");
     assert!(heard, "heard a tick later");
 }

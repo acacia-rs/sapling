@@ -37,6 +37,18 @@ const FLOWERS: [(&str, i32); 16] = [
 pub(super) const UNFED: i32 = -1;
 /// The chance a tick a sheep grazes (its `behavior.eat_block`), a lamb's and a grown one's.
 const GRAZES: [f32; 2] = [0.02, 0.001];
+/// Ticks from a sheep's `EatGrassAnimation` until what it eats goes (`time_until_eat` 1.8 s;
+/// bds-j3sheep.txt).
+const EATS_AFTER: u64 = 36;
+
+/// A sheep eating: when it is done, the cell it eats, the block there it eats, and what that becomes.
+#[derive(Component, Clone, Copy)]
+pub(super) struct Grazing {
+    done: u64,
+    pos: BlockPos,
+    eats: u32,
+    id: u32,
+}
 const MILKS: [&str; 3] = ["minecraft:cow", MOOSHROOM, "minecraft:goat"];
 
 fn stack(name: String, count: u8) -> ItemStack {
@@ -91,8 +103,14 @@ pub(super) fn lay(world: &mut World, entity: Entity, kind: &str, now: u64) {
 
 /// A tick of a sheep that thinks (`sapling:mobAi`): now and then it eats the grass it stands on, or
 /// in, growing back its wool.
-pub(super) fn graze(world: &mut World, entity: Entity, kind: &str) {
+pub(super) fn graze(world: &mut World, entity: Entity, kind: &str, now: u64) {
     if kind != SHEEP {
+        return;
+    }
+    if let Some(grazing) = world.get::<Grazing>(entity).copied() {
+        if now >= grazing.done {
+            swallow(world, entity, kind, grazing);
+        }
         return;
     }
     let Some(baby) = world.get::<Raised>(entity).map(Raised::is_baby) else { return };
@@ -110,9 +128,20 @@ pub(super) fn graze(world: &mut World, entity: Entity, kind: &str) {
     };
     let griefs = level.level().rules.on("mobGriefing");
     let Some((pos, id)) = eaten.filter(|_| griefs) else { return };
-    blocks::set(world, layer, pos, id);
+    let eats = level.block(pos[0], pos[1], pos[2]);
     shown::event(world, entity, acacia_proto::packets::EntityEventEventId::EatGrassAnimation, 0);
-    shorn(world, entity, kind, false);
+    world.entity_mut(entity).insert(Grazing { done: now + EATS_AFTER, pos, eats, id });
+}
+
+/// A sheep's grazing [`EATS_AFTER`] on: what it eats goes, if still there, and its wool grows back.
+fn swallow(world: &mut World, entity: Entity, kind: &str, grazing: Grazing) {
+    world.entity_mut(entity).remove::<Grazing>();
+    let Some(layer) = world.get::<InLayer>(entity).map(|layer| layer.0) else { return };
+    let [x, y, z] = grazing.pos;
+    if world.get::<Layer>(layer).is_some_and(|kept| kept.world.block(x, y, z) == grazing.eats) {
+        blocks::set(world, layer, grazing.pos, grazing.id);
+        shorn(world, entity, kind, false);
+    }
 }
 
 /// The sheep's wool goes (`minecraft:on_sheared`) or grows back (`minecraft:on_eat_block`), told by its

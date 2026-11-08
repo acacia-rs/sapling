@@ -129,7 +129,12 @@ pub(super) fn targets(id: u64, target: i64) -> bytes::Bytes {
 
 /// Where the hunter's prey stands, if it has any.
 pub(super) fn prey_at(world: &World, entity: Entity) -> Option<[f32; 3]> {
-    feet_of(world, world.get::<Hunter>(entity)?.prey?)
+    feet_of(world, prey_of(world, entity)?)
+}
+
+/// The player or mob the hunter `entity` has taken.
+pub(super) fn prey_of(world: &World, entity: Entity) -> Option<Entity> {
+    world.get::<Hunter>(entity)?.prey
 }
 
 /// A hunter that died lets its prey go, which its viewers are told (bds-bite.txt).

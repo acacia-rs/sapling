@@ -7,9 +7,9 @@
 //! While its heart is awake the creaking takes no harm from a hit, which sways it (entity property
 //! 1 counting 1 to 6 a tick, then 0). When its heart goes, sleeps or is uprooted it crumbles:
 //! property 0 is 3 and it stands; 47 ticks on particle event 16478 from its middle; a tick on its
-//! `death` and property 0 is 4; a tick on it is gone, leaving nothing.
-// TODO: a hit's trail of `block.creaking_heart.trail` sounds to the heart and the resin it grows on the logs by it
-// (BDS's third hit grew three clumps) are not done; a creaking strays from its heart without bound.
+//! `death` and property 0 is 4; a tick on it is gone, leaving nothing. A shrugged-off hit sets off
+//! a trail (trail.rs). One more than [`STRAYS`] from its heart is torn down at once: no property 0
+//! of 3, its particle event a tick on (bds-j3creak.txt: kept at 30 off, torn down at 40 and 50).
 
 use std::collections::HashMap;
 
@@ -26,7 +26,7 @@ use crate::components::{InLayer, Layer, NetId, Settings, Tick};
 use crate::{entities, late_sounds, mobs};
 
 const HEART: &str = "minecraft:creaking_heart";
-const LOGS: &[&str] = &["minecraft:pale_oak_log", "minecraft:stripped_pale_oak_log", "minecraft:pale_oak_wood", "minecraft:stripped_pale_oak_wood"];
+pub(super) const LOGS: &[&str] = &["minecraft:pale_oak_log", "minecraft:stripped_pale_oak_log", "minecraft:pale_oak_wood", "minecraft:stripped_pale_oak_wood"];
 const FIRST_CALL: u64 = 18;
 const CALLS_EVERY: u64 = 20;
 const TRIES: usize = 5;
@@ -41,6 +41,8 @@ const CRUMBLING: i32 = 3;
 const CRUMBLED: i32 = 4;
 const CRUMBLES: u64 = 47;
 const CRUMBLE_EVENT: i64 = 16478;
+/// The Java game's bound; BDS's lies between 30 and 40.
+const STRAYS: f32 = 34.0;
 
 #[derive(Resource, Default)]
 pub(in crate::creatures) struct Hearts(HashMap<(Entity, BlockPos), Heart>);
@@ -56,7 +58,10 @@ pub(in crate::creatures) struct Heart {
 pub(in crate::creatures) struct Bound {
     heart: BlockPos,
     swaying: Option<i32>,
+    /// The tick its crumbling's particle event comes in.
     crumbling: Option<u64>,
+    /// The tick of the hit whose trail is under way.
+    trail: Option<u64>,
 }
 
 fn state_of(level: &Level, [x, y, z]: BlockPos) -> Option<(&'static str, &'static str)> {
@@ -176,7 +181,7 @@ fn call(world: &mut World, layer: Entity, heart: BlockPos) {
     let Some(id) = crate::creatures::spawn(world, layer, KIND, [x as f32 + 0.5, y as f32, z as f32 + 0.5], SpawnReason::Spawner) else { return };
     let Some(creaking) = entities::find(world, id) else { return };
     if let Some(mut tie) = world.get_mut::<Creaking>(creaking) {
-        tie.bound = Some(Bound { heart, swaying: None, crumbling: None });
+        tie.bound = Some(Bound { heart, swaying: None, crumbling: None, trail: None });
     }
     world.resource_mut::<Hearts>().0.entry((layer, heart)).or_default().creaking = Some(creaking);
     let corner = |[x, y, z]: BlockPos| Vec3f { x: x as f32, y: y as f32, z: z as f32 };
@@ -208,7 +213,7 @@ fn crumble(world: &mut World, creaking: Entity) {
     let started = {
         let Some(mut tie) = world.get_mut::<Creaking>(creaking) else { return };
         let Some(bound) = tie.bound.as_mut() else { return };
-        bound.crumbling.replace(now).is_none()
+        bound.crumbling.replace(now + CRUMBLES).is_none()
     };
     if started {
         set_property(world, creaking, STATE, CRUMBLING);
@@ -219,22 +224,42 @@ fn crumble(world: &mut World, creaking: Entity) {
 fn sway_and_crumble(world: &mut World, now: u64) {
     let bound: Vec<(Entity, u64, Bound)> = world.query::<(Entity, &NetId, &Creaking)>().iter(world).filter_map(|(entity, id, tie)| tie.bound.map(|bound| (entity, id.0, bound))).collect();
     for (creaking, id, bound) in bound {
+        let (Some(layer), Some(at)) = (world.get::<InLayer>(creaking).map(|layer| layer.0), world.get::<Body>(creaking).map(|body| body.at)) else { continue };
+        if bound.crumbling.is_none() && (0..3).map(|axis| (at[axis] - bound.heart[axis] as f32 - 0.5).powi(2)).sum::<f32>().sqrt() > STRAYS {
+            tear_down(world, layer, creaking, bound.heart, now);
+            continue;
+        }
+        if let Some(hit) = bound.trail.filter(|_| bound.crumbling.is_none()) {
+            super::trail::tick(world, layer, creaking, bound.heart, now - hit);
+        }
         if let Some(sway) = bound.swaying {
             let next = (sway < SWAYS).then_some(sway + 1);
             set_property(world, creaking, SWAY, next.unwrap_or(0));
             set_sway(world, creaking, next);
         }
-        let Some(since) = bound.crumbling else { continue };
+        let Some(shown) = bound.crumbling else { continue };
         let Some(body) = world.get::<Body>(creaking).copied() else { continue };
-        if now == since + CRUMBLES {
+        if now == shown {
             let position = Vec3f { x: body.at[0], y: body.at[1] + body.size[1] / 2.0, z: body.at[2] };
             tell(world, creaking, vec![sapling_net::encode(&LevelEvent { event: LevelEventEvent::Unknown(CRUMBLE_EVENT), position, data: 0 })]);
-        } else if now == since + CRUMBLES + 1 {
+        } else if now == shown + 1 {
             tell(world, creaking, vec![crate::creatures::hunting::sound("death", id, KIND, &body, 0.0)]);
             set_property(world, creaking, STATE, CRUMBLED);
-        } else if now > since + CRUMBLES + 1 {
+        } else if now > shown + 1 {
             mobs::remove(world, creaking);
         }
+    }
+}
+
+/// `creaking` strayed too far from its heart at `heart`: it goes as a crumbling one's last ticks go.
+fn tear_down(world: &mut World, layer: Entity, creaking: Entity, heart: BlockPos, now: u64) {
+    if let Some(mut tie) = world.get_mut::<Creaking>(creaking)
+        && let Some(bound) = tie.bound.as_mut()
+    {
+        bound.crumbling = Some(now + 1);
+    }
+    if let Some(kept) = world.get_resource_mut::<Hearts>().as_mut().and_then(|hearts| hearts.0.get_mut(&(layer, heart))) {
+        kept.creaking = None;
     }
 }
 
@@ -257,6 +282,13 @@ pub(in crate::creatures) fn shrugs_off(world: &mut World, creaking: Entity) -> b
     if bound.swaying.is_none() {
         set_property(world, creaking, SWAY, 1);
         set_sway(world, creaking, Some(1));
+    }
+    let now = world.resource::<Tick>().0;
+    if bound.trail.is_none_or(|hit| now >= hit + super::trail::LASTS)
+        && let Some(mut tie) = world.get_mut::<Creaking>(creaking)
+        && let Some(bound) = tie.bound.as_mut()
+    {
+        bound.trail = Some(now);
     }
     true
 }

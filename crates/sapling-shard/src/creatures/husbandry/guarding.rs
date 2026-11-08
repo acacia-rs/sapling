@@ -84,7 +84,8 @@ pub(super) fn chase(world: &mut World, entity: Entity, layer: Entity, kind: &str
     let touches = (at[0] - body.at[0]).abs() < across && (at[2] - body.at[2]).abs() < across && at[1] < body.at[1] + body.size[1] && body.at[1] < at[1] + size[1];
     if touches && now >= ready {
         world.get_mut::<Raised>(entity).expect("read above").foe = Some((foe, now + EVERY));
-        bite(world, entity, layer, kind, foe, rules.and_then(|rules| rules.tame_attack).unwrap_or(2.0), [dx / across, dz / across]);
+        let far = dx.hypot(dz).max(1e-4);
+        bite(world, entity, layer, kind, foe, rules.and_then(|rules| rules.tame_attack).unwrap_or(2.0), [dx / far, dz / far]);
     }
     true
 }

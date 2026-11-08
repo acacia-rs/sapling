@@ -2,11 +2,12 @@
 //! (research/captures/bds-effects3-findings.md, bds-wind-burst.txt, bds-player-omens-findings.md),
 //! from a body's position (a mob's feet, a player's eyes): one that dies wind charged bursts at
 //! its middle and pushes every living player by about `0.82 (1 - d / 9.8)` towards its eyes, d
-//! from the position; one that dies weaving leaves 2 or 3 cobwebs about it, by the Java game's
-//! rule; one that dies oozing leaves two slimes of the second size half a block up; one hurt while
-//! infested lets out one or two silverfish a time in ten, at 0.3 within 90 degrees of its facing.
-// TODO: the burst's fall-off is fitted to eight noisy samples and it pushes no mob or item; a
-// slime of the second size does not split when it dies.
+//! from the position, and mobs and items as [`push_bodies`] says; one that dies weaving leaves 2 or
+//! 3 cobwebs about it, by the Java game's rule; one that dies oozing leaves two slimes of the second
+//! size half a block up, unless it is a slime itself (bds-j3omen.txt); one hurt while infested lets
+//! out one or two silverfish a time in ten, at 0.3 within 90 degrees of its facing.
+// TODO: the players' fall-off is fitted to eight noisy samples; BDS's items went about 0.95 of the
+// mobs' rule (four samples, bds-j3omen.txt), unfitted.
 
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -24,6 +25,13 @@ use crate::{blocks, entities, late_sounds, vitals};
 const PUSH: f32 = 0.82;
 const REACH: f32 = 9.8;
 const EYES: f32 = 1.62;
+/// How far its push on mobs and items reaches, and how high up them it aims.
+const BODY_REACH: f32 = 7.5;
+const BODY_AIM: f32 = 0.9;
+/// None was pushed this far or further: BDS's cut lies between 5.85 and 7.07 (unfit).
+const BODY_CUT: f32 = 7.0;
+/// What BDS adds the push to across a standing mob's fall: a tick's gravity after drag.
+const ON_GROUND: f32 = -0.0784;
 /// The burst's particle data for a mob.
 const MOB_FLASH: i32 = 4;
 /// Cells weaving tries, and the cobwebs it leaves: the first, and one more a time in two.
@@ -59,7 +67,8 @@ pub(super) struct Watched(f32);
 /// The mob, of the body `body`, died: its effects do what they do.
 pub(super) fn died(world: &mut World, mob: Entity, layer: Entity, body: &Body) {
     let has = |effect| afflictions::level(world, mob, effect).is_some();
-    let omens = Omens { wind: has(Effect::WindCharged), weave: has(Effect::Weaving), ooze: has(Effect::Oozing) };
+    let slime = world.get::<entities::Kind>(mob).is_some_and(|kind| kind.0 == "minecraft:slime");
+    let omens = Omens { wind: has(Effect::WindCharged), weave: has(Effect::Weaving), ooze: has(Effect::Oozing) && !slime };
     befall(world, layer, omens, body.at, body.size[1], MOB_FLASH);
 }
 
@@ -95,6 +104,35 @@ fn burst(world: &mut World, layer: Entity, middle: [f32; 3], from: [f32; 3], dat
         let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt().max(1e-4);
         if far < REACH {
             vitals::pushed(world, player, towards.map(|c| c / long * PUSH * (1.0 - far / REACH)));
+        }
+    }
+    push_bodies(world, layer, middle);
+}
+
+/// The burst at `middle` pushes the living mobs and the items within [`BODY_CUT`] by `1 - d / BODY_REACH`, d from
+/// `middle` to their feet, towards [`BODY_AIM`] of their height, on top of how they move; a mob is
+/// told so at once (bds-j3omen.txt: four cows fit within 0.004).
+fn push_bodies(world: &mut World, layer: Entity, middle: [f32; 3]) {
+    let near: Vec<(Entity, Body, bool)> = world
+        .query::<(Entity, &InLayer, &Body, Option<&super::Creature>, Option<&crate::drops::Dropped>)>()
+        .iter(world)
+        .filter(|(_, on, body, mob, item)| on.0 == layer && (mob.is_some() || item.is_some()) && (0..3).all(|axis| (body.at[axis] - middle[axis]).abs() < BODY_REACH))
+        .map(|(entity, _, body, mob, _)| (entity, *body, mob.is_some()))
+        .collect();
+    for (entity, body, mob) in near {
+        let far = (0..3).map(|axis| (body.at[axis] - middle[axis]).powi(2)).sum::<f32>().sqrt();
+        let dead = mob && (!super::is_alive(world, entity) || world.get::<Health>(entity).is_none_or(|health| health.left() <= 0.0));
+        if far >= BODY_CUT || dead {
+            continue;
+        }
+        let towards: [f32; 3] = std::array::from_fn(|axis| body.at[axis] + if axis == 1 { body.size[1] * BODY_AIM } else { 0.0 } - middle[axis]);
+        let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt().max(1e-4);
+        let before = if mob && body.on_ground { [body.motion[0], ON_GROUND, body.motion[2]] } else { body.motion };
+        let speed: [f32; 3] = std::array::from_fn(|axis| before[axis] + towards[axis] / long * (1.0 - far / BODY_REACH));
+        if mob {
+            super::hits::throw_at_once(world, entity, layer, speed);
+        } else if let Some(mut moved) = world.get_mut::<Body>(entity) {
+            moved.motion = speed;
         }
     }
 }

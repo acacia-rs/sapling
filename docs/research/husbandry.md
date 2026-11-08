@@ -26,7 +26,10 @@ it was recorded; the packs and the binary are the evidence, and the rest is list
   torchflower 10, open eyeblossom 11, closed 12; sound `eat`); shears on a mooshroom (5 mushrooms of
   its colour, becomes a cow); a brush on an armadillo (a scute, `hurt_item` 16). `behavior.eat_block`
   on a sheep: grass block to dirt, short or tall grass to air, success chance 0.02 a lamb's and 0.001
-  a grown one's.
+  a grown one's. BDS's lambs (bds-j3sheep.txt) ate only the block under them, never grass beside
+  them, and the block went 36 ticks (`time_until_eat` 1.8 s) after `EatGrassAnimation`; sapling eats
+  and regrows wool then too. 64 summoned in plains came `Color` 0 ×49, 15 ×7, 7 ×3, 8 ×3, 12 ×2:
+  a spawned (not bred) sheep's colour is rolled by its biome's `*_color` event, in AddEntity.
 - **BDS's binary** (`bdsre`, strings): actor NBT fields `InLove`, `LoveCause`, `BreedCooldown`,
   `OwnerNew`, `LeasherID`, `Temper`, `IsBaby`, `IsTamed`, `Sitting`, `Sheared`, `Saddled`,
   `Chested`, `Color`, `MarkVariant`, `CustomName`, `Persistent`, `definitions`; sound names
@@ -316,8 +319,8 @@ owner for its target. Standing 2.4 off on the ground it leapt at once: motion to
 zombie and 0.4 up (`behavior.leap_at_target` `yd` 0.4), then fell as a thrown mob. Its bite (swing,
 the zombie's hurt, `attack` from its middle a tick on) came 0.75 off centre to centre and threw the
 zombie 0.4 across and up as any hit does; the zombie turned on it and threw it back the same tick.
-BDS told both throws' 0.4 at once; sapling tells a mob's hit on a mob as moved, 0.3136 up
-(hunting/prey.rs `hit`, every hunter's), which is left open.
+BDS told both throws' 0.4 at once, as sapling now does (hunting/prey.rs `hit`; mob-kinds.md
+"Mob knockback").
 Bites came 58 to 94 ticks apart, each after both were thrown apart: no pace can be fitted from them.
 Ported in husbandry/guarding.rs; test `a_tamed_wolf_leaps_at_what_its_owner_hits_and_its_bite_throws_it`.
 

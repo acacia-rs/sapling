@@ -145,12 +145,16 @@ fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: 
     let rolled = strides::roll(world, kind);
     let strength = crate::riding::roll_strength(world, kind);
     let born = super::bats::born_flags(&world.get::<Layer>(layer)?.world, kind, &body);
-    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, None, Some(&properties), rolled.as_ref(), strength), None, [yaw, 0.0], (genes::variant(kind, gene), gene, born))))?;
+    let raised = (reason != SpawnReason::Bred).then(|| husbandry::spawned_raising(world, layer, kind, feet)).flatten();
+    let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, raised.as_ref(), Some(&properties), rolled.as_ref(), strength), None, [yaw, 0.0], (genes::variant(kind, gene), gene, born))))?;
     world.entity_mut(entity).insert((Creature { look: None }, properties));
     if let Some(rolled) = rolled {
         world.entity_mut(entity).insert(strides::Strode(rolled));
     }
     husbandry::adopt(world, entity, kind, None);
+    if let (Some(rolled), Some(mut kept)) = (raised, world.get_mut::<husbandry::Raised>(entity)) {
+        kept.kept.colour = rolled.kept.colour;
+    }
     if let Some(gene) = gene {
         world.entity_mut(entity).insert(gene);
     }

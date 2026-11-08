@@ -1,6 +1,7 @@
 //! The splash an entity makes going into water, as BDS's `Actor::doWaterSplashEffect` and its
 //! in-water check make it (docs/research/splash-sound.md), and its fizz in lava.
-// TODO: a rider's mount splashes louder (0.9 for 0.2); nothing rides here.
+// TODO: a player-driven mount's 0.9 is the decompile's alone, undrilled; a mob rider is no driver
+// (research/captures/bds-j3ride.txt: a zombie horse under its zombie splashed as one unridden).
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::Vec3f;
@@ -14,6 +15,8 @@ use crate::late_sounds;
 /// How much of the move's speed across counts, and how loud speed makes it.
 const ACROSS_WEIGHT: f32 = 0.2;
 const LOUDNESS: f32 = 0.2;
+/// A vehicle a player drives splashes this loud (splash-sound.md's factor table).
+const DRIVEN_LOUDNESS: f32 = 0.9;
 
 /// An entity whose box was in water at its last move.
 #[derive(Component)]
@@ -45,7 +48,9 @@ pub(crate) fn check(world: &mut World, entity: Entity, id: u64, kind: &str, move
         return None;
     }
     let [dx, dy, dz] = moved;
-    let volume = ((ACROSS_WEIGHT * dx * dx + dy * dy + ACROSS_WEIGHT * dz * dz).sqrt() * LOUDNESS).min(1.0);
+    let driven = world.get::<crate::riding::Seats>(entity).and_then(|seats| seats.0.first()).is_some_and(|driver| world.get::<crate::components::Position>(*driver).is_some());
+    let loudness = if driven { DRIVEN_LOUDNESS } else { LOUDNESS };
+    let volume = ((ACROSS_WEIGHT * dx * dx + dy * dy + ACROSS_WEIGHT * dz * dz).sqrt() * loudness).min(1.0);
     let [x, y, z] = body.at;
     let position = Vec3f { x, y: y + body.size[1] / 2.0, z };
     let sound = LevelSoundEvent {
