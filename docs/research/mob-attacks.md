@@ -676,8 +676,10 @@ sapling-aa2spear: the first round's hits at 121, 139, 157, 175 and 193 ticks (BD
 later than BDS's (403 against 322: the reposition walk differs), and the wooden round hit 10 ticks early.
 Fitted, not decompiled: the reach band (2..4.5 × 0.5, the 0.25 margin as centre distance), hits only
 while charging (an unthrown actor was struck once a pass) and 10 ticks apart, the rest 20-30 ticks, the prey's own speed taken only for a mob prey, and the
-husk, zombie villager, pigman and piglin as the zombie (their packs' paces not applied). Not drilled: a
-spear holder against a mob, the camel husk's charge.
+husk, zombie villager, pigman and piglin as the zombie (their packs' paces not applied). Mounted
+(sapling-j3ride against bds-j3ride) still differs: sapling's zombie horse walks 0.185 a tick to BDS's 0.27,
+never gets past the thrown actor and hits 9 times in pairs 10 ticks apart where BDS's passed, turned 8.8 off
+and hit 4 times (49, 136, 152, 227). Not drilled: a spear holder against a mob, the camel husk's charge.
 
 ## Sapling
 
