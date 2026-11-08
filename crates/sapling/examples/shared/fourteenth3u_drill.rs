@@ -151,11 +151,14 @@ const RULES: &[&str] = &[
     "overworld_amethyst_geode_feature",
 ];
 
-/// `/place featurerule` and `/place structure`'s options where the actor joins a generated world of seed
-/// 20261003 (BDS copy of level-type DEFAULT, op level 4; sapling `SAPLING_DRILL_WORLD=generated`).
+/// `/place featurerule` and `/place structure`'s options where the actor lands at (30, 210) on a generated
+/// world of seed 20261003 (BDS copy of level-type DEFAULT, op level 4; sapling `SAPLING_DRILL_WORLD=generated`).
 fn rules_and_options() -> Vec<String> {
-    let mut lines = with(Vec::new(), &["gamerule domobspawning false", "gamemode creative @s"]);
-    waits(&mut lines, 4);
+    // Sapling's drill server is still generating its spawn the first seconds and drops commands.
+    let mut lines = Vec::new();
+    waits(&mut lines, 15);
+    lines = with(lines, &["gamerule domobspawning false", "gamemode creative @s", "tp @s 30 120 210"]);
+    waits(&mut lines, 10);
     for rule in RULES {
         lines.extend([format!("place featurerule minecraft:{rule} ~ ~ ~"), format!("place featurerule minecraft:{rule} ~ ~-1 ~"), format!("place featurerule minecraft:{rule} ~ ~-30 ~"), String::new()]);
     }

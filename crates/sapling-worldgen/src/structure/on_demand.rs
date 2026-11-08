@@ -114,6 +114,12 @@ impl Structures {
         }
     }
 
+    /// The abandoned camp variant `name` started in `start`; Unknown for a name no variant has.
+    pub(crate) fn forced_camp(&self, density: &Density, name: &str, start: (i32, i32), start_y: Option<i32>) -> Result<Forced, PlaceFailure> {
+        let pieces = self.forced_camp_pieces(density, name, start, start_y).ok_or(PlaceFailure::Unknown)?;
+        Forced::jigsaw(Some(StructureKind::AbandonedCamp), pieces)
+    }
+
     /// `/place jigsaw <pool> <target> <max_depth> <at>`: the v2 placer from `pool`'s start element,
     /// its jigsaw named `target` at `at`, drawing from `at`'s chunk's large-feature random.
     pub(crate) fn forced_jigsaw(&self, density: &Density, pool: &str, target: &str, max_depth: u32, at: [i32; 3]) -> Result<Forced, PlaceFailure> {

@@ -151,6 +151,17 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   target. Sapling's generator does the same (`on_demand_tests.rs`
   `place_jigsaw_joins_a_tower_only_at_its_road_anchor`); its flat drill world has no generator, so
   the live drill refused all three.
+- Drilled 2026-11-08, group U (`u3place`, bds-u3place.txt vs sapling-u3place.txt): on a generated
+  world of seed 20261003 (BDS copy of level-type DEFAULT, sapling `SAPLING_DRILL_WORLD=generated`),
+  standing at (30, 210), BDS answered `invalidposition.error` to five feature rules at the feet, one
+  below and 30 below, and `commands.place.success` to `overworld_underground_dirt_feature` at the feet
+  alone, with no block change in sight; sapling answers every rule `invalidposition.error`. BDS placed
+  `abandoned_camp_forest` by name twice (sapling since group U: `place_camp_at`, the variant whatever
+  the biome). Trail ruins and camps brought no entity but falling blocks with `includeEntities` either
+  way, and BDS takes only v2 kinds, so `ignoreStartHeight` for others is not drillable. BDS's
+  placements repeat run to run; sapling's are not the same pieces (trail ruins at `~40 ~ ~ true`:
+  BDS x 57..81 z 169..220, sapling x 54..103 z 197..222; a camp at `~-60`: BDS x -37..-21 z 143..150,
+  sapling x -32..-25 z 137..150).
 - Ticking-area ids are made by sapling (BDS's are random UUIDs).
 - Hardcore: StartGame's flag on BDS, and whether a hardcore world made fresh (cheats off) refuses
   `/difficulty` by another rule than cheats.

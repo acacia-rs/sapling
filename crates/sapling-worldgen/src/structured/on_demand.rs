@@ -120,6 +120,12 @@ impl OverworldGenerator {
         Ok(self.draw(forced, start, load))
     }
 
+    /// [`Self::place_structure_at`] for the abandoned camp variant `name` (`minecraft:abandoned_camp_forest`).
+    pub fn place_camp_at(&self, name: &str, start: (i32, i32), start_y: Option<i32>, load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<StructureWrites, PlaceFailure> {
+        let forced = self.structures.forced_camp(&self.density, name, start, start_y)?;
+        Ok(self.draw(forced, start, load))
+    }
+
     /// `/place jigsaw <pool> <target> <max_depth> <pos>`: assembles the jigsaw pool `pool` (e.g.
     /// "minecraft:trail_ruins/tower", namespace optional) from `at`, its first piece joined at its
     /// jigsaw named `target` (e.g. "minecraft:bottom"), `max_depth` pieces deep; same output.

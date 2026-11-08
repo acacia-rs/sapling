@@ -151,9 +151,28 @@ impl Structures {
             _ => self.v2_start(density, kind, at)?,
         };
         let Some(y) = start_y else { return Some(self.v2_assembled(density, kind, at, || start)) };
+        Some(self.assembled_at(density, start, at, y))
+    }
+
+    /// The camp variant named `name` (`minecraft:abandoned_camp_forest`) started in `at`, whatever
+    /// the biome there, as BDS's `/place structure` takes a variant by name (bds-u3place.txt);
+    /// `start_y` as [`Self::forced_v2`]'s.
+    pub(super) fn forced_camp_pieces(&self, density: &Density, name: &str, at: (i32, i32), start_y: Option<i32>) -> Option<Arc<Vec<Piece>>> {
+        let start = camp_start(data().sets["abandoned_camp"].iter().find(|entry| entry.name == name)?);
+        Some(match start_y {
+            Some(y) => self.assembled_at(density, start, at, y),
+            None => {
+                let raw = RawHeights::new(density);
+                Arc::new(start.assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z)))
+            }
+        })
+    }
+
+    /// `start`'s pieces with its start piece at height `y`, unprojected.
+    fn assembled_at(&self, density: &Density, start: V2Start, at: (i32, i32), y: i32) -> Arc<Vec<Piece>> {
         let raw = RawHeights::new(density);
         let start = V2Start { height: StartHeight::Constant(y), project: false, ..start };
-        Some(Arc::new(start.assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z))))
+        Arc::new(start.assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z)))
     }
 
     /// For probes: the template blocks of v2 pieces in `chunk` as (position, template name, unturned block, rotation, turned block).

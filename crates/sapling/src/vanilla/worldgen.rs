@@ -2,9 +2,8 @@
 //! BDS answered (research/captures/bds-locate.txt, bds-place.txt): a place is named by its block
 //! and its distance, rounded down, from the sender.
 //! `/place` takes BDS's names and options (bds-t1dplace.txt); a player of BDS may not run it (admin).
-// TODO: a feature rule is not placed: BDS answered every rule it lists `invalidposition` on a flat
-// world, on stone and on grass (bds-t1dplace.txt, bds-u1place.txt), and so does sapling. The
-// structure options are taken, not followed: BDS's console placed nothing (bds-t1dplacec.txt).
+// TODO: a feature rule is not placed: BDS answered nearly every rule `invalidposition`, on a flat world
+// and a generated one, but placed `overworld_underground_dirt_feature` at the feet (bds-u3place.txt).
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, parse_choice};
 use sapling_api::{Command, Output, Permission, PlaceError, PlaceOptions, Sender, ShardCtx};
