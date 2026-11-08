@@ -116,7 +116,8 @@ with a shield in the off hand:
 - A mob's hit or shot turned away stands the player up: `FlagsExtended` raised and struck, then one packet with
   `Flags` without sneaking, the standing height 1.8, the same bits and `ArrowShooterId` 0, then the bits clear. The
   next tick the shield is shown down (`blocking_tick` 0) and the player sneaking (1.49) with the bits clear, then
-  the shield goes up again as from a fresh sneak. A player's arrow does not stand it up.
+  the shield goes up again as from a fresh sneak. A player's hit or arrow was not drilled; sapling stands no one
+  up for it.
 - A rider holding a shield has it up as it sits: raised and moving, the shield shown with that tick, raised alone
   two ticks later. Hits from ahead are turned away as on foot (the sound from the seated eyes); a dismount after
   that shows the bits clear. Without a shield the moving bit stays, as bds-m3rideview.txt had it.
