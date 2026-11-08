@@ -3,6 +3,7 @@
 //! (docs/research/block-uses.md, "Blasts").
 // TODO: Blast Protection spares no mob's throw.
 
+mod items;
 mod reached;
 pub(super) mod rays;
 
@@ -17,7 +18,7 @@ pub(super) use reached::{impact, towards};
 use crate::blocks;
 use crate::body::Body;
 use crate::components::{InLayer, Layer, NetId, Position, Settings};
-use crate::{drops, entities, late_sounds, mobs, vitals};
+use crate::{entities, late_sounds, mobs, vitals};
 
 /// A fuse is this many ticks long, and hisses this many ticks after it is lit.
 const FUSE: i32 = 30;
@@ -187,7 +188,8 @@ fn blow(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], 
 }
 
 fn blast(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3], power: f32, wreck: Wreck, rule: Rule) -> blocks::Blown {
-    crate::blocks::vibrate(world, layer, at, crate::blocks::GameEvent::Explode, false);
+    // Heard the next tick with what it hurt, the nearer winning (bds-b1sculk.txt: its items' particle a tick after the flash).
+    crate::blocks::vibrate_next_tick(world, layer, at.map(|c| c.floor() as i32), crate::blocks::GameEvent::Explode, None);
     let (cells, free) = if wreck != Wreck::Nothing { rays::broken(world, source, layer, at, power) } else { Default::default() };
     let (power, cells) = if crate::plugins::listening::<ExplosionEvent>(world) {
         let kind = source.and_then(|source| world.get::<entities::Kind>(source)).map(|kind| kind.0.clone());
@@ -228,11 +230,10 @@ fn blast(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3],
             vitals::blasted(world, player, harm, at, thrown, cause);
         }
     }
-    // Items and orbs lying in it are gone, as the stacks BDS's first TNT left were with its second,
-    // and an orb 2.8 off a creeper's blast was the tick after (bds-a3creeper2.txt).
+    // Orbs lying in it are gone, as an orb 2.8 off a creeper's blast was the tick after (bds-a3creeper2.txt).
     let reach = 2.0 * power;
-    let mut lying: Vec<Entity> = drops::lying_in(world, layer, at.map(|c| c - reach), at.map(|c| c + reach)).into_iter().map(|(item, _)| item).collect();
-    lying.extend(world.query_filtered::<(Entity, &InLayer), With<crate::orbs::Orb>>().iter(world).filter(|(_, in_layer)| in_layer.0 == layer).map(|(orb, _)| orb));
+    items::blast_items(world, layer, at, reach);
+    let lying: Vec<Entity> = world.query_filtered::<(Entity, &InLayer), With<crate::orbs::Orb>>().iter(world).filter(|(_, in_layer)| in_layer.0 == layer).map(|(orb, _)| orb).collect();
     for gone in lying {
         if world.get::<Body>(gone).is_some_and(|its| distance(its.at, at) < reach) {
             mobs::remove(world, gone);

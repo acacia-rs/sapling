@@ -158,7 +158,7 @@ fn born_by(world: &mut World, layer: Entity, kind: &str, feet: [f32; 3], birth: 
     let properties = super::properties::rolled(world, layer, kind, feet, reason == SpawnReason::Bred, rolled_baby);
     let rolled = strides::roll(world, kind);
     let strength = crate::riding::roll_strength(world, kind);
-    let born = super::bats::born_flags(&world.get::<Layer>(layer)?.world, kind, &body);
+    let born = super::bats::born_flags(world, layer, kind, &body);
     let raised = (reason != SpawnReason::Bred).then(|| husbandry::spawned_raising(world, layer, kind, feet)).flatten();
     let entity = entities::spawn_mob(world, layer, kind, body, feet, |id| Some(announcement(id, kind, &body, (None, raised.as_ref(), Some(&properties), rolled.as_ref(), strength), None, [yaw, 0.0], (genes::variant(kind, gene), gene, born))))?;
     world.entity_mut(entity).insert((Creature { look: None }, properties));

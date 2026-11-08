@@ -57,6 +57,8 @@ impl EntityBackend for Ctx<'_> {
         }
         if kind == tnt::KIND {
             let primed = tnt::prime(self.world, layer, feet, tnt::FUSE)?;
+            // Its fuse is heard the next tick (bds-b1sculk.txt: `prime_fuse`'s particle a tick after its AddEntity).
+            crate::blocks::vibrate_next_tick(self.world, layer, feet.map(|c| c.floor() as i32), crate::blocks::GameEvent::PrimeFuse, None);
             return Some(EntityId(self.world.get::<NetId>(primed)?.0));
         }
         if kind == crate::lightning::KIND {

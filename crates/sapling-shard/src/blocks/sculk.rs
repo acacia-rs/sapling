@@ -4,12 +4,13 @@
 //! the event, then cools down. A calibrated sensor powered from behind hears only the frequency
 //! of that power. A shrieker hears sensors going active, and shrieks when a player set one off
 //! (shrieks.rs).
-// TODO: wool broken or walked on is heard; a mob's steps, a summoned TNT's fuse and a hurt item are not.
+// TODO: wool broken or walked on is heard.
 
 mod catalyst;
 mod deferred;
 mod events;
 mod occlusion;
+mod reaching;
 mod resonance;
 mod saved;
 mod shrieks;
@@ -19,6 +20,7 @@ pub(crate) use catalyst::{arrived as catalysts_arrived, mob_died};
 pub(crate) use deferred::{poured, teleported, vibrate_next_tick};
 pub(crate) use events::GameEvent;
 pub(crate) use walks::walked;
+use reaching::reach_listeners;
 
 use std::collections::{HashMap, HashSet};
 
@@ -43,9 +45,14 @@ const COOLDOWN: u64 = 10;
 const IDLE: u8 = 0;
 const LISTENING: u8 = 1;
 const COOLING: u8 = 2;
-/// A vibration on its way to a listener.
+/// A vibration on its way to a listener: when it arrives, the tick it was posted, its cell, its whole
+/// blocks away, and whether its particle went.
 struct Coming {
     when: u64,
+    posted: u64,
+    from: BlockPos,
+    whole: u64,
+    shown: bool,
     layer: Entity,
     listener: BlockPos,
     event: GameEvent,
@@ -63,6 +70,8 @@ pub(crate) struct Listeners {
     heard: HashMap<(Entity, BlockPos), u8>,
     /// How far towards its next step each player has walked.
     strides: HashMap<Entity, f32>,
+    /// Particles wait while the tick's put-off events are posted (reaching.rs).
+    holding: bool,
 }
 
 fn name_at(world: &World, layer: Entity, [x, y, z]: BlockPos) -> Option<(&'static str, &'static str, u32)> {
@@ -175,43 +184,6 @@ fn vibrate_from(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent
     reach_listeners(world, layer, at, event, by_player);
 }
 
-fn reach_listeners(world: &mut World, layer: Entity, at: [f32; 3], event: GameEvent, by_player: bool) {
-    let Some(listeners) = world.get_resource::<Listeners>() else { return };
-    let reach = CALIBRATED_RANGE as i32;
-    let corner = |dx: i32, dz: i32| send::column([at[0] as i32 + dx, 0, at[2] as i32 + dz]);
-    let (low, high) = (corner(-reach, -reach), corner(reach, reach));
-    let near: Vec<BlockPos> = (low.x..=high.x)
-        .flat_map(|x| (low.z..=high.z).map(move |z| ChunkPos { x, z }))
-        .filter_map(|column| listeners.listeners.get(&(layer, column)))
-        .flatten()
-        .copied()
-        .collect();
-    if near.is_empty() {
-        return;
-    }
-    let now = world.resource::<Tick>().0;
-    let cell = at.map(|c| c.floor() as i32);
-    if event == GameEvent::BlockPlace && occlusion::dampens(world, layer, cell) {
-        return;
-    }
-    for listener in near {
-        let Some((name, properties, _)) = name_at(world, layer, listener) else { continue };
-        let range = if name == CALIBRATED { CALIBRATED_RANGE } else { RANGE };
-        let distance = (0..3).map(|axis| ((listener[axis] - cell[axis]) as f32).powi(2)).sum::<f32>().sqrt();
-        if distance > range || !hears(world, layer, (name, properties), listener, cell, event, by_player) || occlusion::occluded(world, layer, cell, listener) {
-            continue;
-        }
-        let strength = (15 - (15.0 * distance / range).floor() as i32).clamp(1, 15) as u8;
-        let mut listeners = world.resource_mut::<Listeners>();
-        if listeners.coming.iter().any(|coming| (coming.layer, coming.listener) == (layer, listener)) {
-            continue;
-        }
-        let when = now + (distance as u64).max(1);
-        listeners.coming.push(Coming { when, layer, listener, event, frequency: event.frequency(), strength, by_player });
-        send::after_blocks(world, layer, cell, events::signal(cell, listener, distance as u64));
-    }
-}
-
 /// [`vibrate`] from the middle of the block at `pos`.
 pub(crate) fn vibrate_at(world: &mut World, layer: Entity, pos: BlockPos, event: GameEvent, by_player: bool) {
     vibrate(world, layer, pos.map(|c| c as f32 + 0.5), event, by_player);
@@ -221,7 +193,7 @@ pub(crate) fn vibrate_at(world: &mut World, layer: Entity, pos: BlockPos, event:
 pub(crate) fn tick(world: &mut World) {
     catalyst::tick(world);
     shrieks::stood_on(world);
-    deferred::post(world);
+    reaching::settled(world, deferred::post);
     let now = world.resource::<Tick>().0;
     let Some(mut listeners) = world.get_resource_mut::<Listeners>().filter(|listeners| !listeners.coming.is_empty()) else { return };
     let (due, waiting): (Vec<Coming>, Vec<Coming>) = std::mem::take(&mut listeners.coming).into_iter().partition(|coming| coming.when <= now);
