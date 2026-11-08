@@ -92,6 +92,15 @@ fn grass_dies_under_stone_and_spreads_in_the_light_only() {
 }
 
 #[test]
+fn mycelium_dies_under_a_block_that_stops_light_but_not_a_mushroom_block_glass_or_water() {
+    let covers = ["stone", "oak_planks", "glass", "brown_mushroom_block", "water", "air"];
+    let set = covers.iter().enumerate().flat_map(|(k, cover)| [([2 * k as i32, 64, 6], block("mycelium", "")), ([2 * k as i32, 65, 6], block(cover, ""))]).collect();
+    let mut h = lit_world(4096, set);
+    let after = blocks(&mut h, 120, (0..covers.len()).map(|k| [2 * k as i32, 64, 6]).collect());
+    assert_eq!(after, ["dirt[]", "dirt[]", "mycelium[]", "mycelium[]", "mycelium[]", "mycelium[]"]);
+}
+
+#[test]
 fn ice_melts_by_glowstone_and_not_in_daylight_and_snow_in_plains_melts_either_way() {
     let set = vec![
         ([3, 65, -3], block("ice", "")),
