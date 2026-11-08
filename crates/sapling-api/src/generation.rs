@@ -65,6 +65,12 @@ impl ShardCtx<'_> {
         self.backend.place_feature(name, at)
     }
 
+    /// Runs the generator's feature rule `name` in the chunk of `at`, as worldgen would there
+    /// whatever its biomes; Failed where it placed nothing.
+    pub fn place_feature_rule(&mut self, name: &str, at: BlockPos) -> Result<(), PlaceError> {
+        self.backend.place_feature_rule(name, at)
+    }
+
     /// Places the generator's structure `name` (as `/locate` names them) as though it started in
     /// the chunk of `at`.
     pub fn place_structure(&mut self, name: &str, at: BlockPos, options: PlaceOptions) -> Result<(), PlaceError> {
@@ -93,6 +99,7 @@ impl ShardCtx<'_> {
 /// The generation side of [`crate::Backend`].
 pub trait GenerationBackend {
     fn place_feature(&mut self, name: &str, at: BlockPos) -> Result<(), PlaceError>;
+    fn place_feature_rule(&mut self, name: &str, at: BlockPos) -> Result<(), PlaceError>;
     fn place_structure(&mut self, name: &str, at: BlockPos, options: PlaceOptions) -> Result<(), PlaceError>;
     fn place_jigsaw(&mut self, pool: &str, target: &str, max_depth: u32, at: BlockPos, options: PlaceOptions) -> Result<(), PlaceError>;
     fn locate_structure(&mut self, name: &str, from: BlockPos) -> Option<[i32; 2]>;
@@ -102,6 +109,9 @@ pub trait GenerationBackend {
 #[cfg(test)]
 impl GenerationBackend for crate::testing::Fake {
     fn place_feature(&mut self, _: &str, _: BlockPos) -> Result<(), PlaceError> {
+        Err(PlaceError::NoGenerator)
+    }
+    fn place_feature_rule(&mut self, _: &str, _: BlockPos) -> Result<(), PlaceError> {
         Err(PlaceError::NoGenerator)
     }
     fn place_structure(&mut self, _: &str, _: BlockPos, _: PlaceOptions) -> Result<(), PlaceError> {

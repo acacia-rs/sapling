@@ -26,6 +26,7 @@ pub fn request(request_id: i32, actions: Vec<Action>) -> ItemStackRequest {
         Action::Create(_) => (Kind::Create, 6),
         Action::CraftRecipe(_) => (Kind::CraftRecipe, 12),
         Action::CraftCreative(_) => (Kind::CraftCreative, 12),
+        Action::CraftRecipeAuto(_) => (Kind::CraftRecipeAuto, 13),
         Action::Optional(_) => (Kind::Optional, 15),
         Action::CraftGrindstoneRequest(_) => (Kind::CraftGrindstoneRequest, 16),
         Action::CraftLoomRequest(_) => (Kind::CraftLoomRequest, 17),

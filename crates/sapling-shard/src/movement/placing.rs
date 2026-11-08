@@ -61,11 +61,17 @@ pub(crate) fn push_unmoving(world: &mut World, entity: Entity, feet: [f32; 3]) {
 /// [`push`] into lava: off the ground, sinking at lava's pull, as BDS corrected a rider let off
 /// into lava (research/captures/bds-aq3exit.txt).
 pub(crate) fn push_into_lava(world: &mut World, entity: Entity, feet: [f32; 3]) {
+    push_off_ground(world, entity, feet, -0.02);
+}
+
+/// [`push`] off the ground, then moving `rise` a tick: a player on slime a piston pushed up was
+/// corrected so, a block up and one fling's move on, rising 0.9016 (research/captures/bds-y3fling.txt).
+pub(crate) fn push_off_ground(world: &mut World, entity: Entity, feet: [f32; 3], rise: f32) {
     let tick = world.resource::<Tick>().0;
     if let Some(mut motion) = world.get_mut::<Motion>(entity) {
         motion.unconfirmed_teleport = Some(tick + SETBACK_TICKS);
     }
-    correction_on(world, entity, feet, -0.02, false);
+    correction_on(world, entity, feet, rise, false);
 }
 
 /// Puts a player's feet at `feet` by correcting its prediction, as BDS does once a client is

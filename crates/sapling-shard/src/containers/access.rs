@@ -93,9 +93,12 @@ pub(crate) fn close_where_gone(world: &mut World) {
     let mut viewers = world.query::<(Entity, &Viewing)>();
     let gone: Vec<(Entity, u8)> = viewers.iter(world).filter(|(_, viewing)| !is_there(world, viewing)).map(|(player, viewing)| (player, viewing.window)).collect();
     for (player, window) in gone {
+        let chest = super::screens::chest_shown(world, player);
         close(world, player);
+        chest.into_iter().for_each(|(layer, lead)| super::lid::shut_gone(world, layer, lead));
         if let Some(mut out) = world.get_mut::<Outgoing>(player) {
             out.push(&ContainerClose { window_id: WindowID::from_raw(window.into()), window_type: WindowType::Container, server: true });
         }
+        chest.into_iter().for_each(|(layer, lead)| super::lid::shut_gone(world, layer, lead));
     }
 }

@@ -2,8 +2,8 @@
 //! BDS answered (research/captures/bds-locate.txt, bds-place.txt): a place is named by its block
 //! and its distance, rounded down, from the sender.
 //! `/place` takes BDS's names and options (bds-t1dplace.txt); a player of BDS may not run it (admin).
-// TODO: a feature rule is not placed: BDS answered nearly every rule `invalidposition`, on a flat world
-// and a generated one, but placed `overworld_underground_dirt_feature` at the feet (bds-u3place.txt).
+//! A feature rule runs in the position's chunk as worldgen runs it (sapling_worldgen::place_feature_rule);
+//! BDS seeds it from entropy each server start, so only whether it placed can match.
 
 use sapling_api::command::{Args, BlockCoords, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, parse_choice};
 use sapling_api::{Command, Output, Permission, PlaceError, PlaceOptions, Sender, ShardCtx};
@@ -164,7 +164,11 @@ impl Command for Place {
         }
         let (placed, unknown) = match &self.what {
             What::Feature(name) => (ctx.place_feature(name, at), "commands.place.invalidfeature.error"),
-            What::FeatureRule(_) => (Err(PlaceError::Unknown), "commands.place.invalidposition.error"),
+            // A rule BDS knows but that placed nothing, or that sapling has not ported, is so answered.
+            What::FeatureRule(name) => {
+                let placed = ctx.place_feature_rule(name, at).map_err(|error| if matches!(error, PlaceError::Failed | PlaceError::Unknown) { PlaceError::Unknown } else { error });
+                (placed, "commands.place.invalidposition.error")
+            }
             What::Structure(name) => (ctx.place_structure(name, at, self.options), "commands.place.invalidstructure.error"),
             What::Jigsaw { max_depth, .. } if !(1..=MOST_DEPTH).contains(max_depth) => return out.translate("commands.place.maxdepth.error", Vec::new(), false),
             // BDS answered an unknown pool so, not as an unknown structure, and a pool or target without its namespace (bds-k1jig.txt).

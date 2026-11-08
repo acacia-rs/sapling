@@ -4,7 +4,6 @@
 use sapling_worldgen::structure::StructureKind;
 use sapling_worldgen::{OverworldGenerator, PlaceFailure, StructureWrites};
 
-use crate::ChunkPos;
 use crate::storage::ShapeLoader;
 
 /// The kind `/locate structure` takes for `name`. BDS found no abandoned camp, so it is left out
@@ -33,14 +32,15 @@ pub(super) fn locate(generator: &OverworldGenerator, name: &str, x: i32, z: i32)
 
 /// `/place structure` takes only the data-driven kinds: BDS refused `village`, `ancient_city` and
 /// `mineshaft` (research/captures/bds-place.txt, bds-t1dplace.txt) and placed trail ruins, trial
-/// chambers and an abandoned camp by its variant's name (`abandoned_camp_forest`, bds-u3place.txt).
-pub(super) fn structure(generator: &OverworldGenerator, name: &str, start: ChunkPos, start_y: Option<i32>, load: &ShapeLoader<'_>) -> Result<StructureWrites, PlaceFailure> {
+/// chambers and an abandoned camp by its variant's name (`abandoned_camp_forest`, bds-u3place.txt),
+/// each started at the block `at` itself.
+pub(super) fn structure(generator: &OverworldGenerator, name: &str, at: [i32; 3], keep_height: bool, load: &ShapeLoader<'_>) -> Result<StructureWrites, PlaceFailure> {
     let bare = name.strip_prefix("minecraft:").unwrap_or(name);
-    if bare.starts_with("abandoned_camp_") {
-        return generator.place_camp_at(&format!("minecraft:{bare}"), (start.x, start.z), start_y, load);
+    let taken = bare.starts_with("abandoned_camp_") || kind(name).is_some_and(|kind| matches!(kind, StructureKind::TrailRuins | StructureKind::TrialChambers));
+    if !taken {
+        return Err(PlaceFailure::Unknown);
     }
-    let kind = kind(name).filter(|kind| matches!(kind, StructureKind::TrailRuins | StructureKind::TrialChambers)).ok_or(PlaceFailure::Unknown)?;
-    generator.place_structure_at(kind, (start.x, start.z), start_y, load)
+    generator.place_commanded(&format!("minecraft:{bare}"), at, keep_height, load)
 }
 
 #[cfg(test)]
@@ -55,7 +55,7 @@ mod tests {
     fn place_structure_takes_trail_ruins_and_trial_chambers_but_no_hardcoded_kind() {
         let generator = OverworldGenerator::new(20261003);
         let air = |_: i32, _: i32| Arc::new(ChunkShape::empty());
-        let unknown = |name: &str| matches!(structure(&generator, name, ChunkPos::new(0, 0), Some(-20), &air), Err(PlaceFailure::Unknown));
+        let unknown = |name: &str| matches!(structure(&generator, name, [0, -20, 0], true, &air), Err(PlaceFailure::Unknown));
         assert!(["minecraft:village", "minecraft:ancient_city", "minecraft:mineshaft", "minecraft:no_such_structure"].into_iter().all(unknown));
         assert!(!unknown("minecraft:trail_ruins") && !unknown("minecraft:trial_chambers") && !unknown("abandoned_camp_forest"));
         assert!(unknown("minecraft:abandoned_camp") && unknown("minecraft:abandoned_camp_moon"));

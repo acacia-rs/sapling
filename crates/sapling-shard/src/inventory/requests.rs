@@ -4,9 +4,8 @@
 
 use acacia_proto::packets::{ItemStackRequest, ItemStackResponse};
 use acacia_proto::types::{
-    ContainerSlotType, FullContainerName, ItemStackRequest as Request, ItemStackRequestActionsItemContent as Action, ItemStackResponsesItem,
-    ItemStackResponsesItemContainersItem as Container, ItemStackResponsesItemContainersItemSlotsItem as SlotInfo, ItemStackResponsesItemStatus as Status,
-    StackRequestSlotInfo,
+    ItemStackRequest as Request, ItemStackRequestActionsItemContent as Action, ItemStackResponsesItem, ItemStackResponsesItemContainersItem as Container,
+    ItemStackResponsesItemContainersItemSlotsItem as SlotInfo, ItemStackResponsesItemStatus as Status,
 };
 use bevy_ecs::prelude::*;
 use sapling_api::{DropEvent, GameMode, Player};
@@ -14,27 +13,18 @@ use sapling_data::Station;
 use sapling_world::ItemStack;
 
 use super::crafting::Craft;
-use super::forge::{self, Bench, Forge, Forged};
-use super::{ARMOR, Inventory, MAIN, MAX_COUNT, Place, bundles, described};
+use super::forge::{self, Bench, Forge};
+use super::{ARMOR, Inventory, MAX_COUNT, Place, bundles, described};
 use crate::components::{Mode, Outgoing, PacketQueues, PerTick, in_world_identity};
 use crate::{containers, drops, plugins, workstations};
 
+mod auto;
+mod slots;
+
+use slots::Applied;
+
 /// Requests looked at per player per tick; a client sends one per click.
 const MAX_REQUESTS_PER_TICK: usize = 32;
-/// The `Ui` slot of what a creative pick or a craft made.
-const CREATED_SLOT: u8 = 50;
-/// The `Ui` slots of the crafting grids: 28 to 31 on the inventory screen, 32 to 40 at a table.
-const GRIDS: std::ops::RangeInclusive<usize> = 28..=40;
-const STONECUTTER_INPUT: usize = 3;
-
-/// What a request did to the inventory it was tried on.
-#[derive(Default)]
-struct Applied {
-    /// The slots it named, as it named them: the answer says what each holds now.
-    touched: Vec<(FullContainerName, u8, Place)>,
-    dropped: Vec<ItemStack>,
-    forged: Option<Forged>,
-}
 
 /// Where a request is made: the station whose recipes it may craft, and the workstation it may
 /// craft at by the server's reckoning.
@@ -43,58 +33,6 @@ struct At {
     bench: Option<Bench>,
     /// The crafting grid's filled map as its level knows it (special/maps.rs).
     grid_map: Option<(i64, u8, bool)>,
-}
-
-fn place(info: &StackRequestSlotInfo) -> Option<Place> {
-    let slot = usize::from(info.slot);
-    match info.slot_type.container_id {
-        // Which slots there are is the open container's to say: none while nothing is open.
-        // `Container` is the protocol's `LevelEntity`: chests, hoppers, dispensers and droppers alike.
-        // A mount's tack slots are its inventory's 0 and 1, its chest's from 2 (riding/packs.rs).
-        ContainerSlotType::Container | ContainerSlotType::Barrel | ContainerSlotType::Shulker | ContainerSlotType::Crafter | ContainerSlotType::HorseEquip => Some(Place::Container(slot)),
-        ContainerSlotType::FurnaceIngredient | ContainerSlotType::BlastFurnaceIngredient | ContainerSlotType::SmokerIngredient => Some(Place::Container(0)),
-        ContainerSlotType::FurnaceFuel => Some(Place::Container(1)),
-        ContainerSlotType::FurnaceOutput => Some(Place::Container(2)),
-        // A brewing stand: the ingredient, three bottles, the blaze powder.
-        ContainerSlotType::BrewingInput => Some(Place::Container(0)),
-        ContainerSlotType::BrewingResult if (1..=3).contains(&slot) => Some(Place::Container(slot)),
-        ContainerSlotType::BrewingFuel => Some(Place::Container(4)),
-        ContainerSlotType::CraftingInput if GRIDS.contains(&slot) => Some(Place::Ui(slot)),
-        ContainerSlotType::StonecutterInput if slot == STONECUTTER_INPUT => Some(Place::Ui(slot)),
-        ContainerSlotType::Hotbar | ContainerSlotType::Inventory | ContainerSlotType::HotbarAndInventory if slot < MAIN => Some(Place::Main(slot)),
-        ContainerSlotType::Armor if slot < ARMOR => Some(Place::Armor(slot)),
-        ContainerSlotType::Offhand => Some(Place::Offhand),
-        ContainerSlotType::Cursor => Some(Place::Cursor),
-        ContainerSlotType::CreativeOutput if info.slot == CREATED_SLOT => Some(Place::Created),
-        ContainerSlotType::Dynamic if slot < bundles::SLOTS => Some(Place::Bundle(slot)),
-        kind if forge::ui_slot(kind) == Some(slot) => Some(Place::Ui(slot)),
-        _ => None,
-    }
-}
-
-impl Applied {
-    /// The slot a request names, if it holds the stack the client thinks it does.
-    fn named(&mut self, inventory: &Inventory, info: &StackRequestSlotInfo) -> Result<Place, ()> {
-        let place = place(info).ok_or(())?;
-        let lent = inventory.bundle.as_ref().and_then(|(id, _)| u32::try_from(*id).ok());
-        if matches!(place, Place::Bundle(_)) && info.slot_type.dynamic_container_id != lent {
-            return Err(());
-        }
-        let id = inventory.slot(place).and_then(Option::as_ref).map_or(0, |held| held.id);
-        // An id below 1 names an empty slot or a stack this request made (its own request id).
-        if info.stack_id > 0 && place != Place::Created && info.stack_id != id {
-            return Err(());
-        }
-        if place != Place::Created && !self.touched.iter().any(|(_, _, touched)| *touched == place) {
-            self.touched.push((info.slot_type.clone(), info.slot, place));
-        }
-        Ok(place)
-    }
-
-    fn transfer(&mut self, inventory: &mut Inventory, count: u8, source: &StackRequestSlotInfo, destination: &StackRequestSlotInfo) -> Result<(), ()> {
-        let (from, to) = (self.named(inventory, source)?, self.named(inventory, destination)?);
-        inventory.transfer(from, to, count)
-    }
 }
 
 fn named_text(request: &Request, index: i32) -> Option<&str> {
@@ -237,6 +175,12 @@ fn answer(world: &mut World, entity: Entity, player: &Player, request: &Request)
     let at = &At { station: containers::station(world, entity), bench: workstations::bench(world, entity), grid_map: crate::maps::in_grid(world, entity) };
     let refuses = containers::refusal(world, entity);
     (trial.container, trial.refuses) = (open.clone().unwrap_or_default(), refuses);
+    if let Some(status) = auto::refusal(&trial, request, open.is_some()) {
+        if let Some(mut out) = world.get_mut::<Outgoing>(entity) {
+            out.push(&refusal(request.request_id, status));
+        }
+        return;
+    }
     bundles::lend(&mut trial, request);
     let takes_nothing = bundles::takes_nothing(&trial, request);
     let looms_a_full_banner = forge::holds_a_full_banner(&trial) && request.actions.iter().any(|action| matches!(action.content, Action::CraftLoomRequest(_)));

@@ -16,6 +16,9 @@ use acacia_bot::proto::types::{
 };
 use acacia_bot::{Bot, BotEvent};
 
+#[path = "crafting_auto.rs"]
+mod auto;
+
 /// The multi recipes `!grid` names (docs/research/crafting-storage.md).
 const RECIPES: [(&str, &str); 8] = [
     ("fireworks", "00000000-0000-0000-0000-000000000002"),
@@ -218,8 +221,8 @@ async fn anvil(actor: &mut Bot, words: &[&str], keep: bool) {
 }
 
 /// Does a crafting drill's `!` line: `!ui from slot [count]` lays hotbar `from` into UI `slot`,
-/// `!uiback slot to` takes it back into hotbar `to`, `!grid` and `!anvilcraft` craft (above),
-/// `!move`, `!ominous` and `!forget` (below), `!inv` prints the hotbar as the bot believes it.
+/// `!uiback slot to` takes it back into hotbar `to`, `!grid`, `!anvilcraft` and `!auto` craft,
+/// `!move`, `!ominous` and `!forget` (below), `!inv` prints the hotbar as the bot believes it, `!openinv` opens the inventory screen.
 /// False else.
 pub async fn act(actor: &mut Bot, line: &str) -> bool {
     let words: Vec<&str> = line.split(' ').collect();
@@ -237,6 +240,7 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
         }
         "!grid" | "!grid!" => grid(actor, &words[1..], words[0].ends_with('!')).await,
         "!anvilcraft" | "!anvilcraft!" => anvil(actor, &words[1..], words[0].ends_with('!')).await,
+        "!auto" => auto::craft(actor, &words[1..]).await,
         // `!move from to`: a hotbar stack moved whole by the bot, which keeps its view of both slots.
         "!move" => {
             let (from, to) = (number(1, 0), number(2, 8));
@@ -254,6 +258,7 @@ pub async fn act(actor: &mut Bot, line: &str) -> bool {
             HOT.with(|hot| hot.borrow_mut().clear());
             UI.with(|ui| ui.borrow_mut().clear());
         }
+        "!openinv" => actor.open_inventory(),
         "!inv" => {
             for slot in 0..HOTBAR {
                 if let Some(stack) = SlotRef::Main(slot).stack(actor.state()).filter(|stack| stack.count > 0) {

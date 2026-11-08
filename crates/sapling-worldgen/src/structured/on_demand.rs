@@ -120,10 +120,12 @@ impl OverworldGenerator {
         Ok(self.draw(forced, start, load))
     }
 
-    /// [`Self::place_structure_at`] for the abandoned camp variant `name` (`minecraft:abandoned_camp_forest`).
-    pub fn place_camp_at(&self, name: &str, start: (i32, i32), start_y: Option<i32>, load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<StructureWrites, PlaceFailure> {
-        let forced = self.structures.forced_camp(&self.density, name, start, start_y)?;
-        Ok(self.draw(forced, start, load))
+    /// `/place structure` of `minecraft:trail_ruins`, `minecraft:trial_chambers` or an abandoned
+    /// camp variant (`minecraft:abandoned_camp_forest`) at the block `at`, its start height kept
+    /// with `keep_height` (`ignoreStartHeight`); Err(Unknown) for another name.
+    pub fn place_commanded(&self, name: &str, at: [i32; 3], keep_height: bool, load: &dyn Fn(i32, i32) -> Arc<ChunkShape>) -> Result<StructureWrites, PlaceFailure> {
+        let forced = self.structures.forced_command(&self.density, name, at, keep_height)?;
+        Ok(self.draw(forced, (at[0] >> 4, at[2] >> 4), load))
     }
 
     /// `/place jigsaw <pool> <target> <max_depth> <pos>`: assembles the jigsaw pool `pool` (e.g.

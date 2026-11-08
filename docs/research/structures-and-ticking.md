@@ -131,7 +131,7 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 ## Unverified
 
 - Animation modes: stale, animated since 2d3869af (`structures/animate.rs`; bds-structanim*.txt).
-- `/place featurerule` places nothing (`invalidfeaturerule.error`): on the drill's flat world BDS
+- `/place featurerule` (ported since group Y, below): on the drill's flat world BDS
   answered every rule, and `feature minecraft:beehive_feature`, at y -26 with `invalidposition.error`
   (bds-t1dplace4.txt), and its console placed nothing (bds-t1dplacec.txt), so what a rule places is
   unseen. `structure` names beyond those drilled: sapling takes `/locate`'s names, `village` too,
@@ -162,6 +162,24 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   placements repeat run to run; sapling's are not the same pieces (trail ruins at `~40 ~ ~ true`:
   BDS x 57..81 z 169..220, sapling x 54..103 z 197..222; a camp at `~-60`: BDS x -37..-21 z 143..150,
   sapling x -32..-25 z 137..150).
+- Decompiled 2026-11-08, group Y (bdsre, PlaceCommand::execute 143aec2b0). `structure`: Java's
+  random of the level seed `fork_at` the block, the start height drawn from a copy of it, rotation
+  `nextInt(4)` then the element; the start piece's corner is the block itself (y kept with
+  `ignoreStartHeight`, projection off), aliases resolved there. Sapling: `place_commanded`
+  (structured/on_demand.rs), `JigsawV2::assemble_from`. `jigsaw` forks at the block the same way.
+  `featurerule` (1438ee190 → decorateBiome 14580b170): the rule runs from the block's chunk corner
+  with no biome or pass check; positions and placing from MT seeded `hash_combine(S, FNV(name))`,
+  Molang from the level random, S the level random's seed (entropy, fixed for a server run). It
+  answers `chunknotloaded` unless the 3x3 chunks round it are loaded, success if any placement placed,
+  else `invalidposition` (the dirt rule's success at the feet: its later calls found dirt already).
+  Sapling: `place_feature_rule` (feature/grow.rs) with one seed a run (generation.rs `RuleSeed`);
+  only whether it placed can match BDS.
+- Drilled 2026-11-08, group Y: `u3place` again and `y3place` (blocks named outright) with sapling on
+  `SAPLING_DRILL_WORLD=generated SAPLING_DRILL_SEED=20261003` (without the seed the drill world is another
+  one). u3place's six placements span BDS's boxes (one trail ruins x to 76 where BDS's stopped at 71); at
+  `70 40 170 true` all 2358 cells both changed hold the same block, at `30 70 250` 3130 of 3182. Left:
+  sapling draws a few cells BDS did not (more pieces past BDS's edge), and answers `chunknotloaded` where
+  part of the structure is not loaded, where BDS placed it anyway.
 - Ticking-area ids are made by sapling (BDS's are random UUIDs).
 - Hardcore: StartGame's flag on BDS, and whether a hardcore world made fresh (cheats off) refuses
   `/difficulty` by another rule than cheats.

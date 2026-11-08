@@ -32,8 +32,18 @@ fn event(world: &mut World, layer: Entity, halves: &[BlockPos], open: bool) {
     if !super::block_name(world, layer, [x, y, z]).and_then(super::kind).is_some_and(|kind| kind.has_lid) {
         return;
     }
+    shown(world, layer, [x, y, z], open);
+}
+
+fn shown(world: &mut World, layer: Entity, [x, y, z]: BlockPos, open: bool) {
     let lid = BlockEvent { position: BlockCoordinates { x, y, z }, r#type: BlockEventType::ChangeState, data: open.into() };
     blocks::to_viewers(world, layer, [x, y, z], &[sapling_net::encode(&lid)]);
+}
+
+/// Shows shut, unheard, the lid of a chest whose lead half `lead` was taken away while open: BDS
+/// sent it each side of the screen's close (research/captures/bds-u3chest.txt, `setblock air`).
+pub(super) fn shut_gone(world: &mut World, layer: Entity, lead: BlockPos) {
+    shown(world, layer, lead, false);
 }
 
 /// Where a container is heard: the middle of its halves (BDS's double chest from the seam).

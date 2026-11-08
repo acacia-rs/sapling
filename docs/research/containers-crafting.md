@@ -103,6 +103,14 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 - `/clone` (same drill): a single chest's copy gets `forceunpair` 1; a whole pair's copies name each
   other at the destination; one half alone answers `commands.clone.failed`. Sapling: `pairs.rs`
   `carried`, `vanilla/copying.rs`.
+- **Chest pairs put** (bds-u3chest.txt, 2026-11-08): the new half's `UpdateBlock` with its entity already
+  paired, the `place` sound (its `extra_data` the block's default state, a chest facing north, not the one
+  put), then the next tick one `UpdateSubchunkBlocks` of lead, other, other, lead and their four
+  `BlockEntityData` in that order. By hand the capture listed the old half first, by `/setblock` the new
+  one (the order a hash set gives); sapling lists the lead first (`blocks/shown_again.rs` `show_pairs`,
+  `containers/pairs.rs` `pair_placed`; test `fourteenth3y`).
+- **A chest set away while open** (same capture): lid `BlockEvent` 0, `ContainerClose` (server), lid 0
+  again, no sound. Sapling the same (`containers/access.rs` `close_where_gone`, `lid.rs` `shut_gone`).
 - A trapped chest's signal is the viewer count of both halves, capped at 15 (`ChestBlock::use`).
 
 ## C. Barrel, trapped chest, ender chest, shulker box
@@ -205,6 +213,12 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
    10 InvalidCraftResultIndex, 11 InvalidCraftResultItem, 25 a consumed item fails the expected descriptor
    (REC: a tag in `CraftRecipeAuto`), 27 ConsumedItemNotAllowed (REC: Consume from `Hotbar`), 31/32 recipe
    not found, 33 MismatchedCraftingSize, 35 grid mismatch, 36 EmptyCraftResults, 63 InvalidNumCrafts.
+7. **Recipe-book crafts drilled** (`bds_command_probe y3auto`, research/captures/bds-y3auto.txt, 2026-11-08;
+   forged `CraftRecipeAuto` with the inventory screen open, sticks from planks). Taken: Consumes from
+   `HotbarAndInventory` anywhere in the inventory, two of one slot, `*2` from one, `times` 2. Refused, nothing
+   resent: from `Hotbar` or `Inventory` 27; cobblestone 25; one plank of two 19; a third from an emptied slot
+   or slot 40 49; with a chest's screen open 7 (no craft handler: `!openinv` first, or every case was 7).
+   Sapling checks these before trying the request (`inventory/requests/auto.rs`; test fourteenth3y).
 
 ## F. Stonecutter and smithing table
 

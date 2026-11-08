@@ -543,10 +543,18 @@ What stands on a moved block (`bds_command_probe u3carry`, research/captures/bds
   after one tick's drag); on honey it went 0.5 and stayed; on stone as on the floor.
 - Pushed up (bds-ffshove.txt): stands on stone and honey are lifted a block; on slime they are
   flung too (SetEntityMotion y 0.9016: 1 a tick after a tick's gravity) and bounce.
-- Sapling (`pistons/shove.rs`): riders go 0.5 in the start tick (the in-between 4.5 is not shown),
-  are put before the block's front a tick on (or carried 1 more on a pull), unless on honey; slime
-  sets the push axis's motion to 1. Not followed: `force_move_local_entity`, a flung player, and the
-  side a pinned body is squeezed to (BDS -z, sapling +z).
+- Sapling (`pistons/shove.rs`): riders pushed out go 1.0 in the start tick (BDS's 0.5 and the
+  0.5 of their own move, the in-between 4.5 not shown), on honey 0.5; they are put before the
+  block's front a tick on (or carried 1 more on a pull); slime sets the push axis's motion to 1.
+  Every move a piston causes is told with `force_move_local_entity` (`Told::pistoned`), as BDS's
+  all were.
+- Pinned (bds-y3pin.txt): cows and a stand in an arm's cell with obsidian beyond went flush with the
+  obsidian and stayed in the arm, unhurt, wherever across the cell they stood; none was squeezed out
+  sideways. Sapling's `push_out_of_block` (body/stuck.rs) skips arm cells for that.
+- A player on slime (bds-y3fling.txt): pushed sideways BDS sends nothing, its client carries it; pushed
+  up one `CorrectPlayerMovePrediction` puts its feet 2 up (the lift and one flung move of 1) with a
+  delta of 0.9016 up, off the ground. Sapling: `pistons/shove.rs` leaves riding players to their client
+  and flings an up-pushed one so (`movement::push_off_ground`).
 
 ## More parts (2026-10-25, decompiled, not drilled)
 

@@ -90,15 +90,17 @@ pub(crate) fn staged(level: &sapling_world::World, pos: BlockPos, id: u32) -> u3
 
 /// Pairs the chest just placed at `pos` with a single chest of its kind beside it that faces
 /// the same way; that one leads, and its open screens are shut (BDS `ChestBlockActor::onPlace`).
+/// The pair is shown a tick on ([`crate::blocks::show_pair_next_tick`]).
 pub(super) fn pair_placed(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(placed) = single_chest(world, layer, pos) else { return };
     let Some(old) = beside(pos, placed.1).into_iter().find(|at| single_chest(world, layer, *at) == Some(placed)) else { return };
     shut_out(world, layer, old);
     for (half, with) in [(old, (pos, true)), (pos, (old, false))] {
-        if let Some(entity) = entity(world, layer, half) {
-            keep_entity(world, layer, half, &paired(&entity, Some(with)));
+        if let (Some(entity), Some(mut level)) = (entity(world, layer, half), world.get_mut::<Layer>(layer)) {
+            _ = level.world.set_block_entity(half, &paired(&entity, Some(with)));
         }
     }
+    crate::blocks::show_pair_next_tick(world, layer, [old, pos]);
 }
 
 /// A chest's entity copied to `to` by `/clone`: a half's partner moved with it (BDS clones a half

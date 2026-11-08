@@ -150,6 +150,8 @@ struct Chest {
     opened_at: u64,
     /// Ticking (a furnace burning, a hopper): kept while nobody looks.
     pinned: bool,
+    /// A chest's, whose lid is shown shut if it goes while open (screens.rs `close_where_gone`).
+    is_chest: bool,
 }
 
 /// The containers whose slots the shard holds: each while someone has it open or it ticks. By
@@ -183,12 +185,15 @@ pub(crate) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &s
         if is_shulker_box(block) {
             entity = shulker::placed(entity, item_tag, face, level.registry());
         }
-        if shown {
-            keep_entity(world, layer, pos, &entity);
-        } else if let Some(mut level) = world.get_mut::<Layer>(layer) {
+        if let Some(mut level) = world.get_mut::<Layer>(layer) {
             _ = level.world.set_block_entity(pos, &entity);
         }
+        // BDS shows a chest put beside its partner already paired (bds-u3chest.txt).
         pairs::pair_placed(world, layer, pos);
+        let kept = world.get::<Layer>(layer).and_then(|layer| layer.world.block_entity(pos)).map(|entity| entity.nbt.clone());
+        if let Some(entity) = kept.filter(|_| shown) {
+            keep_entity(world, layer, pos, &entity);
+        }
     }
     if kind.is_hopper() {
         crate::hoppers::watch(world, layer, pos);
@@ -217,7 +222,7 @@ fn hold(world: &mut World, layer: Entity, pos: BlockPos) -> Option<BlockPos> {
             loot::unpack(world, layer, *half, kind.slots);
             slots.extend(stored_slots(world, layer, *half, kind.slots));
         }
-        opened(world).chests.insert(key, Chest { halves, per_half: kind.slots, slots, viewers: Vec::new(), opened_at: 0, pinned: false });
+        opened(world).chests.insert(key, Chest { halves, per_half: kind.slots, slots, viewers: Vec::new(), opened_at: 0, pinned: false, is_chest: kind.entity == CHEST.entity });
     }
     Some(key.1)
 }

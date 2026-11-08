@@ -269,7 +269,9 @@ pub(crate) fn wreck(world: &mut World, vehicle: Entity, drops: bool) {
     cargo::spill(world, vehicle);
     if drops && crate::rules::on(world, layer, ENTITY_DROPS) {
         let stack = ItemStack { name: item_of(&kind, state.variant), count: 1, damage: 0, block: None, tag: None };
-        crate::drops::let_go(world, layer, stack, body.at);
+        // BDS drops it at the wire point, not the feet (bds-ffcart.txt, bds-ffburn.txt).
+        let [x, y, z] = body.at;
+        crate::drops::let_go(world, layer, stack, [x, y + crate::riding::wire_lift(&kind), z]);
     }
     crate::mobs::remove(world, vehicle);
 }

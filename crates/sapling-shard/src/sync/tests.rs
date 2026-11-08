@@ -1,3 +1,5 @@
+use acacia_proto::packets::SetEntityData;
+use acacia_proto::types::{MetadataDictionaryItemValue as Value, MetadataFlags1 as Flags};
 use acacia_proto::{Packet, RawPacket};
 
 use super::*;

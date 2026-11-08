@@ -187,6 +187,13 @@ pub(crate) fn close(world: &mut World, player: Entity) {
     }
 }
 
+/// The world and lead half of the chest `player` has open, if it is a chest's screen.
+pub(super) fn chest_shown(world: &mut World, player: Entity) -> Option<(Entity, BlockPos)> {
+    let viewing = world.get::<Viewing>(player).copied()?;
+    let key = (viewing.layer, viewing.pos);
+    opened(world).chests.get(&key).is_some_and(|chest| chest.is_chest).then_some(key)
+}
+
 fn stop_viewing(world: &mut World, player: Entity) -> Option<Viewing> {
     let viewing = world.get::<Viewing>(player).copied()?;
     world.entity_mut(player).remove::<Viewing>();

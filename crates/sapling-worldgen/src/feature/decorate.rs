@@ -30,7 +30,7 @@ const fn hashed_string(name: &str) -> u64 {
 
 /// The rule's generator seed: boost's `hash_combine` of the chunk seed and the low 32 bits of the
 /// rule name's hash.
-fn rule_seed(chunk_seed: u32, name: &str) -> u32 {
+pub(super) fn rule_seed(chunk_seed: u32, name: &str) -> u32 {
     let hash = hashed_string(name) as u32;
     chunk_seed ^ hash.wrapping_add(0x9E37_79B9).wrapping_add(chunk_seed << 6).wrapping_add(chunk_seed >> 2)
 }

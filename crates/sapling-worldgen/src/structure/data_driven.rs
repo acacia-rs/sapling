@@ -154,18 +154,17 @@ impl Structures {
         Some(self.assembled_at(density, start, at, y))
     }
 
-    /// The camp variant named `name` (`minecraft:abandoned_camp_forest`) started in `at`, whatever
-    /// the biome there, as BDS's `/place structure` takes a variant by name (bds-u3place.txt);
-    /// `start_y` as [`Self::forced_v2`]'s.
-    pub(super) fn forced_camp_pieces(&self, density: &Density, name: &str, at: (i32, i32), start_y: Option<i32>) -> Option<Arc<Vec<Piece>>> {
-        let start = camp_start(data().sets["abandoned_camp"].iter().find(|entry| entry.name == name)?);
-        Some(match start_y {
-            Some(y) => self.assembled_at(density, start, at, y),
-            None => {
-                let raw = RawHeights::new(density);
-                Arc::new(start.assemble(&mut JavaRandom::large_feature(self.seed, at.0, at.1), self.seed, at, &|x, z| raw.at(x, z)))
-            }
-        })
+    /// `/place structure`'s `minecraft:trail_ruins`, `minecraft:trial_chambers` or camp variant
+    /// (`minecraft:abandoned_camp_forest`, whatever the biome, bds-u3place.txt) started at the block
+    /// `at` ([`V2Start::assemble_from`]); None for another name.
+    pub(super) fn commanded_v2(&self, density: &Density, name: &str, at: [i32; 3], keep_height: bool) -> Option<Arc<Vec<Piece>>> {
+        let start = match name {
+            "minecraft:trail_ruins" => TRAIL_RUINS,
+            "minecraft:trial_chambers" => TRIAL_CHAMBERS,
+            camp => camp_start(data().sets["abandoned_camp"].iter().find(|entry| entry.name == camp)?),
+        };
+        let raw = RawHeights::new(density);
+        Some(Arc::new(start.assemble_from(self.seed, at, keep_height, &|x, z| raw.at(x, z))))
     }
 
     /// `start`'s pieces with its start piece at height `y`, unprojected.

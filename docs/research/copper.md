@@ -166,8 +166,9 @@ The table was read from the strings (`str copper`, `str lightning_rod`); all 128
   one of another stage takes that stage and pairs (bds-r3copper.txt: an exposed one put by an unweathered one was
   shown unweathered; `containers/pairs.rs` `staged`). A pair's lid is as a plain double chest's (bds-u3chest.txt,
   2026-11-08): one `BlockEvent` at the lead half from either half's click, the sound from the pair's middle;
-  sapling's `containers/lid.rs` since group U. Open: the packets of a pair put (BDS: the new half twice in one
-  `UpdateSubchunkBlocks` with its entity twice, then both halves the next tick; sapling one `UpdateBlock`).
+  sapling's `containers/lid.rs` since group U. A pair put is as a plain one's (containers-crafting.md, "Chest
+  pairs put"), except that BDS's copper put lists the new half twice in its first `UpdateSubchunkBlocks` with its
+  entity twice; sapling sends it the plain way.
 - U3 141a56c80 is `hurtAndBreak`: Unbreaking applies (bds-m3axe.txt: a plain iron axe wore 4 in 4 scrapes;
   with Unbreaking III, 8 in 24 scrapes and 6 in 12 unwaxings), as sapling's wear does. 142535e40 tests the
   SNEAKING flag.
