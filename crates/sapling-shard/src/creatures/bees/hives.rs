@@ -10,8 +10,8 @@
 //! research/captures/bds-f14snest.txt, bds-f14snest2.txt); they stay 100 ticks, kept with no data
 //! (`SaveData` {}), and come out as new bees, heard `spawn`. A bee whose stay is up comes out by day
 //! and dry at 1 in 20 a tick (`BeehiveBlockActor` 0xce705e0), so a hive's bees come out ticks apart
-//! (bds-f14snest.txt: 3, 4 and 16 ticks after their stay).
-// TODO: a hive on fire is not looked at.
+//! (bds-f14snest.txt: 3, 4 and 16 ticks after their stay). Fire about a hive lets all its bees out on
+//! its next tick, by night too and unheard, each on a free side, to flee 20 to 50 s (bds-x2bee.txt).
 
 use std::collections::HashMap;
 
@@ -143,6 +143,28 @@ fn release(world: &mut World, layer: Entity, pos: BlockPos, occupant: &Occupant,
     Some(bee)
 }
 
+/// Whether fire is in a cell about `pos`, edges and corners too (Java's `BeehiveBlockEntity::isFireNearby`).
+fn fire_near(world: &World, layer: Entity, pos: BlockPos) -> bool {
+    let Some(level) = level(world, layer) else { return false };
+    let about = (-1..=1).flat_map(|dx| (-1..=1).flat_map(move |dy| (-1..=1).map(move |dz| [pos[0] + dx, pos[1] + dy, pos[2] + dz])));
+    about.into_iter().any(|[x, y, z]| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.name == "minecraft:fire"))
+}
+
+/// The middle of a free cell on a side of `pos`, at random (bds-x2bee.txt: two bees came out over and
+/// behind a hive with fire on its side, neither in front), the hive's own middle where none is free.
+fn beside(world: &mut World, layer: Entity, pos: BlockPos) -> [f32; 3] {
+    const SIDES: [[i32; 3]; 6] = [[0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];
+    let free: Vec<BlockPos> = level(world, layer).map_or_else(Vec::new, |level| {
+        let cells = SIDES.map(|side| [pos[0] + side[0], pos[1] + side[1], pos[2] + side[2]]);
+        cells.into_iter().filter(|&[x, y, z]| level.in_height(y) && level.registry().get(level.block(x, y, z)).is_some_and(|state| state.boxes.is_empty() && state.name != "minecraft:fire")).collect()
+    });
+    let cell = match free.len() {
+        0 => pos,
+        many => free[world.get_resource_or_insert_with(Dice::default).roll(many as u32) as usize],
+    };
+    cell.map(|c| c as f32 + 0.5)
+}
+
 fn add_honey(world: &mut World, layer: Entity, pos: BlockPos) {
     let Some(level) = level(world, layer) else { return };
     let id = level.block(pos[0], pos[1], pos[2]);
@@ -201,6 +223,16 @@ pub(crate) fn tick(world: &mut World) {
         }
         if world.get_resource_or_insert_with(Dice::default).fraction() < WORKS {
             heard(world, layer, pos, "block.beehive.work", pos.map(|c| c as f32 + 0.5));
+        }
+        if !occupants.is_empty() && fire_near(world, layer, pos) {
+            write(world, layer, pos, &entity, &[]);
+            for occupant in &occupants {
+                let at = beside(world, layer, pos);
+                if let Some(bee) = release(world, layer, pos, occupant, at, 0.0) {
+                    super::escape_fire(world, bee);
+                }
+            }
+            continue;
         }
         if !super::may_fly(world, layer) || occupants.iter().all(|occupant| occupant.ticks_left > 0) {
             continue;

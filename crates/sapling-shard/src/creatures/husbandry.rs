@@ -15,6 +15,7 @@ mod frog_spawn;
 mod guarding;
 mod knots;
 mod leads;
+mod lying;
 mod nesting;
 mod offering;
 mod owners;
@@ -81,13 +82,14 @@ pub(super) fn spawned_raising(world: &mut World, layer: Entity, kind: &str, feet
 }
 
 /// Before the mob's move, what its raising has it do: sit, be pulled on its lead, court, follow
-/// its owner, fight for it, follow food, flee or roll. False when none of these steers it.
+/// its owner, fight for it, follow food, flee, roll or lie down. False when none of these steers it.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
     if world.get::<Raised>(entity).is_none() {
         return false;
     }
     owners::stays(world, entity)
         || rolls::keep_rolling(world, entity)
+        || lying::keep_lying(world, entity)
         || bedtime::lie(world, entity, layer, kind)
         || leads::pull(world, entity, layer)
         || allays::steer(world, entity, layer, kind)
@@ -101,6 +103,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         || breeding::tempted(world, entity, layer, kind)
         || avoiding::flee(world, entity, layer, kind)
         || rolls::start(world, entity, kind)
+        || lying::start(world, entity, kind)
 }
 
 /// A tick of every raised mob: babies grow, love and cooldowns wear off, partners breed, hens

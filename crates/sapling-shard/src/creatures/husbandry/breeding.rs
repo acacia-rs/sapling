@@ -134,7 +134,7 @@ pub(super) fn court(world: &mut World, entity: Entity, layer: Entity, kind: &str
     let close = distance(body.at, to) < NEAR;
     let together = if close { together + 1 } else { together };
     world.get_mut::<Raised>(entity).expect("read above").partner = Some((mate, together));
-    let speed = sapling_data::husbandry(kind).map_or(0.25, |rules| rules.walks);
+    let speed = sapling_data::husbandry(kind).map_or(0.25, |rules| rules.walks) * super::super::genes::pace(world, entity);
     super::super::legs::walk(world, entity, layer, &body, [to[0], to[2]], speed, 1.0);
     if together >= COURTS {
         breed(world, entity, mate, layer, kind);
@@ -194,6 +194,7 @@ fn tempter(world: &World, entity: Entity, kind: &str) -> Option<[f32; 3]> {
 /// Before the move of a mob that follows food: it walks to the nearest player near holding some.
 pub(super) fn tempted(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
     let (Some(rules), Some(to), Some(body)) = (sapling_data::husbandry(kind), tempter(world, entity, kind), world.get::<Body>(entity).copied()) else { return false };
-    super::super::legs::walk(world, entity, layer, &body, [to[0], to[2]], rules.walks * rules.tempt_speed, TEMPTED_NEAR);
+    let speed = rules.walks * rules.tempt_speed * super::super::genes::pace(world, entity);
+    super::super::legs::walk(world, entity, layer, &body, [to[0], to[2]], speed, TEMPTED_NEAR);
     true
 }

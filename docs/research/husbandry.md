@@ -323,6 +323,12 @@ BDS told both throws' 0.4 at once, as sapling now does (hunting/prey.rs `hit`; m
 Bites came 58 to 94 ticks apart, each after both were thrown apart: no pace can be fitted from them.
 Ported in husbandry/guarding.rs; test `a_tamed_wolf_leaps_at_what_its_owner_hits_and_its_bite_throws_it`.
 
+`x2wolf` (fourteenth2x, bds-x2wolf.txt): six wolves fed four rounds, five tamed (each feed after taming flips
+`SITTING`); the two left standing (ids 19, 20, tamed in round two) bit a held, warded, healing zombie: 13 bites, 20 ticks apart at the least (19.9 to
+20.1), 31 to 35 when the zombie had thrown the wolf back; feet to feet 0.61 to 1.421 (dz 1.41 at the widest),
+inside `melee_attack`'s reach `(width × 2)² + foe width` = 1.428 and past the hunters' per-axis 1.4 box. Sapling's
+guard now bites by that reach (guarding.rs `reaches`), its pace 20 as before.
+
 ## Group K (2026-11-08, fourteenth2k_drill.rs)
 
 - `k2babies` (bds-k2babies.txt): of 100 plain summons each, 4 cows, 6 pigs, 6 chickens, 3 sheep, 3

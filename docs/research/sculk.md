@@ -301,9 +301,14 @@ third tick, 0.342 apart. b1sculk/b1steps' first-heard distances (0.51 to 1.79 wa
 sensors' activation, which comes after the vibration's travel, and b1steps' zombies started 8.1 from the sensors.
 Sapling: creatures/footfalls.rs `step`, test fourteenth2v `a_cow_walking_past_a_sensor_is_heard_stepping`.
 
-Not ported (REMAINING4, Sculk): a summoned TNT's
-`prime_fuse`; item entities hurt or killed by a blast vibrate on BDS; and of several events reaching a sensor in
-one tick BDS takes the nearest (items hurt at 3.5 were heard over the blast at 7.5) where sapling keeps the first.
+Ported by fourteenth2x (bds-b1sculk.txt vs sapling-b1sculk.txt, same hearings but for a pig's random steps):
+a summoned TNT posts `prime_fuse` the tick after its `AddEntity` (creatures/backend.rs); a blast posts `explode`
+the tick after, and each item entity it hurts (5 health, `harm_by`; a hidden stack takes 1) posts
+`entity_damage` from its cell then, removed at 5 (creatures/blast/items.rs); and of a tick's vibrations a
+listener keeps the one at the smallest whole distance, a tie the higher frequency, per S5
+(blocks/sculk/reaching.rs `beats`), its particle sent once the tick's posts are settled. Test fourteenth2x
+`a_summoned_tnt_is_heard_and_then_the_items_its_blast_hurt_over_the_blast`. Still open: steps up ladders
+and scaffolding.
 
 ## Drilled 2026-11-08, group W (`w1pops`; fourteenth1w_drill.rs)
 

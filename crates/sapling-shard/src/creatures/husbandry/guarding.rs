@@ -4,8 +4,8 @@
 //! it takes up a mob's fight the tick after the mob hurts its owner (not when it only means to),
 //! leaps at its foe 2 to 4 off on the ground (`behavior.leap_at_target`, 0.4 across and up), and
 //! its bite throws a mob 0.4 as a hunter's does, heard `attack` from its middle a tick later.
-// TODO: its reach (BDS's bit 0.75 off, centre to centre) and pace are the hunters'; BDS's bites
-// came 58 to 94 ticks apart as the zombie threw it back, too few to fit a pace.
+//! Its bites (bds-x2wolf.txt, 13 bites of two wolves) came 20 ticks apart at the least, or 31 to 35
+//! as the zombie threw it back, from 0.61 to 1.421 off feet to feet: within [`reaches`].
 
 use bevy_ecs::prelude::*;
 
@@ -16,14 +16,20 @@ use crate::creatures::{Health, hunting};
 
 /// Mobs this near their owner take up its fight, and give it up beyond this.
 const RALLIES: f32 = 16.0;
-/// Its bite reaches this much past its box, once in this many ticks.
-const REACH: f32 = 0.8;
+/// Its bite reaches its width times this, squared, plus its foe's width, feet to feet squared
+/// (`melee_attack`'s `reach_multiplier`), once in this many ticks.
+const REACH_TIMES: f32 = 2.0;
 const EVERY: u64 = 20;
 const PLAYER: [f32; 2] = [0.6, 1.8];
 /// How far off a foe it leaps at, and the leap's speed across and up.
 const LEAPS: [f32; 2] = [2.0, 4.0];
 const LEAP: f32 = 0.4;
 const SOUNDS_FROM: f32 = 0.5;
+
+/// Whether a biter of `body` reaches a foe of `size` standing at `at`: 1.428 for a wolf at a zombie.
+fn reaches(body: &Body, at: [f32; 3], size: [f32; 2]) -> bool {
+    distance(body.at, at).powi(2) <= (body.size[0] * REACH_TIMES).powi(2) + size[0]
+}
 
 /// Where `foe` stands and how wide and tall it is, if it is a player or a mob still alive.
 fn foe_at(world: &World, foe: Entity) -> Option<([f32; 3], [f32; 2], Entity)> {
@@ -80,9 +86,7 @@ pub(super) fn chase(world: &mut World, entity: Entity, layer: Entity, kind: &str
         }
     }
     let now = world.resource::<Tick>().0;
-    let across = (body.size[0] + size[0]) / 2.0 + REACH;
-    let touches = (at[0] - body.at[0]).abs() < across && (at[2] - body.at[2]).abs() < across && at[1] < body.at[1] + body.size[1] && body.at[1] < at[1] + size[1];
-    if touches && now >= ready {
+    if reaches(&body, at, size) && now >= ready {
         world.get_mut::<Raised>(entity).expect("read above").foe = Some((foe, now + EVERY));
         let far = dx.hypot(dz).max(1e-4);
         bite(world, entity, layer, kind, foe, rules.and_then(|rules| rules.tame_attack).unwrap_or(2.0), [dx / far, dz / far]);
@@ -100,4 +104,17 @@ fn bite(world: &mut World, entity: Entity, layer: Entity, kind: &str, foe: Entit
     let (Some(id), Some(body)) = (world.get::<NetId>(entity).map(|id| id.0), world.get::<Body>(entity).copied()) else { return };
     let cell = body.at.map(|c| c.floor() as i32);
     crate::late_sounds::play_later(world, 1, layer, cell, hunting::sound("attack", id, kind, &body, SOUNDS_FROM));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_wolf_bites_a_zombie_1_421_off_but_not_a_diagonal_1_4_each_way() {
+        let wolf = Body::new([0.0, 64.0, 0.0], [0.0; 3], [0.6, 0.8]);
+        let zombie = [0.6, 1.95];
+        assert!(reaches(&wolf, [0.19, 64.0, 1.41], zombie), "bds-x2wolf.txt at 57382");
+        assert!(!reaches(&wolf, [1.2, 64.0, 1.2], zombie), "the hunters' box rule bit here");
+    }
 }
