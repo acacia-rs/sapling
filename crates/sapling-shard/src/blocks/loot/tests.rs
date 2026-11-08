@@ -61,6 +61,22 @@ fn a_cluster_leaves_two_shards_but_to_a_pickaxe_and_a_pot_leaves_itself() {
     assert_eq!(left_of("decorated_pot", "direction=0", Breaker::UNAIDED, 0), named("decorated_pot", 1));
 }
 
+/// research/captures/bds-b1stem.txt: each broken by `setblock ... destroy`.
+#[test]
+fn stems_composters_carpets_propagules_and_pitchers_leave_what_bds_does() {
+    let stem = |block, properties, thrown| left_of(block, properties, Breaker::UNAIDED, thrown);
+    let stems = [stem("pumpkin_stem", "growth=7,facing_direction=0", 7), stem("pumpkin_stem", "growth=7,facing_direction=2", 8), stem("melon_stem", "growth=0,facing_direction=0", 0), stem("melon_stem", "growth=0,facing_direction=0", 1)];
+    assert_eq!(stems, [named("pumpkin_seeds", 3), vec![], named("melon_seeds", 3), vec![]], "three throws of nextInt(15) < growth + 1");
+    let composter = [left_of("composter", "composter_fill_level=8", HAND, 0), left_of("composter", "composter_fill_level=3", HAND, 0)];
+    assert_eq!(composter, [[named("composter", 1), named("bone_meal", 1)].concat(), named("composter", 1)]);
+    assert_eq!([left_of("pale_moss_carpet", "upper_block_bit=0", HAND, 0), left_of("pale_moss_carpet", "upper_block_bit=1", HAND, 0)], [named("pale_moss_carpet", 1), vec![]]);
+    let propagule = |properties| left_of("mangrove_propagule", properties, HAND, 0);
+    let propagules = [propagule("hanging=0,propagule_stage=0"), propagule("hanging=1,propagule_stage=4"), propagule("hanging=1,propagule_stage=2")];
+    assert_eq!(propagules, [named("mangrove_propagule", 1), named("mangrove_propagule", 1), vec![]]);
+    let pitcher = |growth| left_of("pitcher_crop", &format!("growth={growth},upper_block_bit=0"), HAND, 0);
+    assert_eq!([pitcher(4), pitcher(2), pitcher(1)], [named("pitcher_plant", 1), named("pitcher_pod", 1), named("pitcher_pod", 1)]);
+}
+
 #[test]
 fn a_decorated_pot_broken_by_hand_leaves_itself() {
     assert_eq!(left_of("decorated_pot", "direction=0", HAND, 0), named("decorated_pot", 1));

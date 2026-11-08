@@ -1,8 +1,7 @@
 //! What a broken block leaves behind, by the game's loot tables (`sapling_data::block_loot`:
 //! the Java game's, which Bedrock follows for the blocks checked). The tables speak Java's
 //! block states; `state_holds` reads them off a Bedrock block. Putting it in the world: spill.rs.
-// TODO: a row about a state this cannot read off the Bedrock block is skipped, stems leave
-// nothing (their seed count is a formula the table file does not carry).
+//! A row about a state this cannot read off the Bedrock block is skipped.
 
 use sapling_api::Item;
 use sapling_data::{BlockLoot, Fortune, LootRow, StateTest, Tooling};
@@ -20,9 +19,11 @@ pub(super) use spill::{Tags, add_entity_loot, let_go, spill, spill_tagged, throw
 const FROM_ONE: &[(&str, &str)] = &[("candles", "candles"), ("pickles", "cluster_count"), ("layers", "height"), ("flower_amount", "growth"), ("segment_amount", "growth")];
 /// Blocks whose Bedrock `growth` counts as Java's `age` does (a berry bush's 0 to 3; sapling-at1drops.txt
 /// read a ripe one as age 1 and dropped nothing).
-const GROWTH_IS_AGE: &[&str] = &["sweet_berry_bush"];
+const GROWTH_IS_AGE: &[&str] = &["sweet_berry_bush", "pitcher_crop"];
 /// Bedrock's `growth` of a ripe crop.
 const RIPE: i32 = 7;
+/// The age of a propagule the table drops.
+const PROPAGULE_GROWN: i32 = 4;
 /// Chances are thrown out of this many.
 const CHANCE_SIDES: u32 = 1_000_000;
 
@@ -78,6 +79,13 @@ impl Broken<'_> {
             // A shot pot shatters (shot_blocks.rs); broken any other way it is whole.
             "cracked" => Some("false".to_owned()),
             "berries" => Some(self.name.contains("with_berries").to_string()),
+            "bottom" => self.number("upper_block_bit").map(|upper| (upper == 0).to_string()),
+            "level" if self.java == "composter" => self.number("composter_fill_level").map(|level| level.to_string()),
+            // BDS drops a standing propagule, a hanging one only grown (bds-b1stem.txt).
+            "age" if self.java == "mangrove_propagule" => match self.number("hanging") {
+                Some(0) => Some(PROPAGULE_GROWN.to_string()),
+                _ => self.number("propagule_stage").map(|stage| stage.to_string()),
+            },
             "age" if GROWTH_IS_AGE.contains(&self.java) => self.number("growth").map(|age| age.to_string()),
             "age" => match (self.number("growth"), self.number("age"), sapling_data::ripe_age(self.java)) {
                 (Some(growth), _, Some(ripe)) => Some(if growth >= RIPE { i32::from(ripe) } else { growth * i32::from(ripe) / RIPE }),
@@ -132,6 +140,15 @@ fn crop_seeds(fortune: u8, roll: &mut dyn FnMut(u32) -> u32) -> u32 {
     (0..CROP_THROWS + u32::from(fortune)).filter(|_| roll(CROP_SIDES) <= CROP_GROWTH).count() as u32
 }
 
+/// A stem's seeds, one for each of three throws of `nextInt(15) < growth + 1`, fortune or not
+/// (BDS's `VanillaBlockDrops` count functor 1488199a0; bds-b1stem.txt), where the table file
+/// keeps no row for the binomial.
+const STEMS: [(&str, &str); 2] = [("pumpkin_stem", "minecraft:pumpkin_seeds"), ("melon_stem", "minecraft:melon_seeds")];
+
+fn stem_seeds(growth: u32, roll: &mut dyn FnMut(u32) -> u32) -> u32 {
+    (0..CROP_THROWS).filter(|_| roll(CROP_SIDES) <= growth).count() as u32
+}
+
 /// A ripe beetroot leaves 1 + `nextInt(2)` beetroot apart from its seeds, BDS's `VanillaBlockDrops` range
 /// {1, 2} (docs/research/block-rules.md; bds-ax1beet.txt); Java's table leaves 1.
 const BEETROOT: &str = "minecraft:beetroot";
@@ -147,6 +164,9 @@ pub(super) fn of(block: &str, properties: &str, by: &Breaker, roll: &mut dyn FnM
     let name = block.strip_prefix("minecraft:").unwrap_or(block);
     let (java, is_double_slab) = sapling_data::java_block(name);
     let broken = Broken { name, properties, java, is_double_slab };
+    if let Some((_, seeds)) = STEMS.iter().find(|(stem, _)| *stem == name) {
+        return some(seeds, stem_seeds(broken.number("growth").unwrap_or(0).max(0) as u32, roll));
+    }
     let rows = match sapling_data::block_loot(java) {
         BlockLoot::Nothing => return Vec::new(),
         // A Bedrock block of another name than its item (`reeds`) has the Java id's item.
