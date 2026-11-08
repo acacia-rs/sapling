@@ -1,7 +1,7 @@
 //! The armour a mob wears (helmet, chestplate, leggings, boots, as a world folder's `Armor`): shown
 //! in `MobArmorEquipment` and worn against hits over its own skin, as BDS's zombie in a diamond
 //! chestplate took 5.824 of a diamond sword's 8 (research/captures/bds-hits2.txt).
-// TODO: it is not written back to a world folder, worn down, enchanted or dropped.
+// TODO: it is not written back to a world folder or worn down by hits (spawn_gear.rs enchants and drops it).
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;

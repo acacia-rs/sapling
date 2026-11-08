@@ -524,6 +524,17 @@ By night on the stone floor, the survival actor held in place:
   the zombie pigman's gold nuggets lying there into its main hand (`piglins/pickup.rs`); BDS's held
   its crossbow (its pack keeps nuggets `stored_in_inventory`; the drill shows no item packets, so
   whether BDS's took them is not known). Left: that, and the other functions' item data.
+- Zombies, husks and drowned (fourteenth2c, `f14cgear`, bds-f14cgear.txt: 40 of each summoned on
+  hard, 5 at a time): 7 zombies and 6 husks wore armour (leather, copper, gold, iron, partial sets),
+  3 and 6 held an iron shovel, sword or spear (`zombie_equipment.json`: 5% weapons, 15% armour tiers),
+  1 and 2 of them enchanted; of 36 unarmed drowned (`drowned_equipment.json`), 2 held a fishing rod
+  and 6 a nautilus shell in the off hand; of 4 tridents, 1 was enchanted. Before, sapling rolled no
+  table for these (sapling-f14cgear.txt). Now `spawn_gear.rs` rolls the zombie's table for its age
+  events (its `can_have_equipment` group, not `spawn_as_rider`) and the husk's always but as a rider;
+  `drowned.rs` rolls the melee table for an unarmed one, a shell going to the off hand. A `/kill`
+  showed both hands empty on BDS, as on sapling. Tests `zombies_and_husks_roll_their_table_on_hard_and_wear_nothing_on_easy`,
+  `an_unarmed_drowned_may_hold_a_shell_in_its_off_hand`. Left: a ranged drowned's trident is never
+  enchanted (`enchant_random_gear` 0.25), and mob armour is not worn down by hits (`worn.rs`).
 
 ## Head, box, spider, nuggets (2026-11-05, thirteenth3ah, `ah3*` captures)
 

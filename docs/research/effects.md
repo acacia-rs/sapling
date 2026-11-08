@@ -118,8 +118,20 @@ research/captures/bds-bf1*.txt, sapling-bf1*.txt after the port):
   its feet the tick after. A raise tells nothing; sneaking keeps `INVISIBLE`; once seen again it keeps
   `CAN_SHOW_NAMETAG` for good. Every player's `VisibleMobEffects` waits for the sync. A splash hits both
   players in sync order. A late viewer's `AddPlayer` carries the flags. A player leaving is heard
-  `disappeared` at feet + 0.9 after its `RemoveEntity` (roster.rs). Left: the thrown invisibility
-  potion is heard `disappeared`/`reappeared` itself (REMAINING3).
+  `disappeared` at feet + 0.9 after its `RemoveEntity` (roster.rs). A thrown potion is heard
+  `disappeared` as it comes and `reappeared` two ticks on, as any thrown thing (projectiles.md). Its
+  break (fourteenth2c, bds-f14cthrow.txt): `MobEffect` in the breaking tick, then the next tick the
+  potion's RemoveEntity and `glass`, and the struck players' and mobs' flags and `VisibleMobEffects`
+  at that tick's sync (`creatures/splashes.rs`, `entities::synced_next_tick`); `disappeared` the tick
+  after that.
+- Sneaking (fourteenth2c, `f14csneak`, bds-f14csneak.txt): BDS tells the sneaker itself its
+  `Flags`/`BoundingboxHeight` as its viewers (`movement.rs` `announce`), then `FlagsExtended`: a bare
+  sneak shows the shield's bits 8 and 9 (`ServerPlayer::normalTick` 14074efc0 raises them on any
+  sneaker not using an item or swimming), standing up only bit 9, which lingers until a shield comes
+  to hand (`vitals/shield/bare.rs`). With a shield, BDS lowered it as sapling (bit 9, then none) in
+  one run of bds-shield.txt and as base, bit 9, base in another: tick phase.
+- `bg2names` again (`f14cpick`, nine trials of three layouts): BDS's zombie and sapling's each took
+  the nearer of a slowed villager and the survival watcher, 9 of 9; bg2names' difference did not recur.
 - Late viewers (`bg2names`): a mob's `AddEntity` carries the flags it has now (BREATHING, MOVING, a
   charge, a name), not those it was made with (`mobs/live.rs`); a mob made this tick keeps its own.
 - Hunting: a zombie (sight 35) took a bare invisible player only within 2.45 of its eyes (2.41 yes,

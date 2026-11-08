@@ -116,7 +116,7 @@ fn spring(world: &mut World, trap: Entity, layer: Entity, at: [f32; 3]) {
         let [helmet, bow] = gear(world);
         // Told in its announcement only, once (bds-u1trap.txt), as hold_from_birth reshows it.
         let _ = super::worn::wear(world, rider, 0, Some(helmet));
-        super::command_gear::hold_from_birth(world, rider, bow);
+        super::command_gear::hold_from_birth(world, rider, bow, false);
         let _ = crate::riding::seat(world, rider, horse);
     }
     crate::lightning::strike(world, layer, at, false);

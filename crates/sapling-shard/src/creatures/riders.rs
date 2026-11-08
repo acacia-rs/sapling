@@ -4,9 +4,8 @@
 //! back seat); a drowned's `as_rider` makes the zombie nautilus it rides (`minecraft:spawn_entity`),
 //! half a block up. Riders of a natural mount despawn as it does. The zombie and the husk roll
 //! their rider group's `minecraft:equipment` table, an iron spear; the parched its own bow
-//! (spawn_gear.rs), the drowned its trident (drowned.rs).
-// TODO: the tables' `enchant_random_gear` (BDS's zombie's spear came enchanted) and their armour
-// pools (difficulty conditions sapling's loot does not read) are not rolled.
+//! (spawn_gear.rs), the drowned its trident (drowned.rs). `spawn_gear::equip` rolls the tables'
+//! `enchant_random_gear` and difficulty pools.
 
 use bevy_ecs::prelude::*;
 use sapling_api::SpawnReason;

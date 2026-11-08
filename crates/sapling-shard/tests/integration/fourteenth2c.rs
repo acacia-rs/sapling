@@ -4,11 +4,11 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, Animate, LevelEvent, LevelEventEvent, LevelSoundEvent, RemoveEntity, SetEntityData};
-use acacia_proto::types::{InputData, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value};
+use acacia_proto::packets::{AddEntity, Animate, LevelEvent, LevelEventEvent, LevelSoundEvent, MobArmorEquipment, MobEquipment, RemoveEntity, SetEntityData};
+use acacia_proto::types::{InputData, MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, WindowID};
 use common::shooting::{ALEX, click_air, ready};
 use common::{Harness, all, input_at};
-use sapling_api::{GameMode, Item, Slot};
+use sapling_api::{Difficulty, GameMode, Item, Slot};
 
 /// Bits 8 (raised) and 9 (moving) of each `FlagsExtended` told of Alex in `sent`.
 fn shield_bits(sent: &[RawPacket]) -> Vec<i64> {
@@ -100,6 +100,47 @@ fn a_snowball_leaves_from_under_the_eyes_and_goes_the_tick_after_its_puff_heard_
     if puffed + 1 == 2 {
         assert!(!heard(&ticks[2], "reappeared").is_empty(), "heard at two ticks old as it goes");
     }
+}
+
+/// Of `count` mobs of `kind` summoned on `difficulty`, how many were shown wearing armour, holding
+/// something in the main hand, and in the off hand.
+fn geared(kind: &'static str, count: usize, difficulty: Difficulty) -> [usize; 3] {
+    let mut h = Harness::new();
+    h.enter(1, "Alex");
+    h.remote.run(move |ctx| {
+        ctx.set_game_mode(ALEX, GameMode::Spectator);
+        ctx.set_difficulty(difficulty);
+    });
+    h.tick_all();
+    let made = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let out = made.clone();
+    h.remote.run(move |ctx| *out.lock().unwrap() = (0..count).map(|at| ctx.summon_as(None, kind, [2.5 + (at % 10) as f32, 65.0, 2.5 + (at / 10) as f32], 0.0, 0.0, None).expect("summoned").0).collect());
+    let sent: Vec<RawPacket> = (0..5).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let ids: Vec<u64> = std::mem::take(&mut *made.lock().unwrap());
+    let ours = |id: u64| ids.contains(&id);
+    let worn = all::<MobArmorEquipment>(&sent).into_iter().filter(|worn| ours(worn.runtime_entity_id) && [&worn.helmet, &worn.chestplate, &worn.leggings, &worn.boots].iter().any(|item| item.network_id != 0));
+    let held = |window: WindowID| {
+        let held = all::<MobEquipment>(&sent).into_iter().filter(|held| ours(held.runtime_entity_id) && held.window_id == window && held.item.network_id != 0);
+        held.map(|held| held.runtime_entity_id).collect::<std::collections::HashSet<_>>().len()
+    };
+    let worn: std::collections::HashSet<u64> = worn.map(|worn| worn.runtime_entity_id).collect();
+    [worn.len(), held(WindowID::Inventory), held(WindowID::Offhand)]
+}
+
+#[test]
+fn zombies_and_husks_roll_their_table_on_hard_and_wear_nothing_on_easy() {
+    // bds-f14cgear.txt: of 40 on hard, 7 zombies and 6 husks wore armour, 3 and 6 held a weapon.
+    let [worn, held, _] = geared("minecraft:zombie", 100, Difficulty::Hard);
+    assert!((3..=40).contains(&worn) && (1..=20).contains(&held), "{worn} {held}");
+    let [worn, held, _] = geared("minecraft:husk", 100, Difficulty::Hard);
+    assert!((3..=40).contains(&worn) && (1..=20).contains(&held), "{worn} {held}");
+    assert_eq!(geared("minecraft:zombie", 60, Difficulty::Easy), [0, 0, 0], "no chance on easy");
+}
+
+#[test]
+fn an_unarmed_drowned_may_hold_a_shell_in_its_off_hand() {
+    let [worn, _, off] = geared("minecraft:drowned", 100, Difficulty::Easy);
+    assert!(worn == 0 && (1..=30).contains(&off), "{worn} {off}");
 }
 
 #[test]

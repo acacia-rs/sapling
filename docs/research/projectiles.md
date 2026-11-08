@@ -25,8 +25,8 @@ A thrown wind charge leaves at 2.25 a tick, its item's `launch_power_scale` 1.5 
 (bds-q3wind.txt, 2.26). Meeting a block, it bursts 0.25 back from the face (particle data 1) and
 pushes mobs as a blast of reach 2.4 pushes them, 1.22 times as hard: measured from the feet less
 half the width, towards 0.9 up the body, added to the motion (two cows, 0.338 and 0.375, to 0.01).
-Not copied: BDS's `disappeared`/`reappeared` sounds and its removal and `wind_charge.burst` a tick
-after the burst.
+Not copied: BDS's removal and `wind_charge.burst` a tick after the burst (its `disappeared` and
+`reappeared` are, `creatures/flight/vanish.rs`).
 
 A lingering potion leaves a cloud with `duration` 30, `radius` 3, `radius_on_use` -0.5 and
 `reapplication_delay` 40.
@@ -119,6 +119,20 @@ Drilled 2026-11-05 (`bds_command_probe r1shots`, `r1stuck`; research/captures/bd
   from 1 and sounds at a fifth, three fifths and the whole of the load (Quick Charge's fractions assumed), then
   loads (`shots/crossbows.rs` `tick`).
 
+Drilled 2026-11-08 (`f14cthrow`, research/captures/bds-f14cthrow.txt; and bds-s7shots.txt, bds-p2shoot.txt,
+bds-small.txt, bds-q3wind.txt), each thrown straight down by a player at midnight:
+- The thrower and its viewers are told all of its data (`SetEntityData`) at the use, before the
+  thing's `AddEntity`; no arm swings. The throw is heard 0.3 under the eyes and 0.15 ahead along
+  the yaw, as the player's.
+- Potions, eggs, pearls and bottles leave from the eyes themselves (feet + 1.62); snowballs, wind
+  charges, arrows and tridents 0.1 under, the packs' `offset: [0, -0.1, 0]` (`shots/aim.rs`).
+- Each thrown thing but a wind charge goes the tick after it lands: in the landing tick its
+  particles and what it does (effects given, a pearl's teleport), in the next its RemoveEntity, with
+  the orbs or the cloud it leaves announced just before and `glass` or `undefined` heard; one two
+  ticks old is still heard `reappeared` then (`creatures/landing.rs` `goes_late`, `Leaves`;
+  `hits.rs` `struck_goes`). Tests in `fourteenth2c.rs`. Left: the potion's 5 item particles, a pearl's
+  teleport events, and the order within the tick (research/parity/REMAINING4.md).
+
 A stuck arrow or trident that a player may pick up is kept with its column, with the fields
 `player`, `isCreative`, `auxValue` and `Trident` (sapling-leveldb `actors/stuck.rs`). Any other stuck
 shot goes after 1200 ticks.
@@ -128,7 +142,8 @@ shot goes after 1200 ticks.
 These are the Java game's, a guess, or not found in the decompile:
 
 - the Multishot spread of 10 degrees;
-- where a shot leaves from: 0.1 under the eyes;
+- where a bow's or a crossbow's shot leaves from, 0.1 under the eyes (thrown things were drilled:
+  see above);
 - BDS's short pickup delay (Actor +0x1bc): drilled 2026-11-05 (bds-f1pickup.txt), a stuck arrow was
   taken 8 ticks after it lay still, as the 7-tick shake ran out; sapling waits the same since
   (`creatures/stuck.rs` `shaking`). The same drill's dispenser arrow bounced off the creative

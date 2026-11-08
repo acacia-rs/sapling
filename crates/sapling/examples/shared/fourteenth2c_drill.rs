@@ -3,7 +3,7 @@
 //! survival, then with a shield in its off hand. `f14cthrow`: thrown down at its feet beside a slowed
 //! cow: a splash potion of invisibility, a lingering one, a snowball, an egg, a bottle o' enchanting and
 //! a pearl. `f14cpick`: a zombie with a slowed villager and the survival watcher both in reach, each
-//! layout three times: whom it takes first.
+//! layout three times: whom it takes first. `f14cgear`: zombies, husks and drowned summoned on hard.
 
 use crate::villages::wait;
 
@@ -51,7 +51,26 @@ fn pick() -> Vec<String> {
     out
 }
 
+/// Forty of each armed kind summoned on hard, five at a time, then killed: what they hold and wear.
+fn gear() -> Vec<String> {
+    let mut out = start();
+    out.extend(owned(["difficulty hard", "tp @s 0.5 -60 -30.5", "tp CmdWatcher 3.5 -60 -30.5", ""]));
+    for kind in ["zombie", "husk", "drowned"] {
+        for batch in 0..8 {
+            for at in 0..5 {
+                out.push(format!("summon {kind} {} -60 {}", at * 3 - 6, batch % 2 * 3));
+            }
+            wait(&mut out, 1);
+            out.extend(owned([format!("kill @e[type={kind}]").as_str(), "kill @e[type=item]", ""]));
+        }
+    }
+    out.extend(owned(["difficulty easy", ""]));
+    out
+}
+
 const SHOWN: &[&str] = &["CommandOutput", "SetEntityData", "MobEffect", "AddEntity", "AddItemEntity", "AddPlayer", "RemoveEntity", "LevelSoundEvent", "LevelEvent", "EntityEvent", "MobEquipment"];
+
+const GEAR_SHOWN: &[&str] = &["CommandOutput", "AddEntity", "MobEquipment", "MobArmorEquipment"];
 
 /// The drill called `name` of this file.
 pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
@@ -59,6 +78,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "f14csneak" => (sneak(), SHOWN),
         "f14cthrow" => (throw(), SHOWN),
         "f14cpick" => (pick(), SHOWN),
+        "f14cgear" => (gear(), GEAR_SHOWN),
         _ => return None,
     })
 }
