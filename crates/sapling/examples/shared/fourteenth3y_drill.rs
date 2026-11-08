@@ -2,7 +2,8 @@
 //! (stone at y -27). `y3pin`: cows and a stand pinned by pistons against obsidian, a cow off the middle of its
 //! row either way. `y3fling`: the actor (survival, no fall damage) on slime pushed east, then up. `y3auto`:
 //! recipe-book crafts of sticks forged with Consumes from the inventory, the hotbar, an open chest and the
-//! wrong item or count (`!auto`, crafting_auto.rs).
+//! wrong item or count (`!auto`, crafting_auto.rs). `y3place`: `/place structure` at named blocks, on a
+//! generated world (seed 20261003).
 
 use super::creatures::{floor, waits, with};
 
@@ -14,6 +15,7 @@ pub fn drill(name: &str) -> Option<(Vec<String>, &'static [&'static str])> {
         "y3pin" => (pinned(), MOVES),
         "y3fling" => (flung(), MOVES),
         "y3auto" => (auto(), CRAFTS),
+        "y3place" => (placed(), &["CommandOutput", "UpdateBlock", "UpdateSubchunkBlocks", "BlockEntityData"]),
         _ => return None,
     })
 }
@@ -27,6 +29,21 @@ const UP: u8 = 1;
 
 fn tidy(lines: Vec<String>) -> Vec<String> {
     with(lines, &["", "gamemode creative @s", "tp @s 0.5 -26 0.5 -90 0", "kill @e[type=!player]", "fill -8 -26 -8 16 -16 8 air", "fill -8 -27 -8 16 -27 8 stone", ""])
+}
+
+/// u3place's structures at blocks named outright, so the actor's footing cannot move them.
+fn placed() -> Vec<String> {
+    let mut lines = Vec::new();
+    waits(&mut lines, 15);
+    lines = with(lines, &["gamerule domobspawning false", "gamemode creative @s", "tp @s 30 120 210"]);
+    waits(&mut lines, 10);
+    for at in ["70 70 210 true", "-10 70 210 false", "30 70 250 false false true", "30 70 170 false false false", "70 40 170 true"] {
+        lines.extend([format!("place structure minecraft:trail_ruins {at}"), String::new(), String::new()]);
+    }
+    for at in ["90 70 270 false false true", "-30 70 150 false false false"] {
+        lines.extend([format!("place structure minecraft:abandoned_camp_forest {at}"), String::new(), String::new()]);
+    }
+    lines
 }
 
 fn pinned() -> Vec<String> {

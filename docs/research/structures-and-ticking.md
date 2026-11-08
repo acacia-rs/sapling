@@ -174,6 +174,12 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   else `invalidposition` (the dirt rule's success at the feet: its later calls found dirt already).
   Sapling: `place_feature_rule` (feature/grow.rs) with one seed a run (generation.rs `RuleSeed`);
   only whether it placed can match BDS.
+- Drilled 2026-11-08, group Y: `u3place` again and `y3place` (blocks named outright) with sapling on
+  `SAPLING_DRILL_WORLD=generated SAPLING_DRILL_SEED=20261003` (without the seed the drill world is another
+  one). u3place's six placements span BDS's boxes (one trail ruins x to 76 where BDS's stopped at 71); at
+  `70 40 170 true` all 2358 cells both changed hold the same block, at `30 70 250` 3130 of 3182. Left:
+  sapling draws a few cells BDS did not (more pieces past BDS's edge), and answers `chunknotloaded` where
+  part of the structure is not loaded, where BDS placed it anyway.
 - Ticking-area ids are made by sapling (BDS's are random UUIDs).
 - Hardcore: StartGame's flag on BDS, and whether a hardcore world made fresh (cheats off) refuses
   `/difficulty` by another rule than cheats.
