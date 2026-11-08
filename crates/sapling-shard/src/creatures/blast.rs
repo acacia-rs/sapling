@@ -1,7 +1,7 @@
 //! Mobs that blow up, as BDS's creeper did (docs/research/mob-attacks.md, "Creepers"): lit near
 //! its prey, it burns a fuse down and bursts, hurting and throwing who is near and breaking blocks
 //! (docs/research/block-uses.md, "Blasts").
-// TODO: a fuse stays lit for a prey out of sight; no arrows, orbs or falling blocks are thrown; Blast Protection spares no mob's throw.
+// TODO: a falling block is not thrown (bds-a3creeper2.txt's one sample fits no rule); Blast Protection spares no mob's throw.
 
 mod reached;
 pub(super) mod rays;
@@ -228,12 +228,14 @@ fn blast(world: &mut World, source: Option<Entity>, layer: Entity, at: [f32; 3],
             vitals::blasted(world, player, harm, at, thrown, cause);
         }
     }
-    // Items lying in it are gone, as the stacks BDS's first TNT left were with its second.
+    // Items and orbs lying in it are gone, as the stacks BDS's first TNT left were with its second,
+    // and an orb 2.8 off a creeper's blast was the tick after (bds-a3creeper2.txt).
     let reach = 2.0 * power;
-    for (item, _) in drops::lying_in(world, layer, at.map(|c| c - reach), at.map(|c| c + reach)) {
-        let far = world.get::<Body>(item).map_or(f32::MAX, |its| distance(its.at, at));
-        if far < reach {
-            mobs::remove(world, item);
+    let mut lying: Vec<Entity> = drops::lying_in(world, layer, at.map(|c| c - reach), at.map(|c| c + reach)).into_iter().map(|(item, _)| item).collect();
+    lying.extend(world.query_filtered::<(Entity, &InLayer), With<crate::orbs::Orb>>().iter(world).filter(|(_, in_layer)| in_layer.0 == layer).map(|(orb, _)| orb));
+    for gone in lying {
+        if world.get::<Body>(gone).is_some_and(|its| distance(its.at, at) < reach) {
+            mobs::remove(world, gone);
         }
     }
     crate::vehicles::blasted(world, layer, |world, feet, size| impact(world, layer, at, feet, size, reach).map(|impact| harm_by(impact, reach)));

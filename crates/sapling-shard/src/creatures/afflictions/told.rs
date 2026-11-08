@@ -66,6 +66,16 @@ pub(super) fn shown_and_announced(world: &mut World, mob: Entity, id: u64, befor
     (!shown.metadata.is_empty()).then(|| sapling_net::encode(&shown))
 }
 
+/// The mob's walking speed under `active`, if `changed` holds speed or slowness: BDS told it after the
+/// `VisibleMobEffects`, in the same sync (research/captures/bds-mob-effects.txt).
+pub(super) fn paced(world: &World, mob: Entity, id: u64, changed: &[Active], active: &[Active]) -> Option<bytes::Bytes> {
+    changed.iter().any(|active| is_told(active.effect)).then_some(())?;
+    let kind = world.get::<entities::Kind>(mob)?;
+    let base = sapling_data::mob_pace(&kind.0, crate::creatures::shown::is_baby(world, mob))?;
+    let level = |effect: Effect| active.iter().find(|active| active.effect == effect).map(|active| active.amplifier);
+    Some(sapling_net::encode(&crate::vitals::effects::mob_walking(id, base, level(Effect::Speed), level(Effect::Slowness))))
+}
+
 fn fire_immune(world: &mut World, mob: Entity, id: u64, on: bool) -> Option<acacia_proto::types::MetadataDictionaryItem> {
     let kind = world.get::<entities::Kind>(mob)?.0.clone();
     if sapling_data::mob_traits(&kind).fire_immune {

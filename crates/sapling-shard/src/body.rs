@@ -24,6 +24,10 @@ use crate::terrain::{physics_view, physics_view_clearing};
 
 /// How close a top face is to a body's feet to stand it.
 const TOUCH: f32 = 1e-4;
+/// How much of the way to its levitation speed a mob's rise goes each tick.
+const LEVITATES: f32 = 0.2;
+/// A slow-falling mob's gravity once it falls (moves.rs `fall_slowly`).
+const SLOW_FALL: f32 = 0.01;
 
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Body {
@@ -56,6 +60,10 @@ pub(crate) struct Body {
     stepped: bool,
     /// The speed up an erupting geyser gave a mob after its last move, which its next tick adds (geyser.rs).
     geysered: f32,
+    /// The speed levitation lifts a mob towards, or 0 (moves.rs `levitate`).
+    lifted: f32,
+    /// Whether slow falling has it fall by [`SLOW_FALL`].
+    slowed: bool,
 }
 
 /// A box in world coordinates: its lowest and highest corners.
@@ -63,7 +71,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false, geysered: 0.0 }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false, geysered: 0.0, lifted: 0.0, slowed: false }
     }
 
     /// Moves it by `by` as far as the blocks let it, its own motion kept.
@@ -204,7 +212,12 @@ impl Body {
             let across = if stood { physics.ground_drag } else { physics.air_drag };
             (self.motion[0], self.motion[2]) = (self.motion[0] * across, self.motion[2] * across);
             let falling = self.motion[1] < 0.0;
-            self.motion[1] = (self.motion[1] - physics.gravity) * physics.fall_drag;
+            if self.lifted > 0.0 {
+                self.motion[1] = (self.motion[1] + (self.lifted - self.motion[1]) * LEVITATES) * physics.fall_drag;
+                return;
+            }
+            let gravity = if falling && self.slowed { SLOW_FALL } else { physics.gravity };
+            self.motion[1] = (self.motion[1] - gravity) * physics.fall_drag;
             if falling {
                 self.motion[1] *= physics.flutter;
             }

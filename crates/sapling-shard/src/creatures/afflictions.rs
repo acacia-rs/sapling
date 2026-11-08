@@ -3,13 +3,14 @@
 //! viewers (`told`). An undead mob is mended by instant damage and hurt, unflashed, by instant
 //! health, each its own size, and takes no poison or regeneration at all. A mob an effect hurts
 //! runs. Its effects are kept with it (`kept`); potions on it: `potions`; invisibility: `invisible`.
-// TODO: speed's change to the movement attribute is not shown; strength and weakness do not change
-// its hit, and levitation, slow falling and jump boost do nothing to it.
 
 mod invisible;
 mod kept;
+mod moved;
 mod potions;
 mod told;
+
+pub(super) use moved::{float, jump};
 
 use acacia_proto::packets::MobEffectEventId;
 use bevy_ecs::prelude::*;
@@ -66,6 +67,11 @@ pub(super) fn pace(world: &World, mob: Entity) -> f32 {
     (by(Effect::Speed, QUICKENS) * by(Effect::Slowness, -SLOWS)).max(0.0)
 }
 
+/// What the mob's hit of `amount` costs under its strength and weakness.
+pub(super) fn hits_for(world: &World, mob: Entity, amount: f32) -> f32 {
+    crate::vitals::effects::hit_under(amount, level(world, mob, Effect::Strength), level(world, mob, Effect::Weakness))
+}
+
 /// Gives a living mob an effect, as `ShardCtx::give_effect` gives a player one, unless it
 /// [`refuses`] it. Whether it took it.
 pub(super) fn give(world: &mut World, mob: Entity, effect: Effect, ticks: u32, amplifier: u8) -> bool {
@@ -102,6 +108,7 @@ pub(super) fn give_shown(world: &mut World, mob: Entity, effect: Effect, ticks: 
         synced.extend(crate::vitals::effects::omen_sound(effect).and_then(|sound| told::omen_heard(world, mob, id, sound)));
     }
     synced.extend(shown_and_announced(world, mob, id, &before, &list));
+    synced.extend(told::paced(world, mob, id, &[now], &list));
     tell_at_sync(world, mob, synced);
     if effect == Effect::HealthBoost {
         super::boosts::boost(world, mob);
@@ -128,7 +135,9 @@ fn lose(world: &mut World, mob: Entity, gone: &[Active]) {
     let (left, list) = (afflicted.0.is_empty(), afflicted.0.clone());
     let before: Vec<Active> = list.iter().chain(gone).copied().collect();
     let removed: Vec<bytes::Bytes> = gone.iter().filter(|active| is_told(active.effect)).map(|active| told::told(id, MobEffectEventId::Remove, active)).collect();
-    let synced: Vec<bytes::Bytes> = shown_and_announced(world, mob, id, &before, &list).into_iter().collect();
+    let shown = shown_and_announced(world, mob, id, &before, &list);
+    // BDS told the walking speed once for each of speed and slowness taken off (bds-a3fx.txt).
+    let synced: Vec<bytes::Bytes> = shown.into_iter().chain(gone.iter().filter_map(|active| told::paced(world, mob, id, std::slice::from_ref(active), &list))).collect();
     if left
         && let Some(mut health) = world.get_mut::<Health>(mob)
     {

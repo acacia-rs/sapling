@@ -456,8 +456,11 @@ for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player
 5 ticks takes it as its prey with `stare` and a teleport (`creatures/stares.rs`, the Java game's
 cone). It teleports at random a tick in 100 in the dark and in 20 in the sun (the component's dark
 default and its pack's `light_teleport_chance`; BDS's came 5.2 seconds apart at midnight), and
-water it touches costs it 1 by drowning, with a `splash`, and sends it off that tick. It does not
-teleport from beside its prey, rain hurts it without sending it off, and its `ANGRY` flag is not shown.
+water it touches costs it 1 by drowning, with a `splash`, and sends it off that tick. Its random
+teleports come beside its prey too, as BDS's did (`a3ender`, research/captures/bds-a3ender.txt: held
+2.5 off an actor staring at its head, angry, it teleported twice in ~820 ticks, so no Java
+stared-at-under-4 rule; calm, 4 in ~820); the rate itself is open (REMAINING4). Rain hurts it
+without sending it off, and its `ANGRY` flag is not shown.
 
 A goat rams players and mobs as above (`creatures/rams.rs`), the nearest of either it sees,
 charging at most 8 blocks; a mob it meets is hurt and thrown at once by half a hit's throw and the
@@ -498,8 +501,15 @@ newest do as above as it dies or is hurt (`creatures/omens.rs`), to a player too
 (`vitals/omens.rs`); the burst pushes no mob or item, and a slime of the second size does not split.
 Fire resistance sets and clears the mob's `FIRE_IMMUNE` flag with its `VisibleMobEffects` (one packet), as
 BDS's did in `t2flags` (research/captures/bds-t2flags.txt, sapling-t2flags.txt: the same packets); water
-breathing sets none (`afflictions/told.rs`). Speed's movement attribute is not shown, they are not saved with it or told to one who comes, and strength,
-weakness, levitation, slow falling and jump boost do nothing to it.
+breathing sets none (`afflictions/told.rs`). Speed and slowness tell the mob's walking speed in an
+`UpdateAttributes` after its `VisibleMobEffects` (base as `default`, BDS's modifiers 0.2 and -0.15 a
+level, operation 2), once more for each taken off (bds-a3fx.txt: a zombie's 0.322, 0.2254, then 0.23
+twice; `told::paced`). Levitation, slow falling and jump boost move it (`afflictions/moved.rs`,
+bds-a3fx.txt, bds-a3fx2.txt), and strength and weakness scale its hit as a player's (effects.md;
+bds-a3fx.txt, bds-a3fx3.txt: a zombie's 3 on normal was 4.9 and 7.37 under strength I and II, 1.9 and 1.02
+under weakness I and II). Slowness 255 stopped a zombie's hits on BDS, not only its walk
+(bds-a3fx2.txt: none in four 3-second holds beside the survival watcher, one within 4 to 20 ticks of each
+clear). Effects are not saved with it or told to one who comes.
 
 A shulker opens for its prey and shoots as above (`creatures/bullets.rs`, `creatures/shooting.rs`),
 41 ticks apart where BDS's varied; a bullet is not shown hidden on its first tick nor turned, hits

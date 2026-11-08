@@ -12,14 +12,21 @@ const WEAKENS: [f32; 2] = [0.8, 0.4];
 
 /// What a hit of `amount` by a player costs under its strength and its weakness.
 pub(crate) fn hits_for(world: &World, player: Entity, amount: f32) -> f32 {
-    let under = |amount: f32, effect: Effect, [times, plus]: [f32; 2]| match level(world, player, effect) {
+    hit_under(amount, level(world, player, Effect::Strength), level(world, player, Effect::Weakness))
+}
+
+/// What a hit of `amount` costs under strength and weakness of these levels (from 0), a mob's as a
+/// player's (bds-a3fx.txt, bds-a3fx3.txt: a zombie's 3 was 4.9, 7.37, 1.9 and 1.02 under strength I
+/// and II and weakness I and II).
+pub(crate) fn hit_under(amount: f32, strength: Option<u8>, weakness: Option<u8>) -> f32 {
+    let under = |amount: f32, level: Option<u8>, [times, plus]: [f32; 2]| match level {
         Some(level) => {
             let by = times.powi(i32::from(level) + 1);
             amount * by + (by - 1.0) / plus
         }
         None => amount,
     };
-    under(under(amount, Effect::Strength, STRENGTHENS), Effect::Weakness, WEAKENS).max(0.0)
+    under(under(amount, strength, STRENGTHENS), weakness, WEAKENS).max(0.0)
 }
 
 /// What a player's haste and mining fatigue multiply its digging speed by. BDS's stone breaks

@@ -1,6 +1,6 @@
 //! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits"), with
 //! what the weapon's enchantments add (enchanted.rs) and a falling hitter's critical (blows.rs).
-// TODO: a hit mob does not fight back; a hit on an armour stand (armour_stands/hits.rs) tires nobody.
+// TODO: a hit on an armour stand (armour_stands/hits.rs) tires nobody.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{EntityId, GameMode};

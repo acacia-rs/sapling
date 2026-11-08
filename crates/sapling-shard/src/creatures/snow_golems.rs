@@ -6,7 +6,6 @@
 //! enough (`trail`, under 0.81), under the four corners a quarter block about where it stood, as
 //! BDS laid them; it melts where it is hot (over 1.0) and in water or rain (`hurt_on_condition`).
 // The heat's cause is the pack's `temperature` (`hurt_on_condition`, wire 26).
-// TODO: monsters do not fight back, nor does a hit golem take its hitter.
 
 use bevy_ecs::prelude::*;
 

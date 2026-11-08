@@ -47,13 +47,13 @@ pub(super) fn land(world: &mut World, shot: Entity, layer: Entity, at: [f32; 3],
         Lands::Snowball => {
             if let Some((struck, is_player)) = struck {
                 let hurts = world.get::<entities::Kind>(struck).is_some_and(|kind| kind.0 == BLAZE);
-                knock(world, struck, is_player, layer, from, if hurts { shots::SNOWBALL_BLAZE } else { 0.0 }, thrower);
+                knock(world, struck, is_player, layer, from, if hurts { shots::SNOWBALL_BLAZE } else { 0.0 }, thrower, by);
             }
             burst_of_snow(world, layer, at);
         }
         Lands::Egg => {
             if let Some((struck, is_player)) = struck {
-                knock(world, struck, is_player, layer, from, 0.0, thrower);
+                knock(world, struck, is_player, layer, from, 0.0, thrower, by);
             }
             let chicks = {
                 let mut dice = world.get_resource_or_insert_with(Dice::default);
@@ -121,8 +121,10 @@ fn burst_of_snow(world: &mut World, layer: Entity, at: [f32; 3]) {
     late_sounds::play_later(world, 1, layer, cell, flight::sound("undefined", at, ""));
 }
 
-/// Something thrown that hurts little throws whom it hit as a hit from `from` does, costing it `harm`.
-fn knock(world: &mut World, struck: Entity, is_player: bool, layer: Entity, from: [f32; 3], harm: f32, thrower: Option<Entity>) {
+/// Something thrown that hurts little throws whom it hit as a hit from `from` does, costing it `harm`,
+/// and turns a hunter it hit on `by`, who threw it.
+#[allow(clippy::too_many_arguments)]
+fn knock(world: &mut World, struck: Entity, is_player: bool, layer: Entity, from: [f32; 3], harm: f32, thrower: Option<Entity>, by: Entity) {
     if is_player {
         return vitals::knocked(world, struck, from);
     }
@@ -131,6 +133,7 @@ fn knock(world: &mut World, struck: Entity, is_player: bool, layer: Entity, from
     } else {
         harm::flinch(world, struck, layer, Cause::Projectile);
     }
+    super::hunting::hurt_by(world, struck, by);
     let Some(at) = world.get::<Body>(struck).map(|body| body.at) else { return };
     let (dx, dz) = (at[0] - from[0], at[2] - from[2]);
     let far = dx.hypot(dz).max(1e-4);
