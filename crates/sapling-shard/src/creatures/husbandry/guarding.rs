@@ -1,15 +1,18 @@
 //! A tamed mob of a kind that defends its owner (`behavior.owner_hurt_by_target` and
 //! `owner_hurt_target`, a wolf) fights what hurt its owner and what its owner hit, with its
-//! tamed bite, until that is dead or gone.
-// TODO: the reach, the bite's pace and how far it looks are the hunters' (hunting.rs); its bite
-// throws nothing.
+//! tamed bite, until that is dead or gone. As BDS's tamed wolf did (research/captures/bds-g14wolf.txt),
+//! it takes up a mob's fight the tick after the mob hurts its owner (not when it only means to),
+//! leaps at its foe 2 to 4 off on the ground (`behavior.leap_at_target`, 0.4 across and up), and
+//! its bite throws a mob 0.4 as a hunter's does, heard `attack` from its middle a tick later.
+// TODO: its reach (BDS's bit 0.75 off, centre to centre) and pace are the hunters'; BDS's bites
+// came 58 to 94 ticks apart as the zombie threw it back, too few to fit a pace.
 
 use bevy_ecs::prelude::*;
 
 use super::{Raised, distance, shown};
 use crate::body::Body;
-use crate::components::{InLayer, Position, Tick};
-use crate::creatures::{Cause, Health};
+use crate::components::{InLayer, NetId, Position, Tick};
+use crate::creatures::{Health, hunting};
 
 /// Mobs this near their owner take up its fight, and give it up beyond this.
 const RALLIES: f32 = 16.0;
@@ -17,6 +20,10 @@ const RALLIES: f32 = 16.0;
 const REACH: f32 = 0.8;
 const EVERY: u64 = 20;
 const PLAYER: [f32; 2] = [0.6, 1.8];
+/// How far off a foe it leaps at, and the leap's speed across and up.
+const LEAPS: [f32; 2] = [2.0, 4.0];
+const LEAP: f32 = 0.4;
+const SOUNDS_FROM: f32 = 0.5;
 
 /// Where `foe` stands and how wide and tall it is, if it is a player or a mob still alive.
 fn foe_at(world: &World, foe: Entity) -> Option<([f32; 3], [f32; 2], Entity)> {
@@ -65,20 +72,31 @@ pub(super) fn chase(world: &mut World, entity: Entity, layer: Entity, kind: &str
     };
     let rules = sapling_data::husbandry(kind);
     crate::creatures::legs::walk(world, entity, layer, &body, [at[0], at[2]], rules.map_or(0.3, |rules| rules.walks), 0.0);
+    let (dx, dz) = (at[0] - body.at[0], at[2] - body.at[2]);
+    let across = dx.hypot(dz).max(1e-4);
+    if body.on_ground && (LEAPS[0]..=LEAPS[1]).contains(&distance(body.at, at)) {
+        if let Some(mut leaping) = world.get_mut::<Body>(entity) {
+            leaping.fling([dx / across * LEAP, LEAP, dz / across * LEAP]);
+        }
+    }
     let now = world.resource::<Tick>().0;
     let across = (body.size[0] + size[0]) / 2.0 + REACH;
     let touches = (at[0] - body.at[0]).abs() < across && (at[2] - body.at[2]).abs() < across && at[1] < body.at[1] + body.size[1] && body.at[1] < at[1] + size[1];
     if touches && now >= ready {
         world.get_mut::<Raised>(entity).expect("read above").foe = Some((foe, now + EVERY));
-        bite(world, entity, layer, kind, foe, rules.and_then(|rules| rules.tame_attack).unwrap_or(2.0));
+        bite(world, entity, layer, kind, foe, rules.and_then(|rules| rules.tame_attack).unwrap_or(2.0), [dx / across, dz / across]);
     }
     true
 }
 
-fn bite(world: &mut World, entity: Entity, layer: Entity, kind: &str, foe: Entity, harm: f32) {
+fn bite(world: &mut World, entity: Entity, layer: Entity, kind: &str, foe: Entity, harm: f32, away: [f32; 2]) {
     shown::event(world, entity, acacia_proto::packets::EntityEventEventId::ArmSwing, 0);
-    match world.get::<Position>(foe).is_some() {
-        true => drop(crate::vitals::bitten(world, foe, harm, kind, [0.0; 3])),
-        false => drop(crate::creatures::harm::wound_by(world, foe, layer, harm, Cause::Attack, None)),
+    if world.get::<Position>(foe).is_some() {
+        crate::vitals::bitten(world, foe, harm, kind, [0.0; 3]);
+        return;
     }
+    hunting::hit_mob(world, layer, entity, foe, harm, away);
+    let (Some(id), Some(body)) = (world.get::<NetId>(entity).map(|id| id.0), world.get::<Body>(entity).copied()) else { return };
+    let cell = body.at.map(|c| c.floor() as i32);
+    crate::late_sounds::play_later(world, 1, layer, cell, hunting::sound("attack", id, kind, &body, SOUNDS_FROM));
 }

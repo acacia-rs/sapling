@@ -2,7 +2,8 @@
 //! stands for the cast, and a second in sends a line of sixteen fangs at a prey 3 or more off, or
 //! two rings of them about itself at one nearer. A fang bites a tick after it rises. One cast in
 //! four, while fewer than 8 vexes are about, summons three (`vexes`) after five seconds.
-// TODO: no stepping away from a player within 8.
+// It never steps away from a player within 8 (`avoid_mob_type`, priority 5): BDS's strolled about a
+// creative one 2 to 11 off and stood between casts at a survival one 5 off (bds-g14evoker.txt).
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use acacia_proto::types::{MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, MetadataFlags1};

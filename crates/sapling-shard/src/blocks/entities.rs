@@ -93,6 +93,8 @@ pub(super) fn placed(block: &str, pos: BlockPos, placing: &Placing) -> Option<Va
         "minecraft:mob_spawner" => ("MobSpawner", Vec::new()),
         "minecraft:trial_spawner" => ("TrialSpawner", Vec::new()),
         "minecraft:vault" => ("Vault", Vec::new()),
+        // A silk-touched hive's item keeps its bees (creatures/bees/hives.rs `broken`).
+        "minecraft:beehive" | "minecraft:bee_nest" => ("Beehive", vec![("Occupants", placing.tag?.get("Occupants")?.clone())]),
         _ => return None,
     };
     let mut entity = new_block_entity(id, pos);

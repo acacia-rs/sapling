@@ -93,6 +93,7 @@ mod updates;
 mod waterlog;
 
 pub(crate) use blown::{Blown, blow_out, break_blown, spill_blown};
+pub(crate) use bonemeal::pollinate;
 pub(crate) use command_blocks::{dispatch_updates as dispatch_command_block_updates, run_for_cart};
 pub(crate) use shown_again::show_due as show_blocks_again;
 pub(crate) use structure_blocks::{dispatch_exports as dispatch_structure_exports, dispatch_updates as dispatch_structure_block_updates};
