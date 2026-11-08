@@ -101,6 +101,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         }
         let flashed = if smash.is_some() { smash::MACE_SMASH } else { Cause::Attack.id() };
         packets.insert(0, harm::strike_as(id, &health, flashed, None));
+        super::squids::struck(world, entity, eye, id, &mut packets);
         if let Some(sparks) = blows::sparks(blow, id) {
             packets.insert(1, sapling_net::encode(&sparks));
         }
@@ -116,6 +117,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         super::enchanted::struck(world, entity, &kind, weapon.as_ref());
         super::strolling::startle(world, entity);
         super::hunting::provoke(world, entity, layer, id, &kind, &body, player);
+        super::guardians::spike(world, entity, &kind, player);
         super::teleports::startle(world, entity);
         super::owner_hit(world, player, entity);
         super::villagers::hurt_standing(world, player, entity, layer, &kind, health.left() <= 0.0);

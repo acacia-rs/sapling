@@ -1,9 +1,15 @@
 //! A dolphin, as BDS's swam (research/captures/bds-dolphin-findings.md): in water it is pushed
 //! 0.022 a tick (`Physics::SWIMMER`) towards a spot of water up to 10 off across, or, once hit, at
-//! its prey, which it bites as other hunters do (`hunting::strike`).
+//! its prey, which it bites as other hunters do (`hunting::strike`). Its anger: anger.rs; out of
+//! water: ashore.rs.
 // TODO: it does not run out of breath, breach, bob under the surface, turn 10 degrees a tick at
-// most, flock or swim with players; out of water it neither flops nor dries out; its anger is not
-// passed to dolphins near, not shown (`ANGRY`), and does not end.
+// most, flock or swim with players (docs/research/mob-kinds.md, "The dolphin").
+
+mod anger;
+mod ashore;
+
+pub(super) use anger::{anger, bit};
+pub(super) use ashore::dried;
 
 use bevy_ecs::prelude::*;
 
@@ -29,6 +35,12 @@ const MIDDLE: f32 = 0.9;
 pub(super) struct Dolphin {
     spot: Option<[f32; 3]>,
     since: u64,
+    /// The tick it came to rest on the ground, and the first it was out of water.
+    landed: Option<u64>,
+    ashore: Option<u64>,
+    /// The ticks its `ANGRY` shows from and to, and whether it is shown.
+    angry: Option<[u64; 2]>,
+    shown: bool,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
@@ -48,10 +60,16 @@ fn spot(world: &mut World, layer: Entity, at: [f32; 3]) -> Option<[f32; 3]> {
     cells.into_iter().find(|cell| harm::holds(level, *cell, WATER)).map(|[x, y, z]| [x as f32 + 0.5, y as f32, z as f32 + 0.5])
 }
 
-/// Before its move, with its prey at `prey`: in water it swims at it, or about.
+/// Before its move, with its prey at `prey`: its anger shows or ends; in water it swims at its
+/// prey, or about; out of it it flops.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, body: &Body, prey: Option<[f32; 3]>) -> bool {
+    anger::show(world, entity, layer, body);
     if body.liquid() != Some(Liquid::Water) {
-        return false;
+        ashore::flop(world, entity, body);
+        return true;
+    }
+    if let Some(mut dolphin) = world.get_mut::<Dolphin>(entity) {
+        dolphin.landed = None;
     }
     let now = world.resource::<Tick>().0;
     let (kept, since) = world.get::<Dolphin>(entity).map_or((None, 0), |dolphin| (dolphin.spot, dolphin.since));

@@ -52,8 +52,8 @@ pub(super) fn flop(world: &mut World, entity: Entity, body: &Body) {
     }
 }
 
-/// `flop` a tick after each hop, from where it hopped (bds-t2water.txt).
-fn heard_flop(world: &mut World, entity: Entity, body: &Body) {
+/// `flop` a tick after each hop, from where it hopped (bds-t2water.txt; a dolphin's too, bds-f14edolphin.txt).
+pub(in crate::creatures) fn heard_flop(world: &mut World, entity: Entity, body: &Body) {
     let (Some(id), Some(kind), Some(layer)) = (world.get::<NetId>(entity).map(|id| id.0), world.get::<crate::entities::Kind>(entity).map(|kind| kind.0.clone()), world.get::<InLayer>(entity).map(|layer| layer.0)) else { return };
     let sound = crate::creatures::hunting::sound("flop", id, &kind, body, 0.0);
     crate::late_sounds::play_later(world, 1, layer, body.at.map(|c| c.floor() as i32), sound);

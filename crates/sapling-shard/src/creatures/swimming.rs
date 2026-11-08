@@ -7,12 +7,12 @@
 //! axolotl walks to water within 16 blocks.
 //! Fish hop out of water and flee players (ashore.rs).
 // TODO: the push up or down is fitted at its full strength only (a fish's 1.25 of its push
-// across); nearer the spot's height it is taken to fall off over the last block. A fish out of
-// water does not die; a frog does not look for land.
+// across); nearer the spot's height it is taken to fall off over the last block. A frog does not
+// look for land (`move_to_land`; bds-f14efish.txt: 9 s in, it swam the floor and up the wall out).
 
 mod ashore;
 
-pub(super) use ashore::is_fish;
+pub(super) use ashore::{heard_flop, is_fish};
 
 use bevy_ecs::prelude::*;
 
