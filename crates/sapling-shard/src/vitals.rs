@@ -12,7 +12,7 @@ pub(crate) mod effects;
 pub(crate) mod frost;
 pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, give as give_effect, give_ambient, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, Punch, punched, pushed, rammed, resists_all, set_alight, shot, thorned, winded};
+pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, Punch, punched, pushed, rammed, resists_all, set_alight, shot, speared, thorned, winded};
 mod harm;
 use harm::{ask, dress, flash, land, settle};
 pub(crate) use harm::{flash_guarded, hurt};

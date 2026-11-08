@@ -1,9 +1,8 @@
 //! Mobs riding mobs, as BDS's were (research/captures/bds-j3ride.txt): a seated hunter takes prey and
 //! hits it from its seat as one on foot; its mount walks at that prey at its own `movement` times its
 //! pack's `mount_pathing` pace (a chicken under a baby zombie 1.5), or, under a rider holding a spear,
-//! the rider's `use_kinetic_weapon` pace (`hijack_mount_navigation`: a zombie horse under its zombie 1.4).
-// TODO: the spear's charge (`use_kinetic_weapon`: pass, reposition 8-9 off, `KineticDamageDealt`) is not
-// ported, on foot or mounted; a spear rider hits as a melee hunter.
+//! the rider's `use_kinetic_weapon` pace (`hijack_mount_navigation`: a zombie horse under its zombie 1.4),
+//! through its prey and on to the rider's reposition spot (hunting/strike/lances.rs).
 
 use bevy_ecs::prelude::*;
 
@@ -48,7 +47,8 @@ pub(super) fn think(world: &mut World, entity: Entity, layer: Entity, id: u64, k
     if world.get::<hunting::Hunter>(entity).is_none() {
         return;
     }
-    hunting::pick(world, entity, layer, id, kind, body);
+    let prey = hunting::pick(world, entity, layer, id, kind, body);
+    hunting::lances::plan(world, entity, kind, body.at, prey);
     hunting::strike(world, entity, layer, id, kind, body);
 }
 
@@ -56,7 +56,7 @@ pub(super) fn think(world: &mut World, entity: Entity, layer: Entity, id: u64, k
 /// it has any.
 pub(crate) fn rein(world: &World, mount: Entity, kind: &str, rider: Entity) -> Option<([f32; 2], f32)> {
     world.get::<Creature>(rider)?;
-    let prey = hunting::prey_at(world, rider)?;
+    let prey = hunting::lances::aim(world, rider).or_else(|| hunting::prey_at(world, rider))?;
     let rider_kind = world.get::<Kind>(rider)?.0.as_str();
     let spear = super::command_gear::main_hand(world, rider).is_some_and(|item| item.name.ends_with("_spear"));
     let hijack = HIJACKS.iter().find(|(of, under, _)| spear && *of == rider_kind && *under == kind).map(|(.., pace)| *pace);

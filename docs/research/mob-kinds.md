@@ -528,7 +528,19 @@ is assumed from its pack's like shape, not drilled.
   behind it (not in front), to flee (`escape_fire`, panic 1.25, 20 to 50 s; hives.rs `fire_near`, `beside`);
   the hive burned 0.9 s on and one bee flew into the fire.
 - Parrot (bds-x2parrot.txt): falls slowly, as Java's `(v − 0.08) · 0.98 · 0.6` (−0.114 a tick at most), lands
-  and sits on the floor, rises by +0.08 a tick steps, up to ~4.2 over the floor. Not ported (wings.rs TODO).
+  and sits on the floor, rises by +0.08 a tick steps, up to ~4.2 over the floor. Ported by fourteenth2aa
+  (creatures/wings/parrots.rs), from the Linux `FlyMoveControl` tick 0xbdf41f0: aloft (`AFFECTED_BY_GRAVITY`
+  off) nothing pulls it down or slows its rise and fall, and across it keeps 0.91 a tick (BDS's never passed
+  0.2 a tick across); each tick it is pushed 0.05 × `movement` 0.4 = 0.02 along the line to the cell it flies
+  at, its speed quartered first within a third of its box's sides (0.667) of that cell's centre, the next
+  cell taken within 0.5. Every BDS takeoff rose 0.02, 0.42 and 1.00125 over 1, 6 and 11 ticks, which only
+  that fits (no drag up, the first cell straight up, 1.5 over the floor). With no flight under way gravity is
+  back and it falls as a chicken. Fitted, not decompiled: the takeoff odds (8 takeoffs in ~1830 sitting ticks, 1 in 230; BDS's
+  flights come from `random_fly` (RandomFlyingGoal 0xeee7290, spot by RandomPos or a leaf top in a box
+  x/z −3..+2, y −6..+5) and `follow_mob` alike: the three ended in a clump and sat), and the spot's height
+  (1 to 4.2 over the ground). Its path is a line of cells, straight up off a floor first. sapling-x2parrot:
+  the fall and the takeoff the same to the drawn digit, the fastest pace across 0.199 a tick (BDS 0.197);
+  sapling's fly more of the time (median pace 0.07 against 0.006), from the fitted takeoff odds.
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full

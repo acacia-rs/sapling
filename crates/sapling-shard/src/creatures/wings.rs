@@ -4,11 +4,13 @@
 //! `PARROT`). A bat is pushed 0.1 and picks a spot up to 10 off across, 7 up or down and 2 lower
 //! every 2 to 7 ticks (its `float_wander`); an allay is pushed 0.0098, coming up to it over ten
 //! ticks, to a spot up to 8 off and 1 lower, 1 to 4 over the ground (`random_hover`); a parrot
-//! 0.0188 to one up to 15 off across. Either picks another within a block of its spot or after 5
-//! seconds.
+//! flies, falls and sits as parrots.rs says, to one up to 15 off across. Either picks another within a
+//! block of its spot or after 5 seconds.
 // A bat hangs in bats.rs; an allay follows its owner in husbandry/allays/giving.rs.
-// TODO: a parrot neither sits, lands nor falls, bobs where it hovers, nor flies higher than its
-// pack's 1 block up or down (BDS's rose 8 over the floor, which `HOVERS` copies).
+
+mod parrots;
+
+pub(super) use parrots::physics_showing_gravity;
 
 use bevy_ecs::prelude::*;
 
@@ -36,23 +38,26 @@ struct Wing {
     lower: f32,
     over: Option<[f32; 2]>,
     every: Option<[u32; 2]>,
+    /// It slows nearing where it flies at (parrots.rs `slow_nearing`).
+    nears: bool,
 }
 
-const BAT: Wing = Wing { push: 0.1, ramps: false, across: 10.0, up: 7.0, lower: 2.0, over: None, every: Some([2, 7]) };
-const ALLAY: Wing = Wing { push: 0.0098, ramps: true, across: 8.0, up: 8.0, lower: 1.0, over: Some([1.0, 4.0]), every: None };
+const BAT: Wing = Wing { push: 0.1, ramps: false, across: 10.0, up: 7.0, lower: 2.0, over: None, every: Some([2, 7]), nears: false };
+const ALLAY: Wing = Wing { push: 0.0098, ramps: true, across: 8.0, up: 8.0, lower: 1.0, over: Some([1.0, 4.0]), every: None, nears: false };
 /// A bee hovers as an allay does with its own speed, 0.98 x 0.15² (research/captures/bds-keephive.txt:
 /// from rest 0.0063, 0.0121, 0.0193 ... up to 0.1627 a tick, as the allay's ramp gives).
 const BEE: Wing = Wing { push: 0.02205, ..ALLAY };
-/// A parrot's spot is kept this high over the ground (see the TODO).
-const HOVERS: [f32; 2] = [2.0, 8.0];
-const PARROT: Wing = Wing { push: 0.0188, ramps: false, across: 15.0, up: 1.0, lower: 0.0, over: Some(HOVERS), every: None };
+/// A parrot's spot is kept this high over the ground: BDS's rose to 1.7 to 4.8 over the floor
+/// (bds-x2parrot.txt), not within its pack's `y_dist` 1.
+const HOVERS: [f32; 2] = [1.0, 4.2];
+const PARROT: Wing = Wing { push: 0.02, ramps: false, across: 15.0, up: 1.0, lower: 0.0, over: Some(HOVERS), every: None, nears: true };
 
 fn wing(kind: &str) -> Option<&'static Wing> {
     match kind {
         "minecraft:bat" => Some(&BAT),
         "minecraft:allay" => Some(&ALLAY),
         super::bees::KIND => Some(&BEE),
-        "minecraft:parrot" => Some(&PARROT),
+        parrots::KIND => Some(&PARROT),
         _ => None,
     }
 }
@@ -62,6 +67,11 @@ pub(super) struct Wings {
     spot: Option<[f32; 3]>,
     until: u64,
     pace: f32,
+    /// The last tick it was pushed, and whether viewers were last told it flies (a parrot's).
+    flew: Option<u64>,
+    aloft: bool,
+    /// The cell centre a parrot flies at on its way to its spot.
+    next: Option<[f32; 3]>,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
@@ -97,6 +107,9 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
 
 /// [`steer`] at `times` its kind's push (a bee fleeing fire).
 pub(super) fn steer_times(world: &mut World, entity: Entity, layer: Entity, kind: &str, times: f32) -> bool {
+    if kind == parrots::KIND {
+        return parrots::steer(world, entity, layer);
+    }
     let (Some(wing), Some(body)) = (wing(kind), world.get::<Body>(entity).copied()) else { return false };
     let now = world.resource::<Tick>().0;
     let Some(wings) = world.get::<Wings>(entity) else { return false };
@@ -122,11 +135,16 @@ pub(super) fn steer_times(world: &mut World, entity: Entity, layer: Entity, kind
 fn fly_to(world: &mut World, entity: Entity, wing: &Wing, body: &Body, spot: [f32; 3], times: f32) {
     let towards: [f32; 3] = std::array::from_fn(|axis| spot[axis] - body.at[axis]);
     let long = towards.iter().map(|c| c * c).sum::<f32>().sqrt();
+    let now = world.resource::<Tick>().0;
     let Some(mut wings) = world.get_mut::<Wings>(entity) else { return };
     wings.pace = if wing.ramps { (wings.pace + PACE).min(1.0) } else { 1.0 };
+    wings.flew = Some(now);
     let push = wing.push * wings.pace * times;
     if long > 1e-4 {
         if let Some(mut moving) = world.get_mut::<Body>(entity) {
+            if wing.nears {
+                parrots::slow_nearing(&mut moving, spot);
+            }
             moving.fly(towards.map(|c| c / long * push));
         }
         let yaw = (-towards[0]).atan2(towards[2]).to_degrees();

@@ -1,5 +1,8 @@
 //! A hunter's hit: within reach of its prey it swings and hits it, heard a tick later; one that
-//! shoots looses its shots (shooting.rs), and one that blows up lights its fuse (blast.rs).
+//! shoots looses its shots (shooting.rs), one that blows up lights its fuse (blast.rs), and one with
+//! a spear charges (lances.rs).
+
+pub(in crate::creatures) mod lances;
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use bevy_ecs::prelude::*;
@@ -23,6 +26,9 @@ pub(in crate::creatures) fn swing(world: &mut World, mob: Entity, layer: Entity,
 /// After its move: a hunter whose reach its prey is in swings and hits it, heard a tick later; a
 /// polar bear rears before it (rear.rs).
 pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<()> {
+    if let Some(speared) = lances::strike(world, entity, layer, id, kind, body) {
+        return speared;
+    }
     let struck = hit_prey(world, entity, layer, id, kind, body);
     super::rear::rear(world, entity, layer, id, kind, body);
     struck

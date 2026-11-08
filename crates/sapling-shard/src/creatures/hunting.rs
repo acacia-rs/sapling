@@ -13,7 +13,7 @@ pub(super) use heading::approach;
 pub(super) use hurt_by::hurt as hurt_by;
 use heading::{heads, stops_short};
 pub(super) use prey::{feet_of, hit as hit_mob};
-pub(super) use strike::{strike, swing};
+pub(super) use strike::{lances, strike, swing};
 
 use acacia_proto::packets::{LevelSoundEvent, SetEntityData};
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -256,7 +256,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, k
             let prey = prey.and(world.get::<Hunter>(entity).and_then(|hunter| hunter.prey));
             return super::vexes::steer(world, entity, layer, id, kind, &body, prey);
         }
-        _ => {}
+        _ => if let Some(to) = lances::plan(world, entity, kind, body.at, prey) { legs::walk(world, entity, layer, &body, [to[0], to[2]], speed, 0.0); return true },
     }
     let Some(feet) = prey else { return blast::is_lit(world, entity) };
     // A lit creeper stands where it is, an archer within its range, and a crossbowman loading.
