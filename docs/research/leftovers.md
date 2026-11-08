@@ -472,8 +472,9 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
     60 stomps the block out. So a zombie reaching the eggs from afar at about 0.11 a tick crumbles them from
     count 11 (50 ticks, logged 11 to 61), and one already beside them from count 1 (60 ticks): the 47-51
     and 59-60 split. Sapling crumbled for a flat 50 from arriving within 1.14; now as above (test
-    `a_zombie_stomps_a_turtle_egg_out_61_counts_after_reaching_it`). Sapling's mobs have no step up onto
-    the egg's 0.4375 box, so beside the cell its zombie walks on jumping (legs.rs `walk_up`).
+    `a_zombie_stomps_a_turtle_egg_out_61_counts_after_reaching_it`). Sapling's mobs had no step up onto
+    the egg's box (0.45 to BDS's zombie, bds-bc1step.txt); they step up now (mob-attacks.md "Step up"),
+    and the stand-in `legs::walk_up` is gone.
 
 Drilled since (2026-10-30): a chested mount's chest drops after its goods (mob-life.md, `bds-chestdie.txt`), as
 sapling's did. The `lay_egg` sound's 0.34 over a turtle's feet is fixed: 0.85 of its height, from the

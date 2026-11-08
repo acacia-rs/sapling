@@ -10,6 +10,7 @@ mod avoiding;
 mod bedtime;
 mod breeding;
 mod clicks;
+mod fired;
 mod guarding;
 mod knots;
 mod leads;
@@ -30,6 +31,7 @@ use crate::components::Tick;
 use crate::entities::Stored;
 
 pub(super) use ageing::be_born;
+pub(super) use fired::fired;
 pub(super) use allays::take_up as after_move;
 pub(crate) use allays::hear_note as allays_hear_note;
 pub(super) use leads::tie as tie_lead;

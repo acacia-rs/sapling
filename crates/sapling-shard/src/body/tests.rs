@@ -172,3 +172,29 @@ fn a_mob_in_a_full_block_goes_out_its_nearest_open_side_flush() {
     }
     assert_eq!(step([0.5, 65.0, 2.5], &level), [0.5, 65.0, 2.5], "walled in all round it stays (bds-lifts.txt)");
 }
+
+/// A zombie standing 0.1 short of a block walking at it at 0.3 a tick: where it is after a tick.
+fn walked_at(top: Option<&str>, physics: &Physics) -> [f32; 3] {
+    let mut level = level();
+    if let Some(name) = top {
+        let block = level.block_id(name).unwrap();
+        level.set_block(0, 65, 2, block);
+    }
+    let mut zombie = Body::new([0.5, 65.0, 1.6], [0.0; 3], [0.6, 1.9]);
+    zombie.on_ground = true;
+    zombie.step(&level, physics, &mut || 0.5);
+    zombie.walk([0.0, 0.3], None);
+    zombie.step(&level, physics, &mut || 0.5);
+    zombie.at
+}
+
+#[test]
+fn a_walking_mob_steps_up_onto_a_block_as_high_as_its_max_auto_step() {
+    let on = walked_at(Some("minecraft:daylight_detector"), &Physics::MOB);
+    assert!(on[1] == 65.375 && on[2] > 1.7, "onto a detector's 0.375: {on:?}");
+    let full = walked_at(Some("minecraft:stone"), &Physics::MOB);
+    assert!(full[1] == 65.0 && full[2] <= 1.7 + 1e-5, "a full block stops it: {full:?}");
+    assert_eq!(walked_at(Some("minecraft:stone"), &Physics::LONG_STEP)[1], 66.0, "an enderman's 1.0625 takes a full block");
+    let carpet = walked_at(Some("minecraft:white_carpet"), &Physics { step: 0.0, ..Physics::MOB });
+    assert_eq!(carpet[1], 65.0, "with no step a carpet stops it");
+}

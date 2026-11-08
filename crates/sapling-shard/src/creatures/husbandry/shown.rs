@@ -2,7 +2,10 @@
 //! sheep's grazing), sounds, growing up, wool, name, and who owns it and holds its lead.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId, LevelSoundEvent};
-use acacia_proto::types::{MetadataDictionaryItem, MetadataFlags1 as Flags, Vec3f};
+use acacia_proto::types::{
+    MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain,
+    MetadataFlags1 as Flags, Vec3f,
+};
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
 
@@ -98,15 +101,16 @@ pub(super) fn age(world: &mut World, entity: Entity) {
     let Some((_, id, kind, _)) = of(world, entity) else { return };
     let baby = world.get::<Raised>(entity).is_some_and(Raised::is_baby);
     let Some((size, scale)) = sapling_data::mob_look(&kind, baby) else { return };
+    let changed = sapling_data::mob_look(&kind, !baby).is_none_or(|(was, _)| was != size);
     let now = flags_with(world, entity, Flags::BABY, baby);
-    tell_metadata(world, entity, sapling_net::encode(&sapling_data::mob_age_set(id, now, scale, size)));
+    tell_metadata(world, entity, sapling_net::encode(&sapling_data::mob_age_set(id, now, scale, changed.then_some(size))));
 }
 
-/// The mob's wool changed colour, or came off or back.
+/// The mob's wool changed colour: BDS tells `Color` alone (research/captures/bds-bc1event.txt).
 pub(super) fn wool(world: &mut World, entity: Entity) {
-    let Some((id, raised)) = world.get::<NetId>(entity).map(|id| id.0).zip(world.get::<Raised>(entity).map(|raised| (raised.kept.sheared, raised.kept.colour))) else { return };
-    let now = flags_with(world, entity, Flags::SHEARED, raised.0);
-    tell(world, entity, vec![sapling_net::encode(&sapling_data::mob_colour_set(id, now, raised.1))]);
+    let Some(colour) = world.get::<Raised>(entity).map(|raised| raised.kept.colour) else { return };
+    let item = MetadataDictionaryItem { key: Key::Color, r#type: Type::Byte, legacy_type: 0, value: Value::Default(Plain::Byte(colour)) };
+    metadata(world, entity, vec![item]);
 }
 
 pub(super) fn name(world: &mut World, entity: Entity) {
@@ -130,7 +134,6 @@ pub(crate) fn links_packet(world: &World, entity: Entity, id: u64, flags: Flags)
 
 /// The mob's `OwnerEid` item: its owner's runtime id, -1 for none in the world.
 pub(super) fn owner_item(world: &World, entity: Entity) -> Vec<MetadataDictionaryItem> {
-    use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
     let owner = world.get::<Raised>(entity).and_then(|raised| raised.kept.owner).and_then(|owner| player_of(world, owner)).and_then(|owner| world.get::<NetId>(owner)).map_or(-1, |id| id.0 as i64);
     vec![MetadataDictionaryItem { key: Key::OwnerEid, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(owner)) }]
 }

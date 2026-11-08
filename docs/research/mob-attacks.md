@@ -43,6 +43,22 @@ zombie's definition in the vanilla pack (`entities.brarchive`, `zombie.json`). E
 - `SetEntityMotion` goes out as its speed changes by a lot, holding the speed after the tick's
   drag.
 
+## Step up (2026-11-08, `bc1step`, research/captures/bds-bc1step.txt)
+
+A zombie walking at 0.114 a tick into a row one block deep, by night:
+
+- Smooth stone slab (0.5), daylight detector (0.375), turtle egg (0.45) and stonecutter (0.5625): in the
+  tick its box first reaches the block it is on top, on the ground, with its whole stride across; it walks
+  off the far side falling. The egg is reached later, its box being inset 3/16.
+- Enchanting table (0.75): it jumps as at a full block, lands on top and walks on along it.
+- So a mob steps up to its `max_auto_step` (pack `variable_max_auto_step`: 0.5625, enderman and creaking
+  1.0625, camel 1.5625) as acacia-physics' player `auto_step` does, and jumps a top over that above its
+  feet. Sapling's mob move had no step up (`collide_box` only), hence the stand-in jump thirteenth2ay
+  added for eggs. Ported (`body/step.rs`, `Physics::step`; `legs.rs` `at_step` measures from the feet;
+  test `a_walking_mob_steps_up_onto_a_block_as_high_as_its_max_auto_step`); sapling's `bc1step` now
+  steps and jumps in the same ticks. Left: walking off the edge, sapling's mob is off the ground the tick
+  its box clears it, BDS's the tick after (as before the step; not looked into).
+
 ## Around a fence (`around`)
 
 A fence does not hide the player and is not jumped (`research/captures/bds-around.txt`, its

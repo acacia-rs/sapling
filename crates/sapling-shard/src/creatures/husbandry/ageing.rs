@@ -46,15 +46,23 @@ pub(super) fn tick(world: &mut World, entity: Entity, kind: &str) {
     let Some(left) = raised.kept.baby.as_mut() else { return };
     *left -= 1;
     if *left <= 0 {
-        grow_up(world, entity, kind);
+        grow_up(world, entity, kind, true);
     }
 }
 
-fn grow_up(world: &mut World, entity: Entity, kind: &str) {
+/// A baby grows up now, as the pack's `minecraft:ageable_grow_up` fired on it makes it: without what its
+/// `minecraft:ageable` drops (bds-bc1event.txt).
+pub(super) fn grow_up_by_event(world: &mut World, entity: Entity, kind: &str) {
+    if world.get::<Raised>(entity).is_some_and(Raised::is_baby) {
+        grow_up(world, entity, kind, false);
+    }
+}
+
+fn grow_up(world: &mut World, entity: Entity, kind: &str, sheds: bool) {
     if super::tadpoles::grow_up(world, entity, kind) {
         return;
     }
-    let shed = super::products::shed(world, entity, kind);
+    let shed = if sheds { super::products::shed(world, entity, kind) } else { Vec::new() };
     if let Some(mut raised) = world.get_mut::<Raised>(entity) {
         raised.kept.baby = None;
     }

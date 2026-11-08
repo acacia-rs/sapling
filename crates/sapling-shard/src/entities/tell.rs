@@ -37,9 +37,44 @@ pub(crate) fn on_announcing(world: &mut World, layer: Entity, cell: [i32; 3], pa
     world.get_resource_or_insert_with(OnAnnouncing::default).0.push((layer, cell, packets));
 }
 
+/// What players were told while a command ran, held back until after its answer: BDS sends an evented
+/// mob's SetEntityData as its tick ends (research/captures/bds-bc1event.txt).
+#[derive(Resource, Default)]
+struct AfterAnswer(Vec<(Entity, Vec<Bytes>)>);
+
+/// Runs `act`, holding what it tells players until this tick's held moves are sent.
+pub(crate) fn told_after_answer<R>(world: &mut World, act: impl FnOnce(&mut World) -> R) -> R {
+    let before: Vec<(Entity, usize)> = world.query::<(Entity, &Outgoing)>().iter(world).map(|(player, out)| (player, out.0.len())).collect();
+    let done = act(world);
+    let mut held = Vec::new();
+    for (player, len) in before {
+        if let Some(mut out) = world.get_mut::<Outgoing>(player).filter(|out| out.0.len() > len) {
+            held.push((player, last_data(out.0.split_off(len))));
+        }
+    }
+    world.get_resource_or_insert_with(AfterAnswer::default).0.extend(held);
+    done
+}
+
+/// `packets` less each SetEntityData whose every item a later one of the same entity sets again: BDS
+/// sent a player's raid omen swap as one VisibleMobEffects (bds-bc1event.txt).
+fn last_data(packets: Vec<Bytes>) -> Vec<Bytes> {
+    let data: Vec<Option<SetEntityData>> = packets.iter().map(|packet| acacia_proto::RawPacket::parse(packet.clone()).ok().and_then(|raw| raw.decode::<SetEntityData>().ok())).collect();
+    let set_later = |index: usize, item: &acacia_proto::types::MetadataDictionaryItem, id: u64| {
+        data[index + 1..].iter().flatten().any(|later| later.runtime_entity_id == id && later.metadata.iter().any(|again| again.key == item.key))
+    };
+    let stale = |index: usize| data[index].as_ref().is_some_and(|told| told.properties.ints.is_empty() && told.properties.floats.is_empty() && !told.metadata.is_empty() && told.metadata.iter().all(|item| set_later(index, item, told.runtime_entity_id)));
+    packets.into_iter().enumerate().filter(|(index, _)| !stale(*index)).map(|(_, packet)| packet).collect()
+}
+
 /// Sends what is heard as new entities appear, their first data and what was held back for the
 /// tick's announcements; runs after them (mobs.rs).
 pub(crate) fn send_held_moves(world: &mut World) {
+    for (player, packets) in world.get_resource_mut::<AfterAnswer>().map(|mut held| std::mem::take(&mut held.0)).unwrap_or_default() {
+        if let Some(mut out) = world.get_mut::<Outgoing>(player) {
+            out.0.extend(packets);
+        }
+    }
     let heard = world.get_resource_mut::<OnAnnouncing>().map(|mut heard| std::mem::take(&mut heard.0)).unwrap_or_default();
     for (layer, cell, packets) in heard {
         view::to_viewers(world, layer, cell, &packets);

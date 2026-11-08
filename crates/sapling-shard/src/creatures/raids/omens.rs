@@ -44,11 +44,16 @@ pub(super) fn tick(world: &mut World) -> Vec<Trigger> {
             continue;
         }
         if village::centre(world, layer, feet).is_some() {
-            effects::end(world, player, Effect::BadOmen);
-            // Amplifier 0 whatever the bad omen's, so a level 1 raid (bds-raid.txt, bds-raidhero.txt).
-            vitals::give_effect(world, player, Effect::RaidOmen, RAID_OMEN_LASTS, 0, true);
+            gain(world, player);
             world.entity_mut(player).insert(OmenAt(feet));
         }
     }
     triggers
+}
+
+/// The pack's `minecraft:gain_raid_omen`: the bad omen goes and the raid omen comes for 30 s.
+pub(crate) fn gain(world: &mut World, player: Entity) {
+    effects::end(world, player, Effect::BadOmen);
+    // Amplifier 0 whatever the bad omen's, so a level 1 raid (bds-raid.txt, bds-raidhero.txt).
+    vitals::give_effect(world, player, Effect::RaidOmen, RAID_OMEN_LASTS, 0, true);
 }
