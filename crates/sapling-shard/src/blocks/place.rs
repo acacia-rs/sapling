@@ -117,6 +117,7 @@ impl Request<'_> {
         let feet = self.world.get::<Position>(self.entity).map_or(pos, |position| position.feet.map(|c| c.floor() as i32));
         let id = super::coral::placed(level, pos, id, feet);
         let id = super::structure_blocks::as_placed(registry, id);
+        let id = crate::containers::staged_chest(level, pos, id);
         let gives = |cell: BlockPos| level.in_height(cell[1]) && level.is_loaded(send::column(cell)) && gives_way(registry, level.block(cell[0], cell[1], cell[2]));
         let stands = |cell: BlockPos| registry.get(level.block(cell[0], cell[1] - 1, cell[2])).is_some_and(|state| !state.is_air());
         // A second cell beside the first is a bed's: both halves lie on something.
@@ -128,7 +129,8 @@ impl Request<'_> {
         let named = |ends: &[&str]| registry.get(id).is_some_and(|state| ends.iter().any(|end| state.name.ends_with(end)));
         let on_side = named(&[":ladder", "tripwire_hook", ":vine"]) && matches!(click.face, Face::Up | Face::Down);
         let off_floor = named(&["pale_hanging_moss", "hanging_roots", "spore_blossom", "_hanging_sign"]) && click.face == Face::Up;
-        let is_held_up = !updates::lacks_support(self.world, site.layer, pos, id) && !on_side && !off_floor;
+        // A mushroom is refused in light 13 off mycelium or podzol, as on a neighbour's change (bds-r3light.txt).
+        let is_held_up = !updates::lacks_support(self.world, site.layer, pos, id) && !super::ground::is_wrongly_lit(level, pos, id) && !on_side && !off_floor;
         if !is_free || !has_headroom || !is_held_up || is_solid && is_occupied(self.world, site.layer, pos) {
             self.resync(&[against, pos]);
             return None;

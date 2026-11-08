@@ -2,7 +2,7 @@
 //! `mayPlace` / `canSurvive` of each (docs/research/standing-and-shapes.md, part A). Blocks
 //! not named here need only what updates.rs asks.
 // TODO: kelp, nether vines and dripstone still read a top from collision boxes, and the dirt and
-// sand tags are Java's lists. Light is asked only on a neighbour's change ([`is_wrongly_lit`]), not on placing.
+// sand tags are Java's lists.
 
 use sapling_api::{BlockPos, Face};
 use sapling_worldgen::Support;
@@ -181,10 +181,11 @@ const BAMBOO_GROUND: &[&str] = &[
     "minecraft:sand", "minecraft:red_sand", "minecraft:gravel", "minecraft:bamboo", "minecraft:bamboo_sapling",
 ];
 
-/// Whether the block `id` at `pos` has the wrong light to stay when a neighbour changes, its
-/// brightness read with no night in it: a mushroom from 13 up off mycelium and podzol
-/// (`MushroomBlock`'s). Crops never: `CropBlock::neighborChanged` asks only the ground
-/// (research/captures/bds-lightgrow.txt).
+/// Whether the block `id` at `pos` has the wrong light to be put or to stay when a neighbour
+/// changes, its brightness read with no night in it: a mushroom from 13 up off mycelium and podzol
+/// (`MushroomBlock`'s; BDS's put by hand at noon on stone and dirt was refused, in a shut room
+/// put, research/captures/bds-r3light.txt). Crops never: `CropBlock::neighborChanged` asks only
+/// the ground (research/captures/bds-lightgrow.txt).
 pub(super) fn is_wrongly_lit(level: &World, [x, y, z]: BlockPos, id: u32) -> bool {
     const MUSHROOMS: &[&str] = &["minecraft:brown_mushroom", "minecraft:red_mushroom"];
     const MUSHROOM_GROUND: &[&str] = &["minecraft:mycelium", "minecraft:podzol"];
