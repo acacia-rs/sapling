@@ -38,8 +38,9 @@ fn dice(world: &mut World) -> Mut<'_, Dice> {
     world.get_resource_or_insert_with(SpawnerDice::default).map_unchanged(|dice| &mut dice.0)
 }
 
-fn now(world: &World) -> i64 {
-    world.resource::<Tick>().0 as i64
+/// The level's age (`currentTick`), the clock a saved spawner or vault dates its times by.
+fn now(world: &World, layer: Entity) -> i64 {
+    world.get::<Layer>(layer).map_or_else(|| world.resource::<Tick>().0 as i64, |level| level.world.level().age)
 }
 
 /// A player a spawner block may see: in its world and not a spectator.

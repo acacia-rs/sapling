@@ -6,8 +6,11 @@ use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
 
 use super::super::eject::sound;
-use super::super::now;
-use crate::components::Layer;
+use crate::components::{Layer, Tick};
+
+fn now(world: &World) -> i64 {
+    world.resource::<Tick>().0 as i64
+}
 
 struct Shown {
     layer: Entity,

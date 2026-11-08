@@ -232,3 +232,19 @@ fn a_generated_column_keeps_the_liquid_ticks_its_queue_holds() {
     assert!(ticks.iter().all(|tick| tick.name == "minecraft:water" && tick.time - saved_at == 1), "{ticks:?}");
     assert!(generated.generate_column(ChunkPos::new(0, 0)).pending_ticks.is_empty());
 }
+
+/// BDS saves a generated vault's `state_updating_resumes_at` as the level's age at generation.
+#[test]
+fn a_generated_vault_arrives_dated_by_the_levels_age() {
+    let pos = ChunkPos::new(0, 0);
+    let mut record = bytes::BytesMut::new();
+    let vault = sapling_leveldb::generated_vault([3, 70, 3], "t", "k");
+    acacia_proto::nbt::write::<acacia_proto::nbt::LittleEndian>(&mut record, &acacia_proto::nbt::Nbt { name: String::new(), value: vault });
+    let storage = Arc::new(MemoryStorage::default());
+    storage.store_column(pos, 0, &StoredColumn { block_entities: record.to_vec(), ..StoredColumn::of(stone_column(pos, 0)) }).unwrap();
+    let mut world = World::with_storage(storage);
+    world.level_mut().age = 777;
+    world.load_now(pos);
+    let data = world.block_entity([3, 70, 3]).and_then(|entity| entity.nbt.get("data").cloned());
+    assert_eq!(data.and_then(|data| data.get("state_updating_resumes_at").cloned()), Some(Value::Long(777)));
+}

@@ -112,7 +112,9 @@ here was drilled against a running BDS.
   4.5 (at least the first), `key_item`, `override_loot_table_to_display`}; `data` (not Java's `server_data`)
   {`display_item`, `state_updating_resumes_at` Long, `items_to_eject`, `rewarded_players` (Longs), 
   `total_ejections_needed` Long}; `shared_data` only `connected_particle_range` is read. `vault_state`
-  inactive, active, unlocking, ejecting.
+  inactive, active, unlocking, ejecting. Its times (and a trial spawner's `cooldown_end_at`,
+  `next_mob_spawns_at`) are on the level's clock (`currentTick`, sapling `Level::age`, spawners.rs `now`);
+  a generated vault is dated with the level's age as its column arrives (sapling-leveldb `date_generated_vaults`).
 - Every 20 ticks while active the shown item is rolled anew (one item of a roll of the table). At
   `state_updating_resumes_at`: inactive → active when a player (spectators no, creative yes) not yet
   rewarded is within 4 of the block's middle; active → inactive when none is within 4.5; unlocking →

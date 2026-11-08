@@ -51,7 +51,8 @@ impl World {
         self.queue_saves(&HashSet::new())
     }
 
-    fn insert_loaded(&mut self, pos: ChunkPos, column: Column, light: ColumnLight) {
+    fn insert_loaded(&mut self, pos: ChunkPos, mut column: Column, light: ColumnLight) {
+        column.date_generated_vaults(self.level.age);
         if let Entry::Vacant(slot) = self.columns.entry(pos) {
             slot.insert(column);
             self.arrived.push(pos);

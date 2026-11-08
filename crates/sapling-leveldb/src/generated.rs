@@ -1,7 +1,7 @@
 //! The block entities BDS writes with the structures it generates, field for field as a
 //! BDS-generated world holds them (docs/research/structure-block-entities.md).
 
-use acacia_proto::nbt::{List, Str, Value};
+use acacia_proto::nbt::{self, LittleEndian, List, Str, Value};
 
 const STRING: u8 = 8;
 
@@ -99,8 +99,10 @@ pub fn generated_trial_spawner(pos: [i32; 3], normal: &str, ominous: &str) -> Va
     ])
 }
 
-/// A vault rewarding `table` for the key item `key`.
-// TODO: BDS saves `state_updating_resumes_at` as the level's time at generation; 0 updates at once.
+const RESUMES_AT: &str = "state_updating_resumes_at";
+
+/// A vault rewarding `table` for the key item `key`, undated: BDS saves `state_updating_resumes_at` as
+/// the level's age at generation, which the generator has not got ([`date_generated_vaults`]).
 pub fn generated_vault(pos: [i32; 3], table: &str, key: &str) -> Value {
     let config = compound(vec![
         ("activation_range", Value::Float(4.0)),
@@ -109,8 +111,29 @@ pub fn generated_vault(pos: [i32; 3], table: &str, key: &str) -> Value {
         ("loot_table", string(table)),
         ("override_loot_table_to_display", string("")),
     ]);
-    let data = compound(vec![("items_to_eject", empty()), ("rewarded_players", empty()), ("state_updating_resumes_at", Value::Long(0))]);
+    let data = compound(vec![("items_to_eject", empty()), ("rewarded_players", empty())]);
     entity("Vault", pos, vec![("config", config), ("data", data)])
+}
+
+/// A `BlockEntities` record with each undated vault ([`generated_vault`]) dated `age`; `None` when it has none.
+pub fn date_generated_vaults(record: &[u8], age: i64) -> Option<Vec<u8>> {
+    if !record.windows(5).any(|window| window == b"Vault") {
+        return None;
+    }
+    let (mut rest, mut out, mut dated) = (record, bytes::BytesMut::new(), false);
+    while !rest.is_empty() {
+        let mut entity = nbt::read::<LittleEndian>(&mut rest).ok()?;
+        let is_vault = matches!(entity.value.get("id"), Some(Value::String(id)) if id == "Vault");
+        if let (true, Value::Compound(fields)) = (is_vault, &mut entity.value)
+            && let Some((_, Value::Compound(data))) = fields.iter_mut().find(|(key, _)| key == "data")
+            && !data.iter().any(|(key, _)| key == RESUMES_AT)
+        {
+            data.push((RESUMES_AT.into(), Value::Long(age)));
+            dated = true;
+        }
+        nbt::write::<LittleEndian>(&mut out, &entity);
+    }
+    dated.then(|| out.to_vec())
 }
 
 /// Either half of a bed of colour `color` (14 red).
@@ -227,5 +250,17 @@ mod tests {
         assert_eq!(keys(&items.items[0]), ["Block", "Count", "Damage", "Name", "Slot", "WasPickedUp"]);
         assert_eq!(items.items[0].get("Block").and_then(|block| block.get("name")), Some(&string("minecraft:allium")));
         assert_eq!((items.items[1].get("Slot"), keys(&items.items[1]).last().map(String::as_str)), (Some(&Value::Byte(10)), Some("tag")));
+    }
+
+    #[test]
+    fn a_generated_vault_is_dated_by_the_level_once() {
+        let mut record = bytes::BytesMut::new();
+        nbt::write::<LittleEndian>(&mut record, &nbt::Nbt { name: String::new(), value: generated_vault([0, 0, 0], "t", "k") });
+        let dated = date_generated_vaults(&record, 4321).expect("an undated vault");
+        let vault = nbt::read::<LittleEndian>(&mut &dated[..]).unwrap().value;
+        let data = vault.get("data").unwrap();
+        assert_eq!(keys(data), ["items_to_eject", "rewarded_players", RESUMES_AT]);
+        assert_eq!(data.get(RESUMES_AT), Some(&Value::Long(4321)));
+        assert!(date_generated_vaults(&dated, 9).is_none(), "a dated vault keeps its time");
     }
 }

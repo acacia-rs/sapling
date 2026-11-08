@@ -121,6 +121,15 @@ impl Column {
         }
     }
 
+    /// Dates the vaults generation left undated by the level's `age` (`sapling_leveldb::date_generated_vaults`);
+    /// not a write, so an untouched generated column stays unsaved.
+    pub(crate) fn date_generated_vaults(&mut self, age: i64) {
+        if let Some(dated) = sapling_leveldb::date_generated_vaults(&self.block_entities, age) {
+            self.block_entities = dated;
+            self.tiles.take();
+        }
+    }
+
     /// The mobs generation placed, handed out once.
     pub fn take_template_actors(&mut self) -> Vec<sapling_worldgen::TemplateActor> {
         std::mem::take(&mut self.template_actors)

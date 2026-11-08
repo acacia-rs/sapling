@@ -133,7 +133,7 @@ fn stack_value(world: &World, layer: Entity, name: String, count: u32) -> Option
 
 pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fields, near: &[Near]) {
     let Some(mut vault) = load(world, layer, pos, fields) else { return };
-    let now = now(world);
+    let now = now(world, layer);
     let mut shown = false;
     if vault.state == "active" && now % STEP == 0 {
         let table = vault.config.display_table.clone().unwrap_or_else(|| vault.config.loot_table.clone());
@@ -141,7 +141,7 @@ pub(super) fn tick(world: &mut World, layer: Entity, pos: BlockPos, fields: Fiel
         vault.display(item);
         shown = true;
     }
-    // A stored world's ticks are BDS's, not this shard's.
+    // A time past the level's clock (a level.dat older than the column) waits a step at most.
     let resumes = vault.data.int("state_updating_resumes_at", 0).min(now + STEP);
     let mut kept = shown;
     let (mut entered, mut heard, mut settled) = (false, None, false);
