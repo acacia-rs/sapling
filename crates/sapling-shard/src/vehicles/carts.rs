@@ -20,11 +20,13 @@ use crate::sync::Told;
 
 /// The wire puts a minecart this far above its box's bottom.
 pub(super) const LIFT: f32 = 0.35;
-/// Off a rail a cart falls without drag, through water and lava alike, and slides half as far on the
-/// ground (bds-p3lava.txt: 0.04, 0.08, ... a tick to a pool's floor).
-// TODO: the 0.4 cap on each axis off a rail (vehicles.md, step 9) is not applied; the air's
-// sideways drag is undrilled.
-const LOOSE: Physics = Physics { gravity: 0.04, air_drag: 0.95, fall_drag: 1.0, ground_drag: 0.5, liquid: InLiquid::Ignores, burns: false, passes: false, water_drag: 0.8, flutter: 1.0, step: 0.0 };
+/// Off a rail a cart falls without drag either way, through water and lava alike (bds-p3lava.txt:
+/// 0.04, 0.08, ... a tick to a pool's floor); [`loosen`] caps and halves it before the move.
+const LOOSE: Physics = Physics { gravity: 0.04, air_drag: 1.0, fall_drag: 1.0, ground_drag: 1.0, liquid: InLiquid::Ignores, burns: false, passes: false, water_drag: 0.8, flutter: 1.0, step: 0.0 };
+/// Off a rail each axis across is capped at this, then halved if the cart stood on the ground off a
+/// rail a tick before (bds-r3cart.txt: 1.18 off a powered runway went 0.4, 0.2 on, 0.1 once landed).
+const LOOSE_CAP: f32 = 0.4;
+const LOOSE_GROUND_DRAG: f32 = 0.5;
 const RIDDEN_DRAG: f32 = 0.997;
 const EMPTY_DRAG: f32 = 0.96;
 /// A cart with goods keeps more of its motion, the less full it is: its comparator signal.
@@ -42,11 +44,24 @@ const PUSH: f32 = 0.1;
 const PUSHED_SHARE: f32 = 0.5;
 const PUSHER_SHARE: f32 = 0.25;
 
-/// A minecart's own part: the fuse of a primed TNT minecart, and how far it fell.
+/// A minecart's own part: the fuse of a primed TNT minecart, how far it fell, and whether it rolled
+/// on a rail its last tick.
 #[derive(Component, Clone, Copy, Default)]
 pub(super) struct Cart {
     fuse: Option<i32>,
     fallen: f32,
+    railed: bool,
+}
+
+/// A cart's motion off a rail before its move: each axis across capped, halved on the ground unless
+/// it came off a rail this tick (BDS's first tick off a runway went the whole 0.4, bds-r3cart.txt).
+fn loosen(world: &mut World, cart: Entity) {
+    let railed = world.get::<Cart>(cart).is_some_and(|state| state.railed);
+    let Some(mut body) = world.get_mut::<Body>(cart) else { return };
+    let drag = if body.on_ground && !railed { LOOSE_GROUND_DRAG } else { 1.0 };
+    for axis in [0, 2] {
+        body.motion[axis] = body.motion[axis].clamp(-LOOSE_CAP, LOOSE_CAP) * drag;
+    }
 }
 
 pub(super) fn fit(world: &mut World, cart: Entity) {
@@ -108,6 +123,7 @@ pub(super) fn tick(world: &mut World) {
         let parting = world.entity_mut(cart).take::<super::bumps::Parting>();
         let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
         let on = rails::rail_under(level, body.at);
+        let railed = on.is_some();
         let (body, packets) = match on {
             Some(rail) => {
                 let (mut feet, mut motion) = rails::roll(&rail, body.at, body.motion, &how(world, cart, &kind, &rail, level));
@@ -132,6 +148,7 @@ pub(super) fn tick(world: &mut World) {
                 (moved, packets)
             }
             None => {
+                loosen(world, cart);
                 let Some((moved, packets)) = entities::step(world, cart, layer, id, &LOOSE, LIFT) else { continue };
                 (moved, packets)
             }
@@ -141,6 +158,7 @@ pub(super) fn tick(world: &mut World) {
         let Some(mut state) = world.get::<Cart>(cart).copied() else { continue };
         let landed_hard = kind == TNT_MINECART && body.on_ground && state.fallen > HARD_FALL;
         state.fallen = if body.on_ground { 0.0 } else { state.fallen - body.motion[1].min(0.0) };
+        state.railed = railed;
         // A fuse is shown each tick down to 0, and bursts the tick after (research/captures/bds-fftnt.txt).
         if landed_hard || state.fuse.is_some_and(|fuse| fuse <= 0) {
             crate::riding::forget(world, cart);
