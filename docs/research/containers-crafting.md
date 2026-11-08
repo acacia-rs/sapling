@@ -110,7 +110,17 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
   one (the order a hash set gives); sapling lists the lead first (`blocks/shown_again.rs` `show_pairs`,
   `containers/pairs.rs` `pair_placed`; test `fourteenth3y`).
 - **A chest set away while open** (same capture): lid `BlockEvent` 0, `ContainerClose` (server), lid 0
-  again, no sound. Sapling the same (`containers/access.rs` `close_where_gone`, `lid.rs` `shut_gone`).
+  again, no sound, all before the cell's `UpdateBlock` (BDS tells block changes at the tick's end). Sapling
+  the same (`containers/access.rs` `close_where_gone`, `lid.rs` `shut_gone`; `blocks/send.rs` `put_block`
+  shuts the screens between the write and the tell, fourteenth3ad). Left as a tick-order difference: BDS
+  answered the client's own `ContainerClose` 7 ms on, before that tick's block updates; sapling reads a
+  client's packets once a tick at its start, so its answer comes with the next tick's.
+- **An open lid shown again** (decompiled Linux `ChestBlockActor::tick` 0xce3a6d0, shared by barrels, ender
+  chests and, through their own tick, shulker boxes): while open the actor counts ticks and at the 80th sends
+  `blockEvent(pos, 1, open)` and starts again at 0; the count is kept across closings (only a new block
+  entity starts at 0; nothing else writes it). bds-u3chest.txt: a lid open ~60 ticks was shown again ~20
+  ticks into its next opening, both pairs. Sapling: `lid.rs` `LidClocks` (test
+  `an_open_lid_is_shown_again_at_each_80th_open_tick_counted_over_openings`).
 - A trapped chest's signal is the viewer count of both halves, capped at 15 (`ChestBlock::use`).
 
 ## C. Barrel, trapped chest, ender chest, shulker box
@@ -252,6 +262,6 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 - Settled 2026-11-05 (bds-n13win.txt vs sapling-n13win.txt): a chest, ender chest and shulker box window's
   `InventoryContent` has `container` 0 (`AnvilInput`, no dynamic id) and an empty `storage_item`, its
   `InventorySlot` none of either, on both. BDS sends the lid's BlockEvent after the window's first content,
-  before the player's; sapling after all of them. BDS showed no lid again 80 ticks on when a request (one
-  refused too) came in between; sapling now counts the 80 from the last request (`containers::requested_in`).
+  before the player's; sapling after all of them. BDS showed no lid again in the chest's 79 open ticks; read
+  then as "a request puts it off", a misfit: the count is of open ticks alone (see "An open lid shown again").
 - The multi-result sequence on 1.26 and the order of `ResultsDeprecated` entries (E4).

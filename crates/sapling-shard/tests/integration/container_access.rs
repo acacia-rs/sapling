@@ -122,19 +122,32 @@ fn a_barrel_turns_a_tick_after_it_opens_and_its_lid_is_shown_again_80_ticks_on()
     assert_eq!(lids, [0, 80]);
 }
 
-/// research/captures/bds-n13win.txt: a request, refused too, starts the 80 ticks anew.
-#[test]
-fn a_request_puts_off_showing_an_open_lid_again() {
-    let mut h = at_a_chest();
+/// Opens the chest, keeps it open `ticks` more ticks (a request at `request_at`), shuts it: the
+/// ticks from the opening one on that showed a lid.
+fn lids_open_for(h: &mut Harness, ticks: usize, request_at: Option<usize>) -> Vec<usize> {
     h.receive(1, &click(CHEST, 1, None));
-    let mut lids: Vec<usize> = Vec::new();
-    for at in 0..=130 {
-        if at == 40 {
+    let opened = h.tick(1);
+    let window_id = all::<ContainerOpen>(&opened)[0].window_id;
+    let mut lids: Vec<usize> = Some(0).filter(|_| !all::<BlockEvent>(&opened).is_empty()).into_iter().collect();
+    for at in 1..=ticks {
+        if Some(at) == request_at {
             h.receive(1, &common::requests::request(-3, Vec::new()));
         }
         lids.extend(Some(at).filter(|_| !all::<BlockEvent>(&h.tick(1)).is_empty()));
     }
-    assert_eq!(lids, [0, 120]);
+    h.receive(1, &ContainerClose { window_id, window_type: acacia_proto::types::WindowType::Container, server: false });
+    h.tick(1);
+    lids
+}
+
+/// BDS's `ChestBlockActor::tick` counts a lid's open ticks over its openings and shows it again at
+/// each 80th; a request plays no part (bds-u3chest.txt: about 60 open, then again 20 into the next
+/// opening; bds-n13win.txt: none at 79).
+#[test]
+fn an_open_lid_is_shown_again_at_each_80th_open_tick_counted_over_openings() {
+    let mut h = at_a_chest();
+    assert_eq!(lids_open_for(&mut h, 60, Some(30)), [0]);
+    assert_eq!(lids_open_for(&mut h, 30, None), [0, 20]);
 }
 
 /// research/captures/bds-chest-moves.txt: an opened chest's slots are followed by the player's

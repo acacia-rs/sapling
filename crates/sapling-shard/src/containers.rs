@@ -32,7 +32,7 @@ use crate::inventory::{Held, wire};
 
 pub(crate) use again::show_due as show_again_due;
 pub(crate) use lid::show_turned_barrels;
-pub(crate) use screens::{carried_off, close, dispatch_closes, open, requested_in, show_carried, show_lids_again, station, workstation};
+pub(crate) use screens::{carried_off, close, dispatch_closes, open, show_carried, show_lids_again, station, workstation};
 pub(crate) use shulker::is_shulker_box;
 pub(crate) use slots::{carried_viewers, new_held, open_pos, refusal, resend, set_slots, slots_at, slots_of, spill, store, tell_changed, viewers};
 
@@ -145,8 +145,7 @@ struct Chest {
     /// Empty for an ender chest, whose slots are each viewer's own.
     slots: Vec<Option<Held>>,
     viewers: Vec<Entity>,
-    /// The tick its first viewer opened it or a viewer last asked of it, from which its open lid is
-    /// shown again.
+    /// The tick its first viewer opened it: its lid's open ticks are counted from the next.
     opened_at: u64,
     /// Ticking (a furnace burning, a hopper): kept while nobody looks.
     pinned: bool,
@@ -188,6 +187,7 @@ pub(crate) fn furnish(world: &mut World, layer: Entity, pos: BlockPos, block: &s
         if let Some(mut level) = world.get_mut::<Layer>(layer) {
             _ = level.world.set_block_entity(pos, &entity);
         }
+        lid::forget_clock(world, layer, pos);
         // BDS shows a chest put beside its partner already paired (bds-u3chest.txt).
         pairs::pair_placed(world, layer, pos);
         let kept = world.get::<Layer>(layer).and_then(|layer| layer.world.block_entity(pos)).map(|entity| entity.nbt.clone());
