@@ -16,6 +16,12 @@ const AIMED: [i32; 3] = [6, 65, 6];
 
 /// Fires an arrow from a dispenser at `block`, three blocks east of it; what the shot sent.
 fn shoot_at(block: Block, rule: bool) -> (Harness, Vec<RawPacket>) {
+    let (h, ticks) = shoot_at_by_tick(block, rule);
+    (h, ticks.concat())
+}
+
+/// [`shoot_at`], what was sent each tick.
+fn shoot_at_by_tick(block: Block, rule: bool) -> (Harness, Vec<Vec<RawPacket>>) {
     let mut h = Harness::new();
     h.enter(1, "Alex");
     h.remote.run(move |ctx| {
@@ -27,8 +33,18 @@ fn shoot_at(block: Block, rule: bool) -> (Harness, Vec<RawPacket>) {
     });
     h.tick_all();
     h.remote.run(|ctx| assert!(ctx.update_block([3, 65, 7], &Block::new("redstone_block"))));
-    let sent = (0..30).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let sent = (0..30).map(|_| h.tick_all().to(1).to_vec()).collect();
     (h, sent)
+}
+
+/// It shows breaking the tick the arrow meets it, and goes, heard shattering, the tick after (bds-p3pot.txt).
+#[test]
+fn a_shot_pot_shows_breaking_a_tick_before_it_shatters() {
+    let (mut h, ticks) = shoot_at_by_tick(Block::new("decorated_pot"), true);
+    let cracked = ticks.iter().position(|sent| all::<LevelEvent>(sent).iter().any(|event| event.event == LevelEventEvent::ParticleDestroy)).expect("cracked");
+    let shattered = ticks.iter().position(|sent| all::<LevelSoundEvent>(sent).iter().any(|sound| sound.sound_id == "shatter_pot")).expect("shattered");
+    assert_eq!(shattered, cracked + 1);
+    assert_eq!(name_at(&mut h, AIMED), "minecraft:air");
 }
 
 fn name_at(h: &mut Harness, pos: [i32; 3]) -> String {

@@ -139,7 +139,10 @@ sapling: `blocks/brushing.rs`, tests `tests/integration/brushing.rs`.
   the pot (bds-loot-probe2.txt). Fixed 2026-11-03 (`blocks/request.rs` `break_block`, test
   `a_seeded_pot_broken_in_creative_leaves_its_loot_and_not_itself`). The earlier test's entity never
   read back because `set_block_entity` kept an entity without `x`/`y`/`z`, which the column drops
-  (`pistons::at_place` now adds them). A shot pot was not drilled.
+  (`pistons::at_place` now adds them). A shot pot (bds-p3pot.txt, 2026-11-08, a dispenser's arrow and a
+  summoned one falling on it): breaking particles in the tick the shot met it, then a tick later air, its four
+  bricks and what it held (a diamond), and `shatter_pot`; BDS's arrow flew on through. Sapling now waits the tick
+  (`blocks/shot_blocks.rs` `cracked`, `Job::Shatter`); its arrow still stops at the pot.
 - Brushing (2026-11-04, `bds_command_probe t3brush`, bds-t3brush.txt): BDS sent no dust particles,
   and answered each brushing click with the whole inventory, armour, UI and offhand windows; the brush
   sound's extra data is the block's hash. Sapling resends the four windows (`blocks/brushing.rs`

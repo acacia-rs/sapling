@@ -31,7 +31,7 @@ pub(super) fn shot(world: &mut World, layer: Entity, pos: BlockPos, kind: &str, 
         return;
     }
     if name == POT {
-        shatter(world, layer, pos);
+        cracked(world, layer, pos);
     } else {
         updates::pop_by(world, layer, pos, &Breaker { by_entity: true, ..Breaker::UNAIDED });
         updates::settle(world, layer, pos);
@@ -47,17 +47,28 @@ fn shards(kept: Option<&Value>) -> Vec<Item> {
     (0..4).map(|face| faces.get(face).copied().filter(|name| !name.is_empty()).unwrap_or(BRICK)).map(|name| Item::new(name, 1)).collect()
 }
 
+/// The pot at `pos` shows breaking in the tick a shot met it and [`shatter`]s the next
+/// (bds-p3pot.txt).
+fn cracked(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(level) = level(world, layer) else { return };
+    let particles = send::destroy_particles(level.registry(), pos, level.block(pos[0], pos[1], pos[2]));
+    send::to_viewers(world, layer, pos, &[particles]);
+    super::queued::after(world, layer, pos, 1, super::queued::Job::Shatter);
+}
+
 /// The pot at `pos` breaks into its four faces and what it held, and is heard shattering from its
 /// corner (bds-shotblocks.txt).
-fn shatter(world: &mut World, layer: Entity, pos: BlockPos) {
-    let Some(level) = level(world, layer) else { return };
+pub(super) fn shatter(world: &mut World, layer: Entity, pos: BlockPos) {
+    let Some(level) = level(world, layer).filter(|level| level.in_height(pos[1])) else { return };
     let (registry, id) = (level.registry(), level.block(pos[0], pos[1], pos[2]));
-    let (air, particles) = (registry.air_id(), send::destroy_particles(registry, pos, id));
+    if !registry.get(id).is_some_and(|state| state.name == POT) {
+        return;
+    }
+    let air = registry.air_id();
     let heard = send::sound_at(SHATTER, registry, Vec3f { x: pos[0] as f32, y: pos[1] as f32, z: pos[2] as f32 }, id);
     let mut left = shards(level.block_entity(pos).map(|kept| &kept.nbt));
     let mut tags = loot::add_entity_loot(world, layer, pos, &mut left);
     if send::set(world, layer, pos, air) {
-        send::to_viewers(world, layer, pos, &[particles]);
         loot::spill_tagged(world, layer, pos, &left, &mut tags);
         send::to_viewers(world, layer, pos, &[heard]);
         updates::settle(world, layer, pos);
