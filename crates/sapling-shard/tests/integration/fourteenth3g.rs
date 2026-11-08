@@ -121,13 +121,14 @@ fn a_frog_croaks_90_ticks_and_leaps_only_within_the_pen_it_is_in() {
 
 #[test]
 fn a_bat_under_a_ceiling_hangs_from_birth_and_lets_go_as_the_ceiling_goes() {
-    let (mut h, ticks) = watched(&[([0, 66, 0], "stone")], &[("minecraft:bat", [0.5, 65.0, 0.5], None)], 40);
+    // 8 off Alex, who would wake it within 4 (bds-x2bat.txt).
+    let (mut h, ticks) = watched(&[([8, 66, 0], "stone")], &[("minecraft:bat", [8.5, 65.0, 0.5], None)], 40);
     let bat = added(&ticks, "minecraft:bat")[0].clone();
     let shown = bat.metadata.iter().find_map(|item| if let Value::Flags(flags) = item.value { Some(flags.0) } else { None }).unwrap_or(0);
     assert!(shown & Flags::RESTING.0 != 0, "born hanging (bds-g14bat.txt)");
     let ys: Vec<f32> = ticks.iter().flat_map(|sent| all::<MoveEntityDelta>(sent)).filter(|delta| delta.runtime_entity_id == bat.runtime_id).filter_map(|delta| delta.y).collect();
     assert!(ys.iter().all(|y| (y - 65.1).abs() < 1e-4), "its head against the ceiling: {ys:?}");
-    h.remote.run(|ctx| assert!(ctx.set_block([0, 66, 0], &Block::new("air"))));
+    h.remote.run(|ctx| assert!(ctx.set_block([8, 66, 0], &Block::new("air"))));
     let after = watch(&mut h, 3);
     assert!(flags(&after, bat.runtime_id).iter().any(|flags| flags & Flags::RESTING.0 == 0), "it lets go");
 }
