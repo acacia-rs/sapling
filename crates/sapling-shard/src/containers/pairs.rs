@@ -39,9 +39,15 @@ fn paired(entity: &Value, with: Option<(BlockPos, bool)>) -> Value {
 
 /// The cells of the chest at `pos`, the lead half first: one cell, or two that name each other.
 pub(crate) fn halves(world: &World, layer: Entity, pos: BlockPos) -> Vec<BlockPos> {
-    let Some(([x, z], leads)) = entity(world, layer, pos).as_ref().and_then(partner) else { return vec![pos] };
+    world.get::<Layer>(layer).map_or_else(|| vec![pos], |layer| halves_in(&layer.world, pos))
+}
+
+/// [`halves`] in a world read directly.
+pub(crate) fn halves_in(level: &sapling_world::World, pos: BlockPos) -> Vec<BlockPos> {
+    let entity = |at: BlockPos| level.block_entity(at).map(|entity| entity.nbt.clone());
+    let Some(([x, z], leads)) = entity(pos).as_ref().and_then(partner) else { return vec![pos] };
     let other = [x, pos[1], z];
-    let is_mutual = entity(world, layer, other).as_ref().and_then(partner).is_some_and(|(back, _)| back == [pos[0], pos[2]]);
+    let is_mutual = entity(other).as_ref().and_then(partner).is_some_and(|(back, _)| back == [pos[0], pos[2]]);
     match (is_mutual, leads) {
         (false, _) => vec![pos],
         (true, true) => vec![pos, other],

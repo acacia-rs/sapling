@@ -240,6 +240,10 @@ fn apply(world: &mut World, layer: Entity, ticked: BlockPos, grows: bool, change
             rules::How::Quiet => _ = send::set_quietly(world, layer, pos, id),
             rules::How::Shown => _ = send::set(world, layer, pos, id),
             rules::How::Melts => _ = super::liquid::pour(world, layer, pos, super::liquid::Liquid::Water, false),
+            rules::How::CopperChest => {
+                let into = level(world, layer).and_then(|level| super::copper::of_state(level.registry(), id));
+                into.map(|into| super::copper::chests::turn(world, layer, pos, into, true));
+            }
         }
     }
 }

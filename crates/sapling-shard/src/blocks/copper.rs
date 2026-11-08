@@ -9,6 +9,8 @@ use sapling_world::BlockRegistry;
 
 use super::{Dice, doors, level, send};
 
+pub(crate) mod chests;
+
 /// Cells a lightning walk tries for its next step before it ends.
 const WALK_TRIES: usize = 10;
 const ROD: &str = "lightning_rod";
@@ -54,6 +56,10 @@ impl Copper {
         self.base == "copper_door"
     }
 
+    pub(crate) fn is_chest(self) -> bool {
+        self.base == "copper_chest"
+    }
+
     /// The state of this block in the state `id` of another stage or wax, its properties kept.
     pub(crate) fn state(self, registry: &BlockRegistry, id: u32) -> Option<u32> {
         registry.find(&self.name(), registry.get(id)?.properties)
@@ -61,9 +67,10 @@ impl Copper {
 }
 
 /// Whether `held` changes the copper block `name`: honeycomb waxes, an axe unwaxes or scrapes
-/// (docs/research/copper.md, W1-W2), before a door or bulb's own use.
+/// (docs/research/copper.md, W1-W2), before a door or bulb's own use. A chest opens unless its
+/// player sneaks (W7).
 pub(crate) fn is_worked_by(name: &str, held: &str) -> bool {
-    Copper::of(name).is_some_and(|copper| match held {
+    Copper::of(name).filter(|copper| !copper.is_chest()).is_some_and(|copper| match held {
         "minecraft:honeycomb" => !copper.waxed,
         _ => held.ends_with("_axe") && (copper.waxed || copper.stage > 0),
     })
@@ -147,8 +154,11 @@ pub(crate) fn hooks(world: &mut World, layer: Entity, cell: BlockPos, start: Blo
 /// with [`hooks`]); whether it is a rod, to be powered.
 pub(crate) fn hooked(world: &mut World, layer: Entity, pos: BlockPos) -> bool {
     let Some(copper) = copper_at(world, layer, pos) else { return false };
-    if !copper.waxed && copper.stage > 0 {
-        turn(world, layer, pos, Copper { stage: copper.stage - 1, ..copper });
+    let into = Copper { stage: copper.stage.saturating_sub(1), ..copper };
+    if !copper.waxed && copper.stage > 0 && copper.is_chest() {
+        chests::turn(world, layer, pos, into, true);
+    } else if !copper.waxed && copper.stage > 0 {
+        turn(world, layer, pos, into);
     }
     copper.base == ROD
 }

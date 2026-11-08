@@ -17,7 +17,7 @@ use crate::entities::Kind;
 /// What a lid needs above a chest, within the cell above (BDS `getObstructionAABB`).
 const LID_MIN: [f32; 3] = [1.0 / 16.0, 0.0, 1.0 / 16.0];
 const LID_MAX: [f32; 3] = [15.0 / 16.0, 0.5, 15.0 / 16.0];
-const LIDDED: &[&str] = &["minecraft:chest", "minecraft:trapped_chest", "minecraft:ender_chest"];
+const ENDER_CHEST: &str = "minecraft:ender_chest";
 const SITTERS: [&str; 2] = ["minecraft:cat", "minecraft:ocelot"];
 
 /// Whether a block never holds a lid down whatever its shape (`minecraft:chest_obstruction` `never`): a
@@ -74,7 +74,7 @@ pub(super) fn is_blocked(world: &mut World, layer: Entity, pos: BlockPos, block:
     if super::is_shulker_box(block) {
         return lid_is_held_down(world, layer, pos, shulker_lid(world, layer, pos), ([0.0; 3], [1.0, 0.5, 1.0]), false);
     }
-    LIDDED.contains(&block) && pairs::halves(world, layer, pos).into_iter().any(|half| lid_is_held_down(world, layer, half, [0, 1, 0], (LID_MIN, LID_MAX), true) || cat_sits_on(world, layer, half))
+    (super::is_chest(block) || block == ENDER_CHEST) &&pairs::halves(world, layer, pos).into_iter().any(|half| lid_is_held_down(world, layer, half, [0, 1, 0], (LID_MIN, LID_MAX), true) || cat_sits_on(world, layer, half))
 }
 
 /// Whether the block `viewing` shows is still there.

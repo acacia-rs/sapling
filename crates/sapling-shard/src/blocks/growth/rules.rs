@@ -57,6 +57,8 @@ pub(super) enum How {
     Breaks,
     /// Melted into water that then flows, whatever `id` says.
     Melts,
+    /// A copper chest weathered to `id`, its other half with it (copper/chests.rs).
+    CopperChest,
 }
 
 fn state_at(level: &Level, [x, y, z]: BlockPos) -> Option<(u32, &str, &str)> {

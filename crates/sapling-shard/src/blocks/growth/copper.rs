@@ -6,7 +6,7 @@ use sapling_api::BlockPos;
 
 use super::super::copper::{self, Copper, OXIDIZED};
 use super::Picks;
-use super::rules::{Change, shown};
+use super::rules::{Change, How, shown};
 
 type Level = sapling_world::World;
 
@@ -35,6 +35,9 @@ pub(super) fn is_ticked(name: &str) -> bool {
 pub(super) fn ticked(level: &Level, pos: BlockPos, picks: &mut Picks) -> Vec<Change> {
     let (tries, odds) = (draw(picks), draw(picks));
     let Some(here) = copper_at(level, pos).filter(|copper| !copper.waxed && copper.stage < OXIDIZED && tries < TRIES) else { return Vec::new() };
+    if here.is_chest() && !copper::chests::ticks(level, pos) {
+        return Vec::new();
+    }
     let (mut same, mut older) = (0u32, 0u32);
     for dx in -REACH..=REACH {
         for dy in -(REACH - dx.abs())..=REACH - dx.abs() {
@@ -55,6 +58,9 @@ pub(super) fn ticked(level: &Level, pos: BlockPos, picks: &mut Picks) -> Vec<Cha
         return Vec::new();
     }
     let next = Copper { stage: here.stage + 1, ..here };
+    if here.is_chest() {
+        return next.state(level.registry(), level.block(pos[0], pos[1], pos[2])).map(|id| Change { pos, id, how: How::CopperChest }).into_iter().collect();
+    }
     let other_half = here.is_door().then(|| door_half(level, pos)).flatten();
     [Some(pos), other_half].into_iter().flatten().filter_map(|at| next.state(level.registry(), level.block(at[0], at[1], at[2])).map(|id| shown(at, id))).collect()
 }

@@ -230,14 +230,19 @@ impl Request<'_> {
         let Some(change) = change(registry, held, level.block(x, y, z), face).filter(|_| !covered) else { return (held == FLINT_AND_STEEL || held == FIRE_CHARGE) && self.strike(site, face.neighbour(pos), held) };
         let (told, is_event) = (telling(registry, pos, &change), matches!(change.told, Told::Event(..)));
         let left = inventory::stored(&Item::new(change.leaves.0.to_owned(), 1), registry);
-        let copper = registry.get(change.id).and_then(|state| Copper::of(state.name)).filter(|copper| copper.is_door());
+        let copper = registry.get(change.id).and_then(|state| Copper::of(state.name)).filter(|copper| copper.is_door() || copper.is_chest());
         let is_cauldron = registry.get(change.id).is_some_and(|state| state.name == "minecraft:cauldron");
+        // A copper chest's other half is told its own event (copper.md W7).
+        let halves = if copper.is_some_and(Copper::is_chest) { super::copper::chests::cells(self.world, site.layer, pos) } else { vec![pos] };
+        let told_halves: Vec<_> = halves.iter().map(|half| telling(registry, *half, &change)).collect();
         // BDS tells an event before the block and a sound after it.
         if is_event {
-            send::to_viewers(self.world, site.layer, pos, std::slice::from_ref(&told));
+            send::to_viewers(self.world, site.layer, pos, &told_halves);
         }
         if held == ENDER_EYE {
             super::end_portal::fill(self.world, site.layer, pos, change.id);
+        } else if let Some(copper) = copper.filter(|copper| copper.is_chest()) {
+            super::copper::chests::turn(self.world, site.layer, pos, copper, false);
         } else if let Some(copper) = copper {
             super::copper::turn(self.world, site.layer, pos, copper);
         } else {
