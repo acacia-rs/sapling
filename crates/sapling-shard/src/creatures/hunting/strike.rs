@@ -68,7 +68,7 @@ pub(in crate::creatures) fn strike(world: &mut World, entity: Entity, layer: Ent
     let harm = on_difficulty(world, harm)?;
     swing(world, entity, layer, id, body);
     let [along, up] = if hunts.upto.is_some() { FLINGS } else { [THROW; 2] };
-    let blocked = vitals::blocks(world, prey, body.at, harm, super::super::Cause::Attack, vitals::wields_axe(kind));
+    let blocked = vitals::blocks_mob(world, prey, body.at, harm, super::super::Cause::Attack, vitals::wields_axe(kind));
     if blocked && let Some(mut thrown) = world.get_mut::<Body>(entity) {
         let back = vitals::thrown_back(thrown.motion, [-away[0], -away[1]]);
         thrown.throw(back);

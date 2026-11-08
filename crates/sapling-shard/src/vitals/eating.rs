@@ -1,14 +1,15 @@
 //! Eating and drinking: use held on a food until the shard takes it, as BDS does
 //! (docs/research/player-damage.md, "Eating"; food-effects.md).
-//! Every attribute is told as the use of a food that feeds starts (told_all.rs).
-// TODO: only survival and adventure players eat here.
+//! Every attribute is told as the use of a food that feeds starts (told_all.rs), and as any use a
+//! creative player starts. A creative player eats and drinks full, keeping what it ate or drank; a
+//! potion still leaves it a bottle (research/captures/bds-b1eat.txt).
 
 use acacia_proto::packets::{CompletedUsingItem, CompletedUsingItemUseMethod, EntityEvent, EntityEventEventId, LevelSoundEvent};
 use acacia_proto::types::Vec3f;
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
-use super::{Vitals, effects, is_mortal, tell};
+use super::{Vitals, effects, is_creative, is_mortal, tell};
 use crate::blocks::Dice;
 use crate::components::{InLayer, Layer, NetId, Outgoing, PacketQueues, Position, Tick};
 use crate::inventory::{self, Inventory};
@@ -52,17 +53,18 @@ pub(crate) fn show(world: &mut World, player: Entity, using: bool) {
 /// the client's own end of the use, which the shard times itself.
 pub(crate) fn start(world: &mut World, player: Entity) {
     let now = world.resource::<Tick>().0;
-    let Some((id, food)) = held(world, player).filter(|_| is_mortal(world, player)) else { return };
+    let creative = is_creative(world, player);
+    let Some((id, food)) = held(world, player).filter(|_| creative || is_mortal(world, player)) else { return };
     let chorus = holds_chorus(world, player);
     if chorus && crate::cooldowns::is_cooling(world, player, CHORUS) {
         return;
     }
-    let Some(mut vitals) = world.get_mut::<Vitals>(player).filter(|vitals| vitals.meal.is_none() && (food.always || !vitals.hunger.is_full())) else { return };
+    let Some(mut vitals) = world.get_mut::<Vitals>(player).filter(|vitals| vitals.meal.is_none() && (creative || food.always || !vitals.hunger.is_full())) else { return };
     vitals.meal = Some(Meal { id, food, done: now + u64::from(food.ticks) });
     if chorus {
         crate::cooldowns::tell(world, player, CHORUS, CHORUS_COOLDOWN, false);
     }
-    if let Some(all) = super::told_all::all_attributes(world, player).filter(|_| feeds(&food)) {
+    if let Some(all) = super::told_all::all_attributes(world, player).filter(|_| creative || feeds(&food)) {
         tell(world, player, &all);
     }
     show(world, player, true);
@@ -117,12 +119,24 @@ fn afflict(world: &mut World, player: Entity, food: &sapling_data::Food) {
     }
 }
 
+/// What held a food, as a stack of one.
+fn leavings(world: &World, player: Entity, name: Option<&str>) -> Option<sapling_world::ItemStack> {
+    let registry = world.get::<InLayer>(player).and_then(|layer| world.get::<Layer>(layer.0)).map(|layer| layer.world.registry())?;
+    inventory::stored(&sapling_api::Item::new(name?, 1), registry)
+}
+
 /// What held a food is left in its place.
 fn leave(world: &mut World, player: Entity, food: &sapling_data::Food) {
-    let registry = world.get::<InLayer>(player).and_then(|layer| world.get::<Layer>(layer.0)).map(|layer| layer.world.registry());
-    if let Some(left) = food.leaves.zip(registry).and_then(|(name, registry)| inventory::stored(&sapling_api::Item::new(name, 1), registry)) {
+    if let Some(left) = leavings(world, player, food.leaves) {
         inventory::leave_in_hand(world, player, &left);
     }
+}
+
+/// A creative player keeps the food and is shown every window again; a potion's bottle is put
+/// beside it, unheard (bds-b1eat.txt: a bottle more each potion, none for honey or milk).
+fn keep(world: &mut World, player: Entity, food: &sapling_data::Food) {
+    let bottle = leavings(world, player, food.leaves.filter(|_| food.drunk && !food.cures));
+    inventory::change(world, player, |inventory| bottle.map(|bottle| inventory.add(&bottle)));
 }
 
 /// Where a player's bottle is heard: under its eyes and ahead of them, as is an omen taking hold
@@ -163,9 +177,10 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     };
     let used = CompletedUsingItem { used_item_id: meal.id, use_method };
     let eyes = world.get::<Position>(player).map(|position| [position.feet[0], position.feet[1] + EYE_HEIGHT, position.feet[2]]);
+    let event = if meal.food.drunk { crate::blocks::GameEvent::Drink } else { crate::blocks::GameEvent::Eat };
     let heard = move |world: &mut World| {
         if let (Some(eyes), Some(layer)) = (eyes, world.get::<InLayer>(player).map(|layer| layer.0)) {
-            crate::blocks::vibrate(world, layer, eyes, crate::blocks::GameEvent::Eat, true);
+            crate::blocks::vibrate(world, layer, eyes, event, true);
         }
     };
     if !meal.food.drunk {
@@ -178,8 +193,12 @@ fn finish(world: &mut World, player: Entity, meal: Meal) {
     // BDS tells the effects first.
     afflict(world, player, &meal.food);
     world.get_mut::<Outgoing>(player).expect("players have an outbox").push(&used);
-    inventory::change(world, player, Inventory::take_one_in_hand);
-    leave(world, player, &meal.food);
+    if is_creative(world, player) {
+        keep(world, player, &meal.food);
+    } else {
+        inventory::change(world, player, Inventory::take_one_in_hand);
+        leave(world, player, &meal.food);
+    }
     let Some(mut vitals) = world.get_mut::<Vitals>(player) else { return };
     vitals.hunger.feed(meal.food.hunger, meal.food.saturation);
     let hunger = vitals.hunger;
@@ -216,7 +235,8 @@ pub(super) fn tick(world: &mut World) {
     let mut eating = world.query::<(Entity, &Vitals)>();
     let meals: Vec<(Entity, Meal)> = eating.iter(world).filter_map(|(player, vitals)| Some((player, vitals.meal?))).collect();
     for (player, meal) in meals {
-        if !is_mortal(world, player) || held(world, player).is_none_or(|(id, _)| id != meal.id) {
+        let eats = is_mortal(world, player) || is_creative(world, player);
+        if !eats || held(world, player).is_none_or(|(id, _)| id != meal.id) {
             stop(world, player);
         } else if now >= meal.done {
             world.get_mut::<Vitals>(player).expect("queried above").meal = None;

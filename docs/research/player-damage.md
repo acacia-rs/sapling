@@ -100,6 +100,33 @@ From `bds_command_probe eat` (research/captures/bds-eat.txt), the bot holding us
 - An apple gave 4 hunger and 2.4 saturation; the saturation is kept up to the hunger.
 - With a full hunger the bot does not try, so what BDS answers then is not seen.
 
+A creative player eats and drinks too (bds-b1eat.txt, `b1eat` in fourteenth1b_drill.rs): every attribute is told
+as each use starts, potion and milk included; nothing is used up, and the whole inventory (four windows) is sent
+as it ends; a potion leaves a glass bottle beside it unheard, honey and milk nothing; the burp, the vibration and
+a chorus fruit's teleport are as in survival (`vitals/eating.rs` `keep`; test
+`a_creative_player_eats_and_drinks_what_it_keeps_and_a_potion_leaves_a_bottle_as_well`). Left (REMAINING4): BDS
+started no second meal of a food the held use asked for after the first, while it drank a drink twice; sapling
+eats both twice. No rule was found.
+
+## Shield
+
+From bds-b1shield.txt and bds-b1ride.txt (fourteenth1b_drill.rs `b1shield`, `b1ride`), a sneaking survival bot
+with a shield in the off hand:
+
+- A mob's hit or shot turned away stands the player up: `FlagsExtended` raised and struck, then one packet with
+  `Flags` without sneaking, the standing height 1.8, the same bits and `ArrowShooterId` 0, then the bits clear. The
+  next tick the shield is shown down (`blocking_tick` 0) and the player sneaking (1.49) with the bits clear, then
+  the shield goes up again as from a fresh sneak. A player's arrow does not stand it up.
+- A rider holding a shield has it up as it sits: raised and moving, the shield shown with that tick, raised alone
+  two ticks later. Hits from ahead are turned away as on foot (the sound from the seated eyes); a dismount after
+  that shows the bits clear. Without a shield the moving bit stays, as bds-m3rideview.txt had it.
+- Thorns and fireworks from ahead are turned away.
+
+Sapling: `vitals/shield.rs` (`blocks_mob`, `stand_up`, `sneak_again`, `tell_ride`, `settle_ride`); tests in
+`tests/integration/fourteenth1b.rs`. Left (REMAINING4): `/damage ... entity <source>` is turned away on BDS for
+`entity_attack`, `thorns`, `fireworks` and `projectile`, and `magic`, `ram_attack`, `sonic_boom` and
+`mace_smash` hurt and throw back from the source, where sapling's `/damage` with a source neither blocks nor throws.
+
 ## Death
 
 - To the player, in one tick: `InventoryContent` for the inventory, armour, cursor and off hand (several

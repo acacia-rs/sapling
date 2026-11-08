@@ -81,7 +81,8 @@ pub(super) fn hit(world: &mut World, arrow: Entity, layer: Entity, struck: Entit
     let from: [f32; 3] = std::array::from_fn(|axis| at[axis] - motion[axis]);
     let cost = harm(world, layer, shot.harm, loosed.as_ref(), speed, struck, is_player);
     let push = loosed.as_ref().map_or([0.0; 3], |loosed| punched(loosed.punch, motion));
-    if is_player && vitals::blocks(world, struck, from, cost, Cause::Projectile, false) {
+    let turns = if loosed.as_ref().is_none_or(|loosed| loosed.player.is_none()) { vitals::blocks_mob } else { vitals::blocks };
+    if is_player && turns(world, struck, from, cost, Cause::Projectile, false) {
         if let Some(mut loosed) = world.get_mut::<Loosed>(arrow) {
             loosed.spent = true;
         }

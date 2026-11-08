@@ -4,11 +4,15 @@
 //! than the hit; a mob whose hit it turned is thrown back, and an axe's hit puts it down.
 //! The shield is shown anew as it goes up, its `blocking_tick` the tick it went up, and as it goes
 //! down with 0 (bds-shield.txt); BDS's tick is its world's, sapling's the shard's.
-// TODO: a riding player's shield turns hits away too (only its bits are shown); a blocked mob's hit or shot also stood the blocker up from
-// its sneak on BDS; Thorns and fireworks are turned away there too.
+//! A rider's shield is up, and turns hits away, as it sits down; a mob's hit or shot turned away
+//! stands a sneaking player up a moment ([`stand_up`]); Thorns and fireworks are turned away too
+//! (bds-b1ride.txt, bds-b1shield.txt).
 
 use acacia_proto::packets::{InventorySlot, LevelSoundEvent, SetEntityData};
-use acacia_proto::types::{EntityProperties, ItemV4Extra, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2, Vec3f, WindowIDVarint};
+use acacia_proto::types::{
+    EntityProperties, ItemV4Extra, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value,
+    MetadataDictionaryItemValueDefault as Plain, MetadataFlags2, Vec3f, WindowIDVarint,
+};
 use bevy_ecs::prelude::*;
 use sapling_data::EYE_HEIGHT;
 
@@ -40,7 +44,8 @@ const KEEPS: f32 = 0.5;
 const UP_BY: f32 = 1.2;
 
 /// A player's shield: whether it is up and since when, until when the going up or down shows,
-/// until when an axe keeps it down; whether it rides, and whether its ride's going-down bit stays.
+/// until when an axe keeps it down; whether it rides, and whether its ride's going-down bit stays;
+/// the tick a turned hit stood it up in.
 #[derive(Component, Default)]
 pub(crate) struct Guard {
     raised: Option<u64>,
@@ -48,6 +53,7 @@ pub(crate) struct Guard {
     down_until: u64,
     rides: bool,
     lingers: bool,
+    stood: Option<u64>,
 }
 
 /// The shield's bits of `FlagsExtended` a new viewer is shown. A rider is shown raised and moving,
@@ -58,13 +64,35 @@ pub(crate) fn shown_bits(guard: Option<&Guard>) -> i64 {
     raised | if guard.rides || guard.lingers { MOVING } else { 0 }
 }
 
-/// Tells of a ride begun or ended; whether it did.
+/// Tells of a ride begun or ended; whether it did. A rider with a shield has it up as it sits,
+/// the going up shown [`MOVES`] ticks; without one the going up stays, and lingers after.
 fn tell_ride(world: &mut World, player: Entity, id: u64, now: u64) -> bool {
     let riding = world.get::<crate::riding::Riding>(player).is_some();
+    let holds = world.get::<Inventory>(player).and_then(shield_at).is_some();
     let Some(mut guard) = world.get_mut::<Guard>(player).filter(|guard| guard.rides != riding) else { return false };
-    (guard.rides, guard.lingers) = (riding, !riding);
-    tell(world, player, &extended(id, if riding { RAISED | MOVING } else { MOVING }, now));
+    let settled = !riding && guard.raised.is_some() && guard.moving_until < now;
+    (guard.rides, guard.lingers) = (riding, !riding && !settled);
+    guard.raised = (riding && holds).then_some(now);
+    if riding {
+        guard.moving_until = now + MOVES;
+    }
+    let bits = match (riding, settled) {
+        (true, _) => RAISED | MOVING,
+        (false, true) => 0,
+        (false, false) => MOVING,
+    };
+    if riding && holds {
+        show_shield(world, player, now as i64);
+    }
+    tell(world, player, &extended(id, bits, now));
     true
+}
+
+/// A rider's shield done going up: shown up alone.
+fn settle_ride(world: &mut World, player: Entity, id: u64, now: u64) {
+    if world.get::<Guard>(player).is_some_and(|guard| guard.raised.is_some() && guard.moving_until == now) {
+        tell(world, player, &extended(id, RAISED, now));
+    }
 }
 
 /// Where a player holds a shield: the off hand first.
@@ -92,11 +120,13 @@ pub(super) fn tick(world: &mut World) {
         if tell_ride(world, player, id, now) {
             continue;
         }
-        let alive = !is_dead(world, player);
-        let mut guard = world.get_mut::<Guard>(player).expect("put above");
-        if guard.rides {
+        if world.get::<Guard>(player).is_some_and(|guard| guard.rides) {
+            settle_ride(world, player, id, now);
             continue;
         }
+        sneak_again(world, player, id, now);
+        let alive = !is_dead(world, player);
+        let mut guard = world.get_mut::<Guard>(player).expect("put above");
         let raised = sneaking && holds && alive && now >= guard.down_until;
         let told = if raised != guard.raised.is_some() {
             (guard.raised, guard.moving_until) = (raised.then_some(now), now + MOVES);
@@ -119,6 +149,34 @@ pub(super) fn tick(world: &mut World) {
     }
 }
 
+/// A mob's hit or shot the sneaking player's shield turned stands it up: shown standing with the
+/// shield struck, then down; its client, still sneaking, takes it down again the next tick
+/// ([`sneak_again`]), when the shield goes back up (bds-b1shield.txt, bds-b1ride.txt). Whether it
+/// was sneaking.
+fn stand_up(world: &mut World, player: Entity) -> bool {
+    let now = world.resource::<Tick>().0;
+    let (Some(pose), Some(id)) = (world.get::<Motion>(player).map(|motion| motion.pose), world.get::<NetId>(player).map(|id| id.0)) else { return false };
+    let Some(mut guard) = world.get_mut::<Guard>(player).filter(|_| pose.sneaking) else { return false };
+    (guard.raised, guard.stood, guard.down_until) = (None, Some(now), guard.down_until.max(now + 1));
+    let mut stood = crate::movement::pose_packet(id, crate::movement::Pose { sneaking: false, ..pose }, now);
+    stood.metadata.extend(extended(id, RAISED | STRUCK, now).metadata);
+    stood.metadata.push(MetadataDictionaryItem { key: Key::ArrowShooterId, r#type: Type::Long, legacy_type: 7, value: Value::Default(Plain::Long(0)) });
+    tell(world, player, &stood);
+    tell(world, player, &extended(id, 0, now));
+    true
+}
+
+/// The tick after [`stand_up`]: the shield shown down, and the player sneaking again.
+fn sneak_again(world: &mut World, player: Entity, id: u64, now: u64) {
+    let Some(pose) = world.get::<Motion>(player).map(|motion| motion.pose) else { return };
+    let Some(mut guard) = world.get_mut::<Guard>(player).filter(|guard| guard.stood.is_some_and(|stood| stood < now)) else { return };
+    guard.stood = None;
+    show_shield(world, player, 0);
+    let mut sneaks = crate::movement::pose_packet(id, pose, now);
+    sneaks.metadata.extend(extended(id, 0, now).metadata);
+    tell(world, player, &sneaks);
+}
+
 /// Sends the player its shield's slot with `blocking_tick`: the off hand's window, or the main
 /// hand's slot.
 fn show_shield(world: &mut World, player: Entity, blocking_tick: i64) {
@@ -139,11 +197,21 @@ fn show_shield(world: &mut World, player: Entity, blocking_tick: i64) {
 /// hit, a shot or a blast from in front of it. One that does wears the shield, is heard, and
 /// shows; a hit with an axe puts the shield down.
 pub(crate) fn blocks(world: &mut World, player: Entity, from: [f32; 3], amount: f32, cause: Cause, axe: bool) -> bool {
+    turns(world, player, from, amount, cause, axe, false)
+}
+
+/// [`blocks`] a mob's hit or shot, which stands a sneaking player up ([`stand_up`]).
+pub(crate) fn blocks_mob(world: &mut World, player: Entity, from: [f32; 3], amount: f32, cause: Cause, axe: bool) -> bool {
+    turns(world, player, from, amount, cause, axe, true)
+}
+
+fn turns(world: &mut World, player: Entity, from: [f32; 3], amount: f32, cause: Cause, axe: bool, stands_up: bool) -> bool {
     let now = world.resource::<Tick>().0;
     let ready = world.get::<Guard>(player).and_then(|guard| guard.raised).is_some_and(|since| now - since > READIES);
     let (Some(position), Some(id)) = (world.get::<Position>(player).copied(), world.get::<NetId>(player).map(|id| id.0)) else { return false };
     let Some(place) = world.get::<Inventory>(player).and_then(shield_at) else { return false };
-    if !ready || !is_mortal(world, player) || !matches!(cause, Cause::Attack | Cause::Projectile | Cause::EntityExplosion) || !is_ahead(&position, from) {
+    let turned = matches!(cause, Cause::Attack | Cause::Projectile | Cause::EntityExplosion | Cause::Thorns | Cause::Fireworks);
+    if !ready || !is_mortal(world, player) || !turned || !is_ahead(&position, from) {
         return false;
     }
     let broke = crate::inventory::wear_at(world, player, place, 1 + amount as i32);
@@ -162,7 +230,9 @@ pub(crate) fn blocks(world: &mut World, player: Entity, from: [f32; 3], amount: 
         crate::inventory::sound_broken(world, player);
     }
     tell(world, player, &extended(id, RAISED | STRUCK, now));
-    tell(world, player, &extended(id, RAISED, now));
+    if !(stands_up && stand_up(world, player)) {
+        tell(world, player, &extended(id, RAISED, now));
+    }
     if axe && let Some(mut guard) = world.get_mut::<Guard>(player) {
         guard.down_until = now + DISABLED;
     }
