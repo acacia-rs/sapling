@@ -11,6 +11,7 @@
 
 mod eating;
 mod landward;
+mod wading;
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
@@ -116,7 +117,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64) -
             stage
         }
         _ if body.liquid() == Some(Liquid::Water) => {
-            let Some(mut kept) = world.get::<Frog>(entity).map(|frog| frog.landward) else { return false };
+            let Some(mut kept) = world.get_mut::<Frog>(entity).map(|mut frog| std::mem::take(&mut frog.landward)) else { return false };
             landward::steer(world, entity, layer, &body, &mut kept);
             if let Some(mut frog) = world.get_mut::<Frog>(entity) {
                 frog.landward = kept;

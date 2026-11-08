@@ -506,7 +506,14 @@ is assumed from its pack's like shape, not drilled.
   (it walks at 0.1 to an air cell over water within 10 across and 3 up, lays within 1.7, though BDS's began 2.2
   off); test fourteenth2v. In water it makes for the nearest land within 30 across and 8 up or down
   (`move_to_land`; bds-f14efish.txt: along the floor at up to 0.11 a tick, then up the wall at up to 0.14),
-  straight across then up the wall once within 1.5 (frogs/landward.rs, fourteenth1ab; BDS's paths cell by cell).
+  straight across then up the wall once within 1.5 (frogs/landward.rs, fourteenth1ab). Since fourteenth1ae it
+  goes by an amphibious way, cell by cell (frogs/wading.rs: any of 26 neighbours with water in or under it or a
+  floor under it, open water weighed 4 steps more, as Java's frog), and its push up or down is
+  `AmphibiousMoveControl`'s (Linux tick 0xbe27b10: speed x 0.1 along the way, the height off taken half the
+  frog's height further). BDS's `move_to_land` takes a random land cell of 80 tries, sapling the nearest.
+- The swim push up or down below full strength (fourteenth1ae, swimming.rs `rise`): a fish's (`SwimMoveControl`
+  tick, Linux 0xbdf8d50) is its push across x min(5 x the height off, 1.25), so full until the last quarter
+  block; its sign BDS takes from the pitch, sapling from the spot's height.
 - Bees (bds-g14bee.txt): bees with pollen grew wheat a block under them 0 to 1 with `ParticleCropGrowth` at
   the cell's corner (bees/crops.rs, pack `grows_crop` 10 charges at 0.03); a silk-touched hive's item kept its
   bee in `Occupants` and none came out; a hive over a lit campfire broken by hand let its bee out angry.
@@ -601,9 +608,16 @@ random where 6 cells ahead are open surface (`creatures/dolphins/breath.rs`, fou
 breathes 2 ticks into a breach, as BDS's did: breaching when its eyes first reached the top cell
 left them under water after the leap's first tick, so it breathed at 4 (fourteenth1ab moved the
 breach up to BDS's, eyes 0.48 up the cell at bds-dolphin.txt 51885). With no prey it swims with a
-player (`SwimWithEntityGoal`, decompiled; `creatures/dolphins/company.rs`, no capture). Flocking is
-not ported: bds-ab1flock.txt (six in a pool 13 across, 90 s) kept them 2.4 to 3.8 on average from
-their middle, which wandered 4 or so blocks every 5 s, where six roaming apart would spread some 5.
+player (`SwimWithEntityGoal`, decompiled; `creatures/dolphins/company.rs`, no capture).
+bds-ab1flock.txt (six in a pool 13 across, 90 s) kept them 2.4 to 3.8 on average from their middle,
+which wandered 4 or so blocks every 5 s, where six roaming apart would spread some 5. Flocking is BDS's
+`FlockingSystem` (Windows 1446a0300) and a `FollowFlockGoal` the component adds (Linux vtable 0xf2445b8);
+gdb on ab1flock saw the goal built for each dolphin, canUse 3148 times, start 15 and tick 8097 in 90 s.
+Ported (fourteenth1ae, `creatures/dolphins/flock.rs`): loner and flock-size draws, join or found within
+the influence box of 6, members pruned out of it, and each member's way from the leader's step,
+separation (1.75 within 3), cohesion (1.85 beyond 3.5) and the leader's spot (2). The goal's tick
+blends 0.22 of the way into the motion and doubles the pace beyond `cohesion_threshold` 6.5; merging
+flocks (141be0900) and the doubled pace are not ported. Test `dolphins_in_a_wide_pool_keep_together_as_a_flock`.
 
 A fish on land hops as BDS's cod did (`creatures/swimming/ashore.rs`, research/captures/bds-flop.txt),
 and is heard `flop` a tick after each hop from where it hopped, as bds-t2water.txt's cod was

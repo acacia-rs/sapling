@@ -3,31 +3,38 @@
 //! bds-f14efish.txt walked the pool floor at up to 0.11 a tick (0.98 x 0.15² = 0.022 a tick in
 //! water's 0.8), its push coming up to strength over ten ticks, to below the rim, then rose up the
 //! wall at up to 0.14 a tick and out onto it, 16 s from the middle of a pool 13 across. Sapling
-//! heads straight for the nearest land and climbs once within [`UNDER`] of it across.
-// TODO: BDS's way is an amphibious path, cell by cell; sapling's goes straight across, then up.
+//! heads for the nearest land by an amphibious way (wading.rs), node by node: pushed across towards
+//! the next node, and up or down by `AmphibiousMoveControl`'s rule (swimming.rs `amphibian_rise`);
+//! within [`UNDER`] of the land across, under its top, it climbs.
+// BDS's move_to_land takes a random land cell of 80 tries; sapling the nearest.
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
 
+use super::wading;
 use crate::body::Body;
 use crate::components::{Layer, Tick};
-use crate::creatures::{harm, legs};
+use crate::creatures::{harm, legs, swimming};
 
 const WATER: [&str; 2] = ["minecraft:water", "minecraft:flowing_water"];
 const ACROSS: i32 = 30;
 const UP: i32 = 8;
 const PUSH: f32 = 0.022;
+const SPEED: f32 = 0.15;
 const PACE: f32 = 0.1;
 /// Its push up the wall, fitted to the 0.14 a tick BDS's rose at.
 const CLIMB: f32 = 0.048;
 /// It climbs once this near its land across, while under the land's top.
 const UNDER: f32 = 1.5;
+/// A node is passed once the frog is this near its middle across, and not under it by more.
+const PASSED: f32 = 0.5;
 const LOOKS_EVERY: u64 = 20;
 const GIVES_UP: u64 = 400;
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone)]
 pub(super) struct Landward {
     to: Option<[f32; 3]>,
+    way: Vec<[i32; 3]>,
     since: u64,
     pace: f32,
 }
@@ -42,12 +49,19 @@ fn is_land(level: &Level, [x, y, z]: [i32; 3]) -> bool {
         && state(y + 2).is_some_and(|state| state.is_air())
 }
 
-/// The middle of the top of the nearest land within reach of `at`.
-fn nearest_land(level: &Level, at: [f32; 3]) -> Option<[f32; 3]> {
+/// The nearest land within reach of `at`, as the cell over it.
+fn nearest_land(level: &Level, at: [f32; 3]) -> Option<[i32; 3]> {
     let [x, y, z] = at.map(|c| c.floor() as i32);
     let far = |[cx, cy, cz]: &[i32; 3]| (cx - x).pow(2) + (cy - y).pow(2) + (cz - z).pow(2);
     let cells = (-ACROSS..=ACROSS).flat_map(|dx| (-UP..=UP).flat_map(move |dy| (-ACROSS..=ACROSS).map(move |dz| [x + dx, y + dy, z + dz])));
-    cells.filter(|cell| is_land(level, *cell)).min_by_key(far).map(|[x, y, z]| [x as f32 + 0.5, y as f32 + 1.0, z as f32 + 0.5])
+    cells.filter(|cell| is_land(level, *cell)).min_by_key(far).map(|[x, y, z]| [x, y + 1, z])
+}
+
+/// The land, as the middle of its top, and the way there for a frog at `at`.
+fn plan(level: &Level, at: [f32; 3]) -> Option<([f32; 3], Vec<[i32; 3]>)> {
+    let land = nearest_land(level, at)?;
+    let way = wading::route(level, at.map(|c| c.floor() as i32), land)?;
+    Some(([land[0] as f32 + 0.5, land[1] as f32, land[2] as f32 + 0.5], way))
 }
 
 /// A tick of a frog in water: it heads for land, looked for every second while it has none.
@@ -58,16 +72,28 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, body: &Bod
         if !now.is_multiple_of(LOOKS_EVERY) {
             return;
         }
-        (kept.to, kept.since, kept.pace) = (world.get::<Layer>(layer).and_then(|layer| nearest_land(&layer.world, body.at)), now, 0.0);
+        let (to, way) = world.get::<Layer>(layer).and_then(|layer| plan(&layer.world, body.at)).unzip();
+        (kept.to, kept.way, kept.since, kept.pace) = (to, way.unwrap_or_default(), now, 0.0);
     }
     let Some(land) = kept.to else { return };
+    while kept.way.len() > 1 && passed(body, kept.way[0]) {
+        kept.way.remove(0);
+    }
+    let node = kept.way.first().map_or(land, |[x, y, z]| [*x as f32 + 0.5, *y as f32, *z as f32 + 0.5]);
     kept.pace = (kept.pace + PACE).min(1.0);
-    let (dx, dz) = (land[0] - body.at[0], land[2] - body.at[2]);
+    let (dx, dz) = (node[0] - body.at[0], node[2] - body.at[2]);
     let far = dx.hypot(dz).max(1e-4);
-    let up = if far < UNDER && body.at[1] < land[1] { CLIMB } else { 0.0 };
+    let climbs = (land[0] - body.at[0]).hypot(land[2] - body.at[2]) < UNDER && body.at[1] < land[1];
+    let up = if climbs { CLIMB * kept.pace } else { swimming::amphibian_rise(SPEED, [dx, node[1] - body.at[1], dz], body.size[1]) };
     let push = PUSH * kept.pace;
     if let Some(mut moving) = world.get_mut::<Body>(entity) {
-        moving.fly([dx / far * push, up * kept.pace, dz / far * push]);
+        moving.fly([dx / far * push, up, dz / far * push]);
     }
-    legs::face(world, entity, body, [land[0], land[2]]);
+    legs::face(world, entity, body, [node[0], node[2]]);
+}
+
+/// Whether a frog at `body` is past the node `cell`: near its middle across, and not under it by more.
+fn passed(body: &Body, [x, y, z]: [i32; 3]) -> bool {
+    let across = (x as f32 + 0.5 - body.at[0]).hypot(z as f32 + 0.5 - body.at[2]);
+    across < PASSED && y as f32 - body.at[1] < PASSED
 }

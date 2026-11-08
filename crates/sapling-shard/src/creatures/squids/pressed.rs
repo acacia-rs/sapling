@@ -6,8 +6,8 @@
 //! that runs clear, the farther-reaching where both meet one, a coin's pick where neither does. Its
 //! new swim way is that times 0.0025, a tenth of a swim: BDS's squids in a pool 5 across crept along
 //! its walls at 0.0009 a tick for seconds (research/captures/bds-ab1squid.txt). Once it no longer
-//! touches, the idle goal starts again and picks at once.
-// Sapling counts a squid as pressed while its box, grown by a hair, meets a block.
+//! touches, the idle goal starts again and picks at once. The flag is set by a move a block cut short
+//! on any axis (body/moves.rs `collided`), not by a block merely touching.
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
@@ -22,14 +22,6 @@ const STEP: f32 = 0.05;
 const SCALE: f32 = 0.0025;
 /// cos and sin of the 30-degree turn.
 const TURN: [f32; 2] = [0.866_025_4, 0.5];
-const TOUCH: f32 = 1e-3;
-
-/// Whether a squid at `body` touches a block.
-pub(super) fn touches(level: &Level, body: &Body) -> bool {
-    let [width, height] = body.size;
-    let at = [body.at[0], body.at[1] - TOUCH, body.at[2]];
-    !Body::new(at, [0.0; 3], [width + 2.0 * TOUCH, height + 2.0 * TOUCH]).is_free(level)
-}
 
 /// How far along `way` (unit length) from `from` the first solid block is, within [`CAST`].
 fn cast(level: &Level, from: [f32; 3], way: [f32; 3]) -> Option<f32> {

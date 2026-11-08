@@ -48,6 +48,12 @@ impl Body {
         self.slowed = slowly;
     }
 
+    /// Whether its last move was cut short by a block on any axis, by more than `f32::EPSILON`: BDS's
+    /// `CollisionFlagComponent`, set so in `FinalizeMoveSystem` (Windows 14469ee70).
+    pub fn collided(&self) -> bool {
+        self.collided
+    }
+
     /// Has a flying mob's next tick add `speed`, every way, after the drag.
     pub fn fly(&mut self, speed: [f32; 3]) {
         self.walking = speed;

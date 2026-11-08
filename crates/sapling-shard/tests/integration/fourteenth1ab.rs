@@ -50,7 +50,7 @@ fn a_cow_landing_from_a_drop_is_heard_as_hit_ground_and_one_put_on_the_ground_is
 }
 
 /// Glass walls round water filling x `x0..=x0+w`, z `z0..=z0+d`, y `low..=high`, dug into the ground.
-fn pool(ctx: &mut sapling_api::ShardCtx<'_>, [x0, z0]: [i32; 2], [w, d]: [i32; 2], [low, high]: [i32; 2]) {
+pub(crate) fn pool(ctx: &mut sapling_api::ShardCtx<'_>, [x0, z0]: [i32; 2], [w, d]: [i32; 2], [low, high]: [i32; 2]) {
     for x in x0 - 1..=x0 + w + 1 {
         for z in z0 - 1..=z0 + d + 1 {
             for y in low - 1..=high {

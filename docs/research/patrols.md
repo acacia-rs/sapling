@@ -111,3 +111,11 @@ start, so the level was 7020 s old: `time set` moves only the day time (a run wi
 read gametime 2943). 240 s at midnight with the event on: no pillager among 36 natural mobs (zombies,
 skeletons, spiders, creepers, a witch, a zombie horse). So the world age gate is passed and the rule
 loads; what stops it is still unread. Next: gdb on the patrol spawner, or a normally generated world.
+
+The cluster's gates in order (fourteenth1ae, Windows `_spawnMobCluster` 1415ed230 read again) [D]: the biome's
+rule pick; `canSpawnInConditions` (1439077f0: delay, age, event); a rarity at rule +0x114; a position check
+(14118c440); `nextInt(100)` against the chance at rule +0x238; a global cap of 200 (+0x228); the category caps;
+then the population-control pool: its index (141d3f2d0) into the dimension's caps (+0x120, counts +0x104), which
+must be over 0 and over the count. The flat runs passed the first two (age and pack proven), so the suspect is
+the pillager pool's cap or the position check [U]. Not verified: the Linux ELF's cluster was not found by its
+strings (72 sites use the `PersistentComponent` hash), so no gdb run was made.

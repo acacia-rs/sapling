@@ -214,3 +214,16 @@ fn a_mob_whose_box_clears_an_edge_stood_on_it_that_tick_and_falls_the_next() {
     assert!((zombie.at[1] - (65.0 - 0.0784)).abs() < 1e-5 && !zombie.on_ground, "one tick's fall: {zombie:?}");
     assert!(zombie.at[0] - x > 0.12, "walked on at its ground pace: {zombie:?}");
 }
+
+#[test]
+fn a_move_a_block_cuts_short_is_a_collision_and_one_alongside_a_block_is_not() {
+    // BDS's CollisionFlagComponent (FinalizeMoveSystem): any axis of the move cut short.
+    let level = level();
+    let mut body = Body::new([1.5, 65.0, 0.5], [0.0; 3], [0.6, 0.6]);
+    body.shove(&level, [0.5, 0.0, 0.0]);
+    assert!(body.collided() && (body.at[0] - 1.7).abs() < 1e-5, "stopped by the slab: {body:?}");
+    body.shove(&level, [0.0, 0.0, 0.1]);
+    assert!(!body.collided(), "slid along it, touching: {body:?}");
+    body.shove(&level, [0.0, -0.1, 0.0]);
+    assert!(body.collided(), "the floor stopped it: {body:?}");
+}

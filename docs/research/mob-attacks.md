@@ -364,6 +364,11 @@ A held squid and glow squid hit by the survival actor, each let go after
   (squids/pressed.rs; test `a_squid_against_a_wall_creeps_along_it_at_a_tenth_of_its_swim`).
   sapling-ab1squid.txt crept on 701 of 2360 told moves where BDS's did on 354 of 2953: the touch test
   is looser than BDS's collision flag.
+- Tightened 2026-11-08 (fourteenth1ae): BDS's `FinalizeMoveSystem` (Windows 14469ee70) sets
+  `CollisionFlagComponent` when any axis of the move fell short of the wanted one by over 1.19e-7;
+  sapling now presses a squid only so (`Body::collided`, body/moves.rs). A re-drill still crept on 703
+  of 2364 told moves (that run LAGGED 2x), every creep at a wall on both servers, so the excess is not
+  the touch test; what lets BDS's squids leave the wall sooner is unread (REMAINING4).
 
 ## Mobs that fight their own way
 
