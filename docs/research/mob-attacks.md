@@ -273,7 +273,16 @@ of reach.
 a zombie pigman and an iron golem took the actor; a skeleton took the zombie named. The pigman's two bystanders 9
 off took the actor too (`minecraft:angry`, `broadcast_range` 20), all three a tick after the hurt.
 Sapling: `creatures/sourced.rs` (the hit's answer is `attacks::answer`), `creatures/pigmen.rs`; tests in
-`tests/integration/fourteenth2h.rs`. Left: sapling's pigmen take the player in the hurt's tick.
+`tests/integration/fourteenth2h.rs`. bds-o1pig.txt: a melee hit did the same as `/damage`; sapling's pigmen now
+take the player a tick on too (`pigmen::waits`). Left: BDS's bystanders sounded `mob.warning` a tick before the
+hurt one's; sapling's sound together.
+
+A blast pushes falling blocks (bds-o1blast.txt, a creeper under a falling slab of sand): by
+`1 - (dist to feet - 0.49) / reach` towards the block's middle, added to its motion, then a tick's gravity and
+drag, told in the blast's tick (`creatures/blast/reached.rs` `throw_falling`; test in `mob_heat.rs`).
+
+A mace smash spares the hitter's own tamed wolf (bds-o1pets.txt: no motion told to it, 0.4328 up to a wild one
+beside it); `creatures/smash.rs`, test in `mace.rs`.
 
 ## Hoglins, zoglins, the warden and the creaking (`beasts`, `creaking`)
 

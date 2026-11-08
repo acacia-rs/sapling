@@ -5,9 +5,10 @@
 //! is heard to `admire` a tick after that. An ingot it admires in its offhand and barters; another
 //! `admire` item (a golden sword in the drill) it admires as long and then holds; nuggets it holds
 //! in an empty main hand, or keeps unseen while it holds a weapon, and drops all at death
-//! (bds-ah3nugget.txt).
-// TODO: what else it holds is lost on death and its kept nuggets with the world; its other
-// shareables (armour, food, crossbows) are not picked up.
+//! (bds-ah3nugget.txt). Pork it takes and eats unseen; a crossbow it takes into an empty main hand,
+//! shown a tick on; whatever it took up it drops at death, as its offhand (bds-o1piglin.txt).
+// TODO: its kept nuggets are lost with the world; armour shareables are not picked up, nor a
+// crossbow over another weapon (not drilled).
 
 use acacia_proto::packets::TakeItemEntity;
 use bevy_ecs::prelude::*;
@@ -36,20 +37,32 @@ const ADMIRED: &[&str] = &[
     "minecraft:light_weighted_pressure_plate",
 ];
 
+const CROSSBOW: &str = "minecraft:crossbow";
+const PORK: [&str; 2] = ["minecraft:porkchop", "minecraft:cooked_porkchop"];
+
 /// Nuggets a piglin holding something else took up: kept out of sight, its hand unchanged.
 #[derive(Component)]
 pub(super) struct Pocket(u8);
 
-/// The nuggets the dying piglin took up, in its hand or kept: BDS's dropped them all
-/// (research/captures/bds-ah3nugget.txt).
-pub(in crate::creatures) fn picked_gold(world: &mut World, piglin: Entity) -> Vec<sapling_world::ItemStack> {
+/// The piglin's main hand holds what it took up, not what it was born with.
+#[derive(Component)]
+pub(super) struct PickedMain;
+
+/// What the dying piglin took up, taken from its hands: its nuggets held or kept, its offhand, and
+/// a main hand it filled itself. BDS's dropped them all (bds-ah3nugget.txt, bds-o1piglin.txt).
+pub(in crate::creatures) fn picked_up(world: &mut World, piglin: Entity) -> Vec<sapling_world::ItemStack> {
     let kept = world.entity_mut(piglin).take::<Pocket>().map_or(0, |pocket| pocket.0);
-    let held = world.get_mut::<Hands>(piglin).and_then(|mut hands| hands.main.take_if(|held| held.name == NUGGET)).map_or(0, |held| held.count);
-    [kept, held].into_iter().filter(|count| *count > 0).map(|count| stack(NUGGET, count)).collect()
+    let picked_main = world.entity_mut(piglin).take::<PickedMain>().is_some();
+    let Some(mut hands) = world.get_mut::<Hands>(piglin) else { return Vec::new() };
+    let main = hands.main.take_if(|held| picked_main || held.name == NUGGET);
+    let off = hands.off.take();
+    let pocket = (kept > 0).then(|| stack(NUGGET, kept));
+    pocket.into_iter().chain(main).chain(off).collect()
 }
 
-fn wanted(name: &str) -> bool {
-    name == GOLD || name == NUGGET || ADMIRED.contains(&name)
+fn wanted(world: &World, piglin: Entity, name: &str) -> bool {
+    let empty_handed = world.get::<Hands>(piglin).is_none_or(|hands| hands.main.is_none());
+    name == GOLD || name == NUGGET || ADMIRED.contains(&name) || PORK.contains(&name) || (name == CROSSBOW && empty_handed)
 }
 
 /// Before its move: a piglin free to do so goes for gold lying near or takes it up. False where none is near.
@@ -61,7 +74,7 @@ pub(in crate::creatures) fn steer(world: &mut World, piglin: Entity, layer: Enti
     let far = |at: [f32; 3]| (0..3).map(|axis| (at[axis] - body.at[axis]).powi(2)).sum::<f32>().sqrt();
     let nearest = lying
         .into_iter()
-        .filter(|(item, stack)| wanted(&stack.name) && drops::mobs_may_take(world, *item))
+        .filter(|(item, stack)| wanted(world, piglin, &stack.name) && drops::mobs_may_take(world, *item))
         .filter_map(|(item, stack)| world.get::<Body>(item).map(|lies| (item, stack, lies.at)))
         .min_by(|a, b| far(a.2).total_cmp(&far(b.2)));
     let Some((item, taken, at)) = nearest else { return false };
@@ -77,6 +90,19 @@ pub(in crate::creatures) fn steer(world: &mut World, piglin: Entity, layer: Enti
     crate::blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[told]);
     let nuggets = taken.name == NUGGET;
     drops::take(world, item, if nuggets { taken.count } else { 1 });
+    if PORK.contains(&taken.name.as_str()) {
+        return true;
+    }
+    if taken.name == CROSSBOW {
+        let held = sapling_world::ItemStack { count: 1, ..taken };
+        if let Some(shown) = main_hand(id, &held) {
+            late_sounds::play_later(world, 1, layer, cell, shown);
+        }
+        let off = world.get_mut::<Hands>(piglin).and_then(|mut hands| hands.off.take());
+        world.entity_mut(piglin).insert((Hands { main: Some(held), off }, PickedMain));
+        crate::creatures::reshow(world, piglin);
+        return true;
+    }
     let armed = world.get::<Hands>(piglin).and_then(|hands| hands.main.as_ref()).is_some_and(|held| held.name != NUGGET);
     if nuggets && armed {
         let kept = world.get::<Pocket>(piglin).map_or(0, |pocket| pocket.0);

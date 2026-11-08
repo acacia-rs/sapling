@@ -4,9 +4,9 @@
 use crate::common;
 
 use acacia_proto::RawPacket;
-use acacia_proto::packets::{AddEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, UpdateAttributes};
+use acacia_proto::packets::{AddEntity, EntityEvent, EntityEventEventId, LevelEvent, LevelEventEvent, SetEntityMotion, UpdateAttributes};
 use common::{Harness, all};
-use sapling_api::{Block, Difficulty, Weather};
+use sapling_api::{Block, Difficulty, RuleValue, Weather};
 
 /// A cow walled in at x `x` on `floor`, with `inside` in its cell; Alex and Steve far enough off.
 fn penned(h: &mut Harness, x: i32, floor: &'static str, inside: Block, kind: &'static str) {
@@ -171,4 +171,24 @@ fn a_creeper_summoned_with_its_forced_fuse_bursts_30_ticks_on_with_no_prey() {
     let burst = sent.iter().position(|tick| all::<LevelEvent>(tick).iter().any(|event| event.event == LevelEventEvent::ParticleExplosion));
     // research/captures/bds-fights.txt: 1.55 s after the summon, Alex in creative.
     assert!(burst.is_some_and(|at| (29..=33).contains(&at)), "{burst:?}");
+}
+
+/// bds-o1blast.txt: sand falling beside a creeper's blast is told its push in the blast's tick, away
+/// from the blast by 1 less its distance over 6, after a tick's gravity and drag.
+#[test]
+fn a_creepers_blast_pushes_falling_sand_told_at_once() {
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        ctx.set_difficulty(Difficulty::Easy);
+        assert!(ctx.set_game_rule("mobGriefing", RuleValue::Bool(false)));
+        assert!(ctx.summon_as(None, "minecraft:creeper", [0.5, 65.0, 6.5], 0.0, 0.0, Some("minecraft:start_exploding_forced")).is_some());
+    });
+    let mut sent = ticks(&mut h, 24);
+    h.remote.run(|ctx| assert!(ctx.update_block([2, 68, 6], &Block::new("sand"))));
+    sent.extend(ticks(&mut h, 16));
+    let sand = all::<AddEntity>(&sent.concat()).into_iter().find(|added| added.entity_type == "minecraft:falling_block").expect("the sand falls").runtime_id;
+    let burst = sent.iter().position(|tick| all::<LevelEvent>(tick).iter().any(|event| event.event == LevelEventEvent::ParticleExplosion)).expect("a burst");
+    let told: Vec<[f32; 3]> = all::<SetEntityMotion>(&sent[burst]).into_iter().filter(|told| told.runtime_entity_id == sand).map(|told| [told.velocity.x, told.velocity.y, told.velocity.z]).collect();
+    let pushed = told.last().expect("told in the burst's tick");
+    assert!((0.1..0.6).contains(&pushed[0]) && pushed[1] > 0.0 && pushed[2].abs() < 1e-4, "{told:?}");
 }

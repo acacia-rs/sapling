@@ -334,6 +334,10 @@ click (the pack's `minecraft:interact` with `barter`), with that timing, and dro
 `piglin_barter.json` (read by `mob-loot.py` with the block tables) as the offhand empties.
 Admiring shows as `FlagsExtended` bit 30 (33685504 at rest, bits 17 and 25), sent right after the offhand
 each time it fills and empties (bds-goldpickup.txt; sapling since fourteenth2h, `piglins::shown_admiring`).
+Other shareables (bds-o1piglin.txt): a golden helmet is admired like a sword; cooked pork is taken and eaten
+unseen; a crossbow goes to an empty main hand, shown a tick on. A `/kill` dropped whatever it took up (the
+helmet and sword still or once admired, the crossbow); sapling since fourteenth1o (`piglins/pickup.rs`). Not
+drilled: armour other than gold, a crossbow over another weapon.
 
 `piglinkeep` then `piglinkeep2` with `KEEP_WORLD=1` (`bds-piglinkeep.txt`, `bds-piglinkeep2.txt`): a
 piglin picked up a thrown golden sword, admired it in the offhand, and 161 ticks on was sent the sword
@@ -493,8 +497,11 @@ slows BDS's not, nor sapling's.
 An enderman teleports on its first tick, the tick after a hit and towards prey more than 16 off
 for 30 ticks (`creatures/teleports.rs`), and hunts its hitter as above; a player who stares at it
 5 ticks takes it as its prey with `stare` and a teleport (`creatures/stares.rs`, the Java game's
-cone). It teleports at random a tick in 100 in the dark and in 20 in the sun (the component's dark
-default and its pack's `light_teleport_chance`; BDS's came 5.2 seconds apart at midnight), and
+cone). It teleports at random a tick in 100 where its brightness is 0.5 or less and in 20 where
+brighter under open sky, none where brighter under a roof, and with no prey whenever a timer of a
+random 0 to 600 ticks runs out (`TeleportSystem` 0x145ed2fb0, decompiled by fourteenth1o; the
+component's dark default and its pack's `light_teleport_chance` and `max_random_teleport_time`;
+BDS's came 5.2 seconds apart at midnight; the rates were not re-drilled), and
 water it touches costs it 1 by drowning, with a `splash`, and sends it off that tick. Its random
 teleports come beside its prey too, as BDS's did (`a3ender`, research/captures/bds-a3ender.txt: held
 2.5 off an actor staring at its head, angry, it teleported twice in ~820 ticks, so no Java

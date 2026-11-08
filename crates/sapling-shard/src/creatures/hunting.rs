@@ -216,7 +216,10 @@ fn take(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, b
 pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
     super::warden::provoked(world, entity, player);
     super::piglins::attacked(world, entity);
-    let fights = super::genes::fights(world, entity) && !super::bees::is_spent(world, entity) && !super::villagers::is_players_golem(world, entity);
+    if super::pigmen::waits(world, entity, kind, player) {
+        return;
+    }
+    let fights =super::genes::fights(world, entity) && !super::bees::is_spent(world, entity) && !super::villagers::is_players_golem(world, entity);
     if sapling_data::mob_traits(kind).hunts.is_some_and(|hunts| !hunts.provoked && !hunts.by_dark) {
         hurt_by::hurt(world, entity, player);
     }
@@ -236,7 +239,10 @@ pub(super) fn provoke(world: &mut World, entity: Entity, layer: Entity, id: u64,
 
 /// Before the hunter's move: it walks at its prey, if it has any.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str) -> bool {
-    let (Some(body), Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed * super::shown::pace_share(world, entity, kind))) else { return false };
+    if let Some(body) = world.get::<Body>(entity).copied() {
+        super::pigmen::join(world, entity, layer, &body);
+    }
+    let (Some(body),Some(speed)) = (world.get::<Body>(entity).copied(), sapling_data::mob_traits(kind).hunts.map(|hunts| hunts.speed * super::shown::pace_share(world, entity, kind))) else { return false };
     let prey = pick(world, entity, layer, id, kind, &body);
     match sapling_data::mob_traits(kind).hunts.and_then(|hunts| hunts.fights) {
         Some("spells") => return super::spells::steer(world, entity, layer, id, kind, &body, prey),

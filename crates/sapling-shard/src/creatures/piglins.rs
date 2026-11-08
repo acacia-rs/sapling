@@ -14,7 +14,7 @@
 
 mod pickup;
 
-pub(super) use pickup::{picked_gold, steer};
+pub(super) use pickup::{picked_up, steer};
 
 use acacia_proto::packets::MobEquipment;
 use acacia_proto::types::WindowID;
@@ -219,6 +219,8 @@ pub(super) fn tick(world: &mut World) {
         entities::tell_viewers(world, piglin, layer, body.at.map(|c| c.floor() as i32), told);
         if barters {
             world.entity_mut(piglin).insert(Admiring { until: now + 1, bartered: true });
+        } else {
+            world.entity_mut(piglin).insert(pickup::PickedMain);
         }
     }
 }
