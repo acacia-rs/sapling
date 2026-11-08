@@ -84,14 +84,24 @@ pub(crate) fn breathes_water(world: &World, player: Entity) -> bool {
 }
 
 /// What a player no harm comes to does where it stands: in creative it lights redstone ore under it, as
-/// BDS's did (bds-orestand.txt); a spectator nothing. What healed it is told at once, as BDS told instant
-/// health in creative (bds-v2drip.txt).
+/// BDS's did (bds-orestand.txt), and treads farmland it falls on (bds-b1tread.txt); a spectator nothing.
+/// What healed it is told at once, as BDS told instant health in creative (bds-v2drip.txt).
 pub(super) fn stand_unhurt(world: &mut World, player: Entity, layer: Entity) {
     if !super::is_dead(world, player) {
         super::told_health::tell_changed(world, player);
     }
-    let is_creative = world.get::<crate::components::Mode>(player).is_some_and(|mode| mode.0 == sapling_api::GameMode::Creative);
-    if let Some(position) = world.get::<Position>(player).copied().filter(|position| is_creative && position.on_ground && !super::is_dead(world, player)) {
+    let carried = world.get::<Motion>(player).is_some_and(|motion| motion.awaits_teleport());
+    let creative = super::is_creative(world, player);
+    let (Some(position), Some(mut vitals)) = (world.get::<Position>(player).copied(), world.get_mut::<Vitals>(player)) else { return };
+    let from = if creative { vitals.was.replace(position.feet) } else { vitals.was.take() }.unwrap_or(position.feet);
+    if !creative {
+        return;
+    }
+    // As for a mortal player, the move it lands in does not count.
+    let to = if position.on_ground { position.feet[1].max(from[1]) } else { position.feet[1] };
+    let dropped = vitals.health.fall_unhurt(from[1], to, position.on_ground, carried);
+    crate::blocks::trample(world, layer, position.feet, dropped);
+    if position.on_ground {
         crate::blocks::tread_ore(world, layer, position.feet);
     }
 }

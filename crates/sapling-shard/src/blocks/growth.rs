@@ -5,7 +5,7 @@
 // A sapling whose tick comes up grows in saplings.rs; mushrooms, vines, cave vines, chorus flowers,
 // budding amethyst, stalactites and lava draw theirs (sampled.rs, wild.rs, vines.rs, chorus.rs,
 // amethyst.rs, drips.rs, fire.rs); kelp and the nether vines keep their own (kelp.rs).
-// TODO: only a survival player treads farmland down, no mob and no creative player.
+// TODO: only a player treads farmland down; BDS's mobs did, at a chance not found (growth.md, "Farmland trodden down").
 
 mod amethyst;
 mod chorus;
