@@ -113,6 +113,13 @@ fn a_fox_flees_a_standing_player_and_not_a_sneaking_one() {
 /// sleeping owner's bed and lies on its foot (`RESTING`), and gets up with the owner.
 #[test]
 fn a_tamed_cat_sits_and_lies_on_its_owners_bed() {
+    let (mut h, cat) = cat_on_owners_bed();
+    h.remote.run(|ctx| ctx.teleport(ALEX, FEET));
+    assert_eq!(has_flag(&watch(&mut h, 3), cat, Flags::RESTING), Some(false), "up with its owner");
+}
+
+/// Alex asleep at 13000 in a bed by [`FEET`] with the cat he tamed lying on its foot; the cat's id.
+pub(crate) fn cat_on_owners_bed() -> (Harness, u64) {
     let mut h = ready(GameMode::Survival, &[("minecraft:cod", 64, 0)], 0.0);
     let cat = spawn(&mut h, "minecraft:cat", [3.5, 65.0, 3.5]);
     let tamed = (0..60).map(|_| click_on(&mut h, cat)).find(|sent| showed(sent, cat, Event::TameSuccess)).expect("a third of cod tame");
@@ -129,8 +136,7 @@ fn a_tamed_cat_sits_and_lies_on_its_owners_bed() {
     assert_eq!(has_flag(&night, cat, Flags::RESTING), Some(true), "lying down");
     let at = feet_of(&mut h, cat);
     assert!((at[0] - 1.5).hypot(at[2] - 0.5) < 0.5 && at[1] > 65.5, "on the bed's foot: {at:?}");
-    h.remote.run(|ctx| ctx.teleport(ALEX, FEET));
-    assert_eq!(has_flag(&watch(&mut h, 3), cat, Flags::RESTING), Some(false), "up with its owner");
+    (h, cat)
 }
 
 /// bds-ar2look.txt: a cow summoned `entity_born` is announced a baby, at its scale and box.

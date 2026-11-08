@@ -40,6 +40,17 @@ fn at_step(world: &World, layer: Entity, body: &Body, facing: f32) -> bool {
 /// Before the mob's move: it turns towards `to` and its legs push it there at `speed`, unless it
 /// is within `near` of it.
 pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32, near: f32) {
+    stride(world, entity, layer, body, to, speed, near, false);
+}
+
+/// [`walk`], jumping as it goes if on the ground: a stand-in for the step up onto a low block sapling's
+/// mobs lack (BDS's zombie walked onto turtle eggs, 0.4375 high; stomping.rs).
+pub(super) fn walk_up(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32) {
+    stride(world, entity, layer, body, to, speed, 0.0, true);
+}
+
+#[allow(clippy::too_many_arguments)]
+fn stride(world: &mut World, entity: Entity, layer: Entity, body: &Body, to: [f32; 2], speed: f32, near: f32, up: bool) {
     let speed = speed * super::afflictions::pace(world, entity);
     let Some(mut legs) = world.get_mut::<Legs>(entity) else { return };
     let (dx, dz) = (to[0] - body.at[0], to[1] - body.at[2]);
@@ -52,7 +63,7 @@ pub(super) fn walk(world: &mut World, entity: Entity, layer: Entity, body: &Body
     let stride = if body.on_ground && body.liquid().is_none() { STRIDE * (speed * legs.pace).powi(2) } else { AIRBORNE * STRIDE * speed * legs.pace };
     let (yaw, push) = (legs.yaw, if dx.hypot(dz) < near { 0.0 } else { stride });
     let facing = yaw.to_radians();
-    let leap = body.on_ground && push > 0.0 && at_step(world, layer, body, facing);
+    let leap = body.on_ground && push > 0.0 && (up || at_step(world, layer, body, facing));
     if let Some(mut body) = world.get_mut::<Body>(entity) {
         body.walk([-facing.sin() * push, facing.cos() * push], leap.then_some(DEFAULT_JUMP_HEIGHT));
     }

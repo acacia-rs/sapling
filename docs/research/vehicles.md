@@ -188,6 +188,11 @@ were not found in any of these; sapling does what is listed there.
   Traced, still open (thirteenth2ar): at z 4.5 the box's two overlaps are 0.2 each, and their f32 values
   (0.20000005 below, 0.19999981 above) send every z 4.5 the same way, so they cannot explain why x 9.5 went
   to 4.7 and x 4.5 and -0.5 to 4.3. The tie seems settled by something that depends on x; no drill was run.
+  Drilled under gdb 2026-11-08 (thirteenth2ay `ay2gdb`, bds-ay2gdb.txt): (4.5, 4.5) → (4.7, 4.3), (9.5, 4.5)
+  → (9.7, 4.7), (-0.5, 4.5) → (-0.3, 4.3) again, already so in the AddEntity. The Linux ELF's
+  `MoveTowardsClosestSpaceSystemImpl` (vtable 0xefd8a70, per entity 0x74a90a0, a velocity push) never ran
+  for these boats, and `ActorMoveSystemImpl::updateDepenetration` (adapter vtable 0xef8f6b8) is a later
+  tick's: the shift is made on the spawn path before the AddEntity, not found. Still open.
 - Horse and camel steering speeds and the jump charge (sapling: walk at movement speed, no charged jump).
   Drilled 2026-11-05 (group AI, `ai1ride`, bds-ai1ride.txt): a tamed, saddled horse is client-predicted;
   BDS took the bot's walk and 10-tick charged jump with one vehicle correction at the mount, as sapling
@@ -316,5 +321,13 @@ were not found in any of these; sapling does what is listed there.
   carries the harness and still bits (`ghast_flags`, creatures/shown.rs). The last rider's correction
   onto its top has delta 0 (movement `push_unmoving`), and `detach` with `AmbientSoundInterval` come a tick
   after the link. Shears: `MobArmorEquipment`, the harness item, the sound, then `FlagsExtended` alone.
-- Left (harness.rs TODO): `vertical_movement_action` (the bot's jump moved nothing seen); stilled.rs
+- `vertical_movement_action`, traced 2026-11-08 (thirteenth2ay `ay2gdb`): `VerticalMovementActionSystem`'s
+  per-entity tick (Linux ELF 0x730c230) adds the pack's `vertical_velocity` (0.5) to the vehicle's input
+  intent y (+0x18) when the controlling passenger's `MoveInputComponent` flag word (+0x60) has bit 0x10.
+  Under gdb (0x730c399) every one of 738 ticks read 0x100, through the bot's `Jumping`, `JumpDown`,
+  `WantUp`, `JumpPressedRaw` and `Up` with and without a walk, so none of those inputs sets it. The only
+  `or $0x10` into +0x60 in the ELF is 0x7472a7b, in a system function at 0x7472930 that sets it when byte
+  +0x61 bit 0 is on, the move vector (+0x24, +0x28) is not zero, and a check at 0xbb60980 passes (an
+  auto-jump-like path). The input that sets it is still open.
+- Left (harness.rs TODO): `vertical_movement_action` (see above); stilled.rs
   takes the player's eyes at feet + 1.62 and ignores slowness modifiers.

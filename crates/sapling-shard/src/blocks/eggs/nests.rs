@@ -96,12 +96,12 @@ fn plain_egg(level: &super::Level) -> i32 {
     level.registry().find(EGG, "cracked_state=no_cracks,turtle_egg_count=one_egg").map_or(0, |id| sapling_world::block_hash(level.registry(), id) as i32)
 }
 
-/// A tick of a mob of `kind` stomping the eggs at `pos`: they crumble, and heard when it `hops`
+/// A tick of a mob of `kind` stomping the eggs at `pos`: they crumble when it `crumbles`, and it is `heard`
 /// (research/captures/bds-stomping.txt).
-pub(crate) fn stomped_at(world: &mut World, layer: Entity, pos: BlockPos, kind: &str, unique: i64, hops: bool) {
+pub(crate) fn stomped_at(world: &mut World, layer: Entity, pos: BlockPos, kind: &str, unique: i64, crumbles: bool, heard: bool) {
     let Some(level) = level(world, layer) else { return };
-    let mut shown = vec![level_event(LevelEventEvent::ParticleBreakingEgg, pos, plain_egg(level))];
-    shown.extend(hops.then(|| mob_sound("block.turtle_egg.attack", pos, kind, unique)));
+    let mut shown: Vec<_> = crumbles.then(|| level_event(LevelEventEvent::ParticleBreakingEgg, pos, plain_egg(level))).into_iter().collect();
+    shown.extend(heard.then(|| mob_sound("block.turtle_egg.attack", pos, kind, unique)));
     send::to_viewers(world, layer, pos, &shown);
 }
 
