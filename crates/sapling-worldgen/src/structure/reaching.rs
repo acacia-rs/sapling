@@ -41,6 +41,9 @@ pub struct Reaching {
     /// `/place jigsaw`'s have no kind and file none.
     pub(super) v2: Vec<(Option<StructureKind>, Arc<Vec<Piece>>)>,
     pub(super) mansions: Vec<Arc<mansion::Mansion>>,
+    /// The start block of a `/place structure` or `/place jigsaw`, which seeds its v2 loot
+    /// (`Structures::place_v2`); None for generation.
+    pub(super) commanded: Option<[i32; 3]>,
 }
 
 impl Reaching {
@@ -88,6 +91,7 @@ impl Structures {
             villages: self.villages_near(density, chunk),
             v2: self.v2_near(density, chunk),
             mansions: self.mansions_near(density, chunk),
+            commanded: None,
         };
         (!reaching.is_empty()).then_some(reaching)
     }

@@ -139,8 +139,10 @@ pub(super) fn tick(world: &mut World) {
     super::detectors::tick(world);
     push(world);
     super::bumps::push(world);
-    let carts: Vec<(Entity, Entity, u64, String, Body)> = world.query_filtered::<(Entity, &InLayer, &NetId, &Kind, &Body), (With<Cart>, Without<super::burning::BurntThrough>)>().iter(world).map(|(cart, layer, id, kind, body)| (cart, layer.0, id.0, kind.0.clone(), *body)).collect();
+    let carts: Vec<(Entity, Entity, u64, String, Body)> = world.query_filtered::<(Entity, &InLayer, &NetId, &Kind, &Body), With<Cart>>().iter(world).map(|(cart, layer, id, kind, body)| (cart, layer.0, id.0, kind.0.clone(), *body)).collect();
     for (cart, layer, id, kind, body) in carts {
+        // A cart moves the tick it burns through, untold, and breaks from there (bds-p3lava.txt, bds-ffburn.txt).
+        let burnt = world.get::<super::burning::BurntThrough>(cart).is_some();
         let parting = world.entity_mut(cart).take::<super::bumps::Parting>();
         let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { continue };
         let on = rails::rail_under(level, body.at);
@@ -182,7 +184,9 @@ pub(super) fn tick(world: &mut World) {
                 (moved, packets)
             }
         };
-        entities::tell_viewers(world, cart, layer, body.at.map(|c| c.floor() as i32), packets);
+        if !burnt {
+            entities::tell_viewers(world, cart, layer, body.at.map(|c| c.floor() as i32), packets);
+        }
         // Read after the rail acted: an activator rail may have primed it.
         let Some(mut state) = world.get::<Cart>(cart).copied() else { continue };
         let landed_hard = kind == TNT_MINECART && body.on_ground && state.fallen > HARD_FALL;

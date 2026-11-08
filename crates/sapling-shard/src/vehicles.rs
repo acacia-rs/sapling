@@ -64,7 +64,7 @@ pub(crate) fn is_vehicle(kind: &str) -> bool {
     kind == BOAT || kind == CHEST_BOAT || CARTS.contains(&kind)
 }
 
-fn is_boat(kind: &str) -> bool {
+pub(crate) fn is_boat(kind: &str) -> bool {
     kind == BOAT || kind == CHEST_BOAT
 }
 
@@ -179,8 +179,8 @@ pub(crate) fn tick(world: &mut World) {
     }
     struck::tick(world);
     blasts::tick(world);
-    boats::tick(world);
     burning::tick(world);
+    boats::tick(world);
     carts::tick(world);
     cargo::take_up(world);
     pull::tick(world);

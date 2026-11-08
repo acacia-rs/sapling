@@ -156,15 +156,16 @@ impl Structures {
 
     /// `/place structure`'s `minecraft:trail_ruins`, `minecraft:trial_chambers` or camp variant
     /// (`minecraft:abandoned_camp_forest`, whatever the biome, bds-u3place.txt) started at the block
-    /// `at` ([`V2Start::assemble_from`]); None for another name.
-    pub(super) fn commanded_v2(&self, density: &Density, name: &str, at: [i32; 3], keep_height: bool) -> Option<Arc<Vec<Piece>>> {
+    /// `at` ([`V2Start::assemble_from`]), with the block seeding its loot; None for another name.
+    pub(super) fn commanded_v2(&self, density: &Density, name: &str, at: [i32; 3], keep_height: bool) -> Option<(Arc<Vec<Piece>>, [i32; 3])> {
         let start = match name {
             "minecraft:trail_ruins" => TRAIL_RUINS,
             "minecraft:trial_chambers" => TRIAL_CHAMBERS,
             camp => camp_start(data().sets["abandoned_camp"].iter().find(|entry| entry.name == camp)?),
         };
         let raw = RawHeights::new(density);
-        Some(Arc::new(start.assemble_from(self.seed, at, keep_height, &|x, z| raw.at(x, z))))
+        let (pieces, loot_at) = start.assemble_from(self.seed, at, keep_height, &|x, z| raw.at(x, z));
+        Some((Arc::new(pieces), loot_at))
     }
 
     /// `start`'s pieces with its start piece at height `y`, unprojected.
@@ -203,14 +204,23 @@ impl Structures {
     }
 
     /// Every piece meeting the canvas's chunk, in assembly order, all drawing loot seeds from the
-    /// chunk's one decoration generator.
-    pub(super) fn place_v2(&self, canvas: &mut Canvas, structures: &[(Option<StructureKind>, Arc<Vec<Piece>>)]) {
+    /// chunk's one decoration generator; a `/place` command's ([`super::Reaching::commanded`])
+    /// each from Java's random of the level seed forked at its start block (the start height
+    /// before projection), anew for every piece (the command's per-piece, per-chunk action
+    /// 144cfc4d0; bds-adplace's camps and trail ruins).
+    pub(super) fn place_v2(&self, canvas: &mut Canvas, structures: &[(Option<StructureKind>, Arc<Vec<Piece>>)], commanded: Option<[i32; 3]>) {
         let column = canvas.bb;
         let mut random = Xoroshiro::decoration(self.seed, column.x0 >> 4, column.z0 >> 4);
         for (kind, pieces) in structures {
             canvas.dry = *kind == Some(StructureKind::TrialChambers);
             for piece in pieces.iter().filter(|p| p.bb.intersects(&column)) {
-                piece.post_process_java(canvas, self.seed, &mut random);
+                match commanded {
+                    Some([x, y, z]) => {
+                        let mut forked = JavaRandom::new(self.seed).fork_at(x, y, z);
+                        piece.post_process_java(canvas, self.seed, &mut || forked.next_long() as i32);
+                    }
+                    None => piece.post_process_java(canvas, self.seed, &mut || random.next_int()),
+                }
             }
         }
         canvas.dry = false;

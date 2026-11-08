@@ -96,7 +96,13 @@ pub(crate) fn keep_entity_quietly(world: &mut World, layer: Entity, pos: BlockPo
 /// rule, and BDS sends nothing for it. False, with nothing changed, where the cell already is so,
 /// outside the world's height and where the column is not loaded or cannot be written.
 pub(crate) fn set(world: &mut World, layer: Entity, pos: BlockPos, id: u32) -> bool {
+    set_then_tell(world, layer, pos, id, |_| {})
+}
+
+/// [`set`], running `between` after the write and before anyone is told of it.
+fn set_then_tell(world: &mut World, layer: Entity, pos: BlockPos, id: u32, between: impl FnOnce(&mut World)) -> bool {
     let Some(id) = write(world, layer, pos, id) else { return false };
+    between(world);
     if sections::log(world, layer, pos, 0, id) || sections::held(world, layer, pos) || super::portals::defer(world, layer, pos) {
         return true;
     }
@@ -187,7 +193,9 @@ pub(crate) fn put_block(world: &mut World, layer: Entity, pos: BlockPos, block: 
         return Some(false);
     }
     let before = level.block_entity(pos).map(|entity| entity.nbt.clone());
-    if !set(world, layer, pos, id) {
+    // BDS shut a chest's screens, lid events and all, before telling it was set away (bds-u3chest.txt).
+    let written = if before.is_some() { set_then_tell(world, layer, pos, id, crate::containers::close_where_gone) } else { set(world, layer, pos, id) };
+    if !written {
         return None;
     }
     if let Some(name) = world.get::<Layer>(layer).and_then(|layer| layer.world.registry().get(id)).map(|state| state.name) {

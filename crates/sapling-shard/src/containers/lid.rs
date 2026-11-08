@@ -2,6 +2,8 @@
 //! open and 0 shut, as BDS's `ChestBlockActor::startOpen` raises it), a barrel's `open_bit`, and
 //! their sounds, each as late as BDS sent it (research/captures/bds-shut.txt).
 
+use std::collections::HashMap;
+
 use acacia_proto::packets::{BlockEvent, BlockEventType};
 use acacia_proto::types::{BlockCoordinates, Vec3f};
 use bevy_ecs::prelude::*;
@@ -17,9 +19,34 @@ const LATER: [u64; 2] = [2, 6];
 /// The same of a shulker box, which is heard shut once its lid is all the way down.
 const SHULKER_LATE: [u64; 2] = [2, 11];
 
-/// Ticks between two showings of an open lid (BDS `ChestBlockActor::tick`).
-pub(super) const REPEAT: u64 = 80;
+/// Open ticks between two showings of an open lid (BDS `ChestBlockActor::tick`).
+const REPEAT: u32 = 80;
 const BARREL: &str = "minecraft:barrel";
+
+/// Each lidded container's open ticks since its lid was last shown again, by lead half. BDS's
+/// `ChestBlockActor::tick` (Linux 0xce3a6d0, shared by barrels, ender chests and shulker boxes)
+/// counts them while open and keeps the count across closings; only a new block entity starts at 0.
+#[derive(Resource, Default)]
+pub(crate) struct LidClocks(HashMap<(Entity, BlockPos), u32>);
+
+/// Counts an open tick of the container led by `lead`; whether its lid is due to be shown again.
+pub(super) fn counts_open_tick(world: &mut World, layer: Entity, lead: BlockPos) -> bool {
+    let mut clocks = world.get_resource_or_insert_with(LidClocks::default);
+    let ticks = clocks.0.entry((layer, lead)).or_default();
+    *ticks += 1;
+    let due = *ticks >= REPEAT;
+    if due {
+        *ticks = 0;
+    }
+    due
+}
+
+/// A new block entity at `pos` counts its open ticks from 0.
+pub(super) fn forget_clock(world: &mut World, layer: Entity, pos: BlockPos) {
+    if let Some(mut clocks) = world.get_resource_mut::<LidClocks>() {
+        clocks.0.remove(&(layer, pos));
+    }
+}
 
 /// Barrels turned, shown a tick later: when, the world, where.
 #[derive(Resource, Default)]

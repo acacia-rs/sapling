@@ -21,7 +21,8 @@ const SCORCHED: f32 = 2.0;
 /// How far under its box a vehicle feels lava or fire: BDS's carts burned resting on lava.
 const BELOW: f32 = 0.01;
 
-/// A vehicle burnt through, to break next tick; a cart so stays put (bds-p3lava.txt).
+/// A vehicle burnt through, to break next tick: a boat stays put, a cart moves once more untold
+/// (bds-p3lava.txt, bds-ffburn.txt).
 #[derive(Component)]
 pub(super) struct BurntThrough;
 

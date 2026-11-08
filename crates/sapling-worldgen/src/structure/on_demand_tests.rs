@@ -126,6 +126,24 @@ fn the_place_command_starts_trail_ruins_at_its_block_with_that_block_s_random() 
 }
 
 #[test]
+fn the_place_command_seeds_each_piece_s_loot_from_its_column_s_random() {
+    // research/captures/bds-adplace-chests.txt: every piece's share of a chunk draws anew from Java's
+    // random forked at the command's (x, 0, z), its second container taking the second draw.
+    let generator = OverworldGenerator::new(SEED);
+    let carved = |x: i32, z: i32| generator.carved(x, z);
+    let seeds = |name, at, keep_height| {
+        let writes = generator.place_commanded(name, at, keep_height, &carved).unwrap();
+        writes.entities.into_iter().filter_map(|(pos, e)| if let BlockEntity::Loot { seed, .. } = e { Some((pos, seed)) } else { None }).collect::<Vec<_>>()
+    };
+    let camp = |at| seeds("minecraft:abandoned_camp_forest", at, false);
+    assert_eq!(camp([10, 70, 205]), [([15, 72, 203], -1105909668), ([12, 71, 212], -1105909668), ([12, 72, 212], 744381607)]);
+    assert_eq!(camp([30, 70, 195]), [([26, 72, 193], 1057644916), ([33, 70, 191], 1057644916), ([35, 72, 192], 1057644916)]);
+    // Trail ruins fork at their start height: drawn (-15) without ignoreStartHeight, the block's with it.
+    assert!(seeds("minecraft:trail_ruins", [-10, 70, 210], false).contains(&([1, 57, 209], -1408014870)));
+    assert!(seeds("minecraft:trail_ruins", [70, 70, 210], true).contains(&([44, 68, 205], 179796147)));
+}
+
+#[test]
 fn place_structure_fails_a_temple_in_the_ocean() {
     // The monument BDS located (structure/tests.rs): deep ocean, no temple kind there.
     let generator = OverworldGenerator::new(SEED);

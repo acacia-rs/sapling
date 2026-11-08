@@ -232,25 +232,16 @@ pub(crate) fn dispatch_closes(world: &mut World) {
     }
 }
 
-/// Starts the lid's [`lid::REPEAT`] anew for the container `player` has open: BDS showed no lid
-/// again 80 ticks after an opening with a request in between, refused ones too (bds-n13win.txt).
-pub(crate) fn requested_in(world: &mut World, player: Entity) {
-    let Some(&Viewing { layer, pos, .. }) = world.get::<Viewing>(player) else { return };
-    let now = world.resource::<Tick>().0;
-    let Some(mut open) = world.get_resource_mut::<super::OpenContainers>() else { return };
-    if let Some((_, chest)) = open.chests.iter_mut().find(|((at, _), chest)| *at == layer && chest.halves.contains(&pos)) {
-        chest.opened_at = now;
-    }
-}
-
-/// Every [`lid::REPEAT`] ticks from its opening or its last request, shows an open lid again: to
-/// those who came by since (research/captures/bds-shut.txt).
+/// Shows an open lid again each 80 ticks it has been open, counted over its openings since the
+/// opening tick: to those who came by since (research/captures/bds-shut.txt, bds-u3chest.txt).
 pub(crate) fn show_lids_again(world: &mut World) {
     let now = world.resource::<Tick>().0;
     let Some(open) = world.get_resource::<super::OpenContainers>() else { return };
-    let is_due = |chest: &&Chest| !chest.viewers.is_empty() && now > chest.opened_at && (now - chest.opened_at) % lid::REPEAT == 0;
-    let lids: Vec<(Entity, Vec<BlockPos>)> = open.chests.iter().filter(|(_, chest)| is_due(chest)).map(|((layer, _), chest)| (*layer, chest.halves.clone())).collect();
+    let is_open = |chest: &&Chest| !chest.viewers.is_empty() && now > chest.opened_at;
+    let lids: Vec<(Entity, Vec<BlockPos>)> = open.chests.iter().filter(|(_, chest)| is_open(chest)).map(|((layer, _), chest)| (*layer, chest.halves.clone())).collect();
     for (layer, halves) in lids {
-        lid::show_open(world, layer, &halves);
+        if halves.first().is_some_and(|lead| lid::counts_open_tick(world, layer, *lead)) {
+            lid::show_open(world, layer, &halves);
+        }
     }
 }

@@ -70,13 +70,14 @@ impl V2Start {
 
     /// `/place structure` at the block `at` (PlaceCommand 143aed7f0): the level seed's Java random
     /// forked at `at`, the start height drawn from a copy of it (none with `keep_height`, which
-    /// also leaves it unprojected), the start piece's corner at `at` and that height.
-    pub fn assemble_from(&self, level_seed: i64, at: [i32; 3], keep_height: bool, height: &dyn Fn(i32, i32) -> i32) -> Vec<Piece> {
+    /// also leaves it unprojected), the start piece's corner at `at` and that height; with the
+    /// block at that height before projection, which seeds its loot (`Structures::place_v2`).
+    pub fn assemble_from(&self, level_seed: i64, at: [i32; 3], keep_height: bool, height: &dyn Fn(i32, i32) -> i32) -> (Vec<Piece>, [i32; 3]) {
         let mut random = JavaRandom::new(level_seed).fork_at(at[0], at[1], at[2]);
         let (start_y, project) = if keep_height { (at[1], false) } else { (self.start_height(&mut random.clone()), self.project) };
         let (piece, centre) = self.start_at((at[0], start_y, at[2]), project, &mut random, height);
         let aliases = self.resolve_aliases(level_seed, (at[0], start_y, at[2]));
-        self.grow(piece, centre, aliases, &mut random, height)
+        (self.grow(piece, centre, aliases, &mut random, height), [at[0], start_y, at[2]])
     }
 
     /// Java's `/place jigsaw` start (`JigsawPlacement.addPieces` given a start jigsaw name): a

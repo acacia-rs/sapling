@@ -62,6 +62,7 @@ drawn) and `PotionType` Short -1.
   Their NBT (`templates_to_rust.py` `block_entity`, templates.bin special kind 4) gives the tables,
   pots' sherds, trial spawners' configs and vaults' tables and keys; trail ruins' capped
   `suspicious_gravel` rules carry `append_loot` tables (`pools_v2.txt` `c` lines, from `jjson.py`).
+  Placed by `/place` they draw from another generator: structures-and-ticking.md, group AD.
 - `examples/loot_seed_fit.rs` finds which draw of which candidate generator a list of BDS seeds is.
 
 ## Checked

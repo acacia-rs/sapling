@@ -136,14 +136,25 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   (bds-t1dplace4.txt), and its console placed nothing (bds-t1dplacec.txt), so what a rule places is
   unseen. `structure` names beyond those drilled: sapling takes `/locate`'s names, `village` too,
   where BDS's `ancient_city` and `mineshaft` were `invalidstructure.error` and
-  `abandoned_camp_meadow` a `generation.error`; a structure is drawn only over loaded columns
-  (`chunknotloaded.error`, where BDS placed one 9000 blocks off); `ignoreStartHeight` for kinds
+  `abandoned_camp_meadow` a `generation.error`; `ignoreStartHeight` for kinds
   other than the v2 ones; `includeEntities` is followed for `/place structure`
   as for jigsaws, undrilled there (bds-m3place.txt placed both ways, out of the drill's sight). The
   depth limit is 1..20: `trail_ruins/tower` placed at 1 and 20, 0 and 21 were `maxdepth.error`
   (bds-m3place.txt), as sapling's.
-  Block entities are placed with their loot tables (`StructureWrites::entities`); what BDS's
-  chests held is unseen by command.
+  Placed containers hold their table and seed unrolled (below, group AD).
+- Decompiled and drilled 2026-11-08, group AD (`adplace`, bds-adplace.txt and its world folder read
+  with `block_entity_dump` and `block_box_dump`). `_placeOrDeferSections` (Windows 143aee1f0) queues one
+  action per piece per chunk its box touches (lambda 143b313b0, a one-chunk load action), so `/place
+  structure` and `/place jigsaw` never answer `chunknotloaded`: each share is written when its chunk
+  loads. Of y3place's 1264 trail-ruins cells sapling drew past BDS's edge at `70 40 170 true`, BDS's
+  world held 1238 once the actor had walked there, the rest gravel that had fallen since. Sapling:
+  generation/deferred.rs keeps a column's share until it arrives. The action (144cfc4d0) seeds Java's
+  random from the level seed forked at the start block (the start height before projection: 0 for
+  camps, the drawn -15 for trail ruins, the block's own with `ignoreStartHeight`), anew for every
+  piece's share of a chunk, and each container and suspicious gravel takes the low 32 bits of
+  `nextLong`: five camps' chests, secret copper chests and barrels came `Findable` 0, `Items` [],
+  `LootTable`, `LootTableSeed` as sapling's, and the ruins' gravel seeds fit (`Reaching::commanded`,
+  `Structures::place_v2`, on_demand_tests.rs).
 - Drilled 2026-11-05, group AI (`ai1camps`, bds-ai1camps.txt): on the flat drill world, every one of
   the 18 `abandoned_camp_<variant>` names gave `generation.error` on BDS, at 200 and at 9000 (unloaded)
   alike, so neither variant names nor unloaded columns can be told apart there. `/place jigsaw
@@ -177,9 +188,9 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
 - Drilled 2026-11-08, group Y: `u3place` again and `y3place` (blocks named outright) with sapling on
   `SAPLING_DRILL_WORLD=generated SAPLING_DRILL_SEED=20261003` (without the seed the drill world is another
   one). u3place's six placements span BDS's boxes (one trail ruins x to 76 where BDS's stopped at 71); at
-  `70 40 170 true` all 2358 cells both changed hold the same block, at `30 70 250` 3130 of 3182. Left:
-  sapling draws a few cells BDS did not (more pieces past BDS's edge), and answers `chunknotloaded` where
-  part of the structure is not loaded, where BDS placed it anyway.
+  `70 40 170 true` all 2358 cells both changed hold the same block, at `30 70 250` 3130 of 3182. The
+  cells sapling drew past BDS's edge were BDS's deferred shares, and `30 70 250`'s sapling-only cells
+  bubble columns, not ruins (group AD, above).
 - Ticking-area ids are made by sapling (BDS's are random UUIDs).
 - Hardcore: StartGame's flag on BDS, and whether a hardcore world made fresh (cheats off) refuses
   `/difficulty` by another rule than cheats.

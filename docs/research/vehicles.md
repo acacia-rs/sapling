@@ -380,10 +380,16 @@ were not found in any of these; sapling does what is listed there.
   "Minecart"; sapling now does the same (bds-p3names.txt, world-commands.md).
 - Carts in lava and water (bds-p3lava.txt, 2026-11-08): off a rail a cart falls 0.04, 0.08, ... a tick with no drag,
   through water to the pool's floor as through air. One summoned into lava (its wire point in lava) showed `Health`
-  16 then −7, 3 a tick; one that fell onto lava, 0.01 into it, 24, 8, −7 as a scorched one. Neither moved in the tick
-  it burnt through, and each broke into its item the next. Sapling: `carts.rs` `LOOSE` (fall drag 1, liquids
-  ignored), `burning.rs` `CART_IN_LAVA`, a burnt-through cart skipped by `carts::tick`. The wire-point test is a
-  fit to these two carts.
+  16 then −7, 3 a tick; one that fell onto lava, 0.01 into it, 24, 8, −7 as a scorched one. Each broke into its
+  item the next tick. Sapling: `carts.rs` `LOOSE` (fall drag 1, liquids ignored), `burning.rs` `CART_IN_LAVA`.
+  The wire-point test is a fit to these two carts. Corrected 2026-11-08 (fourteenth3ad): "neither moved in the
+  tick it burnt through" was misread from the missing `MoveEntityDelta`; their items (−26.645, −25.765, and
+  ffburn's lava carts −25.765) lie 0.125 over a wire point one more fall down (0.08, 0.12), so a cart falls
+  untold the tick it burns through. A boat in lava (all 40 in its summon tick) dropped 0.125 over where it
+  was shown: it never moved. Sapling: `burning::tick` before boats move, a burnt boat skipped by
+  `boats::tick`, a burnt cart moved but not told (`carts::tick`); test `fourteenth3ad`.
+- `/kill` of a boat or chest boat leaves no item; of a minecart its item (bds-ffburn.txt's last `/kill`,
+  bds-t2eboats.txt `kill @e[type=chest_boat]`, bds-i2rails.txt). Sapling: `creatures/killing.rs` (fourteenth3ad).
 - Off a runway (bds-r3cart.txt, 2026-11-08): a cart at 1.18 left seventeen powered rails, dropped 0.15 to the rail
   block's bottom, went 0.4 onto the floor's edge, then 0.2 a tick across while falling 0.04, 0.08, ... (no drag
   either way), and 0.1, 0.05, 0.025 once landed. Sapling (`carts.rs` `loosen`, efc14f5d, 0da91291) matches it

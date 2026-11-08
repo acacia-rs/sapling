@@ -237,7 +237,6 @@ pub(crate) fn dispatch(world: &mut World) {
     let mut budget = PerTick::new(MAX_REQUESTS_PER_TICK);
     for (entity, packet) in packets {
         let Some(player) = in_world_identity(world, entity) else { continue };
-        containers::requested_in(world, entity);
         for request in packet.requests.iter().filter(|_| budget.allow(entity)) {
             answer(world, entity,&player, request);
         }
