@@ -72,6 +72,16 @@ pub(crate) fn kind_of(world: &World, entity: Entity) -> Option<String> {
     world.get::<Kind>(entity).map(|kind| kind.0.clone())
 }
 
+/// Where `rider` sits on `seat` of a vehicle facing `yaw`, against the vehicle's wire: a baby at
+/// the seat itself (bds-j3ride.txt: a baby zombie 0.48 over its chicken, a grown one 0.5 under its seat).
+fn rider_offset(world: &World, seat: &seats::Seat, rider: Entity, yaw: f32) -> Option<[f32; 3]> {
+    let mut offset = seats::offset(seat, &kind_of(world, rider)?, yaw);
+    if crate::creatures::is_baby(world, rider) {
+        offset[1] = seat.position[1];
+    }
+    Some(offset)
+}
+
 /// How far up from its box's bottom the wire puts a vehicle of `kind`.
 pub(crate) fn wire_lift(kind: &str) -> f32 {
     match kind {
@@ -106,7 +116,7 @@ pub(crate) enum Refusal {
 /// Whether `rider` may take a seat on `vehicle` now.
 pub(crate) fn can_seat(world: &World, rider: Entity, vehicle: Entity) -> Result<(), Refusal> {
     let (Some(kind), Some(rider_kind)) = (kind_of(world, vehicle), kind_of(world, rider)) else { return Err(Refusal::NotRideable) };
-    let layout = layout(&kind).filter(|layout| layout.takes(&rider_kind)).ok_or(Refusal::NotRideable)?;
+    let layout = layout(&kind).filter(|layout| layout.takes(&rider_kind, crate::creatures::is_baby(world, rider))).ok_or(Refusal::NotRideable)?;
     if layout.saddled && !mounts::saddled(world, vehicle) || layout.tamed_riders && !world.get::<crate::creatures::Raised>(rider).is_some_and(|raised| raised.is_tamed()) {
         return Err(Refusal::NotRideable);
     }

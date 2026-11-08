@@ -609,8 +609,10 @@ fireball that meets nothing goes after 10 seconds.
   that moves after its hitter in sapling's tick is told moved in the same tick too (sapling-j3slime.txt).
 - Slimes (bds-j3slime.txt): a large one took an iron golem as its target, its touch hurt it 4 (no throw) with
   `attack` a tick on; packs: slime takes snow and iron golems, magma cube iron golems. A medium one in lava died
-  and split 4, which rose 0.02 to 0.04 a tick, hurt by turns; sapling's sink and a small one dies at once. A
-  large one's aggressive hop went 0.193 across; sapling's 0.086. Despawning undrillable by summon (persistent).
+  and split 4, which rose 0.02 to 0.04 a tick, hurt by turns; sapling's sank. Ported (fourteenth3p): the
+  pack's `slime_float` in lava, `v' = 0.5 v - 0.02 + 0.04` on a 0.8 chance a tick at any depth
+  (creatures/floating.rs `IN_LAVA`); the "hurt by turns" was resistance 255 BDS's small ones took (success 4).
+  A large one's aggressive hop went 0.193 across; sapling's 0.086. Despawning undrillable by summon (persistent).
 - Wind-charged burst (bds-j3omen.txt): four cows fit `1 - d / 7.5` within 0.004, d from the burst to their feet,
   towards 0.9 of their height, added to their motion (-0.0784 standing) and told at once; none at 7.07 or
   beyond. Items went about 0.95 of that, told as moved. An oozing slime leaves only its split; an oozing
@@ -623,4 +625,8 @@ fireball that meets nothing goes after 10 seconds.
   at once (16478 a tick on, `death` and state 4 the next, gone the next; no state 3): sapling uses 34.
 - Riding (bds-j3ride.txt): a zombie horse's rider took the actor as target ~7 ticks after spawning, steered the
   horse to it and hit (`KineticDamageDealt`); a chicken jockey's baby zombie steered and hit every 20 ticks.
-  Not ported. A mob-ridden mount splashed as an unridden one (splash-sound.md); its rider splashed 0 a tick on.
+  Ported (fourteenth3p, creatures/jockeys.rs): a seated mob thinks (hunts and strikes); its mount walks to the
+  prey at its movement times `mount_pathing`'s multiplier (the chicken's 1.5: 0.3035 a tick, as BDS's), or
+  `use_kinetic_weapon`'s `hijack_mount_navigation` pace for a spear rider (zombie horse 1.4: 0.275, as BDS's).
+  A chicken takes a baby undead seated at 0.48. Left: the spear charge itself (approach, pass, reposition,
+  `KineticDamageDealt`), on foot or mounted; a spear rider hits as a melee one. A mob-ridden mount splashed as an unridden one (splash-sound.md); its rider splashed 0 a tick on.

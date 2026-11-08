@@ -6,7 +6,7 @@
 use acacia_physics::{Aabb, WorldView};
 use bevy_ecs::prelude::*;
 
-use super::{kind_of, seats, vehicle_wire};
+use super::{kind_of, vehicle_wire};
 use crate::body::Body;
 use crate::components::{InLayer, Layer, Position};
 use crate::entities::Kind;
@@ -78,9 +78,11 @@ fn exit_feet(view: &impl WorldView, vehicle: [f32; 3], seat: [f32; 3], motion: [
 /// spot is free. A player is told, as BDS corrects one taken off by a command.
 pub(super) fn step_off(world: &mut World, rider: Entity, vehicle: Entity) {
     let (Some((wire, yaw)), Some(motion), Some(layer)) = (vehicle_wire(world, vehicle), world.get::<Body>(vehicle).map(|body| body.motion), world.get::<InLayer>(vehicle).map(|layer| layer.0)) else { return };
-    let Some(kind) = kind_of(world, rider) else { return };
+    if kind_of(world, rider).is_none() {
+        return;
+    }
     let layout = world.get::<Kind>(vehicle).and_then(|vehicle| super::layout(&vehicle.0));
-    let seat = layout.and_then(|layout| layout.seat(1, 0)).map_or([0.0; 3], |seat| seats::offset(&seat, &kind, yaw));
+    let seat = layout.and_then(|layout| layout.seat(1, 0)).and_then(|seat| super::rider_offset(world, &seat, rider, yaw)).unwrap_or([0.0; 3]);
     let size = world.get::<Body>(rider).map_or(PLAYER_SIZE, |body| body.size);
     let Some(level) = world.get::<Layer>(layer).map(|layer| &layer.world) else { return };
     let seated = [wire[0] + seat[0], wire[1], wire[2] + seat[2]];

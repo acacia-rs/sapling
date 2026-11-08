@@ -153,7 +153,7 @@ fn chance(now: u64, id: u64, draw: u64, odds: u32) -> bool {
 }
 
 /// Keeps or picks the hunter's prey and tells its viewers of a change; where the prey is.
-fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<[f32; 3]> {
+pub(super) fn pick(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body) -> Option<[f32; 3]> {
     hurt_by::avenge(world, entity, layer, id, kind, body);
     let now = world.resource::<Tick>().0;
     let had = world.get::<Hunter>(entity)?.prey;

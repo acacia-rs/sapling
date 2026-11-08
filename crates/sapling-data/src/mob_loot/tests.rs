@@ -57,6 +57,14 @@ fn a_players_kill_leaves_the_rare_drops_and_looting_adds_to_them() {
 }
 
 #[test]
+fn a_pets_kill_leaves_what_players_or_pets_get_and_a_stray_its_tipped_arrows() {
+    let rods = |killer| mob_loot("minecraft:blaze", false, killer, &mut always(0.999)).into_iter().any(|(name, _)| name == "minecraft:blaze_rod");
+    assert!(rods(Killer::Pet) && !rods(Killer::None));
+    let tipped = |killer| mob_loot_stacks("minecraft:stray", false, killer, &mut always(0.999)).into_iter().any(|looted| looted.name == "minecraft:arrow" && looted.data == 18);
+    assert!(tipped(Killer::Player { looting: 0 }) && !tipped(Killer::Pet));
+}
+
+#[test]
 fn trial_tables_give_a_key_food_and_a_reward() {
     let key = |table: &str| table_loot(table, &mut always(0.5));
     assert_eq!(key("loot_tables/spawners/trial_chamber/key.json"), [("minecraft:trial_key".to_owned(), 1)]);
