@@ -193,7 +193,8 @@ fn tick(view: &mut View, p: [i32; 3], lava: bool) {
         let l = liquid(view, below);
         if !(l.is_fluid() && (l.is_lava() == lava || l.is_lava())) && !blocking(view, below, lava) {
             if lava && l.is_fluid() {
-                set(view, below, Block::Stone);
+                // The stone takes a waterlogged plant's place too (canon aw3dripleaf: a small dripleaf).
+                view.set_block(below[0], below[1], below[2], Block::Stone);
             } else {
                 spread_to(view, below, if d >= 8 { d } else { d + 8 }, lava);
             }

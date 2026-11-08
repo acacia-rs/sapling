@@ -133,8 +133,8 @@ ChunkSource tasks (strings): `_launchGenerationTask` → `loadChunk`; `_launchSt
 13. Commit block volume to `LevelChunk`, set generator, state → generated (1409f8eb0, 1409e29f0, 1409e1fa0).
 
 ### `structurePostProcessChunk` 148213a20 (slot 9)
-MT seeded `levelSeed32`, `a=nextInt()/2*2+1`, `b=nextInt()/2*2+1`, `seed' = levelSeed ^ (cx*b + cz*a)` (pairing of a/b
-to x/z: verify), then `postProcessStructureFeatures` 14196b2c0 (legacy structures) and `postProcessStructures`
+MT seeded `levelSeed32`, `a=nextInt()/2*2+1`, `b=nextInt()/2*2+1`, `seed' = levelSeed ^ (cx*a + cz*b)`, the
+large-feature chunk seed (`LargeFeatureSeed::chunk`; settled by the structure canons, item 5 below), then `postProcessStructureFeatures` 14196b2c0 (legacy structures) and `postProcessStructures`
 14196c5f0 (jigsaw v2).
 
 ### `decorationPostProcessChunk` 1482143a0 (slot 10)
@@ -244,9 +244,13 @@ nextFloat,consumeCount}`.
    never-compatible (the same gate as 1482f4580 and `CaveFeature::place`), so no new world uses it. NoiseGradient runs
    both as the subsurface pass and as a column's surface builder (worldgen-bds-caves.md). Capped is the
    Nether's; TheEnd finds no stone to change.
-5. Who calls slot 54; structure post-process a/b pairing (assumed as the large-feature seed's). No
-   `underground_cave_carver_feature` exists in this BDS: `bdsre str` finds only `cave_carver`,
-   `nether_cave_carver` and `underwater_cave_carver`, all registered by 14829eeb0 (2026-11-05).
+5. Who calls slot 54. Settled 2026-11-08 (thirteenth3aw): the structure post-process pairs a with x and b with
+   z, as the large-feature seed (`StructureStage` takes `LargeFeatureSeed::chunk`); swapped, every chunk off the
+   x = z diagonal would draw from another seed, and the structure canons that draw in post-process (village,
+   igloos, temples, outpost, ocean ruins, stronghold, mansion, city: replay-all 0, their chest loot seeds all
+   same) could not hold. `underground_cave_carver_feature` is placed by the loose
+   `definitions/feature_rules/overworld_cave_carver_feature.json` with vanilla_1.18.0's redefinition of the
+   feature: pack data, which is why `bdsre str` did not find it (worldgen-bds-carvers.md).
 6. Structures: mapped in [worldgen-bds-structures.md](worldgen-bds-structures.md); templates, jigsaw and the
    terrain adjustments (beards, buries, shavers) are ported there and replay-exact.
 7. Lighting/heightmap stage and `OverworldGenerator2d` selection rule (legacy worlds, `no_legacy_worldgen` 14393d890).

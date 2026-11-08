@@ -15,7 +15,9 @@ tools/worldgen-oracle/canon-upload.sh <out> <canon> <world>     # then write env
 ```
 Canons so far (tools/replay-canons.txt): `dappled` (aa1), `tcores` (ad3tc: chunk -28,-27 of the trial
 chambers, run over -30,-29 to -26,-25 with WORLDGEN_WORKERS=1; 241 decorations), `ag2` (three sulfur spring
-regions in one run, WORLDGEN_WORKERS=1; 923 decorations; worldgen-bds-caves.md "Sulfur springs").
+regions in one run, WORLDGEN_WORKERS=1; 923 decorations; worldgen-bds-caves.md "Sulfur springs"), `aw3`
+(`aw3magma` chunk -49,-181 and `aw3dripleaf` chunk -50,20, each run as its 5x5, WORLDGEN_WORKERS=1, 544
+decorations; worldgen-bds-liquids.md "Blocking").
 `bds_dbg_run.sh` runs a non-`.exe` under gdb with `scripts/bds_gdb.py`; one run logs both the decoration and
 the structure order. The region is picked with BDS's own `/locate biome` and the saved world's biome ids.
 

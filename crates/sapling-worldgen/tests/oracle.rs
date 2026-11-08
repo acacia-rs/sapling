@@ -242,6 +242,8 @@ fn blocks_match_bds_canons() {
             Region::new("sulfur springs on stone, medium_3", 1090, -1139, 1096, -1132),
             Region::new("sulfur spring on stone underground", 710, 1130, 714, 1134),
             Region::new("sulfur spring on cinnabar", 315, 348, 319, 352),
+            Region::new("magma under a liquid update", -49, -181, -49, -181),
+            Region::new("dripleaf under hardening lava", -50, 20, -50, 20),
         ],
     );
 }
