@@ -2,7 +2,7 @@
 //! bds-mob-effects.txt, bds-fixmisc.txt).
 
 use sapling_api::command::{Args, CommandSpec, CommandSyntax, Overload, ParamKind, Parameter, ParameterSpec, ParseError, Selector};
-use sapling_api::{Attacker, Command, DamageCause, Output, Permission, Sender, ShardCtx};
+use sapling_api::{Command, DamageCause, Output, Permission, Sender, ShardCtx, Target};
 
 use super::{answer_name, no_target, targets};
 
@@ -55,12 +55,12 @@ impl CommandSyntax for Damage {
 
 impl Command for Damage {
     fn run(self, ctx: &mut ShardCtx<'_>, sender: &Sender, out: &mut Output) {
-        let attacker = match &self.by {
+        let source = match &self.by {
             None => None,
             Some(by) => match targets(ctx, sender, Some(by)) {
                 (players, mobs) if players.len() + mobs.len() > 1 => return out.translate("commands.damage.tooManySources", Vec::new(), false),
-                (mut players, _) if !players.is_empty() => Some(Attacker::Player(players.remove(0))),
-                (_, mut mobs) if !mobs.is_empty() => Some(Attacker::Mob { kind: mobs.remove(0).kind }),
+                (mut players, _) if !players.is_empty() => Some(Target::Player(players.remove(0))),
+                (_, mut mobs) if !mobs.is_empty() => Some(Target::Entity(mobs.remove(0).id)),
                 _ => return no_target(out),
             },
         };
@@ -78,8 +78,8 @@ impl Command for Damage {
         let (amount, cause) = (self.amount as f32, self.cause);
         let mut hurt: Vec<String> = found
             .iter()
-            .filter(|player| match &attacker {
-                Some(by) => ctx.hurt_player_by(player.id, amount, cause, by),
+            .filter(|player| match &source {
+                Some(by) => ctx.hurt_player_from(player.id, amount, cause, by),
                 None => ctx.hurt_player(player.id, amount, cause),
             })
             .map(|player| player.name.clone())
@@ -87,8 +87,8 @@ impl Command for Damage {
         hurt.extend(
             mobs.iter()
                 .zip(&mob_names)
-                .filter(|(mob, _)| match &attacker {
-                    Some(by) => ctx.hurt_entity_by(mob.id, amount, cause, by),
+                .filter(|(mob, _)| match &source {
+                    Some(by) => ctx.hurt_entity_from(mob.id, amount, cause, by),
                     None => ctx.hurt_entity(mob.id, amount, cause),
                 })
                 .map(|(_, name)| name.clone()),

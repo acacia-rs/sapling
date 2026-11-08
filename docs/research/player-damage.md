@@ -124,9 +124,13 @@ with a shield in the off hand:
 - Thorns and fireworks from ahead are turned away.
 
 Sapling: `vitals/shield.rs` (`blocks_mob`, `stand_up`, `sneak_again`, `tell_ride`, `settle_ride`); tests in
-`tests/integration/fourteenth1b.rs`. Left (REMAINING4): `/damage ... entity <source>` is turned away on BDS for
-`entity_attack`, `thorns`, `fireworks` and `projectile`, and `magic`, `ram_attack`, `sonic_boom` and
-`mace_smash` hurt and throw back from the source, where sapling's `/damage` with a source neither blocks nor throws.
+`tests/integration/fourteenth1b.rs`.
+
+`/damage <player> ... entity <source>` (bds-b1shield.txt, bds-h2dmgp.txt): a raised shield facing the source turns
+away `entity_attack`, `thorns`, `fireworks` and `projectile` (answer `commands.damage.failed`, no stand-up). Any
+cause that lands, all 29 drilled, throws the player 0.4 away from the source across and 0.4 up, told before the
+flash; from itself straight up. Sapling: `vitals/struck.rs` `sourced`, `ShardCtx::hurt_player_from`; tests in
+`tests/integration/fourteenth2h.rs`. Left: `mace_smash` is no cause sapling knows (REMAINING4).
 
 ## Death
 

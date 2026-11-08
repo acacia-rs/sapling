@@ -91,6 +91,19 @@ fn offhand(id: u64, item: Option<&ItemStack>) -> MobEquipment {
     MobEquipment { runtime_entity_id: id, item, slot: OFFHAND, selected_slot: 0, window_id: WindowID::Offhand }
 }
 
+/// An adult piglin's `FlagsExtended` (bits 17 and 25), with bit 30 while it admires: BDS sent it right
+/// after the offhand each time the offhand filled and emptied (research/captures/bds-goldpickup.txt).
+const REST: i64 = 1 << 25 | 1 << 17;
+const ADMIRING: i64 = 1 << 30;
+
+fn shown_admiring(id: u64, admiring: bool) -> Bytes {
+    use acacia_proto::packets::SetEntityData;
+    use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataFlags2};
+    let flags = MetadataFlags2(REST | if admiring { ADMIRING } else { 0 });
+    let item = MetadataDictionaryItem { key: Key::FlagsExtended, r#type: Type::Long, legacy_type: 7, value: Value::FlagsExtended(flags) };
+    sapling_net::encode(&SetEntityData { runtime_entity_id: id, metadata: vec![item], properties: EntityProperties { ints: Vec::new(), floats: Vec::new() }, tick: 0 })
+}
+
 fn main_hand(id: u64, item: &ItemStack) -> Option<Bytes> {
     sapling_data::mob_hand(id, &data(item), false).map(|held| sapling_net::encode(&held))
 }
@@ -148,10 +161,12 @@ fn admire(world: &mut World, piglin: Entity, layer: Entity, item: ItemStack, del
     let shown = sapling_net::encode(&offhand(id, Some(&item)));
     let main = world.get_mut::<Hands>(piglin).and_then(|mut hands| hands.main.take());
     world.entity_mut(piglin).insert((Admiring { until: now + ADMIRES, bartered: false }, Hands { main, off: Some(item) }));
+    let flagged = shown_admiring(id, true);
     if delay == 0 {
-        entities::tell_viewers(world, piglin, layer, cell, vec![shown]);
+        entities::tell_viewers(world, piglin, layer, cell, vec![shown, flagged]);
     } else {
         late_sounds::play_later(world, delay, layer, cell, shown);
+        late_sounds::play_later(world, delay, layer, cell, flagged);
     }
     late_sounds::play_later(world, delay + 1, layer, cell, super::hunting::sound("admire", id, PIGLIN, &body, HEAD));
 }
@@ -200,6 +215,7 @@ pub(super) fn tick(world: &mut World) {
             hands.main = Some(admired);
         }
         told.push(sapling_net::encode(&offhand(id, None)));
+        told.push(shown_admiring(id, false));
         entities::tell_viewers(world, piglin, layer, body.at.map(|c| c.floor() as i32), told);
         if barters {
             world.entity_mut(piglin).insert(Admiring { until: now + 1, bartered: true });

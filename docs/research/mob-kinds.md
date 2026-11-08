@@ -124,8 +124,10 @@ water, held still by slowness for one hit and healed each second
 stream; bds-f14edolphin2.txt), three dolphins in an open pool, one on a dry stone tray, one under
 a stone cap:
 
-- Anger: hurt by `/damage` as from the actor, the dolphin took it a tick on; the two others (5 and
-  8 off) took it the tick after, each `mob.warning` and `ANGRY` a tick after its `TargetEid`. All
+- Anger: hurt by `/damage` as from the actor, the dolphin took it in the hurt's tick (its health
+  told with it), as sapling's did; the two others (5 and 8 off) took it the tick after, each
+  `mob.warning` and `ANGRY` a tick after its `TargetEid` (sapling's took it with the hit one until
+  fourteenth2h, `anger::join`). All
   three let go when the actor went creative; each `ANGRY` cleared 24.9 s after that dolphin's last
   bite (one bite at most 10 s before, the hit one's 4 s before): 25 s from its last bite.
 - On land: a tick after coming to rest it hopped, its first tick's rise 0.4216 (0.5 on a
@@ -330,6 +332,8 @@ later, and 161 ticks on (`admire_item` 8 s) the ingot went to its main hand and 
 No barter came out in three runs: the clicks with an ingot fell out of reach. sapling barters on the
 click (the pack's `minecraft:interact` with `barter`), with that timing, and drops a roll of
 `piglin_barter.json` (read by `mob-loot.py` with the block tables) as the offhand empties.
+Admiring shows as `FlagsExtended` bit 30 (33685504 at rest, bits 17 and 25), sent right after the offhand
+each time it fills and empties (bds-goldpickup.txt; sapling since fourteenth2h, `piglins::shown_admiring`).
 
 `piglinkeep` then `piglinkeep2` with `KEEP_WORLD=1` (`bds-piglinkeep.txt`, `bds-piglinkeep2.txt`): a
 piglin picked up a thrown golden sword, admired it in the offhand, and 161 ticks on was sent the sword

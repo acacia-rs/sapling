@@ -2,7 +2,6 @@
 
 use sapling_api::{DamageCause, Effect, EntityBackend, EntityId, EntityInfo, Item, MobSlot, MobSlotRefusal, PlayerId};
 
-use super::health::Health;
 use crate::components::{InLayer, NetId};
 use crate::handlers::Ctx;
 use crate::{entities, orbs, tnt, worlds};
@@ -158,22 +157,25 @@ impl EntityBackend for Ctx<'_> {
     /// A player's harm kills as its hit does: the mob is its slain, for experience and a raid's
     /// heroes (research/captures/bds-raidhero.txt).
     fn hurt_entity_by(&mut self, id: EntityId, amount: f32, cause: DamageCause, by: Option<&sapling_api::Attacker>) -> bool {
-        let Some(mob) = entities::find(self.world, id).filter(|mob| self.world.get::<super::Dying>(*mob).is_none()) else { return false };
-        let (Some(layer), Some(health)) = (self.world.get::<InLayer>(mob).map(|layer| layer.0), self.world.get::<Health>(mob).copied()) else { return false };
+        let Some(mob) = entities::find(self.world, id) else { return false };
         let player = match by {
             Some(sapling_api::Attacker::Player(player)) => self.entity(player.id),
             _ => None,
         };
-        let before = health.left();
-        // BDS's `/damage` of 8 cost a zombie in a diamond chestplate 5.824 (research/captures/bds-boosts.txt).
-        let amount = if cause.is_stopped_by_armour() { health.shielded(amount) } else { amount };
-        if let Some(sapling_api::Attacker::Mob { kind }) = by
-            && super::villagers::infect(self.world, mob, layer, kind, amount)
-        {
-            return true;
+        super::sourced::wound(self.world, mob, amount, cause, by, player)
+    }
+
+    fn hurt_entity_from(&mut self, id: EntityId, amount: f32, cause: DamageCause, source: &sapling_api::Target) -> bool {
+        let Some(mob) = entities::find(self.world, id) else { return false };
+        let source = match source {
+            sapling_api::Target::Player(player) => self.entity(player.id),
+            sapling_api::Target::Entity(id) => entities::find(self.world, *id),
+            _ => None,
+        };
+        match source {
+            Some(source) => super::sourced::hurt(self.world, mob, amount, cause, source),
+            None => super::sourced::wound(self.world, mob, amount, cause, None, None),
         }
-        super::harm::wound_by(self.world, mob, layer, amount, cause, player);
-        self.world.get::<super::Dying>(mob).is_some() || self.world.get::<Health>(mob).is_some_and(|health| health.left() < before)
     }
 
     fn families(&self, kind: &str) -> Vec<String> {

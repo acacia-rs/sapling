@@ -124,11 +124,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
             smash::follow(world, player, entity, body.at, weapon.as_ref());
         }
         super::enchanted::struck(world, entity, &kind, weapon.as_ref());
-        super::strolling::startle(world, entity);
-        super::hunting::provoke(world, entity, layer, id, &kind, &body, player);
-        super::guardians::spike(world, entity, &kind, player);
-        super::teleports::startle(world, entity);
-        super::owner_hit(world, player, entity);
+        answer(world, entity, layer, id, &kind, &body, player);
         super::villagers::hurt_standing(world, player, entity, layer, &kind, health.left() <= 0.0);
     }
     // A hit inside the mob's guard tires as one that lands (research/captures/bds-hurt2.txt).
@@ -141,6 +137,16 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         super::die(world, entity, layer, &kind, &body);
     }
     Some(())
+}
+
+/// The mob answers a hit from `player` that landed: it is startled, a hunter takes the player, a
+/// still guardian spikes it, an enderman teleports away and the player's pets go for it.
+pub(super) fn answer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
+    super::strolling::startle(world, entity);
+    super::hunting::provoke(world, entity, layer, id, kind, body, player);
+    super::guardians::spike(world, entity, kind, player);
+    super::teleports::startle(world, entity);
+    super::owner_hit(world, player, entity);
 }
 
 /// The mob of `kind` was killed by a player with Looting at `looting`: it is [`Slain`], for the
