@@ -413,7 +413,11 @@ Drilled 2026-11-04, ninth wave (examples/shared/ninth3_drill.rs):
     (vanilla/teleport.rs).
   - `effect clear` tells the removals in effect id order (BDS keeps them by id; bds-q3witch.txt
     2, 11, 19, 21). Fixed (vitals/effects.rs `take`). BDS sends the actor's health and pace
-    UpdateAttributes and VisibleMobEffects the tick after; sapling at once (open).
+    UpdateAttributes and VisibleMobEffects the tick after; sapling at once. Fixed (fourteenth1l): both at
+    the tick-end sync, `VisibleMobEffects` first, then one UpdateAttributes of the walk and the health
+    stamped with the input tick, as for a given speed or health boost (bds-r1fx.txt, bds-t2ebreath.txt)
+    (`vitals/effects/told.rs` `tell_attributes`; test
+    `effects_given_and_cleared_tell_their_attributes_at_the_sync_after_the_shown_effects`).
   - Slowness 255 does not hold BDS's cows (bds-q3wind.txt, bds-q3crowd.txt).
 - Seen in thirteenth3s (bds-s3poi.txt): BDS's `@e[family=armorer]` matched a villager that took up
   armoring, so a component group's `type_family` counts; sapling's selector families were by kind

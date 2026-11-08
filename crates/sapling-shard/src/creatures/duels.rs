@@ -45,12 +45,14 @@ pub(super) fn hit(world: &mut World, hitter: Entity, id: u64) -> Option<()> {
     let axe = held.as_deref().is_some_and(|held| held.ends_with("_axe"));
     let blocked = vitals::blocks(world, struck, from, blow.harm, super::Cause::Attack, axe);
     blows::wear(world, hitter);
-    if !blocked && vitals::punched(world, struck, blow.harm, &name, thrown, pierced) {
+    let punch = vitals::Punch { pierced, flashed: smash.map(|_| smash::MACE_SMASH) };
+    if !blocked && vitals::punched(world, struck, blow.harm, &name, thrown, punch) {
         if let Some(sparks) = blows::sparks(blow, id) {
             crate::blocks::to_viewers(world, layer, cell, &[sapling_net::encode(&sparks)]);
         }
         if let Some(smash) = smash {
-            crate::blocks::to_viewers(world, layer, cell, &smash::shown(smash, from, to));
+            let grounded = world.get::<crate::components::Position>(struck).is_some_and(|position| position.on_ground);
+            smash::show(world, layer, smash, from, to, grounded);
             smash::follow(world, hitter, struck, to, weapon.as_ref());
         }
         vitals::tire(world, hitter, vitals::HIT_TIRES);

@@ -1,6 +1,5 @@
 //! A player's hit on a mob, as BDS answered one (docs/research/mob-damage.md, "Hits"), with
 //! what the weapon's enchantments add (enchanted.rs) and a falling hitter's critical (blows.rs).
-// TODO: a hit on an armour stand (armour_stands/hits.rs) tires nobody.
 
 use bevy_ecs::prelude::*;
 use sapling_api::{EntityId, GameMode};
@@ -94,15 +93,23 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     let bonus = enchant::melee_bonus(weapon.as_ref(), Some(kind.as_str())) + smash::bonus(smash, weapon.as_ref());
     let blow = blows::blow(world, player, crate::vitals::hits_for(world, player, sapling_data::item_attack(held.as_deref()) + bonus));
     let mut packets = vec![sapling_net::encode(&blows::sound(blow, from))];
-    if super::armour_stands::struck(world, entity, &kind, world.get::<Mode>(player)?.0 == GameMode::Creative, packets.clone()) || super::creaking::shrugs_off(world, entity) {
+    if super::armour_stands::struck(world, entity, &kind, world.get::<Mode>(player)?.0 == GameMode::Creative, packets.clone()) {
+        // A hit on a stand tires as one on a mob (bds-l1stand.txt).
+        crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);
+        return Some(());
+    }
+    if super::creaking::shrugs_off(world, entity) {
         return Some(());
     }
     let mut health = *world.get::<Health>(entity)?;
     let harm =if kind == crate::dragon::DRAGON { crate::dragon::body_harm(blow.harm) } else { blow.harm };
     let hitter = in_world_identity(world, player).map(sapling_api::Attacker::Player);
     let before = health.left();
+    // A mace's Breach pierces a mob's armour as a player's (bds-mace-breach.txt).
+    let pierced = enchant::mace::breach(enchant::level(weapon.as_ref(), Enchant::Breach));
+    let mut smashed = None;
     if crate::damage::ask(world, entity, harm, Cause::Attack, hitter).is_some_and(|harm| {
-        let harm = health.shielded(harm);
+        let harm = health.shielded_but(harm, pierced);
         health.hurt(harm)
     }) {
         if kind == crate::dragon::DRAGON {
@@ -114,10 +121,11 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
         if let Some(sparks) = blows::sparks(blow, id) {
             packets.insert(1, sapling_net::encode(&sparks));
         }
-        if let Some(smash) = smash {
+        if let Some(dust) = smash.and_then(|_| smash::dust(body.at, body.on_ground)) {
             let at = packets.len() - 1;
-            packets.splice(at..at, smash::shown(smash, from, body.at));
+            packets.insert(at, dust);
         }
+        smashed = smash;
         blows::throw_from(world, entity, from, enchant::level(weapon.as_ref(), Enchant::Knockback), blow.sprinting);
         *world.get_mut::<Health>(entity)? = health;
         if smash.is_some() {
@@ -130,6 +138,9 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
     // A hit inside the mob's guard tires as one that lands (research/captures/bds-hurt2.txt).
     crate::vitals::tire(world, player, crate::vitals::HIT_TIRES);
     entities::tell_viewers(world, entity, layer, cell, packets);
+    if let Some(smash) = smashed {
+        smash::sound(world, layer, smash, from, body.on_ground);
+    }
     blows::wear(world, player);
     if health.left() <= 0.0 {
         super::raids::slain(world, player, entity);

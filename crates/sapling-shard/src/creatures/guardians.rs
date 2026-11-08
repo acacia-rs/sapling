@@ -64,7 +64,7 @@ pub(super) fn spike(world: &mut World, mob: Entity, kind: &str, player: Entity) 
     let still = world.get::<Told>(mob).and_then(Told::mob_flags).is_some_and(|flags| flags.0 & MetadataFlags1::MOVING.0 == 0);
     if (kind == KIND || kind == ELDER) && still {
         let at = world.get::<crate::body::Body>(mob).map_or([0.0; 3], |body| body.at);
-        crate::vitals::thorned(world, player, SPIKES, at);
+        crate::vitals::thorned(world, player, SPIKES, at, mob);
     }
 }
 

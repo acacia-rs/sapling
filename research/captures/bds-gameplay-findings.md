@@ -22,6 +22,11 @@ Drills in `crates/sapling/examples/shared/gameplay_drill.rs`; captures beside th
   fitted).
 - Breach: armour's share less 0.15 a level. A mace's 6 on a zombie in a diamond chestplate (10
   points, 2 toughness): 4.176, 5.076, 5.976, 6, 6 at Breach 0 to 4.
+- bds-l1mace.txt (`l1mace`, fourteenth1l_drill.rs): the smash sound is sent ~25 ms after the hit, at the
+  tick-end sync. A levitating golem (off the ground) sounded `mace.smash_air` and raised no dust. A smash on a
+  player flashes 34 with `CriticalHit` and throws it 0.4/0.4. A survival player 2 from the target was not
+  shoved; an untamed wolf was. Pets: the wolf would not tame, not drilled. Sapling: `creatures/smash.rs`
+  `dust`/`sound`, `vitals::Punch`; tests in `tests/integration/fourteenth1l.rs`.
 
 ## Powder snow (bds-freeze.txt)
 

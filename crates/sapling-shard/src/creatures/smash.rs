@@ -3,9 +3,8 @@
 //! evidence). The struck mob flashes `MaceSmash`, dust rises where it stands, the hitter stops
 //! falling (its motion told as nought, its fall forgotten) and Wind Burst launches it, and the mobs
 //! around are shoved.
-// TODO: players around are not shoved, nor are the hitter's pets spared; a smash on a player
-// flashes as a plain hit; `mace.smash_air` for a target off the ground was not drilled; the
-// sound goes a tick early. Breach only pierces a player's armour: mobs wear none here.
+// Players around are not shoved, as on BDS (bds-l1mace.txt). TODO: whether the hitter's pets are spared
+// was not drilled (the drill's wolf would not tame).
 
 use acacia_proto::nbt::Value;
 use acacia_proto::packets::{LevelEvent, LevelEventEvent, LevelSoundEvent};
@@ -42,13 +41,32 @@ pub(super) fn bonus(smash: Option<Smash>, weapon: Option<&Value>) -> f32 {
     smash.map_or(0.0, |smash| mace::smash_bonus(smash.fallen, enchant::level(weapon, Enchant::Density)))
 }
 
-/// What a smash's target's viewers see and hear of it: dust at the target's feet `at` and the
-/// smash from the hitter's eyes (bds-mace.txt).
-pub(super) fn shown(smash: Smash, hitter: [f32; 3], at: [f32; 3]) -> [Bytes; 2] {
+/// The dust a smash raises at its grounded target's feet `at` (bds-mace.txt); none off the ground
+/// (bds-l1mace.txt).
+pub(super) fn dust(at: [f32; 3], grounded: bool) -> Option<Bytes> {
     let [x, y, z] = at;
-    let dust = LevelEvent { event: LevelEventEvent::AddParticleSmashAttackGroundDust, position: Vec3f { x, y, z }, data: 0 };
-    let name = if smash.fallen > mace::HEAVY_FROM { "mace.heavy_smash_ground" } else { "mace.smash_ground" };
-    [sapling_net::encode(&dust), sapling_net::encode(&heard(name, [hitter[0], hitter[1] + sapling_data::EYE_HEIGHT, hitter[2]]))]
+    grounded.then(|| sapling_net::encode(&LevelEvent { event: LevelEventEvent::AddParticleSmashAttackGroundDust, position: Vec3f { x, y, z }, data: 0 }))
+}
+
+/// The smash heard from the hitter's eyes at the tick-end sync, after the hit (bds-mace.txt): on a
+/// target off the ground `mace.smash_air` (bds-l1mace.txt).
+pub(super) fn sound(world: &mut World, layer: Entity, smash: Smash, hitter: [f32; 3], grounded: bool) {
+    let name = match (grounded, smash.fallen > mace::HEAVY_FROM) {
+        (false, _) => "mace.smash_air",
+        (true, true) => "mace.heavy_smash_ground",
+        (true, false) => "mace.smash_ground",
+    };
+    let heard = sapling_net::encode(&heard(name, [hitter[0], hitter[1] + sapling_data::EYE_HEIGHT, hitter[2]]));
+    let cell = hitter.map(|c| c.floor() as i32);
+    crate::entities::told_after_answer(world, |world| crate::blocks::to_viewers(world, layer, cell, &[heard]));
+}
+
+/// [`dust`] and [`sound`] of a smash on a target at `at`.
+pub(super) fn show(world: &mut World, layer: Entity, smash: Smash, hitter: [f32; 3], at: [f32; 3], grounded: bool) {
+    if let Some(dust) = dust(at, grounded) {
+        crate::blocks::to_viewers(world, layer, at.map(|c| c.floor() as i32), &[dust]);
+    }
+    sound(world, layer, smash, hitter, grounded);
 }
 
 fn heard(name: &str, [x, y, z]: [f32; 3]) -> LevelSoundEvent {

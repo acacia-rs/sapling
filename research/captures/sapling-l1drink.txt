@@ -1,0 +1,289 @@
+## drill starts at 1794151138976
+## /kill @e[type=!player]
+     22 actor   CommandOutput success_count=0 data=None commands.generic.noTargetMatch success=false []
+## /gamerule domobspawning false
+   1022 actor   GameRulesChanged doMobSpawning=Bool(false)
+   1022 watcher GameRulesChanged doMobSpawning=Bool(false)
+   1022 actor   CommandOutput success_count=1 data=None commands.gamerule.success success=true ["domobspawning", "false"]
+   1022 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamerule.success\",\"with\":{\"rawtext\":[{\"text\":\"domobspawning\"},{\"text\":\"false\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /weather clear
+   2025 actor   CommandOutput success_count=1 data=None commands.weather.clear success=true []
+   2025 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.weather.clear\",\"with\":{\"rawtext\":null}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /difficulty easy
+   3020 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.difficulty.success\",\"with\":{\"rawtext\":[{\"text\":\"EASY\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   3021 actor   CommandOutput success_count=1 data=None commands.difficulty.success success=true ["EASY"]
+## /gamemode creative @s
+   4073 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   4073 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+   4073 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /gamemode creative CmdWatcher
+   5077 actor   CommandOutput success_count=1 data=None commands.gamemode.success.other success=true ["%createWorldScreen.gameMode.creative", "CmdWatcher"]
+   5077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+   5077 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.other\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"},{\"text\":\"CmdWatcher\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /effect @s clear
+   6072 actor   CommandOutput success_count=0 data=None commands.effect.failure.notActive.all success=false ["CmdActor"]
+   6120 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+   6120 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6513, paused: false }] }) }
+## /clear @s
+   7074 actor   CommandOutput success_count=0 data=None commands.clear.failure.no.items success=false ["CmdActor"]
+## /fill -8 -27 -8 16 -27 8 stone
+   8202 actor   CommandOutput success_count=1 data=None commands.fill.success success=true ["425"]
+   8204 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.fill.success\",\"with\":{\"rawtext\":[{\"text\":\"425\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+## /fill -8 -26 -8 16 -16 8 air
+   9183 actor   CommandOutput success_count=0 data=None commands.fill.success success=false ["0"]
+## /tp @s 0.5 -26 0.5 -90 0
+  10047 actor   MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 250 }
+  10047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10047 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  10047 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdActor", "0.50", "-26.00", "0.50"]
+  10047 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.0, yaw: -90.0, head_yaw: -90.0, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 250 }
+  10147 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.012787422, yaw: -90.0061, head_yaw: -90.0061, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 252 }
+  10194 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.012787422, yaw: -90.0061, head_yaw: -90.0061, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 253 }
+## /tp CmdWatcher 0.5 -26 0.5
+  11046 watcher MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: -0.010416273, yaw: 0.006881714, head_yaw: 0.006881714, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 259 }
+  11047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 0.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11047 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"0.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  11048 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "0.50"]
+  11048 actor   MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: -0.010416273, yaw: 0.006881714, head_yaw: 0.006881714, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 259 }
+  11098 actor   MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.00873347, yaw: 0.021087646, head_yaw: 0.021087646, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 260 }
+  11145 actor   MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.00873347, yaw: 0.021087646, head_yaw: 0.021087646, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 261 }
+  11245 actor   MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.00873347, yaw: 0.021087646, head_yaw: 0.021087646, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 263 }
+## /
+## /tp CmdWatcher 0.5 -26 6.5
+  13046 watcher MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 6.5 }, pitch: 0.00873347, yaw: 0.021087646, head_yaw: 0.021087646, mode: Teleport, on_ground: true, ridden_runtime_id: 0, teleport: Some(MovePlayerTeleport { cause: Command, source_entity_type: Unknown(1) }), tick: 298 }
+  13046 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"commands.tp.successVictim\",\"with\":{\"rawtext\":[{\"text\":\"0.50, -26.00, 6.50\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13046 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.tp.success.coordinates\",\"with\":{\"rawtext\":[{\"text\":\"CmdWatcher\"},{\"text\":\"0.50\"},{\"text\":\"-26.00\"},{\"text\":\"6.50\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  13047 actor   CommandOutput success_count=1 data=None commands.tp.success.coordinates success=true ["CmdWatcher", "0.50", "-26.00", "6.50"]
+  13047 actor   MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 6.5 }, pitch: 0.00873347, yaw: 0.021087646, head_yaw: 0.021087646, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 298 }
+  13093 actor   MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 6.5 }, pitch: -0.0028546937, yaw: 0.036392212, head_yaw: 0.036392212, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 299 }
+  13144 actor   MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 6.5 }, pitch: -0.0028546937, yaw: 0.036392212, head_yaw: 0.036392212, mode: Normal, on_ground: false, ridden_runtime_id: 0, teleport: None, tick: 300 }
+  13193 actor   MovePlayer MovePlayer { runtime_id: 2, position: Vec3f { x: 0.5, y: -24.37999, z: 6.5 }, pitch: -0.0028546937, yaw: 0.036392212, head_yaw: 0.036392212, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 301 }
+## /gamemode survival @s
+  14112 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14112 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.survival\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  14113 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.survival"]
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 0
+  16297 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Water Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  16298 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Water Bottle"]
+## /!look 0 1.62 2
+  17109 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: -0.025658775, yaw: -0.019760132, head_yaw: -0.019760132, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 389 }
+## /
+## /!eat
+  19258 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  19258 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 6769, paused: false }] }) }
+  19458 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  19460 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  19660 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  19661 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  19912 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  19912 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+## /
+  20114 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  20115 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  20260 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  20260 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  20459 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  20460 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  20714 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.50006896, y: -24.57999, z: 0.7 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  20716 actor   CompletedUsingItem CompletedUsingItem { used_item_id: 430, use_method: Consume }
+  20717 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.50006896, y: -24.57999, z: 0.7 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 0
+  23114 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Water Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  23115 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Water Bottle"]
+## /!look -2 1.62 0
+  24110 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.015546761, yaw: 90.00989, head_yaw: 90.00989, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 526 }
+## /
+## /!eat
+  26461 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  26461 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  26659 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  26660 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  26861 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  26861 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  27066 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  27067 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+## /
+  27258 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  27258 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  27458 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  27458 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  27722 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.3, y: -24.57999, z: 0.4999655 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  27722 actor   CompletedUsingItem CompletedUsingItem { used_item_id: 430, use_method: Consume }
+  27723 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.3, y: -24.57999, z: 0.4999655 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 0
+  30115 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Water Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  30116 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Water Bottle"]
+## /!look 0 1.62 -2
+  31158 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: -0.01825507, yaw: 179.97272, head_yaw: 179.97272, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 665 }
+  32061 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+  32061 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7025, paused: false }] }) }
+## /
+## /!eat
+  33510 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  33511 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  33709 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  33709 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  33912 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  33912 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+## /
+  34110 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  34111 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  34309 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  34309 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  34509 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  34509 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  34711 actor   CompletedUsingItem CompletedUsingItem { used_item_id: 430, use_method: Consume }
+  34711 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.49990475, y: -24.57999, z: 0.3 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  34712 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.49990475, y: -24.57999, z: 0.3 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 0
+  37162 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Water Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  37163 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Water Bottle"]
+## /!look 2 1.62 0
+  38210 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: -0.029112823, yaw: -89.989174, head_yaw: -89.989174, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 803 }
+## /
+## /!eat
+  40508 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  40508 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  40760 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  40761 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  40962 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  40963 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+## /
+  41160 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  41160 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  41359 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  41360 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  41558 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  41558 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  41762 actor   CompletedUsingItem CompletedUsingItem { used_item_id: 430, use_method: Consume }
+  41763 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.7, y: -24.57999, z: 0.5000378 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  41763 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.7, y: -24.57999, z: 0.5000378 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 0
+  44163 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Water Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  44164 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Water Bottle"]
+  44859 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+  44860 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7281, paused: false }] }) }
+## /!look 1.4 1.62 1.4
+  45207 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: -0.0192746, yaw: -45.023804, head_yaw: -45.023804, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 939 }
+## /
+## /!eat
+  47560 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  47560 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  47808 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  47808 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  48014 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  48014 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+## /
+  48160 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  48160 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  48358 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  48358 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  48607 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  48608 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  48761 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.6414801, y: -24.57999, z: 0.6413626 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  48762 actor   CompletedUsingItem CompletedUsingItem { used_item_id: 430, use_method: Consume }
+  48763 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.6414801, y: -24.57999, z: 0.6413626 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 0
+  51215 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Water Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  51216 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Water Bottle"]
+## /!look 0 0 2
+  52207 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 38.983604, yaw: -0.021743774, head_yaw: -0.021743774, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 1077 }
+## /
+## /!eat
+  54609 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  54609 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  54817 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  54817 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  55009 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  55009 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+## /
+  55211 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  55211 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  55412 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  55412 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  55621 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  55621 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  55819 actor   CompletedUsingItem CompletedUsingItem { used_item_id: 430, use_method: Consume }
+  55820 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.5000759, y: -24.57999, z: 0.7 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  55820 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.5000759, y: -24.57999, z: 0.7 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+  57675 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+  57675 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7537, paused: false }] }) }
+## /replaceitem entity @s slot.weapon.mainhand 0 potion 1 0
+  58213 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Water Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  58214 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Water Bottle"]
+## /!look 0 3.2 2
+  59212 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: -38.33815, yaw: -0.0119018555, head_yaw: -0.0119018555, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 1214 }
+## /
+## /!eat
+  61610 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  61611 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  61811 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  61811 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  62010 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  62010 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+## /
+  62210 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  62210 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  62408 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  62409 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  62608 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  62609 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 28180480, fire_at_position: None }
+  62817 actor   CompletedUsingItem CompletedUsingItem { used_item_id: 430, use_method: Consume }
+  62817 watcher LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.50004154, y: -24.57999, z: 0.7 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+  62818 actor   LevelSoundEvent LevelSoundEvent { sound_id: "bottle.empty", position: Vec3f { x: 0.50004154, y: -24.57999, z: 0.7 }, extra_data: -1, entity_type: "", is_baby_mob: false, is_global: false, entity_unique_id: -1, fire_at_position: None }
+## /
+## /
+## /replaceitem entity @s slot.weapon.mainhand 0 honey_bottle 1
+  65213 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.replaceitem.success.entity\",\"with\":{\"rawtext\":[{\"text\":\"slot.weapon.mainhand\"},{\"text\":\"0\"},{\"text\":\"CmdActor\"},{\"text\":\"1\"},{\"text\":\"Honey Bottle\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  65215 actor   CommandOutput success_count=1 data=None commands.replaceitem.success.entity success=true ["slot.weapon.mainhand", "0", "CmdActor", "1", "Honey Bottle"]
+## /!look -2 1.62 0
+  66258 watcher MovePlayer MovePlayer { runtime_id: 1, position: Vec3f { x: 0.5, y: -24.37999, z: 0.5 }, pitch: 0.012676708, yaw: 90.00958, head_yaw: 90.00958, mode: Normal, on_ground: true, ridden_runtime_id: 0, teleport: None, tick: 1352 }
+## /
+## /!eat
+  68614 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  68614 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  68860 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  68861 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69066 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69066 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+## /
+  69216 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69216 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69462 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69468 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69666 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69666 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69862 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  69862 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  70064 actor   EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+  70065 watcher EntityEvent EntityEvent { runtime_entity_id: 1, event_id: EatingItem, data: 39583744, fire_at_position: None }
+## /
+  70271 actor   CompletedUsingItem CompletedUsingItem { used_item_id: 604, use_method: Eat }
+  70308 actor   LevelSoundEvent LevelSoundEvent { sound_id: "burp", position: Vec3f { x: 0.5, y: -24.47999, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  70309 watcher LevelSoundEvent LevelSoundEvent { sound_id: "burp", position: Vec3f { x: 0.5, y: -24.47999, z: 0.5 }, extra_data: -1, entity_type: "minecraft:player", is_baby_mob: false, is_global: false, entity_unique_id: 1, fire_at_position: None }
+  70460 actor   SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+  70460 watcher SyncWorldClocks SyncWorldClocks { payload_type: SyncState, content: SyncState(SyncWorldClocksContentSyncState { sync_states: [SyncWorldClockStateData { clock_id: 7194480507151251734, time: 7793, paused: false }] }) }
+## /
+## /gamemode creative @s
+  72261 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.gamemode.success.self\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  72261 actor   Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"translate\":\"gameMode.changed\",\"with\":{\"rawtext\":[{\"text\":\"%createWorldScreen.gameMode.creative\"}]}}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  72261 actor   CommandOutput success_count=1 data=None commands.gamemode.success.self success=true ["%createWorldScreen.gameMode.creative"]
+## /clear @s
+  73259 watcher Text Text { needs_translation: false, category: MessageOnly, type: Json, content: Json(TextContentJson { message: "{\"rawtext\":[{\"text\":\"§7§o[\"},{\"translate\":\"CmdActor\"},{\"text\":\": \"},{\"translate\":\"commands.clear.success\",\"with\":{\"rawtext\":[{\"text\":\"CmdActor\"},{\"text\":\"1\"}]}},{\"text\":\"]\"}]}\n" }), xuid: "", platform_chat_id: "", has_filtered_message: false, filtered_message: None }
+  73260 actor   CommandOutput success_count=1 data=None commands.clear.success success=true ["CmdActor", "1"]
+## /
+probe exit 0
+LAGGED: the server fell behind its tick during the drill at 2x; if this capture differs, rerun with TICK_SCALE=1

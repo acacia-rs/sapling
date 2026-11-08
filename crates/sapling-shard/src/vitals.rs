@@ -12,7 +12,7 @@ pub(crate) mod effects;
 pub(crate) mod frost;
 pub(crate) use eating::bite;
 pub(crate) use effects::{afflict, give as give_effect, give_ambient, hits_for, kept as kept_effects, restored as restored_effects};
-pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, punched, pushed, rammed, resists_all, set_alight, shot, thorned, winded};
+pub(crate) use struck::{bitten, blasted, boomed, crushed, electrocuted, fanged, fireworked, is_fireproof, knocked, pearled, Punch, punched, pushed, rammed, resists_all, set_alight, shot, thorned, winded};
 mod harm;
 use harm::{ask, dress, flash, land, settle};
 pub(crate) use harm::{flash_guarded, hurt};
@@ -182,8 +182,7 @@ pub(crate) fn tick(world: &mut World) {
     effects::tick(world);
     shield::tick(world);
     let players: Vec<(Entity, Entity)> = in_world(world).into_iter().filter_map(|player| Some((player, world.get::<InLayer>(player)?.0))).collect();
-    for (player, layer) in players {
-        if is_mortal(world, player) {
+    for (player, layer) in players {        if is_mortal(world, player) {
             stand::stand(world, player, layer);
         } else {
             stand::stand_unhurt(world, player, layer);

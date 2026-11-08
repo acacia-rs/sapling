@@ -38,7 +38,7 @@ pub(super) fn fire_harm(level: &Level, body: &Body) -> Option<(f32, bool)> {
 }
 
 /// Whether the mob at `body`, on the ground, stands on magma.
-pub(super) fn on_magma(level: &Level, body: &Body) -> bool {
+pub(crate) fn on_magma(level: &Level, body: &Body) -> bool {
     under(level, body.at).is_some_and(|state| state.name == MAGMA)
 }
 

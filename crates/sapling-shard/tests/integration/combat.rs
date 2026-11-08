@@ -188,6 +188,25 @@ fn a_hit_while_falling_is_critical_for_half_again_with_its_sound_and_sparks() {
 }
 
 #[test]
+fn a_hit_while_sliding_down_a_ladder_is_not_critical() {
+    // bds-l1crit.txt: a hit from 5 up a ladder column flashed plain, no sparks.
+    let mut h = ready();
+    h.remote.run(|ctx| {
+        assert!(ctx.set_block([-1, 65, 0], &sapling_api::Block::new("stone")) && ctx.set_block([-1, 66, 0], &sapling_api::Block::new("stone")));
+        assert!(ctx.set_block([0, 65, 0], &sapling_api::Block::new("ladder")) && ctx.set_block([0, 66, 0], &sapling_api::Block::new("ladder")));
+    });
+    let cow = cow(&mut h, [2.0, 65.0, 0.5]);
+    for y in [66.6, 66.45, 66.3] {
+        h.receive(1, &input_at([0.5, y, 0.5]));
+        h.tick_all();
+    }
+    h.receive(1, &attack(cow));
+    let sent = h.tick_all().to(2).to_vec();
+    assert_eq!((health_of(&sent, cow), sounds(&sent).contains(&"attack.critical".to_owned())), (vec![9.0], false));
+    assert!(all::<Animate>(&sent).iter().all(|animate| animate.action_id != AnimateActionId::CriticalHit));
+}
+
+#[test]
 fn a_hit_is_dropped_unless_its_packet_names_eyes_within_six_of_the_players() {
     // research/captures/bds-c1reach.txt: claimed eyes 5.8 and 5.95 above the actor's landed, 6.2 and 7 did not.
     let mut h = ready();

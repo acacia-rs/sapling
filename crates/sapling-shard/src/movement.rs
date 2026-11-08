@@ -23,7 +23,7 @@ use crate::riding::{Reins, Riding};
 use crate::simulation::{self, Own, Ruling, Simulated};
 use crate::visibility::ToViewers;
 use crate::vitals::Vitals;
-pub(crate) use crawl::crawl;
+pub(crate) use crawl::{Crawling, crawl};
 pub(crate) use placing::{correct, correct_unmoving, push, push_into_lava, push_unmoving, reset, teleport, teleport_as, teleport_onto_ground};
 pub(crate) use pose::{Pose, after_pose, flags_item, pose_packet, whole_packet};
 
