@@ -2,13 +2,14 @@
 //! spot of water up to 10 off across, or, once hit, its prey, which it bites as other hunters do
 //! (`hunting::strike`); how it turns and is pushed: swim.rs. Short of breath it swims up and
 //! breaches, and now and then breaches at the surface: breath.rs. Its anger: anger.rs; out of
-//! water: ashore.rs.
-// TODO: it does not flock (`minecraft:flocking`) or swim with players (`swim_with_entity`); no
-// capture shows either (docs/research/mob-kinds.md, "The dolphin").
+//! water: ashore.rs; with no prey it may swim with a player: company.rs.
+// TODO: it does not flock (`minecraft:flocking`); BDS's six in a pool 13 across kept 2.4 to 3.8 from
+// their middle as it wandered (research/captures/bds-ab1flock.txt; docs/research/mob-kinds.md).
 
 mod anger;
 mod ashore;
 mod breath;
+mod company;
 mod swim;
 
 pub(super) use anger::{anger, bit};
@@ -50,6 +51,7 @@ pub(super) struct Dolphin {
     rising: bool,
     breach: Option<breath::Breach>,
     breached: Option<u64>,
+    company: Option<company::Company>,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
@@ -112,6 +114,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, body: &Bod
     }
     match prey {
         Some(feet) => swim::chase(world, entity, body, [feet[0], feet[1] + MIDDLE, feet[2]]),
+        None if company::swim_with(world, entity, body) => {}
         None => {
             if let Some(to) = roam(world, entity, layer, body) {
                 swim::roam(world, entity, body, to);

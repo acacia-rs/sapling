@@ -7,8 +7,10 @@
 // The run-up is fitted: BDS's waits from a landing were 7.3 to 9.2 s, sapling's 7.1 to 9.0
 // (research/captures/bds-n3frogs.txt, sapling-n3frogs.txt).
 //! It eats small slimes and magma cubes (eating.rs) and lays frogspawn (husbandry/frog_spawn.rs).
+//! In water it makes for land (landward.rs).
 
 mod eating;
+mod landward;
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
@@ -51,12 +53,13 @@ pub(super) struct Frog {
     /// The tick its next croak may start in, and the tick the one under way ends in.
     croaks: u64,
     croaking: Option<u64>,
+    landward: landward::Landward,
 }
 
 pub(super) fn arm(world: &mut World, entity: Entity, kind: &str) {
     if kind == KIND {
         let (until, croaks) = (wait(world, WAITS), wait(world, CROAK_GAPS));
-        world.entity_mut(entity).insert(Frog { stage: Stage::Sitting(until), croaks, croaking: None });
+        world.entity_mut(entity).insert(Frog { stage: Stage::Sitting(until), croaks, croaking: None, landward: Default::default() });
     }
 }
 
@@ -92,7 +95,7 @@ fn croak(world: &mut World, entity: Entity, layer: Entity, cell: [i32; 3], id: u
 }
 
 /// Before its move: a frog in the air keeps its leap; on land it sits, and leaps when it is
-/// time. False in water, where it swims (swimming.rs).
+/// time; in water it makes for land.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64) -> bool {
     let (Some(stage), Some(body)) = (world.get::<Frog>(entity).map(|frog| frog.stage), world.get::<Body>(entity).copied()) else { return false };
     let now = world.resource::<Tick>().0;
@@ -112,7 +115,14 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, id: u64) -
             fling(world, entity,[x, y - GRAVITY * (now - since) as f32, z]);
             stage
         }
-        _ if body.liquid() == Some(Liquid::Water) => return false,
+        _ if body.liquid() == Some(Liquid::Water) => {
+            let Some(mut kept) = world.get::<Frog>(entity).map(|frog| frog.landward) else { return false };
+            landward::steer(world, entity, layer, &body, &mut kept);
+            if let Some(mut frog) = world.get_mut::<Frog>(entity) {
+                frog.landward = kept;
+            }
+            return true;
+        }
         Stage::Sitting(until) if now >= until && body.on_ground => match target(world, layer, &body) {
             Some(speed) => {
                 fling(world, entity,speed);

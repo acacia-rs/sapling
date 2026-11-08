@@ -504,7 +504,9 @@ is assumed from its pack's like shape, not drilled.
   bred, one `PREGNANT` ~3 s on, `LAYING_EGG` 41 ticks, `frog_spawn` on water with two `lay_spawn`. Ported by
   fourteenth2v: frogs/eating.rs (the loot where the tongue met the prey, 1.125 up) and husbandry/frog_spawn.rs
   (it walks at 0.1 to an air cell over water within 10 across and 3 up, lays within 1.7, though BDS's began 2.2
-  off); test fourteenth2v.
+  off); test fourteenth2v. In water it makes for the nearest land within 30 across and 8 up or down
+  (`move_to_land`; bds-f14efish.txt: along the floor at up to 0.11 a tick, then up the wall at up to 0.14),
+  straight across then up the wall once within 1.5 (frogs/landward.rs, fourteenth1ab; BDS's paths cell by cell).
 - Bees (bds-g14bee.txt): bees with pollen grew wheat a block under them 0 to 1 with `ParticleCropGrowth` at
   the cell's corner (bees/crops.rs, pack `grows_crop` 10 charges at 0.03); a silk-touched hive's item kept its
   bee in `Occupants` and none came out; a hive over a lit campfire broken by hand let its bee out angry.
@@ -582,10 +584,14 @@ It turns 10 degrees a tick at most and is pushed along its heading, bobbing down
 feet in the top water cell (`creatures/dolphins/swim.rs`). It holds 4800 ticks of breath
 (`breath=`, health/breath.rs), shows no bubbles, and drowns at 0; under 150 it shows `SWIMMING`
 and swims up at up to 0.2 a tick, breaching (`SPRINTING`, 0.4 along the way it moves most on top
-of its motion, then 0.62 up) once its eyes reach the top water cell, and now and then breaches at
+of its motion, then 0.62 up) once its eyes are 0.4 up the top water cell, and now and then breaches at
 random where 6 cells ahead are open surface (`creatures/dolphins/breath.rs`, fourteenth1z). It
-breathes 4 ticks into a breach where BDS's did at 2 (sapling's mobs breathe by where the tick
-began). It does not flock or swim with players (no capture shows either).
+breathes 2 ticks into a breach, as BDS's did: breaching when its eyes first reached the top cell
+left them under water after the leap's first tick, so it breathed at 4 (fourteenth1ab moved the
+breach up to BDS's, eyes 0.48 up the cell at bds-dolphin.txt 51885). With no prey it swims with a
+player (`SwimWithEntityGoal`, decompiled; `creatures/dolphins/company.rs`, no capture). Flocking is
+not ported: bds-ab1flock.txt (six in a pool 13 across, 90 s) kept them 2.4 to 3.8 on average from
+their middle, which wandered 4 or so blocks every 5 s, where six roaming apart would spread some 5.
 
 A fish on land hops as BDS's cod did (`creatures/swimming/ashore.rs`, research/captures/bds-flop.txt),
 and is heard `flop` a tick after each hop from where it hopped, as bds-t2water.txt's cod was
