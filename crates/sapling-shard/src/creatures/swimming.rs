@@ -2,13 +2,11 @@
 //! axolotls), as BDS's swam in the `swimmers` and `amphibians` drills
 //! (research/captures/bds-wander-findings.md): in water each tick it turns its body towards a spot
 //! of water up to `roams` off and is pushed `0.98 x speed^2` along its yaw, and up or down
-//! towards the spot; water keeps 0.8 of its speed (`Physics::SWIMMER`; a turtle's 0.9). It looks
-//! for another spot once within a block of it or after 5 seconds. Out of water a turtle or an
-//! axolotl walks to water within 16 blocks.
-//! Fish hop out of water and flee players (ashore.rs).
-// TODO: the push up or down is fitted at its full strength only (a fish's 1.25 of its push
-// across); nearer the spot's height it is taken to fall off over the last block. A frog does not
-// look for land (`move_to_land`; bds-f14efish.txt: 9 s in, it swam the floor and up the wall out).
+//! towards the spot by [`rise`]; water keeps 0.8 of its speed (`Physics::SWIMMER`; a turtle's 0.9).
+//! It looks for another spot once within a block of it or after 5 seconds. Out of water a turtle or
+//! an axolotl walks to water within 16 blocks.
+//! Fish hop out of water and flee players (ashore.rs); frogs make for land (frogs/landward.rs).
+// BDS signs a fish's push up or down by its pitch, which sapling does not keep: it goes by the spot's height.
 
 mod ashore;
 
@@ -36,26 +34,46 @@ const SEEKS: i32 = 16;
 const SEEKS_DEPTH: i32 = 5;
 const SEEKS_EVERY: u64 = 20;
 
+/// A fish's push up or down is its push across times this much of the height to its spot, at most [`FISH_RISE_MOST`].
+const FISH_RISE: f32 = 5.0;
+const FISH_RISE_MOST: f32 = 1.25;
+/// An amphibian's push up or down is its speed times this, along the way to its spot.
+const AMPHIBIAN_RISE: f32 = 0.1;
+
 /// How a kind swims, by its pack's movement component: degrees it turns a tick (`max_turn`),
-/// whether its push comes up to strength over ten ticks (`movement.amphibious`), how much harder
-/// it is pushed up or down than across, and whether out of water it goes back.
+/// whether it is amphibious (`movement.amphibious`: its push comes up to strength over ten ticks,
+/// and it rises by [`rise`]'s other rule), and whether out of water it goes back.
 #[derive(Clone, Copy)]
 struct Stroke {
     turn: f32,
     ramps: bool,
-    rise: f32,
     seeks_water: bool,
 }
 
-const FISH: Stroke = Stroke { turn: 30.0, ramps: false, rise: 1.25, seeks_water: false };
+const FISH: Stroke = Stroke { turn: 30.0, ramps: false, seeks_water: false };
 
 fn stroke(kind: &str) -> Stroke {
     match kind {
-        "minecraft:turtle" => Stroke { turn: 5.0, ramps: true, rise: 1.0, seeks_water: true },
-        "minecraft:axolotl" => Stroke { turn: 15.0, ramps: true, rise: 1.0, seeks_water: true },
-        "minecraft:frog" => Stroke { turn: 30.0, ramps: true, rise: 1.0, seeks_water: false },
+        "minecraft:turtle" => Stroke { turn: 5.0, ramps: true, seeks_water: true },
+        "minecraft:axolotl" => Stroke { turn: 15.0, ramps: true, seeks_water: true },
+        "minecraft:frog" => Stroke { turn: 30.0, ramps: true, seeks_water: false },
         _ => FISH,
     }
+}
+
+/// A swimmer's push up or down towards a spot `off` from its feet. A fish's (`SwimMoveControl` tick, Linux
+/// 0xbdf8d50) is its push across times 5 x the height off, at most 1.25 of it: full strength until the last
+/// quarter block. An amphibian's: [`amphibian_rise`].
+fn rise(stroke: Stroke, push: f32, speed: f32, off: [f32; 3], height: f32) -> f32 {
+    if stroke.ramps { amphibian_rise(speed, off, height) } else { (off[1] * FISH_RISE).clamp(-FISH_RISE_MOST, FISH_RISE_MOST) * push }
+}
+
+/// An amphibian's push up or down towards a spot `off` from its feet (`AmphibiousMoveControl` tick, Linux
+/// 0xbe27b10): its `speed` x 0.1 along the way there, the height off taken half its `height` further.
+pub(in crate::creatures) fn amphibian_rise(speed: f32, [dx, dy, dz]: [f32; 3], height: f32) -> f32 {
+    let dy = if dy > 0.0 { dy + height / 2.0 } else { dy - height / 2.0 };
+    let far = (dx * dx + dy * dy + dz * dz).sqrt();
+    if far > 0.0 { speed * AMPHIBIAN_RISE * dy / far } else { 0.0 }
 }
 
 #[derive(Component, Default)]
@@ -141,8 +159,9 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     swimmer.pace = if stroke.ramps { (swimmer.pace + PACE).min(1.0) } else { 1.0 };
     let (yaw, push) = (swimmer.yaw, STROKE * speed * speed * swimmer.pace * haste);
     let facing = yaw.to_radians();
+    let up = rise(stroke, push, speed, [dx, dy, dz], body.size[1]);
     if let Some(mut moving) = world.get_mut::<Body>(entity) {
-        moving.fly([-facing.sin() * push, dy.clamp(-1.0, 1.0) * stroke.rise * push, facing.cos() * push]);
+        moving.fly([-facing.sin() * push, up, facing.cos() * push]);
     }
     if let Some(mut told) = world.get_mut::<Told>(entity) {
         told.face(yaw, yaw);
@@ -177,4 +196,26 @@ fn seek_water(world: &mut World, entity: Entity, layer: Entity, kind: &str, body
     let (Some(water), Some(speed)) = (water, sapling_data::mob_traits(kind).strolls) else { return false };
     legs::walk(world, entity, layer, body, [water[0], water[2]], speed, 0.0);
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_fish_rises_at_full_strength_until_the_last_quarter_block() {
+        let push = 0.0098;
+        assert!((rise(FISH, push, 0.1, [3.0, 2.0, 0.0], 0.6) - 1.25 * push).abs() < 1e-7);
+        assert!((rise(FISH, push, 0.1, [3.0, -0.25, 0.0], 0.6) + 1.25 * push).abs() < 1e-7);
+        assert!((rise(FISH, push, 0.1, [3.0, 0.1, 0.0], 0.6) - 0.5 * push).abs() < 1e-7);
+    }
+
+    #[test]
+    fn an_amphibian_rises_at_a_tenth_of_its_speed_along_its_way() {
+        let frog = stroke("minecraft:frog");
+        // 1.5 up and half its 0.5 height: (0, 1.75, 0) from feet, straight up.
+        assert!((rise(frog, 0.022, 0.15, [0.0, 1.5, 0.0], 0.5) - 0.015).abs() < 1e-7);
+        let way = rise(frog, 0.022, 0.15, [4.0, 0.0, 0.0], 0.5);
+        assert!((way - 0.015 * -0.25 / 4.0f32.hypot(0.25)).abs() < 1e-7, "{way}");
+    }
 }

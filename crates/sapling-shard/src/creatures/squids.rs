@@ -80,7 +80,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
     let still = fleeing.filter(|hitter| flees_from(world, *hitter, &body));
     let (ended, fleeing) = (fleeing.is_some() && still.is_none(), still);
     let band = world.get::<Layer>(layer).map(|layer| band(&layer.world, &body));
-    let pressed = fleeing.is_none() && world.get::<Layer>(layer).is_some_and(|layer| pressed::touches(&layer.world, &body));
+    let pressed = fleeing.is_none() && body.collided();
     if pressed && !was_pressed {
         way = pressed::way(world, layer, &body);
     }

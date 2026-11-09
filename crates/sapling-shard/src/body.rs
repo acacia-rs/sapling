@@ -64,6 +64,8 @@ pub(crate) struct Body {
     lifted: f32,
     /// Whether slow falling has it fall by [`SLOW_FALL`].
     slowed: bool,
+    /// Whether its last slide fell short of the wanted move on any axis (moves.rs `collided`).
+    collided: bool,
 }
 
 /// A box in world coordinates: its lowest and highest corners.
@@ -71,7 +73,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false, geysered: 0.0, lifted: 0.0, slowed: false }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false, geysered: 0.0, lifted: 0.0, slowed: false, collided: false }
     }
 
     /// Moves it by `by` as far as the blocks let it, its own motion kept.
@@ -264,6 +266,7 @@ impl Body {
     /// Moves by `moved` of the wanted `motion`: see [`Body::slide`].
     fn slide_by(&mut self, view: &impl WorldView, motion: [f32; 3], moved: [f32; 3]) -> bool {
         let start = self.aabb();
+        self.collided = (0..3).any(|axis| (moved[axis] - motion[axis]).abs() > f32::EPSILON);
         for axis in 0..3 {
             self.at[axis] += moved[axis];
             if moved[axis] != motion[axis] && (axis != 1 || motion[axis] > 0.0) {

@@ -4,9 +4,10 @@
 //! looks again 40 to 59 ticks on, else again 10 to 19 ticks on; head 1's 17th look in a row with none
 //! shoots a blue skull at random near. The middle head (the yaw told as its head's) turns 10 degrees a
 //! tick at most towards its prey across, and back to the body with none (research/captures/bds-ab1wither2.txt:
-//! held cows, 483 of 566 told moves within 5 degrees of the prey's yaw, turning 20 a told move).
-// TODO: BDS's looked back to the body for a second after a volley's blue skull, and took random looks
-// while it was spawning; not ported.
+//! held cows, 483 of 566 told moves within 5 degrees of the prey's yaw, turning 20 a told move). After a
+//! volley's blue skull it looks back to the body for [`LOOKS_BACK`] ticks, fitted (bds-ab1wither2.txt: about
+//! 1.4 s each volley, with `WitherRandomAttackPosGoal` starting after it).
+// Not ported: the random looks BDS's took while spawning (`RandomLookAroundGoal`, whose settings are unread).
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -41,6 +42,7 @@ const SIDE_UP: f32 = 2.2;
 const ASIDE: f32 = 1.3;
 const MOB_EYES: f32 = 0.85;
 const HEAD_TURN: f32 = 10.0;
+const LOOKS_BACK: u64 = 28;
 
 #[derive(Default)]
 pub(super) struct Heads {
@@ -51,6 +53,8 @@ pub(super) struct Heads {
     pub(super) rate: Rate,
     /// The middle head's yaw, in degrees, once it has looked.
     look: Option<f32>,
+    /// The tick the middle head looks back to the body until.
+    back: u64,
 }
 
 /// The middle head's ticks between shots (`firerate`) and the health it next halves under
@@ -162,7 +166,7 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
     let before = heads.targets;
     let prey = prey(world, wither, layer, body);
     heads.targets[0] = prey.map(|(player, _)| player);
-    let look = look(heads.look.unwrap_or(yaw), yaw, body, prey.map(|(_, feet)| feet));
+    let look = look(heads.look.unwrap_or(yaw), yaw, body, prey.filter(|_| now >= heads.back).map(|(_, feet)| feet));
     heads.look = Some(look);
     if let Some(mut told) = world.get_mut::<crate::sync::Told>(wither) {
         told.face(yaw, look);
@@ -175,6 +179,9 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
         let every = heads.rate.every;
         let rest = if blue { (RESTS[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll(RESTS[1] as u32))).div_ceil(every) * every } else { every };
         heads.next[0] = now + rest;
+        if blue {
+            heads.back = now + LOOKS_BACK;
+        }
     }
     for head in 1..3 {
         if !fights || now < heads.next[head] {

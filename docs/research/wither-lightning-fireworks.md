@@ -222,6 +222,15 @@ tick towards its prey across, or back to the body with none (`wither/heads.rs` `
 `the_withers_middle_head_aims_its_told_head_yaw_at_its_prey`). Not ported: the look back after a volley and
 the random looks while spawning.
 
+Fourteenth1ae, gdb on Linux BDS (bds-ab1wither2 scene): `WitherRandomAttackPosGoal` (vtable 0xeecb048; canUse
+0x54fca50, start 0x54fcbf0, stop 0x54fcda0) started once a volley, about every 8 s, for 1.5 to 2 s: a dash to a
+random spot near the target. `RandomLookAroundGoal` (start 0x5760e30: target yaw the current plus a lerp of its
+settings, a time drawn between two more) and `LookAtActorGoal` ran on the wither too; their settings are not
+read. In a new capture (bds-ae1wither2.txt, the ab1wither2 scene; sapling's sapling-ae1wither2.txt) the head went to about the body's yaw (pitch 8) at the blue skull for some 1.4 s, then
+back to the prey at 10 a tick. Ported as fitted: after the blue skull the middle head looks to the body for 28
+ticks (`wither/heads.rs` `LOOKS_BACK`; test `the_withers_middle_head_looks_back_to_its_body_after_a_blue_skull`).
+Still not ported: the random looks while spawning and the random attack-position dash.
+
 ## Fireworks
 
 Code: `crates/sapling-shard/src/fireworks.rs`, `fireworks/{item,recipes,burst}.rs`,
