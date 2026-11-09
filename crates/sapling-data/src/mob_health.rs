@@ -50,6 +50,10 @@ pub struct MobTraits {
     /// The speed a kind that swims about swims at: its `underwater_movement` times its
     /// `random_swim`'s `speed_multiplier`, and how far across and up or down a swim goes.
     pub swims: Option<(f32, [u32; 2])>,
+    /// A baby follows a grown one of its kind at its movement times this (`behavior.follow_parent`).
+    pub follows_parent: Option<f32>,
+    /// That goal's priority is no better than its stroll's: a stroll under way is walked to its end.
+    pub strolls_on: bool,
     /// Its `look_at_player`.
     pub looks: Option<Looks>,
     /// It has `random_look_around`.
@@ -161,7 +165,7 @@ pub fn mob_traits(identifier: &str) -> MobTraits {
         let (least, most) = range(parts.next()?)?;
         Some(Looks { distance, chance, ticks: (least as u32, most as u32) })
     });
-    MobTraits { looks, glances: has("glances"), fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), no_air: has("no_air"), no_bubbles: has("no_bubbles"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, baby_experience, hunts, strolls: number("strolls="), panics: number("panics="), swims }
+    MobTraits { looks, glances: has("glances"), fire_immune: has("fire_immune"), burns_in_sun: has("burns_in_sun"), no_fall: has("no_fall"), breathes_water: has("breathes_water"), no_air: has("no_air"), no_bubbles: has("no_bubbles"), breath: number("breath=").map(|ticks| ticks as u32), teleports: has("teleports"), floats: has("floats"), steadfast: has("steadfast"), resists: if has("steadfast") { 1.0 } else { number("resists=").unwrap_or(0.0) }, unpushable: has("unpushable"), experience, baby_experience, hunts, strolls: number("strolls="), panics: number("panics="), swims, follows_parent: number("follows_parent="), strolls_on: has("strolls_on") }
 }
 
 /// The mob `id` has `left` of `max` health.
@@ -244,7 +248,7 @@ mod tests {
     #[test]
     fn fire_spares_a_strider_a_fall_a_chicken_and_water_a_cod() {
         let looks = Some(Looks { distance: 6.0, chance: 0.02, ticks: (40, 80) });
-        assert_eq!(mob_traits("minecraft:pig"), MobTraits { experience: Some((1, 3)), strolls: Some(0.25), panics: Some(0.3125), floats: true, looks, glances: true, ..MobTraits::default() });
+        assert_eq!(mob_traits("minecraft:pig"), MobTraits { experience: Some((1, 3)), strolls: Some(0.25), panics: Some(0.3125), follows_parent: Some(1.1), floats: true, looks, glances: true, ..MobTraits::default() });
         assert_eq!((mob_traits("minecraft:creeper").experience, mob_traits("minecraft:armor_stand").experience), (Some((5, 5)), None));
         assert_eq!(["minecraft:zombie", "minecraft:piglin", "minecraft:cow"].map(|kind| mob_traits(kind).baby_experience), [Some((12, 12)), Some((1, 1)), None]);
         assert!(mob_traits("minecraft:strider").fire_immune && mob_traits("minecraft:chicken").no_fall && mob_traits("minecraft:cod").breathes_water);

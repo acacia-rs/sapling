@@ -307,8 +307,10 @@ the tick after, and each item entity it hurts (5 health, `harm_by`; a hidden sta
 `entity_damage` from its cell then, removed at 5 (creatures/blast/items.rs); and of a tick's vibrations a
 listener keeps the one at the smallest whole distance, a tie the higher frequency, per S5
 (blocks/sculk/reaching.rs `beats`), its particle sent once the tick's posts are settled. Test fourteenth2x
-`a_summoned_tnt_is_heard_and_then_the_items_its_blast_hurt_over_the_blast`. Still open: steps up ladders
-and scaffolding.
+`a_summoned_tnt_is_heard_and_then_the_items_its_blast_hurt_over_the_blast`. Steps up ladders and
+scaffolding: BDS's zombies do not climb them after a prey above (fourteenth2af: bds-af2climb.txt stopped at
+x 1.976 short of a ladder, vine or scaffolding up a 4-high block; bds-af2shaft.txt, summoned in the
+climbable's walled cell, never left y −60), as sapling's do not, so no mob step count up one arises.
 
 ## Drilled 2026-11-08, group W (`w1pops`; fourteenth1w_drill.rs)
 

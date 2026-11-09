@@ -564,7 +564,8 @@ is assumed from its pack's like shape, not drilled.
 - Wolf sight (bds-ac2wolf.txt, two runs): `OwnerHurtByTargetGoal::canUse` (0x57553b0) checks the owner's last
   attacker through the target goal's `_canAttack` with `must_see` from goal+0x32 (the pack sets none; its
   default is not read). Both drills failed to show it: the first held zombie stood 3.6 off the actor's hit,
-  the second's four tamed wolves were all sitting (`SITTING`, bit 24) after four rounds of bones.
+  the second's four tamed wolves were all sitting (`SITTING`, bit 24) after four rounds of bones. Settled by
+  bds-af2wolf.txt (husbandry.md "A tamed wolf's guard"): walled-off standing wolves took the fight, so no sight.
 
 A witch throws as above (`creatures/arrows.rs` `POTION`, its rise fitted to the three throws),
 picking the potion by its pack's rule (`creatures/splashes.rs`). A player it hits gets the full

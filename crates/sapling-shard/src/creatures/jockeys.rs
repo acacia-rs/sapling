@@ -65,6 +65,6 @@ pub(crate) fn rein(world: &World, mount: Entity, kind: &str, rider: Entity) -> O
 }
 
 /// The mob's `movement`: its strides' if it rolled them, else its kind's.
-fn movement(world: &World, mob: Entity, kind: &str) -> Option<f32> {
+pub(super) fn movement(world: &World, mob: Entity, kind: &str) -> Option<f32> {
     world.get::<Strode>(mob).map(|strode| strode.0.movement).or_else(|| sapling_data::mob_pace(kind, shown::is_baby(world, mob)))
 }

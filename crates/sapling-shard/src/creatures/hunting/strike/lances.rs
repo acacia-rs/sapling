@@ -1,7 +1,7 @@
 //! A spear holder's charge, BDS's `UseKineticWeaponGoal` (Linux vtable 0xeeb4b48, tick 0x53497c0) as
 //! research/captures/bds-aa2spear.txt (on foot) and bds-j3ride.txt (on a zombie horse) showed it. Within
 //! its `approach_distance` of its prey it raises the spear (`ACTION`, bit 4) and walks at the prey and
-//! through it, then on to a spot its `reposition` distance beyond, and back. While the spear is up and
+//! through it, then to a spot its `reposition` distance south of the prey ([`spot`]), and back. While the spear is up and
 //! past the spear's `delay`, a prey in its reach band is hit for the mob's attack plus the whole part
 //! of its speed at the prey in blocks a second times the spear's `damage_multiplier`, thrown 0.4 away
 //! and up within the knockback time, and viewers see `KineticDamageDealt`: no swing, no sound. After
@@ -52,8 +52,11 @@ const PASSES: f32 = 1.625;
 const HURTS_FROM: f32 = 0.92;
 const THROWS_FROM: f32 = 1.02;
 const THROW: f32 = 0.4;
-/// Ticks between two of its hits on one prey.
-const REHITS: u64 = 10;
+/// Ticks between two of its hits on one prey (bds-af2spear.txt: 11, mounted and on foot).
+const REHITS: u64 = 11;
+/// The spread of the angle its reposition spot is picked at, degrees (the goal's +0x158, read by gdb
+/// in bds-af2spear-gdb.txt).
+const SPREAD: f32 = 90.0;
 /// How near a reposition spot counts as reached, and the ticks it tries for one.
 const REACHED: f32 = 1.0;
 const GIVES_UP: u64 = 100;
@@ -90,7 +93,7 @@ fn across(a: [f32; 3], b: [f32; 3]) -> f32 {
     (a[0] - b[0]).hypot(a[2] - b[2])
 }
 
-/// Moves a spear holder's charge on a tick and gives where it walks: its prey, or a spot past it.
+/// Moves a spear holder's charge on a tick and gives where it walks: its prey, or its reposition spot.
 /// None for one with no spear or no prey, which lowers a raised spear.
 pub(in crate::creatures) fn plan(world: &mut World, entity: Entity, kind: &str, at: [f32; 3], prey: Option<[f32; 3]>) -> Option<[f32; 3]> {
     let (Some(spear), Some(feet)) = (spear_of(world, entity, kind), prey) else {
@@ -118,11 +121,7 @@ pub(in crate::creatures) fn plan(world: &mut World, entity: Entity, kind: &str, 
             Stage::Charge
         }
         Stage::Approach | Stage::Rest(_) => Stage::Approach,
-        Stage::Charge if off < PASSES => {
-            let beyond = near + world.get_resource_or_insert_with(Dice::default).fraction() * (far - near);
-            let way = if off > 1e-4 { [(feet[0] - at[0]) / off, (feet[2] - at[2]) / off] } else { [0.0, 1.0] };
-            Stage::Reposition([feet[0] + way[0] * beyond, feet[1], feet[2] + way[1] * beyond], now + GIVES_UP)
-        }
+        Stage::Charge if off < PASSES => Stage::Reposition(spot(world, at, feet, [near, far]), now + GIVES_UP),
         Stage::Reposition(spot, until) if now >= until || across(at, spot) < REACHED => Stage::Approach,
         stage => stage,
     };
@@ -131,6 +130,19 @@ pub(in crate::creatures) fn plan(world: &mut World, entity: Entity, kind: &str, 
         Stage::Reposition(spot, _) => spot,
         _ => feet,
     })
+}
+
+/// Where a holder that has passed its prey at `feet` goes next: `UseKineticWeaponGoal` 0x5349f00 turns
+/// the angle from it to its prey (atan2, radians, plus a spread) into radians again as if degrees, so
+/// the spot is all but due south (+z) of the prey, its reposition distance off, whichever way it came
+/// (bds-af2spear-gdb.txt); the cell's middle.
+fn spot(world: &mut World, at: [f32; 3], feet: [f32; 3], [near, far]: [f32; 2]) -> [f32; 3] {
+    let mut dice = world.get_resource_or_insert_with(Dice::default);
+    let spread = SPREAD.to_radians() * 0.5;
+    let angle = (feet[2] - at[2]).atan2(feet[0] - at[0]) + spread * (dice.fraction() * 2.0 - 1.0);
+    let beyond = near + dice.fraction() * (far - near);
+    let turned = angle.to_radians();
+    [(feet[0] - turned.sin() * beyond).floor() + 0.5, feet[1].floor(), (feet[2] + turned.cos() * beyond).floor() + 0.5]
 }
 
 /// The spot a mounted spear holder's mount walks at while it repositions.
