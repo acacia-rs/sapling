@@ -64,6 +64,20 @@ def pace(entity, behaviour, movement_key="minecraft:movement"):
     return round(speed * goal.get("speed_multiplier", 1), 4)
 
 
+def follows_parent(entity):
+    """`follows_parent=<share>`, the share of its `movement` a baby follows a grown one of its kind at
+    (`behavior.follow_parent`, its baby group's over its own), and `strolls_on` where that goal's priority
+    is no better than `random_stroll`'s, so a stroll under way is not cut short; [] for a kind without it."""
+    key = "minecraft:behavior.follow_parent"
+    holders = list(entity.get("component_groups", {}).values()) + [entity.get("components", {})]
+    goal = next((held[key] for held in holders if key in held), None)
+    if goal is None:
+        return []
+    stroll = entity.get("components", {}).get("minecraft:behavior.random_stroll")
+    waits = stroll is not None and goal.get("priority", 0) >= stroll.get("priority", 0)
+    return [f"follows_parent={goal.get('speed_multiplier', 1):g}"] + ["strolls_on"] * waits
+
+
 # Drilled on BDS, not read from the packs (docs/research/mob-attacks.md, "Other kinds").
 HUNTS = {
     # Angry 25 s (`minecraft:angry`); flies at its prey (creatures/bees.rs).
@@ -181,6 +195,7 @@ for document in packs.entities().values():
     for trait, behaviour, movement in [("strolls", "random_stroll", "minecraft:movement"), ("panics", "panic", "minecraft:movement"), ("swims", "random_swim", "minecraft:underwater_movement")]:
         if entity["description"]["identifier"] != "minecraft:player" and pace(entity, behaviour, movement) is not None:
             held.append(f"{trait}={pace(entity, behaviour, movement):g}")
+    held.extend(follows_parent(entity))
     swim = components.get("minecraft:behavior.random_swim")
     if swim and any(name.startswith("swims=") for name in held):
         held.append(f"roams={swim.get('xz_dist', 10)}x{swim.get('y_dist', 7)}")

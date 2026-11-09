@@ -60,7 +60,8 @@ fn a_parrot_falls_slowly_sits_and_takes_off_without_gravity() {
 
 /// bds-aa2spear.txt: a zombie given an iron spear under 10 off (7 here, on the test platform) raises it (`ACTION`) and walks through its
 /// prey, hitting it from 2.5 off for 3.5 on easy (3 + floor(2.28 b/s × 0.95), halved plus 1) with a
-/// throw of 0.4 away and up and `KineticDamageDealt`, never swinging; it goes on past and turns back.
+/// throw of 0.4 away and up and `KineticDamageDealt`, never swinging; once within 1.625 it turns back
+/// toward a spot 6 to 7 south (+z) of its prey (bds-af2spear-gdb.txt), here the side it came from.
 #[test]
 fn a_spear_zombie_charges_through_its_prey_and_hits_by_its_speed() {
     use acacia_proto::packets::{EntityEvent, EntityEventEventId, SetEntityMotion};
@@ -74,7 +75,7 @@ fn a_spear_zombie_charges_through_its_prey_and_hits_by_its_speed() {
     });
     let zombie = common::shooting::spawn(&mut h, "minecraft:zombie", [0.5, FLOOR, 7.5]);
     ask(&mut h, move |ctx| assert_eq!(ctx.set_mob_item(EntityId(zombie), MobSlot::MainHand, Some(&Item::new("minecraft:iron_spear", 1))), Ok(())));
-    let (mut raised, mut events, mut swings, mut throws, mut healths, mut nearest) = (None, Vec::new(), 0, Vec::new(), Vec::new(), f32::MAX);
+    let (mut raised, mut events, mut swings, mut throws, mut healths, mut track) = (None, Vec::new(), 0, Vec::new(), Vec::new(), Vec::new());
     let feet = Arc::new(Mutex::new([0.0; 3]));
     for tick in 0..300 {
         let out = feet.clone();
@@ -88,11 +89,13 @@ fn a_spear_zombie_charges_through_its_prey_and_hits_by_its_speed() {
         swings += all::<EntityEvent>(&sent).iter().filter(mine).filter(|event| event.event_id == EntityEventEventId::ArmSwing).count();
         throws.extend(all::<SetEntityMotion>(&sent).into_iter().map(|motion| [motion.velocity.x, motion.velocity.y, motion.velocity.z]));
         healths.extend(common::shooting::healths(&sent));
-        nearest = nearest.min(feet.lock().unwrap()[2]);
+        track.push(feet.lock().unwrap()[2]);
     }
     assert!(raised.is_some_and(|tick| tick < 5), "raised at once, under 10 off: {raised:?}");
     assert!(!events.is_empty() && swings == 0, "{events:?}, {swings} swings");
     assert!(healths.iter().any(|health| (health - 16.5).abs() < 1e-3), "3.5 a hit on easy: {healths:?}");
     assert!(throws.iter().any(|[x, y, z]| x.abs() < 1e-3 && (y - 0.4).abs() < 1e-3 && (z + 0.4).abs() < 1e-3), "{throws:?}");
-    assert!(nearest < -1.0, "it went through its prey: {nearest}");
+    let nearest = (0..track.len()).min_by(|a, b| track[*a].total_cmp(&track[*b])).expect("ticks");
+    let back = track[nearest..].iter().copied().fold(f32::MIN, f32::max);
+    assert!(track[nearest] < 2.2 && back - track[nearest] > 3.0, "came within {} and turned back to {back}", track[nearest]);
 }

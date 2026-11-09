@@ -123,7 +123,9 @@ value below 1), `unpushable` (no `minecraft:pushable_by_entity`, nor a `minecraf
 and of `panic`, for an entity with `navigation.walk` (or `navigation.generic` that can walk); a
 movement given as a range (a horse's) counts as its middle. `swims=` is `minecraft:underwater_movement`
 times `random_swim`'s `speed_multiplier` (with `navigation.generic` that can swim), and `roams=XxY`
-that behaviour's `xz_dist` and `y_dist`. `attack=`, `speed=`, `sees=` and `hits=effect:ticks` are the script's own
+that behaviour's `xz_dist` and `y_dist`. `follows_parent=` is `behavior.follow_parent`'s
+`speed_multiplier`, its baby group's over its own, and `strolls_on` marks a kind whose goal's priority is no
+better than `random_stroll`'s. `attack=`, `speed=`, `sees=` and `hits=effect:ticks` are the script's own
 table of the kinds whose hunting was drilled (`docs/research/mob-attacks.md`): `attack` is
 `minecraft:attack` plus what the kind holds (a vindicator's axe 5, a wither skeleton's sword 5),
 `speed` is `minecraft:movement` times its attack's `speed_multiplier`, `sees` the `max_dist` of its

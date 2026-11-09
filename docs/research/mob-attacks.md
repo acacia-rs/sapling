@@ -696,7 +696,7 @@ sapling-aa2spear: the first round's hits at 121, 139, 157, 175 and 193 ticks (BD
 194), the same harm and throws, the spear down at 277 (BDS 278); the second charge of each round comes
 later than BDS's (403 against 322: the reposition walk differs), and the wooden round hit 10 ticks early.
 Fitted, not decompiled: the reach band (2..4.5 × 0.5, the 0.25 margin as centre distance), hits only
-while charging (an unthrown actor was struck once a pass) and 10 ticks apart, the rest 20-30 ticks, the prey's own speed taken only for a mob prey, and the
+while charging (an unthrown actor was struck once a pass) and 11 ticks apart (fourteenth2af), the rest 20-30 ticks, the prey's own speed taken only for a mob prey, and the
 husk, zombie villager, pigman and piglin as the zombie (their packs' paces not applied). Mounted
 (sapling-j3ride against bds-j3ride) still differs: sapling's zombie horse walks 0.185 a tick to BDS's 0.27,
 never gets past the thrown actor and hits 9 times in pairs 10 ticks apart where BDS's passed, turned 8.8 off
@@ -710,6 +710,16 @@ actor, the side it came from, where sapling's goes on 8-9 beyond (to z −10). T
 `UseKineticWeaponGoal` 0x5349f00: an angle from atan2 of the two positions plus a random spread of
 ±goal+0x158 / 2 degrees, a distance in the reposition range, floored; which way the atan2 runs and the
 spread were not settled. Not drilled: a spear holder against a mob, the camel husk's charge.
+
+Fourteenth2af (af2spear, both charging from the north: bds-af2spear.txt, gdb on 0x5349f00 and its result at
+0x534a141 in bds-af2spear-gdb.txt). The spread (goal+0x158) is 90; the reach read there is 1 and 2.25, so it
+repositions once nearer than 1.625 across. The angle is `atan2(dz, dx)` from mob to prey in radians plus
+±45° as radians, then turned into radians *again* as if it were degrees, so it is under 0.04: the spot is
+`(floor(x − sin θ·d), floor(y), floor(z + cos θ·d))` about the prey, d in the reposition range, all but
+due south (+z) whichever way the mob came. Seven of the ten picks fit (mounted z +8..9, on foot +6..7);
+three re-picks a few ticks after the first (state 2 starting over without progress) lay 3 to 5 farther,
+unexplained. Hits came 11 ticks apart mounted and on foot (the separate `DealKineticDamageSystem`, not
+found). Ported: lances.rs `spot`, `SPREAD`, `REHITS` 11.
 
 ## Sapling
 

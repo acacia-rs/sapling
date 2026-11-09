@@ -19,6 +19,7 @@ mod lying;
 mod nesting;
 mod offering;
 mod owners;
+mod parents;
 mod products;
 mod rolls;
 mod shoulders;
@@ -82,7 +83,7 @@ pub(super) fn spawned_raising(world: &mut World, layer: Entity, kind: &str, feet
 }
 
 /// Before the mob's move, what its raising has it do: sit, be pulled on its lead, court, follow
-/// its owner, fight for it, follow food, flee, roll or lie down. False when none of these steers it.
+/// its owner, fight for it, follow food, flee, follow its parent (parents.rs), roll or lie down. False when none of these steers it.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str) -> bool {
     if world.get::<Raised>(entity).is_none() {
         return false;
@@ -102,6 +103,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         || owners::follow(world, entity, layer, kind)
         || breeding::tempted(world, entity, layer, kind)
         || avoiding::flee(world, entity, layer, kind)
+        || parents::follow(world, entity, layer, kind)
         || rolls::start(world, entity, kind)
         || lying::start(world, entity, kind)
 }

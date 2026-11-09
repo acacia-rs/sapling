@@ -89,27 +89,40 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: O
         let starts = body.on_ground && (flees.is_some() || world.get_resource_or_insert_with(Dice::default).fraction() * EVERY < 1.0);
         starts.then(|| way_to(world, layer, &body, far, shuns_sun)).flatten().map(|way| (way, now + PATIENCE))
     });
+    let stroll = stroll.filter(|(_, until)| now < *until).map(|(way, until)| (walk_way(world, entity, layer, &body, way, speed), until));
+    if stroll.is_none() {
+        legs::rest(world, entity);
+    }
+    if let Some(mut kept) = world.get_mut::<Stroll>(entity) {
+        kept.0 = stroll.filter(|(way, _)| !way.is_empty());
+    }
+}
+
+/// The mob drops the stroll it was on, for something else to steer it.
+pub(super) fn drop_stroll(world: &mut World, entity: Entity) {
+    if let Some(mut stroll) = world.get_mut::<Stroll>(entity) {
+        stroll.0 = None;
+    }
+}
+
+/// Walks the mob along `way` at `speed`, slowing on its last block, or stands it still at its end:
+/// what is left of the way, the cells it has reached dropped.
+pub(super) fn walk_way(world: &mut World, entity: Entity, layer: Entity, body: &Body, mut way: Vec<Cell>, speed: f32) -> Vec<Cell> {
     let middle = |[x, _, z]: Cell| [x as f32 + 0.5, z as f32 + 0.5];
     let arrived = (body.size[0] * 0.5).max(ARRIVED);
-    let stroll = stroll.filter(|(_, until)| now < *until).map(|(mut way, until)| {
-        while way.first().is_some_and(|cell| {
-            let [x, z] = middle(*cell);
-            (x - body.at[0]).hypot(z - body.at[2]) < arrived
-        }) {
-            way.remove(0);
-        }
-        (way, until)
-    });
-    let stroll = stroll.filter(|(way, _)| !way.is_empty());
-    match &stroll {
-        Some((way, _)) => {
-            let to = middle(way[0]);
-            let slowed = if way.len() == 1 { last_block_share(&body, to) } else { 1.0 };
-            legs::walk(world, entity, layer, &body, to, speed * slowed, 0.0);
+    while way.first().is_some_and(|cell| {
+        let [x, z] = middle(*cell);
+        (x - body.at[0]).hypot(z - body.at[2]) < arrived
+    }) {
+        way.remove(0);
+    }
+    match way.first() {
+        Some(cell) => {
+            let to = middle(*cell);
+            let slowed = if way.len() == 1 { last_block_share(body, to) } else { 1.0 };
+            legs::walk(world, entity, layer, body, to, speed * slowed, 0.0);
         }
         None => legs::rest(world, entity),
     }
-    if let Some(mut kept) = world.get_mut::<Stroll>(entity) {
-        kept.0 = stroll;
-    }
+    way
 }

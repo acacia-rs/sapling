@@ -329,6 +329,32 @@ Ported in husbandry/guarding.rs; test `a_tamed_wolf_leaps_at_what_its_owner_hits
 inside `melee_attack`'s reach `(width × 2)² + foe width` = 1.428 and past the hunters' per-axis 1.4 box. Sapling's
 guard now bites by that reach (guarding.rs `reaches`), its pace 20 as before.
 
+`af2wolf` (fourteenth2af, bds-af2wolf.txt): four wolves tamed and left standing east of a three-high stone wall,
+the survival owner and a held zombie west of it. The zombie hurt the owner at 38.6 s; all four wolves set off
+without sight of it (1.4 to 12 s later), along the wall to its ends at z ±6 and round, and bit it: `owner_hurt_by_target` needs no sight (goal+0x32 `must_see` off by default), as
+sapling's guard, which takes no sight either. sapling-af2wolf's wolves took it up too but pressed on the
+wall at x 3.3, walking straight: the guard's chase now walks as a hunter does, by a way round where the
+floor bars it (guarding.rs `chase` through `hunting::approach`; test fourteenth2af
+`a_tamed_wolf_walks_round_a_wall_to_what_its_owner_hits`).
+
+## Babies following their parents (2026-11-09, `af2baby`, bds-af2baby.txt)
+
+`behavior.follow_parent` is BDS's `FollowParentGoal` (Linux vtable 0xeee5ba8; canUse 0x57420e0,
+canContinueToUse 0x57425a0, tick 0x57427d0), Java's rule: a baby (flag 11) takes the nearest grown,
+living one of its own `ActorTypeComponent` among the entities its box grown by 8, 4, 8 fetches, if that one
+is 3 or more off (squared 9 at 0x1098858); it keeps following while 3 to 16 off (256 at 0x1098344),
+its path to that one found again every 10 ticks, at its movement times `speed_multiplier`.
+On BDS a baby cow, pig and sheep 7 east of a held grown one walked straight to it at 0.163 a tick
+(movement 0.25 × 1.1, the same track for all three) and stopped 2.79 off. A piglet took up a pig
+9.72 off along x, then 10.5 off along z, past the box's 8: the search is fitted 2 wider (parents.rs
+`SEARCH`); a lamb 9.75 off did not within 5 s (unexplained). A cow's follow and stroll share priority
+6 (its `cow_baby` group's over its own 5), so a calf on a stroll walked it to its end, past and away
+from its mother, and followed only after (`strolls_on` in mob-traits.tsv; also mooshroom and rabbit).
+A plain `/summon` is a baby 1 time in 20 (the first run's "mother" pig was one): summon parents with
+`spawn_adult`. Sapling: husbandry/parents.rs; test
+`a_baby_cow_walks_to_a_grown_one_and_stops_three_off`. sapling-af2baby: all three stopped 2.8 to 3.0
+off their mother's first spot as BDS's; after that, both servers' babies stroll and follow by chance.
+
 ## Group K (2026-11-08, fourteenth2k_drill.rs)
 
 - `k2babies` (bds-k2babies.txt): of 100 plain summons each, 4 cows, 6 pigs, 6 chickens, 3 sheep, 3

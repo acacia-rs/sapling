@@ -77,10 +77,13 @@ pub(super) fn chase(world: &mut World, entity: Entity, layer: Entity, kind: &str
         return false;
     };
     let rules = sapling_data::husbandry(kind);
-    crate::creatures::legs::walk(world, entity, layer, &body, [at[0], at[2]], rules.map_or(0.3, |rules| rules.walks), 0.0);
+    // By a way round where the floor bars it: bds-af2wolf.txt's wolves walked round a wall's ends.
+    crate::creatures::hunting::approach(world, entity, layer, &body, at, rules.map_or(0.3, |rules| rules.walks), 0.0);
     let (dx, dz) = (at[0] - body.at[0], at[2] - body.at[2]);
     let across = dx.hypot(dz).max(1e-4);
-    if body.on_ground && (LEAPS[0]..=LEAPS[1]).contains(&distance(body.at, at)) {
+    // Not over a wall: a leap each tick into it kept the wolf from its way round (fitted, not decompiled).
+    let open = world.get::<crate::components::Layer>(layer).is_some_and(|level| crate::creatures::paths::is_clear(&level.world, body.at, at));
+    if open && body.on_ground && (LEAPS[0]..=LEAPS[1]).contains(&distance(body.at, at)) {
         if let Some(mut leaping) = world.get_mut::<Body>(entity) {
             leaping.fling([dx / across * LEAP, LEAP, dz / across * LEAP]);
         }
