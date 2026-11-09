@@ -93,6 +93,9 @@ impl Body {
         }
     }
 
+    /// Whether viewers are told it is on the ground where a push left it.
+    pub fn pushed_ground(&self) -> bool { self.pushed.unwrap_or(self.on_ground) }
+
     /// The liquid found to act on it where the last tick started; a mob went by the one before.
     pub fn liquid(&self) -> Option<Liquid> {
         self.liquid
