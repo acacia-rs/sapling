@@ -155,7 +155,16 @@ impl PacketQueues {
 
     /// Removes and decodes every `T` received this tick; undecodable ones are dropped.
     pub fn take<T: Packet>(&mut self) -> Vec<(Entity, T)> {
-        let raw = self.0.get_mut(&T::ID).map(std::mem::take).unwrap_or_default();
+        self.take_from(|_| true)
+    }
+
+    /// [`PacketQueues::take`] of the `T`s whose senders `from` picks; the rest stay.
+    pub fn take_from<T: Packet>(&mut self, from: impl Fn(Entity) -> bool) -> Vec<(Entity, T)> {
+        let queue = self.0.get_mut(&T::ID).map(std::mem::take).unwrap_or_default();
+        let (raw, kept): (Vec<_>, Vec<_>) = queue.into_iter().partition(|(sender, _)| from(*sender));
+        if let Some(left) = self.0.get_mut(&T::ID) {
+            *left = kept;
+        }
         let decode = |(from, packet): (Entity, RawPacket)| match packet.decode::<T>() {
             Ok(decoded) => Some((from, decoded)),
             Err(error) => {
@@ -168,6 +177,11 @@ impl PacketQueues {
 
     pub fn clear(&mut self) {
         self.0.values_mut().for_each(Vec::clear);
+    }
+
+    /// Whether `sender` has a packet waiting of another type than `besides`.
+    pub fn waits_from(&self, sender: Entity, besides: &[u32]) -> bool {
+        self.0.iter().filter(|(id, _)| !besides.contains(id)).any(|(_, queue)| queue.iter().any(|(from, _)| *from == sender))
     }
 
     /// Who sent a packet of one of `ids` this tick and has not had it taken yet.

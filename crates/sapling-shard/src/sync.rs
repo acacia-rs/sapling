@@ -45,9 +45,10 @@ pub(crate) struct Told {
     pitched: Option<[u8; 2]>,
     /// Its next move is a teleport, which BDS sends forced.
     jumped: bool,
-    /// A piston pushed it this tick: BDS sends the move with `force_move_local_entity`
+    /// Where a piston left it this tick, and whether on the ground: BDS tells that move at once,
+    /// with `force_move_local_entity` and paced as any, before the body's own move of the tick
     /// (research/captures/bds-u3carry.txt, bds-ffshove.txt).
-    pistoned: bool,
+    pistoned: Option<([f32; 3], bool)>,
     /// Viewers are told of every move, however small (an eye of ender's, bds-eye-throw.txt).
     every_move: bool,
     /// This tick's move until it is handed to viewers, each as often as pace.rs lets it.
@@ -77,7 +78,7 @@ struct Before {
 impl Told {
     /// An entity just announced at `at`; its announced motion does not count.
     pub fn new(at: [f32; 3]) -> Self {
-        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], head_follows: false, pitched: None, jumped: false, pistoned: false, every_move: false, pending: None, paced: Paced::default(), grounded: None }
+        Self { at, motion: [0.0; 3], flags: None, turned: [0; 2], turn: [0; 2], head_follows: false, pitched: None, jumped: false, pistoned: None, every_move: false, pending: None, paced: Paced::default(), grounded: None }
     }
 
     /// This tick's move, not yet handed to viewers.
@@ -123,9 +124,17 @@ impl Told {
         self.jumped = true;
     }
 
-    /// A piston pushed the entity: viewers are told of its next move as the piston's.
-    pub fn pistoned(&mut self) {
-        self.pistoned = true;
+    /// A piston left the entity at `at` (its feet), `on_ground` or not: told by
+    /// [`Told::update_pistoned`], or else as its next move.
+    pub fn pistoned(&mut self, at: [f32; 3], on_ground: bool) {
+        self.pistoned = Some((at, on_ground));
+    }
+
+    /// The packets that tell viewers of the entity `id` where a piston left it, its wire `lift`
+    /// above its feet; its motion is left to its next [`Told::update`].
+    pub fn update_pistoned(&mut self, id: u64, lift: f32) -> Vec<Bytes> {
+        let Some(([x, y, z], on_ground)) = self.pistoned.take() else { return Vec::new() };
+        self.tell(id, [x, y + lift, z], self.motion, on_ground, true)
     }
 
     /// The entity's body and head now face `yaw` and `head`, in degrees; viewers are told with its next [`Told::update`].
@@ -159,12 +168,18 @@ impl Told {
     /// The packets that bring viewers of the entity `id` to `at` (where the wire puts it) and
     /// `motion`. BDS sends 0 in their tick fields.
     pub fn update(&mut self, id: u64, at: [f32; 3], motion: [f32; 3], on_ground: bool) -> Vec<Bytes> {
+        let pistoned = self.pistoned.take().is_some();
+        self.tell(id, at, motion, on_ground, pistoned)
+    }
+
+    /// [`Told::update`]; a piston's move is told however small (bds-ffshove.txt: a cow's 0.0024
+    /// drift went with its lift).
+    fn tell(&mut self, id: u64, at: [f32; 3], motion: [f32; 3], on_ground: bool, pistoned: bool) -> Vec<Bytes> {
         let mut packets = Vec::new();
         self.pending = None;
         let gone = length(std::array::from_fn(|axis| at[axis] - self.at[axis]));
         let jumped = std::mem::take(&mut self.jumped);
-        let pistoned = std::mem::take(&mut self.pistoned);
-        let moved = jumped || gone > MOVED || (length(motion) < STOPPING && gone > SETTLED) || (self.every_move && at != self.at);
+        let moved = jumped || pistoned || gone > MOVED || (length(motion) < STOPPING && gone > SETTLED) || (self.every_move && at != self.at);
         let pitched = self.pitched.filter(|[told, now]| told != now).map(|[_, now]| now);
         let degrees = |[told, now]: [u8; 2]| (f32::from(now) - f32::from(told)).abs() * 360.0 / 256.0;
         let turned = degrees([self.turned[0], self.turn[0]]) + degrees([self.turned[1], self.turn[1]]) + self.pitched.map_or(0.0, degrees);

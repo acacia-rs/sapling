@@ -189,6 +189,8 @@ pub(crate) fn step(world: &mut World, entity: Entity, layer: Entity, id: u64, ph
 pub(crate) fn step_flagged(world: &mut World, entity: Entity, layer: Entity, id: u64, physics: &Physics, lift: f32) -> Option<(Body, Option<MetadataFlags1>, Vec<Bytes>)> {
     let mut body = *world.get::<Body>(entity)?;
     let start = body;
+    let pistoned = world.get_mut::<Told>(entity)?.update_pistoned(id, lift);
+    tell_viewers(world, entity, layer, body.at.map(|c| c.floor() as i32), pistoned);
     world.get_resource_or_insert_with(Dice::default);
     let moved = world.resource_scope(|world, mut dice: Mut<Dice>| Some(body.step(&world.get::<Layer>(layer)?.world, physics, &mut || dice.fraction())))?;
     *world.get_mut::<Body>(entity)? = body;

@@ -7,7 +7,7 @@ use std::panic::{self, AssertUnwindSafe};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use bevy_ecs::prelude::*;
 
@@ -16,6 +16,9 @@ use crate::crash::{self, Report};
 use crate::handoff::Peers;
 use crate::shard::Shard;
 use crate::worlds::Named;
+
+/// How often a shard looks for packets between ticks.
+const BETWEEN: Duration = Duration::from_millis(2);
 
 impl Shard {
     /// Runs the shard on its own thread until the handle is stopped or dropped, then closes it.
@@ -33,7 +36,11 @@ impl Shard {
                 }
                 next += tick;
                 match next.checked_duration_since(Instant::now()) {
-                    Some(wait) => std::thread::sleep(wait),
+                    Some(_) => {
+                        if let Err(payload) = panic::catch_unwind(AssertUnwindSafe(|| self.idle_until(next))) {
+                            return self.crashed(index, payload.as_ref());
+                        }
+                    }
                     // Behind by more than a tick: skip the missed ones instead of bursting.
                     None => {
                         next = Instant::now();
@@ -49,6 +56,14 @@ impl Shard {
         };
         let thread = std::thread::Builder::new().name(format!("{}{index}", crash::THREAD_PREFIX)).spawn(run).expect("spawning the shard thread");
         ShardHandle { stop, thread: Some(thread) }
+    }
+
+    /// Waits for `next`, every [`BETWEEN`] doing what is done between ticks ([`Shard::between_ticks`]).
+    fn idle_until(&mut self, next: Instant) {
+        while let Some(left) = next.checked_duration_since(Instant::now()) {
+            self.between_ticks();
+            std::thread::sleep(left.min(BETWEEN));
+        }
     }
 
     /// After a panic in a tick: saves and closes what can be, then reports.

@@ -44,14 +44,15 @@ fn bodies(world: &mut World, layer: Entity) -> Vec<(Entity, Body, bool)> {
     all
 }
 
-fn keep(world: &mut World, moved: Vec<(Entity, Body, bool)>) {
-    for (entity, body, is_player) in moved {
+/// Keeps each moved body, told as the piston left it at the point given (its feet).
+fn keep(world: &mut World, moved: Vec<(Entity, Body, bool, [f32; 3])>) {
+    for (entity, body, is_player, told_at) in moved {
         if is_player {
             crate::movement::push(world, entity, body.at);
         } else if let Some(mut kept) = world.get_mut::<Body>(entity) {
             *kept = body;
             if let Some(mut told) = world.get_mut::<crate::sync::Told>(entity) {
-                told.pistoned();
+                told.pistoned(told_at, body.pushed_ground());
             }
         }
     }
@@ -66,7 +67,7 @@ fn rides(body: &Body, cell: BlockPos, low: [f32; 3]) -> bool {
 
 /// Moves what stands on the blocks at `cells` by `by` towards `dir`, through the blocks there; as a
 /// push starts (`starts_out`), what is not on honey goes as far again, off its block, and falls in
-/// that tick (bds-u3carry.txt: 3.5, 4.0 told, then 4.5 falling).
+/// that tick, told as its own move (bds-u3carry.txt: 3.5, 4.0 told as the piston's, then 4.5 falling).
 pub(super) fn carry_riders(world: &mut World, layer: Entity, cells: &[BlockPos], dir: Face, by: f32, starts_out: bool) {
     let all = bodies(world, layer);
     let tops: Vec<Top> = cells.iter().map(|cell| top_of(world, layer, *cell)).collect();
@@ -77,9 +78,13 @@ pub(super) fn carry_riders(world: &mut World, layer: Entity, cells: &[BlockPos],
         .filter(|(_, _, is_player)| !is_player)
         .filter_map(|(entity, mut body, is_player)| {
             let top = cells.iter().zip(&tops).find(|(cell, _)| rides(&body, **cell, cell.map(|c| c as f32)))?.1;
-            let far = if starts_out && *top != Top::Honey { 2.0 * by } else { by };
-            body.push(level, dir.offset().map(|c| c as f32 * far), cells);
-            Some((entity, body, is_player))
+            let step = dir.offset().map(|c| c as f32 * by);
+            body.push(level, step, cells);
+            let told_at = body.at;
+            if starts_out && *top != Top::Honey {
+                body.push(level, step, cells);
+            }
+            Some((entity, body, is_player, told_at))
         })
         .collect();
     keep(world, carried);
@@ -98,7 +103,7 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
     let (mut shoved, mut flung_players) = (Vec::new(), Vec::new());
     for (entity, mut body, is_player) in all {
         let start = body.at;
-        let mut flung = false;
+        let (mut flung, mut touched) = (false, false);
         for (i, cell) in from.iter().enumerate() {
             let top = tops.get(i).copied().flatten();
             // The block's box, `gone` on its way.
@@ -111,6 +116,7 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
             let mut by = [0.0; 3];
             by[axis] = if ahead { low[axis] + 1.0 - min[axis] } else { low[axis] - max[axis] };
             body.push(level, by, &moving);
+            touched = true;
             flung |= top == Some(Top::Slime);
         }
         if flung && is_player && axis == 1 {
@@ -125,8 +131,9 @@ pub(super) fn shove(world: &mut World, layer: Entity, from: &[BlockPos], dir: Fa
             speed[axis] = offset[axis] as f32;
             body.throw(speed);
         }
-        if body.at != start || flung {
-            shoved.push((entity, body, is_player));
+        // A body the block reaches but cannot move is told so too (bds-ag3pin.txt: pinned stands, no axes).
+        if body.at != start || flung || (touched && !is_player) {
+            shoved.push((entity, body, is_player, body.at));
         }
     }
     keep(world, shoved);

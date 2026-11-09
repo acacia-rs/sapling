@@ -543,14 +543,28 @@ What stands on a moved block (`bds_command_probe u3carry`, research/captures/bds
   after one tick's drag); on honey it went 0.5 and stayed; on stone as on the floor.
 - Pushed up (bds-ffshove.txt): stands on stone and honey are lifted a block; on slime they are
   flung too (SetEntityMotion y 0.9016: 1 a tick after a tick's gravity) and bounce.
-- Sapling (`pistons/shove.rs`): riders pushed out go 1.0 in the start tick (BDS's 0.5 and the
-  0.5 of their own move, the in-between 4.5 not shown), on honey 0.5; they are put before the
-  block's front a tick on (or carried 1 more on a pull); slime sets the push axis's motion to 1.
-  Every move a piston causes is told with `force_move_local_entity` (`Told::pistoned`), as BDS's
-  all were.
+- Telling it (fourteenth3ag): BDS tells a piston's move at once, with `force_move_local_entity`,
+  paced as any move (the `ticks` a viewer may go without one, sync/pace.rs), and the body's own
+  move at the tick's end. In the start tick: 4.0 flagged and on the ground, then 4.5 falling
+  unflagged (that one lands no more on the ground, so it goes to every viewer at once). In the shove
+  tick: 5.25 flagged with y as told, and the body's fall in that tick told to no one ~12 off (paced
+  out a tick after the flagged one); the watcher ~17 off, paced 2, got no 5.25 at all. Pushed up
+  (bds-ffshove.txt), the same: y -23 flagged, the fling's first move untold. A flagged move carries
+  every axis that changed, however little (a cow's 0.0024 drift).
+- Sapling (`pistons/shove.rs`): riders pushed out go 0.5 (told as the piston's), then 0.5 more and
+  fall in the start tick, on honey 0.5 only; they are put before the block's front a tick on (or
+  carried 1 more on a pull); slime sets the push axis's motion to 1. `Told::pistoned` keeps where the
+  piston left a body and `entities::step_flagged` tells it before the body's own move, both paced
+  (test `fourteenth3ag`).
 - Pinned (bds-y3pin.txt): cows and a stand in an arm's cell with obsidian beyond went flush with the
   obsidian and stayed in the arm, unhurt, wherever across the cell they stood; none was squeezed out
-  sideways. Sapling's `push_out_of_block` (body/stuck.rs) skips arm cells for that.
+  sideways. Sapling's `push_out_of_block` (body/stuck.rs) skips arm cells for that. Off the middle
+  (bds-ag3pin.txt, fourteenth3ag): stands at z 0.1, 0.3, 0.7 and 0.9 of their rows (a cow's side 0.15
+  into the next row at 0.1 and 0.9) all went flush (3.75) on BDS and sapling, and both cows went flush
+  (3.55) on BDS this run; y3pin's cow pushed to 3.725 and 3.775 was its own state, not where it stood.
+  Cows summoned before their slowness wander (one climbed the piston on sapling), so cow rows measure
+  the cows. BDS tells the arm's finish to a body it reaches and cannot move as a flagged move of no
+  axes; sapling too (`shove`, its `touched`).
 - A player on slime (bds-y3fling.txt): pushed sideways BDS sends nothing, its client carries it; pushed
   up one `CorrectPlayerMovePrediction` puts its feet 2 up (the lift and one flung move of 1) with a
   delta of 0.9016 up, off the ground. Sapling: `pistons/shove.rs` leaves riding players to their client
