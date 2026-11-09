@@ -510,7 +510,9 @@ is assumed from its pack's like shape, not drilled.
   goes by an amphibious way, cell by cell (frogs/wading.rs: any of 26 neighbours with water in or under it or a
   floor under it, open water weighed 4 steps more, as Java's frog), and its push up or down is
   `AmphibiousMoveControl`'s (Linux tick 0xbe27b10: speed x 0.1 along the way, the height off taken half the
-  frog's height further). BDS's `move_to_land` takes a random land cell of 80 tries, sapling the nearest.
+  frog's height further). BDS's `move_to_land` takes a random land cell of 80 tries, sapling the nearest: in
+sapling-ae1fish.txt it walked the floor at 0.11 a tick to the near wall, rose at 0.14 and was out 5.6 s in, where
+BDS's went to a corner and out at 16 s.
 - The swim push up or down below full strength (fourteenth1ae, swimming.rs `rise`): a fish's (`SwimMoveControl`
   tick, Linux 0xbdf8d50) is its push across x min(5 x the height off, 1.25), so full until the last quarter
   block; its sign BDS takes from the pitch, sapling from the spot's height.
@@ -617,7 +619,8 @@ Ported (fourteenth1ae, `creatures/dolphins/flock.rs`): loner and flock-size draw
 the influence box of 6, members pruned out of it, and each member's way from the leader's step,
 separation (1.75 within 3), cohesion (1.85 beyond 3.5) and the leader's spot (2). The goal's tick
 blends 0.22 of the way into the motion and doubles the pace beyond `cohesion_threshold` 6.5; merging
-flocks (141be0900) and the doubled pace are not ported. Test `dolphins_in_a_wide_pool_keep_together_as_a_flock`.
+flocks (141be0900) and the doubled pace are not ported. Re-drilled (sapling-ae1flock.txt): 2.1 to 4.9 from
+the middle every 5 s, median ~3.1, BDS's 1.9 to 5.0, median ~3.2. Test `dolphins_in_a_wide_pool_keep_together_as_a_flock`.
 
 A fish on land hops as BDS's cod did (`creatures/swimming/ashore.rs`, research/captures/bds-flop.txt),
 and is heard `flop` a tick after each hop from where it hopped, as bds-t2water.txt's cod was
