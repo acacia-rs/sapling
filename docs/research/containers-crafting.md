@@ -112,9 +112,12 @@ project named), **inf** (inferred). Nothing here was tested against a live serve
 - **A chest set away while open** (same capture): lid `BlockEvent` 0, `ContainerClose` (server), lid 0
   again, no sound, all before the cell's `UpdateBlock` (BDS tells block changes at the tick's end). Sapling
   the same (`containers/access.rs` `close_where_gone`, `lid.rs` `shut_gone`; `blocks/send.rs` `put_block`
-  shuts the screens between the write and the tell, fourteenth3ad). Left as a tick-order difference: BDS
-  answered the client's own `ContainerClose` 7 ms on, before that tick's block updates; sapling reads a
-  client's packets once a tick at its start, so its answer comes with the next tick's.
+  shuts the screens between the write and the tell, fourteenth3ad). BDS answered the client's own
+  `ContainerClose` 7 ms on, before that tick's block updates: it handles packets as they come, between
+  ticks. Sapling's shard looks for packets every 2 ms between ticks (`running.rs` `idle_until`,
+  `Shard::between_ticks`) and answers a close there at once, lid included, unless the client sent
+  something else since the tick (but its input), which must go first (`containers/screens.rs`
+  `dispatch_closes_between_ticks`, fourteenth3ag). Every other packet still waits for the tick.
 - **An open lid shown again** (decompiled Linux `ChestBlockActor::tick` 0xce3a6d0, shared by barrels, ender
   chests and, through their own tick, shulker boxes): while open the actor counts ticks and at the 80th sends
   `blockEvent(pos, 1, open)` and starts again at 0; the count is kept across closings (only a new block

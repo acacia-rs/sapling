@@ -1,7 +1,8 @@
 //! Opening and closing the screens of blocks: containers, crafting tables, stonecutters and the
 //! workstations (workstations.rs).
 
-use acacia_proto::packets::{ContainerClose, ContainerOpen, UpdateEquipment};
+use acacia_proto::Packet;
+use acacia_proto::packets::{ContainerClose, ContainerOpen, PlayerAuthInput, UpdateEquipment};
 use acacia_proto::types::{WindowID, WindowType};
 use bevy_ecs::prelude::*;
 use sapling_api::BlockPos;
@@ -219,6 +220,23 @@ pub(super) fn shut_out(world: &mut World, layer: Entity, lead: BlockPos) -> Opti
 /// (research/captures/bds-lids.txt).
 pub(crate) fn dispatch_closes(world: &mut World) {
     let closes = world.resource_mut::<PacketQueues>().take::<ContainerClose>();
+    answer_closes(world, closes);
+}
+
+/// [`dispatch_closes`] between ticks, as BDS answered a client's close 7 ms on, before its tick's
+/// block updates (research/captures/bds-u3chest.txt), for each client that sent nothing else since
+/// the tick but its input, which must not be overtaken; true when any was answered.
+pub(crate) fn dispatch_closes_between_ticks(world: &mut World) -> bool {
+    let queues = world.resource::<PacketQueues>();
+    let besides = [ContainerClose::ID, PlayerAuthInput::ID];
+    let ready: Vec<Entity> = queues.senders(&[ContainerClose::ID]).filter(|sender| !queues.waits_from(*sender, &besides)).collect();
+    let closes = world.resource_mut::<PacketQueues>().take_from::<ContainerClose>(|sender| ready.contains(&sender));
+    let answered = !closes.is_empty();
+    answer_closes(world, closes);
+    answered
+}
+
+fn answer_closes(world: &mut World, closes: Vec<(Entity, ContainerClose)>) {
     for (player, closed) in closes {
         let window = closed.window_id.to_raw();
         if let Some(mut out) = world.get_mut::<Outgoing>(player) {

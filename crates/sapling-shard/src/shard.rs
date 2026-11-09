@@ -179,6 +179,18 @@ impl Shard {
         self.meter.end();
     }
 
+    /// Between ticks: takes what the other shards and the network delivered, and answers at once
+    /// what BDS answers as it arrives (`containers::dispatch_closes_between_ticks`).
+    pub fn between_ticks(&mut self) {
+        self.take_messages();
+        while let Ok(event) = self.inbox.try_recv() {
+            self.accept(event);
+        }
+        if crate::containers::dispatch_closes_between_ticks(&mut self.world) {
+            flush(&mut self.world);
+        }
+    }
+
     fn take_messages(&mut self) {
         while let Ok(message) = self.mailbox.try_recv() {
             handoff::receive(&mut self.world, message).into_iter().for_each(|event| self.accept(event));
@@ -255,10 +267,12 @@ impl Shard {
 }
 
 /// Hands each player's packets of this tick to the network as one batch.
-fn flush(net: Res<Net>, mut players: Query<(&Conn, &mut Outgoing)>) {
-    for (conn, mut out) in &mut players {
+fn flush(world: &mut World) {
+    let net = world.resource::<Net>().0.clone();
+    let mut players = world.query::<(&Conn, &mut Outgoing)>();
+    for (conn, mut out) in players.iter_mut(world) {
         if !out.0.is_empty() {
-            net.0.send(conn.0, std::mem::take(&mut out.0));
+            net.send(conn.0, std::mem::take(&mut out.0));
         }
     }
 }
