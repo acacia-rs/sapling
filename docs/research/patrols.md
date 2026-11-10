@@ -129,3 +129,21 @@ lookup `0x554e0d0` (0xc8cc534, 0xc8cc897: the pool's index, its count at +0x100 
 under it, against the dimension's cap table). Not run under gdb: a patrol run needs the aged level.dat, the
 `z1patrol` pack and a night (above), all to be set up and restored again; breakpoints on these four sites with
 the rule's name read would tell which gate refuses the pillager.
+
+Under gdb (fourteenth1ak; `ab1patrol` with `currentTick` 140000, the `z1patrol` pack, midnight, events on; four
+runs, level.dat put back and compared each time, the pack and the world's pack list removed): none of
+fourteenth1ah's sites ran, though 80 natural monsters came. That inlined path in slot 13 (from 0xc8cc010) is
+taken only when the surface spot check (0xc7f13c0 at 0xc8cbe68) fails and tests the cell's material for 5 or 6:
+the in-liquid spawns. The surface cluster is a function of its own, 0xc8ca260 (called at 0xc8cbe24, 1582 times
+in 240 s): the pick through a virtual at 0xc8ca358 (0xc5ce6a0, which runs the conditions 0xc7bed80 on each of
+the biome's rules: 18 a cluster here), the picked rule's conditions again (0xc8ca418), the position check
+(0xc8ca4ad), the chance (`cmp $0x64` at 0xc8ca4d1), the 200 cap (0xc8ca56f) and the pool lookups (0xc8ca753,
+0xc8ca9bb). The conditions (0xc7bed80) read, in order: the height range, five spawn-place flags, a sub-filter,
+difficulty (+0x58/+0x5c), brightness (+0x30/+0x34), moon (+0x38/+0x3c), the world age in seconds against
++0x80/+0x88 and then the delay's end (context +8), the mob event (name at +0xc8, `events_enabled` at +0xf8 of
+the level's events), then the village filter (+0x74). Logged on every call: none of the 18 rules had an age
+minimum or an event (8 monster rules at brightness 0-7, 7 at 7-15, 1 at 0-4, 2 at 0-15), so the patrol rule
+is never in the list this world's cluster draws from: no gate refuses it, it is not offered. The ELF has no
+patrol spawner of its own (its only strings: `minecraft:patrolling_monster`, `Patrol`, the event's name).
+Next: find how the per-biome rule list is built (who fills what 0xc5ce6a0 walks; whether a rule whose biome
+filter has only `!=` tests is listed for the flat world's biome), or run the same night on a generated world.
