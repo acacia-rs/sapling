@@ -58,7 +58,7 @@ pub(super) fn hurt(world: &mut World, mob: Entity, amount: f32, cause: DamageCau
     match player {
         Some(player) => super::attacks::answer(world, mob, layer, id, &kind, &body, player),
         None => {
-            super::strolling::startle(world, mob);
+            super::strolling::startle(world, mob, Some(source));
             super::hunting::hurt_by(world, mob, source);
             super::teleports::startle(world, mob);
         }

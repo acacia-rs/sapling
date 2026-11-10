@@ -29,15 +29,16 @@ const FLEES_FAR: (i32, i32) = (5, 4);
 
 type Cell = [i32; 3];
 
-/// The cells left of a stroll's way and the tick it gives up in, and the tick it flees until.
+/// The cells left of a stroll's way and the tick it gives up in, the tick it flees until, and
+/// whom it flees.
 #[derive(Component, Default)]
-pub(super) struct Stroll(Option<(Vec<Cell>, u64)>, u64);
+pub(super) struct Stroll(Option<(Vec<Cell>, u64)>, u64, Option<Entity>);
 
-/// A hit mob drops what it was going to and flees.
-pub(super) fn startle(world: &mut World, entity: Entity) {
+/// A hit mob drops what it was going to and flees, away from `by` if a mob or player hurt it.
+pub(super) fn startle(world: &mut World, entity: Entity, by: Option<Entity>) {
     let until = world.resource::<Tick>().0 + FLEES;
     if let Some(mut stroll) = world.get_mut::<Stroll>(entity) {
-        (stroll.0, stroll.1) = (None, until);
+        (stroll.0, stroll.1, stroll.2) = (None, until, by.filter(|by| *by != entity));
     }
     // BDS's cow came up to its run from nothing after the throw.
     legs::rest(world, entity);
@@ -62,12 +63,23 @@ pub(super) fn last_block_share(body: &Body, to: [f32; 2]) -> f32 {
 
 /// The way over whole cells toward a place drawn at random, as BDS's walks went from cell middle
 /// to cell middle (research/captures/bds-strolls.txt): to the cell nearest it where it cannot be
-/// reached, as BDS's zombies on a 3×3 top six up strolled about the top (bds-am2push.txt).
-fn way_to(world: &mut World, layer: Entity, body: &Body, (far, up): (i32, i32), shuns_sun: bool) -> Option<Vec<Cell>> {
+/// reached, as BDS's zombies on a 3×3 top six up strolled about the top (bds-am2push.txt). Away from
+/// `shunned`, a try across toward it is turned about: `RandomPos::getPosAvoid` (Linux 0xbd0b530 →
+/// 0xbd0a310 negates the offsets whose dot with the way from it is below 0).
+fn way_to(world: &mut World, layer: Entity, body: &Body, (far, up): (i32, i32), shuns_sun: bool, shunned: Option<[f32; 3]>) -> Option<Vec<Cell>> {
     let from = body.at.map(|c| c.floor() as i32);
+    let away = shunned.map(|from| [body.at[0] - from[0], body.at[2] - from[2]]);
     let tries: Vec<Cell> = {
         let mut dice = world.get_resource_or_insert_with(Dice::default);
-        (0..TRIES).map(|_| [from[0] + dice.roll(2 * far as u32 + 1) as i32 - far, from[1] + dice.roll(2 * up as u32 + 1) as i32 - up, from[2] + dice.roll(2 * far as u32 + 1) as i32 - far]).collect()
+        (0..TRIES)
+            .map(|_| {
+                let (mut dx, dy, mut dz) = (dice.roll(2 * far as u32 + 1) as i32 - far, dice.roll(2 * up as u32 + 1) as i32 - up, dice.roll(2 * far as u32 + 1) as i32 - far);
+                if away.is_some_and(|[ax, az]| dx as f32 * ax + dz as f32 * az < 0.0) {
+                    (dx, dz) = (-dx, -dz);
+                }
+                [from[0] + dx, from[1] + dy, from[2] + dz]
+            })
+            .collect()
     };
     let head = |[x, _, z]: Cell, feet: f32| [x, (feet + body.size[1]).floor() as i32, z];
     let shaded = shuns_sun && !super::harm::sun_on(world, layer, head(from, body.at[1]));
@@ -87,12 +99,13 @@ fn floor_of(level: &sapling_world::World, [x, y, z]: Cell, lo: i32, hi: i32) -> 
 /// its way on one it has, at the speed it `strolls` at; one that `panics` and was hit runs at that.
 pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, strolls: Option<f32>, panics: Option<f32>, shuns_sun: bool) {
     let now = world.resource::<Tick>().0;
-    let (Some(body), Some((stroll, until))) = (world.get::<Body>(entity).copied(), world.get_mut::<Stroll>(entity).map(|mut stroll| (stroll.0.take(), stroll.1))) else { return };
+    let (Some(body), Some((stroll, until, by))) = (world.get::<Body>(entity).copied(), world.get_mut::<Stroll>(entity).map(|mut stroll| (stroll.0.take(), stroll.1, stroll.2))) else { return };
     let flees = panics.filter(|_| now < until);
     let (Some(speed), far) = (flees.or(strolls), if flees.is_some() { FLEES_FAR } else { FAR }) else { return };
+    let shunned = by.filter(|_| flees.is_some()).and_then(|by| super::hunting::feet_of(world, by));
     let stroll = stroll.or_else(|| {
         let starts = body.on_ground && (flees.is_some() || world.get_resource_or_insert_with(Dice::default).fraction() * EVERY < 1.0);
-        starts.then(|| way_to(world, layer, &body, far, shuns_sun)).flatten().map(|way| (way, now + PATIENCE))
+        starts.then(|| way_to(world, layer, &body, far, shuns_sun, shunned)).flatten().map(|way| (way, now + PATIENCE))
     });
     let stroll = stroll.filter(|(_, until)| now < *until).map(|(way, until)| (walk_way(world, entity, layer, &body, way, speed), until));
     if stroll.is_none() {

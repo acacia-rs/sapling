@@ -196,7 +196,7 @@ fn act(world: &mut World, mob: Entity, layer: Entity, active: &Active) {
     }
     if harm > 0.0 {
         harm::wound(world, mob, layer, harm, cause);
-        strolling::startle(world, mob);
+        strolling::startle(world, mob, None);
     }
 }
 
