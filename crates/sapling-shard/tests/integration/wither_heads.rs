@@ -2,30 +2,71 @@
 
 use crate::common;
 
-use acacia_proto::packets::AddEntity;
+use acacia_proto::packets::{AddEntity, SetEntityData};
+use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use common::asking::ask;
 use common::{Harness, all};
 use sapling_api::{Difficulty, GameMode, PlayerId};
 
 const ALEX: PlayerId = PlayerId(1);
+const STEVE: PlayerId = PlayerId(2);
 const WITHER: &str = "minecraft:wither";
 const CHARGE: usize = 201;
 
-/// A summoned wither on normal 8 off Alex, its charge over, Alex in `mode`.
-fn summoned(mode: GameMode) -> Harness {
+/// A summoned wither on normal 8 off Alex, its charge over, Alex in `mode`; Alex in `charging` while it charges.
+fn summoned_after(charging: GameMode, mode: GameMode) -> Harness {
     let mut h = crate::fourteenth1ah::wide_floor();
     h.enter(1, "Alex");
-    h.remote.run(|ctx| {
+    h.remote.run(move |ctx| {
         ctx.set_difficulty(Difficulty::Normal);
-        ctx.set_game_mode(ALEX, GameMode::Creative);
+        // As y3wither: head 1's stray blue skulls would hole the floor under the wither.
+        ctx.set_game_rule("mobGriefing", sapling_api::RuleValue::Bool(false));
+        ctx.set_game_mode(ALEX, charging);
+        // Its blast at the charge's end would kill an unwarded Alex.
+        assert!(ctx.give_effect(ALEX, sapling_api::Effect::Resistance, 20000, 4, false));
         assert!(ctx.spawn_entity(WITHER, [0.5, 66.0, 8.5]).is_some());
     });
     (0..CHARGE).for_each(|_| drop(h.tick_all()));
-    h.remote.run(move |ctx| {
-        ctx.set_game_mode(ALEX, mode);
-        assert!(ctx.give_effect(ALEX, sapling_api::Effect::Resistance, 1000, 4, false));
-    });
+    h.remote.run(move |ctx| ctx.set_game_mode(ALEX, mode));
     h
+}
+
+fn summoned(mode: GameMode) -> Harness {
+    summoned_after(GameMode::Creative, mode)
+}
+
+/// What the side heads were told to look at over `ticks`, `WitherTarget2` and `WitherTarget3`.
+fn side_targets(h: &mut Harness, ticks: usize) -> [Vec<i64>; 2] {
+    let sent: Vec<_> = (0..ticks).flat_map(|_| h.tick_all().to(1).to_vec()).collect();
+    let told = |key: Key| -> Vec<i64> {
+        let items = all::<SetEntityData>(&sent).into_iter().flat_map(|data| data.metadata).filter(|item| item.key == key);
+        items.filter_map(|item| if let Value::Default(Plain::Long(long)) = item.value { Some(long) } else { None }).collect()
+    };
+    [told(Key::WitherTarget2), told(Key::WitherTarget3)]
+}
+
+#[test]
+fn a_side_head_keeps_a_player_not_the_middle_heads_prey_until_they_turn_creative() {
+    // BDS (`WitherBoss` 0xbbbd900; bds-y3wither.txt, bds-f14nwither2.txt): a side head draws among the
+    // players in reach less the wither's own target, keeps the one it took (`WitherTarget3` held the
+    // actor 52 s) and lets go (-1) as it turns creative. Alex, nearer, is the middle head's prey.
+    let mut h = summoned_after(GameMode::Survival, GameMode::Survival);
+    h.enter(2, "Steve");
+    h.remote.run(|ctx| {
+        ctx.set_game_mode(STEVE, GameMode::Survival);
+        assert!(ctx.give_effect(STEVE, sapling_api::Effect::Resistance, 20000, 4, false));
+        ctx.teleport(STEVE, [0.5, 65.0, -12.5]);
+    });
+    let held = side_targets(&mut h, 600);
+    let took: Vec<usize> = (0..2).filter(|head| !held[*head].is_empty()).collect();
+    assert!(!took.is_empty(), "{held:?}");
+    let steve = held[took[0]][0];
+    // Steve may pass out of sight or reach as the wither swoops (then -1, and taken again): never Alex.
+    assert!(steve > 1 && took.iter().all(|head| held[*head][0] == steve && held[*head].iter().all(|told| [steve, -1].contains(told))), "{held:?}");
+    h.remote.run(|ctx| ctx.set_game_mode(STEVE, GameMode::Creative));
+    let after = side_targets(&mut h, 80);
+    let last = |head: usize| after[head].last().or(held[head].last()).copied();
+    assert!(took.iter().all(|head| last(*head) == Some(-1)), "{held:?} then {after:?}");
 }
 
 #[test]

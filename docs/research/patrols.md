@@ -147,3 +147,17 @@ is never in the list this world's cluster draws from: no gate refuses it, it is 
 patrol spawner of its own (its only strings: `minecraft:patrolling_monster`, `Patrol`, the event's name).
 Next: find how the per-biome rule list is built (who fills what 0xc5ce6a0 walks; whether a rule whose biome
 filter has only `!=` tests is listed for the flat world's biome), or run the same night on a generated world.
+
+Generated world and a positive biome tag (fourteenth1an, `an1patrol` in fourteenth1an_drill.rs; BDS on a
+default world of seed 20261003 in a temporary `f14an1gen` world, server.properties and the world put back
+after): both players creative at the spawn (21.5, 72, 205.5; nearest village at (-984, 1007)), level.dat
+`currentTick` 140000 (gametime 140370), midnight on easy, events on, 300 s, under gdb on the conditions
+(0xc7bed80). With the `z1patrol` pack (research/captures/bds-an1patrol.txt): no pillager among 40 natural
+mobs, 34224 rule checks over 25 rules, none with an age minimum. With the pack's three rules given a first
+`has_biome_tag == monster` test besides the `!=` ones (bds-an1patrol2.txt): the same, 25 rules, none aged, no
+pillager (a wandering trader and its llamas came, by their own spawner). So the biome filter is not why:
+the patrol rule is in no biome's list (the vector at biome +0x50 that 0xc5ce6a0 walks) on either world.
+Sapling: its spawn-rules.tsv has the three rows when regenerated (`py spawn-rules.py`; the `sapling/`
+checkout's copy, of 2026-11-04, lacks them, so builds from it spawn no natural patrols either). Next: who
+fills biome +0x50 at load (a watch on that vector while the packs load) and what keeps a rule out; until
+then sapling is left as is [U].
