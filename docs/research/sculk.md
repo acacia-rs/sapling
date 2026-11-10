@@ -312,6 +312,19 @@ scaffolding: BDS's zombies do not climb them after a prey above (fourteenth2af: 
 x 1.976 short of a ladder, vine or scaffolding up a 4-high block; bds-af2shaft.txt, summoned in the
 climbable's walled cell, never left y −60), as sapling's do not, so no mob step count up one arises.
 
+Pushed up one (fourteenth2ai, `ai2push`, bds-ai2push.txt against sapling-ai2push.txt): three zombies
+summoned 0.2 apart into a vine cell walled on three sides pushed each other into its walls, and two went
+up it at 0.2 a tick from the tick after the push (told motion y 0.2) to its top at −54, the third left
+below; a sculk sensor 4 west powered at 36530 while the first was ~1 up, before any walk. Scaffolding's
+zombies did not rise. The step system (0x7539970) sums `sqrt((3dx)² + (3dz)² + (k·dy)²)` with k 3 under
+its climbing predicates, else 0. Ported: body/climb.rs (a mob whose move in a climbable cell, ladder or
+vine, is stopped across rises 0.2 next tick) and footfalls.rs (a climbing mob counts its rise); test
+fourteenth2ai `zombies_crowded_into_a_walled_vine_cell_climb_it`. sapling-ai2push: the two climbers
+topped out at x 2.1111 and 2.8466, y −53.8824, BDS's numbers to the digit, the sensor powered at 36452
+(BDS 36530). Left: the ladder row (both servers' summons there shoved out differently, one BDS zombie
+suffocating in the wall) and a zombie knocked into an open ladder cell (BDS rose to −59.25, sapling
+−58.85) were not compared further; sapling's sensors powered 23 times over the scene to BDS's 15.
+
 ## Drilled 2026-11-08, group W (`w1pops`; fourteenth1w_drill.rs)
 
 bds-w1pops.txt: a held warden 10 off and a sensor read by a comparator into dust (the dust's runtime id is the

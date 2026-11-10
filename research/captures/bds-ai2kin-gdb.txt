@@ -1,0 +1,15 @@
+# bds-ai2kin under gdb (fourteenth2ai): FollowParentGoal canUse (Linux 0x57420e0).
+# "fetched" at 0x5742296, after BlockSource::fetchEntities: [r12+0] the baby's position (goal+0x28 -> +0x208),
+#   [rsp+10] the search box (min xyz, max xyz) = the baby's box grown 8, 4, 8.
+# "took" at 0x574256f, the parent taken: [rsp+c] its squared distance (taken only if >= 9).
+# 1775 hits in all; the fetched lines came for two leftover babies of earlier drills only (gdb kept
+# none for this drill's six); a sample of them and every take follow.
+# 1794305006.444 armed 2 breakpoints
+hit fetched t42 [r12+0]=(-26.510000228881836, -60.0, 24.489999771118164) [rsp+10]=(-35.0, -64.0, 16.0, -18.020000457763672, -54.880001068115234, 32.97999954223633)
+hit fetched t42 [r12+0]=(-0.7271928787231445, -60.0, 48.05696105957031) [rsp+10]=(-8.952193260192871, -64.0, 39.83196258544922, 7.497807502746582, -55.54999923706055, 56.281959533691406)
+hit took t42 [r12+0]=(9.5, -60.0, -50.5) [rsp+c]=(67.335693359375,)
+hit took t42 [r12+0]=(5.273344039916992, -60.0, -53.592498779296875) [rsp+c]=(9.25383472442627,)
+hit took t42 [r12+0]=(9.165452003479004, -60.0, 51.011959075927734) [rsp+c]=(75.35215759277344,)
+hit took t42 [r12+0]=(9.121520042419434, -60.0, 30.496551513671875) [rsp+c]=(74.33061981201172,)
+hit took t42 [r12+0]=(-0.24772131443023682, -60.0, 47.56546401977539) [rsp+c]=(9.170588493347168,)
+hit took t42 [r12+0]=(9.158663749694824, -60.0, -29.206525802612305) [rsp+c]=(76.6455307006836,)

@@ -11,9 +11,10 @@ use crate::components::{InLayer, Layer, Tick};
 use crate::creatures::{Dying, Health, genes, jockeys, paths, shown, strolling};
 use crate::entities::Kind;
 
-/// The baby's box grows by this across and up or down to find a grown one: the goal's 8 and 4, and 2
-/// more fitted (bds-af2baby.txt: a piglet took up a pig 9.72, then 10.5 off along one axis).
-const SEARCH: [f32; 2] = [10.0, 6.0];
+/// The baby's box grows by this across and up or down to find a grown one whose box it meets (canUse's
+/// fetch, 0x574228f; gdb in bds-ai2kin: every take was 8.68 or less across, babies 9 to 11 off took
+/// none until a stroll brought them in; bds-af2baby's piglet "9.72 off" had strolled in so).
+const SEARCH: [f32; 2] = [8.0, 4.0];
 /// It follows one from 3 off to 16 off, squared.
 const NEAREST: f32 = 9.0;
 const FARTHEST: f32 = 256.0;
@@ -46,7 +47,7 @@ fn nearest(world: &mut World, entity: Entity, layer: Entity, kind: &str, body: &
     let within = |other: &Body| {
         let across = (body.size[0] + other.size[0]) * 0.5 + SEARCH[0];
         let below = other.at[1] + other.size[1] >= body.at[1] - SEARCH[1];
-        (body.at[0] - other.at[0]).abs() <= across && (body.at[2] - other.at[2]).abs() <= across && below && other.at[1] <= body.at[1] + body.size[1] + SEARCH[1]
+        (body.at[0] - other.at[0]).abs() < across && (body.at[2] - other.at[2]).abs() < across && below && other.at[1] <= body.at[1] + body.size[1] + SEARCH[1]
     };
     let found = kin.into_iter().filter_map(|other| grown(world, other, layer).filter(within).map(|at| (other, squared(body.at, at.at))));
     found.min_by(|a, b| a.1.total_cmp(&b.1)).filter(|(_, near)| *near >= NEAREST).map(|(other, _)| other)

@@ -1,8 +1,47 @@
 //! What a mob's next tick is told to do: walk, swim up, fly, be thrown, be jostled.
 
-use super::Body;
+use super::{Body, InLiquid, LEVITATES, Liquid, Physics, SLOW_FALL, liquid};
 
 impl Body {
+    /// A mob's slowing at the start of its tick, by gravity and drag in the air or `liquid`.
+    pub(super) fn drag(&mut self, physics: &Physics, liquid: Option<Liquid>, stood: bool) {
+        if physics.liquid == InLiquid::Swims && liquid == Some(Liquid::Water) {
+            liquid::swim(self, physics.water_drag);
+        } else if let Some(liquid) = liquid {
+            liquid::sink(self, liquid);
+        } else {
+            // BDS slows a mob after its move by where it stood before it (research/captures/bds-chase.txt).
+            let across = if stood { physics.ground_drag } else { physics.air_drag };
+            (self.motion[0], self.motion[2]) = (self.motion[0] * across, self.motion[2] * across);
+            let falling = self.motion[1] < 0.0;
+            if self.lifted > 0.0 {
+                self.motion[1] = (self.motion[1] + (self.lifted - self.motion[1]) * LEVITATES) * physics.fall_drag;
+                return;
+            }
+            let gravity = if falling && self.slowed { SLOW_FALL } else { physics.gravity };
+            self.motion[1] = (self.motion[1] - gravity) * physics.fall_drag;
+            if falling {
+                self.motion[1] *= physics.flutter;
+            }
+        }
+    }
+
+    /// Its motion as BDS holds it after a tick, which viewers are told: a mob's slows after its
+    /// move there, where sapling slows it as its next tick starts (a jump's 0.42 up is told
+    /// 0.3332; research/captures/bds-chase.txt, bds-kinds2.txt).
+    pub fn held_motion(&self, physics: &Physics) -> [f32; 3] {
+        if self.flung || !matches!(physics.liquid, InLiquid::Sinks | InLiquid::Swims) {
+            return self.motion;
+        }
+        let mut held = *self;
+        held.drag(physics, self.liquid, self.stood);
+        held.motion[1] += self.geysered;
+        if held.climbing {
+            held.motion[1] = super::climb::CLIMB;
+        }
+        held.motion
+    }
+
     /// Has a mob crowding this one push it by `by` across in its next tick, after the drag.
     pub fn jostle(&mut self, by: [f32; 2]) {
         self.jostled = [self.jostled[0] + by[0], self.jostled[1] + by[1]];

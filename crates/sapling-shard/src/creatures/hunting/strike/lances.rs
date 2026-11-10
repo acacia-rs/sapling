@@ -5,7 +5,8 @@
 //! past the spear's `delay`, a prey in its reach band is hit for the mob's attack plus the whole part
 //! of its speed at the prey in blocks a second times the spear's `damage_multiplier`, thrown 0.4 away
 //! and up within the knockback time, and viewers see `KineticDamageDealt`: no swing, no sound. After
-//! the damage time the spear comes down for a second or so. A holder never hits as a melee mob.
+//! the damage time the spear comes down for a second or so while it walks to a spot its cooldown
+//! distance off. A holder never hits as a melee mob.
 
 use acacia_proto::packets::{EntityEvent, EntityEventEventId};
 use acacia_proto::types::MetadataFlags1 as Flags;
@@ -39,9 +40,9 @@ const SPEARS: &[Spear] = &[
 
 /// The kinds whose packs give them `use_kinetic_weapon`.
 const HOLDERS: &[&str] = &["minecraft:zombie", "minecraft:husk", "minecraft:zombie_villager_v2", "minecraft:zombie_pigman", "minecraft:piglin"];
-/// Its `approach_distance` and `reposition` range, on foot and mounted (the packs).
-const ON_FOOT: (f32, [f32; 2]) = (10.0, [6.0, 7.0]);
-const MOUNTED: (f32, [f32; 2]) = (12.0, [8.0, 9.0]);
+/// Its `approach_distance`, `reposition_distance` and `cooldown_distance` ranges, on foot and mounted (the packs).
+const ON_FOOT: (f32, [f32; 2], [f32; 2]) = (10.0, [6.0, 7.0], [9.0, 11.0]);
+const MOUNTED: (f32, [f32; 2], [f32; 2]) = (12.0, [8.0, 9.0], [11.0, 13.0]);
 /// The spears' reach 2 to 4.5 with a 0.25 margin, halved by a mob's `weapon_reach_multiplier`, centre
 /// to centre across (fitted: BDS's first hits came 2.5 off).
 const REACH: [f32; 2] = [1.0, 2.5];
@@ -70,8 +71,8 @@ enum Stage {
     Charge,
     /// Its spot and the tick it gives up on it.
     Reposition([f32; 3], u64),
-    /// The tick it may raise the spear again.
-    Rest(u64),
+    /// The tick it may raise the spear again, and the spot it walks to meanwhile.
+    Rest(u64, [f32; 3]),
 }
 
 #[derive(Component, Clone, Copy, Default)]
@@ -101,33 +102,36 @@ pub(in crate::creatures) fn plan(world: &mut World, entity: Entity, kind: &str, 
         return None;
     };
     let now = world.resource::<Tick>().0;
-    let (approach, [near, far]) = if world.get::<crate::riding::Riding>(entity).is_some() { MOUNTED } else { ON_FOOT };
+    let (approach, reposition, cooldown) = if world.get::<crate::riding::Riding>(entity).is_some() { MOUNTED } else { ON_FOOT };
     if world.get::<Lance>(entity).is_none() {
         world.entity_mut(entity).insert(Lance::default());
     }
+    // The goal's state 3 (0x534a440): as the spear comes down it picks a spot as `spot` does, its
+    // `cooldown_distance` off; bds-af2spear-gdb.txt's three far picks were these.
     if world.get::<Lance>(entity)?.raised.is_some_and(|raised| now >= raised + spear.delay + spear.hurts_for) {
         let rest = RESTS[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll((RESTS[1] - RESTS[0]) as u32 + 1));
-        lower(world, entity, Stage::Rest(now + rest));
+        let away = spot(world, at, feet, cooldown);
+        lower(world, entity, Stage::Rest(now + rest, away));
     }
     let mut lance = *world.get::<Lance>(entity)?;
     let off = across(at, feet);
     lance.stage = match lance.stage {
-        Stage::Rest(until) if now < until => Stage::Rest(until),
-        Stage::Approach | Stage::Rest(_) if off < approach => {
+        Stage::Rest(until, away) if now < until => Stage::Rest(until, away),
+        Stage::Approach | Stage::Rest(..) if off < approach => {
             if lance.raised.is_none() {
                 lance.raised = Some(now);
                 crate::creatures::husbandry::show_flag(world, entity, Flags::ACTION, true);
             }
             Stage::Charge
         }
-        Stage::Approach | Stage::Rest(_) => Stage::Approach,
-        Stage::Charge if off < PASSES => Stage::Reposition(spot(world, at, feet, [near, far]), now + GIVES_UP),
+        Stage::Approach | Stage::Rest(..) => Stage::Approach,
+        Stage::Charge if off < PASSES => Stage::Reposition(spot(world, at, feet, reposition), now + GIVES_UP),
         Stage::Reposition(spot, until) if now >= until || across(at, spot) < REACHED => Stage::Approach,
         stage => stage,
     };
     world.entity_mut(entity).insert(lance);
     Some(match lance.stage {
-        Stage::Reposition(spot, _) => spot,
+        Stage::Reposition(spot, _) | Stage::Rest(_, spot) => spot,
         _ => feet,
     })
 }
@@ -145,10 +149,10 @@ fn spot(world: &mut World, at: [f32; 3], feet: [f32; 3], [near, far]: [f32; 2]) 
     [(feet[0] - turned.sin() * beyond).floor() + 0.5, feet[1].floor(), (feet[2] + turned.cos() * beyond).floor() + 0.5]
 }
 
-/// The spot a mounted spear holder's mount walks at while it repositions.
+/// The spot a mounted spear holder's mount walks at while it repositions or cools down.
 pub(in crate::creatures) fn aim(world: &World, rider: Entity) -> Option<[f32; 3]> {
     match world.get::<Lance>(rider)?.stage {
-        Stage::Reposition(spot, _) => Some(spot),
+        Stage::Reposition(spot, _) | Stage::Rest(_, spot) => Some(spot),
         _ => None,
     }
 }
