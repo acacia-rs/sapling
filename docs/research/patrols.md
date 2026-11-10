@@ -161,3 +161,17 @@ Sapling: its spawn-rules.tsv has the three rows when regenerated (`py spawn-rule
 checkout's copy, of 2026-11-04, lacks them, so builds from it spawn no natural patrols either). Next: who
 fills biome +0x50 at load (a watch on that vector while the packs load) and what keeps a rule out; until
 then sapling is left as is [U].
+
+Settled (fourteenth1aq): BDS never spawns natural patrols in this version [L]. The list is filled by the
+`ActorSpawnRuleGroup` constructor's lambda `$_0` (Linux 0xb1ad2b0, the `std::function` named
+`(string, int, BiomeFilterGroup&, MobSpawnRules&)`; caller 0xaf94bfb): it looks the rule's description
+identifier up in an actor registry (0xaf3a9b0, a map at +0x40; the check `cmpq $0, 0x28(%rsp)` at 0xb1ad4e9) and
+only when found builds the rule (0x280 bytes, its `MobSpawnRules` at +0xb0, i.e. +0x90 of the pointer the
+biome holds) and pushes it onto +0x50 of each biome whose `BiomeFilterGroup` passes. Under gdb at world load
+(`an1gen`, flat world, stock packs; scratchpad f14aq1/gdb-rules.log): 103 conditions came through, 100 found and
+the three of `minecraft:pillager_patrol` not, so they are dropped before any biome test. The identifier names no
+entity (it is the only spawn rule so named), so no pack change of chance, delay or biome brings patrols, as the
+z1patrol and an1patrol runs saw. Sapling now does the same: spawn-rules.py leaves out a rule whose identifier no
+pack entity has, so spawn-rules.tsv has no patrol rows (test `a_rule_named_for_no_actor_is_left_out`). The gates
+it wrote for them (event, age, delay, village) stay, unused by the vanilla rows; the patrol captain and followers
+summoned or kept in a world behave as above.

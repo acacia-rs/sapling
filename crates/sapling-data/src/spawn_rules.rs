@@ -221,6 +221,11 @@ mod tests {
     }
 
     #[test]
+    fn a_rule_named_for_no_actor_is_left_out() {
+        assert!(spawn_rules().iter().all(|rule| rule.kind != "minecraft:pillager_patrol"), "spawn-rules.tsv from the current spawn-rules.py");
+    }
+
+    #[test]
     fn a_zombie_wants_the_dark_and_a_difficulty() {
         let zombie = rule("minecraft:zombie", 1);
         assert_eq!((zombie.category, zombie.weight, zombie.herd), ("monster", 100, (2, 4)));

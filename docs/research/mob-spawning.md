@@ -236,8 +236,9 @@ test `a_natural_mob_a_player_names_stays_when_the_player_goes`. Picked-up items 
 ## Left
 
 - Structure spawns and patrols: docs/research/structure-spawns.md (built 2026-11-05: the saved
-  record is chunk tag 0x77 with structure names, not tag 57 with type bytes; patrols built
-  2026-11-05, not drilled spawning naturally).
+  record is chunk tag 0x77 with structure names, not tag 57 with type bytes). Natural patrols:
+  BDS drops the `pillager_patrol` rule at load and never spawns them; sapling does the same since
+  fourteenth1aq (docs/research/patrols.md).
 - Herd events (spawner blocks: docs/research/spawners.md): undrillable live, natural spawning takes a
   random spot and time; drilled by summoning with the events instead (husbandry.md "Herds").
 - `doMobSpawning` and peaceful (2026-11-04, `e1spawn`, bds-e1spawn.txt): with the rule off a monster
