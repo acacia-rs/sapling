@@ -45,11 +45,28 @@ impl Data3d {
         Self { heightmap: Box::new(heightmap), biomes: chunk.biome_bytes() }
     }
 
+    /// The disk record. Only the top run of sections may be written as 0xff copies; a copy with a
+    /// storage above it is written out in full, or BDS crashes (research/worlds-and-ecs.md "Data3D copies").
     pub fn encode(&self) -> Result<Vec<u8>, Error> {
         let mut out: Vec<u8> = self.heightmap.iter().flat_map(|height| height.to_le_bytes()).collect();
         let r = &mut &self.biomes[..];
+        let mut storages = Vec::new();
         while !r.is_empty() {
-            disk_storage(r, &mut out)?;
+            let mut storage = Vec::new();
+            disk_storage(r, &mut storage)?;
+            storages.push(storage);
+        }
+        let is_copy = |storage: &Vec<u8>| storage[..] == [COPY_BELOW];
+        let top_run = storages.iter().rposition(|storage| !is_copy(storage)).map_or(0, |last| last + 1);
+        let mut below: Option<&Vec<u8>> = None;
+        for (index, storage) in storages.iter().enumerate() {
+            match below {
+                Some(below) if index < top_run && is_copy(storage) => out.extend_from_slice(below),
+                _ => out.extend_from_slice(storage),
+            }
+            if !is_copy(storage) {
+                below = Some(storage);
+            }
         }
         Ok(out)
     }
@@ -147,6 +164,18 @@ mod tests {
         assert_eq!((chunk.biome(0, -64, 0), chunk.biome(15, -50, 3)), (Some(4), Some(4)));
         assert_eq!((chunk.biome(2, -48, 9), chunk.biome(3, -48, 9), chunk.biome(3, -20, 9)), (Some(4), Some(7), Some(7)));
         assert_eq!(chunk.biome(0, 0, 0), None, "only three sections were stored");
+    }
+
+    #[test]
+    fn only_the_top_run_is_written_as_copies() {
+        let single = |biome: i32| [&[NETWORK][..], &biome.to_le_bytes()].concat();
+        let storages = [single(4), vec![COPY_BELOW], single(7), vec![COPY_BELOW], vec![COPY_BELOW]].concat();
+        let data = Data3d::decode(&record(&storages)).unwrap();
+        let mut chunk = Chunk::empty(0, 0, Dimension::overworld(BlockRegistry::vanilla().air_id()));
+        chunk.set_biomes(&data.biomes);
+        let written = Data3d::of(&chunk, BlockRegistry::vanilla()).encode().unwrap();
+        let expected = [single(4), single(4), single(7), vec![COPY_BELOW; 21]].concat();
+        assert_eq!(&written[512..], &expected[..], "the copy under biome 7 is written out");
     }
 
     #[test]

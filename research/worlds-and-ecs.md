@@ -46,7 +46,7 @@ Official enum `LevelChunkTag` (Microsoft Learn, "Actor Storage"), plus wiki addi
 
 | byte | tag | notes |
 |---|---|---|
-| 0x2B `+` | Data3D | 512 B heightmap (256×i16) + per-subchunk biome paletted storages; a 0x7F "copy previous" marker repeats the previous palette (`chunk/decode.go:137`) |
+| 0x2B `+` | Data3D | 512 B heightmap (256×i16) + per-subchunk biome paletted storages; a 0x7F "copy previous" marker repeats the previous palette (`chunk/decode.go:137`). Data3D copies: Linux BDS 1.26.52 `LevelChunk::deserialize3DBiomes` (0xc9eb8c0) stores a null storage for a 0xfe/0xff header and keeps a count up to the last real one; a null under that count is read at 0xc9fd06d and SIGSEGVs (fourteenth3ar, REMAINING4 set_blocks line). So 0xff is safe only in the top run (data3d.rs `encode`) |
 | 0x2C `,` | Version | 1 byte. dragonfly writes **42** (`mcdb/db.go:150`). Vanilla still reads legacy `0x76 v` |
 | 0x2D `-` / 0x2E | Data2D / Data2DLegacy | legacy biomes |
 | 0x2F `/` | SubChunkPrefix | + i8 Y index |
