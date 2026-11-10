@@ -110,11 +110,13 @@ def despawns():
 
 def main():
     rows, left = [], []
+    kinds = {document["minecraft:entity"]["description"]["identifier"] for document in packs.entities().values() if "minecraft:entity" in document}
     for name, document in sorted(spawn_rules().items()):
         rules = document["minecraft:spawn_rules"]
         kind, category = rules["description"]["identifier"], rules["description"]["population_control"]
         for held in rules.get("conditions", []):
-            if kind in GATED:
+            # BDS lists a rule only under an actor's identifier, so `minecraft:pillager_patrol` never spawns (docs/research/patrols.md).
+            if kind in GATED or kind not in kinds:
                 left.append(name)
                 continue
             rows.append(condition(kind, category, held))

@@ -185,8 +185,9 @@ parameters, as BDS's console printed them (research/captures/bds-console-cmds.tx
 size, then `light=min~max` (`w`: `adjust_for_weather`), `difficulty=`, `height=`, `distance=`,
 `density=surface:underground` (`-` for none), `on=` and `not_on=` blocks (old names renamed),
 `permute=weight:kind,..`, and the biome filter in prefix form (`&(..)` all of, `|(..)` any of, `!|(..)`
-none of, `!tag` not, `snow` for `is_snow_covered`). Left out: conditions that need patrols or villages
-(`pillager_patrol`), and the phantom, guardian and slime, whose spawning BDS's own code gates. Herd
+none of, `!tag` not, `snow` for `is_snow_covered`). Left out: a rule whose identifier names no entity
+(`minecraft:pillager_patrol`; BDS drops it at load, docs/research/patrols.md), and the guardian, whose
+spawning BDS's own code gates. Herd
 events (babies, variants, riders) are not kept. `despawns.tsv`: each entity's own `minecraft:despawn`
 `despawn_from_distance` as `near-far` (32 and 128 where it names none). Biome tags are read from
 `BiomeDefinitionList.bin` by the ids chunks store (`spawn_rules/biomes.rs`).
