@@ -85,7 +85,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity) -> bool {
         way = pressed::way(world, layer, &body);
     }
     let above = band.is_some_and(|[_, high]| body.at[1] > high && way[1] > 0.0);
-    let picks = fleeing.is_none() && !pressed && (idle >= KEEPS || above || ended || was_pressed);
+    let picks = fleeing.is_none() && (idle >= KEEPS || above || ended);
     if fleeing.is_some() && above {
         way[1] = 0.0;
     }

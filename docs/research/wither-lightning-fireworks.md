@@ -231,6 +231,31 @@ back to the prey at 10 a tick. Ported as fitted: after the blue skull the middle
 ticks (`wither/heads.rs` `LOOKS_BACK`; test `the_withers_middle_head_looks_back_to_its_body_after_a_blue_skull`).
 Still not ported: the random looks while spawning and the random attack-position dash.
 
+Fourteenth1ah, gdb on Linux BDS (the ab1wither2 scene twice: bds-ah1wither-gdb1.txt and bds-ah1wither-gdb2.txt,
+their breakpoint logs in the matching `-breaks.txt`; sapling-ah1wither2.txt after the port):
+- The spawn spin (`WitherBoss` 0xbbba9f0, armed from its own `newServerAiStep` 0xbbbd900): each tick of the
+  charge its spin speed (+0x4d4, 10 at first) grows 0.2 and body yaw, head yaw and rotation all become
+  wrap(yaw − speed); when the yaw comes round from below 0 to 0 or more it plays `spawn` (id 0x35), global,
+  at its feet; it heals ceil(max/200). 22 `spawn` sounds on both servers.
+- Its `RandomLookAroundGoal` (start 0x5760e30) read under gdb: -180 to 180 degrees about the body, 20 to 39
+  ticks, a 0.02 chance a tick; the head holds the look's yaw while the body spins under it, no more than 75
+  off it, and returns to the body when the look ends. Ported: `wither/spin.rs`.
+- `WitherRandomAttackPosGoal` (speed 1, `xz_dist` 10, `y_dist` 7; `WitherBoss` fire rate +0x4d0 20, rest
+  +0x4f0 40): canUse wants a target, no `POWERED` flag and +0x4e0, which is set when the countdown +0x4dc
+  (set to the rest after each fourth shot) runs out on an unarmoured wither. The spot is the target's x and z
+  plus 10 along the way from the wither to a `RandomPos` spot, at the wither's height: 10.0 off the cow at
+  each start. Start multiplies its air speed by 15 and paths there; stop divides it back, clears +0x4e0 and
+  sets +0x4fc to 20, and the middle head shoots on its fire-rate beat only with +0x4dc, +0x4e0 and +0x4fc
+  clear. Fitted to bds-ae1wither2.txt's second swoop (0.2 of a block over 35 ticks): v' = 0.91 v + 0.1764 x
+  min(1, 0.1 k), y held at its block's middle; it stopped 2.4 to 3.5 past the spot. Ported:
+  `wither/swoop.rs`, `wither/heads.rs` (the shot after a blue skull waits on the swoop); sapling's ends as it
+  passes the spot or after 5 s, and is skipped for a spot in no loaded chunk (a failed path). Both servers now swoop
+  about every 8 s (16, 24, 33, 40, 50 s on BDS; 16, 24, 32, 40, 47 s on sapling).
+- Unarmoured, BDS's wither does not close in on its prey between swoops (it hovered 40 off in
+  bds-ae1wither2.txt); sapling's no longer does (`flight::close_in` only when armoured). Armoured, the same
+  countdown leads to the charge dash (+0x4ad, +0x4c0 = 20), left as `wither/dash.rs` has it.
+- A `mob.warning` sound shortly after the summon on BDS is not explained; sapling sends none.
+
 ## Fireworks
 
 Code: `crates/sapling-shard/src/fireworks.rs`, `fireworks/{item,recipes,burst}.rs`,

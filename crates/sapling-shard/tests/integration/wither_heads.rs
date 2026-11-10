@@ -13,7 +13,7 @@ const CHARGE: usize = 201;
 
 /// A summoned wither on normal 8 off Alex, its charge over, Alex in `mode`.
 fn summoned(mode: GameMode) -> Harness {
-    let mut h = Harness::new();
+    let mut h = crate::fourteenth1ah::wide_floor();
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
         ctx.set_difficulty(Difficulty::Normal);
@@ -42,9 +42,13 @@ fn skulls_are_aimed_half_the_eye_height_over_a_players_eyes_and_spread_about_it(
     // BDS: 38 skulls passed the standing actor 2.41 over its feet on average (1.62 x 1.5 = 2.43),
     // spread with sd 1.15 (the pack's uncertainty 7.5 less 1 a level); one skull is not the mean.
     let mut h = summoned(GameMode::Survival);
-    let mut overs = Vec::new();
-    for _ in 0..3000 {
-        let feet = ask(&mut h, |ctx| ctx.position(ALEX).unwrap().feet);
+    let (mut overs, mut seen) = (Vec::new(), Vec::new());
+    // Unarmoured, its middle head rests through each swoop (wither/swoop.rs): about 4 shots in 8 s.
+    for tick in 0..6000 {
+        let (feet, wither) = ask(&mut h, |ctx| (ctx.position(ALEX).unwrap().feet, ctx.entities().into_iter().find(|entity| entity.kind == WITHER).map(|entity| entity.feet)));
+        if tick % 500 == 0 {
+            seen.push((tick, feet, wither, overs.len()));
+        }
         for shot in all::<AddEntity>(h.tick_all().to(1)).into_iter().filter(|added| added.entity_type == "minecraft:wither_skull") {
             let ([px, py, pz], [vx, vy, vz]) = ([shot.position.x, shot.position.y, shot.position.z], [shot.velocity.x, shot.velocity.y, shot.velocity.z]);
             let along = ((feet[0] - px) * vx + (feet[2] - pz) * vz) / (vx * vx + vz * vz);
@@ -54,7 +58,7 @@ fn skulls_are_aimed_half_the_eye_height_over_a_players_eyes_and_spread_about_it(
             break;
         }
     }
-    assert!(overs.len() >= 80, "{overs:?}");
+    assert!(overs.len() >= 80, "{} skulls; Alex, the wither and the count every 500: {seen:?}", overs.len());
     let mean = overs.iter().sum::<f32>() / overs.len() as f32;
     let sd = (overs.iter().map(|over| (over - mean).powi(2)).sum::<f32>() / overs.len() as f32).sqrt();
     // Within 2.5 standard errors of an sd up to 1.5.

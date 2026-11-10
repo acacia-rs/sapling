@@ -5,9 +5,11 @@
 //! where that meets a block it casts the way turned 30 degrees either side, flat, and keeps the side
 //! that runs clear, the farther-reaching where both meet one, a coin's pick where neither does. Its
 //! new swim way is that times 0.0025, a tenth of a swim: BDS's squids in a pool 5 across crept along
-//! its walls at 0.0009 a tick for seconds (research/captures/bds-ab1squid.txt). Once it no longer
-//! touches, the idle goal starts again and picks at once. The flag is set by a move a block cut short
-//! on any axis (body/moves.rs `collided`), not by a block merely touching.
+//! its walls at 0.0009 a tick for seconds (research/captures/bds-ab1squid.txt). The idle goal runs
+//! alongside it, never stopped: its pick every 201 ticks goes on while the squid is pressed and is not
+//! hurried by the release (bds-ah1swim gdb: a creep off the wall ran on past the goal's one tick; one
+//! pressed along a wall crept 4.5 s until the idle pick took it off). The flag is set by a move a
+//! block cut short on any axis (body/moves.rs `collided`), not by a block merely touching.
 
 use bevy_ecs::prelude::*;
 use sapling_world::World as Level;
