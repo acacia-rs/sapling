@@ -706,7 +706,7 @@ sapling-aa2spear: the first round's hits at 121, 139, 157, 175 and 193 ticks (BD
 194), the same harm and throws, the spear down at 277 (BDS 278); the second charge of each round comes
 later than BDS's (403 against 322: the reposition walk differs), and the wooden round hit 10 ticks early.
 Fitted, not decompiled: the reach band (2..4.5 × 0.5, the 0.25 margin as centre distance), hits only
-while charging (an unthrown actor was struck once a pass) and 11 ticks apart (fourteenth2af), the rest 20-30 ticks, the prey's own speed taken only for a mob prey, and the
+while charging (an unthrown actor was struck once a pass) and 11 ticks apart (fourteenth2af), the rest (20 ticks and the walk, fourteenth2am), the prey's own speed taken only for a mob prey, and the
 husk, zombie villager, pigman and piglin as the zombie (their packs' paces not applied). Mounted
 (sapling-j3ride against bds-j3ride) still differs: sapling's zombie horse walks 0.185 a tick to BDS's 0.27,
 never gets past the thrown actor and hits 9 times in pairs 10 ticks apart where BDS's passed, turned 8.8 off
@@ -747,6 +747,21 @@ players it meets, but not a hunter by its prey) and crawled behind the actor at 
 sapling-ai2spear: the horse kept 0.29 a tick through the actor, but at that pace passed it before the
 11-tick re-hit, so still one hit a pass where BDS's 0.245 horse struck thrice: the horse's random
 `movement` roll (sapling's dice are fixed; fourteenth2ac), not a rule.
+
+Fourteenth2am (am2ride: six spear riders charging the actor from the north one after another, so passes
+pair by roll; bds-am2ride.txt, gdb on the spot picker in bds-am2ride-gdb.txt, sapling-am2ride.txt). Both
+servers' horses walk 2.16 × (`movement` × 1.4)² a tick. Hits a pass by roll, BDS: 0.263 and 0.271 one
+(the next on the next pass), 0.237 and 0.247 nine and ten (11 apart, then 13-17 as the actor drifts
+aside), 0.208 and 0.209 eight. BDS's 1.4-wide horse ran at x 0.0 for an actor at x 0.5, never at the
+actor: it walks to its path node's stand, the cell of its box's low corner plus half its whole width
+plus one; ported (jockeys.rs `node_middle`, hijacked mounts wider than a block), so the throws gain
+the same sideways part (0.069-0.087 x) and sapling's horse turns after the actor as BDS's does. Sapling
+since: 0.256-0.272 one a pass, 0.209 nine (0, 11, 22, 38, 49, ...), 0.228 two, the first two hits at
+BDS's spots to 0.03. Still open: between 0.23 and 0.25 BDS's horse keeps behind the thrown actor (its
+path re-planned to each new node, slowing as it turns) where sapling's walks straight at the stand and
+passes it after two. The goal's cooldown (+0x16c) is 20 ticks, a constant (no pack sets it); state 3
+ends once cooled and its walk to the cooldown spot is done (0x53499ad), so the spear stays down 20
+ticks or more (bds-aa2spear's 22 and 30): lances.rs `COOLDOWN` replaces the fitted 20-30 roll.
 
 ## Sapling
 

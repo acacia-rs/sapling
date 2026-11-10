@@ -1,7 +1,7 @@
 //! Where BDS puts a mob or boat `/summon`ed with its box in blocks: its initial-move depenetration, read
 //! under gdb (docs/research/water-movement.md "Summoned into blocks"; solver 0x72b7190, per box 0xd7814b0).
 
-use acacia_physics::{Aabb, WorldView};
+use acacia_physics::{Aabb, Traversal, WorldView};
 use sapling_world::World as Level;
 
 use crate::terrain::physics_view;
@@ -64,13 +64,17 @@ pub(crate) fn pushed_out_standing(level: &Level, feet: [f32; 3], size: [f32; 2])
 }
 
 /// The collision boxes of the blocks the box `lo`..`hi` reaches, in world coordinates, x then z then y
-/// (BDS's list order; its passes take them last first).
+/// (BDS's list order; its passes take them last first). Scaffolding has none: BDS left zombies
+/// summoned inside it where they were (research/captures/bds-am2push.txt).
 fn block_boxes(view: &impl WorldView, lo: [f32; 3], hi: [f32; 3]) -> Vec<Aabb> {
     let span = |axis: usize| lo[axis].floor() as i32..=hi[axis].floor() as i32;
     let mut boxes = Vec::new();
     for x in span(0) {
         for z in span(2) {
             for y in span(1) {
+                if view.block([x, y, z]).traversal == Traversal::Scaffolding {
+                    continue;
+                }
                 let mut local = Vec::new();
                 view.block_collisions([x, y, z], &mut local);
                 let at = [x as f32, y as f32, z as f32];

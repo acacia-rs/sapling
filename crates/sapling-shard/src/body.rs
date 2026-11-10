@@ -191,6 +191,7 @@ impl Body {
             }
             let moved = [speed[0], speed[1] + lift, speed[2]];
             self.on_ground = self.travel(level, physics, moved, stood);
+            climb::pressed(level, self, moved);
             return moved;
         }
         self.flung = false;
