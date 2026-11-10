@@ -33,6 +33,8 @@ cp -r "$here/pack" "$pack"
 printf 'export const REGIONS = [%s];\nexport const TILE = %d;\nexport const WORKERS = %d;\nexport const SETTLE = %d;\nexport const LOAD_TIMEOUT = %d;\nexport const KICK = %s;\nexport const DIMENSION = "%s";\n' \
   "$regions" "$tile" "$workers" "$settle" "${WORLDGEN_LOAD_TICKS:-600}" "${WORLDGEN_KICK:-false}" "${WORLDGEN_DIMENSION:-overworld}" >"$pack/scripts/regions.js"
 mkdir -p "$bds/worlds/$level"
+# WORLDGEN_RESUME=<world dir>: start from a copy of that world (an earlier run's, edited offline) instead of a new one.
+[ -n "${WORLDGEN_RESUME:-}" ] && cp -r "$WORLDGEN_RESUME/." "$bds/worlds/$level/" && rm -f "$bds/worlds/$level/oracle.txt"
 echo '[{"pack_id": "7a3d2f60-5c1e-4b8a-9d47-0e6f1b2c3a01", "version": [1, 0, 0]}]' >"$bds/worlds/$level/world_behavior_packs.json"
 
 props="$bds/server.properties"

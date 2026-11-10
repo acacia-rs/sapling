@@ -90,6 +90,24 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   water in layer 1 under the waterloggable blocks placed (stairs, slabs, fences, panes, doors),
   `ignore_waterlogging` none. sapling: apply is what any write does (`blocks/waterlog.rs`);
   ignore clears layer 1 under every placed block (`sapling-shard/src/generation.rs` `write`).
+- Drilled 2026-11-10, group AJ. `feature minecraft:coal_ore_feature` in the middle of a floating 9x9x9
+  cube of stone, and of target blocks, answered `invalidposition.error` [] on BDS both times, no block
+  changed (bds-aj3ore.txt), as `beehive_feature` did (bds-t1dplace4.txt): a known feature that places
+  nothing is answered so. sapling answered `invalidfeature.error` until then (sapling-aj3ore.txt; fixed in
+  `vanilla/worldgen.rs`, test `structure_ticking_place_and_locate_answer_as_bds_answered`). The cube was to
+  show the read of a block worldgen does not name (sapling-world `generated/grow.rs` reads it as stone);
+  with no ore placed in stone either, it showed nothing, and is still undrilled.
+- Generation next to a world folder's edited chunks, group AJ 2026-11-10 (bds-aj3folder.txt, sapling-world
+  `examples/folder_generation_diff`): BDS generated forest chunks 186..187 x 506..509 (seed 20261003, the
+  worldgen oracle's run.sh, saved `FinalizedState` 2, no ring chunk saved), a copy got a glass wall along
+  its east edge offline (6272 cells, x 3006..3007, y 62..110), then BDS generated 188..189 over the copy
+  and over the unedited world (`WORLDGEN_RESUME`). The two BDS worlds differed only in the glass and 27
+  glow-lichen cells (run spread): the new chunks did not see the edit, and nothing was written into the
+  stored chunks (sapling's stored-column view of them differed in 0 cells). sapling over either folder
+  (`Generated`) generated the new chunks as with no folder: 1676 and 1668 cells off BDS, all ore blobs
+  and lichen that pristine sapling-vs-BDS shows too (Linux BDS's hash-seeded ore draws). Not covered:
+  a stored chunk whose `FinalizedState` is below 2 (sapling serves it as stored, undecorated; this BDS
+  run saved none), and a new chunk's feature that reaches into an edited one (none crossed the wall).
 
 ## /tickingarea
 
