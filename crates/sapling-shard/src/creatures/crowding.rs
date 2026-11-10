@@ -86,7 +86,9 @@ pub(super) fn tick(world: &mut World) {
         for &other in near.filter(|other| **other > index) {
             let (other_entity, _, other_body) = &bodies[other];
             // bds-ah3stop2.txt: a husk walked into its still prey's box to 0.523 off, never pushed back.
-            let its_prey = || super::hunting::quarry(world, *entity).is_some_and(|(prey, _)| prey == *other_entity);
+            // bds-af2spear.txt: nor a spear rider's zombie horse, which kept its pace through the actor.
+            let hunts = |mob: Entity| super::hunting::quarry(world, mob).is_some_and(|(prey, _)| prey == *other_entity);
+            let its_prey = || hunts(*entity) || world.get::<crate::riding::Seats>(*entity).is_some_and(|seats| seats.0.iter().any(|rider| hunts(*rider)));
             if other >= mobs && (not_by_players.contains(entity) || its_prey()) {
                 continue;
             }

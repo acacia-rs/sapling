@@ -4,6 +4,7 @@
 //! What viewers are told: sync.rs.
 
 mod bubbles;
+mod climb;
 mod geyser;
 mod liquid;
 mod moves;
@@ -14,6 +15,7 @@ mod stuck;
 
 use acacia_physics::{Aabb, WorldView, collide_box};
 use bevy_ecs::prelude::Component;
+pub(crate) use climb::is_climbing;
 pub(crate) use liquid::{InLiquid, Liquid, in_liquid, liquid_in, surface};
 pub(crate) use physics::Physics;
 pub(crate) use spawn_push::{pushed_out, pushed_out_standing};
@@ -66,6 +68,8 @@ pub(crate) struct Body {
     slowed: bool,
     /// Whether its last slide fell short of the wanted move on any axis (moves.rs `collided`).
     collided: bool,
+    /// Whether its last move pressed on a block across from a climbable cell, so its next rises (climb.rs).
+    climbing: bool,
 }
 
 /// A box in world coordinates: its lowest and highest corners.
@@ -73,7 +77,7 @@ type Bounds = ([f32; 3], [f32; 3]);
 
 impl Body {
     pub fn new(at: [f32; 3], motion: [f32; 3], size: [f32; 2]) -> Self {
-        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false, geysered: 0.0, lifted: 0.0, slowed: false, collided: false }
+        Self { at, motion, size, on_ground: false, liquid: None, wave: 0.0, thrown: None, lift: 0.0, walking: [0.0; 3], leaping: None, stood: false, pushed: None, jostled: [0.0; 2], flung: false, stepped: false, geysered: 0.0, lifted: 0.0, slowed: false, collided: false, climbing: false }
     }
 
     /// Moves it by `by` as far as the blocks let it, its own motion kept.
@@ -196,50 +200,16 @@ impl Body {
         if let Some(rise) = leaping {
             self.motion[1] = rise;
         }
+        climb::rise(self);
         bubbles::push_columns(level, self);
         let wanted = self.motion;
         self.on_ground = self.travel(level, physics, wanted, stood);
+        climb::pressed(level, self, wanted);
         if self.on_ground {
             self.motion[1] = 0.0;
         }
         self.geysered = geyser::boost(level, self, self.held_motion(physics)[1]);
         wanted
-    }
-
-    /// A mob's slowing at the start of its tick, by gravity and drag in the air or `liquid`.
-    fn drag(&mut self, physics: &Physics, liquid: Option<Liquid>, stood: bool) {
-        if physics.liquid == InLiquid::Swims && liquid == Some(Liquid::Water) {
-            liquid::swim(self, physics.water_drag);
-        } else if let Some(liquid) = liquid {
-            liquid::sink(self, liquid);
-        } else {
-            // BDS slows a mob after its move by where it stood before it (research/captures/bds-chase.txt).
-            let across = if stood { physics.ground_drag } else { physics.air_drag };
-            (self.motion[0], self.motion[2]) = (self.motion[0] * across, self.motion[2] * across);
-            let falling = self.motion[1] < 0.0;
-            if self.lifted > 0.0 {
-                self.motion[1] = (self.motion[1] + (self.lifted - self.motion[1]) * LEVITATES) * physics.fall_drag;
-                return;
-            }
-            let gravity = if falling && self.slowed { SLOW_FALL } else { physics.gravity };
-            self.motion[1] = (self.motion[1] - gravity) * physics.fall_drag;
-            if falling {
-                self.motion[1] *= physics.flutter;
-            }
-        }
-    }
-
-    /// Its motion as BDS holds it after a tick, which viewers are told: a mob's slows after its
-    /// move there, where sapling slows it as its next tick starts (a jump's 0.42 up is told
-    /// 0.3332; research/captures/bds-chase.txt, bds-kinds2.txt).
-    pub fn held_motion(&self, physics: &Physics) -> [f32; 3] {
-        if self.flung || !matches!(physics.liquid, InLiquid::Sinks | InLiquid::Swims) {
-            return self.motion;
-        }
-        let mut held = *self;
-        held.drag(physics, self.liquid, self.stood);
-        held.motion[1] += self.geysered;
-        held.motion
     }
 
     /// A mob's move by `motion`: through blocks if its physics pass them, else [`Body::slide`] with

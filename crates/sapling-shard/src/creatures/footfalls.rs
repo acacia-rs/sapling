@@ -6,7 +6,9 @@
 //! Steps, as BDS's step system (Linux 0x7539970, under gdb in research/captures/bds-f14v2steps-gdb.txt): a
 //! mob on the ground counts 3 for each block it walks across and vibrates (`entity_move`, 22) from its feet
 //! each time the count passes the next whole one, so every third of a block; BDS's walking zombie at 0.114 a
-//! tick vibrated every third tick. The count up a ladder or scaffolding is not ported.
+//! tick vibrated every third tick. A mob climbing (body/climb.rs) counts its way up too, as the system's
+//! sum takes the rise at the same 3 for a climbing mob (0x7539970's weighted y); bds-ai2push.txt's vine
+//! climbers were heard on the way up.
 //!
 //! Treading, as FarmBlock::transformOnFall (Linux 0xc563f30, called by the fall-distance update 0xb2df080 on
 //! the block a mob lands on; bds-f14v2tread*-gdb.txt, docs/research/growth.md): a landing treads farmland as a
@@ -30,8 +32,10 @@ pub(super) struct Strides {
 
 /// A mob's move from `start` to `now`: a step's vibration when its strides pass the next whole one.
 pub(super) fn step(world: &mut World, entity: Entity, layer: Entity, start: &Body, now: &Body) {
-    let across = (now.at[0] - start.at[0]).hypot(now.at[2] - start.at[2]) * STRIDES;
-    if !now.on_ground || now.liquid().is_some() || across <= 0.0 {
+    let climbing = !now.on_ground && world.get::<crate::components::Layer>(layer).is_some_and(|level| crate::body::is_climbing(&level.world, now));
+    let up = if climbing { now.at[1] - start.at[1] } else { 0.0 };
+    let across = (now.at[0] - start.at[0]).hypot(now.at[2] - start.at[2]).hypot(up) * STRIDES;
+    if !(now.on_ground || climbing) || now.liquid().is_some() || across <= 0.0 {
         return;
     }
     let mut strides = world.get::<Strides>(entity).copied().unwrap_or(Strides { walked: 0.0, next: 1.0 });

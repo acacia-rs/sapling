@@ -721,6 +721,23 @@ three re-picks a few ticks after the first (state 2 starting over without progre
 unexplained. Hits came 11 ticks apart mounted and on foot (the separate `DealKineticDamageSystem`, not
 found). Ported: lances.rs `spot`, `SPREAD`, `REHITS` 11.
 
+Fourteenth2ai (decompile of tick 0x53497c0; no new BDS drill). The three far picks were not state 2
+restarting: they are state 3. When the spear-use component (EnTT 0x6b006dfe) is gone, the spear down,
+the goal goes to state 3 (0x5349d95), sets its cooldown end (now + goal+0x16c) and calls the same spot
+picker with the `cooldown_distance` range (goal+0x184, call 0x534a44e): mounted 11-13, on foot 9-11,
+which fits all three (z 13 from a prey at 0.67, 18 from 8.78, 6 from −3.89). In state 3 it walks there
+and, while still cooling with its path done, re-picks by RandomPos 0xbd09940 in that range + 1.625;
+state 2 too re-picks by RandomPos (reposition range + 1.625) when its path ends nearer than 1.625.
+Ported: lances.rs `Rest` walks to the cooldown spot (rest length still the fitted 20-30 ticks; goal+0x16c
+not read). Kinetic damage is `DealKineticDamageSystem` (adapter vtable 0xefe1870, per-entity
+0x75a9380, names at 0x10f1b9f), not decompiled further. Mounted, the three hits riding with the thrown
+actor: sapling's zombie horse was pushed back by its rider's prey (crowding.rs pushes a mob by the
+players it meets, but not a hunter by its prey) and crawled behind the actor at 0.04 a tick; BDS's kept
+0.245 through it. A mount is now not pushed by its rider's prey (crowding.rs `its_prey`).
+sapling-ai2spear: the horse kept 0.29 a tick through the actor, but at that pace passed it before the
+11-tick re-hit, so still one hit a pass where BDS's 0.245 horse struck thrice: the horse's random
+`movement` roll (sapling's dice are fixed; fourteenth2ac), not a rule.
+
 ## Sapling
 
 Every kind that walks strolls (`creatures/strolling.rs`, `strolls=` in `mob-traits.tsv`, the

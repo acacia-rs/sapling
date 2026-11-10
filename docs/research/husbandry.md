@@ -345,15 +345,24 @@ living one of its own `ActorTypeComponent` among the entities its box grown by 8
 is 3 or more off (squared 9 at 0x1098858); it keeps following while 3 to 16 off (256 at 0x1098344),
 its path to that one found again every 10 ticks, at its movement times `speed_multiplier`.
 On BDS a baby cow, pig and sheep 7 east of a held grown one walked straight to it at 0.163 a tick
-(movement 0.25 × 1.1, the same track for all three) and stopped 2.79 off. A piglet took up a pig
-9.72 off along x, then 10.5 off along z, past the box's 8: the search is fitted 2 wider (parents.rs
-`SEARCH`); a lamb 9.75 off did not within 5 s (unexplained). A cow's follow and stroll share priority
+(movement 0.25 × 1.1, the same track for all three) and stopped 2.79 off. A piglet seemed to take up
+a pig 9.72 off along x and a lamb 9.75 off did not; fourteenth2ai settled it (below): the search is
+the goal's box, 8 across, and the piglet had strolled into it. A cow's follow and stroll share priority
 6 (its `cow_baby` group's over its own 5), so a calf on a stroll walked it to its end, past and away
 from its mother, and followed only after (`strolls_on` in mob-traits.tsv; also mooshroom and rabbit).
 A plain `/summon` is a baby 1 time in 20 (the first run's "mother" pig was one): summon parents with
 `spawn_adult`. Sapling: husbandry/parents.rs; test
 `a_baby_cow_walks_to_a_grown_one_and_stops_three_off`. sapling-af2baby: all three stopped 2.8 to 3.0
 off their mother's first spot as BDS's; after that, both servers' babies stroll and follow by chance.
+
+`ai2kin` (fourteenth2ai, bds-ai2kin.txt, gdb on canUse's fetch 0x5742296 and its take 0x574256f in
+research/captures/bds-ai2kin-gdb.txt): the box is the baby's own grown by 8, 4, 8 (constants 0x13e9250,
+0x13e5d50, 0x1098808, 0x1098494), and BlockSource::fetchEntities (slot 29, 0xc8db0f0, per chunk
+0xc9e0ce0) keeps the entities whose box meets it strictly. Lambs and piglets 9, 9.75 and 11 east of a
+held grown one took none while they stood; all four takes came at 8.2 to 8.75 off, once a stroll had
+brought them in (8 + the halves of both boxes, 8.675 across). So bds-af2baby's piglet strolled in, and
+its lamb at 9.75 was out of reach. parents.rs `SEARCH` is back to 8, 4 (strict); test fourteenth2ai
+`a_piglet_nine_off_does_not_take_up_a_grown_pig_and_one_seven_off_does`.
 
 ## Group K (2026-11-08, fourteenth2k_drill.rs)
 
