@@ -6,16 +6,19 @@
 //! dashes now and then (dash.rs). Its boss bar
 //! shows every second to players within 55; with none within 50 it heals 1 a second.
 
+mod bar;
 mod dash;
 mod dying;
 mod flight;
 mod heads;
 mod skulls;
+mod spin;
+mod swoop;
 mod wreck;
 
 pub(super) use dying::dies;
 
-use acacia_proto::packets::{BossEventColor, SetEntityData};
+use acacia_proto::packets::SetEntityData;
 use acacia_proto::types::{EntityProperties, MetadataDictionaryItem, MetadataDictionaryItemKey as Key, MetadataDictionaryItemType as Type, MetadataDictionaryItemValue as Value, MetadataDictionaryItemValueDefault as Plain};
 use bevy_ecs::prelude::*;
 use sapling_api::{Difficulty, SpawnReason};
@@ -23,7 +26,7 @@ use sapling_api::{Difficulty, SpawnReason};
 use super::health::{Cause, Health};
 use super::{Birth, blast};
 use crate::body::Body;
-use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_world};
+use crate::components::{Layer, NetId, Settings, Tick};
 use crate::entities;
 
 pub(super) const KIND: &str = "minecraft:wither";
@@ -45,11 +48,6 @@ const NORMAL: f32 = 0.75;
 const STUNNED: u32 = 80;
 const HEAD_UP: f32 = 3.0;
 const SKELETONS: usize = 3;
-/// The bar shows to players this near, and it heals 1 every second with no player this near.
-const BAR_REACH: f32 = 55.0;
-const LONELY: f32 = 50.0;
-const SECOND: u64 = 20;
-const TITLE: &str = "entity.wither.name";
 /// Sapling's own key for the ticks to an armoured one's next dash, which BDS keeps across a load
 /// under no key its loader names (bds-f14nwither2.txt: 140 ticks after the load, 137 were left).
 const DASH_IN: &str = "DashIn";
@@ -65,6 +63,8 @@ pub(super) struct Wither {
     wrecks: Option<u32>,
     heads: heads::Heads,
     dash: dash::Dash,
+    swoop: swoop::Swoop,
+    spin: spin::Spin,
 }
 
 /// Its own blasts and skulls do not hurt it while this is on.
@@ -181,9 +181,10 @@ fn blow_up(world: &mut World, wither: Entity, layer: Entity, at: [f32; 3]) {
     world.entity_mut(wither).remove::<Blasting>();
 }
 
-/// A tick of its charge: it heals, and blows up at the end.
+/// A tick of its charge: it spins, heals, and blows up at the end.
 fn charge(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
     let left = world.get::<Wither>(wither).map_or(0, |kept| kept.charging) - 1;
+    spin::turn(world, wither, layer, body);
     if let Some(mut health) = world.get_mut::<Health>(wither) {
         let by = (health.max() / CHARGE as f32).ceil();
         health.mend(by);
@@ -237,7 +238,7 @@ pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
     heads::pace(world, wither);
     armour(world, wither, layer, &body);
     wreck::tick(world, wither, layer, &body);
-    heal_alone(world, wither, layer, &body);
+    bar::heal_alone(world, wither, layer, &body);
     if stunned > 0 {
         if let Some(mut kept) = world.get_mut::<Wither>(wither) {
             kept.stunned -= 1;
@@ -255,27 +256,19 @@ pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
     if let Some(mut kept) = world.get_mut::<Wither>(wither) {
         kept.dash = dash;
     }
-    if !dashing {
+    let swooping = swoop::steer(world, wither, layer, &body, prey);
+    // Unarmoured, BDS's moves across only by its swoops (bds-ae1wither2.txt: it hovered 40 off its prey).
+    if !dashing && armoured {
         let [x, z] = flight::close_in(&body, prey);
         if let Some(mut moving) = world.get_mut::<Body>(wither) {
             (moving.motion[0], moving.motion[2]) = (x, z);
         }
     }
-    lift(world, wither, rise);
+    if !swooping {
+        lift(world, wither, rise);
+    }
     heads::tick(world, wither, layer, &body);
     true
-}
-
-/// A second's healing with no player near.
-fn heal_alone(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
-    if world.resource::<Tick>().0 % SECOND != 0 {
-        return;
-    }
-    let near = |feet: [f32; 3]| (0..3).all(|axis| (feet[axis] - body.at[axis]).abs() <= LONELY);
-    let lonely = !in_world(world).into_iter().any(|player| world.get::<InLayer>(player).is_some_and(|on| on.0 == layer) && world.get::<Position>(player).is_some_and(|at| near(at.feet)));
-    if let Some(mut health) = world.get_mut::<Health>(wither).filter(|_| lonely) {
-        health.mend(1.0);
-    }
 }
 
 /// The wither was hurt: its blocks are broken a second on.
@@ -289,11 +282,5 @@ pub(crate) fn hurt(world: &mut World, mob: Entity) {
 pub(super) fn tick(world: &mut World) {
     skulls::tick(world);
     dying::tick(world);
-    if world.resource::<Tick>().0 % SECOND != 0 {
-        return;
-    }
-    let bars: Vec<(Entity, i64, f32, [f32; 3])> = world.query_filtered::<(&InLayer, &NetId, &Body, &Health), With<Wither>>().iter(world).map(|(layer, id, body, health)| (layer.0, id.0 as i64, health.left() / health.max(), body.at)).collect();
-    for (layer, id, progress, at) in bars {
-        crate::dragon::show_boss_bar(world, layer, id, TITLE, BossEventColor::RebeccaPurple, progress, at, BAR_REACH);
-    }
+    bar::show(world);
 }

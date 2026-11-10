@@ -37,16 +37,23 @@ fn dolphins_in_a_wide_pool_keep_together_as_a_flock() {
 #[test]
 fn the_withers_middle_head_looks_back_to_its_body_after_a_blue_skull() {
     // bds-ab1wither2.txt: after each volley's blue skull the head went to about the body's yaw for 1.4 s.
-    let mut h = Harness::new();
+    let mut h = crate::fourteenth1ah::wide_floor();
     h.enter(1, "Alex");
     h.remote.run(|ctx| {
         ctx.set_difficulty(sapling_api::Difficulty::Normal);
-        assert!(ctx.spawn_entity("minecraft:wither", [8.5, 66.0, 0.5]).is_some());
+        // Placed so its spin leaves its body well off the way to Alex.
+        assert!(ctx.spawn_entity("minecraft:wither", [0.5, 66.0, 8.5]).is_some());
         assert!(ctx.give_effect(PlayerId(1), sapling_api::Effect::Resistance, 1000, 4, false));
     });
-    let added: Vec<AddEntity> = (0..201).flat_map(|_| all::<AddEntity>(h.tick_all().to(1))).collect();
+    let (mut added, mut turned) = (Vec::<AddEntity>::new(), Vec::<MoveEntityDelta>::new());
+    for _ in 0..201 {
+        let told = h.tick_all();
+        added.extend(all::<AddEntity>(told.to(1)));
+        turned.extend(all::<MoveEntityDelta>(told.to(1)));
+    }
     let id = added.iter().find(|added| added.entity_type == "minecraft:wither").expect("the wither shown").runtime_id;
-    let body = added.iter().find(|added| added.runtime_id == id).map(|added| added.body_yaw).unwrap_or(0.0);
+    // Its body spun while it charged (wither/spin.rs), so the body yaw is the last told one.
+    let mut body = turned.iter().filter(|moved| moved.runtime_entity_id == id).filter_map(|moved| moved.rot_y).last().map(|byte| f32::from(byte) * 360.0 / 256.0).expect("the spin told");
     let alex = ask(&mut h, |ctx| ctx.position(PlayerId(1)).map(|at| at.feet)).expect("Alex");
     let mut at = ask(&mut h, |ctx| ctx.entities().into_iter().find(|entity| entity.kind == "minecraft:wither").map(|entity| entity.feet)).expect("the wither");
     let off = |a: f32, b: f32| ((a - b + 540.0).rem_euclid(360.0) - 180.0).abs();
@@ -58,6 +65,7 @@ fn the_withers_middle_head_looks_back_to_its_body_after_a_blue_skull() {
         }
         for moved in all::<MoveEntityDelta>(told.to(1)).into_iter().filter(|moved| moved.runtime_entity_id == id) {
             head = moved.rot_z.or(head);
+            body = moved.rot_y.map_or(body, |byte| f32::from(byte) * 360.0 / 256.0);
             at = [moved.x.unwrap_or(at[0]), at[1], moved.z.unwrap_or(at[2])];
         }
         let wanted = (at[0] - alex[0]).atan2(alex[2] - at[2]).to_degrees();
@@ -68,7 +76,8 @@ fn the_withers_middle_head_looks_back_to_its_body_after_a_blue_skull() {
     }
     let from = blue.expect("a blue skull in 15 s");
     let near = back.iter().filter(|(since, to_body, _, apart)| (19..=26).contains(since) && *to_body <= 6.0 && *apart >= 30.0).count();
-    let after = back.iter().filter(|(since, _, to_prey, apart)| (50..=60).contains(since) && *to_prey <= 6.0 && *apart >= 30.0).count();
+    // From 40 on it swoops (wither/swoop.rs): the way to Alex swings and the head catches up after.
+    let after = back.iter().filter(|(since, _, to_prey, _)| (50..=90).contains(since) && *to_prey <= 6.0).count();
     let shown: Vec<_> = back.iter().step_by(4).take(20).collect();
     assert!(near >= 6 && after >= 6, "back to the body ({near}) and round to Alex again ({after}) after the blue skull at {from}: {shown:?}");
 }

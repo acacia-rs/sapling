@@ -6,8 +6,8 @@
 //! tick at most towards its prey across, and back to the body with none (research/captures/bds-ab1wither2.txt:
 //! held cows, 483 of 566 told moves within 5 degrees of the prey's yaw, turning 20 a told move). After a
 //! volley's blue skull it looks back to the body for [`LOOKS_BACK`] ticks, fitted (bds-ab1wither2.txt: about
-//! 1.4 s each volley, with `WitherRandomAttackPosGoal` starting after it).
-// Not ported: the random looks BDS's took while spawning (`RandomLookAroundGoal`, whose settings are unread).
+//! 1.4 s each volley, with `WitherRandomAttackPosGoal` starting after it). Unarmoured, the middle head's
+//! next shot after a blue skull waits on its swoop (swoop.rs); armoured, on [`RESTS`].
 
 use acacia_proto::packets::LevelSoundEvent;
 use acacia_proto::types::{MetadataDictionaryItemKey as Key, MetadataDictionaryItemValueDefault as Plain, Vec3f};
@@ -43,6 +43,13 @@ const ASIDE: f32 = 1.3;
 const MOB_EYES: f32 = 0.85;
 const HEAD_TURN: f32 = 10.0;
 const LOOKS_BACK: u64 = 28;
+
+impl Heads {
+    /// The middle head shoots again at `tick`, after a swoop.
+    pub(super) fn resume(&mut self, tick: u64) {
+        self.next[0] = tick;
+    }
+}
 
 #[derive(Default)]
 pub(super) struct Heads {
@@ -164,6 +171,10 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
     let yaw = world.get::<legs::Legs>(wither).map_or(0.0, |legs| legs.yaw);
     let Some(mut heads) = world.get_mut::<Wither>(wither).map(|mut kept| std::mem::take(&mut kept.heads)) else { return };
     let before = heads.targets;
+    let armoured = world.get::<Wither>(wither).is_some_and(|kept| kept.armoured);
+    if armoured && heads.next[0] == u64::MAX {
+        heads.next[0] = now;
+    }
     let prey = prey(world, wither, layer, body);
     heads.targets[0] = prey.map(|(player, _)| player);
     let look = look(heads.look.unwrap_or(yaw), yaw, body, prey.filter(|_| now >= heads.back).map(|(_, feet)| feet));
@@ -181,6 +192,12 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
         heads.next[0] = now + rest;
         if blue {
             heads.back = now + LOOKS_BACK;
+        }
+        if blue && !armoured {
+            heads.next[0] = u64::MAX;
+            if let Some(mut kept) = world.get_mut::<Wither>(wither) {
+                kept.swoop.after_volley(now, every);
+            }
         }
     }
     for head in 1..3 {
