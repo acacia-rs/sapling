@@ -2,7 +2,9 @@
 //! hits it from its seat as one on foot; its mount walks at that prey at its own `movement` times its
 //! pack's `mount_pathing` pace (a chicken under a baby zombie 1.5), or, under a rider holding a spear,
 //! the rider's `use_kinetic_weapon` pace (`hijack_mount_navigation`: a zombie horse under its zombie 1.4),
-//! through its prey and on to the rider's reposition spot (hunting/strike/lances.rs).
+//! through its prey and on to the rider's reposition spot (hunting/strike/lances.rs), by a way ([`ways`]).
+
+mod ways;
 
 use bevy_ecs::prelude::*;
 
@@ -48,7 +50,9 @@ pub(super) fn think(world: &mut World, entity: Entity, layer: Entity, id: u64, k
         return;
     }
     let prey = hunting::pick(world, entity, layer, id, kind, body);
-    hunting::lances::plan(world, entity, kind, body.at, prey);
+    if let Some(to) = hunting::lances::plan(world, entity, kind, body.at, prey) {
+        ways::plan(world, entity, to);
+    }
     hunting::strike(world, entity, layer, id, kind, body);
 }
 
@@ -61,16 +65,9 @@ pub(crate) fn rein(world: &World, mount: Entity, kind: &str, rider: Entity) -> O
     let spear = super::command_gear::main_hand(world, rider).is_some_and(|item| item.name.ends_with("_spear"));
     let hijack = HIJACKS.iter().find(|(of, under, _)| spear && *of == rider_kind && *under == kind).map(|(.., pace)| *pace);
     let pace = hijack.or_else(|| PATHING.iter().find(|(of, _)| *of == kind).map(|(_, pace)| *pace))?;
-    let width = world.get::<Body>(mount).map_or(0.0, |body| body.size[0]);
-    let to = if hijack.is_some() && width > 1.0 { [node_middle(prey[0], width), node_middle(prey[2], width)] } else { [prey[0], prey[2]] };
-    Some((to, movement(world, mount, kind)? * pace))
-}
-
-/// Where a mob `width` wide stands on the path node it would take for `at`: the node is the cell of
-/// its box's low corner, its stand the node plus half its whole width plus one. BDS's zombie horses
-/// (1.4 wide) ran at x 0.0 for an actor at x 0.5 (research/captures/bds-am2ride.txt).
-fn node_middle(at: f32, width: f32) -> f32 {
-    (at - width / 2.0).floor() + (width + 1.0).trunc() * 0.5
+    let speed = movement(world, mount, kind)? * pace;
+    let way = hijack.and_then(|_| ways::next(world, rider, world.get::<Body>(mount)?));
+    Some(way.map_or(([prey[0], prey[2]], speed), |(to, share)| (to, speed * share)))
 }
 
 /// The mob's `movement`: its strides' if it rolled them, else its kind's.

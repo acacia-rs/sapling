@@ -260,7 +260,7 @@ pub(super) fn strike(world: &mut World, entity: Entity, layer: Entity, id: u64, 
                 moved.throw(thrown);
             }
             harm::wound(world, mob, layer, harm, Cause::RamAttack);
-            super::strolling::startle(world, mob);
+            super::strolling::startle(world, mob, Some(entity));
         }
         (None, None) => {}
     }

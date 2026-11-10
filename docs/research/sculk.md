@@ -343,6 +343,12 @@ ways to the nearest reachable cell). sapling-f14ao2push.txt: the climbers now st
 1.3 at a time, as BDS's), the sensors powered 16 times to BDS's 18 (14 of them steps on the tops, BDS 17;
 stroll draws differ). Left: at the scene's `/kill` (56080) BDS's sensors heard no zombie die, sapling's
 two (z −8 and z 8; sapling-am2push's one), REMAINING4.
+Corrected by fourteenth2ap: BDS's z 0 and z 8 sensors powered 287 ms after the deaths (bds-am2push.txt 56377,
+5 to 6 ticks: death + 1, 4 to travel), its z −8 sensor was still active from 54930; sapling-f14ao2push's z −8
+and z 8 powered, its z 0 active. Both heard on every free sensor. bds-ap2kill.txt (a held zombie `/kill`ed 4
+from a sensor read by comparator and dust, loot off and on): heard at 15 in the open, in the walled vine,
+scaffolding and ladder cells and on the 3×3 top six up (410 ms there to 280 below); sapling-ap2kill.txt the
+same, all 15.
 
 ## Drilled 2026-11-08, group W (`w1pops`; fourteenth1w_drill.rs)
 

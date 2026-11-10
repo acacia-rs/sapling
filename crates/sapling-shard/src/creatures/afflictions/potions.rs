@@ -59,5 +59,5 @@ fn breathed_on(world: &mut World, mob: Entity, layer: Entity, share: f32, from: 
     }
     harm::wound(world, mob, layer, HARMS * share, Cause::Magic);
     blows::throw_from(world, mob, from, 0, false);
-    strolling::startle(world, mob);
+    strolling::startle(world, mob, None);
 }

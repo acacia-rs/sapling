@@ -229,6 +229,6 @@ fn throw_mob(world: &mut World, mob: Entity, layer: Entity, motion: [f32; 3], pu
     throw_at_once(world, mob, layer, [motion[0] / across * THROW + push[0], THROW + push[1], motion[2] / across * THROW + push[2]])?;
     let (id, body, kind) = (world.get::<NetId>(mob)?.0, *world.get::<Body>(mob)?, world.get::<entities::Kind>(mob)?.0.clone());
     hunting::provoke(world, mob, layer, id, &kind, &body, player?);
-    super::strolling::startle(world, mob);
+    super::strolling::startle(world, mob, player);
     Some(())
 }

@@ -154,7 +154,7 @@ fn hit(world: &mut World, player: Entity, id: u64) -> Option<()> {
 /// The mob answers a hit from `player` that landed: it is startled, a hunter takes the player, a
 /// still guardian spikes it, an enderman teleports away and the player's pets go for it.
 pub(super) fn answer(world: &mut World, entity: Entity, layer: Entity, id: u64, kind: &str, body: &Body, player: Entity) {
-    super::strolling::startle(world, entity);
+    super::strolling::startle(world, entity, Some(player));
     super::hunting::provoke(world, entity, layer, id, kind, body, player);
     super::guardians::spike(world, entity, kind, player);
     super::teleports::startle(world, entity);

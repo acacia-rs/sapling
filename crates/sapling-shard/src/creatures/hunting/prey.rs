@@ -84,5 +84,5 @@ pub(in crate::creatures) fn hit(world: &mut World, layer: Entity, by: Entity, pr
     if kept > 0.0 {
         super::super::hits::throw_at_once(world, prey, layer, [away[0] * along * kept, up * kept, away[1] * along * kept]);
     }
-    super::super::strolling::startle(world, prey);
+    super::super::strolling::startle(world, prey, Some(by));
 }

@@ -459,8 +459,13 @@ light is even on drill floors). No path check: `start` (0xbdc8e40) asks navigati
 place out of reach gives the way to the nearest cell searched (Java 1.8 `PathFinder`'s closest point), so
 bds-am2push.txt's zombies on a 3×3 top six up strolled about the top, 0.3 to 1.3 at a time. Sapling took
 only places at its own height with a whole way there, so stood. Ported: strolling.rs `way_to`/`floor_of`,
-paths.rs `route_toward`; a flight is the same draw with (5, 4) (`PanicGoal::canUse` 0xbdc7260; with an
-attacker BDS draws `getPosAvoid` away from it, not ported). Test fourteenth2ao.
+paths.rs `route_toward`; a flight is the same draw with (5, 4) (`PanicGoal::canUse` 0xbdc7260). Test fourteenth2ao.
+With an attacker (its last hurt-by mob or player) the flight draws by `RandomPos::getPosAvoid` (0xbd0b530, args
+5, 4, the attacker's position, 10 tries): the way from the attacker to the mob goes to 0xbd0a310, which
+negates a try's x and z offsets when their dot with that way is below 0 (constant 0x10983fc = 0), so every
+place lies on the far side (fourteenth2ap). bds-ap2flee.txt: six cows hit from the west and the north ran
+9-13 off in five seconds and never came nearer the actor than they stood; sapling-ap2flee.txt the same
+(8.8-13.6 off). Ported: strolling.rs `way_to` `shunned`, `startle` takes the attacker; test fourteenth2ap.
 
 ## Fleeing (`flee`)
 
@@ -787,13 +792,27 @@ along the look, and has no dismount; neither changes how many hits a pass lands.
 sapling's walks straight at the node stand and passes after two: a port of node-by-node path following
 for hijacked mounts, not reached.
 
+Fourteenth2ap (the goal tick's approach and charge, read again in 0x53497c0: both run the melee path upkeep
+at 0x526f3a0). The mount's navigation is asked for a path to the prey every 4 + nextInt(7) ticks (more when
+far), and when the prey is moving and still in the path's last node only 1 time in 20 (0x1098844 = 0.05);
+a reposition or cooldown spot is one `moveTo`. The mount walks the path node by node to each node's stand,
+done within max(width / 2, 0.6): so it keeps to where the prey was and weaves behind a thrown one.
+Ported: creatures/jockeys/ways.rs (node = the cell of the box's low corner, stand = node plus half the
+whole width plus one, as before; the way includes its start node; the mount stands once its way is walked).
+ap2ride (am2ride with the watcher beside the actor, so its `MovePlayer`s give the actor's track):
+bds-ap2ride.txt hits a pass by roll 0.214 eight, 0.209 eight, 0.216 nine, 0.273 one then four, 0.274 one,
+and 0.251 one (where am2ride's 0.247 struck ten: hits a pass are not a function of the roll; the thrown
+actor's flight and the re-plan draws decide them). sapling-ap2ride.txt: 0.209 eight, 0.214 six and eight,
+0.221 eight, 0.251 seven and five (five and three in one pass), the horse now kept behind the thrown
+actor at 0.25 where it passed after two.
+
 ## Sapling
 
 Every kind that walks strolls (`creatures/strolling.rs`, `strolls=` in `mob-traits.tsv`, the
 shard's `mobs_stroll`): a tick in 120 it draws a place as `RandomPos` does and walks a way of cells
 toward it at its stroll speed, to the nearest cell it can reach, giving up after ten seconds ("Strolling"
 above, drilled). A mob a player hit, of a kind with `panics=`, runs for 70 ticks from place to place
-within 5 blocks at that speed.
+within 5 blocks at that speed, each on the far side from whoever hit it.
 
 A creeper is lit, burns and bursts so (`creatures/blast.rs`): its blast hurts and throws players
 by the rule above, hurts mobs, and breaks blocks along the Java game's rays, which break that one
