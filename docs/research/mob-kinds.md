@@ -510,12 +510,21 @@ is assumed from its pack's like shape, not drilled.
   goes by an amphibious way, cell by cell (frogs/wading.rs: any of 26 neighbours with water in or under it or a
   floor under it, open water weighed 4 steps more, as Java's frog), and its push up or down is
   `AmphibiousMoveControl`'s (Linux tick 0xbe27b10: speed x 0.1 along the way, the height off taken half the
-  frog's height further). BDS's `move_to_land` takes a random land cell of 80 tries, sapling the nearest: in
+  frog's height further). BDS's `move_to_land` takes a random land cell of 80 tries, sapling the nearest
+  (ported by fourteenth1ah: `BaseMoveToBlockGoal::findTargetBlock` 0x48c8b20 draws 80 `RandomPos::getPos`
+  spots, 30 across and 8 up or down, and keeps the nearest whose cell under it is solid with no liquid over
+  it; frogs/landward.rs `nearest_land`). Before that, in
 sapling-ae1fish.txt it walked the floor at 0.11 a tick to the near wall, rose at 0.14 and was out 5.6 s in, where
 BDS's went to a corner and out at 16 s.
 - The swim push up or down below full strength (fourteenth1ae, swimming.rs `rise`): a fish's (`SwimMoveControl`
   tick, Linux 0xbdf8d50) is its push across x min(5 x the height off, 1.25), so full until the last quarter
-  block; its sign BDS takes from the pitch, sapling from the spot's height.
+  block; its sign BDS takes from the pitch, sapling from the spot's height. Fourteenth1ah read it under gdb
+  (bds-ah1swim.txt, its breakpoints in bds-ah1swim-gdb.txt): the y input is −sign(sin pitch) x max(|sin pitch|,
+  min(5 |dy|, 1.25)) x speed, forward cos(pitch) x speed. The pitch is written by the look control's tick
+  (Linux 0xbdf78f0, a rotlerp of rot.x, pc 0xbdf7c20) and does not follow the pitch to the swim spot: the cod
+  went 0 → 9.4 in one tick, then down by 0.1 to 0.58 a tick while the pitch to its spot stayed 0.6 to 8 over it,
+  crossing 0 a tick before the cod reached the spot's height, so it went 0.1 under it and back. Not fitted, so
+  not ported: sapling still signs the push by the spot's height (at most a tenth of a block of overshoot).
 - Bees (bds-g14bee.txt): bees with pollen grew wheat a block under them 0 to 1 with `ParticleCropGrowth` at
   the cell's corner (bees/crops.rs, pack `grows_crop` 10 charges at 0.03); a silk-touched hive's item kept its
   bee in `Occupants` and none came out; a hive over a lit campfire broken by hand let its bee out angry.

@@ -119,3 +119,13 @@ then the population-control pool: its index (141d3f2d0) into the dimension's cap
 must be over 0 and over the count. The flat runs passed the first two (age and pack proven), so the suspect is
 the pillager pool's cap or the position check [U]. Not verified: the Linux ELF's cluster was not found by its
 strings (72 sites use the `PersistentComponent` hash), so no gdb run was made.
+
+Linux cluster found (fourteenth1ah) [D]: it is inlined in `BedrockSpawner`'s slot 13 (vtable 0xf2ea500,
+function 0xc8cbad0; the 200 is `200 - count` there, not a compare against an immediate, which is why a scan
+for `$0xc8` missed it). Its gates by call site: the rule's conditions `0xc7bed80` (call at 0xc8cc384; `0xc7bebc0` at
+0xc8cc36e gives the count it rounds a draw onto, likely the herd size [U]), the position check `0xc7f16f0` (0xc8cc429), then the global
+cap (200 less the count, at most the herd) and the category cap, then per mob the population-control pool
+lookup `0x554e0d0` (0xc8cc534, 0xc8cc897: the pool's index, its count at +0x100 on the surface or +0xe4
+under it, against the dimension's cap table). Not run under gdb: a patrol run needs the aged level.dat, the
+`z1patrol` pack and a night (above), all to be set up and restored again; breakpoints on these four sites with
+the rule's name read would tell which gate refuses the pillager.

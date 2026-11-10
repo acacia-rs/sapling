@@ -369,6 +369,16 @@ A held squid and glow squid hit by the survival actor, each let go after
   sapling now presses a squid only so (`Body::collided`, body/moves.rs). A re-drill (sapling-ae1squid.txt) still crept on 703
   of 2364 told moves (that run LAGGED 2x), every creep at a wall on both servers, so the excess is not
   the touch test; what lets BDS's squids leave the wall sooner is unread (REMAINING4).
+- Read 2026-11-09 (fourteenth1ah, gdb on canUse 0x5933820, its return and start 0x5933980; bds-ah1swim.txt,
+  one squid in the 5-wide pool for 60 s): canUse ran every tick but while the goal ran, and the goal started 5
+  times, 4 of them for one tick only (the creep way took the squid off the wall at once, so the flag went),
+  the fifth for 4.5 s while it crept along a wall pressed into it. What ended that one was the idle goal's
+  pick: `SquidIdleGoal` (vtable 0xeefc9b0; canUse and canContinueToUse 0x5933450/0x5933460 test only a
+  component, start 0x5933470 sets its count to 200, tick 0x5933490 picks past 199 or above its band) is never
+  stopped by the pressed goal, so it picks on its 201-tick beat while the squid is pressed and is not
+  hurried by the release (the creeps off the wall ran on for seconds after the goal's one tick). Sapling had
+  held its pick while pressed and picked at once on release, so a squid pressed along a wall crept until it
+  left it (sapling-ah1swim.txt: 40 s on one wall). Fixed: squids.rs picks on its beat whatever the press.
 
 ## Mobs that fight their own way
 
