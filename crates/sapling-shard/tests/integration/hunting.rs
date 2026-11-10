@@ -268,8 +268,13 @@ fn a_cow_a_player_hit_runs_off_faster_than_it_strolls() {
     let on = TransactionTransactionDataItemUseOnEntity { entity_runtime_id: cow, action_type: Action::Attack, hotbar_slot: 0, held_item, player_pos: Vec3f { x: 0.5, y: 66.62, z: 0.5 }, click_pos: Vec3f { x: 0.0, y: 0.0, z: 0.0 } };
     let transaction = Transaction { legacy: TransactionLegacy { legacy_request_id: 0, legacy_transactions: None }, transaction_type: TransactionTransactionType::ItemUseOnEntity, actions: Vec::new(), transaction_data: TransactionTransactionData::ItemUseOnEntity(on) };
     h.receive(1, &InventoryTransaction { transaction });
+    h.tick_all();
+    // Out of its way: a cow running into the player is shoved past its pace.
+    h.remote.run(|ctx| {
+        ctx.teleport(sapling_api::PlayerId(1), [-7.5, 65.0, -7.5]);
+    });
     let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-    for _ in 0..70 {
+    for _ in 0..69 {
         let seen = seen.clone();
         h.remote.run(move |ctx| seen.lock().unwrap().extend(ctx.entities().first().filter(|cow| cow.on_ground).map(|cow| cow.velocity[0].hypot(cow.velocity[2]))));
         h.tick_all();
