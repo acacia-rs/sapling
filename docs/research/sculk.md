@@ -338,6 +338,11 @@ stone top at y −54 (and the vine row's): BDS's strolled about up there (0.3 to
 every few seconds, sapling's stood. Sapling's stroll (creatures/strolling.rs) only takes a place at its own
 height with a whole route to it, which ten tries over ±10 seldom find on a 3×3 top; BDS's moves (short, all on
 the top) look like partial paths toward places it cannot reach, not decompiled. Open (a stroll port, not climbing).
+Fourteenth2ao: the stroll ported (mob-attacks.md "Strolling": `RandomPos` places moved down their column,
+ways to the nearest reachable cell). sapling-f14ao2push.txt: the climbers now stroll about the top (0.3 to
+1.3 at a time, as BDS's), the sensors powered 16 times to BDS's 18 (14 of them steps on the tops, BDS 17;
+stroll draws differ). Left: at the scene's `/kill` (56080) BDS's sensors heard no zombie die, sapling's
+two (z −8 and z 8; sapling-am2push's one), REMAINING4.
 
 ## Drilled 2026-11-08, group W (`w1pops`; fourteenth1w_drill.rs)
 

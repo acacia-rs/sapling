@@ -13,19 +13,19 @@ use crate::components::{Layer, Tick};
 /// A tick in this many starts a stroll, to the first of this many places tried that will do.
 const EVERY: f32 = 120.0;
 const TRIES: usize = 10;
-/// A stroll goes up to this far along each axis, takes the next cell of its way this near the
-/// middle of the last (half its width if more: `PathNavigation::updatePath`, Linux 0xbd70f60), and
-/// is given up after this many ticks.
-const FAR: f32 = 10.0;
+/// A stroll's place is drawn up to this far along each axis and this far up or down (`random_stroll`'s
+/// `xz_dist`, `y_dist`); it takes the next cell of its way this near the middle of the last (half its
+/// width if more: `PathNavigation::updatePath`, Linux 0xbd70f60), and is given up after this many ticks.
+const FAR: (i32, i32) = (10, 7);
 const ARRIVED: f32 = 0.6;
 const PATIENCE: u64 = 200;
 /// Within a block of its way's last middle its speed is the squared distance there, at least half:
 /// BDS's MoveControl::calculateMoveSpeed 1430b8050 and shouldSlowSpeed 1430b90d0 (bds-strolls.txt
 /// walks end 0.086, 0.076, 0.062, ... 0.022 a tick).
 const LAST_SLOWEST: f32 = 0.5;
-/// A hit mob flees this many ticks, to places up to this far along each axis.
+/// A hit mob flees this many ticks, to places drawn this far across and up (`PanicGoal::canUse`, Linux 0xbdc7260).
 const FLEES: u64 = 70;
-const FLEES_FAR: f32 = 5.0;
+const FLEES_FAR: (i32, i32) = (5, 4);
 
 type Cell = [i32; 3];
 
@@ -60,22 +60,27 @@ pub(super) fn last_block_share(body: &Body, to: [f32; 2]) -> f32 {
     if near < 1.0 { near.max(LAST_SLOWEST) } else { 1.0 }
 }
 
-/// The way over whole cells to a place tried at random, as BDS's walks went from cell middle to
-/// cell middle (research/captures/bds-strolls.txt).
-fn way_to(world: &mut World, layer: Entity, body: &Body, far: f32, shuns_sun: bool) -> Option<Vec<Cell>> {
-    let tries: Vec<[f32; 2]> = {
-        let mut dice = world.get_resource_or_insert_with(Dice::default);
-        (0..TRIES).map(|_| [body.at[0] + (dice.fraction() * 2.0 - 1.0) * far, body.at[2] + (dice.fraction() * 2.0 - 1.0) * far]).collect()
-    };
-    let head = |[x, z]: [f32; 2]| [x, body.at[1] + body.size[1], z].map(|c| c.floor() as i32);
-    let shaded = shuns_sun && !super::harm::sun_on(world, layer, head([body.at[0], body.at[2]]));
+/// The way over whole cells toward a place drawn at random, as BDS's walks went from cell middle
+/// to cell middle (research/captures/bds-strolls.txt): to the cell nearest it where it cannot be
+/// reached, as BDS's zombies on a 3×3 top six up strolled about the top (bds-am2push.txt).
+fn way_to(world: &mut World, layer: Entity, body: &Body, (far, up): (i32, i32), shuns_sun: bool) -> Option<Vec<Cell>> {
     let from = body.at.map(|c| c.floor() as i32);
+    let tries: Vec<Cell> = {
+        let mut dice = world.get_resource_or_insert_with(Dice::default);
+        (0..TRIES).map(|_| [from[0] + dice.roll(2 * far as u32 + 1) as i32 - far, from[1] + dice.roll(2 * up as u32 + 1) as i32 - up, from[2] + dice.roll(2 * far as u32 + 1) as i32 - far]).collect()
+    };
+    let head = |[x, _, z]: Cell, feet: f32| [x, (feet + body.size[1]).floor() as i32, z];
+    let shaded = shuns_sun && !super::harm::sun_on(world, layer, head(from, body.at[1]));
     let level = &world.get::<Layer>(layer)?.world;
-    let suits = |to: [f32; 2]| !(shaded && super::harm::sun_on(world, layer, head(to)));
-    tries.into_iter().filter(|to| suits(*to)).find_map(|[x, z]| {
-        let to = [x.floor() as i32, from[1], z.floor() as i32];
-        paths::is_standable(level, to).then(|| paths::route(level, from, to)).flatten().filter(|way| !way.is_empty())
-    })
+    let to = tries.into_iter().filter_map(|cell| floor_of(level, cell, from[1] - up, from[1] + up).map(|y| [cell[0], y, cell[2]])).find(|to| !(shaded && super::harm::sun_on(world, layer, head(*to, to[1] as f32))))?;
+    paths::route_toward(level, from, to).filter(|way| !way.is_empty())
+}
+
+/// The height a place drawn at `cell` is moved to, as BDS's `RandomPos` (Linux 0xbd0a310) moves it:
+/// onto the solid cell it is in, else down its column to the first floor, else up, within `lo..=hi`.
+fn floor_of(level: &sapling_world::World, [x, y, z]: Cell, lo: i32, hi: i32) -> Option<i32> {
+    let solid = |y: i32| paths::holds(level, [x, y, z]);
+    (lo..=y).rev().find(|y| solid(*y) && !solid(y + 1)).map(|y| y + 1).or_else(|| (y + 1..=hi).find(|y| !solid(*y) && solid(y - 1)))
 }
 
 /// Before the move of a mob with nothing else to do: it starts a stroll now and then and walks

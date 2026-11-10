@@ -449,6 +449,18 @@ max(width / 2, 0.6) of its middle (constant 0x1098584 = 0.6; 3-D, the node's own
 were at their last wanted tick 0.6 to 0.64 off their last middle 113 times of 132, the rest cut short.
 Sapling took a cell under 0.5: ported (`ARRIVED` in `creatures/strolling.rs`, half the width if more);
 test `a_strolling_cow_is_done_with_a_cell_0_6_off_its_middle`.
+Where a stroll goes (2026-11-10, fourteenth2ao, decompiled on the Linux ELF): `RandomStrollGoal` (vtable
+0xf242178; canUse 0xbdc8d30 rolls the interval, then slot 12 0xbdc91e0) asks `RandomPos::getPos` (0xbd09940
+→ 0xbd0a310) with the pack's `xz_dist` and `y_dist` (10, 7) and 10 tries. Each try draws `nextInt(2r+1) − r`
+for x and z and `nextInt(2y+1) − y` for height about the mob's floored cell, then moves it within the mob's
+height ± y_dist: onto a solid cell it is in with air over it, else down its column to the first floor, else
+up; a column with neither is dropped. The best walk-target value wins (ties: the first; not ported, as
+light is even on drill floors). No path check: `start` (0xbdc8e40) asks navigation for a way there, and a
+place out of reach gives the way to the nearest cell searched (Java 1.8 `PathFinder`'s closest point), so
+bds-am2push.txt's zombies on a 3×3 top six up strolled about the top, 0.3 to 1.3 at a time. Sapling took
+only places at its own height with a whole way there, so stood. Ported: strolling.rs `way_to`/`floor_of`,
+paths.rs `route_toward`; a flight is the same draw with (5, 4) (`PanicGoal::canUse` 0xbdc7260; with an
+attacker BDS draws `getPosAvoid` away from it, not ported). Test fourteenth2ao.
 
 ## Fleeing (`flee`)
 
@@ -763,13 +775,25 @@ passes it after two. The goal's cooldown (+0x16c) is 20 ticks, a constant (no pa
 ends once cooled and its walk to the cooldown spot is done (0x53499ad), so the spear stays down 20
 ticks or more (bds-aa2spear's 22 and 30): lances.rs `COOLDOWN` replaces the fitted 20-30 roll.
 
+Fourteenth2ao (decompile of `DealKineticDamageSystem`'s per-entity 0x75a9380, no drill): it takes the
+holder's look direction from its rotation (the sine table), gathers the mobs along it within reach
+(0xd09a470), and for each one hit no more than 10 ticks before (a per-target tick list: `REHITS` 11
+confirmed) takes the holder's speed along its look and that less the target's own; damage, knockback and
+dismount each need their own least speed and least relative speed and lie in their own time window, and
+damage is floor(base + multiplier × relative speed). Sapling measures speed toward the prey's middle, not
+along the look, and has no dismount; neither changes how many hits a pass lands. The 0.23-0.25 riders'
+9-10 hits come from BDS's horse staying behind the thrown actor (bds-am2ride.txt pass 2: its x weaves
+0.0 → 1.74 → 1.27 as it re-plans to each new node, z steps 0.17-0.26 against a 0.238 straight pace), where
+sapling's walks straight at the node stand and passes after two: a port of node-by-node path following
+for hijacked mounts, not reached.
+
 ## Sapling
 
 Every kind that walks strolls (`creatures/strolling.rs`, `strolls=` in `mob-traits.tsv`, the
-shard's `mobs_stroll`): a tick in 120 it picks the first of ten places up to 10 blocks off along
-each axis that has floor, and walks straight there at its stroll speed, giving up at an edge, at a
-block in its way or after ten seconds (how often: "Strolling" above, drilled). A mob a player hit, of a
-kind with `panics=`, runs for 70 ticks from place to place within 5 blocks at that speed.
+shard's `mobs_stroll`): a tick in 120 it draws a place as `RandomPos` does and walks a way of cells
+toward it at its stroll speed, to the nearest cell it can reach, giving up after ten seconds ("Strolling"
+above, drilled). A mob a player hit, of a kind with `panics=`, runs for 70 ticks from place to place
+within 5 blocks at that speed.
 
 A creeper is lit, burns and bursts so (`creatures/blast.rs`): its blast hurts and throws players
 by the rule above, hurts mobs, and breaks blocks along the Java game's rays, which break that one

@@ -48,19 +48,38 @@ pub(super) fn is_clear(level: &Level, from: [f32; 3], to: [f32; 3]) -> bool {
 /// The cells of the shortest way from `from` to `to`, after `from`; `None` where there is none
 /// within reach.
 pub(super) fn route(level: &Level, from: Cell, to: Cell) -> Option<Vec<Cell>> {
+    search(level, from, to, false)
+}
+
+/// As [`route`], but where `to` cannot be reached the way to the cell searched nearest it, `None`
+/// if that is `from`: BDS's strolls toward places they cannot reach (Java 1.8 `PathFinder`'s
+/// closest point; bds-am2push.txt).
+pub(super) fn route_toward(level: &Level, from: Cell, to: Cell) -> Option<Vec<Cell>> {
+    search(level, from, to, true)
+}
+
+fn search(level: &Level, from: Cell, to: Cell, partial: bool) -> Option<Vec<Cell>> {
     let ahead = |[x, _, z]: Cell| ((x - to[0]).abs().max((z - to[2]).abs()) as u32) * ACROSS;
+    let off = |cell: Cell| (0..3).map(|axis| (cell[axis] - to[axis]).pow(2)).sum::<i32>();
     let (mut open, mut came, mut cost) = (BinaryHeap::from([(Reverse(ahead(from)), from)]), HashMap::new(), HashMap::from([(from, 0u32)]));
+    let way_to = |came: &HashMap<Cell, Cell>, end: Cell| {
+        let mut way = vec![end];
+        while let Some(before) = came.get(way.last()?).filter(|before| **before != from) {
+            way.push(*before);
+        }
+        way.reverse();
+        Some(way)
+    };
+    let mut nearest = from;
     while let Some((_, cell)) = open.pop() {
         if [cell[0], cell[2]] == [to[0], to[2]] && (cell[1] - to[1]).abs() <= 1 {
-            let mut way = vec![cell];
-            while let Some(before) = came.get(way.last()?).filter(|before| **before != from) {
-                way.push(*before);
-            }
-            way.reverse();
-            return Some(way);
+            return way_to(&came, cell);
+        }
+        if off(cell) < off(nearest) {
+            nearest = cell;
         }
         if cost.len() > MOST {
-            return None;
+            break;
         }
         for (dx, dz) in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)] {
             let Some(next) = landing(level, [cell[0] + dx, cell[1], cell[2] + dz]).filter(|next| (next[0] - from[0]).abs() <= REACH && (next[2] - from[2]).abs() <= REACH) else { continue };
@@ -77,7 +96,7 @@ pub(super) fn route(level: &Level, from: Cell, to: Cell) -> Option<Vec<Cell>> {
             }
         }
     }
-    None
+    (partial && nearest != from).then(|| way_to(&came, nearest)).flatten()
 }
 
 #[cfg(test)]
