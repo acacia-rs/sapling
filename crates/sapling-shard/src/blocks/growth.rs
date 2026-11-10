@@ -19,7 +19,7 @@ mod snowfall;
 pub(super) mod vines;
 mod wild;
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use bevy_ecs::prelude::*;
 use sapling_api::{Block, BlockPos};
@@ -43,7 +43,8 @@ const TROD_UNDER: f32 = 0.2;
 /// The cells that hold something a random tick changes, by world: sampling every cell around
 /// the players as BDS does cost more than a tick has when the rule is set high.
 #[derive(Resource, Default)]
-pub(crate) struct Growing(HashSet<(Entity, BlockPos)>);
+/// Fx, not std: [`tick`] hands out its draws in iteration order, which std seeds anew in every process.
+pub(crate) struct Growing(FxHashSet<(Entity, BlockPos)>);
 
 /// A xorshift of its own: the shard's dice are thrown by what happens, and what happens must not
 /// turn on how many plants there are.
