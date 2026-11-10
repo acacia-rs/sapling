@@ -3,7 +3,7 @@
 //! one copies nothing, and until a column is written every arena serves the template's own
 //! encodings, so a map is encoded once however many games run on it.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::sync::Arc;
 
 use acacia_world::{BlockRegistry, Dimension};
@@ -17,7 +17,7 @@ pub struct Template {
     dimension: i32,
     dim: Dimension,
     registry: Arc<BlockRegistry>,
-    columns: HashMap<ChunkPos, Column>,
+    columns: FxHashMap<ChunkPos, Column>,
     /// The columns that hold actors: an arena's mobs start from them.
     with_actors: Vec<ChunkPos>,
     level: Level,
@@ -60,7 +60,7 @@ impl World {
             dimension: template.dimension,
             dim: template.dim,
             registry: template.registry.clone(),
-            columns: HashMap::new(),
+            columns: FxHashMap::default(),
             void: Column::empty(0, 0, template.dim),
             loader: None,
             level: template.level.clone(),

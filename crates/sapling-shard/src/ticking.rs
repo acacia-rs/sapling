@@ -5,7 +5,10 @@
 //! more stop, their state kept in their block entities. A placed hopper, an opened furnace and a
 //! campfire given food start at once.
 
-use std::collections::{HashMap, HashSet};
+use std::cell::RefCell;
+use std::collections::HashSet;
+
+use rustc_hash::FxHashMap;
 
 use acacia_proto::nbt::Value;
 use bevy_ecs::prelude::*;
@@ -40,17 +43,28 @@ pub(crate) fn in_tick_region(dx: i32, dz: i32, reach: i32) -> bool {
 /// The columns that tick this tick: each player's tick region ([`in_tick_region`]) and the kept
 /// columns (kept.rs), taken once a tick.
 pub(crate) struct Region {
-    centres: HashMap<Entity, Vec<ChunkPos>>,
+    /// By layer; each layer's centres sorted and deduplicated for [`Region::ticks`]'s x band.
+    centres: Vec<(Entity, Vec<ChunkPos>)>,
     reach: i32,
+    /// Block loops ask per block, so per column the answer repeats; kept columns stay live.
+    near: RefCell<FxHashMap<(Entity, ChunkPos), bool>>,
 }
 
 impl Region {
     pub(crate) fn of(world: &mut World) -> Self {
-        let mut centres: HashMap<Entity, Vec<ChunkPos>> = HashMap::new();
+        let mut centres: Vec<(Entity, Vec<ChunkPos>)> = Vec::new();
         for (in_layer, view) in world.query::<(&InLayer, &View)>().iter(world) {
-            centres.entry(in_layer.0).or_default().extend(view.center());
+            let at = centres.iter().position(|(layer, _)| *layer == in_layer.0).unwrap_or_else(|| {
+                centres.push((in_layer.0, Vec::new()));
+                centres.len() - 1
+            });
+            centres[at].1.extend(view.center());
         }
-        Self { centres, reach: tick_distance(world) }
+        for (_, layer_centres) in &mut centres {
+            layer_centres.sort_unstable();
+            layer_centres.dedup();
+        }
+        Self { centres, reach: tick_distance(world), near: RefCell::default() }
     }
 
     /// Whether `column` of `layer` ticks. A shard nobody is in ticks everything: BDS's ticks
@@ -59,8 +73,14 @@ impl Region {
     /// there, research/captures/bds-t1dexec.txt).
     pub(crate) fn ticks(&self, world: &World, layer: Entity, column: ChunkPos) -> bool {
         let kept = || world.get::<crate::kept::Kept>(layer).is_some_and(|kept| kept.holds(column));
-        let Some(centres) = self.centres.get(&layer) else { return self.centres.is_empty() || kept() };
-        centres.iter().any(|centre| in_tick_region(column.x - centre.x, column.z - centre.z, self.reach)) || kept()
+        let Some((_, centres)) = self.centres.iter().find(|(centres_layer, _)| *centres_layer == layer) else {
+            return self.centres.is_empty() || kept();
+        };
+        let near = *self.near.borrow_mut().entry((layer, column)).or_insert_with(|| {
+            let band = centres.partition_point(|centre| centre.x < column.x - self.reach);
+            centres[band..].iter().take_while(|centre| centre.x <= column.x + self.reach).any(|centre| in_tick_region(column.x - centre.x, column.z - centre.z, self.reach))
+        });
+        near || kept()
     }
 
     pub(crate) fn ticks_block(&self, world: &World, layer: Entity, pos: BlockPos) -> bool {
