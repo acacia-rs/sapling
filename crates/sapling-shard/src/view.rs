@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use bevy_ecs::prelude::*;
 use bytes::Bytes;
@@ -50,7 +50,7 @@ pub(crate) struct View {
     radius: i32,
     center: Option<ChunkPos>,
     moves: u64,
-    sent: HashSet<ChunkPos>,
+    sent: FxHashSet<ChunkPos>,
     /// Columns in the circle not sent yet, nearest first.
     queue: Vec<ChunkPos>,
 }
