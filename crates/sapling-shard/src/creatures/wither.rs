@@ -14,6 +14,7 @@ mod heads;
 mod skulls;
 mod spin;
 mod swoop;
+mod target;
 mod wreck;
 
 pub(super) use dying::dies;
@@ -65,6 +66,8 @@ pub(super) struct Wither {
     dash: dash::Dash,
     swoop: swoop::Swoop,
     spin: spin::Spin,
+    /// The prey it keeps (target.rs).
+    prey: Option<Entity>,
 }
 
 /// Its own blasts and skulls do not hurt it while this is on.
@@ -231,6 +234,8 @@ fn lift(world: &mut World, wither: Entity, rise: f32) {
 pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
     let (Some(kept), Some(body)) = (world.get::<Wither>(wither), world.get::<Body>(wither).copied()) else { return false };
     let (charging, stunned) = (kept.charging, kept.stunned);
+    let hunted = target::held(world, wither);
+    target::look(world, wither, layer, &body);
     if charging > 0 {
         charge(world, wither, layer, &body);
         return true;
@@ -248,7 +253,6 @@ pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
         return true;
     }
     let armoured = world.get::<Wither>(wither).is_some_and(|kept| kept.armoured);
-    let hunted = heads::prey(world, wither, layer, &body);
     let rise = flight::rise(world, &body, hunted, armoured);
     let prey = hunted.map(|(_, feet)| feet);
     let mut dash = world.get_mut::<Wither>(wither).map(|mut kept| std::mem::take(&mut kept.dash)).unwrap_or_default();
@@ -267,7 +271,7 @@ pub(super) fn steer(world: &mut World, wither: Entity, layer: Entity) -> bool {
     if !swooping {
         lift(world, wither, rise);
     }
-    heads::tick(world, wither, layer, &body);
+    heads::tick(world, wither, layer, &body, hunted);
     true
 }
 

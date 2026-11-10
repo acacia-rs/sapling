@@ -525,6 +525,19 @@ BDS's went to a corner and out at 16 s.
   went 0 → 9.4 in one tick, then down by 0.1 to 0.58 a tick while the pitch to its spot stayed 0.6 to 8 over it,
   crossing 0 a tick before the cod reached the spot's height, so it went 0.1 under it and back. Not fitted, so
   not ported: sapling still signs the push by the spot's height (at most a tenth of a block of overshoot).
+  Fourteenth1ak (four gdb runs of the ah1swim scene: the attach points in research/captures/bds-ak1swim-gdb.txt,
+  the look-at's writer in bds-ak1swim-gdb-writer.txt; the rule checked against bds-ah1swim-gdb.txt): the look control's target is a look-at point the swim move control writes every tick
+  (0xbdf952d): its head (attach point 3, last tick's feet + 0.255 on the 0.3-tall cod) plus (2 dx / d, dy / d,
+  2 dz / d) towards the spot, d the distance from its feet (y is not doubled: the `addss` doubling only touches
+  the low lane), eased by 0.125 only if the last one was still set, which it never was. The look control
+  (0xbdf78f0) aims from its eyes (attach point 7, last tick's feet + 0.27) and turns the pitch at most 40 a tick
+  (yaw 10); a tick with no swim spot turns it 10 towards level. Replayed over the 1219 logged ticks it predicts
+  the next pitch within 0.01 degrees at the median, 0.28 at 90%, 1.6 at worst; the idle ticks exactly. The push
+  is −sign(sin pitch) (down at 0: the first tick fell 1.25 x 0.0098 x 0.8) x max(|sin pitch|, min(5 |dy|,
+  1.25)), across cos(pitch). Ported (swimming/pitch.rs, fish only, heights 0.85 and 0.9 of the body [U for
+  salmon, pufferfish and tropical fish], the pitch told; unit tests `a_cods_pitch_aims_from_its_eyes_a_step_towards_its_spot`,
+  `a_cods_push_is_signed_by_its_pitch_and_down_at_none`). Sapling's re-drill (2x, lagged) fell the same first
+  15 told heights as BDS's cod before their spots, drawn apart, parted.
 - Bees (bds-g14bee.txt): bees with pollen grew wheat a block under them 0 to 1 with `ParticleCropGrowth` at
   the cell's corner (bees/crops.rs, pack `grows_crop` 10 charges at 0.03); a silk-touched hive's item kept its
   bee in `Occupants` and none came out; a hive over a lit campfire broken by hand let its bee out angry.

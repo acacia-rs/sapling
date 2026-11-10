@@ -5,10 +5,11 @@
 //! towards the spot by [`rise`]; water keeps 0.8 of its speed (`Physics::SWIMMER`; a turtle's 0.9).
 //! It looks for another spot once within a block of it or after 5 seconds. Out of water a turtle or
 //! an axolotl walks to water within 16 blocks.
-//! Fish hop out of water and flee players (ashore.rs); frogs make for land (frogs/landward.rs).
-// BDS signs a fish's push up or down by its pitch, which sapling does not keep: it goes by the spot's height.
+//! Fish hop out of water and flee players (ashore.rs) and push by their pitch (pitch.rs); frogs make
+//! for land (frogs/landward.rs).
 
 mod ashore;
+mod pitch;
 
 pub(super) use ashore::{heard_flop, is_fish};
 
@@ -86,6 +87,9 @@ pub(super) struct Swimmer {
     fleeing: bool,
     /// Out of water, the tick it was first seen on the ground.
     landed: Option<u64>,
+    /// A fish's pitch, and its feet a tick ago (pitch.rs).
+    pitch: f32,
+    was: Option<[f32; 3]>,
 }
 
 /// Makes a mob of a kind that swims about, and hunts nothing or swims about between its prey (a
@@ -141,7 +145,7 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     let stroke = stroke(kind);
     if body.liquid() != Some(Liquid::Water) {
         if let Some(mut swimmer) = world.get_mut::<Swimmer>(entity) {
-            (swimmer.pace, swimmer.fleeing) = (0.0, false);
+            (swimmer.pace, swimmer.fleeing, swimmer.was) = (0.0, false, None);
         }
         if is_fish(kind) {
             ashore::flop(world, entity, &body);
@@ -150,7 +154,12 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
         return stroke.seeks_water && seek_water(world, entity, layer, kind, &body);
     }
     let haste = ashore::flee(world, entity, layer, kind, &body);
-    let Some(to) = spot(world, entity, layer, &body, roams) else { return true };
+    let Some(to) = spot(world, entity, layer, &body, roams) else {
+        if let Some(mut swimmer) = world.get_mut::<Swimmer>(entity).filter(|_| is_fish(kind)) {
+            (swimmer.pitch, swimmer.was) = (pitch::idle(swimmer.pitch), Some(body.at));
+        }
+        return true;
+    };
     let Some(mut swimmer) = world.get_mut::<Swimmer>(entity) else { return true };
     swimmer.landed = None;
     let (dx, dy, dz) = (to[0] - body.at[0], to[1] - body.at[1], to[2] - body.at[2]);
@@ -159,12 +168,21 @@ pub(super) fn steer(world: &mut World, entity: Entity, layer: Entity, kind: &str
     swimmer.pace = if stroke.ramps { (swimmer.pace + PACE).min(1.0) } else { 1.0 };
     let (yaw, push) = (swimmer.yaw, STROKE * speed * speed * swimmer.pace * haste);
     let facing = yaw.to_radians();
-    let up = rise(stroke, push, speed, [dx, dy, dz], body.size[1]);
+    let fish = is_fish(kind);
+    let (across, up) = if fish { pitch::push(swimmer.pitch, push, dy) } else { (push, rise(stroke, push, speed, [dx, dy, dz], body.size[1])) };
+    if fish {
+        let was = swimmer.was.unwrap_or(body.at);
+        (swimmer.pitch, swimmer.was) = (pitch::next(swimmer.pitch, was, body.at, to, body.size[1]), Some(body.at));
+    }
+    let pitched = swimmer.pitch;
     if let Some(mut moving) = world.get_mut::<Body>(entity) {
-        moving.fly([-facing.sin() * push, up, facing.cos() * push]);
+        moving.fly([-facing.sin() * across, up, facing.cos() * across]);
     }
     if let Some(mut told) = world.get_mut::<Told>(entity) {
         told.face(yaw, yaw);
+        if fish {
+            told.pitch(pitched);
+        }
     }
     if let Some(mut legs) = world.get_mut::<legs::Legs>(entity) {
         legs.yaw = yaw;
