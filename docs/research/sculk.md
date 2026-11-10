@@ -325,6 +325,20 @@ topped out at x 2.1111 and 2.8466, y −53.8824, BDS's numbers to the digit, the
 suffocating in the wall) and a zombie knocked into an open ladder cell (BDS rose to −59.25, sapling
 −58.85) were not compared further; sapling's sensors powered 23 times over the scene to BDS's 15.
 
+Fourteenth2am (`am2push`, bds-am2push.txt against sapling-am2push.txt): ai2push's ladder row was summoned at
+z −8.45, in the wall cell z −9, and its first zombie was a baby jockey; summoned grown (`minecraft:as_adult`) at
+x 2.3, 2.4, 2.5, z −7.55, clear of the plate and walls, two climbed the ladder to y −53.8455 at x 2.0174 and
+2.8170 on both servers. The knocked zombie: a mob thrown against a ladder's plate is stopped across too, and
+rises 0.2 next tick (BDS −59.6, −59.4, −59.2824, −59.2456); sapling's thrown move did not check, so it rose
+on its knock's 0.4 to −58.85. Fixed (body.rs: the thrown move calls `climb::pressed`); sapling's later
+knocks match to the digit. Scaffolding: BDS leaves a mob summoned inside it where it was, sapling shoved it
+out by the block's box and its crowd walked about, heard; spawn_push.rs now takes no box from scaffolding.
+Tests fourteenth2am. Sensors: BDS 18 powerings, sapling 9, all the difference the two climbers on the 3×3
+stone top at y −54 (and the vine row's): BDS's strolled about up there (0.3 to 1.3 at a time) and were heard
+every few seconds, sapling's stood. Sapling's stroll (creatures/strolling.rs) only takes a place at its own
+height with a whole route to it, which ten tries over ±10 seldom find on a 3×3 top; BDS's moves (short, all on
+the top) look like partial paths toward places it cannot reach, not decompiled. Open (a stroll port, not climbing).
+
 ## Drilled 2026-11-08, group W (`w1pops`; fourteenth1w_drill.rs)
 
 bds-w1pops.txt: a held warden 10 off and a sensor read by a comparator into dust (the dust's runtime id is the

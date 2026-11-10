@@ -61,8 +61,9 @@ const SPREAD: f32 = 90.0;
 /// How near a reposition spot counts as reached, and the ticks it tries for one.
 const REACHED: f32 = 1.0;
 const GIVES_UP: u64 = 100;
-/// Ticks the spear stays down after its damage time (bds-aa2spear.txt: 22 and 30).
-const RESTS: [u64; 2] = [20, 30];
+/// Ticks the spear stays down after its damage time at the least: the goal's +0x16c, read by gdb in
+/// bds-am2ride-gdb.txt; it rests on until it is at its cooldown spot (bds-aa2spear.txt: 22 and 30).
+const COOLDOWN: u64 = 20;
 
 #[derive(Clone, Copy, Default)]
 enum Stage {
@@ -109,14 +110,14 @@ pub(in crate::creatures) fn plan(world: &mut World, entity: Entity, kind: &str, 
     // The goal's state 3 (0x534a440): as the spear comes down it picks a spot as `spot` does, its
     // `cooldown_distance` off; bds-af2spear-gdb.txt's three far picks were these.
     if world.get::<Lance>(entity)?.raised.is_some_and(|raised| now >= raised + spear.delay + spear.hurts_for) {
-        let rest = RESTS[0] + u64::from(world.get_resource_or_insert_with(Dice::default).roll((RESTS[1] - RESTS[0]) as u32 + 1));
         let away = spot(world, at, feet, cooldown);
-        lower(world, entity, Stage::Rest(now + rest, away));
+        lower(world, entity, Stage::Rest(now + COOLDOWN, away));
     }
     let mut lance = *world.get::<Lance>(entity)?;
     let off = across(at, feet);
     lance.stage = match lance.stage {
-        Stage::Rest(until, away) if now < until => Stage::Rest(until, away),
+        // State 3 (0x53499ad) ends only once cooled and its walk there is done.
+        Stage::Rest(until, away) if now < until || (across(at, away) >= REACHED && now < until + GIVES_UP) => Stage::Rest(until, away),
         Stage::Approach | Stage::Rest(..) if off < approach => {
             if lance.raised.is_none() {
                 lance.raised = Some(now);
