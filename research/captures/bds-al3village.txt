@@ -1,0 +1,87 @@
+## fourteenth3al 2026-11-10: generation next to stored chunks under a village (seed 20261003, Linux BDS 1.26.52.3)
+## Village start chunk 217,526 (sapling structure_starts); its pieces span chunks 212..217 x 523..531, bell in 216,526.
+## s1 = BDS generated 217,526 alone (worldgen-oracle run.sh, region 217,526,217,526).
+## Edits by BDS itself (console: tickingarea over the chunks, /fill, save, stop; sapling-leveldb set_blocks crashed
+## BDS on this world, see below), then BDS generated 212..222 x 521..531 over each edited world (WORLDGEN_RESUME):
+##   round 1 (area 217,526):          c = no fill,  r = fill 3472 63 8416 3487 72 8431 netherite_block (2560),
+##                                     d = fill 3472 50 8416 3487 62 8431 air (3328)
+##   round 2 (area 216..217 x 525..527): C = no fill, R = fill 3456 63 8400 3487 72 8447 netherite_block (15360),
+##                                     D = fill 3456 50 8400 3487 62 8447 air (19968)
+##   each control generated twice (c2, C2) for BDS's own run noise.
+## netherite_block is a block sapling-worldgen does not name; the raise is 10 blocks over the village centre and
+## start, the dig 13 blocks under them (sea level 62, the village at 62-69).
+
+## BDS edited vs BDS control, per chunk (sapling-world examples/folder_generation_diff <seed> <control> <edited>,
+## all cells y -64..319; columns x 212..222, rows z). Round 2:
+=== s3C vs s3C2 (twin)
+z 521:    8   0   0   3   0   2   0 403   3   0   2
+z 522:    0   0   0   3   4   0   2  51   9   2  46
+z 523:    1   1   1   2   0   0   0   2   3  11  49
+z 524:    2   0   2   0   0   0   0   6   0   0   2
+z 525:    2   0   2   3   0   0   0   0   2   0   1
+z 526:    6   1   1 103   0   0   0   0   0   0   0
+z 527:    0   0   2   0   0   0   0   2   0   0   3
+z 528:    0   8   0   0   2   0   0   0   0   1   0
+z 529:    2   0   0   0   2   0   0   0   0   0   0
+z 530:    6   0   2   0   2   6   0   0   0   0   0
+z 531:    3   1   2   4   1   0   0   0   0   0   4
+total 794
+=== s3C vs s3R (raised)
+z 521:    4   0   0   0   0   0   0 397   3  35 157
+z 522:    0   0   0   4   5   0   0  51   8   3  74
+z 523:    1   0   0   0   1   0   0   3   2  13  47
+z 524:    2   0   2   2   0   0   0   3   2   0   1
+z 525:    2   0   3   0 2620 2560  0   0   2   0   0
+z 526:    5   0   1  13 2628 2565  0   0   0   0   4
+z 527:    0   0   2   0 2608 2560  0   2   0   0   0
+z 528:    0   5   0   0   2   0   0   0   0   2   0
+z 529:    2   0   0   0   0   0   0   2   0   0   0
+z 530:    8   0   5   0   3   5   0   0   0   0   2
+z 531:    5   1   3   4   1   3   1   0   1   0   2
+total 16452
+=== s3C vs s3D (dug)
+z 521:    8   0   0   6   0   2   0   5   0   2   2
+z 522:    0   0   0   4   6   0   2   0   2   2   2
+z 523:    0   2   1   2   0   0   0   2   0   8   0
+z 524:    4   0   2   0   0   0   0   4   2   0   1
+z 525:    2   0   2   3 3370 3384  0   0   1   0   1
+z 526:    4   1   1  89 3363 3358  0   0   0   0   4
+z 527:    0   0   2   5 3344 3363  0   2   2   0   2
+z 528:    0   7   0   0   4   0   0   0   0   1   0
+z 529:    2   0   0   0   3   0   0   3   0   0   0
+z 530:   11   2   2   0   2   7   0   0   0   0   2
+z 531:    3   1   0   0   0   3   0   0   0   0   6
+total 20433
+## Outside the filled chunks every count is twin-sized. Chunks 219,521 (397/403) and 221..222 x 521..522 (35, 157,
+## 74) are caves below y 40 with two BDS outcomes each: they flipped in the twin, in s3R and in round 1's d, not
+## with the fill.
+## Cells y 40..110 (block_box_dump) outside the fills: lichen and water swaps as in the twin, plus the fill's own
+## neighbour updates at x 3455 (column next to the fill) in chunks the edit session saved: glass panes and a wall
+## connecting east, a stair corner, a path under a wall turned dirt (raise); a path turned dirt and gravel sinking
+## through water at 3455,49..56,8447 (dig, liquid ticks). No village piece moved, no tree or feature changed.
+
+## Sums over each case's new chunks (folder had no column there; ore baseline = sapling vs BDS control):
+##                      new  sapling-vs-BDS  minus baseline   BDS edit-vs-control   BDS twin
+## round 1 raise (r)    116      26594            +38                375               399
+## round 1 dig (d)      115      25780           -127                522               399
+## round 2 raise (R)    111      25539           -581                898               688
+## round 2 dig (D)      105      24492             -3                150               686
+## (round 2 R's -581: the cave chunk 219,521 above, BDS outcome flipped.) Pristine sapling vs BDS control s2c over
+## all 121 chunks: 27241, all ore blobs (andesite/diorite/granite/dirt/gravel/coal/copper), clay disks and
+## dripstone; no village block among the 25 commonest pairs.
+
+## Stored chunks (folder column present): sapling serves them as stored, 0 cells off BDS's saved copy, except
+##   - dug chunks: BDS's water flowed into the pit while they were loaded (D: 1077 cells, liquid_depth 1-9), and
+##     the gravel above; liquid ticks of a loaded chunk, not generation;
+##   - columns with a Version but no FinalizedState (the edit sessions saved ring chunks so: 215..218 x 524..528):
+##     BDS kept their blocks (0-5 cells, the 5 the gravel above), as sapling serves them;
+##   - columns with a FinalizedState but no Version (run.sh's ring): neither reads them as stored, both generate.
+## Round 1 r: a pending tall_grass tick the edit session saved in 217,527 fired in the generation run and popped
+## the plant at 3480,63..64,8432 (2 cells), beside the fill.
+
+## set_blocks crash: any column of s1 rewritten by sapling-leveldb set_blocks (217,526 with 2560 or 3328 cells,
+## or one cell set to its own block in 216,526) made BDS SIGSEGV ~10 s into the next run (worker thread, image
+## offsets 0xc9fd06d <- 0xc9e89b6 <- 0xc9f2643 <- 0xd16d180); opening the db with sapling alone (no column written)
+## did not. The rewritten records decode to the same blocks, palettes and biomes (Data3D: middle sections
+## written as 0xff copies). This world, unlike AJ's (bds-aj3folder.txt, no crash), holds tag 0x77 records
+## (`minecraft:trial_chambers`, chunks 213..214 x 524..526) and partly saved ring chunks.

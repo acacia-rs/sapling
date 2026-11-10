@@ -108,6 +108,18 @@ Evidence: `research/captures/bds-structures.txt`, `bds-locate.txt`, `bds-ticking
   and lichen that pristine sapling-vs-BDS shows too (Linux BDS's hash-seeded ore draws). Not covered:
   a stored chunk whose `FinalizedState` is below 2 (sapling serves it as stored, undecorated; this BDS
   run saved none), and a new chunk's feature that reaches into an edited one (none crossed the wall).
+- A village over edited stored chunks, group AL 2026-11-10 (bds-al3village.txt): the village starting in
+  chunk 217,526 (pieces over 212..217 x 523..531) had its start chunk, then the six chunks round its bell
+  and start, raised 10 blocks with netherite (a block worldgen does not name) or dug 13 blocks, by BDS's
+  own `/fill`; BDS then generated 121 chunks round them. Its new chunks matched the unedited control's
+  within the control's own twin noise: no village piece moved, no path followed the edit, no feature
+  beside the netherite changed. Neither village assembly nor terrain matching nor features read stored
+  neighbours while BDS generates, and sapling's `Generated` never reads them: sapling vs BDS over the new
+  chunks stayed the ore baseline (+38, -127, -581, -3 cells against the control). Stored columns without a
+  `FinalizedState` (BDS saved such ring chunks after the fill's neighbour updates) were kept as saved by BDS
+  and are served as stored by sapling. The /place and growth reads over loaded chunks (on_demand.rs,
+  feature/grow.rs, generated/grow.rs TODOs) are not generation and stay undrilled. `set_blocks` rewrites of
+  this world crashed BDS, so the edits went through the console; see REMAINING4's set_blocks line.
 
 ## /tickingarea
 

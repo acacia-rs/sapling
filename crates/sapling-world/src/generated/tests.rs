@@ -26,7 +26,7 @@ fn inner_columns_come_first_and_only_overworld_holes_are_generated() {
 
     assert_eq!(generated.load_column(stored, 0).unwrap(), Some(StoredColumn::of(stone_column(stored, 0))));
     let filled = generated.load_column(hole, 0).unwrap().expect("a hole is generated");
-    assert_eq!(filled, generated.generate_column(hole));
+    assert_eq!(filled, generated.generate_column(hole), "stored neighbours are not read, as BDS read none (bds-al3village.txt)");
     let bedrock = BlockRegistry::vanilla().find("minecraft:bedrock", "infiniburn_bit=0").unwrap();
     assert_eq!(filled.chunk.block(16, MIN_Y, 0), bedrock);
     assert_eq!(generated.load_column(hole, 1).unwrap(), Some(StoredColumn::of(stone_column(hole, 1))));
