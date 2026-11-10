@@ -107,9 +107,21 @@ Code: `crates/sapling-shard/src/creatures/wither.rs`, `creatures/wither/{heads,s
 - **Phase 2**: at health ≤ max/2 `WitherAerialAttack` (52) goes 0 (armoured: arrows do nothing), a
   blast of power 7 from its head, 80 ticks stunned, and on normal and hard 3 wither skeletons.
 - **Heads** (`_performRangedAttack` 0x142f95cd0): the middle one shoots its target every 20 ticks,
-  every 4th skull blue; on normal and hard each side head takes a random player within 30 across, 8
-  up or down, in sight (10 tries), shoots it, then waits 40 + rand; after 15 idle looks head 1
-  shoots a blue skull at a random point ±10/±5/±10. Firing points: middle (x, y+3, z), sides y+2.2,
+  every 4th skull blue. Side heads (Linux `WitherBoss` 0xbbbd900, loop from 0xbbbe1e1, fourteenth1an
+  [D]): each looks every 10 + rand(10) ticks; holding a player (`WitherTarget2`/`3`) it keeps it while it
+  lives within 30 (a sphere about the player's eyes), is seen, and is not a spectator or invulnerable
+  (creative), shooting it on normal and hard and then waiting 40 + rand(20), else it lets go (told -1);
+  holding none it takes, on any difficulty and without a shot or a sight check, a player at random in the
+  wither's box grown 30 across and 8 up and down, never invulnerable and never the wither's own target
+  (10 tries). So with one player who is the middle head's prey, only a head that took it first holds it
+  (bds-y3wither.txt: `WitherTarget3` took the actor before `TargetEid`, kept it 52 s; `WitherTarget2`
+  never took it; bds-f14nwither2.txt on easy: taken, kept, -1 as the actor turned creative). Sapling
+  re-picked every look, needing sight, and let go when a look found none: now wither/heads/sides.rs
+  (test `a_side_head_keeps_a_player_not_the_middle_heads_prey_until_they_turn_creative`; re-drilled
+  research/captures/sapling-y3wither.txt: `WitherTarget3` took the actor 97243 ms in, before `TargetEid`,
+  and kept it to the end; `WitherTarget2` never took it, as BDS). On normal and
+  hard every head counts its looks since it last shot; head 1's 17th shoots a blue skull at a random
+  point ±10/±5/±10 (head 2's count only resets). Firing points: middle (x, y+3, z), sides y+2.2,
   1.3 aside by yaw + head·180 − 180. Targets told as `WitherTarget1..3` (49–51).
 - **Skulls** (pack `wither_skull`, `wither_skull_dangerous`): power 1.2 (blue 0.6), no gravity; on a
   hit a blast of power 1, no fire; Wither II for 200 ticks on normal, 800 on hard. A player's hit
