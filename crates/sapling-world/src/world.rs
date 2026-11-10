@@ -1,6 +1,6 @@
 mod wire;
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::sync::Arc;
 
 use acacia_world::{BlockRegistry, Dimension};
@@ -28,7 +28,7 @@ pub struct World {
     pub(crate) dim: Dimension,
     pub(crate) registry: Arc<BlockRegistry>,
     /// Of an arena: only the columns that were written to.
-    pub(crate) columns: HashMap<ChunkPos, Column>,
+    pub(crate) columns: FxHashMap<ChunkPos, Column>,
     /// Stands in for every unwritten column of a world without storage, so they share one encoding.
     pub(crate) void: Column,
     pub(crate) loader: Option<Loader>,
@@ -54,7 +54,7 @@ impl World {
     pub fn void_in(dimension: i32) -> Self {
         let registry = BlockRegistry::vanilla_arc();
         let dim = Dimension::from_id(dimension, registry.air_id());
-        let (columns, void, players, light) = (HashMap::new(), Column::empty(0, 0, dim), Players::default(), Lights::new(&registry));
+        let (columns, void, players, light) = (FxHashMap::default(), Column::empty(0, 0, dim), Players::default(), Lights::new(&registry));
         Self { dimension, dim, registry, columns, void, loader: None, level: Level::default(), arrived: Vec::new(), base: None, base_actors_taken: false, players, light, held: false }
     }
 

@@ -13,4 +13,5 @@ sapling-worldgen.workspace = true
 acacia-proto.workspace = true
 acacia-world.workspace = true
 bytes.workspace = true
+rustc-hash.workspace = true
 tracing.workspace = true
