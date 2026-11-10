@@ -5,6 +5,7 @@
 
 pub mod access;
 mod admission;
+mod batch;
 mod config;
 mod congestion;
 mod driver;

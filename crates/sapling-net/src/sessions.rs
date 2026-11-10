@@ -16,8 +16,8 @@ use acacia_session::server::login::{LoginConfig, ServerLogin};
 use p384::ecdsa::{SigningKey, VerifyingKey};
 use uuid::Uuid;
 
-use crate::access;
 use crate::admission::Throttle;
+use crate::{access, batch};
 use crate::config::NetConfig;
 use crate::congestion::Congestion;
 use crate::event::{ConnId, NetEvent, Outbound};
@@ -127,7 +127,7 @@ impl Sessions {
         match command {
             Outbound::Send { conn, packets } => {
                 let Some((&link, player)) = self.links.get(&conn).and_then(|link| Some((link, self.players.get_mut(link)?))) else { return };
-                links.send(link, player.conn.encode(&packets), now);
+                links.send(link, batch::trimmed(player.conn.encode(&packets)), now);
                 let queued = links.queued_bytes(link);
                 if queued > self.cfg.max_queued_bytes {
                     self.close_player(links, link, "send backlog over the limit", "disconnectionScreen.timeout", now);
