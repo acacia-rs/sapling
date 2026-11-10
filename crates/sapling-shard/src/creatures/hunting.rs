@@ -26,7 +26,7 @@ use crate::components::{InLayer, Layer, NetId, Position, Settings, Tick, in_worl
 use crate::{entities, late_sounds, vitals};
 
 /// Ticks between two looks for a player.
-const LOOKS: u64 = 10;
+pub(super) const LOOKS: u64 = 10;
 /// An iron golem's hit throws this fast away and up (research/captures/bds-golem.txt).
 const FLINGS: [f32; 2] = [0.52, 0.4288];
 /// An archer walks at its prey for this many ticks after taking it (BDS's went 1.7 blocks, from

@@ -256,6 +256,19 @@ their breakpoint logs in the matching `-breaks.txt`; sapling-ah1wither2.txt afte
   countdown leads to the charge dash (+0x4ad, +0x4c0 = 20), left as `wither/dash.rs` has it.
 - A `mob.warning` sound shortly after the summon on BDS is not explained; sapling sends none.
 
+Fourteenth1ak, the `mob.warning` (bds-ab1wither2.txt, bds-ah1wither-gdb2.txt): it is the growl any hunter gives
+as it takes prey (mob-attacks.md "Picking a player"). All five in the two captures came a tick after a `TargetEid`
+from 0 to a mob: the first 5 ticks into the charge (the pack's `nearest_attackable_target` runs while it
+charges), the rest as it took a new cow or slime after losing one (`TargetEid` 0, then 4 ticks to the next).
+Each was 2.55 over its feet: 0.85 of its pack's collision height 3, not of the 3.5 box BDS tells. The middle
+head followed a tick after each `TargetEid` (`WitherTarget1` the same mob, or -1 for none: BDS never told a
+head's target as 0), and kept the prey it took; no `WitherTarget1` came while it charged. Sapling's wither had
+no `TargetEid` and re-took the nearest each tick, telling 0 for none; now it keeps its prey (alive, in its
+layer, within 70) and looks on the hunters' 10-tick beat, charging too, tells each change as `TargetEid` with
+`mob.warning` a tick on, and its heads and flight follow a tick late (`wither/target.rs`; test
+`a_wither_takes_its_prey_while_charging_and_growls_a_tick_on_then_its_head_follows`). Not broken under gdb:
+which function sends the sound [U]; losing an unseen prey after `must_see` (sapling keeps it).
+
 ## Fireworks
 
 Code: `crates/sapling-shard/src/fireworks.rs`, `fireworks/{item,recipes,burst}.rs`,

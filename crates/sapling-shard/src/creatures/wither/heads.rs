@@ -28,7 +28,7 @@ const BLUE_EVERY: u32 = 4;
 const RESTS: [u64; 2] = [41, 100];
 /// Its health is cut in this many steps, each halving the fire rate off easy.
 const STEPS: f32 = 6.0;
-const SIGHT: f32 = 70.0;
+pub(super) const SIGHT: f32 = 70.0;
 const REACH: [f32; 2] = [30.0, 8.0];
 const TRIES: usize = 10;
 const AGAIN: [u64; 2] = [40, 20];
@@ -164,8 +164,9 @@ pub(super) fn pace(world: &mut World, wither: Entity) {
     }
 }
 
-/// A tick of the heads: each shoots when its time comes, and viewers are told whom each looks at.
-pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body) {
+/// A tick of the heads, the middle one's on `prey`: each shoots when its time comes, and viewers are
+/// told whom each looks at, -1 for none as BDS's.
+pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body, prey: Option<(Entity, [f32; 3])>) {
     let now = world.resource::<Tick>().0;
     let fights = matches!(world.resource::<Settings>().0.difficulty, Difficulty::Normal | Difficulty::Hard);
     let yaw = world.get::<legs::Legs>(wither).map_or(0.0, |legs| legs.yaw);
@@ -175,7 +176,6 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
     if armoured && heads.next[0] == u64::MAX {
         heads.next[0] = now;
     }
-    let prey = prey(world, wither, layer, body);
     heads.targets[0] = prey.map(|(player, _)| player);
     let look = look(heads.look.unwrap_or(yaw), yaw, body, prey.filter(|_| now >= heads.back).map(|(_, feet)| feet));
     heads.look = Some(look);
@@ -238,7 +238,7 @@ pub(super) fn tick(world: &mut World, wither: Entity, layer: Entity, body: &Body
         .into_iter()
         .zip(heads.targets.iter().zip(before))
         .filter(|(_, (now, before))| **now != *before)
-        .map(|(key, (target, _))| (key, Plain::Long(target.and_then(|target| world.get::<NetId>(target)).map_or(0, |id| id.0 as i64))))
+        .map(|(key, (target, _))| (key, Plain::Long(target.and_then(|target| world.get::<NetId>(target)).map_or(-1, |id| id.0 as i64))))
         .collect();
     if let Some(mut kept) = world.get_mut::<Wither>(wither) {
         kept.heads = heads;
