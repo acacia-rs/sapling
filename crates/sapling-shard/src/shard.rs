@@ -211,6 +211,10 @@ impl Shard {
         worlds::withdraw(&self.world);
         let net = self.world.resource::<Net>().0.clone();
         handoff::owned(&mut self.world).into_iter().for_each(|conn| net.kick(conn, CLOSED));
+        // Nobody will see them, and saving waits for every queued load: under load, a minute of generation.
+        for mut layer in self.world.query::<&mut Layer>().iter_mut(&mut self.world) {
+            layer.world.cancel_loads(|_| false);
+        }
         self.save_worlds();
     }
 
