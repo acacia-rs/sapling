@@ -163,8 +163,8 @@ impl Command for Place {
             return out.translate("commands.place.invalidposition.error", Vec::new(), false);
         }
         let (placed, unknown) = match &self.what {
-            What::Feature(name) => (ctx.place_feature(name, at), "commands.place.invalidfeature.error"),
-            // A rule BDS knows but that placed nothing, or that sapling has not ported, is so answered.
+            // A feature or rule BDS knows but that placed nothing, or that sapling has not ported, is so answered (bds-aj3ore.txt).
+            What::Feature(name) => (ctx.place_feature(name, at), "commands.place.invalidposition.error"),
             What::FeatureRule(name) => {
                 let placed = ctx.place_feature_rule(name, at).map_err(|error| if matches!(error, PlaceError::Failed | PlaceError::Unknown) { PlaceError::Unknown } else { error });
                 (placed, "commands.place.invalidposition.error")

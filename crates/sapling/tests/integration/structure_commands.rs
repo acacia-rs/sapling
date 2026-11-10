@@ -68,6 +68,8 @@ async fn structure_ticking_place_and_locate_answer_as_bds_answered() {
         ("place feature oak_tree_feature", r#"commands.generic.syntax ["e feature ", "oak_tree_feature", ""] 0"#),
         ("place feature minecraft:no_such_feature", r#"commands.generic.syntax ["e feature ", "minecraft:no_such_feature", ""] 0"#),
         ("place feature minecraft:oak_tree_feature ~2 400 ~2", "commands.place.invalidposition.error [] 0"),
+        // bds-aj3ore.txt: a known feature that placed nothing (an ore blob in the air).
+        ("place feature minecraft:coal_ore_feature ~ ~20 ~", "commands.place.invalidposition.error [] 0"),
         ("place featurerule minecraft:plains_surface_flowers_feature", "commands.place.invalidposition.error [] 0"),
         ("place jigsaw minecraft:trail_ruins/tower minecraft:road_anchor 30", "commands.place.maxdepth.error [] 0"),
         ("place jigsaw minecraft:no_such_pool minecraft:bottom 3", "commands.place.generation.error [] 0"),

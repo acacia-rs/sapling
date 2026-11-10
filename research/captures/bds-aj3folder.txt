@@ -1,0 +1,125 @@
+## folder_generation_diff 20261003 <before> <after> 185 505 190 510 (sapling over the folder vs BDS; s1 = BDS chunks 186..187 x 506..509, s1e = s1 with glass at x 3006..3007 z 8096..8159 y 62..110, s2c/s2e = BDS then generating 188..189 x 506..509 over s1/s1e)
+=== before s1 after s2c
+per chunk: differing cells (folder state/BDS state)
+z   505:      -(./.)       -(./.)       -(./.)       -(./.)       -(./.)       -(./.) 
+z   506:      -(./.)       0(2/2)       0(2/2)     333(./2)     100(./2)       -(./.) 
+z   507:      -(./.)       0(2/2)       0(2/2)     226(./2)      93(./2)       -(./.) 
+z   508:      -(./.)       0(2/2)       0(2/2)     148(./2)     176(./2)       -(./.) 
+z   509:      -(./.)       0(2/2)       0(2/2)     313(./2)     287(./2)       -(./.) 
+z   510:      -(./.)       -(./.)       -(./.)       -(./.)       -(./.)       -(./.) 
+total 1676
+    313 ours andesite"" +air"" / bds diorite"" +air""
+    258 ours diorite"" +air"" / bds dirt"" +air""
+    248 ours diorite"" +air"" / bds granite"" +air""
+    213 ours andesite"" +air"" / bds granite"" +air""
+    102 ours stone"" +air"" / bds coal_ore"" +air""
+     97 ours coal_ore"" +air"" / bds stone"" +air""
+     68 ours andesite"" +air"" / bds dirt"" +air""
+     60 ours andesite"" +air"" / bds gravel"" +air""
+     38 ours copper_ore"" +air"" / bds diorite"" +air""
+     35 ours andesite"" +air"" / bds copper_ore"" +air""
+     32 ours coal_ore"" +air"" / bds granite"" +air""
+     21 ours deepslate_gold_ore"" +air"" / bds tuff"" +air""
+     20 ours copper_ore"" +air"" / bds dirt"" +air""
+     19 ours copper_ore"" +air"" / bds granite"" +air""
+     19 ours andesite"" +air"" / bds iron_ore"" +air""
+     12 ours andesite"" +air"" / bds lapis_ore"" +air""
+     12 ours deepslate"pillar_axis=y" +air"" / bds deepslate_gold_ore"" +air""
+      8 ours diorite"" +air"" / bds redstone_ore"" +air""
+      7 ours deepslate_diamond_ore"" +air"" / bds tuff"" +air""
+      7 ours deepslate_gold_ore"" +air"" / bds deepslate"pillar_axis=y" +air""
+      6 ours diorite"" +air"" / bds lapis_ore"" +air""
+      6 ours andesite"" +air"" / bds redstone_ore"" +air""
+      6 ours gravel"" +air"" / bds deepslate_redstone_ore"" +air""
+      5 ours air"" +air"" / bds glow_lichen"multi_face_direction_bits=8" +air""
+      5 ours air"" +air"" / bds water"liquid_depth=10" +air""
+exit: 0
+=== before s1e after s2e
+per chunk: differing cells (folder state/BDS state)
+z   505:      -(./.)       -(./.)       -(./.)       -(./.)       -(./.)       -(./.) 
+z   506:      -(./.)       0(2/2)       0(2/2)     331(./2)     100(./2)       -(./.) 
+z   507:      -(./.)       0(2/2)       0(2/2)     221(./2)      92(./2)       -(./.) 
+z   508:      -(./.)       0(2/2)       0(2/2)     148(./2)     174(./2)       -(./.) 
+z   509:      -(./.)       0(2/2)       0(2/2)     315(./2)     287(./2)       -(./.) 
+z   510:      -(./.)       -(./.)       -(./.)       -(./.)       -(./.)       -(./.) 
+total 1668
+    313 ours andesite"" +air"" / bds diorite"" +air""
+    258 ours diorite"" +air"" / bds dirt"" +air""
+    248 ours diorite"" +air"" / bds granite"" +air""
+    213 ours andesite"" +air"" / bds granite"" +air""
+    102 ours stone"" +air"" / bds coal_ore"" +air""
+     97 ours coal_ore"" +air"" / bds stone"" +air""
+     68 ours andesite"" +air"" / bds dirt"" +air""
+     60 ours andesite"" +air"" / bds gravel"" +air""
+     38 ours copper_ore"" +air"" / bds diorite"" +air""
+     35 ours andesite"" +air"" / bds copper_ore"" +air""
+     32 ours coal_ore"" +air"" / bds granite"" +air""
+     21 ours deepslate_gold_ore"" +air"" / bds tuff"" +air""
+     20 ours copper_ore"" +air"" / bds dirt"" +air""
+     19 ours andesite"" +air"" / bds iron_ore"" +air""
+     19 ours copper_ore"" +air"" / bds granite"" +air""
+     12 ours andesite"" +air"" / bds lapis_ore"" +air""
+     12 ours deepslate"pillar_axis=y" +air"" / bds deepslate_gold_ore"" +air""
+      8 ours diorite"" +air"" / bds redstone_ore"" +air""
+      7 ours deepslate_diamond_ore"" +air"" / bds tuff"" +air""
+      7 ours deepslate_gold_ore"" +air"" / bds deepslate"pillar_axis=y" +air""
+      6 ours andesite"" +air"" / bds redstone_ore"" +air""
+      6 ours gravel"" +air"" / bds deepslate_redstone_ore"" +air""
+      6 ours diorite"" +air"" / bds lapis_ore"" +air""
+      5 ours air"" +air"" / bds water"liquid_depth=1" +air""
+      5 ours air"" +air"" / bds water"liquid_depth=10" +air""
+exit: 0
+=== before - after s2e
+per chunk: differing cells (folder state/BDS state)
+z   505:      -(-/.)       -(-/.)       -(-/.)       -(-/.)       -(-/.)       -(-/.) 
+z   506:      -(-/.)     267(-/2)    1793(-/2)     331(-/2)     100(-/2)       -(-/.) 
+z   507:      -(-/.)     472(-/2)    1670(-/2)     221(-/2)      92(-/2)       -(-/.) 
+z   508:      -(-/.)     147(-/2)    2004(-/2)     148(-/2)     174(-/2)       -(-/.) 
+z   509:      -(-/.)     151(-/2)    1936(-/2)     315(-/2)     287(-/2)       -(-/.) 
+z   510:      -(-/.)       -(-/.)       -(-/.)       -(-/.)       -(-/.)       -(-/.) 
+total 10108
+   3196 ours air"" +air"" / bds glass"" +air""
+   2110 ours stone"" +air"" / bds glass"" +air""
+   1101 ours diorite"" +air"" / bds granite"" +air""
+    430 ours andesite"" +air"" / bds diorite"" +air""
+    430 ours andesite"" +air"" / bds granite"" +air""
+    404 ours dirt"" +air"" / bds glass"" +air""
+    326 ours andesite"" +air"" / bds dirt"" +air""
+    280 ours diorite"" +air"" / bds dirt"" +air""
+    275 ours oak_leaves"persistent_bit=0,update_bit=0" +air"" / bds glass"" +air""
+    236 ours stone"" +air"" / bds coal_ore"" +air""
+    222 ours coal_ore"" +air"" / bds stone"" +air""
+    153 ours andesite"" +air"" / bds gravel"" +air""
+    126 ours grass_block"" +air"" / bds glass"" +air""
+     95 ours andesite"" +air"" / bds copper_ore"" +air""
+     92 ours coal_ore"" +air"" / bds granite"" +air""
+     55 ours gravel"" +air"" / bds glass"" +air""
+     54 ours copper_ore"" +air"" / bds diorite"" +air""
+     46 ours copper_ore"" +air"" / bds granite"" +air""
+     31 ours andesite"" +air"" / bds iron_ore"" +air""
+     31 ours deepslate_gold_ore"" +air"" / bds tuff"" +air""
+     29 ours deepslate"pillar_axis=y" +air"" / bds deepslate_gold_ore"" +air""
+     28 ours coal_ore"" +air"" / bds diorite"" +air""
+     23 ours copper_ore"" +air"" / bds dirt"" +air""
+     22 ours deepslate_gold_ore"" +air"" / bds deepslate"pillar_axis=y" +air""
+     20 ours andesite"" +air"" / bds lapis_ore"" +air""
+exit: 0
+## worldgen-oracle s2e diff s2c 186,506,189,509
+16 chunks compared, 10 differ: 6299 block cells, 0 biome cells
+    3196  glass vs air
+    2103  glass vs stone
+     407  glass vs dirt
+     275  glass vs oak_leaves
+     126  glass vs grass_block
+      55  glass vs gravel
+      52  glass vs leaf_litter
+      16  glass vs oak_log
+      14  glass vs coal_ore
+      13  glass vs copper_ore
+      11  air vs glow_lichen
+      10  glow_lichen vs air
+       8  glass vs birch_leaves
+       7  glass vs short_grass
+       6  glow_lichen vs glow_lichen
+       6  glow_lichen vs glow_lichen
+
